@@ -31,9 +31,15 @@ class SignedTransaction(BaseModel):
 
     expires_date: Optional[datetime] = Field(default=None, alias="expiresDate")
     in_app_ownership_type: Optional[str] = Field(default=None, alias="inAppOwnershipType")
+    # Refund / revoke markers. Apple sets BOTH on a refunded or family-revoked
+    # transaction; `revocationDate` was previously not modelled at all and
+    # `revocationReason` was parsed but read by nobody, so a revoked
+    # transaction verified exactly like a live one (adversarial audit
+    # 2026-07-30). `AppleJWSVerifier.verify` now rejects on either field.
     revocation_reason: Optional[int] = Field(default=None, alias="revocationReason")
+    revocation_date: Optional[datetime] = Field(default=None, alias="revocationDate")
 
-    @field_validator("purchase_date", "expires_date", mode="before")
+    @field_validator("purchase_date", "expires_date", "revocation_date", mode="before")
     @classmethod
     def _coerce_ms_epoch(cls, value: Any) -> Any:
         if value is None or isinstance(value, datetime):

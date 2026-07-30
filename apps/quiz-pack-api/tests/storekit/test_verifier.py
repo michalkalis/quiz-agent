@@ -24,6 +24,7 @@ from app.storekit import (
     AppleJWSVerifier,
     JWSExpired,
     JWSInvalid,
+    JWSRevoked,
     JWSWrongBundle,
     SignedTransaction,
 )
@@ -293,6 +294,58 @@ def test_non_subscription_transaction_has_no_expiry_gate(verifier, make_jws):
     tx = verifier.verify(make_jws())
 
     assert tx.expires_date is None
+
+
+def test_revoked_transaction_never_verifies(verifier, make_jws):
+    """A refunded transaction must buy nothing — the chargeback enforcement line.
+
+    Adversarial audit 2026-07-30: a revoked payload used to verify exactly like a
+    live one. `revocationDate` was not modelled at all and `revocationReason` was
+    parsed by models.py and read by nobody, so a customer who got a refund could
+    keep redeeming the same receipt for packs we pay (LLM + Tavily) to generate.
+    Pack JWS carry no `expiresDate`, so the expiry gate above never covered them.
+    """
+    revoked_ms = int(
+        (datetime.now(timezone.utc) - timedelta(days=2)).timestamp() * 1000
+    )
+    jws = make_jws(
+        payload_overrides={"revocationDate": revoked_ms, "revocationReason": 1}
+    )
+
+    with pytest.raises(JWSRevoked, match="is revoked"):
+        verifier.verify(jws)
+
+
+@pytest.mark.parametrize(
+    "payload_overrides",
+    [
+        pytest.param({"revocationDate": 1750000000000}, id="date-only"),
+        pytest.param({"revocationReason": 0}, id="reason-only-zero"),
+        pytest.param({"revocationReason": 1}, id="reason-only-one"),
+    ],
+)
+def test_either_revocation_field_alone_rejects(verifier, make_jws, payload_overrides):
+    """Either field alone is enough — never require both to be present.
+
+    Apple normally sets both, but the gate must not depend on that: a payload
+    carrying only one of them is still a reversed purchase. `revocationReason: 0`
+    is the trap — it is a real Apple value (0 = "other"/refund) and any
+    truthiness-based check would let it through.
+    """
+    with pytest.raises(JWSRevoked, match="is revoked"):
+        verifier.verify(make_jws(payload_overrides=payload_overrides))
+
+
+def test_unrevoked_transaction_still_verifies(verifier, make_jws):
+    """The other half of the contract: a normal purchase must still pass.
+
+    Asserting only the rejection would let an always-raise revocation gate look
+    correct while blocking every paying customer.
+    """
+    tx = verifier.verify(make_jws())
+
+    assert tx.revocation_date is None
+    assert tx.revocation_reason is None
 
 
 def test_payload_missing_required_field_raises(verifier, test_chain):

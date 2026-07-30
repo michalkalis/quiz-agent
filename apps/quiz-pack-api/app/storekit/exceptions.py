@@ -23,6 +23,16 @@ class JWSExpired(JWSError):
     """
 
 
+class JWSRevoked(JWSError):
+    """JWS payload carries `revocationDate` / `revocationReason`.
+
+    The transaction was refunded or family-sharing-revoked, so it must buy
+    nothing. Its own class (rather than `JWSInvalid`) because the JWS is
+    perfectly well-formed and genuinely Apple-signed — this is a money signal
+    ("this purchase was reversed"), not a forgery signal.
+    """
+
+
 class JWSWrongBundle(JWSError):
     """JWS `bundleId` does not match the configured `APP_BUNDLE_ID`.
 

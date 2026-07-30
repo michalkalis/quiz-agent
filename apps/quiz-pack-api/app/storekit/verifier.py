@@ -24,6 +24,10 @@ Verification steps:
 8. Reject a payload whose `expiresDate` has passed (`JWSExpired`) — the
    lapsed-subscriber enforcement line. Non-subscription products carry no
    `expiresDate` and skip the gate.
+
+9. Reject a payload carrying `revocationDate` / `revocationReason`
+   (`JWSRevoked`) — a refunded or family-revoked transaction must buy nothing.
+   **Partial by design** — see the comment on the gate in `verify()`.
 """
 
 from __future__ import annotations
@@ -41,7 +45,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from pydantic import ValidationError
 
-from .exceptions import JWSExpired, JWSInvalid, JWSWrongBundle
+from .exceptions import JWSExpired, JWSInvalid, JWSRevoked, JWSWrongBundle
 from .models import SignedTransaction
 
 _MAX_CHAIN_LEN = 4
@@ -152,6 +156,30 @@ class AppleJWSVerifier:
         if tx.expires_date is not None and tx.expires_date < now:
             raise JWSExpired(
                 f"transaction {tx.transaction_id} expired at {tx.expires_date.isoformat()}"
+            )
+        # Revocation gate (adversarial audit 2026-07-30). A refunded or
+        # family-sharing-revoked transaction must never verify: otherwise a
+        # customer who charges back keeps redeeming packs we pay to generate.
+        # Until now `revocationReason` was parsed by models.py and read
+        # nowhere, and `revocationDate` was not modelled at all — a revoked
+        # payload verified exactly like a live one.
+        #
+        # HONEST LIMIT — this fix is deliberately PARTIAL. It only catches JWS
+        # bytes that actually *carry* the revocation fields, i.e. a transaction
+        # re-fetched from Apple after the refund. A client replaying the
+        # pre-refund JWS bytes it captured at purchase time is NOT caught: those
+        # bytes are genuinely Apple-signed, carry no revocation fields, and stay
+        # valid forever. Closing that requires a server-side revocation record —
+        # an App Store Server Notifications v2 consumer (REFUND / REVOKE /
+        # REFUND_DECLINED) writing a revoked-transaction table that this
+        # verifier consults. That is founder-gated work: it needs App Store
+        # Connect webhook configuration plus a migration, so it is out of scope
+        # here.
+        if tx.revocation_date is not None or tx.revocation_reason is not None:
+            raise JWSRevoked(
+                f"transaction {tx.transaction_id} is revoked "
+                f"(revocationDate={tx.revocation_date}, "
+                f"revocationReason={tx.revocation_reason})"
             )
         return tx
 

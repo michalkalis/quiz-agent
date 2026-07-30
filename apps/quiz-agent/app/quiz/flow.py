@@ -34,6 +34,14 @@ logger = logging.getLogger(__name__)
 # so without this set tasks could be garbage-collected mid-execution.
 _prefetch_tasks: "set[asyncio.Task]" = set()
 
+# The parser emits a difficulty *direction* ("harder"/"easier"), while the corpus
+# stores discrete levels — so a direction is one clamped step along
+# easy → medium → hard. "random" has no direction and is left alone.
+_DIFFICULTY_STEPS = {
+    "harder": {"easy": "medium", "medium": "hard", "hard": "hard"},
+    "easier": {"hard": "medium", "medium": "easy", "easy": "easy"},
+}
+
 
 def prefetch_question_audio(
     tts_service: Optional[TTSService], question_text: str, language: str
@@ -219,27 +227,25 @@ class QuizFlowService:
                 rating_value = extracted_data.get("rating")
                 result.feedback_received.append(f"rating: {rating_value}")
 
-            elif intent_type == "difficulty_change":
-                difficulty = extracted_data.get("difficulty")
-                session.current_difficulty = difficulty
-                result.feedback_received.append(f"difficulty: {difficulty}")
-
             elif intent_type == "preference_change":
-                topic = extracted_data.get("topic", "")
-                if topic.startswith("-"):
-                    topic = topic[1:]
+                for topic in extracted_data.get("avoid_topics") or []:
+                    if not topic:
+                        continue
                     if topic not in session.disliked_topics:
                         session.disliked_topics.append(topic)
                     result.feedback_received.append(f"avoiding: {topic}")
-                else:
+                for topic in extracted_data.get("prefer_topics") or []:
+                    if not topic:
+                        continue
                     if topic not in session.preferred_topics:
                         session.preferred_topics.append(topic)
                     result.feedback_received.append(f"preference: {topic}")
-
-            elif intent_type == "category_change":
-                category = extracted_data.get("category")
-                session.category = category
-                result.feedback_received.append(f"category: {category}")
+                stepped = _DIFFICULTY_STEPS.get(
+                    extracted_data.get("difficulty"), {}
+                ).get(session.current_difficulty)
+                if stepped:
+                    session.current_difficulty = stepped
+                    result.feedback_received.append(f"difficulty: {stepped}")
 
         # Ghost-question guard (#66): a non-answer intent (rating, difficulty,
         # preference, category, or an unparseable utterance) produces no evaluation.

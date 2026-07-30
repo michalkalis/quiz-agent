@@ -97,7 +97,9 @@ async def transcribe_and_submit(
                 detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
             )
 
-        current_question = question_retriever.get(session.current_question_id)
+        current_question = await asyncio.to_thread(
+            question_retriever.get, session.current_question_id
+        )
         if not current_question:
             raise HTTPException(status_code=500, detail="Current question not found")
 

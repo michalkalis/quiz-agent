@@ -94,7 +94,13 @@ def test_fallback_retrieval_respects_image_opt_out():
         session_id="sess_test", current_difficulty="medium", language="en"
     )
 
-    retriever._fallback_retrieval(session, "medium", n_candidates=5, excluded_ids=[])
+    retriever._fallback_retrieval(
+        session,
+        "medium",
+        n_candidates=5,
+        excluded_ids=[],
+        filters=retriever._build_metadata_filters("medium", session),
+    )
 
     assert store.search.call_count > 0
     for call in store.search.call_args_list:
@@ -161,8 +167,50 @@ def test_pack_session_fallback_never_hits_global_library():
     )
 
     result = retriever._fallback_retrieval(
-        session, "medium", n_candidates=5, excluded_ids=[]
+        session,
+        "medium",
+        n_candidates=5,
+        excluded_ids=[],
+        filters=retriever._build_metadata_filters("medium", session),
     )
 
     assert result == []
     store.search.assert_not_called()
+
+
+def test_fallback_keeps_pack_guard_category_and_language_constraints():
+    """Adversarial audit 2026-07-30: the fallbacks rebuilt their filters from
+    scratch and dropped ``category`` and the ``pack_id IS NULL`` guard.
+
+    With ~31 approved questions, primary-empty is routine, so a session that
+    picked "Kids" was routinely served an adults question and the multi-select
+    category picker silently degraded to a no-op. Fallbacks must be the primary
+    filter with only the intended key relaxed, so every constraint survives by
+    construction — asserted on EVERY fallback query, not just the first.
+    """
+    retriever = _retriever()
+    store = retriever._store
+    store.search.return_value = []
+    session = QuizSession(
+        session_id="sess_kids",
+        current_difficulty="medium",
+        language="sk",
+        preferred_categories=["kids"],
+    )
+    primary = retriever._build_metadata_filters("medium", session)
+
+    retriever._fallback_retrieval(
+        session, "medium", n_candidates=5, excluded_ids=[], filters=primary
+    )
+
+    assert store.search.call_count > 0
+    difficulties = []
+    for call in store.search.call_args_list:
+        filters = call.kwargs["filters"]
+        assert "pack_id" in filters and filters["pack_id"] is None
+        assert filters["category"] == {"$in": ["kids"]}
+        assert filters["language_dependent"] is False
+        assert filters["review_status"] == "approved"
+        difficulties.append(filters.get("difficulty"))
+    # Difficulty is the only thing relaxed: the other levels, then no level at all.
+    assert difficulties == ["medium", "easy", "hard", None]

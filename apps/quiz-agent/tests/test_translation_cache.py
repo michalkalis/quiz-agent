@@ -275,7 +275,9 @@ def test_version_bump_forces_retranslate(service, store_url, tmp_path, monkeypat
     )
     asyncio.run(service.translate_question(QUESTION, "sk"))
 
-    monkeypatch.setattr(translator_module, "TRANSLATION_PROMPT_VERSION", "2")
+    current = translator_module.TRANSLATION_PROMPT_VERSION
+    bumped = current + "-bumped"
+    monkeypatch.setattr(translator_module, "TRANSLATION_PROMPT_VERSION", bumped)
     fresh = make_service(store_url)
     fresh.client.chat.completions.create = AsyncMock(
         return_value=mock_response(QUESTION_SK)
@@ -286,7 +288,8 @@ def test_version_bump_forces_retranslate(service, store_url, tmp_path, monkeypat
     assert fresh.client.chat.completions.create.call_count == 1
 
     versions = sorted(row[3] for row in disk_rows(tmp_path))
-    assert versions == ["1", "2"]  # old row orphaned on disk, new row written
+    # old row orphaned on disk, new row written
+    assert versions == sorted([current, bumped])
 
 
 def test_question_fallbacks_not_persisted_to_disk(service, tmp_path):

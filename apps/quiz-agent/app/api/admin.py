@@ -382,6 +382,8 @@ async def list_questions(
                 "difficulty": q.difficulty,
                 "type": q.type,
                 "review_status": q.review_status,
+                "possible_answers": q.possible_answers,
+                "explanation": q.explanation,
             }
         )
 

@@ -60,6 +60,9 @@ _REMAP_OPENROUTER = {
     "gpt-4.1": "openai/gpt-4.1",
     "gpt-4.1-mini": "openai/gpt-4.1-mini",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+    # Serve-time question translation (quiz-agent TranslationService, 2026-07-30
+    # review); slug verified live against the OpenRouter catalog on 2026-07-30.
+    "claude-opus-5": "anthropic/claude-opus-5",
     # Creative-generation default for issue #72 (Lever A), dormant until the
     # GENERATION_MODEL flag is flipped at Phase 6. Slug follows the established
     # Anthropic convention (dashes in the direct id -> dot in the OpenRouter

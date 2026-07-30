@@ -339,6 +339,71 @@ struct AuthServiceTests {
         #expect(notified.withLock { $0 }, "UI must be notified so it can reload account state (I7)")
     }
 
+    // MARK: 5d. An involuntary drop must NOT move the purchase identity
+
+    /// WHY (adversarial audit 2026-07-30): the re-bootstrap above fired the
+    /// account-link callback, which AppState wires to `Purchases.logIn(anonId)`.
+    /// That moved RevenueCat's appUserID off the account id that owns the
+    /// subscription onto an id with no purchase history, so a paying subscriber saw
+    /// the free plan and was pushed at the paywall. The trigger is not exotic: the
+    /// backend caps a refresh family at 60 days, so every signed-in user reaches
+    /// this path. The mint must still happen — only the purchase identity stays put.
+    @Test("signed-in refresh rejection does NOT re-alias the purchase identity to the anon id")
+    func signedInRejectionKeepsPurchaseIdentity() async throws {
+        let seeded = AuthTokens(
+            accessToken: "acc", refreshToken: "r-revoked", anonId: "users-1",
+            accountName: "Jane", accountEmail: nil, appleUserId: "apple-1"
+        )
+        let store = MockTokenStore(seed: seeded)
+        let service = makeService(store: store)
+        _ = await service.accessToken()  // warm cache, no mint (token is stored)
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        AuthStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                return (.make(status: 401), Data())  // family past its 60-day cap
+            }
+            return (.make(status: 200), Data(AuthStubs.tokenJSON(access: "fresh-anon", refresh: "r-fresh", anon: "anon-2").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        let token = await service.refreshedAccessToken(replacing: "acc")
+        #expect(token == "fresh-anon", "the app must keep working on a fresh anon identity")
+        #expect(linked.withLock { $0 }.isEmpty,
+                "an active subscription must not be hidden by aliasing RevenueCat to the anon id")
+    }
+
+    /// Contrast: a rejected refresh for an ANONYMOUS device is a genuinely new
+    /// identity, so the link must still fire — otherwise a purchase made after it
+    /// lands under an id the backend cannot map to the account (#96 P1).
+    @Test("anonymous refresh rejection still links the freshly minted identity")
+    func anonRejectionStillLinksNewIdentity() async throws {
+        let seeded = AuthTokens(accessToken: "acc", refreshToken: "r-revoked", anonId: "anon-1")
+        let store = MockTokenStore(seed: seeded)
+        let service = makeService(store: store)
+        _ = await service.accessToken()
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        AuthStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/refresh" {
+                return (.make(status: 401), Data())
+            }
+            return (.make(status: 200), Data(AuthStubs.tokenJSON(access: "fresh", refresh: "r-fresh", anon: "anon-2").utf8))
+        }
+        defer { AuthStubURLProtocol.handler = nil }
+
+        _ = await service.refreshedAccessToken(replacing: "acc")
+        #expect(linked.withLock { $0 } == ["anon-2"])
+    }
+
     // MARK: 6. Single-flight refresh — concurrent 401s share one refresh
 
     @Test("concurrent refreshes for the same stale token fire only one refresh")

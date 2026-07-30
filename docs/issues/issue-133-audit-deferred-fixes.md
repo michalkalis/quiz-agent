@@ -1,6 +1,11 @@
 # Issue #133 — Audit 2026-07-30: deferred fixes + test debt
 
-**Triage:** ready-for-prep
+**Triage:** ready-for-agent (founder 2026-07-30: direct Fable run on mba, no prepare-issue pipeline)
+
+**Founder decisions (2026-07-30, in-chat):**
+- 1b precedence: **option-text match wins**; positional/letter directives apply only when no unique value match exists.
+- 1e migration: run may implement + commit the Alembic migration and fix, but must **NOT deploy quiz-pack-api** — deploy waits for founder OK (migrate-before-deploy gate).
+- iOS snapshot baselines: **do not re-record** — founder sign-off required (ios.md rule); park that item.
 **Source:** [Adversarial multi-agent audit 2026-07-30](../research/adversarial-audit-2026-07-30.md) — 21 confirmed findings; 13 fixed in-session, these 5 + test debt remain. All 5 were adversarially verified (confirmed real); they are deferred because they are product-behavior-sensitive or need a cross-service API change, not because they are doubtful.
 
 ## 1. Deferred confirmed defects (iOS + one cross-service design)

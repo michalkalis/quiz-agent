@@ -1537,6 +1537,21 @@ final class QuizViewModel: ObservableObject {
     }
 
     func handleQuizResponse(_ response: QuizResponse) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
+        // Only the state that submitted may commit the answer. Everything below is
+        // durable, user-visible state — the session score, the saved stats, the
+        // per-session tallies, the recap row — while `.showingResult` is a legal
+        // successor of .processing/.skipping ONLY. A response landing after its
+        // submission was superseded (a spoken "stop" during an MCQ evaluation
+        // returns to .askingQuestion but cannot cancel the inline request) used to
+        // apply every side effect and then have its transition rejected: inflated
+        // score, phantom recap row, and the driver stranded on a question the
+        // backend had already moved past, with every later answer misgraded.
+        guard quizState == .processing || quizState == .skipping else {
+            let state = quizState.label
+            Logger.quiz.error("❌ Dropping quiz response — state \(state, privacy: .public) did not submit it")
+            return
+        }
+
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
             Logger.quiz.warning("⚠️ handleQuizResponse already in progress, ignoring duplicate call")

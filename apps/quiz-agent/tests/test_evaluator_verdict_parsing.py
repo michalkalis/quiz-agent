@@ -13,7 +13,7 @@ coverage for; a regression re-scoring any of them flips a wrong answer to right.
 import os
 
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test")
 
@@ -122,4 +122,59 @@ class TestVerdictParsing:
         result, score = await evaluator.evaluate("something", _make_question())
 
         assert result == "incorrect"
+        assert score == 0.0
+
+
+class TestPartialCreditWeights:
+    """The verdict → points table in ``AnswerEvaluator.evaluate`` (``score_map``).
+
+    These are the only partial-credit weights in the product: half a point for
+    "right idea, missing a qualifier" and a quarter for "related but mostly
+    wrong". They are what a player's session score, and therefore the
+    end-of-quiz result screen, is built from — silently changing 0.5 to 1.0
+    would turn every near-miss into a win.
+
+    Pinned one layer BELOW the tests above: those drive the reply-text → verdict
+    parser, this stubs ``_llm_evaluate`` and drives verdict → score directly, so
+    the weights stay pinned even if the parser is rewritten.
+    """
+
+    @pytest.mark.parametrize(
+        "verdict,expected_points",
+        [
+            ("correct", 1.0),
+            ("partially_correct", 0.5),
+            ("partially_incorrect", 0.25),
+            ("incorrect", 0.0),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_verdict_maps_to_its_documented_weight(
+        self, verdict, expected_points
+    ):
+        evaluator = _evaluator_replying("unused — the judge itself is stubbed")
+        evaluator._llm_evaluate = AsyncMock(return_value=verdict)
+
+        result, score = await evaluator.evaluate(
+            "some free-text answer", _make_question()
+        )
+
+        assert result == verdict
+        assert score == expected_points
+
+    @pytest.mark.asyncio
+    async def test_verdict_outside_the_table_pays_nothing(self):
+        """``score_map.get(result, 0.0)`` — the default branch. A verdict the
+        table does not know (a new label, a prompt change, a judge that answers
+        in another language) must fall back to zero points rather than to the
+        first/most generous entry. Guessing a score for an unrecognised verdict
+        is how free credit leaks in."""
+        evaluator = _evaluator_replying("unused")
+        evaluator._llm_evaluate = AsyncMock(return_value="mostly_right")
+
+        result, score = await evaluator.evaluate(
+            "some free-text answer", _make_question()
+        )
+
+        assert result == "mostly_right"
         assert score == 0.0

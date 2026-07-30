@@ -5,13 +5,14 @@ A ``pack_id`` both serves private paid questions and bypasses the free quota, so
 pack. This runs the real SQL (``question_packs`` matched by ``id`` + ``user_id``)
 against the dev-stack Postgres so a wrong column/table — which the unit tests'
 fake sessionmaker cannot catch — fails loudly. Skips when ``TEST_DATABASE_URL``
-is unset. The ``questions`` schema is alembic-managed by quiz-pack-api and
-persistent, so every row created here is cleaned up in ``finally``.
+is unset, unless ``REQUIRE_DB_TESTS=1`` — this is an IDOR gate, so a run that
+must not silently lose it sets that env var (see ``require_db_url``). The
+``questions`` schema is alembic-managed by quiz-pack-api and persistent, so
+every row created here is cleaned up in ``finally``.
 """
 
 from __future__ import annotations
 
-import os
 import uuid
 
 import pytest
@@ -22,13 +23,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.engine import build_engine
 from app.api.routes.sessions import _require_pack_ownership
+from tests.conftest import require_db_url
 
 
 @pytest_asyncio.fixture
 async def factory():
-    url = os.environ.get("TEST_DATABASE_URL")
-    if not url:
-        pytest.skip("TEST_DATABASE_URL not set — skipping DB-backed test")
+    url = require_db_url("pack-ownership IDOR gate")
     engine = build_engine(url)
     maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     try:

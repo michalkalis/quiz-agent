@@ -12,12 +12,12 @@ methods must match the old `ChromaDBQuestionStore` write semantics exactly:
 
 Runs against the dev-stack Postgres (`TEST_DATABASE_URL`, colima #73); the
 `questions` table is alembic-managed by quiz-pack-api and persistent, so all
-assertions are scoped to ids created here and cleaned up in `finally`.
+assertions are scoped to ids created here and cleaned up in `finally`. Skips
+without a test DB unless `REQUIRE_DB_TESTS=1` — see `require_db_url`.
 """
 
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime, timezone
 
@@ -30,10 +30,7 @@ from app.db.engine import build_engine
 from quiz_shared.database.pgvector_client import EMBEDDING_DIM, PgvectorQuestionStore
 from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 from quiz_shared.models.question import Question
-
-
-def _test_db_url() -> str | None:
-    return os.environ.get("TEST_DATABASE_URL")
+from tests.conftest import require_db_url
 
 
 def _make_question(qid: uuid.UUID, text_: str, **overrides) -> Question:
@@ -60,9 +57,7 @@ def _make_question(qid: uuid.UUID, text_: str, **overrides) -> Question:
 @pytest_asyncio.fixture
 async def pg_store():
     """(store, session_factory) on the test Postgres; engine disposed after."""
-    url = _test_db_url()
-    if not url:
-        pytest.skip("TEST_DATABASE_URL not set — skipping DB-backed test")
+    url = require_db_url("PgvectorQuestionStore write-surface tests")
     engine = build_engine(url)
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     try:
@@ -240,9 +235,7 @@ def test_sync_facade_write_roundtrip() -> None:
     """SyncPgvectorStore is the surface quiz-agent's sync consumers (admin,
     feedback) will actually call after Session B — the new writes must work
     through the background-loop bridge, not just on the async store."""
-    url = _test_db_url()
-    if not url:
-        pytest.skip("TEST_DATABASE_URL not set — skipping DB-backed test")
+    url = require_db_url("SyncPgvectorStore write round-trip")
 
     # The sync bridge owns its engine (created on its background loop) —
     # never share a test-loop-bound engine across loops.

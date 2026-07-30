@@ -2,13 +2,19 @@
 
 import sys
 import os
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 # Add shared package to path
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "../../../..", "packages/shared")
 )
 
+from app.quiz.flow import QuizFlowService
 from app.session.manager import SessionManager
+from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.question import Question
 
 
 class StubSQLClient:
@@ -120,36 +126,122 @@ class TestSessionManagerDeepCopy:
 
 
 class TestEvaluationQuestionId:
-    """Verify evaluation response includes question_id for client-side validation."""
+    """The evaluation handed back to the client must name the question it GRADED.
 
-    def test_evaluation_dict_contains_question_id(self):
-        """The evaluation result dict should include the evaluated question's ID."""
-        evaluated_question_id = "q_abc123"
+    iOS validates the verdict against the question on screen before rendering it,
+    so a wrongly-tagged verdict is shown against the wrong question. The trap is
+    ordering: by the time ``process_answer`` returns, the session has already
+    advanced to the next question, so ``question_id`` must be the id captured
+    before the advance — using the live ``session.current_question_id`` at
+    response-build time would tag every verdict with the *next*, unanswered
+    question.
 
-        evaluation_result = {
-            "user_answer": "Paris",
-            "result": "correct",
-            "points": 1.0,
-            "correct_answer": "Paris",
-            "question_id": evaluated_question_id,
-        }
+    Driven through the real ``SessionManager`` (this module's subject) and the
+    real ``QuizFlowService``: the stored session genuinely moving on is what
+    makes these assertions non-vacuous. Scope note — the replay / re-grade side
+    of this same field is covered by ``test_idempotent_submit.py``; what is
+    pinned here is the FIRST submit of a question (no ``submitted_question_id``,
+    i.e. the legacy-client path) and the skip intent, which build the evaluation
+    dict at two separate sites in ``flow.py``.
+    """
 
-        assert "question_id" in evaluation_result
-        assert evaluation_result["question_id"] == "q_abc123"
+    GRADED = "q_graded"
+    NEXT = "q_next"
 
-    def test_skip_evaluation_contains_question_id(self):
-        """Skip evaluation should also include question_id."""
-        evaluated_question_id = "q_def456"
+    def _question(self, qid: str) -> Question:
+        return Question(
+            id=qid,
+            question="What is the capital of France?",
+            type="text",
+            correct_answer="Paris",
+            topic="Geography",
+            category="general",
+            difficulty="medium",
+        )
 
-        evaluation_result = {
-            "user_answer": "skipped",
-            "result": "skipped",
-            "points": 0.0,
-            "correct_answer": "Expected Answer",
-            "question_id": evaluated_question_id,
-        }
+    def _manager_at_graded_question(self) -> tuple[SessionManager, str]:
+        manager = SessionManager()
+        sid = manager.create_session(max_questions=10).session_id
+        session = manager.get_session(sid)
+        session.phase = SessionPhase.ASKING
+        session.current_question_id = self.GRADED
+        session.asked_question_ids = [self.GRADED]
+        manager.update_session(session)
+        return manager, sid
 
-        assert evaluation_result["question_id"] == "q_def456"
+    def _flow(self, manager: SessionManager, intents) -> QuizFlowService:
+        input_parser = MagicMock()
+        input_parser.parse = AsyncMock(return_value=intents)
+
+        retriever = MagicMock()
+        retriever.get = MagicMock(return_value=self._question(self.GRADED))
+        retriever.get_next_question = MagicMock(return_value=self._question(self.NEXT))
+
+        evaluator = MagicMock()
+        evaluator.evaluate = AsyncMock(return_value=("correct", 1.0))
+
+        return QuizFlowService(
+            session_manager=manager,
+            input_parser=input_parser,
+            question_retriever=retriever,
+            answer_evaluator=evaluator,
+            tts_service=None,
+            usage_tracker=None,
+            translation_service=None,
+        )
+
+    @pytest.mark.asyncio
+    async def test_answer_evaluation_names_the_graded_question_not_the_next_one(self):
+        manager, sid = self._manager_at_graded_question()
+        flow = self._flow(
+            manager, [{"intent_type": "answer", "extracted_data": {"answer": "Paris"}}]
+        )
+
+        result = await flow.process_answer(
+            session=manager.get_session(sid), answer_text="Paris"
+        )
+
+        assert result.evaluation["question_id"] == self.GRADED
+        assert result.evaluation["result"] == "correct"
+        # Non-vacuous: the session really did move on, and the client is being
+        # handed the next question in the same response — so "graded" and
+        # "current" are genuinely two different ids at this point.
+        assert manager.get_session(sid).current_question_id == self.NEXT
+        assert result.next_question_dict["id"] == self.NEXT
+
+    @pytest.mark.asyncio
+    async def test_skip_evaluation_names_the_skipped_question(self):
+        """A skip is graded state too, and builds its own evaluation dict — it
+        must carry the id of the question that was skipped, not the one served
+        in its place."""
+        manager, sid = self._manager_at_graded_question()
+        flow = self._flow(manager, [])  # literal "skip" never reaches the parser
+
+        result = await flow.process_answer(
+            session=manager.get_session(sid), answer_text="skip"
+        )
+
+        assert result.evaluation["question_id"] == self.GRADED
+        assert result.evaluation["result"] == "skipped"
+        assert result.evaluation["points"] == 0.0
+        assert manager.get_session(sid).current_question_id == self.NEXT
+
+    @pytest.mark.asyncio
+    async def test_graded_id_is_remembered_on_the_session_for_a_retry(self):
+        """The same id is snapshotted onto ``session.last_evaluation`` before the
+        advance — that is what lets a re-sent submit be recognised as a retry of
+        the graded question instead of being scored against the next one."""
+        manager, sid = self._manager_at_graded_question()
+        flow = self._flow(
+            manager, [{"intent_type": "answer", "extracted_data": {"answer": "Paris"}}]
+        )
+
+        await flow.process_answer(session=manager.get_session(sid), answer_text="Paris")
+
+        stored = manager.get_session(sid)
+        assert stored.last_evaluation is not None
+        assert stored.last_evaluation.question_id == self.GRADED
+        assert stored.current_question_id == self.NEXT
 
 
 class TestSessionPersistence:

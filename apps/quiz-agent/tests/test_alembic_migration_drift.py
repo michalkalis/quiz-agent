@@ -39,6 +39,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.db.base import Base
 from app.db.engine import normalize_async_url
 import app.db.models  # noqa: F401 -- populate Base.metadata
+from tests.conftest import require_db_url
 
 pytestmark = pytest.mark.asyncio
 
@@ -53,9 +54,7 @@ VERSION_TABLE = "alembic_version_quiz_agent"
 def _server_url_and_scratch_name() -> tuple[str, str, str]:
     """Derive an admin (maintenance-db) URL and a unique scratch DB name from
     TEST_DATABASE_URL, per the worktree's private-scratch-DB concurrency rule."""
-    raw = os.environ.get("TEST_DATABASE_URL")
-    if not raw:
-        pytest.skip("TEST_DATABASE_URL not set — skipping migration drift guard")
+    raw = require_db_url("alembic migration-drift guard")
     parts = urlsplit(normalize_async_url(raw))
     dbname = f"quiz_agent_drift_{uuid.uuid4().hex[:10]}"
     admin_url = urlunsplit(parts._replace(path="/postgres"))

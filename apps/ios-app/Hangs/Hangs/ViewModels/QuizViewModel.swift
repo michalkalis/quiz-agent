@@ -1359,17 +1359,29 @@ final class QuizViewModel: ObservableObject {
 
     /// Skip the current question
     func skipQuestion() async {
+        // A skip is legal only while the question is open (.askingQuestion) or is
+        // being voice-answered (.recording) — mirroring submitMCQAnswer. The MCQ
+        // Skip button stays enabled through the 1-3 s evaluation, and
+        // .processing → .skipping is a legal transition, so without this guard an
+        // impatient tap fired a SECOND /input for the same session: an extra
+        // freemium quota unit, a duplicate recap row, and a question the backend
+        // advanced past without ever showing it.
+        guard quizState == .askingQuestion || quizState == .recording else { return }
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
         quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
 
+        // Claim .skipping before the first suspension point: a rejected transition
+        // must abort the POST rather than skip from an illegal state, and a second
+        // Skip tap during stopAnyPlayingAudio() then finds the state already moved
+        // on (the state is the single-flight token, as in submitMCQAnswer).
+        guard transition(to: .skipping) else { return }
+        errorMessage = nil
+
         // Stop any playing question audio immediately
         await audioDeviceState.stopAnyPlayingAudio()
-
-        transition(to: .skipping)
-        errorMessage = nil
 
         do {
             Logger.quiz.info("⏭️ Skipping current question")

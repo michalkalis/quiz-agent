@@ -17,6 +17,13 @@ struct HangsQuestionPrompt: View {
     var textFont: Font = .hangsDisplaySM
     var textColor: Color = Theme.Hangs.Colors.ink
     var minimumScaleFactor: CGFloat = 0.55
+    /// A11y identifier for the prompt's `Text`, set here rather than with
+    /// `.accessibilityIdentifier` on the whole component: this `HStack` owns no
+    /// accessibility element of its own, so an identifier applied to it never
+    /// reaches the a11y tree — inside a button the text is folded into the
+    /// button's element and only the button's identifier survives, which is how
+    /// the MCQ stem's `question.text` went missing for XCUITest.
+    var textIdentifier: String = ""
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -32,6 +39,7 @@ struct HangsQuestionPrompt: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
+                .accessibilityIdentifier(textIdentifier)
         }
     }
 }

@@ -39,6 +39,7 @@ from sqlalchemy import (
     delete,
     func,
     select,
+    text as sql_text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -66,6 +67,7 @@ questions_table = Table(
     Column("type", String(32), nullable=False),
     Column("possible_answers", JSONB, nullable=True),
     Column("correct_answer", JSONB, nullable=False),
+    Column("headline_answer", Text, nullable=True),
     Column("alternative_answers", JSONB, nullable=False),
     Column("topic", String(128), nullable=False),
     Column("category", String(64), nullable=False),
@@ -90,6 +92,29 @@ questions_table = Table(
     Column("media_url", Text, nullable=True),
     Column("image_subtype", String(32), nullable=True),
     Column("provenance", JSONB, nullable=True),
+)
+
+
+# ── TEMPORARY pending-migration compat shim (#133 V7) ──────────────────
+# `questions.headline_answer` arrives with quiz-pack-api migration
+# b4d9e17c3a52, which is founder-gated (migrate-before-deploy). quiz-agent may
+# deploy first, and a build whose mirror names the column would fail EVERY read
+# against a not-yet-migrated database. So the store probes information_schema
+# once and, when the column is missing, drops it from its SELECT/INSERT lists
+# and warns which migration is pending.
+#
+# The probe result is cached per store instance: a process that started before
+# the migration keeps serving without the gist until it restarts, which a
+# deploy does. Remove this block, `_has_pending_column`/`_visible_columns`/
+# `_writable_row`, and their call sites once b4d9e17c3a52 is applied in staging
+# and prod.
+PENDING_MIGRATION = "b4d9e17c3a52"
+PENDING_COLUMN = "headline_answer"
+
+_COLUMN_PROBE = sql_text(
+    "SELECT 1 FROM information_schema.columns "
+    "WHERE table_schema = current_schema() "
+    "AND table_name = 'questions' AND column_name = :col"
 )
 
 
@@ -140,6 +165,38 @@ class PgvectorQuestionStore:
             )
         self._session_factory = session_factory
         self._embedder = embedder
+        # None = not probed yet. See the pending-migration shim above.
+        self._headline_answer_present: Optional[bool] = None
+
+    # ── Pending-migration shim (remove with PENDING_MIGRATION) ─────────
+
+    async def _has_pending_column(self, session: AsyncSession) -> bool:
+        """One-shot information_schema probe for `questions.headline_answer`."""
+        if self._headline_answer_present is None:
+            result = await session.execute(_COLUMN_PROBE, {"col": PENDING_COLUMN})
+            self._headline_answer_present = result.first() is not None
+            if not self._headline_answer_present:
+                logger.warning(
+                    "questions.%s is missing: quiz-pack-api migration %s has not "
+                    "been applied to this database. Serving without the "
+                    "answer-gist column; apply the migration to restore it.",
+                    PENDING_COLUMN,
+                    PENDING_MIGRATION,
+                )
+        return self._headline_answer_present
+
+    async def _visible_columns(self, session: AsyncSession) -> List[Any]:
+        """Mirror columns that actually exist in the target database."""
+        if await self._has_pending_column(session):
+            return list(questions_table.c)
+        return [c for c in questions_table.c if c.name != PENDING_COLUMN]
+
+    async def _writable_row(
+        self, session: AsyncSession, row: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        if await self._has_pending_column(session):
+            return row
+        return {k: v for k, v in row.items() if k != PENDING_COLUMN}
 
     # ── Writes ─────────────────────────────────────────────────────────
 
@@ -151,7 +208,7 @@ class PgvectorQuestionStore:
             async with self._session_factory() as session:
                 stmt = (
                     pg_insert(questions_table)
-                    .values(row)
+                    .values(await self._writable_row(session, row))
                     .on_conflict_do_nothing(index_elements=["id"])
                 )
                 await session.execute(stmt)
@@ -172,6 +229,7 @@ class PgvectorQuestionStore:
         row = _question_to_row_dict(question, embedding)
         try:
             async with self._session_factory() as session:
+                row = await self._writable_row(session, row)
                 stmt = pg_insert(questions_table).values(row)
                 stmt = stmt.on_conflict_do_update(
                     index_elements=["id"],
@@ -209,7 +267,9 @@ class PgvectorQuestionStore:
             return None
         async with self._session_factory() as session:
             result = await session.execute(
-                select(questions_table).where(questions_table.c.id == qid)
+                select(*await self._visible_columns(session)).where(
+                    questions_table.c.id == qid
+                )
             )
             row = result.mappings().first()
             return _row_to_question(row) if row else None
@@ -224,7 +284,9 @@ class PgvectorQuestionStore:
 
     async def get_all(self, limit: int = 1000) -> List[Question]:
         async with self._session_factory() as session:
-            result = await session.execute(select(questions_table).limit(limit))
+            result = await session.execute(
+                select(*await self._visible_columns(session)).limit(limit)
+            )
             return [_row_to_question(row) for row in result.mappings().all()]
 
     async def search(
@@ -240,24 +302,27 @@ class PgvectorQuestionStore:
         None, mirroring the ChromaDB store's behaviour.
         """
         fetch_count = n_results + (len(excluded_ids) if excluded_ids else 0)
-        stmt = select(questions_table)
-        for clause in _build_where(filters or {}):
-            stmt = stmt.where(clause)
+        # Embed before opening the session so the (possibly remote) embedding
+        # call never holds a pooled connection.
+        query_embedding = self._embedder(query_text) if query_text else None
 
-        if excluded_ids:
-            excluded_uuids = [_coerce_uuid(x) for x in excluded_ids]
-            excluded_uuids = [u for u in excluded_uuids if u is not None]
-            if excluded_uuids:
-                stmt = stmt.where(~questions_table.c.id.in_(excluded_uuids))
-
-        if query_text:
-            query_embedding = self._embedder(query_text)
-            stmt = stmt.where(questions_table.c.embedding.is_not(None)).order_by(
-                questions_table.c.embedding.cosine_distance(query_embedding)
-            )
-
-        stmt = stmt.limit(fetch_count)
         async with self._session_factory() as session:
+            stmt = select(*await self._visible_columns(session))
+            for clause in _build_where(filters or {}):
+                stmt = stmt.where(clause)
+
+            if excluded_ids:
+                excluded_uuids = [_coerce_uuid(x) for x in excluded_ids]
+                excluded_uuids = [u for u in excluded_uuids if u is not None]
+                if excluded_uuids:
+                    stmt = stmt.where(~questions_table.c.id.in_(excluded_uuids))
+
+            if query_embedding is not None:
+                stmt = stmt.where(questions_table.c.embedding.is_not(None)).order_by(
+                    questions_table.c.embedding.cosine_distance(query_embedding)
+                )
+
+            stmt = stmt.limit(fetch_count)
             result = await session.execute(stmt)
             return [_row_to_question(row) for row in result.mappings().all()][
                 :n_results
@@ -278,13 +343,13 @@ class PgvectorQuestionStore:
         """
         query_embedding = self._embedder(question_text)
         distance = questions_table.c.embedding.cosine_distance(query_embedding)
-        stmt = (
-            select(questions_table, distance.label("distance"))
-            .where(questions_table.c.embedding.is_not(None))
-            .order_by(distance)
-            .limit(10)
-        )
         async with self._session_factory() as session:
+            stmt = (
+                select(*await self._visible_columns(session), distance.label("distance"))
+                .where(questions_table.c.embedding.is_not(None))
+                .order_by(distance)
+                .limit(10)
+            )
             result = await session.execute(stmt)
             rows = result.mappings().all()
 
@@ -327,6 +392,7 @@ def _question_to_row_dict(
         "type": q.type,
         "possible_answers": q.possible_answers,
         "correct_answer": q.correct_answer,
+        "headline_answer": q.headline_answer,
         "alternative_answers": list(q.alternative_answers),
         "topic": q.topic,
         "category": q.category,
@@ -377,12 +443,17 @@ def _row_to_question(row: Any) -> Question:
         GenerationProvenance.model_validate(provenance) if provenance else None
     )
 
+    # `.get`, not `[...]`: the pending-migration shim narrows the SELECT when
+    # the column does not exist yet, and legacy dict rows never carried it.
+    headline_answer = row.get(PENDING_COLUMN) if hasattr(row, "get") else None
+
     return Question(
         id=str(row["id"]),
         question=row["question"],
         type=row["type"],
         possible_answers=row["possible_answers"],
         correct_answer=row["correct_answer"],
+        headline_answer=headline_answer,
         alternative_answers=list(row["alternative_answers"] or []),
         topic=row["topic"],
         category=row["category"],

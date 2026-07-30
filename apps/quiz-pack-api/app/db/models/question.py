@@ -47,6 +47,11 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
     type: Mapped[str] = mapped_column(String(32), nullable=False, default="text")
     possible_answers: Mapped[Optional[Dict[str, str]]] = mapped_column(JSONB, nullable=True)
     correct_answer: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    # Short gettable gist for open-shape questions (#46 D7) — the answer the
+    # evaluator actually scores against. NULL for closed questions, and for rows
+    # written before migration b4d9e17c3a52, whose gist `Question.from_dict`
+    # already folded into `correct_answer` (#133 V7).
+    headline_answer: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     alternative_answers: Mapped[List[str]] = mapped_column(
         JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
     )
@@ -156,6 +161,7 @@ def question_to_row(q: Question) -> QuestionRow:
         type=q.type,
         possible_answers=q.possible_answers,
         correct_answer=q.correct_answer,
+        headline_answer=q.headline_answer,
         alternative_answers=list(q.alternative_answers),
         topic=q.topic,
         category=q.category,
@@ -212,6 +218,7 @@ def row_to_question(row: QuestionRow) -> Question:
         type=row.type,
         possible_answers=row.possible_answers,
         correct_answer=row.correct_answer,
+        headline_answer=row.headline_answer,
         alternative_answers=list(row.alternative_answers or []),
         topic=row.topic,
         category=row.category,

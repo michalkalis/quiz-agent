@@ -22,8 +22,9 @@ question it was written for, not the one that came after it.
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -34,7 +35,9 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api import deps
 from app.api.routes import quiz as quiz_routes
+from app.quiz import resubmission
 from app.quiz.flow import QuestionMismatch, QuizFlowService
+from app.quiz.resubmission import REGRADE_CAP
 from app.rate_limit import limiter
 from quiz_shared.models.participant import Participant
 from quiz_shared.models.phase import SessionPhase
@@ -299,6 +302,93 @@ async def test_regrade_scores_against_the_strings_the_player_actually_saw():
     graded_with = flow.answer_evaluator.evaluate.await_args.kwargs["question"]
     assert graded_with.question == "Aké je hlavné mesto Francúzska?"
     assert graded_with.correct_answer == "Paríž"
+
+
+# ── The re-grade bound (#133 V6b) ────────────────────────────────────────────
+
+
+async def test_regrades_past_the_cap_replay_instead_of_paying_to_evaluate_again(
+    caplog,
+):
+    """Re-grading is quota-free on purpose (editing must not cost a question),
+    which left it unbounded and *paid*: every different text buys an evaluator
+    call — plus a Whisper transcription and feedback TTS on the voice route — at
+    the route's 30/min, forever, on one question.
+
+    Past the cap the flow must hand back the verdict the client already has:
+    no evaluator call, no write, and no error (a 4xx would break the legitimate
+    editing flow it shares a path with).
+    """
+    manager = _FakeSessionManager(_session())
+    flow = _flow(manager)
+
+    await _submit(flow, manager, "Paris", question_id=_Q1)
+    for text in ("Lyon", "Nice", "Brest"):  # REGRADE_CAP legitimate corrections
+        await _submit(flow, manager, text, question_id=_Q1)
+
+    assert manager.stored.last_evaluation.regrade_count == REGRADE_CAP
+    stored_verdict = dict(manager.stored.last_evaluation.evaluation)
+    evaluator_calls = flow.answer_evaluator.evaluate.await_count
+    writes = len(manager.writes)
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch.object(resubmission.sentry_sdk, "capture_message") as capture,
+    ):
+        capped = await _submit(flow, manager, "Cannes", question_id=_Q1)
+
+    # A complete, valid answer — the last verdict, replayed.
+    assert capped.evaluation == stored_verdict
+    assert capped.evaluation["user_answer"] == "Brest"
+    # Nothing was paid for and nothing moved.
+    assert flow.answer_evaluator.evaluate.await_count == evaluator_calls
+    assert len(manager.writes) == writes
+    assert manager.stored.last_evaluation.submitted_text == "Brest"
+    assert manager.stored.last_evaluation.regrade_count == REGRADE_CAP
+    flow.usage_tracker.record_question.assert_awaited_once()
+    # ...and the abuse is visible instead of silently absorbed.
+    assert "Re-grade cap reached" in caplog.text
+    capture.assert_called_once()
+    warned = capture.call_args.args[0]
+    assert _SESSION_ID in warned and _Q1 in warned
+
+
+async def test_a_replay_never_counts_against_the_re_grade_cap():
+    """Only a *different* text buys an evaluation, so only that may be counted.
+    A client retrying the identical text (the lost-response case the whole
+    mechanism exists for) must keep being served past the cap — otherwise the
+    bound would break the retry it is not supposed to touch."""
+    manager = _FakeSessionManager(_session())
+    flow = _flow(manager)
+
+    await _submit(flow, manager, "Paris", question_id=_Q1)
+    for _ in range(REGRADE_CAP + 2):
+        replay = await _submit(flow, manager, "Paris", question_id=_Q1)
+
+    assert replay.message == "Answer already processed"
+    assert replay.evaluation["result"] == "correct"
+    assert manager.stored.last_evaluation.regrade_count == 0
+    assert flow.answer_evaluator.evaluate.await_count == 1
+
+
+async def test_the_cap_is_per_question_not_per_session():
+    """The counter lives on the graded-submission record, so grading the next
+    question starts it over. A session-wide counter would stop honouring
+    transcript edits for the rest of the quiz after one heavily-corrected
+    question."""
+    manager = _FakeSessionManager(_session())
+    flow = _flow(manager)
+
+    await _submit(flow, manager, "Paris", question_id=_Q1)
+    for text in ("Lyon", "Nice", "Brest"):
+        await _submit(flow, manager, text, question_id=_Q1)
+    assert manager.stored.last_evaluation.regrade_count == REGRADE_CAP
+
+    # Grade the question the session has since advanced to (_Q2).
+    await _submit(flow, manager, "Paris")
+
+    assert manager.stored.last_evaluation.question_id == _Q2
+    assert manager.stored.last_evaluation.regrade_count == 0
 
 
 # ── Refusal: an id this session cannot grade ─────────────────────────────────

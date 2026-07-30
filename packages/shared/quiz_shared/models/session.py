@@ -60,6 +60,19 @@ class LastEvaluation(BaseModel):
             "player saw."
         ),
     )
+    regrade_count: int = Field(
+        0,
+        description=(
+            "How many times this question has been re-graded with different text "
+            "(#133 V6b). Re-grading is quota-free by design — editing a transcript "
+            "must not cost a question — which left an unbounded paid path: each "
+            "re-grade buys an evaluator LLM call (and, on voice, a Whisper "
+            "transcription plus feedback TTS) at the route's 30/min. Legitimate "
+            "editing is one or two corrections, so past REGRADE_CAP the flow "
+            "replays the stored verdict instead of re-evaluating. Replays (same "
+            "text) never touch this counter."
+        ),
+    )
 
 
 class QuizSession(BaseModel):

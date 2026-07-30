@@ -190,7 +190,17 @@ class InputParser:
         # Validate answer intents to prevent question text contamination
         for intent in intents:
             if intent.get("intent_type") == "answer":
-                answer = intent.get("extracted_data", {}).get("answer", "")
+                # An explicit ``"answer": null`` in the model's JSON is not the same
+                # as a missing key — ``.get("answer", "")`` returns None and the
+                # length/similarity guards below then raise TypeError, a 500 on a
+                # submission the player was already charged for (#133 V9). Normalize
+                # it here, and write it back so no downstream reader sees None:
+                # an empty answer is a valid state the evaluator already grades
+                # "skipped".
+                extracted = intent.get("extracted_data") or {}
+                answer = extracted.get("answer") or ""
+                extracted["answer"] = answer
+                intent["extracted_data"] = extracted
 
                 # Check if answer suspiciously long (likely captured question)
                 if len(answer) > 100:

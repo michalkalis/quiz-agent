@@ -1,6 +1,10 @@
 """Shared quiz flow logic for processing answers and advancing sessions.
 
 Extracted from the duplicated logic between /input and /voice/submit endpoints.
+
+The first grade of a question lives here: parse intents → evaluate → score →
+advance. Everything about a submit for a question that was ALREADY graded
+(replay, re-grade, refuse, the re-grade cap) lives in ``resubmission.py``.
 """
 
 import asyncio
@@ -18,13 +22,19 @@ from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
 from quiz_shared.models.question import Question
-from quiz_shared.models.session import LastEvaluation, QuizSession
+from quiz_shared.models.session import QuizSession
 from quiz_shared.models.phase import SessionPhase
 
+from .resubmission import (
+    QuestionMismatch,  # noqa: F401 — re-exported: routes and tests import it from here
+    IntentOutcome,
+    classify_submission,
+    evaluation_record,
+    process_resubmission,
+)
+
 from ..serializers import (
-    apply_question_translation,
     correct_option_key,
-    question_to_dict,
     session_translation,
     translated_question_payload,
     translated_question_view,
@@ -78,35 +88,6 @@ def _log_prefetch_outcome(task: "asyncio.Task") -> None:
         logger.debug("TTS prefetch completed (cache warmed)")
 
 
-class QuestionMismatch(Exception):
-    """A submit carried a ``question_id`` this session cannot grade (#133 1a).
-
-    It is neither the current question nor the last graded one, so the client is
-    a whole question out of step (stale UI, resumed session) and grading the text
-    would score the wrong question. Raised before any mutation — session state is
-    untouched — and turned into a 409 carrying the current id so the client can
-    resync instead of silently answering something the player never saw.
-    """
-
-    def __init__(self, current_question_id: Optional[str]):
-        super().__init__(
-            "submitted question_id does not match this session "
-            f"(current={current_question_id})"
-        )
-        self.current_question_id = current_question_id
-
-
-def _same_submission(new_text: str, graded_text: str) -> bool:
-    """Whether a re-sent submission is the same answer that was already graded.
-
-    Compared case- and whitespace-insensitively because the evaluator normalizes
-    both anyway: a retry differing only there would produce the identical verdict,
-    so replaying it is free and correct. Anything else — an edited transcript, a
-    re-transcribed upload — is a genuinely different answer and gets re-graded.
-    """
-    return new_text.strip().casefold() == graded_text.strip().casefold()
-
-
 @dataclass
 class FlowResult:
     """Result of processing a quiz answer through the flow."""
@@ -118,20 +99,6 @@ class FlowResult:
     quiz_finished: bool = False
     message: str = "Input processed"
     usage_limit_error: Optional[Dict[str, Any]] = None
-
-
-@dataclass
-class _IntentOutcome:
-    """What one parse-and-apply pass actually changed, for the caller to persist.
-
-    ``score_delta``/``answered_delta`` are the participant-counter effects, kept
-    so a re-graded submission can reverse the previous verdict exactly (#133 1a).
-    """
-
-    score_delta: float = 0.0
-    answered_delta: int = 0
-    preferences_changed: bool = False
-    feedback_audio: Optional[bytes] = None
 
 
 class QuizFlowService:
@@ -160,23 +127,10 @@ class QuizFlowService:
     ) -> bool:
         """True when a submit re-sends a question this session already graded (#133 1a).
 
-        False = grade it against the current question, which is also the legacy
-        path: a client that sends no ``question_id`` behaves exactly as before.
-        Raises ``QuestionMismatch`` when the id is neither the current nor the
-        last-graded question.
-
-        Pure and side-effect free, so callers can gate expensive work on it — the
-        voice route checks it before paying for transcription.
+        Method form of ``resubmission.classify_submission`` — the voice route calls
+        it on the injected flow service to gate transcription spend.
         """
-        if (
-            submitted_question_id is None
-            or submitted_question_id == session.current_question_id
-        ):
-            return False
-        previous = session.last_evaluation
-        if previous is not None and previous.question_id == submitted_question_id:
-            return True
-        raise QuestionMismatch(session.current_question_id)
+        return classify_submission(session, submitted_question_id)
 
     async def process_answer(
         self,
@@ -204,13 +158,15 @@ class QuizFlowService:
         Returns:
             FlowResult with evaluation, next question, audio info, etc.
         """
-        if self.classify_submission(session, submitted_question_id):
-            return await self._process_resubmission(
+        if classify_submission(session, submitted_question_id):
+            return await process_resubmission(
+                self,
                 session=session,
                 previous=session.last_evaluation,
                 answer_text=answer_text,
                 participant_id=participant_id,
                 include_audio=include_audio,
+                result=FlowResult(),
             )
 
         result = FlowResult()
@@ -247,7 +203,7 @@ class QuizFlowService:
 
         # #133 1a: remember what was graded BEFORE anything advances, so a retry
         # of this same submission is replayed instead of scoring the next question.
-        session.last_evaluation = self._evaluation_record(
+        session.last_evaluation = evaluation_record(
             result=result,
             question_id=evaluated_question_id,
             submitted_text=answer_text,
@@ -362,7 +318,7 @@ class QuizFlowService:
         participant_id: Optional[str],
         include_audio: bool,
         result: FlowResult,
-    ) -> _IntentOutcome:
+    ) -> IntentOutcome:
         """Parse ``answer_text`` and apply every intent it carries to session + result.
 
         Shared by a first submission and a re-graded one (#133 1a) so an edited
@@ -389,7 +345,7 @@ class QuizFlowService:
                 phase=session.phase,
             )
 
-        outcome = _IntentOutcome()
+        outcome = IntentOutcome()
 
         # Process intents
         for intent in intents:
@@ -397,7 +353,14 @@ class QuizFlowService:
             extracted_data = intent.get("extracted_data", {})
 
             if intent_type == "answer":
-                user_answer = extracted_data.get("answer")
+                # #133 V9: the classifier can return an answer intent with a
+                # missing or null "answer" (it heard speech, extracted nothing).
+                # ``user_answer`` is projected straight into the response and iOS
+                # decodes it as a non-optional String — a null killed the decode of
+                # the WHOLE response, losing a verdict the player had already been
+                # charged for. Empty string is the contract: iOS renders it as
+                # "said nothing", and the evaluator already grades it "skipped".
+                user_answer = extracted_data.get("answer") or ""
                 eval_result, score_delta = await self.answer_evaluator.evaluate(
                     user_answer=user_answer,
                     question=display_question,
@@ -485,89 +448,8 @@ class QuizFlowService:
 
         return outcome
 
-    async def _process_resubmission(
-        self,
-        session: QuizSession,
-        previous: LastEvaluation,
-        answer_text: str,
-        participant_id: Optional[str],
-        include_audio: bool,
-    ) -> FlowResult:
-        """Handle a submit for the question this session already graded (#133 1a).
-
-        Same text (a retry whose original response was lost) → replay the stored
-        verdict: no evaluation call, no quota, no advance, no counter change.
-        Different text (an edited transcript, or a retried voice upload the STT
-        transcribed slightly differently) → re-grade it against THAT question,
-        reverse the previous verdict's counter effect and replace the record.
-
-        Either way the session never advances twice and the freemium quota is
-        never charged twice — that is the whole invariant this branch exists for.
-        """
-        result = FlowResult()
-
-        if _same_submission(answer_text, previous.submitted_text):
-            result.evaluation = dict(previous.evaluation)
-            result.feedback_received = list(previous.feedback_received)
-            result.message = "Answer already processed"
-            result.next_question_dict = await self._current_question_payload(session)
-            if include_audio:
-                result.audio_info = self._resubmitted_audio_info(
-                    session, result.evaluation, None
-                )
-            return result
-
-        question = await asyncio.to_thread(
-            self.question_retriever.get, previous.question_id
-        )
-        if not question:
-            raise ValueError("Re-submitted question not found")
-
-        outcome = await self._apply_intents(
-            session=session,
-            answer_text=answer_text,
-            evaluated_question_id=previous.question_id,
-            question=question,
-            translation=previous.translation,
-            participant_id=participant_id,
-            include_audio=include_audio,
-            result=result,
-        )
-
-        # An edit that parses to no answer must not destroy the verdict the client
-        # already holds: keep the stored record and let the route 400, exactly as
-        # for a first submission with no answer in it.
-        if result.evaluation is None:
-            return self._no_answer_result(session, result, outcome)
-
-        # Replace, don't accumulate: undo what the previous verdict applied to the
-        # participant before keeping the new one.
-        self._update_participant_score(
-            session,
-            previous.participant_id,
-            -previous.points_awarded,
-            answered_delta=-previous.answered_count_delta,
-        )
-        session.last_evaluation = self._evaluation_record(
-            result=result,
-            question_id=previous.question_id,
-            submitted_text=answer_text,
-            translation=previous.translation,
-            participant_id=participant_id,
-            outcome=outcome,
-        )
-        self.session_manager.update_session(session)
-
-        result.next_question_dict = await self._current_question_payload(session)
-        result.message = "Answer re-evaluated"
-        if include_audio:
-            result.audio_info = self._resubmitted_audio_info(
-                session, result.evaluation, outcome.feedback_audio
-            )
-        return result
-
     def _no_answer_result(
-        self, session: QuizSession, result: FlowResult, outcome: _IntentOutcome
+        self, session: QuizSession, result: FlowResult, outcome: IntentOutcome
     ) -> FlowResult:
         """Finish a submission that carried no answer (ghost-question guard, #66).
 
@@ -581,74 +463,6 @@ class QuizFlowService:
             self.session_manager.update_session(session)
             result.message = "Preferences updated, no answer detected"
         return result
-
-    @staticmethod
-    def _evaluation_record(
-        *,
-        result: FlowResult,
-        question_id: str,
-        submitted_text: str,
-        translation: Optional[Dict[str, Any]],
-        participant_id: Optional[str],
-        outcome: _IntentOutcome,
-    ) -> LastEvaluation:
-        """Snapshot a graded submission for idempotent re-submits (#133 1a)."""
-        return LastEvaluation(
-            question_id=question_id,
-            submitted_text=submitted_text,
-            evaluation=dict(result.evaluation or {}),
-            feedback_received=list(result.feedback_received),
-            points_awarded=outcome.score_delta,
-            answered_count_delta=outcome.answered_delta,
-            participant_id=participant_id,
-            translation=translation,
-        )
-
-    async def _current_question_payload(
-        self, session: QuizSession
-    ) -> Optional[Dict[str, Any]]:
-        """The question the session is on now, in the exact wording it was served.
-
-        Rebuilt from the stored serve-time translation record, never re-translated,
-        so replaying a lost response costs no LLM call. None when there is no
-        current question or the row has since disappeared.
-        """
-        if not session.current_question_id:
-            return None
-        question = await asyncio.to_thread(
-            self.question_retriever.get, session.current_question_id
-        )
-        if not question:
-            return None
-        record = session_translation(session, question.id)
-        payload = apply_question_translation(question_to_dict(question), record)
-        if not record and session.current_question_text:
-            # Pre-#132 session, or a serve where translation fell back: the stem is
-            # the only translated string stored — same fallback GET /question uses.
-            payload["question"] = session.current_question_text
-        return payload
-
-    def _resubmitted_audio_info(
-        self,
-        session: QuizSession,
-        evaluation: Dict[str, Any],
-        feedback_audio: Optional[bytes],
-    ) -> Dict[str, Any]:
-        """Audio block for a replayed / re-graded submission.
-
-        With no freshly synthesized feedback (a replay evaluates nothing) the block
-        carries the cache-backed ``feedback_url`` instead of inline base64: a retry
-        must not pay OpenAI TTS again for audio the client can fetch. The static
-        ``question_url`` is included because the client may have lost the original
-        response that carried it, but no prefetch is fired — that question's audio
-        was already warmed when it was served.
-        """
-        info = self._build_audio_info(session.session_id, evaluation, feedback_audio)
-        if session.current_question_id:
-            info["question_url"] = (
-                f"/api/v1/sessions/{session.session_id}/question/audio"
-            )
-        return info
 
     def _update_participant_score(
         self,

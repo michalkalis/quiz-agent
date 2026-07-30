@@ -1,16 +1,37 @@
 """Default examples for prompt template."""
 
 import json
-import os
 import random
+from pathlib import Path
 from typing import Optional
 
+from quiz_shared.paths import find_in_ancestors
 
-def _get_data_dir() -> str:
-    """Get path to data/examples/ directory."""
-    return os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "..", "data", "examples"
-    )
+
+def example_corpus_path(filename: str) -> Path:
+    """Locate a ``data/examples/`` corpus file, or raise.
+
+    Walks up from this module rather than indexing a fixed number of parents so
+    the same code resolves in the repo checkout AND in the Docker ``/app``
+    layout, where the Dockerfile copies ``data/examples`` next to the app
+    (#60.P3 pattern).
+
+    Raises rather than returning a fallback: the deployed image used to carry no
+    ``data/`` at all, so gold-standard and anti-pattern injection degraded to
+    five hardcoded exemplars — which themselves taught banned shapes (a
+    language-dependent anagram, a non-metric figure) to every paid pack, with no
+    log line saying so. A missing corpus is a packaging defect and must be loud.
+    """
+    path = find_in_ancestors(Path(__file__), f"data/examples/{filename}")
+    if path is None:
+        raise FileNotFoundError(
+            f"prompt example corpus data/examples/{filename} not found above "
+            f"{Path(__file__).parent} — refusing to generate with degraded "
+            "prompts. In the Docker image the corpus is copied by "
+            "apps/quiz-pack-api/Dockerfile (and re-included in .dockerignore); "
+            "locally it lives in the repo's data/examples/."
+        )
+    return path
 
 
 def load_gold_standard(
@@ -28,11 +49,7 @@ def load_gold_standard(
 
     Returns formatted string suitable for prompt injection.
     """
-    path = os.path.join(_get_data_dir(), "gold_standard.json")
-    if not os.path.exists(path):
-        return EXCELLENT_EXAMPLES  # fallback to hardcoded
-
-    with open(path, "r", encoding="utf-8") as f:
+    with example_corpus_path("gold_standard.json").open("r", encoding="utf-8") as f:
         examples = json.load(f)
 
     # Issue #72 P2.3 — bias toward type-appropriate exemplars FIRST (before the
@@ -103,11 +120,7 @@ def load_anti_patterns(n: int = 5) -> str:
 
     Returns formatted string suitable for prompt injection.
     """
-    path = os.path.join(_get_data_dir(), "anti_patterns.json")
-    if not os.path.exists(path):
-        return ""  # no anti-patterns available
-
-    with open(path, "r", encoding="utf-8") as f:
+    with example_corpus_path("anti_patterns.json").open("r", encoding="utf-8") as f:
         examples = json.load(f)
 
     selected = random.sample(examples, min(n, len(examples)))
@@ -123,34 +136,6 @@ def load_anti_patterns(n: int = 5) -> str:
 
     return "\n".join(lines)
 
-
-# 5 EXCELLENT examples with WHY explanations
-EXCELLENT_EXAMPLES = """
-**Example 1: Clever Wordplay**
-Q: "Which writer's name is an anagram of 'I am a weakish speller'?"
-A: William Shakespeare
-**WHY EXCELLENT:** Combines wordplay with famous figure. Creates "aha!" moment when solved. Educational and entertaining.
-
-**Example 2: Surprising Fact**
-Q: "What temperature is the same in Celsius and Fahrenheit?"
-A: -40 degrees
-**WHY EXCELLENT:** Counterintuitive fact that surprises people. Mathematical elegance. Educational value.
-
-**Example 3: Unexpected Connection**
-Q: "Which spice was so prized the Dutch traded Manhattan for a tiny Indonesian island to control it?"
-A: Nutmeg
-**WHY EXCELLENT:** Surprising historical fact. Links familiar place (Manhattan) with unexpected answer. Teaches interesting history.
-
-**Example 4: Scientific Wonder**
-Q: "Which planet has a hexagon-shaped storm at its north pole?"
-A: Saturn
-**WHY EXCELLENT:** Fascinating space fact most people don't know. Visually striking. Universal appeal.
-
-**Example 5: Biological Curiosity**
-Q: "Which animal has cube-shaped feces, a feature believed to help mark territory?"
-A: Wombat
-**WHY EXCELLENT:** Quirky, memorable fact. Unexpected answer. Makes people laugh and learn.
-"""
 
 # 3 OK examples with WHY explanations
 OK_EXAMPLES = """

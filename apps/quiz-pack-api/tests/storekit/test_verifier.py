@@ -22,6 +22,7 @@ from cryptography.x509.oid import NameOID
 
 from app.storekit import (
     AppleJWSVerifier,
+    JWSExpired,
     JWSInvalid,
     JWSWrongBundle,
     SignedTransaction,
@@ -249,6 +250,49 @@ def test_purchase_date_parses_ms_epoch(verifier, make_jws):
     jws = make_jws(payload_overrides={"purchaseDate": int(iso_target.timestamp() * 1000)})
     tx = verifier.verify(jws)
     assert tx.purchase_date == iso_target
+
+
+def test_expired_transaction_raises_jws_expired(verifier, make_jws):
+    """A lapsed subscription must not buy anything — this is the enforcement line.
+
+    Adversarial audit 2026-07-30: a mutation probe inverted this comparison
+    (`expires_date > now`) and the entire suite still passed, because nothing
+    covered `expiresDate` at all. With the comparison broken, every expired
+    subscription JWS verifies and every live one is rejected — a paid-content
+    bypass on one side and a lockout of paying subscribers on the other.
+    """
+    expired_ms = int(
+        (datetime.now(timezone.utc) - timedelta(days=1)).timestamp() * 1000
+    )
+    jws = make_jws(payload_overrides={"expiresDate": expired_ms})
+
+    with pytest.raises(JWSExpired, match="expired at"):
+        verifier.verify(jws)
+
+
+def test_unexpired_transaction_verifies(verifier, make_jws):
+    """The other half of the same contract: a live subscription must pass.
+
+    Asserting only the rejection would let an always-raise implementation look
+    correct while locking out every paying subscriber (see the audit note above).
+    """
+    expires = datetime.now(timezone.utc) + timedelta(days=30)
+    jws = make_jws(
+        payload_overrides={"expiresDate": int(expires.timestamp() * 1000)}
+    )
+
+    tx = verifier.verify(jws)
+
+    assert tx.expires_date is not None
+    assert tx.expires_date > datetime.now(timezone.utc)
+
+
+def test_non_subscription_transaction_has_no_expiry_gate(verifier, make_jws):
+    """Packs are non-consumables with no `expiresDate`; the gate must skip them
+    rather than treating a missing date as expired."""
+    tx = verifier.verify(make_jws())
+
+    assert tx.expires_date is None
 
 
 def test_payload_missing_required_field_raises(verifier, test_chain):

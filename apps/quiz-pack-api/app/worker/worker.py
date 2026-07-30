@@ -24,12 +24,13 @@ from .tasks import process_order
 
 logger = logging.getLogger(__name__)
 
-# Locate gold_standard.json by walking up from this file. Used by DedupStage's
-# Jaccard check; a missing file means the check is a no-op (the stage handles
-# `None` by skipping the gold-standard comparison). Walking up -- rather than a
-# fixed `parents[N]` -- keeps this safe in the Docker `/app` layout, where the
-# repo `data/` dir is absent and a fixed index raised IndexError (#70, twin
-# #60.P3); there it resolves to `None` and the dedup check simply skips.
+# Locate gold_standard.json by walking up from this file (rather than a fixed
+# `parents[N]`, which raised IndexError in the Docker `/app` layout -- #70, twin
+# #60.P3). Used by DedupStage's Jaccard check. `data/examples/` now ships inside
+# the image (Dockerfile COPY + `.dockerignore` re-include), so `None` no longer
+# means "expected in Docker" -- it means the corpus was left out of the build,
+# and `on_startup` refuses to boot rather than run paid packs on a silently
+# degraded pipeline (same fail-loud rule as `examples.example_corpus_path`).
 _GOLD_STANDARD_PATH = find_in_ancestors(
     Path(__file__), "data/examples/gold_standard.json"
 )
@@ -96,7 +97,13 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     ctx["question_store"] = SyncPgvectorStore(
         PgvectorQuestionStore(session_factory=AsyncSessionLocal)
     )
-    # `find_in_ancestors` already returns an existing file or None.
+    if _GOLD_STANDARD_PATH is None:
+        raise RuntimeError(
+            "data/examples/gold_standard.json not found above app/worker/ — the "
+            "prompt example corpus is missing from this build; refusing to start "
+            "a worker that would generate paid packs with degraded prompts and a "
+            "no-op gold-standard dedup check."
+        )
     ctx["gold_standard_path"] = _GOLD_STANDARD_PATH
     logger.info("worker on_startup: collaborators initialised")
 

@@ -58,6 +58,14 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /build/app /app
 
+# Prompt example corpus (gold standard + anti-patterns). Without it every paid
+# pack was generated with no curated exemplars and no anti-pattern block, and
+# DedupStage's gold-standard check was a no-op — silently, because the loaders
+# fell back to hardcoded examples. `.dockerignore` excludes `data/` but
+# re-includes `data/examples/`; if that negation is ever dropped this COPY
+# fails the build instead of shipping degraded prompts.
+COPY data/examples /app/data/examples
+
 EXPOSE 8003
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

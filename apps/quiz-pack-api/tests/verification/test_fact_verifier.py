@@ -15,6 +15,12 @@ boring, first-degree-recall questions — the exact RC-9 failure #72 exists to f
 - ``test_judge_unavailable_holds_instead_of_dropping``: when the search/judge
   is unavailable we cannot conclude "wrong"; the question is tagged
   ``held_for_review`` (kept) rather than dropped at confidence 0.
+- ``test_judge_failure_holds_instead_of_dropping``: same policy for a judge
+  that *is* configured but fails mid-call (429/timeout → ``_complete`` returns
+  ``None``, prose instead of JSON, or a raising client). The adversarial audit
+  2026-07-30 found this fallback returned confidence 0.3 with
+  ``held_for_review`` unset, so a rate-limited Gemini deleted paid questions
+  exactly as if their answers had been shown wrong.
 - ``_answer_supported`` / ``_numbers_in`` unit cases pin the strictness contract:
   numeric tolerance for estimates, strict substring for recall answers.
 """
@@ -119,6 +125,52 @@ async def test_judge_unavailable_holds_instead_of_dropping(monkeypatch) -> None:
 
     assert result.held_for_review is True
     assert result.verdict == "unverified"
+
+
+async def _judge_returns_none(prompt: str) -> None:
+    """What a 429/timeout looks like: `_complete` swallows and returns None."""
+    return None
+
+
+async def _judge_returns_prose(prompt: str) -> str:
+    """A reply with no JSON object → ValueError inside the parse block."""
+    return "I think the claimed answer is roughly in the right ballpark."
+
+
+async def _judge_raises(prompt: str) -> str:
+    raise TimeoutError("gemini rate limited")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "judge",
+    [_judge_returns_none, _judge_returns_prose, _judge_raises],
+    ids=["returns_none", "returns_prose", "raises"],
+)
+async def test_judge_failure_holds_instead_of_dropping(judge) -> None:
+    """A judge that fails mid-call must HOLD the question, not delete it.
+
+    Adversarial audit 2026-07-30: the exception fallback returned
+    confidence 0.3 with `held_for_review` unset, which VerificationStage scores
+    identically to "the answer is probably wrong" — so a rate-limited Gemini
+    silently dropped questions from a paid pack and pushed the order toward the
+    top-up/shortfall path. A judge failure is not evidence against the answer.
+    """
+    verifier = FactVerifier(gemini_api_key="test-key")
+    verifier.search = _FakeSearch(  # type: ignore[assignment]
+        results=[
+            {"url": "u1", "content": "An article about the city's history.", "score": 0.5},
+            {"url": "u2", "content": "No population figure appears here.", "score": 0.4},
+            {"url": "u3", "content": "Unrelated content about local tourism.", "score": 0.3},
+        ]
+    )
+    verifier._complete = judge  # type: ignore[assignment]
+
+    result = await verifier.verify("How many people live in X?", "about 4 million")
+
+    assert result.held_for_review is True
+    assert result.verdict == "unverified"
+    assert result.confidence < 0.5  # below the gate, so only `held` saves it
 
 
 @pytest.mark.asyncio

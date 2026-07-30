@@ -40,7 +40,7 @@ from sse_starlette.sse import EventSourceResponse
 from arq.connections import ArqRedis
 
 from ...config import Settings, get_settings
-from ...db.models.job import GenerationJob
+from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
 from ...db.models.pack import QuestionPack
 from ...db.session import AsyncSessionLocal, get_session
@@ -524,9 +524,12 @@ async def retry_order(
     job.retry_count = 0
     job.manual_retry_count = job.manual_retry_count + 1
     order.status = "pending"
+    # Read the attempt key before the commit: after it the ORM would need a
+    # lazy refresh to answer, which is not available on this async session.
+    enqueue_id = attempt_job_id(order.id, job)
     await session.commit()
 
-    await arq_pool.enqueue_job("process_order", str(order.id))
+    await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
 
     order.status = "in_progress"
     await session.commit()

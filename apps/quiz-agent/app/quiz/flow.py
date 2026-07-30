@@ -21,6 +21,7 @@ from quiz_shared.models.session import QuizSession
 from quiz_shared.models.phase import SessionPhase
 
 from ..serializers import (
+    correct_option_key,
     session_translation,
     translated_question_payload,
     translated_question_view,
@@ -393,6 +394,14 @@ class QuizFlowService:
         """
         if translation:
             return translation["correct_answer"]
+        # No record → the player saw the ENGLISH question. Corpus MCQ rows store
+        # ``correct_answer`` either as option text or as the bare key ("b"), and
+        # a lone letter is useless on the result screen and unspeakable in the
+        # feedback audio — resolve it to the option text the player actually saw.
+        # The raw value is only right for non-MCQ questions.
+        correct_key = correct_option_key(question)
+        if correct_key is not None:
+            return question.possible_answers[correct_key]
         correct = question.correct_answer
         if isinstance(correct, list):
             correct = correct[0] if correct else ""

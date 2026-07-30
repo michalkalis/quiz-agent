@@ -215,35 +215,14 @@ GET /api/v1/sessions/{session_id}
 DELETE /api/v1/sessions/{session_id}
 ```
 
-### 7. Voice Transcription
+### 7. Voice Submit (One-Step)
 
-Transcribe audio to text using Whisper API:
-
-```bash
-POST /api/v1/voice/transcribe
-Content-Type: multipart/form-data
-
-# Upload audio file
-curl -X POST http://localhost:8002/api/v1/voice/transcribe \
-  -F "audio=@answer.mp3"
-```
-
-Response:
-```json
-{
-  "success": true,
-  "text": "Paris",
-  "language": "en",
-  "filename": "answer.mp3"
-}
-```
+Transcribe audio and submit to quiz in one request. This is the only
+transcription entry point — the standalone `POST /api/v1/voice/transcribe` was
+removed in #133 (unused, but billed a Whisper call per request).
 
 **Supported formats**: mp3, mp4, mpeg, mpga, m4a, wav, webm, ogg
 **Max file size**: 25 MB
-
-### 8. Voice Submit (One-Step)
-
-Transcribe audio and submit to quiz in one request:
 
 ```bash
 POST /api/v1/voice/submit/{session_id}

@@ -34,48 +34,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/voice/transcribe")
-@limiter.limit("30/minute")
-async def transcribe_audio(
-    request: Request,
-    voice_transcriber: VoiceTranscriber = Depends(get_voice_transcriber),
-    audio: UploadFile = File(..., description="Audio file (mp3, wav, m4a, etc.)"),
-    _auth=Depends(require_auth_or_grace),
-):
-    """Transcribe audio file to text."""
-    try:
-        if not voice_transcriber.is_supported_format(audio.filename):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
-            )
-
-        result = await voice_transcriber.transcribe(
-            audio_file=audio.file, filename=audio.filename
-        )
-
-        return {
-            "success": True,
-            "text": result.text,
-            "language": result.language,
-            "filename": audio.filename,
-            "confidence": {
-                "no_speech_prob": result.no_speech_prob,
-                "avg_logprob": result.avg_logprob,
-                "is_valid": result.is_valid(),
-            },
-        }
-    except HTTPException:
-        raise
-    except ValueError as e:
-        # Constructed validation text (format/size) — client-safe by design.
-        logger.warning("Transcription rejected: %s", e)
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error("Transcription failed: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Transcription failed")
-
-
+# NOTE: a bare ``POST /voice/transcribe`` (transcribe-only, no session) used to
+# live here. It was removed 2026-07-30 (#133 audit V6a): no client ever called it,
+# yet it billed a Whisper transcription per request at 30/min on the same
+# bearer-or-grace auth as the rest of the voice surface — spend with no product
+# behind it. Transcription happens only as part of /voice/submit, where it is
+# metered by the session it feeds.
 @router.post("/voice/submit/{session_id}", response_model=InputResponse)
 @limiter.limit("30/minute")
 async def transcribe_and_submit(

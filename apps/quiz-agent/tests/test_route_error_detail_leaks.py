@@ -12,6 +12,9 @@ inside the try block passes through instead of being swallowed into a 500
 
 from __future__ import annotations
 
+import asyncio
+from unittest.mock import MagicMock
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -26,10 +29,16 @@ from app.api.routes import voice as voice_routes
 from app.auth.identity import AuthSubject
 from app.rate_limit import limiter
 from app.voice.transcriber import VoiceTranscriber
+from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.question import Question
+from quiz_shared.models.session import QuizSession
 
 pytestmark = pytest.mark.asyncio
 
 SECRET = "SECRET_INTERNAL_DETAIL_pg_dsn=postgres://user:pw@host/db"
+
+_SESSION_ID = "s_leak"
+_QUESTION_ID = "q_leak"
 
 
 class _ExplodingTranscriber:
@@ -41,8 +50,30 @@ class _ExplodingTranscriber:
     def is_supported_format(self, filename):
         return self._supported
 
-    async def transcribe(self, audio_file, filename):
+    async def transcribe_with_quiz_context(self, **kwargs):
         raise RuntimeError(SECRET)
+
+
+class _StubSessionManager:
+    """Just enough SessionManager for the /voice/submit route to reach the body."""
+
+    def __init__(self):
+        self._session = QuizSession(
+            session_id=_SESSION_ID,
+            phase=SessionPhase.ASKING,
+            current_question_id=_QUESTION_ID,
+            asked_question_ids=[_QUESTION_ID],
+        )
+        self._lock = asyncio.Lock()
+
+    def get_session(self, session_id: str) -> QuizSession:
+        return self._session
+
+    def update_session(self, session: QuizSession) -> bool:
+        return True
+
+    def session_lock(self, session_id: str) -> asyncio.Lock:
+        return self._lock
 
 
 class _ExplodingTTS:
@@ -65,6 +96,30 @@ def _app() -> FastAPI:
     return app
 
 
+def _voice_submit_app(transcriber: _ExplodingTranscriber) -> FastAPI:
+    """``/voice/submit`` wired to reach its try block: real route, stub collaborators."""
+    app = _app()
+    retriever = MagicMock()
+    retriever.get = MagicMock(
+        return_value=Question(
+            id=_QUESTION_ID,
+            question="What is the capital of France?",
+            type="text",
+            correct_answer="Paris",
+            topic="Geography",
+            category="general",
+            difficulty="medium",
+        )
+    )
+    flow = MagicMock()
+    flow.classify_submission = MagicMock(return_value=False)
+    app.dependency_overrides[deps.get_session_manager] = _StubSessionManager
+    app.dependency_overrides[deps.get_question_retriever] = lambda: retriever
+    app.dependency_overrides[deps.get_quiz_flow] = lambda: flow
+    app.dependency_overrides[deps.get_voice_transcriber] = lambda: transcriber
+    return app
+
+
 @pytest_asyncio.fixture
 async def make_client():
     limiter.reset()
@@ -83,30 +138,27 @@ async def make_client():
 _AUDIO = {"audio": ("answer.mp3", b"fake-bytes", "audio/mpeg")}
 
 
-async def test_transcribe_500_hides_exception_text(make_client):
-    app = _app()
-    app.dependency_overrides[deps.get_voice_transcriber] = lambda: (
-        _ExplodingTranscriber()
-    )
-    client = await make_client(app)
+async def test_voice_submit_500_hides_exception_text(make_client):
+    # #133 V6a removed the standalone /voice/transcribe (unused, billed a Whisper
+    # call per request); /voice/submit is the only transcription entry point left
+    # and carries the same log-then-generic contract.
+    client = await make_client(_voice_submit_app(_ExplodingTranscriber()))
 
-    resp = await client.post("/api/v1/voice/transcribe", files=_AUDIO)
+    resp = await client.post(f"/api/v1/voice/submit/{_SESSION_ID}", files=_AUDIO)
 
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "Transcription failed"
+    assert resp.json()["detail"] == "Voice submission failed"
     assert SECRET not in resp.text
 
 
-async def test_transcribe_unsupported_format_stays_400(make_client):
+async def test_voice_submit_unsupported_format_stays_400(make_client):
     # Regression: the explicit 400 raised inside the try block used to be
     # swallowed by ``except Exception`` and returned as a 500.
-    app = _app()
-    app.dependency_overrides[deps.get_voice_transcriber] = lambda: (
-        _ExplodingTranscriber(supported=False)
+    client = await make_client(
+        _voice_submit_app(_ExplodingTranscriber(supported=False))
     )
-    client = await make_client(app)
 
-    resp = await client.post("/api/v1/voice/transcribe", files=_AUDIO)
+    resp = await client.post(f"/api/v1/voice/submit/{_SESSION_ID}", files=_AUDIO)
 
     assert resp.status_code == 400
     assert "Unsupported audio format" in resp.json()["detail"]

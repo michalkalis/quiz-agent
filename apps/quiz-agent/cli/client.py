@@ -184,19 +184,6 @@ class QuizClient:
         except requests.exceptions.RequestException as e:
             raise QuizAPIError(f"Failed to delete session: {e}")
 
-    def transcribe_audio(self, audio_file_path: str) -> Dict[str, Any]:
-        """Transcribe audio file to text using Whisper API."""
-        try:
-            with open(audio_file_path, "rb") as audio_file:
-                files = {"audio": audio_file}
-                response = requests.post(
-                    f"{self.base_url}/voice/transcribe", files=files
-                )
-                response.raise_for_status()
-                return response.json()
-        except requests.exceptions.RequestException as e:
-            raise QuizAPIError(f"Failed to transcribe audio: {e}")
-
     def submit_voice(self, audio_file_path: str) -> Dict[str, Any]:
         """Transcribe audio and submit as answer in one step."""
         if not self.session_id:

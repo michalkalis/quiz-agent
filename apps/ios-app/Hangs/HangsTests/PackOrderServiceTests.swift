@@ -18,12 +18,14 @@
 //
 
 import Foundation
-import os
 @testable import Hangs
+import os
 import Testing
 
 private nonisolated enum Stubs {
     static let baseURL = "http://test.invalid"
+
+    static let orderId = "11111111-1111-1111-1111-111111111111"
 
     static let createdJSON = #"""
     {
@@ -32,6 +34,60 @@ private nonisolated enum Stubs {
       "created_at": "2026-07-17T10:00:00Z"
     }
     """#
+
+    /// A single `GET /v1/orders/{id}` payload — the poll target.
+    static let snapshotJSON = #"""
+    {
+      "order_id": "11111111-1111-1111-1111-111111111111",
+      "status": "in_progress",
+      "product_id": "pack_30",
+      "target_count": 30,
+      "language": "en",
+      "category": null,
+      "theme": null,
+      "created_at": "2026-07-17T10:00:00Z",
+      "delivered_at": null,
+      "pack_id": null,
+      "llm_cost_usd": null,
+      "search_cost_cents": 0,
+      "job": null
+    }
+    """#
+
+    static let listJSON = #"""
+    { "orders": [] }
+    """#
+}
+
+// MARK: - PackOrderStubAuthService
+
+/// Deterministic auth service for the refresh-retry tests: hands out one fixed
+/// access token and, on refresh, whatever the test seeded — a fresh token, or the
+/// same stale one to model a refresh that cannot recover the session. Counts
+/// refreshes so a test can pin "refreshed exactly once".
+private actor PackOrderStubAuthService: AuthServiceProtocol {
+    private let initialToken: String
+    private let refreshedToken: String?
+    private var refreshes = 0
+
+    init(initialToken: String, refreshedToken: String?) {
+        self.initialToken = initialToken
+        self.refreshedToken = refreshedToken
+    }
+
+    func accessToken() async -> String? { initialToken }
+
+    func refreshedAccessToken(replacing _: String) async -> String? {
+        refreshes += 1
+        return refreshedToken
+    }
+
+    func refreshCallCount() -> Int { refreshes }
+}
+
+/// The `Authorization` header of a captured request, or nil when none was sent.
+private nonisolated func capturedBearer(_ request: URLRequest) -> String? {
+    request.value(forHTTPHeaderField: "Authorization")
 }
 
 /// URLSession sometimes moves httpBody to httpBodyStream before handing the
@@ -59,7 +115,8 @@ private nonisolated func readRequestBody(_ request: URLRequest) -> Data? {
 /// the body is missing/undecodable.
 private nonisolated func capturedTransactionId(_ request: URLRequest) -> String? {
     guard let data = readRequestBody(request),
-          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else {
         return nil
     }
     return json["transaction_id"] as? String
@@ -78,8 +135,7 @@ private nonisolated func capturedTransactionId(_ request: URLRequest) -> String?
 // clone of the original `StubURLProtocol` (synchronous startLoading) so the
 // in-flight semaphore test below observes identical blocking semantics.
 final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
-
-    nonisolated override init(
+    override nonisolated init(
         request: URLRequest,
         cachedResponse: CachedURLResponse?,
         client: (any URLProtocolClient)?
@@ -89,18 +145,19 @@ final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
 
     private nonisolated static let handlerLock = OSAllocatedUnfairLock<
         ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
-    )>(initialState: nil)
+        )
+    >(initialState: nil)
 
     nonisolated static var handler: (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
         get { handlerLock.withLock { $0 } }
         set { handlerLock.withLock { $0 = newValue } }
     }
 
-    nonisolated override class func canInit(with request: URLRequest) -> Bool { true }
+    override nonisolated class func canInit(with _: URLRequest) -> Bool { true }
 
-    nonisolated override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override nonisolated class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
-    nonisolated override func startLoading() {
+    override nonisolated func startLoading() {
         guard let handler = PackOrderStubURLProtocol.handler else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
@@ -115,7 +172,7 @@ final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
         }
     }
 
-    nonisolated override func stopLoading() {}
+    override nonisolated func stopLoading() {}
 
     static func makeSession() -> URLSession {
         let cfg = URLSessionConfiguration.ephemeral
@@ -124,14 +181,17 @@ final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 }
 
-@Suite("PackOrderService — idempotency key stability (#103 finding 6)", .serialized)
+// Both sections live in ONE suite on purpose: `.serialized` only orders tests
+// *within* a suite, and they share `PackOrderStubURLProtocol`'s process-wide
+// handler — a second suite would run in parallel and stomp it (see the protocol's
+// header comment).
+@Suite("PackOrderService — idempotency (#103 finding 6) + auth refresh (#133 V16)", .serialized)
 struct PackOrderServiceTests {
-
-    private func makeService() -> PackOrderService {
+    private func makeService(authService: AuthServiceProtocol? = nil) -> PackOrderService {
         PackOrderService(
             baseURL: Stubs.baseURL,
             session: PackOrderStubURLProtocol.makeSession(),
-            authService: nil,
+            authService: authService,
             adminKeyStore: AdminKeyStore()
         )
     }
@@ -229,5 +289,129 @@ struct PackOrderServiceTests {
 
         #expect(callCount.withLock { $0 } == 1)
         #expect(firstResult.orderId == secondResult.orderId)
+    }
+
+    // MARK: 4. Expired bearer → refresh once and retry (#133 V16)
+
+    //
+    // WHY: `AuthService.accessToken()` never checks `exp` — refresh is purely
+    // reactive — and `OrderPackViewModel` polls `getOrder` at 1 Hz for the whole
+    // generation, so a mid-poll expiry is routine, not exotic. These three
+    // requests used to bypass the 401-refresh-retry convention that
+    // NetworkService and AuthService both implement, so every expiry became a
+    // `PackOrderError.server` that ate the poller's tolerated-failure budget and
+    // dead-ended a PAID pack order on an opaque message.
+
+    /// Returns a handler that 401s any bearer other than `acceptedBearer`, and
+    /// records every bearer it saw.
+    private func bearerGatedHandler(
+        acceptedBearer: String,
+        body: String,
+        okStatus: Int = 200,
+        seen: OSAllocatedUnfairLock<[String?]>
+    ) -> @Sendable (URLRequest) throws -> (HTTPURLResponse, Data) {
+        { req in
+            let bearer = capturedBearer(req)
+            seen.withLock { $0.append(bearer) }
+            guard bearer == acceptedBearer else {
+                return (.make(status: 401), Data(#"{"detail": "Not authenticated"}"#.utf8))
+            }
+            return (.make(status: okStatus), Data(body.utf8))
+        }
+    }
+
+    @Test("a mid-poll 401 refreshes the access token and retries once — getOrder succeeds transparently")
+    func expiredBearerOnPollRefreshesAndRetries() async throws {
+        let auth = PackOrderStubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let service = makeService(authService: auth)
+        let seen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+
+        PackOrderStubURLProtocol.handler = bearerGatedHandler(
+            acceptedBearer: "Bearer fresh", body: Stubs.snapshotJSON, seen: seen
+        )
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        let snapshot = try await service.getOrder(id: Stubs.orderId)
+
+        #expect(snapshot.orderId == Stubs.orderId, "the poll must succeed on the retry, not surface the 401")
+        #expect(await auth.refreshCallCount() == 1, "exactly one refresh — not one per poll iteration")
+        #expect(seen.withLock { $0 } == ["Bearer stale", "Bearer fresh"],
+                "the retry must carry the REFRESHED bearer, not re-send the stale one")
+    }
+
+    @Test("createOrder and listOrders route through the same refresh-and-retry")
+    func createAndListAlsoRefreshAndRetry() async throws {
+        let createAuth = PackOrderStubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let createSeen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+        PackOrderStubURLProtocol.handler = bearerGatedHandler(
+            acceptedBearer: "Bearer fresh", body: Stubs.createdJSON, okStatus: 202, seen: createSeen
+        )
+        let created = try await makeService(authService: createAuth)
+            .createOrder(intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil))
+        PackOrderStubURLProtocol.handler = nil
+
+        #expect(created.orderId == Stubs.orderId)
+        #expect(await createAuth.refreshCallCount() == 1)
+        #expect(createSeen.withLock { $0 }.count == 2)
+
+        let listAuth = PackOrderStubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let listSeen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+        PackOrderStubURLProtocol.handler = bearerGatedHandler(
+            acceptedBearer: "Bearer fresh", body: Stubs.listJSON, seen: listSeen
+        )
+        defer { PackOrderStubURLProtocol.handler = nil }
+        let orders = try await makeService(authService: listAuth).listOrders()
+
+        #expect(orders.isEmpty)
+        #expect(await listAuth.refreshCallCount() == 1)
+        #expect(listSeen.withLock { $0 }.count == 2)
+    }
+
+    @Test("a 401 that survives the refresh surfaces as an auth failure, not an opaque server error")
+    func secondUnauthorizedSurfacesAuthFailure() async throws {
+        // The refresh hands back the same dead token → the retry 401s too.
+        let auth = PackOrderStubAuthService(initialToken: "stale", refreshedToken: "stale")
+        let service = makeService(authService: auth)
+        let seen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+
+        PackOrderStubURLProtocol.handler = bearerGatedHandler(
+            acceptedBearer: "Bearer fresh", body: Stubs.snapshotJSON, seen: seen
+        )
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.getOrder(id: Stubs.orderId)
+            Issue.record("expected PackOrderError.unauthorized")
+        } catch let error as PackOrderError {
+            guard case .unauthorized = error else {
+                Issue.record("expected .unauthorized, got \(error)"); return
+            }
+        }
+        // Exactly one retry, never a loop — and the user is told to sign in again
+        // rather than shown the generic "the pack service returned an error".
+        #expect(seen.withLock { $0 }.count == 2)
+        #expect(await auth.refreshCallCount() == 1)
+    }
+
+    @Test("a non-401 failure is unchanged — still PackOrderError.server with the backend detail, no refresh")
+    func nonAuthErrorUnchangedAndNeverRefreshes() async throws {
+        let auth = PackOrderStubAuthService(initialToken: "stale", refreshedToken: "fresh")
+        let service = makeService(authService: auth)
+
+        PackOrderStubURLProtocol.handler = { _ in
+            (.make(status: 500), Data(#"{"detail": "generation worker down"}"#.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.getOrder(id: Stubs.orderId)
+            Issue.record("expected PackOrderError.server")
+        } catch let error as PackOrderError {
+            guard case let .server(message) = error else {
+                Issue.record("expected .server, got \(error)"); return
+            }
+            #expect(message == "generation worker down", "the backend detail must still reach the user")
+        }
+        #expect(await auth.refreshCallCount() == 0, "a 500 is not a credential problem — refreshing would hide it")
     }
 }

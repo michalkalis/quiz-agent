@@ -61,9 +61,9 @@ nonisolated struct AuthTokens: Codable, Sendable, Equatable {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
         self.anonId = anonId
-        self.accountName = nil
-        self.accountEmail = nil
-        self.appleUserId = nil
+        accountName = nil
+        accountEmail = nil
+        appleUserId = nil
     }
 
     /// Full init used when an Apple sign-in credential is resolved.
@@ -105,6 +105,53 @@ protocol AuthServiceProtocol: Sendable {
     /// 401. Concurrent callers holding the same stale token share one refresh.
     /// Re-bootstraps if the refresh token is rejected. Returns nil if both fail.
     func refreshedAccessToken(replacing staleToken: String) async -> String?
+}
+
+// MARK: - Authorized send (the 401-refresh-retry convention)
+
+/// `accessToken()` hands back whatever is cached/stored WITHOUT checking `exp` —
+/// refresh is purely reactive, so every authenticated caller must implement the
+/// same "on 401, refresh once and retry once" dance. `NetworkService` and
+/// `AuthService` each grew a private copy of it; `PackOrderService` had none, so a
+/// routine mid-poll access-token expiry collapsed into an opaque
+/// `PackOrderError.server` and dead-ended a PAID custom-pack order (#133 V16).
+/// Defined here, on the protocol, so the convention lives once next to the two
+/// requirements it is built from and every conformer (real service or test stub)
+/// gets it for free.
+extension AuthServiceProtocol {
+    /// Attach the current bearer, send on `session`, and on a 401 refresh once
+    /// (single-flight, deduped inside `AuthService`) and retry exactly once.
+    ///
+    /// `session` is the CALLER's transport, injected rather than borrowed from the
+    /// auth service: the pack-api client targets a different host with its own
+    /// timeouts and its own `URLProtocol` stub in tests.
+    ///
+    /// With no token available the request still goes out unauthenticated, so the
+    /// legacy `user_id` grace path (and the founder admin-key path) keep working. A
+    /// 401 that survives the retry is returned as-is for the caller to classify —
+    /// there is never a third attempt.
+    nonisolated func sendAuthorized(
+        _ request: URLRequest,
+        on session: URLSession
+    ) async throws -> (Data, URLResponse) {
+        var req = request
+        let token = await accessToken()
+        if let token {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.data(for: req)
+
+        // Only retry a 401 that followed a bearer we actually sent.
+        guard let http = response as? HTTPURLResponse, http.statusCode == 401, let token else {
+            return (data, response)
+        }
+        guard let fresh = await refreshedAccessToken(replacing: token) else {
+            return (data, response) // refresh unavailable → surface the 401
+        }
+        req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
+        return try await session.data(for: req)
+    }
 }
 
 // MARK: - AuthService
@@ -302,7 +349,8 @@ actor AuthService: AuthServiceProtocol {
         do {
             let (data, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse,
-                  (200...299).contains(http.statusCode) else {
+                  (200 ... 299).contains(http.statusCode)
+            else {
                 return nil
             }
             return try JSONDecoder().decode(ChallengeResponse.self, from: data).challenge
@@ -328,7 +376,7 @@ actor AuthService: AuthServiceProtocol {
         }
         let body = try? JSONSerialization.data(withJSONObject: ["refresh_token": current.refreshToken])
         switch await postTokensResult(path: "/api/v1/auth/refresh", body: body) {
-        case .success(let decoded):
+        case let .success(decoded):
             // #78: a routine refresh must never drop the signed-in account fields.
             // The backend never re-sends `appleUserId` on refresh, so it is always
             // carried forward from the current tokens; name/email prefer the
@@ -407,7 +455,7 @@ actor AuthService: AuthServiceProtocol {
                 Logger.network.warning("🔐 Auth \(path, privacy: .public) → non-HTTP response")
                 return .transient
             }
-            guard (200...299).contains(http.statusCode) else {
+            guard (200 ... 299).contains(http.statusCode) else {
                 Logger.network.warning("🔐 Auth \(path, privacy: .public) → HTTP \(http.statusCode, privacy: .public)")
                 // Only a 401 is a definitive rejection; everything else is transient.
                 return http.statusCode == 401 ? .rejected : .transient
@@ -426,7 +474,7 @@ actor AuthService: AuthServiceProtocol {
     /// the bare 3-field `AuthTokens`. The refresh path uses `postTokensResult`
     /// directly so it can merge `fullName`/`email` (#78).
     private func postTokens(path: String, body: Data?) async -> AuthTokens? {
-        if case .success(let decoded) = await postTokensResult(path: path, body: body) {
+        if case let .success(decoded) = await postTokensResult(path: path, body: body) {
             return AuthTokens(
                 accessToken: decoded.accessToken,
                 refreshToken: decoded.refreshToken,
@@ -461,7 +509,7 @@ actor AuthService: AuthServiceProtocol {
             case expiresIn = "expires_in"
             case anonId = "anon_id"
             case fullName = "full_name"
-            case email = "email"
+            case email
         }
     }
 
@@ -566,7 +614,8 @@ actor AuthService: AuthServiceProtocol {
         do {
             let (data, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse,
-                  (200...299).contains(http.statusCode) else {
+                  (200 ... 299).contains(http.statusCode)
+            else {
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                 Logger.network.warning("🔐 Apple sign-in → HTTP \(status, privacy: .public)")
                 return nil
@@ -580,7 +629,7 @@ actor AuthService: AuthServiceProtocol {
             let newTokens = AuthTokens(
                 accessToken: decoded.accessToken,
                 refreshToken: decoded.refreshToken,
-                anonId: decoded.anonId,     // now users.id, not the anon id
+                anonId: decoded.anonId, // now users.id, not the anon id
                 accountName: mergedAccountField(live: fullName, server: decoded.fullName, stored: existing?.accountName),
                 accountEmail: mergedAccountField(live: email, server: decoded.email, stored: existing?.accountEmail),
                 appleUserId: user
@@ -613,7 +662,7 @@ actor AuthService: AuthServiceProtocol {
     func checkAppleCredentialState() async {
         let stored = tokens ?? store.load()
         guard let appleUserId = stored?.appleUserId else {
-            return  // anonymous user — nothing to check
+            return // anonymous user — nothing to check
         }
         let state = await withCheckedContinuation { continuation in
             ASAuthorizationAppleIDProvider().getCredentialState(forUserID: appleUserId) { state, _ in
@@ -622,10 +671,11 @@ actor AuthService: AuthServiceProtocol {
         }
         switch state {
         case .authorized:
-            break  // credential is still valid
+            break // credential is still valid
         case .revoked, .notFound, .transferred:
             Logger.network.info("🔐 Apple credential \(String(describing: state), privacy: .public) → dropping to anon")
-            await dropToFreshAnon()
+            // Involuntary drop → no RevenueCat re-alias (see `dropToFreshAnon`).
+            await dropToFreshAnon(linkAccount: false)
         @unknown default:
             break
         }
@@ -645,7 +695,8 @@ actor AuthService: AuthServiceProtocol {
             queue: nil
         ) { [weak self] _ in
             guard let self else { return }
-            Task { await self.dropToFreshAnon() }
+            // Involuntary drop → no RevenueCat re-alias (see `dropToFreshAnon`).
+            Task { await self.dropToFreshAnon(linkAccount: false) }
         }
     }
 
@@ -689,7 +740,8 @@ actor AuthService: AuthServiceProtocol {
 
         let (_, response) = try await sendAuthorized(request)
         guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode) else {
+              (200 ... 299).contains(http.statusCode)
+        else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             Logger.network.warning("🔐 DELETE /auth/me → HTTP \(status, privacy: .public)")
             throw AuthError.serverError(status)
@@ -709,7 +761,8 @@ actor AuthService: AuthServiceProtocol {
 
         let (data, response) = try await sendAuthorized(request)
         guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode) else {
+              (200 ... 299).contains(http.statusCode)
+        else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             Logger.network.warning("🔐 GET /auth/me/export → HTTP \(status, privacy: .public)")
             throw AuthError.serverError(status)
@@ -733,7 +786,7 @@ actor AuthService: AuthServiceProtocol {
             return (data, response)
         }
         guard let fresh = await refreshedAccessToken(replacing: token) else {
-            return (data, response)  // refresh unavailable → surface the 401
+            return (data, response) // refresh unavailable → surface the 401
         }
         req.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
         return try await session.data(for: req)
@@ -741,10 +794,21 @@ actor AuthService: AuthServiceProtocol {
 
     /// Drop the stored tokens (anon or account), clear the in-memory cache, and
     /// re-bootstrap a fresh anonymous identity.
-    private func dropToFreshAnon() async {
+    ///
+    /// - Parameter linkAccount: whether the fresh identity is also aliased into
+    ///   RevenueCat (`performBootstrap`'s account-link callback). Pass `false`
+    ///   whenever the auth session is dropped WITHOUT the App Store subscription
+    ///   going away — the revocation call sites, for the same reason the
+    ///   refresh-rejection path passes `false`: revoking Sign in with Apple does
+    ///   not cancel a subscription, so moving RC's appUserID onto a fresh anon id
+    ///   would hide an active entitlement and push a paying user at the paywall
+    ///   (#133 V17). `signOut` and `deleteAccount` deliberately keep the default:
+    ///   there the next user of the device is treated as a different human, and
+    ///   re-aliasing is the intended behaviour (founder's call).
+    private func dropToFreshAnon(linkAccount: Bool = true) async {
         tokens = nil
         store.clear()
-        _ = await performBootstrap()
+        _ = await performBootstrap(linkAccount: linkAccount)
     }
 }
 
@@ -767,7 +831,7 @@ enum AuthError: LocalizedError, Sendable {
         switch self {
         case .notSignedIn:
             return String(localized: "Not signed in", comment: "Auth error: no active session")
-        case .serverError(let code):
+        case let .serverError(code):
             return String(localized: "Server error (\(code))", comment: "Auth error: server returned non-2xx; placeholder is the HTTP status code")
         }
     }

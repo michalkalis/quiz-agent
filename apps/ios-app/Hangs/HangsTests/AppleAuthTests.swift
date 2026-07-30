@@ -26,9 +26,9 @@
 import AuthenticationServices
 import CryptoKit
 import Foundation
+@testable import Hangs
 import os
 import Testing
-@testable import Hangs
 
 // MARK: - AppleStubURLProtocol
 
@@ -36,8 +36,7 @@ import Testing
 // Isolated static handler + session so it never races AuthServiceTests or AuthAttestTests.
 
 final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
-
-    nonisolated override init(
+    override nonisolated init(
         request: URLRequest,
         cachedResponse: CachedURLResponse?,
         client: (any URLProtocolClient)?
@@ -47,17 +46,18 @@ final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
 
     private nonisolated static let handlerLock = OSAllocatedUnfairLock<
         ((@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))?
-    )>(initialState: nil)
+        )
+    >(initialState: nil)
 
     nonisolated static var handler: (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
         get { handlerLock.withLock { $0 } }
         set { handlerLock.withLock { $0 = newValue } }
     }
 
-    nonisolated override class func canInit(with request: URLRequest) -> Bool { true }
-    nonisolated override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override nonisolated class func canInit(with _: URLRequest) -> Bool { true }
+    override nonisolated class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
-    nonisolated override func startLoading() {
+    override nonisolated func startLoading() {
         let request = self.request
         DispatchQueue.global(qos: .userInitiated).async {
             guard let handler = Self.handler else {
@@ -75,7 +75,7 @@ final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
         }
     }
 
-    nonisolated override func stopLoading() {}
+    override nonisolated func stopLoading() {}
 
     static func makeSession() -> URLSession {
         let cfg = URLSessionConfiguration.ephemeral
@@ -86,7 +86,7 @@ final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
 
 // MARK: - AppleTestTokenStore
 
-nonisolated final class AppleTestTokenStore: TokenStore, @unchecked Sendable {
+final nonisolated class AppleTestTokenStore: TokenStore, @unchecked Sendable {
     private let lock = OSAllocatedUnfairLock<AuthTokens?>(initialState: nil)
 
     init(seed: AuthTokens? = nil) {
@@ -126,13 +126,13 @@ private nonisolated enum AppleAuthStubs {
         """#
     }
 }
+
 // HTTPURLResponse.make(status:) is provided by Support/StubURLProtocol.swift (shared test target helper).
 
 // MARK: - AppleAuthTests
 
 @Suite("Apple Auth — nonce + credential flow", .serialized)
 struct AppleAuthTests {
-
     // MARK: - 0. Raw nonce generation (#91 item 1)
 
     /// generateRawNonce must yield a fresh 64-char lowercase-hex string every call.
@@ -192,7 +192,7 @@ struct AppleAuthTests {
         let anonTokens = AuthTokens(accessToken: "anon-access", refreshToken: "anon-refresh", anonId: "anon-123")
         let store = AppleTestTokenStore(seed: anonTokens)
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm in-memory cache
+        _ = await service.accessToken() // warm in-memory cache
 
         let receivedBearers = OSAllocatedUnfairLock<[String]>(initialState: [])
 
@@ -251,12 +251,12 @@ struct AppleAuthTests {
         )
         let store = AppleTestTokenStore(seed: accountTokens)
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm cache
+        _ = await service.accessToken() // warm cache
 
         let deleteCalled = OSAllocatedUnfairLock<Bool>(initialState: false)
 
         AppleStubURLProtocol.handler = { req in
-            if req.url?.path == "/api/v1/auth/me" && req.httpMethod == "DELETE" {
+            if req.url?.path == "/api/v1/auth/me", req.httpMethod == "DELETE" {
                 deleteCalled.withLock { $0 = true }
                 return (.make(status: 204), Data())
             }
@@ -296,7 +296,7 @@ struct AppleAuthTests {
         )
         let store = AppleTestTokenStore(seed: accountTokens)
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm cache
+        _ = await service.accessToken() // warm cache
 
         AppleStubURLProtocol.handler = { req in
             if req.url?.path == "/api/v1/auth/anon-bootstrap" {
@@ -319,14 +319,113 @@ struct AppleAuthTests {
         )
 
         // Allow the async observer chain (Notification -> Task -> actor method) to complete.
-        try await Task.sleep(nanoseconds: 300_000_000)  // 300ms
+        try await Task.sleep(nanoseconds: 300_000_000) // 300ms
 
         let stored = store.load()
         #expect(stored?.appleUserId == nil, "appleUserId must be cleared after revocation")
         #expect(stored?.accessToken == "fresh-anon-after-revoke", "Fresh anon tokens must replace account tokens")
     }
 
+    // MARK: - 4b. Revocation must NOT move the purchase identity (#133 V17)
+
+    /// WHY (adversarial audit 2026-07-30): the re-bootstrap above went through
+    /// `dropToFreshAnon()` → `performBootstrap()` with the account-link default ON,
+    /// which AppState wires to `Purchases.logIn(anonId)`. Revoking Sign in with
+    /// Apple does NOT cancel an App Store subscription, so aliasing RevenueCat onto
+    /// a brand-new anon id moved the purchase identity off the id that owns the
+    /// subscription: `isPurchased` flipped false, `/entitlements/sync` found
+    /// nothing, and a paying subscriber was pushed at the paywall. This is the same
+    /// reasoning that already made the refresh-rejection path pass
+    /// `linkAccount: false`. Both revocation entry points
+    /// (`checkAppleCredentialState` on cold launch and the revoked-notification
+    /// observer) are exercised here — `setupAppleCredentialObservation` runs the
+    /// cold-launch check first, then the posted notification runs the observer.
+    @Test("credential revocation re-bootstraps WITHOUT re-aliasing the purchase identity")
+    func credentialRevocationKeepsPurchaseIdentity() async throws {
+        let accountTokens = AuthTokens(
+            accessToken: "account-access",
+            refreshToken: "account-refresh",
+            anonId: "users-id-1",
+            accountName: "Test User",
+            accountEmail: nil,
+            appleUserId: "apple-user-123"
+        )
+        let store = AppleTestTokenStore(seed: accountTokens)
+        let service = makeService(store: store)
+        _ = await service.accessToken() // warm cache, no mint (token is stored)
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        AppleStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/anon-bootstrap" {
+                return (
+                    .make(status: 200),
+                    Data(AppleAuthStubs.tokenJSON(access: "fresh-anon-after-revoke", refresh: "fresh-r2", anon: "anon-999").utf8)
+                )
+            }
+            return (.make(status: 500), Data())
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        await service.setupAppleCredentialObservation()
+        NotificationCenter.default.post(
+            name: ASAuthorizationAppleIDProvider.credentialRevokedNotification,
+            object: nil
+        )
+        try await Task.sleep(nanoseconds: 300_000_000) // observer chain: Notification → Task → actor
+
+        // The mint itself must still happen — only the purchase identity stays put.
+        #expect(store.load()?.accessToken == "fresh-anon-after-revoke", "the app must keep working on a fresh anon identity")
+        #expect(linked.withLock { $0 }.isEmpty,
+                "an active subscription must not be hidden by aliasing RevenueCat to the revocation anon id")
+    }
+
+    /// Contrast, pinning the deliberate difference: an explicit `signOut` DOES link
+    /// the fresh identity. There the device is handed to a different human, so the
+    /// purchase identity is supposed to move — the founder's call, and the reason
+    /// `dropToFreshAnon`'s `linkAccount` default stays `true`.
+    @Test("signOut still links the freshly minted anon identity (deliberate contrast to revocation)")
+    func signOutStillLinksFreshIdentity() async throws {
+        let accountTokens = AuthTokens(
+            accessToken: "account-access",
+            refreshToken: "account-refresh",
+            anonId: "users-id-1",
+            accountName: "Test User",
+            accountEmail: nil,
+            appleUserId: "apple-user-123"
+        )
+        let store = AppleTestTokenStore(seed: accountTokens)
+        let service = makeService(store: store)
+        _ = await service.accessToken()
+
+        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        await service.setAccountLinkedHandler { id in
+            linked.withLock { $0.append(id) }
+        }
+
+        AppleStubURLProtocol.handler = { req in
+            if req.url?.path == "/api/v1/auth/anon-bootstrap" {
+                return (
+                    .make(status: 200),
+                    Data(AppleAuthStubs.tokenJSON(access: "fresh-anon-after-signout", refresh: "fresh-r3", anon: "anon-777").utf8)
+                )
+            }
+            // /auth/logout is best-effort and its result ignored.
+            return (.make(status: 204), Data())
+        }
+        defer { AppleStubURLProtocol.handler = nil }
+
+        await service.signOut()
+
+        #expect(store.load()?.accessToken == "fresh-anon-after-signout")
+        #expect(linked.withLock { $0 } == ["anon-777"])
+    }
+
     // MARK: - 5. #78 account-field merge matrix
+
     //
     // Apple only supplies fullName/email on the FIRST authorization of an Apple ID
     // with the app — every later sign-in (and every token refresh) gets nil from
@@ -342,11 +441,11 @@ struct AppleAuthTests {
     /// is the freshest source of truth.
     @Test("completeAppleSignIn: live Apple name/email wins over server-decoded value (#78 a)")
     func mergePrefersLiveCredentialOverServerValue() async throws {
-        let store = AppleTestTokenStore()  // fresh anon, nothing stored yet
+        let store = AppleTestTokenStore() // fresh anon, nothing stored yet
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm cache
+        _ = await service.accessToken() // warm cache
 
-        AppleStubURLProtocol.handler = { req in
+        AppleStubURLProtocol.handler = { _ in
             (
                 .make(status: 200),
                 Data(
@@ -375,9 +474,9 @@ struct AppleAuthTests {
     /// recover it. This is Acceptance criterion #2.
     @Test("completeAppleSignIn: nil live name + server name → name recovered from server (#78 b)")
     func mergeRecoversNameFromServerWhenLiveIsNil() async throws {
-        let store = AppleTestTokenStore()  // fresh install: nothing stored locally
+        let store = AppleTestTokenStore() // fresh install: nothing stored locally
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm cache (mints anon)
+        _ = await service.accessToken() // warm cache (mints anon)
 
         AppleStubURLProtocol.handler = { req in
             if req.url?.path == "/api/v1/auth/apple" {
@@ -398,7 +497,7 @@ struct AppleAuthTests {
         let result = await service.completeAppleSignIn(
             identityToken: "mock-id-token", authorizationCode: "mock-auth-code",
             rawNonce: "test-raw-nonce", user: "apple-user-1",
-            fullName: nil, email: nil  // Apple sends nothing on a repeat authorization
+            fullName: nil, email: nil // Apple sends nothing on a repeat authorization
         )
 
         #expect(result?.accountName == "Recovered Name", "Server-decoded value must recover the name Apple no longer sends")
@@ -419,7 +518,7 @@ struct AppleAuthTests {
         )
         let store = AppleTestTokenStore(seed: seed)
         let service = makeService(store: store)
-        _ = await service.accessToken()  // warm cache with the seeded signed-in tokens
+        _ = await service.accessToken() // warm cache with the seeded signed-in tokens
 
         AppleStubURLProtocol.handler = { req in
             if req.url?.path == "/api/v1/auth/refresh" {

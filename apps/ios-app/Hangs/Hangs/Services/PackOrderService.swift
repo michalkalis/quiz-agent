@@ -76,7 +76,7 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     private func performCreateOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         let url = baseURL.appendingPathComponent("/v1/orders")
-        var request = await makeRequest(url: url, method: "POST", includeAdminKey: true)
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: true)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let payload = CreateOrderRequest(
@@ -91,10 +91,13 @@ actor PackOrderService: PackOrderServiceProtocol {
         request.httpBody = try JSONEncoder().encode(payload)
 
         Logger.network.debug("🌐 POST \(url, privacy: .public) (create pack order)")
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await send(request)
 
         guard let http = response as? HTTPURLResponse else {
             throw PackOrderError.invalidResponse
+        }
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
         }
         // 202 create / 200 idempotent replay both carry the created payload.
         guard http.statusCode == 200 || http.statusCode == 202 else {
@@ -106,15 +109,18 @@ actor PackOrderService: PackOrderServiceProtocol {
     func listOrders() async throws -> [OrderSnapshot] {
         let url = baseURL.appendingPathComponent("/v1/orders")
         // List is owner-scoped: bearer required, no admin-key alternative.
-        let request = await makeRequest(url: url, method: "GET", includeAdminKey: false)
+        let request = makeRequest(url: url, method: "GET", includeAdminKey: false)
 
         Logger.network.debug("🌐 GET \(url, privacy: .public) (list pack orders)")
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await send(request)
 
         guard let http = response as? HTTPURLResponse else {
             throw PackOrderError.invalidResponse
         }
-        guard (200...299).contains(http.statusCode) else {
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
+        }
+        guard (200 ... 299).contains(http.statusCode) else {
             throw PackOrderError.server(Self.errorMessage(from: data))
         }
         return try JSONDecoder().decode(OrderListResponse.self, from: data).orders
@@ -122,16 +128,19 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     func getOrder(id: String) async throws -> OrderSnapshot {
         let url = baseURL.appendingPathComponent("/v1/orders/\(id)")
-        var request = await makeRequest(url: url, method: "GET", includeAdminKey: true)
+        var request = makeRequest(url: url, method: "GET", includeAdminKey: true)
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
         Logger.network.debug("🌐 GET \(url, privacy: .public) (poll pack order)")
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await send(request)
 
         guard let http = response as? HTTPURLResponse else {
             throw PackOrderError.invalidResponse
         }
-        guard (200...299).contains(http.statusCode) else {
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
+        }
+        guard (200 ... 299).contains(http.statusCode) else {
             throw PackOrderError.server(Self.errorMessage(from: data))
         }
         return try JSONDecoder().decode(OrderSnapshot.self, from: data)
@@ -139,19 +148,34 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     // MARK: - Helpers
 
-    /// Build a request with the admin key (optional) + account bearer (when
-    /// available) attached. The admin key is the founder path; the bearer links
-    /// the order to the account so it lists under "mine".
-    private func makeRequest(url: URL, method: String, includeAdminKey: Bool) async -> URLRequest {
+    /// Build a request with the admin key (optional) attached. The admin key is the
+    /// founder path; the account bearer — which links the order to the account so it
+    /// lists under "mine" — is attached by `send`, because a 401 has to re-attach a
+    /// refreshed one.
+    private func makeRequest(url: URL, method: String, includeAdminKey: Bool) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         if includeAdminKey, let adminKey = adminKeyStore.load() {
             request.setValue(adminKey, forHTTPHeaderField: "X-Admin-Key")
         }
-        if let token = await authService?.accessToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
         return request
+    }
+
+    /// Send through the shared 401-refresh-retry convention
+    /// (`AuthServiceProtocol.sendAuthorized`): it attaches the bearer and, on a 401,
+    /// refreshes the access token once and retries the request once.
+    ///
+    /// This matters most on the 1 Hz `getOrder` poll `OrderPackViewModel` runs for
+    /// the whole generation — the access token routinely expires mid-poll, and
+    /// before this every such 401 ate the poller's tolerated-failure budget and
+    /// dead-ended a PAID order on an opaque `.server` message (#133 V16). With no
+    /// `authService` (founder admin-key path, and this service's own unit tests) the
+    /// request goes out unchanged.
+    private func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        guard let authService else {
+            return try await session.data(for: request)
+        }
+        return try await authService.sendAuthorized(request, on: session)
     }
 
     /// Decode the backend error body defensively. Hand-raised errors are
@@ -176,13 +200,20 @@ private nonisolated struct DetailStringError: Decodable, Sendable {
 
 enum PackOrderError: LocalizedError {
     case invalidResponse
+    /// A 401 that survived the refresh-and-retry in `send` — the session is
+    /// genuinely gone, not merely expired. Distinct from `.server` so a paid pack
+    /// flow tells the user to sign in again instead of showing the API's opaque
+    /// "returned an error" fallback (#133 V16).
+    case unauthorized
     case server(String)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return String(localized: "Invalid response from the pack service", comment: "Pack-order error: malformed server response")
-        case .server(let message):
+        case .unauthorized:
+            return String(localized: "Your session expired. Please sign in again to continue.", comment: "Pack-order error: the request was still unauthorized after a token refresh")
+        case let .server(message):
             // Server-provided message — already human-readable, do not wrap.
             return message
         }

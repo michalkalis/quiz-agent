@@ -4994,6 +4994,17 @@
         }
       }
     },
+    "Your session expired. Please sign in again to continue." : {
+      "comment" : "Pack-order error: the request was still unauthorized after a token refresh",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relácia vypršala. Prihlás sa znova."
+          }
+        }
+      }
+    },
     "Your submission was interrupted. Try answering again." : {
       "comment" : "Error body: a cancelled submission",
       "localizations" : {

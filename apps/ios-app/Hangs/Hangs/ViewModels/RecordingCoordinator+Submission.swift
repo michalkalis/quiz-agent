@@ -116,8 +116,21 @@ extension RecordingCoordinator {
                     self.consecutiveTranscriptionFailures = 0
                 }
 
-                // Store response and show confirmation modal
+                // Store response and show confirmation modal — but only if this
+                // coordinator still owns the submission. The submit path transitions to
+                // `.processing` before its first await, so anything that has since left
+                // `.processing` (a Re-record tap or a spoken "again", a Cancel, a skip)
+                // has REJECTED this recording. Applying the result anyway put the stale
+                // transcript back on screen and armed auto-confirm over the live
+                // re-record; when that fired the rejected answer got graded and the
+                // re-recorded one was dropped. Mirrors `handleQuizResponse`'s
+                // "only the state that submitted may commit" guard (#133 V14).
                 await MainActor.run {
+                    guard self.quizState() == .processing else {
+                        let state = self.quizState().label
+                        Logger.network.info("🚫 Dropping voice submit result — state \(state, privacy: .public) no longer owns this submission")
+                        return
+                    }
                     self.pendingResponse = response
                     self.transcribedAnswer = evaluation.userAnswer
                     self.showAnswerConfirmation = true
@@ -129,6 +142,13 @@ extension RecordingCoordinator {
             } catch is CancellationError {
                 // User cancelled - state already cleaned up by cancelProcessing()
                 Logger.network.debug("🚫 Voice submission task was cancelled")
+            } catch let error as URLError where error.code == .cancelled {
+                // The same cancellation arriving from URLSession rather than from
+                // `Task.checkCancellation()`. Re-record / Cancel abort this task
+                // mid-request, and the rejected submission must vanish silently —
+                // routing it to `setError` would raise an "Action cancelled" screen
+                // over the recording the driver just started (#133 V14).
+                Logger.network.debug("🚫 Voice submission cancelled mid-request")
             } catch let error as URLError where error.code == .timedOut {
                 // #131 Track A: pass the error through. Without it `setError` fell
                 // back to the context-only model and every failure — timeout,

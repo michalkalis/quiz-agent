@@ -95,6 +95,13 @@ extension RecordingCoordinator {
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
         cancelAutoConfirm()
+        // The sheet can also be reached from `.processing` while the voice upload is
+        // still in flight (the command screen maps `.processing` → `.confirmation`, so
+        // a spoken "again" lands here mid-submit). That submission is answering the
+        // recording the driver just rejected — leave it running and its completion
+        // resurfaces the stale transcript on top of the live re-record. Cancel it,
+        // exactly as `cancelProcessing()` does (#133 V14).
+        taskBag.cancel(.voiceSubmission)
         showAnswerConfirmation = false
         pendingResponse = nil
         transcriptWasEdited = false

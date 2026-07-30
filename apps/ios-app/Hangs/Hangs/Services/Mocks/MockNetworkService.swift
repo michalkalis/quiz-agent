@@ -95,6 +95,12 @@ import os
         var textInputFailuresBeforeSuccess = 0
         var submitVoiceAnswerFailuresBeforeSuccess = 0
         var submitVoiceAnswerCallCount = 0
+        /// Optional hook awaited right after the call is recorded, before
+        /// `submitVoiceAnswer` returns/throws — lets a test hold a voice upload in
+        /// flight deterministically and interleave a Re-record / spoken "again" at
+        /// exactly the #133 V14 window, with no wall-clock race. Sibling of
+        /// `getUsageGate` / `syncEntitlementsGate`.
+        var submitVoiceAnswerGate: (@Sendable () async -> Void)?
         /// The transient failure those two counters throw.
         static let coldWakeError = NetworkError.serverError(statusCode: 503, message: "machine waking")
         /// Number of times `endSession` was invoked — for assertions that X actually
@@ -164,6 +170,7 @@ import os
         func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
             capturedVoiceAnswerQuestionId = questionId
+            await submitVoiceAnswerGate?()
             if submitVoiceAnswerFailuresBeforeSuccess > 0 {
                 submitVoiceAnswerFailuresBeforeSuccess -= 1
                 throw Self.coldWakeError

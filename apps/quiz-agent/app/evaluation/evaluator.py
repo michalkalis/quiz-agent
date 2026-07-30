@@ -3,6 +3,7 @@
 Ported from graph.py:445-518
 """
 
+import re
 from typing import Tuple
 
 from quiz_shared.llm import factory as llm_factory
@@ -215,15 +216,17 @@ Respond with EXACTLY one of these words: correct, partially_correct, partially_i
         elif result_text == "incorrect":
             return "incorrect"
 
-        # Fallback parsing
-        if "partially_correct" in result_text:
-            return "partially_correct"
-        elif "partially_incorrect" in result_text:
-            return "partially_incorrect"
-        elif "correct" in result_text:
-            return "correct"
-        elif "incorrect" in result_text:
-            return "incorrect"
+        # Fallback parsing on word boundaries, negative verdicts first:
+        # "incorrect" contains "correct", so a plain substring match would
+        # score a rejected answer ("Incorrect.") as full credit.
+        for pattern, verdict in (
+            (r"\bpartially[ _]incorrect\b", "partially_incorrect"),
+            (r"\bpartially[ _]correct\b", "partially_correct"),
+            (r"\bincorrect\b", "incorrect"),
+            (r"\bcorrect\b", "correct"),
+        ):
+            if re.search(pattern, result_text):
+                return verdict
 
         # Default to incorrect if unclear
         return "incorrect"

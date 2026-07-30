@@ -131,7 +131,9 @@ class FactVerifier:
             )
         try:
             response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model("gemini-2.5-flash"),
+                # 2026-07-30 frontier refresh: verification correctness is
+                # quality-critical — factory VERIFY role, no flash-class model.
+                model=llm_factory.resolve_model(llm_factory.VERIFY),
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content
@@ -217,27 +219,7 @@ class FactVerifier:
     ) -> VerificationResult:
         """Stage 2: Use Gemini Flash to analyze search evidence."""
         if not self._available():
-            # Fallback: use heuristics only
-            agreeing = sum(1 for s in sources if s["agrees_with_answer"])
-            total = len(sources)
-            if agreeing > total / 2:
-                return VerificationResult(
-                    verdict="likely_correct",
-                    confidence=0.5 + (agreeing / max(total, 1)) * 0.2,
-                    sources=sources,
-                    notes="Gemini unavailable; heuristic verdict based on source agreement",
-                )
-            # RC-9: judge unavailable + no clear source agreement → we simply
-            # could not verify. Hold for review rather than drop at low
-            # confidence; dropping here selects FOR crisp recall answers that
-            # happen to substring-match and against estimation/reasoning ones.
-            return VerificationResult(
-                verdict="unverified",
-                confidence=0.3,
-                sources=sources,
-                held_for_review=True,
-                notes="Judge unavailable; insufficient source agreement — held for review",
-            )
+            return self._judge_unusable(sources, "Gemini unavailable")
 
         # Build evidence summary for Gemini
         evidence_lines = []
@@ -309,15 +291,35 @@ Rules:
             )
 
         except Exception as e:
-            # Gemini failed — fall back to heuristic
-            agreeing = sum(1 for s in sources if s["agrees_with_answer"])
-            total = len(sources)
+            return self._judge_unusable(sources, f"Gemini analysis failed ({e})")
+
+    def _judge_unusable(self, sources: list[dict], reason: str) -> VerificationResult:
+        """Verdict for a question the judge could not rule on.
+
+        Covers both ways the judge goes silent: no key/gateway at all, and a
+        live judge that 429s, times out (``_complete`` → ``None``) or answers
+        with prose instead of JSON. RC-9: neither is evidence *against* the
+        answer. Source agreement can still carry a verdict on its own;
+        without it the question is held for review rather than dropped at low
+        confidence, because dropping here selects FOR crisp recall answers
+        that happen to substring-match and against estimation/reasoning ones.
+        """
+        agreeing = sum(1 for s in sources if s["agrees_with_answer"])
+        total = len(sources)
+        if agreeing > total / 2:
             return VerificationResult(
-                verdict="uncertain",
-                confidence=0.3,
+                verdict="likely_correct",
+                confidence=0.5 + (agreeing / max(total, 1)) * 0.2,
                 sources=sources,
-                notes=f"Gemini analysis failed ({e}); heuristic fallback",
+                notes=f"{reason}; heuristic verdict based on source agreement",
             )
+        return VerificationResult(
+            verdict="unverified",
+            confidence=0.3,
+            sources=sources,
+            held_for_review=True,
+            notes=f"{reason}; insufficient source agreement — held for review",
+        )
 
     async def verify_batch(self, questions: list[dict]) -> list[dict]:
         """Verify a batch of question-answer pairs.

@@ -32,8 +32,14 @@ protocol ElevenLabsSTTServiceProtocol: Sendable {
     func commitAndClose() async throws
     /// Disconnect and clean up
     func disconnect() async
-    /// Stream of STT events
-    var events: AsyncStream<STTEvent> { get }
+    /// STT events for ONE listening session — each call mints a FRESH
+    /// `AsyncStream` (see StreamChannel). Never store one stream for the
+    /// service's lifetime: this service is app-lifetime (one instance in
+    /// AppState) and its listeners are cancelled on every teardown (feedback
+    /// dictation stop, commit watchdog, audio interruption), and cancelling a
+    /// `for await` permanently finishes a shared AsyncStream — the
+    /// dead-voice-commands P0 class.
+    func makeEventStream() -> AsyncStream<STTEvent>
 }
 
 /// Streaming STT service using ElevenLabs Scribe v2 Realtime WebSocket
@@ -41,15 +47,12 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
 
     private var webSocketTask: URLSessionWebSocketTask?
     private var receiveTask: Task<Void, Never>?
-    private var eventContinuation: AsyncStream<STTEvent>.Continuation?
 
-    nonisolated let events: AsyncStream<STTEvent>
+    /// Per-acquisition event channel: a cancelled listener can only terminate its
+    /// own stream, never the next session's. See StreamChannel.swift.
+    private nonisolated let eventChannel = StreamChannel<STTEvent>()
 
-    init() {
-        var continuation: AsyncStream<STTEvent>.Continuation!
-        self.events = AsyncStream { continuation = $0 }
-        self.eventContinuation = continuation
-    }
+    nonisolated func makeEventStream() -> AsyncStream<STTEvent> { eventChannel.makeStream() }
 
     // MARK: - Connection
 
@@ -93,7 +96,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             await self?.receiveLoop()
         }
 
-        eventContinuation?.yield(.connected)
+        eventChannel.yield(.connected)
 
         Logger.stt.info("🎙️ ElevenLabs STT: connected")
 
@@ -178,7 +181,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             } catch {
                 if !Task.isCancelled {
                     Logger.stt.error("🎙️ ElevenLabs STT: receive error: \(error.localizedDescription, privacy: .public)")
-                    eventContinuation?.yield(.disconnected(error))
+                    eventChannel.yield(.disconnected(error))
                 }
                 return
             }
@@ -195,7 +198,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         switch messageType {
         case "partial_transcript":
             if let text = json["text"] as? String, !text.isEmpty {
-                eventContinuation?.yield(.partialTranscript(text))
+                eventChannel.yield(.partialTranscript(text))
 
                 Logger.stt.debug("🎙️ ElevenLabs STT partial: \(text, privacy: .public)")
             }
@@ -206,7 +209,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
             // transcription failure. Swallowing it left the app stuck on the
             // RECORDING screen forever (#54 task 54.4, founder #5).
             let text = json["text"] as? String ?? ""
-            eventContinuation?.yield(.committedTranscript(text))
+            eventChannel.yield(.committedTranscript(text))
 
             Logger.stt.info("🎙️ ElevenLabs STT committed: \(text, privacy: .public)")
 
@@ -228,7 +231,7 @@ actor ElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
                 "reason": "server_error",
                 "message": errorMsg
             ])
-            eventContinuation?.yield(.disconnected(ElevenLabsSTTError.serverError(errorMsg)))
+            eventChannel.yield(.disconnected(ElevenLabsSTTError.serverError(errorMsg)))
 
         default:
             Logger.stt.debug("🎙️ ElevenLabs STT: unknown message type: \(messageType, privacy: .public)")

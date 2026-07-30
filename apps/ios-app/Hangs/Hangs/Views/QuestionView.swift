@@ -458,9 +458,16 @@ struct QuestionView: View {
                         HangsQuestionPrompt(
                             text: question.question,
                             barColor: Theme.Hangs.Colors.blue,
-                            textFont: stemFont
+                            textFont: stemFont,
+                            textIdentifier: "question.text"
                         )
-                        .accessibilityIdentifier("question.text")
+                        // Keep the stem its OWN a11y element inside the replay
+                        // button. A button label that resolves to a single
+                        // element gets folded into the button, taking the stem's
+                        // identifier with it — which is what happened when #132
+                        // dropped the speaker glyph that used to be the label's
+                        // second element.
+                        .accessibilityElement(children: .contain)
                         .padding(.horizontal, 28)
                         .padding(.vertical, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)

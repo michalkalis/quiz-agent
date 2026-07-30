@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir \
     uvicorn>=0.24.0 \
     langchain>=0.3.9 \
     langchain-openai>=0.2.10 \
+    langchain-aws>=0.2.27 \
     anthropic>=0.42.0 \
     tavily-python>=0.5.0 \
     google-generativeai>=0.8.0 \
@@ -57,6 +58,14 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /build/app /app
+
+# Prompt example corpus (gold standard + anti-patterns). Without it every paid
+# pack was generated with no curated exemplars and no anti-pattern block, and
+# DedupStage's gold-standard check was a no-op — silently, because the loaders
+# fell back to hardcoded examples. `.dockerignore` excludes `data/` but
+# re-includes `data/examples/`; if that negation is ever dropped this COPY
+# fails the build instead of shipping degraded prompts.
+COPY data/examples /app/data/examples
 
 EXPOSE 8003
 

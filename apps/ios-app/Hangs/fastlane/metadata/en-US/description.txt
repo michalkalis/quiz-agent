@@ -1,0 +1,20 @@
+Trubbo is a voice-first trivia quiz built for the road. Start a quiz, listen to the question, and answer out loud. No tapping, no reading, just talking.
+
+WHY TRUBBO
+• Fully voice controlled: start, answer, skip and repeat with your voice
+• Questions are read aloud with natural speech
+• Answer in your own words. AI understands what you mean, not just exact matches
+• Plays in Slovak and English
+• Built for driving: audio-first flow, big controls, screen stays awake
+
+FREE TO PLAY
+You get a monthly allowance of free questions. The Unlimited subscription removes the limit, and one-time question packs never expire. Prices are shown in the app before any purchase.
+
+STAY SAFE
+Trubbo is designed for hands-free use. Never operate the screen while driving and always follow traffic laws.
+
+GOOD TO KNOW
+Questions and answer evaluation are AI generated and may contain inaccuracies. You can export or delete your data anytime in Settings.
+
+Privacy Policy: https://quiz-agent-api.fly.dev/legal/privacy
+Terms of Use: https://quiz-agent-api.fly.dev/legal/terms

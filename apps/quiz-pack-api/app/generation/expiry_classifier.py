@@ -45,7 +45,9 @@ CONTENT_CLASS_TTL: dict[str, Optional[timedelta]] = {
 # Cheapest judgment tier already used in this codebase (factory EVAL/CRITIQUE/
 # PARSE default). Resolved through the factory so the OpenRouter remap applies
 # under ``LLM_GATEWAY=openrouter``; direct mode leaves it unchanged.
-_CLASSIFIER_MODEL = "gpt-4o-mini"
+# 2026-07-30 frontier refresh (founder: no mini-class models anywhere in the
+# generation pipeline) — reuse the factory CRITIQUE role.
+_CLASSIFIER_MODEL = llm_factory.CRITIQUE
 
 _PROMPT_HEADER = """You classify trivia questions by how quickly their correct \
 answer goes out of date. You read only the question and its correct answer.

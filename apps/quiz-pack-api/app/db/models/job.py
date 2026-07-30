@@ -21,6 +21,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -78,8 +79,17 @@ class GenerationJob(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
+    # `onupdate` is load-bearing for the stuck-order sweep, which measures job
+    # liveness by `updated_at`. Its only writer used to be `append_step`'s
+    # explicit `now()`, so a requeue (manual /retry or a sweep recovery) left the
+    # timestamp at the last completed step — hours stale — and the very next
+    # sweep tick classified the freshly queued job as stuck and started a second
+    # paid pipeline for the same order. Client-side default: no DDL, no migration.
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
     )
 
     __table_args__ = (
@@ -93,6 +103,20 @@ class GenerationJob(Base, UUIDPrimaryKeyMixin):
             name="ck_jobs_progress",
         ),
     )
+
+
+def attempt_job_id(order_id: uuid.UUID, job: GenerationJob) -> str:
+    """Deterministic arq ``_job_id`` for one processing attempt of ``order_id``.
+
+    With no explicit id arq assigns a random ``uuid4``, so nothing stopped a
+    duplicate enqueue of the *same* attempt — a requeue racing the stuck-order
+    sweep — from running two paid pipelines for one purchase: double LLM +
+    search spend, two ``QuestionPack`` rows, one of them orphaned. Both counters
+    are in the key because ``/retry`` resets ``retry_count`` to 0: keyed on
+    ``retry_count`` alone, a second manual retry would reuse the first one's id
+    and be silently swallowed as a duplicate while ``keep_result`` still holds it.
+    """
+    return f"process_order:{order_id}:{job.retry_count}:{job.manual_retry_count}"
 
 
 # Single-statement append: the new entry's `event_id` is `jsonb_array_length(step_log)`

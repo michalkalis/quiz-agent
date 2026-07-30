@@ -359,6 +359,7 @@ async def list_questions(
     _: str = Depends(verify_admin_key),
     search: Optional[str] = None,
     topic: Optional[str] = None,
+    review_status: Optional[str] = None,
     limit: int = 1000,
 ):
 
@@ -370,6 +371,8 @@ async def list_questions(
             continue
         if topic and q.topic.lower() != topic.lower():
             continue
+        if review_status and q.review_status != review_status:
+            continue
         results.append(
             {
                 "id": q.id,
@@ -378,6 +381,9 @@ async def list_questions(
                 "topic": q.topic,
                 "difficulty": q.difficulty,
                 "type": q.type,
+                "review_status": q.review_status,
+                "possible_answers": q.possible_answers,
+                "explanation": q.explanation,
             }
         )
 

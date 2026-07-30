@@ -94,7 +94,13 @@ def test_fallback_retrieval_respects_image_opt_out():
         session_id="sess_test", current_difficulty="medium", language="en"
     )
 
-    retriever._fallback_retrieval(session, "medium", n_candidates=5, excluded_ids=[])
+    retriever._fallback_retrieval(
+        session,
+        "medium",
+        n_candidates=5,
+        excluded_ids=[],
+        filters=retriever._build_metadata_filters("medium", session),
+    )
 
     assert store.search.call_count > 0
     for call in store.search.call_args_list:
@@ -108,11 +114,13 @@ def test_pack_session_scopes_to_pack_id_only():
     # constraints. Crucially it must drop review_status: delivered pack questions
     # stay `pending_review` (they are never promoted into the shared corpus), so
     # if the "approved" gate survived here every pack would play as an EMPTY quiz.
+    # (#128's language_dependent guard is NOT one of the dropped constraints —
+    # see the dedicated pack + language tests below.)
     retriever = _retriever()
     session = QuizSession(
         session_id="sess_pack",
         current_difficulty="hard",
-        language="sk",  # non-en would normally add a language_dependent filter
+        language="en",
         pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
         preferred_categories=["music"],  # would normally add a category filter
     )
@@ -125,9 +133,74 @@ def test_pack_session_scopes_to_pack_id_only():
         "difficulty" not in filters
     )  # a pack is a fixed bundle, not difficulty-scoped
     assert "category" not in filters  # pack scoping overrides the category picker
-    assert "language_dependent" not in filters
+    assert "language_dependent" not in filters  # en session: nothing to exclude
     # The image-safety opt-out is the one constraint that still applies.
     assert "image" not in filters["type"]["$in"]
+
+
+def test_pack_session_non_english_excludes_language_dependent():
+    # #128: a paid custom pack is not exempt from the translation guard.
+    # Wordplay/collective-noun questions ("a murder of crows") break under
+    # literal translation regardless of which corpus they came from, so a
+    # Slovak pack session must still exclude them even though pack scoping
+    # drops every other global constraint (review_status/difficulty/category).
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="medium",
+        language="sk",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert filters["language_dependent"] is False
+
+
+def test_pack_session_english_keeps_no_language_filter():
+    # English is exactly where a language_dependent question belongs — adding
+    # the filter there would silently shrink an English pack's own question
+    # set for no protective reason.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_pack",
+        current_difficulty="medium",
+        language="en",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+    )
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert "language_dependent" not in filters
+
+
+def test_pack_language_dependent_column_cannot_be_silently_missing():
+    # Why it's safe to add a `{"language_dependent": False}` equality filter to
+    # the pack branch at all: unlike a schemaless metadata dict (e.g. Chroma,
+    # where a filter on an absent key excludes the document), `language_dependent`
+    # is a real Postgres column declared NOT NULL with a server-side default of
+    # `false` (quiz-pack-api's QuestionRow + migration 1c5e0fa7b3d4), and the
+    # Question domain model defaults the same field to False. So no pack
+    # question can ever reach the DB with the key simply absent, and this
+    # filter can only correctly select/exclude real values — never silently
+    # drop an untagged row.
+    from quiz_shared.database.pgvector_client import questions_table
+    from quiz_shared.models.question import Question
+
+    assert questions_table.c.language_dependent.nullable is False
+
+    untagged = Question(
+        id="q_untagged",
+        question="Untagged pack question",
+        type="text",
+        correct_answer="answer",
+        topic="General",
+        category="general",
+        difficulty="easy",
+        pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
+        # language_dependent intentionally omitted — must default, not be absent.
+    )
+    assert untagged.language_dependent is False
 
 
 def test_normal_session_never_serves_pack_questions():
@@ -161,8 +234,50 @@ def test_pack_session_fallback_never_hits_global_library():
     )
 
     result = retriever._fallback_retrieval(
-        session, "medium", n_candidates=5, excluded_ids=[]
+        session,
+        "medium",
+        n_candidates=5,
+        excluded_ids=[],
+        filters=retriever._build_metadata_filters("medium", session),
     )
 
     assert result == []
     store.search.assert_not_called()
+
+
+def test_fallback_keeps_pack_guard_category_and_language_constraints():
+    """Adversarial audit 2026-07-30: the fallbacks rebuilt their filters from
+    scratch and dropped ``category`` and the ``pack_id IS NULL`` guard.
+
+    With ~31 approved questions, primary-empty is routine, so a session that
+    picked "Kids" was routinely served an adults question and the multi-select
+    category picker silently degraded to a no-op. Fallbacks must be the primary
+    filter with only the intended key relaxed, so every constraint survives by
+    construction — asserted on EVERY fallback query, not just the first.
+    """
+    retriever = _retriever()
+    store = retriever._store
+    store.search.return_value = []
+    session = QuizSession(
+        session_id="sess_kids",
+        current_difficulty="medium",
+        language="sk",
+        preferred_categories=["kids"],
+    )
+    primary = retriever._build_metadata_filters("medium", session)
+
+    retriever._fallback_retrieval(
+        session, "medium", n_candidates=5, excluded_ids=[], filters=primary
+    )
+
+    assert store.search.call_count > 0
+    difficulties = []
+    for call in store.search.call_args_list:
+        filters = call.kwargs["filters"]
+        assert "pack_id" in filters and filters["pack_id"] is None
+        assert filters["category"] == {"$in": ["kids"]}
+        assert filters["language_dependent"] is False
+        assert filters["review_status"] == "approved"
+        difficulties.append(filters.get("difficulty"))
+    # Difficulty is the only thing relaxed: the other levels, then no level at all.
+    assert difficulties == ["medium", "easy", "hard", None]

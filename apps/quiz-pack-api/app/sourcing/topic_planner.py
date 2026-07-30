@@ -53,7 +53,9 @@ class TopicPlanner:
 
     def __init__(
         self,
-        model: str = "gpt-4o-mini",
+        # 2026-07-30 frontier refresh — factory CRITIQUE role (no mini-class
+        # models anywhere in the generation pipeline, founder policy).
+        model: str = llm_factory.CRITIQUE,
         topic_count: int = DEFAULT_TOPIC_COUNT,
     ) -> None:
         self._model = model

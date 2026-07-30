@@ -38,7 +38,9 @@ CACHE_MAX_ENTRIES = 2000
 # Manual refresh lever for the durable store: bump after a prompt/model improvement to
 # lazily re-translate unchanged texts (old-version rows are orphaned, never served). One
 # global stamp covers both prompts (#69 Decision #2). Read at call-time so tests can patch.
-TRANSLATION_PROMPT_VERSION = "1"
+# "2": translation moved to claude-opus-5 + idiomatic-target-language prompt
+# (2026-07-30 review) — old gpt-4o-mini translations must not be reused.
+TRANSLATION_PROMPT_VERSION = "2"
 
 # Attempts before falling back to the original English (#107). Was 2 — bumped to 3 after
 # a founder-reported live session still leaked an untranslated question through the old
@@ -49,20 +51,28 @@ TRANSLATION_MAX_ATTEMPTS = 3
 class TranslationService:
     """Service for translating quiz content to different languages.
 
-    Uses OpenAI GPT-4 for high-quality translations that preserve
-    quiz question meaning and difficulty.
+    Translation quality IS the product in non-English sessions (every question
+    the player hears is this service's output), and each translation is made
+    once and cached durably — so a frontier model is the right cost/quality
+    trade (2026-07-30 review). Default claude-opus-5 requires
+    LLM_GATEWAY=openrouter; in direct mode the call fails and the serving path
+    falls back to English (#132 pattern), so override TRANSLATION_MODEL to an
+    OpenAI model for direct-mode setups.
     """
 
-    def __init__(self, model: str = "gpt-4o-mini", store_url: str | None = None):
+    def __init__(self, model: str | None = None, store_url: str | None = None):
         """Initialize translation service.
 
         Args:
-            model: OpenAI model to use for translation
+            model: direct-provider model id; defaults to TRANSLATION_MODEL env
+                var, then claude-opus-5
             store_url: SQLAlchemy URL for the durable translation store; defaults to
                 TRANSLATION_CACHE_URL env var, then sqlite under ./data (→ /data in prod)
         """
         self.client = llm_factory.openai_client(async_=True)
-        self.model = llm_factory.resolve_model(model)
+        self.model = llm_factory.resolve_model(
+            model or os.getenv("TRANSLATION_MODEL", "claude-opus-5")
+        )
         # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
         # TranslationService is a process-wide singleton, so this survives every request/session.
         self._cache: dict[tuple[str, str, str], str] = {}
@@ -196,8 +206,9 @@ class TranslationService:
                             "content": f"Translate this quiz question to {target_lang_name}:\n\n{question}",
                         },
                     ],
-                    temperature=0.3,  # Low temperature for consistent translations
-                    max_tokens=300,
+                    # No temperature: claude-opus-5 rejects sampling params (400).
+                    # max_tokens covers thinking + output on reasoning models.
+                    max_tokens=1500,
                 )
 
                 translated = response.choices[0].message.content.strip()
@@ -348,9 +359,15 @@ class TranslationService:
 
         target_lang_name = LANGUAGE_NAMES.get(target_language, target_language)
         system_prompt = (
-            "You are a professional translator for a spoken quiz app. You are given a "
-            f"JSON object of quiz text. Translate every value into {target_lang_name} and "
-            "return ONLY a JSON object with exactly the same keys and structure. "
+            f"You are translating a spoken trivia quiz into {target_lang_name}. You are "
+            "given a JSON object of quiz text. Return ONLY a JSON object with exactly "
+            "the same keys and structure, every value translated. Write natural, "
+            f"idiomatic {target_lang_name} with correct grammar, phrased the way a "
+            "native quiz host would say it aloud — never a word-for-word calque, and "
+            f"never words borrowed from languages closely related to {target_lang_name}. "
+            "Use "
+            f"the established {target_lang_name} form of proper names where one exists; "
+            "otherwise keep the original name. Keep numbers and units unchanged. "
             "'options' is a map of option letters to answer texts: keep the letters "
             "unchanged and translate only the texts. 'correct_answer' and "
             "'headline_answer' must match the wording used in 'options' when both are "
@@ -370,8 +387,9 @@ class TranslationService:
                             "content": json.dumps(payload, ensure_ascii=False),
                         },
                     ],
-                    temperature=0.3,
-                    max_tokens=900,
+                    # No temperature: claude-opus-5 rejects sampling params (400).
+                    # max_tokens covers thinking + output on reasoning models.
+                    max_tokens=2500,
                     response_format={"type": "json_object"},
                 )
                 raw = response.choices[0].message.content
@@ -460,8 +478,9 @@ class TranslationService:
                         "content": f"Translate to {target_lang_name}: {feedback}",
                     },
                 ],
-                temperature=0.3,
-                max_tokens=50,
+                # No temperature: claude-opus-5 rejects sampling params (400).
+                # max_tokens covers thinking + output on reasoning models.
+                max_tokens=500,
             )
 
             translated = response.choices[0].message.content.strip()

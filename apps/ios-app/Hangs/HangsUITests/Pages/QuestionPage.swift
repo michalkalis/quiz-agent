@@ -43,11 +43,20 @@ struct QuestionPage {
         app.buttons["mcq.option.\(key)"]
     }
 
-    /// The docked answer ListenBar ("LISTENING — SAY A–D", #125 — replaced the
+    /// The docked ANSWER ListenBar ("LISTENING — SAY A–D", #125 — replaced the
     /// old listening pill). Queried across element types: the caption is a
     /// combined a11y element, not a button.
-    var listenBarExists: Bool {
-        app.descendants(matching: .any).matching(identifier: "listen-bar").count > 0
+    ///
+    /// #132 Track B docked the think-phase countdown in the SAME `listen-bar`
+    /// element ("THINK — LISTENING IN N S"), so the identifier alone no longer
+    /// tells "the mic is live" from "the mic is about to go live". Match the
+    /// answer-mode caption instead — it is the only one that opens with
+    /// "LISTENING —" (command mode reads "LISTENING FOR COMMANDS").
+    var answerListenBarExists: Bool {
+        let predicate = NSPredicate(
+            format: "identifier == %@ AND label BEGINSWITH %@", "listen-bar", "LISTENING —"
+        )
+        return app.descendants(matching: .any).matching(predicate).count > 0
     }
 
     /// Wait for the question screen to appear (question.text must exist).

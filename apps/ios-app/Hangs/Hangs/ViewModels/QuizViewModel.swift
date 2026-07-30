@@ -1359,17 +1359,29 @@ final class QuizViewModel: ObservableObject {
 
     /// Skip the current question
     func skipQuestion() async {
+        // A skip is legal only while the question is open (.askingQuestion) or is
+        // being voice-answered (.recording) — mirroring submitMCQAnswer. The MCQ
+        // Skip button stays enabled through the 1-3 s evaluation, and
+        // .processing → .skipping is a legal transition, so without this guard an
+        // impatient tap fired a SECOND /input for the same session: an extra
+        // freemium quota unit, a duplicate recap row, and a question the backend
+        // advanced past without ever showing it.
+        guard quizState == .askingQuestion || quizState == .recording else { return }
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
         quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
 
+        // Claim .skipping before the first suspension point: a rejected transition
+        // must abort the POST rather than skip from an illegal state, and a second
+        // Skip tap during stopAnyPlayingAudio() then finds the state already moved
+        // on (the state is the single-flight token, as in submitMCQAnswer).
+        guard transition(to: .skipping) else { return }
+        errorMessage = nil
+
         // Stop any playing question audio immediately
         await audioDeviceState.stopAnyPlayingAudio()
-
-        transition(to: .skipping)
-        errorMessage = nil
 
         do {
             Logger.quiz.info("⏭️ Skipping current question")
@@ -1525,6 +1537,21 @@ final class QuizViewModel: ObservableObject {
     }
 
     func handleQuizResponse(_ response: QuizResponse) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
+        // Only the state that submitted may commit the answer. Everything below is
+        // durable, user-visible state — the session score, the saved stats, the
+        // per-session tallies, the recap row — while `.showingResult` is a legal
+        // successor of .processing/.skipping ONLY. A response landing after its
+        // submission was superseded (a spoken "stop" during an MCQ evaluation
+        // returns to .askingQuestion but cannot cancel the inline request) used to
+        // apply every side effect and then have its transition rejected: inflated
+        // score, phantom recap row, and the driver stranded on a question the
+        // backend had already moved past, with every later answer misgraded.
+        guard quizState == .processing || quizState == .skipping else {
+            let state = quizState.label
+            Logger.quiz.error("❌ Dropping quiz response — state \(state, privacy: .public) did not submit it")
+            return
+        }
+
         // Guard against concurrent calls (safe: @MainActor serializes access)
         guard !isProcessingResponse else {
             Logger.quiz.warning("⚠️ handleQuizResponse already in progress, ignoring duplicate call")

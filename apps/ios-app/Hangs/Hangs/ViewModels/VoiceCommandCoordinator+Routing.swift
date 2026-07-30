@@ -169,24 +169,16 @@ extension VoiceCommandCoordinator {
 
     /// Attributes shared by the two drop logs.
     ///
-    /// TEMPORARY EXCEPTION to the no-raw-speech rule in Logging.swift: `text`
-    /// carries the normalized transcript while the founder is the only prod user
-    /// — remove before GA (tracked in docs/todo/TODO.md). Gated on the master
-    /// switch because with voice commands OFF `currentCommandScreen` is nil, so
-    /// EVERY transcript of every question takes the window-closed branch: a
-    /// founder who turned the feature off would be uploading a running transcript
-    /// of his car in exchange for no diagnostic value at all. The consumer is
-    /// armed for VAD regardless of the switch (`startSilenceDetectionListening`),
-    /// so this branch really is reached in that configuration.
+    /// Metadata only — never the transcript text itself, per the no-raw-speech
+    /// rule in Logging.swift (the pre-GA temporary `text` exception was removed
+    /// 2026-07-30).
     func droppedTranscriptAttributes(
         _ normalized: String, isFinal: Bool, tokens: Int, sincePrevMs: Int?
     ) -> [String: Any] {
-        var attributes: [String: Any] = [
+        [
             "len": normalized.count, "final": isFinal, "tokens": tokens,
             "sincePrevMs": sincePrevMs ?? -1,
         ]
-        if settings().voiceCommandsEnabled { attributes["text"] = normalized }
-        return attributes
     }
 
     // MARK: - Fan-out

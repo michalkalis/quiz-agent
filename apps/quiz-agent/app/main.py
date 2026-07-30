@@ -71,7 +71,7 @@ from .tts.service import TTSService
 from .translation import TranslationService
 from .usage.tracker import UsageTracker
 from .api import rest, admin
-from .api.routes import webhooks
+from .api.routes import legal, webhooks
 from .quiz.flow import QuizFlowService
 
 try:
@@ -399,6 +399,9 @@ app.include_router(admin.router)
 # RevenueCat webhook — mounted at the app root (no /api/v1) to match the URL
 # registered in the RevenueCat dashboard: https://<host>/webhooks/revenuecat.
 app.include_router(webhooks.router)
+# Public legal pages (privacy/terms/support) — URLs are printed in the App
+# Store listing and linked from the iOS app; must stay unauthenticated.
+app.include_router(legal.router)
 
 
 @app.get("/api/v1/admin/health")

@@ -581,15 +581,16 @@ struct QuizViewModelLoadingStateTests {
         #expect(viewModel.quizState != .processing)
     }
 
-    @Test("skipQuestion during processing state keeps state consistent")
+    /// WHY (adversarial audit 2026-07-30): on MCQ the Skip button stays enabled and
+    /// unguarded through the whole 1-3 s evaluation, and .processing → .skipping is
+    /// a legal transition — so an impatient tap sent a SECOND "skip" input for the
+    /// same session. The backend charged a second freemium quota unit, appended a
+    /// duplicate recap row, and advanced past a question the driver never saw. A
+    /// skip must be a no-op while a submission is in flight.
+    @Test("skipQuestion during an in-flight submit is a no-op — no second input")
     @MainActor
-    func skipQuestionDuringProcessingKeepsConsistentState() async throws {
-        // This test documents the duplicate-call guard behavior.
-        // handleQuizResponse uses a Bool guard (isProcessingResponse) to prevent
-        // concurrent calls from corrupting state. When skipQuestion is called while
-        // already in .processing, the second call through handleQuizResponse is
-        // rejected by the guard, keeping state consistent.
-        let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
+    func skipQuestionDuringProcessingIsNoOp() async throws {
+        let (viewModel, network) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = QuizSession(
             id: "test_session_123",
             mode: "single", phase: "asking", maxQuestions: 10,
@@ -598,15 +599,12 @@ struct QuizViewModelLoadingStateTests {
             createdAt: Date()
         )
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .processing // Already processing
+        viewModel.quizState = .processing // an answer submit is already in flight
 
-        // Call skipQuestion while already processing
         await viewModel.skipQuestion()
 
-        // State should resolve to showingResult (the skip call goes through
-        // handleQuizResponse which transitions to showingResult)
-        #expect(viewModel.quizState.isShowingResult)
-        #expect(viewModel.resultEvaluation != nil)
+        #expect(viewModel.quizState == .processing, "the skip must not move the state machine")
+        #expect(network.submitTextInputCallCount == 0, "no second input for a question already being evaluated")
     }
 }
 

@@ -254,7 +254,15 @@ async def test_retry_failed_order_returns_202(
     assert body["order_id"] == order_id
     assert body["status"] == "in_progress"
 
-    arq_mock.enqueue_job.assert_awaited_once_with("process_order", order_id)
+    # Deterministic attempt id (adversarial audit 2026-07-30): without it arq
+    # minted a random uuid4 per enqueue, so a retry racing the stuck-order sweep
+    # ran two paid pipelines for one purchase. retry_count is reset to 0 and the
+    # manual budget is now 1, which is why both counters are in the key — keyed
+    # on retry_count alone the NEXT manual retry would reuse this id and be
+    # silently swallowed as a duplicate.
+    arq_mock.enqueue_job.assert_awaited_once_with(
+        "process_order", order_id, _job_id=f"process_order:{order_id}:0:1"
+    )
 
     # Verify DB state: order back to in_progress, job reset to queued,
     # manual_retry_count++ (the dedicated manual budget), auto retry_count

@@ -106,7 +106,9 @@ def test_escape_hatch_keeps_factual_grounding(monkeypatch: pytest.MonkeyPatch) -
     'pure-imagination generation')."""
     monkeypatch.setenv("V3_ESCAPE_HATCH", "true")
     prompt = _build_v3_prompt()
-    assert "still traces to one of the source facts above" in prompt
+    # Direction-neutral since the 2026-07-30 static-first reordering placed
+    # the facts below the contract ("provided", not "above").
+    assert "still traces to one of the provided source facts" in prompt
     assert "never for the *answer*" in prompt
 
 

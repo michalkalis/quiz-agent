@@ -22,7 +22,8 @@ private func collectEvents(
 ) async -> [STTEvent] {
     let sentinel = #"{"message_type":"partial_transcript","text":"__SENTINEL__"}"#
 
-    let collector = Task { [events = service.events] () -> [STTEvent] in
+    let events = service.makeEventStream()
+    let collector = Task { () -> [STTEvent] in
         var collected: [STTEvent] = []
         for await event in events {
             collected.append(event)
@@ -200,6 +201,38 @@ struct ElevenLabsSTTServiceTests {
         let json = #"{"text":"Hello","confidence":0.99}"#
         let event = await firstEvent(from: service, sending: json)
         #expect(event == nil)
+    }
+
+    // MARK: Event pipe survives a consumer cancellation
+
+    /// WHY (adversarial audit 2026-07-30, stream killed by consumer cancellation):
+    /// the service is instantiated ONCE for the app lifetime and every consumer is
+    /// cancelled while parked in `for await` — the feedback sheet's stop, the 5 s
+    /// commit watchdog, an incoming call. Cancelling a task suspended over an
+    /// `AsyncStream` permanently finishes that stream's storage, so with one stream
+    /// created in `init` the NEXT voice answer received zero events: no transcript,
+    /// watchdog timeout, "Sorry, I didn't catch that", and the third consecutive
+    /// failure auto-skipped the question against the freemium quota — for the rest
+    /// of the app session, recoverable only by a restart.
+    @Test("a listener acquired after a prior listener was cancelled still receives events")
+    func eventStreamSurvivesConsumerCancellation() async {
+        let service = ElevenLabsSTTService()
+
+        // First listener parks in `for await`, then is cancelled — the kill.
+        let first = service.makeEventStream()
+        let firstListener = Task { for await _ in first {} }
+        await Task.yield()
+        firstListener.cancel()
+        _ = await firstListener.value
+
+        // A brand-new session must still see events (starved before the fix).
+        let json = #"{"message_type":"committed_transcript","text":"Paris"}"#
+        let event = await firstEvent(from: service, sending: json)
+        guard case .committedTranscript(let text) = event else {
+            Issue.record("Expected .committedTranscript after a cancelled listener, got \(String(describing: event))")
+            return
+        }
+        #expect(text == "Paris")
     }
 }
 

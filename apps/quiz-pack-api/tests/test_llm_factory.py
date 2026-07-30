@@ -63,18 +63,90 @@ def test_resolve_model_passes_unknown_through_in_openrouter(monkeypatch):
     assert factory.resolve_model("some/custom-model") == "some/custom-model"
 
 
-def test_role_constants_match_call_site_defaults():
-    # Guard against silent drift from the models the pipeline runs today.
-    assert factory.GEN == "gpt-4o"
-    assert factory.CRITIQUE == "gpt-4o-mini"
-    assert factory.EVAL == "gpt-4o-mini"
-    assert factory.PARSE == "gpt-4o-mini"
-    assert factory.TRANSLATE == "gpt-4o-mini"
-    assert factory.VERIFY == "gemini-2.5-flash"
-    assert factory.NORMALIZE == "gemini-2.5-flash"
-    assert factory.SCORE_OPENAI == "gpt-4.1-mini"
-    assert factory.SCORE_ANTHROPIC == "claude-sonnet-4-6"
+def test_role_constants_are_frontier_only():
+    """2026-07-30 founder policy: the generation pipeline always runs on the
+    best available frontier models — a mini/flash-class id reappearing in a
+    generation-pipeline role is a regression, not a tweak. EVAL is the one
+    deliberate exception (serve-time hot path, own cost model)."""
+    assert factory.GEN == "claude-fable-5"
+    assert factory.CRITIQUE == "gpt-5.6-sol"
+    assert factory.EVAL == "gpt-4o-mini"  # serve-time, decided separately
+    assert factory.PARSE == "gpt-5.6-sol"
+    assert factory.TRANSLATE == "claude-opus-5"
+    assert factory.VERIFY == "gemini-3.1-pro-preview"
+    assert factory.NORMALIZE == "gemini-3.1-pro-preview"
+    assert factory.SCORE_OPENAI == "gpt-5.6-sol"
+    # Google, not Anthropic: the generator is a Claude model, and a same-family
+    # judge is the documented self-preference bias (review 2026-07-30, C).
+    assert factory.SCORE_GOOGLE == "gemini-3.1-pro-preview"
     assert factory.EMBED == "text-embedding-3-small"
+
+    banned = ("-mini", "-nano", "-flash", "-lite")
+    for role_name in ("GEN", "CRITIQUE", "PARSE", "TRANSLATE", "VERIFY",
+                      "NORMALIZE", "SCORE_OPENAI", "SCORE_GOOGLE"):
+        model_id = getattr(factory, role_name)
+        assert not any(b in model_id for b in banned), (
+            f"{role_name}={model_id!r} is a mini/flash-class model — banned "
+            "in the generation pipeline (founder policy 2026-07-30)"
+        )
+
+
+def test_frontier_stack_resolves_on_openrouter(monkeypatch):
+    """Every 2026-07-30 role id must have a live-verified OpenRouter slug —
+    an unmapped id would pass through raw and 404 at the gateway."""
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    assert factory.resolve_model("claude-fable-5") == "anthropic/claude-fable-5"
+    assert factory.resolve_model("gpt-5.6-sol") == "openai/gpt-5.6-sol"
+    assert factory.resolve_model("claude-opus-5") == "anthropic/claude-opus-5"
+    assert (
+        factory.resolve_model("gemini-3.1-pro-preview")
+        == "google/gemini-3.1-pro-preview"
+    )
+
+
+def test_bedrock_ids_bypass_remap_and_report_provider(monkeypatch):
+    """``bedrock:`` ids identify provider+model in one verbatim string: no
+    remap table to go stale, and provenance still records the model owner."""
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    bedrock_id = "bedrock:anthropic.claude-fable-5-v1:0"
+    assert factory.is_bedrock_model(bedrock_id)
+    assert factory.resolve_model(bedrock_id) == bedrock_id
+    assert factory.provider_for_model(bedrock_id) == "anthropic"
+
+
+def test_bedrock_without_credentials_fails_loud(monkeypatch):
+    """A Bedrock-configured environment without AWS credentials is a config
+    error — construction must raise, never silently fall back to another
+    provider (a paid order generating on the wrong model is worse than a
+    crash)."""
+    for var in ("AWS_ACCESS_KEY_ID", "AWS_PROFILE", "AWS_ROLE_ARN",
+                "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"):
+        monkeypatch.delenv(var, raising=False)
+    with pytest.raises(RuntimeError, match="AWS credentials"):
+        factory.chat_openai("bedrock:anthropic.claude-fable-5-v1:0")
+
+
+def test_sampling_params_dropped_for_frontier_families():
+    """Claude 5-class and the gpt-5 reasoning family reject temperature with a
+    400 (verified on the translator, 2026-07-30); the factory must strip it so
+    historical call-site signatures keep working."""
+    assert not factory.supports_sampling_params("claude-fable-5")
+    assert not factory.supports_sampling_params("claude-opus-5")
+    assert not factory.supports_sampling_params("gpt-5.6-sol")
+    assert not factory.supports_sampling_params(
+        "bedrock:anthropic.claude-fable-5-v1:0"
+    )
+    assert factory.supports_sampling_params("gpt-4o")
+    assert factory.supports_sampling_params("gemini-3.1-pro-preview")
+
+
+def test_chat_openai_strips_temperature_for_claude_5(monkeypatch):
+    """Passing temperature for a Claude 5-class model must not reach the
+    client (it would 400 at call time)."""
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    llm = factory.chat_openai("claude-fable-5", temperature=0.8)
+    assert llm.model_name == "anthropic/claude-fable-5"
+    assert getattr(llm, "temperature", None) != 0.8
 
 
 def test_openai_client_direct_uses_canonical_endpoint(monkeypatch):

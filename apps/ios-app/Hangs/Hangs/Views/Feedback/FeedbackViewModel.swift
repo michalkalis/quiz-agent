@@ -364,8 +364,13 @@ final class FeedbackViewModel: ObservableObject {
     /// the editable `message` and dictation continues until the user stops.
     private func startEventListener(_ sttService: ElevenLabsSTTServiceProtocol) {
         eventListenerTask?.cancel()
+        // Fresh stream per dictation (StreamChannel): `stopDictation` cancels this
+        // task while it is parked in `for await`, which finishes that stream's
+        // storage. The service is shared with the quiz flow, so a single stored
+        // stream meant one dictation killed every later voice answer.
+        let stream = sttService.makeEventStream()
         eventListenerTask = Task { [weak self] in
-            for await event in sttService.events {
+            for await event in stream {
                 guard let self, !Task.isCancelled else { break }
                 switch event {
                 case let .partialTranscript(text):

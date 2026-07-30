@@ -230,7 +230,7 @@ final nonisolated class RegressionTests: XCTestCase {
             "RS-mcq-long: the 2×2 grid is incomplete during the think phase"
         )
         XCTAssertFalse(
-            question.listenBarExists,
+            question.answerListenBarExists,
             "RS-mcq-long: the answer ListenBar claims LISTENING before the mic is live"
         )
         XCTAssertTrue(
@@ -245,7 +245,7 @@ final nonisolated class RegressionTests: XCTestCase {
         // The countdown expires and recording starts: the listening bar joins.
         question.waitForState("recording", timeout: 15)
         XCTAssertTrue(
-            question.listenBarExists,
+            question.answerListenBarExists,
             "RS-mcq-long: the answer ListenBar never appeared after recording started"
         )
         XCTAssertTrue(

@@ -27,6 +27,17 @@ nonisolated enum Config {
         return url
     }
 
+    /// Public legal pages served by the quiz-agent backend. The same URLs are
+    /// printed into the App Store listing — paths must stay in sync with
+    /// apps/quiz-agent/app/api/routes/legal.py.
+    static var privacyPolicyURL: URL {
+        URL(string: apiBaseURL + "/legal/privacy")!
+    }
+
+    static var termsOfUseURL: URL {
+        URL(string: apiBaseURL + "/legal/terms")!
+    }
+
     /// API version prefix
     ///
     /// Read from Info.plist which gets populated from xcconfig files
@@ -167,16 +178,10 @@ nonisolated enum Config {
 
     // MARK: - Freemium
 
-    /// StoreKit product identifier for unlimited access
-    static let unlimitedProductId = "com.carquiz.unlimited"
-
     /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by
     /// design — safe to embed in the client; entitlement is still resolved
     /// server-side via the backend's RevenueCat secret key + webhook mirror.
     static let revenueCatPublicSDKKey = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
-
-    /// Free tier daily question limit (display only — enforced by backend)
-    static let freeDailyQuestionLimit = 20
 
     // MARK: - Sentry
 

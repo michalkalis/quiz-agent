@@ -19,6 +19,10 @@ verdicts identically downstream. The judge checks the four properties from D2:
 
 Fail-safe by construction: no API key, an unparseable response, or any error
 returns an ``uncertain`` verdict at low confidence — never a false ``verified``.
+Such a verdict is also flagged ``held_for_review`` (RC-9, mirroring
+``FactVerifier``): a judge we could not reach says nothing about the puzzle, so
+``VerificationStage`` keeps it for a human instead of deleting every lateral
+puzzle in the batch on a transient 429.
 """
 
 from __future__ import annotations
@@ -99,11 +103,14 @@ class LogicalConsistencyVerifier:
 
         Returns an ``uncertain`` / low-confidence result whenever the model is
         unavailable or the response can't be parsed — never a false positive.
+        Those results carry ``held_for_review`` so the stage keeps the puzzle
+        (RC-9) instead of dropping it below the confidence gate.
         """
         if not self._available():
             return VerificationResult(
                 verdict="uncertain",
                 confidence=0.0,
+                held_for_review=True,
                 notes="Gemini unavailable; cannot judge logical consistency",
             )
 
@@ -135,5 +142,6 @@ class LogicalConsistencyVerifier:
             return VerificationResult(
                 verdict="uncertain",
                 confidence=0.2,
+                held_for_review=True,
                 notes=f"Logical consistency judge failed ({e})",
             )

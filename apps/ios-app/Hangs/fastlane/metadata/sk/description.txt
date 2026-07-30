@@ -1,0 +1,20 @@
+Trubbo je hlasový vedomostný kvíz stvorený na cesty autom. Spusti kvíz, vypočuj si otázku a odpovedz nahlas. Žiadne ťukanie, žiadne čítanie, len rozprávanie.
+
+PREČO TRUBBO
+• Plne hlasové ovládanie: štart, odpoveď, preskočenie aj zopakovanie otázky
+• Otázky číta prirodzený hlas
+• Odpovedaj vlastnými slovami. AI pochopí, čo máš na mysli, nielen presné znenie
+• Funguje v slovenčine aj angličtine
+• Navrhnutý na šoférovanie: zvuk na prvom mieste, veľké ovládacie prvky, obrazovka nezhasína
+
+HRAJ ZADARMO
+Každý mesiac máš balík otázok zadarmo. Predplatné Unlimited limit odstráni a jednorazové balíčky otázok nikdy neexpirujú. Ceny sa zobrazujú v aplikácii pred nákupom.
+
+BEZPEČNOSŤ PREDOVŠETKÝM
+Trubbo je navrhnuté na hands-free použitie. Počas jazdy nikdy neobsluhuj obrazovku a vždy dodržiavaj dopravné predpisy.
+
+DOBRÉ VEDIEŤ
+Otázky a vyhodnotenie odpovedí generuje umelá inteligencia a môžu obsahovať nepresnosti. Svoje údaje si môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
+
+Zásady ochrany súkromia: https://quiz-agent-api.fly.dev/legal/privacy
+Podmienky používania: https://quiz-agent-api.fly.dev/legal/terms

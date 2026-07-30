@@ -165,18 +165,16 @@ class _StubResponse:
 async def test_score_question_merges_deterministic_dims_into_llm_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When the LLM returns a parseable score block, the deterministic
-    dims must be merged into the ``scores`` dict alongside the LLM
-    ones — not stored on a separate entry."""
+    """One dimension per call (2026-07-30 redesign): each judge call returns a
+    single {"score", "reasoning"} verdict; the scorer assembles the dims dict,
+    computes overall deterministically (never trusting an LLM overall_score),
+    and merges the deterministic dims alongside — not on a separate entry."""
     scorer = MultiModelScorer(models=[
-        {"provider": "openai", "model": "gpt-4.1-mini", "name": "gpt-4.1-mini"}
+        {"provider": "openai", "model": "gpt-5.6-sol", "name": "gpt-5.6-sol"}
     ])
     fake_client = AsyncMock()
     fake_client.ainvoke.return_value = _StubResponse(
-        '{"conversation_spark": 8, "surprise_delight": 7, "tellability": 8,'
-        ' "driving_friendliness": 9, "clever_framing": 7,'
-        ' "factual_confidence": 9, "overall_score": 8.0,'
-        ' "reasoning": "stubbed"}'
+        '{"score": 7, "reasoning": "stubbed"}'
     )
     monkeypatch.setattr(scorer, "_get_client", lambda _cfg: fake_client)
 
@@ -188,9 +186,44 @@ async def test_score_question_merges_deterministic_dims_into_llm_result(
 
     assert len(out) == 1
     scores = out[0]["scores"]
-    assert scores["conversation_spark"] == 8  # LLM dims preserved
+    from app.scoring.multi_model_scorer import SCORING_DIMENSIONS
+
+    for dim_key in SCORING_DIMENSIONS:  # every dimension got its own call
+        assert scores[dim_key] == 7
+    assert out[0]["overall_score"] == 7.0  # computed in code, not by the LLM
     assert scores["answer_brevity"] == 10  # deterministic dim merged
     assert scores["distractor_quality"] == 10  # deterministic dim merged
+    # A3: every judge prompt must carry the options and the answer TEXT.
+    prompt_sent = fake_client.ainvoke.call_args_list[0].args[0][0].content
+    assert "OPTIONS:" in prompt_sent
+    assert "Jupiter" in prompt_sent
+
+
+@pytest.mark.asyncio
+async def test_score_question_drops_judge_after_failed_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A6: an unparseable judge is retried once, then dropped loudly — never
+    defaulted to a neutral score. With no judge left, the synthetic
+    deterministic entry keeps the advisory dims logged."""
+    scorer = MultiModelScorer(models=[
+        {"provider": "openai", "model": "gpt-5.6-sol", "name": "gpt-5.6-sol"}
+    ])
+    fake_client = AsyncMock()
+    fake_client.ainvoke.return_value = _StubResponse("no json here at all")
+    monkeypatch.setattr(scorer, "_get_client", lambda _cfg: fake_client)
+
+    out = await scorer.score_question(
+        question="Which planet has the most mass?",
+        answer="Jupiter",
+    )
+
+    assert len(out) == 1
+    assert out[0]["model_name"] == "deterministic"
+    # one dimension set of calls, each retried once
+    from app.scoring.multi_model_scorer import SCORING_DIMENSIONS
+
+    assert fake_client.ainvoke.await_count == 2 * len(SCORING_DIMENSIONS)
 
 
 @pytest.mark.asyncio

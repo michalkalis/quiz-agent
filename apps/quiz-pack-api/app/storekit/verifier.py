@@ -21,8 +21,9 @@ Verification steps:
    error log distinguishes "JWS for a different app" (security signal) from
    "Sandbox JWS hit a Production deployment" (config drift).
 
-Subscription-only behavior (e.g. `expiresDate` enforcement) is deferred to
-Phase 4 — see plan C2.
+8. Reject a payload whose `expiresDate` has passed (`JWSExpired`) — the
+   lapsed-subscriber enforcement line. Non-subscription products carry no
+   `expiresDate` and skip the gate.
 """
 
 from __future__ import annotations

@@ -19,6 +19,7 @@ from quiz_shared.llm import factory as llm_factory
 import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
+from .examples import example_corpus_path
 from .prompt_builder import PromptBuilder
 from .pattern_routing import verification_mode
 from .. import feature_flags
@@ -1105,13 +1106,11 @@ class AdvancedQuestionGenerator:
         self, questions: List[Question], threshold: float = 0.80
     ) -> List[Question]:
         """Remove questions that are too similar to gold standard examples."""
-        gold_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "data", "examples", "gold_standard.json"
-        )
-        if not os.path.exists(gold_path):
-            return questions
-
-        with open(gold_path, "r", encoding="utf-8") as f:
+        # Shared resolver: a fixed `parents[N]` path silently resolved to a
+        # non-existent /data/examples in the Docker layout, making this whole
+        # check a no-op in prod.
+        gold_path = example_corpus_path("gold_standard.json")
+        with gold_path.open("r", encoding="utf-8") as f:
             gold_examples = json.load(f)
         gold_texts = [ex.get("question", "") for ex in gold_examples]
 

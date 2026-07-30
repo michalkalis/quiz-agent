@@ -36,6 +36,9 @@ build/
 # Data directories (will be mounted as volumes)
 data/
 **/data/
+# ...except the prompt example corpus, which is code-like input the
+# quiz-pack-api image must carry (apps/quiz-pack-api/Dockerfile COPYs it).
+!data/examples/
 chroma_data/
 *.db
 *.sqlite

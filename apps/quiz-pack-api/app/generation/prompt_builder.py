@@ -98,7 +98,7 @@ class PromptBuilder:
         Returns:
             Complete prompt ready for LLM
         """
-        # Use dynamic sampling from gold-standard library (falls back to hardcoded)
+        # Use dynamic sampling from the gold-standard library (raises if absent)
         if excellent_examples is None:
             excellent_examples = load_gold_standard(
                 n=5,

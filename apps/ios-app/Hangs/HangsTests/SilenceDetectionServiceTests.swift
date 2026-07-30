@@ -408,6 +408,7 @@ struct VoiceCommandAvailabilityTests {
     }
 
     // MARK: - Window-scoped failures must not latch (field fix, 2026-07-26)
+
     //
     // WHY THIS MATTERS: `.unavailable` drives what the founder is TOLD — the
     // Settings status row and the "LISTENING FOR COMMANDS" cue. On device, the
@@ -612,5 +613,69 @@ struct EngineStartGenerationCheckTests {
         // IS non-nil, just pointing at a different (newer) engine. The identity check
         // must catch this too, or the stale engine still gets started alongside the new one.
         #expect(!SilenceDetectionService.shouldStartEngine(staleEngine, tracking: newEngine))
+    }
+}
+
+// MARK: - StartListeningSingleFlightTests (#133 audit 1c — re-entrant start)
+
+/// WHY: `startListening()`'s only concurrency check was `guard audioEngine ==
+/// nil`, but `audioEngine` is assigned only AFTER the input format settles — it
+/// is still nil across `analyzer.setContext`,
+/// `SpeechAnalyzer.bestAvailableAudioFormat` and the settle retry loop. A second
+/// @MainActor caller landing in that window (reachable — see
+/// `AudioDeviceState.startSilenceDetectionListening`) passed the SAME guard and
+/// built a second analyzer/engine/tap/task set; each property then kept
+/// whichever call wrote last and teardown orphaned the other call's still-running
+/// engine — the "#64 two-engine crash config". `shouldBeginStart` is the
+/// single-flight guard, and BOTH of its terms close a distinct hole.
+///
+/// Same constraint as `EngineStartGenerationCheckTests` above: `startListening()`
+/// itself needs a live SpeechAnalyzer/AVAudioEngine (real engines "can't run
+/// headlessly", see SharedEngineTests), so the guard is exercised as the pure
+/// state function production code calls through.
+@Suite("SilenceDetectionService — startListening single-flight (#133 1c)")
+@MainActor
+struct StartListeningSingleFlightTests {
+    @Test("nothing listening and no start in flight → a start may begin")
+    func idleMayBeginStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        #expect(SilenceDetectionService.shouldBeginStart(startInFlight: false, audioEngine: nil))
+    }
+
+    @Test("a start suspended before the engine exists → a second start must NOT begin (the pre-fix hole)")
+    func startInFlightBlocksReentrantStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        // This is exactly the state a start suspended at
+        // `bestAvailableAudioFormat` leaves behind: in flight, engine still nil.
+        // The pre-fix guard checked ONLY the engine, so this case passed and spun
+        // a second analyzer + engine + tap alongside the first.
+        #expect(!SilenceDetectionService.shouldBeginStart(startInFlight: true, audioEngine: nil))
+    }
+
+    @Test("already listening → still the documented no-op every choke-point caller relies on")
+    func alreadyListeningDoesNotBeginStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        // Dropping the engine term (keeping only the in-flight flag) would let a
+        // call arm a SECOND engine over a live listener.
+        #expect(!SilenceDetectionService.shouldBeginStart(startInFlight: false, audioEngine: AVAudioEngine()))
+    }
+
+    @Test("a start in flight past its engine assignment (the 50 ms settle window) also blocks a second start")
+    func lateStartWindowBlocksReentrantStart() {
+        guard #available(iOS 26, *) else {
+            withKnownIssue("SilenceDetectionService requires iOS 26+") {}
+            return
+        }
+        // Pins that the flag covers the WHOLE call, not just its pre-engine half.
+        #expect(!SilenceDetectionService.shouldBeginStart(startInFlight: true, audioEngine: AVAudioEngine()))
     }
 }

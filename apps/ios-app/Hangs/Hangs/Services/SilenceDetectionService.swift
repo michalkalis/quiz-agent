@@ -141,6 +141,16 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var transcriptionTask: Task<Void, Never>?
     var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
 
+    /// Whether a `startListening()` is between its entry guard and its return
+    /// (#133 audit 1c). `audioEngine` cannot express this: it stays nil across
+    /// every suspension in the first half of `startListening()` (the analyzer is
+    /// built first, the engine only after the input format settles), so a second
+    /// caller landing in that window passed the `audioEngine == nil` guard and
+    /// built a SECOND analyzer/engine/tap — each property then kept whichever
+    /// call wrote last and teardown orphaned the other one (the #64 two-engine
+    /// crash config). Set/cleared by `startListening()` only.
+    var startInFlight = false
+
     /// The engine seam (#120): constructs, configures and normalizes the
     /// concrete transcriber. Chosen once at launch (CommandEngineSelection);
     /// everything below reads capabilities off it instead of naming an engine.
@@ -232,12 +242,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     }
 
     // MARK: - Authorization + assets
+
     //
     // requestAuthorizationAndPrepareAssets() / prepareAssets() /
     // markCommandsUnavailable() — the #105 permission flow and the #77/#120
     // engine-asset preparation — live in SilenceDetectionService+Assets.swift.
 
     // MARK: - Lifecycle
+
     //
     // startListening() / stopListening() — the AVAudioEngine + SpeechAnalyzer
     // lifecycle — live in SilenceDetectionService+Engine.swift.

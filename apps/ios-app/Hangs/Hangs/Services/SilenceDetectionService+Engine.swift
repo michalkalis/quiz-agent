@@ -26,7 +26,27 @@ extension SilenceDetectionService {
     // MARK: - Lifecycle
 
     func startListening() async {
-        guard audioEngine == nil else { return }
+        // SINGLE-FLIGHT (#133 audit 1c): `audioEngine == nil` alone is NOT a
+        // concurrency check. `audioEngine` is only assigned below the format
+        // settle, so it is still nil across every suspension above it
+        // (`analyzer.setContext`, `bestAvailableAudioFormat`, the settle retry
+        // loop) — a second @MainActor caller entering there passed the same
+        // guard and built a second analyzer/engine/tap/task set. Each property
+        // then kept whichever call wrote last, and teardown orphaned the other
+        // call's still-running engine: the #64 two-engine crash config the
+        // pre-`.start()` identity check below (#100.4) only covers for the
+        // LATER settle window. Concurrent entry is reachable — see
+        // `AudioDeviceState.startSilenceDetectionListening`.
+        guard Self.shouldBeginStart(startInFlight: startInFlight, audioEngine: audioEngine) else {
+            // Only the re-entrant case is worth a line: "already listening" is a
+            // documented no-op every choke-point caller relies on.
+            if startInFlight {
+                Logger.voice.warning("🔇 SilenceDetection: startListening re-entered while a start was in flight — ignored (#133 1c)")
+            }
+            return
+        }
+        startInFlight = true
+        defer { startInFlight = false }
 
         state = .idle
         loggedVolatileThisSegment = false
@@ -111,7 +131,7 @@ extension SilenceDetectionService {
                 try? await Task.sleep(for: .milliseconds(250))
                 try? AVAudioSession.sharedInstance().setActive(true)
                 inputFormat = inputNode.outputFormat(forBus: 0)
-                if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 { break }
+                if inputFormat.sampleRate > 0, inputFormat.channelCount > 0 { break }
                 Logger.voice.warning("🔇 SilenceDetection: format retry \(attempt, privacy: .public) — still \(inputFormat.sampleRate, privacy: .public)Hz, \(inputFormat.channelCount, privacy: .public)ch")
             }
             guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
@@ -299,6 +319,18 @@ extension SilenceDetectionService {
     /// so tests can drive the exact race (nil / same / different engine) directly.
     nonisolated static func shouldStartEngine(_ engine: AVAudioEngine, tracking current: AVAudioEngine?) -> Bool {
         current === engine
+    }
+
+    /// Whether a fresh `startListening()` may begin: nothing is listening AND no
+    /// earlier start is still working through its suspensions (#133 audit 1c).
+    /// Both terms are load-bearing — `audioEngine == nil` alone lets a second
+    /// caller in during the pre-engine awaits, `!startInFlight` alone lets one in
+    /// once an engine is already running. Kept a free function of its inputs for
+    /// the same reason as `shouldStartEngine` above: `startListening()` itself
+    /// needs a live SpeechAnalyzer/AVAudioEngine, so the guard is only reachable
+    /// in tests through the pure form production calls.
+    nonisolated static func shouldBeginStart(startInFlight: Bool, audioEngine: AVAudioEngine?) -> Bool {
+        !startInFlight && audioEngine == nil
     }
 
     func stopListening() {

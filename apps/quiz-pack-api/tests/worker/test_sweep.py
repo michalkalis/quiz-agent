@@ -149,13 +149,17 @@ class FakeArqPool:
 
     def __init__(self, *, fail: bool = False) -> None:
         self.calls: list[tuple[str, str]] = []
+        self.job_ids: list[str | None] = []
         self._fail = fail
         self.enqueue_job = AsyncMock(side_effect=self._enqueue)
 
-    async def _enqueue(self, task_name: str, arg: str) -> None:
+    async def _enqueue(
+        self, task_name: str, arg: str, _job_id: str | None = None
+    ) -> None:
         if self._fail:
             raise ConnectionError("redis unreachable (simulated)")
         self.calls.append((task_name, arg))
+        self.job_ids.append(_job_id)
 
 
 @pytest.mark.asyncio
@@ -268,6 +272,93 @@ async def test_sweep_leaves_pending_on_enqueue_failure(
     assert order.status == "pending"
     assert job.status == "queued"  # reset, ready for the next tick to retry
     assert job.retry_count == 1
+
+    await _cleanup(session, order_id)
+
+
+async def _requeue_like_retry_endpoint(
+    session: AsyncSession, order_id: uuid.UUID, job_id: uuid.UUID
+) -> None:
+    """Mirror the ORM requeue in POST /v1/orders/{id}/retry (orders.py:521-532).
+
+    Deliberately the same shape as production: job back to 'queued', auto
+    retry_count reset, manual budget spent, order flipped to 'in_progress'.
+    """
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    job.status = "queued"
+    job.progress = 0
+    job.error = None
+    job.retry_count = 0
+    job.manual_retry_count = job.manual_retry_count + 1
+    order.status = "in_progress"
+    await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_sweep_ignores_a_just_requeued_order(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """A freshly re-queued order must NOT look stuck, even though its last
+    completed step is ancient.
+
+    Adversarial audit 2026-07-30: `job.updated_at` was only ever written by
+    `append_step`, so a requeue left it at the last step's timestamp — for an
+    order that failed an hour ago, an hour stale. The order was 'in_progress'
+    with job.status 'queued' and a stale timestamp, i.e. a textbook match for
+    the stuck predicate, so the next tick (or `run_at_startup` after a deploy)
+    enqueued a SECOND pipeline for the same purchase: double LLM + Tavily
+    spend, two QuestionPack rows with one orphaned, and a retry_count burn that
+    can end in a spurious refund_eligible failure.
+    """
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=timedelta(hours=1), retry_count=3
+    )
+    await _requeue_like_retry_endpoint(session, order_id, job_id)
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert pool.calls == []  # no second pipeline for one purchase
+    assert order.status == "in_progress"
+    assert job.retry_count == 0  # recovery budget not burned
+    assert job.status == "queued"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_enqueues_with_a_deterministic_attempt_job_id(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """The re-enqueue must carry a deterministic arq job id.
+
+    Adversarial audit 2026-07-30: with no `_job_id` arq mints a random uuid4,
+    so nothing in the system could ever recognise a duplicate enqueue of the
+    same attempt — the reason a race ran two paid pipelines instead of one.
+    The key spans both counters (auto + manual) so genuine attempts stay
+    distinct while a duplicate of one attempt collides and is dropped.
+    """
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    # retry_count 0 → 1 on recovery; manual_retry_count untouched.
+    assert pool.job_ids == [f"process_order:{order_id}:1:0"]
 
     await _cleanup(session, order_id)
 

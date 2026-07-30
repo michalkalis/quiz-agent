@@ -18,6 +18,10 @@ tracked on ``job.retry_count`` — a sweep-triggered re-enqueue is as much an
 than getting an unbounded one of its own). Past the cap, the order is marked
 ``failed`` with ``refund_eligible = True``, the same terminal state a
 naturally-exhausted ARQ job reaches.
+
+Every re-enqueue carries the deterministic ``attempt_job_id`` so ARQ's own
+uniqueness check drops a duplicate enqueue of the same attempt instead of
+letting two pipelines bill one purchase twice.
 """
 
 from __future__ import annotations
@@ -29,7 +33,7 @@ from typing import Any, Dict
 
 from sqlalchemy import select
 
-from app.db.models.job import GenerationJob
+from app.db.models.job import GenerationJob, attempt_job_id
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal
 
@@ -61,6 +65,11 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
         )
         pending_ids = (await session.execute(pending_stmt)).scalars().all()
 
+        # Liveness is measured by `job.updated_at` alone: every step append and
+        # every requeue bumps it (`GenerationJob.updated_at` onupdate). `queued`
+        # deliberately stays inside the predicate — production only ever writes
+        # 'queued'/'done'/'failed', so excluding it would match nothing and
+        # disable in_progress recovery, which is this sweep's whole purpose.
         in_progress_stmt = (
             select(GenerationOrder.id)
             .join(GenerationJob, GenerationJob.id == GenerationOrder.job_id)
@@ -136,10 +145,11 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         job.error = None
         job.retry_count = job.retry_count + 1
         order.status = "pending"
+        enqueue_id = attempt_job_id(order_id, job)
         await session.commit()
 
     try:
-        await arq_pool.enqueue_job("process_order", str(order_id))
+        await arq_pool.enqueue_job("process_order", str(order_id), _job_id=enqueue_id)
     except Exception:
         logger.exception(
             "sweep_stuck_orders re-enqueue failed order_id=%s; left 'pending' "

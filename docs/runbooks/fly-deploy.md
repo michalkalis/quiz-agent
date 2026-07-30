@@ -26,9 +26,19 @@ read from pyproject directly. Shared package install must stay non-editable
 ChromaDB was decommissioned in #41 (Phase B done 2026-07-07): `/data/chroma`
 wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
 `DATABASE_URL`. **The volume `vol_r1l5163d2gjekdz4` (`/data` mount) must
-stay** — it holds `ratings.db`, `tts_cache/` (and lazily-created
-`translations.db`). Questions live in pgvector; final Chroma backup:
+stay** — it holds `tts_cache/`, `ratings.db` and `translations.db`. Questions
+live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
+
+⚠️ The volume only holds those three because `[env]` in `fly.toml` /
+`fly.staging.toml` pins `TTS_CACHE_DIR`, `RATINGS_DATABASE_URL` and
+`TRANSLATION_CACHE_URL` to `/data`. Until 2026-07-30 the two SQLite vars were
+unpinned, so the code defaults (`./data/*.db`) resolved against WORKDIR `/app`
+and prod really wrote to container-local storage — with
+`min_machines_running = 0` that is discarded on every idle wake, not just every
+deploy (ratings + persisted sessions lost, opus-5 translation cache re-paid).
+Any new on-disk store needs the same treatment; verify after deploy with
+`fly ssh console -C 'ls -la /data'`.
 
 Historical note: the CHROMA_PATH/mount mismatch bit twice (2026-04-21,
 2026-05-03 — empty DB ~17h). If a `[[mounts]]` change ever breaks the

@@ -22,6 +22,10 @@ primary_region = "cdg"
   # Keep the TTS audio cache on the mounted volume — see fly.toml for why the
   # default path would silently re-buy the cache on every deploy.
   TTS_CACHE_DIR = "/data/tts_cache"
+  # Same for the SQLite stores — see fly.toml for why the defaults land on
+  # container-local /app/data and are lost on every idle wake.
+  TRANSLATION_CACHE_URL = "sqlite:////data/translations.db"
+  RATINGS_DATABASE_URL = "sqlite:////data/ratings.db"
 
 [[services]]
   protocol = "tcp"

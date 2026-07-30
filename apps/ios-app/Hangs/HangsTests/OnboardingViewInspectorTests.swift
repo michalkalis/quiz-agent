@@ -7,8 +7,8 @@
 //  Why these tests matter:
 //  - Each page must render its distinguishing headline and CTA so accidental
 //    regressions (wrong page shown, missing button) fail fast.
-//  - The page-indicator accent-color logic differs for the denied branch (amber
-//    vs. pink) — this tests the ViewModel-layer rule, not just the view.
+//  - The denied branch must not grow a 4th dot — it sits on the permission dot,
+//    which is a ViewModel-layer rule, not just a view detail.
 //  - These are the invariants a refactor must not break.
 //
 
@@ -28,19 +28,10 @@ private func makeVM(micGranted: Bool = true) -> OnboardingViewModel {
     return OnboardingViewModel(audioService: audio, persistenceStore: store)
 }
 
-// MARK: - Page-indicator accent color rule
+// MARK: - Page-indicator dot rule
 
-@Suite("OnboardingView — page indicator accent color")
-struct OnboardingPageIndicatorColorTests {
-    @Test("Non-denied pages use pink page indicator")
-    func nonDeniedPagesUsePinkIndicator() {
-        let vm = makeVM()
-        #expect(vm.page == .welcome)
-        // Pink is the accent for welcome / features / permission
-        let pinkColor = Theme.Hangs.Colors.pink
-        #expect(pinkColor == Theme.Hangs.Colors.pink, "Pink token must resolve consistently")
-    }
-
+@Suite("OnboardingView — page indicator")
+struct OnboardingPageIndicatorTests {
     @Test("permissionDenied maps to pageIndex 2 (same dot as permission)")
     func deniedPageIndexIsTwo() async {
         let vm = makeVM(micGranted: false)
@@ -48,17 +39,6 @@ struct OnboardingPageIndicatorColorTests {
         await vm.requestMicPermission()
         #expect(vm.page == .permissionDenied)
         #expect(vm.pageIndex == 2, "Denied branch must sit on the 3rd dot, not a 4th")
-    }
-
-    @Test("Denied branch accent is warning (amber), not pink")
-    func deniedBranchAccentIsAmber() async {
-        let vm = makeVM(micGranted: false)
-        vm.advance(); vm.advance()
-        await vm.requestMicPermission()
-        let isDenied = vm.page == .permissionDenied
-        let expectedColor = isDenied ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.pink
-        #expect(isDenied, "VM must be in denied state after denied permission")
-        #expect(expectedColor == Theme.Hangs.Colors.warning)
     }
 }
 

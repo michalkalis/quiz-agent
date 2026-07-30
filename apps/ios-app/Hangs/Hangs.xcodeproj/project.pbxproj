@@ -13,7 +13,6 @@
 		503020B32F8E706400A567CA /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
 		A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */ = {isa = PBXBuildFile; productRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */; };
-		B8C9D0E1F2A3B4C5D6E7F8A9 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */; };
 		C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */; };
 /* End PBXBuildFile section */
 
@@ -103,7 +102,6 @@
 			files = (
 				503020B22F8E706400A567CA /* (null) in Frameworks */,
 				A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */,
-				B8C9D0E1F2A3B4C5D6E7F8A9 /* SnapshotTesting in Frameworks */,
 				C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,7 +207,6 @@
 			name = HangsTests;
 			packageProductDependencies = (
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */,
-				E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */,
 				F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */,
 			);
 			productName = HangsTests;
@@ -273,7 +270,6 @@
 			packageReferences = (
 				D836EF69338645ED82615379 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */,
-				B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 				CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
@@ -1052,14 +1048,6 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nalexn/ViewInspector";
@@ -1101,11 +1089,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */;
 			productName = ConcurrencyExtras;
-		};
-		E5F6A7B8C9D0E1F2A3B4C5D6 /* SnapshotTesting */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B2C3D4E5F6A7B8C9D0E1F2A3 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
-			productName = SnapshotTesting;
 		};
 		F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */ = {
 			isa = XCSwiftPackageProductDependency;

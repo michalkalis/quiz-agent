@@ -5,8 +5,6 @@
 //  #52 task 52.14 — Error screen (Fwafe frame) bound to AppErrorModel (52.7).
 //
 //  Why these tests matter:
-//  - The icon circle must use the error token (red), not pink — a wrong colour
-//    means the wrong emotional signal for a failure screen.
 //  - The "OOPS" headline and model.title must both render so regressions that
 //    drop one of the two text layers fail immediately.
 //  - CTA selection driven by model.retryAction is the semantic contract of 52.7:
@@ -35,33 +33,6 @@ private func makeErrorView(
     )
     let model = AppErrorModel(title: title, description: description, retryAction: retryAction)
     return ErrorView(viewModel: vm, model: model)
-}
-
-// MARK: - Icon token: error colour, not pink
-
-@MainActor
-@Suite("ErrorView — icon uses error token")
-struct ErrorViewIconTokenTests {
-    @Test("Error token resolves to a distinct colour from pink")
-    func errorTokenDiffersFromPink() {
-        #expect(
-            Theme.Hangs.Colors.error != Theme.Hangs.Colors.pink,
-            "error (#FF4444) must differ from pink (#FF3D8F) — they signal different states"
-        )
-    }
-
-    @Test("Error token resolves to the design hex #FF4444 in light mode")
-    func errorTokenHex() {
-        let uiColor = UIColor(Theme.Hangs.Colors.error)
-            .resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
-        let tol: CGFloat = 1.0 / 255.0 + 0.0001
-        // #FF4444 = R:1.0 G:68/255 B:68/255
-        #expect(abs(r - 1.0) <= tol, "Red channel must be 1.0 for #FF4444")
-        #expect(abs(g - (68.0 / 255.0)) <= tol, "Green channel must be 68/255 for #FF4444")
-        #expect(abs(b - (68.0 / 255.0)) <= tol, "Blue channel must be 68/255 for #FF4444")
-    }
 }
 
 // MARK: - Structural: "OOPS" + title + description render

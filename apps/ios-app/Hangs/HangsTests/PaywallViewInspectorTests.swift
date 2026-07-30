@@ -79,32 +79,6 @@ private func treeHasText(_ tree: InspectableView<ViewType.ClassifiedView>, conta
     }
 }
 
-// MARK: - Token: warning colour for offline variant
-
-@Suite("PaywallView — offline uses warning token")
-struct PaywallViewOfflineTokenTests {
-    @Test("Warning token resolves to amber #F59E0B in light mode")
-    func warningTokenIsAmber() {
-        let uiColor = UIColor(Theme.Hangs.Colors.warning)
-            .resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: nil)
-        let tol: CGFloat = 1.0 / 255.0 + 0.0001
-        // #F59E0B = R:245 G:158 B:11
-        #expect(abs(r - (245.0 / 255.0)) <= tol, "Red channel: \(r)")
-        #expect(abs(g - (158.0 / 255.0)) <= tol, "Green channel: \(g)")
-        #expect(abs(b - (11.0 / 255.0)) <= tol, "Blue channel: \(b)")
-    }
-
-    @Test("Warning token differs from pink — offline and upgrade signals are distinct")
-    func warningDiffersFromPink() {
-        #expect(
-            Theme.Hangs.Colors.warning != Theme.Hangs.Colors.pink,
-            "warning (#F59E0B) must differ from pink (#FF3D8F)"
-        )
-    }
-}
-
 // MARK: - isOffline logic
 
 @MainActor

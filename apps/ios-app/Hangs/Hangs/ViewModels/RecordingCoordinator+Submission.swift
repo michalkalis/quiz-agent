@@ -63,6 +63,12 @@ extension RecordingCoordinator {
             return
         }
 
+        // #133 1a: bind the recording to the question that was on screen when the
+        // user stopped talking — read here, synchronously, before the state moves or
+        // any response can advance it. A retry of this upload is then replayed
+        // against THAT question instead of grading the next, unseen one.
+        let answeredQuestionId = currentQuestion()?.id
+
         transition(to: .processing)
         setErrorMessage(nil)
 
@@ -87,7 +93,8 @@ extension RecordingCoordinator {
                         try await self.networkService.submitVoiceAnswer(
                             sessionId: sessionId,
                             audioData: audioData,
-                            fileName: "answer.m4a"
+                            fileName: "answer.m4a",
+                            questionId: answeredQuestionId
                         )
                     }
                 }

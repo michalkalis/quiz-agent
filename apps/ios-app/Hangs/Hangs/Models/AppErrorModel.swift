@@ -83,6 +83,16 @@ struct AppErrorModel: Equatable, Sendable {
                     description: String(localized: "This quiz session is no longer active. Start a new game.", comment: "Error body: expired session"),
                     retryAction: .goHome
                 )
+            case .questionMismatch:
+                // #133 1a: the client is a whole question out of step with the
+                // session, so nothing was graded. Retrying re-sends the same stale
+                // id and 409s again, and the app has no session-resync path — Home
+                // (a fresh session) is the only recovery, as for .sessionNotFound.
+                return AppErrorModel(
+                    title: String(localized: "Quiz out of sync", comment: "Error title: the app and the server disagree about which question is open"),
+                    description: String(localized: "The quiz moved on to another question. Start a new game to continue.", comment: "Error body: question-scoped submit was rejected; recovery is a new session"),
+                    retryAction: .goHome
+                )
             case let .serverError(statusCode, _) where statusCode >= 500:
                 return AppErrorModel(
                     title: String(localized: "Server error", comment: "Error title: backend returned a 5xx"),

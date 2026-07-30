@@ -1275,7 +1275,8 @@ final class QuizViewModel: ObservableObject {
             let response = try await networkService.submitTextInput(
                 sessionId: sessionId,
                 input: value,
-                audio: settings.audioMode != "off"
+                audio: settings.audioMode != "off",
+                questionId: currentQuestion?.id // #133 1a: the tapped option answers THIS question
             )
             await handleQuizResponse(response)
         } catch {
@@ -1340,11 +1341,21 @@ final class QuizViewModel: ObservableObject {
             // #131 Track A: same bounded cold-wake retry as skip/start — only
             // failures that prove the request never reached application code
             // qualify, so the answer can never be counted twice.
+            //
+            // #133 1a: `currentQuestion` is still the ANSWERED question here — the
+            // advance to the response's next question happens in
+            // `advanceToNextQuestionOrFinish`, never in `handleQuizResponse` — so an
+            // edited Whisper transcript re-grades the question the player actually
+            // saw instead of being scored against the next one. Read ONCE outside
+            // the retry closure: every attempt must carry the same id, or a retry
+            // would grade a different question than the first attempt did.
+            let answeredQuestionId = currentQuestion?.id
             let response = try await withTransientRetry(label: "text answer submit") {
                 try await networkService.submitTextInput(
                     sessionId: sessionId,
                     input: newAnswer,
-                    audio: !suppressAudio && settings.audioMode != "off"
+                    audio: !suppressAudio && settings.audioMode != "off",
+                    questionId: answeredQuestionId
                 )
             }
 
@@ -1389,11 +1400,15 @@ final class QuizViewModel: ObservableObject {
             // #131 Track A: a staging cold wake used to surface OOPS on the first
             // Skip. A skip carries no user content, so re-sending it after a
             // connection-level failure or a 502/503 is safe.
+            // #133 1a: skip THIS question, never the next one. Read once outside the
+            // retry closure so every attempt skips the same question.
+            let skippedQuestionId = currentQuestion?.id
             let response = try await withTransientRetry(label: "skip question") {
                 try await networkService.submitTextInput(
                     sessionId: sessionId,
                     input: "skip",
-                    audio: settings.audioMode != "off"
+                    audio: settings.audioMode != "off",
+                    questionId: skippedQuestionId
                 )
             }
 

@@ -14,8 +14,15 @@ import Sentry
 protocol NetworkServiceProtocol: Sendable {
     func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String) async throws -> QuizResponse
-    func submitTextInput(sessionId: String, input: String, audio: Bool) async throws -> QuizResponse
+    /// `questionId` (#133 1a) is the id of the question the submission answers —
+    /// pass it on EVERY submit. The backend then replays an already-graded
+    /// submission (or re-grades that same question when the text changed, the
+    /// edited-transcript case) instead of scoring the answer against the next,
+    /// unseen question and burning a second freemium question. An id the session
+    /// cannot grade comes back as `NetworkError.questionMismatch`; `nil` selects
+    /// the legacy, un-scoped behaviour.
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?) async throws -> QuizResponse
+    func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse
     /// In-app beta feedback (#109): multipart POST to `/feedback`. `message` is
     /// required; `metadataJSON`, `appVersion`, `screenshotPNG`, `audioWAV`, and
     /// `logsText` are optional attachments. `audioWAV` is the dictation recording
@@ -158,6 +165,18 @@ actor NetworkService: NetworkServiceProtocol {
                 throw NetworkError.quotaLimitReached(limitError.detail)
             }
             throw NetworkError.serverError(statusCode: 429, message: "Rate limited")
+        }
+
+        // #133 1a: question-scoped submit rejected — the client is a whole question
+        // out of step, so the server graded nothing. Body-discriminated like the 429
+        // above: a 409 that does NOT carry `question_mismatch` falls through to the
+        // generic .serverError(409, …) below.
+        if httpResponse.statusCode == 409,
+           let mismatch = try? JSONDecoder().decode(QuestionMismatchWrapper.self, from: data),
+           mismatch.detail.code == "question_mismatch"
+        {
+            logHTTPError(endpoint: endpointPath, status: 409)
+            throw NetworkError.questionMismatch(currentQuestionId: mismatch.detail.currentQuestionId)
         }
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
@@ -348,8 +367,19 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Voice Submission
 
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a") async throws -> QuizResponse {
-        let endpoint = baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)")
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil) async throws -> QuizResponse {
+        // #133 1a: the route takes `question_id` as a QUERY param (the body is the
+        // multipart audio), and rejects a mismatch BEFORE paying for transcription.
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        if let questionId {
+            components.queryItems = [URLQueryItem(name: "question_id", value: questionId)]
+        }
+
+        guard let endpoint = components.url else {
+            throw NetworkError.invalidURL
+        }
 
         let boundary = UUID().uuidString
         var request = URLRequest(url: endpoint)
@@ -377,7 +407,7 @@ actor NetworkService: NetworkServiceProtocol {
         return try await decodeQuizResponse(from: data)
     }
 
-    func submitTextInput(sessionId: String, input: String, audio: Bool = true) async throws -> QuizResponse {
+    func submitTextInput(sessionId: String, input: String, audio: Bool = true, questionId: String? = nil) async throws -> QuizResponse {
         guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/input"), resolvingAgainstBaseURL: false) else {
             throw NetworkError.invalidURL
         }
@@ -394,8 +424,13 @@ actor NetworkService: NetworkServiceProtocol {
         // Text submission with GPT-4 evaluation and TTS
         request.timeoutInterval = 60
 
-        // Build JSON body
-        let body = ["input": input]
+        // Build JSON body. #133 1a: `question_id` scopes the submit to the question
+        // it answers (SubmitInputRequest.question_id) — omitted when nil so the
+        // legacy un-scoped behaviour stays reachable.
+        var body = ["input": input]
+        if let questionId {
+            body["question_id"] = questionId
+        }
         request.httpBody = try JSONEncoder().encode(body)
 
         let endpointPath = "/api/v1/sessions/{id}/input"
@@ -625,6 +660,23 @@ private nonisolated struct QuotaLimitErrorWrapper: Decodable, Sendable {
     let detail: QuotaLimitError
 }
 
+/// Backend 409 for a submit whose `question_id` the session cannot grade (#133 1a):
+/// `{"detail": {"code": "question_mismatch", "current_question_id": "…"}}`.
+/// `current_question_id` is nullable server-side (a session with no open question).
+private nonisolated struct QuestionMismatchWrapper: Decodable, Sendable {
+    struct Detail: Decodable, Sendable {
+        let code: String
+        let currentQuestionId: String?
+
+        enum CodingKeys: String, CodingKey {
+            case code
+            case currentQuestionId = "current_question_id"
+        }
+    }
+
+    let detail: Detail
+}
+
 enum NetworkError: LocalizedError {
     case invalidResponse
     case invalidURL
@@ -632,6 +684,12 @@ enum NetworkError: LocalizedError {
     case serverError(statusCode: Int, message: String)
     case quotaLimitReached(QuotaLimitError)
     case sessionNotFound
+    /// HTTP 409 `question_mismatch` (#133 1a): the submitted `question_id` is
+    /// neither the session's current question nor the last one it graded, so the
+    /// server refused to grade it and mutated nothing. Carries the server's
+    /// current question id (nullable) for diagnostics. Never retryable — the
+    /// request demonstrably reached application code.
+    case questionMismatch(currentQuestionId: String?)
 
     var errorDescription: String? {
         switch self {
@@ -648,6 +706,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "Free question limit reached", comment: "Network error: user hit the free monthly question quota")
         case .sessionNotFound:
             return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+        case .questionMismatch:
+            return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
         }
     }
 }

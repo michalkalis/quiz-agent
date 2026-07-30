@@ -107,5 +107,8 @@ struct SubmitRetryTests {
         #expect(!TransientRetry.isTransient(NetworkError.serverError(statusCode: 429, message: "quota")))
         #expect(!TransientRetry.isTransient(NetworkError.invalidResponse))
         #expect(!TransientRetry.isTransient(URLError(.cancelled)))
+        // #133 1a: a 409 question_mismatch is the server telling us it saw the
+        // request and refused it — re-sending the same stale id fails identically.
+        #expect(!TransientRetry.isTransient(NetworkError.questionMismatch(currentQuestionId: "q_042")))
     }
 }

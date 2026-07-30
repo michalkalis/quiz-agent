@@ -46,6 +46,16 @@ private nonisolated enum Stubs {
     }
     """#
 
+    /// #133 1a — the backend's 409 body for a submit the session cannot grade.
+    static let questionMismatchJSON = #"""
+    {
+      "detail": {
+        "code": "question_mismatch",
+        "current_question_id": "q_042"
+      }
+    }
+    """#
+
     static let usageInfoJSON = #"""
     {
       "user_id": "user_abc",
@@ -477,6 +487,139 @@ struct NetworkServiceTests {
                 #expect(code == 429)
             } else {
                 Issue.record("Expected .serverError(429, …), got \(error)")
+            }
+        }
+    }
+
+    // MARK: 17. #133 1a — question-scoped submit: the id must reach the wire
+
+    //
+    // These pin the WIRE FORMAT, because the money invariant lives on the server:
+    // it can only replay-instead-of-double-charge a re-sent answer if it is told
+    // which question the answer belongs to. Drop the id anywhere in the request
+    // builder and the backend silently falls back to the legacy behaviour —
+    // grading the retry against the next, unseen question. The two routes take it
+    // differently on purpose (multipart body vs JSON body), so both are pinned.
+
+    @Test("submitVoiceAnswer sends question_id as a URL query param")
+    func voiceSubmitCarriesQuestionIdInQuery() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data(Stubs.questionMismatchJSON.utf8)) // body irrelevant; decode may fail
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitVoiceAnswer(
+            sessionId: "s1",
+            audioData: Data([0x1, 0x2]),
+            fileName: "answer.m4a",
+            questionId: "q_001"
+        )
+
+        let request = try #require(captured.withLock { $0 })
+        let url = try #require(request.url)
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        #expect(components.queryItems?.first { $0.name == "question_id" }?.value == "q_001")
+    }
+
+    @Test("submitVoiceAnswer omits question_id when none is given (legacy path)")
+    func voiceSubmitOmitsQuestionIdWhenNil() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitVoiceAnswer(sessionId: "s1", audioData: Data([0x1]), fileName: "answer.m4a")
+
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.url?.query == nil)
+    }
+
+    @Test("submitTextInput sends question_id in the JSON body")
+    func textSubmitCarriesQuestionIdInBody() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false, questionId: "q_001")
+
+        let request = try #require(captured.withLock { $0 })
+        let bodyData = try #require(readBody(from: request), "Expected a JSON body on submitTextInput")
+        let decoded = try JSONSerialization.jsonObject(with: bodyData) as? [String: String]
+        #expect(decoded?["input"] == "Paris")
+        #expect(decoded?["question_id"] == "q_001")
+    }
+
+    @Test("submitTextInput omits question_id when none is given (legacy path)")
+    func textSubmitOmitsQuestionIdWhenNil() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false)
+
+        let request = try #require(captured.withLock { $0 })
+        let bodyData = try #require(readBody(from: request))
+        let decoded = try JSONSerialization.jsonObject(with: bodyData) as? [String: String]
+        #expect(decoded?.keys.contains("question_id") == false)
+    }
+
+    // MARK: 18. #133 1a — 409 question_mismatch decode
+
+    //
+    // The 409 must arrive at the ViewModel as its OWN case, not as a generic
+    // .serverError: it is the one submit failure that must never be retried and
+    // whose recovery is a new session rather than "try again".
+
+    @Test("409 question_mismatch body → .questionMismatch carrying the server's current id")
+    func questionMismatch409Decodes() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in
+            (.make(status: 409), Data(Stubs.questionMismatchJSON.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false, questionId: "q_001")
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case let .questionMismatch(currentQuestionId) = error else {
+                Issue.record("Expected .questionMismatch, got \(error)"); return
+            }
+            #expect(currentQuestionId == "q_042")
+        }
+    }
+
+    /// Body-discriminated, exactly like the 429 quota parse: an unrelated 409
+    /// (or a future one with a different code) must NOT be mistaken for a
+    /// question mismatch and steer the user to "start a new game".
+    @Test("409 without the question_mismatch code → .serverError(409, …)")
+    func unrelated409StaysServerError() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in
+            (.make(status: 409), Data(#"{"detail": "some other conflict"}"#.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false, questionId: "q_001")
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case let .serverError(code, _) = error, code == 409 else {
+                Issue.record("Expected .serverError(409, …), got \(error)"); return
             }
         }
     }

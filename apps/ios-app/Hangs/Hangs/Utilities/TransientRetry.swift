@@ -17,6 +17,18 @@
 //  never reached application code qualify — a retried submit must never double-count
 //  an answer.
 //
+//  #133 1a — why retrying a submit is now SAFE rather than merely narrow: every
+//  submit carries the `question_id` it answers, and the server is question-scoped
+//  idempotent (`SubmitInputRequest.question_id` / the voice route's `question_id`
+//  query param). A re-sent submission whose id matches the question the session
+//  last graded is replayed — or re-graded against that same question when the text
+//  changed — never double-charging quota and never advancing twice. So the old
+//  hazard (server processed, response lost on a tunnel, retry answers the NEXT
+//  question) is closed at the protocol level. The retry classes below stay exactly
+//  as narrow as before: this is defence in depth, not a licence to widen them.
+//  A 409 `question_mismatch` is deliberately NOT retryable — it proves the request
+//  reached application code, and re-sending the same stale id fails identically.
+//
 
 import Foundation
 import os

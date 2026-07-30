@@ -50,6 +50,17 @@ import os
         // Capture properties for unit-test assertions (additive — no behaviour change)
         var capturedTextInputAudio: Bool?
         var capturedTextInputInput: String?
+        /// #133 1a: the `question_id` each submit path scoped itself to. The
+        /// money invariant is that this is the question the player was looking
+        /// at — a submit carrying the NEXT question's id double-charges quota and
+        /// grades an unseen question.
+        var capturedTextInputQuestionId: String?
+        var capturedVoiceAnswerQuestionId: String?
+        /// When set, `submitTextInput` throws this instead of returning — the
+        /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
+        /// failure (e.g. the #133 409 `question_mismatch`) on the text path
+        /// without tripping `shouldFail` for every other call.
+        var submitTextInputError: Error?
         /// Number of times `submitTextInput` was invoked — the #79 typed↔voice race
         /// tests assert exactly ONE submission survives an interleaving.
         var submitTextInputCallCount = 0
@@ -150,8 +161,9 @@ import os
             return response
         }
 
-        func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String) async throws -> QuizResponse {
+        func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
+            capturedVoiceAnswerQuestionId = questionId
             if submitVoiceAnswerFailuresBeforeSuccess > 0 {
                 submitVoiceAnswerFailuresBeforeSuccess -= 1
                 throw Self.coldWakeError
@@ -191,10 +203,11 @@ import os
             if shouldFail { throw NetworkError.invalidResponse }
         }
 
-        func submitTextInput(sessionId _: String, input: String, audio: Bool) async throws -> QuizResponse {
+        func submitTextInput(sessionId _: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse {
             submitTextInputCallCount += 1
             capturedTextInputAudio = audio
             capturedTextInputInput = input
+            capturedTextInputQuestionId = questionId
             // Mirror URLSession semantics: a cancelled enclosing Task throws
             // URLError(.cancelled) — the 54.5 self-cancelling-auto-confirm vector.
             if Task.isCancelled {
@@ -204,6 +217,7 @@ import os
                 textInputFailuresBeforeSuccess -= 1
                 throw Self.coldWakeError
             }
+            if let submitTextInputError { throw submitTextInputError }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

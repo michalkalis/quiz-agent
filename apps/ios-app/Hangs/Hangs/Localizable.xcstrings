@@ -3077,6 +3077,17 @@
         }
       }
     },
+    "Quiz out of sync" : {
+      "comment" : "Error title: the app and the server disagree about which question is open",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz nie je zosynchronizovaný"
+          }
+        }
+      }
+    },
     "RESUME" : {
       "localizations" : {
         "sk" : {
@@ -4310,6 +4321,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nákup prešiel, ale neaktivoval sa. Skús Obnoviť nákupy — ak to nepomôže, ozvi sa podpore."
+          }
+        }
+      }
+    },
+    "The quiz moved on to another question" : {
+      "comment" : "Network error: the answer was submitted for a question the session is no longer on",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz už prešiel na inú otázku"
+          }
+        }
+      }
+    },
+    "The quiz moved on to another question. Start a new game to continue." : {
+      "comment" : "Error body: question-scoped submit was rejected; recovery is a new session",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz už prešiel na inú otázku. Pokračuj novou hrou."
           }
         }
       }

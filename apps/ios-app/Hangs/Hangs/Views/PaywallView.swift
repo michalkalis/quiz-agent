@@ -633,6 +633,19 @@ struct PaywallView: View {
                 .multilineTextAlignment(.center)
                 .padding(.top, 2)
                 .accessibilityIdentifier("paywall.legal")
+
+            // App Store review requirement (3.1.2): auto-renew subscriptions
+            // must link the privacy policy and terms of use from the paywall.
+            HStack(spacing: 6) {
+                Link("Privacy Policy", destination: Config.privacyPolicyURL)
+                    .accessibilityIdentifier("paywall.privacyPolicy")
+                Text(verbatim: "·")
+                Link("Terms of Use", destination: Config.termsOfUseURL)
+                    .accessibilityIdentifier("paywall.termsOfUse")
+            }
+            .font(.hangsBody(11))
+            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+            .padding(.top, 2)
         }
     }
 

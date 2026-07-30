@@ -478,6 +478,34 @@ struct SettingsView: View {
                 .padding(.bottom, 16)
                 .disabled(isSigningIn)
                 .accessibilityIdentifier("account.signInWithApple")
+
+                hairline
+
+                // Anonymous users have a server-side identity from first launch,
+                // so GDPR/App Store data-deletion (5.1.1(v)) must be reachable
+                // without signing in. Reuses the signed-in flows: DELETE /auth/me
+                // re-bootstraps a fresh anon identity.
+                HangsConfigRow(
+                    label: "Export my data",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.muted,
+                    showsChevron: true
+                ) {
+                    Task { await performExportData() }
+                }
+                .accessibilityIdentifier("account.exportData")
+
+                hairline
+
+                HangsConfigRow(
+                    label: "Delete my data",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.error
+                ) {
+                    showDeleteConfirmation = true
+                }
+                .accessibilityIdentifier("account.deleteMyData")
+                .disabled(isDeletingAccount)
             }
         }
     }
@@ -672,6 +700,41 @@ struct SettingsView: View {
                 }
             }
             .accessibilityIdentifier("settings.resetHistory")
+
+            hairline
+
+            HangsConfigRow(
+                label: "Privacy Policy",
+                value: "",
+                valueColor: Theme.Hangs.Colors.muted,
+                showsChevron: true
+            ) {
+                openURL(Config.privacyPolicyURL)
+            }
+            .accessibilityIdentifier("settings.privacyPolicy")
+
+            hairline
+
+            HangsConfigRow(
+                label: "Terms of Use",
+                value: "",
+                valueColor: Theme.Hangs.Colors.muted,
+                showsChevron: true
+            ) {
+                openURL(Config.termsOfUseURL)
+            }
+            .accessibilityIdentifier("settings.termsOfUse")
+
+            // EU AI Act Art. 50 transparency: users must be told they are
+            // interacting with AI-generated content.
+            Text("Questions and answer evaluation are AI-generated and may contain inaccuracies.")
+                .font(.hangsBody(12))
+                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .accessibilityIdentifier("settings.aiDisclosure")
         }
     }
 

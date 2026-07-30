@@ -18,6 +18,13 @@ primary_region = "cdg"
   # storage — so every deploy would re-buy the whole cache from ElevenLabs,
   # whose credits are metered and shared with realtime STT.
   TTS_CACHE_DIR = "/data/tts_cache"
+  # Same reason for the two SQLite stores: their defaults (`./data/*.db`) also
+  # resolve against WORKDIR /app, and with min_machines_running = 0 the rootfs
+  # is recreated on every idle wake — not just every deploy. Unpinned, ratings
+  # + persisted sessions are wiped and the claude-opus-5 translation cache is
+  # re-paid each cold start.
+  TRANSLATION_CACHE_URL = "sqlite:////data/translations.db"
+  RATINGS_DATABASE_URL = "sqlite:////data/ratings.db"
 
 [[services]]
   protocol = "tcp"

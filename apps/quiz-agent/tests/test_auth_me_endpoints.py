@@ -23,7 +23,7 @@ call; the auth tables use the real test Postgres via ``db_sessionmaker``.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from urllib.parse import parse_qs
 
 import httpx
@@ -44,6 +44,7 @@ from app.auth.refresh import RefreshTokenStore
 from app.auth.tokens import TokenService
 from app.db.models import AnonymousIdentity, DailyUsage, RefreshToken, User
 from app.rate_limit import limiter
+from app.usage import tracker as usage_tracker
 
 pytestmark = pytest.mark.asyncio
 
@@ -321,6 +322,56 @@ async def test_delete_todays_carry_takes_the_greater_of_both_counters(
 
     rows = await _rows(db_sessionmaker, DailyUsage, DailyUsage.subject_id == anon_id)
     assert [r.questions_count for r in rows] == [9]  # max(9, 5), not 14
+
+
+async def test_delete_carries_the_whole_current_month_not_just_today(
+    db_sessionmaker, monkeypatch
+):
+    """Adversarial audit 2026-07-30: the free allotment is a calendar-month window
+    (``UsageTracker`` sums every row since the 1st), but the carry kept only the
+    row for *today* — and bailed out entirely when today had no row. So a user who
+    burned the month's quota on earlier days could delete → re-sign-in for a full
+    fresh allotment, repeatable every day. Every row of the current month must
+    land on the anon; last month's must not (that quota reset on its own)."""
+    monkeypatch.setattr(usage_tracker, "_today", lambda: date(2026, 7, 30))
+    app = _make_app(db_sessionmaker)
+    user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.month")
+    await _seed_usage(db_sessionmaker, user_id, 12, day=date(2026, 7, 5))
+    await _seed_usage(db_sessionmaker, user_id, 18, day=date(2026, 7, 20))
+    await _seed_usage(db_sessionmaker, user_id, 25, day=date(2026, 6, 28))
+    anon_id = await _seed_anon_upgraded(db_sessionmaker, user_id)
+
+    async with _asgi(app) as c:
+        resp = await c.delete("/api/v1/auth/me", headers=_auth(bearer))
+    assert resp.status_code == 204, resp.text
+
+    rows = await _rows(db_sessionmaker, DailyUsage, DailyUsage.subject_id == anon_id)
+    assert {r.usage_date: r.questions_count for r in rows} == {
+        date(2026, 7, 5): 12,
+        date(2026, 7, 20): 18,
+    }
+
+
+async def test_delete_then_resignin_cannot_reset_the_exhausted_month(
+    db_sessionmaker, monkeypatch
+):
+    """Adversarial audit 2026-07-30, the reason the carry exists: after the delete
+    the device's App Attest key returns it to its anon subject, so the quota gate
+    reads the anon. A month already spent on earlier days must still be spent."""
+    monkeypatch.setattr(usage_tracker, "_today", lambda: date(2026, 7, 30))
+    app = _make_app(db_sessionmaker)
+    user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.reset")
+    await _seed_usage(db_sessionmaker, user_id, 30, day=date(2026, 7, 1))
+    anon_id = await _seed_anon_upgraded(db_sessionmaker, user_id)
+
+    async with _asgi(app) as c:
+        resp = await c.delete("/api/v1/auth/me", headers=_auth(bearer))
+    assert resp.status_code == 204, resp.text
+
+    allowed, remaining, _ = await usage_tracker.UsageTracker(
+        db_sessionmaker, monthly_limit=30
+    ).check_limit(anon_id)
+    assert not allowed and remaining == 0
 
 
 async def test_delete_succeeds_even_when_apple_revoke_fails(db_sessionmaker):

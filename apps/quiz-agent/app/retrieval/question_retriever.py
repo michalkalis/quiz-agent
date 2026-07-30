@@ -122,7 +122,7 @@ class QuestionRetriever:
                 "No candidates from semantic search, trying fallback strategies"
             )
             candidates = self._fallback_retrieval(
-                session, question_difficulty, n_candidates, all_excluded_ids
+                session, question_difficulty, n_candidates, all_excluded_ids, filters
             )
             # Filter out expired questions from fallback results too
             candidates = [c for c in candidates if not c.is_expired()]
@@ -281,14 +281,22 @@ class QuestionRetriever:
         question_difficulty: str,
         n_candidates: int,
         excluded_ids: List[str],
+        filters: dict,
     ) -> List[Question]:
         """Fallback retrieval strategies when primary semantic search fails.
+
+        Every fallback is the PRIMARY filter dict with only the one key it means
+        to relax changed. Rebuilding the constraints from scratch is what silently
+        dropped the category selection (a "Kids" session served an adults
+        question, so the picker degraded to a no-op) and the ``pack_id IS NULL``
+        guard — with a small approved corpus, primary-empty is routine.
 
         Args:
             session: Current quiz session
             question_difficulty: Difficulty level
             n_candidates: Number of candidates
             excluded_ids: Question IDs to exclude (merged session + client)
+            filters: The metadata filters the primary search used
 
         Returns:
             List of candidate questions
@@ -301,24 +309,12 @@ class QuestionRetriever:
         if session.pack_id:
             return []
 
-        # Build language filter for non-English sessions
-        lang_filter = {}
-        if session.language and session.language != "en":
-            lang_filter["language_dependent"] = False
-
-        fallback_types = ["text"] + self._image_types(session)
-
-        # Fallback 1: Simpler semantic query (just "question")
+        # Fallback 1: Simpler semantic query, same constraints
         logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
         candidates = self._store.search(
             query_text=simple_query,
-            filters={
-                "difficulty": question_difficulty,
-                "type": {"$in": fallback_types},
-                "review_status": "approved",
-                **lang_filter,
-            },
+            filters=dict(filters),
             n_results=n_candidates,
             excluded_ids=excluded_ids,
         )
@@ -334,12 +330,7 @@ class QuestionRetriever:
         for fallback_difficulty in difficulty_fallback:
             candidates = self._store.search(
                 query_text=simple_query,
-                filters={
-                    "difficulty": fallback_difficulty,
-                    "type": {"$in": fallback_types},
-                    "review_status": "approved",
-                    **lang_filter,
-                },
+                filters={**filters, "difficulty": fallback_difficulty},
                 n_results=n_candidates,
                 excluded_ids=excluded_ids,
             )
@@ -351,15 +342,11 @@ class QuestionRetriever:
                 )
                 return candidates
 
-        # Fallback 3: Minimal constraints (still require approved)
+        # Fallback 3: Drop the difficulty constraint, keep everything else
         logger.debug("Fallback 3 - Minimal constraints")
         candidates = self._store.search(
             query_text="question",
-            filters={
-                "type": {"$in": fallback_types},
-                "review_status": "approved",
-                **lang_filter,
-            },
+            filters={k: v for k, v in filters.items() if k != "difficulty"},
             n_results=n_candidates,
             excluded_ids=excluded_ids,
         )

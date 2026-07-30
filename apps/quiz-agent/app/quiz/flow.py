@@ -13,6 +13,7 @@ from ..evaluation.evaluator import AnswerEvaluator
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
+from ..tts.number_normalization import normalize_numbers_for_tts
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
@@ -21,6 +22,7 @@ from quiz_shared.models.session import QuizSession
 from quiz_shared.models.phase import SessionPhase
 
 from ..serializers import (
+    correct_option_key,
     session_translation,
     translated_question_payload,
     translated_question_view,
@@ -32,19 +34,33 @@ logger = logging.getLogger(__name__)
 # so without this set tasks could be garbage-collected mid-execution.
 _prefetch_tasks: "set[asyncio.Task]" = set()
 
+# The parser emits a difficulty *direction* ("harder"/"easier"), while the corpus
+# stores discrete levels — so a direction is one clamped step along
+# easy → medium → hard. "random" has no direction and is left alone.
+_DIFFICULTY_STEPS = {
+    "harder": {"easy": "medium", "medium": "hard", "hard": "hard"},
+    "easier": {"hard": "medium", "medium": "easy", "easy": "easy"},
+}
+
 
 def prefetch_question_audio(
-    tts_service: Optional[TTSService], question_text: str
+    tts_service: Optional[TTSService], question_text: str, language: str
 ) -> None:
     """Fire-and-forget TTS warm-up so the next /question/audio request hits the cache.
 
     Returns immediately. Failures are logged but never propagate to the caller —
     a missed prefetch just means iOS pays the original synthesis cost.
+
+    ``language`` is required because the serve route synthesizes
+    ``normalize_numbers_for_tts(text, language)`` and the cache key is the exact
+    text: warming the raw stem warms a key nothing ever reads, so any stem with a
+    digit was synthesized (and paid for) twice.
     """
     if not tts_service or not question_text:
         return
 
-    task = asyncio.create_task(tts_service.synthesize_question(question_text))
+    tts_text = normalize_numbers_for_tts(question_text, language)
+    task = asyncio.create_task(tts_service.synthesize_question(tts_text))
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
     task.add_done_callback(_log_prefetch_outcome)
@@ -117,8 +133,12 @@ class QuizFlowService:
         result = FlowResult()
         evaluated_question_id = session.current_question_id
 
-        # Get current question
-        current_question = self.question_retriever.get(evaluated_question_id)
+        # Get current question. The retriever is sync and blocks the calling
+        # thread on the pgvector bridge (and, for retrieval, an OpenAI embedding
+        # HTTP call) — keep it off the event loop, as /voice/submit already does.
+        current_question = await asyncio.to_thread(
+            self.question_retriever.get, evaluated_question_id
+        )
         if not current_question:
             raise ValueError("Current question not found")
 
@@ -207,27 +227,25 @@ class QuizFlowService:
                 rating_value = extracted_data.get("rating")
                 result.feedback_received.append(f"rating: {rating_value}")
 
-            elif intent_type == "difficulty_change":
-                difficulty = extracted_data.get("difficulty")
-                session.current_difficulty = difficulty
-                result.feedback_received.append(f"difficulty: {difficulty}")
-
             elif intent_type == "preference_change":
-                topic = extracted_data.get("topic", "")
-                if topic.startswith("-"):
-                    topic = topic[1:]
+                for topic in extracted_data.get("avoid_topics") or []:
+                    if not topic:
+                        continue
                     if topic not in session.disliked_topics:
                         session.disliked_topics.append(topic)
                     result.feedback_received.append(f"avoiding: {topic}")
-                else:
+                for topic in extracted_data.get("prefer_topics") or []:
+                    if not topic:
+                        continue
                     if topic not in session.preferred_topics:
                         session.preferred_topics.append(topic)
                     result.feedback_received.append(f"preference: {topic}")
-
-            elif intent_type == "category_change":
-                category = extracted_data.get("category")
-                session.category = category
-                result.feedback_received.append(f"category: {category}")
+                stepped = _DIFFICULTY_STEPS.get(
+                    extracted_data.get("difficulty"), {}
+                ).get(session.current_difficulty)
+                if stepped:
+                    session.current_difficulty = stepped
+                    result.feedback_received.append(f"difficulty: {stepped}")
 
         # Ghost-question guard (#66): a non-answer intent (rating, difficulty,
         # preference, category, or an unparseable utterance) produces no evaluation.
@@ -278,7 +296,9 @@ class QuizFlowService:
 
         # Get next question (use pre-fetched if available)
         if next_question is None:
-            next_question = self.question_retriever.get_next_question(session)
+            next_question = await asyncio.to_thread(
+                self.question_retriever.get_next_question, session
+            )
 
         if not next_question:
             session.transition(
@@ -326,7 +346,9 @@ class QuizFlowService:
             # Warm TTS cache so iOS gets a cache hit when it requests this URL.
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
             # giving OpenAI TTS time to finish in the background.
-            prefetch_question_audio(self.tts_service, translated_q_dict["question"])
+            prefetch_question_audio(
+                self.tts_service, translated_q_dict["question"], session.language
+            )
 
         return result
 
@@ -393,6 +415,14 @@ class QuizFlowService:
         """
         if translation:
             return translation["correct_answer"]
+        # No record → the player saw the ENGLISH question. Corpus MCQ rows store
+        # ``correct_answer`` either as option text or as the bare key ("b"), and
+        # a lone letter is useless on the result screen and unspeakable in the
+        # feedback audio — resolve it to the option text the player actually saw.
+        # The raw value is only right for non-MCQ questions.
+        correct_key = correct_option_key(question)
+        if correct_key is not None:
+            return question.possible_answers[correct_key]
         correct = question.correct_answer
         if isinstance(correct, list):
             correct = correct[0] if correct else ""

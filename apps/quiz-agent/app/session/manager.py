@@ -43,9 +43,28 @@ class SessionManager:
         """
         self._sessions: Dict[str, QuizSession] = {}
         self._lock = Lock()
+        self._session_locks: Dict[str, asyncio.Lock] = {}
         self._cleanup_interval = cleanup_interval
         self._cleanup_task: Optional[asyncio.Task] = None
         self._sql_client = sql_client
+
+    def session_lock(self, session_id: str) -> asyncio.Lock:
+        """Mutex serializing the answer-submit read→process→write for one session.
+
+        ``get_session`` hands out a deep copy and ``update_session`` replaces the
+        whole object with no version check, so two overlapping submits both read
+        the same snapshot and the last write wins: the question returned to the
+        first client is never recorded in ``asked_question_ids``, the stored
+        ``current_question_id`` disagrees with what that client is showing, and
+        one of the two recorded freemium questions has no served question behind
+        it. The submit routes hold this lock across the whole flow so the second
+        submit reads the first one's result. The lock dies with its session."""
+        with self._lock:
+            lock = self._session_locks.get(session_id)
+            if lock is None:
+                lock = asyncio.Lock()
+                self._session_locks[session_id] = lock
+            return lock
 
     def _persist(self, session: QuizSession) -> None:
         """Write session to SQLite (best-effort, non-blocking)."""
@@ -134,6 +153,7 @@ class SessionManager:
             ]
             for sid in expired:
                 del self._sessions[sid]
+                self._session_locks.pop(sid, None)
             if expired:
                 logger.info("Cleaned up %d expired sessions", len(expired))
         for sid in expired:
@@ -246,6 +266,7 @@ class SessionManager:
         with self._lock:
             if session_id in self._sessions:
                 del self._sessions[session_id]
+                self._session_locks.pop(session_id, None)
                 self._deactivate(session_id)
                 return True
             return False

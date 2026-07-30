@@ -1,5 +1,6 @@
 """Quiz game flow endpoints: start, submit input, get question, rate."""
 
+import asyncio
 import logging
 import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -116,8 +117,13 @@ async def start_quiz(
             session.current_difficulty,
         )
         try:
-            question = question_retriever.get_next_question(
-                session, client_excluded_ids=client_excluded_ids
+            # The retriever is sync and its store bridges to a background loop,
+            # blocking the calling thread on an OpenAI embedding HTTP call — off
+            # the event loop, or one /start starves every other request.
+            question = await asyncio.to_thread(
+                question_retriever.get_next_question,
+                session,
+                client_excluded_ids=client_excluded_ids,
             )
         except Exception as e:
             logger.error("Exception in get_next_question: %s", e, exc_info=True)
@@ -191,7 +197,9 @@ async def start_quiz(
             # Warm TTS cache while iOS is still rendering the question UI.
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
-            prefetch_question_audio(tts_service, translated_question_dict["question"])
+            prefetch_question_audio(
+                tts_service, translated_question_dict["question"], session.language
+            )
 
         return InputResponse(
             success=True,
@@ -219,48 +227,52 @@ async def submit_input(
     audio: bool = False,
 ):
     """Submit user input (AI-powered natural language parsing)."""
-    session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    # The whole read→process→write is serialized per session: the flow mutates a
+    # deep copy across several awaits and writes it back wholesale, so overlapping
+    # submits would lose one another's advance (see SessionManager.session_lock).
+    async with session_manager.session_lock(session_id):
+        session = session_manager.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
-        raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
+            raise HTTPException(status_code=400, detail="Not waiting for input")
 
-    try:
-        flow_result = await quiz_flow.process_answer(
-            session=session,
-            answer_text=body.input,
-            participant_id=body.participant_id,
-            include_audio=audio,
-        )
-    except _TRANSIENT_INFRA_ERRORS as e:
-        # Cold-wake DB hiccup (staging auto_stop_machines) or pool exhaustion —
-        # retryable, not a bug. iOS retries on 502/503 (isTransientStartError).
-        logger.warning(
-            "Transient infra error in submit_input (session=%s): %s", session_id, e
-        )
-        raise HTTPException(
-            status_code=503, detail="Temporary server issue, please retry"
-        )
-    except Exception as e:
-        logger.error("Unexpected exception in submit_input: %s", e, exc_info=True)
-        if sentry_sdk.get_client().is_active():
-            sentry_sdk.capture_exception(e)
-        raise HTTPException(status_code=500, detail="Failed to process your answer")
+        try:
+            flow_result = await quiz_flow.process_answer(
+                session=session,
+                answer_text=body.input,
+                participant_id=body.participant_id,
+                include_audio=audio,
+            )
+        except _TRANSIENT_INFRA_ERRORS as e:
+            # Cold-wake DB hiccup (staging auto_stop_machines) or pool exhaustion —
+            # retryable, not a bug. iOS retries on 502/503 (isTransientStartError).
+            logger.warning(
+                "Transient infra error in submit_input (session=%s): %s", session_id, e
+            )
+            raise HTTPException(
+                status_code=503, detail="Temporary server issue, please retry"
+            )
+        except Exception as e:
+            logger.error("Unexpected exception in submit_input: %s", e, exc_info=True)
+            if sentry_sdk.get_client().is_active():
+                sentry_sdk.capture_exception(e)
+            raise HTTPException(status_code=500, detail="Failed to process your answer")
 
-    # Ghost-question guard (#66): a non-answer intent leaves the session
-    # untouched (no current_question_id advance, no question recorded). Surface
-    # it as a 400 instead of silently returning an empty response.
-    if flow_result.evaluation is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not understand your answer. Please try again.",
-        )
+        # Ghost-question guard (#66): a non-answer intent leaves the session
+        # untouched (no current_question_id advance, no question recorded). Surface
+        # it as a 400 instead of silently returning an empty response.
+        if flow_result.evaluation is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not understand your answer. Please try again.",
+            )
 
-    if flow_result.usage_limit_error:
-        raise HTTPException(status_code=429, detail=flow_result.usage_limit_error)
+        if flow_result.usage_limit_error:
+            raise HTTPException(status_code=429, detail=flow_result.usage_limit_error)
 
-    return flow_to_response(flow_result, session)
+        return flow_to_response(flow_result, session)
 
 
 @router.get("/sessions/{session_id}/question", response_model=CurrentQuestionResponse)
@@ -278,7 +290,9 @@ async def get_current_question(
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    question = question_retriever.get(session.current_question_id)
+    question = await asyncio.to_thread(
+        question_retriever.get, session.current_question_id
+    )
     if not question:
         raise HTTPException(status_code=500, detail="Question not found")
 

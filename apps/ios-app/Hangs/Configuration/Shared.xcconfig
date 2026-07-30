@@ -16,14 +16,13 @@ PRODUCT_NAME = $(APP_NAME)
 BUNDLE_ID_BASE = com.missinghue.hangs
 
 // MARK: - Info.plist
+// Hangs/Info.plist is the single source of truth for plist content. Do NOT
+// re-add INFOPLIST_KEY_* entries that duplicate keys already in the plist —
+// two sources for one key (e.g. the mic purpose string App Review reads) is
+// how divergent copies ship.
 INFOPLIST_FILE = Hangs/Info.plist
 GENERATE_INFOPLIST_FILE = YES
-INFOPLIST_KEY_NSMicrophoneUsageDescription = We need microphone access to record your quiz answers hands-free.
-INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
-INFOPLIST_KEY_UILaunchScreen_Generation = YES
-INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 
 // MARK: - API
 API_VERSION = /api/v1

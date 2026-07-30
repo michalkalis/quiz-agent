@@ -82,7 +82,8 @@ On multi-step work, keep state durable enough that a fresh context could resume 
 
 ### 8. Commit and Build Autonomously
 Commit at every natural checkpoint without asking for permission — incomplete downstream subtasks do not block a valid commit.
-Trigger TestFlight or deploy steps as soon as a testable increment exists; don't wait for the full feature to be complete.
+Deploy the backend autonomously as soon as a testable increment exists; don't wait for the full feature to be complete.
+**TestFlight builds are on-request only (founder, 2026-07-30):** trigger one only when the founder explicitly asks for it — typically right before an on-device test — never as a routine end-of-run/session step. Do not list "trigger TF build" as a follow-up task either; the founder requests it when they go test.
 Push to remote autonomously once commits are ready — no approval needed. Ask before destructive git operations only (force-push, reset --hard, amend, history rewrites). When in doubt, act rather than defer.
 
 ### 9. Pivot When Approach Is Rejected

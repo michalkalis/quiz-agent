@@ -555,19 +555,30 @@ def _topup_friendly_openai_dispatch(request: httpx.Request) -> httpx.Response:
     return _pipeline_llm_response(request, _topup_friendly_generation_payload())
 
 
+def register_e2e_mocks_full(router: respx.MockRouter) -> None:
+    """Like `register_e2e_mocks`, but with the top-up-friendly generation payload.
+
+    A plain function (not just a fixture body) because `tests/worker/` drives
+    the same live pipeline through `process_order` and must serve the same
+    endpoints — one corpus of canned routes, so both suites drift together
+    instead of one rotting behind the other.
+    """
+    register_sourcing_mocks(router)
+    router.post("https://api.tavily.com/search").mock(
+        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
+    )
+    router.post("https://api.openai.com/v1/chat/completions").mock(
+        side_effect=_topup_friendly_openai_dispatch
+    )
+    router.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
+    )
+
+
 @pytest.fixture
 def e2e_http_mocks_full(_block_external_http):
     """Like `e2e_http_mocks`, but the generation mock returns enough
     genuinely distinct questions for a real-sized order to clear
     TopUpStage's floor on the first pass (see block comment above)."""
-    register_sourcing_mocks(_block_external_http)
-    _block_external_http.post("https://api.tavily.com/search").mock(
-        return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
-    )
-    _block_external_http.post("https://api.openai.com/v1/chat/completions").mock(
-        side_effect=_topup_friendly_openai_dispatch
-    )
-    _block_external_http.post("https://api.anthropic.com/v1/messages").mock(
-        return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
-    )
+    register_e2e_mocks_full(_block_external_http)
     return _block_external_http

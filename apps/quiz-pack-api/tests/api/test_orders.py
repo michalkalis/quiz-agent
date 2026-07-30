@@ -207,6 +207,73 @@ async def test_create_order_missing_bearer_401(
 
 
 @pytest.mark.asyncio
+async def test_create_order_tampered_jws_rejected_no_row(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A JWS with a flipped signature bit must be rejected AND leave no order.
+
+    The verifier's own unit test proves `verify()` raises; this proves the
+    *route* refuses to monetize it. A forged JWS that got past here would be an
+    unpaid pack: an order row, a real ARQ job, and a full LLM+Tavily pipeline
+    billed to us with no Apple transaction behind it. Asserting "no row" and
+    "no enqueue" matters as much as the status code — a rejection that already
+    committed the order would still be a free pack via `POST /retry`.
+    """
+    tx_id = "tx-tampered-signature"
+    jws = make_jws(payload_overrides={"transactionId": tx_id}, tamper_signature=True)
+
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
+    )
+    # 401: the route maps every JWSError except a bundle mismatch to
+    # "unauthenticated" (app/api/v1/orders.py create_order).
+    assert resp.status_code == 401, resp.text
+
+    test_session.expire_all()
+    orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert orders == [], f"forged JWS created order rows: {[o.id for o in orders]}"
+    arq_mock.enqueue_job.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_order_wrong_bundle_jws_rejected_no_row(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A validly-signed JWS for a DIFFERENT app is rejected with no order.
+
+    Same money exposure as a forgery, different attacker: anyone holding a real
+    receipt from another App Store app could otherwise redeem it here for a
+    generated pack we pay for. Distinct status code (403, not 401) because the
+    signature is genuine — this is "not your app", and the route keeps
+    `JWSWrongBundle` separate so it reads as a security signal in logs/Sentry.
+    """
+    tx_id = "tx-wrong-bundle"
+    jws = make_jws(
+        payload_overrides={"transactionId": tx_id, "bundleId": "com.evil.knockoff"}
+    )
+
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
+    )
+    assert resp.status_code == 403, resp.text
+
+    test_session.expire_all()
+    orders = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert orders == [], f"foreign-bundle JWS created order rows: {[o.id for o in orders]}"
+    arq_mock.enqueue_job.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_create_order_enqueue_failure_marks_failed_503(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,

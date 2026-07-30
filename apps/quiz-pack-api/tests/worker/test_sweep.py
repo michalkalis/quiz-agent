@@ -34,6 +34,7 @@ from app.worker.sweep import (
     PENDING_STUCK_TIMEOUT,
     sweep_stuck_orders,
 )
+from tests._isolation import truncate_order_graph
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 
@@ -76,6 +77,21 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as s:
         yield s
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_order_tables(session: AsyncSession) -> None:
+    """Start each test from an empty order graph (mirrors tests/api, tests/integration).
+
+    The sweep scans the WHOLE orders table, so isolation here can't come from
+    unique ids alone: any row a previous run left behind — a test that failed
+    before its trailing `_cleanup`, an aborted gate run — is another stuck order
+    the sweep legitimately recovers, which used to break the call-list asserts
+    below and blame the sweep for it. Truncating up front (plus scoping those
+    asserts to each test's own ids) makes the suite re-runnable instead of
+    pass-once.
+    """
+    await truncate_order_graph(session)
 
 
 def _session_factory(engine: AsyncEngine):
@@ -176,6 +192,24 @@ class FakeArqPool:
         self.job_ids.append(_job_id)
 
 
+def _enqueued_for(pool: FakeArqPool, order_id: uuid.UUID) -> list[tuple[str, str]]:
+    """The enqueue calls this pool saw *for one order*.
+
+    The pool captures every call and the sweep scans the whole table, so a bare
+    `pool.calls == [...]` also asserts "no other order in the database was
+    stuck" — a fact about leftover rows, not about the sweep. Comparing the
+    scoped list keeps both money-path claims exact: exactly one enqueue for THIS
+    order (a duplicate = two paid pipelines for one purchase), or none at all.
+    """
+    return [call for call in pool.calls if call[1] == str(order_id)]
+
+
+def _job_ids_for(pool: FakeArqPool, order_id: uuid.UUID) -> list[str | None]:
+    """The arq job ids this pool was handed for one order (same scoping WHY)."""
+    prefix = f"process_order:{order_id}:"
+    return [jid for jid in pool.job_ids if jid is not None and jid.startswith(prefix)]
+
+
 @pytest.mark.asyncio
 async def test_sweep_recovers_stuck_pending_order(
     engine: AsyncEngine, session: AsyncSession
@@ -200,7 +234,7 @@ async def test_sweep_recovers_stuck_pending_order(
     assert order.status == "in_progress"
     assert job.status == "queued"
     assert job.retry_count == 1
-    assert pool.calls == [("process_order", str(order_id))]
+    assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
 
     await _cleanup(session, order_id)
 
@@ -228,7 +262,7 @@ async def test_sweep_recovers_stuck_in_progress_order(
     assert order.status == "in_progress"
     assert job.status == "queued"
     assert job.retry_count == 1
-    assert pool.calls == [("process_order", str(order_id))]
+    assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
 
     await _cleanup(session, order_id)
 
@@ -257,7 +291,7 @@ async def test_sweep_fails_order_past_retry_budget(
     assert order.status == "failed"
     assert order.refund_eligible is True
     assert job.status == "failed"
-    assert pool.calls == []  # never re-enqueued past the budget
+    assert _enqueued_for(pool, order_id) == []  # never re-enqueued past the budget
 
     await _cleanup(session, order_id)
 
@@ -340,7 +374,7 @@ async def test_sweep_ignores_a_just_requeued_order(
     session.expire_all()
     order = await session.get(GenerationOrder, order_id)
     job = await session.get(GenerationJob, job_id)
-    assert pool.calls == []  # no second pipeline for one purchase
+    assert _enqueued_for(pool, order_id) == []  # no second pipeline for one purchase
     assert order.status == "in_progress"
     assert job.retry_count == 0  # recovery budget not burned
     assert job.status == "queued"
@@ -461,7 +495,7 @@ async def test_sweep_enqueues_with_a_deterministic_attempt_job_id(
     await sweep_stuck_orders(ctx)
 
     # retry_count 0 → 1 on recovery; manual_retry_count untouched.
-    assert pool.job_ids == [f"process_order:{order_id}:1:0"]
+    assert _job_ids_for(pool, order_id) == [f"process_order:{order_id}:1:0"]
 
     await _cleanup(session, order_id)
 
@@ -487,7 +521,8 @@ async def test_sweep_ignores_fresh_orders(
     inprog_order = await session.get(GenerationOrder, inprog_id)
     assert pending_order.status == "pending"
     assert inprog_order.status == "in_progress"
-    assert pool.calls == []
+    assert _enqueued_for(pool, pending_id) == []
+    assert _enqueued_for(pool, inprog_id) == []
 
     await _cleanup(session, pending_id)
     await _cleanup(session, inprog_id)

@@ -3,8 +3,12 @@
 Run locally
 -----------
     cd apps/quiz-pack-api
-    make dev-db          # starts docker-compose postgres:16 + redis:7
+    make dev-db                  # starts docker-compose postgres:16 + redis:7
+    uv pip install -e '.[test]'  # respx — tests/integration/conftest.py needs it
     pytest tests/integration/test_order_e2e.py -v -m integration
+
+The module self-migrates (`_alembic_head`), so a stale test DB is not a reason
+for this recipe to fail — see that fixture for the two databases involved.
 
 CI
 --
@@ -30,8 +34,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import subprocess
+import sys
 import uuid
-from typing import AsyncIterator, Optional
+from pathlib import Path
+from typing import AsyncIterator, Iterator, Optional
 
 import pytest
 import pytest_asyncio
@@ -110,6 +117,54 @@ def _check_services() -> Optional[str]:
 _SKIP_REASON = _check_services()
 if _SKIP_REASON:
     pytest.skip(_SKIP_REASON, allow_module_level=True)
+
+APP_ROOT = Path(__file__).resolve().parents[2]
+
+
+# ---------------------------------------------------------------------------
+# Self-migration — the module must pass standalone, not only full-suite
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _alembic_head() -> Iterator[None]:
+    """Bring the test DB to head, and point the app's DATABASE_URL at it.
+
+    Two databases are in play on a dev host and this module needs BOTH sorted:
+
+    1. `TEST_DATABASE_URL` — where the test's own rows live. Every other
+       DB-touching module self-migrates it (tests/api/conftest.py, tests/db,
+       tests/worker); this one didn't, so it only passed when tests/api
+       happened to collect first and migrate as a side effect. Standalone
+       (`pytest tests/integration/test_order_e2e.py -m integration`) it failed.
+    2. `DATABASE_URL` — what `get_settings()` hands the in-process ARQ worker's
+       boot gate (`on_startup` → `assert_migrations_at_head`). On a dev host
+       that is the *dev* DB, which nothing in the suite migrates, so a worker
+       that would have processed the order refused to boot ("schema is BEHIND
+       this build") and the order never left 'pending'. Pinning it to the
+       migrated test DB for this module makes the worker validate the same
+       schema the test actually writes to — no dev-DB coupling either way.
+
+    Re-runnability: `alembic upgrade head` is a no-op once at head, and the env
+    pin + settings cache are restored on teardown so later modules see the
+    developer's real DATABASE_URL.
+    """
+    env = os.environ.copy()
+    env["DATABASE_URL"] = _DB_URL
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=APP_ROOT,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("DATABASE_URL", _DB_URL)
+        get_settings.cache_clear()
+        yield
+    get_settings.cache_clear()
+
 
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures

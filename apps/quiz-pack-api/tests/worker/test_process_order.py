@@ -1,36 +1,45 @@
-"""Tests for `process_order` ARQ task (issue #33 Task 1.10).
+"""Tests for `process_order` — the ARQ task's worker-layer state machine.
 
-Drives the task directly as an async function — no running Redis or ARQ daemon
-required. A FakeRedis captures .publish() calls so SSE contract is verifiable
-without a real broker.
+Drives the task directly as an async function (no ARQ daemon, no Redis broker:
+a FakeRedis captures the pubsub publishes SSE clients depend on), but with the
+SAME collaborators production builds — `app.worker.worker.on_startup` — and
+every provider endpoint served by respx. Written that way on purpose: the
+previous version of this module hand-stubbed the pipeline and patched a private
+worker helper (`_persist_pack`), so #36 task 2.10 renamed the helper out from
+under it and all three scenarios sat xfail-ed while the state machine they
+cover had no passing test at all. Going through `on_startup` + the ctx
+collaborator seam means a wiring change breaks these tests instead of quietly
+passing against a stub.
 
-Why these three scenarios matter:
-- Happy path: proves the full 7-step state machine delivers a pack with valid
-  stub questions and correct step_log shape before Phase 2 wires real generation.
-- Failure + final retry: proves refund_eligible is set only on the last attempt,
-  not on intermediate ones — otherwise customers would see premature refund flags.
-- Non-final retry: proves ARQ's retry backoff window is respected (order stays
-  in_progress so the next attempt can continue rather than finding a terminal state).
+Why these three scenarios matter — each one is a money path:
+- Happy path: a paid order must end 'delivered' with a pack whose
+  `actual_count` matches the questions actually on disk, a job at 100%, and a
+  monotonic step_log covering every stage. Less than that means the customer
+  paid and got nothing playable.
+- Failure on the FINAL retry: order 'failed' AND refund_eligible=True — the
+  only signal that a completed purchase owes a refund.
+- Failure on a NON-final retry: refund_eligible must stay False and the order
+  must stay 'in_progress', or ARQ's next attempt finds a terminal order and a
+  recoverable blip gets refunded/abandoned instead of retried.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import subprocess
 import sys
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, AsyncIterator, Dict, List
-from unittest.mock import AsyncMock, patch
+from typing import Any, AsyncIterator, Dict, Iterator, List
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import text
+import respx
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.config import get_settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models import (
     GenerationJob,
@@ -39,6 +48,13 @@ from app.db.models import (
     QuestionRow,
     row_to_question,
 )
+from app.worker.worker import WorkerSettings, on_startup
+from tests._isolation import truncate_order_graph
+
+# The canned provider routes live with the integration suite that owns them
+# (tests/integration/conftest.py); imported rather than duplicated so the live
+# pipeline's mock corpus has exactly one definition.
+from tests.integration.conftest import register_e2e_mocks_full
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 
@@ -54,8 +70,15 @@ def _test_url() -> str:
 
 
 @pytest.fixture(scope="module", autouse=True)
-def _alembic_head() -> None:
-    """Bring the test DB to alembic head once per module."""
+def _alembic_head() -> Iterator[None]:
+    """Bring the test DB to head, and point the app's DATABASE_URL at it.
+
+    `on_startup` head-checks `get_settings().database_url` before it builds any
+    collaborator — a worker must never pull paid orders against a behind-head
+    schema. On a dev host that setting names the *dev* DB, which nothing in this
+    suite migrates, so without the pin these tests would fail on a database they
+    never touch. Restored on teardown; `upgrade head` is a no-op once at head.
+    """
     raw = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
     if not raw:
         pytest.skip("TEST_DATABASE_URL / DATABASE_URL not set")
@@ -69,6 +92,11 @@ def _alembic_head() -> None:
         capture_output=True,
         text=True,
     )
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("DATABASE_URL", raw)
+        get_settings.cache_clear()
+        yield
+    get_settings.cache_clear()
 
 
 @pytest_asyncio.fixture
@@ -87,6 +115,17 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
         yield s
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_order_tables(session: AsyncSession) -> None:
+    """Start each test from an empty order graph (mirrors tests/api, tests/integration).
+
+    Re-runnability, not tidiness: leftover questions from an earlier run are a
+    dedup corpus, and DedupStage drops near-duplicates — so the happy path could
+    pass once and then fail forever against the persistent test DB.
+    """
+    await truncate_order_graph(session)
+
+
 # ── Fixtures: order + job ─────────────────────────────────────────────────────
 
 
@@ -97,10 +136,10 @@ async def _create_order_and_job(
     order = GenerationOrder(
         transaction_id=f"txn_{uuid.uuid4().hex}",
         product_id="pack_10",
-        prompt="A prompt long enough for stub generation",
+        prompt="Surprising facts about octopus biology",
         target_count=target_count,
         language="en",
-        category="general",
+        category="science",
         status="in_progress",
     )
     session.add(order)
@@ -137,108 +176,150 @@ class FakeRedis:
         self.published.append((channel, message))
 
 
-# ── Helper to patch AsyncSessionLocal inside tasks ───────────────────────────
+class _BoomSourcer:
+    """FactSourcer double that always raises (Tavily/Wikipedia outage).
+
+    Injected through the ctx collaborator seam production itself uses, so the
+    failure-path tests stay valid across stage renames — unlike the private
+    `_persist_pack` patch they replace. Which stage raises is irrelevant to what
+    they assert: the retry/refund decision must depend on the attempt number
+    alone, never on where the pipeline died.
+    """
+
+    def __init__(self, message: str) -> None:
+        self._message = message
+
+    async def gather_facts(self, *_args: Any, **_kwargs: Any) -> None:
+        raise RuntimeError(self._message)
 
 
-def _make_session_factory(engine: AsyncEngine):
-    """Return an async_sessionmaker bound to the test engine."""
-    return async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+# ── ctx + HTTP mock fixtures ──────────────────────────────────────────────────
+
+
+@pytest.fixture
+def pipeline_http_mocks() -> Iterator[respx.MockRouter]:
+    """Serve every provider endpoint the live Phase-2 pipeline touches.
+
+    `assert_all_mocked=True` is the point: PackGenerator really calls
+    OpenAI/Tavily/Wikipedia now, so an unmocked route fails the test loudly
+    instead of spending money locally or 401-ing in CI.
+    """
+    with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
+        register_e2e_mocks_full(router)
+        yield router
+
+
+@pytest_asyncio.fixture
+async def worker_ctx(
+    engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
+) -> AsyncIterator[Dict[str, Any]]:
+    """Production ARQ ctx: `on_startup`'s collaborators, bound to the test DB.
+
+    `on_startup` reads `app.db.session.AsyncSessionLocal` for both the stage
+    session factory and the pgvector dedup store, so patching that one module
+    attribute redirects every write to the test DB.
+    """
+    import app.db.session as db_session_mod
+
+    test_factory = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    monkeypatch.setattr(db_session_mod, "AsyncSessionLocal", test_factory)
+
+    ctx: Dict[str, Any] = {"redis": FakeRedis(), "job_try": 1}
+    await on_startup(ctx)
+    # Fail loud rather than write a test's paid-order rows into the dev DB if
+    # on_startup ever stops reading the patched module attribute.
+    assert ctx["session_factory"] is test_factory
+    yield ctx
+
+
+def _published_on(ctx: Dict[str, Any], order_id: uuid.UUID) -> List[dict]:
+    """Decoded pubsub payloads for this order's progress channel."""
+    channel = f"order:{order_id}:progress"
+    return [
+        json.loads(msg) for ch, msg in ctx["redis"].published if ch == channel
+    ]
 
 
 # ── Happy path ────────────────────────────────────────────────────────────────
 
-# All three scenarios below were written against the Phase 1 stub (#33 task
-# 1.10) and patch `app.worker.tasks._persist_pack`, which Phase 2 (#36 task
-# 2.10) replaces with `PersistStage`. Plus the live `PackGenerator` now calls
-# OpenAI/Anthropic/Gemini/Tavily — these tests have no respx HTTP mocks, so
-# they would either hit live APIs or 401 in CI. The new e2e test
-# (`tests/integration/test_order_e2e.py`, #36 task 2.11) already covers the
-# happy path with full HTTP mocks. The two failure-path scenarios (retry
-# semantics, refund_eligible flagging) still need a respx port — tracked as
-# #36 task 2.10 follow-up.
-pytestmark = pytest.mark.xfail(
-    reason="Phase 1 stub tests; needs respx HTTP-mock port post-#36 task 2.10",
-    strict=False,
-)
-
 
 @pytest.mark.asyncio
-async def test_happy_path(engine: AsyncEngine, session: AsyncSession) -> None:
+async def test_happy_path(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """A paid order runs the real 7-stage pipeline through to 'delivered'."""
     order_id, job_id = await _create_order_and_job(session, target_count=10)
 
-    fake_redis = FakeRedis()
-    fake_ctx: Dict[str, Any] = {
-        "redis": fake_redis,
-        "job_try": 1,
-        "job_id": str(uuid.uuid4()),
-    }
+    from app.worker.tasks import process_order
 
-    test_factory = _make_session_factory(engine)
+    await process_order(worker_ctx, str(order_id))
 
-    with (
-        patch("app.worker.tasks.AsyncSessionLocal", test_factory),
-        patch("app.worker.tasks.asyncio.sleep", new=AsyncMock(return_value=None)),
-    ):
-        from app.worker.tasks import process_order
-        await process_order(fake_ctx, str(order_id))
+    # process_order commits on its own sessions; drop this session's identity
+    # map or it keeps serving the pre-run rows.
+    session.expire_all()
 
-    # ── Order assertions ──
+    # ── Order ──
     order = await session.get(GenerationOrder, order_id)
-    await session.refresh(order)
     assert order.status == "delivered"
     assert order.pack_id is not None
     assert order.delivered_at is not None
 
-    # ── Pack assertions ──
+    # ── Pack + questions: what the customer paid for vs. what they got ──
     pack = await session.get(QuestionPack, order.pack_id)
     assert pack is not None
-    assert pack.actual_count == 10
     assert pack.target_count == 10
-
-    # ── Question rows ──
-    result = await session.execute(
-        text("SELECT * FROM questions WHERE pack_id = :pack_id"),
-        {"pack_id": pack.id},
+    rows = (
+        (
+            await session.execute(
+                select(QuestionRow).where(QuestionRow.pack_id == pack.id)
+            )
+        )
+        .scalars()
+        .all()
     )
-    rows = result.fetchall()
-    assert len(rows) == 10
+    assert rows, "order was delivered with zero questions persisted"
+    # `actual_count` is what the client shows for a short pack (#103 F5); it
+    # must never overstate the rows on disk.
+    assert pack.actual_count == len(rows)
+    for row in rows:
+        # The play path reads these rows through row_to_question; a row it can't
+        # parse is a delivered-but-unplayable pack.
+        assert row_to_question(row).id is not None
+        assert row.source_url, "question persisted without source attribution (F8)"
 
-    # Each row round-trips through row_to_question without raising.
-    for raw_row in rows:
-        q_row = await session.get(QuestionRow, raw_row.id)
-        assert q_row is not None
-        q = row_to_question(q_row)
-        assert q.id is not None
-
-    # ── step_log shape ──
+    # ── Job + step_log ──
     job = await session.get(GenerationJob, job_id)
-    await session.refresh(job)
     assert job.status == "done"
     assert job.progress == 100
 
-    step_log = job.step_log
-    # Phase 2: 6 stages (sourcing, generating, verifying, scoring, dedup,
-    # persisting) + the "done" tail = 7 entries. Critique is inside
-    # AdvancedQuestionGenerator (#36 task 2.5) so it's not a separate step.
-    assert len(step_log) == 7
-    expected_steps = ["sourcing", "generating", "verifying", "scoring", "dedup", "persisting", "done"]
-    actual_steps = [e["step"] for e in step_log]
-    assert actual_steps == expected_steps
+    expected_steps = [
+        "sourcing",
+        "generating",
+        "verifying",
+        "scoring",
+        "dedup",
+        "topup",
+        "persisting",
+        "done",
+    ]
+    assert [e["step"] for e in job.step_log] == expected_steps
+    # event_ids must be monotonic 0..n: the SSE bridge replays by
+    # `event_id > Last-Event-ID`, so a gap or repeat silently drops progress
+    # events for any client that reconnects.
+    assert [e["event_id"] for e in job.step_log] == list(range(len(expected_steps)))
 
-    event_ids = [e["event_id"] for e in step_log]
-    assert event_ids == list(range(7))  # monotonic 0..6
+    # Real spend, bounded: 0 would mean no stage did paid work, and the Phase-2
+    # sanity ceiling catches a runaway pack (Phase 3 tightens per tier).
+    assert 0 < job.total_cost_cents < 100
 
-
-    # ── Redis pubsub ──
-    channel = f"order:{order_id}:progress"
-    published_on_channel = [msg for ch, msg in fake_redis.published if ch == channel]
-    assert len(published_on_channel) >= 7
-
-    last_payload = json.loads(published_on_channel[-1])
-    assert last_payload["step"] == "done"
-
-    # Cost must be zero — stub pipeline must not call any paid LLM (1.12 guardrail).
-    assert job.total_cost_cents == 0
+    # ── Redis pubsub (SSE contract) ──
+    payloads = _published_on(worker_ctx, order_id)
+    assert len(payloads) >= len(expected_steps)
+    assert payloads[-1]["step"] == "done"
 
     await _cleanup(session, order_id)
 
@@ -247,47 +328,35 @@ async def test_happy_path(engine: AsyncEngine, session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-async def test_failure_final_retry(engine: AsyncEngine, session: AsyncSession) -> None:
-    """On job_try == max_tries: order=failed, refund_eligible=True, job.retry_count set."""
+async def test_failure_final_retry(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """On the last attempt: order=failed, refund_eligible=True, retry_count set."""
     order_id, job_id = await _create_order_and_job(session, target_count=3)
 
-    fake_redis = FakeRedis()
-    fake_ctx: Dict[str, Any] = {
-        "redis": fake_redis,
-        "job_try": 3,  # == max_tries
-        "job_id": str(uuid.uuid4()),
-    }
+    worker_ctx["job_try"] = WorkerSettings.max_tries  # the final attempt
+    worker_ctx["fact_sourcer"] = _BoomSourcer("injected sourcing outage")
 
-    test_factory = _make_session_factory(engine)
+    from app.worker.tasks import process_order
 
-    async def _boom(*_args: Any, **_kwargs: Any) -> QuestionPack:
-        raise RuntimeError("injected failure in persisting")
+    with pytest.raises(RuntimeError, match="injected sourcing outage"):
+        await process_order(worker_ctx, str(order_id))
 
-    with (
-        patch("app.worker.tasks.AsyncSessionLocal", test_factory),
-        patch("app.worker.tasks.asyncio.sleep", new=AsyncMock(return_value=None)),
-        patch("app.worker.tasks._persist_pack", side_effect=_boom),
-    ):
-        from app.worker.tasks import process_order
-        with pytest.raises(RuntimeError, match="injected failure"):
-            await process_order(fake_ctx, str(order_id))
-
+    session.expire_all()
     order = await session.get(GenerationOrder, order_id)
-    await session.refresh(order)
     assert order.status == "failed"
+    # The only machine-readable "this purchase owes a refund" signal.
     assert order.refund_eligible is True
 
     job = await session.get(GenerationJob, job_id)
-    await session.refresh(job)
     assert job.status == "failed"
-    assert job.error is not None
-    assert job.retry_count == 3
+    assert job.error is not None, "terminal failure with no error recorded"
+    assert job.retry_count == WorkerSettings.max_tries
 
-    channel = f"order:{order_id}:progress"
-    failed_events = [
-        msg for ch, msg in fake_redis.published
-        if ch == channel and json.loads(msg)["step"] == "failed"
-    ]
+    # SSE clients must see the failure, not just stop receiving progress.
+    failed_events = [p for p in _published_on(worker_ctx, order_id) if p["step"] == "failed"]
     assert len(failed_events) >= 1
 
     await _cleanup(session, order_id)
@@ -297,39 +366,31 @@ async def test_failure_final_retry(engine: AsyncEngine, session: AsyncSession) -
 
 
 @pytest.mark.asyncio
-async def test_failure_non_final_retry(engine: AsyncEngine, session: AsyncSession) -> None:
-    """On job_try < max_tries: order stays in_progress, refund_eligible=False."""
+async def test_failure_non_final_retry(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """Before the last attempt: order stays in_progress, refund_eligible=False."""
+    assert WorkerSettings.max_tries > 1, "premise: there is a non-final attempt"
     order_id, job_id = await _create_order_and_job(session, target_count=3)
 
-    fake_redis = FakeRedis()
-    fake_ctx: Dict[str, Any] = {
-        "redis": fake_redis,
-        "job_try": 1,  # < max_tries (3)
-        "job_id": str(uuid.uuid4()),
-    }
+    worker_ctx["job_try"] = 1  # < max_tries
+    worker_ctx["fact_sourcer"] = _BoomSourcer("injected non-final failure")
 
-    test_factory = _make_session_factory(engine)
+    from app.worker.tasks import process_order
 
-    async def _boom(*_args: Any, **_kwargs: Any) -> QuestionPack:
-        raise RuntimeError("injected non-final failure")
+    with pytest.raises(RuntimeError, match="injected non-final failure"):
+        await process_order(worker_ctx, str(order_id))
 
-    with (
-        patch("app.worker.tasks.AsyncSessionLocal", test_factory),
-        patch("app.worker.tasks.asyncio.sleep", new=AsyncMock(return_value=None)),
-        patch("app.worker.tasks._persist_pack", side_effect=_boom),
-    ):
-        from app.worker.tasks import process_order
-        with pytest.raises(RuntimeError, match="injected non-final failure"):
-            await process_order(fake_ctx, str(order_id))
-
+    session.expire_all()
     order = await session.get(GenerationOrder, order_id)
-    await session.refresh(order)
-    # Order must NOT be terminal — ARQ still has retries remaining.
-    assert order.status != "failed"
+    # Not terminal — ARQ still has retries left, and a 'failed' order here would
+    # both refund a recoverable blip and make POST /retry the only way forward.
+    assert order.status == "in_progress"
     assert order.refund_eligible is False
 
     job = await session.get(GenerationJob, job_id)
-    await session.refresh(job)
     assert job.status == "failed"
     assert job.retry_count == 1
 

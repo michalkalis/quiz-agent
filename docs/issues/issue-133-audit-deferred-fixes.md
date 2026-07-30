@@ -41,6 +41,10 @@ The in_progress branch was fixed in-session (`updated_at` onupdate + determinist
 - [ ] Assert partial-credit weights (0.5 / 0.25) somewhere; fix the two self-asserting dict tests in `test_session_manager.py::TestEvaluationQuestionId` and the inverted/self-recomputing assertions in `test_translation_validation.py`.
 - [ ] Make the 4 DB suites that roll their own `pytest.skip` honor `REQUIRE_DB_TESTS=1` (`test_pgvector_store.py`, `test_question_monitor.py`, `db/test_pack_ownership.py`, `test_alembic_migration_drift.py`); isolate `test_question_monitor.py` from ambient table content.
 
+**iOS — why main CI is red (state 2026-07-30, run 30540373427: 886/896 pass, 10 fail, none from the audit):**
+- [ ] 6 stale `.stableDump` snapshot baselines (Home idle/stats, QuestionView asking/recording, ResultView NAILED/MISSED/SKIPPED) from the 2026-07-28/29 UI commits — byte-identical with today's changes stashed. **Founder re-record sign-off needed** (ios.md: re-record signal, never silently fix). Note: xcpretty swallows Swift Testing failures, so CI logs showed only the UI-test failure — use the xcresult artifact.
+- [ ] 4 wall-clock-flaky usage/entitlement retry tests (usageLoadState .failed/.recovery/backoff) — the known EntitlementReconcile flaky suite (green in isolation, documented 2026-07-28). Deterministic clock injection belongs with the flaky-test cleanup below.
+
 **iOS:**
 - [ ] Snapshot layer replacement: all 8 baselines are `.dump`/`.stableDump` view-model property dumps — zero rendered-view coverage, pure false confidence + the recorded "breaks on every new @Published" pain. Replace with ViewInspector assertions (the layer that already works) or real image snapshots; delete `HangsUITests/HangsUITests.swift::testExample` and `HangsUITestsLaunchTests` (template stubs, assert nothing).
 - [ ] RS-correct regression scenario is verdict-blind (asserts only `result.continue` exists) — assert the verdict; nothing anywhere asserts a CORRECT answer renders the correct verdict end-to-end.

@@ -1,0 +1,5 @@
+Trubbo is a voice-first trivia quiz. No account or sign-in is required; an anonymous identity is created automatically on first launch (optional Sign in with Apple exists in Settings).
+
+How to test: grant the microphone permission when prompted, tap Start (or say "start"), listen to the question being read aloud, and answer out loud in your own words. AI evaluates the spoken answer.
+
+The subscription paywall is reachable from Settings under Subscription and links the privacy policy and terms of use. Data deletion: Settings > Delete my data (works without sign-in). The app targets in-car hands-free use; the terms include a driving-safety notice.

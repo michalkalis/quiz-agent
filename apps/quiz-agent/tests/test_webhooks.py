@@ -11,6 +11,11 @@ Pins the Design §2 / §4 invariants of the two RC-facing endpoints:
   (dedupe on the store txn id), and a redelivered refund claws back once
   (dedupe on the rc event id).
 * **Pack grants are NOT gated by the subscription watermark.**
+* **A grant with no store txn id is refused** — NULLs never collide in the
+  partial unique index, so granting one would double-credit on redelivery.
+* **TRANSFER moves entitlement** — the losing ``app_user_id`` is revoked and the
+  winning one reconciled against RC's snapshot; the event carries no
+  ``app_user_id`` and must still reach the handler.
 
 DB-backed: the ``db_sessionmaker`` fixture targets ``TEST_DATABASE_URL`` and
 skips wholesale when it is unset. The RC REST call is mocked with ``AsyncMock``.
@@ -19,6 +24,7 @@ skips wholesale when it is unset. The RC REST call is mocked with ``AsyncMock``.
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -42,6 +48,8 @@ pytestmark = pytest.mark.asyncio
 _SECRET = "rc-webhook-shared-secret-xyz"
 _API_KEY = "rc-rest-secret-key"
 _ACCOUNT = "acct_webhook_subject"
+# The app_user_id an RC TRANSFER re-attaches the purchases to (same id space).
+_ACCOUNT_NEW = "acct_webhook_transfer_target"
 _SUB_PID = "com.carquiz.unlimited.monthly"
 _PACK_PID = "com.carquiz.pack.questions100"
 
@@ -76,7 +84,7 @@ async def _balance(db_sessionmaker, account_id=_ACCOUNT) -> int:
         )
 
 
-async def _row_count(db_sessionmaker, kind: str) -> int:
+async def _row_count(db_sessionmaker, kind: str, account_id=_ACCOUNT) -> int:
     async with db_sessionmaker() as s:
         return int(
             (
@@ -84,7 +92,7 @@ async def _row_count(db_sessionmaker, kind: str) -> int:
                     select(func.count())
                     .select_from(CreditLedger)
                     .where(
-                        CreditLedger.account_id == _ACCOUNT,
+                        CreditLedger.account_id == account_id,
                         CreditLedger.kind == kind,
                     )
                 )
@@ -304,7 +312,7 @@ def _pack_event(
     etype: str,
     *,
     ts_ms: int,
-    txn_id: str,
+    txn_id: str | None,
     event_id: str,
     environment: str | None = "PRODUCTION",
 ):
@@ -314,8 +322,11 @@ def _pack_event(
         "app_user_id": _ACCOUNT,
         "product_id": _PACK_PID,
         "event_timestamp_ms": ts_ms,
-        "transaction_id": txn_id,
     }
+    # txn_id=None simulates the transaction_id field being ABSENT — the shape that
+    # makes the NULL-dedup double-grant possible.
+    if txn_id is not None:
+        event["transaction_id"] = txn_id
     if environment is not None:
         event["environment"] = environment
     return event
@@ -365,6 +376,47 @@ async def test_pack_grant_not_gated_by_sub_watermark(client, db_sessionmaker):
     assert resp.status_code == 200
     assert await _balance(db_sessionmaker) == 100
     assert await _row_count(db_sessionmaker, "grant") == 1
+
+
+async def test_pack_grant_without_transaction_id_never_grants(
+    client, db_sessionmaker, caplog
+):
+    """A NON_RENEWING_PURCHASE with NO transaction_id has no dedup key, so it must
+    be skipped rather than granted.
+
+    The GRANT dedup is a partial UNIQUE index on ``store_txn_id`` and Postgres
+    treats NULLs as distinct — a NULL-txn grant can never conflict. RC delivery is
+    at-least-once (every non-2xx is retried), so granting one would insert ANOTHER
+    +100 row on every redelivery: unbounded free credits. The skip mirrors the
+    sync path's ``if not store_txn_id: continue``.
+    """
+    event = _pack_event(
+        "NON_RENEWING_PURCHASE", ts_ms=1000, txn_id=None, event_id="evt_no_txn"
+    )
+    with caplog.at_level(logging.WARNING):
+        assert (await _post_webhook(client, event)).status_code == 200
+        assert (await _post_webhook(client, event)).status_code == 200
+
+    assert await _row_count(db_sessionmaker, "grant") == 0
+    assert await _balance(db_sessionmaker) == 0
+    # The skip is loud, and names the RC event so it can be reconciled by hand.
+    assert "evt_no_txn" in caplog.text
+
+
+async def test_pack_grant_with_transaction_id_grants_exactly_once(
+    client, db_sessionmaker
+):
+    """The dedup that DOES work stays covered: two webhook deliveries of the same
+    purchase (same store txn id) collapse to one grant via the GRANT partial
+    index — the txn-less skip above must not have weakened this path."""
+    event = _pack_event(
+        "NON_RENEWING_PURCHASE", ts_ms=1000, txn_id="pack_dedup", event_id="evt_dedup"
+    )
+    assert (await _post_webhook(client, event)).status_code == 200
+    assert (await _post_webhook(client, event)).status_code == 200
+
+    assert await _row_count(db_sessionmaker, "grant") == 1
+    assert await _balance(db_sessionmaker) == 100
 
 
 async def test_clawback_once(client, db_sessionmaker):
@@ -850,6 +902,164 @@ async def test_entitlement_read_gate_honors_environment(
         await s.commit()
     async with db_sessionmaker() as s:
         assert await account_is_entitled(s, _ACCOUNT) is entitled
+
+
+# --- TRANSFER: entitlement follows the store account -------------------------
+#
+# RC fires TRANSFER when a store account's purchases are re-attached to another
+# app_user_id (the common trigger: the same Apple ID signing in as a different
+# user). Dropping it strands entitlement on BOTH sides — the stale account keeps
+# unlimited until expires_at, and the paying account has no row at all.
+
+
+def _transfer_event(
+    *,
+    ts_ms: int,
+    event_id: str = "evt_transfer",
+    transferred_from=(_ACCOUNT,),
+    transferred_to=(_ACCOUNT_NEW,),
+):
+    """The real RC TRANSFER shape: NO ``app_user_id``, no ``product_id`` /
+    ``expiration_at_ms``, and no ``environment`` — only the two id arrays."""
+    return {
+        "type": "TRANSFER",
+        "id": event_id,
+        "event_timestamp_ms": ts_ms,
+        "store": "APP_STORE",
+        "transferred_from": list(transferred_from),
+        "transferred_to": list(transferred_to),
+    }
+
+
+def _transferred_snapshot(*, request_date_ms: int, non_subscriptions=None):
+    """RC's ``GET /subscribers`` view of the account the sub was transferred TO."""
+    return _snapshot(
+        request_date_ms=request_date_ms,
+        subscriptions={
+            _SUB_PID: {
+                "expires_date": (utcnow() + timedelta(days=30)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "grace_period_expires_date": None,
+                "billing_issues_detected_at": None,
+                "original_transaction_id": "orig_transferred",
+            }
+        },
+        non_subscriptions=non_subscriptions,
+    )
+
+
+async def test_transfer_without_app_user_id_is_accepted(client, monkeypatch):
+    """A TRANSFER must pass the route's malformed-event guard: it identifies the
+    accounts by ``transferred_from``/``transferred_to``, not ``app_user_id``, and a
+    400 meant RC retried, gave up, and the transfer was lost forever.
+
+    The guard must still reject a single-id event shape that genuinely lacks its
+    account — the fix is a TRANSFER carve-out, not a blanket loosening.
+    """
+    monkeypatch.setattr(
+        rc_service,
+        "fetch_rc_subscriber",
+        AsyncMock(return_value=_snapshot(request_date_ms=1)),
+    )
+    resp = await _post_webhook(client, _transfer_event(ts_ms=2000))
+    assert resp.status_code == 200
+
+    renewal = _sub_event("RENEWAL", ts_ms=2000, expires_ms=_ms(30))
+    del renewal["app_user_id"]
+    assert (await _post_webhook(client, renewal)).status_code == 400
+
+
+async def test_transfer_revokes_old_account_and_entitles_new(
+    client, db_sessionmaker, monkeypatch
+):
+    """The money invariant: after a TRANSFER the OLD account_id must stop being
+    entitled and the NEW one must start.
+
+    Before the fix the event was dropped three times over (route 400 on the
+    missing app_user_id, then the #101 environment gate on the absent
+    ``environment`` field, then no TRANSFER branch in ``_normalize_sub_event``), so
+    a re-login left the stale account on unlimited until ``expires_at`` while the
+    paying account stayed unentitled until the next RENEWAL.
+    """
+    await _post_webhook(
+        client, _sub_event("INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(300))
+    )
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _ACCOUNT) is True
+        assert await account_is_entitled(s, _ACCOUNT_NEW) is False
+
+    fetch = AsyncMock(return_value=_transferred_snapshot(request_date_ms=2000))
+    monkeypatch.setattr(rc_service, "fetch_rc_subscriber", fetch)
+
+    resp = await _post_webhook(client, _transfer_event(ts_ms=2000))
+    assert resp.status_code == 200
+
+    old = await _sub_row(db_sessionmaker, _ACCOUNT)
+    assert old.status == "expired"
+    assert old.last_event_ts_ms == 2000  # revoke folded through the watermark
+    new = await _sub_row(db_sessionmaker, _ACCOUNT_NEW)
+    assert new is not None
+    assert new.status == "active"
+    assert new.environment == "PRODUCTION"  # env resolved from RC's is_sandbox
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _ACCOUNT) is False
+        assert await account_is_entitled(s, _ACCOUNT_NEW) is True
+    # The winner is reconciled against RC's own snapshot (TRANSFER carries no
+    # product/expiry of its own to grant from).
+    fetch.assert_awaited_once_with(_ACCOUNT_NEW, api_key=_API_KEY)
+
+
+async def test_transfer_redelivery_is_idempotent(client, db_sessionmaker, monkeypatch):
+    """RC delivery is at-least-once, so the same TRANSFER arrives twice. The second
+    delivery must move nothing: the revoke is watermark-dropped (event_ts equals
+    the stored watermark) and the winner's reconcile is a full-state overwrite
+    whose pack grant dedupes on the store txn id — no second ledger row."""
+    await _post_webhook(
+        client, _sub_event("INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(300))
+    )
+    snapshot = _transferred_snapshot(
+        request_date_ms=2000,
+        non_subscriptions={
+            _PACK_PID: [{"id": "rc_ns_t", "store_transaction_id": "pack_transferred"}]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+
+    transfer = _transfer_event(ts_ms=2000)
+    assert (await _post_webhook(client, transfer)).status_code == 200
+    assert (await _post_webhook(client, transfer)).status_code == 200
+
+    old = await _sub_row(db_sessionmaker, _ACCOUNT)
+    assert old.status == "expired"
+    assert old.last_event_ts_ms == 2000
+    new = await _sub_row(db_sessionmaker, _ACCOUNT_NEW)
+    assert new.status == "active"
+    assert await _balance(db_sessionmaker, _ACCOUNT_NEW) == 100
+    assert await _row_count(db_sessionmaker, "grant", _ACCOUNT_NEW) == 1
+
+
+async def test_transfer_fails_closed_when_environment_unset(
+    client, db_sessionmaker, monkeypatch
+):
+    """TRANSFER is processed without a per-event environment (it has none), but an
+    *unset* RC_ALLOWED_ENVIRONMENT still refuses it — a deploy that never declared
+    its environment must not touch money rows on any RC surface."""
+    await _post_webhook(
+        client, _sub_event("INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(300))
+    )
+    fetch = AsyncMock(return_value=_transferred_snapshot(request_date_ms=2000))
+    monkeypatch.setattr(rc_service, "fetch_rc_subscriber", fetch)
+    monkeypatch.delenv("RC_ALLOWED_ENVIRONMENT", raising=False)
+
+    resp = await _post_webhook(client, _transfer_event(ts_ms=2000))
+    assert resp.status_code == 200
+    old = await _sub_row(db_sessionmaker, _ACCOUNT)
+    assert old.status == "active"  # untouched
+    assert await _sub_row(db_sessionmaker, _ACCOUNT_NEW) is None
+    fetch.assert_not_awaited()
 
 
 async def test_entitlement_read_gate_fails_closed_when_unset(

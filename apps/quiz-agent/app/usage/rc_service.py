@@ -29,6 +29,7 @@ Session A review notes honoured here:
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timezone
 
 import httpx
@@ -65,6 +66,11 @@ _SUB_EXTEND_TYPES = frozenset(
 )
 # Refund-family types: immediate revocation for a sub, clawback for a pack.
 _REFUND_TYPES = frozenset({"REFUND", "CHARGEBACK"})
+# RC's account-transfer event: purchases re-attached from one app_user_id to
+# another. Shaped unlike every other event (no app_user_id, no product/expiry, no
+# environment) — see ``_handle_transfer``. Public so the route can special-case
+# its id shape without duplicating the literal.
+TRANSFER_EVENT_TYPE = "TRANSFER"
 
 
 # --- environment gate (#101 prod/sandbox separation) --------------------------
@@ -254,7 +260,7 @@ async def _write_sub_event(
     account_id: str,
     current_row: Subscription | None,
     event: SubscriptionEvent,
-    environment: str,
+    environment: str | None,
 ) -> None:
     """Fold ``event`` into ``current_row`` and persist the result, in the caller's
     (already advisory-locked) session/transaction. The caller commits.
@@ -299,6 +305,25 @@ async def _grant_pack(
     product_id = event.get("product_id")
     store_txn_id = event.get("transaction_id")
     rc_event_id = event.get("id")
+    if not store_txn_id:
+        # The grant dedup below is a partial UNIQUE index on ``store_txn_id``, and
+        # Postgres treats NULLs as distinct — so a txn-less grant can NEVER
+        # conflict, and RC delivery is at-least-once (it retries every non-2xx).
+        # Inserting it would add another +amount row on every redelivery,
+        # unbounded. Skip instead — the same call the sync path already makes
+        # (``if not store_txn_id: continue``). The stronger fix (a partial unique
+        # index on ``COALESCE(store_txn_id, rc_event_id)``, which would let the
+        # grant land *and* stay exactly-once) is deliberately deferred: it needs a
+        # migration, kept out of scope for this change set.
+        message = (
+            "RevenueCat pack grant skipped: NON_RENEWING_PURCHASE has no "
+            f"transaction_id (rc_event_id={rc_event_id!r} product={product_id!r} "
+            f"account={account_id!r}) — no dedup key, so granting would "
+            "double-credit on RC redelivery"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return
     async with sessionmaker() as session:
         amount = await _product_credit_amount(session, product_id)
         if not amount:
@@ -383,6 +408,145 @@ async def _report_consumption(
     )
 
 
+# --- account transfer (RC TRANSFER) ------------------------------------------
+
+
+def _transfer_ids(event: dict, key: str) -> list[str]:
+    """The ``app_user_id``s on one side of a TRANSFER (``transferred_from`` /
+    ``transferred_to``).
+
+    RC sends arrays. A bare string is coerced into a one-element list rather than
+    iterated character-by-character — that would "transfer" a handful of
+    one-letter accounts instead of the real one.
+    """
+    value = event.get(key)
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return []
+    return [str(v) for v in value if v]
+
+
+async def _expire_transferred_from(
+    sessionmaker: async_sessionmaker[AsyncSession], account_id: str, event_ts_ms: int
+) -> None:
+    """Revoke the losing account's subscription so it stops being entitled.
+
+    A TRANSFER carries no ``product_id`` / ``expiration_at_ms``, so this keeps the
+    row's own product and expiry and flips ``status`` to ``expired`` — the same
+    shape as the "RC reports no subscription" branch of ``apply_sync_snapshot``,
+    and exactly what ``account_is_entitled`` needs to deny. No local row means
+    nothing to revoke. The flip is folded through the **revoke** class, so the
+    watermark drops a replayed (or genuinely stale) TRANSFER: redelivery is a
+    no-op, and a subscription event *newer* than the transfer still wins.
+    """
+    async with sessionmaker() as session:
+        await _advisory_lock(session, account_id)
+        row = (
+            await session.execute(
+                select(Subscription).where(Subscription.account_id == account_id)
+            )
+        ).scalar_one_or_none()
+        if row is not None:
+            await _write_sub_event(
+                session,
+                account_id,
+                row,
+                SubscriptionEvent(
+                    event_class=EVENT_CLASS_REVOKE,
+                    product_id=row.product_id,
+                    status=STATUS_EXPIRED,
+                    expires_at=row.expires_at,
+                    rc_original_txn_id=row.rc_original_txn_id,
+                    event_ts_ms=event_ts_ms,
+                ),
+                # A revoke never re-stamps the #101 audit column: keep whatever
+                # environment the row was written with.
+                row.environment,
+            )
+        await session.commit()  # commit always runs (releases the advisory lock)
+
+
+async def _resync_transferred_to(
+    sessionmaker: async_sessionmaker[AsyncSession], account_id: str
+) -> None:
+    """Grant the winning account the entitlement that was transferred to it.
+
+    A TRANSFER has no ``product_id``/``expiration_at_ms``, so there is nothing for
+    ``_normalize_sub_event`` to grant from the event the way a RENEWAL or
+    INITIAL_PURCHASE does. The winning account is instead reconciled against RC's
+    authoritative ``GET /subscribers`` snapshot via ``apply_sync_snapshot`` — the
+    same full-state path ``/entitlements/sync`` uses, which re-applies the #101
+    environment gate per entry and dedupes pack grants on the store txn id, so it
+    is idempotent under RC redelivery.
+
+    A missing API key or an RC/DB failure is logged + reported, never raised: iOS
+    calls ``/entitlements/sync`` after launch/purchase, so the account self-heals
+    on the next sync instead of the webhook 5xx-ing into an RC retry storm.
+    """
+    api_key = os.getenv("REVENUECAT_API_KEY")
+    if not api_key:
+        message = (
+            "RevenueCat TRANSFER: REVENUECAT_API_KEY unset — cannot reconcile "
+            f"transferred_to account {account_id!r}; its entitlement waits for the "
+            "client's /entitlements/sync"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return
+    try:
+        snapshot = await fetch_rc_subscriber(account_id, api_key=api_key)
+        await apply_sync_snapshot(sessionmaker, account_id, snapshot)
+    except Exception:
+        logger.exception(
+            "RevenueCat TRANSFER: reconcile failed for transferred_to account %s "
+            "— its entitlement waits for the client's /entitlements/sync",
+            account_id,
+        )
+        sentry_sdk.capture_exception()
+
+
+async def _handle_transfer(
+    sessionmaker: async_sessionmaker[AsyncSession], event: dict
+) -> None:
+    """Move entitlement between accounts on an RC ``TRANSFER``.
+
+    RC fires TRANSFER when a store account's purchases are re-attached to a
+    different ``app_user_id`` — most commonly the same Apple ID signing in as a
+    different app user. The payload is shaped unlike every other event: no
+    ``app_user_id`` (only the ``transferred_from`` / ``transferred_to`` id arrays,
+    which live in the same id space as ``app_user_id`` — i.e. our ``account_id``),
+    no ``product_id``/``expiration_at_ms``, and no ``environment``.
+
+    Environment (#101): a TRANSFER cannot be gated on its own payload, so it is
+    processed under this deployment's ``RC_ALLOWED_ENVIRONMENT`` (an *unset*
+    setting still fails closed, upstream in ``handle_webhook_event``). That is
+    safe because the two sides are asymmetric: the ``transferred_from`` side only
+    ever **revokes** — it can never mint entitlement or credits in the wrong
+    environment — and the ``transferred_to`` side grants exclusively through
+    ``apply_sync_snapshot``, which re-derives the environment from RC's
+    authoritative per-entry ``is_sandbox`` rather than trusting the event.
+
+    Losing accounts are revoked before winners are reconciled, so an id appearing
+    on both sides ends up on RC's truth rather than expired.
+    """
+    event_ts_ms = int(event["event_timestamp_ms"])
+    from_ids = _transfer_ids(event, "transferred_from")
+    to_ids = _transfer_ids(event, "transferred_to")
+    if not from_ids and not to_ids:
+        message = (
+            "RevenueCat TRANSFER carried neither transferred_from nor "
+            f"transferred_to (rc_event_id={event.get('id')!r}) — nothing to move"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
+        return
+    for account_id in from_ids:
+        await _expire_transferred_from(sessionmaker, account_id, event_ts_ms)
+    for account_id in to_ids:
+        await _resync_transferred_to(sessionmaker, account_id)
+
+
 # --- top-level webhook dispatch ----------------------------------------------
 
 
@@ -393,14 +557,23 @@ async def handle_webhook_event(
 
     Environment gate first (#101 §3.3): the event's store environment must
     equal this deployment's ``RC_ALLOWED_ENVIRONMENT``. A mismatch, a missing
-    environment field (optional on TRANSFER — never assumed PRODUCTION), or an
-    unset setting (fail closed) drops the event with **no DB write of any
-    kind**; the route still answers 200 so RC does not retry-storm.
+    environment field (never assumed PRODUCTION), or an unset setting (fail
+    closed) drops the event with **no DB write of any kind**; the route still
+    answers 200 so RC does not retry-storm.
+
+    ``TRANSFER`` is the single exception: it has no ``environment`` field at all,
+    so the gate would drop every account transfer (leaving the losing account
+    entitled and the paying one unentitled). It is dispatched *before* the
+    per-event gate and still refused when the setting is unset — see
+    ``_handle_transfer`` for why that is safe in both directions.
     """
     etype = event.get("type")
 
     allowed = get_settings().rc_allowed_environment
     environment = normalize_rc_environment(event)
+    if etype == TRANSFER_EVENT_TYPE and allowed is not None:
+        await _handle_transfer(sessionmaker, event)
+        return
     if allowed is None or environment != allowed:
         message = (
             "RevenueCat webhook dropped by environment gate (#101): "

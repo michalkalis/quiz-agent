@@ -54,7 +54,15 @@ async def revenuecat_webhook(
 
     body = await request.json()
     event = body.get("event") or {}
-    if not event.get("type") or not event.get("app_user_id"):
+    etype = event.get("type")
+    # A TRANSFER has no ``app_user_id`` — it carries ``transferred_from`` /
+    # ``transferred_to`` id arrays instead — so demanding one 400'd every account
+    # transfer away: RC retried, then gave up, and the losing account kept
+    # unlimited while the paying one got nothing. Only the id shape differs; the
+    # arrays are validated in ``rc_service._handle_transfer``.
+    if not etype or (
+        etype != rc_service.TRANSFER_EVENT_TYPE and not event.get("app_user_id")
+    ):
         raise HTTPException(status_code=400, detail="Malformed RevenueCat event")
 
     await rc_service.handle_webhook_event(sessionmaker, event)

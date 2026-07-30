@@ -8,6 +8,10 @@ from the setup. The judge must return a `verified` verdict (same shape as
 fail-safe to `uncertain` (never a false `verified`) when the model is absent or
 its response is garbage, because shipping an unverifiable puzzle as "verified"
 is the exact failure mode this branch exists to prevent.
+
+Fail-safe must not mean fail-delete: every unusable-judge verdict also carries
+`held_for_review`, so `VerificationStage` keeps the puzzle for a human instead
+of dropping it below the confidence gate (RC-9; adversarial audit 2026-07-30).
 """
 
 from __future__ import annotations
@@ -94,7 +98,13 @@ async def test_uncertain_surfaces_alternative_answers() -> None:
 @pytest.mark.asyncio
 async def test_uncertain_when_model_unavailable() -> None:
     """No API key → no model → fail-safe to `uncertain` at zero confidence,
-    never a false `verified`, and never raises."""
+    never a false `verified`, and never raises.
+
+    The verdict is also `held_for_review`: adversarial audit 2026-07-30 found
+    that a zero-confidence verdict alone makes VerificationStage DELETE every
+    lateral puzzle in the batch, so an unreachable judge quietly emptied the
+    puzzle branch instead of queueing it for a human.
+    """
     verifier = LogicalConsistencyVerifier(gemini_api_key=None)
     verifier.gemini_api_key = None  # neutralise any ambient GOOGLE_API_KEY
 
@@ -102,11 +112,14 @@ async def test_uncertain_when_model_unavailable() -> None:
 
     assert result.verdict == "uncertain"
     assert result.confidence == 0.0
+    assert result.held_for_review is True
 
 
 @pytest.mark.asyncio
 async def test_uncertain_on_unparseable_response() -> None:
-    """A response with no JSON object must fail-safe to `uncertain`, not crash."""
+    """A response with no JSON object must fail-safe to `uncertain`, not crash,
+    and be held for review rather than dropped (adversarial audit 2026-07-30 —
+    a prose reply is not evidence the puzzle is broken)."""
     question = "What word becomes shorter when you add two letters to it?"
     verifier = _verifier_with({question: "I think the answer is 'short'."})
 
@@ -114,3 +127,22 @@ async def test_uncertain_on_unparseable_response() -> None:
 
     assert result.verdict == "uncertain"
     assert result.confidence < 0.5
+    assert result.held_for_review is True
+
+
+@pytest.mark.asyncio
+async def test_held_for_review_when_judge_call_fails() -> None:
+    """A 429/timeout surfaces as `_complete` returning None. That transient
+    failure must hold the puzzle, not drop it: adversarial audit 2026-07-30
+    traced a whole lateral-puzzle batch being deleted on judge flakiness."""
+    verifier = LogicalConsistencyVerifier(gemini_api_key="test-key")
+
+    async def _fail(prompt: str) -> None:
+        return None
+
+    verifier._complete = _fail  # inject, bypass the live client
+
+    result = await verifier.verify("A man pushes his car to a hotel?", "Monopoly")
+
+    assert result.verdict == "uncertain"
+    assert result.held_for_review is True

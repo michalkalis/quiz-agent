@@ -32,7 +32,8 @@ from app.orchestrator.stages.verification import (
     DEFAULT_MIN_CONFIDENCE,
     VerificationStage,
 )
-from app.verification.fact_verifier import VerificationResult
+from app.verification.fact_verifier import FactVerifier, VerificationResult
+from app.verification.logical_verifier import LogicalConsistencyVerifier
 from quiz_shared.models.question import GenerationProvenance, Question
 
 
@@ -302,6 +303,64 @@ async def test_logical_questions_fall_back_to_fact_verifier_when_unwired() -> No
 
     factual_ids = {q["id"] for batch in fact_verifier.calls for q in batch}
     assert factual_ids == {"q_0"}
+
+
+class _FakeWebSearch:
+    """WebSearchSource double whose sources mention neither answer.
+
+    Forces `FactVerifier.verify` past its 3/3-agreement shortcut and into the
+    Gemini judge — the path the audit found deletes questions on judge failure.
+    """
+
+    async def verify_claim(
+        self, question: str, claimed_answer: str, max_results: int = 5
+    ) -> dict[str, Any]:
+        return {
+            "results": [
+                {"url": f"u{i}", "content": "An unrelated article.", "score": 0.4}
+                for i in range(3)
+            ]
+        }
+
+
+@pytest.mark.asyncio
+async def test_judge_failure_keeps_questions_through_the_whole_stage() -> None:
+    """A flaky judge must cost the pack nothing but a review flag.
+
+    Adversarial audit 2026-07-30: with the REAL verifiers wired in, a Gemini
+    429/timeout (`_complete` → None) made both branches return a sub-threshold
+    verdict with `held_for_review` unset, so this stage silently deleted the
+    questions and reported them as `dropped` — indistinguishable from answers
+    proven wrong. On a paid pack that burns top-up spend and can fail the order
+    as refund-eligible for questions nobody ever showed to be wrong. Driving
+    the real classes through the stage is the point: unit-level holds are
+    worthless if the stage still drops them.
+    """
+    fact_verifier = FactVerifier(gemini_api_key="test-key")
+    fact_verifier.search = _FakeWebSearch()  # type: ignore[assignment]
+    logical_verifier = LogicalConsistencyVerifier(gemini_api_key="test-key")
+
+    async def _judge_unavailable(prompt: str) -> None:
+        return None
+
+    fact_verifier._complete = _judge_unavailable  # type: ignore[assignment]
+    logical_verifier._complete = _judge_unavailable  # type: ignore[assignment]
+
+    factual = _stub_question(0, question="How many people live in X?")
+    puzzle = _stub_question(
+        1,
+        question="A man pushes his car to a hotel. What happened?",
+        generation_metadata=GenerationProvenance(reasoning_pattern="lateral_thinking"),
+    )
+    stage = VerificationStage(fact_verifier, logical_verifier)
+    ctx = _make_ctx([factual, puzzle])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert {q.id for q in ctx.questions} == {"q_0", "q_1"}
+    assert result.info["dropped"] == 0
+    for q in ctx.questions:
+        assert q.generation_metadata.extra["held_for_review"] is True
 
 
 @pytest.mark.asyncio

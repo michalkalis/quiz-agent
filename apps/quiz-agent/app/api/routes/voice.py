@@ -83,121 +83,131 @@ async def transcribe_and_submit(
     _auth=Depends(require_auth_or_grace),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
-    session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    # The whole read→process→write is serialized per session: the flow mutates a
+    # deep copy across several awaits and writes it back wholesale, so overlapping
+    # submits would lose one another's advance (see SessionManager.session_lock).
+    async with session_manager.session_lock(session_id):
+        session = session_manager.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found or expired")
 
-    if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
-        raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
+            raise HTTPException(status_code=400, detail="Not waiting for input")
 
-    try:
-        if not voice_transcriber.is_supported_format(audio.filename):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
+        try:
+            if not voice_transcriber.is_supported_format(audio.filename):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
+                )
+
+            current_question = await asyncio.to_thread(
+                question_retriever.get, session.current_question_id
+            )
+            if not current_question:
+                raise HTTPException(
+                    status_code=500, detail="Current question not found"
+                )
+
+            # Transcribe with quiz context
+            transcription_result = await voice_transcriber.transcribe_with_quiz_context(
+                audio_file=audio.file,
+                filename=audio.filename,
+                current_question=current_question.question,
+                language=session.language,
             )
 
-        current_question = await asyncio.to_thread(
-            question_retriever.get, session.current_question_id
-        )
-        if not current_question:
-            raise HTTPException(status_code=500, detail="Current question not found")
+            if not transcription_result.is_valid():
+                rejection_reason = transcription_result.get_rejection_reason()
+                logger.warning(
+                    "Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
+                    session_id,
+                    rejection_reason,
+                    transcription_result.text,
+                    transcription_result.no_speech_prob,
+                    transcription_result.avg_logprob,
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail="No clear speech detected. Please speak clearly and try again.",
+                )
 
-        # Transcribe with quiz context
-        transcription_result = await voice_transcriber.transcribe_with_quiz_context(
-            audio_file=audio.file,
-            filename=audio.filename,
-            current_question=current_question.question,
-            language=session.language,
-        )
-
-        if not transcription_result.is_valid():
-            rejection_reason = transcription_result.get_rejection_reason()
-            logger.warning(
-                "Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
-                session_id,
-                rejection_reason,
-                transcription_result.text,
+            transcribed_text = transcription_result.text
+            logger.info(
+                "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
+                transcribed_text,
                 transcription_result.no_speech_prob,
                 transcription_result.avg_logprob,
             )
-            raise HTTPException(
-                status_code=400,
-                detail="No clear speech detected. Please speak clearly and try again.",
+
+            # Contamination detection
+            if len(transcribed_text) > 100:
+                logger.warning(
+                    "Transcription unusually long (%d chars) - possible TTS leakage",
+                    len(transcribed_text),
+                )
+            similarity = SequenceMatcher(
+                None, transcribed_text.lower(), current_question.question.lower()
+            ).ratio()
+            if similarity > 0.5:
+                logger.warning(
+                    "Transcription %.0f%% similar to question - possible TTS leakage",
+                    similarity * 100,
+                )
+
+            # Parallel next-question prefetch
+            next_question_task = None
+            if len(session.asked_question_ids) < session.max_questions:
+                next_question_task = asyncio.create_task(
+                    asyncio.to_thread(question_retriever.get_next_question, session)
+                )
+
+            next_question = None
+            if next_question_task:
+                next_question = await next_question_task
+
+            # Delegate to shared quiz flow
+            flow_result = await quiz_flow.process_answer(
+                session=session,
+                answer_text=transcribed_text,
+                participant_id=participant_id,
+                include_audio=include_audio,
+                next_question=next_question,
             )
 
-        transcribed_text = transcription_result.text
-        logger.info(
-            "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
-            transcribed_text,
-            transcription_result.no_speech_prob,
-            transcription_result.avg_logprob,
-        )
+            # Voice-specific: require an answer intent
+            if flow_result.evaluation is None:
+                logger.warning(
+                    "No answer intent detected in transcription: '%s'", transcribed_text
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail="Could not understand your answer. Please speak clearly and try again.",
+                )
 
-        # Contamination detection
-        if len(transcribed_text) > 100:
+            flow_result.feedback_received.insert(0, f"voice_input: {transcribed_text}")
+            flow_result.message = "Voice input processed"
+
+            if flow_result.usage_limit_error:
+                raise HTTPException(
+                    status_code=429, detail=flow_result.usage_limit_error
+                )
+
+            return flow_to_response(flow_result, session)
+
+        except HTTPException:
+            raise
+        except ValueError as e:
+            # Constructed validation text (format/size) — client-safe by design.
             logger.warning(
-                "Transcription unusually long (%d chars) - possible TTS leakage",
-                len(transcribed_text),
+                "Voice submission rejected for session %s: %s", session_id, e
             )
-        similarity = SequenceMatcher(
-            None, transcribed_text.lower(), current_question.question.lower()
-        ).ratio()
-        if similarity > 0.5:
-            logger.warning(
-                "Transcription %.0f%% similar to question - possible TTS leakage",
-                similarity * 100,
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(
+                "Voice submission failed for session %s: %s",
+                session_id,
+                e,
+                exc_info=True,
             )
-
-        # Parallel next-question prefetch
-        next_question_task = None
-        if len(session.asked_question_ids) < session.max_questions:
-            next_question_task = asyncio.create_task(
-                asyncio.to_thread(question_retriever.get_next_question, session)
-            )
-
-        next_question = None
-        if next_question_task:
-            next_question = await next_question_task
-
-        # Delegate to shared quiz flow
-        flow_result = await quiz_flow.process_answer(
-            session=session,
-            answer_text=transcribed_text,
-            participant_id=participant_id,
-            include_audio=include_audio,
-            next_question=next_question,
-        )
-
-        # Voice-specific: require an answer intent
-        if flow_result.evaluation is None:
-            logger.warning(
-                "No answer intent detected in transcription: '%s'", transcribed_text
-            )
-            raise HTTPException(
-                status_code=400,
-                detail="Could not understand your answer. Please speak clearly and try again.",
-            )
-
-        flow_result.feedback_received.insert(0, f"voice_input: {transcribed_text}")
-        flow_result.message = "Voice input processed"
-
-        if flow_result.usage_limit_error:
-            raise HTTPException(status_code=429, detail=flow_result.usage_limit_error)
-
-        return flow_to_response(flow_result, session)
-
-    except HTTPException:
-        raise
-    except ValueError as e:
-        # Constructed validation text (format/size) — client-safe by design.
-        logger.warning("Voice submission rejected for session %s: %s", session_id, e)
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(
-            "Voice submission failed for session %s: %s",
-            session_id,
-            e,
-            exc_info=True,
-        )
-        raise HTTPException(status_code=500, detail="Voice submission failed")
+            raise HTTPException(status_code=500, detail="Voice submission failed")

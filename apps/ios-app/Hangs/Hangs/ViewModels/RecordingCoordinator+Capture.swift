@@ -255,6 +255,10 @@ extension RecordingCoordinator {
 
         default:
             consecutiveTranscriptionFailures = 0
+            // Leave the answer phase first, like tiers 1-2: the auto-skip is only
+            // accepted from .askingQuestion/.recording (a skip must never race an
+            // in-flight submit), and the Whisper path escalates from .processing.
+            transition(to: .askingQuestion)
             Task { await self.skipQuestion() }
         }
     }

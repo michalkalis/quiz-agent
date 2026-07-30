@@ -214,7 +214,10 @@ actor AuthService: AuthServiceProtocol {
         return result
     }
 
-    private func performBootstrap() async -> AuthTokens? {
+    /// `linkAccount: false` suppresses the account-link (RevenueCat alias) callback
+    /// for an INVOLUNTARY drop of a signed-in session — see the refresh-rejection
+    /// call site. The mint itself still happens; only the purchase identity stays put.
+    private func performBootstrap(linkAccount: Bool = true) async -> AuthTokens? {
         let minted: AuthTokens?
         if let attestor, attestor.isSupported {
             minted = await performAttestedBootstrap(attestor)
@@ -227,7 +230,7 @@ actor AuthService: AuthServiceProtocol {
         // purchase made before this link lands under an id the backend can't
         // map to an account. Apple sign-in has its own call site. A mint that
         // beats handler registration is parked and replayed on registration.
-        if let minted {
+        if linkAccount, let minted {
             if let onAccountLinked {
                 await onAccountLinked(minted.anonId)
             } else {
@@ -347,8 +350,17 @@ actor AuthService: AuthServiceProtocol {
             if current.isSignedIn {
                 // A signed-in (Apple-linked) session was dropped — user-visible.
                 // Re-bootstrap anon, then notify UI so it can reload account state (I7).
+                //
+                // Deliberately WITHOUT the account link: this drop is involuntary
+                // (the refresh family hits an absolute 60-day cap, so it happens to
+                // every signed-in user eventually) and aliasing RevenueCat onto the
+                // fresh anon id would move the purchase identity off the account
+                // that owns the subscription — `isPurchased` flips false,
+                // /entitlements/sync finds nothing, and a paying subscriber is
+                // pushed at the paywall. The RC appUserID stays on the account id;
+                // signing in again re-pins it to the same id.
                 Logger.network.error("🔐 Signed-in session dropped (refresh rejected) → re-bootstrapping anon")
-                let fresh = await performBootstrap()
+                let fresh = await performBootstrap(linkAccount: false)
                 NotificationCenter.default.post(name: .authSignedInSessionDropped, object: nil)
                 return fresh
             }

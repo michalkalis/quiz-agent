@@ -15,8 +15,17 @@ extension RecordingCoordinator {
     /// Listen for STT events and update live transcript / handle committed text
     /// (Internal, not private — started from +Capture's `startStreamingRecording`.)
     func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol) {
+        // Fresh stream per recording session (StreamChannel): this listener is
+        // cancelled on every teardown (commit watchdog, audio interruption, a
+        // superseding typed answer) and so is the feedback sheet's dictation
+        // listener on the SAME app-lifetime service. Cancelling a `for await`
+        // finishes that stream's storage, so a shared stream left every later
+        // voice answer with a dead event pipe — no transcript, watchdog timeout,
+        // auto-skip. Acquired SYNCHRONOUSLY before the task so an event yielded
+        // right after this call buffers instead of racing the task's startup.
+        let stream = sttService.makeEventStream()
         let task = Task { [weak self] in
-            for await event in sttService.events {
+            for await event in stream {
                 guard let self, !Task.isCancelled else { break }
 
                 switch event {

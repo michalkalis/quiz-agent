@@ -11,8 +11,11 @@ import Sentry
 
 #if DEBUG
 actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
-    private var eventContinuation: AsyncStream<STTEvent>.Continuation?
-    nonisolated let events: AsyncStream<STTEvent>
+    // Mirrors the real service's per-acquisition StreamChannel design: a single
+    // stored stream here would hide the dead-event-pipe defect from every test.
+    private nonisolated let eventChannel = StreamChannel<STTEvent>()
+
+    nonisolated func makeEventStream() -> AsyncStream<STTEvent> { eventChannel.makeStream() }
 
     var mockCommittedText = "Paris"
     var shouldFail = false
@@ -28,27 +31,21 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     /// Poll this to know the handler has reached (and is parked at) disconnect().
     var isSuspendedInDisconnect: Bool { !disconnectContinuations.isEmpty }
 
-    init() {
-        var continuation: AsyncStream<STTEvent>.Continuation!
-        self.events = AsyncStream { continuation = $0 }
-        self.eventContinuation = continuation
-    }
-
     func connect(token: String, languageCode: String) async throws {
         if shouldFail {
             throw ElevenLabsSTTError.notConnected
         }
-        eventContinuation?.yield(.connected)
+        eventChannel.yield(.connected)
     }
 
     func sendAudioChunk(_ pcmData: Data) async throws {
         // Simulate partial transcript after a few chunks
-        eventContinuation?.yield(.partialTranscript("Par..."))
+        eventChannel.yield(.partialTranscript("Par..."))
     }
 
     func commitAndClose() async throws {
         guard !commitEmitsNothing else { return }
-        eventContinuation?.yield(.committedTranscript(mockCommittedText))
+        eventChannel.yield(.committedTranscript(mockCommittedText))
     }
 
     func disconnect() async {
@@ -88,7 +85,7 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     /// The default mock paths emit fixed events on `sendAudioChunk` and `commitAndClose`;
     /// this lets a UI test runner pump events deterministically without an audio chunk arriving.
     func injectEvent(_ event: STTEvent) {
-        eventContinuation?.yield(event)
+        eventChannel.yield(event)
         Logger.stt.info("🎙️ MockSTT injected event")
     }
 }

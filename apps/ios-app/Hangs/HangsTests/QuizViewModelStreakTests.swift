@@ -75,6 +75,36 @@ struct QuizViewModelStreakTests {
         #expect(vm.sessionIncorrectCount == 1)
     }
 
+    /// WHY (adversarial audit 2026-07-30): a response whose submission was already
+    /// superseded — e.g. a spoken "stop" during an MCQ evaluation transitions back
+    /// to .askingQuestion but cannot cancel the inline request — used to commit the
+    /// score, the persisted stats, the tallies and a recap row and only THEN have
+    /// its .showingResult transition rejected. The driver was left on the same
+    /// question with an inflated score and a phantom recap row. Half-committed
+    /// state is worse than a dropped response: nothing may be recorded unless the
+    /// result can actually be shown.
+    @Test("a response arriving after the submission was superseded mutates nothing")
+    func rejectedTransitionCommitsNoState() async {
+        let vm = Fixtures.makeViewModel()
+        vm.quizStats = QuizStats(
+            currentStreak: 3, bestStreak: 7,
+            totalCorrect: 10, totalAnswered: 12, totalQuizzes: 2
+        )
+        vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
+        // The submission was cancelled: the state machine is back on the question,
+        // from which .showingResult is not a legal transition.
+        vm.quizState = .askingQuestion
+
+        await vm.handleQuizResponse(makeResponse(result: .correct))
+
+        #expect(vm.quizState == .askingQuestion)
+        #expect(vm.quizStats.currentStreak == 3, "no answer was shown — the streak must not advance")
+        #expect(vm.quizStats.totalAnswered == 12)
+        #expect(vm.sessionCorrectCount == 0)
+        #expect(vm.recapEntries.isEmpty, "a result the driver never saw must not appear in the recap")
+        #expect(vm.currentSession?.id == nil, "the superseded response must not replace the session")
+    }
+
     @Test("resetState clears the session tallies for the next quiz (54.13)")
     func resetClearsSessionTallies() async {
         let vm = Fixtures.makeViewModel()

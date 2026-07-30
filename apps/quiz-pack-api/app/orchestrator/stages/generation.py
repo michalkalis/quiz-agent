@@ -240,6 +240,18 @@ class GenerationStage:
             # this explicit bool and the generator injects the hard quota
             # into `{mcq_patterns_section}` itself.
             mcq_emphasis=ctx.mcq_emphasis,
+            # V18 (2026-07-30) — the gold-bias exemplar sampler keys off
+            # `question_type == "text_multichoice"`
+            # (`app/generation/examples.py:76`) and the example pack is built
+            # ONCE per invocation (`advanced_generator.py:445`), before the MCQ
+            # sub-batch fan-out. Leaving this at the "text" default meant
+            # MCQ-emphasis orders got type-blind exemplars — the MCQ sub-batches
+            # never saw the option-dict payload shape. `ctx.mcq_emphasis` is the
+            # trigger because `mcq_patterns` above is a constant (non-empty on
+            # every order, so it can't discriminate) and emphasis is the same
+            # flag the generator itself gates its MCQ path on
+            # (`advanced_generator.py:482`).
+            question_type="text_multichoice" if ctx.mcq_emphasis else "text",
         )
 
         prompt_seed = _compute_prompt_seed(

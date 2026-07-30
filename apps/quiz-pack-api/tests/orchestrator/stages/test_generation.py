@@ -662,6 +662,37 @@ async def test_calls_generator_with_target_count_and_facts() -> None:
     assert gen.calls[1]["mcq_emphasis"] is True
 
 
+@pytest.mark.asyncio
+async def test_mcq_emphasis_order_requests_mcq_typed_exemplars() -> None:
+    """V18 — an MCQ-emphasis order must reach the generator as `question_type`.
+
+    Why this matters (and why the loader-level test in
+    `tests/generation/test_gold_standard_mcq.py` cannot catch it): the
+    gold-standard sampler only biases toward MCQ-shaped exemplars when it is
+    told `question_type == "text_multichoice"` (`app/generation/examples.py`),
+    and the generator samples that example pack ONCE per invocation — before it
+    fans out into the per-pattern MCQ sub-batches. So if this stage leaves
+    `question_type` at its `"text"` default, every MCQ sub-batch of a paid
+    MCQ-emphasis order is primed with type-blind exemplars and never sees the
+    option-dict payload shape it is supposed to imitate. Nothing downstream can
+    recover that; the only observable is this kwarg. A plain order must keep
+    "text" so non-MCQ packs are not silently biased toward options.
+    """
+    questions = [_stub_question(i) for i in range(5)]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text=f"t{i}", source_url=f"https://ex/{i}") for i in range(5)]
+
+    plain_ctx = _make_ctx(target_count=5, facts=facts)
+    await stage.run(plain_ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls[0]["question_type"] == "text"
+
+    emphasis_ctx = _make_ctx(target_count=5, facts=facts)
+    emphasis_ctx.mcq_emphasis = True
+    await stage.run(emphasis_ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls[1]["question_type"] == "text_multichoice"
+
+
 # ---------------------------------------------------------------------------
 # Expiry stamping / dormancy / fail-safe (issue #76 F-3b task 3).
 #

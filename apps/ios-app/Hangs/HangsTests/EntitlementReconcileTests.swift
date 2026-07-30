@@ -281,6 +281,49 @@ struct EntitlementReconcileTests {
         await waitUntil({ vm.usageInfo != nil }, "the joined fetch never completed")
     }
 
+    @Test("a post-purchase check reads a /usage fetch issued AFTER its sync, never the pre-sync fetch it found in flight (#133 1d)")
+    func postPurchaseCheckDoesNotJoinPreSyncFetch() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let gate = OneShotGate()
+        // The pack-only recovery of #102 finding 3: the server re-derives the
+        // credits during the post-purchase sync, so /usage answers differently
+        // before and after it. First response = the PRE-sync truth (no credits,
+        // quota spent), second = what the sync just recovered.
+        let recovered = UsageInfo(
+            userId: "mock-subject", isPremium: false, questionsUsed: 100,
+            questionsLimit: 100, remaining: 0, resetsAt: "",
+            subscriptionStatus: "none", creditBalance: 5
+        )
+        mock.stubbedUsageSequence = [makeUsage(remaining: 0), recovered]
+        mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
+        let vm = makeVM(network: mock)
+
+        await waitUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
+        let syncsBeforePurchase = mock.syncEntitlementsCallCount
+
+        // The restore lands while the launch fetch is still suspended — the Fly
+        // cold-start shape where the pre-sync fetch outlives the purchase.
+        let verdict = Task { await vm.notifyPremiumPurchased() }
+        await waitUntil(
+            { mock.syncEntitlementsCallCount == syncsBeforePurchase + 1 },
+            "the post-purchase entitlement sync never fired"
+        )
+        #expect(
+            mock.getUsageCallCount == 1,
+            "the post-sync refresh must serialise behind the in-flight fetch, never fetch /usage in parallel"
+        )
+
+        await gate.open()
+        let confirmed = await verdict.value
+
+        // Pre-fix this JOINED the pre-sync fetch, read "no credits" and told a
+        // customer whose credits had just been recovered there was nothing to
+        // restore — #102 finding 3, re-introduced by the single-flight join.
+        #expect(confirmed == true, "the purchase verdict must come from the post-sync fetch, not the pre-sync one")
+        #expect(mock.getUsageCallCount == 2, "exactly two /usage calls: the pre-sync one it waited for, then its own")
+        #expect(vm.usageInfo?.creditBalance == 5, "the published mirror must end on the post-sync value")
+    }
+
     @Test("429 on a voice-submit quota block deactivates the audio session before the paywall (#112 copy C)")
     func voiceSubmitQuotaDeactivatesAudioSession() async {
         let mock = Fixtures.makeFullMockNetwork()

@@ -132,10 +132,24 @@ final class EntitlementReconciler: ObservableObject {
     /// nothing to reload it (#FIX2). Failure after the final attempt is logged
     /// only and, if nothing was ever loaded, flips `usageLoadState` to
     /// `.failed` so the card shows a retry affordance instead of vanishing.
-    func refreshUsage() async {
+    ///
+    /// - Parameter force: pass `true` when the caller is about to READ
+    ///   `usageInfo` to decide something about a state the server just changed
+    ///   (post-`/entitlements/sync`). Plain single-flight joins whatever fetch
+    ///   is in flight *regardless of when it started*, so a post-sync check
+    ///   could consume a PRE-sync response and conclude "nothing to restore"
+    ///   right after a successful recovery (#102 finding 3 for pack buyers, on
+    ///   a Fly cold start where the launch/`onAppear` fetch is still running).
+    ///   `force` waits for that fetch (serialise — never two `/usage` calls in
+    ///   parallel) and then always issues a new one, so the value read after it
+    ///   returns comes from a request that started after the sync.
+    func refreshUsage(force: Bool = false) async {
         if let usageFetchTask {
             await usageFetchTask.value
-            return
+            // A non-force caller only wants the mirror warm — whatever that
+            // fetch returned is fine. A force caller cannot use it: it may have
+            // been issued before the sync it is checking.
+            if !force { return }
         }
         let task = Task { [weak self] in
             guard let self else { return }
@@ -143,7 +157,11 @@ final class EntitlementReconciler: ObservableObject {
         }
         usageFetchTask = task
         await task.value
-        usageFetchTask = nil
+        // Identity-checked: a force caller can install its own task while an
+        // earlier caller is still suspended on the one it replaced, and that
+        // caller must not clear a task that is still in flight (the next caller
+        // would then fetch in parallel instead of joining).
+        if usageFetchTask == task { usageFetchTask = nil }
     }
 
     /// Bounded exponential-backoff `/usage` fetch (3 attempts) — mirrors the
@@ -191,7 +209,10 @@ final class EntitlementReconciler: ObservableObject {
     @discardableResult
     func notifyPremiumPurchased() async -> Bool {
         await syncEntitlementsWithRetry()
-        await refreshUsage()
+        // force: the value below is the purchase/restore VERDICT — it must come
+        // from a fetch issued after the sync above, never from a launch/onAppear
+        // fetch that was already in flight (#133 audit 1d).
+        await refreshUsage(force: true)
         return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 
@@ -210,7 +231,12 @@ final class EntitlementReconciler: ObservableObject {
         let task = Task { [weak self] in
             guard let self else { return }
             await self.syncEntitlementsWithRetry()
-            await self.refreshUsage()
+            // force: this refresh exists to publish what the sync just changed
+            // (a webhook that landed while backgrounded — #102 finding 2).
+            // Joining a fetch that started before the sync would republish the
+            // stale mirror and the quota card would stay wrong until the next
+            // reconcile (#133 audit 1d).
+            await self.refreshUsage(force: true)
         }
         reconcileTask = task
         await task.value
@@ -268,7 +294,10 @@ final class EntitlementReconciler: ObservableObject {
             await group.next()
             group.cancelAll()
         }
-        await refreshUsage()
+        // force: the return value decides whether the paywall is skipped, so it
+        // must reflect the resync above and not a fetch that predates it
+        // (#133 audit 1d).
+        await refreshUsage(force: true)
         return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 }

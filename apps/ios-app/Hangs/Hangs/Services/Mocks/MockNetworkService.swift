@@ -22,6 +22,11 @@ import os
         /// When set, `getUsage` returns this instead of the default fixture — lets
         /// tests pin the quota state (e.g. the ≤5-remaining completion upsell, #94).
         var stubbedUsage: UsageInfo?
+        /// Successive `getUsage` responses, consumed in call order (falls back to
+        /// `stubbedUsage`/the default fixture once exhausted) — lets a test pin a
+        /// PRE-sync mirror against a POST-sync one without racing a `stubbedUsage`
+        /// swap against the fetch it is meant to affect (#133 audit 1d).
+        var stubbedUsageSequence: [UsageInfo] = []
         /// Number of times `getUsage` was invoked — asserts the post-restore
         /// reconciliation bridge (#102 finding 3) actually refreshes usage, not
         /// just entitlements.
@@ -270,6 +275,9 @@ import os
             }
             if shouldFail {
                 throw NetworkError.invalidResponse
+            }
+            if !stubbedUsageSequence.isEmpty {
+                return stubbedUsageSequence.removeFirst()
             }
             if let stubbedUsage {
                 return stubbedUsage

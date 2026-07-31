@@ -91,6 +91,16 @@ class AppleJWSVerifier:
         self._app_bundle_id = app_bundle_id
         self._environment = environment
 
+    @property
+    def app_bundle_id(self) -> str:
+        """The bundle id this verifier accepts (read by the notification path)."""
+        return self._app_bundle_id
+
+    @property
+    def environment(self) -> Optional[str]:
+        """Configured store environment, or None when the deploy hasn't declared one."""
+        return self._environment
+
     @classmethod
     def from_path(
         cls,
@@ -113,7 +123,22 @@ class AppleJWSVerifier:
             cert = x509.load_pem_x509_certificate(data)
         return cls(cert, app_bundle_id, environment)
 
-    def verify(self, jws: str) -> SignedTransaction:
+    def verify_payload(self, jws: str) -> dict:
+        """Verify the JWS cryptographically and return its raw JSON payload.
+
+        Everything that is *shape-agnostic*: store-environment configured,
+        three segments, ES256 header, x5c chain to the configured Apple root
+        (incl. CA constraints + Apple marker OIDs), leaf signature over the
+        signing input, payload parses as JSON.
+
+        Split out of `verify()` (issue #133 close-out) so the App Store Server
+        Notifications V2 consumer can verify a payload that is NOT a
+        transaction — a notification's outer JWS decodes to
+        `notificationType` / `data`, not to a `SignedTransaction`. Both paths
+        must go through the same chain verification; a second, laxer
+        verification path for webhooks is exactly how forged refund
+        notifications get in.
+        """
         # Fail closed (backend arch review 2026-07-18): no configured store
         # environment means we cannot tell Sandbox from Production purchases,
         # so refuse everything — mirrors quiz-agent's RC_ALLOWED_ENVIRONMENT.
@@ -138,6 +163,23 @@ class AppleJWSVerifier:
             payload = json.loads(_b64url_decode(payload_b64))
         except json.JSONDecodeError as exc:
             raise JWSInvalid(f"payload is not valid JSON: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise JWSInvalid("payload must be a JSON object")
+        return payload
+
+    def verify_transaction_info(self, jws: str) -> SignedTransaction:
+        """Verified transaction *identity* — no money-state gates applied.
+
+        Chain + signature + `bundleId` + `environment`, stopping short of the
+        expiry and revocation gates. `verify()` is this plus those gates.
+
+        The notification consumer needs exactly this: a REFUND notification's
+        inner `signedTransactionInfo` always carries `revocationDate`, so
+        running it through `verify()` would raise `JWSRevoked` and the consumer
+        could never read the transaction it is being told to revoke.
+        Purchase-authorising call sites must keep using `verify()`.
+        """
+        payload = self.verify_payload(jws)
         try:
             tx = SignedTransaction.model_validate(payload)
         except ValidationError as exc:
@@ -153,6 +195,16 @@ class AppleJWSVerifier:
                 f"environment mismatch: JWS environment={tx.environment!r}, "
                 f"expected {self._environment!r}"
             )
+        return tx
+
+    def verify(self, jws: str) -> SignedTransaction:
+        """Verify a StoreKit JWS for a call site that is about to grant value.
+
+        Full gate stack: crypto + identity (`verify_transaction_info`) plus the
+        expiry and revocation gates below.
+        """
+        tx = self.verify_transaction_info(jws)
+        now = datetime.now(timezone.utc)
         if tx.expires_date is not None and tx.expires_date < now:
             raise JWSExpired(
                 f"transaction {tx.transaction_id} expired at {tx.expires_date.isoformat()}"
@@ -164,17 +216,17 @@ class AppleJWSVerifier:
         # nowhere, and `revocationDate` was not modelled at all — a revoked
         # payload verified exactly like a live one.
         #
-        # HONEST LIMIT — this fix is deliberately PARTIAL. It only catches JWS
-        # bytes that actually *carry* the revocation fields, i.e. a transaction
-        # re-fetched from Apple after the refund. A client replaying the
-        # pre-refund JWS bytes it captured at purchase time is NOT caught: those
-        # bytes are genuinely Apple-signed, carry no revocation fields, and stay
-        # valid forever. Closing that requires a server-side revocation record —
-        # an App Store Server Notifications v2 consumer (REFUND / REVOKE /
-        # REFUND_DECLINED) writing a revoked-transaction table that this
-        # verifier consults. That is founder-gated work: it needs App Store
-        # Connect webhook configuration plus a migration, so it is out of scope
-        # here.
+        # SCOPE — this gate reads only what the JWS bytes themselves carry, so
+        # it catches a transaction re-fetched from Apple after the refund but
+        # NOT a client replaying the pre-refund bytes it captured at purchase
+        # time (genuinely Apple-signed, no revocation fields, valid forever).
+        # That second half is now closed by the server-side revocation record:
+        # `app/api/v1/appstore.py` consumes App Store Server Notifications V2
+        # REFUND/REVOKE into `revoked_transactions`, and every purchase-
+        # authorising call site awaits `storekit.revocation.assert_not_revoked`
+        # (which the verifier, being sync, cannot do itself). Both halves are
+        # required: this one denies a revoked JWS even before any notification
+        # arrives; the table one denies replayed pre-refund bytes forever.
         if tx.revocation_date is not None or tx.revocation_reason is not None:
             raise JWSRevoked(
                 f"transaction {tx.transaction_id} is revoked "

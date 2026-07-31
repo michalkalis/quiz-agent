@@ -39,6 +39,7 @@ setup_logging()
 init_sentry(get_settings().sentry_dsn)
 
 from .api.routes import router
+from .api.v1.appstore import router as appstore_v1_router
 from .api.v1.orders import router as orders_v1_router
 from .web.routes import router as web_router
 from .rate_limit import limiter
@@ -118,6 +119,11 @@ app.include_router(router)
 # alias). Hidden from OpenAPI so the spec advertises only the canonical path.
 app.include_router(orders_v1_router, prefix="/api")
 app.include_router(orders_v1_router, include_in_schema=False)
+# App Store Server Notifications V2 (#133 close-out). Mounted BARE only — the
+# URL is typed into App Store Connect by hand and must stay exactly
+# /v1/appstore/notifications; an /api alias would just be a second unauthenticated
+# entry point to the revocation writer for no caller.
+app.include_router(appstore_v1_router)
 app.include_router(web_router)
 
 

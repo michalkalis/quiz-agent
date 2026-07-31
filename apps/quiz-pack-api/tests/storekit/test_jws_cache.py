@@ -22,7 +22,7 @@ suite's in-memory test cert chain for the verifier.
 from __future__ import annotations
 
 from typing import Any, Optional
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -74,22 +74,39 @@ def spy_verifier(verifier: AppleJWSVerifier) -> MagicMock:
     return MagicMock(wraps=verifier)
 
 
+@pytest.fixture
+def unrevoked_session() -> MagicMock:
+    """A session double whose revocation lookup finds nothing.
+
+    These tests are about *cache* semantics, so they keep the DB out. The
+    revocation half of `verify_jws_cached` is covered against a real database
+    in tests/api/test_appstore_notifications.py — including the case this
+    double cannot express, a refund landing inside the cache window.
+    """
+    session = MagicMock()
+    result = MagicMock()
+    result.scalars.return_value.first.return_value = None
+    session.execute = AsyncMock(return_value=result)
+    return session
+
+
 @pytest.mark.asyncio
 async def test_cache_miss_verifies_once_and_caches(
-    spy_verifier: MagicMock, make_jws: JWSFactory
+    spy_verifier: MagicMock, make_jws: JWSFactory, unrevoked_session: MagicMock
 ) -> None:
     """First sight of a JWS: full chain verify, then a TTL-bounded cache entry."""
     jws = make_jws()
     redis = FakeRedis()
 
-    tx = await verify_jws_cached(jws, spy_verifier, redis)
+    tx = await verify_jws_cached(jws, spy_verifier, redis, unrevoked_session)
 
     assert isinstance(tx, SignedTransaction)
     assert tx.transaction_id == "1000000123456789"
     spy_verifier.verify.assert_called_once_with(jws)
 
-    # Cached under this JWS's own key, with the short TTL that keeps revoked
-    # tokens from being trusted indefinitely, and NX so two racing requests
+    # Cached under this JWS's own key, with a bounded TTL (so a cert/chain
+    # change is picked up promptly — revocation no longer rides on this TTL,
+    # it is checked per call against the DB), and NX so two racing requests
     # can't clobber each other's window.
     assert _jws_cache_key(jws) in redis.store
     assert redis.set_calls == [{"key": _jws_cache_key(jws), "ex": 60, "nx": True}]
@@ -97,7 +114,7 @@ async def test_cache_miss_verifies_once_and_caches(
 
 @pytest.mark.asyncio
 async def test_cache_hit_skips_verification_but_keeps_identity(
-    spy_verifier: MagicMock, make_jws: JWSFactory
+    spy_verifier: MagicMock, make_jws: JWSFactory, unrevoked_session: MagicMock
 ) -> None:
     """Second call is served from cache: no re-verify, same transaction back.
 
@@ -110,8 +127,8 @@ async def test_cache_hit_skips_verification_but_keeps_identity(
     jws = make_jws()
     redis = FakeRedis()
 
-    first = await verify_jws_cached(jws, spy_verifier, redis)
-    second = await verify_jws_cached(jws, spy_verifier, redis)
+    first = await verify_jws_cached(jws, spy_verifier, redis, unrevoked_session)
+    second = await verify_jws_cached(jws, spy_verifier, redis, unrevoked_session)
 
     spy_verifier.verify.assert_called_once()  # NOT called again on the hit
     assert second.transaction_id == first.transaction_id
@@ -124,7 +141,7 @@ async def test_cache_hit_skips_verification_but_keeps_identity(
 
 @pytest.mark.asyncio
 async def test_failed_verify_is_not_cached_as_valid(
-    spy_verifier: MagicMock, make_jws: JWSFactory
+    spy_verifier: MagicMock, make_jws: JWSFactory, unrevoked_session: MagicMock
 ) -> None:
     """A rejected JWS must raise and leave the cache untouched.
 
@@ -138,11 +155,11 @@ async def test_failed_verify_is_not_cached_as_valid(
     redis = FakeRedis()
 
     with pytest.raises(JWSInvalid, match="signature verification failed"):
-        await verify_jws_cached(forged, spy_verifier, redis)
+        await verify_jws_cached(forged, spy_verifier, redis, unrevoked_session)
 
     assert redis.store == {}, "failed verification was cached as verified"
     assert redis.set_calls == []
 
     with pytest.raises(JWSInvalid):
-        await verify_jws_cached(forged, spy_verifier, redis)
+        await verify_jws_cached(forged, spy_verifier, redis, unrevoked_session)
     assert spy_verifier.verify.call_count == 2  # re-verified, not served from cache

@@ -17,6 +17,7 @@ from .question import (
     question_to_row,
     row_to_question,
 )
+from .revoked_transaction import RevokedTransaction
 
 __all__ = [
     "EMBEDDING_DIM",
@@ -27,6 +28,7 @@ __all__ = [
     "QuestionPack",
     "QuestionRow",
     "REVIEW_STATUSES",
+    "RevokedTransaction",
     "append_step",
     "question_to_row",
     "row_to_question",

@@ -29,3 +29,15 @@ async def truncate_order_graph(session: AsyncSession) -> None:
         text("TRUNCATE generation_orders, generation_jobs RESTART IDENTITY CASCADE")
     )
     await session.commit()
+
+
+async def truncate_revoked_transactions(session: AsyncSession) -> None:
+    """Empty `revoked_transactions` (#133 close-out gate 2).
+
+    Separate from the order graph because it has no FK to it: a revocation row
+    survives its order being truncated, and a leftover row would make the next
+    run's purchase 401 instead of 202 — the same "re-runnable, not just passes
+    once" requirement `_clean_orders` exists for.
+    """
+    await session.execute(text("TRUNCATE revoked_transactions"))
+    await session.commit()

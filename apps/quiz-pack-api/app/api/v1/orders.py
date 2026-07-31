@@ -55,6 +55,7 @@ from ...storekit import (
     SignedTransaction,
 )
 from ...storekit.jws_cache import verify_jws_cached
+from ...storekit.revocation import assert_not_revoked
 from ..deps import (
     admin_key_presented,
     check_admin_key,
@@ -260,6 +261,12 @@ async def create_order(
         # 1. Verify JWS
         try:
             tx = verifier.verify(x_storekit_jws)
+            # Second half of the revocation gate (#133 close-out): the verifier
+            # only sees revocation fields the presented bytes happen to carry,
+            # so a client replaying its pre-refund JWS passes it. The
+            # server-side record written by the App Store notification consumer
+            # catches that replay. Same JWSError family → same 401.
+            await assert_not_revoked(session, tx)
         except JWSWrongBundle as exc:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
         except JWSError as exc:
@@ -568,7 +575,9 @@ async def retry_order(
         redis_conn: Redis = Redis.from_url(redis_url, decode_responses=True)
         try:
             try:
-                tx = await verify_jws_cached(x_storekit_jws, verifier, redis_conn)
+                tx = await verify_jws_cached(
+                    x_storekit_jws, verifier, redis_conn, session
+                )
             except JWSWrongBundle as exc:
                 raise HTTPException(status_code=403, detail=str(exc)) from exc
             except JWSError as exc:
@@ -673,15 +682,20 @@ async def stream_order(
     # socket open; we must not reuse the ARQ pool connection).
     redis_conn: Redis = Redis.from_url(redis_url, decode_responses=True)
     try:
-        try:
-            tx = await verify_jws_cached(x_storekit_jws, verifier, redis_conn)
-        except JWSWrongBundle as exc:
-            raise HTTPException(status_code=403, detail=str(exc)) from exc
-        except JWSError as exc:
-            raise HTTPException(status_code=401, detail=str(exc)) from exc
-
-        # Fetch order to cross-check transaction_id.
+        # One session covers both the revocation check inside verify_jws_cached
+        # and the order lookup below (this route has no `get_session` dep — it
+        # returns a streaming response that outlives a request-scoped session).
         async with AsyncSessionLocal() as session:
+            try:
+                tx = await verify_jws_cached(
+                    x_storekit_jws, verifier, redis_conn, session
+                )
+            except JWSWrongBundle as exc:
+                raise HTTPException(status_code=403, detail=str(exc)) from exc
+            except JWSError as exc:
+                raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+            # Fetch order to cross-check transaction_id.
             stmt = select(GenerationOrder).where(GenerationOrder.id == order_id)
             order = (await session.execute(stmt)).scalars().first()
 

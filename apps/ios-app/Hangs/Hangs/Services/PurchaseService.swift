@@ -82,6 +82,12 @@ protocol PurchaseService: AnyObject, Sendable {
     /// (issue #93 §2, Session E must-do).
     func logIn(appUserID: String) async
 
+    /// Releases the current RC identity and switches to a fresh anonymous one.
+    /// Called on explicit sign-out: the purchases stay with the signed-out
+    /// account's app-user id, so the next human on the device inherits no
+    /// entitlement (founder 2026-07-31).
+    func logOut() async
+
     /// Long-lived stream of entitlement updates from `Purchases.customerInfoStream`.
     var entitlementUpdates: AsyncStream<EntitlementUpdate> { get }
 }
@@ -187,6 +193,15 @@ final class LivePurchaseService: PurchaseService {
             _ = try await Purchases.shared.logIn(appUserID)
         } catch {
             Logger.quiz.error("❌ LivePurchaseService: RC logIn failed: \(error, privacy: .public)")
+        }
+    }
+
+    func logOut() async {
+        do {
+            _ = try await Purchases.shared.logOut()
+        } catch {
+            // Already anonymous → RC throws; harmless, the identity is what we want.
+            Logger.quiz.error("❌ LivePurchaseService: RC logOut failed: \(error, privacy: .public)")
         }
     }
 }

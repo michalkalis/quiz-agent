@@ -149,6 +149,13 @@ final class AppState: ObservableObject {
                 await storeManager.logIn(accountId: accountId)
                 try? await networkService.syncEntitlements()
             }
+            // The mirror image (founder 2026-07-31): an explicit sign-out
+            // releases the RC identity instead of moving it onto the fresh anon
+            // id, so the subscription stays with the signed-out account and the
+            // new anon user sees no leftover premium.
+            await authService.setSignedOutHandler {
+                await storeManager.logOut()
+            }
         }
 
         // Post-purchase continuation (#96 P1): entitlement sync + usage

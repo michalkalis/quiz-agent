@@ -276,6 +276,16 @@ final class StoreManager: ObservableObject {
         await checkPurchaseStatus()
     }
 
+    /// Releases the purchase identity on explicit sign-out: RC switches to a
+    /// fresh anonymous customer, and `isPurchased` is re-read from it so the
+    /// signed-out account's entitlement stops driving the UI (no stale premium
+    /// on Home/paywall). Founder 2026-07-31 — the subscription stays with the
+    /// account and reappears on the next sign-in.
+    func logOut() async {
+        await purchaseService.logOut()
+        await checkPurchaseStatus()
+    }
+
     // MARK: - Entitlement Listener
 
     private func listenForEntitlementUpdates() -> Task<Void, Never> {

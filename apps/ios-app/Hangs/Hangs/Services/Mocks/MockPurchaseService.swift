@@ -49,6 +49,7 @@
         var currentlyEntitledCallCount: Int = 0
         var logInCallCount: Int = 0
         var lastLogInAppUserID: String?
+        var logOutCallCount: Int = 0
 
         // MARK: - Entitlement Stream
 
@@ -102,6 +103,13 @@
         func logIn(appUserID: String) async {
             logInCallCount += 1
             lastLogInAppUserID = appUserID
+        }
+
+        /// Mirrors RC: the fresh anonymous customer owns nothing, so a later
+        /// `currentlyEntitled` must report false unless a test says otherwise.
+        func logOut() async {
+            logOutCallCount += 1
+            stubbedIsEntitled = false
         }
     }
 

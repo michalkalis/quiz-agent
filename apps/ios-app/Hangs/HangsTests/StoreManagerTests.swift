@@ -238,6 +238,28 @@ struct StoreManagerTests {
         #expect(manager.isPurchased == true)
     }
 
+    // MARK: 12b. logOut — releases the RC identity on sign-out (founder 2026-07-31)
+
+    /// WHY: signing out hands the device back to an anonymous user who has not
+    /// bought anything. If `isPurchased` kept the signed-out account's `true`,
+    /// the app would keep showing premium (Home plan card, paywall bypass) for a
+    /// subscription that user does not own. Releasing the RC identity and
+    /// re-reading entitlement from the fresh anonymous customer is what makes the
+    /// reset clean — the entitlement itself stays with the account and comes back
+    /// on the next sign-in, it is not cancelled.
+    @Test("logOut releases the RC identity and clears the stale entitlement")
+    func logOutReleasesPurchaseIdentity() async {
+        let (manager, mock) = await makeManager(isEntitled: true)
+        await manager.logIn(accountId: "user-123")
+        #expect(manager.isPurchased == true, "precondition: signed-in account holds the entitlement")
+
+        await manager.logOut()
+
+        #expect(mock.logOutCallCount == 1, "sign-out must release the RC identity, not re-alias it")
+        #expect(mock.logInCallCount == 1, "no new RC logIn may follow a sign-out")
+        #expect(manager.isPurchased == false, "the fresh anonymous user must not inherit premium")
+    }
+
     // MARK: 13. Purchase outcome is a first-class event (#96 P1)
     //
     // The founder's device bug: a pack purchase succeeded end-to-end

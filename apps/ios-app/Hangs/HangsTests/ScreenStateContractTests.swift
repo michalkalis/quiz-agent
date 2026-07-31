@@ -279,6 +279,8 @@ private final class StalledOfferingsPurchaseService: PurchaseService {
     func currentlyEntitled(entitlementId _: String) async -> Bool { false }
 
     func logIn(appUserID _: String) async {}
+
+    func logOut() async {}
 }
 
 /// The purchase CTA's underlying `Button` — `HangsPrimaryButton` applies

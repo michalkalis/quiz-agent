@@ -182,6 +182,18 @@ actor AuthService: AuthServiceProtocol {
     /// credential-revocation → dropToFreshAnon — can beat it). Replayed on
     /// registration so the RC alias is never silently skipped (#96 P1).
     private var pendingAccountLink: String?
+    /// Set once by AppState: called on an explicit `signOut`, right before the
+    /// account tokens are dropped, so the purchase identity is released instead
+    /// of being carried onto the fresh anonymous identity (founder 2026-07-31 —
+    /// see `signOut`). AppState wires it to `StoreManager.logOut()`.
+    private var onSignedOut: (@Sendable () async -> Void)?
+
+    /// Registers the sign-out handler. Called once by AppState at launch.
+    /// Unlike the account-link handler there is nothing to replay: a sign-out
+    /// before registration is impossible (the user must reach Settings first).
+    func setSignedOutHandler(_ handler: @escaping @Sendable () async -> Void) {
+        onSignedOut = handler
+    }
 
     /// Registers the account-linked handler. Called once by AppState at launch.
     /// If an identity was already minted before registration, the handler is
@@ -700,8 +712,26 @@ actor AuthService: AuthServiceProtocol {
         }
     }
 
-    /// Sign out: revoke the refresh-token family on the backend (best-effort), then
-    /// clear stored account tokens and re-bootstrap a fresh anonymous identity.
+    /// Sign out: revoke the refresh-token family on the backend (best-effort), release
+    /// the purchase identity, then clear stored account tokens and re-bootstrap a
+    /// fresh anonymous identity.
+    ///
+    /// The subscription stays bound to the account that was signed out (founder,
+    /// 2026-07-31): the next human on the device sees it again only by signing
+    /// back in. ORDER is what makes that true and is therefore load-bearing:
+    ///
+    /// 1. `onSignedOut` (→ `StoreManager.logOut()`) releases the RevenueCat
+    ///    identity while the account tokens are still in place. RC drops to a
+    ///    brand-new anonymous customer that owns nothing, and the entitlement
+    ///    state that would otherwise linger (`isPurchased`) is re-read from it —
+    ///    no stale premium UI.
+    /// 2. `dropToFreshAnon()` then mints the new anon identity and links it into
+    ///    RC as usual (#96 P1). That link is safe *only because step 1 already
+    ///    ran*: it binds an EMPTY anonymous RC customer to the new anon id, so
+    ///    nothing is carried over from the signed-out account. Skipping the link
+    ///    instead (the revocation pattern) would leave RC on an
+    ///    `$RCAnonymousID` the backend cannot map, and a purchase made in the
+    ///    post-sign-out window would never reach the credit ledger.
     func signOut() async {
         Logger.network.info("🔐 Sign out → dropping to anon")
         // Best-effort backend logout to revoke the refresh-token family (I2).
@@ -709,6 +739,7 @@ actor AuthService: AuthServiceProtocol {
         if let refreshToken = (tokens ?? store.load())?.refreshToken {
             await postLogout(refreshToken: refreshToken)
         }
+        await onSignedOut?()
         await dropToFreshAnon()
     }
 
@@ -802,9 +833,12 @@ actor AuthService: AuthServiceProtocol {
     ///   refresh-rejection path passes `false`: revoking Sign in with Apple does
     ///   not cancel a subscription, so moving RC's appUserID onto a fresh anon id
     ///   would hide an active entitlement and push a paying user at the paywall
-    ///   (#133 V17). `signOut` and `deleteAccount` deliberately keep the default:
-    ///   there the next user of the device is treated as a different human, and
-    ///   re-aliasing is the intended behaviour (founder's call).
+    ///   (#133 V17). `signOut` and `deleteAccount` keep the default `true`, but
+    ///   for different reasons: `deleteAccount` destroyed the account, so there
+    ///   is nothing left to keep the purchase identity attached to, while
+    ///   `signOut` first RELEASES the RC identity (`onSignedOut`) and therefore
+    ///   links an already-empty anonymous customer — see `signOut`, where that
+    ///   ordering is the whole point.
     private func dropToFreshAnon(linkAccount: Bool = true) async {
         tokens = nil
         store.clear()

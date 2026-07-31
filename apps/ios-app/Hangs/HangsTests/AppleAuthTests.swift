@@ -383,12 +383,21 @@ struct AppleAuthTests {
                 "an active subscription must not be hidden by aliasing RevenueCat to the revocation anon id")
     }
 
-    /// Contrast, pinning the deliberate difference: an explicit `signOut` DOES link
-    /// the fresh identity. There the device is handed to a different human, so the
-    /// purchase identity is supposed to move — the founder's call, and the reason
-    /// `dropToFreshAnon`'s `linkAccount` default stays `true`.
-    @Test("signOut still links the freshly minted anon identity (deliberate contrast to revocation)")
-    func signOutStillLinksFreshIdentity() async throws {
+    /// WHY (founder 2026-07-31): signing out used to alias RevenueCat straight
+    /// from the paying account onto the freshly minted anon id, dragging the
+    /// subscription along with the device instead of leaving it with the account
+    /// that paid for it. The fix is an ORDER, not a missing step: RC is first
+    /// RELEASED (`onSignedOut` → `StoreManager.logOut()`, dropping to an empty
+    /// anonymous customer), and only then is the new anon id linked — so the link
+    /// carries no entitlement, yet still leaves RC on an id the backend can map,
+    /// which a purchase made right after sign-out depends on (#96 P1).
+    ///
+    /// The sequence is asserted, not just the endpoints: release → mint → link.
+    /// A link that ran before the release would silently restore the old defect,
+    /// and no link at all would strand a post-sign-out purchase on an
+    /// `$RCAnonymousID`.
+    @Test("signOut releases the purchase identity BEFORE linking the fresh anon id")
+    func signOutReleasesPurchaseIdentityBeforeLinking() async throws {
         let accountTokens = AuthTokens(
             accessToken: "account-access",
             refreshToken: "account-refresh",
@@ -401,13 +410,19 @@ struct AppleAuthTests {
         let service = makeService(store: store)
         _ = await service.accessToken()
 
-        let linked = OSAllocatedUnfairLock<[String]>(initialState: [])
+        // One ordered log for all three side effects — a refactor that reorders
+        // them (release after link) fails here, where separate flags would not.
+        let events = OSAllocatedUnfairLock<[String]>(initialState: [])
         await service.setAccountLinkedHandler { id in
-            linked.withLock { $0.append(id) }
+            events.withLock { $0.append("linked:\(id)") }
+        }
+        await service.setSignedOutHandler {
+            events.withLock { $0.append("released") }
         }
 
         AppleStubURLProtocol.handler = { req in
             if req.url?.path == "/api/v1/auth/anon-bootstrap" {
+                events.withLock { $0.append("minted") }
                 return (
                     .make(status: 200),
                     Data(AppleAuthStubs.tokenJSON(access: "fresh-anon-after-signout", refresh: "fresh-r3", anon: "anon-777").utf8)
@@ -420,8 +435,10 @@ struct AppleAuthTests {
 
         await service.signOut()
 
-        #expect(store.load()?.accessToken == "fresh-anon-after-signout")
-        #expect(linked.withLock { $0 } == ["anon-777"])
+        #expect(store.load()?.accessToken == "fresh-anon-after-signout",
+                "the app must keep working on a fresh anon identity")
+        #expect(events.withLock { $0 } == ["released", "minted", "linked:anon-777"],
+                "RevenueCat must be released before the new anon id is linked, so the link carries no entitlement")
     }
 
     // MARK: - 5. #78 account-field merge matrix

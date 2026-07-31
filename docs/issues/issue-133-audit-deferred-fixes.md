@@ -98,7 +98,7 @@ Suggested next step: one verification pass (same adversarial-verifier pattern) o
 **End gates (all green):** quiz-agent 605 passed (REQUIRE_DB_TESTS=1) · quiz-pack-api 739 passed + 1 pre-existing skip (LLM_GATEWAY=direct, re-runnable ×2) · iOS full HangsTests target 912 passed ×2 (~29 s; was 886/896 + minutes of sleeps on main) · HangsUITests build-for-testing clean (RS runs are on-demand sim-driving, not a CI gate).
 
 **Founder decisions / gates left open (in priority order):**
-1. **quiz-pack-api migrate-before-deploy** (per your gate): TWO pending migrations — `a3f7c81d92be` (order.enqueued_at) + `b4d9e17c3a52` (question.headline_answer). Run both, deploy pack-api, then delete the temporary pgvector column shim (marked in `pgvector_client.py`).
+1. ✅ **DONE 2026-07-31 (founder-approved in-chat):** both migrations applied to prod `quiz_pack`, staging `quiz_pack_staging`, and the local dev `quiz_pack_test`; quiz-pack-api deployed (health 200); pgvector column shim deleted (`55ff2cc4`) and quiz-agent prod redeployed (health 200).
 2. **Full StoreKit revocation pipeline** (V1 was fixed only partially, honestly commented): App Store Server Notifications v2 REFUND/REVOKE consumer + revoked-transaction table — needs ASC console config (founder) + a migration; fold in the jws_cache 60 s local-decode window.
 3. **Anon reachability of `/tts/synthesize` + `/elevenlabs/token` during the legacy grace window** (V6 residual): flip `LEGACY_USER_ID_GRACE` off once installed clients are confirmed bearer-clean.
 4. **Lone preference_change returns HTTP 400** though it now persists — flipping to 200 "preference acknowledged" is an iOS-visible product change.

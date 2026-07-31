@@ -46,14 +46,6 @@ logger = logging.getLogger(__name__)
 # so without this set tasks could be garbage-collected mid-execution.
 _prefetch_tasks: "set[asyncio.Task]" = set()
 
-# The parser emits a difficulty *direction* ("harder"/"easier"), while the corpus
-# stores discrete levels — so a direction is one clamped step along
-# easy → medium → hard. "random" has no direction and is left alone.
-_DIFFICULTY_STEPS = {
-    "harder": {"easy": "medium", "medium": "hard", "hard": "hard"},
-    "easier": {"hard": "medium", "medium": "easy", "easy": "easy"},
-}
-
 
 def prefetch_question_audio(
     tts_service: Optional[TTSService], question_text: str, language: str
@@ -193,13 +185,13 @@ class QuizFlowService:
             result=result,
         )
 
-        # Ghost-question guard (#66): a non-answer intent (rating, difficulty,
-        # preference, category, or an unparseable utterance) produces no evaluation.
+        # Ghost-question guard (#66): a non-answer intent (rating, explanation
+        # request, or an unparseable utterance) produces no evaluation.
         # Return BEFORE the session-advance block so we never advance
         # current_question_id or burn a freemium question on a non-answer. The
         # callers surface this as a 400 with no state mutation.
         if result.evaluation is None:
-            return self._no_answer_result(session, result, outcome)
+            return self._no_answer_result(result)
 
         # #133 1a: remember what was graded BEFORE anything advances, so a retry
         # of this same submission is replayed instead of scoring the next question.
@@ -420,48 +412,14 @@ class QuizFlowService:
                 rating_value = extracted_data.get("rating")
                 result.feedback_received.append(f"rating: {rating_value}")
 
-            elif intent_type == "preference_change":
-                for topic in extracted_data.get("avoid_topics") or []:
-                    if not topic:
-                        continue
-                    if topic not in session.disliked_topics:
-                        session.disliked_topics.append(topic)
-                        outcome.preferences_changed = True
-                    result.feedback_received.append(f"avoiding: {topic}")
-                for topic in extracted_data.get("prefer_topics") or []:
-                    if not topic:
-                        continue
-                    if topic not in session.preferred_topics:
-                        session.preferred_topics.append(topic)
-                        outcome.preferences_changed = True
-                    result.feedback_received.append(f"preference: {topic}")
-                stepped = _DIFFICULTY_STEPS.get(
-                    extracted_data.get("difficulty"), {}
-                ).get(session.current_difficulty)
-                if stepped:
-                    # A clamped direction ("harder" at hard) is acknowledged to the
-                    # player but changed nothing — nothing to persist.
-                    if stepped != session.current_difficulty:
-                        outcome.preferences_changed = True
-                    session.current_difficulty = stepped
-                    result.feedback_received.append(f"difficulty: {stepped}")
-
         return outcome
 
-    def _no_answer_result(
-        self, session: QuizSession, result: FlowResult, outcome: IntentOutcome
-    ) -> FlowResult:
+    def _no_answer_result(self, result: FlowResult) -> FlowResult:
         """Finish a submission that carried no answer (ghost-question guard, #66).
 
-        Nothing advances and no quota is charged. A preference the utterance DID
-        carry ("no more geography", said on its own) is still persisted: it was
-        parsed and applied to the session, and returning before ``update_session``
-        threw it away — the player then kept getting the topic they just rejected.
+        Nothing advances, no quota is charged, and the session is not persisted.
         """
         result.message = "No answer detected in input"
-        if outcome.preferences_changed:
-            self.session_manager.update_session(session)
-            result.message = "Preferences updated, no answer detected"
         return result
 
     def _update_participant_score(

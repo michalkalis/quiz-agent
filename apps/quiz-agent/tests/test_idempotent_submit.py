@@ -430,37 +430,28 @@ async def test_submit_without_question_id_grades_the_current_question_as_before(
     assert flow.usage_tracker.record_question.await_count == 2
 
 
-# ── The lone preference change (audit follow-up to the same flow) ────────────
+# ── The lone non-answer utterance ────────────────────────────────────────────
 
 
-async def test_a_preference_stated_alone_is_persisted():
-    """A preference stated alone ("no more geography") parsed and mutated the
-    session — then the ghost-question guard returned before ``update_session`` and
-    threw the mutation away, so the player kept getting the topic they had just
-    rejected.
+async def test_a_lone_preference_utterance_is_just_not_understood():
+    """In-quiz voice preference changes were removed (founder, 2026-07-31).
 
-    It must be persisted. It is still not an answer: nothing advances and no
-    freemium question is charged.
+    "No more geography, make it harder" is now an ordinary non-answer: the route
+    surfaces a 400, nothing advances, no freemium question is charged, and the
+    session is not written at all.
     """
     manager = _FakeSessionManager(_session())
     flow = _flow(manager)
     flow.input_parser.parse = AsyncMock(
-        return_value=[
-            {
-                "intent_type": "preference_change",
-                "extracted_data": {
-                    "avoid_topics": ["geography"],
-                    "difficulty": "harder",
-                },
-            }
-        ]
+        return_value=[{"intent_type": "unclear", "extracted_data": {}}]
     )
 
     result = await _submit(flow, manager, "no more geography, make it harder")
 
-    assert result.evaluation is None  # the route still surfaces this as a 400
-    assert manager.stored.disliked_topics == ["geography"]
-    assert manager.stored.current_difficulty == "hard"
+    assert result.evaluation is None
+    assert manager.writes == []
+    assert manager.stored.disliked_topics == []
+    assert manager.stored.current_difficulty == "medium"
     assert manager.stored.current_question_id == _Q1
     assert manager.stored.asked_question_ids == [_Q1]
     assert manager.stored.last_evaluation is None

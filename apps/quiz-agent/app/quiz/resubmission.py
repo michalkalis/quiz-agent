@@ -77,7 +77,6 @@ class IntentOutcome:
 
     score_delta: float = 0.0
     answered_delta: int = 0
-    preferences_changed: bool = False
     feedback_audio: Optional[bytes] = None
 
 
@@ -207,7 +206,7 @@ async def process_resubmission(
     # already holds: keep the stored record and let the route 400, exactly as
     # for a first submission with no answer in it.
     if result.evaluation is None:
-        return flow._no_answer_result(session, result, outcome)
+        return flow._no_answer_result(result)
 
     # Replace, don't accumulate: undo what the previous verdict applied to the
     # participant before keeping the new one.

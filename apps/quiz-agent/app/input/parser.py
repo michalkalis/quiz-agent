@@ -30,9 +30,6 @@ class InputParser:
     Examples:
         "Paris, but I don't like this question" →
             [answer: "Paris", rating: 1]
-
-        "London, no more geography, make it harder" →
-            [answer: "London", excluded_topics: ["geography"], difficulty: "harder"]
     """
 
     def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
@@ -248,11 +245,10 @@ INTENT TYPES:
 1. "answer" - User is answering the current quiz question
 2. "skip" - User wants to skip this question (words like: skip, pass, next, idk, "i don't know")
 3. "rating" - User is rating the question (1-5 scale or sentiment)
-4. "preference_change" - User wants to change topic preferences or difficulty
-5. "start" - User wants to begin the quiz
-6. "explanation_request" - User is asking for clarification about something in the question
-7. "quit" - User wants to end the quiz
-8. "unclear" - Irrelevant text that should be ignored
+4. "start" - User wants to begin the quiz
+5. "explanation_request" - User is asking for clarification about something in the question
+6. "quit" - User wants to end the quiz
+7. "unclear" - Irrelevant text that should be ignored
 
 EXTRACTION RULES:
 - For "answer": Extract ONLY the user's spoken answer, not the question text
@@ -265,24 +261,21 @@ EXTRACTION RULES:
   - Negative sentiment ("bad", "terrible", "too easy", "don't like") → rating: 1
   - Positive sentiment ("great", "good", "love it") → rating: 5
   - Explicit number: "rate this 3" → rating: 3
-- For "preference_change": Extract avoid_topics (list), prefer_topics (list), and/or difficulty ("harder" or "easier")
 - For "explanation_request": Extract what user wants explained
 - For "unclear": Mark as ignored
 
 MULTI-INTENT EXAMPLES:
-- "London. No more geography" → [answer, preference_change]
+- "London. No more geography" → [answer]
 - "Paris. I don't like this question" → [answer, rating (1)]
 - "Paris. This is too easy" → [answer, rating (1)]
 - "Berlin. Great question!" → [answer, rating (5)]
-- "42. Make it harder" → [answer, preference_change]
+- "42. Make it harder" → [answer]
 - "skip" → [skip]
 - "What is a quasar?" → [explanation_request]
 
 CONFIRMATION MESSAGES:
 Generate user-friendly confirmation messages for intents.
 Examples:
-- "Got it! Avoiding geography questions from now on."
-- "Making questions harder - challenge accepted!"
 - "Thanks for the feedback!"
 - "I'll skip this question."
 
@@ -290,14 +283,11 @@ Respond in this exact JSON format:
 {{
     "intents": [
         {{
-            "intent_type": "answer|skip|rating|preference_change|start|explanation_request|quit|unclear",
+            "intent_type": "answer|skip|rating|start|explanation_request|quit|unclear",
             "extracted_data": {{
                 "answer": "text" (for answer),
                 "rating": 1-5 (for rating),
                 "feedback": "text" (for rating, optional),
-                "avoid_topics": ["topic1"] (for preference_change),
-                "prefer_topics": ["topic1"] (for preference_change),
-                "difficulty": "harder|easier" (for preference_change),
                 "explanation_request": "what to explain" (for explanation_request)
             }},
             "confirmation_message": "message to user" or null

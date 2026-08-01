@@ -159,6 +159,10 @@ def provider_for_model(model_id: str) -> str:
         return "moonshot"
     if "nova" in lowered:
         return "amazon"
+    if "deepseek" in lowered:
+        return "deepseek"
+    if "mistral" in lowered or "pixtral" in lowered:
+        return "mistral"
     return "openai"
 
 

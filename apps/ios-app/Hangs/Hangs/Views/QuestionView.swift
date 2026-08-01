@@ -437,6 +437,25 @@ struct QuestionView: View {
         .frame(maxHeight: .infinity)
     }
 
+    // MARK: - TEMP provenance badge (Bedrock gen test)
+
+    /// TEMP (Bedrock gen test): small caption naming the LLM that generated the
+    /// question (`generated_by` from the API, e.g. "bedrock:us.mistral…").
+    /// Remove before App Store release.
+    @ViewBuilder
+    private func generatedByBadge(_ question: Question, horizontalPadding: CGFloat) -> some View {
+        if let generatedBy = question.generatedBy {
+            Text(generatedBy)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(Theme.Hangs.Colors.ink.opacity(0.45))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, horizontalPadding)
+                .accessibilityHidden(true)
+        }
+    }
+
     // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)
 
     /// The stem scroll region: a hard floor (360pt, 300 on SE-class) at Anton 34
@@ -472,6 +491,9 @@ struct QuestionView: View {
                         .padding(.vertical, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    // TEMP (Bedrock gen test): provenance badge showing which
+                    // LLM generated the question — remove before App Store release.
+                    generatedByBadge(question, horizontalPadding: 28)
                 }
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
@@ -558,6 +580,9 @@ struct QuestionView: View {
                             }
                             .padding(.horizontal, 24)
                         }
+                        // TEMP (Bedrock gen test): provenance badge showing which
+                        // LLM generated the question — remove before App Store release.
+                        generatedByBadge(question, horizontalPadding: 24)
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }

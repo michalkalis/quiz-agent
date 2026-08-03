@@ -4,54 +4,66 @@
     "answer": "Canberra",
     "why_bad": "Boring 'what is the capital of' format. No narrative, no surprise, no delight. Pure rote memorization that feels like a geography textbook quiz.",
     "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
-    "red_flags": ["boring_format", "pure_memorization", "predictable"]
+    "red_flags": ["boring_format", "pure_memorization", "predictable"],
+    "fixed_question": "Which capital city exists only because Sydney and Melbourne couldn't stand the idea of the other one winning the title?",
+    "fixed_answer": "Canberra",
+    "why_fixed": "Same fact, but the player now starts from a wrong assumption (capital = the famous big city) and the answer overturns it with a retellable story; elimination gives a path beyond memory."
   },
   {
     "question": "Who wrote Romeo and Juliet?",
     "answer": "William Shakespeare",
     "why_bad": "Textbook question with a universally known answer. No interesting angle or framing. Feels like a school exam, not a pub quiz.",
     "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
-    "red_flags": ["boring_format", "predictable", "pure_memorization"]
+    "red_flags": ["boring_format", "predictable", "pure_memorization"],
+    "fixed_question": "In Shakespeare's original Romeo and Juliet, how old was Juliet — an age that would horrify modern audiences?",
+    "fixed_answer": "13",
+    "why_fixed": "When the obvious fact is universally known, shift to the surprising angle of the same subject: everyone knows the play, almost nobody knows the age; estimation gives a fair path and the reveal is retellable."
   },
   {
     "question": "What is the largest ocean on Earth?",
     "answer": "Pacific Ocean",
     "why_bad": "Simple recall question with no twist. Everyone who paid attention in school knows this. No surprise or engagement factor.",
     "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
-    "red_flags": ["boring_format", "predictable", "pure_memorization"]
+    "red_flags": ["boring_format", "predictable", "pure_memorization"],
+    "fixed_question": "All of Earth's land — every continent and every island — could fit inside one ocean with room to spare. Which ocean?",
+    "fixed_answer": "The Pacific",
+    "why_fixed": "The same 'largest ocean' fact becomes a scale surprise; the player can still reason toward the biggest ocean they know, but now the answer lands with a 'no way' instead of a shrug."
   },
   {
     "question": "In what year was the Declaration of Independence signed?",
     "answer": "1776",
     "why_bad": "Pure date memorization. The most boring type of history question. No narrative or interesting context provided.",
     "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
-    "red_flags": ["boring_format", "pure_memorization"]
+    "red_flags": ["boring_format", "pure_memorization"],
+    "fixed_question": "The USA celebrates its birthday on the 4th of July — yet most founding fathers actually signed the Declaration of Independence weeks later. In which month?",
+    "fixed_answer": "August",
+    "why_fixed": "The date stops being the answer and becomes the myth the question busts; 'weeks later' gives a fair estimation path and the player learns something worth retelling."
   },
   {
     "question": "In the video game Dark Souls III, what is the name of the final boss in the Ringed City DLC?",
     "answer": "Slave Knight Gael",
-    "why_bad": "Extremely niche. Only people who have played a specific DLC of a specific game would know this. Excludes 99% of quiz participants.",
+    "why_bad": "Extremely niche. Only people who have played a specific DLC of a specific game would know this. Excludes 99% of quiz participants. UNSALVAGEABLE: the fact itself excludes most players — no rephrasing widens it. Skip niche facts entirely and pick a different one.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["niche_reference"]
   },
   {
     "question": "Which professional darts player is nicknamed 'The Power'?",
     "answer": "Phil Taylor",
-    "why_bad": "Niche sports reference. Professional darts has a limited following, and player nicknames are known only to dedicated fans.",
+    "why_bad": "Niche sports reference. Professional darts has a limited following, and player nicknames are known only to dedicated fans. UNSALVAGEABLE: fan-lore like nicknames stays niche no matter how it is phrased. Skip such facts entirely.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["niche_reference"]
   },
   {
     "question": "What is the name of the rarest shiny variant in Pokemon Scarlet and Violet?",
     "answer": "Authentic Sinistea",
-    "why_bad": "Triple niche: requires knowledge of a specific game, the shiny mechanic, and rarity tiers within that mechanic. Alienates most people.",
+    "why_bad": "Triple niche: requires knowledge of a specific game, the shiny mechanic, and rarity tiers within that mechanic. Alienates most people. UNSALVAGEABLE: no rephrasing rescues a fact only insiders can know. Skip it.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["niche_reference"]
   },
   {
     "question": "In competitive StarCraft II, which Zerg unit composition is considered the strongest counter to a Protoss Skytoss army?",
     "answer": "Corruptor-Viper-Infestor",
-    "why_bad": "Requires deep knowledge of a specific esports meta. Meaningless jargon to anyone who doesn't play competitive StarCraft.",
+    "why_bad": "Requires deep knowledge of a specific esports meta. Meaningless jargon to anyone who doesn't play competitive StarCraft. UNSALVAGEABLE: the fact is jargon all the way down — skip it entirely.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["niche_reference"]
   },
@@ -60,82 +72,103 @@
     "answer": "W (from Wolfram)",
     "why_bad": "Pure memorization of a periodic table entry. No interesting framing or context. Feels like a chemistry homework problem.",
     "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
-    "red_flags": ["pure_memorization", "boring_format"]
+    "red_flags": ["pure_memorization", "boring_format"],
+    "fixed_question": "For over a century, light-bulb filaments glowed white-hot without melting thanks to the metal with the highest melting point of them all. Which metal?",
+    "fixed_answer": "Tungsten",
+    "why_fixed": "Symbol trivia was rote recall; the metal's record-holding property is the universal core of the same subject — everyday experience (glowing bulbs) gives the player a real path to the answer."
   },
   {
     "question": "What is the atomic number of iron?",
     "answer": "26",
     "why_bad": "Raw number recall with no narrative hook. There is nothing engaging about remembering an arbitrary number from the periodic table.",
     "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
-    "red_flags": ["pure_memorization", "boring_format"]
+    "red_flags": ["pure_memorization", "boring_format"],
+    "fixed_question": "Every atom of iron in your blood was forged in the same distant place. Where?",
+    "fixed_answer": "Inside a dying star",
+    "why_fixed": "An arbitrary number becomes an origin story connecting the player's own body to exploding stars; pop-science familiarity gives a path and the reveal is unforgettable."
   },
   {
     "question": "How many bones are in the adult human body?",
     "answer": "206",
-    "why_bad": "Arbitrary number memorization. Could be improved by framing around a surprising fact (e.g., 'babies have about 270 bones that fuse into how many?').",
+    "why_bad": "Arbitrary number memorization with no reveal — the number is the whole question.",
     "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
-    "red_flags": ["pure_memorization", "boring_format"]
+    "red_flags": ["pure_memorization", "boring_format"],
+    "fixed_question": "A newborn baby has about 270 bones, an adult only 206. What happened to the rest?",
+    "fixed_answer": "They fused together",
+    "why_fixed": "The number moves from answer to setup; the real question now has a 'wait, bones merge?!' reveal and a short spoken answer instead of raw digit recall."
   },
   {
     "question": "In what year did World War I begin?",
     "answer": "1914",
     "why_bad": "Pure date recall. A date question without any interesting framing or connection. History should tell stories, not quiz dates.",
     "violated_principles": ["Delight over Memorization", "Narrative over Facts"],
-    "red_flags": ["pure_memorization", "boring_format"]
+    "red_flags": ["pure_memorization", "boring_format"],
+    "fixed_question": "The world's first electric traffic light was switched on the same year a war broke out that would change everything. Which war?",
+    "fixed_answer": "World War I",
+    "why_fixed": "A bare date becomes a surprising collision of the mundane and the historic; the player can estimate from 'electric traffic light ≈ early 1900s' instead of reciting a memorized year."
   },
   {
     "question": "Which planet is closest to the Sun?",
     "answer": "Mercury",
     "why_bad": "Utterly predictable answer that virtually everyone knows. No challenge, no surprise, no delight. A question with zero engagement.",
     "violated_principles": ["Delight over Memorization", "Clever over Straightforward"],
-    "red_flags": ["predictable", "boring_format"]
+    "red_flags": ["predictable", "boring_format"],
+    "fixed_question": "The hottest planet in our Solar System is NOT the one closest to the Sun. Which planet holds the record?",
+    "fixed_answer": "Venus",
+    "why_fixed": "The boring known fact (Mercury is closest) becomes the wrong assumption the question overturns; elimination among famous planets gives a fair path and the explanation can deliver the why (a runaway greenhouse atmosphere)."
   },
   {
     "question": "What color are flamingos?",
     "answer": "Pink",
-    "why_bad": "The answer is in the common mental image of the animal. Zero challenge or surprise. Could be improved: 'What color are flamingos born?'",
+    "why_bad": "The answer is in the common mental image of the animal. Zero challenge or surprise.",
     "violated_principles": ["Clever over Straightforward"],
-    "red_flags": ["predictable"]
+    "red_flags": ["predictable"],
+    "fixed_question": "What color are flamingos when they hatch — before their diet kicks in?",
+    "fixed_answer": "Grey",
+    "why_fixed": "Flips the universally known image into a surprise (pink is not innate, it comes from their food) and the diet clue gives a reasoning path."
   },
   {
     "question": "How many sides does a triangle have?",
     "answer": "Three",
-    "why_bad": "The answer is literally in the name. This is not trivia; it is a definition. Insults the intelligence of any adult participant.",
+    "why_bad": "The answer is literally in the name. This is not trivia; it is a definition. Insults the intelligence of any adult participant. UNSALVAGEABLE: a definition has no hidden side to reveal — no rephrasing helps. Skip such 'facts' entirely.",
     "violated_principles": ["Clever over Straightforward", "Delight over Memorization"],
     "red_flags": ["predictable"]
   },
   {
     "question": "What do you call a baby dog?",
     "answer": "A puppy",
-    "why_bad": "Preschool-level question with universal knowledge. No trivia value whatsoever for an adult audience.",
+    "why_bad": "Preschool-level question with universal knowledge. No trivia value whatsoever for an adult audience. UNSALVAGEABLE: vocabulary everyone learned as a toddler cannot surprise — skip it entirely.",
     "violated_principles": ["Clever over Straightforward"],
     "red_flags": ["predictable"]
   },
   {
     "question": "What English word, derived from the Old French 'desporter' meaning 'to carry away,' became a Middle English term for 'pleasant pastime' before evolving to specifically mean physical competitive activities governed by rules?",
     "answer": "Sport",
-    "why_bad": "The etymology is interesting but the question is so long and convoluted that it loses all engagement. The answer is anticlimactically simple.",
+    "why_bad": "The etymology is interesting but the question is so long and convoluted that it loses all engagement, and the payoff is anticlimactically simple. UNSALVAGEABLE twice over: the build-up is exhausting AND the payoff is English word-origin trivia that dies in translation. Skip it.",
     "violated_principles": ["Clever over Straightforward"],
-    "red_flags": ["too_long", "boring_format"]
+    "red_flags": ["too_long", "boring_format", "language_dependent"]
   },
   {
     "question": "Which chemical compound, with the molecular formula C8H10N4O2, is a trimethylxanthine alkaloid that acts as a central nervous system stimulant by blocking adenosine receptors, and is the most widely consumed psychoactive substance on Earth?",
     "answer": "Caffeine",
     "why_bad": "Buries a simple answer under layers of unnecessary jargon. The question is exhausting to parse and the payoff does not match the effort.",
     "violated_principles": ["Clever over Straightforward", "Delight over Memorization"],
-    "red_flags": ["too_long", "pure_memorization"]
+    "red_flags": ["too_long", "pure_memorization"],
+    "fixed_question": "Which drug do most adults on Earth take every single morning, entirely legally, often before they've said a word to anyone?",
+    "fixed_answer": "Caffeine",
+    "why_fixed": "One sharp clue replaces seven; the reveal reframes something familiar (coffee is a drug) and the question survives a single listen while driving."
   },
   {
     "question": "What word in English rhymes with 'orange'?",
     "answer": "Sporange (a rare botanical term) or 'door hinge' as a near-rhyme",
-    "why_bad": "The common belief is that nothing rhymes with orange, but the 'correct' answer is an obscure word most people have never encountered. Feels like a trick question with an unsatisfying answer.",
+    "why_bad": "The common belief is that nothing rhymes with orange, but the 'correct' answer is an obscure word most people have never encountered. Feels like a trick question with an unsatisfying answer. UNSALVAGEABLE: rhyme trivia exists only in English and dies in a quiz served in Slovak or German — skip such facts, don't patch them.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["language_dependent", "ambiguous"]
   },
   {
     "question": "Which English word changes its pronunciation when the first letter is capitalized?",
     "answer": "Polish/polish",
-    "why_bad": "Only works in written English. In a voice-based quiz, participants cannot see the capitalization. Also highly language-dependent and excludes non-native speakers.",
+    "why_bad": "Only works in written English. In a voice-based quiz, participants cannot see the capitalization. Also highly language-dependent and excludes non-native speakers. UNSALVAGEABLE: spelling tricks are invisible to the ear and untranslatable — skip such facts entirely.",
     "violated_principles": ["Universal over Niche"],
     "red_flags": ["language_dependent", "ambiguous"]
   },
@@ -144,27 +177,36 @@
     "answer": "Koala",
     "why_bad": "Fascinating fact but a dead-end question: there is zero reasoning path to 'koala.' You either know this obscure biology fact or you're guessing randomly among thousands of animals. Interesting to learn, not fun to play.",
     "violated_principles": ["Engagement Path over Dead End"],
-    "red_flags": ["dead_end", "no_reasoning_path"]
+    "red_flags": ["dead_end", "no_reasoning_path"],
+    "fixed_question": "Australian police once worried that crime scenes could be contaminated by the fingerprints of which animal?",
+    "fixed_answer": "The koala",
+    "why_fixed": "Same fact, but the 'Australian' anchor narrows the field to a few iconic animals (a real elimination path) and the police angle turns a dead-end into a retellable story."
   },
   {
     "question": "Which English word has three consecutive double letters?",
     "answer": "Bookkeeper",
-    "why_bad": "Interesting linguistic fact, but impossible to work toward. There's no mental process that leads you from 'three consecutive double letters' to 'bookkeeper.' Pure memory search with no engagement path.",
-    "violated_principles": ["Engagement Path over Dead End"],
-    "red_flags": ["dead_end", "no_reasoning_path"]
+    "why_bad": "Interesting linguistic fact, but impossible to work toward and letter-count trivia is spelling-bound English-only knowledge. UNSALVAGEABLE: it stops existing when heard aloud or translated — skip such facts entirely.",
+    "violated_principles": ["Engagement Path over Dead End", "Universal over Niche"],
+    "red_flags": ["dead_end", "no_reasoning_path", "language_dependent"]
   },
   {
     "question": "Which creature's heart is located in its head?",
     "answer": "Shrimp",
-    "why_bad": "Quirky anatomy fact with no deductive path. Why would anyone guess 'shrimp' over 'ant' or 'jellyfish'? The question format ('Which creature...') combined with an arbitrary anatomical fact creates a dead end. Compare with: 'Which is bigger: a shrimp's heart or its brain?' — same fact, but now the player can reason.",
+    "why_bad": "Quirky anatomy fact with no deductive path. Why would anyone guess 'shrimp' over 'ant' or 'jellyfish'? The question format ('Which creature...') combined with an arbitrary anatomical fact creates a dead end.",
     "violated_principles": ["Engagement Path over Dead End", "Clever over Straightforward"],
-    "red_flags": ["dead_end", "no_reasoning_path", "structural_monotony"]
+    "red_flags": ["dead_end", "no_reasoning_path", "structural_monotony"],
+    "fixed_question": "Which is bigger: a shrimp's heart or its brain?",
+    "fixed_answer": "Its heart",
+    "why_fixed": "The same anatomy fact recast as a 50/50 comparison bet: the player can genuinely reason instead of blind-guessing across the animal kingdom, and the explanation still lands the reveal — both organs sit in its head."
   },
   {
     "question": "Which soft drink was originally marketed as a nerve tonic?",
     "answer": "Coca-Cola",
-    "why_bad": "The 'Which [product] was originally [surprising use]?' format is overused and creates structural monotony. While the fact is interesting, the player has no way to reason from 'nerve tonic' to 'Coca-Cola' — it's pure recall. Better framing: 'In the 1880s, a pharmacist created a nerve tonic that became the world's most famous drink. What is it?'",
+    "why_bad": "The 'Which [product] was originally [surprising use]?' format is overused and creates structural monotony, and the player has no way to reason from 'nerve tonic' to 'Coca-Cola' — pure recall.",
     "violated_principles": ["Engagement Path over Dead End"],
-    "red_flags": ["structural_monotony", "no_reasoning_path"]
+    "red_flags": ["structural_monotony", "no_reasoning_path"],
+    "fixed_question": "In the 1880s, an American pharmacist invented a 'nerve tonic' that today outsells every other drink on the planet. What is it?",
+    "fixed_answer": "Coca-Cola",
+    "why_fixed": "Chronological storytelling moves the reveal to the end, the 'outsells every other drink' clue opens an elimination path, and the opener escapes the overused 'Which product was originally…' template."
   }
 ]

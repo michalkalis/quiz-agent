@@ -281,10 +281,26 @@ def test_load_anti_patterns_renders_contrastive_fixed_block_when_present(
     ) in rendered
 
 
-def test_load_anti_patterns_keeps_legacy_format_without_fixed_fields() -> None:
-    """An entry without the fixed-* triad keeps today's BAD-only format —
-    the real anti_patterns.json has no such fields yet."""
-    rendered = load_anti_patterns(n=5)
+def test_load_anti_patterns_keeps_legacy_format_without_fixed_fields(
+    tmp_path, monkeypatch
+) -> None:
+    """An entry without the fixed-* triad keeps the BAD-only format — these are
+    the deliberately unsalvageable classes (niche, language-bound, definitions)
+    where no corrected version exists by design."""
+    data = [
+        {
+            "question": "Which pro darts player is nicknamed 'The Power'?",
+            "answer": "Phil Taylor",
+            "why_bad": "Niche fan-lore. UNSALVAGEABLE: skip such facts entirely.",
+        }
+    ]
+    (tmp_path / "anti_patterns.json").write_text(json.dumps(data), encoding="utf-8")
+    monkeypatch.setattr(
+        examples, "example_corpus_path", lambda filename: tmp_path / filename
+    )
+
+    rendered = load_anti_patterns(n=1)
 
     assert "FIXED (same fact, done right)" not in rendered
     assert "Why the fix works" not in rendered
+    assert "UNSALVAGEABLE" in rendered

@@ -63,36 +63,36 @@ def test_v3_prompt_offers_the_three_reasoning_patterns() -> None:
 
 
 def test_v3_prompt_caps_pure_recall_and_prefers_reasoning() -> None:
-    """The batch-shape rule is the only thing capping pure-recall questions; if
-    it is dropped the model is free to emit an all-recall (all-boring) batch.
-    (2026-07-30 consolidation: the old triple-quota wording collapsed into THE
-    CONTRACT's batch-shape rules — same intent, one statement.)"""
+    """Anti-recall steering survives as guidance (#135 D3, 2026-08-03: the
+    founder demoted the batch-shape QUOTAS — ≥4 patterns, ≤3 repeats — to
+    'vary structure' guidance; over-constraining the model was the concern).
+    What must not regress out: the variety instruction and the explicit
+    preference for reasoning patterns over recall shapes."""
     prompt = _read_v3_prompt()
-    assert "At least 4 different patterns per batch" in prompt
-    assert "no pattern more than 3 times" in prompt
-    assert "prefer reasoning patterns (7–13) over recall shapes (1–6)" in prompt
+    assert "Vary structure across the batch" in prompt
+    assert "patterns 7–13 usually beat 1–6" in prompt
 
 
 def test_v3_prompt_scores_answerability() -> None:
-    """Fair answerability is the in-prompt signal against dead-end recall:
-    the player must have a path to the answer besides memory."""
+    """The engagement path is the in-prompt signal against dead-end recall:
+    the player must have a path to the answer besides memory. Guidance since
+    #135 D3 (was hard rule 5), but the substance must stay in the prompt."""
     prompt = _read_v3_prompt()
-    assert "Fair answerability" in prompt
     assert "at least one path to the answer besides memory" in prompt
 
 
 def test_v3_prompt_states_engagement_path_principle() -> None:
-    """The engagement-path principle survives as a ranked clause of THE
-    CONTRACT's precedence order — fun never outranks a fair reasoning path.
-    (Was: 'Engagement Path over Dead End' constitutional principle.)"""
+    """The contract still separates non-negotiables from craft: hard rules
+    discard a question no matter how fun (#135 D3 replaced the five-step
+    precedence ladder with the hard/guidance split)."""
     prompt = _read_v3_prompt()
-    assert "(2) fair answerability" in prompt
+    assert "### Hard rules" in prompt
     assert "discarded no matter how fun" in prompt
 
 
 def test_v3_prompt_flags_structural_monotony() -> None:
-    """The batch-shape opener rules are the guard against the 'every question
-    starts with Which' failure mode."""
+    """The opener-variety guidance is the guard against the 'every question
+    starts with Which' failure mode (quota form demoted to guidance by
+    #135 D3)."""
     prompt = _read_v3_prompt()
-    assert 'At most 30% of the batch opens with "Which"' in prompt
-    assert "at least 4 different opener structures" in prompt
+    assert "mix opener words" in prompt

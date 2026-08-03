@@ -72,9 +72,9 @@ For EACH question follow this process:
    `reasoning.why_interesting`). No wrong assumption = plain recall = pick a
    different fact.
 3. Choose a pattern from the Pattern Library and draft the question.
-4. Check the draft against every rule in THE CONTRACT below; fix or discard on
-   any violation.
-5. Emit only questions that pass everything."""
+4. Check the draft against THE CONTRACT below: fix or discard on any
+   hard-rule violation; weigh the craft guidance with judgment.
+5. Emit only questions you would defend as genuinely fun."""
 
 
 def process_header_for_model(model_id: str) -> str:

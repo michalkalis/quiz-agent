@@ -77,6 +77,11 @@ _REQUIRED_FACT_FIRST_PLACEHOLDERS = (
 # LLM call instead of being pinned once per order.
 CACHE_BREAKPOINT_MARKER = "<!--CACHE_BREAKPOINT-->"
 
+# #135 D5 (founder, 2026-08-03) — default batch composition: ~80% free-text /
+# ~20% MCQ. Rendered into `{mcq_patterns_section}` as a soft target for
+# non-emphasis orders; MCQ-emphasis orders keep their hard ≥7/10 quota.
+MCQ_TARGET_FRACTION = 0.2
+
 
 # Issue #72 — per-question source attribution. Tokeniser for matching a
 # generated question back to the specific source Fact it was built from, so each
@@ -132,21 +137,21 @@ _V3_ESCAPE_HATCH_SECTION = """
 # and #99 G3 blind-rating 2026-07-15; examples verbatim from those sessions.
 _V3_CRAFT_GUARDS_SECTION = """
 
-**Craft guards — founder-calibrated illustrations (apply together with the rules above):**
+**Craft guards — founder-calibrated illustrations (apply together with the guidance above):**
 
-- **Stem leak** (rule 6). BAD: "The myth that Napoleon was short came from British wartime propaganda. Which country's cartoonists spread it?" → "Britain" — the stem already says it. Re-read every stem as the player: any word handing over the answer → rewrite.
-- **Deductive giveaway** (rule 6). BAD: "every British tank has a built-in boiling vessel — what beverage is it designed to make?" → tea (British + beverage: the stereotype answers for you). BAD: "the only U.S. state made up of two distinct peninsulas" → Michigan (the frame is a lookup key). BAD: "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation). Fix: ask about the surprising detail instead of the identity the frame gives away.
-- **Clue pile** (rule 7). BAD: "known for its ancient empire, iconic amphitheater, gladiators…" — one sharp hook, never a list of properties.
-- **Unanchored referent** (rule 8). BAD: "a citizen called a 'hippeus' owned which animal?" (term never glossed); a temperature record with no year or era; "appear the same size" with no vantage point. Context evicted from the answer by the word cap lands in the stem as a NEUTRAL anchor — never as a category hint, never dropped entirely.
-- **Telegraphed T/F → transform** (rule 15). "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options.
-- **Convoluted stem** (rule 10). BAD: "you're never more than six miles from a body of water" — double condition in imperial units; forces a second listen.
-- **Answer context payoff** (rule 9). `explanation` is read aloud after the reveal: 1–2 sentences of genuinely interesting context (where, how big, why surprising) — never empty, never a restatement.
+- **Stem leak** (hard rule 2). BAD: "The myth that Napoleon was short came from British wartime propaganda. Which country's cartoonists spread it?" → "Britain" — the stem already says it. Re-read every stem as the player: any word handing over the answer → rewrite.
+- **Deductive giveaway** (hard rule 2). BAD: "every British tank has a built-in boiling vessel — what beverage is it designed to make?" → tea (British + beverage: the stereotype answers for you). BAD: "the only U.S. state made up of two distinct peninsulas" → Michigan (the frame is a lookup key). BAD: "a Renaissance genius sketched a diving suit… who designed it?" → Leonardo da Vinci (famous-inventor reputation). Fix: ask about the surprising detail instead of the identity the frame gives away.
+- **Clue pile** (spoken clarity). BAD: "known for its ancient empire, iconic amphitheater, gladiators…" — one sharp hook, never a list of properties.
+- **Unanchored referent** (spoken clarity). BAD: "a citizen called a 'hippeus' owned which animal?" (term never glossed); a temperature record with no year or era; "appear the same size" with no vantage point. Context evicted from the answer by the word cap lands in the stem as a NEUTRAL anchor — never as a category hint, never dropped entirely.
+- **Telegraphed T/F → transform** (batch variety). "St Andrews originally had 22 holes — true or false?" becomes "How many holes did the Old Course at St Andrews originally have?" with options.
+- **Convoluted stem** (spoken clarity). BAD: "you're never more than six miles from a body of water" — double condition in imperial units; forces a second listen.
+- **Answer context payoff** (spoken clarity). `explanation` is read aloud after the reveal: 1–2 sentences of genuinely interesting context (where, how big, why surprising) — never empty, never a restatement.
 
-**Carve-outs — do NOT over-apply the rules:**
+**Carve-outs — do NOT over-apply the guidance:**
 
-- An **estimable numeric is a GOOD open question**: heart beats per day — count your pulse and multiply. Ban only numerics with no reasoning path (rule 5).
-- An **iconic source figure may keep imperial in parentheses**: "100 °F (38 °C)" (rule 10).
-- **Exact years are right** when the year IS the question (`year_guess`, rule 11) and in every entertainment date anchor."""
+- An **estimable numeric is a GOOD open question**: heart beats per day — count your pulse and multiply. Avoid only numerics with no reasoning path.
+- An **iconic source figure may keep imperial in parentheses**: "100 °F (38 °C)".
+- **Exact years are right** when the year IS the question (`year_guess`) and in every entertainment date anchor."""
 
 
 class MCQQuestionItem(BaseModel):
@@ -1333,10 +1338,13 @@ class AdvancedQuestionGenerator:
         the order prompt declares MULTIPLE-CHOICE EMPHASIS" — a condition
         the generation LLM can never observe, because the order prompt is
         not part of the generation prompt (#42 task 42.20 blocker, root
-        cause D). Unbiased runs (the default) keep the diversity rule
-        untouched.
+        cause D).
 
-        Issue #42 tasks 42.9b + 42.20 blocker fix.
+        Default (non-emphasis) orders get the #135 D5 batch composition
+        instead: ~80% free-text / ~20% MCQ (``MCQ_TARGET_FRACTION``) — a
+        soft target, not a quota (D3: guidance over guardrails).
+
+        Issue #42 tasks 42.9b + 42.20 blocker fix; #135 D5 (2026-08-03).
         """
         if not mcq_patterns:
             return ""
@@ -1435,6 +1443,15 @@ class AdvancedQuestionGenerator:
                 "PATTERN DIVERSITY RULE's per-pattern cap for this order — "
                 "repeating them is expected and correct. Emit "
                 "`possible_answers` for every question using one of them.",
+                "",
+            ]
+        else:
+            lines += [
+                "**Batch composition (default):** aim for roughly "
+                f"{MCQ_TARGET_FRACTION:.0%} of the batch — about 1 in 5 "
+                "questions — using one of the MCQ patterns below; keep the "
+                "rest free-text. A soft target, not a quota: never force a "
+                "fact into an MCQ shape it doesn't suit.",
                 "",
             ]
         lines += [

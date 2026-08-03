@@ -77,7 +77,8 @@ def test_craft_guard_rules_always_on_in_contract(
     assert "no answer word (or derivative" in prompt          # stem leak
     assert "ONE sharp clue per stem" in prompt                # one sharp hook
     assert "the wrong assumption the player starts from" in prompt
-    assert "something the player has heard of" in prompt      # gettable answer
+    # ("answer must be something the player has heard of" was dropped
+    # entirely by founder decision — #135 D3, 2026-08-03.)
     assert "genuinely ~50/50" in prompt                       # T/F discipline
     assert "at least one path to the answer besides memory" in prompt
     assert "1–2 spoken sentences" in prompt                   # context payoff

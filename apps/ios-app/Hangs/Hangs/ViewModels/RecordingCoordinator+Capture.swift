@@ -248,10 +248,16 @@ extension RecordingCoordinator {
         case 1:
             setErrorMessage(String(localized: "Sorry, I didn't catch that. Please try again.", comment: "Transcription failure tier 1: ask the user to retry"))
             transition(to: .askingQuestion)
+            // Re-arm the think/answer window: recording start zeroed both
+            // countdowns, so without this the timer pill disappears exactly when
+            // the retry banner appears and no retry window ever opens (founder
+            // 2026-08-03).
+            restartAnswerWindow()
 
         case 2:
             setErrorMessage(String(localized: "Having trouble hearing you. Try speaking closer to the mic.", comment: "Transcription failure tier 2: suggest speaking closer to the mic"))
             transition(to: .askingQuestion)
+            restartAnswerWindow()
 
         default:
             consecutiveTranscriptionFailures = 0

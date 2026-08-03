@@ -155,6 +155,11 @@ final class RecordingCoordinator: ObservableObject {
     let startAutoStopRecordingTimer: @MainActor () -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
+    /// Re-arms the think/answer window (`startRecordingOrTimer`) after a
+    /// recoverable transcription failure — without it the countdown pill
+    /// vanishes the moment the "didn't catch that" banner appears and the
+    /// user has no retry window (founder 2026-08-03).
+    let restartAnswerWindow: @MainActor () -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -189,7 +194,8 @@ final class RecordingCoordinator: ObservableObject {
         cancelThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
-        stopSilenceDetectionListening: @escaping @MainActor () -> Void
+        stopSilenceDetectionListening: @escaping @MainActor () -> Void,
+        restartAnswerWindow: @escaping @MainActor () -> Void
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -224,6 +230,7 @@ final class RecordingCoordinator: ObservableObject {
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
+        self.restartAnswerWindow = restartAnswerWindow
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

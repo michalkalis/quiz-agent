@@ -63,11 +63,16 @@ class TopUpStage:
         dedup_stage,
         floor_fraction: float = FLOOR_FRACTION,
         max_rounds: int = MAX_TOPUP_ROUNDS,
+        answerability_stage=None,
     ) -> None:
         self._generation_stage = generation_stage
         self._verification_stage = verification_stage
         self._scoring_stage = scoring_stage
         self._dedup_stage = dedup_stage
+        # #135 D10 — optional; when present, top-up rounds re-apply the
+        # round-trip check to the new tail, mirroring the main walk's
+        # dedup → answerability → verify → score order.
+        self._answerability_stage = answerability_stage
         self._floor_fraction = floor_fraction
         self._max_rounds = max_rounds
 
@@ -99,6 +104,10 @@ class TopUpStage:
             # (now dedup-filtered) tail needs to pay for verify/score.
             old_kept = ctx.questions[:n_old]
             ctx.questions = ctx.questions[n_old:]
+            if self._answerability_stage is not None:
+                cost_cents += (
+                    await self._answerability_stage.run(ctx, sink)
+                ).cost_cents
             cost_cents += (await self._verification_stage.run(ctx, sink)).cost_cents
             cost_cents += (await self._scoring_stage.run(ctx, sink)).cost_cents
             ctx.questions = old_kept + ctx.questions

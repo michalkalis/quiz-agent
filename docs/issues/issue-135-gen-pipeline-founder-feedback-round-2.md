@@ -22,27 +22,37 @@ Founder reviewed the deep-review report (`docs/research/gen-pipeline-deep-review
 
 ## Tasks
 
-- [ ] T1 — Rewrite `question_generation_v3_fact_first.md`: generic persona (D2), hard-rules→guidance split (D3: hard = leakage rule 6 + grounding-in-fact-first + response format; everything else guidance), pattern library as inspiration (D4). Keep cache breakpoint layout.
-- [ ] T2 — Make `GEN` (and critique/judge roles) cleanly configurable per run/order (env or order param via the factory registry, `resolve_model` path); add GLM-5.1 / Kimi K3 / DeepSeek OpenRouter slugs to `_REMAP_OPENROUTER` (verify live slugs first).
-- [ ] T3 — Default type mix 80/20 text/MCQ at batch/pack composition level (D5).
-- [ ] T4 — Early answerability round-trip check after dedup, all types, cheap model (D10).
-- [ ] T5 — Selector diet per D6 (confirmed) + ranking unification (approved earlier). Record the old→new values in § Setting changes and keep them config-switchable.
-- [ ] T6 — Gate redesign per D7 (confirmed): 5 dims, 3 judges × 1 call, reasoning-first, Gemini temp 1.0; calibration-set validation gate before flipping the default.
-- [ ] T7 — Fact-verify arbiter → cheaper model (D9); free-gen arm gets verification early.
+- [x] T1 — Rewrite `question_generation_v3_fact_first.md`: generic persona (D2), hard-rules→guidance split (D3: hard = grounding + no-giveaways + response format; everything else guidance), pattern library as inspiration (D4). Cache breakpoint layout kept. **Also applied to `question_generation_entertainment.md`** (shares the injected craft-guards block, which now references the new rule names — leaving it on the old numbered contract would have made those references dangle; entertainment keeps a 4th hard rule: voice-servable format). Prompt tests updated to the new contract.
+- [x] T2 — `GEN`/`CRITIQUE` stay env-per-run (`GENERATION_MODEL`/`CRITIQUE_MODEL`); judges via `JUDGE_MODELS`, verify via `VERIFY_MODEL`, answerability via `ANSWERABILITY_MODEL`. Slugs added to `_REMAP_OPENROUTER` (verified live 2026-08-03): `glm-5.1`, `kimi-k3`, `deepseek-v4-pro`, `deepseek-v4-flash`.
+- [x] T3 — Default composition ~80/20 text/MCQ as a soft target rendered into the MCQ prompt section (`MCQ_TARGET_FRACTION`); MCQ-emphasis orders keep their hard ≥7/10 quota.
+- [x] T4 — `AnswerabilityStage` after dedup (all types, one `deepseek-v4-flash` call/q, blind attempt + deterministic comparison; open shapes drop only on the model's own gave-up/unclear signal; checker failure keeps the question). Default ON, `ANSWERABILITY_CHECK=0` disables. Verified live 2026-08-03.
+- [x] T5 — Selector diet: overgen 3×→2×, duel ring 5→3 (both env-switchable, § Setting changes). Ranking unification in `question_critique_v2.md`: `educational_value` deleted, universality→`niche_reference` red flag (cap 4), `language_dependent`→red flag (cap 4). Pairwise duel prompt genericized (D2).
+- [~] T6 — Gate v2 CODE DONE behind `GATE_V2` (default OFF): 5 dims, 3 judges (GPT + Gemini + `deepseek-v4-pro`) × 1 reasoning-first call, Gemini temp 1.0. Validation script ready (`scripts/validate_gate_v2.py`, joins pilot questions + founder ratings). **Validation run BLOCKED: OpenRouter credits exhausted** (see § Status). ⚠ The "36-rated" calibration raw log is not in the repo (only the synthesis doc survives); the machine-readable ground truth is the 27-item pilot rating set 2026-07-11/12 — validation uses that.
+- [x] T7 — Fact + logical verify arbiter → `deepseek-v4-pro` (D9 carve-out; ~93 % lacnejšie než gemini-3.1-pro), `VERIFY_MODEL` env switches back. Free-gen arm early-verify ordering belongs to T8's A/B wiring.
 - [ ] T8 — Fact-first vs free-gen A/B wired into the blind-test round (D8); founder blind-rates.
 - [ ] T9 — Cost phase (D11/O5): measure per-step spend, decide EVAL model — after T1–T8 settle.
 - [ ] T10 — **Few-shot pool cleanup (own session — founder directive 2026-08-03).** The whole injected pool (32 rated golds + 14 FIXED pair variants) was run through the pipeline's own judging stage on 2026-08-03 — 2 judges (gpt-5.6-sol + gemini-3.1-pro-preview) × 7 dimensions, one call per dimension, plus the deterministic craft guards; full per-example scores, judge reasoning and format flags in **`docs/research/few-shot-examples-judged-2026-08-03.md`** (HTML twin in `docs/artifacts/`, throwaway). Results: 0/46 below the production gate (3.0/10 — gate is lenient by design), but **23/46 have ≥1 dimension ≤4** and 6 carry craft-guard flags. Worst: `gold-6` Olympic-elegance 3.64 (founder had 8) · `gold-3` Egypt butchers 4.93 · `gold-24` water-% 5.71 · `gold-21` chess (long_answer, 7-word answer — over the ≤6-word voice cap) · `gold-14` "spelled incorrectly" (stem_leak + pure English wordplay, conflicts with rule 12) · `gold-32` ARPANET year 5.79. Known false positive: `gold-19` Cleopatra stem_leak flag is an artifact of the comparison format (it is the top-scoring example, 8.86). Session scope: propose drop/rewrite for the weak tail, cross-check against the loosened contract (T1), then run the gap round (entertainment/sport/food/MCQ golds) to refill. **⚠ Founder caveat (2026-08-03): the examples may be OUTDATED — before any removals/rewrites land, the founder personally re-verifies the proposed set** (facts may have drifted since rating, and his calibration has moved since July). Deliver the proposal as an interactive review in chat, not a doc-only task.
 
 ## Setting changes (tracked — founder requirement 2026-08-03)
 
-Quality-relevant knob changes made under this issue, so a future quality regression can be traced to its cause. Fill in as T5/T6 land:
+Quality-relevant knob changes made under this issue, so a future quality regression can be traced to its cause:
 
 | Date | Setting | Old | New | Why | Revert |
 |---|---|---|---|---|---|
-| (T5) | overgeneration factor | 3× | 2× | call-count diet, founder 2026-08-03 | config |
-| (T5) | duel ring neighbours | 5 | 3 | call-count diet | config |
-| (T6) | gate dimensions | 7 | 5 (drop factual-certainty, drive-safety) | redundancy / founder call | prompt template history |
-| (T6) | gate call shape | 1 call/dim × 2 judges (14/q) | 1 call/judge × 3 judges (3/q) | call-count diet; validated on 36-rated set | config |
+| 2026-08-03 | overgeneration factor | 3× | 2× | call-count diet (D6, founder confirmed) | `OVERGEN_MULTIPLIER=3` |
+| 2026-08-03 | duel ring neighbours | 5 | 3 | call-count diet (D6) | `DUEL_RING_NEIGHBOURS=5` |
+| 2026-08-03 | fact/logical verify arbiter | gemini-3.1-pro-preview | deepseek-v4-pro | D9 carve-out ("overkill") | `VERIFY_MODEL=gemini-3.1-pro-preview` |
+| 2026-08-03 | critique ranking dims | 7 (s universal_appeal + educational_value) | 5 + red flags | ranking unification (D6) | git history `question_critique_v2.md` |
+| 2026-08-03 | default type mix | neriadené (pattern-driven) | ~80/20 text/MCQ soft target | D5 | `MCQ_TARGET_FRACTION` v `advanced_generator.py` |
+| 2026-08-03 | answerability round-trip | žiadny | ON, deepseek-v4-flash, po dedupe | D10/O3 | `ANSWERABILITY_CHECK=0` |
+| 2026-08-03 | generation contract | 15 hard rules + kvóty | 3 hard rules + craft guidance | D2/D3/D4 | git history prompt šablón |
+| (pending) | gate shape | 7 dim × 2 judges × 1 call/dim (14/q) | 5 dim × 3 judges × 1 call (3/q) | D7; čaká na kalibračnú validáciu | `GATE_V2` (default off) |
+
+## Status 2026-08-03 (agent run)
+
+- T1–T5, T7 shipped; T6 code shipped, default OFF.
+- **BLOCKER: OpenRouter kredity vyčerpané** — $29.57 z $30 minutých, zostáva ~$0.43. Drahšie modely (gpt-5.6-sol, gemini-3.1-pro) padajú s 402; deepseek prešiel. Blokuje: kalibračnú validáciu gate v2 (T6 flip), 5-model blind test + fact-first A/B (T8, D8), a prod generovanie s frontier sudcami vôbec. Po dobití: `cd apps/quiz-pack-api && LLM_GATEWAY=openrouter uv run --no-sync python scripts/validate_gate_v2.py`.
+- Gate v2 panel call overený živo na deepseek-v4-pro (všetkých 5 dimenzií parsovaných); answerability checker overený živo na deepseek-v4-flash.
 
 ## Future (out of scope here, founder wish 2026-08-03)
 

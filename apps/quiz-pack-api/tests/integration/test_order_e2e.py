@@ -503,8 +503,8 @@ async def test_order_e2e_full(
     # (#103 F5) always runs — a no-op (0 rounds) when nothing was dropped,
     # which is the case here since the mocked collaborators never drop.
     expected_steps = {
-        "sourcing", "generating", "verifying", "scoring", "dedup", "topup",
-        "persisting", "done",
+        "sourcing", "generating", "answerability", "verifying", "scoring",
+        "dedup", "topup", "persisting", "done",
     }
     received_steps = set(step_names)
     assert received_steps == expected_steps, (

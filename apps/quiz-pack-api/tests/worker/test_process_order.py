@@ -300,6 +300,8 @@ async def test_happy_path(
         "sourcing",
         "generating",
         "dedup",
+        # #135 D10 — round-trip check sits between dedup and verification.
+        "answerability",
         "verifying",
         "scoring",
         "topup",

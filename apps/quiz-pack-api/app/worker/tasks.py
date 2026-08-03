@@ -24,6 +24,7 @@ from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
 from app.orchestrator.stages import (
+    AnswerabilityStage,
     DedupStage,
     GenerationStage,
     PersistStage,
@@ -49,9 +50,14 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     initial pass.
 
     2026-08 perf fix: dedup runs right after generation, before verification
-    (1 call/q) and scoring (14 calls/q) — a question dedup would discard
-    anyway should never pay for either.
+    (1 call/q) and scoring — a question dedup would discard anyway should
+    never pay for either. #135 D10: the answerability round-trip check sits
+    between dedup and verification (EARLY, one cheap call/q) so an unclear or
+    unanswerable question never pays for Tavily/judges either; absent from
+    the walk entirely when ``ANSWERABILITY_CHECK=0`` or no checker is on ctx.
     """
+    from app import feature_flags
+
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     generation = GenerationStage(
         ctx["generator"],
@@ -61,15 +67,29 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
     scoring = ScoringStage(ctx["scorer"])
     dedup = DedupStage(ctx["question_store"], ctx.get("gold_standard_path"))
-    return [
+    answerability = None
+    if feature_flags.answerability_check() and ctx.get("answerability_checker"):
+        answerability = AnswerabilityStage(ctx["answerability_checker"])
+    stages: list[Stage] = [
         SourcingStage(ctx["fact_sourcer"]),
         generation,
         dedup,
+    ]
+    if answerability is not None:
+        stages.append(answerability)
+    stages += [
         verification,
         scoring,
-        TopUpStage(generation, verification, scoring, dedup),
+        TopUpStage(
+            generation,
+            verification,
+            scoring,
+            dedup,
+            answerability_stage=answerability,
+        ),
         PersistStage(session_factory),
     ]
+    return stages
 
 
 async def process_order(ctx: Dict[str, Any], order_id: str) -> None:

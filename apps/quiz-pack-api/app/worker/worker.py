@@ -90,6 +90,11 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # 46.B6 — logical-consistency judge for lateral puzzles; fail-safe to
     # `uncertain` when GOOGLE_API_KEY is absent.
     ctx["logical_verifier"] = LogicalConsistencyVerifier()
+    # #135 D10 — round-trip answerability checker (cheap blind-player proxy);
+    # stage inclusion is flag-gated in tasks._build_stages.
+    from app.verification.answerability import AnswerabilityChecker
+
+    ctx["answerability_checker"] = AnswerabilityChecker()
     ctx["scorer"] = MultiModelScorer()
     # 42.27 — DedupStage dedups against the canonical pgvector corpus (ChromaDB
     # is frozen read-only legacy). SyncPgvectorStore bridges DedupStage's sync

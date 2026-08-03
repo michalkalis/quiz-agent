@@ -27,7 +27,7 @@ Founder reviewed the deep-review report (`docs/research/gen-pipeline-deep-review
 - [x] T3 — Default composition ~80/20 text/MCQ as a soft target rendered into the MCQ prompt section (`MCQ_TARGET_FRACTION`); MCQ-emphasis orders keep their hard ≥7/10 quota.
 - [x] T4 — `AnswerabilityStage` after dedup (all types, one `deepseek-v4-flash` call/q, blind attempt + deterministic comparison; open shapes drop only on the model's own gave-up/unclear signal; checker failure keeps the question). Default ON, `ANSWERABILITY_CHECK=0` disables. Verified live 2026-08-03.
 - [x] T5 — Selector diet: overgen 3×→2×, duel ring 5→3 (both env-switchable, § Setting changes). Ranking unification in `question_critique_v2.md`: `educational_value` deleted, universality→`niche_reference` red flag (cap 4), `language_dependent`→red flag (cap 4). Pairwise duel prompt genericized (D2).
-- [~] T6 — Gate v2 CODE DONE behind `GATE_V2` (default OFF): 5 dims, 3 judges (GPT + Gemini + `deepseek-v4-pro`) × 1 reasoning-first call, Gemini temp 1.0. Validation script ready (`scripts/validate_gate_v2.py`, joins pilot questions + founder ratings). **Validation run BLOCKED: OpenRouter credits exhausted** (see § Status). ⚠ The "36-rated" calibration raw log is not in the repo (only the synthesis doc survives); the machine-readable ground truth is the 27-item pilot rating set 2026-07-11/12 — validation uses that.
+- [x] T6 — Gate v2 CODE DONE behind `GATE_V2`; **validation RAN 2026-08-03 → FAIL → default zostáva OFF** (presne per founder condition). Výsledky (n=27, `data/pilot-2026-07-11/gate_v2_validation.json`): v1 vs founder Spearman 0.161 / Pearson 0.371; v2 vs founder Spearman 0.026 / Pearson 0.186; v1↔v2 zhoda 0.879. Separácia founder-slabých (≤3) od dobrých (≥4.5): v1 = 1.89 b, v2 = 1.18 b — jeden panel-call na sudcu signál merateľne otupil (kontaminácia medzi dimenziami, ktorú per-dim calls riešili). Caveaty: n=27 s ceiling efektom (24/27 hodnotených 4+, len 3 slabé kotvy) → čísla sú šumové, ale pre-registrované pravidlo nepustí. ⚠ "36-rated" surový log nie je v repo; ground truth = 27 pilot ratingov. **Open option (issue § Notes fallback): medzistupeň 2 clustery (fun+craft) × 3 sudcovia = 6 calls/q (−57 %) — otestovať za ~2 $ na founder pokyn.**
 - [x] T7 — Fact + logical verify arbiter → `deepseek-v4-pro` (D9 carve-out; ~93 % lacnejšie než gemini-3.1-pro), `VERIFY_MODEL` env switches back. Free-gen arm early-verify ordering belongs to T8's A/B wiring.
 - [ ] T8 — Fact-first vs free-gen A/B wired into the blind-test round (D8); founder blind-rates.
 - [ ] T9 — Cost phase (D11/O5): measure per-step spend, decide EVAL model — after T1–T8 settle.
@@ -50,9 +50,10 @@ Quality-relevant knob changes made under this issue, so a future quality regress
 
 ## Status 2026-08-03 (agent run)
 
-- T1–T5, T7 shipped; T6 code shipped, default OFF.
-- **BLOCKER: OpenRouter kredity vyčerpané** — $29.57 z $30 minutých, zostáva ~$0.43. Drahšie modely (gpt-5.6-sol, gemini-3.1-pro) padajú s 402; deepseek prešiel. Blokuje: kalibračnú validáciu gate v2 (T6 flip), 5-model blind test + fact-first A/B (T8, D8), a prod generovanie s frontier sudcami vôbec. Po dobití: `cd apps/quiz-pack-api && LLM_GATEWAY=openrouter uv run --no-sync python scripts/validate_gate_v2.py`.
-- Gate v2 panel call overený živo na deepseek-v4-pro (všetkých 5 dimenzií parsovaných); answerability checker overený živo na deepseek-v4-flash.
+- T1–T7 shipped a nasadené (quiz-pack-api v29). T6 validácia RAN → FAIL → `GATE_V2` zostáva OFF (detail v T6 vyššie).
+- OpenRouter kredity: vyčerpané počas behu (~$0.43), founder dobil na $40 → validácia dobehla; zostatok ~$9 (validácia stála ~$1.4).
+- Gate v2 panel call overený živo na deepseek-v4-pro; answerability checker overený živo na deepseek-v4-flash.
+- Otvorené: T8 (fact-first A/B v blind teste), T9 (cost fáza), T10 (few-shot cleanup, interaktívne), + prípadný 2-cluster gate experiment (T6 fallback).
 
 ## Future (out of scope here, founder wish 2026-08-03)
 

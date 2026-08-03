@@ -102,12 +102,17 @@ async def test_prefetch_then_serve_synthesizes_once_for_a_slovak_digit_stem():
     prefetch_question_audio(service, SK_STEM, "sk")
     await _drain_prefetch()
 
+    # No translation record on the session → the route re-reads the question
+    # for possible MCQ options (2026-08-03); a text question adds none.
+    retriever = MagicMock()
+    retriever.get = MagicMock(return_value=_question("q_next", SK_STEM))
+
     await get_question_audio(
         request=_Req(),
         session_id=session.session_id,
         session_manager=manager,
         tts_service=service,
-        question_retriever=MagicMock(),
+        question_retriever=retriever,
         translation_service=None,
     )
 

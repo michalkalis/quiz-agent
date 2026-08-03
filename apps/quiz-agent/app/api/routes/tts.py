@@ -14,10 +14,11 @@ from ..deps import (
     get_translation_service,
     require_auth_or_grace,
 )
-from ...serializers import translated_question_payload
+from ...serializers import session_translation, translated_question_payload
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...tts.number_normalization import normalize_numbers_for_tts
+from ...tts.spoken_text import spoken_question_text
 from ...tts.service import TTSService
 from ...rate_limit import limiter
 
@@ -74,8 +75,11 @@ async def get_question_audio(
         raise HTTPException(status_code=400, detail="No active question in session")
 
     try:
-        if session.current_question_text:
+        translation_record = session_translation(session, session.current_question_id)
+        possible_answers = None
+        if session.current_question_text and translation_record:
             question_text = session.current_question_text
+            possible_answers = translation_record.get("possible_answers")
         else:
             current_question = await asyncio.to_thread(
                 question_retriever.get, session.current_question_id
@@ -85,22 +89,33 @@ async def get_question_audio(
                     status_code=404, detail="Current question not found"
                 )
 
-            translated_dict, translation_record = await translated_question_payload(
-                current_question,
-                session.language,
-                translation_service,
-                session_id=session_id,
-            )
-            question_text = translated_dict["question"]
+            if session.current_question_text:
+                # English session (no translation record): stem cached, MCQ
+                # options read from the source question.
+                question_text = session.current_question_text
+                possible_answers = current_question.possible_answers
+            else:
+                translated_dict, translation_record = await translated_question_payload(
+                    current_question,
+                    session.language,
+                    translation_service,
+                    session_id=session_id,
+                )
+                question_text = translated_dict["question"]
+                possible_answers = translated_dict.get("possible_answers")
 
-            session.current_question_text = question_text
-            session.current_question_translation = translation_record
-            session_manager.update_session(session)
+                session.current_question_text = question_text
+                session.current_question_translation = translation_record
+                session_manager.update_session(session)
+
+        # MCQ options are part of the spoken audio (founder 2026-08-03) but
+        # never of the cached display text.
+        speech_text = spoken_question_text(question_text, possible_answers)
 
         # Founder bug 2026-07-12: tts-1 reads embedded digits with English
         # pronunciation in Slovak text — spell them out for the TTS input only
         # (the cached display text keeps its numerals).
-        tts_text = normalize_numbers_for_tts(question_text, session.language)
+        tts_text = normalize_numbers_for_tts(speech_text, session.language)
 
         audio_data = await tts_service.synthesize_question(question_text=tts_text)
 

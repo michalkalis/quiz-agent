@@ -309,6 +309,7 @@ class QuizClient {
 ```python
 import requests
 
+
 class QuizClient:
     def __init__(self, base_url="http://localhost:8002/api/v1"):
         self.base_url = base_url
@@ -320,8 +321,8 @@ class QuizClient:
             json={
                 "max_questions": max_questions,
                 "difficulty": difficulty,
-                "mode": "single"
-            }
+                "mode": "single",
+            },
         )
         response.raise_for_status()
         data = response.json()
@@ -330,8 +331,7 @@ class QuizClient:
 
     def start_quiz(self):
         response = requests.post(
-            f"{self.base_url}/sessions/{self.session_id}/start",
-            json={}
+            f"{self.base_url}/sessions/{self.session_id}/start", json={}
         )
         response.raise_for_status()
         return response.json()
@@ -339,7 +339,7 @@ class QuizClient:
     def submit_input(self, user_input):
         response = requests.post(
             f"{self.base_url}/sessions/{self.session_id}/input",
-            json={"input": user_input}
+            json={"input": user_input},
         )
         response.raise_for_status()
         return response.json()
@@ -347,13 +347,11 @@ class QuizClient:
     def rate_question(self, rating, feedback=None):
         response = requests.post(
             f"{self.base_url}/sessions/{self.session_id}/rate",
-            json={
-                "rating": rating,
-                "feedback_text": feedback
-            }
+            json={"rating": rating, "feedback_text": feedback},
         )
         response.raise_for_status()
         return response.json()
+
 
 # Usage
 client = QuizClient()

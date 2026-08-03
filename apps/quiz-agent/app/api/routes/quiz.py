@@ -37,6 +37,7 @@ from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
 from ...quiz.flow import QuestionMismatch, QuizFlowService, prefetch_question_audio
+from ...tts.spoken_text import spoken_question_text
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -198,7 +199,12 @@ async def start_quiz(
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
             prefetch_question_audio(
-                tts_service, translated_question_dict["question"], session.language
+                tts_service,
+                spoken_question_text(
+                    translated_question_dict["question"],
+                    translated_question_dict.get("possible_answers"),
+                ),
+                session.language,
             )
 
         return InputResponse(

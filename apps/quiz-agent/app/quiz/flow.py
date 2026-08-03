@@ -18,6 +18,7 @@ from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
 from ..tts.number_normalization import normalize_numbers_for_tts
+from ..tts.spoken_text import spoken_question_text
 from ..tts.service import TTSService
 from ..usage.tracker import UsageTracker
 
@@ -295,7 +296,12 @@ class QuizFlowService:
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
             # giving OpenAI TTS time to finish in the background.
             prefetch_question_audio(
-                self.tts_service, translated_q_dict["question"], session.language
+                self.tts_service,
+                spoken_question_text(
+                    translated_q_dict["question"],
+                    translated_q_dict.get("possible_answers"),
+                ),
+                session.language,
             )
 
         return result

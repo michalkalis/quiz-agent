@@ -308,3 +308,65 @@ def test_cache_breakpoint_splits_only_for_anthropic_over_openrouter(monkeypatch)
 
     monkeypatch.setenv("LLM_GATEWAY", "direct")
     assert gen._prompt_message_content(prompt) == "STATICDYNAMIC"
+
+
+# --- 2026-08 follow-up: examples move below the breakpoint + rotate per call --
+
+
+@pytest.mark.parametrize(
+    "template_name",
+    ["question_generation_v3_fact_first.md", "question_generation_entertainment.md"],
+)
+def test_cache_breakpoint_now_precedes_the_example_sections(template_name):
+    """Founder call: examples rotate per LLM call, so they must live in the
+    dynamic (post-breakpoint) half of the prompt, not the cacheable static
+    prefix — otherwise a rotated sample would bust the provider prompt cache
+    on every single call instead of just not participating in it."""
+    from pathlib import Path
+
+    import app.generation.advanced_generator as adv_mod
+
+    prompt_path = (
+        Path(adv_mod.__file__).resolve().parents[2] / "prompts" / template_name
+    )
+    text = prompt_path.read_text(encoding="utf-8")
+
+    breakpoint_index = text.index(CACHE_BREAKPOINT_MARKER)
+    examples_index = text.index("{excellent_examples}")
+    source_facts_index = text.index("## SOURCE FACTS")
+
+    assert breakpoint_index < examples_index < source_facts_index
+
+
+def test_build_batch_prompt_resamples_examples_on_every_call(monkeypatch):
+    """Founder call, 2026-08: per-call example rotation over within-order
+    prompt-cache stability. `_build_batch_prompt` must NOT pin one sample and
+    reuse it — each call renders its own fresh gold/anti-pattern sample via
+    the prompt builder's own default (no shared `example_pack`)."""
+    import app.generation.prompt_builder as pb_mod
+
+    calls = iter(range(1, 100))
+    monkeypatch.setattr(
+        pb_mod, "load_gold_standard", lambda **kw: f"GOLD-SAMPLE-{next(calls)}"
+    )
+    monkeypatch.setattr(pb_mod, "load_anti_patterns", lambda *a, **kw: "")
+
+    gen = _make_generator()
+    kwargs = dict(
+        count=3,
+        difficulty="medium",
+        topics=None,
+        categories=None,
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=_SOURCE_FACTS,
+        mcq_patterns=None,
+    )
+    prompt1, *_ = gen._build_batch_prompt(**kwargs)
+    prompt2, *_ = gen._build_batch_prompt(**kwargs)
+
+    assert "GOLD-SAMPLE-1" in prompt1
+    assert "GOLD-SAMPLE-2" in prompt2
+    assert prompt1 != prompt2

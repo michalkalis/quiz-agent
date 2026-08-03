@@ -68,15 +68,6 @@ Choose whichever pattern makes the fact MOST engaging — patterns 7–13 usuall
 
 ---
 
-## Gold-Standard Examples (founder-rated 8+ of 10)
-
-> These demonstrate patterns and the quality bar only. NEVER reproduce, paraphrase, or closely imitate one — any question with >50% word overlap with an example is automatically rejected.
-
-{excellent_examples}
-{bad_examples_section}
-
----
-
 ## This Order
 
 **Difficulty:** {difficulty}
@@ -90,6 +81,15 @@ Choose whichever pattern makes the fact MOST engaging — patterns 7–13 usuall
 {classification_section}
 
 <!--CACHE_BREAKPOINT-->
+
+## Gold-Standard Examples (founder-rated 8+ of 10)
+
+> These demonstrate patterns and the quality bar only. NEVER reproduce, paraphrase, or closely imitate one — any question with >50% word overlap with an example is automatically rejected.
+
+{excellent_examples}
+{bad_examples_section}
+
+---
 
 ## SOURCE FACTS
 

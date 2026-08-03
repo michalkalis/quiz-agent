@@ -172,8 +172,13 @@ def test_mcq_question_type_surfaces_mcq_exemplars_deterministically() -> None:
         )
         # Schema demonstration: each rendered MCQ shows the keyed option shape.
         assert "A)" in rendered and "B)" in rendered
-        # Answer-stripping is preserved for the trailing pattern-only examples.
-        assert "Answer omitted" in rendered
+        # Every one of the n selected examples annotates: normally a
+        # `**WHY EXCELLENT:**` line (now rendered even for the answer-omitted
+        # tail), OR — only when that annotation text would leak the hidden
+        # answer — the old pattern-only note as a safeguard. Never neither.
+        assert (
+            rendered.count("**WHY EXCELLENT:**") + rendered.count("Answer omitted")
+        ) == n
 
 
 def test_question_type_text_leaves_sampling_unbiased() -> None:

@@ -21,7 +21,7 @@ import os
 from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder, STRUCTURED_MCQ_FORMAT_NOTE
 from .pattern_routing import verification_mode
-from .examples import example_corpus_path, load_gold_standard, load_anti_patterns
+from .examples import example_corpus_path
 from ..scoring.multi_model_scorer import resolve_correct_answer
 from .. import feature_flags
 
@@ -63,14 +63,18 @@ _REQUIRED_FACT_FIRST_PLACEHOLDERS = (
     "{process_header}",
 )
 
-# Splits the cacheable static prefix (role, contract, patterns, examples,
-# order specs) from per-call dynamic content (fact slice, MCQ pattern pin,
-# count). Under the OpenRouter gateway with an Anthropic generation model the
-# static half is sent as a `cache_control` block — the five concurrent MCQ
-# sub-batch calls share one prefix, and any sequential reuse (top-up,
-# follow-up order) reads it from cache instead of re-paying for it
-# (generation review section B). Other providers just get the marker stripped;
-# static-first ordering still helps their implicit prefix caching.
+# Splits the cacheable static prefix (role, contract, patterns, order specs)
+# from per-call dynamic content (gold/anti-pattern examples, fact slice, MCQ
+# pattern pin, count). Under the OpenRouter gateway with an Anthropic
+# generation model the static half is sent as a `cache_control` block — the
+# five concurrent MCQ sub-batch calls share one prefix, and any sequential
+# reuse (top-up, follow-up order) reads it from cache instead of re-paying
+# for it (generation review section B). Other providers just get the marker
+# stripped; static-first ordering still helps their implicit prefix caching.
+# Examples moved BELOW this marker deliberately (founder call, 2026-08):
+# per-call example rotation beats within-order prompt-cache stability, so
+# `excellent_examples`/`bad_examples_section` are resampled fresh on every
+# LLM call instead of being pinned once per order.
 CACHE_BREAKPOINT_MARKER = "<!--CACHE_BREAKPOINT-->"
 
 
@@ -436,21 +440,14 @@ class AdvancedQuestionGenerator:
         # `explanation` contract, 46.B3). Best-of-N / critique stays on the
         # closed slice; the open slice is generated directly so the sentence
         # answer survives the critique judge unchanged.
-        # 2026-07-30 — sample the gold/anti example sections ONCE per
-        # invocation and hand the same strings to every LLM call this order
-        # fans out into (MCQ sub-batches, top-ups). Keeps the static prompt
-        # prefix identical across the order's calls so provider-side prompt
-        # caching can hit (see CACHE_BREAKPOINT_MARKER); orders still rotate
-        # exemplars against each other because each invocation resamples.
-        example_pack = {
-            "excellent_examples": load_gold_standard(
-                topics=topics,
-                difficulty=difficulty,
-                question_type=question_type,
-            ),
-            "anti_examples": load_anti_patterns(),
-        }
-
+        # 2026-08 (founder call) — per-call example rotation replaces the old
+        # once-per-order `example_pack` sample. Every LLM call this order fans
+        # out into (open slice, best-of-N batch, each MCQ sub-batch) now
+        # resamples gold/anti-pattern examples independently via the prompt
+        # builder's own default (`excellent_examples`/`anti_examples` left
+        # unset below). The static prompt prefix stays cacheable regardless —
+        # see CACHE_BREAKPOINT_MARKER, which now sits ABOVE the example
+        # sections in the fact-first templates.
         open_questions: List[Question] = []
         if open_count > 0:
             print(f"Generating {open_count} open-shape questions...")
@@ -464,7 +461,6 @@ class AdvancedQuestionGenerator:
                 avoid_questions=avoid_questions,
                 user_bad_examples=user_bad_examples,
                 open_shape=True,
-                example_pack=example_pack,
             )
             count = max(0, count - open_count)
         if count == 0:
@@ -491,7 +487,6 @@ class AdvancedQuestionGenerator:
                 user_bad_examples=user_bad_examples,
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
-                example_pack=example_pack,
             )
             return open_questions + closed_questions
 
@@ -512,7 +507,6 @@ class AdvancedQuestionGenerator:
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
                 mcq_emphasis=mcq_emphasis,
-                example_pack=example_pack,
             )
 
             print(f"Generated {len(raw_questions)} raw questions")
@@ -583,7 +577,6 @@ class AdvancedQuestionGenerator:
                 source_facts=source_facts,
                 mcq_patterns=mcq_patterns,
                 mcq_emphasis=mcq_emphasis,
-                example_pack=example_pack,
             )
             return open_questions + closed_questions
 
@@ -599,7 +592,6 @@ class AdvancedQuestionGenerator:
         source_facts: Optional[list],
         mcq_patterns: set[str],
         question_type: str = "text",
-        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate ``count`` questions as one small sub-batch per MCQ pattern.
 
@@ -657,7 +649,6 @@ class AdvancedQuestionGenerator:
                     user_bad_examples=user_bad_examples,
                     source_facts=facts,
                     mcq_patterns={pattern},
-                    example_pack=example_pack,
                 )
             except Exception as exc:  # noqa: BLE001
                 # #72 P1.3 (= #42 task 42.31) — crash isolation. One pattern's
@@ -832,7 +823,6 @@ class AdvancedQuestionGenerator:
         mcq_patterns: Optional[set[str]] = None,
         mcq_emphasis: bool = False,
         open_shape: bool = False,
-        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate a batch of questions.
 
@@ -844,8 +834,12 @@ class AdvancedQuestionGenerator:
                 LLM is told to set ``reasoning.pattern_used`` to one of the
                 snake_case keys and emit ``possible_answers`` + key-letter
                 ``correct_answer`` when it picks one.
-            example_pack: Pre-sampled example sections shared by every call of
-                one order (prompt-cache stability); None = sample per call.
+
+        Gold/anti-pattern examples are sampled fresh for THIS call (founder
+        call, 2026-08: per-call rotation over within-order prompt-cache
+        stability) — ``_build_batch_prompt`` leaves ``excellent_examples``/
+        ``anti_examples`` unset so the prompt builder's own default sampling
+        fires every time.
         """
         prompt, prompt_version, use_open, use_fact_first = self._build_batch_prompt(
             count=count,
@@ -860,7 +854,6 @@ class AdvancedQuestionGenerator:
             mcq_patterns=mcq_patterns,
             mcq_emphasis=mcq_emphasis,
             open_shape=open_shape,
-            example_pack=example_pack,
         )
 
         # Call LLM
@@ -898,7 +891,6 @@ class AdvancedQuestionGenerator:
         mcq_patterns: Optional[set[str]] = None,
         mcq_emphasis: bool = False,
         open_shape: bool = False,
-        example_pack: Optional[dict] = None,
         response_format_section: Optional[str] = None,
     ):
         """Select the prompt template and render the generation prompt.
@@ -911,6 +903,11 @@ class AdvancedQuestionGenerator:
         ``response_format_section`` overrides the builder's prose-JSON output
         contract; the structured MCQ path passes the tool-schema note so the
         prompt never ships two conflicting output contracts (review A4).
+
+        Gold/anti-pattern examples are NOT pinned here (founder call,
+        2026-08): ``excellent_examples``/``anti_examples`` are left unset so
+        ``prompt_builder.build_prompt`` samples a fresh pair every call —
+        per-call rotation over within-order prompt-cache stability.
         """
         # Determine which prompt builder and version to use. The open/logical
         # branch (46.B4b) takes precedence and never uses source_facts — open
@@ -982,7 +979,6 @@ class AdvancedQuestionGenerator:
             avoid_questions=avoid_questions,
             user_bad_examples=user_bad_examples,
             generation_model=self.generation_model,
-            **(example_pack or {}),
             **extra_kwargs,
         )
         return prompt, prompt_version, use_open, use_fact_first
@@ -1113,7 +1109,6 @@ class AdvancedQuestionGenerator:
         user_bad_examples: Optional[List[str]],
         source_facts: Optional[list],
         mcq_patterns: set[str],
-        example_pack: Optional[dict] = None,
     ) -> List[Question]:
         """Generate one MCQ sub-batch via structured output (#42 task 42.25).
 
@@ -1132,6 +1127,11 @@ class AdvancedQuestionGenerator:
         ``LLM_GATEWAY=openrouter`` the model id becomes ``openai/gpt-4o``
         and function-calling is proxied reliably, whereas ``json_schema``
         proxying through OpenRouter is not guaranteed.
+
+        Each MCQ sub-batch call samples its own gold/anti-pattern examples
+        (founder call, 2026-08: per-call rotation) — ``_build_batch_prompt``
+        is not handed a shared example pack, so the concurrent sub-batch
+        calls each get an independent sample.
         """
         prompt, prompt_version, use_open, use_fact_first = self._build_batch_prompt(
             count=count,
@@ -1145,7 +1145,6 @@ class AdvancedQuestionGenerator:
             source_facts=source_facts,
             mcq_patterns=mcq_patterns,
             mcq_emphasis=True,
-            example_pack=example_pack,
             # A4: structured output is bound below — the prompt must carry the
             # tool-schema note, not the prose-JSON contract, or the model gets
             # two conflicting output contracts.

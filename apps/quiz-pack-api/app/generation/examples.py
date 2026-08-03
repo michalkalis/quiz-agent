@@ -41,6 +41,41 @@ def example_corpus_path(filename: str) -> Path:
 MIN_GOLD_RATING = 8
 
 
+def _diverse_sample(pool: list[dict], k: int) -> list[dict]:
+    """Randomly pick ``k`` examples from ``pool``, preferring pairwise-distinct
+    ``pattern`` values (secondary preference: distinct ``topic``).
+
+    Founder-approved diversity pass: a plain ``random.sample`` could (and
+    did) hand a batch four "Surprising Connection" exemplars back to back,
+    over-anchoring generation on one pattern shape. Greedily prefers an
+    unseen pattern each pick — guaranteed pairwise-distinct patterns whenever
+    the pool has >= k distinct pattern values — and falls back to preferring
+    an unseen topic once patterns run out. Still random within those
+    constraints: the pool is shuffled once up front, and the per-pick
+    priority sort is stable, so ties keep their shuffled order.
+    """
+    remaining = pool[:]
+    random.shuffle(remaining)
+    if k >= len(remaining):
+        return remaining
+
+    selected: list[dict] = []
+    used_patterns: set = set()
+    used_topics: set = set()
+    while len(selected) < k and remaining:
+        remaining.sort(
+            key=lambda ex: (
+                ex.get("pattern") in used_patterns,
+                ex.get("topic") in used_topics,
+            )
+        )
+        pick = remaining.pop(0)
+        selected.append(pick)
+        used_patterns.add(pick.get("pattern"))
+        used_topics.add(pick.get("topic"))
+    return selected
+
+
 def load_gold_standard(
     n: int = 4,
     topics: Optional[list[str]] = None,
@@ -102,14 +137,22 @@ def load_gold_standard(
         if len(diff_filtered) >= n // 2:  # Use filtered if enough matches
             examples = diff_filtered
 
-    # Sample n examples
-    selected = random.sample(examples, min(n, len(examples)))
+    # Sample n examples — diversity-aware (pairwise-distinct pattern, then
+    # topic) rather than pure random, so a batch never anchors on one pattern
+    # shape repeated across every exemplar.
+    selected = _diverse_sample(examples, min(n, len(examples)))
 
     # Format as prompt text
-    # First n-2 examples: full Q+A. Last 2: pattern-only (no answer) to reduce copying.
+    # First n-2 examples: full Q+A. Last 2: answer omitted (to reduce copying).
     # Issue #42 task 42.10: MCQ entries (type=text_multichoice + possible_answers)
     # render the options dict so the LLM sees the exact MCQ payload shape; the
     # `answer` field for MCQ examples is the key letter, value-resolved inline.
+    #
+    # Every example (including the answer-omitted ones) renders a
+    # `**WHY EXCELLENT:**` line so the craft reasoning still reaches the
+    # prompt even without the answer — UNLESS that annotation text itself
+    # contains the hidden answer (case-insensitive substring check), in which
+    # case the old pattern-only note is kept instead so nothing leaks.
     lines = []
     full_count = max(len(selected) - 2, 1)
     for i, ex in enumerate(selected, 1):
@@ -120,16 +163,27 @@ def load_gold_standard(
         if is_mcq:
             opts_inline = ", ".join(f'{k.upper()}) {v}' for k, v in options.items())
             lines.append(f"Options: {opts_inline}")
+            key = str(ex["answer"]).strip().lower()
+            answer_text = str(options.get(key, ex["answer"]))
+        else:
+            key = None
+            answer_text = str(ex.get("answer", ""))
+
+        why_excellent = ex.get("why_excellent", "")
+        leaks_answer = bool(answer_text.strip()) and (
+            answer_text.strip().lower() in why_excellent.lower()
+        )
+
         if i <= full_count:
             if is_mcq:
-                key = str(ex["answer"]).strip().lower()
-                resolved = options.get(key, ex["answer"])
-                lines.append(f'A: {key} ({resolved})')
+                lines.append(f'A: {key} ({answer_text})')
             else:
                 lines.append(f'A: {ex["answer"]}')
-            lines.append(f'**WHY EXCELLENT:** {ex["why_excellent"]}')
-        else:
+            lines.append(f'**WHY EXCELLENT:** {why_excellent}')
+        elif leaks_answer:
             lines.append('*(Answer omitted — study the question structure and pattern, not the answer.)*')
+        else:
+            lines.append(f'**WHY EXCELLENT:** {why_excellent}')
         lines.append("")
 
     return "\n".join(lines)
@@ -138,7 +192,11 @@ def load_gold_standard(
 def load_anti_patterns(n: int = 3) -> str:
     """Load n random anti-pattern examples.
 
-    Returns formatted string suitable for prompt injection.
+    Returns formatted string suitable for prompt injection. An entry that
+    carries a `fixed_question`/`fixed_answer`/`why_fixed` triad renders the
+    contrastive BAD -> FIXED shape (same fact, done right) so the LLM sees
+    the concrete fix, not just the failure; entries without that triad keep
+    the original BAD-only format.
     """
     with example_corpus_path("anti_patterns.json").open("r", encoding="utf-8") as f:
         examples = json.load(f)
@@ -149,9 +207,16 @@ def load_anti_patterns(n: int = 3) -> str:
     for ex in selected:
         lines.append(f'**BAD:** "{ex["question"]}" -> {ex["answer"]}')
         lines.append(f'**Why it\'s bad:** {ex["why_bad"]}')
-        violated = ", ".join(ex.get("violated_principles", []))
-        if violated:
-            lines.append(f'**Violated principles:** {violated}')
+        if ex.get("fixed_question") and ex.get("fixed_answer") and ex.get("why_fixed"):
+            lines.append(
+                f'**FIXED (same fact, done right):** '
+                f'"{ex["fixed_question"]}" -> {ex["fixed_answer"]}'
+            )
+            lines.append(f'**Why the fix works:** {ex["why_fixed"]}')
+        else:
+            violated = ", ".join(ex.get("violated_principles", []))
+            if violated:
+                lines.append(f'**Violated principles:** {violated}')
         lines.append("")
 
     return "\n".join(lines)

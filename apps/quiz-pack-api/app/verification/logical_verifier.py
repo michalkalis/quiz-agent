@@ -88,10 +88,14 @@ class LogicalConsistencyVerifier:
                 async_=True, timeout=llm_factory.GENERATION_TIMEOUT
             )
         try:
+            from app import feature_flags
+
             response = await self._client.chat.completions.create(
-                # 2026-08 registry fix: route through the factory VERIFY role
-                # (like FactVerifier) instead of a hardcoded model id.
-                model=llm_factory.resolve_model(llm_factory.VERIFY),
+                # #135 D9 (2026-08-03): same cheaper VERIFY role + env
+                # override as FactVerifier — the two arbiters move together.
+                model=llm_factory.resolve_model(
+                    feature_flags.verify_model() or llm_factory.VERIFY
+                ),
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content

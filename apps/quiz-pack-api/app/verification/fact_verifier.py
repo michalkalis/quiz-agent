@@ -1,8 +1,9 @@
-"""Automated fact verification using Tavily search + Gemini Flash.
+"""Automated fact verification using Tavily search + an LLM evidence arbiter.
 
 Two-stage pipeline:
 1. Tavily search — find evidence for/against the claimed answer (~$0.005/query)
-2. Gemini 2.5 Flash — analyze evidence if Tavily inconclusive (~$0.001/call)
+2. LLM arbiter (factory ``VERIFY`` role, ``VERIFY_MODEL`` env override) —
+   analyze evidence if Tavily inconclusive
 """
 
 import json
@@ -130,10 +131,15 @@ class FactVerifier:
                 async_=True, timeout=llm_factory.GENERATION_TIMEOUT
             )
         try:
+            from app import feature_flags
+
             response = await self._client.chat.completions.create(
-                # 2026-07-30 frontier refresh: verification correctness is
-                # quality-critical — factory VERIFY role, no flash-class model.
-                model=llm_factory.resolve_model(llm_factory.VERIFY),
+                # #135 D9 (2026-08-03): evidence arbitration runs on the
+                # cheaper factory VERIFY role (founder carve-out from the
+                # frontier-only policy); VERIFY_MODEL env switches it back.
+                model=llm_factory.resolve_model(
+                    feature_flags.verify_model() or llm_factory.VERIFY
+                ),
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content

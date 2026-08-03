@@ -13,10 +13,10 @@ Use these calibration anchors to keep your scoring honest:
 **Q:** "Which spice was so prized the Dutch traded Manhattan for a tiny Indonesian island to control it?"
 **A:** Nutmeg
 
-**Scores:** surprise_factor: 10, universal_appeal: 9, clever_framing: 9, educational_value: 10, clarity: 9, factual_accuracy: 9
-**Overall: 9.3** — Verdict: excellent
+**Scores:** surprise_factor: 10, clever_framing: 9, clarity: 9, factual_accuracy: 9, answerability: 5
+**Overall: 9.2** — Verdict: excellent
 
-**Why 9+:** Genuinely shocking historical trade-off. Manhattan is universally known. The answer (nutmeg) is mundane, creating maximum surprise. Teaches real history. Narrative framing ("so prized... traded Manhattan") is masterful.
+**Why 9+:** Genuinely shocking historical trade-off. Manhattan is universally known. The answer (nutmeg) is mundane, creating maximum surprise. Narrative framing ("so prized... traded Manhattan") is masterful.
 
 ---
 
@@ -25,10 +25,10 @@ Use these calibration anchors to keep your scoring honest:
 **Q:** "Which common yellow fruit is botanically classified as a berry, while strawberries are not?"
 **A:** Banana
 
-**Scores:** surprise_factor: 7, universal_appeal: 9, clever_framing: 7, educational_value: 7, clarity: 9, factual_accuracy: 9
-**Overall: 8.0** — Verdict: good
+**Scores:** surprise_factor: 7, clever_framing: 7, clarity: 9, factual_accuracy: 9, answerability: 7
+**Overall: 7.8** — Verdict: good
 
-**Why 7-8:** Moderately surprising (many people know the banana-berry fact now). Universal topic. Framing is decent but "Which common yellow fruit" is a near-giveaway. Educational but not deeply so.
+**Why 7-8:** Moderately surprising (many people know the banana-berry fact now). Framing is decent but "Which common yellow fruit" is a near-giveaway.
 
 ---
 
@@ -37,7 +37,7 @@ Use these calibration anchors to keep your scoring honest:
 **Q:** "How many hearts does an octopus have?"
 **A:** Three
 
-**Scores:** surprise_factor: 5, universal_appeal: 7, clever_framing: 4, educational_value: 6, clarity: 9, factual_accuracy: 10
+**Scores:** surprise_factor: 5, clever_framing: 4, clarity: 9, factual_accuracy: 10, answerability: 3
 **Overall: 5.8** — Verdict: acceptable
 
 **Why 5-6:** The fact is mildly interesting but widely known. "How many..." format is boring and predictable. No narrative framing. It's correct and clear, but wouldn't make anyone say "great question!" A mediocre pub quiz filler.
@@ -49,10 +49,10 @@ Use these calibration anchors to keep your scoring honest:
 **Q:** "What is the chemical symbol for gold?"
 **A:** Au
 
-**Scores:** surprise_factor: 2, universal_appeal: 5, clever_framing: 2, educational_value: 3, clarity: 10, factual_accuracy: 10
+**Scores:** surprise_factor: 2, clever_framing: 2, clarity: 10, factual_accuracy: 10, answerability: 2
 **Overall: 3.7** — Verdict: poor
 
-**Why 3-4:** Pure memorization from school chemistry. No surprise, no narrative, no delight. "What is the X of Y" is the most boring possible format. Some people know it, most don't care. Clear and correct, but that's the only positive.
+**Why 3-4:** Pure memorization from school chemistry. No surprise, no narrative, no delight. "What is the X of Y" is the most boring possible format. Clear and correct, but that's the only positive. Note the overall is far below the dimension mean — `overall_score` is your holistic judgment, and a question with nothing going for it beyond correctness must land in the poor band.
 
 ---
 
@@ -86,16 +86,7 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4: Predictable answer, little surprise
 - 1-2: Completely obvious or pure memorization
 
-### 2. Universal Appeal (1-10)
-**Does this work for an international audience without specialized knowledge?**
-
-- 9-10: Universally accessible, no cultural/niche barriers
-- 7-8: Broadly accessible, minor cultural context needed
-- 5-6: Requires some specific knowledge
-- 3-4: Niche audience (specific sport, game, local culture)
-- 1-2: Extremely niche, alienates most people
-
-### 3. Clever Framing (1-10)
+### 2. Clever Framing (1-10)
 **Is the question creatively framed, or boring/predictable format?**
 
 - 9-10: Creative framing, avoids cliches, engaging wording
@@ -104,17 +95,8 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4: Boring "What is..." or "Who wrote..." format
 - 1-2: Pure memorization question, no narrative
 
-### 4. Educational Value (1-10)
-**Do people learn something interesting, or is it just trivia?**
-
-- 9-10: Teaches fascinating fact or connection, memorable
-- 7-8: Interesting information, educational
-- 5-6: Some learning value
-- 3-4: Trivial information, low value
-- 1-2: No educational value, arbitrary fact
-
-### 5. Clarity (1-10)
-**Is the question clear and unambiguous? It is heard ONCE, by a non-native English listener, while driving.**
+### 3. Clarity (1-10)
+**Is the question clear and unambiguous? It is read aloud and must land on a single listen.**
 
 - 9-10: Crystal clear, no ambiguity
 - 7-8: Clear with minor potential confusion
@@ -127,7 +109,7 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4 clarity: "a citizen called a 'hippeus' was defined by owning which animal" (term never glossed — the solver has no foothold)
 - 3-4 clarity: "The Sun and Moon appear almost exactly the same size" with no vantage point (from where? for whom?)
 
-### 6. Factual Accuracy (1-10)
+### 4. Factual Accuracy (1-10)
 **Is the stated correct answer actually correct? Are the facts in the question accurate?**
 
 - 9-10: Verified, unambiguously correct
@@ -136,7 +118,7 @@ Rate the question on these dimensions (1-10 scale):
 - 3-4: Contains inaccuracies or misleading claims
 - 1-2: The stated answer is wrong or the question contains factual errors
 
-### 7. Answerability / Engagement Path (1-10)
+### 5. Answerability / Engagement Path (1-10)
 **Can the player reason, estimate, or deduce toward the answer?**
 
 - 9-10: Multiple reasoning paths to the answer (estimation, elimination, deduction)
@@ -163,11 +145,12 @@ Check for these common problems:
 - "What year did..."
 - "Which author..."
 
-**Niche Reference** (-3 points from Universal Appeal)
-- Video games, specific sports stats, obscure films
+**Niche Reference** (add "niche_reference" to red_flags; cap overall_score at 4)
+- Universality is not a scored virtue — its ABSENCE is a defect (2026-08-03 ranking unification)
+- Video games, specific sports stats, obscure films, US-only framing
 - Regional/country-specific content (unless topic is specifically about that region)
 
-**Pure Memorization** (-2 points from Educational Value)
+**Pure Memorization** (-2 points from Surprise Factor)
 - Chemical symbols, dates without context, rote facts
 - No narrative or interesting angle
 
@@ -175,9 +158,10 @@ Check for these common problems:
 - Common knowledge everyone knows
 - Answer obvious from question wording
 
-**Language-Dependent** (-3 points from Universal Appeal)
+**Language-Dependent** (add "language_dependent" to red_flags; cap overall_score at 4)
 - Answer depends on English spelling, letter counts, or word structure
 - Wordplay that only works in English (puns, anagrams, rhymes)
+- These questions are dropped from every non-English session, so they can never rank above portable ones
 
 **Ambiguous** (-3 points from Clarity)
 - Multiple plausible correct answers exist
@@ -231,7 +215,6 @@ Check for these common problems:
 
 **Convoluted Stem** (-2 points from Clarity, add "convoluted_stem" to red_flags)
 - Phrasing that needs a second pass when heard once: nested negation, double conditions ("you're never more than six miles from a body of water"), figures in units the listener must convert, numbers not written the way people say them
-- The question is heard once, by a non-native English listener, while driving
 
 ---
 
@@ -242,10 +225,9 @@ When the question's topic is "Logic" (number sequences, analogies, odd-one-out, 
 ### Reinterpreted Dimensions
 
 - **Surprise Factor** measures the **elegance of the pattern** or cleverness of the puzzle, not factual surprise
-- **Educational Value** measures **reasoning skill development**, not factual knowledge gained
 - **Clever Framing** still applies: creative presentation of the puzzle
-- **Universal Appeal** — logic questions are inherently universal. Exception: puzzles relying on English wordplay
 - **Clarity** — especially important. Sequences must be unambiguous (only one valid pattern)
+- Logic questions are inherently portable; puzzles relying on English wordplay still get the language_dependent red flag
 
 ### Logic-Specific Red Flags
 
@@ -280,9 +262,7 @@ Provide your evaluation in this EXACT JSON format:
 {{
   "scores": {{
     "surprise_factor": 6,
-    "universal_appeal": 7,
     "clever_framing": 5,
-    "educational_value": 6,
     "clarity": 8,
     "factual_accuracy": 9,
     "answerability": 5

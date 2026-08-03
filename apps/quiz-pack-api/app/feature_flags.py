@@ -145,3 +145,94 @@ def mcq_critique_telemetry() -> bool:
     over-generation the sub-batch path was built to replace.
     """
     return _truthy(os.getenv("MCQ_CRITIQUE_TELEMETRY"))
+
+
+# --- #135 gen-pipeline founder feedback round 2 (2026-08-03) -----------------
+# Every quality-relevant knob below is env-switchable on purpose: the founder's
+# condition on the call-count diet (D6) was that old and new values both stay
+# reachable via config, so a future quality drop can be traced by flipping one
+# env var, not by a git archaeology session. Old→new values are logged in
+# docs/issues/issue-135-… § Setting changes.
+
+
+def _int_env(name: str, default: int, minimum: int = 1) -> int:
+    """Integer env override with a floor; falls back to ``default`` on junk."""
+    raw = (os.getenv(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        return max(minimum, int(raw))
+    except ValueError:
+        return default
+
+
+def verify_model() -> str | None:
+    """#135 D9: override the fact/logical-verification arbiter model.
+
+    ``None`` (default) → the factory ``VERIFY`` role (deepseek-v4-pro since
+    2026-08-03, the founder's cheaper-arbiter carve-out). Set ``VERIFY_MODEL``
+    (e.g. ``gemini-3.1-pro-preview``) to switch back.
+    """
+    return os.getenv("VERIFY_MODEL") or None
+
+
+def answerability_model() -> str | None:
+    """#135 D10: override the round-trip answerability-check model.
+
+    ``None`` (default) → the factory ``ANSWERABILITY`` role.
+    """
+    return os.getenv("ANSWERABILITY_MODEL") or None
+
+
+def answerability_check() -> bool:
+    """#135 D10 (T4): early round-trip answerability check after dedup.
+
+    ``True`` by default — founder-approved as a real early gate ("placed as
+    EARLY as possible … also catches unclear phrasing/format"). Set
+    ``ANSWERABILITY_CHECK=0`` to remove the stage entirely.
+    """
+    return _default_on(os.getenv("ANSWERABILITY_CHECK"))
+
+
+def overgen_multiplier() -> int:
+    """#135 D6 (T5): best-of-N over-generation factor.
+
+    Default **2** (was 3 until 2026-08-03 — call-count diet, founder
+    confirmed). Set ``OVERGEN_MULTIPLIER=3`` to restore the old breadth.
+    """
+    return _int_env("OVERGEN_MULTIPLIER", default=2)
+
+
+def duel_ring_neighbours() -> int:
+    """#135 D6 (T5): pairwise-duel ring width (neighbours per candidate).
+
+    Default **3** (was 5 until 2026-08-03 — call-count diet, founder
+    confirmed). Set ``DUEL_RING_NEIGHBOURS=5`` to restore the old ring.
+    """
+    return _int_env("DUEL_RING_NEIGHBOURS", default=3)
+
+
+def gate_v2() -> bool:
+    """#135 D7 (T6): the redesigned scoring gate — 5 dimensions, a 3-family
+    judge panel (GPT + Gemini + cheap Chinese frontier), ONE call per judge
+    with reasoning-first structured output.
+
+    ``False`` by default — the founder's condition is a calibration-set
+    validation (old vs new vs founder ratings, ``scripts/validate_gate_v2.py``)
+    BEFORE the default flips. Set ``GATE_V2=1`` to enable.
+    """
+    return _truthy(os.getenv("GATE_V2"))
+
+
+def judge_models() -> list[str] | None:
+    """#135 T2: override the gate judge panel (comma-separated factory ids).
+
+    ``None`` (default) → role defaults (``SCORE_OPENAI``/``SCORE_GOOGLE`` and,
+    under ``GATE_V2``, ``SCORE_THIRD``). Example:
+    ``JUDGE_MODELS=gpt-5.6-sol,gemini-3.1-pro-preview,glm-5.1``.
+    """
+    raw = (os.getenv("JUDGE_MODELS") or "").strip()
+    if not raw:
+        return None
+    models = [m.strip() for m in raw.split(",") if m.strip()]
+    return models or None

@@ -25,9 +25,16 @@ fails loud otherwise; there is no silent fallback to another provider.
 
 **Model policy (founder, 2026-07-30):** the generation pipeline always uses
 the best available frontier models — quality over cost. Do not reintroduce
-mini/flash-class models into generation, critique, scoring, verification or
-translation roles. (Serve-time roles like EVAL have their own cost model and
-are decided separately.)
+mini/flash-class models into generation, critique, scoring or translation
+roles. (Serve-time roles like EVAL have their own cost model and are decided
+separately.)
+
+**Founder carve-outs (#135, 2026-08-03):** two verification-side roles are
+explicitly exempt from the frontier-only rule — ``VERIFY`` (evidence
+arbitration; "Gemini 3.1 Pro is overkill here") and ``ANSWERABILITY`` (the
+round-trip answerability check, where a cheap model is the *point*: it proxies
+a smart player, not an oracle). Both stay env-overridable via
+``app.feature_flags``.
 """
 
 import os
@@ -64,12 +71,27 @@ EVAL = "gpt-4o-mini"
 PARSE = "gpt-5.6-sol"
 TRANSLATE = "claude-opus-5"
 NORMALIZE = "gemini-3.1-pro-preview"
-VERIFY = "gemini-3.1-pro-preview"
+# #135 D9 (founder carve-out, 2026-08-03): evidence arbitration reads Tavily
+# snippets against a claim — frontier-class comprehension at ~7% of the
+# gemini-3.1-pro price. Family-disjoint from every blind-test generation
+# candidate (Anthropic/OpenAI/Google/GLM/Kimi), so no self-preference either.
+# VERIFY_MODEL env (feature_flags.verify_model) switches it back if
+# verification quality drops.
+VERIFY = "deepseek-v4-pro"
 SCORE_OPENAI = "gpt-5.6-sol"
 # Second judge family. Google, not Anthropic: generation now runs on a Claude
 # model, and an Anthropic judge scoring Anthropic output is the documented
 # self-preference bias (generation review 2026-07-30, section C).
 SCORE_GOOGLE = "gemini-3.1-pro-preview"
+# Third judge family for the gate-v2 panel (#135 D7, founder-confirmed
+# 2026-08-03: GPT + Gemini + a cheap Chinese frontier). DeepSeek rather than
+# GLM/Kimi because those two are 5-model blind-test generation candidates —
+# a judge family must stay disjoint from every possible generator.
+SCORE_THIRD = "deepseek-v4-pro"
+# #135 D10: round-trip answerability checker — a "smart player" proxy, cheap
+# by founder approval (2026-08-03). Flash-class is deliberate: if a capable
+# cheap model can't reach the answer blind, a player won't either.
+ANSWERABILITY = "deepseek-v4-flash"
 EMBED = "text-embedding-3-small"
 
 # Direct model id -> OpenRouter slug. Confirmed served via OpenRouter in the
@@ -97,6 +119,12 @@ _REMAP_OPENROUTER = {
     "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
     "kimi-k2.6": "moonshotai/kimi-k2.6",
     "glm-5.2": "z-ai/glm-5.2",
+    # #135 D1 blind-test candidates + D7/D9/D10 cheap-frontier roles. Slugs
+    # verified live against the OpenRouter catalog on 2026-08-03.
+    "glm-5.1": "z-ai/glm-5.1",
+    "kimi-k3": "moonshotai/kimi-k3",
+    "deepseek-v4-pro": "deepseek/deepseek-v4-pro",
+    "deepseek-v4-flash": "deepseek/deepseek-v4-flash",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "text-embedding-3-small": "text-embedding-3-small",
 }

@@ -377,7 +377,7 @@ class AdvancedQuestionGenerator:
         avoid_questions: Optional[List[str]] = None,
         user_bad_examples: Optional[List[str]] = None,
         enable_best_of_n: bool = True,
-        n_multiplier: int = 3,
+        n_multiplier: Optional[int] = None,
         min_quality_score: float = 7.0,
         source_facts: Optional[list] = None,
         mcq_patterns: Optional[set[str]] = None,
@@ -404,7 +404,10 @@ class AdvancedQuestionGenerator:
             avoid_questions: Previously asked questions to avoid
             user_bad_examples: Questions users rated poorly
             enable_best_of_n: Use Best-of-N selection (default: True)
-            n_multiplier: Generate this many times count (default: 3x)
+            n_multiplier: Generate this many times count. ``None`` (default)
+                resolves to ``feature_flags.overgen_multiplier()`` — 2× since
+                2026-08-03 (#135 D6 call-count diet, was 3×;
+                ``OVERGEN_MULTIPLIER`` env restores the old breadth)
             min_quality_score: Minimum acceptable score (default: 7.0/10)
             source_facts: Optional list of Fact objects for fact-first generation.
                 When provided, uses V3 fact-first prompt template instead of V2.
@@ -492,6 +495,8 @@ class AdvancedQuestionGenerator:
 
         if enable_best_of_n:
             # Stage 1: Generate N x count questions
+            if n_multiplier is None:
+                n_multiplier = feature_flags.overgen_multiplier()
             generate_count = count * n_multiplier
             print(f"Stage 1: Generating {generate_count} questions...")
 
@@ -1541,7 +1546,7 @@ class AdvancedQuestionGenerator:
             lines.append(f"Explanation: {question.explanation}")
         return "\n".join(lines)
 
-    _PAIRWISE_PROMPT = """You are choosing the better of two trivia questions for a voice-first quiz played hands-free while driving. Each question is heard ONCE by a non-native-English adult and answered by voice.
+    _PAIRWISE_PROMPT = """You are choosing the better of two trivia questions for a spoken quiz. Each question is read aloud and answered by voice, so it must land on a single listen.
 
 Judge on substance, in this order: the reveal (does the answer overturn an assumption worth retelling?), fairness (a reasoning path besides recall; for MCQ, plausible-but-eliminable options), one-listen clarity, retellability. Ignore superficial polish differences.
 
@@ -1579,7 +1584,10 @@ Respond in JSON only:
         final ordering comes from pairwise wins among the top ``2*count``
         absolute-scored candidates (ties broken by absolute score). Pairing is
         a deterministic ring — full round-robin when small enough, otherwise
-        each candidate meets its 5 ring-nearest peers; A/B presentation order
+        each candidate meets its ring-nearest peers
+        (``feature_flags.duel_ring_neighbours()`` — 3 since 2026-08-03, #135
+        D6 call-count diet, was 5; ``DUEL_RING_NEIGHBOURS`` env restores it);
+        A/B presentation order
         alternates to cancel position bias. A failed/unparseable verdict skips
         that pair only. Candidates whose critique failed (score None) sort
         behind every scored candidate and never displace one.
@@ -1601,8 +1609,9 @@ Respond in JSON only:
         if n * (n - 1) // 2 <= 80:
             pairs = {(i, j) for i in range(n) for j in range(i + 1, n)}
         else:
+            ring = feature_flags.duel_ring_neighbours()
             for i in range(n):
-                for d in range(1, 6):
+                for d in range(1, ring + 1):
                     j = (i + d) % n
                     pairs.add((min(i, j), max(i, j)))
 

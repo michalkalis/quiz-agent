@@ -285,8 +285,10 @@ async def test_veto_shadow_flags_starboard_class_but_keeps_it(
     """Gate for P4.1: with VETO_SHADOW on, a starboard-class recall question
     that clears the lenient overall floor is FLAGGED (surfaced in info) yet
     still KEPT — shadow mode logs would-drops, drops nothing — while a good
-    question alongside it is not flagged."""
+    question alongside it is not flagged. VETO_ENFORCE defaults ON since
+    2026-08, so it must be explicitly disabled to isolate shadow behaviour."""
     monkeypatch.setenv("VETO_SHADOW", "1")
+    monkeypatch.setenv("VETO_ENFORCE", "0")
     scores = {
         "q_0": {"gpt-4.1-mini": 4.0},  # clears the 3.0 floor — not score-dropped
         "q_1": {"gpt-4.1-mini": 8.0},  # good
@@ -341,6 +343,30 @@ async def test_veto_enforce_drops_flagged_question(
     assert "q_0" in ctx.scores
 
 
+@pytest.mark.asyncio
+async def test_veto_enforce_drops_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """2026-08: VETO_ENFORCE defaults ON (prod parity) — with no env var set
+    at all, the starboard-class question is dropped, not just shadow-flagged."""
+    monkeypatch.delenv("VETO_SHADOW", raising=False)
+    monkeypatch.delenv("VETO_ENFORCE", raising=False)
+    scores = {
+        "q_0": {"gpt-4.1-mini": 4.0},
+        "q_1": {"gpt-4.1-mini": 8.0},
+    }
+    dims = {
+        "q_0": {"surprise_delight": 2, "answerability": 2},
+        "q_1": {"surprise_delight": 8, "answerability": 9},
+    }
+    scorer = _FakeMultiModelScorer(scores, dims=dims)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["veto_dropped"] == 1
+
+
 # --- Craft guards in the stage (#72 reviewer upgrade, 2026-07-10) --------------
 #
 # Why these scenarios: the guards must be shadow-by-default (flag, keep) so the
@@ -361,7 +387,9 @@ def _leaky_question(idx: int) -> Question:
 async def test_craft_guard_shadow_flags_but_keeps(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("CRAFT_GUARDS_ENFORCE", raising=False)
+    """CRAFT_GUARDS_ENFORCE defaults ON since 2026-08 (prod parity); shadow
+    mode (flag, keep) now requires the explicit rollback value."""
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "0")
     scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
@@ -389,6 +417,24 @@ async def test_craft_guard_enforce_drops_stem_leak(
     assert [q.id for q in ctx.questions] == ["q_1"]
     assert result.info["craft_dropped"] == 1
     assert result.info["craft_flagged"] == 0
+
+
+@pytest.mark.asyncio
+async def test_craft_guard_enforce_drops_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2026-08: CRAFT_GUARDS_ENFORCE defaults ON (prod parity) — with no env
+    var set at all, the stem-leak question is dropped, not just flagged."""
+    monkeypatch.delenv("CRAFT_GUARDS_ENFORCE", raising=False)
+    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["craft_dropped"] == 1
 
 
 @pytest.mark.asyncio
@@ -475,9 +521,11 @@ async def test_undated_record_is_shadow_only_even_under_enforce(
 
 @pytest.mark.asyncio
 async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Default (flag off): the veto is not consulted at all — a starboard-class
-    question produces zero flags, so the change is dormant until Phase 6."""
+    """VETO_ENFORCE defaults ON since 2026-08 (prod parity), so "veto not
+    consulted at all" now requires explicitly disabling it (the old dormant
+    behaviour becomes the rollback path, not the default)."""
     monkeypatch.delenv("VETO_SHADOW", raising=False)
+    monkeypatch.setenv("VETO_ENFORCE", "0")
     scores = {"q_0": {"gpt-4.1-mini": 4.0}}
     dims = {"q_0": {"surprise_delight": 2, "clever_framing": 2}}
     scorer = _FakeMultiModelScorer(scores, dims=dims)

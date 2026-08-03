@@ -299,9 +299,9 @@ async def test_happy_path(
     expected_steps = [
         "sourcing",
         "generating",
+        "dedup",
         "verifying",
         "scoring",
-        "dedup",
         "topup",
         "persisting",
         "done",

@@ -10,15 +10,17 @@ allow a surprising angle/framing drawn from general knowledge **as long as the
 core factual claim still traces to a source fact**, so the grounding that v3 was
 built to guarantee is preserved.
 
-Because this is the highest-risk prompt change in the issue, it ships **dormant
-behind `V3_ESCAPE_HATCH`** and must be fully revertible. These assertions lock in
+Because this is the highest-risk prompt change in the issue, it ships **behind
+`V3_ESCAPE_HATCH`** and must be fully revertible. 2026-08: the flag defaults ON
+(prod parity — prod Fly secrets already set it); `V3_ESCAPE_HATCH=0` is the
+rollback lever back to the byte-identical old prompt. These assertions lock in
 the contract the plan requires:
 
-- flag OFF (default): the built v3 prompt is byte-identical to today — no escape
-  hatch text leaks in, so production behaviour is unchanged.
-- flag ON: the escape hatch appears, AND it keeps the grounding condition (the
-  answer must still trace to a source) — the hatch must never become a licence to
-  fabricate, which is the exact risk v3 exists to remove.
+- flag ON (default): the escape hatch appears, AND it keeps the grounding
+  condition (the answer must still trace to a source) — the hatch must never
+  become a licence to fabricate, which is the exact risk v3 exists to remove.
+- flag explicitly OFF: the built v3 prompt is byte-identical to the pre-hatch
+  prompt — no escape hatch text leaks in.
 
 The assertions build the prompt through the real `_build_batch_prompt` path
 (not a raw file read) so they exercise the flag wiring, not just the template.
@@ -81,19 +83,28 @@ def _build_v3_prompt() -> str:
     return prompt
 
 
-def test_escape_hatch_absent_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Default (dormant): no escape hatch text reaches the live v3 prompt, so
-    production output is unchanged until the founder flips the flag at Phase 6."""
+def test_escape_hatch_present_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """2026-08 default: with no env var set, the escape hatch reaches the live
+    v3 prompt (prod parity — see feature_flags._default_on)."""
     monkeypatch.delenv("V3_ESCAPE_HATCH", raising=False)
     prompt = _build_v3_prompt()
+    assert "Escape Hatch: A Surprising Angle" in prompt
+    # Sanity: we really did render the fact-first prompt.
+    assert "SOURCE FACTS" in prompt
+
+
+def test_escape_hatch_absent_when_flag_explicitly_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The rollback lever: `V3_ESCAPE_HATCH=0` reverts to the pre-hatch prompt."""
+    monkeypatch.setenv("V3_ESCAPE_HATCH", "0")
+    prompt = _build_v3_prompt()
     assert "Escape Hatch" not in prompt
-    # Sanity: we really did render the fact-first prompt (so the absence above
-    # is meaningful, not because the v3 template was skipped).
     assert "SOURCE FACTS" in prompt
 
 
 def test_escape_hatch_present_when_flag_on(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Flag on: the surprising-angle escape hatch appears in the prompt."""
+    """Flag explicitly on: the surprising-angle escape hatch appears in the prompt."""
     monkeypatch.setenv("V3_ESCAPE_HATCH", "1")
     prompt = _build_v3_prompt()
     assert "Escape Hatch: A Surprising Angle" in prompt

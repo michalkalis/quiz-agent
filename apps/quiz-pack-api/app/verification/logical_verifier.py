@@ -89,7 +89,9 @@ class LogicalConsistencyVerifier:
             )
         try:
             response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model("gemini-2.5-flash"),
+                # 2026-08 registry fix: route through the factory VERIFY role
+                # (like FactVerifier) instead of a hardcoded model id.
+                model=llm_factory.resolve_model(llm_factory.VERIFY),
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content

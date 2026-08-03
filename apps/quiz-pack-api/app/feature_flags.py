@@ -1,10 +1,13 @@
-"""Dormant feature flags for the #72 generation-quality overhaul.
+"""Feature flags for the #72 generation-quality overhaul.
 
-Every flag here defaults to today's production behaviour ("off"): with no env
-var set, each accessor returns the dormant value and **nothing in the pipeline
-reads it yet**, so flipping a flag changes no output. Phases 1–4 of issue #72
-wire each flag into its call site (Lever A → models, Lever B → escape hatch,
-Lever C → veto shadow); this module only declares them.
+2026-08: the quality-safeguard flags (``V3_ESCAPE_HATCH``, ``GEN_CRAFT_GUARDS``,
+``VETO_ENFORCE``, ``CRAFT_GUARDS_ENFORCE``) now default ON — prod Fly secrets
+already set them, so a local/CLI run with nothing set was silently missing the
+safeguards (Bedrock field test 2026-08-01). An explicit falsy env value
+("0"/"false"/"no"/"off") still disables any of them; see ``_default_on``.
+``EXPIRY_CLASSIFICATION`` and ``MCQ_CRITIQUE_TELEMETRY`` stay dormant/off by
+default (see ``_truthy``) — neither has been validated yet. Model overrides
+(``GENERATION_MODEL``/``CRITIQUE_MODEL``) stay ``None`` by default.
 
 Env-driven on purpose: the generation/scoring/verification layers configure
 themselves via inline ``os.getenv()`` (see ``answer_normalizer``,
@@ -22,10 +25,25 @@ from __future__ import annotations
 import os
 
 _TRUTHY = {"1", "true", "yes", "on"}
+_FALSY = {"0", "false", "no", "off"}
 
 
 def _truthy(value: str | None) -> bool:
     return (value or "").strip().lower() in _TRUTHY
+
+
+def _default_on(value: str | None) -> bool:
+    """Like `_truthy`, but the unset/blank default is True, not False.
+
+    2026-08: prod Fly secrets already set these quality-safeguard flags, so a
+    local/CLI run with nothing set was silently missing them (Bedrock field
+    test 2026-08-01). An explicit falsy value ("0"/"false"/"no"/"off",
+    case-insensitive) still disables the flag.
+    """
+    value = (value or "").strip().lower()
+    if not value:
+        return True
+    return value not in _FALSY
 
 
 def generation_model() -> str | None:
@@ -51,9 +69,11 @@ def v3_escape_hatch() -> bool:
     """Lever B (Phase 2): allow a surprising angle from general knowledge so
     long as the factual claim still traces to a source.
 
-    ``False`` (default) → the hard-bound ``v3_fact_first`` prompt only.
+    ``True`` by default (2026-08: prod parity — see ``_default_on``); set
+    ``V3_ESCAPE_HATCH=0``/``false`` to fall back to the hard-bound
+    ``v3_fact_first`` prompt only.
     """
-    return _truthy(os.getenv("V3_ESCAPE_HATCH"))
+    return _default_on(os.getenv("V3_ESCAPE_HATCH"))
 
 
 def gen_craft_guards() -> bool:
@@ -62,9 +82,10 @@ def gen_craft_guards() -> bool:
     named wrong assumption, gettable answer, T/F balance + transform-to-MCQ,
     no unguessable open numeric, answer-context payoff).
 
-    ``False`` (default) → the prompt is byte-identical to today.
+    ``True`` by default (2026-08: prod parity — see ``_default_on``); set
+    ``GEN_CRAFT_GUARDS=0``/``false`` for the byte-identical old prompt.
     """
-    return _truthy(os.getenv("GEN_CRAFT_GUARDS"))
+    return _default_on(os.getenv("GEN_CRAFT_GUARDS"))
 
 
 def veto_shadow() -> bool:
@@ -80,24 +101,23 @@ def veto_enforce() -> bool:
     """#72 reviewer upgrade (Phase 2): promote the Answerability/surprise veto
     from shadow to enforcing — flagged questions are DROPPED.
 
-    ``False`` (default) → shadow behaviour only (see ``veto_shadow``). Turning
-    this on implies consultation regardless of ``VETO_SHADOW``. Stays off
-    until the veto's calibration is validated against the founder's 36-rating
-    ground truth (plan Phase 2 validation).
+    ``True`` by default (2026-08: prod parity — see ``_default_on``); turning
+    this on implies consultation regardless of ``VETO_SHADOW``. Set
+    ``VETO_ENFORCE=0``/``false`` to fall back to shadow-only (see
+    ``veto_shadow``).
     """
-    return _truthy(os.getenv("VETO_ENFORCE"))
+    return _default_on(os.getenv("VETO_ENFORCE"))
 
 
 def craft_guards_enforce() -> bool:
     """#72 reviewer upgrade (Phase 2): promote the deterministic craft guards
     (stem answer-leak, T/F key-balance) from shadow to dropping.
 
-    ``False`` (default) → guards run in shadow: computed and counted in the
-    stage info, nothing dropped. The guards are lexical heuristics, so they
-    earn drop rights only after the Phase 2 validation run shows zero false
-    positives on the founder's 4-5/5 rated questions.
+    ``True`` by default (2026-08: prod parity — see ``_default_on``); set
+    ``CRAFT_GUARDS_ENFORCE=0``/``false`` to run guards in shadow only
+    (computed and counted in the stage info, nothing dropped).
     """
-    return _truthy(os.getenv("CRAFT_GUARDS_ENFORCE"))
+    return _default_on(os.getenv("CRAFT_GUARDS_ENFORCE"))
 
 
 def expiry_classification() -> bool:

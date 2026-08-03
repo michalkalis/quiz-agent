@@ -8,10 +8,11 @@ true/false, unguessable open numerics, missing post-answer context. Phase 2
 taught the reviewer to catch them; Phase 3 teaches the generator to not produce
 them — the same rules, injected into the live v3 prompt.
 
-Per the #72 reversibility contract the section ships **dormant behind
-`GEN_CRAFT_GUARDS`**: flag off (default) leaves the production prompt
-byte-identical; flag on injects the guard block. These assertions lock both
-halves in, through the real `_build_batch_prompt` path.
+Per the #72 reversibility contract the illustration block ships behind
+`GEN_CRAFT_GUARDS`. 2026-08: the flag now defaults ON (prod parity — prod Fly
+secrets already set it); `GEN_CRAFT_GUARDS=0` is the rollback lever back to
+the byte-identical old prompt. These assertions lock both halves in, through
+the real `_build_batch_prompt` path.
 """
 
 from __future__ import annotations
@@ -67,9 +68,10 @@ def test_craft_guard_rules_always_on_in_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """2026-07-30 consolidation: the guard RULES moved into THE CONTRACT and
-    are always on — flag off must still carry every rule's substance. One
-    assertion per rule so stripping any single one fails loudly (the
-    2026-05-20-class silent-regression lesson from P2.1)."""
+    are always on, independent of `GEN_CRAFT_GUARDS` (only the illustration
+    block is flag-gated) — must still carry every rule's substance regardless
+    of the flag's value. One assertion per rule so stripping any single one
+    fails loudly (the 2026-05-20-class silent-regression lesson from P2.1)."""
     monkeypatch.delenv("GEN_CRAFT_GUARDS", raising=False)
     prompt = _build_v3_prompt()
     assert "no answer word (or derivative" in prompt          # stem leak
@@ -91,12 +93,22 @@ def test_craft_guard_rules_always_on_in_contract(
     assert "10-second read-aloud self-test" in prompt
 
 
-def test_craft_guards_flag_off_hides_illustrations(
+def test_craft_guards_illustrations_present_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Default (dormant): the founder-calibrated illustration block stays out;
-    the rendered prompt is unchanged."""
+    """2026-08 default: with no env var set, the founder-calibrated
+    illustration block reaches the prompt (prod parity)."""
     monkeypatch.delenv("GEN_CRAFT_GUARDS", raising=False)
+    prompt = _build_v3_prompt()
+    assert "founder-calibrated illustrations" in prompt
+    assert "SOURCE FACTS" in prompt  # sanity: the v3 template really rendered
+
+
+def test_craft_guards_flag_explicitly_off_hides_illustrations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The rollback lever: `GEN_CRAFT_GUARDS=0` hides the illustration block."""
+    monkeypatch.setenv("GEN_CRAFT_GUARDS", "0")
     prompt = _build_v3_prompt()
     assert "founder-calibrated illustrations" not in prompt
     assert "SOURCE FACTS" in prompt  # sanity: the v3 template really rendered

@@ -9,14 +9,21 @@ lost questions to verification/scoring/dedup silently delivered short:
 marked the order `delivered` unconditionally, with no client-visible signal
 of the shortfall.
 
-This stage re-runs generation → verification → scoring → dedup for just the
+This stage re-runs generation → dedup → verification → scoring for just the
 shortfall, up to `max_rounds` extra rounds, merging survivors into
-`ctx.questions` each time (the merged list — not just the new batch — goes
-through `DedupStage` again so a top-up round can't reintroduce a duplicate
-of an already-accepted question). If the pack is still below
+`ctx.questions` before dedup each time (the merged list — not just the new
+batch — goes through `DedupStage` again so a top-up round can't reintroduce
+a duplicate of an already-accepted question). If the pack is still below
 `FLOOR_FRACTION * target_count` after every round, it raises instead of
 letting the worker mark the order `delivered` — the acceptance bar
 (`app/worker/tasks.py`) is "fail loud, don't ship a silently short pack".
+
+Dedup runs before verify/score (perf fix, 2026-08): DedupStage never drops a
+question it has already accepted in an earlier round — the corpus/gold data
+it reads is unchanged for the life of an order, so it is idempotent on the
+same input. That means the merged list's already-accepted prefix always
+survives dedup unchanged, so only the new (dedup-filtered) batch needs to
+pay for verify/score each round, not the whole merged list.
 """
 
 from __future__ import annotations
@@ -72,12 +79,11 @@ class TopUpStage:
         while len(ctx.questions) < target and rounds < self._max_rounds:
             shortfall = target - len(ctx.questions)
             survivors_so_far = ctx.questions
+            n_old = len(survivors_so_far)
             original_target = ctx.target_count
             ctx.target_count = shortfall
             try:
                 cost_cents += (await self._generation_stage.run(ctx, sink)).cost_cents
-                cost_cents += (await self._verification_stage.run(ctx, sink)).cost_cents
-                cost_cents += (await self._scoring_stage.run(ctx, sink)).cost_cents
             finally:
                 ctx.target_count = original_target
 
@@ -86,6 +92,16 @@ class TopUpStage:
             # round or the initial pass.
             ctx.questions = survivors_so_far + ctx.questions
             cost_cents += (await self._dedup_stage.run(ctx, sink)).cost_cents
+
+            # DedupStage is idempotent on already-accepted survivors (see
+            # module docstring), so the surviving list's first `n_old`
+            # entries are exactly `survivors_so_far`, unchanged. Only the new
+            # (now dedup-filtered) tail needs to pay for verify/score.
+            old_kept = ctx.questions[:n_old]
+            ctx.questions = ctx.questions[n_old:]
+            cost_cents += (await self._verification_stage.run(ctx, sink)).cost_cents
+            cost_cents += (await self._scoring_stage.run(ctx, sink)).cost_cents
+            ctx.questions = old_kept + ctx.questions
             rounds += 1
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",

@@ -269,9 +269,12 @@ def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
         # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
         SourcingStage(FactSourcer(), topic_pool=TopicPool()),
         generation,
+        # 2026-08 perf fix: dedup runs right after generation, before
+        # verification/scoring — a question dedup would discard anyway
+        # should never pay for either, mirroring the worker's `_build_stages`.
+        dedup,
         verification,
         scoring,
-        dedup,
         # 2026-07-27 live-run F-b: the CLI omitted TopUpStage, so every pack
         # that lost questions downstream just delivered short (the plain run
         # needed 11 batches for 100 questions). Same instances as the initial

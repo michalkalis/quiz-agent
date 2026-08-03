@@ -1,7 +1,7 @@
 """ARQ task: `process_order` — drives an order through `PackGenerator`.
 
 Issue #36 task 2.10 replaced the Phase-1 stub with a real orchestrator
-walk. The stages (sourcing → generating → verifying → scoring → dedup →
+walk. The stages (sourcing → generating → dedup → verifying → scoring →
 top-up → persisting) live in ``app/orchestrator/stages``; this module wires
 them to the ARQ ``ctx`` collaborators built in ``app.worker.worker.on_startup``
 and handles the worker-layer concerns the orchestrator deliberately
@@ -47,6 +47,10 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     stage instances for its backfill rounds (not fresh copies) — same
     collaborators, same config, so a top-up round behaves identically to the
     initial pass.
+
+    2026-08 perf fix: dedup runs right after generation, before verification
+    (1 call/q) and scoring (14 calls/q) — a question dedup would discard
+    anyway should never pay for either.
     """
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     generation = GenerationStage(
@@ -60,9 +64,9 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     return [
         SourcingStage(ctx["fact_sourcer"]),
         generation,
+        dedup,
         verification,
         scoring,
-        dedup,
         TopUpStage(generation, verification, scoring, dedup),
         PersistStage(session_factory),
     ]

@@ -66,28 +66,38 @@ def test_resolve_model_passes_unknown_through_in_openrouter(monkeypatch):
 def test_role_constants_are_frontier_only():
     """2026-07-30 founder policy: the generation pipeline always runs on the
     best available frontier models — a mini/flash-class id reappearing in a
-    generation-pipeline role is a regression, not a tweak. EVAL is the one
-    deliberate exception (serve-time hot path, own cost model)."""
+    generation-pipeline role is a regression, not a tweak. Deliberate
+    exceptions: EVAL (serve-time hot path, own cost model) and the #135
+    founder carve-outs of 2026-08-03 — VERIFY (cheaper evidence arbiter, D9)
+    and ANSWERABILITY (cheap round-trip checker is the point, D10)."""
     assert factory.GEN == "claude-fable-5"
     assert factory.CRITIQUE == "gpt-5.6-sol"
     assert factory.EVAL == "gpt-4o-mini"  # serve-time, decided separately
     assert factory.PARSE == "gpt-5.6-sol"
     assert factory.TRANSLATE == "claude-opus-5"
-    assert factory.VERIFY == "gemini-3.1-pro-preview"
+    # #135 D9 carve-out: cheap-frontier arbiter, family-disjoint from every
+    # blind-test generation candidate.
+    assert factory.VERIFY == "deepseek-v4-pro"
     assert factory.NORMALIZE == "gemini-3.1-pro-preview"
     assert factory.SCORE_OPENAI == "gpt-5.6-sol"
     # Google, not Anthropic: the generator is a Claude model, and a same-family
     # judge is the documented self-preference bias (review 2026-07-30, C).
     assert factory.SCORE_GOOGLE == "gemini-3.1-pro-preview"
+    # #135 D7: third judge family = cheap Chinese frontier, disjoint from the
+    # GLM/Kimi blind-test generation candidates.
+    assert factory.SCORE_THIRD == "deepseek-v4-pro"
+    assert factory.ANSWERABILITY == "deepseek-v4-flash"
     assert factory.EMBED == "text-embedding-3-small"
 
     banned = ("-mini", "-nano", "-flash", "-lite")
-    for role_name in ("GEN", "CRITIQUE", "PARSE", "TRANSLATE", "VERIFY",
-                      "NORMALIZE", "SCORE_OPENAI", "SCORE_GOOGLE"):
+    for role_name in ("GEN", "CRITIQUE", "PARSE", "TRANSLATE",
+                      "NORMALIZE", "SCORE_OPENAI", "SCORE_GOOGLE",
+                      "SCORE_THIRD"):
         model_id = getattr(factory, role_name)
         assert not any(b in model_id for b in banned), (
             f"{role_name}={model_id!r} is a mini/flash-class model — banned "
-            "in the generation pipeline (founder policy 2026-07-30)"
+            "in the generation pipeline (founder policy 2026-07-30; #135 "
+            "carve-outs cover only VERIFY and ANSWERABILITY)"
         )
 
 
@@ -102,6 +112,12 @@ def test_frontier_stack_resolves_on_openrouter(monkeypatch):
         factory.resolve_model("gemini-3.1-pro-preview")
         == "google/gemini-3.1-pro-preview"
     )
+    # #135 (2026-08-03) — new roles + blind-test candidates, slugs verified
+    # live against the OpenRouter catalog the same day.
+    assert factory.resolve_model("deepseek-v4-pro") == "deepseek/deepseek-v4-pro"
+    assert factory.resolve_model("deepseek-v4-flash") == "deepseek/deepseek-v4-flash"
+    assert factory.resolve_model("glm-5.1") == "z-ai/glm-5.1"
+    assert factory.resolve_model("kimi-k3") == "moonshotai/kimi-k3"
 
 
 def test_bedrock_ids_bypass_remap_and_report_provider(monkeypatch):

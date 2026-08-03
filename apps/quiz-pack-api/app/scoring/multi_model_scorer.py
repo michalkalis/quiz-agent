@@ -23,6 +23,21 @@
 
 Deterministic advisory dimensions (#42 task 42.6) are unchanged: computed in
 code, attached to every result entry.
+
+2026-08-03 gate v2 (#135 D7, founder-confirmed, behind ``GATE_V2``):
+
+- **5 dimensions, not 7.** ``factual_confidence`` dropped (redundant with the
+  fact-verification step; the MCQ "exactly one defensible option" concern is
+  covered by the deterministic distractor check + the round-trip answerability
+  check); ``driving_friendliness`` dropped as its own dimension — one-listen
+  clarity folds into the craft dimension (``clever_framing``).
+- **3 judge families × ONE call each** (GPT + Gemini + cheap Chinese
+  frontier), all dimensions in one structured output, **reasoning before
+  score per dimension** (O2). Gemini judges run at temperature 1.0 (O2).
+- Contamination mitigation for the single call: reasoning-first per dim +
+  explicit independence instruction + calibration-set validation
+  (``scripts/validate_gate_v2.py``) before the default flips.
+- ``overall_score`` stays code-computed; deterministic dims stay attached.
 """
 
 import asyncio
@@ -34,6 +49,7 @@ from typing import Optional
 
 from langchain_core.messages import HumanMessage
 
+from app import feature_flags
 from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
@@ -294,6 +310,105 @@ SCORING_DIMENSIONS: dict[str, dict[str, str]] = {
 }
 
 
+# --- Gate v2 (#135 D7, behind GATE_V2) ---------------------------------------
+# 5 dimensions. conversation_spark / surprise_delight / tellability /
+# answerability reuse the calibrated v1 rubrics verbatim; clever_framing keeps
+# the v1 craft-defect list (which already carries convoluted-stem and
+# clue-pile — that is where one-listen clarity now lives, D7).
+GATE_V2_DIMENSION_KEYS = (
+    "conversation_spark",
+    "surprise_delight",
+    "tellability",
+    "clever_framing",
+    "answerability",
+)
+
+_GATE_V2_HEADER = """You are evaluating ONE trivia quiz question on five quality dimensions. The question is read aloud to the player and answered by voice: it must land on a single listen, and the answer must be short and gradable.
+
+QUESTION: {question}
+{options_block}CORRECT ANSWER: {answer}
+DIFFICULTY: {difficulty}
+TOPIC: {topic}
+
+Score calibration: most questions land at 4-7. 9-10 is rare (top 5%). If you would score almost everything 7+, you are inflating — recalibrate against the anchors below.
+
+THE FIVE DIMENSIONS:
+
+{dims_block}
+
+Judge each dimension INDEPENDENTLY — a defect that belongs to one dimension must not bleed into the others. For EACH dimension write one short sentence of reasoning FIRST, then the score.
+
+Respond in JSON only, dimensions in the order listed, "reasoning" before "score" in every entry:
+{{"dimensions": {{{schema_entries}}}}}"""
+
+
+def _gate_v2_prompt(
+    question: str,
+    options_block: str,
+    answer: str,
+    difficulty: str,
+    topic: str,
+) -> str:
+    dims_block = "\n\n".join(
+        f"{i}. `{key}` — {SCORING_DIMENSIONS[key]['title']}:\n"
+        f"{SCORING_DIMENSIONS[key]['rubric']}"
+        for i, key in enumerate(GATE_V2_DIMENSION_KEYS, start=1)
+    )
+    schema_entries = ", ".join(
+        f'"{key}": {{"reasoning": "<one short sentence>", "score": <integer 1-10>}}'
+        for key in GATE_V2_DIMENSION_KEYS
+    )
+    return _GATE_V2_HEADER.format(
+        question=question,
+        options_block=options_block,
+        answer=answer,
+        difficulty=difficulty,
+        topic=topic,
+        dims_block=dims_block,
+        schema_entries=schema_entries,
+    )
+
+
+def _parse_gate_v2_response(text: str) -> dict[str, tuple[float, str]]:
+    """{dim_key: (score, reasoning)} for every valid entry; {} on no-parse."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    start = cleaned.find("{")
+    end = cleaned.rfind("}") + 1
+    if start == -1 or end <= start:
+        return {}
+    try:
+        data = json.loads(cleaned[start:end])
+    except json.JSONDecodeError:
+        return {}
+    dims = data.get("dimensions")
+    if not isinstance(dims, dict):
+        return {}
+    parsed: dict[str, tuple[float, str]] = {}
+    for key in GATE_V2_DIMENSION_KEYS:
+        entry = dims.get(key)
+        if not isinstance(entry, dict):
+            continue
+        score = entry.get("score")
+        if isinstance(score, str) and re.fullmatch(r"\d+(\.\d+)?", score.strip()):
+            score = float(score.strip())
+        if not isinstance(score, (int, float)):
+            continue
+        score = float(score)
+        if not 1.0 <= score <= 10.0:
+            continue
+        parsed[key] = (score, str(entry.get("reasoning", "")))
+    return parsed
+
+
+def _judge_temperature(model_id: str, gate_v2: bool) -> float:
+    """0.3 for judges, except Gemini under gate v2 (O2: Google's guidance)."""
+    if gate_v2 and "gemini" in model_id.lower():
+        return 1.0
+    return 0.3
+
+
 def _format_options_block(possible_answers: Optional[dict]) -> str:
     """Render MCQ options for the judge prompt ('' for non-MCQ)."""
     if not possible_answers:
@@ -333,7 +448,11 @@ def _parse_dim_response(text: str) -> Optional[tuple[float, str]]:
 class MultiModelScorer:
     """Score questions using multiple AI judges, one dimension per call."""
 
-    def __init__(self, models: Optional[list[dict]] = None):
+    def __init__(
+        self,
+        models: Optional[list[dict]] = None,
+        gate_v2: Optional[bool] = None,
+    ):
         """Initialize with a list of judges.
 
         Args:
@@ -341,43 +460,68 @@ class MultiModelScorer:
                 - provider: "openai" | "google" | "anthropic"
                 - model: model name (factory direct id)
                 - name: display name for tracking
+            gate_v2: Force the gate mode; ``None`` (default) reads the
+                ``GATE_V2`` feature flag (#135 D7 — off until the
+                calibration-set validation passes).
         """
-        self.models = models or self._default_models()
+        self._gate_v2 = feature_flags.gate_v2() if gate_v2 is None else gate_v2
+        self.models = models or self._default_models(self._gate_v2)
         self._clients: dict = {}
 
     @staticmethod
-    def _default_models() -> list[dict]:
-        """Default judge pair: OpenAI + Google frontier (2026-07-30 refresh).
+    def _default_models(gate_v2: bool = False) -> list[dict]:
+        """Default judge panel.
 
-        Families are disjoint from the Claude generation model (LLM-judge
-        self-preference bias, generation review section C). In the OpenRouter
-        gateway both judges share one key (``OPENROUTER_API_KEY``); in direct
-        mode each provider is gated on its own key — without one that judge is
-        dropped, as before.
+        v1: OpenAI + Google frontier pair (2026-07-30 refresh). v2 (#135 D7):
+        the same pair plus the ``SCORE_THIRD`` cheap-frontier family. Families
+        stay disjoint from the generation model (LLM-judge self-preference
+        bias, generation review section C). In the OpenRouter gateway all
+        judges share one key (``OPENROUTER_API_KEY``); in direct mode each
+        provider is gated on its own key — without one that judge is dropped.
+        The third family has no direct-mode endpoint, so it only joins under
+        the OpenRouter gateway. ``JUDGE_MODELS`` env (feature_flags) replaces
+        the whole panel with an explicit list of factory ids.
         """
         openrouter = llm_factory.gateway() == llm_factory.OPENROUTER
+        direct_keys = {"openai": "OPENAI_API_KEY", "google": "GOOGLE_API_KEY"}
 
-        def _enabled(direct_key: str) -> bool:
+        def _enabled(provider: str) -> bool:
             if openrouter:
                 return bool(os.getenv("OPENROUTER_API_KEY"))
-            return bool(os.getenv(direct_key))
+            direct_key = direct_keys.get(provider)
+            return bool(direct_key and os.getenv(direct_key))
 
-        models = []
-        if _enabled("OPENAI_API_KEY"):
-            models.append({
-                "provider": "openai",
-                "model": llm_factory.SCORE_OPENAI,
-                "name": llm_factory.SCORE_OPENAI,
-                "temperature": 0.3,
-            })
-        if _enabled("GOOGLE_API_KEY"):
-            models.append({
-                "provider": "google",
-                "model": llm_factory.SCORE_GOOGLE,
-                "name": llm_factory.SCORE_GOOGLE,
-                "temperature": 0.3,
-            })
-        return models
+        def _config(model_id: str, provider: Optional[str] = None) -> dict:
+            return {
+                "provider": provider or llm_factory.provider_for_model(model_id),
+                "model": model_id,
+                "name": model_id,
+                "temperature": _judge_temperature(model_id, gate_v2),
+            }
+
+        override = feature_flags.judge_models()
+        if override:
+            models = []
+            for model_id in override:
+                provider = llm_factory.provider_for_model(model_id)
+                if not _enabled(provider):
+                    logger.warning(
+                        "JUDGE_MODELS judge %s skipped — no API key for "
+                        "provider %s in %s mode",
+                        model_id, provider, "openrouter" if openrouter else "direct",
+                    )
+                    continue
+                models.append(_config(model_id, provider))
+            return models
+
+        role_ids = [llm_factory.SCORE_OPENAI, llm_factory.SCORE_GOOGLE]
+        if gate_v2:
+            role_ids.append(llm_factory.SCORE_THIRD)
+        return [
+            _config(model_id)
+            for model_id in role_ids
+            if _enabled(llm_factory.provider_for_model(model_id))
+        ]
 
     def _get_client(self, model_config: dict):
         """Get or create the LLM client for a judge config.
@@ -430,6 +574,40 @@ class MultiModelScorer:
                 )
         return None
 
+    async def _score_panel(
+        self,
+        model_config: dict,
+        prompt: str,
+        semaphore: Optional[asyncio.Semaphore] = None,
+    ) -> Optional[dict[str, tuple[float, str]]]:
+        """One judge × one gate-v2 panel call (all dims), single retry.
+
+        Returns {dim_key: (score, reasoning)} or None after the retry —
+        the caller logs the miss; nothing is silently defaulted.
+        """
+        client = self._get_client(model_config)
+        for attempt in (1, 2):
+            try:
+                if semaphore is not None:
+                    async with semaphore:
+                        response = await client.ainvoke([HumanMessage(content=prompt)])
+                else:
+                    response = await client.ainvoke([HumanMessage(content=prompt)])
+                parsed = _parse_gate_v2_response(response.content)
+                if parsed:
+                    return parsed
+                logger.warning(
+                    "Judge %s returned unparseable gate-v2 panel response "
+                    "(attempt %d)",
+                    model_config["name"], attempt,
+                )
+            except Exception as exc:  # noqa: BLE001 — judge call boundary
+                logger.warning(
+                    "Judge %s failed gate-v2 panel call (attempt %d): %r",
+                    model_config["name"], attempt, exc,
+                )
+        return None
+
     async def score_question(
         self,
         question: str,
@@ -461,48 +639,77 @@ class MultiModelScorer:
                 scores["distractor_quality"] = distractor
             return scores
 
-        dim_items = list(SCORING_DIMENSIONS.items())
-        prompts = {
-            dim_key: _CONTEXT_HEADER.format(
-                question=question,
-                options_block=options_block,
-                answer=answer_text,
-                difficulty=difficulty,
-                topic=topic,
-                dim_title=spec["title"],
-                dim_rubric=spec["rubric"],
+        if self._gate_v2:
+            # #135 D7: one panel call per judge, all 5 dims in one
+            # reasoning-first structured output; judges run concurrently.
+            panel_prompt = _gate_v2_prompt(
+                question, options_block, answer_text, difficulty, topic
             )
-            for dim_key, spec in dim_items
-        }
+            panel_results = await asyncio.gather(*(
+                self._score_panel(model_config, panel_prompt, semaphore)
+                for model_config in self.models
+            ))
+            judge_outcomes = [
+                (
+                    model_config,
+                    None
+                    if parsed is None
+                    else {k: v[0] for k, v in parsed.items()},
+                    []
+                    if parsed is None
+                    else [f"{k}: {v[1]}" for k, v in parsed.items() if v[1]],
+                    len(GATE_V2_DIMENSION_KEYS),
+                )
+                for model_config, parsed in zip(self.models, panel_results)
+            ]
+        else:
+            dim_items = list(SCORING_DIMENSIONS.items())
+            prompts = {
+                dim_key: _CONTEXT_HEADER.format(
+                    question=question,
+                    options_block=options_block,
+                    answer=answer_text,
+                    difficulty=difficulty,
+                    topic=topic,
+                    dim_title=spec["title"],
+                    dim_rubric=spec["rubric"],
+                )
+                for dim_key, spec in dim_items
+            }
+            judge_outcomes = []
+            for model_config in self.models:
+                dim_results = await asyncio.gather(*(
+                    self._score_dimension(
+                        model_config, dim_key, prompts[dim_key], semaphore
+                    )
+                    for dim_key, _ in dim_items
+                ))
+                scores: dict = {}
+                reasonings: list[str] = []
+                for (dim_key, _), outcome in zip(dim_items, dim_results):
+                    if outcome is None:
+                        continue
+                    score, reasoning = outcome
+                    scores[dim_key] = score
+                    if reasoning:
+                        reasonings.append(f"{dim_key}: {reasoning}")
+                judge_outcomes.append(
+                    (model_config, scores or None, reasonings, len(dim_items))
+                )
 
         results = []
-        for model_config in self.models:
-            dim_results = await asyncio.gather(*(
-                self._score_dimension(model_config, dim_key, prompts[dim_key], semaphore)
-                for dim_key, _ in dim_items
-            ))
-
-            scores: dict = {}
-            reasonings: list[str] = []
-            for (dim_key, _), outcome in zip(dim_items, dim_results):
-                if outcome is None:
-                    continue
-                score, reasoning = outcome
-                scores[dim_key] = score
-                if reasoning:
-                    reasonings.append(f"{dim_key}: {reasoning}")
-
-            missing = len(dim_items) - len(scores)
+        for model_config, scores, reasonings, dim_count in judge_outcomes:
             if not scores:
                 logger.warning(
                     "Judge %s produced no scores for question %r — dropped",
                     model_config["name"], question[:80],
                 )
                 continue
+            missing = dim_count - len(scores)
             if missing:
                 logger.warning(
                     "Judge %s missing %d/%d dimensions for question %r",
-                    model_config["name"], missing, len(dim_items), question[:80],
+                    model_config["name"], missing, dim_count, question[:80],
                 )
 
             overall = round(sum(scores.values()) / len(scores), 2)

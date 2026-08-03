@@ -173,14 +173,17 @@ struct AnswerTile: View {
     }
 
     private var tile: some View {
-        VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+        // Founder 2026-08-03: badge INLINE with the text (was stacked above it) —
+        // the grid was eating too much of the screen; inline drops the tile
+        // floor 88 → 60 without shrinking the tap target below driving-safe.
+        HStack(spacing: compact ? 8 : 10) {
             ZStack {
                 Circle().fill(state.badgeFill)
                 Text(key.uppercased())
-                    .font(.hangsBody(15, weight: .bold))
+                    .font(.hangsBody(14, weight: .bold))
                     .foregroundColor(state.letterColor)
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 28, height: 28)
 
             Text(value)
                 .font(.hangsBody(16, weight: .semibold))
@@ -190,9 +193,9 @@ struct AnswerTile: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: compact ? 76 : 88, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: compact ? 54 : 60, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)
         )

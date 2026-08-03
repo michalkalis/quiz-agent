@@ -84,8 +84,11 @@ extension QuizState {
         switch self {
         case .idle: return ["startingQuiz"]
         case .startingQuiz: return ["askingQuestion", "error", "idle"]
-        case .askingQuestion: return ["recording", "processing", "skipping", "error", "idle"]
-        case .recording: return ["processing", "skipping", "askingQuestion", "error", "idle"]
+        // "finished" on askingQuestion/recording is the early-exit-with-results
+        // path (founder 2026-08-03): X → "End & See Results" lands on the
+        // score screen mid-question.
+        case .askingQuestion: return ["recording", "processing", "skipping", "finished", "error", "idle"]
+        case .recording: return ["processing", "skipping", "askingQuestion", "finished", "error", "idle"]
         // "finished" on processing/skipping is the #132 E deferred-reveal path:
         // with reveal-at-end there is no result interstitial, so the last
         // question's evaluation lands directly on the recap.
@@ -788,7 +791,8 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
-            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            restartAnswerWindow: { [weak self] in self?.startRecordingOrTimer() }
         )
     }
 
@@ -1450,6 +1454,38 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
+    }
+
+    /// End the quiz early but land on the results screen instead of Home
+    /// (founder 2026-08-03): an early exit is "end the session now", scored on
+    /// the questions answered so far — not a forfeit. Keeps `currentSession`
+    /// (CompletionView/SetRecapView read their tallies from it); the backend
+    /// end is best-effort, since locally the quiz is over either way and the
+    /// server session TTLs out on its own.
+    func endQuizWithResults() async {
+        guard let sessionId = currentSession?.id else { return }
+        guard transition(to: .finished) else { return }
+
+        // Tear down everything answer-related (we may arrive mid-recording),
+        // but leave the session tallies alone — the results screen reads them.
+        taskBag.cancelAll()
+        recordingCoordinator.cleanupStreamingSTT()
+        audioDeviceState.stopSilenceDetectionListening()
+        quizTimersController.reset()
+        isAutoRecording = false
+        mcqVoiceMatchedKey = nil
+        errorMessage = nil
+        await audioDeviceState.stopAnyPlayingAudio()
+        audioService.deactivateSession()
+        persistenceStore.clearSession()
+
+        do {
+            try await networkService.endSession(sessionId: sessionId)
+        } catch {
+            Logger.quiz.warning("⚠️ Backend end-session failed after early exit (session will TTL out): \(error, privacy: .public)")
+        }
+
+        Logger.quiz.info("🎮 Quiz ended early with results — score: \(self.score, privacy: .public)")
     }
 
     /// Resume a saved session

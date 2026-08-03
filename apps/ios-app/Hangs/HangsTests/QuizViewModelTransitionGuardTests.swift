@@ -49,7 +49,9 @@ struct QuizViewModelTransitionGuardTests {
         let illegal: [(from: QuizState, to: QuizState)] = [
             (.idle, result), // a result with no quiz behind it
             (.idle, .askingQuestion), // a start that never created a session (#111 nav teardown skipped)
-            (.askingQuestion, .finished), // completion without an answer or a skip
+            // (.askingQuestion, .finished) left this list 2026-08-03: it is the
+            // legal early-exit-with-results path now (X → "End & See Results").
+            (.idle, .finished), // a results screen with no session at all
             (result, .recording), // a stale timer re-opening the mic from the result screen
             (.finished, .askingQuestion), // resuming a finished set instead of restarting it
             (.error(message: "boom", context: .submission), .recording), // recording out of an error screen
@@ -75,10 +77,13 @@ struct QuizViewModelTransitionGuardTests {
         coordinator.noteMatchedForFeedback()
 
         // Recording-phase capture state that only a phase EXIT may drop.
+        // (.recording → .finished stopped being the illegal fixture 2026-08-03 —
+        // it is the early-exit-with-results path now; a result landing without
+        // an evaluation is still illegal from .recording.)
         vm.quizState = .recording
         vm.liveTranscript = "the driver was mid-answer"
 
-        #expect(vm.transition(to: .finished) == false, ".recording → .finished is not in the legal table")
+        #expect(vm.transition(to: makeResultState()) == false, ".recording → .showingResult is not in the legal table")
 
         #expect(
             coordinator.voiceFeedbackPhase == .matched,

@@ -98,6 +98,12 @@ struct QuestionView: View {
             // #125: the MCQ screen drops its settings gear, so settings stay
             // reachable through this sheet (both modes share the alert).
             Button("Settings") { showQuizSettings = true }
+            // Founder 2026-08-03 (Sporcle-style early exit): ending mid-quiz can
+            // land on the score screen for the questions answered so far instead
+            // of discarding the run.
+            Button("End & See Results") {
+                Task { await viewModel.endQuizWithResults() }
+            }
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
@@ -382,6 +388,13 @@ struct QuestionView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
+            // Founder 2026-08-03: MCQ needs the same visible evaluating state
+            // the voice screen has (59.6) — after tapping an option the screen
+            // otherwise looks frozen until the result arrives.
+            if isProcessing {
+                processingRow
+            }
+
             // #132 Track B (variant A "odpočet v lište"): ONE bar slot from the
             // first countdown tick to submit. While the driver decides, the bar
             // shows the think state — teal drain + seconds + the same command
@@ -416,17 +429,12 @@ struct QuestionView: View {
                 .transition(.opacity)
             }
 
-            HangsSecondaryButton(title: "Skip question",
-                                 icon: "play.forward.fill",
-                                 height: 44)
-            {
-                Task { await viewModel.skipQuestion() }
-            }
-            .accessibilityIdentifier("question.skip")
-            // #96 P3 (founder): tighter side padding + lower footprint (was h24 / bottom 28).
-            .padding(.horizontal, 20)
-            .padding(.top, compact ? 8 : 12)
-            .padding(.bottom, compact ? 10 : 16)
+            // Founder 2026-08-03: skip is a secondary escape hatch, not the
+            // screen's CTA — a compact centered chip (voice footer's skip
+            // styling), no longer a full-width bar competing with the options.
+            mcqSkipChip
+                .padding(.top, compact ? 8 : 12)
+                .padding(.bottom, compact ? 10 : 16)
 
             #if DEBUG
                 Text(quizStateName)
@@ -435,6 +443,30 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
+    }
+
+    /// Compact MCQ skip chip — mirrors the voice footer's skip styling so the
+    /// two modes read the same. Disabled while an answer is being evaluated.
+    private var mcqSkipChip: some View {
+        Button {
+            Task { await viewModel.skipQuestion() }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "play.forward.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Skip question")
+                    .font(.hangsBody(15, weight: .medium))
+            }
+            .foregroundColor(Theme.Hangs.Colors.ink)
+            .frame(height: 40)
+            .padding(.horizontal, 16)
+            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(isProcessing)
+        .opacity(isProcessing ? 0.45 : 1)
+        .accessibilityIdentifier("question.skip")
     }
 
     // MARK: - TEMP provenance badge (Bedrock gen test)

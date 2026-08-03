@@ -1397,6 +1397,42 @@ struct QuizViewModelEndQuizTests {
         #expect(viewModel.errorMessage != nil)
         #expect(viewModel.currentSession != nil) // not dropped — may still be live
     }
+
+    /// Founder 2026-08-03: X → "End & See Results" ends the quiz early but must
+    /// land on the results screen scored on the questions answered so far — a
+    /// self-paced quiz exit is "end the session now", not a forfeit. The session
+    /// (and its tallies) must survive the exit; only `.finished` routing shows
+    /// CompletionView/SetRecapView, and dropping the session would zero the score.
+    @Test("endQuizWithResults lands on .finished and keeps the session tallies")
+    @MainActor
+    func endQuizWithResultsKeepsSessionAndFinishes() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+
+        await viewModel.endQuizWithResults()
+
+        #expect(mockNetwork.endSessionCallCount == 1) // server-side cleanup was attempted
+        #expect(viewModel.quizState == .finished)
+        #expect(viewModel.currentSession != nil) // the results screen reads its tallies
+    }
+
+    /// Same exit taken mid-recording (the alert is reachable while the mic is
+    /// live): the transition must be legal from `.recording` too, and a backend
+    /// failure must not strand the user — locally the quiz is over either way.
+    @Test("endQuizWithResults from .recording survives a backend end failure")
+    @MainActor
+    func endQuizWithResultsFromRecordingIsBestEffort() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        mockNetwork.endSessionError = NetworkError.serverError(statusCode: 500, message: "boom")
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .recording
+
+        await viewModel.endQuizWithResults()
+
+        #expect(viewModel.quizState == .finished)
+        #expect(viewModel.errorMessage == nil) // no banner over the results screen
+    }
 }
 
 // MARK: - Resume Auto-Advance Tests (RS-17, #59.8)

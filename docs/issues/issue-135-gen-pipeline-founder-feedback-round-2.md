@@ -1,6 +1,6 @@
 # Issue #135 — Gen pipeline founder feedback round 2 (prompt genericization + call-count diet)
 
-**Triage:** ready-for-agent (two design points flagged ⚠ below were proposed to the founder in chat 2026-08-03; confirm before executing those tasks)
+**Triage:** ready-for-agent (D6/D7 confirmed by the founder in chat 2026-08-03)
 
 Founder reviewed the deep-review report (`docs/research/gen-pipeline-deep-review-2026-08-03.md`) on 2026-08-03 and gave line-by-line feedback. This issue captures the locked decisions and the implementation plan. Companion artifact: `docs/artifacts/few-shot-examples-2026-08-03.html` (full gold + anti-pattern pool shown to the founder).
 
@@ -13,8 +13,8 @@ Founder reviewed the deep-review report (`docs/research/gen-pipeline-deep-review
 | D3 | **Contract loosened: rules become guidance.** Rule 4 ("answer must be something the player knows") — no longer required. Rule 5 (path-to-answer besides memory) — too strict, demote to hint. Batch-shape quotas (≤30% "Which", ≥4 patterns, ≥4 openers) — demote to "vary structure" guidance. **Rule 6 (no giveaways/leakage) stays HARD.** Grounding (rule 1) stays hard *in fact-first mode* (see D8). General worry: too many guardrails over-constrain the model. |
 | D4 | **Pattern library stays as inspiration only** — no mandated usage quotas (ties to D3). |
 | D5 | **Question-type mix: ~80% text / 20% MCQ** as the default batch/pack composition (was more MCQ-heavy). |
-| D6 | **Selector diet.** Critique (~36 calls) + pairwise duels (~50–60 calls) is too many. Reduce. ⚠ Proposed: overgeneration 3×→2× (36→24 candidates) + duel ring 5→3 neighbours (~60→~36 duel calls); optionally route critique/duels to a cheap-frontier judge (GLM/DeepSeek via OpenRouter). O4 (bidirectional duels) REJECTED — never increase call count. Ranking unification (drop "educational value", universality→red flag) stays approved. |
-| D7 | **Scoring gate redesign — biggest cost item (~168 calls/12q).** Drop "Faktická istota" as a gate dimension (redundant with the fact-verification step; the MCQ "exactly one defensible option" part moves to the MCQ distractor check). "Vhodnosť za volant" likely unnecessary as its own dimension — fold one-listen clarity into "Remeselné podanie". ⚠ Proposed target: 5 dimensions, judged by a panel of 2–3 judges × **1 call each** (all dims in one structured output, reasoning-first per dim) ≈ 24–36 calls/12q (−80%). Validate the new judge against the founder's 36-rated calibration set before switching (correlation old vs new vs founder ratings). O2 (reasoning→score order + Gemini temp 1.0) approved — implement as a constraint of the new templates. |
+| D6 | **Selector diet — CONFIRMED.** Overgeneration 3×→2× (36→24 candidates) + duel ring 5→3 neighbours (~60→~36 duel calls); optionally route critique/duels to a cheap-frontier judge (GLM/DeepSeek via OpenRouter). O4 (bidirectional duels) REJECTED — never increase call count. Ranking unification (drop "educational value", universality→red flag) stays approved. **Founder condition: log this as an explicit tracked setting change** — record old→new values + date + rationale here and keep both values config-switchable, so a future quality drop can be traced back to this change (see § Setting changes). |
+| D7 | **Scoring gate redesign — CONFIRMED (founder picked 3 judges).** Drop "Faktická istota" as a gate dimension (redundant with the fact-verification step; the MCQ "exactly one defensible option" part moves to the MCQ distractor check). "Vhodnosť za volant" dropped as its own dimension — fold one-listen clarity into "Remeselné podanie". Target: 5 dimensions, judged by a panel of **3 judges from 3 families (GPT + Gemini + cheap Chinese frontier, e.g. GLM/DeepSeek) × 1 call each** (all dims in one structured output, reasoning-first per dim) ≈ 36 calls/12q (−79%). Validate the new judge against the founder's 36-rated calibration set before switching (correlation old vs new vs founder ratings). O2 (reasoning→score order + Gemini temp 1.0) approved — implement as a constraint of the new templates. |
 | D8 | **Fact-first is challenged.** Founder: mandatory fact-grounding may cap creativity; the fact-verification step already guards production. Run an A/B: same model, one arm fact-first, one arm free-generation (verification moved EARLY in that arm). Fold into the blind-test round; founder blind-rates. Fact-sourcing improvements (O1) still agreed as an issue, but scoped after/with this experiment. |
 | D9 | **Fact verification: cheaper arbiter.** Gemini 3.1 Pro is overkill for evidence arbitration — founder explicitly allows a simpler model here (carve-out from the no-mini-class policy, 2026-08-03). Position: keep after selection in fact-first mode (grounded candidates rarely fail; early check would 3× Tavily spend for little); early in the free-gen arm. |
 | D10 | **O3 approved and broadened:** round-trip answerability check (a model attempts the question without seeing the answer) for ALL question types, not just text, placed as EARLY as possible (after generation+dedup, before critique) — also catches unclear phrasing/format, which the founder keeps seeing. Cheap model OK. |
@@ -26,12 +26,27 @@ Founder reviewed the deep-review report (`docs/research/gen-pipeline-deep-review
 - [ ] T2 — Make `GEN` (and critique/judge roles) cleanly configurable per run/order (env or order param via the factory registry, `resolve_model` path); add GLM-5.1 / Kimi K3 / DeepSeek OpenRouter slugs to `_REMAP_OPENROUTER` (verify live slugs first).
 - [ ] T3 — Default type mix 80/20 text/MCQ at batch/pack composition level (D5).
 - [ ] T4 — Early answerability round-trip check after dedup, all types, cheap model (D10).
-- [ ] T5 — Selector diet per D6 (⚠ confirm numbers) + ranking unification (approved earlier).
-- [ ] T6 — Gate redesign per D7 (⚠ confirm shape): 5 dims, 1 call/judge, reasoning-first, Gemini temp 1.0; calibration-set validation gate before flipping the default.
+- [ ] T5 — Selector diet per D6 (confirmed) + ranking unification (approved earlier). Record the old→new values in § Setting changes and keep them config-switchable.
+- [ ] T6 — Gate redesign per D7 (confirmed): 5 dims, 3 judges × 1 call, reasoning-first, Gemini temp 1.0; calibration-set validation gate before flipping the default.
 - [ ] T7 — Fact-verify arbiter → cheaper model (D9); free-gen arm gets verification early.
 - [ ] T8 — Fact-first vs free-gen A/B wired into the blind-test round (D8); founder blind-rates.
 - [ ] T9 — Cost phase (D11/O5): measure per-step spend, decide EVAL model — after T1–T8 settle.
 - [ ] T10 — Gold-pool gap round (entertainment/sport/food/MCQ golds) — approved earlier, still pending; founder rates in chat.
+
+## Setting changes (tracked — founder requirement 2026-08-03)
+
+Quality-relevant knob changes made under this issue, so a future quality regression can be traced to its cause. Fill in as T5/T6 land:
+
+| Date | Setting | Old | New | Why | Revert |
+|---|---|---|---|---|---|
+| (T5) | overgeneration factor | 3× | 2× | call-count diet, founder 2026-08-03 | config |
+| (T5) | duel ring neighbours | 5 | 3 | call-count diet | config |
+| (T6) | gate dimensions | 7 | 5 (drop factual-certainty, drive-safety) | redundancy / founder call | prompt template history |
+| (T6) | gate call shape | 1 call/dim × 2 judges (14/q) | 1 call/judge × 3 judges (3/q) | call-count diet; validated on 36-rated set | config |
+
+## Future (out of scope here, founder wish 2026-08-03)
+
+**Self-improving pipeline (learning loop):** when a question is rated well (by the founder or by users in the app), a review process should reverse-engineer *why* it works and feed that back into the pipeline (gold pool, critique anchors, pattern weights). Same for badly-rated questions. Tracked as its own TODO line; needs a design round (data source = in-app ratings + founder ratings; output = automated gold/anti-pattern candidates + anchor updates).
 
 ## Notes
 

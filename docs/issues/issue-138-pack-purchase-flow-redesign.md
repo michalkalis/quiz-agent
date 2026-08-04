@@ -1,6 +1,6 @@
 # Issue 138: Custom-pack purchase flow redesign — modal flow, post-purchase states, form UX
 
-**Triage:** enhancement · design-gated (HTML variants → founder pick → Pencil → code)
+**Triage:** enhancement · DONE 2026-08-04 (design round + implementation + review round; merged with #140 StoreKit path)
 **Reversibility:** a
 **Status:** Founder field report 2026-08-04 (first real e2e of the #95 flow). Design round first — verify against iOS HIG (sheets, progress, payment disclosures).
 **Created:** 2026-08-04
@@ -40,10 +40,10 @@ How the user learns the pack is ready: at minimum a correct in-app state (#137 d
 
 ## Acceptance
 
-- [ ] Order flow presented as a sheet; after purchase, reopening/dismissing never shows the form for that order (state-machine unit test); back chevron exists only pre-payment (summary → form).
-- [ ] Preparing state shows ETA copy + Close/X + primary dismiss; dismiss ≠ cancel (polling survives, reopening shows live state).
-- [ ] Payment step carries the no-cancellation notice (SK+EN).
-- [ ] Min-length validation gone client AND server (1-char prompt valid end-to-end); 1000 max kept.
-- [ ] Language menu = full quiz-language list, preselected from global quiz language; backend accepts all 10 codes.
-- [ ] Failed state offers Try again (backend retry endpoint when order exists) + Close.
-- [ ] Settings entry row loses the chevron; dead push navigation (orderProgressPresented, AppRoute.orderPack) removed.
+- [x] Order flow presented as a sheet; after purchase, reopening/dismissing never shows the form for that order (state-machine unit test); back chevron exists only pre-payment (summary → form).
+- [x] Preparing state shows ETA copy + Close/X + primary dismiss; dismiss ≠ cancel (polling survives, reopening shows live state).
+- [x] Payment step carries the no-cancellation notice (SK+EN).
+- [x] Min-length validation gone client AND server (1-char prompt valid end-to-end); 1000 max kept.
+- [x] Language menu = full quiz-language list, preselected from global quiz language; backend accepts all 10 codes.
+- [x] Failed state offers Try again (backend retry endpoint when order exists) + Close.
+- [x] Settings entry row loses the chevron; dead push navigation (orderProgressPresented, AppRoute.orderPack) removed.

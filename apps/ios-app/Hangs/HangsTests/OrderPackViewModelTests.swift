@@ -398,13 +398,107 @@ struct OrderPackViewModelTests {
 
         await vm.submit()
 
-        guard case .failed(let message) = vm.state else {
+        guard case .failed(let message, let retryable) = vm.state else {
             Issue.record("expected .failed from the deadline, got \(vm.state)")
             return
         }
         // Assert it's the deadline's soft copy, not a generic error — the message
         // is what tells the user the pack is still coming.
         #expect(message == String(localized: "Still working — check My packs later."))
+        // WHY (review finding 2): the order is still pending/in_progress
+        // server-side, and the backend's retry endpoint 409s anything that isn't
+        // `failed`. Offering "Try again" here would hand the user a raw 409.
+        #expect(retryable == false, "a timed-out (still generating) order must not offer a retry")
+    }
+
+    // WHY (review finding 2): the flag is not decoration — `retry()` itself must
+    // refuse, so a stale tap or a future call site can't fire the doomed request.
+    @Test("retry is refused on a non-retryable timeout — the backend would 409 it")
+    func retryRefusedAfterTimeout() async {
+        let service = MockPackOrderService(getResult: .success(.mockPending))
+        let vm = payingViewModel(service: service)
+        vm.pollTimeoutSeconds = 0.05
+        vm.pollIntervalSeconds = 0.01
+
+        await vm.submit()
+        await vm.retry()
+
+        #expect(service.retryOrderCallCount == 0)
+        #expect(service.createOrderCallCount == 1, "and certainly no second paid order")
+        guard case .failed(_, retryable: false) = vm.state else {
+            Issue.record("expected the non-retryable failure to survive retry(), got \(vm.state)")
+            return
+        }
+    }
+
+    // WHY (review finding 1): THE double-charge door. Payment succeeded and the
+    // order exists server-side; the poll then timed out. If reopening the sheet
+    // reset to a fresh form, the next submit would purchase the SAME pack again.
+    // The paid order — with its id and its status screen — must survive.
+    @Test("paidFailedOrderSurvivesReopen_noSecondCharge")
+    func paidFailedOrderSurvivesReopenNoSecondCharge() async {
+        let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollTimeoutSeconds = 0.05
+        vm.pollIntervalSeconds = 0.01
+
+        await vm.submit()
+        guard case .failed = vm.state else {
+            Issue.record("expected .failed from the deadline, got \(vm.state)")
+            return
+        }
+        let paidOrderId = vm.orderId
+        #expect(paidOrderId != nil, "the order was created — this is a PAID order")
+
+        // User closes the sheet and reopens "Create a pack".
+        vm.prepareForPresentation(defaultLanguage: "sk")
+
+        guard case .failed = vm.state else {
+            Issue.record("reopening reset a paid order to \(vm.state) — next submit would charge again")
+            return
+        }
+        #expect(vm.orderId == paidOrderId, "the paid order must stay addressable")
+        #expect(purchase.purchaseCallCount == 1, "reopening must not have set up a second purchase")
+    }
+
+    // WHY: the guard must be narrow. A failure with nothing paid for (create
+    // never landed AND no pending proof) is genuinely finished business, so
+    // reopening still gives a fresh form instead of stranding the user on an
+    // error screen forever.
+    @Test("an unpaid failure still resets to a fresh form on reopen")
+    func unpaidFailureStillResetsOnReopen() async {
+        let service = MockPackOrderService(createResult: .failure(.init("boom")))
+        let vm = payingViewModel(service: service) // admin path: no proof, no charge
+
+        await vm.submit()
+        #expect(vm.orderId == nil)
+
+        vm.prepareForPresentation(defaultLanguage: "sk")
+
+        #expect(vm.state == .editing)
+    }
+
+    // WHY: a create that failed AFTER a successful purchase leaves an unspent
+    // proof. Resetting there would drop the user back on the form, where the
+    // pending-proof reuse is fine — but the failed screen's "Try again" is the
+    // path that actually spends it, so the state must be kept.
+    @Test("a failure holding an unspent payment proof is kept, not reset")
+    func failureWithPendingProofIsKept() async {
+        let service = MockPackOrderService(createResult: .failure(.init("backend down")))
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+        #expect(vm.orderId == nil)
+        #expect(purchase.pendingProof() != nil, "paid, but the order never landed")
+
+        vm.prepareForPresentation(defaultLanguage: "sk")
+
+        guard case .failed = vm.state else {
+            Issue.record("a paid-but-unordered attempt was reset to \(vm.state)")
+            return
+        }
     }
 
     // MARK: - Try again

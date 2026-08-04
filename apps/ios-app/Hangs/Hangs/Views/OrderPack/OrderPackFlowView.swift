@@ -49,9 +49,10 @@ struct OrderPackFlowView: View {
                             },
                             onClose: onClose
                         )
-                    case .failed(let message):
+                    case .failed(let message, let retryable):
                         OrderPackFailedStep(
                             message: message,
+                            isRetryable: retryable,
                             onRetry: { Task { await viewModel.retry() } },
                             onClose: onClose
                         )

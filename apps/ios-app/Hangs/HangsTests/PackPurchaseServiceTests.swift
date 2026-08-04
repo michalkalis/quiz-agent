@@ -50,4 +50,56 @@ struct PendingPackPurchaseStoreTests {
 
         #expect(store.load() == nil)
     }
+
+    // MARK: - Deferred approvals arriving on Transaction.updates (#138 review 3)
+
+    //
+    // WHY: Ask to Buy / SCA purchases clear later — sometimes on a whole new
+    // launch — and come back only through `Transaction.updates`. The proof has
+    // to be persisted BEFORE the transaction is finished: a finished consumable
+    // can never be read from StoreKit again, so a finish-first ordering loses a
+    // real charge outright.
+
+    @Test("a deferred pack transaction is persisted BEFORE it is finished")
+    func capturePersistsBeforeFinish() async {
+        let store = makeStore()
+        var proofWasPersistedBeforeFinish = false
+
+        let handled = await StoreKitPackPurchaseService.captureAndFinish(
+            store: store,
+            transactionId: "990000000000555",
+            productId: "pack_30",
+            jws: "deferred.jws.payload",
+            finish: { proofWasPersistedBeforeFinish = store.load() != nil }
+        )
+
+        #expect(handled)
+        #expect(proofWasPersistedBeforeFinish, "finishing first would destroy the only proof of the charge")
+        #expect(store.load() == PackPaymentProof(
+            transactionId: "990000000000555",
+            productId: "pack_30",
+            jws: "deferred.jws.payload"
+        ))
+    }
+
+    // WHY: subscriptions and the #93 credit pack are RevenueCat's to finish.
+    // Grabbing them here would both corrupt the pack slot and finish a
+    // transaction another flow is still waiting on.
+    @Test("a non-pack transaction is ignored — not stored, not finished")
+    func captureIgnoresOtherProducts() async {
+        let store = makeStore()
+        var finishCalled = false
+
+        let handled = await StoreKitPackPurchaseService.captureAndFinish(
+            store: store,
+            transactionId: "990000000000999",
+            productId: "premium_monthly",
+            jws: "other.jws",
+            finish: { finishCalled = true }
+        )
+
+        #expect(handled == false)
+        #expect(finishCalled == false)
+        #expect(store.load() == nil)
+    }
 }

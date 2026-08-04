@@ -84,10 +84,16 @@ struct OrderPackReadyStep: View {
     }
 }
 
-/// `.failed` — including the soft "still working" timeout. "Try again" re-runs
-/// the order that was already paid for (backend retry), never a second charge.
+/// `.failed`. A retryable failure offers "Try again", which re-runs the order
+/// that was already paid for (backend retry), never a second charge.
+///
+/// The soft poll timeout is NOT retryable: the order is still pending/
+/// in_progress server-side, so the retry endpoint would 409 and dump raw
+/// backend text on the user (review finding 2). There the only honest action is
+/// to close — the pack keeps generating and lands in My packs.
 struct OrderPackFailedStep: View {
     let message: String
+    var isRetryable: Bool = true
     let onRetry: () -> Void
     let onClose: () -> Void
 
@@ -95,9 +101,9 @@ struct OrderPackFailedStep: View {
         VStack(spacing: 20) {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
                 VStack(spacing: 12) {
-                    Image(systemName: "exclamationmark.triangle.fill")
+                    Image(systemName: isRetryable ? "exclamationmark.triangle.fill" : "clock.badge.checkmark")
                         .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.error)
+                        .foregroundColor(isRetryable ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.blue)
                     Text(verbatim: message)
                         .font(.hangsBody(16))
                         .foregroundColor(Theme.Hangs.Colors.ink)
@@ -106,11 +112,18 @@ struct OrderPackFailedStep: View {
                 .frame(maxWidth: .infinity)
             }
 
-            HangsPrimaryButton(title: "Try again", icon: "arrow.clockwise", action: onRetry)
-                .accessibilityIdentifier("orderPack.retry")
+            if isRetryable {
+                HangsPrimaryButton(title: "Try again", icon: "arrow.clockwise", action: onRetry)
+                    .accessibilityIdentifier("orderPack.retry")
 
-            HangsSecondaryButton(title: "Close", action: onClose)
-                .accessibilityIdentifier("orderPack.closeButton")
+                HangsSecondaryButton(title: "Close", action: onClose)
+                    .accessibilityIdentifier("orderPack.closeButton")
+            } else {
+                // Nothing to retry — the order is alive server-side. Closing is
+                // the whole action, so it takes the primary slot.
+                HangsPrimaryButton(title: "Got it", action: onClose)
+                    .accessibilityIdentifier("orderPack.gotIt")
+            }
         }
     }
 }
@@ -122,6 +135,12 @@ struct OrderPackFailedStep: View {
                 OrderPackPreparingStep(progress: 0.4, onDismiss: {})
                 OrderPackReadyStep(packId: "pack", onPlayPack: { _ in }, onClose: {})
                 OrderPackFailedStep(message: "Pack generation failed.", onRetry: {}, onClose: {})
+                OrderPackFailedStep(
+                    message: "Still working — check My packs later.",
+                    isRetryable: false,
+                    onRetry: {},
+                    onClose: {}
+                )
             }
             .padding(20)
         }

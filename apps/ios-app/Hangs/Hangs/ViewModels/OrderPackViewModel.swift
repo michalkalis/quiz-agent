@@ -38,7 +38,11 @@ final class OrderPackViewModel: ObservableObject {
         case submitting
         case polling(OrderSnapshot)
         case delivered(OrderSnapshot)
-        case failed(String)
+        /// `retryable: false` means "Try again" would be a lie: the order is
+        /// still pending/in_progress server-side, and the backend's retry
+        /// endpoint 409s anything that isn't `failed` (orders.py). The soft
+        /// poll-timeout is the only such case — the pack is still coming.
+        case failed(String, retryable: Bool)
     }
 
     /// Prompt ceiling. There is no floor beyond "not empty" (#138 B): the
@@ -139,12 +143,22 @@ final class OrderPackViewModel: ObservableObject {
 
     // MARK: Actions
 
-    /// Sheet (re)opened. A terminal order is done with — start a fresh one. An
+    /// Sheet (re)opened. A finished order is done with — start a fresh one. An
     /// in-flight one is shown exactly where it is, so reopening lands on
     /// "Preparing", never back on the form the user already paid from.
+    ///
+    /// A `.failed` order is NOT automatically finished business: a poll timeout
+    /// or a run of network errors leaves a PAID, server-side order behind.
+    /// Resetting there would hand the user a fresh form whose next submit
+    /// charges them a second time for the same pack (review finding 1), so the
+    /// failed state is kept — with its order id, its proof and its "Try again" —
+    /// unless nothing was ever paid for.
     func prepareForPresentation(defaultLanguage: String) {
         switch state {
-        case .delivered, .failed:
+        case .delivered:
+            resetForNewOrder(defaultLanguage: defaultLanguage)
+        case .failed:
+            guard orderId == nil, purchaseService.pendingProof() == nil else { break }
             resetForNewOrder(defaultLanguage: defaultLanguage)
         case .editing:
             // Only preselect what the user hasn't already overridden.
@@ -192,11 +206,13 @@ final class OrderPackViewModel: ObservableObject {
         await task.value
     }
 
-    /// "Try again" from the failed state. If the order was created server-side
-    /// we re-enqueue THAT order (no second charge); if the create itself never
-    /// landed we resubmit the same intent, whose idempotency key is unchanged.
+    /// "Try again" from a *retryable* failure. If the order was created
+    /// server-side we re-enqueue THAT order (no second charge); if the create
+    /// itself never landed we resubmit the same intent, whose idempotency key is
+    /// unchanged. A non-retryable failure (the soft poll timeout) is refused
+    /// here as well as hidden in the UI — the backend would 409 it.
     func retry() async {
-        guard case .failed = state else { return }
+        guard case .failed(_, retryable: true) = state else { return }
         state = .submitting
 
         let existingOrderId = orderId
@@ -258,7 +274,7 @@ final class OrderPackViewModel: ObservableObject {
             state = .confirming
             return
         } catch {
-            state = .failed(Self.message(for: error))
+            state = .failed(Self.message(for: error), retryable: true)
             return
         }
 
@@ -290,7 +306,7 @@ final class OrderPackViewModel: ObservableObject {
         do {
             created = try await service.createOrder(intent: intent)
         } catch {
-            state = .failed(Self.message(for: error))
+            state = .failed(Self.message(for: error), retryable: true)
             return
         }
         pendingIntent = nil // order created — a future submit is a new order
@@ -315,7 +331,7 @@ final class OrderPackViewModel: ObservableObject {
         do {
             _ = try await service.retryOrder(id: orderId, paymentProof: orderPaymentProof)
         } catch {
-            state = .failed(Self.message(for: error))
+            state = .failed(Self.message(for: error), retryable: true)
             return
         }
         await poll(orderId: orderId)
@@ -345,7 +361,7 @@ final class OrderPackViewModel: ObservableObject {
             // and never resolve the "Building your pack…" spinner. Stop and hand the
             // user off to My packs; any generation still runs server-side.
             if Date() >= deadline {
-                state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"))
+                state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
                 return
             }
 
@@ -360,7 +376,7 @@ final class OrderPackViewModel: ObservableObject {
                 // Retry a few times; only a sustained run of errors is fatal.
                 consecutiveErrors += 1
                 if consecutiveErrors > Self.maxConsecutivePollErrors {
-                    state = .failed(Self.message(for: error))
+                    state = .failed(Self.message(for: error), retryable: true)
                     return
                 }
                 try? await Task.sleep(for: .seconds(pollIntervalSeconds))
@@ -373,7 +389,7 @@ final class OrderPackViewModel: ObservableObject {
             }
             if snapshot.isFailure {
                 // A real terminal failure status — surface immediately, never retry.
-                state = .failed(String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in a failed/refunded state"))
+                state = .failed(String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in a failed/refunded state"), retryable: true)
                 return
             }
             state = .polling(snapshot)

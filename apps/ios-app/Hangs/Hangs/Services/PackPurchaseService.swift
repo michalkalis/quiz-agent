@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import os
 import StoreKit
 
 // MARK: - Payment proof
@@ -113,12 +114,69 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
     /// server (`orders.py`), because the backend cross-checks the JWS's
     /// productId against the order body. Single tier today, mirroring
     /// `PackOrderService.productId`.
-    static let productId = "pack_30"
+    nonisolated static let productId = "pack_30"
 
     private let store: PendingPackPurchaseStore
+    /// Lives as long as the service (AppState owns one for the app's lifetime);
+    /// held so `deinit` can cancel it. Lock-guarded to keep the type `Sendable`
+    /// without `nonisolated(unsafe)`.
+    private let updatesTask = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
-    init(store: PendingPackPurchaseStore = PendingPackPurchaseStore()) {
+    /// - Parameter observesTransactionUpdates: set false in unit tests so they
+    ///   don't attach a live StoreKit listener to the test process.
+    init(
+        store: PendingPackPurchaseStore = PendingPackPurchaseStore(),
+        observesTransactionUpdates: Bool = true
+    ) {
         self.store = store
+        guard observesTransactionUpdates else { return }
+        // Capture `store` (a value type), never self — the task must not
+        // escape a partially initialised object.
+        updatesTask.withLock { $0 = Self.makeUpdatesListener(store: store) }
+    }
+
+    deinit {
+        updatesTask.withLock { $0?.cancel() }
+    }
+
+    /// Deferred approvals (Ask to Buy, SCA) never come back through
+    /// `product.purchase()` — StoreKit delivers them on `Transaction.updates`
+    /// whenever they clear, possibly on a later launch. Without an observer the
+    /// user is charged and the JWS is never captured, so the pack they paid for
+    /// simply never gets ordered (review finding 3); worse, RevenueCat's default
+    /// mode would eventually finish the transaction and destroy the only proof.
+    /// Anything that isn't our consumable is left untouched for those flows.
+    private nonisolated static func makeUpdatesListener(store: PendingPackPurchaseStore) -> Task<Void, Never> {
+        Task.detached {
+            for await update in Transaction.updates {
+                guard case let .verified(transaction) = update else { continue }
+                await captureAndFinish(
+                    store: store,
+                    transactionId: String(transaction.id),
+                    productId: transaction.productID,
+                    jws: update.jwsRepresentation,
+                    finish: { await transaction.finish() }
+                )
+            }
+        }
+    }
+
+    /// Persist a pack transaction's proof, THEN finish it. Split out of the
+    /// listener so the persist-before-finish ordering — the whole point of the
+    /// crash-safety contract — is unit-testable without a StoreKit harness.
+    /// Returns false (and touches nothing) for other products.
+    @discardableResult
+    nonisolated static func captureAndFinish(
+        store: PendingPackPurchaseStore,
+        transactionId: String,
+        productId: String,
+        jws: String,
+        finish: () async -> Void
+    ) async -> Bool {
+        guard productId == Self.productId else { return false }
+        store.save(PackPaymentProof(transactionId: transactionId, productId: productId, jws: jws))
+        await finish()
+        return true
     }
 
     func purchase() async throws -> PackPaymentProof {

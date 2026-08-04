@@ -713,6 +713,11 @@ final class QuizViewModel: ObservableObject {
             quizState: { [weak self] in self?.quizState ?? .idle },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            configureQuietListeningSession: { [weak self] in
+                // Failure is non-fatal: the listener still arms; worst case the
+                // session keeps its previous category (logged in AudioService).
+                try? self?.audioService.setupQuietListeningSession()
+            },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },

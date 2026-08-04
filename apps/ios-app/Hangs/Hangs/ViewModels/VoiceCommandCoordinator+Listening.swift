@@ -67,7 +67,14 @@ extension VoiceCommandCoordinator {
     /// Arm or tear down the command/VAD listener to match the current window.
     /// Idempotent (the underlying choke points are).
     func syncCommandListenerWindow() async {
-        if currentCommandScreen != nil {
+        if let screen = currentCommandScreen {
+            // #136 (founder decision B): Home listening runs under the QUIET
+            // mixable session — external audio keeps playing while the app
+            // waits for "start". In-quiz windows keep whatever session
+            // startNewQuiz configured (ducking included).
+            if screen == .home {
+                configureQuietListeningSession()
+            }
             await startSilenceDetectionListening()
         } else {
             stopSilenceDetectionListening()

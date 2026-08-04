@@ -22,18 +22,14 @@ Constraints:
 - `AppState.swift:~99-104` also kicks `SilenceDetectionService.requestAuthorizationAndPrepareAssets()` at init — verify it does not itself `setActive` the session; asset prep may stay.
 - Home command listener: #124 — app raises volume on Home — attributes the Home-time Voice-Processing I/O arming to the same eager activation. Fixing this issue likely fixes/changes #124's primary candidate — re-check #124 after landing.
 
-## Product decision (founder, pending in-chat)
+## Product decision — RESOLVED (founder in-chat, 2026-08-04)
 
-Home-screen voice commands ("start" hands-free) need a live mic. Two scopes:
-- **(A)** No audio session until quiz start — music never touched on launch; Home voice commands stop working until the first quiz starts.
-- **(B)** Home uses a non-interrupting, mixable listening configuration (no duck/interrupt options) and the full quiz session only activates at quiz start. Preserves hands-free start; needs a spike to confirm mixable capture doesn't still duck A2DP audio.
-
-Founder's literal ask matches (A). Decision recorded here once answered.
+**Option (B): quiet listening on Home.** Home keeps command listening in a non-interrupting, mixable configuration (no `.duckOthers`/interrupt options — external music keeps playing); the full quiz audio session activates only at quiz start. **Fallback clause (founder-approved): if a spike shows mixable capture still audibly ducks/pauses A2DP audio, fall back to (A)** — no session at all until quiz start, Home voice commands sacrificed. Spike first, record the result here.
 
 ## Acceptance
 
 - [ ] Cold-launch the app while audio plays in another app (sim: verify via `AVAudioSession` state + no `setActive(true)` call before quiz start; unit-pin the call order) — external audio is not interrupted on launch.
 - [ ] Starting a quiz still configures the session exactly as today (`startNewQuiz` path unchanged; targeted quiz-audio suites green).
 - [ ] #105's speech-authorization launch request still fires (existing test/grep pin).
-- [ ] Per the founder's (A)/(B) decision: chosen Home-listening behavior covered by a unit test.
+- [ ] Home command listening runs in the mixable configuration (unit test pins the category/options used on Home vs. in-quiz), OR the (A) fallback is recorded in this file with the spike evidence.
 - [ ] Full targeted audio/voice suites green; note in #124 what changed.

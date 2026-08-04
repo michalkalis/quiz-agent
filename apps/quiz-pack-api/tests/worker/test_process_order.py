@@ -397,3 +397,70 @@ async def test_failure_non_final_retry(
     assert job.retry_count == 1
 
     await _cleanup(session, order_id)
+
+
+# ── Cancellation (ARQ job_timeout / worker shutdown) ──────────────────────────
+
+
+class _HangingSourcer:
+    """FactSourcer double that hangs forever — the #139 silent failure mode
+    (a stalled LLM/network connection with no client timeout)."""
+
+    async def gather_facts(self, *_args: Any, **_kwargs: Any) -> None:
+        import asyncio
+
+        await asyncio.Event().wait()
+
+
+@pytest.mark.asyncio
+async def test_cancellation_updates_rows_and_propagates(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#139 root cause: ARQ's job_timeout cancels the task, and CancelledError
+    is a BaseException — before the fix `except Exception` never ran, so a
+    timed-out job updated no rows and reported nothing. The founder's
+    2026-08-03 order showed exactly that: three silent attempts, zero
+    diagnostics. This pins: rows go terminal on the final attempt, the error
+    names the hung stage, and the cancellation still propagates so ARQ keeps
+    its own semantics."""
+    import asyncio
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+
+    worker_ctx["job_try"] = WorkerSettings.max_tries  # the final attempt
+    worker_ctx["fact_sourcer"] = _HangingSourcer()
+
+    from app.worker.tasks import process_order
+
+    task = asyncio.create_task(process_order(worker_ctx, str(order_id)))
+    # Wait until the pipeline has actually reached the hanging sourcing stage
+    # (step_log gets its first entry) before cancelling — cancelling earlier
+    # would test a different, uninteresting window.
+    async with worker_ctx["session_factory"]() as poll_session:
+        for _ in range(200):
+            await asyncio.sleep(0.02)
+            job = await poll_session.get(GenerationJob, job_id)
+            await poll_session.refresh(job)
+            if job.step_log:
+                break
+        else:
+            task.cancel()
+            pytest.fail("pipeline never reached the sourcing stage")
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+
+    job = await session.get(GenerationJob, job_id)
+    assert job.status == "failed"
+    assert job.error is not None and "sourcing" in job.error
+    assert job.retry_count == WorkerSettings.max_tries
+
+    await _cleanup(session, order_id)

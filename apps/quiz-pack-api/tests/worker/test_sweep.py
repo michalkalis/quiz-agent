@@ -526,3 +526,40 @@ async def test_sweep_ignores_fresh_orders(
 
     await _cleanup(session, pending_id)
     await _cleanup(session, inprog_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_force_fail_emits_sentry_event(
+    engine: AsyncEngine, session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#139 acceptance 3: the budget-exhausted force-fail is the terminal
+    state a hung-then-killed pipeline lands in — the worker never raised, so
+    if this branch doesn't report to Sentry, nothing ever will (the founder's
+    2026-08-03 order died exactly here with zero footprint)."""
+    import sentry_sdk
+
+    from app.worker import sweep as sweep_module
+
+    captured: list[str] = []
+    monkeypatch.setattr(
+        sentry_sdk,
+        "capture_message",
+        lambda message, level=None, **kw: captured.append((message, level)),
+    )
+
+    order_id, _job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5), retry_count=3
+    )
+    ctx: Dict[str, Any] = {
+        "redis": FakeArqPool(fail=False),
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    assert len(captured) == 1
+    message, level = captured[0]
+    assert str(order_id) in message
+    assert level == "error"
+
+    await _cleanup(session, order_id)

@@ -297,6 +297,14 @@ def chat_openai(model: str, **kwargs):
     that reject them (Claude 5-class, gpt-5 reasoning family) so call sites
     keep their historical signatures. Name kept from #53 for call-site
     compatibility even though it can now return a non-OpenAI client.
+
+    #139: when the caller passes no ``timeout``/``request_timeout``, the
+    ``ChatOpenAI`` path defaults to ``GENERATION_TIMEOUT``. LangChain's own
+    default is an *explicit* ``timeout=None`` handed to the OpenAI SDK, which
+    (unlike the omitted-arg sentinel) disables httpx timeouts entirely — a
+    stalled connection then hangs the caller forever, which is how a pack
+    order died with zero diagnostics on 2026-08-03. The Bedrock path keeps
+    boto3's own bounded connect/read defaults.
     """
     if not supports_sampling_params(model):
         kwargs.pop("temperature", None)
@@ -306,6 +314,9 @@ def chat_openai(model: str, **kwargs):
         return _chat_bedrock(model, **kwargs)
 
     from langchain_openai import ChatOpenAI
+
+    if "timeout" not in kwargs and "request_timeout" not in kwargs:
+        kwargs["timeout"] = GENERATION_TIMEOUT
 
     base_url, api_key = _base_url_and_key(direct=False)
     return ChatOpenAI(

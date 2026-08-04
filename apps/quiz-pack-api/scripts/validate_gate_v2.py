@@ -5,6 +5,13 @@ each correlates with the founder's ratings:
 
 - v1: 2 judges × 7 dimensions × 1 call each (the current default)
 - v2: 3 judges × 1 panel call each, 5 dimensions, reasoning-first (GATE_V2)
+- v2c (``--arms``): the T6-fallback middle ground — 5 dimensions in 2 cluster
+  calls per judge (fun + craft, GATE_V2_CLUSTERED)
+
+``JUDGE_MODELS`` (env) swaps the judge panel for every arm — e.g. the Bedrock
+panel (founder directive 2026-08-04): pass ``bedrock:``-prefixed ids and set
+``SCORER_MAX_CONCURRENT=3`` (Bedrock on-demand throttling, field test
+2026-08-01).
 
 The calibration set is built by joining ``data/pilot-2026-07-11/pilot_review.md``
 (numbered question texts) with ``founder_ratings.md`` (blind 1-5 ratings,
@@ -162,19 +169,32 @@ def _mean_overall(model_scores: list[dict]) -> float | None:
     return sum(overalls) / len(overalls) if overalls else None
 
 
-async def _run(out_path: Path) -> None:
+# Arm label → MultiModelScorer kwargs. Explicit kwargs so an env flag flip
+# can never silently change which gate an arm measures.
+ARMS = {
+    "v1": {"gate_v2": False},
+    "v2": {"gate_v2": True, "gate_v2_clustered": False},
+    "v2c": {"gate_v2": True, "gate_v2_clustered": True},
+}
+
+
+async def _run(out_path: Path, arms: list[str]) -> None:
     if not os.getenv("OPENROUTER_API_KEY") and os.getenv("LLM_GATEWAY") == "openrouter":
         raise SystemExit("OPENROUTER_API_KEY is not set")
 
     items = build_calibration_set()
     print(f"calibration set: {len(items)} founder-rated questions")
 
-    results: dict[str, dict] = {"items": {i["id"]: {"founder": i["founder_rating"]} for i in items}}
-    for label, gate_v2 in (("v1", False), ("v2", True)):
-        scorer = MultiModelScorer(gate_v2=gate_v2)
+    results: dict[str, dict] = {
+        "items": {i["id"]: {"founder": i["founder_rating"]} for i in items},
+        "judges": {},
+    }
+    for label in arms:
+        scorer = MultiModelScorer(**ARMS[label])
         if not scorer.models:
             raise SystemExit(f"{label}: no judges available (check API keys/gateway)")
-        print(f"{label}: judges = {[m['name'] for m in scorer.models]}")
+        results["judges"][label] = [m["name"] for m in scorer.models]
+        print(f"{label}: judges = {results['judges'][label]}")
         batch = await scorer.score_batch([dict(i) for i in items])
         for r in batch:
             entry = results["items"][r["id"]]
@@ -185,36 +205,47 @@ async def _run(out_path: Path) -> None:
                 if s.get("model_name") != "deterministic"
             }
 
-    founder, v1_scores, v2_scores = [], [], []
+    founder: list[float] = []
+    arm_scores: dict[str, list[float]] = {label: [] for label in arms}
     for i in items:
         entry = results["items"][i["id"]]
-        if entry.get("v1") is None or entry.get("v2") is None:
+        if any(entry.get(label) is None for label in arms):
             print(f"  ! {i['id']}: unscored by at least one gate — excluded")
             continue
         founder.append(entry["founder"])
-        v1_scores.append(entry["v1"])
-        v2_scores.append(entry["v2"])
+        for label in arms:
+            arm_scores[label].append(entry[label])
 
-    summary = {
-        "n": len(founder),
-        "v1_vs_founder": {
-            "pearson": round(_pearson(v1_scores, founder), 3),
-            "spearman": round(_spearman(v1_scores, founder), 3),
-        },
-        "v2_vs_founder": {
-            "pearson": round(_pearson(v2_scores, founder), 3),
-            "spearman": round(_spearman(v2_scores, founder), 3),
-        },
-        "v1_vs_v2_spearman": round(_spearman(v1_scores, v2_scores), 3),
-    }
+    summary: dict = {"n": len(founder)}
+    for label in arms:
+        summary[f"{label}_vs_founder"] = {
+            "pearson": round(_pearson(arm_scores[label], founder), 3),
+            "spearman": round(_spearman(arm_scores[label], founder), 3),
+        }
+    for a_idx, a in enumerate(arms):
+        for b in arms[a_idx + 1:]:
+            summary[f"{a}_vs_{b}_spearman"] = round(
+                _spearman(arm_scores[a], arm_scores[b]), 3
+            )
     results["summary"] = summary
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
     print(json.dumps(summary, indent=2))
     print(f"full results: {out_path}")
-    v1_s, v2_s = summary["v1_vs_founder"]["spearman"], summary["v2_vs_founder"]["spearman"]
-    verdict = "PASS (v2 >= v1 - 0.05)" if v2_s >= v1_s - 0.05 else "FAIL — keep GATE_V2 off"
-    print(f"advisory verdict: {verdict}")
+    if "v1" in arms:
+        # Pre-registered flip rule (#135 T6): a challenger arm passes only if
+        # its founder correlation is not meaningfully below v1's.
+        v1_s = summary["v1_vs_founder"]["spearman"]
+        for label in arms:
+            if label == "v1":
+                continue
+            arm_s = summary[f"{label}_vs_founder"]["spearman"]
+            verdict = (
+                f"PASS ({label} >= v1 - 0.05)"
+                if arm_s >= v1_s - 0.05
+                else f"FAIL — keep {label} off"
+            )
+            print(f"advisory verdict [{label}]: {verdict}")
 
 
 def main() -> None:
@@ -225,8 +256,17 @@ def main() -> None:
         default=DATA_DIR / "gate_v2_validation.json",
         help="where to write per-question results",
     )
+    parser.add_argument(
+        "--arms",
+        default="v1,v2",
+        help=f"comma-separated arms to run, from {sorted(ARMS)} (default: v1,v2)",
+    )
     args = parser.parse_args()
-    asyncio.run(_run(args.out))
+    arms = [a.strip() for a in args.arms.split(",") if a.strip()]
+    unknown = sorted(set(arms) - set(ARMS))
+    if unknown or not arms:
+        raise SystemExit(f"unknown arms {unknown}; choose from {sorted(ARMS)}")
+    asyncio.run(_run(args.out, arms))
 
 
 if __name__ == "__main__":

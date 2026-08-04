@@ -224,6 +224,19 @@ def gate_v2() -> bool:
     return _truthy(os.getenv("GATE_V2"))
 
 
+def gate_v2_clustered() -> bool:
+    """#135 T6 fallback (founder go 2026-08-04): split the gate-v2 panel call
+    into 2 cluster calls per judge — fun (spark/surprise/tellability) and
+    craft (framing/answerability) — the middle ground between one call per
+    dimension (v1) and all dims in one call (v2).
+
+    Only meaningful with ``GATE_V2`` on. ``False`` by default — same flip
+    condition as ``GATE_V2`` (calibration-set validation + founder go).
+    Set ``GATE_V2_CLUSTERED=1`` to enable.
+    """
+    return _truthy(os.getenv("GATE_V2_CLUSTERED"))
+
+
 def judge_models() -> list[str] | None:
     """#135 T2: override the gate judge panel (comma-separated factory ids).
 

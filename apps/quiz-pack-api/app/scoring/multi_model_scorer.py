@@ -71,7 +71,9 @@ _ANSWER_TAIL_MARKERS = (
 
 # Bound on concurrent judge calls per score_batch (dimensions × judges ×
 # questions fan out fast; the gateway tolerates ~10 in flight comfortably).
-_MAX_CONCURRENT_CALLS = 10
+# Bedrock on-demand quotas throttle well below that (field test 2026-08-01)
+# — SCORER_MAX_CONCURRENT lowers the bound for Bedrock judge runs.
+_MAX_CONCURRENT_CALLS = int(os.getenv("SCORER_MAX_CONCURRENT", "10"))
 
 
 def compute_answer_brevity(answer: object) -> int:
@@ -323,7 +325,19 @@ GATE_V2_DIMENSION_KEYS = (
     "answerability",
 )
 
-_GATE_V2_HEADER = """You are evaluating ONE trivia quiz question on five quality dimensions. The question is read aloud to the player and answered by voice: it must land on a single listen, and the answer must be short and gradable.
+# #135 T6 fallback (founder go 2026-08-04, behind GATE_V2_CLUSTERED): the
+# 2-cluster middle ground between v1 (one call per dimension) and v2 (all
+# dims in one call) — entertainment value vs craft, 2 calls per judge.
+GATE_V2_CLUSTERS: dict[str, tuple[str, ...]] = {
+    "fun": ("conversation_spark", "surprise_delight", "tellability"),
+    "craft": ("clever_framing", "answerability"),
+}
+
+# Keeps the rendered prompt byte-identical to the pre-cluster wording for the
+# full 5-dim panel ("five", "THE FIVE DIMENSIONS") — validation comparability.
+_NUM_WORDS = {2: "two", 3: "three", 5: "five"}
+
+_GATE_V2_HEADER = """You are evaluating ONE trivia quiz question on {dim_count} quality dimensions. The question is read aloud to the player and answered by voice: it must land on a single listen, and the answer must be short and gradable.
 
 QUESTION: {question}
 {options_block}CORRECT ANSWER: {answer}
@@ -332,7 +346,7 @@ TOPIC: {topic}
 
 Score calibration: most questions land at 4-7. 9-10 is rare (top 5%). If you would score almost everything 7+, you are inflating — recalibrate against the anchors below.
 
-THE FIVE DIMENSIONS:
+THE {dim_count_upper} DIMENSIONS:
 
 {dims_block}
 
@@ -348,16 +362,18 @@ def _gate_v2_prompt(
     answer: str,
     difficulty: str,
     topic: str,
+    dim_keys: tuple[str, ...] = GATE_V2_DIMENSION_KEYS,
 ) -> str:
     dims_block = "\n\n".join(
         f"{i}. `{key}` — {SCORING_DIMENSIONS[key]['title']}:\n"
         f"{SCORING_DIMENSIONS[key]['rubric']}"
-        for i, key in enumerate(GATE_V2_DIMENSION_KEYS, start=1)
+        for i, key in enumerate(dim_keys, start=1)
     )
     schema_entries = ", ".join(
         f'"{key}": {{"reasoning": "<one short sentence>", "score": <integer 1-10>}}'
-        for key in GATE_V2_DIMENSION_KEYS
+        for key in dim_keys
     )
+    dim_count = _NUM_WORDS.get(len(dim_keys), str(len(dim_keys)))
     return _GATE_V2_HEADER.format(
         question=question,
         options_block=options_block,
@@ -366,10 +382,35 @@ def _gate_v2_prompt(
         topic=topic,
         dims_block=dims_block,
         schema_entries=schema_entries,
+        dim_count=dim_count,
+        dim_count_upper=dim_count.upper(),
     )
 
 
-def _parse_gate_v2_response(text: str) -> dict[str, tuple[float, str]]:
+def _response_text(response) -> str:
+    """Plain text of a LangChain chat response.
+
+    OpenAI-style clients return ``content`` as a string; Bedrock Converse
+    judges (Pixtral / DeepSeek R1 / gpt-oss) return a list of typed blocks
+    where reasoning models put chain-of-thought in ``reasoning_content``
+    blocks — only ``text`` blocks carry the verdict JSON.
+    """
+    content = response.content
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict) and block.get("type") == "text":
+            parts.append(str(block.get("text", "")))
+    return "\n".join(parts)
+
+
+def _parse_gate_v2_response(
+    text: str,
+    dim_keys: tuple[str, ...] = GATE_V2_DIMENSION_KEYS,
+) -> dict[str, tuple[float, str]]:
     """{dim_key: (score, reasoning)} for every valid entry; {} on no-parse."""
     cleaned = text.strip()
     if cleaned.startswith("```"):
@@ -386,7 +427,7 @@ def _parse_gate_v2_response(text: str) -> dict[str, tuple[float, str]]:
     if not isinstance(dims, dict):
         return {}
     parsed: dict[str, tuple[float, str]] = {}
-    for key in GATE_V2_DIMENSION_KEYS:
+    for key in dim_keys:
         entry = dims.get(key)
         if not isinstance(entry, dict):
             continue
@@ -452,6 +493,7 @@ class MultiModelScorer:
         self,
         models: Optional[list[dict]] = None,
         gate_v2: Optional[bool] = None,
+        gate_v2_clustered: Optional[bool] = None,
     ):
         """Initialize with a list of judges.
 
@@ -463,8 +505,16 @@ class MultiModelScorer:
             gate_v2: Force the gate mode; ``None`` (default) reads the
                 ``GATE_V2`` feature flag (#135 D7 — off until the
                 calibration-set validation passes).
+            gate_v2_clustered: Split the gate-v2 panel into 2 cluster calls
+                per judge (#135 T6 fallback); ``None`` (default) reads the
+                ``GATE_V2_CLUSTERED`` feature flag. No effect under gate v1.
         """
         self._gate_v2 = feature_flags.gate_v2() if gate_v2 is None else gate_v2
+        self._gate_v2_clustered = (
+            feature_flags.gate_v2_clustered()
+            if gate_v2_clustered is None
+            else gate_v2_clustered
+        )
         self.models = models or self._default_models(self._gate_v2)
         self._clients: dict = {}
 
@@ -503,6 +553,18 @@ class MultiModelScorer:
         if override:
             models = []
             for model_id in override:
+                if llm_factory.is_bedrock_model(model_id):
+                    # Bedrock judges bypass the gateway — gated on AWS creds
+                    # only (the factory fails loud on a missing dependency).
+                    if os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_PROFILE"):
+                        models.append(_config(model_id))
+                    else:
+                        logger.warning(
+                            "JUDGE_MODELS judge %s skipped — no AWS "
+                            "credentials for Bedrock",
+                            model_id,
+                        )
+                    continue
                 provider = llm_factory.provider_for_model(model_id)
                 if not _enabled(provider):
                     logger.warning(
@@ -560,7 +622,7 @@ class MultiModelScorer:
                         response = await client.ainvoke([HumanMessage(content=prompt)])
                 else:
                     response = await client.ainvoke([HumanMessage(content=prompt)])
-                parsed = _parse_dim_response(response.content)
+                parsed = _parse_dim_response(_response_text(response))
                 if parsed is not None:
                     return parsed
                 logger.warning(
@@ -579,6 +641,7 @@ class MultiModelScorer:
         model_config: dict,
         prompt: str,
         semaphore: Optional[asyncio.Semaphore] = None,
+        dim_keys: tuple[str, ...] = GATE_V2_DIMENSION_KEYS,
     ) -> Optional[dict[str, tuple[float, str]]]:
         """One judge × one gate-v2 panel call (all dims), single retry.
 
@@ -593,7 +656,7 @@ class MultiModelScorer:
                         response = await client.ainvoke([HumanMessage(content=prompt)])
                 else:
                     response = await client.ainvoke([HumanMessage(content=prompt)])
-                parsed = _parse_gate_v2_response(response.content)
+                parsed = _parse_gate_v2_response(_response_text(response), dim_keys)
                 if parsed:
                     return parsed
                 logger.warning(
@@ -640,28 +703,43 @@ class MultiModelScorer:
             return scores
 
         if self._gate_v2:
-            # #135 D7: one panel call per judge, all 5 dims in one
-            # reasoning-first structured output; judges run concurrently.
-            panel_prompt = _gate_v2_prompt(
-                question, options_block, answer_text, difficulty, topic
+            # #135 D7: one panel call per judge covering all 5 dims —
+            # or, clustered (#135 T6 fallback), one call per dimension
+            # cluster per judge. All calls run concurrently.
+            clusters = (
+                list(GATE_V2_CLUSTERS.values())
+                if self._gate_v2_clustered
+                else [GATE_V2_DIMENSION_KEYS]
             )
-            panel_results = await asyncio.gather(*(
-                self._score_panel(model_config, panel_prompt, semaphore)
-                for model_config in self.models
-            ))
-            judge_outcomes = [
-                (
-                    model_config,
-                    None
-                    if parsed is None
-                    else {k: v[0] for k, v in parsed.items()},
-                    []
-                    if parsed is None
-                    else [f"{k}: {v[1]}" for k, v in parsed.items() if v[1]],
-                    len(GATE_V2_DIMENSION_KEYS),
+            cluster_prompts = [
+                _gate_v2_prompt(
+                    question, options_block, answer_text, difficulty, topic,
+                    dim_keys,
                 )
-                for model_config, parsed in zip(self.models, panel_results)
+                for dim_keys in clusters
             ]
+            panel_results = await asyncio.gather(*(
+                self._score_panel(model_config, prompt, semaphore, dim_keys)
+                for model_config in self.models
+                for prompt, dim_keys in zip(cluster_prompts, clusters)
+            ))
+            judge_outcomes = []
+            n_clusters = len(clusters)
+            for i, model_config in enumerate(self.models):
+                parts = [
+                    p
+                    for p in panel_results[i * n_clusters:(i + 1) * n_clusters]
+                    if p is not None
+                ]
+                merged: dict[str, tuple[float, str]] = {}
+                for p in parts:
+                    merged.update(p)
+                judge_outcomes.append((
+                    model_config,
+                    {k: v[0] for k, v in merged.items()} if merged else None,
+                    [f"{k}: {v[1]}" for k, v in merged.items() if v[1]],
+                    len(GATE_V2_DIMENSION_KEYS),
+                ))
         else:
             dim_items = list(SCORING_DIMENSIONS.items())
             prompts = {

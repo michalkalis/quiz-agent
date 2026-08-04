@@ -272,3 +272,132 @@ async def test_score_batch_threads_possible_answers_through(
     ])
 
     assert captured[0]["possible_answers"] == {"a": "Mars", "b": "Jupiter"}
+
+
+# ---------------------------------------------------------------------------
+# Gate v2 clustered mode + Bedrock judges (#135 T6 fallback, 2026-08-04)
+# ---------------------------------------------------------------------------
+
+
+_PANEL_JSON = (
+    '{"dimensions": {'
+    '"conversation_spark": {"reasoning": "r", "score": 6}, '
+    '"surprise_delight": {"reasoning": "r", "score": 7}, '
+    '"tellability": {"reasoning": "r", "score": 8}, '
+    '"clever_framing": {"reasoning": "r", "score": 4}, '
+    '"answerability": {"reasoning": "r", "score": 5}}}'
+)
+
+
+@pytest.mark.asyncio
+async def test_gate_v2_clustered_merges_two_calls_per_judge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clustered mode exists to undo the cross-dimension contamination of the
+    single panel call WITHOUT paying v1's per-dimension cost: each judge must
+    get exactly one call per cluster, each cluster prompt must carry only its
+    own dimensions, and the judge's overall must still be the mean of all 5."""
+    from app.scoring.multi_model_scorer import GATE_V2_CLUSTERS
+
+    scorer = MultiModelScorer(
+        models=[{"provider": "openai", "model": "m", "name": "m"}],
+        gate_v2=True,
+        gate_v2_clustered=True,
+    )
+    fake_client = AsyncMock()
+    fake_client.ainvoke.return_value = _StubResponse(_PANEL_JSON)
+    monkeypatch.setattr(scorer, "_get_client", lambda _cfg: fake_client)
+
+    out = await scorer.score_question(question="Q?", answer="A")
+
+    assert fake_client.ainvoke.await_count == len(GATE_V2_CLUSTERS)
+    prompts = [c.args[0][0].content for c in fake_client.ainvoke.call_args_list]
+    fun_prompt = next(p for p in prompts if "conversation_spark" in p)
+    craft_prompt = next(p for p in prompts if "clever_framing" in p)
+    assert "clever_framing" not in fun_prompt  # cluster isolation
+    assert "conversation_spark" not in craft_prompt
+    assert "THE THREE DIMENSIONS" in fun_prompt
+    assert "THE TWO DIMENSIONS" in craft_prompt
+
+    scores = out[0]["scores"]
+    for dim in ("conversation_spark", "tellability", "answerability"):
+        assert dim in scores  # both clusters merged into one judge entry
+    assert out[0]["overall_score"] == 6.0  # mean of 6,7,8,4,5 — code-computed
+
+
+@pytest.mark.asyncio
+async def test_gate_v2_clustered_partial_failure_keeps_other_cluster(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A6 fail-loud carry-over: when one cluster call fails after its retry,
+    the judge keeps the other cluster's dimensions (logged as missing) rather
+    than dropping the whole judge or defaulting scores."""
+    scorer = MultiModelScorer(
+        models=[{"provider": "openai", "model": "m", "name": "m"}],
+        gate_v2=True,
+        gate_v2_clustered=True,
+    )
+    fake_client = AsyncMock()
+
+    async def _ainvoke(messages: Any) -> _StubResponse:
+        if "clever_framing" in messages[0].content:
+            return _StubResponse("no json")
+        return _StubResponse(_PANEL_JSON)
+
+    fake_client.ainvoke.side_effect = _ainvoke
+    monkeypatch.setattr(scorer, "_get_client", lambda _cfg: fake_client)
+
+    out = await scorer.score_question(question="Q?", answer="A")
+
+    scores = out[0]["scores"]
+    assert "conversation_spark" in scores
+    assert "clever_framing" not in scores
+    assert out[0]["overall_score"] == 7.0  # mean of the 3 fun dims only
+
+
+def test_parse_gate_v2_response_respects_dim_subset() -> None:
+    """Cluster parsing must ignore dimensions outside its cluster — otherwise
+    a model echoing all 5 dims would smuggle unvalidated scores past the
+    cluster split and both calls would double-count."""
+    from app.scoring.multi_model_scorer import _parse_gate_v2_response
+
+    parsed = _parse_gate_v2_response(
+        _PANEL_JSON, dim_keys=("clever_framing", "answerability")
+    )
+    assert set(parsed) == {"clever_framing", "answerability"}
+
+
+def test_response_text_extracts_bedrock_content_blocks() -> None:
+    """Bedrock Converse reasoning judges (R1/gpt-oss) return typed blocks;
+    chain-of-thought must not reach the JSON parser — only text blocks do."""
+    from app.scoring.multi_model_scorer import _response_text
+
+    resp = _StubResponse("plain")
+    assert _response_text(resp) == "plain"
+
+    resp = _StubResponse("x")
+    resp.content = [
+        {"type": "reasoning_content", "reasoning_content": {"text": "cot"}},
+        {"type": "text", "text": '{"score": 5}'},
+    ]
+    assert _response_text(resp) == '{"score": 5}'
+
+
+def test_judge_models_override_gates_bedrock_on_aws_creds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bedrock judges bypass the LLM gateway, so the panel builder must gate
+    them on AWS credentials — not on gateway API keys (which they don't use).
+    Without creds the judge is skipped loudly, never half-configured."""
+    monkeypatch.setenv(
+        "JUDGE_MODELS", "bedrock:us.mistral.pixtral-large-2502-v1:0"
+    )
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test-key")
+    models = MultiModelScorer._default_models(gate_v2=True)
+    assert [m["model"] for m in models] == [
+        "bedrock:us.mistral.pixtral-large-2502-v1:0"
+    ]
+
+    monkeypatch.delenv("AWS_ACCESS_KEY_ID")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    assert MultiModelScorer._default_models(gate_v2=True) == []

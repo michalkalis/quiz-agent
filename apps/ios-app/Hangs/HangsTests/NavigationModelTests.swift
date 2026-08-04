@@ -27,7 +27,7 @@ struct NavigationModelTests {
     func startingQuizEmptiesPath() {
         let nav = NavigationModel()
         nav.path.append(AppRoute.settings)
-        nav.path.append(AppRoute.orderPack)
+        nav.path.append(AppRoute.myPacks)
 
         nav.handleQuizStateChange(.startingQuiz)
 
@@ -63,41 +63,49 @@ struct NavigationModelTests {
         #expect(!nav.path.isEmpty)
     }
 
-    // WHY: the belt-and-braces isPresented reset (gate note 2) — SwiftUI's
-    // transitive dismiss of a `navigationDestination(isPresented:)` child
-    // when the parent path clears is community-documented as unreliable, so
-    // OrderProgress's presentation is driven off this flag directly and must
-    // reset in the SAME step as the path, proven here off-sim.
-    @Test("entering .startingQuiz resets orderProgressPresented too")
-    func startingQuizResetsOrderProgressPresented() {
+    // WHY (#138): the create-pack flow is a sheet now, and "Start quiz" on a
+    // delivered pack fires from INSIDE it. If the sheet flag didn't clear in
+    // the same step as the path, the modal would sit on top of the fresh
+    // QuestionView — the same class of bug the pushed OrderProgress child had.
+    @Test("entering .startingQuiz closes the order sheet too")
+    func startingQuizClosesOrderFlow() {
         let nav = NavigationModel()
         nav.path.append(AppRoute.settings)
-        nav.path.append(AppRoute.orderPack)
-        nav.orderProgressPresented = true
+        nav.orderFlowPresented = true
 
         nav.handleQuizStateChange(.startingQuiz)
 
         #expect(nav.path.isEmpty)
-        #expect(nav.orderProgressPresented == false)
+        #expect(nav.orderFlowPresented == false)
     }
 
-    // WHY: `orderProgressPresented` lives on the app-lifetime NavigationModel,
-    // not per-mount view @State — if a multi-level pop (back-button long-press
-    // menu) removes OrderPack without SwiftUI writing the isPresented binding
-    // back, a stale `true` would auto-push a ghost OrderProgress on the next
-    // Create-pack visit. The model itself must drop the flag the moment
-    // `.orderPack` leaves the path, and keep it while OrderPack stays mounted.
-    @Test("popping OrderPack out of the path resets orderProgressPresented")
-    func poppingOrderPackResetsOrderProgressPresented() {
+    // WHY: teardown must be atomic — a caller that empties the path but leaves
+    // the sheet up (or vice versa) is exactly the half-torn-down state #111
+    // made structurally impossible. clearAll is the single seam both go
+    // through, so it is asserted directly.
+    @Test("clearAll resets the path and the order sheet in one step")
+    func clearAllResetsBoth() {
         let nav = NavigationModel()
-        nav.path = [.settings, .orderPack]
-        nav.orderProgressPresented = true
+        nav.path = [.settings, .myPacks]
+        nav.orderFlowPresented = true
 
-        nav.path = [.settings, .orderPack]
-        #expect(nav.orderProgressPresented, "flag must survive while OrderPack stays mounted")
+        nav.clearAll()
 
+        #expect(nav.path.isEmpty)
+        #expect(nav.orderFlowPresented == false)
+    }
+
+    // WHY: the sheet must survive ordinary navigation. Only a quiz start (or an
+    // explicit close) may collapse it — a pack being generated behind the sheet
+    // keeps polling, and popping a screen is not a cancellation.
+    @Test("a non-start state leaves the order sheet open")
+    func nonStartStateLeavesOrderFlowOpen() {
+        let nav = NavigationModel()
         nav.path = [.settings]
-        #expect(nav.orderProgressPresented == false)
-        #expect(nav.path == [.settings], "the pop itself must not be disturbed")
+        nav.orderFlowPresented = true
+
+        nav.handleQuizStateChange(.askingQuestion)
+
+        #expect(nav.orderFlowPresented)
     }
 }

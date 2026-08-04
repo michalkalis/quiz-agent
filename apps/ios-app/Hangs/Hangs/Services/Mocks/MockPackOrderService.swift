@@ -33,6 +33,19 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// then a success. Takes precedence over `getSequence`/`getResult`.
     private let getResults: [Result<OrderSnapshot, PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
+    private let retryResult: Result<OrderCreatedResponse, PackFailure>
+    /// Artificial latency on `createOrder`, in seconds. Default 0 (instant).
+    /// A test that needs to observe the `.submitting` window — where the sheet
+    /// blocks dismissal because the purchase call is in flight — has to hold
+    /// the VM there deterministically rather than racing an instant mock.
+    private let createDelaySeconds: Double
+    /// Call counters so a test can prove WHICH endpoint "Try again" used — a
+    /// retry of a paid order must never fall through to a second `createOrder`.
+    private let createCalls = OSAllocatedUnfairLock(initialState: 0)
+    private let retryCalls = OSAllocatedUnfairLock(initialState: 0)
+
+    var createOrderCallCount: Int { createCalls.withLock { $0 } }
+    var retryOrderCallCount: Int { retryCalls.withLock { $0 } }
 
     /// Boxed error so the whole config stays value-typed / Sendable.
     struct PackFailure: Error, Sendable {
@@ -45,17 +58,30 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         getResult: Result<OrderSnapshot, PackFailure> = .success(.mockDelivered),
         listResult: Result<[OrderSnapshot], PackFailure> = .success([.mockDelivered, .mockPending]),
         getSequence: [OrderSnapshot] = [],
-        getResults: [Result<OrderSnapshot, PackFailure>] = []
+        getResults: [Result<OrderSnapshot, PackFailure>] = [],
+        retryResult: Result<OrderCreatedResponse, PackFailure> = .success(.mockCreated),
+        createDelaySeconds: Double = 0
     ) {
+        self.createDelaySeconds = createDelaySeconds
         self.createResult = createResult
         self.getResult = getResult
         self.listResult = listResult
         self.getSequence = getSequence
         self.getResults = getResults
+        self.retryResult = retryResult
     }
 
     func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
-        try createResult.get()
+        createCalls.withLock { $0 += 1 }
+        if createDelaySeconds > 0 {
+            try await Task.sleep(for: .seconds(createDelaySeconds))
+        }
+        return try createResult.get()
+    }
+
+    func retryOrder(id: String) async throws -> OrderCreatedResponse {
+        retryCalls.withLock { $0 += 1 }
+        return try retryResult.get()
     }
 
     func listOrders() async throws -> [OrderSnapshot] {

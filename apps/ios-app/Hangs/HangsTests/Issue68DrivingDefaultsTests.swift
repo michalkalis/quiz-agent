@@ -35,6 +35,7 @@ struct SettingsViewSessionGroupTests {
         )
         return SettingsView(viewModel: .preview)
             .environmentObject(appState)
+            .environmentObject(NavigationModel())
     }
 
     @Test("all four session rows render in the view tree")

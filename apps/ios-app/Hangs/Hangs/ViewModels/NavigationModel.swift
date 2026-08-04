@@ -17,12 +17,9 @@ import SwiftUI
 /// The pushed-stack routes on ContentView's root `NavigationStack`. A plain
 /// value enum (no associated values) so it stays `Hashable` for
 /// `NavigationStack(path:)` / `NavigationLink(value:)` — see issue-111 gate
-/// note 2. OrderPack→OrderProgress is the one push that stays local
-/// `navigationDestination(isPresented:)` (OrderProgress observes OrderPack's
-/// live, reference-typed view model, which cannot live in a Hashable enum).
+/// note 2.
 enum AppRoute: Hashable {
     case settings
-    case orderPack
     case myPacks
     #if DEBUG
         case debugLog
@@ -30,35 +27,29 @@ enum AppRoute: Hashable {
 }
 
 /// Owns the navigation surface for ContentView's root stack: the pushed
-/// route path and the belt-and-braces `isPresented` binding for the
-/// OrderPack→OrderProgress child (issue-111 gate note 2). Both are cleared
-/// atomically the moment `quizState` enters `.startingQuiz`, so a quiz start
-/// from anywhere — voice "start" over a pushed stack, error-retry, or a
-/// button — always tears the stack down; there is no per-call-site teardown
-/// to forget.
+/// route path and the presented-ness of the custom-pack order sheet (#138).
+/// Both are cleared atomically the moment `quizState` enters `.startingQuiz`,
+/// so a quiz start from anywhere — voice "start" over a pushed stack,
+/// error-retry, or a button — always tears the surface down; there is no
+/// per-call-site teardown to forget.
 @MainActor
 final class NavigationModel: ObservableObject {
     /// Typed (not `NavigationPath`) so the model can see *which* routes are
-    /// mounted: `orderProgressPresented` must never outlive the OrderPack
-    /// screen it belongs to. SwiftUI's write-back of an `isPresented` binding
-    /// is not guaranteed when a multi-level pop removes the whole subtree at
-    /// once (back-button long-press menu), which would leave a stale `true`
-    /// that auto-pushes a ghost OrderProgress on the next Create-pack visit.
-    @Published var path: [AppRoute] = [] {
-        didSet {
-            if orderProgressPresented, !path.contains(.orderPack) {
-                orderProgressPresented = false
-            }
-        }
-    }
+    /// mounted.
+    @Published var path: [AppRoute] = []
 
-    @Published var orderProgressPresented = false
+    /// The #138 create-pack modal. It lives here rather than in SettingsView's
+    /// `@State` for the same reason the old OrderProgress flag did: quiz-start
+    /// teardown has to be able to collapse it in the SAME step that empties the
+    /// path, otherwise "Start quiz" from a delivered pack leaves the sheet
+    /// covering the fresh QuestionView.
+    @Published var orderFlowPresented = false
 
-    /// Resets the whole nav surface — path + the OrderProgress `isPresented`
-    /// child — in one step, so no in-between state is ever observable.
+    /// Resets the whole nav surface — pushed path + the order sheet — in one
+    /// step, so no in-between state is ever observable.
     func clearAll() {
         path = []
-        orderProgressPresented = false
+        orderFlowPresented = false
     }
 
     /// Reactive teardown seam: called from ContentView's

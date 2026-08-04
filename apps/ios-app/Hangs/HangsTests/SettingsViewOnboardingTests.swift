@@ -35,6 +35,7 @@ struct SettingsViewOnboardingTests {
         )
         let view = SettingsView(viewModel: .preview)
             .environmentObject(appState)
+            .environmentObject(NavigationModel())
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -76,7 +77,7 @@ struct SettingsViewOnboardingTests {
             persistenceStore: MockPersistenceStore()
         )
         let settings = SettingsView(viewModel: .preview, onReplayOnboarding: { fired = true })
-        let view = settings.environmentObject(appState)
+        let view = settings.environmentObject(appState).environmentObject(NavigationModel())
 
         try await ViewHosting.host(view) {
             _ = try view.inspect()

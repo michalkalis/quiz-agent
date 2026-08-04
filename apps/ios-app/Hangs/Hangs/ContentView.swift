@@ -69,7 +69,7 @@ struct ContentView: View {
     }
 
     /// Start a quiz that plays the delivered custom pack (#95). Moved here
-    /// from SettingsView (#111): OrderPack/MyPacks are now built inside this
+    /// from SettingsView (#111): MyPacks is now built inside this
     /// view's single route-destination closure below, and the
     /// teardown that used to require a broadcast notification is now
     /// automatic — flipping `quizState` to `.startingQuiz` clears the pushed
@@ -143,8 +143,6 @@ struct ContentView: View {
                     switch route {
                     case .settings:
                         SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
-                    case .orderPack:
-                        OrderPackView(service: appState.packOrderService, onPlayPack: playPack)
                     case .myPacks:
                         MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
                     #if DEBUG

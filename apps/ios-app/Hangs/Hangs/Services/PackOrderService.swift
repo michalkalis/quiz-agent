@@ -24,6 +24,12 @@ protocol PackOrderServiceProtocol: Sendable {
     func listOrders() async throws -> [OrderSnapshot]
     /// `GET /v1/orders/{id}` — single order snapshot (poll target).
     func getOrder(id: String) async throws -> OrderSnapshot
+    /// `POST /v1/orders/{id}/retry` — re-enqueue an order the backend marked
+    /// `failed`. This is how "Try again" resumes an order that was already PAID
+    /// for: it re-runs the existing order instead of creating (and charging) a
+    /// second one. The backend rejects it unless the order is `failed`, and caps
+    /// manual retries at 3.
+    func retryOrder(id: String) async throws -> OrderCreatedResponse
 }
 
 /// Thread-safe pack-order service using a Swift 6 actor.
@@ -144,6 +150,29 @@ actor PackOrderService: PackOrderServiceProtocol {
             throw PackOrderError.server(Self.errorMessage(from: data))
         }
         return try JSONDecoder().decode(OrderSnapshot.self, from: data)
+    }
+
+    func retryOrder(id: String) async throws -> OrderCreatedResponse {
+        let url = baseURL.appendingPathComponent("/v1/orders/\(id)/retry")
+        // Same auth surface as create: admin key here (founder path) plus the
+        // bearer that `send` attaches — the backend accepts either an X-Admin-Key
+        // or a StoreKit JWS matching the order's transaction.
+        let request = makeRequest(url: url, method: "POST", includeAdminKey: true)
+
+        Logger.network.debug("🌐 POST \(url, privacy: .public) (retry pack order)")
+        let (data, response) = try await send(request)
+
+        guard let http = response as? HTTPURLResponse else {
+            throw PackOrderError.invalidResponse
+        }
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
+        }
+        // 202 is the documented success; 200 accepted for symmetry with create.
+        guard http.statusCode == 200 || http.statusCode == 202 else {
+            throw PackOrderError.server(Self.errorMessage(from: data))
+        }
+        return try JSONDecoder().decode(OrderCreatedResponse.self, from: data)
     }
 
     // MARK: - Helpers

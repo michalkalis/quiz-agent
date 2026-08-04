@@ -36,6 +36,7 @@ struct SettingsViewHistoryTests {
         )
         let view = SettingsView(viewModel: .preview)
             .environmentObject(appState)
+            .environmentObject(NavigationModel())
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {

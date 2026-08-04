@@ -22,6 +22,9 @@ struct SettingsView: View {
     /// actions. Marked `optional` via `@EnvironmentObject` — nil only in raw Xcode previews
     /// that don't inject AppState; the real app and tests via NavigationStack always have it.
     @EnvironmentObject private var appState: AppState
+    /// #138: the create-pack modal's presented-ness lives on the nav model so
+    /// quiz-start teardown collapses it in the same step it empties the path.
+    @EnvironmentObject private var navModel: NavigationModel
     @Environment(\.openURL) private var openURL
 
     /// Called when the user taps "Replay intro". Caller is responsible for
@@ -48,6 +51,13 @@ struct SettingsView: View {
     // is stored; the order/list links only appear once one is saved.
     @State private var adminKeyInput: String = ""
     @State private var hasAdminKey: Bool = false
+
+    // #138: the order flow's view model is owned HERE, not by the sheet, so it
+    // survives the sheet being closed and reopened — closing "Preparing" must
+    // not cancel a paid order, and reopening must land back on live progress
+    // instead of an empty form. Built on first use because the service comes
+    // from the environment, which an initializer can't read.
+    @State private var orderPackViewModel: OrderPackViewModel?
 
     // #80: pinned-bar title fades in once the in-content hero scrolls away.
     @State private var isHeroCollapsed = false
@@ -163,6 +173,25 @@ struct SettingsView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
+        .sheet(isPresented: $navModel.orderFlowPresented) {
+            if let orderPackViewModel {
+                OrderPackFlowView(
+                    viewModel: orderPackViewModel,
+                    onPlayPack: { packId in viewModel.beginQuizStart(packId: packId) },
+                    onClose: { navModel.orderFlowPresented = false }
+                )
+            }
+        }
+    }
+
+    /// Open the create-pack modal (#138). Building the view model lazily keeps
+    /// it alive across close/reopen; `prepareForPresentation` decides whether
+    /// this is a fresh form or the still-running order from last time.
+    private func presentCreatePack() {
+        let model = orderPackViewModel ?? OrderPackViewModel(service: appState.packOrderService)
+        orderPackViewModel = model
+        model.prepareForPresentation(defaultLanguage: viewModel.settings.language)
+        navModel.orderFlowPresented = true
     }
 
     // MARK: - Groups
@@ -801,10 +830,14 @@ struct SettingsView: View {
                 if hasAdminKey {
                     hairline
 
-                    NavigationLink(value: AppRoute.orderPack) {
-                        HangsConfigRow(label: "Create a pack", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
-                            .allowsHitTesting(false)
-                    }
+                    // #138: a modal trigger, not a push — hence no chevron.
+                    HangsConfigRow(
+                        label: "Create a pack",
+                        value: "",
+                        valueColor: Theme.Hangs.Colors.muted,
+                        showsChevron: false,
+                        action: presentCreatePack
+                    )
                     .accessibilityIdentifier("packs.createPack")
 
                     hairline
@@ -902,6 +935,7 @@ struct SettingsView: View {
             NavigationStack {
                 SettingsView(viewModel: .preview)
                     .environmentObject(AppState())
+                    .environmentObject(NavigationModel())
             }
         }
     }

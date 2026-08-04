@@ -36,6 +36,7 @@ struct SettingsSubscriptionPlanTests {
         )
         let view = SettingsView(viewModel: vm)
             .environmentObject(appState)
+            .environmentObject(NavigationModel())
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()

@@ -303,18 +303,18 @@ final nonisolated class RegressionTests: XCTestCase {
     // MARK: - RS-pack-nav-start
 
     //
-    // Scenario: push the full #95 custom-pack depth — Home→Settings→OrderPack→
-    // OrderProgress(delivered) — then start the quiz from that deepest pushed
-    // point, once via the "Start quiz" CTA and once via voice "start". Assert
-    // QuestionView is the clean visible root (no Settings/OrderPack/OrderProgress
-    // covering it) and the back-stack is empty.
+    // Scenario: reach the full #95 custom-pack depth — Home→Settings→order
+    // sheet (form→summary→pay→delivered) — then start the quiz from there,
+    // once via the "Start quiz" CTA and once via voice "start". Assert
+    // QuestionView is the clean visible root (no Settings screen and no order
+    // modal covering it) and the back-stack is empty.
     //
     // Regression guarded: NavigationModel's reactive teardown (#111) clears the
-    // pushed stack + the OrderProgress `isPresented` child on every quiz-start
-    // entry point — including the voice bypass (originally
+    // pushed stack + the order sheet (#138) on every quiz-start entry point —
+    // including the voice bypass (originally
     // QuizViewModel+CommandListener.swift:169) that shipped without any
-    // teardown at all, and proves the belt-and-braces `isPresented` child
-    // actually collapses rather than relying on SwiftUI's transitive pop.
+    // teardown at all, and proves the modal actually collapses rather than
+    // being left on top of the fresh QuestionView.
 
     @MainActor
     func testRSPackNavStart() async throws {
@@ -327,7 +327,7 @@ final nonisolated class RegressionTests: XCTestCase {
         case voiceCommand
     }
 
-    /// Drives Home→Settings→OrderPack→OrderProgress(delivered) from a fresh
+    /// Drives Home→Settings→order sheet (delivered) from a fresh
     /// launch, fires "start" via `trigger`, then asserts QuestionView is the
     /// clean visible root with an empty back-stack. A fresh relaunch per pass
     /// is required — the first start tears the pushed chain down, so a second
@@ -370,16 +370,16 @@ final nonisolated class RegressionTests: XCTestCase {
         )
         question.waitForState("askingQuestion", timeout: 10)
 
-        // A7: the back-stack is empty — no back button, and none of the
-        // pushed screens' identifiers survive behind QuestionView. This is
-        // what proves the OrderProgress `isPresented` child actually
-        // dismissed (not just that `path` emptied), pinning the founder
-        // default (post-pack-quiz lands on Home, not back in MyPacks).
+        // A7: the back-stack is empty — no back button, and neither the
+        // Settings screen nor the order modal survives behind QuestionView.
+        // This is what proves the #138 sheet actually dismissed (not just that
+        // `path` emptied), pinning the founder default (post-pack-quiz lands on
+        // Home, not back in MyPacks).
         XCTAssertEqual(
             app.navigationBars.buttons.count, 0,
             "RS-pack-nav-start (\(trigger)): a navigation back button still exists — back-stack not empty"
         )
-        for identifier in ["settings.voiceCommands", "packs.createPack", "orderPack.prompt", "orderPack.submit", "orderProgress.startQuiz"] {
+        for identifier in ["settings.voiceCommands", "packs.createPack", "orderPack.prompt", "orderPack.submit", "orderPack.pay", "orderProgress.startQuiz"] {
             XCTAssertFalse(
                 app.descendants(matching: .any)[identifier].exists,
                 "RS-pack-nav-start (\(trigger)): '\(identifier)' still present — pushed stack not fully torn down"

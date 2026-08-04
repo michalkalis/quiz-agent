@@ -51,6 +51,7 @@ struct SettingsNavigationTests {
         )
         let view = SettingsView(viewModel: .preview)
             .environmentObject(appState)
+            .environmentObject(NavigationModel())
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             // The old custom control carried this identifier; native back means

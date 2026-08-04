@@ -464,3 +464,121 @@ async def test_cancellation_updates_rows_and_propagates(
     assert job.retry_count == WorkerSettings.max_tries
 
     await _cleanup(session, order_id)
+
+
+# ── #139: sweep-budget interplay + heartbeat ─────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_failure_never_rewinds_sweep_budget(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#139: sweep re-enqueues run under a FRESH ARQ job id, so job_try
+    restarts at 1. Writing it blindly rewound retry_count (2 → 1) and the
+    shared recovery budget never exhausted — an endless loop of paid
+    attempts. The counter must only move forward."""
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text("UPDATE generation_jobs SET retry_count = 2 WHERE id = :id"),
+        {"id": job_id},
+    )
+    await session.commit()
+
+    worker_ctx["job_try"] = 1  # fresh ARQ id — as after a sweep re-enqueue
+    worker_ctx["fact_sourcer"] = _BoomSourcer("boom on sweep-recovered attempt")
+
+    from app.worker.tasks import process_order
+
+    with pytest.raises(RuntimeError):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    job = await session.get(GenerationJob, job_id)
+    assert job.retry_count == 2  # preserved, not rewound to job_try=1
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "in_progress"  # 2 < max_tries → non-final
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_last_budgeted_attempt_is_terminal(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#139: when the sweep hands out the LAST budgeted attempt
+    (retry_count == max_tries) and it fails, the order must go terminal
+    (failed + refund_eligible) immediately — not wait one more sweep cycle."""
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text("UPDATE generation_jobs SET retry_count = :n WHERE id = :id"),
+        {"n": WorkerSettings.max_tries, "id": job_id},
+    )
+    await session.commit()
+
+    worker_ctx["job_try"] = 1
+    worker_ctx["fact_sourcer"] = _BoomSourcer("boom on final budgeted attempt")
+
+    from app.worker.tasks import process_order
+
+    with pytest.raises(RuntimeError):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_heartbeat_keeps_job_fresh_during_long_stage(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#139: the sweep measures liveness via job.updated_at, which only moved
+    on step appends — a legit frontier stage runs 10+ min without one, so a
+    LIVE job looked stuck and would be re-enqueued (double-billing). The
+    heartbeat must advance updated_at while a stage is still running."""
+    import asyncio
+
+    from app.worker import tasks as tasks_module
+
+    monkeypatch.setattr(tasks_module, "HEARTBEAT_INTERVAL_SECONDS", 0.05)
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    worker_ctx["fact_sourcer"] = _HangingSourcer()
+
+    from app.worker.tasks import process_order
+
+    task = asyncio.create_task(process_order(worker_ctx, str(order_id)))
+    try:
+        async with worker_ctx["session_factory"]() as poll_session:
+            for _ in range(200):
+                await asyncio.sleep(0.02)
+                job = await poll_session.get(GenerationJob, job_id)
+                await poll_session.refresh(job)
+                if job.step_log:
+                    break
+            else:
+                pytest.fail("pipeline never reached the hanging stage")
+            first_seen = job.updated_at
+            for _ in range(200):
+                await asyncio.sleep(0.02)
+                await poll_session.refresh(job)
+                if job.updated_at > first_seen:
+                    break
+            else:
+                pytest.fail("updated_at never advanced while the stage hung")
+    finally:
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    await _cleanup(session, order_id)

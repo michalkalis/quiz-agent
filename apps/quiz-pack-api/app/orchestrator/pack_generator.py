@@ -31,10 +31,14 @@ logger = logging.getLogger(__name__)
 
 # #139 — belt over the per-call client timeouts: no single stage may run
 # longer than this before failing loud. Must stay under WorkerSettings.
-# job_timeout (600s), or ARQ's cancel fires first and this belt never
-# triggers. Env-driven like the gen-layer flags (see app.feature_flags
-# docstring) — the orchestrator keeps zero dependency on app.config.
-_STAGE_TIMEOUT_SECONDS = float(os.getenv("STAGE_TIMEOUT_SECONDS", "480"))
+# job_timeout (3600s), or ARQ's cancel fires first and this belt never
+# triggers. 1200s is sized for the real worst case measured 2026-08-04: a
+# legit pack_30 generating stage on frontier models runs many sequential
+# LLM calls (batch + critique + MCQ), and the hang case is already bounded
+# by the 300s per-call timeout — this only catches pathological loops.
+# Env-driven like the gen-layer flags (see app.feature_flags docstring) —
+# the orchestrator keeps zero dependency on app.config.
+_STAGE_TIMEOUT_SECONDS = float(os.getenv("STAGE_TIMEOUT_SECONDS", "1200"))
 
 
 def _rss_mb() -> float | None:

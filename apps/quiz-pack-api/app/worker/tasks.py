@@ -39,9 +39,33 @@ from app.orchestrator.stages import (
 
 logger = logging.getLogger(__name__)
 
+# #139 — the sweep measures job liveness via `generation_jobs.updated_at`,
+# which historically only moved on step appends. A legit frontier pack_30
+# spends 10+ minutes inside ONE stage, so the 15-minute staleness threshold
+# would have re-enqueued a live job (double-billing a purchase). This
+# heartbeat touches the row every 60s while the pipeline runs.
+HEARTBEAT_INTERVAL_SECONDS = 60.0
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+async def _job_heartbeat(session_factory: Any, job_id: uuid.UUID) -> None:
+    from sqlalchemy import text
+
+    while True:
+        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
+        try:
+            async with session_factory() as session:
+                await session.execute(
+                    text("UPDATE generation_jobs SET updated_at = now() WHERE id = :id"),
+                    {"id": job_id},
+                )
+                await session.commit()
+        except Exception:
+            # A missed beat must never kill the pipeline; the next one retries.
+            logger.warning("job heartbeat failed job_id=%s", job_id, exc_info=True)
 
 
 def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
@@ -111,6 +135,7 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     sink: DBProgressSink | None = None
     generator: PackGenerator | None = None
+    heartbeat: asyncio.Task[None] | None = None
 
     logger.info(
         "process_order start order_id=%s attempt=%s",
@@ -126,6 +151,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             if order.status != "in_progress":
                 order.status = "in_progress"
                 await session.commit()
+
+        heartbeat = asyncio.create_task(_job_heartbeat(session_factory, job_id))
 
         sink = DBProgressSink(session_factory, redis, channel, job_id)
         sink_factory = _make_sink_factory(sink)
@@ -207,6 +234,9 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         logger.warning("process_order failed order_id=%s error=%r", order_id, exc)
         await _handle_failure(ctx, order_uuid, order_id, sink, exc)
         raise
+    finally:
+        if heartbeat is not None:
+            heartbeat.cancel()
 
 
 def _make_sink_factory(sink: DBProgressSink):
@@ -233,7 +263,6 @@ async def _handle_failure(
 
     job_try: int = ctx.get("job_try", 1)
     max_tries: int = getattr(WorkerSettings, "max_tries", 3)
-    is_final = job_try >= max_tries
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
 
     try:
@@ -244,9 +273,17 @@ async def _handle_failure(
             job = await session.get(GenerationJob, order.job_id)
             if job is None:
                 return
+            # #139: sweep-driven recovery re-enqueues under a FRESH ARQ job id,
+            # so ctx["job_try"] restarts at 1 on every such attempt. Writing it
+            # blindly rewound the sweep's retry_count and the shared budget
+            # never exhausted (endless paid retries). The attempt number is
+            # whichever counter is further along; the final budgeted attempt is
+            # terminal for the ORDER too, not just the job.
+            effective_try = max(job.retry_count, job_try)
+            is_final = effective_try >= max_tries
             job.status = "failed"
             job.error = repr(exc)
-            job.retry_count = job_try
+            job.retry_count = effective_try
             if is_final:
                 order.status = "failed"
                 order.refund_eligible = True
@@ -273,6 +310,7 @@ async def _handle_failure(
                 {
                     "order_id": order_id,
                     "job_try": job_try,
+                    "effective_try": effective_try,
                     "is_final_attempt": is_final,
                 },
             )

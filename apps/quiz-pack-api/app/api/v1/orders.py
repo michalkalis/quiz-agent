@@ -78,7 +78,8 @@ _PRODUCT_TIERS: dict[str, int] = {
     "pack_50": 50,
 }
 
-_ALLOWED_LANGUAGES = {"en", "sk", "cs"}
+# The app's 10 supported quiz languages (#138).
+_ALLOWED_LANGUAGES = {"en", "sk", "cs", "de", "fr", "es", "it", "pl", "hu", "ro"}
 
 # Admin-created orders (#95) synthesize their own transaction ids. The prefix
 # keeps them disjoint from Apple's numeric transaction ids so a founder order
@@ -160,10 +161,10 @@ class OrderListResponse(BaseModel):
 
 def _validate_guards(body: CreateOrderRequest) -> None:
     """Raise HTTPException for prompt length or language violations."""
-    if not (10 <= len(body.prompt.strip()) <= 1000):
+    if not (1 <= len(body.prompt.strip()) <= 1000):
         raise HTTPException(
             status_code=422,
-            detail="prompt must be between 10 and 1000 characters (after stripping whitespace)",
+            detail="prompt must be between 1 and 1000 characters (after stripping whitespace)",
         )
     if body.language not in _ALLOWED_LANGUAGES:
         raise HTTPException(

@@ -216,7 +216,7 @@ async def test_create_order_bad_language_422_is_reported(
     """
     tx_id = "tx-bad-lang"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
-    body = {**_valid_body(tx_id=tx_id), "language": "de"}
+    body = {**_valid_body(tx_id=tx_id), "language": "xx"}
 
     with caplog.at_level(logging.ERROR, logger=ORDERS_LOGGER):
         resp = await client.post(
@@ -247,7 +247,7 @@ async def test_admin_reject_is_not_reported_as_lost_purchase(
     The trail exists to catch *money* taken for nothing. Firing it for founder
     (#95 admin-key) orders, which are free, would train everyone to ignore it.
     """
-    body = {**_valid_body(tx_id="admin-tx-bad-lang"), "language": "de"}
+    body = {**_valid_body(tx_id="admin-tx-bad-lang"), "language": "xx"}
     resp = await client.post(
         "/v1/orders", json=body, headers={"X-Admin-Key": TEST_ADMIN_KEY, **BEARER}
     )
@@ -256,13 +256,77 @@ async def test_admin_reject_is_not_reported_as_lost_purchase(
 
 
 @pytest.mark.asyncio
-async def test_create_order_prompt_too_short_422(
+async def test_create_order_language_de_accepted(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """#138: de is one of the app's 10 supported quiz languages → 202, not 422."""
+    tx_id = "tx-lang-de"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "language": "de"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202
+
+
+@pytest.mark.asyncio
+async def test_create_order_prompt_one_char_accepted(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """#138: minimum prompt length dropped from 10 to 1 → a 1-char prompt is valid."""
+    tx_id = "tx-prompt-one-char"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "prompt": "x"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202
+
+
+@pytest.mark.asyncio
+async def test_create_order_prompt_empty_422(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,
 ) -> None:
-    """Prompt under 10 chars → 422."""
-    jws = make_jws(payload_overrides={"transactionId": "tx-short-prompt"})
-    body = {**_valid_body(tx_id="tx-short-prompt"), "prompt": "hi"}
+    """Empty prompt → 422."""
+    jws = make_jws(payload_overrides={"transactionId": "tx-empty-prompt"})
+    body = {**_valid_body(tx_id="tx-empty-prompt"), "prompt": ""}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 422
+    assert "prompt" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_create_order_prompt_whitespace_only_422(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+) -> None:
+    """Whitespace-only prompt strips to empty → 422."""
+    jws = make_jws(payload_overrides={"transactionId": "tx-whitespace-prompt"})
+    body = {**_valid_body(tx_id="tx-whitespace-prompt"), "prompt": "   "}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 422
+    assert "prompt" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_create_order_prompt_too_long_422(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+) -> None:
+    """Prompt over 1000 chars → 422."""
+    jws = make_jws(payload_overrides={"transactionId": "tx-long-prompt"})
+    body = {**_valid_body(tx_id="tx-long-prompt"), "prompt": "x" * 1001}
     resp = await client.post(
         "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
     )

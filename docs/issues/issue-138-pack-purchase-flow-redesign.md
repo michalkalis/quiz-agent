@@ -29,17 +29,21 @@ Wanted:
 
 How the user learns the pack is ready: at minimum a correct in-app state (#137 does the list mechanics); design round decides ETA copy, notification (push/local?), and the failed-state affordance (backend retry exists: `POST /v1/orders/{id}/retry`).
 
-## Process
+## Design round — founder decisions (2026-08-04, in-chat)
 
-1. HIG review + HTML variants (flow states + form) → founder picks in-chat.
-2. Pencil sync (`design/quiz-agent.pen`), founder ⌘S.
-3. Implement + tests (state machine unit tests: no route back to form post-purchase; sheet dismiss rules).
+- **Form = variant A (minimal):** topic + language only; Category/Theme fields removed from the form (backend keeps the optional API fields; client sends nil). Topic placeholder must carry rich examples incl. difficulty/audience ("space for kids, tough questions on Slovak history, 90s music…").
+- **Language:** full 10-language quiz list (`Language.supportedLanguages`), preselected from the global quiz language; no auto-detect. Backend whitelist extended en/sk/cs → all 10.
+- **Readiness:** in-app only (ETA copy "a few minutes" + My packs pointer; #137 does the live list). No push/local notifications now.
+- **Min length:** dropped to 1 on BOTH sides — backend `_validate_guards` also enforced 10, so client-only removal would purchase-then-422. Max 1000 kept.
+- Backend research: category/theme genuinely steer sourcing + generation prompts (not decorative); language is serving metadata only (generation is English-only); no numeric ETA exists server-side → static hedged copy.
+- Pencil: 5 sheet states added as `NEW_Screen/Pack-Order — 138 Form/Payment/Preparing/Ready/Failed`.
 
-## Acceptance (sketch — finalize after design pick)
+## Acceptance
 
-- [ ] Order flow presented as a sheet; after purchase, reopening/dismissing never shows the form for that order (state-machine unit test).
-- [ ] Preparing state shows ETA copy + Close/X + primary dismiss (snapshot/unit).
-- [ ] Payment step carries the no-cancellation notice (unit/snapshot; SK+EN).
-- [ ] Min-length validation gone (unit test: 1-char prompt valid); 1000 max kept.
-- [ ] Language control per founder pick; defaults follow the global quiz language.
-- [ ] Settings entry updated (no chevron on a modal trigger).
+- [ ] Order flow presented as a sheet; after purchase, reopening/dismissing never shows the form for that order (state-machine unit test); back chevron exists only pre-payment (summary → form).
+- [ ] Preparing state shows ETA copy + Close/X + primary dismiss; dismiss ≠ cancel (polling survives, reopening shows live state).
+- [ ] Payment step carries the no-cancellation notice (SK+EN).
+- [ ] Min-length validation gone client AND server (1-char prompt valid end-to-end); 1000 max kept.
+- [ ] Language menu = full quiz-language list, preselected from global quiz language; backend accepts all 10 codes.
+- [ ] Failed state offers Try again (backend retry endpoint when order exists) + Close.
+- [ ] Settings entry row loses the chevron; dead push navigation (orderProgressPresented, AppRoute.orderPack) removed.

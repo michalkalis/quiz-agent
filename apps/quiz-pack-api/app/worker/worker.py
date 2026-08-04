@@ -99,8 +99,24 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # 42.27 — DedupStage dedups against the canonical pgvector corpus (ChromaDB
     # is frozen read-only legacy). SyncPgvectorStore bridges DedupStage's sync
     # `find_duplicates` call to the async store via a background event loop.
+    # #139: the bridged store must own a SEPARATE engine — sharing
+    # AsyncSessionLocal's engine poisoned the pool, because asyncpg
+    # connections are bound to the loop that created them and a cross-loop
+    # reuse/terminate raises "attached to a different loop" mid-pipeline
+    # (every other SyncPgvectorStore call site already passes database_url
+    # for its own engine; the worker was the one anomaly). The URL comes
+    # from the active session factory's bind so a test fixture that patches
+    # AsyncSessionLocal redirects the bridge to the same test database.
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    bridge_url = AsyncSessionLocal.kw["bind"].url.render_as_string(
+        hide_password=False
+    )
+    bridge_factory = async_sessionmaker(
+        create_async_engine(bridge_url), expire_on_commit=False
+    )
     ctx["question_store"] = SyncPgvectorStore(
-        PgvectorQuestionStore(session_factory=AsyncSessionLocal)
+        PgvectorQuestionStore(session_factory=bridge_factory)
     )
     if _GOLD_STANDARD_PATH is None:
         raise RuntimeError(

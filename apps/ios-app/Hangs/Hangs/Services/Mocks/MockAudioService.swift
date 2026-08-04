@@ -88,8 +88,20 @@ import os
         var currentInputDevice: AudioDevice?
         var currentOutputDeviceName: String = "iPhone"
 
+        /// Counts full quiz-session configurations (#136): pins that the ducking
+        /// session is applied by the quiz-start path, never by Home arming.
+        var setupAudioSessionCallCount = 0
+
         func setupAudioSession(mode _: AudioMode) throws {
-            // Mock implementation
+            setupAudioSessionCallCount += 1
+        }
+
+        /// Counts quiet Home-listening configurations (#136): pins that arming
+        /// the command window on Home applies the mixable, non-ducking session.
+        var setupQuietListeningSessionCallCount = 0
+
+        func setupQuietListeningSession() throws {
+            setupQuietListeningSessionCallCount += 1
         }
 
         /// Counts deactivations so the scene-phase teardown tests can assert the

@@ -47,10 +47,9 @@ struct SettingsView: View {
     // Reflects the current Keychain state; refreshed on appear + after auth events.
     @State private var currentTokens: AuthTokens? = nil
 
-    // Custom packs (#95): admin-gated entry. `hasAdminKey` reflects whether a key
-    // is stored; the order/list links only appear once one is saved.
+    // Custom packs (#95/#140): entry is open to all users; the admin-key field
+    // is the Debug-only internal door.
     @State private var adminKeyInput: String = ""
-    @State private var hasAdminKey: Bool = false
 
     // #138: the order flow's view model is owned HERE, not by the sheet, so it
     // survives the sheet being closed and reopened — closing "Preparing" must
@@ -134,7 +133,6 @@ struct SettingsView: View {
         .task {
             // Load auth state from Keychain on appear.
             currentTokens = KeychainTokenStore().load()
-            hasAdminKey = AdminKeyStore().load() != nil
         }
         .onReceive(NotificationCenter.default.publisher(for: .authSignedInSessionDropped)) { _ in
             // A signed-in session was dropped out-of-band (refresh 401) — reload so the
@@ -188,7 +186,10 @@ struct SettingsView: View {
     /// it alive across close/reopen; `prepareForPresentation` decides whether
     /// this is a fresh form or the still-running order from last time.
     private func presentCreatePack() {
-        let model = orderPackViewModel ?? OrderPackViewModel(service: appState.packOrderService)
+        let model = orderPackViewModel ?? OrderPackViewModel(
+            service: appState.packOrderService,
+            purchaseService: appState.packPurchaseService
+        )
         orderPackViewModel = model
         model.prepareForPresentation(defaultLanguage: viewModel.settings.language)
         navModel.orderFlowPresented = true
@@ -796,58 +797,58 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Custom packs group (#95)
+    // MARK: - Custom packs group (#95, ungated #140)
 
-    // Admin-gated: paste the quiz-pack-api admin key once (stored in the
-    // Keychain, never in the binary — works in TestFlight). Once a key is
-    // stored, the order + list links appear. This lives OUTSIDE the paywall
-    // by design — custom packs are a distinct concept from #93 credit packs.
+    // Open to every user: the order flow itself is paid via StoreKit (#140).
+    // The admin-key field — the internal no-charge testing door — compiles
+    // only into Debug builds; a Release user build has no way to enter or
+    // send an admin key. This lives OUTSIDE the paywall by design — custom
+    // packs are a distinct concept from #93 credit packs.
 
     private var packsGroup: some View {
         groupSection(label: "custom packs", color: Theme.Hangs.Colors.accentTeal) {
             VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    SecureField("Admin key", text: $adminKeyInput)
-                        .font(.hangsBody(15))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .accessibilityIdentifier("packs.adminKeyField")
-                    Button("Save") {
-                        let trimmed = adminKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !trimmed.isEmpty else { return }
-                        AdminKeyStore().save(trimmed)
-                        adminKeyInput = ""
-                        hasAdminKey = true
+                #if DEBUG
+                    HStack(spacing: 10) {
+                        SecureField("Admin key", text: $adminKeyInput)
+                            .font(.hangsBody(15))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("packs.adminKeyField")
+                        Button("Save") {
+                            let trimmed = adminKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            AdminKeyStore().save(trimmed)
+                            adminKeyInput = ""
+                        }
+                        .font(.hangsBody(15, weight: .semibold))
+                        .foregroundColor(Theme.Hangs.Colors.pink)
+                        .accessibilityIdentifier("packs.saveAdminKey")
                     }
-                    .font(.hangsBody(15, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.pink)
-                    .accessibilityIdentifier("packs.saveAdminKey")
-                }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 14)
-
-                if hasAdminKey {
-                    hairline
-
-                    // #138: a modal trigger, not a push — hence no chevron.
-                    HangsConfigRow(
-                        label: "Create a pack",
-                        value: "",
-                        valueColor: Theme.Hangs.Colors.muted,
-                        showsChevron: false,
-                        action: presentCreatePack
-                    )
-                    .accessibilityIdentifier("packs.createPack")
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 14)
 
                     hairline
+                #endif
 
-                    NavigationLink(value: AppRoute.myPacks) {
-                        HangsConfigRow(label: "My packs", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
-                            .allowsHitTesting(false)
-                    }
-                    .accessibilityIdentifier("packs.myPacks")
+                // #138: a modal trigger, not a push — hence no chevron.
+                HangsConfigRow(
+                    label: "Create a pack",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.muted,
+                    showsChevron: false,
+                    action: presentCreatePack
+                )
+                .accessibilityIdentifier("packs.createPack")
+
+                hairline
+
+                NavigationLink(value: AppRoute.myPacks) {
+                    HangsConfigRow(label: "My packs", value: "", valueColor: Theme.Hangs.Colors.muted, showsChevron: true, action: {})
+                        .allowsHitTesting(false)
                 }
+                .accessibilityIdentifier("packs.myPacks")
             }
         }
     }

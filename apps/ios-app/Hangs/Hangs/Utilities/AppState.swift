@@ -22,6 +22,8 @@ final class AppState: ObservableObject {
     let authService: AuthService
     /// Custom-pack ordering client (issue #95), targeting the quiz-pack-api host.
     let packOrderService: PackOrderServiceProtocol
+    /// StoreKit purchase of the custom-pack product (issue #140).
+    let packPurchaseService: PackPurchaseServiceProtocol
 
     /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
     /// owner is ContentView's `@StateObject`). HangsApp routes scene-phase
@@ -50,15 +52,17 @@ final class AppState: ObservableObject {
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 packOrderService = MockPackOrderService()
+                packPurchaseService = MockPackPurchaseService()
                 storeManager.onPurchaseSuccess = { [weak self] in
                     await self?.quizViewModel?.notifyPremiumPurchased() ?? false
                 }
-                // Issue #111 T3: seed a fake admin key so `SettingsView.hasAdminKey`
-                // is true under UI test — the `packs.createPack` / `packs.myPacks`
-                // entries render without a real key. Seed ONLY when the Keychain
-                // slot is empty: the store is the sim's persistent Keychain, and
-                // an unconditional save would silently clobber a real admin key
-                // pasted for manual #95 order testing on the same simulator.
+                // Issue #111 T3 (#140 update): the packs entries are ungated now,
+                // but the seeded key keeps UI-test order flows on the deterministic
+                // Debug admin path (no StoreKit payment step). Seed ONLY when the
+                // Keychain slot is empty: the store is the sim's persistent
+                // Keychain, and an unconditional save would silently clobber a
+                // real admin key pasted for manual #95 order testing on the same
+                // simulator.
                 if AdminKeyStore().load() == nil {
                     AdminKeyStore().save("ui-test")
                 }
@@ -85,6 +89,7 @@ final class AppState: ObservableObject {
         persistenceStore = PersistenceStore()
         self.storeManager = StoreManager()
         packOrderService = PackOrderService(authService: authService)
+        packPurchaseService = StoreKitPackPurchaseService()
 
         // Silence detection / barge-in (iOS 26 SpeechDetector; min target is 26.0).
         let resolved: SilenceDetectionServiceProtocol
@@ -121,8 +126,11 @@ final class AppState: ObservableObject {
             sttService = nil
         }
 
-        // Setup audio session with default mode
-        try? audioService.setupAudioSession(mode: AudioMode.default)
+        // #136: NO audio-session activation at launch — the eager
+        // setupAudioSession here paused external audio (Spotify) the moment the
+        // app opened. Home command listening arms its own QUIET mixable session
+        // (VoiceCommandCoordinator.syncCommandListenerWindow); the full quiz
+        // session (with ducking) activates only in startNewQuiz.
 
         // #131 Track E: diagnostic-only telemetry for the founder-reported
         // hardware volume drift (media volume set to 0, rises during quiz
@@ -192,7 +200,8 @@ final class AppState: ObservableObject {
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil,
         authService: AuthService? = nil,
-        packOrderService: PackOrderServiceProtocol = MockPackOrderService()
+        packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
+        packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService()
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -202,6 +211,7 @@ final class AppState: ObservableObject {
         self.storeManager = storeManager ?? StoreManager()
         self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
         self.packOrderService = packOrderService
+        self.packPurchaseService = packPurchaseService
     }
 
     /// Create a new QuizViewModel with injected dependencies

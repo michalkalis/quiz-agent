@@ -190,3 +190,42 @@ async def test_requires_sourcing_first() -> None:
         stages=[FakeStage("sourcing"), FakeStage("generating")],
         sink_factory=sink_factory,
     )
+
+
+@pytest.mark.asyncio
+async def test_hanging_stage_fails_with_timeout(monkeypatch) -> None:
+    """#139 acceptance 1: a stage that hangs (stalled LLM connection) must
+    become a caught, logged TimeoutError — not an ARQ job_timeout kill with
+    zero diagnostics, which is how the 2026-08-03 order died silently."""
+    import asyncio
+
+    from app.orchestrator import pack_generator as pg_module
+
+    monkeypatch.setattr(pg_module, "_STAGE_TIMEOUT_SECONDS", 0.05)
+
+    class HangingStage:
+        name = "generating"
+
+        async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
+            await asyncio.sleep(60)
+            return StageResult()
+
+    s1 = FakeStage("sourcing")
+    s3 = FakeStage("verifying")
+    sink = RecordingSink()
+    gen = PackGenerator(
+        stages=[s1, HangingStage(), s3], sink_factory=lambda _oid: sink
+    )
+
+    with pytest.raises(TimeoutError, match="generating"):
+        await gen.run(_make_order())
+
+    assert s3.ran is False
+    # The worker's cancellation handler names the hung stage from here.
+    assert gen.current_stage == "generating"
+    failed_starts = [
+        info for kind, step, info in sink.events
+        if kind == "start" and step == "failed"
+    ]
+    assert len(failed_starts) == 1
+    assert "STAGE_TIMEOUT_SECONDS" in failed_starts[0]["error"]

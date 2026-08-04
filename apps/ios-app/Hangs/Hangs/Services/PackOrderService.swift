@@ -5,8 +5,12 @@
 //  REST client for quiz-pack-api `/v1/orders` (issue #95 custom packs). Actor-
 //  based for thread-safe networking, mirroring `NetworkService`. Targets a
 //  DIFFERENT host than NetworkService (`Config.packApiBaseURL`, the pack-api),
-//  and authenticates with the founder admin key (Keychain) PLUS the account
-//  bearer when one is available, so orders link to the signed-in account.
+//  and always attaches the account bearer so orders link to the account.
+//
+//  Order authorisation (#140): the user path sends the StoreKit JWS
+//  (`X-StoreKit-JWS`) from the intent's `paymentProof`. The founder admin-key
+//  path (`X-Admin-Key`, Keychain) is compiled OUT of Release builds — it
+//  exists for internal Debug testing only.
 //
 
 @preconcurrency import Foundation
@@ -28,8 +32,11 @@ protocol PackOrderServiceProtocol: Sendable {
     /// `failed`. This is how "Try again" resumes an order that was already PAID
     /// for: it re-runs the existing order instead of creating (and charging) a
     /// second one. The backend rejects it unless the order is `failed`, and caps
-    /// manual retries at 3.
-    func retryOrder(id: String) async throws -> OrderCreatedResponse
+    /// manual retries at 3. Authorised exactly like `createOrder`: the order's
+    /// own StoreKit proof (`X-StoreKit-JWS`) in the user path, the admin key in
+    /// Debug builds. With neither, it fails rather than sending an
+    /// unauthenticated retry.
+    func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse
 }
 
 /// Thread-safe pack-order service using a Swift 6 actor.
@@ -41,7 +48,10 @@ actor PackOrderService: PackOrderServiceProtocol {
     private let baseURL: URL
     private let session: URLSession
     private let authService: AuthServiceProtocol?
-    private let adminKeyStore: AdminKeyStore
+    /// Reads the stored admin key (Debug internal door). A closure — not the
+    /// concrete Keychain store — so unit tests can pin header behaviour without
+    /// racing other suites for the simulator's shared, persistent Keychain.
+    private let adminKey: @Sendable () -> String?
 
     /// In-flight create calls keyed by `idempotencyKey`. A second `createOrder`
     /// for the SAME intent while one is still pending awaits the existing task
@@ -53,7 +63,7 @@ actor PackOrderService: PackOrderServiceProtocol {
         baseURL: String = Config.packApiBaseURL,
         session: URLSession = .shared,
         authService: AuthServiceProtocol?,
-        adminKeyStore: AdminKeyStore = AdminKeyStore()
+        adminKey: @escaping @Sendable () -> String? = { AdminKeyStore().load() }
     ) {
         guard let url = URL(string: baseURL) else {
             fatalError("PackOrderService: invalid baseURL '\(baseURL)' — check Config.packApiBaseURL")
@@ -61,7 +71,7 @@ actor PackOrderService: PackOrderServiceProtocol {
         self.baseURL = url
         self.session = session
         self.authService = authService
-        self.adminKeyStore = adminKeyStore
+        self.adminKey = adminKey
     }
 
     // MARK: - Requests
@@ -82,12 +92,17 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     private func performCreateOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         let url = baseURL.appendingPathComponent("/v1/orders")
-        var request = makeRequest(url: url, method: "POST", includeAdminKey: true)
+        // User path: the StoreKit JWS authorises the order and the admin key is
+        // never attached. Debug admin path (no proof): admin key only.
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: intent.paymentProof == nil)
+        if let proof = intent.paymentProof {
+            request.setValue(proof.jws, forHTTPHeaderField: "X-StoreKit-JWS")
+        }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let payload = CreateOrderRequest(
             transactionId: intent.idempotencyKey,
-            productId: Self.productId,
+            productId: intent.paymentProof?.productId ?? Self.productId,
             prompt: intent.prompt,
             language: intent.language,
             targetCount: Self.targetCount,
@@ -152,12 +167,23 @@ actor PackOrderService: PackOrderServiceProtocol {
         return try JSONDecoder().decode(OrderSnapshot.self, from: data)
     }
 
-    func retryOrder(id: String) async throws -> OrderCreatedResponse {
+    func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
+        // The backend accepts a JWS whose transaction_id matches the order, or
+        // an admin key. Neither available (a Release build with no proof) means
+        // the request could only ever 401 — fail here instead of sending an
+        // unauthenticated retry and mislabelling the result.
+        guard paymentProof != nil || Self.adminRetryPossible(adminKey()) else {
+            throw PackOrderError.unauthorized
+        }
+
         let url = baseURL.appendingPathComponent("/v1/orders/\(id)/retry")
-        // Same auth surface as create: admin key here (founder path) plus the
-        // bearer that `send` attaches — the backend accepts either an X-Admin-Key
-        // or a StoreKit JWS matching the order's transaction.
-        let request = makeRequest(url: url, method: "POST", includeAdminKey: true)
+        // Mirrors createOrder's authorisation: the order's own StoreKit proof in
+        // the user path, the Debug-only admin key otherwise, plus the bearer
+        // that `send` attaches.
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: paymentProof == nil)
+        if let paymentProof {
+            request.setValue(paymentProof.jws, forHTTPHeaderField: "X-StoreKit-JWS")
+        }
 
         Logger.network.debug("🌐 POST \(url, privacy: .public) (retry pack order)")
         let (data, response) = try await send(request)
@@ -177,16 +203,31 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     // MARK: - Helpers
 
+    /// Whether a stored admin key could authorise a proofless request. Always
+    /// false in Release: `makeRequest` compiles the header out there, so a key
+    /// in the Keychain authorises nothing.
+    private nonisolated static func adminRetryPossible(_ key: String?) -> Bool {
+        #if DEBUG
+            return key != nil
+        #else
+            return false
+        #endif
+    }
+
     /// Build a request with the admin key (optional) attached. The admin key is the
-    /// founder path; the account bearer — which links the order to the account so it
-    /// lists under "mine" — is attached by `send`, because a 401 has to re-attach a
+    /// internal Debug-only door (#140) — the attachment is compiled out of Release,
+    /// so a user build can never send `X-Admin-Key` no matter what the Keychain
+    /// holds. The account bearer — which links the order to the account so it lists
+    /// under "mine" — is attached by `send`, because a 401 has to re-attach a
     /// refreshed one.
     private func makeRequest(url: URL, method: String, includeAdminKey: Bool) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
-        if includeAdminKey, let adminKey = adminKeyStore.load() {
-            request.setValue(adminKey, forHTTPHeaderField: "X-Admin-Key")
-        }
+        #if DEBUG
+            if includeAdminKey, let key = adminKey() {
+                request.setValue(key, forHTTPHeaderField: "X-Admin-Key")
+            }
+        #endif
         return request
     }
 

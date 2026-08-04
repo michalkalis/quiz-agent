@@ -68,3 +68,39 @@ struct SettingsNavigationTests {
         }
     }
 }
+
+// MARK: - Custom packs entry (#140)
+
+//
+// WHY: custom packs are a paid StoreKit product now — the entry must be open
+// to every user. Before #140 these rows were admin-key-gated, which made the
+// whole feature invisible to anyone but the founder.
+
+@MainActor
+@Suite("Settings custom packs entry (#140)")
+struct SettingsPacksEntryTests {
+    @Test("Create a pack and My packs are visible with NO admin key stored")
+    func packsEntriesVisibleWithoutAdminKey() async throws {
+        // Clear any admin key the simulator's persistent Keychain may hold
+        // (e.g. the UI-test seed), restoring it afterwards — this pins the
+        // rows' visibility specifically in the no-key user state.
+        let store = AdminKeyStore()
+        let original = store.load()
+        store.clear()
+        defer { if let original { store.save(original) } }
+
+        let appState = AppState(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        let view = SettingsView(viewModel: .preview)
+            .environmentObject(appState)
+            .environmentObject(NavigationModel())
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            _ = try tree.find(viewWithAccessibilityIdentifier: "packs.createPack")
+            _ = try tree.find(viewWithAccessibilityIdentifier: "packs.myPacks")
+        }
+    }
+}

@@ -32,6 +32,11 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// to the last element) — a per-call sequence that can inject a transient error
     /// then a success. Takes precedence over `getSequence`/`getResult`.
     private let getResults: [Result<OrderSnapshot, PackFailure>]
+    /// When non-empty, `listOrders` returns/throws `listResults[callIndex]`
+    /// (clamping to the last element) — lets a test drive the My packs refresh
+    /// loop through in_progress → delivered, or inject a transient list error.
+    /// Takes precedence over `listResult`.
+    private let listResults: [Result<[OrderSnapshot], PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
     private let retryResult: Result<OrderCreatedResponse, PackFailure>
     /// Artificial latency on `createOrder`, in seconds. Default 0 (instant).
@@ -46,6 +51,12 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
 
     var createOrderCallCount: Int { createCalls.withLock { $0 } }
     var retryOrderCallCount: Int { retryCalls.withLock { $0 } }
+    var capturedRetryProofs: [PackPaymentProof?] { retryProofs.withLock { $0 } }
+    /// Proof passed to each `retryOrder` call — a retry of a PAID order must
+    /// carry the same StoreKit JWS the order was created with (#140/#138).
+    private let retryProofs = OSAllocatedUnfairLock<[PackPaymentProof?]>(initialState: [])
+    private let listCallIndex = OSAllocatedUnfairLock(initialState: 0)
+    private let intents = OSAllocatedUnfairLock<[PackOrderIntent]>(initialState: [])
 
     /// Boxed error so the whole config stays value-typed / Sendable.
     struct PackFailure: Error, Sendable {
@@ -60,7 +71,8 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         getSequence: [OrderSnapshot] = [],
         getResults: [Result<OrderSnapshot, PackFailure>] = [],
         retryResult: Result<OrderCreatedResponse, PackFailure> = .success(.mockCreated),
-        createDelaySeconds: Double = 0
+        createDelaySeconds: Double = 0,
+        listResults: [Result<[OrderSnapshot], PackFailure>] = []
     ) {
         self.createDelaySeconds = createDelaySeconds
         self.createResult = createResult
@@ -69,23 +81,37 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         self.getSequence = getSequence
         self.getResults = getResults
         self.retryResult = retryResult
+        self.listResults = listResults
+    }
+
+    /// Every intent `createOrder` received, in call order — lets a test assert
+    /// what payment proof / idempotency key an order actually carried (#140).
+    var capturedIntents: [PackOrderIntent] {
+        intents.withLock { $0 }
     }
 
     func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         createCalls.withLock { $0 += 1 }
+        intents.withLock { $0.append(intent) }
         if createDelaySeconds > 0 {
             try await Task.sleep(for: .seconds(createDelaySeconds))
         }
         return try createResult.get()
     }
 
-    func retryOrder(id: String) async throws -> OrderCreatedResponse {
+    func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
         retryCalls.withLock { $0 += 1 }
+        retryProofs.withLock { $0.append(paymentProof) }
         return try retryResult.get()
     }
 
     func listOrders() async throws -> [OrderSnapshot] {
-        try listResult.get()
+        guard !listResults.isEmpty else { return try listResult.get() }
+        return try listCallIndex.withLock { index in
+            let result = listResults[min(index, listResults.count - 1)]
+            index += 1
+            return try result.get()
+        }
     }
 
     func getOrder(id: String) async throws -> OrderSnapshot {

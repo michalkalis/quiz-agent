@@ -30,20 +30,39 @@ import Foundation
 @testable import Hangs
 import Testing
 
+/// Defaults to the Debug admin path (`adminKeyAvailable: true`) so the
+/// pre-#140 order/poll tests keep exercising exactly the flow they always did —
+/// no payment step. Purchase-flow tests below pass `adminKeyAvailable: false`
+/// to route through the (mock) StoreKit purchase instead.
 @MainActor
 private func makeOrderPackViewModel(
-    service: MockPackOrderService = MockPackOrderService()
+    service: MockPackOrderService = MockPackOrderService(),
+    purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
+    adminKeyAvailable: Bool = true
 ) -> OrderPackViewModel {
-    OrderPackViewModel(service: service)
+    OrderPackViewModel(
+        service: service,
+        purchaseService: purchaseService,
+        adminKeyAvailable: { adminKeyAvailable }
+    )
 }
 
-/// Drive the VM the way the sheet does: form → summary → pay.
+/// Drive the VM the way the sheet does: form → summary, parked on the payment
+/// step so a test can call `submit()`. Defaults to the Debug admin path (no
+/// StoreKit step) like `makeOrderPackViewModel`; payment tests pass
+/// `adminKeyAvailable: false`.
 @MainActor
 private func payingViewModel(
     service: MockPackOrderService = MockPackOrderService(),
+    purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
+    adminKeyAvailable: Bool = true,
     prompt: String = "History of the Roman Empire in ten questions"
 ) -> OrderPackViewModel {
-    let vm = OrderPackViewModel(service: service)
+    let vm = makeOrderPackViewModel(
+        service: service,
+        purchaseService: purchaseService,
+        adminKeyAvailable: adminKeyAvailable
+    )
     vm.prompt = prompt
     vm.advanceToSummary()
     return vm
@@ -418,6 +437,26 @@ struct OrderPackViewModelTests {
         }
     }
 
+    // WHY (#140 + #138): the retry endpoint authorises on the SAME StoreKit JWS
+    // the order was created with. Retrying with no proof would 401 in a user
+    // build, dead-ending a pack the user already paid for.
+    @Test("retrying a paid order sends the proof that created it, not a new purchase")
+    func retryCarriesTheOriginalPaymentProof() async {
+        let service = MockPackOrderService(getResults: [
+            .success(.mockFailed),
+            .success(.mockDelivered)
+        ])
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0
+
+        await vm.submit()
+        await vm.retry()
+
+        #expect(purchase.purchaseCallCount == 1, "a retry of a paid order must never charge again")
+        #expect(service.capturedRetryProofs == [MockPackPurchaseService.mockProof])
+    }
+
     // WHY: if the create call itself never landed there is no order to retry —
     // resubmitting the same intent replays the SAME idempotency key, so a
     // create that did land server-side is replayed rather than duplicated.
@@ -449,5 +488,144 @@ struct OrderPackViewModelTests {
         #expect(vm.state == .confirming)
         #expect(service.createOrderCallCount == 0)
         #expect(service.retryOrderCallCount == 0)
+    }
+
+    // MARK: - Payment flow (#140)
+
+    //
+    // WHY: a user order must be authorised by a real StoreKit purchase, exactly
+    // once — a double charge or an order created without payment are both
+    // money bugs, the worst class this app has.
+
+    @Test("user mode purchases once and the order intent carries the proof's transaction id")
+    func userModePurchasesAndPassesProof() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 1)
+        guard let intent = service.capturedIntents.first else {
+            Issue.record("createOrder was never called"); return
+        }
+        #expect(intent.paymentProof == MockPackPurchaseService.mockProof)
+        // The server cross-checks body.transaction_id against the JWS — the
+        // intent's idempotency key must BE the StoreKit transaction id.
+        #expect(intent.idempotencyKey == MockPackPurchaseService.mockProof.transactionId)
+    }
+
+    // ADAPTED from #140's cancel→.failed (#138 merge decision): dismissing the
+    // App Store sheet charges nothing, so it is not a failure — the user lands
+    // back on the payment summary they came from and can pay or leave. The
+    // no-way-back rule starts at a SUCCESSFUL payment. What must NOT change:
+    // no order may reach the backend without payment.
+    @Test("a cancelled payment sheet returns to the summary and never reaches the backend")
+    func cancelledPurchaseReturnsToSummary() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService(purchaseResult: .failure(.cancelled))
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.state == .confirming, "cancelling charges nothing — it is a step back, not a failure")
+        #expect(service.capturedIntents.isEmpty, "no payment → no order may be created")
+        // …and the user can still pay from there.
+        #expect(vm.allowsInteractiveDismiss)
+    }
+
+    // WHY: only a *cancellation* is benign. A real purchase failure (store
+    // outage, unverified receipt, Ask-to-Buy pending) must surface as .failed
+    // so the user sees the reason instead of a silently unchanged Pay button.
+    @Test("a non-cancel purchase error surfaces .failed, not the summary")
+    func purchaseErrorSurfacesFailed() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService(purchaseResult: .failure(.productUnavailable))
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        guard case .failed = vm.state else {
+            Issue.record("expected .failed after a purchase error, got \(vm.state)"); return
+        }
+        #expect(service.capturedIntents.isEmpty)
+    }
+
+    // ADAPTED from #140 (which called submit() twice): after a failed create the
+    // machine is in .failed, and "Try again" is retry() — submit() is guarded to
+    // the summary step now. The invariant is unchanged: the second attempt spends
+    // the SAME proof, so the user is charged once.
+    @Test("a retry after a failed create reuses the pending proof — the user is not charged twice")
+    func retryReusesPendingProof() async {
+        let service = MockPackOrderService(createResult: .failure(.init("backend down")))
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit() // pays, then create fails → proof stays pending
+        await vm.retry()  // must spend the SAME proof, not purchase again
+
+        #expect(purchase.purchaseCallCount == 1)
+        #expect(service.capturedIntents.count == 2)
+        #expect(service.capturedIntents[0].idempotencyKey == service.capturedIntents[1].idempotencyKey,
+                "both attempts must carry the same transaction id so the server dedupes")
+    }
+
+    @Test("a durably-pending proof from an earlier run is spent before any new charge")
+    func pendingProofFromEarlierRunIsSpentFirst() async {
+        let service = MockPackOrderService()
+        let earlier = PackPaymentProof(transactionId: "990000000000777", productId: "pack_30", jws: "earlier.jws")
+        let purchase = MockPackPurchaseService(pending: earlier)
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 0, "an unspent paid transaction must be reused, never re-charged")
+        #expect(service.capturedIntents.first?.paymentProof == earlier)
+    }
+
+    @Test("a successful order clears the pending proof")
+    func successfulOrderClearsPendingProof() async {
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(purchase.pendingProof() == nil,
+                "an accepted order spends the proof — leaving it pending would replay it into the next order")
+    }
+
+    @Test("the Debug admin path skips payment entirely and sends an admin transaction id")
+    func adminPathSkipsPayment() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: true)
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 0)
+        guard let intent = service.capturedIntents.first else {
+            Issue.record("createOrder was never called"); return
+        }
+        #expect(intent.paymentProof == nil)
+        #expect(intent.idempotencyKey.hasPrefix("admin-"),
+                "the server only accepts keyless orders whose transaction id is admin-prefixed")
+    }
+
+    // WHY (#138 rule 3 under #140 payment): a SUCCESSFUL payment is the point of
+    // no return even when a pending proof would make a re-order free — the user
+    // must not be able to walk back into the form mid-order and re-drive it.
+    @Test("after a successful payment there is still no route back to the form")
+    func paidOrderCannotReturnToForm() async {
+        let service = MockPackOrderService(getResult: .success(.mockPending), createDelaySeconds: 0.1)
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0.01
+
+        let task = Task { await vm.submit() }
+        #expect(await waitForState(vm) { if case .polling = $0 { return true } else { return false } })
+        expectNoRouteBackToForm(vm, "a paid order")
+
+        vm.stop()
+        await task.value
     }
 }

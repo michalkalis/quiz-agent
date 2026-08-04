@@ -526,3 +526,76 @@ async def test_sweep_ignores_fresh_orders(
 
     await _cleanup(session, pending_id)
     await _cleanup(session, inprog_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_force_fail_emits_sentry_event(
+    engine: AsyncEngine, session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#139 acceptance 3: the budget-exhausted force-fail is the terminal
+    state a hung-then-killed pipeline lands in — the worker never raised, so
+    if this branch doesn't report to Sentry, nothing ever will (the founder's
+    2026-08-03 order died exactly here with zero footprint)."""
+    import sentry_sdk
+
+    captured: list[str] = []
+    monkeypatch.setattr(
+        sentry_sdk,
+        "capture_message",
+        lambda message, level=None, **kw: captured.append((message, level)),
+    )
+
+    order_id, _job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5), retry_count=3
+    )
+    ctx: Dict[str, Any] = {
+        "redis": FakeArqPool(fail=False),
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    assert len(captured) == 1
+    message, level = captured[0]
+    assert str(order_id) in message
+    assert level == "error"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_recovers_parked_nonfinal_failure(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """#139: a job that failed on a NON-final attempt parks as job='failed'
+    under a still-'in_progress' order. ARQ deletes plain-exception jobs from
+    its queue (only cancelled jobs re-run) and /retry 409s on a non-'failed'
+    order, so before this fix nothing would ever retry the order — stranded
+    forever, invisible. The sweep must treat that state as stuck and
+    re-enqueue it within the shared auto-retry budget."""
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5), retry_count=1
+    )
+    await session.execute(
+        text("UPDATE generation_jobs SET status = 'failed' WHERE id = :id"),
+        {"id": job_id},
+    )
+    await session.commit()
+
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert order.status == "in_progress"
+    assert job.status == "queued"
+    assert job.retry_count == 2
+    assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
+
+    await _cleanup(session, order_id)

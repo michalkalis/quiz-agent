@@ -31,6 +31,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
+import sentry_sdk
 from sqlalchemy import select
 
 from app.db.models.job import GenerationJob, attempt_job_id
@@ -77,12 +78,19 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
         # deliberately stays inside the predicate — production only ever writes
         # 'queued'/'done'/'failed', so excluding it would match nothing and
         # disable in_progress recovery, which is this sweep's whole purpose.
+        # #139: a 'failed' job under a still-'in_progress' order is a parked
+        # NON-final failure — ARQ deletes a plain-exception job from its queue
+        # (only cancelled jobs re-run), so nothing else will ever retry it and
+        # the manual /retry endpoint 409s on a non-'failed' order. Excluding
+        # 'failed' here stranded those orders forever; only 'done' is terminal
+        # for this predicate (a final failure also flips the ORDER to 'failed',
+        # which the order-status filter already excludes).
         in_progress_stmt = (
             select(GenerationOrder.id)
             .join(GenerationJob, GenerationJob.id == GenerationOrder.job_id)
             .where(
                 GenerationOrder.status == "in_progress",
-                GenerationJob.status.notin_(("done", "failed")),
+                GenerationJob.status != "done",
                 GenerationJob.updated_at < now - IN_PROGRESS_STUCK_TIMEOUT,
             )
         )
@@ -140,11 +148,33 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
             )
             order.status = "failed"
             order.refund_eligible = True
+            step_log_tail = list(job.step_log or [])[-10:]
+            retry_count = job.retry_count
             await session.commit()
             logger.warning(
                 "sweep_stuck_orders order_id=%s exceeded auto-retry budget; marked failed",
                 order_id,
             )
+            # #139 — this branch is the terminal state a hung-then-killed
+            # pipeline lands in (the worker itself never got to raise, so
+            # nothing else will ever report it). The 2026-08-03 founder order
+            # died exactly here with zero Sentry footprint; a warning-level
+            # log is a breadcrumb, not an event, hence the explicit capture.
+            with sentry_sdk.new_scope() as scope:
+                scope.set_context(
+                    "order",
+                    {
+                        "order_id": str(order_id),
+                        "retry_count": retry_count,
+                        "max_tries": max_tries,
+                    },
+                )
+                scope.set_context("step_log_tail", {"steps": step_log_tail})
+                sentry_sdk.capture_message(
+                    f"sweep force-failed order {order_id} after {retry_count} "
+                    "exhausted recovery attempts (silent worker hang or death)",
+                    level="error",
+                )
             return
 
         job.status = "queued"

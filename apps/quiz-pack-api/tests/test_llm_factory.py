@@ -208,6 +208,23 @@ def test_openai_client_timeout_is_overridable(monkeypatch):
     assert client.timeout.read == 300.0
 
 
+def test_chat_openai_defaults_to_generation_timeout(monkeypatch):
+    """#139: LangChain's own default is an explicit ``timeout=None``, which
+    disables httpx timeouts entirely — a stalled generation/critique/scoring
+    connection then hangs the worker until ARQ kills the job with zero
+    diagnostics (the 2026-08-03 silent order failure)."""
+    monkeypatch.setenv("LLM_GATEWAY", "direct")
+    llm = factory.chat_openai("gpt-4o")
+    assert llm.request_timeout == factory.GENERATION_TIMEOUT
+    assert llm.request_timeout.read == 300.0
+
+
+def test_chat_openai_timeout_stays_overridable(monkeypatch):
+    monkeypatch.setenv("LLM_GATEWAY", "direct")
+    llm = factory.chat_openai("gpt-4o", timeout=12.5)
+    assert llm.request_timeout == 12.5
+
+
 def test_chat_openai_direct_resolves_model_and_endpoint(monkeypatch):
     monkeypatch.setenv("LLM_GATEWAY", "direct")
     llm = factory.chat_openai("gpt-4o", temperature=0.8)

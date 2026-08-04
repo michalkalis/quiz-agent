@@ -5,31 +5,34 @@
 //  Lists the account's custom-pack orders (issue #95), newest-first. A delivered
 //  row offers "Start quiz" to play that pack. Listing requires an account bearer;
 //  without one the pack-api returns 401 and we show a graceful sign-in empty
-//  state instead of crashing.
+//  state instead of crashing. List state + keep-fresh refresh live in
+//  MyPacksViewModel (issue #137).
 //
 
 import SwiftUI
 
 struct MyPacksView: View {
-    let service: PackOrderServiceProtocol
+    @StateObject private var viewModel: MyPacksViewModel
     /// Play a delivered pack by its packId.
     let onPlayPack: (String) -> Void
 
-    @State private var orders: [OrderSnapshot] = []
-    @State private var isLoading = true
-    @State private var loadFailed = false
+    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void) {
+        _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
+        self.onPlayPack = onPlayPack
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if isLoading {
+                if viewModel.isLoading {
                     ProgressView()
                         .tint(Theme.Hangs.Colors.pink)
+                        .frame(maxWidth: .infinity)
                         .padding(.top, 40)
-                } else if orders.isEmpty {
+                } else if viewModel.orders.isEmpty {
                     emptyState
                 } else {
-                    ForEach(orders) { order in
+                    ForEach(viewModel.orders) { order in
                         orderRow(order)
                     }
                 }
@@ -40,7 +43,8 @@ struct MyPacksView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationTitle("My packs")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await load() }
+        .task { await viewModel.start() }
+        .refreshable { await viewModel.refresh() }
     }
 
     // MARK: - Rows
@@ -53,7 +57,7 @@ struct MyPacksView: View {
                         .font(.hangsBody(16, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
                     Spacer()
-                    Text(verbatim: order.status)
+                    Text(verbatim: order.statusLabel)
                         .font(.hangsMono(11, weight: .semibold))
                         .tracking(1)
                         .textCase(.uppercase)
@@ -72,15 +76,15 @@ struct MyPacksView: View {
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: loadFailed ? "person.crop.circle.badge.questionmark" : "tray")
+            Image(systemName: viewModel.loadFailed ? "person.crop.circle.badge.questionmark" : "tray")
                 .font(.system(size: 32, weight: .regular))
                 .foregroundColor(Theme.Hangs.Colors.muted)
-            Text(loadFailed
+            Text(viewModel.loadFailed
                  ? "Sign in to see your packs"
                  : "No packs yet")
                 .font(.hangsBody(16, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
-            Text(loadFailed
+            Text(viewModel.loadFailed
                  ? "Your ordered packs appear here once you're signed in."
                  : "Create a pack to see it here.")
                 .font(.hangsBody(13))
@@ -95,21 +99,6 @@ struct MyPacksView: View {
         if order.isDelivered { return Theme.Hangs.Colors.greenCorrect }
         if order.isFailure { return Theme.Hangs.Colors.error }
         return Theme.Hangs.Colors.blue
-    }
-
-    // MARK: - Load
-
-    private func load() async {
-        isLoading = true
-        loadFailed = false
-        do {
-            orders = try await service.listOrders()
-        } catch {
-            // 401 / no bearer / offline → graceful empty state, never a crash.
-            orders = []
-            loadFailed = true
-        }
-        isLoading = false
     }
 }
 

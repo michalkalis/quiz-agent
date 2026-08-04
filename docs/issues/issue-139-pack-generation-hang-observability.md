@@ -22,6 +22,16 @@ Plausible triggers, none evidenced: worker machine OOM/auto-suspend mid-job (kno
 3. **Memory check**: measure worker RSS during a pack run on the 512MB machine; if OOM is implicated, fix (defer chromadb import / bump machine) rather than paper over.
 4. **Recover the founder's order**: after 1–3 are deployed, trigger `POST /v1/orders/{id}/retry` (`orders.py:543-658`) on the failed order and confirm delivery end-to-end.
 
+## Findings (2026-08-04 implementation)
+
+Three compounding holes explain the zero-diagnostics failure; all fixed:
+
+1. **`chat_openai()` had no timeout at all.** LangChain's default is an *explicit* `timeout=None` handed to the OpenAI SDK, which (unlike the omitted-arg sentinel) disables httpx timeouts entirely. The generation, critique, and scoring clients — exactly the stages the order hung at — could wait forever on a stalled connection. All native-SDK call sites (verifier, normalizer, answerability, …) already carried `GENERATION_TIMEOUT` (300s); Tavily/Wikipedia/OpenTrivia had explicit 10–15s timeouts. Fix: factory defaults the ChatOpenAI path to `GENERATION_TIMEOUT`.
+2. **ARQ's job_timeout kill was invisible to our code.** `job_timeout=600` cancels the task with `CancelledError` (a BaseException) — `process_order`'s `except Exception` never ran, so a timed-out attempt updated no rows, logged nothing, sent nothing. Fix: explicit cancel handler names the hung stage (`PackGenerator.current_stage`), runs `_handle_failure`, re-raises.
+3. **The sweep's force-fail (where the order actually died) only logged a warning** — a Sentry breadcrumb, not an event. Fix: error-level `capture_message` with the step-log tail.
+
+Belt: per-stage `asyncio.wait_for` (`STAGE_TIMEOUT_SECONDS`, default 480s < job_timeout 600s). Observability: stage breadcrumbs, per-stage RSS log lines (`/proc/self/statm`), one rich Sentry event per failed attempt (step-log context) in `_handle_failure`. Worker machine did NOT restart during the hang window (last update 18:57Z vs order 19:10Z) — weakens the OOM theory; unbounded LLM call is the prime suspect.
+
 ## Acceptance
 
 - [ ] Every pipeline stage LLM/network call carries an explicit timeout (grep/test evidence per stage; a stubbed hanging call fails the stage with a logged exception, pytest).

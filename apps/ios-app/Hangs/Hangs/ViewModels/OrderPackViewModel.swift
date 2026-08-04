@@ -2,14 +2,25 @@
 //  OrderPackViewModel.swift
 //  Hangs
 //
-//  Drives the custom-pack order flow (#95, redesigned in #138). One state
-//  machine backs the whole modal: editing → confirming (payment summary) →
-//  submitting → polling → delivered/failed. Once `submitting` is entered the
-//  order is paid-for and irreversible, so NO public call can walk the state
-//  back to the form or the summary for that order — the founder field test
-//  (2026-08-04) landed back on the form after ordering and nearly re-paid.
-//  The poll task is cancelled on stop()/deinit only; it deliberately survives
-//  the sheet being dismissed, because delivery can complete while it is closed.
+//  Drives the custom-pack order flow (#95, redesigned in #138, paid via
+//  StoreKit in #140). One state machine backs the whole modal:
+//  editing → confirming (payment summary) → submitting → polling →
+//  delivered/failed. `submitting` runs the App Store payment sheet and then
+//  creates the order with the purchase proof, polling `getOrder` at 1 Hz to a
+//  terminal status. The poll task is cancelled on stop()/deinit only; it
+//  deliberately survives the sheet being dismissed, because delivery can
+//  complete while it is closed.
+//
+//  Payment rules (#140): a durably-pending proof (paid, but the order POST
+//  never landed) is always spent before a new charge is made, and the proof is
+//  cleared only after the backend accepts the order. In Debug builds a stored
+//  admin key skips payment entirely — the internal testing door.
+//
+//  Irreversibility (#138): once payment SUCCEEDS the order is paid for, and no
+//  public call can walk the state back to the form or the summary for it — the
+//  founder field test (2026-08-04) landed back on the form after ordering and
+//  nearly re-paid. Cancelling the payment sheet is the one exception: nothing
+//  was charged, so it returns to the summary rather than a dead-end error.
 //
 
 import Combine
@@ -66,12 +77,22 @@ final class OrderPackViewModel: ObservableObject {
     @Published private(set) var state: OrderState = .editing
 
     private let service: PackOrderServiceProtocol
+    private let purchaseService: PackPurchaseServiceProtocol
+    /// Whether the Debug admin door is open (a key is stored). Injected so unit
+    /// tests aren't at the mercy of the simulator's persistent Keychain; only
+    /// consulted in Debug builds.
+    private let adminKeyAvailable: () -> Bool
     private var pollTask: Task<Void, Never>?
 
     /// Set once the order exists server-side. A "Try again" after that point is a
     /// retry of THAT order (`POST /v1/orders/{id}/retry`), never a second paid
     /// create — the backend caps manual retries at 3.
     private(set) var orderId: String?
+
+    /// The StoreKit proof the current order was created with (nil = Debug admin
+    /// order). Kept in memory after the durable pending slot is cleared, because
+    /// the backend's retry endpoint authorises on that same JWS.
+    private(set) var orderPaymentProof: PackPaymentProof?
 
     /// True once the user has picked a language by hand for the current order;
     /// stops `prepareForPresentation` from stomping the choice on reopen.
@@ -84,8 +105,14 @@ final class OrderPackViewModel: ObservableObject {
     /// a later submit with the same content is then a genuinely new order.
     private var pendingIntent: PackOrderIntent?
 
-    init(service: PackOrderServiceProtocol) {
+    init(
+        service: PackOrderServiceProtocol,
+        purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
+        adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil }
+    ) {
         self.service = service
+        self.purchaseService = purchaseService
+        self.adminKeyAvailable = adminKeyAvailable
     }
 
     deinit {
@@ -198,6 +225,7 @@ final class OrderPackViewModel: ObservableObject {
     private func resetForNewOrder(defaultLanguage: String) {
         stop()
         orderId = nil
+        orderPaymentProof = nil
         pendingIntent = nil
         hasChosenLanguage = false
         language = Self.supportedLanguage(defaultLanguage)
@@ -215,6 +243,25 @@ final class OrderPackViewModel: ObservableObject {
     private func runOrder() async {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // #140: settle payment BEFORE the order is formed. A cancelled sheet or
+        // a failed charge never reaches the backend.
+        let proof: PackPaymentProof?
+        do {
+            proof = try await resolvePaymentProof()
+        } catch PackPurchaseError.cancelled {
+            // #138 deviation from #140's cancel→failed: dismissing the App Store
+            // sheet charges nothing, so it is not a failure — it is the user
+            // stepping back. Return to the summary they came from. The
+            // no-way-back invariant begins at a SUCCESSFUL payment, not at
+            // tapping Pay; stranding a non-paying user on an error screen would
+            // cost them the order for a decision they deliberately made.
+            state = .confirming
+            return
+        } catch {
+            state = .failed(Self.message(for: error))
+            return
+        }
+
         // Reuse the pending intent (and its idempotency key) when the form
         // content is unchanged from the last attempt — a retry after a create
         // that never landed. Any change to the fields is a genuinely new
@@ -222,7 +269,8 @@ final class OrderPackViewModel: ObservableObject {
         let intent: PackOrderIntent
         if let pending = pendingIntent,
            pending.prompt == trimmedPrompt,
-           pending.language == language {
+           pending.language == language,
+           pending.paymentProof == proof {
             intent = pending
         } else {
             // #138 dropped the category/theme inputs (meaningless even to the
@@ -232,7 +280,8 @@ final class OrderPackViewModel: ObservableObject {
                 prompt: trimmedPrompt,
                 language: language,
                 category: nil,
-                theme: nil
+                theme: nil,
+                paymentProof: proof
             )
         }
         pendingIntent = intent
@@ -246,18 +295,44 @@ final class OrderPackViewModel: ObservableObject {
         }
         pendingIntent = nil // order created — a future submit is a new order
         orderId = created.orderId
+        // Held in memory (not the durable store) so a later "Try again" can
+        // authorise `POST /v1/orders/{id}/retry` with the SAME proof the order
+        // was created with — the backend accepts nothing else in a user build.
+        orderPaymentProof = intent.paymentProof
+        if intent.paymentProof != nil {
+            // The backend accepted the order — the purchase is spent. (Guarded
+            // so a Debug admin order can never discard a real unspent proof.)
+            purchaseService.clearPendingProof()
+        }
 
         await poll(orderId: created.orderId)
     }
 
+    /// Re-enqueue an order that already exists (and was already paid for)
+    /// server-side. Authorised by the proof that created it — never a second
+    /// purchase.
     private func retryExistingOrder(orderId: String) async {
         do {
-            _ = try await service.retryOrder(id: orderId)
+            _ = try await service.retryOrder(id: orderId, paymentProof: orderPaymentProof)
         } catch {
             state = .failed(Self.message(for: error))
             return
         }
         await poll(orderId: orderId)
+    }
+
+    /// How this order gets paid: Debug builds with a stored admin key skip
+    /// payment (nil proof → `X-Admin-Key` path); otherwise a durably-pending
+    /// proof from an earlier interrupted attempt is spent first, and only when
+    /// none exists does the App Store payment sheet run.
+    private func resolvePaymentProof() async throws -> PackPaymentProof? {
+        #if DEBUG
+            if adminKeyAvailable() { return nil }
+        #endif
+        if let pending = purchaseService.pendingProof() {
+            return pending
+        }
+        return try await purchaseService.purchase()
     }
 
     private func poll(orderId: String) async {

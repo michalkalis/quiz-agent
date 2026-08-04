@@ -78,12 +78,19 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
         # deliberately stays inside the predicate — production only ever writes
         # 'queued'/'done'/'failed', so excluding it would match nothing and
         # disable in_progress recovery, which is this sweep's whole purpose.
+        # #139: a 'failed' job under a still-'in_progress' order is a parked
+        # NON-final failure — ARQ deletes a plain-exception job from its queue
+        # (only cancelled jobs re-run), so nothing else will ever retry it and
+        # the manual /retry endpoint 409s on a non-'failed' order. Excluding
+        # 'failed' here stranded those orders forever; only 'done' is terminal
+        # for this predicate (a final failure also flips the ORDER to 'failed',
+        # which the order-status filter already excludes).
         in_progress_stmt = (
             select(GenerationOrder.id)
             .join(GenerationJob, GenerationJob.id == GenerationOrder.job_id)
             .where(
                 GenerationOrder.status == "in_progress",
-                GenerationJob.status.notin_(("done", "failed")),
+                GenerationJob.status != "done",
                 GenerationJob.updated_at < now - IN_PROGRESS_STUCK_TIMEOUT,
             )
         )

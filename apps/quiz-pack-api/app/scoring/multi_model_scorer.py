@@ -41,6 +41,7 @@ code, attached to every result entry.
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -74,6 +75,12 @@ _ANSWER_TAIL_MARKERS = (
 # Bedrock on-demand quotas throttle well below that (field test 2026-08-01)
 # — SCORER_MAX_CONCURRENT lowers the bound for Bedrock judge runs.
 _MAX_CONCURRENT_CALLS = int(os.getenv("SCORER_MAX_CONCURRENT", "10"))
+
+# Bedrock per-model account quotas are low enough that even 2 concurrent
+# calls to the same model throttle through a 12-attempt adaptive retry
+# (validation run 2026-08-04, Pixtral Large). Bedrock judges are therefore
+# additionally serialized per model; other providers are unaffected.
+_BEDROCK_PER_MODEL_CONCURRENT = int(os.getenv("BEDROCK_PER_MODEL_CONCURRENT", "1"))
 
 
 def compute_answer_brevity(answer: object) -> int:
@@ -517,6 +524,7 @@ class MultiModelScorer:
         )
         self.models = models or self._default_models(self._gate_v2)
         self._clients: dict = {}
+        self._model_semaphores: dict[str, asyncio.Semaphore] = {}
 
     @staticmethod
     def _default_models(gate_v2: bool = False) -> list[dict]:
@@ -602,6 +610,34 @@ class MultiModelScorer:
             )
         return self._clients[name]
 
+    def _model_semaphore(self, model_config: dict) -> Optional[asyncio.Semaphore]:
+        """Per-model concurrency bound — Bedrock judges only (quota, see
+        ``_BEDROCK_PER_MODEL_CONCURRENT``)."""
+        if not llm_factory.is_bedrock_model(model_config["model"]):
+            return None
+        name = model_config["name"]
+        if name not in self._model_semaphores:
+            self._model_semaphores[name] = asyncio.Semaphore(
+                _BEDROCK_PER_MODEL_CONCURRENT
+            )
+        return self._model_semaphores[name]
+
+    async def _invoke(
+        self,
+        model_config: dict,
+        prompt: str,
+        semaphore: Optional[asyncio.Semaphore],
+    ):
+        """One judge call under the global and (Bedrock) per-model bounds."""
+        client = self._get_client(model_config)
+        async with contextlib.AsyncExitStack() as stack:
+            model_sem = self._model_semaphore(model_config)
+            if model_sem is not None:
+                await stack.enter_async_context(model_sem)
+            if semaphore is not None:
+                await stack.enter_async_context(semaphore)
+            return await client.ainvoke([HumanMessage(content=prompt)])
+
     async def _score_dimension(
         self,
         model_config: dict,
@@ -614,14 +650,9 @@ class MultiModelScorer:
         Returns (score, reasoning) or None after the retry — the caller logs
         the miss; nothing is silently defaulted (generation review A6).
         """
-        client = self._get_client(model_config)
         for attempt in (1, 2):
             try:
-                if semaphore is not None:
-                    async with semaphore:
-                        response = await client.ainvoke([HumanMessage(content=prompt)])
-                else:
-                    response = await client.ainvoke([HumanMessage(content=prompt)])
+                response = await self._invoke(model_config, prompt, semaphore)
                 parsed = _parse_dim_response(_response_text(response))
                 if parsed is not None:
                     return parsed
@@ -648,14 +679,9 @@ class MultiModelScorer:
         Returns {dim_key: (score, reasoning)} or None after the retry —
         the caller logs the miss; nothing is silently defaulted.
         """
-        client = self._get_client(model_config)
         for attempt in (1, 2):
             try:
-                if semaphore is not None:
-                    async with semaphore:
-                        response = await client.ainvoke([HumanMessage(content=prompt)])
-                else:
-                    response = await client.ainvoke([HumanMessage(content=prompt)])
+                response = await self._invoke(model_config, prompt, semaphore)
                 parsed = _parse_gate_v2_response(_response_text(response), dim_keys)
                 if parsed:
                     return parsed

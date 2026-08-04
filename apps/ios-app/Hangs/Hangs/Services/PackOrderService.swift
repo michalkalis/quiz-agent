@@ -5,8 +5,12 @@
 //  REST client for quiz-pack-api `/v1/orders` (issue #95 custom packs). Actor-
 //  based for thread-safe networking, mirroring `NetworkService`. Targets a
 //  DIFFERENT host than NetworkService (`Config.packApiBaseURL`, the pack-api),
-//  and authenticates with the founder admin key (Keychain) PLUS the account
-//  bearer when one is available, so orders link to the signed-in account.
+//  and always attaches the account bearer so orders link to the account.
+//
+//  Order authorisation (#140): the user path sends the StoreKit JWS
+//  (`X-StoreKit-JWS`) from the intent's `paymentProof`. The founder admin-key
+//  path (`X-Admin-Key`, Keychain) is compiled OUT of Release builds — it
+//  exists for internal Debug testing only.
 //
 
 @preconcurrency import Foundation
@@ -35,7 +39,10 @@ actor PackOrderService: PackOrderServiceProtocol {
     private let baseURL: URL
     private let session: URLSession
     private let authService: AuthServiceProtocol?
-    private let adminKeyStore: AdminKeyStore
+    /// Reads the stored admin key (Debug internal door). A closure — not the
+    /// concrete Keychain store — so unit tests can pin header behaviour without
+    /// racing other suites for the simulator's shared, persistent Keychain.
+    private let adminKey: @Sendable () -> String?
 
     /// In-flight create calls keyed by `idempotencyKey`. A second `createOrder`
     /// for the SAME intent while one is still pending awaits the existing task
@@ -47,7 +54,7 @@ actor PackOrderService: PackOrderServiceProtocol {
         baseURL: String = Config.packApiBaseURL,
         session: URLSession = .shared,
         authService: AuthServiceProtocol?,
-        adminKeyStore: AdminKeyStore = AdminKeyStore()
+        adminKey: @escaping @Sendable () -> String? = { AdminKeyStore().load() }
     ) {
         guard let url = URL(string: baseURL) else {
             fatalError("PackOrderService: invalid baseURL '\(baseURL)' — check Config.packApiBaseURL")
@@ -55,7 +62,7 @@ actor PackOrderService: PackOrderServiceProtocol {
         self.baseURL = url
         self.session = session
         self.authService = authService
-        self.adminKeyStore = adminKeyStore
+        self.adminKey = adminKey
     }
 
     // MARK: - Requests
@@ -76,12 +83,17 @@ actor PackOrderService: PackOrderServiceProtocol {
 
     private func performCreateOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         let url = baseURL.appendingPathComponent("/v1/orders")
-        var request = makeRequest(url: url, method: "POST", includeAdminKey: true)
+        // User path: the StoreKit JWS authorises the order and the admin key is
+        // never attached. Debug admin path (no proof): admin key only.
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: intent.paymentProof == nil)
+        if let proof = intent.paymentProof {
+            request.setValue(proof.jws, forHTTPHeaderField: "X-StoreKit-JWS")
+        }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let payload = CreateOrderRequest(
             transactionId: intent.idempotencyKey,
-            productId: Self.productId,
+            productId: intent.paymentProof?.productId ?? Self.productId,
             prompt: intent.prompt,
             language: intent.language,
             targetCount: Self.targetCount,
@@ -149,15 +161,19 @@ actor PackOrderService: PackOrderServiceProtocol {
     // MARK: - Helpers
 
     /// Build a request with the admin key (optional) attached. The admin key is the
-    /// founder path; the account bearer — which links the order to the account so it
-    /// lists under "mine" — is attached by `send`, because a 401 has to re-attach a
+    /// internal Debug-only door (#140) — the attachment is compiled out of Release,
+    /// so a user build can never send `X-Admin-Key` no matter what the Keychain
+    /// holds. The account bearer — which links the order to the account so it lists
+    /// under "mine" — is attached by `send`, because a 401 has to re-attach a
     /// refreshed one.
     private func makeRequest(url: URL, method: String, includeAdminKey: Bool) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
-        if includeAdminKey, let adminKey = adminKeyStore.load() {
-            request.setValue(adminKey, forHTTPHeaderField: "X-Admin-Key")
-        }
+        #if DEBUG
+            if includeAdminKey, let key = adminKey() {
+                request.setValue(key, forHTTPHeaderField: "X-Admin-Key")
+            }
+        #endif
         return request
     }
 

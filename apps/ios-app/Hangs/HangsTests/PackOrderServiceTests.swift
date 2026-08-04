@@ -187,12 +187,15 @@ final class PackOrderStubURLProtocol: URLProtocol, @unchecked Sendable {
 // header comment).
 @Suite("PackOrderService — idempotency (#103 finding 6) + auth refresh (#133 V16)", .serialized)
 struct PackOrderServiceTests {
-    private func makeService(authService: AuthServiceProtocol? = nil) -> PackOrderService {
+    private func makeService(
+        authService: AuthServiceProtocol? = nil,
+        adminKey: String? = nil
+    ) -> PackOrderService {
         PackOrderService(
             baseURL: Stubs.baseURL,
             session: PackOrderStubURLProtocol.makeSession(),
             authService: authService,
-            adminKeyStore: AdminKeyStore()
+            adminKey: { adminKey }
         )
     }
 
@@ -391,6 +394,62 @@ struct PackOrderServiceTests {
         // rather than shown the generic "the pack service returned an error".
         #expect(seen.withLock { $0 }.count == 2)
         #expect(await auth.refreshCallCount() == 1)
+    }
+
+    // MARK: 5. Order authorisation headers (#140)
+
+    //
+    // WHY: the user flow must be authorised by the StoreKit JWS and NEVER by
+    // the admin key — an admin header in a user build is a free-packs door.
+    // The user-mode test injects an available admin key on purpose, proving a
+    // stored key's mere presence doesn't leak into a paid order's request.
+
+    @Test("user mode (payment proof) sends X-StoreKit-JWS and the proof's ids — never X-Admin-Key")
+    func userModeSendsJWSNeverAdminKey() async throws {
+        let service = makeService(adminKey: "seeded-admin-key")
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+
+        PackOrderStubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        let proof = PackPaymentProof(transactionId: "990000000000123", productId: "pack_30", jws: "header.payload.sig")
+        let intent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, paymentProof: proof)
+        _ = try await service.createOrder(intent: intent)
+
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.value(forHTTPHeaderField: "X-StoreKit-JWS") == proof.jws)
+        #expect(request.value(forHTTPHeaderField: "X-Admin-Key") == nil,
+                "a stored admin key must NOT ride along on a paid user order")
+        // The server 400s unless body ids match the JWS payload exactly.
+        let body = try #require(readRequestBody(request))
+        let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(json["transaction_id"] as? String == proof.transactionId)
+        #expect(json["product_id"] as? String == proof.productId)
+    }
+
+    @Test("no proof (Debug admin path) sends X-Admin-Key and no JWS header")
+    func adminModeSendsAdminKeyNoJWS() async throws {
+        let service = makeService(adminKey: "seeded-admin-key")
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+
+        PackOrderStubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        let intent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil)
+        _ = try await service.createOrder(intent: intent)
+
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.value(forHTTPHeaderField: "X-Admin-Key") == "seeded-admin-key")
+        #expect(request.value(forHTTPHeaderField: "X-StoreKit-JWS") == nil)
+        let transactionId = try #require(capturedTransactionId(request))
+        #expect(transactionId.hasPrefix("admin-"),
+                "keyless synthetic orders must stay in the server's admin- id namespace")
     }
 
     @Test("a non-401 failure is unchanged — still PackOrderError.server with the backend detail, no refresh")

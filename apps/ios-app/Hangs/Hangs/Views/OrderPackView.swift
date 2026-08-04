@@ -30,8 +30,12 @@ struct OrderPackView: View {
         ("cs", "Czech"),
     ]
 
-    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void) {
-        _viewModel = StateObject(wrappedValue: OrderPackViewModel(service: service))
+    init(
+        service: PackOrderServiceProtocol,
+        purchaseService: PackPurchaseServiceProtocol,
+        onPlayPack: @escaping (String) -> Void
+    ) {
+        _viewModel = StateObject(wrappedValue: OrderPackViewModel(service: service, purchaseService: purchaseService))
         self.onPlayPack = onPlayPack
     }
 
@@ -146,7 +150,7 @@ struct OrderPackView: View {
 #if DEBUG
     #Preview {
         NavigationStack {
-            OrderPackView(service: MockPackOrderService(), onPlayPack: { _ in })
+            OrderPackView(service: MockPackOrderService(), purchaseService: MockPackPurchaseService(), onPlayPack: { _ in })
         }
         .environmentObject(NavigationModel())
     }

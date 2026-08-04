@@ -33,6 +33,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// then a success. Takes precedence over `getSequence`/`getResult`.
     private let getResults: [Result<OrderSnapshot, PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
+    private let intents = OSAllocatedUnfairLock<[PackOrderIntent]>(initialState: [])
 
     /// Boxed error so the whole config stays value-typed / Sendable.
     struct PackFailure: Error, Sendable {
@@ -54,8 +55,15 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         self.getResults = getResults
     }
 
+    /// Every intent `createOrder` received, in call order — lets a test assert
+    /// what payment proof / idempotency key an order actually carried (#140).
+    var capturedIntents: [PackOrderIntent] {
+        intents.withLock { $0 }
+    }
+
     func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
-        try createResult.get()
+        intents.withLock { $0.append(intent) }
+        return try createResult.get()
     }
 
     func listOrders() async throws -> [OrderSnapshot] {

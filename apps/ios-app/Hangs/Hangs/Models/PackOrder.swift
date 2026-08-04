@@ -52,29 +52,34 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
 /// a retry (client timeout, resubmit after a failed attempt) sends the same
 /// `transaction_id` both times, so the server's dedup (quiz-pack-api
 /// `orders.py`) replays the original order instead of creating — and
-/// billing — a duplicate. `idempotencyKey` is admin-path only today
-/// (defaults to `"admin-<uuid>"`); once packs carry a real StoreKit
-/// transaction, that id slots into `idempotencyKey` unchanged — no signature
-/// change needed.
+/// billing — a duplicate.
+///
+/// With a `paymentProof` (issue #140, the user path) the idempotency key IS the
+/// StoreKit transaction id — the server cross-checks it against the JWS. With
+/// no proof (Debug admin path) it stays a synthetic `"admin-<uuid>"`.
 nonisolated struct PackOrderIntent: Equatable, Sendable {
     let idempotencyKey: String
     let prompt: String
     let language: String
     let category: String?
     let theme: String?
+    /// StoreKit proof authorising this order; nil = Debug admin path.
+    let paymentProof: PackPaymentProof?
 
     init(
         prompt: String,
         language: String,
         category: String?,
         theme: String?,
+        paymentProof: PackPaymentProof? = nil,
         idempotencyKey: String = "admin-\(UUID().uuidString)"
     ) {
-        self.idempotencyKey = idempotencyKey
+        self.idempotencyKey = paymentProof?.transactionId ?? idempotencyKey
         self.prompt = prompt
         self.language = language
         self.category = category
         self.theme = theme
+        self.paymentProof = paymentProof
     }
 }
 

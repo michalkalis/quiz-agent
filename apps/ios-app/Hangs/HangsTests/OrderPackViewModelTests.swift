@@ -19,11 +19,21 @@ import Foundation
 @testable import Hangs
 import Testing
 
+/// Defaults to the Debug admin path (`adminKeyAvailable: true`) so the
+/// pre-#140 order/poll tests keep exercising exactly the flow they always did —
+/// no payment step. Purchase-flow tests below pass `adminKeyAvailable: false`
+/// to route through the (mock) StoreKit purchase instead.
 @MainActor
 private func makeOrderPackViewModel(
-    service: MockPackOrderService = MockPackOrderService()
+    service: MockPackOrderService = MockPackOrderService(),
+    purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
+    adminKeyAvailable: Bool = true
 ) -> OrderPackViewModel {
-    OrderPackViewModel(service: service)
+    OrderPackViewModel(
+        service: service,
+        purchaseService: purchaseService,
+        adminKeyAvailable: { adminKeyAvailable }
+    )
 }
 
 @MainActor
@@ -210,5 +220,106 @@ struct OrderPackViewModelTests {
         // Assert it's the deadline's soft copy, not a generic error — the message
         // is what tells the user the pack is still coming.
         #expect(message == String(localized: "Still working — check My packs later."))
+    }
+
+    // MARK: - Payment flow (#140)
+
+    //
+    // WHY: a user order must be authorised by a real StoreKit purchase, exactly
+    // once — a double charge or an order created without payment are both
+    // money bugs, the worst class this app has.
+
+    @Test("user mode purchases once and the order intent carries the proof's transaction id")
+    func userModePurchasesAndPassesProof() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService()
+        let vm = makeOrderPackViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 1)
+        guard let intent = service.capturedIntents.first else {
+            Issue.record("createOrder was never called"); return
+        }
+        #expect(intent.paymentProof == MockPackPurchaseService.mockProof)
+        // The server cross-checks body.transaction_id against the JWS — the
+        // intent's idempotency key must BE the StoreKit transaction id.
+        #expect(intent.idempotencyKey == MockPackPurchaseService.mockProof.transactionId)
+    }
+
+    @Test("a cancelled payment sheet surfaces .failed and never reaches the backend")
+    func cancelledPurchaseNeverCreatesOrder() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService(purchaseResult: .failure(.cancelled))
+        let vm = makeOrderPackViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        guard case .failed = vm.state else {
+            Issue.record("expected .failed after a cancelled sheet, got \(vm.state)"); return
+        }
+        #expect(service.capturedIntents.isEmpty, "no payment → no order may be created")
+    }
+
+    @Test("a retry after a failed create reuses the pending proof — the user is not charged twice")
+    func retryReusesPendingProof() async {
+        let service = MockPackOrderService(createResult: .failure(.init("backend down")))
+        let purchase = MockPackPurchaseService()
+        let vm = makeOrderPackViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit() // pays, then create fails → proof stays pending
+        await vm.submit() // retry must spend the SAME proof, not purchase again
+
+        #expect(purchase.purchaseCallCount == 1)
+        #expect(service.capturedIntents.count == 2)
+        #expect(service.capturedIntents[0].idempotencyKey == service.capturedIntents[1].idempotencyKey,
+                "both attempts must carry the same transaction id so the server dedupes")
+    }
+
+    @Test("a durably-pending proof from an earlier run is spent before any new charge")
+    func pendingProofFromEarlierRunIsSpentFirst() async {
+        let service = MockPackOrderService()
+        let earlier = PackPaymentProof(transactionId: "990000000000777", productId: "pack_30", jws: "earlier.jws")
+        let purchase = MockPackPurchaseService(pending: earlier)
+        let vm = makeOrderPackViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 0, "an unspent paid transaction must be reused, never re-charged")
+        #expect(service.capturedIntents.first?.paymentProof == earlier)
+    }
+
+    @Test("a successful order clears the pending proof")
+    func successfulOrderClearsPendingProof() async {
+        let purchase = MockPackPurchaseService()
+        let vm = makeOrderPackViewModel(purchaseService: purchase, adminKeyAvailable: false)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        #expect(purchase.pendingProof() == nil,
+                "an accepted order spends the proof — leaving it pending would replay it into the next order")
+    }
+
+    @Test("the Debug admin path skips payment entirely and sends an admin transaction id")
+    func adminPathSkipsPayment() async {
+        let service = MockPackOrderService()
+        let purchase = MockPackPurchaseService()
+        let vm = makeOrderPackViewModel(service: service, purchaseService: purchase, adminKeyAvailable: true)
+        vm.prompt = "History of the Roman Empire in ten questions"
+
+        await vm.submit()
+
+        #expect(purchase.purchaseCallCount == 0)
+        guard let intent = service.capturedIntents.first else {
+            Issue.record("createOrder was never called"); return
+        }
+        #expect(intent.paymentProof == nil)
+        #expect(intent.idempotencyKey.hasPrefix("admin-"),
+                "the server only accepts keyless orders whose transaction id is admin-prefixed")
     }
 }

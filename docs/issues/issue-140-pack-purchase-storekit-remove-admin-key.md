@@ -1,6 +1,6 @@
 # Issue 140: Custom-pack purchase must run on real StoreKit payment — retire the admin-key path for users
 
-**Triage:** enhancement · ready-for-human (class c — payments; agent implements attended, founder does the sandbox leg)
+**Triage:** enhancement · agent-side DONE 2026-08-04 · awaiting founder leg (class c — payments; ASC product + price, sandbox e2e)
 **Reversibility:** c
 **Status:** Founder 2026-08-04: "ten admin kľúč už snáď netreba… nech to poriadne funguje aj pre bežných užívateľov" — test via sandbox purchases in the TF build. This is #95's deferred Session 4 (payments), now due.
 **Created:** 2026-08-04
@@ -21,8 +21,15 @@
 
 ## Acceptance
 
-- [ ] User flow sends `X-StoreKit-JWS`, never `X-Admin-Key` (unit test on `PackOrderService` request construction in user mode).
-- [ ] Custom-packs entry visible without an admin key (unit/snapshot).
-- [ ] Admin path unreachable in Release user builds (test or build-config grep evidence).
+- [x] User flow sends `X-StoreKit-JWS`, never `X-Admin-Key` (unit test on `PackOrderService` request construction in user mode) — `PackOrderServiceTests` section 5; the user-mode test injects an available admin key and proves it does NOT ride along.
+- [x] Custom-packs entry visible without an admin key (unit/snapshot) — `SettingsPacksEntryTests` (ViewInspector, Keychain cleared).
+- [x] Admin path unreachable in Release user builds — build-config evidence: `#if DEBUG` wraps the `X-Admin-Key` attachment (`PackOrderService.makeRequest`), the Settings admin-key field (`SettingsView.packsGroup`), and the VM's skip-payment branch (`OrderPackViewModel.resolvePaymentProof`).
 - [ ] `[HUMAN]` Founder sandbox purchase e2e passes on device (charge shown, pack delivered, playable).
-- [ ] Backend untouched or changes covered by pytest; `/verify-api` clean if models move.
+- [x] Backend untouched (JWS path shipped in #95/#133 already enforced); no model moves, `/verify-api` not needed.
+
+## Implementation notes (2026-08-04, agent run)
+
+- Purchase is **raw StoreKit 2** (`StoreKitPackPurchaseService`), NOT RevenueCat: RC keeps `jwsRepresentation` internal, and quiz-pack-api authorises orders from the raw Apple JWS. Subscriptions + #93 credit pack stay on RC.
+- Product id = `pack_30` (must match the server's `_PRODUCT_TIERS` key AND the ASC product id — the server cross-checks the JWS payload against the body). Founder creates the ASC consumable with EXACTLY this product id.
+- Crash-safety: proof (JWS + tx id) persists in `PendingPackPurchaseStore` BEFORE `transaction.finish()`; an interrupted order retries from the pending proof (no double charge), cleared only after the backend accepts the order. VM tests pin purchase-once/reuse/clear.
+- Prod quiz-pack-api runs `STOREKIT_ENVIRONMENT=Sandbox` (verified on the machine) — TestFlight sandbox purchases will verify as-is.

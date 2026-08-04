@@ -144,7 +144,11 @@ struct ContentView: View {
                     case .settings:
                         SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
                     case .orderPack:
-                        OrderPackView(service: appState.packOrderService, onPlayPack: playPack)
+                        OrderPackView(
+                            service: appState.packOrderService,
+                            purchaseService: appState.packPurchaseService,
+                            onPlayPack: playPack
+                        )
                     case .myPacks:
                         MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
                     #if DEBUG

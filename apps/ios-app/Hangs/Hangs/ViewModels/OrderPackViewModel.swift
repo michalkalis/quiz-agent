@@ -2,10 +2,16 @@
 //  OrderPackViewModel.swift
 //  Hangs
 //
-//  Drives the custom-pack order form + delivery poll (issue #95). Creates an
-//  order via PackOrderService, then polls `getOrder` at 1 Hz until the order is
+//  Drives the custom-pack order form + delivery poll (issue #95). Pays for the
+//  pack via StoreKit (issue #140), creates an order via PackOrderService with
+//  the purchase proof, then polls `getOrder` at 1 Hz until the order is
 //  terminal (delivered / failed / refunded), publishing each step so the
 //  progress view can render it. The poll task is cancelled on stop()/deinit.
+//
+//  Payment rules (#140): a durably-pending proof (paid, but the order POST
+//  never landed) is always spent before a new charge is made, and the proof is
+//  cleared only after the backend accepts the order. In Debug builds a stored
+//  admin key skips payment entirely — the internal testing door.
 //
 
 import Combine
@@ -57,6 +63,11 @@ final class OrderPackViewModel: ObservableObject {
     @Published private(set) var state: OrderState = .editing
 
     private let service: PackOrderServiceProtocol
+    private let purchaseService: PackPurchaseServiceProtocol
+    /// Whether the Debug admin door is open (a key is stored). Injected so unit
+    /// tests aren't at the mercy of the simulator's persistent Keychain; only
+    /// consulted in Debug builds.
+    private let adminKeyAvailable: () -> Bool
     private var pollTask: Task<Void, Never>?
 
     /// The intent behind the order currently being submitted (or last failed).
@@ -66,8 +77,14 @@ final class OrderPackViewModel: ObservableObject {
     /// a later submit with the same content is then a genuinely new order.
     private var pendingIntent: PackOrderIntent?
 
-    init(service: PackOrderServiceProtocol) {
+    init(
+        service: PackOrderServiceProtocol,
+        purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
+        adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil }
+    ) {
         self.service = service
+        self.purchaseService = purchaseService
+        self.adminKeyAvailable = adminKeyAvailable
     }
 
     deinit {
@@ -117,6 +134,16 @@ final class OrderPackViewModel: ObservableObject {
         let resolvedCategory = trimmedCategory.isEmpty ? nil : trimmedCategory
         let resolvedTheme = trimmedTheme.isEmpty ? nil : trimmedTheme
 
+        // #140: settle payment BEFORE the order is formed. A cancelled sheet or
+        // a failed charge never reaches the backend.
+        let proof: PackPaymentProof?
+        do {
+            proof = try await resolvePaymentProof()
+        } catch {
+            state = .failed(Self.message(for: error))
+            return
+        }
+
         // Reuse the pending intent (and its idempotency key) when the form
         // content is unchanged from the last attempt — a retry after a failed
         // submit (e.g. "Back" then "Create pack" again with the same fields).
@@ -127,14 +154,16 @@ final class OrderPackViewModel: ObservableObject {
            pending.prompt == trimmedPrompt,
            pending.language == language,
            pending.category == resolvedCategory,
-           pending.theme == resolvedTheme {
+           pending.theme == resolvedTheme,
+           pending.paymentProof == proof {
             intent = pending
         } else {
             intent = PackOrderIntent(
                 prompt: trimmedPrompt,
                 language: language,
                 category: resolvedCategory,
-                theme: resolvedTheme
+                theme: resolvedTheme,
+                paymentProof: proof
             )
         }
         pendingIntent = intent
@@ -147,8 +176,27 @@ final class OrderPackViewModel: ObservableObject {
             return
         }
         pendingIntent = nil // order created — a future submit is a new order
+        if intent.paymentProof != nil {
+            // The backend accepted the order — the purchase is spent. (Guarded
+            // so a Debug admin order can never discard a real unspent proof.)
+            purchaseService.clearPendingProof()
+        }
 
         await poll(orderId: created.orderId)
+    }
+
+    /// How this order gets paid: Debug builds with a stored admin key skip
+    /// payment (nil proof → `X-Admin-Key` path); otherwise a durably-pending
+    /// proof from an earlier interrupted attempt is spent first, and only when
+    /// none exists does the App Store payment sheet run.
+    private func resolvePaymentProof() async throws -> PackPaymentProof? {
+        #if DEBUG
+            if adminKeyAvailable() { return nil }
+        #endif
+        if let pending = purchaseService.pendingProof() {
+            return pending
+        }
+        return try await purchaseService.purchase()
     }
 
     private func poll(orderId: String) async {

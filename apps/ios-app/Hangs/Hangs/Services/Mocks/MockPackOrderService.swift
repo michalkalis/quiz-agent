@@ -32,7 +32,13 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// to the last element) — a per-call sequence that can inject a transient error
     /// then a success. Takes precedence over `getSequence`/`getResult`.
     private let getResults: [Result<OrderSnapshot, PackFailure>]
+    /// When non-empty, `listOrders` returns/throws `listResults[callIndex]`
+    /// (clamping to the last element) — lets a test drive the My packs refresh
+    /// loop through in_progress → delivered, or inject a transient list error.
+    /// Takes precedence over `listResult`.
+    private let listResults: [Result<[OrderSnapshot], PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
+    private let listCallIndex = OSAllocatedUnfairLock(initialState: 0)
     private let intents = OSAllocatedUnfairLock<[PackOrderIntent]>(initialState: [])
 
     /// Boxed error so the whole config stays value-typed / Sendable.
@@ -46,13 +52,15 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         getResult: Result<OrderSnapshot, PackFailure> = .success(.mockDelivered),
         listResult: Result<[OrderSnapshot], PackFailure> = .success([.mockDelivered, .mockPending]),
         getSequence: [OrderSnapshot] = [],
-        getResults: [Result<OrderSnapshot, PackFailure>] = []
+        getResults: [Result<OrderSnapshot, PackFailure>] = [],
+        listResults: [Result<[OrderSnapshot], PackFailure>] = []
     ) {
         self.createResult = createResult
         self.getResult = getResult
         self.listResult = listResult
         self.getSequence = getSequence
         self.getResults = getResults
+        self.listResults = listResults
     }
 
     /// Every intent `createOrder` received, in call order — lets a test assert
@@ -67,7 +75,12 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     }
 
     func listOrders() async throws -> [OrderSnapshot] {
-        try listResult.get()
+        guard !listResults.isEmpty else { return try listResult.get() }
+        return try listCallIndex.withLock { index in
+            let result = listResults[min(index, listResults.count - 1)]
+            index += 1
+            return try result.get()
+        }
     }
 
     func getOrder(id: String) async throws -> OrderSnapshot {

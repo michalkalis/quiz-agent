@@ -153,6 +153,26 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     var isFailure: Bool {
         status == "failed" || status == "refunded"
     }
+
+    /// Localized user-facing label for the wire status (issue #137) — the raw
+    /// wire value must never be rendered. An unknown future status falls back
+    /// to the raw value rather than hiding or crashing the row.
+    var statusLabel: String {
+        switch status {
+        case "pending":
+            String(localized: "Pending", comment: "Custom-pack order status: queued, generation not started yet")
+        case "in_progress":
+            String(localized: "In progress", comment: "Custom-pack order status: the pack is being generated")
+        case "delivered":
+            String(localized: "Delivered", comment: "Custom-pack order status: pack generated and playable")
+        case "failed":
+            String(localized: "Failed", comment: "Custom-pack order status: generation failed")
+        case "refunded":
+            String(localized: "Refunded", comment: "Custom-pack order status: the order was refunded")
+        default:
+            status
+        }
+    }
 }
 
 // MARK: - Order list response

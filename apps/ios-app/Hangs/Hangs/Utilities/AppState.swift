@@ -126,8 +126,11 @@ final class AppState: ObservableObject {
             sttService = nil
         }
 
-        // Setup audio session with default mode
-        try? audioService.setupAudioSession(mode: AudioMode.default)
+        // #136: NO audio-session activation at launch — the eager
+        // setupAudioSession here paused external audio (Spotify) the moment the
+        // app opened. Home command listening arms its own QUIET mixable session
+        // (VoiceCommandCoordinator.syncCommandListenerWindow); the full quiz
+        // session (with ducking) activates only in startNewQuiz.
 
         // #131 Track E: diagnostic-only telemetry for the founder-reported
         // hardware volume drift (media volume set to 0, rises during quiz

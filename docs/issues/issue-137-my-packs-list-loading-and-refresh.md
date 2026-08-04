@@ -1,6 +1,6 @@
 # Issue 137: My Packs list — broken loading layout, raw status strings, list never refreshes
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · done (2026-08-04)
 **Reversibility:** a
 **Status:** Founder field report 2026-08-04 (screenshots: spinner in a narrow vertical strip; raw "FAILED" label).
 **Created:** 2026-08-04
@@ -15,7 +15,7 @@ Bigger "how do I know it's ready / how long will it take" UX (ETA, notification,
 
 ## Acceptance
 
-- [ ] Loading state renders the spinner centered full-width (snapshot or layout unit test on the loading branch).
-- [ ] No raw wire status string rendered; each of the 5 statuses maps to a localized SK+EN label (unit test over all `PackOrder` statuses).
-- [ ] With a stubbed order going `in_progress → delivered` while the list is open, the row updates without navigation (unit test on the refresh loop); pull-to-refresh wired.
-- [ ] Targeted MyPacks/PackOrder suites green.
+- [x] Loading state renders the spinner centered full-width (ViewInspector layout test on the loading branch: `flexFrame().maxWidth == .infinity`).
+- [x] No raw wire status string rendered; each of the 5 statuses maps to a localized SK+EN label via `OrderSnapshot.statusLabel` (unit test over all statuses + unknown-status fallback). Key `Ready` was taken (voice-recognizer meaning), so delivered = `Delivered`/`Hotový`.
+- [x] `MyPacksViewModel` keep-fresh loop: periodic reload while any order is non-terminal (stops hitting the network once settled), `in_progress → delivered` row update covered by unit test; `.refreshable` pull-to-refresh wired and works on a settled list too.
+- [x] Targeted suites green: 28/28 (MyPacksViewModel, PackOrderStatusLabel, MyPacksViewLoadingLayout, OrderPackViewModel, PackOrderCodable), 0 skipped.

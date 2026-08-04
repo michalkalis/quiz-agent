@@ -261,6 +261,52 @@ struct AudioSessionCategoryOptionsTests {
     }
 }
 
+// MARK: - Quiet Home Listening Session (#136 founder decision B)
+
+//
+// Home command listening must NOT interrupt external audio: opening the app
+// while Spotify plays paused the music because the launch-time session carried
+// the quiz's ducking options. These pin the quiet option set via the pure
+// `quietListeningCategoryOptions` — same no-live-session rationale as the
+// category-options suite above — and the Home-vs-in-quiz contrast the #136
+// acceptance requires.
+
+@Suite("Quiet Home Listening Session Options")
+struct QuietListeningSessionOptionsTests {
+    @Test("quiet options mix with others — no ducking, no interruption of external audio")
+    func quietOptionsAreMixable() {
+        let options = AudioService.quietListeningCategoryOptions
+
+        #expect(options.contains(.mixWithOthers), "Home listening must let Spotify keep playing")
+        #expect(!options.contains(.duckOthers), "ducking on Home is the #136 bug")
+        #expect(!options.contains(.interruptSpokenAudioAndMixWithOthers), "pausing podcasts on Home is the #136 bug")
+    }
+
+    @Test("quiet options keep A2DP output and never offer HFP")
+    func quietOptionsKeepA2DPWithoutHFP() {
+        let options = AudioService.quietListeningCategoryOptions
+
+        // Without A2DP, activating .playAndRecord would yank playback off the
+        // car/headphones — a route change is as disruptive as ducking.
+        #expect(options.contains(.allowBluetoothA2DP))
+        // HFP on Home would make the car show a "phone call" UI before any quiz
+        // exists (#104 lesson, applied to the Home window).
+        #expect(!options.contains(.allowBluetoothHFP))
+    }
+
+    @Test("in-quiz options duck — the Home vs. in-quiz contrast")
+    func quizOptionsDuckWhereHomeDoesNot() {
+        for mode in AudioMode.supportedModes {
+            let options = AudioService.categoryOptions(for: mode)
+            // Note: .interruptSpokenAudioAndMixWithOthers bit-includes
+            // .mixWithOthers, so the contrast is pinned on the ducking options —
+            // present in-quiz, absent in the quiet Home set above.
+            #expect(options.contains(.duckOthers), "\(mode.id): the quiz session keeps ducking (startNewQuiz path unchanged)")
+            #expect(options.contains(.interruptSpokenAudioAndMixWithOthers), "\(mode.id): podcasts must pause during the quiz (two voices = unintelligible)")
+        }
+    }
+}
+
 // MARK: - Streaming Start: Hardware-Format Settle Wait (#104)
 
 //

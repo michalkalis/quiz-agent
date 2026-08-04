@@ -209,6 +209,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// The shared silence-detection choke points (AudioDeviceState, #113 T2).
     let startSilenceDetectionListening: @MainActor () async -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
+    /// #136 (founder decision B): applies the QUIET mixable audio session
+    /// before the Home command window arms, so listening on Home never ducks
+    /// or pauses external audio. In-quiz windows never call this — the quiz
+    /// session set by `startNewQuiz` must stay as-is.
+    let configureQuietListeningSession: @MainActor () -> Void
     /// The façade's single earcon funnel (suppresses cues during question TTS).
     let emitEarcon: @MainActor (Earcon) -> Void
     // routeCommand fan-out targets — quiz flow / recording / timers stay
@@ -240,6 +245,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         quizState: @escaping @MainActor () -> QuizState,
         startSilenceDetectionListening: @escaping @MainActor () async -> Void,
         stopSilenceDetectionListening: @escaping @MainActor () -> Void,
+        configureQuietListeningSession: @escaping @MainActor () -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
         startNewQuiz: @escaping @MainActor () async -> Void,
         startRecording: @escaping @MainActor () async -> Void,
@@ -261,6 +267,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.quizState = quizState
         self.startSilenceDetectionListening = startSilenceDetectionListening
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
+        self.configureQuietListeningSession = configureQuietListeningSession
         self.emitEarcon = emitEarcon
         self.startNewQuiz = startNewQuiz
         self.startRecording = startRecording

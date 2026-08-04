@@ -53,6 +53,7 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     var currentOutputDeviceName: String { get }
 
     func setupAudioSession(mode: AudioMode) throws
+    func setupQuietListeningSession() throws
     func deactivateSession()
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
@@ -206,6 +207,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         return options
     }
 
+    /// Options for the QUIET Home command-listening session (#136, founder
+    /// decision B): external audio (Spotify, podcasts) must keep playing while
+    /// the app merely listens for "start" on Home — no ducking, no
+    /// interruption. `.allowBluetoothA2DP` keeps the output route on the car /
+    /// headphones so activation doesn't yank playback onto the phone speaker;
+    /// no HFP so the car never shows a call UI before a quiz exists. Pure for
+    /// the same simulator-testability reason as `categoryOptions(for:)`.
+    nonisolated static var quietListeningCategoryOptions: AVAudioSession.CategoryOptions {
+        [.mixWithOthers, .allowBluetoothA2DP, .defaultToSpeaker]
+    }
+
     func setupAudioSession(mode: AudioMode) throws {
         let session = AVAudioSession.sharedInstance()
 
@@ -238,10 +250,36 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         try session.setActive(true)
 
-        // Observe audio route changes (Bluetooth connect/disconnect).
-        // setupAudioSession is called repeatedly (switchAudioMode, the
-        // withPlaybackCategory recovery path) — remove the previous observer first
-        // or duplicate registrations pile up and every handler fires N times.
+        registerSessionObservers()
+
+        Logger.audio.info("🎤 Audio session configured for background playback and recording")
+    }
+
+    /// Configure and activate the QUIET Home listening session (#136, founder
+    /// decision B): `.playAndRecord` so the command mic can run, but with
+    /// `quietListeningCategoryOptions` — external audio keeps playing, nothing
+    /// is ducked or interrupted. The full quiz session (with ducking) is
+    /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`.
+    func setupQuietListeningSession() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(
+            .playAndRecord,
+            mode: .default,
+            options: Self.quietListeningCategoryOptions
+        )
+        try session.setActive(true)
+
+        registerSessionObservers()
+
+        Logger.audio.info("🎤 Audio session configured for quiet Home listening (mixable, no ducking)")
+    }
+
+    /// Observe route changes (Bluetooth connect/disconnect) and session
+    /// interruptions. Called from every session-configuration path
+    /// (`setupAudioSession`, `setupQuietListeningSession`, the
+    /// `withPlaybackCategory` recovery path) — remove the previous observer
+    /// first or duplicate registrations pile up and every handler fires N times.
+    private func registerSessionObservers() {
         if let existingRouteObserver = routeChangeObserver.withLock({ $0 }) {
             NotificationCenter.default.removeObserver(existingRouteObserver)
         }
@@ -255,8 +293,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
         routeChangeObserver.withLock { $0 = routeObserver }
 
-        // Observe audio session interruptions (phone calls, Siri, other apps) —
-        // same duplicate-registration guard as the route observer above.
+        // Same duplicate-registration guard as the route observer above.
         if let existingInterruptionObserver = interruptionObserver.withLock({ $0 }) {
             NotificationCenter.default.removeObserver(existingInterruptionObserver)
         }
@@ -268,8 +305,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             self?.handleInterruption(notification)
         }
         interruptionObserver.withLock { $0 = interruptObserver }
-
-        Logger.audio.info("🎤 Audio session configured for background playback and recording")
     }
 
     /// Deactivate the audio session and notify other apps so background music

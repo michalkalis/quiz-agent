@@ -11,11 +11,14 @@ and the final ``done`` event SSE clients expect.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict
+
+import sentry_sdk
 
 from app import cost_tracking
 from app.db.models import GenerationJob, GenerationOrder
@@ -107,6 +110,7 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
     redis = ctx["redis"]
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     sink: DBProgressSink | None = None
+    generator: PackGenerator | None = None
 
     logger.info(
         "process_order start order_id=%s attempt=%s",
@@ -181,8 +185,26 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             order_id, pack.id, cost_cents,
         )
 
+    except asyncio.CancelledError:
+        # #139 root cause of the silent 2026-08-03 failure: ARQ's job_timeout
+        # cancels this coroutine, and CancelledError is a BaseException — the
+        # `except Exception` below never ran, so a timed-out job updated no
+        # rows and reported nothing. Translate the cancel into a described
+        # failure (naming the stage that hung), then let it propagate so ARQ
+        # keeps its own timeout/shutdown semantics.
+        stage = generator.current_stage if generator else None
+        exc = TimeoutError(
+            f"process_order cancelled at stage {stage!r} "
+            "(ARQ job_timeout or worker shutdown)"
+        )
+        # warning, not error: the Sentry event for a failed job is the rich
+        # capture_exception in _handle_failure (step-log context attached);
+        # an error-level log here would double-report via LoggingIntegration.
+        logger.warning("process_order cancelled order_id=%s stage=%s", order_id, stage)
+        await _handle_failure(ctx, order_uuid, order_id, sink, exc)
+        raise
     except Exception as exc:
-        logger.error("process_order failed order_id=%s error=%r", order_id, exc)
+        logger.warning("process_order failed order_id=%s error=%r", order_id, exc)
         await _handle_failure(ctx, order_uuid, order_id, sink, exc)
         raise
 
@@ -238,7 +260,24 @@ async def _handle_failure(
             failed_event_id = 0
             if job.step_log:
                 failed_event_id = job.step_log[-1].get("event_id", 0)
+            step_log_tail = list(job.step_log or [])[-10:]
             await session.commit()
+
+        # #139 — the one Sentry event per failed attempt, carrying the step
+        # log so a prod failure names its stage instead of arriving as a bare
+        # "stuck past recovery budget". (Callers log at warning level for
+        # exactly this reason — see process_order.)
+        with sentry_sdk.new_scope() as scope:
+            scope.set_context(
+                "order",
+                {
+                    "order_id": order_id,
+                    "job_try": job_try,
+                    "is_final_attempt": is_final,
+                },
+            )
+            scope.set_context("step_log_tail", {"steps": step_log_tail})
+            sentry_sdk.capture_exception(exc)
 
         if sink is not None:
             await sink.publish(

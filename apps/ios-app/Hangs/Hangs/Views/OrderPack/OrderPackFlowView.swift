@@ -35,7 +35,7 @@ struct OrderPackFlowView: View {
                         OrderPackPreparingStep(progress: nil, onDismiss: onClose)
                     case .polling(let snapshot):
                         OrderPackPreparingStep(
-                            progress: snapshot.job.map { Double($0.progress) / 100 },
+                            progress: snapshot?.job.map { Double($0.progress) / 100 },
                             onDismiss: onClose
                         )
                     case .delivered(let snapshot):

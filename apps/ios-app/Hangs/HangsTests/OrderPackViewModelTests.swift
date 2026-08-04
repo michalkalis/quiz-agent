@@ -454,12 +454,66 @@ struct OrderPackViewModelTests {
         // User closes the sheet and reopens "Create a pack".
         vm.prepareForPresentation(defaultLanguage: "sk")
 
-        guard case .failed = vm.state else {
-            Issue.record("reopening reset a paid order to \(vm.state) — next submit would charge again")
-            return
-        }
+        // The invariant this test protects is the MONEY one: the paid order is
+        // still the one on screen, and nothing has queued a second charge.
+        // (Reopening now resumes the poll rather than freezing on the failure —
+        // see reopenAfterTimeoutResumesPolling — so the state may be .polling.)
+        expectNoRouteBackToForm(vm, "a paid, timed-out order")
         #expect(vm.orderId == paidOrderId, "the paid order must stay addressable")
         #expect(purchase.purchaseCallCount == 1, "reopening must not have set up a second purchase")
+        #expect(service.createOrderCallCount == 1, "and must not create a second order")
+        vm.stop()
+    }
+
+    // WHY: the soft timeout means "still generating", so the sheet must be able
+    // to catch up with the order instead of parking the user on "Still working"
+    // with no way forward. Reopening resumes the poll on a fresh budget — the
+    // same dismiss ≠ cancel promise the Preparing screen already makes.
+    @Test("reopening after a timeout resumes polling and reaches the delivered pack")
+    func reopenAfterTimeoutResumesPolling() async {
+        let service = MockPackOrderService(getResult: .success(.mockDelivered))
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollTimeoutSeconds = 0 // budget already spent when the poll starts
+
+        await vm.submit()
+        guard case .failed(_, retryable: false) = vm.state else {
+            Issue.record("expected the soft timeout, got \(vm.state)")
+            return
+        }
+
+        vm.pollTimeoutSeconds = 5 // reopening grants a fresh budget
+        vm.pollIntervalSeconds = 0
+        vm.prepareForPresentation(defaultLanguage: "sk")
+
+        #expect(await waitForState(vm) { if case .delivered = $0 { return true } else { return false } },
+                "the resumed poll must pick the finished pack up, got \(vm.state)")
+        #expect(purchase.purchaseCallCount == 1, "resuming a poll is not a purchase")
+        #expect(service.createOrderCallCount == 1, "resuming a poll is not a new order")
+    }
+
+    // WHY: a resumed poll that times out again must land back on the same honest
+    // non-retryable failure — not a retryable one whose "Try again" the backend
+    // would 409, and not a reset form that would charge again.
+    @Test("a resumed poll that times out again returns to the non-retryable failure")
+    func reopenAfterTimeoutCanTimeOutAgain() async {
+        let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollTimeoutSeconds = 0
+        vm.pollIntervalSeconds = 0.01
+
+        await vm.submit()
+        let paidOrderId = vm.orderId
+
+        vm.prepareForPresentation(defaultLanguage: "sk")
+
+        #expect(await waitForState(vm) {
+            if case .failed(_, retryable: false) = $0 { return true } else { return false }
+        }, "expected the soft timeout again, got \(vm.state)")
+        #expect(vm.orderId == paidOrderId)
+        #expect(purchase.purchaseCallCount == 1)
+        #expect(service.createOrderCallCount == 1)
     }
 
     // WHY: the guard must be narrow. A failure with nothing paid for (create

@@ -36,7 +36,10 @@ final class OrderPackViewModel: ObservableObject {
         /// Payment summary — the last screen with a way back to the form.
         case confirming
         case submitting
-        case polling(OrderSnapshot)
+        /// Generating. The snapshot is nil for the first tick of a *resumed*
+        /// poll (reopen after a timeout), where the screen is already correct
+        /// before the first `getOrder` answers.
+        case polling(OrderSnapshot?)
         case delivered(OrderSnapshot)
         /// `retryable: false` means "Try again" would be a lie: the order is
         /// still pending/in_progress server-side, and the backend's retry
@@ -153,10 +156,22 @@ final class OrderPackViewModel: ObservableObject {
     /// charges them a second time for the same pack (review finding 1), so the
     /// failed state is kept — with its order id, its proof and its "Try again" —
     /// unless nothing was ever paid for.
+    ///
+    /// The one paid case that *is* actionable on reopen is the soft timeout: the
+    /// order is alive server-side, so reopening resumes the poll on a fresh
+    /// budget rather than parking the user on "Still working" forever. That
+    /// completes dismiss ≠ cancel — the pack keeps coming, and the sheet catches
+    /// up with wherever it got to (delivered, or a real retryable failure).
     func prepareForPresentation(defaultLanguage: String) {
         switch state {
         case .delivered:
             resetForNewOrder(defaultLanguage: defaultLanguage)
+        case .failed(_, retryable: false):
+            if let orderId {
+                resumePolling(orderId: orderId)
+            } else if purchaseService.pendingProof() == nil {
+                resetForNewOrder(defaultLanguage: defaultLanguage)
+            }
         case .failed:
             guard orderId == nil, purchaseService.pendingProof() == nil else { break }
             resetForNewOrder(defaultLanguage: defaultLanguage)
@@ -226,6 +241,19 @@ final class OrderPackViewModel: ObservableObject {
         }
         pollTask = task
         await task.value
+    }
+
+    /// Pick the poll back up for an order that outlived its foreground budget.
+    /// No payment, no order creation, no state to unwind — just a fresh watch on
+    /// an order that is still generating. Fire-and-forget: the caller is the
+    /// sheet appearing, and `stop()`/`deinit` own the task's lifetime.
+    private func resumePolling(orderId: String) {
+        stop()
+        state = .polling(nil) // the first getOrder fills in the snapshot
+        pollTask = Task { [weak self] in
+            guard let self else { return }
+            await self.poll(orderId: orderId)
+        }
     }
 
     /// Cancel any in-flight polling. NOT called on sheet dismissal — the user

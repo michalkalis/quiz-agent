@@ -116,8 +116,15 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
 class WorkerSettings:
     """ARQ worker configuration.
 
-    max_tries=3 + job_timeout=600 gives the Phase-1 mitigation for R5:
-    a stuck job is killed at 10 min and retried up to 3× before failing.
+    #139: job_timeout was 600s — sized for pack_10 before the frontier stack.
+    A legit pack_30 run on frontier models (GEN=claude-fable-5) spends well
+    over 10 minutes in the generating stage alone, so 600s guaranteed an ARQ
+    kill on every large pack. Hang protection no longer lives here: per-call
+    client timeouts (GENERATION_TIMEOUT, 300s) convert a stalled connection
+    into an exception and the per-stage belt (STAGE_TIMEOUT_SECONDS) bounds a
+    pathological stage — this outer budget is only the last resort, so it can
+    afford to be generous. Liveness for the sweep comes from the 60s job
+    heartbeat in tasks.process_order, not from this timeout.
     """
 
     redis_settings: RedisSettings = RedisSettings.from_dsn(get_settings().redis_url)
@@ -132,5 +139,5 @@ class WorkerSettings:
     on_startup = on_startup
     max_jobs: int = 2
     max_tries: int = 3
-    job_timeout: int = 600
+    job_timeout: int = 3600
     keep_result: int = 86400

@@ -1,8 +1,9 @@
 # Issue 142: pack_30 generation call dies on non-JSON provider response (OpenRouter)
 
-**Triage:** bug · needs-plan
+**Triage:** bug · fixed (agent-side)
 **Reversibility:** a
-**Status:** Filed 2026-08-04 from the first fully-observable pack_30 run (#139 — pack generation hang observability made it visible). Provisionally read as a transient provider-side failure surfacing un-retried; verify against the raw body on next occurrence.
+**Status:** Fix shipped 2026-08-05 — both generation `ainvoke` call sites (free-text batch + structured MCQ sub-batch) now retry exactly once on `json.JSONDecodeError` and log the raw body head + slice around the error position (open question 1: raw-body capture; open question 2: bounded retry). A second failure propagates as before; the 20-min stage belt still caps the stage. Sub-batching for pack_30 (open question 3) NOT done — needs eval data + founder approval. Confirm the Cloudflare/proxy theory from the logged body on next occurrence.
+**Filed:** 2026-08-04 from the first fully-observable pack_30 run (#139 — pack generation hang observability made it visible).
 **Created:** 2026-08-04
 
 ## What happened

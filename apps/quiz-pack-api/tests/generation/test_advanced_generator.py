@@ -1008,3 +1008,63 @@ async def test_mcq_structured_contract_carries_topic_category_difficulty() -> No
     assert (questions[1].topic, questions[1].category, questions[1].difficulty) == (
         "General", "general", "medium",
     )
+
+
+# --- #142: non-JSON provider body must not kill the batch un-retried ------
+#
+# OpenRouter occasionally returns a 200 whose body is a proxy/Cloudflare
+# error page, not JSON; the SDK raises json.JSONDecodeError instead of
+# retrying, and one such transient body used to sink an entire pack_30
+# order. The contract: exactly one bounded re-invoke, then fail loud.
+
+
+@pytest.mark.asyncio
+async def test_generate_batch_retries_once_on_non_json_provider_body() -> None:
+    import json as _json
+
+    garbage = _json.JSONDecodeError("Expecting value", "<html>502</html>", 0)
+    fake_ainvoke = AsyncMock(
+        side_effect=[garbage, _llm_response(_TEXT_RESPONSE)]
+    )
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+
+    questions = await gen._generate_batch(
+        count=1,
+        difficulty="easy",
+        topics=None,
+        categories=["general"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+    )
+
+    assert fake_ainvoke.await_count == 2
+    assert len(questions) == 1
+    assert questions[0].correct_answer == "Paris"
+
+
+@pytest.mark.asyncio
+async def test_generate_batch_second_non_json_failure_propagates() -> None:
+    import json as _json
+
+    def _garbage() -> _json.JSONDecodeError:
+        return _json.JSONDecodeError("Expecting value", "<html>502</html>", 0)
+
+    fake_ainvoke = AsyncMock(side_effect=[_garbage(), _garbage()])
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+
+    with pytest.raises(_json.JSONDecodeError):
+        await gen._generate_batch(
+            count=1,
+            difficulty="easy",
+            topics=None,
+            categories=["general"],
+            question_type="text",
+            excluded_topics=None,
+            avoid_questions=None,
+            user_bad_examples=None,
+        )
+
+    # Bounded: exactly one retry, never a loop.
+    assert fake_ainvoke.await_count == 2

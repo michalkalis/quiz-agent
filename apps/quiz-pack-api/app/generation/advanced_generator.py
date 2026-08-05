@@ -819,6 +819,29 @@ class AdvancedQuestionGenerator:
             update={"extra": extra}
         )
 
+    @staticmethod
+    async def _ainvoke_generation(llm, messages):
+        """Invoke a generation LLM with one bounded retry on a non-JSON body.
+
+        #142: OpenRouter can return a 200 response whose body is not JSON
+        (proxy/Cloudflare error page or truncated body on very long calls);
+        the SDK raises ``json.JSONDecodeError`` instead of retrying, killing
+        the whole batch. Log the raw body (``e.doc``) to confirm the theory
+        on next occurrence, then re-invoke exactly once; a second failure
+        propagates as before (stage belt still caps the stage).
+        """
+        try:
+            return await llm.ainvoke(messages)
+        except json.JSONDecodeError as e:
+            body = e.doc or ""
+            around = body[max(0, e.pos - 100):e.pos + 100]
+            print(
+                f"#142 non-JSON provider response "
+                f"(len={len(body)}, pos={e.pos}): retrying once. "
+                f"Body head: {body[:300]!r} … around error: {around!r}"
+            )
+            return await llm.ainvoke(messages)
+
     async def _generate_batch(
         self,
         count: int,
@@ -867,7 +890,7 @@ class AdvancedQuestionGenerator:
         )
 
         # Call LLM
-        response = await self.generation_llm.ainvoke([
+        response = await self._ainvoke_generation(self.generation_llm, [
             HumanMessage(content=self._prompt_message_content(prompt))
         ])
 
@@ -1171,7 +1194,7 @@ class AdvancedQuestionGenerator:
         structured_llm = self.generation_llm.with_structured_output(
             MCQBatchOutput, method="function_calling", include_raw=True
         )
-        result = await structured_llm.ainvoke([
+        result = await self._ainvoke_generation(structured_llm, [
             HumanMessage(content=self._prompt_message_content(prompt))
         ])
         items = self._mcq_items_from_structured_result(result)

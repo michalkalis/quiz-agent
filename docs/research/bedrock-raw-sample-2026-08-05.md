@@ -12,7 +12,7 @@ _The Lego company, founded in 1932, initially produced wooden stepladders, ironi
 
 **Topic:** History · **Difficulty:** hard
 
-**Rating (1-10):**
+**Rating (1-10):** 9
 
 ### #2
 
@@ -24,7 +24,7 @@ _The Great Pyramid was completed around 2560 BCE. Woolly mammoths survived on Wr
 
 **Topic:** history · **Difficulty:** hard
 
-**Rating (1-10):**
+**Rating (1-10):** 10 (super interesting and unexpected)
 
 ### #3
 
@@ -36,7 +36,7 @@ _Invented by Hans Riegel in 1922, these were called 'Gummibärchen' — 'gummi' 
 
 **Topic:** history · **Difficulty:** easy
 
-**Rating (1-10):**
+**Rating (1-10):** 10 (again, super interesting. had no idea there was some history behind gummy bears)
 
 ### #4
 
@@ -48,7 +48,7 @@ _NASA's Cassini spacecraft captured images of the hexagonal jet stream, a phenom
 
 **Topic:** Science · **Difficulty:** hard
 
-**Rating (1-10):**
+**Rating (1-10):** 10 (interesting space fact and i knew this one, so even better)
 
 ### #5
 
@@ -60,7 +60,7 @@ _Sudan has over 200 recorded pyramids, primarily in the Nubian region, compared 
 
 **Topic:** Geography · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 9 (fun geography question)
 
 ### #6
 
@@ -72,7 +72,7 @@ _While Edison perfected a commercially viable, long-lasting bulb, he did not inv
 
 **Topic:** History · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 10 (again, helps that i knew the answer and it's good that it's mcq in a good format)
 
 ### #7
 
@@ -84,7 +84,7 @@ _Sudan has over 200 pyramids, while Egypt has around 130. The Sudanese pyramids 
 
 **Topic:** Geography · **Difficulty:** hard
 
-**Rating (1-10):**
+**Rating (1-10):** 5 (this question is already asked on question 5, but in muuuch better way and format. this one is neither mcq nor text nor true/false)
 
 ### #8
 
@@ -96,7 +96,7 @@ _Hawaiian pizza was invented in Canada, Caesar salad in Mexico, and German choco
 
 **Topic:** arts · **Difficulty:** easy
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (it's func question and interesting fact, but the format is kind of wrong and hard to quess the answer as it was really difficult to guess that origin country might be the reason. maybe it's too subjective though)
 
 ### #9
 
@@ -108,7 +108,7 @@ _The magnetron was developed during World War II to power Allied radar systems f
 
 **Topic:** technology · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 9
 
 ### #10
 
@@ -120,7 +120,7 @@ _Originally called Kutol Wall Cleaner, it was repurposed as a toy when homes swi
 
 **Topic:** History · **Difficulty:** easy
 
-**Rating (1-10):**
+**Rating (1-10):** 9 (sounds very interesting even though i don't know the game)
 
 ### #11
 
@@ -132,7 +132,7 @@ _This is the Fibonacci sequence, where each number is the sum of the two precedi
 
 **Topic:** Logic · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (very easy, very common)
 
 ### #12
 
@@ -144,7 +144,7 @@ _Scientists at Kodak were searching for clear plastic for precision gun sights w
 
 **Topic:** technology · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 8 (good but maybe not that interesting topic)
 
 ### #13
 
@@ -156,7 +156,7 @@ _Nicolaus Copernicus proposed the heliocentric model in the 1500s, a theoretical
 
 **Topic:** History · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (interesting fact, but weird correlation among answers. not really easy to guess the answer)
 
 ### #14
 
@@ -168,7 +168,7 @@ _While Egypt's pyramids are world-famous, Sudan is home to over 200 pyramids at 
 
 **Topic:** Geography · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** (same as before)
 
 ### #15
 
@@ -180,7 +180,7 @@ _Invented in 1957 by Alfred Fielding and Marc Chavannes as 'Air Cap' — a textu
 
 **Topic:** technology · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 8 (ok)
 
 ### #16
 
@@ -192,7 +192,7 @@ _In the board game Monopoly, players can land on a hotel property they don't own
 
 **Topic:** Logic · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 4 (stupid. doesn't make any sense. it says she's pushing her car up to a hotel, but that's not true. she's not doing that in reality.)
 
 ### #17
 
@@ -204,7 +204,7 @@ _This is the Fibonacci sequence, where each number is the sum of the two precedi
 
 **Topic:** Logic · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (meh, very common)
 
 ### #18
 
@@ -216,7 +216,7 @@ _Due to exponential growth, folding paper doubles its thickness each time. After
 
 **Topic:** Science · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 8 (yeah ok, i've seen this question a few times already, but still a good question)
 
 ### #19
 
@@ -228,7 +228,7 @@ _Each number is multiplied by an increasing integer: 1×2=2, 2×3=6, 6×4=24, 24
 
 **Topic:** Logic · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 8 (ok)
 
 ### #20
 
@@ -240,7 +240,7 @@ _Cleopatra died in 30 BCE, about 2,500 years after the Great Pyramid was complet
 
 **Topic:** history · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (very predictable answer)
 
 ### #21
 
@@ -252,7 +252,7 @@ _It's true! While Egypt's pyramids are more famous, Sudan is home to the ancient
 
 **Topic:** Geography · **Difficulty:** hard
 
-**Rating (1-10):**
+**Rating (1-10):** 6 (bad formatting. and this is 4th appearance of the question in this set)
 
 ### #22
 
@@ -264,7 +264,7 @@ _Engineers Alfred Fielding and Marc Chavannes created it as a 3D textured wallpa
 
 **Topic:** Technology · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** (already answered)
 
 ### #23
 
@@ -276,7 +276,7 @@ _Bangkok is in Southeast Asia, while Tokyo, Beijing, and Seoul are all in East A
 
 **Topic:** Geography · **Difficulty:** easy
 
-**Rating (1-10):**
+**Rating (1-10):** 3 (it's almost impossible to see the correlation between these. there's infinity of possibel categories)
 
 ### #24
 
@@ -288,4 +288,23 @@ _While individual humans are vastly heavier, the estimated global ant population
 
 **Topic:** Science · **Difficulty:** medium
 
-**Rating (1-10):**
+**Rating (1-10):** 8 (ok)
+
+---
+
+## Verdict (founder ratings unblinded, 2026-08-05)
+
+Per-model averages (duplicates inherit the rating of their first appearance):
+
+| Model | Avg | Ratings | Notes |
+|-------|-----|---------|-------|
+| `moonshotai.kimi-k2.5` | **8.1** | 10, 10, 9, 8, 8, 8, 6, 6 | Two 10s (mammoth-vs-pyramid, gummy bears), nothing below 6, zero duplicates |
+| `deepseek.v3.2` | 7.0 | 9, 10, 8, 8, 6, 6, 5, 4 | One 10 (Edison myth MCQ); self-duplicated the Sudan-pyramids fact (2 of 8); worst item = Monopoly riddle (4) |
+| `zai.glm-5` | 7.0 | 10, 9, 9, 8, 6, 6, 5, 3 | Strong top end (Saturn hexagon 10) but self-duplicated Fibonacci AND generated Sudan-pyramids too; worst item = odd-capital-out (3) |
+
+**Winner: Kimi K2.5** — highest average, most consistent, no self-duplication. Confirms the July pilot result (Kimi won that blind test too).
+
+Caveats:
+- Raw first-pass output — no critique, gate, or dedup ran. Duplicates and format misses (#7, #21) would be caught by the real pipeline, so these scores understate production quality for all three.
+- The Sudan-pyramids fact appeared 4× across two models — models converge on the same viral facts; cross-model dedup matters if we ever mix models in one pack.
+- 8 questions/model is a small sample; ordering (Kimi > DeepSeek ≈ GLM) is directional, not definitive.

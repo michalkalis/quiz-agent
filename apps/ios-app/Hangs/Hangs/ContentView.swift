@@ -93,12 +93,12 @@ struct ContentView: View {
                     // "Quiz" screen. The Start Quiz button already reflects the loading
                     // state itself (HomeView's cancellable start control).
                     case .idle, .startingQuiz:
-                        HomeView(viewModel: viewModel)
+                        HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
 
                     case .askingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
                         if viewModel.isMinimized {
-                            HomeView(viewModel: viewModel)
+                            HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
                         } else {
                             QuestionView(viewModel: viewModel)
                         }
@@ -106,7 +106,7 @@ struct ContentView: View {
                     case .showingResult:
                         // Show HomeView when minimized, otherwise ResultView
                         if viewModel.isMinimized {
-                            HomeView(viewModel: viewModel)
+                            HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
                         } else {
                             ResultView(viewModel: viewModel)
                         }

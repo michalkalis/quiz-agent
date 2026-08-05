@@ -11,6 +11,10 @@ import UIKit
 
 struct HomeView: View {
     @ObservedObject var viewModel: QuizViewModel
+    /// #141: injected from ContentView so Home can list the account's custom
+    /// packs. Nil (inspector tests / previews that don't exercise the packs
+    /// section) renders Home without the section.
+    var packOrderService: PackOrderServiceProtocol?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,6 +37,15 @@ struct HomeView: View {
 
                     freePlanCard
                         .padding(.horizontal, 20)
+
+                    // #141: pick-and-play entry for owned custom packs
+                    // (variant B — founder 2026-08-05). Renders nothing for
+                    // accounts without pack orders.
+                    if let packOrderService {
+                        HomePacksSection(service: packOrderService) { packId in
+                            viewModel.beginQuizStart(packId: packId)
+                        }
+                    }
 
                     HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
                         .padding(.horizontal, 20)
@@ -414,7 +427,7 @@ struct HomeView: View {
 #if DEBUG
     #Preview {
         NavigationStack {
-            HomeView(viewModel: QuizViewModel.preview)
+            HomeView(viewModel: QuizViewModel.preview, packOrderService: MockPackOrderService())
         }
     }
 #endif

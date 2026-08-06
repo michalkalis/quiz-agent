@@ -188,6 +188,26 @@ def compute_distractor_quality(
 
 _DETERMINISTIC_DIMS_KEY = "deterministic"
 
+# Marker on the advisory-only entry emitted when the whole judge panel failed
+# (#147). It exists so the deterministic dims are still logged for that
+# question — it is NOT a verdict, and `is_judge_verdict` below is the single
+# place that says so.
+JUDGE_FAILED_KEY = "judge_failed"
+
+
+def is_judge_verdict(entry: dict) -> bool:
+    """True when ``entry`` is a real judge verdict a gate may act on.
+
+    #147: when every judge failed, ``score_question`` used to append an entry
+    whose ``overall_score`` was the deterministic ``answer_brevity`` heuristic
+    — a word count. The ship gate averaged it like any judgment, so a panel
+    outage silently turned the pipeline's only quality gate into "is the
+    answer short?" (brevity 7/10 clears the 3.0 floor → an ungated paid pack
+    ships). Anything that decides whether a question is delivered must filter
+    through this predicate; advisory/telemetry readers may use every entry.
+    """
+    return not entry.get(JUDGE_FAILED_KEY) and entry.get("overall_score") is not None
+
 # Shared context header for every per-dimension call. The calibration lens
 # matches the generation prompt's: voice-first, one listen, non-native
 # English player.
@@ -712,9 +732,12 @@ class MultiModelScorer:
         entry's ``scores`` dict carries ``answer_brevity`` (always) and
         ``distractor_quality`` (MCQ only) — issue #42 task 42.6. A judge with
         zero parsed dimensions is dropped (logged); when no judge returns
-        anything, a synthetic ``deterministic`` entry is emitted so the
-        advisory dims are always logged. ``overall_score`` is always computed
-        here as the mean of the judged dimensions — never taken from the LLM.
+        anything, a ``deterministic`` entry is emitted so the advisory dims
+        are still logged, but it is flagged ``judge_failed`` and carries
+        ``overall_score = None`` — the question is UNJUDGED and no gate may
+        treat it otherwise (#147; see `is_judge_verdict`). ``overall_score``
+        is always computed here as the mean of the judged dimensions — never
+        taken from the LLM.
         """
         _, answer_text = resolve_correct_answer(answer, possible_answers)
         options_block = _format_options_block(possible_answers)
@@ -825,11 +848,18 @@ class MultiModelScorer:
             })
 
         if not results:
+            # #147 (fail-closed gate): the panel produced nothing at all. The
+            # advisory dims still ride along so the question is not silent in
+            # the logs, but this entry carries NO ``overall_score`` and is
+            # flagged ``judge_failed`` — it is a record of an outage, not a
+            # verdict, and `is_judge_verdict` rejects it. Emitting the
+            # word-count brevity here as an overall was the fail-open hole.
             results.append({
                 "model_name": _DETERMINISTIC_DIMS_KEY,
                 "scores": _attach_dims({}),
-                "overall_score": float(brevity),
-                "reasoning": "deterministic-only (no LLM result available)",
+                "overall_score": None,
+                JUDGE_FAILED_KEY: True,
+                "reasoning": "deterministic dims only — every judge failed (not a verdict)",
             })
 
         return results
@@ -866,6 +896,12 @@ class MultiModelScorer:
         if sql_client:
             for r in results:
                 for s in r["model_scores"]:
+                    # #147: the judge-failure entry has no overall_score, and
+                    # `model_scores.overall_score` is NOT NULL — skip it. A
+                    # missing row is the honest record of a question no judge
+                    # scored.
+                    if not is_judge_verdict(s):
+                        continue
                     sql_client.add_model_score(
                         question_id=r["id"],
                         scored_by=s["model_name"],

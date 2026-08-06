@@ -30,6 +30,7 @@ from app.scoring.multi_model_scorer import (
     MultiModelScorer,
     compute_answer_brevity,
     compute_distractor_quality,
+    is_judge_verdict,
 )
 
 
@@ -204,8 +205,10 @@ async def test_score_question_drops_judge_after_failed_retry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A6: an unparseable judge is retried once, then dropped loudly — never
-    defaulted to a neutral score. With no judge left, the synthetic
-    deterministic entry keeps the advisory dims logged."""
+    defaulted to a neutral score. With no judge left, the deterministic entry
+    keeps the advisory dims logged but is NOT a verdict (#147): no
+    ``overall_score``, flagged ``judge_failed``, so no gate can average the
+    word-count heuristic in place of a judgment."""
     scorer = MultiModelScorer(models=[
         {"provider": "openai", "model": "gpt-5.6-sol", "name": "gpt-5.6-sol"}
     ])
@@ -220,6 +223,9 @@ async def test_score_question_drops_judge_after_failed_retry(
 
     assert len(out) == 1
     assert out[0]["model_name"] == "deterministic"
+    assert out[0]["overall_score"] is None
+    assert out[0]["judge_failed"] is True
+    assert not is_judge_verdict(out[0])
     # one dimension set of calls, each retried once
     from app.scoring.multi_model_scorer import SCORING_DIMENSIONS
 
@@ -229,7 +235,11 @@ async def test_score_question_drops_judge_after_failed_retry(
 @pytest.mark.asyncio
 async def test_score_question_emits_deterministic_only_entry_when_no_models() -> None:
     """Test/CI without API keys configures zero models — but the
-    advisory dims must still appear, so a synthetic entry is emitted."""
+    advisory dims must still appear, so a synthetic entry is emitted.
+
+    #147: that entry is explicitly not a verdict — ``answer_brevity`` is a word
+    count, and letting it stand in for a judgment is what turned a provider
+    outage into a silently different ship gate."""
     # Constructor falls back to defaults when ``models`` is falsy, so
     # set the empty list directly to simulate "no LLM available".
     scorer = MultiModelScorer(models=[{"provider": "openai", "model": "x", "name": "x"}])
@@ -244,6 +254,7 @@ async def test_score_question_emits_deterministic_only_entry_when_no_models() ->
     assert out[0]["model_name"] == "deterministic"
     assert out[0]["scores"]["answer_brevity"] == 10
     assert "distractor_quality" not in out[0]["scores"]  # no MCQ context
+    assert not is_judge_verdict(out[0])  # advisory only — never a gate input
 
 
 @pytest.mark.asyncio

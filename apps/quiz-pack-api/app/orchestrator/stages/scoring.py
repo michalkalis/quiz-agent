@@ -22,9 +22,24 @@ quality gate; two scorers that only ever warned were "false confidence"
   (``distractor_quality`` is the deterministic dim from task 42.6, attached
   identically to every model's ``scores`` sub-dict; ``None`` for free-form).
 
-A question the scorer could not score at all (empty ``model_scores``) is
-KEPT — we never drop on the absence of a judgment, only on a bad one. The
-drop count is surfaced via ``StageResult.info["dropped_low_score"]``,
+**#147 — the gate is FAIL-CLOSED on a judge outage (founder decision
+2026-08-06).** A question that reaches the gate with zero *real* judge
+verdicts is UNJUDGED, and an unjudged question is never delivered: it is
+withheld, and the stage then raises `JudgePanelUnavailable`, failing the
+order into the existing failure/retry machinery (ARQ, the stuck-order sweep,
+`POST /retry`) instead of shipping an ungated paid pack. Repeated retries are
+bounded by the per-order spend ceiling (#145, `app.order_budget`), and the
+terminal-failure path already marks the order `refund_eligible`.
+
+The threshold is deliberately "ANY question with zero judgments fails the
+stage", not a ratio: the customer paid for judged questions, a partial panel
+still produces verdicts (so a single failing judge does not trip this), and
+the realistic cause of a zero-verdict question is a panel-wide outage that
+hits the whole batch anyway. The judge-failure count is surfaced via
+``StageResult.info["judge_failures"]`` and an error-level Sentry event, so an
+outage is legible in the order's step log rather than only in worker logs.
+
+The drop count is surfaced via ``StageResult.info["dropped_low_score"]``,
 mirroring ``DedupStage.info["dropped"]`` so SSE/audit clients see it.
 
 **#72 reviewer upgrade (founder calibration 2026-07-09/10):** deterministic
@@ -38,13 +53,33 @@ from __future__ import annotations
 
 import logging
 
+import sentry_sdk
+
 from app import feature_flags
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring import craft_guards
-from app.scoring.multi_model_scorer import MultiModelScorer
+from app.scoring.multi_model_scorer import MultiModelScorer, is_judge_verdict
 
 logger = logging.getLogger(__name__)
+
+
+class JudgePanelUnavailable(RuntimeError):
+    """Questions reached the ship gate with zero real judge verdicts (#147).
+
+    Raised instead of delivering an ungated pack. It is a retryable failure by
+    construction — the worker's failure path treats it like any other stage
+    exception, so the order re-enters the ARQ/sweep/manual-retry machinery and
+    ends `refund_eligible` once its #145 budget is gone.
+
+    ``info`` carries the counters the stage would have returned in
+    ``StageResult.info``: the stage failed, so nothing else can hand them to
+    the step log or to a test.
+    """
+
+    def __init__(self, message: str, info: dict | None = None) -> None:
+        super().__init__(message)
+        self.info = dict(info or {})
 
 # Drop thresholds (module-level constants, not magic numbers — #42 task 42.29).
 # Deliberately lenient: the gate removes broken questions, it is not a top-K
@@ -125,7 +160,10 @@ class ScoringStage:
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         if not ctx.questions:
-            return StageResult(info={"scored": 0, "dropped_low_score": 0}, cost_cents=0)
+            return StageResult(
+                info={"scored": 0, "dropped_low_score": 0, "judge_failures": 0},
+                cost_cents=0,
+            )
 
         payload = [
             {
@@ -166,6 +204,7 @@ class ScoringStage:
         craft_flagged = 0
         craft_dropped = 0
         undated_flagged = 0
+        judge_failures = 0
         for q in ctx.questions:
             model_scores = scores_by_id.get(q.id, [])
 
@@ -249,6 +288,19 @@ class ScoringStage:
                         veto_reason,
                     )
 
+            # #147 fail-closed: no real verdict → the question is unjudged, so
+            # it cannot be delivered and the gate below has nothing to decide
+            # on. Counted here (at the gate, after the deterministic drops) so
+            # the count means "would have shipped unjudged".
+            if not any(is_judge_verdict(s) for s in model_scores):
+                judge_failures += 1
+                logger.warning(
+                    "ScoringStage judge outage: question id=%s reached the ship "
+                    "gate with zero judge verdicts — withheld",
+                    q.id,
+                )
+                continue
+
             drop_reason = self._gate_reason(model_scores)
             if drop_reason is not None:
                 dropped += 1
@@ -259,30 +311,65 @@ class ScoringStage:
             kept.append(q)
 
         ctx.questions = kept
-        return StageResult(
-            info={
-                "scored": len(ctx.scores),
-                "dropped_low_score": dropped,
-                "veto_shadow_flagged": veto_flagged,
-                "veto_dropped": veto_dropped,
-                "craft_flagged": craft_flagged,
-                "craft_dropped": craft_dropped,
-                "undated_shadow_flagged": undated_flagged,
-            },
-            cost_cents=0,
+        info = {
+            "scored": len(ctx.scores),
+            "dropped_low_score": dropped,
+            "veto_shadow_flagged": veto_flagged,
+            "veto_dropped": veto_dropped,
+            "craft_flagged": craft_flagged,
+            "craft_dropped": craft_dropped,
+            "undated_shadow_flagged": undated_flagged,
+            "judge_failures": judge_failures,
+        }
+        if judge_failures:
+            self._report_judge_outage(ctx, judge_failures, len(payload), info)
+            raise JudgePanelUnavailable(
+                f"{judge_failures} question(s) reached the ship gate with zero "
+                "judge verdicts — refusing to deliver an ungated pack",
+                info=info,
+            )
+        return StageResult(info=info, cost_cents=0)
+
+    @staticmethod
+    def _report_judge_outage(
+        ctx: OrderContext, judge_failures: int, batch_size: int, info: dict
+    ) -> None:
+        """Error-level Sentry event for the outage that failed this stage.
+
+        The order's step log records the same counter, but the pack is now
+        late for a paying customer and the cause is upstream (provider outage,
+        exhausted credits, throttling) — that has to page us, not sit in
+        worker logs. Mirrors `order_budget.report_breach`'s shape.
+        """
+        message = (
+            f"order {ctx.order_id} scoring gate failed: {judge_failures} of "
+            f"{batch_size} question(s) had zero judge verdicts "
+            "(judge panel unavailable)"
         )
+        logger.error(message)
+        with sentry_sdk.new_scope() as scope:
+            scope.set_context(
+                "scoring_gate",
+                {
+                    "order_id": str(ctx.order_id),
+                    "policy": "fail_closed",
+                    **info,
+                },
+            )
+            sentry_sdk.capture_message(message, level="error")
 
     @staticmethod
     def _gate_reason(model_scores: list[dict]) -> str | None:
         """Return a drop reason if the question fails the gate, else None.
 
-        Unscored questions (empty ``model_scores``) return None — absence of
-        a judgment is not a failed judgment, so they are kept.
+        Only REAL judge verdicts count (`is_judge_verdict`): the deterministic
+        advisory entry emitted during a judge outage carries no
+        ``overall_score`` and must never move this average (#147). Callers do
+        not reach this method for an unjudged question at all — `run` withholds
+        it and fails the stage, because "no judgment" is no longer "keep it".
         """
         overalls = [
-            float(s["overall_score"])
-            for s in model_scores
-            if s.get("overall_score") is not None
+            float(s["overall_score"]) for s in model_scores if is_judge_verdict(s)
         ]
         if overalls and (sum(overalls) / len(overalls)) < MIN_OVERALL_SCORE:
             return f"overall_below_{MIN_OVERALL_SCORE}"

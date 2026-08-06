@@ -29,7 +29,12 @@ from typing import Any
 import pytest
 
 from app.orchestrator import OrderContext
-from app.orchestrator.stages.scoring import ScoringStage, _shadow_veto_reason
+from app.orchestrator.stages.scoring import (
+    JudgePanelUnavailable,
+    ScoringStage,
+    _shadow_veto_reason,
+)
+from app.scoring.multi_model_scorer import MultiModelScorer
 from quiz_shared.models.question import Question
 
 
@@ -144,21 +149,23 @@ async def test_scores_keyed_by_question_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_keeps_passing_and_unscored_questions() -> None:
-    """#42 task 42.29 — the gate drops only on a *bad* judgment, never on the
-    *absence* of one. A well-scored question (q_0) and a question the scorer
-    could not score at all (q_1, empty model_scores) must both survive: we do
-    not throw away questions just because the scorer was silent on them."""
-    scores = {"q_0": {"gpt-4.1-mini": 9.0}}  # q_1 deliberately unscored
+async def test_unjudged_question_fails_the_stage() -> None:
+    """#147 (founder decision 2026-08-06, supersedes the #42 "unscored → keep"
+    rule): the customer must receive judged questions only. One question with
+    no judge verdict at all (q_1) is enough to fail the whole stage — it is
+    withheld, never delivered, and the order goes back through the retry
+    machinery instead of shipping a partly-ungated paid pack."""
+    scores = {"q_0": {"gpt-4.1-mini": 9.0}}  # q_1 deliberately unjudged
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_stub_question(0), _stub_question(1)])
-    before_ids = [q.id for q in ctx.questions]
 
-    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    with pytest.raises(JudgePanelUnavailable) as exc_info:
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert [q.id for q in ctx.questions] == before_ids
-    assert result.info["dropped_low_score"] == 0
+    assert exc_info.value.info["judge_failures"] == 1
+    # The unjudged question never survives the stage, whatever happens next.
+    assert [q.id for q in ctx.questions] == ["q_0"]
 
 
 @pytest.mark.asyncio
@@ -229,7 +236,11 @@ async def test_no_questions_returns_zero_count() -> None:
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert result.info == {"scored": 0, "dropped_low_score": 0}
+    assert result.info == {
+        "scored": 0,
+        "dropped_low_score": 0,
+        "judge_failures": 0,
+    }
     assert ctx.scores == {}
     assert scorer.calls == []
 
@@ -517,6 +528,122 @@ async def test_undated_record_is_shadow_only_even_under_enforce(
     assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
     assert result.info["undated_shadow_flagged"] == 1
     assert result.info["craft_dropped"] == 0
+
+
+# --- Judge-panel outage: FAIL CLOSED (#147, founder decision 2026-08-06) ------
+#
+# Why these scenarios: when every judge failed, the scorer used to hand the gate
+# a synthetic entry whose "overall score" was `answer_brevity` — a word count.
+# The gate averaged it like a verdict, so a provider outage silently swapped the
+# pipeline's only quality gate for "is the answer short?": brevity 7/10 cleared
+# the 3.0 floor (ungated paid pack ships), brevity 1 dropped (mass-drop for a
+# reason no step log explained). These tests pin that answer length can no
+# longer decide anything, and that the outage is loud instead of silent.
+
+
+_SHORT_ANSWER = "Paris"  # answer_brevity 10 — used to sail through the gate
+_LONG_ANSWER = (  # answer_brevity 1 — over the word cap AND an explanation tail
+    "Basketball — its rules were written by James Naismith in December 1891, "
+    "while the modern marathon distance was only standardised at the 1908 "
+    "London Olympics"
+)
+
+
+def _dead_panel_scorer() -> MultiModelScorer:
+    """A real MultiModelScorer with no judge left — the outage shape itself.
+
+    Deliberately the production object rather than a double: the thing under
+    test is what `score_question` emits when every judge fails, so a stubbed
+    "outage" entry would test the stub.
+    """
+    scorer = MultiModelScorer(models=[{"provider": "openai", "model": "x", "name": "x"}])
+    scorer.models = []
+    return scorer
+
+
+@pytest.mark.asyncio
+async def test_total_panel_failure_is_length_blind_and_fails_the_stage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The core #147 regression: under a total panel outage, a brevity-10 and a
+    brevity-1 question get IDENTICAL outcomes — both withheld, the stage fails.
+    Before the fix the short one shipped ungated and the long one was dropped.
+
+    Craft enforcement is pinned off so answer length has exactly one possible
+    route into the outcome (the judge gate) — with it on, the long answer would
+    also trip the deterministic long-answer guard and blur the comparison."""
+    monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "0")
+    monkeypatch.setenv("VETO_ENFORCE", "0")
+    stage = ScoringStage(_dead_panel_scorer())
+    ctx = _make_ctx([
+        _stub_question(0, correct_answer=_SHORT_ANSWER),
+        _stub_question(1, correct_answer=_LONG_ANSWER),
+    ])
+
+    with pytest.raises(JudgePanelUnavailable) as exc_info:
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    # Identical outcome for both: neither is delivered.
+    assert ctx.questions == []
+    assert exc_info.value.info["judge_failures"] == 2
+    assert exc_info.value.info["dropped_low_score"] == 0  # nothing was "judged bad"
+
+
+def test_gate_reason_ignores_the_judge_failure_entry() -> None:
+    """The deterministic entry can no longer produce OR clear a gate verdict:
+    `_gate_reason` sees no overall at all for it, whatever the word count. This
+    is the invariant the old docstring claimed and the code contradicted."""
+    from app.scoring.multi_model_scorer import compute_answer_brevity
+
+    for answer in (_SHORT_ANSWER, _LONG_ANSWER):
+        entry = {
+            "model_name": "deterministic",
+            "scores": {"answer_brevity": compute_answer_brevity(answer)},
+            "overall_score": None,
+            "judge_failed": True,
+        }
+        assert ScoringStage._gate_reason([entry]) is None, answer
+
+
+@pytest.mark.asyncio
+async def test_healthy_run_reports_zero_judge_failures() -> None:
+    """The counter must be trustworthy in both directions — a healthy panel
+    reports 0, so a non-zero value in an order's step log always means the
+    judges were actually down."""
+    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 4.0}}
+    stage = ScoringStage(_FakeMultiModelScorer(scores))  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["judge_failures"] == 0
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
+
+
+@pytest.mark.asyncio
+async def test_judge_outage_is_reported_to_sentry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A late pack for a paying customer caused by an upstream outage must page
+    us: the step-log counter alone is only read after someone goes looking."""
+    import sentry_sdk
+
+    captured: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        sentry_sdk,
+        "capture_message",
+        lambda message, level=None, **kw: captured.append((message, level)),
+    )
+    stage = ScoringStage(_dead_panel_scorer())
+    ctx = _make_ctx([_stub_question(0, correct_answer=_SHORT_ANSWER)])
+
+    with pytest.raises(JudgePanelUnavailable):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(captured) == 1
+    message, level = captured[0]
+    assert level == "error"
+    assert str(ctx.order_id) in message
 
 
 @pytest.mark.asyncio

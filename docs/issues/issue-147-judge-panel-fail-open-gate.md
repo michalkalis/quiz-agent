@@ -1,6 +1,6 @@
 # Issue 147: Total judge-panel failure fabricates a word-count score that the pack ship gate treats as a real judgment
 
-**Triage:** bug · needs-triage
+**Triage:** bug · fixed (agent-side), awaiting deploy
 **Priority:** serious
 **Source:** architectural audit 2026-08-06
 **Reversibility:** a
@@ -65,12 +65,22 @@ Confined to the scoring seam — `multi_model_scorer.score_question` plus `Scori
 
 **Founder decision (2026-08-06, in-session): fail closed.** The customer must receive judged questions only. A question that reaches the gate with zero real judge verdicts must NOT be delivered; a panel-wide outage fails the scoring stage with a retryable, refund-eligible error so the order retries later (bounded by the #145 spend ceiling) instead of delivering an ungated pack. The user is informed via the existing failed/retry order status ("pack arrives later"), and the outage is recorded loudly (StageResult.info judge-failure count + Sentry). This supersedes the "unscored questions are kept" docstring invariant — update the docstring and tests to the new policy. Done criteria below adjusted accordingly: the brevity-parity tests now assert identical *non-delivery* outcomes, and the `_gate_reason` criterion is replaced by the stage-failure behaviour.
 
+## Implemented policy (2026-08-06)
+
+**Threshold: ANY question that reaches the ship gate with zero real judge verdicts fails the stage.** Not a ratio — the customer paid for judged questions, a partially-alive panel still returns verdicts (one flaky judge never trips this), and the realistic cause of a zero-verdict question is a panel-wide outage that hits the whole batch anyway. The unjudged question is withheld first, so nothing ungated can leak even if the failure were somehow swallowed.
+
+Shape of the fix:
+- `score_question` still emits the `deterministic` entry (advisory dims stay logged) but with `overall_score = None` and a `judge_failed` flag. `multi_model_scorer.is_judge_verdict` is the single predicate that says what a gate may act on; `_gate_reason` and the new outage check both use it, and the score-persistence path skips non-verdicts (`model_scores.overall_score` is NOT NULL).
+- `ScoringStage.run` withholds unjudged questions, then raises `JudgePanelUnavailable` (a plain stage exception, so the worker's existing failure path applies: ARQ/sweep/manual retry, terminal failure sets `refund_eligible`, and #145's `order_budget` bounds repeats — no new budget logic).
+- Counters: `judge_failures` in `StageResult.info` on healthy runs; on an outage the stage has no `StageResult` to return, so the same dict rides on `JudgePanelUnavailable.info` and in the Sentry context.
+
 ## Done criteria
 
-- [ ] A test drives `score_question` with every judge failing and asserts the gate does **not** drop or keep questions on the basis of answer length: two questions differing only in answer word count (one brevity 10, one brevity 1) get identical gate outcomes.
-- [ ] A test asserts `_gate_reason` returns `None` for a question whose only score entry originates from the judge-failure path — the docstring's invariant now exercised by a reachable case.
-- [ ] `StageResult.info` from a run with a fully failed panel reports a non-zero judge-failure count; a run with healthy judges reports zero.
-- [ ] Grep confirms no remaining consumer treats the deterministic entry as a judge verdict in any gating decision (advisory/telemetry uses are fine and explicitly noted).
-- [ ] Existing scoring tests still pass with real judge scores unchanged — normal-path gate behaviour is untouched.
-- [ ] quiz-pack-api suite green (`LLM_GATEWAY=direct` pinned, per the test-gate hermeticity constraint).
-- [ ] Founder answered the policy question in item 4 and the chosen behaviour is recorded in this file.
+- [x] A test drives `score_question` with every judge failing and asserts the gate does **not** drop or keep questions on the basis of answer length: two questions differing only in answer word count (one brevity 10, one brevity 1) get identical gate outcomes. — `test_total_panel_failure_is_length_blind_and_fails_the_stage` (real `MultiModelScorer` with an empty panel, not a stub): both withheld, `judge_failures == 2`, `dropped_low_score == 0`.
+- [x] A test asserts `_gate_reason` returns `None` for a question whose only score entry originates from the judge-failure path — the docstring's invariant now exercised by a reachable case. — `test_gate_reason_ignores_the_judge_failure_entry`, brevity 10 and brevity 1.
+- [x] `StageResult.info` from a run with a fully failed panel reports a non-zero judge-failure count; a run with healthy judges reports zero. — healthy: `test_healthy_run_reports_zero_judge_failures`; outage: the counter travels on `JudgePanelUnavailable.info` (the stage fails, so there is no `StageResult`) — asserted in the two outage tests.
+- [x] Grep confirms no remaining consumer treats the deterministic entry as a judge verdict in any gating decision (advisory/telemetry uses are fine and explicitly noted). — `"deterministic"` appears only at its definition + the append site (`multi_model_scorer.py`) and twice in `scripts/validate_gate_v2.py`, which already excludes it explicitly (calibration, non-gating).
+- [x] Existing scoring tests still pass with real judge scores unchanged — normal-path gate behaviour is untouched. — only `test_keeps_passing_and_unscored_questions` changed (it asserted the superseded "unscored → keep" rule; now `test_unjudged_question_fails_the_stage`).
+- [x] quiz-pack-api suite green (`LLM_GATEWAY=direct` pinned, per the test-gate hermeticity constraint). — 819 passed / 1 skipped, run twice sequentially.
+- [x] Founder answered the policy question in item 4 and the chosen behaviour is recorded in this file. — fail closed (2026-08-06), recorded above with the exact threshold.
+- [ ] Deployed to prod quiz-pack-api. **Open** — this run commits only.

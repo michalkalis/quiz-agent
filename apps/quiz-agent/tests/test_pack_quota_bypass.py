@@ -19,6 +19,7 @@ from quiz_shared.models.question import Question
 
 from app.api.deps import StartQuizRequest
 from app.api.routes.quiz import start_quiz
+from app.auth.identity import AuthSubject
 from app.session.manager import SessionManager
 
 pytestmark = pytest.mark.asyncio
@@ -82,6 +83,8 @@ async def _start(manager: SessionManager, session_id: str, tracker: MagicMock):
         translation_service=None,
         tts_service=MagicMock(),
         audio=False,
+        # #144: sessions below are created for "u1"; the caller must be u1.
+        subject=AuthSubject(subject_id="u1", is_legacy=False, authenticated=True),
     )
 
 

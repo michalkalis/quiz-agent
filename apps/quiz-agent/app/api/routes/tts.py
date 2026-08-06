@@ -15,6 +15,8 @@ from ..deps import (
     require_auth_or_grace,
 )
 from ...serializers import session_translation, translated_question_payload
+from ..session_auth import require_session_ownership
+from ...auth.identity import AuthSubject
 from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...tts.number_normalization import normalize_numbers_for_tts
@@ -64,12 +66,13 @@ async def get_question_audio(
     tts_service: TTSService = Depends(get_tts_service),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
     translation_service=Depends(get_translation_service),
-    _auth=Depends(require_auth_or_grace),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get audio for current question in session (cached)."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    # #144: this audio IS the question read aloud, so it leaks exactly what
+    # /sessions/{id}/question leaks — same owner gate.
+    require_session_ownership(session, subject, session_id=session_id)
 
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question in session")
@@ -188,12 +191,11 @@ async def get_session_feedback_audio(
     session_manager: SessionManager = Depends(get_session_manager),
     tts_service: TTSService = Depends(get_tts_service),
     translation_service=Depends(get_translation_service),
-    _auth=Depends(require_auth_or_grace),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get feedback audio in session's language."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    require_session_ownership(session, subject, session_id=session_id)  # #144
 
     valid_results = [
         "correct",

@@ -60,6 +60,9 @@ class _StubSessionManager:
     def __init__(self):
         self._session = QuizSession(
             session_id=_SESSION_ID,
+            # #144: the routes now require the caller to own the session; the
+            # app fixture below authenticates as "test-subject".
+            user_id="test-subject",
             phase=SessionPhase.ASKING,
             current_question_id=_QUESTION_ID,
             asked_question_ids=[_QUESTION_ID],

@@ -23,6 +23,7 @@ from app.api.routes.quiz import start_quiz
 from app.api.routes.tts import get_question_audio
 from app.quiz import flow as flow_module
 from app.quiz.flow import QuizFlowService, prefetch_question_audio
+from app.auth.identity import AuthSubject
 from app.session.manager import SessionManager
 from app.tts.service import TTSService
 from quiz_shared.models.question import Question
@@ -92,7 +93,7 @@ async def test_prefetch_then_serve_synthesizes_once_for_a_slovak_digit_stem():
     synthesis for one question, and it must be the digits-spelled-out text."""
     service, provider = _service()
     manager = SessionManager()
-    session = manager.create_session()
+    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_next"
@@ -114,6 +115,7 @@ async def test_prefetch_then_serve_synthesizes_once_for_a_slovak_digit_stem():
         tts_service=service,
         question_retriever=retriever,
         translation_service=None,
+        subject=AuthSubject(subject_id="u_owner", is_legacy=False, authenticated=True),
     )
 
     assert len(provider.calls) == 1
@@ -161,7 +163,7 @@ async def test_start_prefetch_uses_the_session_language():
     """Same for the /start prefetch — the other call site of the same helper."""
     service, provider = _service()
     manager = SessionManager()
-    session = manager.create_session()
+    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
     manager.update_session(session)
 
@@ -178,6 +180,7 @@ async def test_start_prefetch_uses_the_session_language():
         translation_service=None,
         tts_service=service,
         audio=True,
+        subject=AuthSubject(subject_id="u_owner", is_legacy=False, authenticated=True),
     )
     await _drain_prefetch()
 

@@ -35,6 +35,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api import deps
 from app.api.routes import quiz as quiz_routes
+from app.auth.identity import AuthSubject
 from app.quiz import resubmission
 from app.quiz.flow import QuestionMismatch, QuizFlowService
 from app.quiz.resubmission import REGRADE_CAP
@@ -489,6 +490,11 @@ async def client():
     app.include_router(quiz_routes.router, prefix="/api/v1")
     app.dependency_overrides[deps.get_session_manager] = lambda: manager
     app.dependency_overrides[deps.get_quiz_flow] = lambda: flow
+    # #144: the route is owner-gated — stand in for the bearer of `_session`'s
+    # user_id (the client already sends one on every request).
+    app.dependency_overrides[deps.require_auth_or_grace] = lambda: AuthSubject(
+        subject_id="u_1", is_legacy=False, authenticated=True
+    )
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

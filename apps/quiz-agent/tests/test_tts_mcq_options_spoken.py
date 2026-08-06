@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.api.routes.tts import get_question_audio
+from app.auth.identity import AuthSubject
 from app.session.manager import SessionManager
 from app.tts.service import TTSService
 from app.tts.spoken_text import spoken_question_text
@@ -57,7 +58,7 @@ async def test_audio_route_reads_translated_mcq_options():
     provider = CountingProvider()
     service = TTSService(provider=provider)
     manager = SessionManager()
-    session = manager.create_session()
+    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_mcq"
@@ -79,6 +80,7 @@ async def test_audio_route_reads_translated_mcq_options():
         tts_service=service,
         question_retriever=MagicMock(),
         translation_service=None,
+        subject=AuthSubject(subject_id="u_owner", is_legacy=False, authenticated=True),
     )
 
     assert len(provider.calls) == 1
@@ -93,7 +95,7 @@ async def test_audio_route_reads_source_options_for_english_session():
     provider = CountingProvider()
     service = TTSService(provider=provider)
     manager = SessionManager()
-    session = manager.create_session()
+    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "en"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_mcq"
@@ -110,6 +112,7 @@ async def test_audio_route_reads_source_options_for_english_session():
         tts_service=service,
         question_retriever=retriever,
         translation_service=None,
+        subject=AuthSubject(subject_id="u_owner", is_legacy=False, authenticated=True),
     )
 
     assert len(provider.calls) == 1

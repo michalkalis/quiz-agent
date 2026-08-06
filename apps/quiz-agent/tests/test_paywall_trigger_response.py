@@ -30,6 +30,7 @@ from quiz_shared.models.question import Question
 
 from app.api.deps import StartQuizRequest
 from app.api.routes.quiz import start_quiz
+from app.auth.identity import AuthSubject
 from app.session.manager import SessionManager
 from app.usage.tracker import UsageTracker
 
@@ -107,6 +108,11 @@ async def test_start_quiz_denies_with_paywall_contract_when_quota_and_credits_ex
             translation_service=None,
             tts_service=MagicMock(),
             audio=False,
+            # #144: the route now requires the bearer's subject to own the
+            # session — same subject the session was created for.
+            subject=AuthSubject(
+                subject_id=SUBJECT, is_legacy=False, authenticated=True
+            ),
         )
 
     exc = exc_info.value

@@ -201,8 +201,8 @@ class TestEvaluationQuestionId:
             session=manager.get_session(sid), answer_text="Paris"
         )
 
-        assert result.evaluation["question_id"] == self.GRADED
-        assert result.evaluation["result"] == "correct"
+        assert result.evaluation.question_id == self.GRADED
+        assert result.evaluation.result == "correct"
         # Non-vacuous: the session really did move on, and the client is being
         # handed the next question in the same response — so "graded" and
         # "current" are genuinely two different ids at this point.
@@ -221,9 +221,9 @@ class TestEvaluationQuestionId:
             session=manager.get_session(sid), answer_text="skip"
         )
 
-        assert result.evaluation["question_id"] == self.GRADED
-        assert result.evaluation["result"] == "skipped"
-        assert result.evaluation["points"] == 0.0
+        assert result.evaluation.question_id == self.GRADED
+        assert result.evaluation.result == "skipped"
+        assert result.evaluation.points == 0.0
         assert manager.get_session(sid).current_question_id == self.NEXT
 
     @pytest.mark.asyncio

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from .participant import Participant
 from .phase import InvalidPhaseTransition, SessionPhase, is_valid_transition
+from .submit import Evaluation
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,9 @@ class LastEvaluation(BaseModel):
     submitted_text: str = Field(
         ..., description="Raw submitted text (typed input or transcript), as received"
     )
-    evaluation: Dict[str, Any] = Field(
-        ..., description="The evaluation dict returned to the client; replayed verbatim"
+    evaluation: Evaluation = Field(
+        ...,
+        description="The verdict returned to the client; replayed verbatim (#148)",
     )
     feedback_received: List[str] = Field(
         default_factory=list,

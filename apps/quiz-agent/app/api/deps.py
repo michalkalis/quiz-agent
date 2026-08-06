@@ -1,6 +1,6 @@
 """Shared dependencies, models, and helpers for REST API routes."""
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Any
 from pydantic import BaseModel, Field
 from datetime import datetime, date
 from fastapi import Depends, Request
@@ -8,6 +8,7 @@ from fastapi import Depends, Request
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
 from quiz_shared.models.question import PublicQuestion
+from quiz_shared.models.submit import AudioInfo, Evaluation
 from quiz_shared.database.question_store import QuestionStore
 
 from ..session.manager import SessionManager
@@ -125,11 +126,13 @@ class InputResponse(BaseModel):
     message: str
     session: SessionResponse
     current_question: Optional[PublicQuestion] = None
-    evaluation: Optional[Dict[str, Any]] = None
+    evaluation: Optional[Evaluation] = Field(
+        default=None, description="The graded verdict, when this input was an answer"
+    )
     feedback_received: List[str] = Field(
         default_factory=list, description="Parsed intents"
     )
-    audio: Optional[Dict[str, Any]] = Field(
+    audio: Optional[AudioInfo] = Field(
         default=None, description="Audio URLs when audio=true"
     )
 

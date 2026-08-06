@@ -1,10 +1,7 @@
 """Quiz game flow endpoints: start, submit input, get question, rate."""
 
 import logging
-import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.exc import TimeoutError as SATimeoutError
 
 from ..deps import (
     StartQuizRequest,
@@ -27,6 +24,7 @@ from ..deps import (
     flow_to_response,
 )
 from ..session_auth import require_session_ownership
+from ..submit_errors import submit_http_error
 from ...auth.identity import AuthSubject
 from ...serializers import (
     apply_question_translation,
@@ -38,25 +36,14 @@ from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
-from ...quiz.flow import QuestionMismatch, QuizFlowService, prefetch_question_audio
+from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...tts.spoken_text import spoken_question_text
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.submit import AudioInfo
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# #131 Track A: DB connection/pool errors typical of a Fly `auto_stop_machines`
-# cold wake (staging) — surface these as a retryable 503 instead of a raw 500.
-# ``OperationalError`` covers DBAPI/asyncpg disconnects; ``SATimeoutError`` is
-# the SQLAlchemy pool-checkout timeout (pool exhaustion); ``ConnectionError``/
-# ``TimeoutError`` catch a raw socket failure before SQLAlchemy wraps it.
-_TRANSIENT_INFRA_ERRORS = (
-    OperationalError,
-    SATimeoutError,
-    ConnectionError,
-    TimeoutError,
-)
 
 
 @router.post("/sessions/{session_id}/start", response_model=InputResponse)
@@ -193,10 +180,9 @@ async def start_quiz(
 
         audio_info = None
         if audio:
-            audio_info = {
-                "question_url": f"/api/v1/sessions/{session_id}/question/audio",
-                "format": "opus",
-            }
+            audio_info = AudioInfo(
+                question_url=f"/api/v1/sessions/{session_id}/question/audio",
+            )
             # Warm TTS cache while iOS is still rendering the question UI.
             # Best-effort: if iOS requests audio before this finishes, both calls
             # run in parallel and the second wins (cache write is idempotent).
@@ -254,31 +240,15 @@ async def submit_input(
                 include_audio=audio,
                 submitted_question_id=body.question_id,
             )
-        except QuestionMismatch as e:
-            # #133 1a: the client is a whole question out of step. Grading this
-            # text would score a question the player never saw, so refuse and hand
-            # back the id to resync on. Nothing was mutated.
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "code": "question_mismatch",
-                    "current_question_id": e.current_question_id,
-                },
-            )
-        except _TRANSIENT_INFRA_ERRORS as e:
-            # Cold-wake DB hiccup (staging auto_stop_machines) or pool exhaustion —
-            # retryable, not a bug. iOS retries on 502/503 (isTransientStartError).
-            logger.warning(
-                "Transient infra error in submit_input (session=%s): %s", session_id, e
-            )
-            raise HTTPException(
-                status_code=503, detail="Temporary server issue, please retry"
-            )
         except Exception as e:
-            logger.error("Unexpected exception in submit_input: %s", e, exc_info=True)
-            if sentry_sdk.get_client().is_active():
-                sentry_sdk.capture_exception(e)
-            raise HTTPException(status_code=500, detail="Failed to process your answer")
+            # #148: one mapping for both submit routes — the same flow condition
+            # must yield the same status, Sentry behaviour and retryability on
+            # /input and /voice/submit.
+            raise submit_http_error(
+                e,
+                session_id=session_id,
+                fallback_detail="Failed to process your answer",
+            ) from e
 
         # Ghost-question guard (#66): a non-answer intent leaves the session
         # untouched (no current_question_id advance, no question recorded). Surface

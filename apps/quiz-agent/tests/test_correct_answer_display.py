@@ -89,7 +89,7 @@ async def test_english_mcq_answer_stored_as_key_reports_the_option_text():
 
     result = await flow.process_answer(session=_make_session(), answer_text="b")
 
-    assert result.evaluation["correct_answer"] == "Venus"
+    assert result.evaluation.correct_answer == "Venus"
 
 
 @pytest.mark.asyncio
@@ -100,7 +100,7 @@ async def test_english_mcq_answer_stored_as_text_is_unchanged():
 
     result = await flow.process_answer(session=_make_session(), answer_text="b")
 
-    assert result.evaluation["correct_answer"] == "Venus"
+    assert result.evaluation.correct_answer == "Venus"
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_non_mcq_answer_is_passed_through_raw():
 
     result = await flow.process_answer(session=_make_session(), answer_text="Paris")
 
-    assert result.evaluation["correct_answer"] == "Paris"
+    assert result.evaluation.correct_answer == "Paris"
 
 
 @pytest.mark.asyncio
@@ -130,4 +130,4 @@ async def test_translation_record_still_wins():
 
     result = await flow.process_answer(session=session, answer_text="b")
 
-    assert result.evaluation["correct_answer"] == "Venusa"
+    assert result.evaluation.correct_answer == "Venusa"

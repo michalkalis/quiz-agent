@@ -24,11 +24,13 @@ from ..deps import (
     require_auth_or_grace,
 )
 from ..session_auth import require_session_ownership
+from ..submit_errors import submit_http_error
 from ...auth.identity import AuthSubject
 from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
-from ...quiz.flow import QuestionMismatch, QuizFlowService
+from ...quiz.errors import InvalidSubmission, QuestionUnavailable
+from ...quiz.flow import QuizFlowService
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -83,9 +85,9 @@ async def transcribe_and_submit(
 
         try:
             if not voice_transcriber.is_supported_format(audio.filename):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unsupported audio format. Supported: {', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}",
+                raise InvalidSubmission(
+                    "Unsupported audio format. Supported: "
+                    f"{', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}"
                 )
 
             # #133 1a: reject an out-of-step question_id here, before paying
@@ -100,8 +102,10 @@ async def transcribe_and_submit(
                 question_id or session.current_question_id
             )
             if not current_question:
-                raise HTTPException(
-                    status_code=500, detail="Current question not found"
+                # Server-side data fault, not bad input (#148): mapped to a 500
+                # + Sentry capture exactly as on the text route.
+                raise QuestionUnavailable(
+                    question_id or session.current_question_id, stage="current"
                 )
 
             # Transcribe with quiz context
@@ -198,28 +202,11 @@ async def transcribe_and_submit(
 
         except HTTPException:
             raise
-        except QuestionMismatch as e:
-            # #133 1a: the client is a whole question out of step. Grading this
-            # recording would score a question the player never saw, so refuse and
-            # hand back the id to resync on. Nothing was mutated.
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "code": "question_mismatch",
-                    "current_question_id": e.current_question_id,
-                },
-            )
-        except ValueError as e:
-            # Constructed validation text (format/size) — client-safe by design.
-            logger.warning(
-                "Voice submission rejected for session %s: %s", session_id, e
-            )
-            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            logger.error(
-                "Voice submission failed for session %s: %s",
-                session_id,
-                e,
-                exc_info=True,
-            )
-            raise HTTPException(status_code=500, detail="Voice submission failed")
+            # #148: the shared submit mapping — no bare ``ValueError`` catch here
+            # any more. A server-side data fault pages on this route too, and a
+            # transient DB error now reaches iOS as the retryable 503 the text
+            # route has answered with since #131 Track A.
+            raise submit_http_error(
+                e, session_id=session_id, fallback_detail="Voice submission failed"
+            ) from e

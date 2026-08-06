@@ -233,6 +233,8 @@ struct ResultView: View {
         // #82 item 2 (decision 7): a skip is not a failure — gentle tick.
         case .skipped: return .selection
         case .partiallyCorrect, .partiallyIncorrect: return .warning
+        // #148: a verdict this build does not know — neutral, never a failure buzz.
+        case .unknown: return .impact
         }
     }
 }

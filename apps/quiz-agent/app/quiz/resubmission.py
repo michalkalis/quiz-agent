@@ -28,7 +28,9 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 import sentry_sdk
 
 from quiz_shared.models.session import LastEvaluation, QuizSession
+from quiz_shared.models.submit import AudioInfo, Evaluation
 
+from .errors import QuestionMismatch, QuestionUnavailable
 from ..serializers import (
     apply_question_translation,
     question_to_dict,
@@ -48,22 +50,8 @@ logger = logging.getLogger(__name__)
 REGRADE_CAP = 3
 
 
-class QuestionMismatch(Exception):
-    """A submit carried a ``question_id`` this session cannot grade (#133 1a).
-
-    It is neither the current question nor the last graded one, so the client is
-    a whole question out of step (stale UI, resumed session) and grading the text
-    would score the wrong question. Raised before any mutation — session state is
-    untouched — and turned into a 409 carrying the current id so the client can
-    resync instead of silently answering something the player never saw.
-    """
-
-    def __init__(self, current_question_id: Optional[str]):
-        super().__init__(
-            "submitted question_id does not match this session "
-            f"(current={current_question_id})"
-        )
-        self.current_question_id = current_question_id
+# ``QuestionMismatch`` moved to ``errors.py`` with the rest of the submit-flow
+# exception family (#148) — one place decides what each condition means.
 
 
 @dataclass
@@ -124,11 +112,15 @@ def evaluation_record(
     outcome: IntentOutcome,
     regrade_count: int = 0,
 ) -> LastEvaluation:
-    """Snapshot a graded submission for idempotent re-submits (#133 1a)."""
+    """Snapshot a graded submission for idempotent re-submits (#133 1a).
+
+    The verdict is copied, not aliased: the record is replayed later and must
+    not drift with whatever the live ``FlowResult`` does next.
+    """
     return LastEvaluation(
         question_id=question_id,
         submitted_text=submitted_text,
-        evaluation=dict(result.evaluation or {}),
+        evaluation=result.evaluation.model_copy(deep=True),
         feedback_received=list(result.feedback_received),
         points_awarded=outcome.score_delta,
         answered_count_delta=outcome.answered_delta,
@@ -186,7 +178,7 @@ async def process_resubmission(
 
     question = await flow.question_retriever.get(previous.question_id)
     if not question:
-        raise ValueError("Re-submitted question not found")
+        raise QuestionUnavailable(previous.question_id, stage="re-submitted")
 
     outcome = await flow._apply_intents(
         session=session,
@@ -247,7 +239,7 @@ async def _replay_stored_verdict(
     cap (#133 V6b) — the client gets a valid, complete answer either way, and
     the only difference is the ``message`` that says which happened.
     """
-    result.evaluation = dict(previous.evaluation)
+    result.evaluation = previous.evaluation.model_copy(deep=True)
     result.feedback_received = list(previous.feedback_received)
     result.message = message
     result.next_question_dict = await _current_question_payload(flow, session)
@@ -284,9 +276,9 @@ async def _current_question_payload(
 def _resubmitted_audio_info(
     flow: "QuizFlowService",
     session: QuizSession,
-    evaluation: Dict[str, Any],
+    evaluation: Evaluation,
     feedback_audio: Optional[bytes],
-) -> Dict[str, Any]:
+) -> AudioInfo:
     """Audio block for a replayed / re-graded submission.
 
     With no freshly synthesized feedback (a replay evaluates nothing) the block
@@ -298,5 +290,5 @@ def _resubmitted_audio_info(
     """
     info = flow._build_audio_info(session.session_id, evaluation, feedback_audio)
     if session.current_question_id:
-        info["question_url"] = f"/api/v1/sessions/{session.session_id}/question/audio"
+        info.question_url = f"/api/v1/sessions/{session.session_id}/question/audio"
     return info

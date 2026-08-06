@@ -1,6 +1,6 @@
 # Issue 148: Type the answer-submit contract — shared exception taxonomy across voice/text plus Pydantic evaluation and audio payloads
 
-**Triage:** bug · needs-triage
+**Triage:** bug · fixed (agent-side), awaiting deploy
 **Priority:** serious
 **Source:** architectural audit 2026-08-06
 **Reversibility:** a
@@ -50,11 +50,18 @@ Do not change status codes the clients already depend on (409 question mismatch,
 
 ## Done criteria
 
-- [ ] `voice.py` no longer catches bare `ValueError`; grepping the submit paths shows no route mapping an untyped exception to a status code.
-- [ ] A test asserts that the *same* flow condition (question not found) yields the *same* status code and the same Sentry behaviour on both `/input` and `/voice-input`.
-- [ ] A test asserts a transient DB error during a **voice** submit returns 503, and that `TransientRetry` classifies it as retryable.
-- [ ] A test asserts a client-side audio format/size rejection still returns 400 on the voice route.
-- [ ] `curl /openapi.json` shows `InputResponse.evaluation` and `InputResponse.audio` as `$ref`s to named schemas, not free-form objects.
-- [ ] `test_question_openapi_visibility.py` fails if either payload regresses to an untyped dict.
-- [ ] iOS decodes an unknown `result` string without throwing (unit test), and `/verify-api` runs clean against the new models.
-- [ ] Backend suite green (`cd apps/quiz-agent && pytest tests/ -v`); targeted iOS ViewModel/Codable tests green; deployed to prod.
+- [x] `voice.py` no longer catches bare `ValueError`; grepping the submit paths shows no route mapping an untyped exception to a status code. — both routes funnel every flow exception through `app/api/submit_errors.py:submit_http_error`; the only `raise HTTPException` left on either submit path are direct preconditions (phase, no-speech, no-answer-intent, quota).
+- [x] A test asserts that the *same* flow condition (question not found) yields the *same* status code and the same Sentry behaviour on both `/input` and `/voice-input`. — `tests/test_submit_error_contract.py::test_missing_question_pages_identically_on_both_routes`, parametrized over both routes (500 + one Sentry capture, internal ids never in the body).
+- [x] A test asserts a transient DB error during a **voice** submit returns 503, and that `TransientRetry` classifies it as retryable. — `test_transient_db_error_is_a_retryable_503_on_both_routes`; the iOS half already existed and stays green: `SubmitRetryTests.onlyTransientErrorsRetry` (503 ⇒ transient) + `voiceSubmitRetriesTransient503`.
+- [x] A test asserts a client-side audio format/size rejection still returns 400 on the voice route. — size: `test_voice_rejects_an_oversized_upload_with_a_400`; format: the pre-existing `test_route_error_detail_leaks.py::test_voice_submit_unsupported_format_stays_400`, unchanged and still green through the new `InvalidSubmission` path.
+- [x] `curl /openapi.json` shows `InputResponse.evaluation` and `InputResponse.audio` as `$ref`s to named schemas, not free-form objects. — both are `anyOf[$ref → Evaluation | AudioInfo, null]`; each resolves to its wire schema, same convention as `PublicQuestion`.
+- [x] `test_question_openapi_visibility.py` fails if either payload regresses to an untyped dict. — two new tests pin the `$ref` *and* the exact property/required sets, so widening the verdict payload or dropping `format` breaks the build.
+- [x] iOS decodes an unknown `result` string without throwing (unit test), and `/verify-api` runs clean against the new models. — `EvaluationResult` gained `.unknown` + the `QuestionType`-style `init(from:)`; `NetworkDecodingTests."Evaluation survives a verdict this build does not know"`. `/verify-api`: clean for `Evaluation` / `AudioInfo` / `InputResponse`.
+- [~] Backend suite green (`cd apps/quiz-agent && pytest tests/ -v`); targeted iOS ViewModel/Codable tests green; deployed to prod. — 624 backend tests green; 55 iOS tests across 6 touched suites green first run. **Deploy still open** (rides the same quiz-agent deploy as #144 / #151).
+
+## Implementation notes (2026-08-06)
+
+- **Exception family** — `apps/quiz-agent/app/quiz/errors.py`: `QuizFlowError` base, `QuestionUnavailable` (server data fault, carries `question_id` + `stage`), `InvalidSubmission` (client audio/text), `QuestionMismatch` (moved verbatim from `resubmission.py`). `flow.py` and `resubmission.py` raise these instead of `ValueError`; `voice/transcriber.py` raises `InvalidSubmission` for its format/size checks.
+- **One mapping** — `apps/quiz-agent/app/api/submit_errors.py` owns 409 / 400 / 503 / 500-with-capture and the `TRANSIENT_INFRA_ERRORS` tuple (moved off `routes/quiz.py`). Route-specific wording survives as `fallback_detail`.
+- **Typed payloads** — `packages/shared/quiz_shared/models/submit.py`: `Evaluation` + `AudioInfo`, both with a `model_serializer(mode="plain")` wire TypedDict so optional keys are still *omitted* rather than emitted as null — the JSON bytes are unchanged. `FlowResult`, `LastEvaluation.evaluation` and `InputResponse` are now typed end to end. `result` stays a plain `str`: a verdict the backend has not seen before must not fail validation on a response the player was already charged for; degrading it is the client's job.
+- **Not done, deliberately** — the evaluation field set was not widened, and 409 / 400-non-answer-intent are byte-identical.

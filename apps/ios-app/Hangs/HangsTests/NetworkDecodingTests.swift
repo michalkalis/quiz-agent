@@ -208,6 +208,37 @@ struct NetworkDecodingTests {
         }
     }
 
+    /// #148: the money path's payload. A verdict string this build has never
+    /// seen must degrade, not throw — a strict enum discarded the WHOLE
+    /// evaluation of a question the player had already been charged for, and a
+    /// shipped binary cannot be fixed retroactively when the backend adds a
+    /// sixth verdict. Same fallback `Question.QuestionType` has carried since
+    /// old builds met new question types.
+    @Test("Evaluation survives a verdict this build does not know")
+    func decodeEvaluationWithUnknownResult() throws {
+        let json = """
+        {
+            "user_answer": "Mostly Paris",
+            "result": "mostly_correct",
+            "points": 0.7,
+            "correct_answer": "Paris",
+            "question_id": "q_future_1",
+            "explanation": "The capital is Paris."
+        }
+        """
+
+        let evaluation = try JSONDecoder().decode(Evaluation.self, from: json.data(using: .utf8)!)
+
+        #expect(evaluation.result == .unknown)
+        // The rest of the charged verdict survives intact — that is the point.
+        #expect(evaluation.userAnswer == "Mostly Paris")
+        #expect(evaluation.points == 0.7)
+        #expect(evaluation.correctAnswer == "Paris")
+        // ...and it reads as neither a win nor a failure.
+        #expect(evaluation.isCorrect == false)
+        #expect(evaluation.wasSkipped == false)
+    }
+
     @Test("Evaluation decodes headline_answer and tolerates its absence")
     func decodeEvaluationHeadlineAnswer() throws {
         let withHeadline = """

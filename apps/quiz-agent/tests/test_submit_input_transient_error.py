@@ -27,6 +27,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as SATimeoutError
 
 from app.api import deps
+from app.api import submit_errors
 from app.api.routes import quiz as quiz_routes
 from app.auth.identity import AuthSubject
 from app.rate_limit import limiter
@@ -120,12 +121,12 @@ async def test_unexpected_error_still_surfaces_as_500_and_is_captured(
     elsewhere in the app (feedback.py)."""
     captured: list[Exception] = []
     monkeypatch.setattr(
-        quiz_routes.sentry_sdk,
+        submit_errors.sentry_sdk,
         "get_client",
         lambda: MagicMock(is_active=lambda: True),
     )
     monkeypatch.setattr(
-        quiz_routes.sentry_sdk, "capture_exception", lambda e: captured.append(e)
+        submit_errors.sentry_sdk, "capture_exception", lambda e: captured.append(e)
     )
 
     boom = RuntimeError("secret_internal_detail_should_not_leak")

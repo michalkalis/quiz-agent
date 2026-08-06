@@ -72,7 +72,7 @@ async def test_answer_carrying_a_preference_phrase_is_still_graded():
         session=session, answer_text="Paris. No more geography"
     )
 
-    assert result.evaluation["result"] == "correct"
+    assert result.evaluation.result == "correct"
     assert session.preferred_topics == []
     assert session.disliked_topics == []
     assert session.current_difficulty == "medium"

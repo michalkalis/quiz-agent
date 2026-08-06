@@ -1,6 +1,5 @@
 """Text-to-Speech and audio feedback endpoints."""
 
-import asyncio
 import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -84,9 +83,7 @@ async def get_question_audio(
             question_text = session.current_question_text
             possible_answers = translation_record.get("possible_answers")
         else:
-            current_question = await asyncio.to_thread(
-                question_retriever.get, session.current_question_id
-            )
+            current_question = await question_retriever.get(session.current_question_id)
             if not current_question:
                 raise HTTPException(
                     status_code=404, detail="Current question not found"

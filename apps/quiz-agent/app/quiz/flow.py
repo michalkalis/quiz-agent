@@ -165,12 +165,10 @@ class QuizFlowService:
         result = FlowResult()
         evaluated_question_id = session.current_question_id
 
-        # Get current question. The retriever is sync and blocks the calling
-        # thread on the pgvector bridge (and, for retrieval, an OpenAI embedding
-        # HTTP call) — keep it off the event loop, as /voice/submit already does.
-        current_question = await asyncio.to_thread(
-            self.question_retriever.get, evaluated_question_id
-        )
+        # #151: the retriever is async end to end (awaited pgvector + awaited
+        # embedding), so this runs on the request's own loop and overlaps with
+        # other players' retrievals instead of queueing on one bridge thread.
+        current_question = await self.question_retriever.get(evaluated_question_id)
         if not current_question:
             raise ValueError("Current question not found")
 
@@ -245,9 +243,7 @@ class QuizFlowService:
 
         # Get next question (use pre-fetched if available)
         if next_question is None:
-            next_question = await asyncio.to_thread(
-                self.question_retriever.get_next_question, session
-            )
+            next_question = await self.question_retriever.get_next_question(session)
 
         if not next_question:
             session.transition(

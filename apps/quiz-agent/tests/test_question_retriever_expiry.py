@@ -17,12 +17,16 @@ selection in `get_next_question`), plus the public return value.
 """
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 
 from app.retrieval.question_retriever import QuestionRetriever
+
+pytestmark = pytest.mark.asyncio
 
 
 def _make_question(qid: str, *, expires_at=None) -> Question:
@@ -57,15 +61,16 @@ def _retriever_capturing_survivors(search_results) -> QuestionRetriever:
     fallback call) to reach the fallback path.
     """
     store = MagicMock()
+    # #151: the retriever awaits the store.
     if search_results and isinstance(search_results[0], list):
-        store.search.side_effect = search_results
+        store.search = AsyncMock(side_effect=search_results)
     else:
-        store.search.return_value = search_results
+        store.search = AsyncMock(return_value=search_results)
     retriever = QuestionRetriever(question_store=store)
     # get_next_question calls _select_with_semantic_diversity(candidates, session)
     # with the survivor set immediately after the expiry filter — capture it and
     # return a concrete question so the public return value stays non-None.
-    retriever._select_with_semantic_diversity = MagicMock(
+    retriever._select_with_semantic_diversity = AsyncMock(
         side_effect=lambda candidates, session: candidates[0]
     )
     return retriever
@@ -76,20 +81,20 @@ def _survivor_ids(retriever: QuestionRetriever) -> list[str]:
     return [c.id for c in candidates_arg]
 
 
-def test_dormant_filter_is_a_noop_when_expires_at_is_none():
+async def test_dormant_filter_is_a_noop_when_expires_at_is_none():
     """F-3b dormancy: while no row carries ``expires_at``, the expiry filter must
     drop NOTHING — every candidate stays servable. If this fails, the filter is
     silently discarding live questions before F-3b even writes a date."""
     candidates = [_make_question("q1"), _make_question("q2"), _make_question("q3")]
     retriever = _retriever_capturing_survivors(candidates)
 
-    result = retriever.get_next_question(_session())
+    result = await retriever.get_next_question(_session())
 
     assert result is not None
     assert _survivor_ids(retriever) == ["q1", "q2", "q3"]  # zero dropped
 
 
-def test_past_expiry_row_is_dropped_and_rest_remain_servable():
+async def test_past_expiry_row_is_dropped_and_rest_remain_servable():
     """F-3b activation (primary path): once ``expires_at`` is written, a
     past-expiry row must be the ONLY thing dropped; the un-dated / still-valid
     rows must remain servable so the driver still gets a question. This is the
@@ -102,7 +107,7 @@ def test_past_expiry_row_is_dropped_and_rest_remain_servable():
     ]
     retriever = _retriever_capturing_survivors(candidates)
 
-    result = retriever.get_next_question(_session())
+    result = await retriever.get_next_question(_session())
 
     survivors = _survivor_ids(retriever)
     assert survivors == ["q_ok_a", "q_ok_b"]  # exactly the past-expiry row dropped
@@ -111,7 +116,7 @@ def test_past_expiry_row_is_dropped_and_rest_remain_servable():
     assert result.id != "q_expired"  # the expired row can never be returned
 
 
-def test_future_expiry_row_is_retained():
+async def test_future_expiry_row_is_retained():
     """F-3b activation (primary path): a not-yet-expired row (future
     ``expires_at``) must survive the filter — F-3b's time-boxed entertainment
     questions are meant to be served until their expiry, not pre-emptively
@@ -120,14 +125,14 @@ def test_future_expiry_row_is_retained():
     candidates = [_make_question("q_future", expires_at=future)]
     retriever = _retriever_capturing_survivors(candidates)
 
-    result = retriever.get_next_question(_session())
+    result = await retriever.get_next_question(_session())
 
     assert _survivor_ids(retriever) == ["q_future"]  # retained
     assert result is not None
     assert result.id == "q_future"  # servable
 
 
-def test_fallback_path_also_drops_past_expiry():
+async def test_fallback_path_also_drops_past_expiry():
     """F-3b activation (fallback path, question_retriever.py:128): when primary
     semantic search returns nothing and retrieval falls through to the fallback
     strategies, the same expiry filter must apply — a past-expiry row must still
@@ -143,7 +148,7 @@ def test_fallback_path_also_drops_past_expiry():
     # are the line-128 filter's input.
     retriever = _retriever_capturing_survivors([[], fallback_candidates])
 
-    result = retriever.get_next_question(_session())
+    result = await retriever.get_next_question(_session())
 
     survivors = _survivor_ids(retriever)
     assert survivors == ["q_ok"]  # past-expiry row dropped on the fallback path

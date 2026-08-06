@@ -135,8 +135,8 @@ def _flow(
     input_parser.parse = AsyncMock(side_effect=_parse)
 
     retriever = MagicMock()
-    retriever.get = MagicMock(side_effect=lambda qid: questions.get(qid))
-    retriever.get_next_question = MagicMock(return_value=questions[_Q2])
+    retriever.get = AsyncMock(side_effect=lambda qid: questions.get(qid))
+    retriever.get_next_question = AsyncMock(return_value=questions[_Q2])
 
     evaluator = MagicMock()
     evaluator.evaluate = AsyncMock(side_effect=_evaluate)

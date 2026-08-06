@@ -354,8 +354,8 @@ async def test_pre_record_retrieval_500_no_debit(db_sessionmaker):
         return_value=[{"intent_type": "answer", "extracted_data": {"answer": "Paris"}}]
     )
     question_retriever = MagicMock()
-    question_retriever.get = MagicMock(return_value=_make_question())
-    question_retriever.get_next_question = MagicMock(
+    question_retriever.get = AsyncMock(return_value=_make_question())
+    question_retriever.get_next_question = AsyncMock(
         side_effect=RuntimeError("retrieval 500 before record")
     )
 

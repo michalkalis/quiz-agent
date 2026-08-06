@@ -96,8 +96,8 @@ async def transcribe_and_submit(
             # lost submit carries the already-graded id, and priming Whisper with
             # the question the session has since advanced to would transcribe the
             # same audio differently — turning a free replay into a paid re-grade.
-            current_question = await asyncio.to_thread(
-                question_retriever.get, question_id or session.current_question_id
+            current_question = await question_retriever.get(
+                question_id or session.current_question_id
             )
             if not current_question:
                 raise HTTPException(
@@ -159,7 +159,7 @@ async def transcribe_and_submit(
                 and len(session.asked_question_ids) < session.max_questions
             ):
                 next_question_task = asyncio.create_task(
-                    asyncio.to_thread(question_retriever.get_next_question, session)
+                    question_retriever.get_next_question(session)
                 )
 
             next_question = None

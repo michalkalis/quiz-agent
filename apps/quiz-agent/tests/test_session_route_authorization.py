@@ -140,9 +140,10 @@ def manager() -> SessionManager:
 @pytest.fixture
 def retriever() -> MagicMock:
     r = MagicMock()
-    r.get.return_value = _pack_question()
-    r.get_next_question.return_value = _pack_question()
-    r.count.return_value = 1
+    # #151: the retriever is awaited on the serve path.
+    r.get = AsyncMock(return_value=_pack_question())
+    r.get_next_question = AsyncMock(return_value=_pack_question())
+    r.count = AsyncMock(return_value=1)
     return r
 
 

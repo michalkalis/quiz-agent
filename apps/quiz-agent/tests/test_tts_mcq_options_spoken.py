@@ -6,7 +6,7 @@ Pins: (1) the audio route appends the (translated) options to the spoken text,
 same cache key for an MCQ question (one metered synthesis).
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -103,7 +103,7 @@ async def test_audio_route_reads_source_options_for_english_session():
     manager.update_session(session)
 
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=_mcq())
+    retriever.get = AsyncMock(return_value=_mcq())
 
     await get_question_audio(
         request=_Req(),

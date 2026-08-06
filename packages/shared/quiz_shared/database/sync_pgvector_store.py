@@ -1,10 +1,12 @@
 """Sync adapter over the async `PgvectorQuestionStore`.
 
 Bridges synchronous `QuestionStore` callers to the async-only pgvector
-store via a dedicated background event loop. Two consumers share it:
+store via a dedicated background event loop. Remaining consumers:
 
-- **quiz-agent voice-quiz read path** (#36 task 2.20): `QuestionRetriever`
-  is sync (request hot path), so `get`/`count`/`search` adapt here.
+- **quiz-agent admin/write surface**: those callers hold a sync
+  `QuestionStore`. The voice-quiz *read* path no longer routes through
+  here — since #151 `QuestionRetriever` is async and awaits the pgvector
+  store directly, because every bridged call serialized on this one loop.
 - **quiz-pack-api `DedupStage`** (#42 task 42.27): the `QuestionStore`
   Protocol declares `find_duplicates` sync and `DedupStage.run` calls it
   synchronously, so duplicate detection against the canonical pgvector
@@ -22,11 +24,21 @@ Why a background loop and not `asyncio.run`?
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..models.question import Question
 from .pgvector_client import PgvectorQuestionStore
+
+logger = logging.getLogger(__name__)
+
+# An untimed ``future.result()`` parks the calling thread forever if the bridged
+# coroutine stalls (#151) — the worker's dedup call would simply never return and
+# the stage would look "still running". Bound it: the coroutine's own legs are
+# already bounded (30s embedding client timeout, 5s pgvector statement timeout),
+# so anything past this is a stall, not slowness, and must be loud.
+DEFAULT_BRIDGE_TIMEOUT_SECONDS = 60.0
 
 
 class _BackgroundLoop:
@@ -54,10 +66,25 @@ class _BackgroundLoop:
             self._thread = thread
             return loop
 
-    def run(self, coro: Any) -> Any:
+    def run(self, coro: Any, timeout: Optional[float] = None) -> Any:
+        """Run ``coro`` on the bridge loop, waiting at most ``timeout`` seconds.
+
+        On expiry the future is cancelled and a ``TimeoutError`` is raised with
+        the elapsed budget, so a stalled retrieval surfaces as an error the
+        caller can log/retry instead of an indefinitely parked thread.
+        """
         loop = self._ensure_started()
         future = asyncio.run_coroutine_threadsafe(coro, loop)
-        return future.result()
+        try:
+            return future.result(timeout)
+        except TimeoutError:
+            future.cancel()
+            logger.error(
+                "pgvector bridge call exceeded %.1fs and was cancelled", timeout
+            )
+            raise TimeoutError(
+                f"pgvector bridge call did not complete within {timeout}s"
+            ) from None
 
 
 class SyncPgvectorStore:
@@ -69,24 +96,32 @@ class SyncPgvectorStore:
     that #41 moves off ChromaDB (D3).
     """
 
-    def __init__(self, async_store: PgvectorQuestionStore) -> None:
+    def __init__(
+        self,
+        async_store: PgvectorQuestionStore,
+        timeout: float = DEFAULT_BRIDGE_TIMEOUT_SECONDS,
+    ) -> None:
         self._async = async_store
         self._bridge = _BackgroundLoop()
+        self._timeout = timeout
+
+    def _run(self, coro: Any) -> Any:
+        return self._bridge.run(coro, timeout=self._timeout)
 
     def add(self, question: Question) -> bool:
-        return self._bridge.run(self._async.add(question))
+        return self._run(self._async.add(question))
 
     def upsert(self, question: Question) -> bool:
-        return self._bridge.run(self._async.upsert(question))
+        return self._run(self._async.upsert(question))
 
     def delete(self, question_id: str) -> bool:
-        return self._bridge.run(self._async.delete(question_id))
+        return self._run(self._async.delete(question_id))
 
     def get(self, question_id: str) -> Optional[Question]:
-        return self._bridge.run(self._async.get(question_id))
+        return self._run(self._async.get(question_id))
 
     def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
-        return self._bridge.run(self._async.count(filters=filters))
+        return self._run(self._async.count(filters=filters))
 
     def search(
         self,
@@ -95,7 +130,7 @@ class SyncPgvectorStore:
         n_results: int = 10,
         excluded_ids: Optional[List[str]] = None,
     ) -> List[Question]:
-        return self._bridge.run(
+        return self._run(
             self._async.search(
                 query_text=query_text,
                 filters=filters,
@@ -105,11 +140,11 @@ class SyncPgvectorStore:
         )
 
     def get_all(self, limit: int = 1000) -> List[Question]:
-        return self._bridge.run(self._async.get_all(limit=limit))
+        return self._run(self._async.get_all(limit=limit))
 
     def find_duplicates(
         self, question_text: str, threshold: float = 0.85
     ) -> List[Tuple[Question, float]]:
-        return self._bridge.run(
+        return self._run(
             self._async.find_duplicates(question_text, threshold=threshold)
         )

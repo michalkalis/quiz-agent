@@ -72,8 +72,8 @@ def _flow(intent_data):
     )
 
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=_question())
-    retriever.get_next_question = MagicMock(return_value=None)
+    retriever.get = AsyncMock(return_value=_question())
+    retriever.get_next_question = AsyncMock(return_value=None)
 
     usage_tracker = MagicMock()
     usage_tracker.check_limit = AsyncMock(return_value=(True, 5, None))

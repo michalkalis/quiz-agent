@@ -106,7 +106,7 @@ async def test_prefetch_then_serve_synthesizes_once_for_a_slovak_digit_stem():
     # No translation record on the session → the route re-reads the question
     # for possible MCQ options (2026-08-03); a text question adds none.
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=_question("q_next", SK_STEM))
+    retriever.get = AsyncMock(return_value=_question("q_next", SK_STEM))
 
     await get_question_audio(
         request=_Req(),
@@ -138,8 +138,8 @@ async def test_answer_advance_prefetch_uses_the_session_language():
         return_value=[{"intent_type": "answer", "extracted_data": {"answer": "1969"}}]
     )
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=_question("q_current", "Kedy?"))
-    retriever.get_next_question = MagicMock(return_value=_question())
+    retriever.get = AsyncMock(return_value=_question("q_current", "Kedy?"))
+    retriever.get_next_question = AsyncMock(return_value=_question())
 
     flow = QuizFlowService(
         session_manager=MagicMock(),
@@ -168,7 +168,7 @@ async def test_start_prefetch_uses_the_session_language():
     manager.update_session(session)
 
     retriever = MagicMock()
-    retriever.get_next_question = MagicMock(return_value=_question())
+    retriever.get_next_question = AsyncMock(return_value=_question())
 
     await start_quiz(
         request=_Req(),

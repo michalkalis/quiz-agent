@@ -99,8 +99,8 @@ async def test_overlapping_submits_are_serialized_per_session():
         return "correct", 1.0
 
     retriever = MagicMock()
-    retriever.get = MagicMock(side_effect=_question)
-    retriever.get_next_question = MagicMock(
+    retriever.get = AsyncMock(side_effect=_question)
+    retriever.get_next_question = AsyncMock(
         side_effect=[_question("q2"), _question("q3")]
     )
 

@@ -7,9 +7,11 @@ alembic. The voice-quiz read path (task 2.20) is the primary consumer:
 
 Design notes
 ------------
-- **Async-only.** Pgvector queries go through SQLAlchemy + asyncpg.
-  ``QuestionRetriever`` is sync; task 2.20 adapts at that seam, accepting
-  the minor blocking cost in the voice-quiz hot path.
+- **Async-only.** Pgvector queries go through SQLAlchemy + asyncpg. Since
+  #151 the serve path awaits this store directly (``QuestionRetriever`` is
+  async, embeddings are awaited), so concurrent retrievals overlap. The
+  synchronous ``SyncPgvectorStore`` facade remains only for the genuinely
+  sync callers (pack worker dedup, admin/CLI).
 - **Schema duplication is deliberate.** The ORM model lives in
   ``apps/quiz-pack-api/app/db/models/question.py``. Re-importing it here
   would invert the dependency direction (shared → app). Instead this file
@@ -21,10 +23,11 @@ Design notes
 
 from __future__ import annotations
 
+import inspect
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -46,13 +49,23 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from ..models.question import GenerationProvenance, Question
-from ..utils.embeddings import generate_embedding
+from ..utils.embeddings import generate_embedding_async
 
 logger = logging.getLogger(__name__)
 
 EMBEDDING_DIM = 1536
 
-Embedder = Callable[[str], List[float]]
+# Every embedder use in this class happens inside an ``async def``, so an
+# embedder may be a coroutine function (the default since #151) or a plain
+# callable (test stubs, callers that already hold a sync embedder). ``_embed``
+# awaits whichever it gets.
+Embedder = Callable[[str], Union[List[float], Awaitable[List[float]]]]
+
+# Bounds the pgvector leg of a retrieval. The serve path runs inside the voice
+# loop's latency budget, so a query that cannot finish in this window must fail
+# loudly rather than hang the request (#151). Applies per connection, so it also
+# covers the admin/write callers sharing this engine.
+DEFAULT_STATEMENT_TIMEOUT_MS = 5_000
 
 # Minimal mirror of the `questions` table managed by quiz-pack-api alembic.
 # Only the columns the voice-quiz read path needs are declared; INSERTs
@@ -128,14 +141,21 @@ class PgvectorQuestionStore:
         self,
         session_factory: Optional[async_sessionmaker[AsyncSession]] = None,
         database_url: Optional[str] = None,
-        embedder: Embedder = generate_embedding,
+        embedder: Embedder = generate_embedding_async,
+        statement_timeout_ms: int = DEFAULT_STATEMENT_TIMEOUT_MS,
     ) -> None:
         if session_factory is None:
             if not database_url:
                 raise ValueError(
                     "PgvectorQuestionStore requires session_factory or database_url"
                 )
-            engine = create_async_engine(database_url)
+            engine = create_async_engine(
+                database_url,
+                # asyncpg passes these straight to the server on connect.
+                connect_args={
+                    "server_settings": {"statement_timeout": str(statement_timeout_ms)}
+                },
+            )
             session_factory = async_sessionmaker(
                 engine, class_=AsyncSession, expire_on_commit=False
             )
@@ -146,7 +166,7 @@ class PgvectorQuestionStore:
 
     async def add(self, question: Question) -> bool:
         """Insert a question. Idempotent on id via `ON CONFLICT DO NOTHING`."""
-        embedding = self._embedding_for(question)
+        embedding = await self._embedding_for(question)
         row = _question_to_row_dict(question, embedding)
         try:
             async with self._session_factory() as session:
@@ -169,7 +189,7 @@ class PgvectorQuestionStore:
         `ChromaDBQuestionStore.upsert`: never silently no-ops on an existing
         id, every field is overwritten from the given `Question`.
         """
-        embedding = self._embedding_for(question)
+        embedding = await self._embedding_for(question)
         row = _question_to_row_dict(question, embedding)
         try:
             async with self._session_factory() as session:
@@ -242,8 +262,10 @@ class PgvectorQuestionStore:
         """
         fetch_count = n_results + (len(excluded_ids) if excluded_ids else 0)
         # Embed before opening the session so the (possibly remote) embedding
-        # call never holds a pooled connection.
-        query_embedding = self._embedder(query_text) if query_text else None
+        # call never holds a pooled connection — and await it (#151) so
+        # concurrent retrievals overlap instead of queueing behind each other's
+        # round trip.
+        query_embedding = await self._embed(query_text) if query_text else None
 
         async with self._session_factory() as session:
             stmt = select(questions_table)
@@ -280,7 +302,7 @@ class PgvectorQuestionStore:
         question already in the store is returned; ``DedupStage`` excludes the
         self-match by id, keeping a re-run idempotent.
         """
-        query_embedding = self._embedder(question_text)
+        query_embedding = await self._embed(question_text)
         distance = questions_table.c.embedding.cosine_distance(query_embedding)
         async with self._session_factory() as session:
             stmt = (
@@ -301,12 +323,19 @@ class PgvectorQuestionStore:
 
     # ── Internal helpers ───────────────────────────────────────────────
 
-    def _embedding_for(self, question: Question) -> Optional[List[float]]:
+    async def _embed(self, text: str) -> List[float]:
+        """Run the configured embedder, awaiting it when it is asynchronous."""
+        result = self._embedder(text)
+        if inspect.isawaitable(result):
+            return await result
+        return result
+
+    async def _embedding_for(self, question: Question) -> Optional[List[float]]:
         if question.embedding is not None:
             return list(question.embedding)
         if not question.question:
             return None
-        return self._embedder(question.question)
+        return await self._embed(question.question)
 
 
 # ── Row ↔ Question seam ────────────────────────────────────────────────

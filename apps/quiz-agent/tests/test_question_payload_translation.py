@@ -234,8 +234,8 @@ def _flow_with(intents, question: Question) -> QuizFlowService:
     input_parser.parse = AsyncMock(return_value=intents)
 
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=question)
-    retriever.get_next_question = MagicMock(return_value=None)  # end after one
+    retriever.get = AsyncMock(return_value=question)
+    retriever.get_next_question = AsyncMock(return_value=None)  # end after one
 
     evaluator = MagicMock()
     evaluator.evaluate = AsyncMock(return_value=("correct", 1.0))

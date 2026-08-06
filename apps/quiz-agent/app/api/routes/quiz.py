@@ -1,6 +1,5 @@
 """Quiz game flow endpoints: start, submit input, get question, rate."""
 
-import asyncio
 import logging
 import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -123,11 +122,9 @@ async def start_quiz(
             session.current_difficulty,
         )
         try:
-            # The retriever is sync and its store bridges to a background loop,
-            # blocking the calling thread on an OpenAI embedding HTTP call — off
-            # the event loop, or one /start starves every other request.
-            question = await asyncio.to_thread(
-                question_retriever.get_next_question,
+            # #151: awaited end to end (pgvector + embedding), so concurrent
+            # /start calls overlap instead of serializing on one bridge thread.
+            question = await question_retriever.get_next_question(
                 session,
                 client_excluded_ids=client_excluded_ids,
             )
@@ -137,7 +134,7 @@ async def start_quiz(
 
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
-            total_count = question_retriever.count(
+            total_count = await question_retriever.count(
                 filters={"review_status": "approved"}
             )
             client_seen_count = len(client_excluded_ids)
@@ -313,9 +310,7 @@ async def get_current_question(
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    question = await asyncio.to_thread(
-        question_retriever.get, session.current_question_id
-    )
+    question = await question_retriever.get(session.current_question_id)
     if not question:
         raise HTTPException(status_code=500, detail="Question not found")
 

@@ -35,8 +35,8 @@ def _flow(intents):
     input_parser.parse = AsyncMock(return_value=intents)
 
     retriever = MagicMock()
-    retriever.get = MagicMock(return_value=_question("q_current"))
-    retriever.get_next_question = MagicMock(return_value=_question("q_next"))
+    retriever.get = AsyncMock(return_value=_question("q_current"))
+    retriever.get_next_question = AsyncMock(return_value=_question("q_next"))
 
     flow = QuizFlowService(
         session_manager=MagicMock(),

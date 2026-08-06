@@ -5,9 +5,10 @@ from typing import List, Optional
 
 from quiz_shared.llm import factory as llm_factory
 
-# Module-level cached client to avoid creating a new instance per call.
+# Module-level cached clients to avoid creating a new instance per call.
 # Routed through the issue #53 gateway: text-embedding-3-small is OpenRouter-served.
 _openai_client = None
+_async_openai_client = None
 
 
 def _get_openai_client(api_key: Optional[str] = None):
@@ -21,6 +22,18 @@ def _get_openai_client(api_key: Optional[str] = None):
     if _openai_client is None:
         _openai_client = llm_factory.openai_client()
     return _openai_client
+
+
+def _get_async_openai_client(api_key: Optional[str] = None):
+    """Async twin of ``_get_openai_client`` (same gateway, same key rules)."""
+    global _async_openai_client
+    if api_key:
+        from openai import AsyncOpenAI
+
+        return AsyncOpenAI(api_key=api_key)
+    if _async_openai_client is None:
+        _async_openai_client = llm_factory.openai_client(async_=True)
+    return _async_openai_client
 
 
 def generate_embedding(
@@ -48,6 +61,24 @@ def generate_embedding(
     # embedding model, but keeps a single resolution path).
     resolved = model if api_key else llm_factory.resolve_model(model)
     response = client.embeddings.create(model=resolved, input=text)
+
+    return response.data[0].embedding
+
+
+async def generate_embedding_async(
+    text: str, model: str = "text-embedding-3-small", api_key: Optional[str] = None
+) -> List[float]:
+    """Awaitable twin of :func:`generate_embedding` (#151).
+
+    Same gateway, model resolution and result — the difference is that the HTTP
+    round trip *yields* instead of parking the calling thread. The serve path
+    embeds on every question lookup, so a blocking call there caps the whole
+    process at roughly one retrieval per embedding round trip; the synchronous
+    function stays for the synchronous callers (worker dedup, admin, scripts).
+    """
+    client = _get_async_openai_client(api_key)
+    resolved = model if api_key else llm_factory.resolve_model(model)
+    response = await client.embeddings.create(model=resolved, input=text)
 
     return response.data[0].embedding
 

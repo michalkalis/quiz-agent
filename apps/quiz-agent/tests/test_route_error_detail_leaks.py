@@ -13,7 +13,7 @@ inside the try block passes through instead of being swallowed into a 500
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
@@ -103,7 +103,7 @@ def _voice_submit_app(transcriber: _ExplodingTranscriber) -> FastAPI:
     """``/voice/submit`` wired to reach its try block: real route, stub collaborators."""
     app = _app()
     retriever = MagicMock()
-    retriever.get = MagicMock(
+    retriever.get = AsyncMock(
         return_value=Question(
             id=_QUESTION_ID,
             question="What is the capital of France?",

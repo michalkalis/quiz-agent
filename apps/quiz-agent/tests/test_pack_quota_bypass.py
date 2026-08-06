@@ -72,7 +72,7 @@ def _tracker() -> MagicMock:
 
 async def _start(manager: SessionManager, session_id: str, tracker: MagicMock):
     retriever = MagicMock()
-    retriever.get_next_question.return_value = _make_question()
+    retriever.get_next_question = AsyncMock(return_value=_make_question())
     return await start_quiz(
         request=_Req(),
         session_id=session_id,

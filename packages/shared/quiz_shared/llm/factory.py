@@ -288,10 +288,18 @@ def _chat_bedrock(model_id: str, **kwargs):
             "before selecting a Bedrock model — there is no silent fallback."
         )
 
+    import botocore.config
+
     region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION") or "us-east-1"
+    # botocore's 60s read default is too short for pack-generation batches
+    # (observed 2026-08-06: kimi-k2.5 Converse ReadTimeoutError killed order
+    # 7dbef479). Mirror GENERATION_TIMEOUT's bounds — still finite (#139: no
+    # unbounded hangs), just sized for long generation calls.
+    bedrock_config = botocore.config.Config(connect_timeout=10, read_timeout=300)
     return ChatBedrockConverse(
         model=_strip_bedrock_prefix(model_id),
         region_name=region,
+        config=bedrock_config,
         **kwargs,
     )
 

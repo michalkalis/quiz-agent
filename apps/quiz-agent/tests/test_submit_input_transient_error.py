@@ -28,6 +28,7 @@ from sqlalchemy.exc import TimeoutError as SATimeoutError
 
 from app.api import deps
 from app.api.routes import quiz as quiz_routes
+from app.auth.identity import AuthSubject
 from app.rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.session import QuizSession
@@ -61,6 +62,11 @@ def _app(process_answer_side_effect: Exception) -> FastAPI:
     quiz_flow = MagicMock()
     quiz_flow.process_answer = AsyncMock(side_effect=process_answer_side_effect)
     app.dependency_overrides[deps.get_quiz_flow] = lambda: quiz_flow
+
+    # #144: owner-gated route — stand in for the session owner's bearer.
+    app.dependency_overrides[deps.require_auth_or_grace] = lambda: AuthSubject(
+        subject_id="u_1", is_legacy=False, authenticated=True
+    )
 
     return app
 

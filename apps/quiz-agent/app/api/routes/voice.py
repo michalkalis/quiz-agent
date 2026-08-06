@@ -23,6 +23,8 @@ from ..deps import (
     flow_to_response,
     require_auth_or_grace,
 )
+from ..session_auth import require_session_ownership
+from ...auth.identity import AuthSubject
 from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
@@ -64,7 +66,7 @@ async def transcribe_and_submit(
         ),
     ),
     include_audio: bool = True,
-    _auth=Depends(require_auth_or_grace),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
     # The whole read→process→write is serialized per session: the flow mutates a
@@ -72,8 +74,9 @@ async def transcribe_and_submit(
     # submits would lose one another's advance (see SessionManager.session_lock).
     async with session_manager.session_lock(session_id):
         session = session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found or expired")
+        # #144: this route already carried the auth dependency but discarded the
+        # subject — "is this *a* valid user", never "is this *the* session's user".
+        require_session_ownership(session, subject, session_id=session_id)
 
         if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
             raise HTTPException(status_code=400, detail="Not waiting for input")
@@ -93,8 +96,8 @@ async def transcribe_and_submit(
             # lost submit carries the already-graded id, and priming Whisper with
             # the question the session has since advanced to would transcribe the
             # same audio differently — turning a free replay into a paid re-grade.
-            current_question = await asyncio.to_thread(
-                question_retriever.get, question_id or session.current_question_id
+            current_question = await question_retriever.get(
+                question_id or session.current_question_id
             )
             if not current_question:
                 raise HTTPException(
@@ -156,7 +159,7 @@ async def transcribe_and_submit(
                 and len(session.asked_question_ids) < session.max_questions
             ):
                 next_question_task = asyncio.create_task(
-                    asyncio.to_thread(question_retriever.get_next_question, session)
+                    question_retriever.get_next_question(session)
                 )
 
             next_question = None

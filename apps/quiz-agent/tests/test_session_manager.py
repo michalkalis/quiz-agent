@@ -174,8 +174,8 @@ class TestEvaluationQuestionId:
         input_parser.parse = AsyncMock(return_value=intents)
 
         retriever = MagicMock()
-        retriever.get = MagicMock(return_value=self._question(self.GRADED))
-        retriever.get_next_question = MagicMock(return_value=self._question(self.NEXT))
+        retriever.get = AsyncMock(return_value=self._question(self.GRADED))
+        retriever.get_next_question = AsyncMock(return_value=self._question(self.NEXT))
 
         evaluator = MagicMock()
         evaluator.evaluate = AsyncMock(return_value=("correct", 1.0))

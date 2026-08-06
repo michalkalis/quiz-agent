@@ -157,8 +157,10 @@ async def lifespan(app: FastAPI):
     async_pgvector = PgvectorQuestionStore(
         database_url=normalize_async_url(settings.database_url)
     )
-    retrieval_store = SyncPgvectorStore(async_pgvector)
-    question_store = retrieval_store
+    # #151: the serve path awaits the async store directly — one bridged,
+    # blocking call per retrieval capped the whole process at ~one lookup at a
+    # time. The sync facade stays for the admin/write callers that need it.
+    question_store = SyncPgvectorStore(async_pgvector)
     logger.info("Question store: PgvectorQuestionStore (canonical, read + write)")
 
     try:
@@ -181,7 +183,7 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing services...")
         session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(question_store=retrieval_store)
+        question_retriever = QuestionRetriever(question_store=async_pgvector)
         answer_evaluator = AnswerEvaluator()
         # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(

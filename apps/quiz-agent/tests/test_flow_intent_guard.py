@@ -53,8 +53,8 @@ def _make_flow(intents, current_question, usage_tracker):
     input_parser.parse = AsyncMock(return_value=intents)
 
     question_retriever = MagicMock()
-    question_retriever.get = MagicMock(return_value=current_question)
-    question_retriever.get_next_question = MagicMock(
+    question_retriever.get = AsyncMock(return_value=current_question)
+    question_retriever.get_next_question = AsyncMock(
         return_value=_make_question("q_next")
     )
 

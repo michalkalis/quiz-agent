@@ -65,8 +65,8 @@ def _make_flow(current_question: Question) -> QuizFlowService:
         return_value=[{"intent_type": "answer", "extracted_data": {"answer": "b"}}]
     )
     question_retriever = MagicMock()
-    question_retriever.get = MagicMock(return_value=current_question)
-    question_retriever.get_next_question = MagicMock(return_value=None)
+    question_retriever.get = AsyncMock(return_value=current_question)
+    question_retriever.get_next_question = AsyncMock(return_value=None)
 
     flow = QuizFlowService(
         session_manager=MagicMock(),

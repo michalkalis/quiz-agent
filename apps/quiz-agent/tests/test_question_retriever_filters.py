@@ -8,7 +8,9 @@ questions silently vanish from selection even though they're approved, so this
 test guards the launch-critical contract rather than the literal list.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from quiz_shared.models.session import QuizSession
 
@@ -83,18 +85,19 @@ def test_metadata_filter_admits_image_when_opted_in():
     assert "image" in filters["type"]["$in"]
 
 
-def test_fallback_retrieval_respects_image_opt_out():
+@pytest.mark.asyncio
+async def test_fallback_retrieval_respects_image_opt_out():
     # #68: the fallback paths query the store directly with their own type
     # lists — if they re-admit "image" for an opted-out session, the default-
     # off guarantee only holds until the primary search comes back empty.
     retriever = _retriever()
     store = retriever._store
-    store.search.return_value = []
+    store.search = AsyncMock(return_value=[])  # #151: awaited store
     session = QuizSession(
         session_id="sess_test", current_difficulty="medium", language="en"
     )
 
-    retriever._fallback_retrieval(
+    await retriever._fallback_retrieval(
         session,
         "medium",
         n_candidates=5,
@@ -219,7 +222,8 @@ def test_normal_session_never_serves_pack_questions():
     assert filters["pack_id"] is None
 
 
-def test_pack_session_fallback_never_hits_global_library():
+@pytest.mark.asyncio
+async def test_pack_session_fallback_never_hits_global_library():
     # #95: a pack is a closed set. If the primary search comes back empty (pack
     # exhausted), the fallback must NOT reach into the shared corpus — that would
     # leak global questions into a paid pack AND bypass quota on them. It returns
@@ -233,7 +237,7 @@ def test_pack_session_fallback_never_hits_global_library():
         pack_id="e5b8c1a2-0000-4000-8000-000000000abc",
     )
 
-    result = retriever._fallback_retrieval(
+    result = await retriever._fallback_retrieval(
         session,
         "medium",
         n_candidates=5,
@@ -245,7 +249,8 @@ def test_pack_session_fallback_never_hits_global_library():
     store.search.assert_not_called()
 
 
-def test_fallback_keeps_pack_guard_category_and_language_constraints():
+@pytest.mark.asyncio
+async def test_fallback_keeps_pack_guard_category_and_language_constraints():
     """Adversarial audit 2026-07-30: the fallbacks rebuilt their filters from
     scratch and dropped ``category`` and the ``pack_id IS NULL`` guard.
 
@@ -257,7 +262,7 @@ def test_fallback_keeps_pack_guard_category_and_language_constraints():
     """
     retriever = _retriever()
     store = retriever._store
-    store.search.return_value = []
+    store.search = AsyncMock(return_value=[])  # #151: awaited store
     session = QuizSession(
         session_id="sess_kids",
         current_difficulty="medium",
@@ -266,7 +271,7 @@ def test_fallback_keeps_pack_guard_category_and_language_constraints():
     )
     primary = retriever._build_metadata_filters("medium", session)
 
-    retriever._fallback_retrieval(
+    await retriever._fallback_retrieval(
         session, "medium", n_candidates=5, excluded_ids=[], filters=primary
     )
 

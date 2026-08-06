@@ -1,6 +1,5 @@
 """Quiz game flow endpoints: start, submit input, get question, rate."""
 
-import asyncio
 import logging
 import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,11 +20,14 @@ from ..deps import (
     get_quiz_flow,
     get_translation_service,
     get_tts_service,
+    require_auth_or_grace,
     session_to_response,
     question_to_dict,
     question_to_dict_translated,
     flow_to_response,
 )
+from ..session_auth import require_session_ownership
+from ...auth.identity import AuthSubject
 from ...serializers import (
     apply_question_translation,
     session_translation,
@@ -69,12 +71,14 @@ async def start_quiz(
     translation_service=Depends(get_translation_service),
     tts_service: TTSService = Depends(get_tts_service),
     audio: bool = False,
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Start the quiz and get first question."""
     try:
         session = session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found or expired")
+        # #144: the session id alone is not a credential — the bearer's subject
+        # must own this session (404, never 403; see require_session_ownership).
+        require_session_ownership(session, subject, session_id=session_id)
 
         if session.phase != SessionPhase.IDLE:
             raise HTTPException(status_code=400, detail="Quiz already started")
@@ -118,11 +122,9 @@ async def start_quiz(
             session.current_difficulty,
         )
         try:
-            # The retriever is sync and its store bridges to a background loop,
-            # blocking the calling thread on an OpenAI embedding HTTP call — off
-            # the event loop, or one /start starves every other request.
-            question = await asyncio.to_thread(
-                question_retriever.get_next_question,
+            # #151: awaited end to end (pgvector + embedding), so concurrent
+            # /start calls overlap instead of serializing on one bridge thread.
+            question = await question_retriever.get_next_question(
                 session,
                 client_excluded_ids=client_excluded_ids,
             )
@@ -132,7 +134,7 @@ async def start_quiz(
 
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
-            total_count = question_retriever.count(
+            total_count = await question_retriever.count(
                 filters={"review_status": "approved"}
             )
             client_seen_count = len(client_excluded_ids)
@@ -231,6 +233,7 @@ async def submit_input(
     session_manager: SessionManager = Depends(get_session_manager),
     quiz_flow: QuizFlowService = Depends(get_quiz_flow),
     audio: bool = False,
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Submit user input (AI-powered natural language parsing)."""
     # The whole read→process→write is serialized per session: the flow mutates a
@@ -238,8 +241,7 @@ async def submit_input(
     # submits would lose one another's advance (see SessionManager.session_lock).
     async with session_manager.session_lock(session_id):
         session = session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found or expired")
+        require_session_ownership(session, subject, session_id=session_id)  # #144
 
         if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
             raise HTTPException(status_code=400, detail="Not waiting for input")
@@ -299,18 +301,16 @@ async def get_current_question(
     session_manager: SessionManager = Depends(get_session_manager),
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
     translation_service=Depends(get_translation_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get current question without submitting input."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
-    question = await asyncio.to_thread(
-        question_retriever.get, session.current_question_id
-    )
+    question = await question_retriever.get(session.current_question_id)
     if not question:
         raise HTTPException(status_code=500, detail="Question not found")
 
@@ -345,11 +345,11 @@ async def rate_question(
     request: RateQuestionRequest,
     session_manager: SessionManager = Depends(get_session_manager),
     feedback_service: FeedbackService = Depends(get_feedback_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Rate the current or last question."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No question to rate")
@@ -385,11 +385,11 @@ async def flag_question(
     body: FlagQuestionRequest,
     session_manager: SessionManager = Depends(get_session_manager),
     feedback_service: FeedbackService = Depends(get_feedback_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Flag the current question as potentially incorrect."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No question to flag")

@@ -28,6 +28,7 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test")
 
 from app.api.deps import SubmitInputRequest  # noqa: E402
 from app.api.routes.quiz import submit_input  # noqa: E402
+from app.auth.identity import AuthSubject  # noqa: E402
 from app.input.parser import InputParser  # noqa: E402
 from app.quiz.flow import QuizFlowService  # noqa: E402
 from app.session.manager import SessionManager  # noqa: E402
@@ -98,8 +99,8 @@ async def test_overlapping_submits_are_serialized_per_session():
         return "correct", 1.0
 
     retriever = MagicMock()
-    retriever.get = MagicMock(side_effect=_question)
-    retriever.get_next_question = MagicMock(
+    retriever.get = AsyncMock(side_effect=_question)
+    retriever.get_next_question = AsyncMock(
         side_effect=[_question("q2"), _question("q3")]
     )
 
@@ -126,6 +127,10 @@ async def test_overlapping_submits_are_serialized_per_session():
                 body=SubmitInputRequest(input="Paris"),
                 session_manager=manager,
                 quiz_flow=flow,
+                # #144: both concurrent submits are the session owner's.
+                subject=AuthSubject(
+                    subject_id="u_race", is_legacy=False, authenticated=True
+                ),
             )
         )
 

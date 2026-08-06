@@ -21,7 +21,6 @@ functions take the ``QuizFlowService`` explicitly and reach back through it, so
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -185,9 +184,7 @@ async def process_resubmission(
             flow, session, previous, result, include_audio, "Re-grade limit reached"
         )
 
-    question = await asyncio.to_thread(
-        flow.question_retriever.get, previous.question_id
-    )
+    question = await flow.question_retriever.get(previous.question_id)
     if not question:
         raise ValueError("Re-submitted question not found")
 
@@ -272,9 +269,7 @@ async def _current_question_payload(
     """
     if not session.current_question_id:
         return None
-    question = await asyncio.to_thread(
-        flow.question_retriever.get, session.current_question_id
-    )
+    question = await flow.question_retriever.get(session.current_question_id)
     if not question:
         return None
     record = session_translation(session, question.id)

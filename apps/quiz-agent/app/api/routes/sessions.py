@@ -13,10 +13,12 @@ from ..deps import (
     get_auth_sessionmaker,
     get_session_manager,
     get_token_service,
+    require_auth_or_grace,
     session_to_response,
 )
 from quiz_shared.models.participant import Participant
-from ...auth.identity import resolve_session_subject
+from ..session_auth import require_session_ownership
+from ...auth.identity import AuthSubject, resolve_session_subject
 from ...auth.tokens import TokenService
 from ...session.manager import SessionManager
 from ...rate_limit import limiter
@@ -138,11 +140,11 @@ async def create_session(
 async def get_session(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get session state."""
     session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+    require_session_ownership(session, subject, session_id=session_id)  # #144
     return session_to_response(session)
 
 
@@ -150,11 +152,15 @@ async def get_session(
 async def delete_session(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Delete a session."""
-    success = session_manager.delete_session(session_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Session not found")
+    # #144: load and authorize BEFORE mutating — otherwise a stranger's DELETE
+    # destroys the session and only then learns it was not theirs.
+    require_session_ownership(
+        session_manager.get_session(session_id), subject, session_id=session_id
+    )
+    session_manager.delete_session(session_id)
 
 
 @router.post("/sessions/{session_id}/extend", response_model=SessionResponse)
@@ -162,8 +168,12 @@ async def extend_session(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
     minutes: int = 30,
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Extend session expiry time."""
+    require_session_ownership(
+        session_manager.get_session(session_id), subject, session_id=session_id
+    )  # #144
     success = session_manager.extend_session(session_id, minutes)
     if not success:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -180,8 +190,17 @@ async def add_participant(
     session_id: str,
     request: AddParticipantRequest,
     session_manager: SessionManager = Depends(get_session_manager),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
-    """Add participant to multiplayer session."""
+    """Add participant to multiplayer session.
+
+    Owner-only for now (#144, founder decision 2026-08-06): the roster is managed
+    by whoever created the session. A participant-scoped predicate belongs in
+    ``require_session_ownership``, not in a conditional here.
+    """
+    require_session_ownership(
+        session_manager.get_session(session_id), subject, session_id=session_id
+    )
     participant = session_manager.add_participant(
         session_id=session_id,
         display_name=request.display_name,
@@ -200,8 +219,12 @@ async def remove_participant(
     session_id: str,
     participant_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
-    """Remove participant from session."""
+    """Remove participant from session (owner-only, see ``add_participant``)."""
+    require_session_ownership(
+        session_manager.get_session(session_id), subject, session_id=session_id
+    )  # #144
     success = session_manager.remove_participant(session_id, participant_id)
     if not success:
         raise HTTPException(status_code=404, detail="Session or participant not found")

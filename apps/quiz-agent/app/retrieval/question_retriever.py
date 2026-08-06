@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.database.question_store import QuestionStore
-from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
-from quiz_shared.utils.embeddings import generate_embedding, calculate_similarity
+from quiz_shared.utils.embeddings import generate_embedding_async, calculate_similarity
 
 from ..config import get_settings
 
@@ -26,19 +24,23 @@ from ..config import get_settings
 class QuestionRetriever:
     """Retrieves questions using proper RAG with semantic search."""
 
-    def __init__(self, question_store: Optional[QuestionStore] = None):
+    def __init__(self, question_store: Optional[PgvectorQuestionStore] = None):
         """Initialize question retriever.
 
         Args:
-            question_store: QuestionStore for read access. If omitted,
-                defaults to a `PgvectorQuestionStore` constructed from
-                `DATABASE_URL` (the canonical voice-quiz read path since
+            question_store: **async** question store for read access. If
+                omitted, defaults to a `PgvectorQuestionStore` constructed
+                from `DATABASE_URL` (the canonical voice-quiz read path since
                 #36 task 2.20 — ChromaDB is documented read-only).
+
+        #151: this seam is async end to end. It used to hold a
+        `SyncPgvectorStore`, whose single background loop serialized every
+        retrieval in the process behind one blocking embedding round trip.
         """
         self._store = question_store or self._build_default_store()
 
     @staticmethod
-    def _build_default_store() -> QuestionStore:
+    def _build_default_store() -> PgvectorQuestionStore:
         settings = get_settings()
         if not settings.database_url:
             raise RuntimeError(
@@ -46,23 +48,22 @@ class QuestionRetriever:
                 "explicit question_store=... or set DATABASE_URL so the "
                 "PgvectorQuestionStore can connect."
             )
-        async_store = PgvectorQuestionStore(database_url=settings.database_url)
-        return SyncPgvectorStore(async_store)
+        return PgvectorQuestionStore(database_url=settings.database_url)
 
-    def get(self, question_id: str) -> Optional[Question]:
+    async def get(self, question_id: str) -> Optional[Question]:
         """Look up a single question by ID.
 
         Application-layer callers must go through the retriever rather than
         reaching into the underlying store, so this seam stays the single
         place to add caching, telemetry, or fallbacks later.
         """
-        return self._store.get(question_id)
+        return await self._store.get(question_id)
 
-    def count(self, filters: Optional[dict] = None) -> int:
+    async def count(self, filters: Optional[dict] = None) -> int:
         """Count questions, optionally filtered by metadata."""
-        return self._store.count(filters=filters)
+        return await self._store.count(filters=filters)
 
-    def get_next_question(
+    async def get_next_question(
         self,
         session: QuizSession,
         n_candidates: int = 50,  # Fetch more for better semantic selection
@@ -107,7 +108,7 @@ class QuestionRetriever:
         )
 
         # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
-        candidates = self._retrieve_candidates_semantic(
+        candidates = await self._retrieve_candidates_semantic(
             semantic_query=semantic_query,
             filters=filters,
             n_candidates=n_candidates,
@@ -121,17 +122,17 @@ class QuestionRetriever:
             logger.debug(
                 "No candidates from semantic search, trying fallback strategies"
             )
-            candidates = self._fallback_retrieval(
+            candidates = await self._fallback_retrieval(
                 session, question_difficulty, n_candidates, all_excluded_ids, filters
             )
             # Filter out expired questions from fallback results too
             candidates = [c for c in candidates if not c.is_expired()]
 
         if not candidates:
-            return self._handle_no_candidates(session, question_difficulty)
+            return await self._handle_no_candidates(session, question_difficulty)
 
         # Step 5: Select best question using semantic diversity scoring
-        selected = self._select_with_semantic_diversity(candidates, session)
+        selected = await self._select_with_semantic_diversity(candidates, session)
 
         return selected
 
@@ -259,7 +260,7 @@ class QuestionRetriever:
 
         return filters
 
-    def _retrieve_candidates_semantic(
+    async def _retrieve_candidates_semantic(
         self,
         semantic_query: str,
         filters: dict,
@@ -278,7 +279,7 @@ class QuestionRetriever:
             List of candidate questions
         """
         # ALWAYS use semantic search (RAG-first approach)
-        candidates = self._store.search(
+        candidates = await self._store.search(
             query_text=semantic_query,  # Always provide semantic query
             filters=filters,
             n_results=n_candidates,
@@ -288,7 +289,7 @@ class QuestionRetriever:
         logger.debug("Retrieved %d candidates via semantic search", len(candidates))
         return candidates
 
-    def _fallback_retrieval(
+    async def _fallback_retrieval(
         self,
         session: QuizSession,
         question_difficulty: str,
@@ -325,7 +326,7 @@ class QuestionRetriever:
         # Fallback 1: Simpler semantic query, same constraints
         logger.debug("Fallback 1 - Simpler semantic query")
         simple_query = "quiz question"
-        candidates = self._store.search(
+        candidates = await self._store.search(
             query_text=simple_query,
             filters=dict(filters),
             n_results=n_candidates,
@@ -341,7 +342,7 @@ class QuestionRetriever:
             difficulty_fallback.remove(question_difficulty)
 
         for fallback_difficulty in difficulty_fallback:
-            candidates = self._store.search(
+            candidates = await self._store.search(
                 query_text=simple_query,
                 filters={**filters, "difficulty": fallback_difficulty},
                 n_results=n_candidates,
@@ -357,7 +358,7 @@ class QuestionRetriever:
 
         # Fallback 3: Drop the difficulty constraint, keep everything else
         logger.debug("Fallback 3 - Minimal constraints")
-        candidates = self._store.search(
+        candidates = await self._store.search(
             query_text="question",
             filters={k: v for k, v in filters.items() if k != "difficulty"},
             n_results=n_candidates,
@@ -366,7 +367,7 @@ class QuestionRetriever:
 
         return candidates
 
-    def _handle_no_candidates(
+    async def _handle_no_candidates(
         self, session: QuizSession, question_difficulty: str
     ) -> None:
         """Handle case when no candidates found.
@@ -378,7 +379,7 @@ class QuestionRetriever:
         Returns:
             None
         """
-        total_count = self._store.count()
+        total_count = await self._store.count()
         if total_count == 0:
             logger.error("Database is empty. No questions found.")
         else:
@@ -390,7 +391,7 @@ class QuestionRetriever:
             )
         return None
 
-    def _apply_image_cap(
+    async def _apply_image_cap(
         self,
         candidates: List[Question],
         session: QuizSession,
@@ -407,7 +408,7 @@ class QuestionRetriever:
         image_cap = min(3, max_questions // 4)
 
         # Count image questions already asked
-        recent_questions = self._get_recent_questions(
+        recent_questions = await self._get_recent_questions(
             session, limit=len(session.asked_question_ids)
         )
         image_count = sum(1 for q in recent_questions if q.type == "image")
@@ -420,7 +421,7 @@ class QuestionRetriever:
 
         return candidates
 
-    def _select_with_semantic_diversity(
+    async def _select_with_semantic_diversity(
         self, candidates: List[Question], session: QuizSession
     ) -> Question:
         """Select question using semantic diversity scoring.
@@ -439,14 +440,14 @@ class QuestionRetriever:
             return None
 
         # Apply image question cap
-        candidates = self._apply_image_cap(candidates, session)
+        candidates = await self._apply_image_cap(candidates, session)
 
         # If no questions asked yet, just pick randomly
         if not session.asked_question_ids:
             return random.choice(candidates)
 
         # Get recently asked questions for diversity comparison
-        recent_questions = self._get_recent_questions(session, limit=3)
+        recent_questions = await self._get_recent_questions(session, limit=3)
 
         if not recent_questions:
             # If can't retrieve recent questions, fall back to topic-based diversity
@@ -455,7 +456,7 @@ class QuestionRetriever:
         # Score each candidate by semantic diversity
         scored_candidates = []
         for candidate in candidates:
-            diversity_score = self._calculate_semantic_diversity(
+            diversity_score = await self._calculate_semantic_diversity(
                 candidate, recent_questions
             )
             scored_candidates.append((candidate, diversity_score))
@@ -470,7 +471,7 @@ class QuestionRetriever:
         logger.debug("Selected question with diversity score %.3f", score)
         return selected
 
-    def _get_recent_questions(
+    async def _get_recent_questions(
         self, session: QuizSession, limit: int = 3
     ) -> List[Question]:
         """Get recently asked questions from session.
@@ -491,13 +492,13 @@ class QuestionRetriever:
         # Retrieve question objects
         recent_questions = []
         for qid in recent_ids:
-            question = self.get(qid)
+            question = await self.get(qid)
             if question:
                 recent_questions.append(question)
 
         return recent_questions
 
-    def _calculate_semantic_diversity(
+    async def _calculate_semantic_diversity(
         self, candidate: Question, recent_questions: List[Question]
     ) -> float:
         """Calculate semantic diversity score for a candidate.
@@ -515,7 +516,7 @@ class QuestionRetriever:
         if candidate.embedding is not None:
             candidate_embedding = candidate.embedding
         else:
-            candidate_embedding = generate_embedding(candidate.question)
+            candidate_embedding = await generate_embedding_async(candidate.question)
 
         # Calculate average distance from recent questions
         distances = []
@@ -524,7 +525,7 @@ class QuestionRetriever:
             if recent_q.embedding is not None:
                 recent_embedding = recent_q.embedding
             else:
-                recent_embedding = generate_embedding(recent_q.question)
+                recent_embedding = await generate_embedding_async(recent_q.question)
 
             similarity = calculate_similarity(candidate_embedding, recent_embedding)
             # Distance = 1 - similarity (higher distance = more diverse)
@@ -563,7 +564,7 @@ class QuestionRetriever:
         # Randomly select from diverse candidates
         return random.choice(diverse_candidates)
 
-    def search_questions(
+    async def search_questions(
         self,
         query: Optional[str] = None,
         difficulty: Optional[str] = None,
@@ -595,4 +596,6 @@ class QuestionRetriever:
         if not query:
             query = "quiz question"
 
-        return self._store.search(query_text=query, filters=filters, n_results=limit)
+        return await self._store.search(
+            query_text=query, filters=filters, n_results=limit
+        )

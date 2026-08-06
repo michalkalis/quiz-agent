@@ -193,7 +193,7 @@ async def test_retry_of_a_graded_submission_replays_it_and_charges_nothing():
     replay = await _submit(flow, manager, "Paris", question_id=_Q1)
 
     assert replay.evaluation == first.evaluation
-    assert replay.evaluation["question_id"] == _Q1
+    assert replay.evaluation.question_id == _Q1
     assert replay.feedback_received == first.feedback_received
     # The question the client should be showing comes back unchanged.
     assert replay.next_question_dict["id"] == _Q2
@@ -216,7 +216,7 @@ async def test_a_skip_is_recorded_and_replayed_as_a_skip():
     flow = _flow(manager)
 
     first = await _submit(flow, manager, "skip", question_id=_Q1)
-    assert first.evaluation["result"] == "skipped"
+    assert first.evaluation.result == "skipped"
     assert manager.stored.last_evaluation.question_id == _Q1
     assert manager.stored.last_evaluation.answered_count_delta == 0
 
@@ -244,9 +244,9 @@ async def test_edited_transcript_is_regraded_against_the_question_it_answers():
 
     regrade = await _submit(flow, manager, "Lyon", question_id=_Q1)
 
-    assert regrade.evaluation["question_id"] == _Q1
-    assert regrade.evaluation["result"] == "incorrect"
-    assert regrade.evaluation["user_answer"] == "Lyon"
+    assert regrade.evaluation.question_id == _Q1
+    assert regrade.evaluation.result == "incorrect"
+    assert regrade.evaluation.user_answer == "Lyon"
     # Still on the question the first submit advanced to — no double advance.
     assert manager.stored.current_question_id == _Q2
     assert manager.stored.asked_question_ids == [_Q1, _Q2]
@@ -328,7 +328,7 @@ async def test_regrades_past_the_cap_replay_instead_of_paying_to_evaluate_again(
         await _submit(flow, manager, text, question_id=_Q1)
 
     assert manager.stored.last_evaluation.regrade_count == REGRADE_CAP
-    stored_verdict = dict(manager.stored.last_evaluation.evaluation)
+    stored_verdict = manager.stored.last_evaluation.evaluation.model_copy(deep=True)
     evaluator_calls = flow.answer_evaluator.evaluate.await_count
     writes = len(manager.writes)
 
@@ -340,7 +340,7 @@ async def test_regrades_past_the_cap_replay_instead_of_paying_to_evaluate_again(
 
     # A complete, valid answer — the last verdict, replayed.
     assert capped.evaluation == stored_verdict
-    assert capped.evaluation["user_answer"] == "Brest"
+    assert capped.evaluation.user_answer == "Brest"
     # Nothing was paid for and nothing moved.
     assert flow.answer_evaluator.evaluate.await_count == evaluator_calls
     assert len(manager.writes) == writes
@@ -367,7 +367,7 @@ async def test_a_replay_never_counts_against_the_re_grade_cap():
         replay = await _submit(flow, manager, "Paris", question_id=_Q1)
 
     assert replay.message == "Answer already processed"
-    assert replay.evaluation["result"] == "correct"
+    assert replay.evaluation.result == "correct"
     assert manager.stored.last_evaluation.regrade_count == 0
     assert flow.answer_evaluator.evaluate.await_count == 1
 
@@ -426,8 +426,8 @@ async def test_submit_without_question_id_grades_the_current_question_as_before(
     first = await _submit(flow, manager, "Paris")
     second = await _submit(flow, manager, "Paris")
 
-    assert first.evaluation["question_id"] == _Q1
-    assert second.evaluation["question_id"] == _Q2  # graded the advanced question
+    assert first.evaluation.question_id == _Q1
+    assert second.evaluation.question_id == _Q2  # graded the advanced question
     assert flow.usage_tracker.record_question.await_count == 2
 
 

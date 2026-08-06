@@ -24,10 +24,14 @@ from ..usage.tracker import UsageTracker
 
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
+from quiz_shared.models.submit import AudioInfo, Evaluation
 from quiz_shared.models.phase import SessionPhase
 
+from .errors import (  # noqa: F401 — re-exported: routes and tests import from here
+    QuestionMismatch,
+    QuestionUnavailable,
+)
 from .resubmission import (
-    QuestionMismatch,  # noqa: F401 — re-exported: routes and tests import it from here
     IntentOutcome,
     classify_submission,
     evaluation_record,
@@ -85,10 +89,10 @@ def _log_prefetch_outcome(task: "asyncio.Task") -> None:
 class FlowResult:
     """Result of processing a quiz answer through the flow."""
 
-    evaluation: Optional[Dict[str, Any]] = None
+    evaluation: Optional[Evaluation] = None
     feedback_received: List[str] = field(default_factory=list)
     next_question_dict: Optional[Dict[str, Any]] = None
-    audio_info: Optional[Dict[str, Any]] = None
+    audio_info: Optional[AudioInfo] = None
     quiz_finished: bool = False
     message: str = "Input processed"
     usage_limit_error: Optional[Dict[str, Any]] = None
@@ -170,7 +174,7 @@ class QuizFlowService:
         # other players' retrievals instead of queueing on one bridge thread.
         current_question = await self.question_retriever.get(evaluated_question_id)
         if not current_question:
-            raise ValueError("Current question not found")
+            raise QuestionUnavailable(evaluated_question_id, stage="current")
 
         translation = session_translation(session, evaluated_question_id)
         outcome = await self._apply_intents(
@@ -237,7 +241,9 @@ class QuizFlowService:
                     "questions_limit": usage["questions_limit"],
                     "resets_at": usage["resets_at"],
                     "upgrade_available": True,
-                    "evaluation": result.evaluation,
+                    # Dumped to the wire shape: this rides inside an
+                    # HTTPException detail, which is JSON-encoded as-is.
+                    "evaluation": result.evaluation.model_dump(),
                 }
                 return result
 
@@ -282,11 +288,10 @@ class QuizFlowService:
         # Add question audio URL
         if include_audio:
             if not result.audio_info:
-                result.audio_info = {}
-            result.audio_info["question_url"] = (
+                result.audio_info = AudioInfo()
+            result.audio_info.question_url = (
                 f"/api/v1/sessions/{session.session_id}/question/audio"
             )
-            result.audio_info["format"] = "opus"
 
             # Warm TTS cache so iOS gets a cache hit when it requests this URL.
             # iOS plays feedback + result screen + auto-advance (~3-5s) before requesting,
@@ -365,19 +370,15 @@ class QuizFlowService:
                     question, translation, session
                 )
 
-                result.evaluation = {
-                    "user_answer": user_answer,
-                    "result": eval_result,
-                    "points": score_delta,
-                    "correct_answer": translated_correct,
-                    "question_id": evaluated_question_id,
-                }
-                if display_question.headline_answer:
-                    result.evaluation["headline_answer"] = (
-                        display_question.headline_answer
-                    )
-                if display_question.explanation:
-                    result.evaluation["explanation"] = display_question.explanation
+                result.evaluation = Evaluation(
+                    user_answer=user_answer,
+                    result=eval_result,
+                    points=score_delta,
+                    correct_answer=translated_correct,
+                    question_id=evaluated_question_id,
+                    headline_answer=display_question.headline_answer,
+                    explanation=display_question.explanation,
+                )
 
                 # Generate enhanced feedback audio
                 if include_audio and self.tts_service:
@@ -395,19 +396,15 @@ class QuizFlowService:
                 translated_correct = await self._correct_answer_display(
                     question, translation, session
                 )
-                result.evaluation = {
-                    "user_answer": "skipped",
-                    "result": "skipped",
-                    "points": 0.0,
-                    "correct_answer": translated_correct,
-                    "question_id": evaluated_question_id,
-                }
-                if display_question.headline_answer:
-                    result.evaluation["headline_answer"] = (
-                        display_question.headline_answer
-                    )
-                if display_question.explanation:
-                    result.evaluation["explanation"] = display_question.explanation
+                result.evaluation = Evaluation(
+                    user_answer="skipped",
+                    result="skipped",
+                    points=0.0,
+                    correct_answer=translated_correct,
+                    question_id=evaluated_question_id,
+                    headline_answer=display_question.headline_answer,
+                    explanation=display_question.explanation,
+                )
                 result.feedback_received.append("skipped question")
 
             elif intent_type == "rating":
@@ -448,22 +445,21 @@ class QuizFlowService:
     def _build_audio_info(
         self,
         session_id: str,
-        evaluation: Dict[str, Any],
+        evaluation: Evaluation,
         enhanced_feedback_audio: Optional[bytes],
-    ) -> Dict[str, Any]:
-        """Build audio info dict for the response."""
-        result_type = evaluation.get("result", "")
+    ) -> AudioInfo:
+        """Build the audio block for the response."""
         if enhanced_feedback_audio:
-            return {
-                "feedback_audio_base64": base64.b64encode(
+            return AudioInfo(
+                feedback_audio_base64=base64.b64encode(
                     enhanced_feedback_audio
                 ).decode(),
-                "format": "opus",
-            }
-        return {
-            "feedback_url": f"/api/v1/sessions/{session_id}/feedback/{result_type}/audio",
-            "format": "opus",
-        }
+            )
+        return AudioInfo(
+            feedback_url=(
+                f"/api/v1/sessions/{session_id}/feedback/{evaluation.result}/audio"
+            ),
+        )
 
     async def _generate_feedback_audio(
         self, result: str, correct_answer: str, language: str

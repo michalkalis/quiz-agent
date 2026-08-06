@@ -271,8 +271,8 @@ def test_answer_result_carries_the_translated_explanation_and_answer():
 
     result = asyncio.run(flow.process_answer(session=session, answer_text="Paríž"))
 
-    assert result.evaluation["explanation"] == EXPLANATION_SK
-    assert result.evaluation["correct_answer"] == "Paríž"
+    assert result.evaluation.explanation == EXPLANATION_SK
+    assert result.evaluation.correct_answer == "Paríž"
     # The evaluator scored the question as the player saw it.
     scored = flow.answer_evaluator.evaluate.await_args.kwargs["question"]
     assert scored.possible_answers == MCQ_OPTIONS_SK
@@ -288,9 +288,9 @@ def test_skip_result_carries_the_translated_explanation_and_answer():
 
     result = asyncio.run(flow.process_answer(session=session, answer_text="skip"))
 
-    assert result.evaluation["result"] == "skipped"
-    assert result.evaluation["explanation"] == EXPLANATION_SK
-    assert result.evaluation["correct_answer"] == "Paríž"
+    assert result.evaluation.result == "skipped"
+    assert result.evaluation.explanation == EXPLANATION_SK
+    assert result.evaluation.correct_answer == "Paríž"
 
 
 def test_english_session_result_is_untouched():
@@ -305,8 +305,8 @@ def test_english_session_result_is_untouched():
 
     result = asyncio.run(flow.process_answer(session=session, answer_text="Paris"))
 
-    assert result.evaluation["explanation"] == EXPLANATION
-    assert result.evaluation["correct_answer"] == "Paris"
+    assert result.evaluation.explanation == EXPLANATION
+    assert result.evaluation.correct_answer == "Paris"
     flow.translation_service.translate_question_payload.assert_not_awaited()
 
 

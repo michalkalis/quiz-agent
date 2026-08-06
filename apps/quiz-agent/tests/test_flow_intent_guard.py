@@ -123,6 +123,6 @@ async def test_answer_intent_still_advances():
     result = await flow.process_answer(session=session, answer_text="Paris")
 
     assert result.evaluation is not None
-    assert result.evaluation["result"] == "correct"
+    assert result.evaluation.result == "correct"
     assert session.current_question_id == "q_next"
     usage_tracker.record_question.assert_awaited_once()

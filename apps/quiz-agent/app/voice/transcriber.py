@@ -9,6 +9,8 @@ from dataclasses import dataclass
 
 from quiz_shared.llm import factory as llm_factory
 
+from ..quiz.errors import InvalidSubmission
+
 logger = logging.getLogger(__name__)
 
 
@@ -152,7 +154,8 @@ class VoiceTranscriber:
             TranscriptionResult with text, language, and confidence metrics
 
         Raises:
-            ValueError: If file format not supported or file too large
+            InvalidSubmission: If file format not supported or file too large
+                (#148 — a typed client fault the submit routes map to a 400)
 
         Example:
             >>> transcriber = VoiceTranscriber()
@@ -166,7 +169,7 @@ class VoiceTranscriber:
         # Validate file format
         file_ext = self._get_file_extension(filename)
         if file_ext not in self.SUPPORTED_FORMATS:
-            raise ValueError(
+            raise InvalidSubmission(
                 f"Unsupported audio format: {file_ext}. "
                 f"Supported: {', '.join(self.SUPPORTED_FORMATS)}"
             )
@@ -177,7 +180,7 @@ class VoiceTranscriber:
         audio_file.seek(0)  # Reset to beginning
 
         if file_size > self.MAX_FILE_SIZE:
-            raise ValueError(
+            raise InvalidSubmission(
                 f"File too large: {file_size / 1024 / 1024:.1f} MB. "
                 f"Maximum: {self.MAX_FILE_SIZE / 1024 / 1024} MB"
             )

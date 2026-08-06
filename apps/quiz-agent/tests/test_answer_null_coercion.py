@@ -110,10 +110,10 @@ async def test_an_answer_intent_with_no_answer_is_projected_as_empty_string(
     result = await flow.process_answer(session=_session(), answer_text="mmm")
 
     assert result.evaluation is not None
-    assert result.evaluation["user_answer"] == ""
+    assert result.evaluation.user_answer == ""
     # The real evaluator's empty-answer contract: not scored as a wrong answer.
-    assert result.evaluation["result"] == "skipped"
-    assert result.evaluation["points"] == 0.0
+    assert result.evaluation.result == "skipped"
+    assert result.evaluation.points == 0.0
 
 
 def _parser_replying(content: str):

@@ -39,6 +39,10 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     private let listResults: [Result<[OrderSnapshot], PackFailure>]
     private let getCallIndex = OSAllocatedUnfairLock(initialState: 0)
     private let retryResult: Result<OrderCreatedResponse, PackFailure>
+    /// Typed failure for `retryOrder`, thrown ahead of `retryResult` — lets a
+    /// test inject the exact `PackOrderError` the real service maps a status to
+    /// (e.g. `.retryRefused` for the 422 retry-budget refusal, #146).
+    private let retryFailure: PackOrderError?
     /// Artificial latency on `createOrder`, in seconds. Default 0 (instant).
     /// A test that needs to observe the `.submitting` window — where the sheet
     /// blocks dismissal because the purchase call is in flight — has to hold
@@ -72,8 +76,10 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         getResults: [Result<OrderSnapshot, PackFailure>] = [],
         retryResult: Result<OrderCreatedResponse, PackFailure> = .success(.mockCreated),
         createDelaySeconds: Double = 0,
-        listResults: [Result<[OrderSnapshot], PackFailure>] = []
+        listResults: [Result<[OrderSnapshot], PackFailure>] = [],
+        retryFailure: PackOrderError? = nil
     ) {
+        self.retryFailure = retryFailure
         self.createDelaySeconds = createDelaySeconds
         self.createResult = createResult
         self.getResult = getResult
@@ -102,6 +108,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
         retryCalls.withLock { $0 += 1 }
         retryProofs.withLock { $0.append(paymentProof) }
+        if let retryFailure { throw retryFailure }
         return try retryResult.get()
     }
 
@@ -190,6 +197,23 @@ extension OrderSnapshot {
             error: nil,
             updatedAt: "2026-07-13T09:55:00Z"
         )
+    )
+
+    /// Terminal, paid back, and NOT retryable — the retry endpoint 409s it.
+    static let mockRefunded = OrderSnapshot(
+        orderId: "88888888-8888-8888-8888-888888888888",
+        status: "refunded",
+        productId: "pack_30",
+        targetCount: 30,
+        language: "en",
+        category: nil,
+        theme: nil,
+        createdAt: "2026-08-06T09:00:00Z",
+        deliveredAt: nil,
+        packId: nil,
+        llmCostUsd: nil,
+        searchCostCents: 0,
+        job: nil
     )
 
     static let mockFailed = OrderSnapshot(

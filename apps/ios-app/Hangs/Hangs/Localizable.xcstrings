@@ -1124,6 +1124,28 @@
         }
       }
     },
+    "Couldn't restart the pack" : {
+      "comment" : "Alert title shown when Try again on a failed custom-pack order in My packs did not go through",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balík sa nepodarilo spustiť znova"
+          }
+        }
+      }
+    },
+    "Couldn't restart this pack. Please try again." : {
+      "comment" : "Shown when retrying a failed custom-pack order from My packs did not reach the server",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento balík sa nepodarilo spustiť znova. Skús to znova."
+          }
+        }
+      }
+    },
     "Couldn't start the quiz" : {
       "comment" : "Error title: quiz failed to start (no specific error)",
       "localizations" : {
@@ -2810,7 +2832,7 @@
       }
     },
     "Pack generation failed. Please try again." : {
-      "comment" : "Shown when a custom-pack order ends in a failed/refunded state",
+      "comment" : "Shown when a custom-pack order ends in the failed state and can be retried",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -4557,6 +4579,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Čas na rozmyslenie"
+          }
+        }
+      }
+    },
+    "This order was refunded." : {
+      "comment" : "Shown when a custom-pack order ended refunded — there is nothing left to retry",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto objednávka bola vrátená."
           }
         }
       }

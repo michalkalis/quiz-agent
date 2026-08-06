@@ -25,6 +25,16 @@ final class AppState: ObservableObject {
     /// StoreKit purchase of the custom-pack product (issue #140).
     let packPurchaseService: PackPurchaseServiceProtocol
 
+    /// The custom-pack order flow's view model (#146). Owned HERE, not in
+    /// `SettingsView`'s `@State`: Settings is a pushed route that quiz-start
+    /// teardown empties (`NavigationModel.clearAll`), so a view-scoped owner
+    /// takes a live, PAID order down with it the moment the user starts a quiz.
+    /// Lazy — it costs nothing until the user opens the pack flow.
+    private(set) lazy var orderPackViewModel = OrderPackViewModel(
+        service: packOrderService,
+        purchaseService: packPurchaseService
+    )
+
     /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
     /// owner is ContentView's `@StateObject`). HangsApp routes scene-phase
     /// changes through it so the mic input is torn down in the background.

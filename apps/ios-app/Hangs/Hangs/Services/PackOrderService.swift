@@ -32,10 +32,14 @@ protocol PackOrderServiceProtocol: Sendable {
     /// `failed`. This is how "Try again" resumes an order that was already PAID
     /// for: it re-runs the existing order instead of creating (and charging) a
     /// second one. The backend rejects it unless the order is `failed`, and caps
-    /// manual retries at 3. Authorised exactly like `createOrder`: the order's
-    /// own StoreKit proof (`X-StoreKit-JWS`) in the user path, the admin key in
-    /// Debug builds. With neither, it fails rather than sending an
-    /// unauthenticated retry.
+    /// manual retries at 3.
+    ///
+    /// Authorisation (#146, founder Option B): the account bearer alone is
+    /// enough — the backend accepts a JWT whose subject matches `order.user_id`.
+    /// `paymentProof` is therefore OPTIONAL: the order flow still passes the JWS
+    /// it holds in memory, and My packs — which only ever has the order id —
+    /// passes nil. That is what makes a failed order recoverable after the app
+    /// (or the Settings screen) has been torn down and the proof is gone.
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse
 }
 
@@ -168,18 +172,13 @@ actor PackOrderService: PackOrderServiceProtocol {
     }
 
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
-        // The backend accepts a JWS whose transaction_id matches the order, or
-        // an admin key. Neither available (a Release build with no proof) means
-        // the request could only ever 401 — fail here instead of sending an
-        // unauthenticated retry and mislabelling the result.
-        guard paymentProof != nil || Self.adminRetryPossible(adminKey()) else {
-            throw PackOrderError.unauthorized
-        }
-
+        // #146 Option B: no client-side authorisation precondition any more. The
+        // bearer `send` attaches is sufficient on its own, so a proofless retry
+        // (My packs, or any order whose in-memory JWS died with the view) is a
+        // legitimate request rather than a guaranteed 401.
         let url = baseURL.appendingPathComponent("/v1/orders/\(id)/retry")
-        // Mirrors createOrder's authorisation: the order's own StoreKit proof in
-        // the user path, the Debug-only admin key otherwise, plus the bearer
-        // that `send` attaches.
+        // Extra credentials when we still hold them: the order's own StoreKit
+        // proof, or the Debug-only admin key.
         var request = makeRequest(url: url, method: "POST", includeAdminKey: paymentProof == nil)
         if let paymentProof {
             request.setValue(paymentProof.jws, forHTTPHeaderField: "X-StoreKit-JWS")
@@ -194,6 +193,13 @@ actor PackOrderService: PackOrderServiceProtocol {
         guard http.statusCode != 401 else {
             throw PackOrderError.unauthorized
         }
+        // 422 = the backend refuses to spend more on this order (manual-retry
+        // cap of 3, or the spend ceiling). Distinct from a transient `.server`
+        // failure because it is FINAL: offering "Try again" again would be a
+        // lie, and any retry credentials held for the order can be dropped.
+        guard http.statusCode != 422 else {
+            throw PackOrderError.retryRefused(Self.errorMessage(from: data))
+        }
         // 202 is the documented success; 200 accepted for symmetry with create.
         guard http.statusCode == 200 || http.statusCode == 202 else {
             throw PackOrderError.server(Self.errorMessage(from: data))
@@ -202,17 +208,6 @@ actor PackOrderService: PackOrderServiceProtocol {
     }
 
     // MARK: - Helpers
-
-    /// Whether a stored admin key could authorise a proofless request. Always
-    /// false in Release: `makeRequest` compiles the header out there, so a key
-    /// in the Keychain authorises nothing.
-    private nonisolated static func adminRetryPossible(_ key: String?) -> Bool {
-        #if DEBUG
-            return key != nil
-        #else
-            return false
-        #endif
-    }
 
     /// Build a request with the admin key (optional) attached. The admin key is the
     /// internal Debug-only door (#140) — the attachment is compiled out of Release,
@@ -275,6 +270,10 @@ enum PackOrderError: LocalizedError {
     /// flow tells the user to sign in again instead of showing the API's opaque
     /// "returned an error" fallback (#133 V16).
     case unauthorized
+    /// A 422 from `POST /v1/orders/{id}/retry` — the manual-retry budget or the
+    /// spend ceiling refuses to run this order again (#146). Terminal: another
+    /// "Try again" would get the same answer.
+    case retryRefused(String)
     case server(String)
 
     var errorDescription: String? {
@@ -283,6 +282,9 @@ enum PackOrderError: LocalizedError {
             return String(localized: "Invalid response from the pack service", comment: "Pack-order error: malformed server response")
         case .unauthorized:
             return String(localized: "Your session expired. Please sign in again to continue.", comment: "Pack-order error: the request was still unauthorized after a token refresh")
+        case let .retryRefused(message):
+            // Server-provided message — already human-readable, do not wrap.
+            return message
         case let .server(message):
             // Server-provided message — already human-readable, do not wrap.
             return message

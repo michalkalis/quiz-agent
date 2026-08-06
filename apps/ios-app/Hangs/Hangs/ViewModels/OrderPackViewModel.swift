@@ -353,16 +353,40 @@ final class OrderPackViewModel: ObservableObject {
     }
 
     /// Re-enqueue an order that already exists (and was already paid for)
-    /// server-side. Authorised by the proof that created it — never a second
-    /// purchase.
+    /// server-side — never a second purchase. Sends the proof that created it
+    /// when we still hold it; since #146 the account bearer authorises the call
+    /// on its own, so a proofless retry is valid too.
     private func retryExistingOrder(orderId: String) async {
         do {
             _ = try await service.retryOrder(id: orderId, paymentProof: orderPaymentProof)
+        } catch let error as PackOrderError {
+            if case let .retryRefused(message) = error {
+                // The retry budget / spend ceiling is spent: this order can
+                // never run again, so offering "Try again" would be a lie and
+                // the credentials held for it are dead weight (#146).
+                clearRetainedOrderCredentials()
+                state = .failed(message, retryable: false)
+            } else {
+                state = .failed(Self.message(for: error), retryable: true)
+            }
+            return
         } catch {
             state = .failed(Self.message(for: error), retryable: true)
             return
         }
         await poll(orderId: orderId)
+    }
+
+    /// Drop everything the view model holds for an order that can never run
+    /// again — delivered, refunded, or out of retry budget. Now that the model
+    /// lives for the whole app session (#146 — it moved off `SettingsView`'s
+    /// `@State`), a settled order's StoreKit proof would otherwise linger in
+    /// memory indefinitely. A `failed` order is deliberately NOT cleared here:
+    /// its id is exactly what "Try again" re-enqueues.
+    private func clearRetainedOrderCredentials() {
+        orderId = nil
+        orderPaymentProof = nil
+        pendingIntent = nil
     }
 
     /// How this order gets paid: Debug builds with a stored admin key skip
@@ -412,12 +436,26 @@ final class OrderPackViewModel: ObservableObject {
             }
 
             if snapshot.isDelivered {
+                // Delivered is the end of the line for this order — nothing can
+                // be retried, so the proof it was created with goes now (#146).
+                clearRetainedOrderCredentials()
                 state = .delivered(snapshot)
                 return
             }
             if snapshot.isFailure {
-                // A real terminal failure status — surface immediately, never retry.
-                state = .failed(String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in a failed/refunded state"), retryable: true)
+                // A real terminal failure status — surface immediately, never retry
+                // the poll. `failed` is the one the backend re-enqueues, so it keeps
+                // its order id AND the proof that created it. `refunded` can never
+                // run again (retry 409s it), so it drops both and offers no "Try
+                // again" — with no order id, one would resubmit and charge a second
+                // time (#138's double-charge door).
+                if !snapshot.isRetryable { clearRetainedOrderCredentials() }
+                state = .failed(
+                    snapshot.isRetryable
+                        ? String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in the failed state and can be retried")
+                        : String(localized: "This order was refunded.", comment: "Shown when a custom-pack order ended refunded — there is nothing left to retry"),
+                    retryable: snapshot.isRetryable
+                )
                 return
             }
             state = .polling(snapshot)

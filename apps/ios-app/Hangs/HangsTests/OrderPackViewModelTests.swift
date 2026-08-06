@@ -605,6 +605,95 @@ struct OrderPackViewModelTests {
         #expect(service.capturedRetryProofs == [MockPackPurchaseService.mockProof])
     }
 
+    // MARK: - Retained credentials lifecycle (#146)
+
+    //
+    // WHY: the view model now lives for the whole app session (it moved off
+    // SettingsView's `@State` so a live order survives a quiz start). Anything
+    // it keeps for a settled order therefore lingers indefinitely instead of
+    // dying with the screen — so a StoreKit proof must be dropped the moment
+    // the order can never run again.
+
+    @Test("a delivered order drops the proof and the order id it was holding")
+    func deliveredOrderClearsRetainedCredentials() async {
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0
+
+        await vm.submit()
+
+        guard case .delivered = vm.state else {
+            Issue.record("expected .delivered, got \(vm.state)"); return
+        }
+        #expect(vm.orderPaymentProof == nil, "a delivered order can never be retried — its proof is dead weight")
+        #expect(vm.orderId == nil)
+    }
+
+    // WHY: a `failed` order is the ONE case that must keep what it holds — the
+    // order id is the retry target and the proof still authorises it.
+    @Test("a failed order keeps its order id and proof — that is what Try again re-enqueues")
+    func failedOrderKeepsRetainedCredentials() async {
+        let service = MockPackOrderService(getResult: .success(.mockFailed))
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0
+
+        await vm.submit()
+
+        guard case .failed(_, retryable: true) = vm.state else {
+            Issue.record("expected a retryable .failed, got \(vm.state)"); return
+        }
+        #expect(vm.orderId != nil)
+        #expect(vm.orderPaymentProof != nil)
+    }
+
+    // WHY: the retry endpoint 409s a refunded order, so "Try again" there is a
+    // lie — and with nothing retained, a retry would fall through to a second
+    // paid create (the #138 double-charge door).
+    @Test("a refunded order offers no retry and keeps nothing")
+    func refundedOrderIsTerminalAndCleared() async {
+        let service = MockPackOrderService(getResult: .success(.mockRefunded))
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0
+
+        await vm.submit()
+
+        guard case .failed(_, retryable: false) = vm.state else {
+            Issue.record("expected a non-retryable .failed, got \(vm.state)"); return
+        }
+        #expect(vm.orderId == nil)
+        #expect(vm.orderPaymentProof == nil)
+
+        await vm.retry()
+        #expect(service.createOrderCallCount == 1, "a refunded order must never fall through to a second paid create")
+        #expect(service.retryOrderCallCount == 0)
+    }
+
+    // WHY: once the backend refuses to spend more on the order (422 — manual
+    // retry cap or spend ceiling) the failure is FINAL. Keeping "Try again"
+    // alive would just re-refuse, and the proof would linger for the session.
+    @Test("a 422 retry refusal ends the order — no further retry offered, nothing retained")
+    func retryBudgetRefusalIsTerminal() async {
+        let service = MockPackOrderService(
+            getResults: [.success(.mockFailed)],
+            retryFailure: .retryRefused("manual retry budget exhausted")
+        )
+        let purchase = MockPackPurchaseService()
+        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
+        vm.pollIntervalSeconds = 0
+
+        await vm.submit()
+        await vm.retry()
+
+        guard case let .failed(message, retryable: false) = vm.state else {
+            Issue.record("expected a non-retryable .failed, got \(vm.state)"); return
+        }
+        #expect(message == "manual retry budget exhausted", "the backend's reason must reach the user")
+        #expect(vm.orderId == nil)
+        #expect(vm.orderPaymentProof == nil)
+    }
+
     // WHY: if the create call itself never landed there is no order to retry —
     // resubmitting the same intent replays the SAME idempotency key, so a
     // create that did land server-side is replayed rather than duplicated.

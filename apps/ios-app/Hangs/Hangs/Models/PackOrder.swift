@@ -154,6 +154,12 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         status == "failed" || status == "refunded"
     }
 
+    /// The one failure the user can act on: `failed` is what
+    /// `POST /v1/orders/{id}/retry` accepts (it 409s anything else), so it is
+    /// also the only row that may offer "Try again" (#146). `refunded` is money
+    /// already returned — nothing left to re-run.
+    var isRetryable: Bool { status == "failed" }
+
     /// Localized user-facing label for the wire status (issue #137) — the raw
     /// wire value must never be rendered. An unknown future status falls back
     /// to the raw value rather than hiding or crashing the row.

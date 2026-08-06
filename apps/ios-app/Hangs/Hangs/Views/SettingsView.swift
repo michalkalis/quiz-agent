@@ -51,12 +51,9 @@ struct SettingsView: View {
     // is the Debug-only internal door.
     @State private var adminKeyInput: String = ""
 
-    // #138: the order flow's view model is owned HERE, not by the sheet, so it
-    // survives the sheet being closed and reopened — closing "Preparing" must
-    // not cancel a paid order, and reopening must land back on live progress
-    // instead of an empty form. Built on first use because the service comes
-    // from the environment, which an initializer can't read.
-    @State private var orderPackViewModel: OrderPackViewModel?
+    // #138/#146: the order flow's view model is owned by AppState, not by this
+    // view — closing "Preparing" must not cancel a paid order, and neither must
+    // starting a quiz, which empties the pushed path this screen lives on.
 
     // #80: pinned-bar title fades in once the in-content hero scrolls away.
     @State private var isHeroCollapsed = false
@@ -172,26 +169,20 @@ struct SettingsView: View {
             FeedbackView(viewModel: presentation.viewModel)
         }
         .sheet(isPresented: $navModel.orderFlowPresented) {
-            if let orderPackViewModel {
-                OrderPackFlowView(
-                    viewModel: orderPackViewModel,
-                    onPlayPack: { packId in viewModel.beginQuizStart(packId: packId) },
-                    onClose: { navModel.orderFlowPresented = false }
-                )
-            }
+            OrderPackFlowView(
+                viewModel: appState.orderPackViewModel,
+                onPlayPack: { packId in viewModel.beginQuizStart(packId: packId) },
+                onClose: { navModel.orderFlowPresented = false }
+            )
         }
     }
 
-    /// Open the create-pack modal (#138). Building the view model lazily keeps
-    /// it alive across close/reopen; `prepareForPresentation` decides whether
-    /// this is a fresh form or the still-running order from last time.
+    /// Open the create-pack modal (#138). The view model lives on AppState
+    /// (#146), so it is the same object across close/reopen AND across a quiz
+    /// start; `prepareForPresentation` decides whether this is a fresh form or
+    /// the still-running order from last time.
     private func presentCreatePack() {
-        let model = orderPackViewModel ?? OrderPackViewModel(
-            service: appState.packOrderService,
-            purchaseService: appState.packPurchaseService
-        )
-        orderPackViewModel = model
-        model.prepareForPresentation(defaultLanguage: viewModel.settings.language)
+        appState.orderPackViewModel.prepareForPresentation(defaultLanguage: viewModel.settings.language)
         navModel.orderFlowPresented = true
     }
 

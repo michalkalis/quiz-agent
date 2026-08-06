@@ -473,4 +473,60 @@ struct PackOrderServiceTests {
         }
         #expect(await auth.refreshCallCount() == 0, "a 500 is not a credential problem — refreshing would hide it")
     }
+
+    // MARK: 6. Proofless retry (#146 Option B)
+
+    //
+    // WHY: the StoreKit proof a paid order was created with dies with the view
+    // that held it (a quiz start, a relaunch). If the client refuses to send a
+    // retry without one, a failed PAID order is permanently unrecoverable in
+    // app — the whole of #146. Option B moved authorisation onto the account
+    // bearer, so the request must go out carrying exactly that and nothing else.
+
+    @Test("a retry with no payment proof still reaches the backend, authorised by the account bearer alone")
+    func proofSlessRetryUsesBearer() async throws {
+        let auth = PackOrderStubAuthService(initialToken: "live", refreshedToken: "live")
+        // No admin key on purpose — this is the Release-shaped user path, which
+        // before #146 refused to send the request at all.
+        let service = makeService(authService: auth, adminKey: nil)
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+
+        PackOrderStubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        let created = try await service.retryOrder(id: Stubs.orderId, paymentProof: nil)
+
+        #expect(created.orderId == Stubs.orderId)
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.httpMethod == "POST")
+        #expect(request.url?.path == "/v1/orders/\(Stubs.orderId)/retry")
+        #expect(capturedBearer(request) == "Bearer live", "the bearer IS the authorisation now")
+        #expect(request.value(forHTTPHeaderField: "X-StoreKit-JWS") == nil)
+    }
+
+    @Test("a 422 retry refusal (budget spent) is its own error, not a generic server blip")
+    func retryBudgetRefusalIsTyped() async throws {
+        let service = makeService()
+
+        PackOrderStubURLProtocol.handler = { _ in
+            (.make(status: 422), Data(#"{"detail": "manual retry budget exhausted"}"#.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.retryOrder(id: Stubs.orderId, paymentProof: nil)
+            Issue.record("expected PackOrderError.retryRefused")
+        } catch let error as PackOrderError {
+            // Typed separately because it is FINAL: the caller has to stop
+            // offering "Try again" and drop what it held for the order,
+            // which a generic `.server` blip must never trigger.
+            guard case let .retryRefused(message) = error else {
+                Issue.record("expected .retryRefused, got \(error)"); return
+            }
+            #expect(message == "manual retry budget exhausted")
+        }
+    }
 }

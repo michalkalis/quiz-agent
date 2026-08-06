@@ -3,7 +3,9 @@
 //  Hangs
 //
 //  Lists the account's custom-pack orders (issue #95), newest-first. A delivered
-//  row offers "Start quiz" to play that pack. Listing requires an account bearer;
+//  row offers "Start quiz" to play that pack; a failed row offers "Try again"
+//  (#146), which is the only recovery path once the order flow's own retry has
+//  been torn down. Listing requires an account bearer;
 //  without one the pack-api returns 401 and we show a graceful sign-in empty
 //  state instead of crashing. List state + keep-fresh refresh live in
 //  MyPacksViewModel (issue #137).
@@ -17,7 +19,14 @@ struct MyPacksView: View {
     let onPlayPack: (String) -> Void
 
     init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void) {
-        _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
+        self.init(viewModel: MyPacksViewModel(service: service), onPlayPack: onPlayPack)
+    }
+
+    /// Adopt an already-built list model. Used by previews and by the row
+    /// structure tests, which need the list in a known loaded state rather than
+    /// racing the `.task` that fetches it.
+    init(viewModel: MyPacksViewModel, onPlayPack: @escaping (String) -> Void) {
+        _viewModel = StateObject(wrappedValue: viewModel)
         self.onPlayPack = onPlayPack
     }
 
@@ -45,6 +54,18 @@ struct MyPacksView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.start() }
         .refreshable { await viewModel.refresh() }
+        .alert(
+            "Couldn't restart the pack",
+            isPresented: Binding(
+                get: { viewModel.retryErrorMessage != nil },
+                set: { if !$0 { viewModel.retryErrorMessage = nil } }
+            ),
+            presenting: viewModel.retryErrorMessage
+        ) { _ in
+            Button("OK", role: .cancel) { viewModel.retryErrorMessage = nil }
+        } message: { message in
+            Text(message)
+        }
     }
 
     // MARK: - Rows
@@ -69,6 +90,18 @@ struct MyPacksView: View {
                         onPlayPack(packId)
                     }
                     .accessibilityIdentifier("myPacks.startQuiz")
+                } else if order.isRetryable {
+                    // #146: the ONLY in-app way back for a paid order that failed
+                    // server-side. The order flow's own "Try again" is gone the
+                    // moment the user starts a quiz or relaunches, so without this
+                    // row the money is spent and the pack is unrecoverable.
+                    // pending/in_progress rows get nothing (the backend 409s a
+                    // retry there); refunded gets nothing (nothing left to run).
+                    HangsSecondaryButton(title: "Try again", icon: "arrow.clockwise", height: 48) {
+                        Task { await viewModel.retry(orderId: order.orderId) }
+                    }
+                    .accessibilityIdentifier("myPacks.retry")
+                    .disabled(viewModel.retryingOrderIds.contains(order.orderId))
                 }
             }
         }

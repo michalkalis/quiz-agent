@@ -71,15 +71,19 @@ final class AudioDeviceState: ObservableObject {
     let setAudioMode: @MainActor (String) -> Void
     let setPreferredInputDeviceId: @MainActor (String?) -> Void
     let setMuted: @MainActor (Bool) -> Void
-    let isAppForeground: @MainActor () -> Bool
     let isAskingQuestion: @MainActor () -> Bool
     let isRerecording: @MainActor () -> Bool
     let isPlayingQuestionTTS: @MainActor () -> Bool
-    /// ANY app TTS — question OR feedback. The question-only reader above still
-    /// drives barge-in / replay re-entrancy; this one is the mic's self-trigger
-    /// guard, re-checked after `startListening()` suspends (see
-    /// `startSilenceDetectionListening`).
-    let isPlayingAnyTTS: @MainActor () -> Bool
+    /// #149: the ONE capture predicate — may the engine / input tap be live at
+    /// all (foreground, no TTS, no recording, quiz not torn down, and the
+    /// Settings master switch on)? Injected as a closure, so this child gains
+    /// no dependency on VoiceCommandCoordinator, which owns the policy.
+    let mayCaptureAudio: @MainActor () -> Bool
+    /// #149: whether the command WINDOW is open on top of capture — the only
+    /// thing that decides if the command consumer is armed. Deliberately
+    /// separate from `mayCaptureAudio` so the screen map can never take the
+    /// microphone (or barge-in) with it.
+    let isCommandWindowOpen: @MainActor () -> Bool
     let setPlayingQuestionTTS: @MainActor (Bool) -> Void
     /// Feedback-TTS twin of the flag above — closes the command window while the
     /// result feedback plays so the recognizer can't hear it (#119).
@@ -105,11 +109,11 @@ final class AudioDeviceState: ObservableObject {
         setAudioMode: @escaping @MainActor (String) -> Void,
         setPreferredInputDeviceId: @escaping @MainActor (String?) -> Void,
         setMuted: @escaping @MainActor (Bool) -> Void,
-        isAppForeground: @escaping @MainActor () -> Bool,
         isAskingQuestion: @escaping @MainActor () -> Bool,
         isRerecording: @escaping @MainActor () -> Bool,
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
-        isPlayingAnyTTS: @escaping @MainActor () -> Bool,
+        mayCaptureAudio: @escaping @MainActor () -> Bool,
+        isCommandWindowOpen: @escaping @MainActor () -> Bool,
         setPlayingQuestionTTS: @escaping @MainActor (Bool) -> Void,
         setPlayingFeedbackTTS: @escaping @MainActor (Bool) -> Void,
         currentQuestionAudioUrl: @escaping @MainActor () -> String?,
@@ -129,11 +133,11 @@ final class AudioDeviceState: ObservableObject {
         self.setAudioMode = setAudioMode
         self.setPreferredInputDeviceId = setPreferredInputDeviceId
         self.setMuted = setMuted
-        self.isAppForeground = isAppForeground
         self.isAskingQuestion = isAskingQuestion
         self.isRerecording = isRerecording
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
-        self.isPlayingAnyTTS = isPlayingAnyTTS
+        self.mayCaptureAudio = mayCaptureAudio
+        self.isCommandWindowOpen = isCommandWindowOpen
         self.setPlayingQuestionTTS = setPlayingQuestionTTS
         self.setPlayingFeedbackTTS = setPlayingFeedbackTTS
         self.currentQuestionAudioUrl = currentQuestionAudioUrl
@@ -157,14 +161,23 @@ final class AudioDeviceState: ObservableObject {
 
     /// Start listening for silence events and barge-in during question playback.
     /// Safe to call multiple times (the service itself no-ops if already listening).
+    ///
+    /// #149: this is the SINGLE place that decides whether the mic may be
+    /// armed. Every caller — the playback tails, the mute path, the no-audio
+    /// quiz start, and the window-aware sync path — funnels through here and
+    /// carries no conditions of its own; before this, four of the five tails
+    /// re-armed the input tap without ever asking, so the Settings "Voice
+    /// commands" toggle behaved as a routing filter instead of a capture
+    /// switch and a tail resuming after the quiz ended started the engine on a
+    /// deactivated session.
     func startSilenceDetectionListening() async {
         let service = silenceDetectionService
 
-        // Backgrounded → never arm the input tap. This is the choke point for
-        // every direct caller (e.g. the post-TTS tail of playQuestionAudio,
-        // which fires after background TTS finishes); `.active` re-arms via
-        // syncCommandListenerWindow (mic-in-background fix).
-        guard isAppForeground() else { return }
+        // The one capture gate. Covers backgrounded (the post-TTS tail fires
+        // after background TTS finishes; `.active` re-arms via
+        // syncCommandListenerWindow), TTS, recording, a torn-down quiz, and the
+        // master switch.
+        guard mayCaptureAudio() else { return }
 
         await service.startListening()
 
@@ -186,7 +199,9 @@ final class AudioDeviceState: ObservableObject {
         // Without this guard the mic goes live under the app's own TTS (#119 root
         // cause #3 — "you said proud answer proud") and the AVAudioEngine +
         // AVPlayer pair the crash notes above warn about run concurrently (#64).
-        guard isAppForeground(), !isPlayingAnyTTS() else {
+        // Re-evaluates the SAME predicate — a teardown that lands inside the
+        // suspension must lose to it, whatever made capture illegal.
+        guard mayCaptureAudio() else {
             stopSilenceDetectionListening()
             return
         }
@@ -204,8 +219,12 @@ final class AudioDeviceState: ObservableObject {
         }
         taskBag.add(task, key: .bargeIn)
 
-        // #77 (77.5): the SAME shared engine/transcriber now also feeds the
-        // English command listener — arm its consumer whenever we listen.
+        // #77 (77.5): the SAME shared engine/transcriber also feeds the English
+        // command listener — but the consumer is armed only when the command
+        // WINDOW is open (#149). Capture without a window is a legitimate
+        // state: barge-in above still runs, the matcher just has no screen to
+        // scope to.
+        guard isCommandWindowOpen() else { return }
         startCommandConsumer()
     }
 

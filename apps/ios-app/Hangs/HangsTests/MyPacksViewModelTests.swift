@@ -174,6 +174,49 @@ struct MyPacksViewModelTests {
         await vm.refresh() // the user's pull — must re-fetch regardless of terminal states
         #expect(vm.orders.count == 2)
     }
+
+    // MARK: Try again (#146)
+
+    // WHY: this is the recovery path for an order the user already PAID for.
+    // It must re-enqueue THAT order (never a second create) and it must send no
+    // StoreKit proof — My packs has none, which is exactly the situation the
+    // old proof-bound retry made unrecoverable.
+    @Test("Try again re-enqueues the paid order with no payment proof, and the row returns to in progress")
+    func retryReenqueuesWithoutProof() async {
+        let service = MockPackOrderService(listResults: [
+            .success([order(status: "failed")]),
+            .success([order(status: "in_progress")]),
+        ])
+        let vm = MyPacksViewModel(service: service)
+        await vm.refresh()
+        #expect(vm.orders.first?.status == "failed")
+
+        await vm.retry(orderId: "order-failed")
+
+        #expect(service.retryOrderCallCount == 1)
+        #expect(service.createOrderCallCount == 0, "a retry must never mint a second paid order")
+        #expect(service.capturedRetryProofs == [nil], "no proof is held — the account bearer authorises it")
+        #expect(vm.orders.first?.status == "in_progress", "the row must leave the failed state after a 202")
+        #expect(vm.retryErrorMessage == nil)
+        #expect(vm.retryingOrderIds.isEmpty, "the in-flight marker must not leak past the call")
+    }
+
+    // WHY: a refused retry that looks like a no-op leaves the user tapping a
+    // dead button on a pack they paid for — the reason has to be visible.
+    @Test("a refused retry surfaces the backend's reason instead of failing silently")
+    func refusedRetrySurfacesReason() async {
+        let service = MockPackOrderService(
+            listResult: .success([order(status: "failed")]),
+            retryFailure: .retryRefused("manual retry budget exhausted")
+        )
+        let vm = MyPacksViewModel(service: service)
+        await vm.refresh()
+
+        await vm.retry(orderId: "order-failed")
+
+        #expect(vm.retryErrorMessage == "manual retry budget exhausted")
+        #expect(vm.orders.first?.status == "failed", "a refused retry must not fake progress")
+    }
 }
 
 // MARK: - Loading layout

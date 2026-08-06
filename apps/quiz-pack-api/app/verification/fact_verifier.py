@@ -119,30 +119,32 @@ class FactVerifier:
         client. Under the OpenRouter gateway one key serves Gemini; in direct
         mode an explicit/ambient ``GOOGLE_API_KEY`` still marks it configured.
         """
+        from app import feature_flags
+
+        if llm_factory.is_bedrock_model(
+            feature_flags.verify_model() or llm_factory.VERIFY
+        ):
+            return True
         return (
             bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
         )
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            from app import feature_flags
+            if self._client is None:
+                from app import feature_flags
 
-            response = await self._client.chat.completions.create(
                 # #135 D9 (2026-08-03): evidence arbitration runs on the
                 # cheaper factory VERIFY role (founder carve-out from the
                 # frontier-only policy); VERIFY_MODEL env switches it back.
-                model=llm_factory.resolve_model(
+                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
+                # defaults to the generation timeout.
+                self._client = llm_factory.chat_model(
                     feature_flags.verify_model() or llm_factory.VERIFY
-                ),
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.choices[0].message.content
+                )
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response)
         except Exception:
             return None
 

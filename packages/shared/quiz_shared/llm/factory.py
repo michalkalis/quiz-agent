@@ -59,18 +59,26 @@ BEDROCK_PREFIX = "bedrock:"
 DEFAULT_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 GENERATION_TIMEOUT = httpx.Timeout(300.0, connect=10.0)
 
+
+def _role(env_name: str, default: str) -> str:
+    """Role model id, overridable via env (founder, 2026-08-06: switching any
+    pipeline stage between OpenRouter and Bedrock must be a config change, not
+    a code change). Read at import — Fly sets env before process start."""
+    return (os.getenv(env_name) or "").strip() or default
+
+
 # Logical role -> canonical (direct-provider) model id. Frontier-only for the
 # generation pipeline (founder policy 2026-07-30, generation-review fix run);
 # verified against the live OpenRouter catalog the same day.
-GEN = "claude-fable-5"
-CRITIQUE = "gpt-5.6-sol"
+GEN = _role("LLM_ROLE_GEN", "claude-fable-5")
+CRITIQUE = _role("LLM_ROLE_CRITIQUE", "gpt-5.6-sol")
 # EVAL is the serve-time answer grader (voice hot path, per-answer cost model)
 # — deliberately NOT part of the 2026-07-30 frontier refresh; revisit
 # separately with the founder.
 EVAL = "gpt-4o-mini"
 PARSE = "gpt-5.6-sol"
 TRANSLATE = "claude-opus-5"
-NORMALIZE = "gemini-3.1-pro-preview"
+NORMALIZE = _role("LLM_ROLE_NORMALIZE", "gemini-3.1-pro-preview")
 # #135 D9 (founder carve-out, 2026-08-03): evidence arbitration reads Tavily
 # snippets against a claim — frontier-class comprehension at ~7% of the
 # gemini-3.1-pro price. Family-disjoint from every blind-test generation
@@ -329,3 +337,19 @@ def chat_openai(model: str, **kwargs):
 
 # Explicit alias for new call sites; ``chat_openai`` remains for existing ones.
 chat_model = chat_openai
+
+
+def message_text(message) -> str:
+    """Text content of a LangChain chat response.
+
+    ``ChatBedrockConverse`` may return ``content`` as a list of blocks rather
+    than a plain string; flatten to the concatenated text parts so call sites
+    stay provider-agnostic.
+    """
+    content = message.content
+    if isinstance(content, str):
+        return content
+    return "".join(
+        block.get("text", "") if isinstance(block, dict) else str(block)
+        for block in content
+    )

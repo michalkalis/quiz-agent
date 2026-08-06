@@ -78,27 +78,29 @@ class LogicalConsistencyVerifier:
 
     def _available(self) -> bool:
         """Whether the LLM judge is reachable (see FactVerifier._available)."""
+        from app import feature_flags
+
+        if llm_factory.is_bedrock_model(
+            feature_flags.verify_model() or llm_factory.VERIFY
+        ):
+            return True
         return bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            from app import feature_flags
+            if self._client is None:
+                from app import feature_flags
 
-            response = await self._client.chat.completions.create(
                 # #135 D9 (2026-08-03): same cheaper VERIFY role + env
                 # override as FactVerifier — the two arbiters move together.
-                model=llm_factory.resolve_model(
+                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
+                # defaults to the generation timeout.
+                self._client = llm_factory.chat_model(
                     feature_flags.verify_model() or llm_factory.VERIFY
-                ),
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.choices[0].message.content
+                )
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response)
         except Exception:
             return None
 

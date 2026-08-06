@@ -85,23 +85,21 @@ class AnswerNormalizer:
 
     def _available(self) -> bool:
         """Whether the LLM judge is reachable (see FactVerifier._available)."""
+        if llm_factory.is_bedrock_model(llm_factory.NORMALIZE):
+            return True
         return bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            response = await self._client.chat.completions.create(
+            if self._client is None:
                 # 2026-07-30 frontier refresh: the normalizer shapes stored
                 # answers — factory NORMALIZE role, no flash-class model.
-                model=llm_factory.resolve_model(llm_factory.NORMALIZE),
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.choices[0].message.content
+                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
+                # defaults to the generation timeout.
+                self._client = llm_factory.chat_model(llm_factory.NORMALIZE)
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response)
         except Exception:
             return None
 

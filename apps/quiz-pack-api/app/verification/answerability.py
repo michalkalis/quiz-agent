@@ -111,16 +111,13 @@ class AnswerabilityChecker:
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
-        if self._client is None:
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model(self._model),
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.choices[0].message.content
+            if self._client is None:
+                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
+                # defaults to the generation timeout.
+                self._client = llm_factory.chat_model(self._model)
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response)
         except Exception:  # noqa: BLE001 — checker call boundary (fail-safe)
             return None
 

@@ -99,23 +99,21 @@ class ExpiryClassifier:
 
     def _available(self) -> bool:
         """Whether the LLM is reachable under the active gateway."""
+        if llm_factory.is_bedrock_model(_CLASSIFIER_MODEL):
+            return True
         if llm_factory.gateway() == llm_factory.OPENROUTER:
             return bool(os.getenv("OPENROUTER_API_KEY"))
         return bool(self.api_key)
 
     async def _complete(self, prompt: str) -> Optional[str]:
         """Single LLM boundary: raw model text, or ``None`` on any failure."""
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model(_CLASSIFIER_MODEL),
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.choices[0].message.content
+            if self._client is None:
+                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
+                # defaults to the generation timeout.
+                self._client = llm_factory.chat_model(_CLASSIFIER_MODEL)
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response)
         except Exception:
             return None
 

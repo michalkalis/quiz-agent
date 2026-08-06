@@ -193,6 +193,11 @@ The 2026-08-06 architectural audit produced a tail of findings that are individu
 - Impact: a paid pack purchase can end with no credits, the webhook acknowledged, and only a warning-level breadcrumb. No reconciliation job, no ledger row to repair from. Acceptable while the founder is the only user; a support ticket with no audit trail once that changes.
 - Fix: land the deferred migration (partial unique on `COALESCE(store_txn_id, rc_event_id)` where `kind='grant'`), then let the grant insert instead of returning early.
 
+**api-1 — three pre-existing Codable↔Pydantic drifts** · found by `/verify-api` during #148 (2026-08-06) · *verified by that run*
+- `Evaluation.swift` declares `questionId` optional though the backend always sends `question_id` (harmless looseness — tighten to non-optional).
+- `Question.swift` declares six fields the `PublicQuestion` wire shape never carries (`language`, `packId`, `promptSeed`, `embeddingModel`, `embeddingDim`, `costCents`) — always nil; dead weight, delete or serve.
+- `OrderSnapshotResponse.actual_count` / `.refund_eligible` (quiz-pack-api `orders.py`) are silently dropped by `PackOrder.swift` — `refund_eligible` is user-relevant post-#145/#147 (refund-eligible failed orders now actually occur); surface it.
+
 ## Proposed approach
 
 Work the sub-sections in order (A → G) as independent commits; nothing here has a cross-cutting dependency, so a partial pass is a valid stopping point.

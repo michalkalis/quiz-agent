@@ -37,7 +37,7 @@ Conceptual, one shared mechanism rather than per-route ad-hoc checks:
 2. **Add the auth dependency to every `/sessions/{session_id}/…` route** in `quiz.py` and `sessions.py`, binding the subject to a named parameter (not a discarded `_auth`), and route it through the helper right after the session is loaded.
 3. **Fix the voice route to use the same helper** instead of discarding its subject — one code path, no second-class twin.
 4. **Decide the grace and no-identity behaviour explicitly.** `require_auth_or_grace` can return an unauthenticated legacy subject while `LEGACY_USER_ID_GRACE` is on; prod has it off. Fail closed (deny when the subject cannot be verified), and keep the decision in one place inside the helper rather than duplicating conditionals per route.
-5. **Multiplayer participants** — decide before implementing whether the participant routes are owner-only (simplest, matches today's single-device use) or need a participant-scoped rule. Owner-only is the recommended default; anything broader needs a product call.
+5. **Multiplayer participants** — founder decision (2026-08-06, in-session): **owner-only for now**; multiplayer is far-future but the architecture should accommodate it. Keep the ownership rule in the single shared helper so a participant-scoped predicate can be added there later without touching routes.
 6. **No client change.** iOS already attaches `Authorization: Bearer` on its generic request path (`apps/ios-app/Hangs/Hangs/Services/NetworkService.swift:97/109`), so this ships and deploys server-side alone.
 
 ## Done criteria

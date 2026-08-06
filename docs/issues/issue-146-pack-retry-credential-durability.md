@@ -58,7 +58,7 @@ One design call decides the shape; both options are small and self-contained. De
 
 Whichever is chosen, `MyPacksView` must stop being a read-only screen for failed orders — that is the user-visible half of the fix in both options, and the `@State` ownership in `SettingsView` should still move to `AppState` so a live order survives a quiz start.
 
-**Founder decision needed (in-session, per Rule #13):** A or B. This is a monetisation-path behaviour change, so it is not an agent default.
+**Founder decision (2026-08-06, in-session): Option B.** `retry_order` accepts a bearer JWT whose subject matches `order.user_id` (in addition to the existing JWS/admin paths); the client persists no proof. `MyPacksView` gains the retry action; `OrderPackViewModel` ownership still moves to `AppState`.
 
 ## Done criteria
 

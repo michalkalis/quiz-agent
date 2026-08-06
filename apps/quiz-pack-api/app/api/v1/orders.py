@@ -17,6 +17,12 @@ for, generated (LLM cost spent), and then permanently unplayable/unlistable.
 Requires the admin key or a bearer JWT matching the order's `user_id` — the
 Phase-1 unauthenticated read is closed (#95).
 
+`POST /v1/orders/{order_id}/retry` accepts the same bearer identity as the
+read above, in addition to the StoreKit JWS and the admin key (#146 Option B):
+a consumable's proof cannot be re-read once finished, so proof-only
+authorisation made a paid order unrecoverable as soon as the view holding it
+went away.
+
 Ops note: prod machines auto-suspend; the first order after idle waits for the
 worker machine to wake, so early progress can sit at 0% for tens of seconds —
 accepted for the founder-only phase (#95 Session 1).
@@ -551,14 +557,28 @@ async def retry_order(
     verifier: Annotated[AppleJWSVerifier, Depends(get_jws_verifier)],
     redis_url: Annotated[str, Depends(get_redis_url)],
     settings: Annotated[Settings, Depends(get_settings)],
+    subject: Annotated[Optional[str], Depends(optional_user)],
     x_storekit_jws: Annotated[Optional[str], Header()] = None,
 ) -> OrderCreatedResponse:
     """Re-enqueue a failed order (M-2).
 
-    Authz: ``X-StoreKit-JWS`` must verify and its ``transaction_id`` must match
-    the order's recorded ``transaction_id`` (verification reuses the 60s Redis
-    cache from #33 Task 1.11) — or a valid ``X-Admin-Key`` (#95: admin orders
-    have no JWS, and a failed founder order must stay retryable).
+    Authz — three accepted identities, checked before anything else:
+
+    - ``X-StoreKit-JWS`` must verify and its ``transaction_id`` must match the
+      order's recorded ``transaction_id`` (verification reuses the 60s Redis
+      cache from #33 Task 1.11);
+    - a valid ``X-Admin-Key`` (#95: admin orders have no JWS, and a failed
+      founder order must stay retryable);
+    - **(#146 Option B)** a quiz-agent bearer JWT whose subject equals
+      ``order.user_id`` — the same identity `GET /v1/orders/{id}` authorises
+      on. The StoreKit proof of a consumable cannot be re-read once finished,
+      so it lived only in a view-scoped view model on iOS; a paid order whose
+      view had been torn down was permanently unretryable. Ownership of the
+      order row is proof enough, and it is durable.
+
+    No credential at all → 401. A bearer that is not the order's owner → 403,
+    the same answer the JWS-mismatch branch gives (a credential that does not
+    belong to this order).
 
     Flow:
         409 if ``order.status != 'failed'``.
@@ -578,6 +598,10 @@ async def retry_order(
         enqueue → ``in_progress``.
     """
     tx = None
+    # True when the bearer JWT is the ONLY credential presented — then the
+    # order's `user_id` is what authorises the retry (checked below, once the
+    # row is loaded).
+    bearer_only = False
     if x_storekit_jws:
         redis_conn: Redis = Redis.from_url(redis_url, decode_responses=True)
         try:
@@ -593,10 +617,15 @@ async def retry_order(
             await redis_conn.aclose()
     elif admin_key_presented(request):
         check_admin_key(request, settings)
+    elif subject is not None:
+        # #146 Option B. `optional_user` has already rejected a present-but-
+        # invalid bearer with 401, so `subject` here is an authenticated
+        # account id — it still has to own the order.
+        bearer_only = True
     else:
         raise HTTPException(
             status_code=401,
-            detail="X-StoreKit-JWS or X-Admin-Key header is required",
+            detail="X-StoreKit-JWS, X-Admin-Key or a bearer token is required",
         )
 
     # Row-lock order: concurrent retries must serialise so we don't double-enqueue
@@ -613,6 +642,12 @@ async def retry_order(
             status_code=403,
             detail="JWS transaction_id does not match this order",
         )
+
+    # #146: the bearer-only path's authorisation check. `order.user_id` is
+    # NULL on pre-#103 rows, which never matches a subject — a retry that
+    # cannot be tied to an account is refused rather than allowed.
+    if bearer_only and order.user_id != subject:
+        raise HTTPException(status_code=403, detail="order belongs to another account")
 
     if order.status != "failed":
         raise HTTPException(

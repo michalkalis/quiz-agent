@@ -543,7 +543,10 @@ async def test_retry_missing_jws_returns_401(
     make_jws: JWSFactory,
     arq_mock: MagicMock,
 ) -> None:
-    """No X-StoreKit-JWS header → 401, no DB or ARQ side effects."""
+    """No credential at all → 401, no DB or ARQ side effects.
+
+    Unchanged by #146: the bearer widened *which* identities authorise a
+    retry, not whether one is needed."""
     tx_id = f"retry-noauth-{uuid.uuid4().hex[:8]}"
     order_id = await _post_order(client, make_jws, tx_id)
     await _force_failed(engine, db_session, order_id, job_try=3)
@@ -551,4 +554,121 @@ async def test_retry_missing_jws_returns_401(
 
     resp = await client.post(f"/v1/orders/{order_id}/retry")
     assert resp.status_code == 401, resp.text
+    arq_mock.enqueue_job.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# #146 Option B — bearer-authorised retry
+# ---------------------------------------------------------------------------
+#
+# Why these scenarios: a consumable's StoreKit proof cannot be re-read once the
+# transaction is finished, so the app held it only in a view-scoped view model.
+# Starting a quiz or relaunching destroyed it, and a paid order that failed
+# afterwards could never be retried — the user's only visible option was to pay
+# again. Ownership of the order row is the durable proof, so these tests pin
+# both halves: the owner gets in, everyone else does not.
+
+
+def _bearer_for(subject: str) -> dict:
+    token = TokenService(
+        secret=_JWT_SECRET, issuer="quiz-agent", audience="quiz-agent-clients"
+    ).create_access_token(subject)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.mark.integration
+async def test_retry_with_owner_bearer_and_no_proof_returns_202(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """#146: the order's own account retries it with the bearer alone — no
+    StoreKit JWS, no admin key — and the order is really re-enqueued.
+
+    This is the whole point of Option B: the client persists no proof, so this
+    request is exactly what "Try again" from My packs sends after a relaunch."""
+    tx_id = f"retry-bearer-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    await _force_failed(engine, db_session, order_id, job_try=3)
+    arq_mock.enqueue_job.reset_mock()
+
+    resp = await client.post(f"/v1/orders/{order_id}/retry", headers=_BEARER)
+
+    assert resp.status_code == 202, resp.text
+    assert resp.json()["status"] == "in_progress"
+    arq_mock.enqueue_job.assert_awaited_once_with(
+        "process_order", order_id, _job_id=f"process_order:{order_id}:1"
+    )
+
+    db_session.expire_all()
+    job = (
+        await db_session.execute(
+            select(GenerationJob).where(GenerationJob.order_id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    assert job.status == "queued"
+    assert job.manual_retry_count == 1
+
+
+@pytest.mark.integration
+async def test_retry_with_another_accounts_bearer_is_refused(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """#146 guard: a valid bearer for a DIFFERENT account cannot spend this
+    order's remaining paid attempts. Widening the authorisation surface of a
+    monetisation endpoint is only safe if the ownership check is real."""
+    tx_id = f"retry-stranger-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    await _force_failed(engine, db_session, order_id, job_try=3)
+    arq_mock.enqueue_job.reset_mock()
+
+    resp = await client.post(
+        f"/v1/orders/{order_id}/retry", headers=_bearer_for("someone-else")
+    )
+
+    assert resp.status_code == 403, resp.text
+    arq_mock.enqueue_job.assert_not_awaited()
+
+    db_session.expire_all()
+    order = (
+        await db_session.execute(
+            select(GenerationOrder).where(GenerationOrder.id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    assert order.status == "failed"  # untouched
+
+
+@pytest.mark.integration
+async def test_retry_bearer_still_hits_the_manual_cap(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """#146 must not weaken #145: authentication comes first, the budget
+    guards still bind. The bearer path answers 422 at the manual cap exactly
+    as the JWS path does — the client treats 422 as final ("retryRefused")."""
+    tx_id = f"retry-bearer-cap-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    await _force_failed(engine, db_session, order_id, job_try=3)
+    job = (
+        await db_session.execute(
+            select(GenerationJob).where(GenerationJob.order_id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    job.manual_retry_count = 3
+    await db_session.commit()
+    arq_mock.enqueue_job.reset_mock()
+
+    resp = await client.post(f"/v1/orders/{order_id}/retry", headers=_BEARER)
+
+    assert resp.status_code == 422, resp.text
+    assert "retry cap" in resp.json()["detail"]
     arq_mock.enqueue_job.assert_not_awaited()

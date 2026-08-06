@@ -288,10 +288,25 @@ def _chat_bedrock(model_id: str, **kwargs):
             "before selecting a Bedrock model — there is no silent fallback."
         )
 
+    import botocore.config
+
     region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION") or "us-east-1"
+    # botocore's 60s read default is too short for pack-generation batches
+    # (observed 2026-08-06: kimi-k2.5 Converse ReadTimeoutError killed order
+    # 7dbef479). Mirror GENERATION_TIMEOUT's bounds — still finite (#139: no
+    # unbounded hangs), just sized for long generation calls.
+    bedrock_config = botocore.config.Config(connect_timeout=10, read_timeout=300)
+    # Bedrock's per-model default output cap (~8k for kimi-k2.5) silently
+    # truncates large generation batches mid-JSON — 58-question batches died
+    # at ~34k chars, 3/3 attempts on order 7dbef479 (2026-08-06). The OpenAI
+    # path leaves max_tokens unset and gets the model maximum; mirror that
+    # intent with an explicit high bound (all three pipeline models accept
+    # 16384, probed live 2026-08-06).
+    kwargs.setdefault("max_tokens", 16384)
     return ChatBedrockConverse(
         model=_strip_bedrock_prefix(model_id),
         region_name=region,
+        config=bedrock_config,
         **kwargs,
     )
 

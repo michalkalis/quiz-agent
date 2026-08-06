@@ -33,3 +33,17 @@
 - Product id = `pack_30` (must match the server's `_PRODUCT_TIERS` key AND the ASC product id — the server cross-checks the JWS payload against the body). Founder creates the ASC consumable with EXACTLY this product id.
 - Crash-safety: proof (JWS + tx id) persists in `PendingPackPurchaseStore` BEFORE `transaction.finish()`; an interrupted order retries from the pending proof (no double charge), cleared only after the backend accepts the order. VM tests pin purchase-once/reuse/clear.
 - Prod quiz-pack-api runs `STOREKIT_ENVIRONMENT=Sandbox` (verified on the machine) — TestFlight sandbox purchases will verify as-is.
+- #138 (2026-08-04) rebuilt the order UI on top of this: modal state machine, StoreKit at the Pay step, deferred-purchase (Ask to Buy/SCA) capture via `Transaction.updates`. The payment invariants (pay before order POST, pending-proof reuse, clear after accept) carried over.
+
+## Founder leg — exact steps (written 2026-08-06)
+
+**1. Create the App Store Connect product (blocks everything else):**
+1. Open appstoreconnect.apple.com → **Apps** → the CarQuiz app.
+2. Left menu **Monetization → In-App Purchases** → **+** (Create).
+3. Type: **Consumable**. Reference Name: e.g. `Custom Pack 30`. **Product ID: `pack_30`** — exactly this, it can never be changed later. (Prefer a branded id like `com.carquiz.pack.custom30`? Say so BEFORE creating — it is a 2-line code/backend change.)
+4. Set the price — **founder decision, still open**. Premium positioning per founder; suggestion on the table: **€9.99** (2× the monthly sub). Note pack_30 COGS ≈ $4.23 (#139 measurement), so anything under ~€5 sells at a loss.
+5. Fill Display Name + Description (SK and EN) — sandbox purchasing does not work while metadata is missing.
+
+**2. Then ask for a TF build** (builds are on-request only) and run the sandbox e2e on device: order → Apple charge sheet shows the price → generation → pack playable. Watch: the charge must appear, and Settings must NOT show the admin-key field in the TF build.
+
+**3. Before GA (not now):** flip prod quiz-pack-api Fly secret `STOREKIT_ENVIRONMENT` from `Sandbox` to `Production`, otherwise real customers' purchases would be rejected. Agent does the flip on request.

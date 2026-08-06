@@ -6,6 +6,7 @@ Two-stage pipeline:
    analyze evidence if Tavily inconclusive
 """
 
+import asyncio
 import json
 import os
 import re
@@ -15,6 +16,15 @@ from typing import Optional
 from quiz_shared.llm import factory as llm_factory
 
 from ..sourcing.web_search_source import WebSearchSource
+
+# #150 — verification fans out one Tavily search (+ an arbiter call on any
+# inconclusive verdict) per question, and was the last per-question stage
+# still running them one at a time while dedup's neighbours (answerability,
+# scoring) already gathered under a bound. Same knob convention as
+# SCORER_MAX_CONCURRENT in app/scoring/multi_model_scorer.py; the default is
+# the answerability stage's 8, sized for the search provider rather than the
+# judge panel.
+MAX_CONCURRENT_VERIFICATIONS = int(os.getenv("VERIFIER_MAX_CONCURRENT", "8"))
 
 
 @dataclass
@@ -330,7 +340,12 @@ Rules:
         )
 
     async def verify_batch(self, questions: list[dict]) -> list[dict]:
-        """Verify a batch of question-answer pairs.
+        """Verify a batch of question-answer pairs, concurrently.
+
+        Bounded by `MAX_CONCURRENT_VERIFICATIONS` (#150), mirroring
+        `MultiModelScorer.score_batch`. `gather` preserves input order, so
+        the returned list is positionally identical to the sequential
+        version — callers index it by ``id`` regardless.
 
         Args:
             questions: List of {"question": str, "correct_answer": str, "id": str, "topic": str}
@@ -338,19 +353,20 @@ Rules:
         Returns:
             List of {"id": str, "verification": VerificationResult}
         """
-        results = []
-        for q in questions:
-            result = await self.verify(
-                question=q["question"],
-                claimed_answer=str(q["correct_answer"]),
-                topic=q.get("topic", ""),
-            )
-            results.append(
-                {
-                    "id": q.get("id", "unknown"),
-                    "question": q["question"],
-                    "claimed_answer": str(q["correct_answer"]),
-                    "verification": result,
-                }
-            )
-        return results
+        semaphore = asyncio.Semaphore(MAX_CONCURRENT_VERIFICATIONS)
+
+        async def _verify_one(q: dict) -> dict:
+            async with semaphore:
+                result = await self.verify(
+                    question=q["question"],
+                    claimed_answer=str(q["correct_answer"]),
+                    topic=q.get("topic", ""),
+                )
+            return {
+                "id": q.get("id", "unknown"),
+                "question": q["question"],
+                "claimed_answer": str(q["correct_answer"]),
+                "verification": result,
+            }
+
+        return list(await asyncio.gather(*(_verify_one(q) for q in questions)))

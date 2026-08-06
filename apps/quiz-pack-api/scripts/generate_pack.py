@@ -66,7 +66,7 @@ from app.orchestrator.stages import (
     TopUpStage,
     VerificationStage,
 )
-from quiz_shared.database.question_store import QuestionStore
+from app.orchestrator.stages.dedup import AsyncDuplicateFinder
 from quiz_shared.models.question import Question
 
 logger = logging.getLogger("generate_pack")
@@ -140,42 +140,16 @@ class _StdoutSink:
 
 
 class _NoopQuestionStore:
-    """`QuestionStore` that owns nothing and finds no duplicates.
+    """Duplicate finder that owns nothing and finds no duplicates.
 
-    `DedupStage` only calls `find_duplicates`; the rest of the protocol is
-    untouched in this code path. Returning ``[]`` is safe for a one-shot
-    CLI run — the user is generating a fresh pack, not deduping against an
-    existing corpus.
+    `DedupStage` only awaits `find_duplicates` (#150), so that is the whole
+    surface. Returning ``[]`` is safe for a one-shot CLI run — the user is
+    generating a fresh pack, not deduping against an existing corpus.
     """
 
-    def find_duplicates(
+    async def find_duplicates(
         self, question_text: str, threshold: float = 0.85
     ) -> list[tuple[Question, float]]:
-        return []
-
-    # Protocol satisfaction — these are never invoked through the CLI path
-    # (DedupStage only calls `find_duplicates`), so they raise to fail loud
-    # if a future stage starts using them by accident.
-
-    def add(self, question: Question) -> bool:  # pragma: no cover
-        raise NotImplementedError("CLI dry-run does not persist to a question store")
-
-    def upsert(self, question: Question) -> bool:  # pragma: no cover
-        raise NotImplementedError("CLI dry-run does not persist to a question store")
-
-    def get(self, question_id: str):  # pragma: no cover
-        return None
-
-    def delete(self, question_id: str) -> bool:  # pragma: no cover
-        return False
-
-    def search(self, *args, **kwargs):  # pragma: no cover
-        return []
-
-    def count(self, filters=None) -> int:  # pragma: no cover
-        return 0
-
-    def get_all(self, limit: int = 1000):  # pragma: no cover
         return []
 
 
@@ -202,31 +176,29 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
     )
 
 
-def _build_dedup_store(name: str) -> QuestionStore:
+def _build_dedup_store(name: str) -> AsyncDuplicateFinder:
     """Select the corpus `DedupStage` checks against.
 
     ``noop`` (default) finds no duplicates — correct for a one-shot fresh
     pack with no existing corpus. ``pgvector`` dedups against the live
     Postgres corpus (requires ``DATABASE_URL``), so the 0.85 cosine guard
     fires against real history (issue #42 task 42.27, was deferred 42.19c).
+    #150: the async store is handed to `DedupStage` directly — no sync bridge.
     """
     if name == "pgvector":
         from app.db.engine import normalize_async_url
         from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-        from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
         url = os.environ.get("DATABASE_URL")
         if not url:
             raise SystemExit(
                 "--dedup-store pgvector requires DATABASE_URL (Postgres + pgvector)."
             )
-        return SyncPgvectorStore(
-            PgvectorQuestionStore(database_url=normalize_async_url(url))
-        )
+        return PgvectorQuestionStore(database_url=normalize_async_url(url))
     return _NoopQuestionStore()
 
 
-def _build_stages(*, persist: bool, dedup_store: QuestionStore) -> list[Stage]:
+def _build_stages(*, persist: bool, dedup_store: AsyncDuplicateFinder) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode."""
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator

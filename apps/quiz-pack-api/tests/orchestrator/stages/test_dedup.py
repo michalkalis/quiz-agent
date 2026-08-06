@@ -64,11 +64,11 @@ class _RecordingSink:
 
 
 class _FakeQuestionStore:
-    """QuestionStore double whose `find_duplicates` returns canned matches.
+    """`AsyncDuplicateFinder` double whose `find_duplicates` returns canned matches.
 
     Caller seeds {question_text: [(Question, similarity)]} keyed by the
-    *query* text. Other QuestionStore methods are stubbed; DedupStage only
-    needs `find_duplicates`.
+    *query* text. `find_duplicates` is the whole surface DedupStage uses
+    (#150) and it is awaited, so the double is async too.
     """
 
     def __init__(
@@ -78,22 +78,12 @@ class _FakeQuestionStore:
         self._canned = canned or {}
         self.find_calls: list[tuple[str, float]] = []
 
-    # Methods DedupStage uses:
-    def find_duplicates(
+    async def find_duplicates(
         self, question_text: str, threshold: float = 0.85
     ) -> list[tuple[Question, float]]:
         self.find_calls.append((question_text, threshold))
         matches = self._canned.get(question_text, [])
         return [(q, s) for q, s in matches if s >= threshold]
-
-    # Unused-by-DedupStage protocol methods (kept so we satisfy QuestionStore):
-    def add(self, question: Question) -> bool: return True
-    def upsert(self, question: Question) -> bool: return True
-    def get(self, question_id: str) -> Question | None: return None
-    def delete(self, question_id: str) -> bool: return True
-    def search(self, **kwargs: Any) -> list[Question]: return []
-    def count(self, filters: dict[str, Any] | None = None) -> int: return 0
-    def get_all(self, limit: int = 1000) -> list[Question]: return []
 
 
 def _stub_question(idx: int, text: str | None = None, **overrides: Any) -> Question:

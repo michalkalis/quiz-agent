@@ -17,10 +17,14 @@ Two independent checks, either of which is enough to drop a question:
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
 
-The constructor takes a `QuestionStore` (Protocol from `quiz_shared`);
-in production that is the pgvector-backed store. The `pack_id` filter
-(`WHERE pack_id IS NULL OR pack_id = ctx.pack_id`) belongs inside the
-store's query implementation, not here.
+The constructor takes an **async** duplicate finder; in production that is
+`PgvectorQuestionStore` itself, awaited directly on the worker loop (#150).
+It used to take the sync `QuestionStore` Protocol, which in the worker meant
+`SyncPgvectorStore` — a `future.result()` bridge that parked the whole worker
+event loop for the duration of every embedding + query, making #139's
+heartbeat, per-stage belt and sweep inert exactly where a stall was most
+likely. The `pack_id` filter (`WHERE pack_id IS NULL OR pack_id =
+ctx.pack_id`) belongs inside the store's query implementation, not here.
 """
 
 from __future__ import annotations
@@ -28,11 +32,10 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Protocol
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
-from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.models.question import Question
 
 DEFAULT_COSINE_THRESHOLD = 0.85
@@ -47,6 +50,20 @@ DEFAULT_IN_BATCH_JACCARD_THRESHOLD = 0.60
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
+class AsyncDuplicateFinder(Protocol):
+    """The single async method `DedupStage` needs from a question store.
+
+    Deliberately narrower than `quiz_shared.database.question_store.
+    QuestionStore`: the stage never reads or writes questions, so requiring
+    the full (sync) protocol is what pushed this call onto the blocking
+    `SyncPgvectorStore` bridge in the first place.
+    """
+
+    async def find_duplicates(
+        self, question_text: str, threshold: float = 0.85
+    ) -> list[tuple[Question, float]]: ...
+
+
 class DedupStage:
     """Drops near-duplicate questions via cosine + Jaccard checks."""
 
@@ -54,7 +71,7 @@ class DedupStage:
 
     def __init__(
         self,
-        question_store: QuestionStore,
+        question_store: AsyncDuplicateFinder,
         gold_standard_path: str | Path | None,
         cosine_threshold: float = DEFAULT_COSINE_THRESHOLD,
         jaccard_threshold: float = DEFAULT_JACCARD_THRESHOLD,
@@ -79,7 +96,7 @@ class DedupStage:
         kept_tokens: list[frozenset[str]] = []
         dropped = 0
         for q in ctx.questions:
-            if self._is_cosine_duplicate(q):
+            if await self._is_cosine_duplicate(q):
                 dropped += 1
                 continue
             if self._is_jaccard_duplicate(q, gold_tokens):
@@ -106,9 +123,9 @@ class DedupStage:
             cost_cents=0,
         )
 
-    def _is_cosine_duplicate(self, question: Question) -> bool:
+    async def _is_cosine_duplicate(self, question: Question) -> bool:
         try:
-            duplicates = self._store.find_duplicates(
+            duplicates = await self._store.find_duplicates(
                 question.question, threshold=self._cosine_threshold
             )
         except Exception:

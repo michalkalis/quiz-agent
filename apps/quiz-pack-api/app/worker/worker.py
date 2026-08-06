@@ -63,7 +63,6 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.verification.fact_verifier import FactVerifier
     from app.verification.logical_verifier import LogicalConsistencyVerifier
     from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-    from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
     from quiz_shared.llm import factory as llm_factory
 
     ctx["session_factory"] = AsyncSessionLocal
@@ -97,26 +96,21 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     ctx["answerability_checker"] = AnswerabilityChecker()
     ctx["scorer"] = MultiModelScorer()
     # 42.27 — DedupStage dedups against the canonical pgvector corpus (ChromaDB
-    # is frozen read-only legacy). SyncPgvectorStore bridges DedupStage's sync
-    # `find_duplicates` call to the async store via a background event loop.
-    # #139: the bridged store must own a SEPARATE engine — sharing
-    # AsyncSessionLocal's engine poisoned the pool, because asyncpg
-    # connections are bound to the loop that created them and a cross-loop
-    # reuse/terminate raises "attached to a different loop" mid-pipeline
-    # (every other SyncPgvectorStore call site already passes database_url
-    # for its own engine; the worker was the one anomaly). The URL comes
-    # from the active session factory's bind so a test fixture that patches
-    # AsyncSessionLocal redirects the bridge to the same test database.
-    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-    bridge_url = AsyncSessionLocal.kw["bind"].url.render_as_string(
-        hide_password=False
-    )
-    bridge_factory = async_sessionmaker(
-        create_async_engine(bridge_url), expire_on_commit=False
-    )
-    ctx["question_store"] = SyncPgvectorStore(
-        PgvectorQuestionStore(session_factory=bridge_factory)
+    # is frozen read-only legacy). #150: the store is handed over ASYNC and
+    # awaited on the worker loop. It used to be wrapped in SyncPgvectorStore,
+    # whose `future.result()` bridge parked the worker thread for every
+    # embedding + query — the one stage where #139's heartbeat, per-stage belt
+    # and stuck-order sweep were all inert.
+    # #139: the dedup store still owns a SEPARATE engine from AsyncSessionLocal
+    # (passing `database_url` makes the store build its own, with the #151
+    # statement timeout on it); sharing the session factory's engine poisoned
+    # the pool. The URL comes from the active session factory's bind so a test
+    # fixture that patches AsyncSessionLocal redirects dedup to the same test
+    # database.
+    ctx["question_store"] = PgvectorQuestionStore(
+        database_url=AsyncSessionLocal.kw["bind"].url.render_as_string(
+            hide_password=False
+        )
     )
     if _GOLD_STANDARD_PATH is None:
         raise RuntimeError(

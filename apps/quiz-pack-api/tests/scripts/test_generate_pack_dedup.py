@@ -7,7 +7,8 @@ Why these matter:
   questions against an empty/irrelevant store.
 - `pgvector` is the opt-in that wires the live corpus into the dry-run so an
   operator can dedup a batch against real history; it must build a real
-  `SyncPgvectorStore` and fail loud (not silently no-op) when `DATABASE_URL`
+  async `PgvectorQuestionStore` (#150 — no sync bridge in front of it, that
+  blocked the loop) and fail loud (not silently no-op) when `DATABASE_URL`
   is absent.
 
 These assert the store *selection* wiring only — no DB query, so no embedder
@@ -16,10 +17,11 @@ call. The end-to-end pgvector drop is covered in `tests/db/test_pgvector_dedup`.
 
 from __future__ import annotations
 
+import inspect
+
 import pytest
 
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
 import scripts.generate_pack as generate_pack
 
@@ -32,16 +34,18 @@ def test_dedup_store_defaults_to_noop():
 def test_build_noop_store_is_default_noop():
     store = generate_pack._build_dedup_store("noop")
     assert isinstance(store, generate_pack._NoopQuestionStore)
+    # #150 — DedupStage awaits find_duplicates; a sync double would raise.
+    assert inspect.iscoroutinefunction(store.find_duplicates)
 
 
-def test_build_pgvector_store_wraps_async_store(monkeypatch):
+def test_build_pgvector_store_is_async_store(monkeypatch):
     # Valid URL → engine is created lazily (no connection), so no DB needed.
     monkeypatch.setenv(
         "DATABASE_URL", "postgresql+asyncpg://quiz:quiz@localhost:5432/quiz_pack"
     )
     store = generate_pack._build_dedup_store("pgvector")
-    assert isinstance(store, SyncPgvectorStore)
-    assert isinstance(store._async, PgvectorQuestionStore)
+    # #150 — the async store goes straight to DedupStage, no sync bridge.
+    assert isinstance(store, PgvectorQuestionStore)
 
 
 def test_pgvector_store_fails_loud_without_database_url(monkeypatch):

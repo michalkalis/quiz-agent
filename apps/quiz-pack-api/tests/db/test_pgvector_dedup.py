@@ -1,11 +1,10 @@
 """End-to-end DedupStage check against the real pgvector store (#42 task 42.27).
 
 Why this test matters: 42.27 swaps the worker's dedup corpus from frozen
-ChromaDB to the canonical pgvector store, reached through the moved
-`SyncPgvectorStore` facade. The bridge (sync `find_duplicates` → background
-event loop → async store) only exists to make `DedupStage` — whose `run` is
-async but calls `find_duplicates` *synchronously* — work against the async
-store. This test exercises that exact path against a live DB:
+ChromaDB to the canonical pgvector store. Since #150 `DedupStage` awaits that
+async store directly on the worker loop (the `SyncPgvectorStore` bridge it
+used to go through blocked the loop for every embedding + query). This test
+exercises that exact path against a live DB:
 
 - a fresh near-paraphrase (different id) of a stored question is dropped, and
 - re-running the stage on the stored question itself keeps it (self-match
@@ -27,7 +26,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from app.orchestrator import OrderContext
 from app.orchestrator.stages.dedup import DedupStage
 from quiz_shared.database.pgvector_client import EMBEDDING_DIM, PgvectorQuestionStore
-from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 from quiz_shared.models.question import Question
 
 
@@ -99,16 +97,14 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         return embeds[query]
 
     # Seed via the fixture engine (bound to the test event loop). The dedup
-    # store gets its OWN engine over the same DB, so every query it runs goes
-    # through the SyncPgvectorStore background loop without ever sharing the
-    # test-loop-bound fixture engine across loops. This mirrors production: the
-    # worker's PgvectorQuestionStore is only ever reached via the sync bridge.
+    # store gets its OWN engine over the same DB — mirroring production, where
+    # `on_startup` builds it from the session factory's URL rather than sharing
+    # AsyncSessionLocal's engine (#139 pool poisoning).
     seed_store = PgvectorQuestionStore(session_factory=factory)
-    dedup_async = PgvectorQuestionStore(
+    dedup_store = PgvectorQuestionStore(
         database_url=engine.url.render_as_string(hide_password=False),
         embedder=fake_embedder,
     )
-    sync_store = SyncPgvectorStore(dedup_async)
 
     seeded_id = uuid.uuid4()
     seeded = _make_question(seeded_id, "Capital of France?", _vec(base))
@@ -121,7 +117,7 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
             uuid.uuid4(), "What is the capital city of France?", None
         )
         ctx = _ctx([paraphrase])
-        result = await DedupStage(sync_store, gold_standard_path=None).run(
+        result = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx, _NullSink()
         )
         assert result.info == {"kept": 0, "dropped": 1}
@@ -130,7 +126,7 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         # Re-running on the stored question itself keeps it — the only match is
         # its own id, which DedupStage excludes (idempotent re-run).
         ctx_self = _ctx([seeded])
-        result_self = await DedupStage(sync_store, gold_standard_path=None).run(
+        result_self = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx_self, _NullSink()
         )
         assert result_self.info == {"kept": 1, "dropped": 0}

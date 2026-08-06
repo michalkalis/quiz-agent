@@ -7,14 +7,13 @@ store via a dedicated background event loop. Remaining consumers:
   `QuestionStore`. The voice-quiz *read* path no longer routes through
   here — since #151 `QuestionRetriever` is async and awaits the pgvector
   store directly, because every bridged call serialized on this one loop.
-- **quiz-pack-api `DedupStage`** (#42 task 42.27): the `QuestionStore`
-  Protocol declares `find_duplicates` sync and `DedupStage.run` calls it
-  synchronously, so duplicate detection against the canonical pgvector
-  corpus also routes through this facade.
+quiz-pack-api's `DedupStage` used to bridge here too (#42 task 42.27); since
+#150 it awaits `PgvectorQuestionStore` directly, because every bridged call
+blocked the worker's event loop for the whole embedding + query round trip.
 
 Why a background loop and not `asyncio.run`?
-  Both callers invoke these methods from inside a *running* event loop
-  (FastAPI async handlers; the worker/CLI pipeline's async `Stage.run`).
+  Callers invoke these methods from inside a *running* event loop
+  (FastAPI async handlers).
   Calling `asyncio.run` from such a thread raises `RuntimeError`. Running
   the coroutine on a separate, dedicated loop via
   `run_coroutine_threadsafe` works in both sync and async caller contexts,
@@ -91,7 +90,7 @@ class SyncPgvectorStore:
     """Sync facade over `PgvectorQuestionStore`.
 
     Exposes the read-path methods `QuestionRetriever` uses (`get`, `count`,
-    `search`), `find_duplicates` for `DedupStage`, and the write surface
+    `search`), `find_duplicates`, and the write surface
     (`add`, `upsert`, `delete`) plus `get_all` for the admin/feedback callers
     that #41 moves off ChromaDB (D3).
     """

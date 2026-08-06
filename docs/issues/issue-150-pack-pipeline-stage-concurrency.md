@@ -1,6 +1,6 @@
 # Issue 150: Pack pipeline per-question stages block and serialize the worker loop, defeating the hang-protection layers
 
-**Triage:** bug · needs-triage
+**Triage:** bug · fixed (agent-side), awaiting deploy
 **Priority:** serious
 **Source:** architectural audit 2026-08-06
 **Reversibility:** a
@@ -46,10 +46,16 @@ Both neighbours do the opposite: `MultiModelScorer.score_batch` gathers under `a
 
 ## Done criteria
 
-- [ ] No stage in the worker pipeline performs a blocking call on the event loop: `DedupStage` awaits the store (or runs the bridge via `to_thread` with a bounded result wait), and a test asserts the loop stays responsive — e.g. a heartbeat-style task keeps ticking while a deliberately slow dedup store call is in flight.
-- [ ] A hung dedup store call now fails loud within a bounded time (test: patched store that never returns → stage raises a timeout error, order fails with a named stage, instead of hanging).
-- [ ] `SyncPgvectorStore.run` no longer waits without a timeout; default is explicit and documented.
-- [ ] `FactVerifier.verify_batch` and the logical branch of `VerificationStage` run concurrently under a semaphore; a test with N slow stubbed verifications completes in roughly one round-trip, not N, and returns results in the same order/content as the sequential version.
-- [ ] Verdict/drop parity: existing dedup and verification tests pass unchanged (no threshold or semantics drift), quiz-pack-api suite green with `LLM_GATEWAY=direct` pinned, verified twice per the test-gate rule.
+- [x] No stage in the worker pipeline performs a blocking call on the event loop: `DedupStage` awaits the store (or runs the bridge via `to_thread` with a bounded result wait), and a test asserts the loop stays responsive — e.g. a heartbeat-style task keeps ticking while a deliberately slow dedup store call is in flight.
+      → `DedupStage` takes an async `AsyncDuplicateFinder` and `await`s `find_duplicates` (`stages/dedup.py`); `worker.py on_startup` hands it `PgvectorQuestionStore` directly (no `SyncPgvectorStore`), the CLI `--dedup-store` path likewise. `TopUpStage` re-runs the same instance, so its rounds inherit the async path. Test: `tests/orchestrator/stages/test_dedup_non_blocking.py::test_heartbeat_keeps_ticking_during_slow_dedup_store_call`.
+- [x] A hung dedup store call now fails loud within a bounded time (test: patched store that never returns → stage raises a timeout error, order fails with a named stage, instead of hanging).
+      → `tests/orchestrator/stages/test_dedup_non_blocking.py::test_hung_dedup_store_fails_loud_with_named_stage`: store that never returns, `_STAGE_TIMEOUT_SECONDS` patched to 0.2s → `PackGenerator`'s belt cancels it and raises `stage 'dedup' exceeded STAGE_TIMEOUT_SECONDS=…`, sink records a `failed` step. That belt was unreachable before, because a parked bridge thread cannot be cancelled.
+- [x] `SyncPgvectorStore.run` no longer waits without a timeout; default is explicit and documented.
+      → Already delivered by #151 (`DEFAULT_BRIDGE_TIMEOUT_SECONDS = 60.0`, `future.result(timeout)` + cancel + logged `TimeoutError`). Verified, not redone; only the docstring's stale "DedupStage bridges here" claim was corrected.
+- [x] `FactVerifier.verify_batch` and the logical branch of `VerificationStage` run concurrently under a semaphore; a test with N slow stubbed verifications completes in roughly one round-trip, not N, and returns results in the same order/content as the sequential version.
+      → `MAX_CONCURRENT_VERIFICATIONS = int(os.getenv("VERIFIER_MAX_CONCURRENT", "8"))` (same convention as `SCORER_MAX_CONCURRENT`), used by `verify_batch` and by the logical branch of `VerificationStage.run`. Tests: `tests/verification/test_verification_concurrency.py` — 12 × 0.1s verifications finish under 0.4s, order/content identical to the input batch, in-flight peak equals the semaphore bound, logical branch same shape.
+- [x] Verdict/drop parity: existing dedup and verification tests pass unchanged (no threshold or semantics drift), quiz-pack-api suite green with `LLM_GATEWAY=direct` pinned, verified twice per the test-gate rule.
+      → No model, prompt, threshold or verdict-semantics change. Existing dedup/verification assertions untouched (only the test doubles' `find_duplicates` became `async`, matching the stage contract). `LLM_GATEWAY=direct pytest tests/ -v` → 825 passed, 1 skipped, twice, sequential.
 - [ ] One real pack_30 order runs post-deploy: step log shows heartbeat updates continuing through the dedup stage, and the verification stage duration is materially below the sequential baseline recorded in the same log.
-- [ ] `docs/issues/INDEX.md` and `docs/todo/TODO.md` updated with the issue and its outcome.
+      → **Open — deploy-dependent.** Nothing to verify until quiz-pack-api ships this commit.
+- [x] `docs/issues/INDEX.md` and `docs/todo/TODO.md` updated with the issue and its outcome.

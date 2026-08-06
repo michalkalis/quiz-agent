@@ -23,12 +23,13 @@ follow-up #37 work; we do not stack the two thresholds here.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 from app.generation.pattern_routing import verification_mode
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
-from app.verification.fact_verifier import FactVerifier
+from app.verification.fact_verifier import MAX_CONCURRENT_VERIFICATIONS, FactVerifier
 from app.verification.logical_verifier import LogicalConsistencyVerifier
 from quiz_shared.models.question import GenerationProvenance, Question
 
@@ -90,11 +91,24 @@ class VerificationStage:
             for record in await self._fact_verifier.verify_batch(payload):
                 by_id[record.get("id")] = record
 
-        for q in logical:
-            result = await self._logical_verifier.verify(
-                q.question, _stringify_answer(q.correct_answer), q.topic
+        if logical:
+            # #150 — same bound as the factual branch (verify_batch) and the
+            # scoring/answerability stages; one judge call per question, run
+            # concurrently instead of one at a time. `gather` keeps order, so
+            # the verdict merged onto each question is unchanged.
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_VERIFICATIONS)
+
+            async def _verify_logical(q: Question):
+                async with semaphore:
+                    return await self._logical_verifier.verify(
+                        q.question, _stringify_answer(q.correct_answer), q.topic
+                    )
+
+            logical_results = await asyncio.gather(
+                *(_verify_logical(q) for q in logical)
             )
-            by_id[q.id] = {"id": q.id, "verification": result}
+            for q, result in zip(logical, logical_results):
+                by_id[q.id] = {"id": q.id, "verification": result}
 
         kept: list[Question] = []
         dropped = 0

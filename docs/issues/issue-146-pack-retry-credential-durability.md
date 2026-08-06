@@ -62,10 +62,10 @@ Whichever is chosen, `MyPacksView` must stop being a read-only screen for failed
 
 ## Done criteria
 
-- [ ] Option A or B explicitly chosen and recorded in this file before implementation starts.
-- [ ] A pack order created in Settings survives a quiz start and an app relaunch: its identity and retry authorisation are still available afterwards (unit test on the owning object's lifetime, not on view internals).
-- [ ] `MyPacksView` renders a working retry action on a `failed` order row, and no action on `pending`/`in_progress`/`delivered` rows (ViewInspector structure test per the repo's verification altitude).
-- [ ] Retry from `MyPacksView` after the full teardown path (order created → quiz started → app relaunched → order fails) reaches the backend and is accepted — 202, not 401/409. Verified against a real failed order (admin path, no charge) or a simulated failure, and the result stated concretely.
-- [ ] Retry credentials/state are cleared exactly when the order reaches a terminal delivered state (or refunded / retry budget exhausted) — asserted, so a stale proof cannot linger indefinitely.
-- [ ] The existing #138 guarantee still holds: no path produces a second paid create where a retry was intended.
-- [ ] iOS suite green for the touched targets; UI change screenshot-verified per `docs/testing/screenshot-verify-procedure.md` (non-gating).
+- [x] Option A or B explicitly chosen and recorded in this file before implementation starts. — Option B (founder, 2026-08-06).
+- [x] A pack order created in Settings survives a quiz start and an app relaunch: its identity and retry authorisation are still available afterwards (unit test on the owning object's lifetime, not on view internals). — `OrderPackViewModel` now owned by `AppState`; `PackOrderOwnershipTests` asserts object identity survives `NavigationModel.handleQuizStateChange(.startingQuiz)`. Relaunch needs no client state under Option B: the order is re-listed from the server and the bearer authorises the retry.
+- [x] `MyPacksView` renders a working retry action on a `failed` order row, and no action on `pending`/`in_progress`/`delivered` rows (ViewInspector structure test per the repo's verification altitude). — `MyPacksRetryActionTests`, matrix over all five statuses (`refunded` also gets none).
+- [ ] Retry from `MyPacksView` after the full teardown path (order created → quiz started → app relaunched → order fails) reaches the backend and is accepted — 202, not 401/409. **Open — deploy-dependent:** the bearer-authorised `retry_order` half ships separately; iOS side proven against a URLProtocol-stubbed 202 (`PackOrderServiceTests` section 6).
+- [x] Retry credentials/state are cleared exactly when the order reaches a terminal delivered state (or refunded / retry budget exhausted) — asserted, so a stale proof cannot linger indefinitely. — `clearRetainedOrderCredentials()` on delivered / refunded / 422 `retryRefused`; `failed` deliberately keeps its id (the retry target). Four tests in `OrderPackViewModelTests`.
+- [x] The existing #138 guarantee still holds: no path produces a second paid create where a retry was intended. — `refunded` is now non-retryable precisely because a cleared order id would let "Try again" fall through to a paid create; asserted in `refundedOrderIsTerminalAndCleared`.
+- [ ] iOS suite green for the touched targets (80 tests / 11 suites green); UI change screenshot-verified per `docs/testing/screenshot-verify-procedure.md` — **open (non-gating founder leg)**.

@@ -64,7 +64,26 @@ class GenerationJob(Base, UUIDPrimaryKeyMixin):
     total_cost_cents: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
+    # #145: spend for the DELIVERED pack only lives in `total_cost_cents`
+    # (assigned on the success path). This one accumulates every attempt,
+    # success or failure — it is the number the per-order spend ceiling is
+    # checked against, and the reason the pre-#145 money hole was invisible in
+    # the data (a failed attempt recorded nothing at all).
+    cumulative_cost_cents: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    # #145: lifetime attempt counter for the ORDER — never reset. `/retry` used
+    # to zero it (so the ARQ job id stayed unique across manual retries), which
+    # handed every manual retry a fresh 3-attempt auto budget: ~12 paid frontier
+    # runs for one purchase. Uniqueness now comes from `attempt_seq`, so this
+    # counter is free to mean what its name implies.
     retry_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    # #145: monotonic ARQ enqueue sequence — bumped by every actor that starts a
+    # NEW arq sequence for this job (manual retry, sweep recovery). Its only job
+    # is keeping `attempt_job_id` unique; nothing gates on it.
+    attempt_seq: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
     # #103 F1: the manual-retry budget the `/retry` endpoint gates on.
@@ -111,12 +130,14 @@ def attempt_job_id(order_id: uuid.UUID, job: GenerationJob) -> str:
     With no explicit id arq assigns a random ``uuid4``, so nothing stopped a
     duplicate enqueue of the *same* attempt — a requeue racing the stuck-order
     sweep — from running two paid pipelines for one purchase: double LLM +
-    search spend, two ``QuestionPack`` rows, one of them orphaned. Both counters
-    are in the key because ``/retry`` resets ``retry_count`` to 0: keyed on
-    ``retry_count`` alone, a second manual retry would reuse the first one's id
-    and be silently swallowed as a duplicate while ``keep_result`` still holds it.
+    search spend, two ``QuestionPack`` rows, one of them orphaned.
+
+    #145: the key is ``attempt_seq``, a field whose only purpose is this id.
+    It used to be ``retry_count``+``manual_retry_count``, which is why ``/retry``
+    had to zero ``retry_count`` to stay unique — and zeroing it handed every
+    manual retry a fresh auto-retry budget (up to ~12 paid runs per purchase).
     """
-    return f"process_order:{order_id}:{job.retry_count}:{job.manual_retry_count}"
+    return f"process_order:{order_id}:{job.attempt_seq}"
 
 
 # Single-statement append: the new entry's `event_id` is `jsonb_array_length(step_log)`

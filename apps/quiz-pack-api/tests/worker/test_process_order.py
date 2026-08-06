@@ -39,6 +39,7 @@ import respx
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app import order_budget
 from app.config import get_settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models import (
@@ -496,9 +497,13 @@ async def test_failure_never_rewinds_sweep_budget(
 
     session.expire_all()
     job = await session.get(GenerationJob, job_id)
-    assert job.retry_count == 2  # preserved, not rewound to job_try=1
+    # #145: forward only — the recovered attempt that just failed counts (2 → 3),
+    # where the old `max(retry_count, job_try)` would have written back 1.
+    assert job.retry_count == 3
     order = await session.get(GenerationOrder, order_id)
-    assert order.status == "in_progress"  # 2 < max_tries → non-final
+    # job_try=1 is not the end of this ARQ sequence and 3 < the lifetime attempt
+    # budget → still recoverable, not terminal.
+    assert order.status == "in_progress"
 
     await _cleanup(session, order_id)
 
@@ -509,13 +514,15 @@ async def test_last_budgeted_attempt_is_terminal(
     worker_ctx: Dict[str, Any],
     pipeline_http_mocks: respx.MockRouter,
 ) -> None:
-    """#139: when the sweep hands out the LAST budgeted attempt
-    (retry_count == max_tries) and it fails, the order must go terminal
-    (failed + refund_eligible) immediately — not wait one more sweep cycle."""
+    """#139: when the sweep hands out the LAST budgeted attempt and it fails,
+    the order must go terminal (failed + refund_eligible) immediately — not
+    wait one more sweep cycle. #145: the budget it is the last attempt OF is
+    now the order's lifetime attempt budget, not a per-sequence one, so this
+    also pins that a fresh ARQ sequence cannot outlive the lifetime cap."""
     order_id, job_id = await _create_order_and_job(session, target_count=3)
     await session.execute(
         text("UPDATE generation_jobs SET retry_count = :n WHERE id = :id"),
-        {"n": WorkerSettings.max_tries, "id": job_id},
+        {"n": order_budget.attempt_budget() - 1, "id": job_id},
     )
     await session.commit()
 
@@ -531,6 +538,103 @@ async def test_last_budgeted_attempt_is_terminal(
     order = await session.get(GenerationOrder, order_id)
     assert order.status == "failed"
     assert order.refund_eligible is True
+
+    await _cleanup(session, order_id)
+
+
+# ── #145: per-order spend accounting + ceiling ───────────────────────────────
+
+
+class _BoomAfterGeneration:
+    """Collaborator double whose every call raises.
+
+    Injected as the *scorer*, so sourcing and generation — the stages that
+    actually spend — complete first and the failure lands late in the run. That
+    is the expensive failure shape #145 is about: an attempt that dies in the
+    judge panel has already paid for the whole pipeline up to it.
+    """
+
+    def __getattr__(self, _name: str) -> Any:
+        async def _boom(*_args: Any, **_kwargs: Any) -> None:
+            raise RuntimeError("injected scoring outage")
+
+        return _boom
+
+
+@pytest.mark.asyncio
+async def test_failed_attempt_records_cumulative_spend(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#145 F2: spend was assigned on the SUCCESS path only, so a failed
+    attempt recorded nothing and an order could burn a dozen paid runs without
+    leaving a single number behind — no ceiling was enforceable against it.
+    An attempt that dies after generation must pay into the order's running
+    total, while `total_cost_cents` (the delivered pack's cost) stays 0."""
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+
+    worker_ctx["job_try"] = 1
+    worker_ctx["scorer"] = _BoomAfterGeneration()
+
+    from app.worker.tasks import process_order
+
+    with pytest.raises(RuntimeError, match="injected scoring outage"):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    job = await session.get(GenerationJob, job_id)
+    assert job.status == "failed"
+    # Premise: the run really did get past generation before dying.
+    assert [e["step"] for e in job.step_log][:2] == ["sourcing", "generating"]
+    assert job.cumulative_cost_cents > 0, "failed attempt left no financial trace"
+    assert job.total_cost_cents == 0, "nothing was delivered — no pack cost"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_attempt_past_the_ceiling_is_refused_before_spending(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#145: ARQ's own in-sequence retries reach neither the endpoint nor the
+    sweep, so the worker consults the same shared guard before it starts a paid
+    attempt. An order already past its ceiling must end terminal + refund
+    eligible with the pipeline never touched."""
+    import sentry_sdk
+
+    captured: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        sentry_sdk,
+        "capture_message",
+        lambda message, level=None, **kw: captured.append((message, level)),
+    )
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text("UPDATE generation_jobs SET cumulative_cost_cents = :c WHERE id = :id"),
+        {"c": order_budget.spend_ceiling_cents("pack_10"), "id": job_id},
+    )
+    await session.commit()
+
+    from app.worker.tasks import process_order
+
+    # Returns rather than raising: raising would hand the job back to ARQ for
+    # yet another attempt, which is the spend we are refusing.
+    await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+    assert job.status == "failed"
+    assert "ceiling" in (job.error or "")
+    assert job.step_log == [], "a refused attempt must not run a single stage"
+    assert captured and captured[0][1] == "error"
 
     await _cleanup(session, order_id)
 

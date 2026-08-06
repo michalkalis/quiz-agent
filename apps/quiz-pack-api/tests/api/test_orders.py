@@ -92,9 +92,10 @@ async def test_create_order_happy_path_202(
     # Without an explicit `_job_id` arq mints a random uuid4 per enqueue, so a
     # duplicate enqueue of this same first attempt (a sweep tick racing the
     # handoff) was unrecognisable and ran a second paid pipeline for one
-    # purchase. Counters are 0/0 at creation, hence the ':0:0' suffix.
+    # purchase. `attempt_seq` is 0 at creation, hence the ':0' suffix (#145
+    # replaced the old retry_count/manual_retry_count pair with that counter).
     arq_mock.enqueue_job.assert_awaited_once_with(
-        "process_order", str(order_id), _job_id=f"process_order:{order_id}:0:0"
+        "process_order", str(order_id), _job_id=f"process_order:{order_id}:0"
     )
 
 

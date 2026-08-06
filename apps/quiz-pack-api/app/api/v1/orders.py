@@ -42,6 +42,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from arq.connections import ArqRedis
 
+from ... import order_budget
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
@@ -565,11 +566,16 @@ async def retry_order(
         budget, separate from ``retry_count`` — the ARQ auto-attempt counter
         that is always 3 on a terminal failure, which used to make this
         endpoint permanently 422 for every real failure).
+        422 if the order has spent its ceiling or its lifetime attempt budget
+        (#145) — the order goes terminal + ``refund_eligible`` and the breach
+        is reported to Sentry.
         Otherwise: ``SELECT ... FOR UPDATE`` row-locks order + job (R14 —
         prevents double-enqueue under concurrent retries), resets job to
-        ``queued``/``progress=0``/``error=NULL``/``retry_count=0`` (fresh ARQ
-        attempt sequence), increments ``manual_retry_count``, flips order to
-        ``pending`` → commit → ARQ enqueue → ``in_progress``.
+        ``queued``/``progress=0``/``error=NULL``, advances ``retry_count`` and
+        ``attempt_seq`` (the latter is what keeps the ARQ job id unique — #145
+        replaced the old ``retry_count = 0`` trick), increments
+        ``manual_retry_count``, flips order to ``pending`` → commit → ARQ
+        enqueue → ``in_progress``.
     """
     tx = None
     if x_storekit_jws:
@@ -635,10 +641,28 @@ async def retry_order(
             ),
         )
 
+    # #145: the money guard, and the one that binds first on expensive tiers.
+    # The manual cap above counts retries; this one counts what they cost —
+    # every attempt runs the full frontier pipeline (~$4.23 measured for
+    # pack_30), so a purchase that has already burned its ceiling must stop
+    # here rather than buy another sequence of paid runs. Same verdict the
+    # sweep and the worker consult (app.order_budget).
+    verdict = order_budget.evaluate(order, job)
+    if not verdict.ok:
+        order_budget.mark_exhausted(order, job, verdict)
+        await session.commit()
+        order_budget.report_breach(order.id, verdict, list(job.step_log or [])[-10:])
+        raise HTTPException(status_code=422, detail=verdict.detail)
+
     job.status = "queued"
     job.progress = 0
     job.error = None
-    job.retry_count = 0
+    # #145: NOT reset — this is the order's lifetime attempt counter, and
+    # zeroing it was what handed each manual retry a fresh 3-attempt auto
+    # budget. The retry claims the attempt it is about to enqueue, so an
+    # enqueue that never runs still burns budget.
+    job.retry_count = job.retry_count + 1
+    job.attempt_seq = job.attempt_seq + 1
     job.manual_retry_count = job.manual_retry_count + 1
     order.status = "pending"
     # Fresh queue handoff: without this the sweep would keep measuring the

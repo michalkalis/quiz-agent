@@ -26,6 +26,7 @@ from fastapi import FastAPI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app import order_budget
 from app.api.deps import get_arq_pool, get_jws_verifier, get_redis_url
 from app.api.v1.orders import router as orders_router
 from app.config import Settings, get_settings
@@ -200,10 +201,11 @@ async def _force_failed(
     """Drive the order to a REAL terminal-failed state via the runtime's own
     failure handler (`_handle_failure`) — the exact path a genuinely
     exhausted ARQ job takes — instead of hand-forcing `retry_count=0` (a
-    state the runtime never produces: `_handle_failure` always sets
-    `retry_count = job_try`, and an order only reaches 'failed' when
-    `job_try >= max_tries`, so every real failure has `retry_count == 3`;
-    #103 F1). `job_try=3` (== `WorkerSettings.max_tries`) reproduces that.
+    state the runtime never produces: `_handle_failure` advances
+    `retry_count` on every ended attempt, and an order only reaches 'failed'
+    when `job_try >= max_tries` or the lifetime budget is gone, so every real
+    failure of a fresh order has `retry_count == 3`; #103 F1, #145).
+    `job_try=3` (== `WorkerSettings.max_tries`) reproduces that.
     """
     from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -258,17 +260,18 @@ async def test_retry_failed_order_returns_202(
 
     # Deterministic attempt id (adversarial audit 2026-07-30): without it arq
     # minted a random uuid4 per enqueue, so a retry racing the stuck-order sweep
-    # ran two paid pipelines for one purchase. retry_count is reset to 0 and the
-    # manual budget is now 1, which is why both counters are in the key — keyed
-    # on retry_count alone the NEXT manual retry would reuse this id and be
-    # silently swallowed as a duplicate.
+    # ran two paid pipelines for one purchase. #145: the id is keyed on
+    # `attempt_seq` (0 → 1 here), a counter that exists only for this — keyed on
+    # `retry_count` the endpoint had to zero it, which is what handed every
+    # manual retry a fresh 3-attempt paid budget.
     arq_mock.enqueue_job.assert_awaited_once_with(
-        "process_order", order_id, _job_id=f"process_order:{order_id}:0:1"
+        "process_order", order_id, _job_id=f"process_order:{order_id}:1"
     )
 
     # Verify DB state: order back to in_progress, job reset to queued,
-    # manual_retry_count++ (the dedicated manual budget), auto retry_count
-    # reset to 0 for the fresh ARQ attempt sequence this retry starts.
+    # manual_retry_count++ (the dedicated manual budget), and retry_count
+    # ADVANCED (3 from the exhausted sequence + the attempt this retry claims),
+    # never reset — it is the order's lifetime attempt counter now (#145).
     db_session.expire_all()
     order = (
         await db_session.execute(
@@ -282,7 +285,8 @@ async def test_retry_failed_order_returns_202(
     ).scalars().one()
     assert order.status == "in_progress"
     assert job.status == "queued"
-    assert job.retry_count == 0
+    assert job.retry_count == 4
+    assert job.attempt_seq == 1
     assert job.manual_retry_count == 1
     assert job.error is None
     assert job.progress == 0
@@ -356,6 +360,179 @@ async def test_retry_at_cap_returns_422(
     assert resp.status_code == 422, resp.text
     assert "retry cap" in resp.json()["detail"]
     arq_mock.enqueue_job.assert_not_awaited()
+
+
+@pytest.mark.integration
+async def test_three_manual_retries_keep_distinct_ids_and_a_rising_attempt_count(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#145 F1 regression: `/retry` must not buy a fresh auto-retry budget.
+
+    It used to zero `retry_count` purely to keep the deterministic ARQ job id
+    unique across sequences — and that reset was the money hole: one purchase
+    could walk through four independent 3-attempt budgets, ~12 full frontier
+    pipeline runs (~$4.23 each) for ~€4.99. Uniqueness now comes from
+    `attempt_seq`, so the attempt counter is free to be what it claims to be:
+    monotonic for the life of the order. The lifetime budget is lifted here so
+    this test isolates that one property (its own refusal is covered below).
+    """
+    monkeypatch.setenv("ORDER_ATTEMPT_BUDGET", "20")
+    tx_id = f"retry-monotonic-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_10"})
+
+    job_ids: list[str] = []
+    attempt_counts: list[int] = []
+    for _ in range(3):
+        # Drive the order back to a REAL terminal failure between retries — the
+        # state a customer actually retries from.
+        await _force_failed(engine, db_session, order_id, job_try=3)
+        arq_mock.enqueue_job.reset_mock()
+
+        resp = await client.post(
+            f"/v1/orders/{order_id}/retry", headers={"X-StoreKit-JWS": jws}
+        )
+        assert resp.status_code == 202, resp.text
+        job_ids.append(arq_mock.enqueue_job.await_args.kwargs["_job_id"])
+
+        db_session.expire_all()
+        job = (
+            await db_session.execute(
+                select(GenerationJob).where(
+                    GenerationJob.order_id == uuid.UUID(order_id)
+                )
+            )
+        ).scalars().one()
+        attempt_counts.append(job.retry_count)
+
+    # Distinct ids: a repeated id would be swallowed by arq as a duplicate, so
+    # the customer's retry would silently never run.
+    assert len(set(job_ids)) == 3, job_ids
+    # Strictly increasing attempts: the whole point — the order's spend is now
+    # accountable across manual retries instead of restarting each time.
+    assert attempt_counts == sorted(set(attempt_counts)), attempt_counts
+
+
+@pytest.mark.integration
+async def test_lifetime_attempt_budget_ends_the_order_before_four_budgets(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """#145 F1: an order that fails every attempt must die once, at the
+    lifetime budget — not after four independent 3-attempt budgets.
+
+    Before the fix the manual cap (3) was the only limit and each retry bought
+    a fresh auto budget, so this loop would have run to ~12 paid pipeline runs.
+    Here the shared budget refuses *before* the manual cap is even reached, and
+    leaves the order terminal + refund-eligible."""
+    tx_id = f"retry-lifetime-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_10"})
+
+    accepted = 0
+    for _ in range(3):  # the manual cap — the only limit before #145
+        await _force_failed(engine, db_session, order_id, job_try=3)
+        resp = await client.post(
+            f"/v1/orders/{order_id}/retry", headers={"X-StoreKit-JWS": jws}
+        )
+        if resp.status_code == 422:
+            break
+        assert resp.status_code == 202, resp.text
+        accepted += 1
+    else:
+        pytest.fail("lifetime attempt budget never refused a retry")
+
+    assert accepted < 3, "the shared budget must bind before the manual cap"
+    assert "attempt budget" in resp.json()["detail"]
+
+    db_session.expire_all()
+    order = (
+        await db_session.execute(
+            select(GenerationOrder).where(GenerationOrder.id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    job = (
+        await db_session.execute(
+            select(GenerationJob).where(GenerationJob.order_id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+    assert job.retry_count >= order_budget.attempt_budget()
+
+
+@pytest.mark.integration
+async def test_retry_over_spend_ceiling_returns_422_and_marks_refund_eligible(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#145: a retry that would push one purchase past its spend ceiling is
+    refused, loudly, and the order ends refund-eligible.
+
+    The manual cap alone cannot do this: three retries of a cheap failure are
+    fine, three retries that each burn a full frontier run are ~$12 against a
+    ~€4.99 sale. The refusal must name the ceiling (the client shows it, and
+    the Sentry event is what tells us the ceiling is set wrong)."""
+    import sentry_sdk
+
+    captured: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        sentry_sdk,
+        "capture_message",
+        lambda message, level=None, **kw: captured.append((message, level)),
+    )
+
+    tx_id = f"retry-ceiling-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    await _force_failed(engine, db_session, order_id, job_try=3)
+
+    job = (
+        await db_session.execute(
+            select(GenerationJob).where(GenerationJob.order_id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    ceiling = order_budget.spend_ceiling_cents("pack_10")
+    job.cumulative_cost_cents = ceiling
+    await db_session.commit()
+    arq_mock.enqueue_job.reset_mock()
+
+    jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_10"})
+    resp = await client.post(
+        f"/v1/orders/{order_id}/retry", headers={"X-StoreKit-JWS": jws}
+    )
+
+    assert resp.status_code == 422, resp.text
+    detail = resp.json()["detail"]
+    assert "ceiling" in detail and str(ceiling) in detail
+    # No fourth paid pipeline for this purchase.
+    arq_mock.enqueue_job.assert_not_awaited()
+
+    db_session.expire_all()
+    order = (
+        await db_session.execute(
+            select(GenerationOrder).where(GenerationOrder.id == uuid.UUID(order_id))
+        )
+    ).scalars().one()
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+
+    assert len(captured) == 1
+    message, level = captured[0]
+    assert str(order_id) in message
+    assert str(ceiling) in message
+    assert level == "error"
 
 
 @pytest.mark.integration

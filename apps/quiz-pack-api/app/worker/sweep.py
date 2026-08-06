@@ -11,12 +11,12 @@ Two ways an order can lodge forever without this sweep:
   order here forever — ARQ's own retry machinery only fires when the job
   function raises, which a killed process never gets to do.
 
-Recovery re-enqueues the order (resetting the job to ``queued``) up to the
-same auto-retry budget ``_handle_failure`` uses (``WorkerSettings.max_tries``,
-tracked on ``job.retry_count`` — a sweep-triggered re-enqueue is as much an
-"automatic attempt" as an ARQ-driven retry, so it shares that budget rather
-than getting an unbounded one of its own). Past the cap, the order is marked
-``failed`` with ``refund_eligible = True``, the same terminal state a
+Recovery re-enqueues the order (resetting the job to ``queued``) as long as
+``app.order_budget`` says the order may spend another attempt — a
+sweep-triggered re-enqueue is as much a paid attempt as an ARQ-driven retry, so
+it shares the order's spend ceiling and lifetime attempt budget rather than
+getting an unbounded one of its own (#145). Past either guard the order is
+marked ``failed`` with ``refund_eligible = True``, the same terminal state a
 naturally-exhausted ARQ job reaches.
 
 Every re-enqueue carries the deterministic ``attempt_job_id`` so ARQ's own
@@ -31,9 +31,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
-import sentry_sdk
 from sqlalchemy import select
 
+from app import order_budget
 from app.db.models.job import GenerationJob, attempt_job_id
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal
@@ -109,10 +109,7 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
 
 
 async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None:
-    from app.worker.worker import WorkerSettings
-
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
-    max_tries: int = getattr(WorkerSettings, "max_tries", 3)
     arq_pool = ctx["redis"]
 
     async with session_factory() as session:
@@ -140,47 +137,35 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
             await session.commit()
             return
 
-        if job.retry_count >= max_tries:
-            job.status = "failed"
+        # #145 — one shared gate, the same verdict POST /retry and the worker
+        # ask for: recovery is as much a paid attempt as any other, so the
+        # per-order spend ceiling and the lifetime attempt budget decide here
+        # too (they replace this branch's old private `retry_count >= max_tries`
+        # rule). Past either one the order goes terminal + refund_eligible —
+        # the same state a naturally-exhausted ARQ job reaches.
+        verdict = order_budget.evaluate(order, job)
+        if not verdict.ok:
+            order_budget.mark_exhausted(order, job, verdict)
             job.error = (
-                f"sweep: order stuck in {order.status!r} past its recovery "
-                f"budget (retry_count={job.retry_count}, max={max_tries})"
+                f"sweep: order stuck in {order.status!r} and cut off — {verdict.detail}"
             )
-            order.status = "failed"
-            order.refund_eligible = True
             step_log_tail = list(job.step_log or [])[-10:]
-            retry_count = job.retry_count
             await session.commit()
-            logger.warning(
-                "sweep_stuck_orders order_id=%s exceeded auto-retry budget; marked failed",
-                order_id,
-            )
             # #139 — this branch is the terminal state a hung-then-killed
             # pipeline lands in (the worker itself never got to raise, so
             # nothing else will ever report it). The 2026-08-03 founder order
             # died exactly here with zero Sentry footprint; a warning-level
             # log is a breadcrumb, not an event, hence the explicit capture.
-            with sentry_sdk.new_scope() as scope:
-                scope.set_context(
-                    "order",
-                    {
-                        "order_id": str(order_id),
-                        "retry_count": retry_count,
-                        "max_tries": max_tries,
-                    },
-                )
-                scope.set_context("step_log_tail", {"steps": step_log_tail})
-                sentry_sdk.capture_message(
-                    f"sweep force-failed order {order_id} after {retry_count} "
-                    "exhausted recovery attempts (silent worker hang or death)",
-                    level="error",
-                )
+            order_budget.report_breach(order_id, verdict, step_log_tail)
             return
 
         job.status = "queued"
         job.progress = 0
         job.error = None
         job.retry_count = job.retry_count + 1
+        # #145: a new arq sequence, so a new deterministic job id (the counter
+        # the id used to be keyed on no longer resets).
+        job.attempt_seq = job.attempt_seq + 1
         order.status = "pending"
         order.enqueued_at = datetime.now(timezone.utc)
         enqueue_id = attempt_job_id(order_id, job)

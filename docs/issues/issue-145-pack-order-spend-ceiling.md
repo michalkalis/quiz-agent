@@ -58,10 +58,14 @@ Keep the existing manual cap of 3 as a secondary guard; the spend ceiling is exp
 
 ## Done criteria
 
-- [ ] `retry_order` no longer writes `job.retry_count = 0`; the ARQ job id stays unique across manual retries via its own sequence field. Test: three consecutive manual retries produce three distinct ARQ job ids **and** a strictly increasing `retry_count`.
-- [ ] Total attempts across one order's whole lifetime cannot exceed the configured budget. Test: an order that fails on every attempt reaches a terminal `failed` state after the lifetime budget, not after 4 independent budgets.
-- [ ] Per-order cumulative spend is persisted and increases on **failed** attempts, not only delivered ones. Test: an attempt that fails after the generation stage leaves a non-zero cumulative spend on the order.
-- [ ] A retry that would exceed the tier's spend ceiling is refused: `retry_order` returns a 4xx naming the ceiling, and the sweep's recovery path force-fails the order instead of re-enqueuing. Both paths consult one shared check.
-- [ ] Crossing the ceiling emits an error-level Sentry event carrying order id, cumulative spend and attempt count, and marks the order refund-eligible.
-- [ ] Ceiling is configurable per product tier and defaults to a value grounded in the measured pack COGS (#143), not a magic number in code.
-- [ ] quiz-pack-api suite green with `LLM_GATEWAY=direct` pinned, verified twice (per `project_test_gate_env_hermeticity`).
+Shipped 2026-08-06 (`app/order_budget.py` = the one shared guard; migration
+`d5b0c93a71e4` adds `generation_jobs.attempt_seq` + `.cumulative_cost_cents`;
+**not applied to prod — the orchestrator deploys it**).
+
+- [x] `retry_order` no longer writes `job.retry_count = 0`; the ARQ job id stays unique across manual retries via its own sequence field. Test: three consecutive manual retries produce three distinct ARQ job ids **and** a strictly increasing `retry_count`.
+- [x] Total attempts across one order's whole lifetime cannot exceed the configured budget. Test: an order that fails on every attempt reaches a terminal `failed` state after the lifetime budget, not after 4 independent budgets.
+- [x] Per-order cumulative spend is persisted and increases on **failed** attempts, not only delivered ones. Test: an attempt that fails after the generation stage leaves a non-zero cumulative spend on the order.
+- [x] A retry that would exceed the tier's spend ceiling is refused: `retry_order` returns a 4xx naming the ceiling, and the sweep's recovery path force-fails the order instead of re-enqueuing. Both paths consult one shared check.
+- [x] Crossing the ceiling emits an error-level Sentry event carrying order id, cumulative spend and attempt count, and marks the order refund-eligible.
+- [x] Ceiling is configurable per product tier and defaults to a value grounded in the measured pack COGS (#143), not a magic number in code.
+- [x] quiz-pack-api suite green with `LLM_GATEWAY=direct` pinned, verified twice (per `project_test_gate_env_hermeticity`).

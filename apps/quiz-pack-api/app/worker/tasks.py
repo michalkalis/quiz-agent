@@ -20,7 +20,7 @@ from typing import Any, Dict
 
 import sentry_sdk
 
-from app import cost_tracking
+from app import cost_tracking, order_budget
 from app.db.models import GenerationJob, GenerationOrder
 from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
@@ -136,6 +136,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
     sink: DBProgressSink | None = None
     generator: PackGenerator | None = None
     heartbeat: asyncio.Task[None] | None = None
+    tracker: cost_tracking.OrderCostTracker | None = None
+    usage_before: float | None = None
 
     logger.info(
         "process_order start order_id=%s attempt=%s",
@@ -148,6 +150,20 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             if order is None:
                 raise LookupError(f"GenerationOrder {order_id} not found")
             job_id = order.job_id
+            # #145: the budget gate for ARQ's OWN in-sequence retries. The
+            # endpoint and the sweep check the same verdict before enqueuing,
+            # but ARQ re-runs a raised job without consulting either — so
+            # without this check the ceiling could be crossed by two more paid
+            # attempts after the order had already been cut off.
+            job = await session.get(GenerationJob, job_id) if job_id else None
+            if job is not None:
+                verdict = order_budget.evaluate(order, job)
+                if not verdict.ok:
+                    order_budget.mark_exhausted(order, job, verdict)
+                    step_log_tail = list(job.step_log or [])[-10:]
+                    await session.commit()
+                    order_budget.report_breach(order_id, verdict, step_log_tail)
+                    return
             if order.status != "in_progress":
                 order.status = "in_progress"
                 await session.commit()
@@ -203,6 +219,10 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             job.status = "done"
             job.progress = 100
             job.total_cost_cents = cost_cents
+            # #145: `total_cost_cents` stays "what the delivered pack cost";
+            # the ceiling is checked against the running total for the ORDER,
+            # which includes every failed attempt that preceded this one.
+            job.cumulative_cost_cents = job.cumulative_cost_cents + cost_cents
             await session.commit()
 
         done_event_id = await sink.start_step("done")
@@ -228,15 +248,58 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         # capture_exception in _handle_failure (step-log context attached);
         # an error-level log here would double-report via LoggingIntegration.
         logger.warning("process_order cancelled order_id=%s stage=%s", order_id, stage)
-        await _handle_failure(ctx, order_uuid, order_id, sink, exc)
+        # No OpenRouter round-trip here: this task is being cancelled, so an
+        # awaited HTTP call can be interrupted again (and CancelledError is a
+        # BaseException the fetch helper does not catch). Stage + search spend
+        # is measured locally and still records a non-zero attempt cost.
+        attempt_cost = await _attempt_cost_cents(
+            tracker, usage_before, generator, fetch_usage=False
+        )
+        await _handle_failure(
+            ctx, order_uuid, order_id, sink, exc, attempt_cost_cents=attempt_cost
+        )
         raise
     except Exception as exc:
         logger.warning("process_order failed order_id=%s error=%r", order_id, exc)
-        await _handle_failure(ctx, order_uuid, order_id, sink, exc)
+        attempt_cost = await _attempt_cost_cents(
+            tracker, usage_before, generator, fetch_usage=True
+        )
+        await _handle_failure(
+            ctx, order_uuid, order_id, sink, exc, attempt_cost_cents=attempt_cost
+        )
         raise
     finally:
         if heartbeat is not None:
             heartbeat.cancel()
+
+
+async def _attempt_cost_cents(
+    tracker: cost_tracking.OrderCostTracker | None,
+    usage_before: float | None,
+    generator: PackGenerator | None,
+    *,
+    fetch_usage: bool,
+) -> int:
+    """Measured spend of an attempt that did NOT deliver (#145).
+
+    Same three components the success path sums, minus the delivered-pack
+    bookkeeping: an attempt that dies in the judge panel has already paid for
+    sourcing, generation and verification, and recording nothing for it is
+    exactly why the pre-#145 spend hole was invisible. Never raises — a cost
+    number we could not measure must not replace the real failure.
+    """
+    try:
+        stage_cost = generator.last_ctx.cost_cents if generator and generator.last_ctx else 0
+        search_cost = tracker.search_cost_cents if tracker is not None else 0
+        llm_cost = 0
+        if fetch_usage and usage_before is not None:
+            usage_after = await cost_tracking.fetch_openrouter_usage()
+            if usage_after is not None:
+                llm_cost = int(round(max(usage_after - usage_before, 0.0) * 100))
+        return stage_cost + search_cost + llm_cost
+    except Exception:
+        logger.warning("failed-attempt cost measurement failed", exc_info=True)
+        return 0
 
 
 def _make_sink_factory(sink: DBProgressSink):
@@ -252,6 +315,7 @@ async def _handle_failure(
     order_id: str,
     sink: DBProgressSink | None,
     exc: Exception,
+    attempt_cost_cents: int = 0,
 ) -> None:
     """Mark job (and order on final retry) failed; publish failure event.
 
@@ -279,11 +343,25 @@ async def _handle_failure(
             # never exhausted (endless paid retries). The attempt number is
             # whichever counter is further along; the final budgeted attempt is
             # terminal for the ORDER too, not just the job.
-            effective_try = max(job.retry_count, job_try)
-            is_final = effective_try >= max_tries
+            #
+            # #145: `+ 1` makes it a real LIFETIME attempt counter — inside the
+            # first arq sequence it still tracks `job_try` exactly, but past it
+            # (after a manual retry or a sweep recovery) `job_try` restarts and
+            # the old `max(retry_count, job_try)` simply stopped counting. An
+            # attempt already claimed at enqueue time (sweep/manual retry) is
+            # counted twice; the counter is deliberately conservative — it may
+            # over-state lifetime attempts, never under-state them.
+            effective_try = max(job.retry_count + 1, job_try)
+            # Two ways an attempt is the last one: this arq sequence is out of
+            # tries (terminal for the order today — it is what makes /retry
+            # reachable), or the order has burned its whole lifetime budget.
+            is_final = job_try >= max_tries or effective_try >= order_budget.attempt_budget()
             job.status = "failed"
             job.error = repr(exc)
             job.retry_count = effective_try
+            # #145: record spend for the attempt that just died — the ceiling
+            # is only enforceable because failures pay into this total too.
+            job.cumulative_cost_cents = job.cumulative_cost_cents + attempt_cost_cents
             if is_final:
                 order.status = "failed"
                 order.refund_eligible = True
@@ -312,6 +390,7 @@ async def _handle_failure(
                     "job_try": job_try,
                     "effective_try": effective_try,
                     "is_final_attempt": is_final,
+                    "attempt_cost_cents": attempt_cost_cents,
                 },
             )
             scope.set_context("step_log_tail", {"steps": step_log_tail})

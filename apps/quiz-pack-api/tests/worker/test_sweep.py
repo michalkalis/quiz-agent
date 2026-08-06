@@ -26,6 +26,7 @@ import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app import order_budget
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
@@ -140,7 +141,11 @@ async def _make_stuck_pending(
 
 
 async def _make_stuck_in_progress(
-    session: AsyncSession, *, age: timedelta, retry_count: int = 0
+    session: AsyncSession,
+    *,
+    age: timedelta,
+    retry_count: int = 0,
+    cumulative_cost_cents: int = 0,
 ) -> tuple[uuid.UUID, uuid.UUID]:
     """Insert an order stuck 'in_progress' (as if the worker was killed)."""
     order = GenerationOrder(
@@ -153,7 +158,12 @@ async def _make_stuck_in_progress(
     )
     session.add(order)
     await session.flush()
-    job = GenerationJob(order_id=order.id, status="generating", retry_count=retry_count)
+    job = GenerationJob(
+        order_id=order.id,
+        status="generating",
+        retry_count=retry_count,
+        cumulative_cost_cents=cumulative_cost_cents,
+    )
     session.add(job)
     await session.flush()
     order.job_id = job.id
@@ -271,11 +281,16 @@ async def test_sweep_recovers_stuck_in_progress_order(
 async def test_sweep_fails_order_past_retry_budget(
     engine: AsyncEngine, session: AsyncSession
 ) -> None:
-    """A stuck order that already exhausted the auto-retry budget
-    (retry_count >= max_tries) is marked 'failed' + refund_eligible instead
-    of being re-enqueued forever."""
+    """A stuck order that already exhausted its lifetime attempt budget is
+    marked 'failed' + refund_eligible instead of being re-enqueued forever.
+
+    #145: the budget is the shared one in `app.order_budget` — the endpoint,
+    this sweep and the worker all ask it the same question, so a recovery can
+    no longer hand out attempts the manual path has already paid for."""
     order_id, job_id = await _make_stuck_in_progress(
-        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5), retry_count=3
+        session,
+        age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5),
+        retry_count=order_budget.attempt_budget(),
     )
     pool = FakeArqPool(fail=False)
     ctx: Dict[str, Any] = {
@@ -292,6 +307,43 @@ async def test_sweep_fails_order_past_retry_budget(
     assert order.refund_eligible is True
     assert job.status == "failed"
     assert _enqueued_for(pool, order_id) == []  # never re-enqueued past the budget
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_force_fails_order_past_the_spend_ceiling(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """#145: recovery is a PAID attempt, so the sweep must consult the order's
+    spend ceiling, not just count attempts.
+
+    An order whose attempts died late and expensive can still have recovery
+    budget left on paper; re-enqueuing it buys another ~$4.23 frontier run for
+    a ~€4.99 purchase. Past the ceiling the sweep force-fails it terminally
+    (refund-eligible) instead, and says so in the job error."""
+    order_id, job_id = await _make_stuck_in_progress(
+        session,
+        age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5),
+        retry_count=1,  # attempt budget untouched — only the money binds here
+        cumulative_cost_cents=order_budget.spend_ceiling_cents("pack_10"),
+    )
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert _enqueued_for(pool, order_id) == []  # no further paid attempt
+    assert order.status == "failed"
+    assert order.refund_eligible is True
+    assert job.status == "failed"
+    assert "ceiling" in job.error
 
     await _cleanup(session, order_id)
 
@@ -327,17 +379,19 @@ async def test_sweep_leaves_pending_on_enqueue_failure(
 async def _requeue_like_retry_endpoint(
     session: AsyncSession, order_id: uuid.UUID, job_id: uuid.UUID
 ) -> None:
-    """Mirror the ORM requeue in POST /v1/orders/{id}/retry (orders.py:521-532).
+    """Mirror the ORM requeue in POST /v1/orders/{id}/retry.
 
-    Deliberately the same shape as production: job back to 'queued', auto
-    retry_count reset, manual budget spent, order flipped to 'in_progress'.
+    Deliberately the same shape as production: job back to 'queued', the
+    lifetime attempt counter and the arq sequence both ADVANCED (never reset —
+    #145), manual budget spent, order flipped to 'in_progress'.
     """
     order = await session.get(GenerationOrder, order_id)
     job = await session.get(GenerationJob, job_id)
     job.status = "queued"
     job.progress = 0
     job.error = None
-    job.retry_count = 0
+    job.retry_count = job.retry_count + 1
+    job.attempt_seq = job.attempt_seq + 1
     job.manual_retry_count = job.manual_retry_count + 1
     order.status = "in_progress"
     await session.commit()
@@ -376,7 +430,7 @@ async def test_sweep_ignores_a_just_requeued_order(
     job = await session.get(GenerationJob, job_id)
     assert _enqueued_for(pool, order_id) == []  # no second pipeline for one purchase
     assert order.status == "in_progress"
-    assert job.retry_count == 0  # recovery budget not burned
+    assert job.retry_count == 4  # the retry's own claim only; no sweep burn
     assert job.status == "queued"
 
     await _cleanup(session, order_id)
@@ -480,8 +534,10 @@ async def test_sweep_enqueues_with_a_deterministic_attempt_job_id(
     Adversarial audit 2026-07-30: with no `_job_id` arq mints a random uuid4,
     so nothing in the system could ever recognise a duplicate enqueue of the
     same attempt — the reason a race ran two paid pipelines instead of one.
-    The key spans both counters (auto + manual) so genuine attempts stay
-    distinct while a duplicate of one attempt collides and is dropped.
+    #145: the key is `attempt_seq`, bumped by every actor that starts a new arq
+    sequence, so genuine attempts stay distinct while a duplicate of one attempt
+    collides and is dropped — without the retry endpoint having to zero the
+    lifetime attempt counter to get uniqueness.
     """
     order_id, job_id = await _make_stuck_in_progress(
         session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5)
@@ -494,8 +550,8 @@ async def test_sweep_enqueues_with_a_deterministic_attempt_job_id(
 
     await sweep_stuck_orders(ctx)
 
-    # retry_count 0 → 1 on recovery; manual_retry_count untouched.
-    assert _job_ids_for(pool, order_id) == [f"process_order:{order_id}:1:0"]
+    # attempt_seq 0 → 1 on recovery.
+    assert _job_ids_for(pool, order_id) == [f"process_order:{order_id}:1"]
 
     await _cleanup(session, order_id)
 
@@ -546,7 +602,9 @@ async def test_sweep_force_fail_emits_sentry_event(
     )
 
     order_id, _job_id = await _make_stuck_in_progress(
-        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5), retry_count=3
+        session,
+        age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5),
+        retry_count=order_budget.attempt_budget(),
     )
     ctx: Dict[str, Any] = {
         "redis": FakeArqPool(fail=False),

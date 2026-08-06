@@ -19,26 +19,53 @@ import Foundation
 extension VoiceCommandCoordinator {
     // MARK: - Window
 
-    /// The command screen active for the current quiz state, or `nil` when the
-    /// listener must be torn down. Recording, TTS playback, and non-interactive
-    /// states all map to `nil` (windowed lifecycle, 77.5). This is the single
-    /// source of truth for both arming and for scoping the matcher.
-    var currentCommandScreen: VoiceCommandScreen? {
-        // Master switch (#96 P2): the founder-facing Settings toggle. OFF → the
-        // command window never arms on any screen and the listening indicator
-        // is suppressed; buttons stay the untouched fallback.
-        if !settings().voiceCommandsEnabled { return nil }
+    /// CAPTURE policy (#149): may the audio engine / input tap be live at all
+    /// right now? This — not the command screen below — is what every arming
+    /// path must consult. It governs the ENGINE and barge-in; the window below
+    /// governs only whether the command consumer is armed and how the matcher
+    /// is scoped. Keeping them as two named predicates is the point: a future
+    /// change to *which screens accept which commands* must never be able to
+    /// take the microphone (or barge-in) with it, and vice versa.
+    var mayCaptureAudio: Bool {
+        // Master switch (#96 P2): the founder-facing Settings toggle. It is a
+        // CAPTURE switch, not a routing filter (#149 F3) — with it off the mic
+        // must stay down for the rest of the session, not merely stop matching
+        // commands. Before this, flipping it off tore the listener down once
+        // and the next question's TTS tail put the mic straight back up.
+        if !settings().voiceCommandsEnabled { return false }
 
-        // Backgrounded → no window: the mic input must never be (re-)armed
+        // Backgrounded → never armed: the mic input must never be (re-)armed
         // while the app is in the background, even by a refreshCommandWindow()
         // racing the scene-phase teardown (mic-in-background fix).
-        if !isAppForeground() { return nil }
+        if !isAppForeground() { return false }
 
-        // Torn down during ANY TTS (the recognizer must never transcribe the
-        // app's own playback — #119 widened this from question-only to feedback
-        // too) and during any recording (the answer window is the Slovak
-        // ElevenLabs stream — time-disjoint from command listening).
-        if isPlayingTTS() || isRecordingActive { return nil }
+        // Down during ANY TTS (the recognizer must never transcribe the app's
+        // own playback — #119 widened this from question-only to feedback too)
+        // and during any recording (the answer window is the Slovak ElevenLabs
+        // stream — time-disjoint from command listening).
+        if isPlayingTTS() || isRecordingActive { return false }
+
+        return isCaptureSafeQuizState
+    }
+
+    /// Quiz states whose audio session is live enough to run the engine.
+    /// `.finished` is the one that bites (#149 F4): `endQuizWithResults()`
+    /// deactivates the session, and a question-TTS tail resuming afterwards
+    /// used to start the engine on top of it. Structural, so the fix does not
+    /// depend on each tail remembering its own `Task.isCancelled` guard.
+    private var isCaptureSafeQuizState: Bool {
+        switch quizState() {
+        case .idle, .askingQuestion, .processing, .showingResult: true
+        default: false // startingQuiz / skipping / finished / error / recording
+        }
+    }
+
+    /// The command screen active for the current quiz state, or `nil` when the
+    /// command consumer must be torn down. Capture policy plus the screen map:
+    /// this is the single source of truth for SCOPING the matcher, and for
+    /// whether the consumer is armed at all.
+    var currentCommandScreen: VoiceCommandScreen? {
+        guard mayCaptureAudio else { return nil }
 
         switch quizState() {
         case .idle: return .home

@@ -174,9 +174,10 @@ extension AudioDeviceState {
         // Auto-advance can start the NEXT question's read while long feedback is
         // still playing; that read owns the engine (and stopped it on the way
         // in), so re-arming here would put the mic live under question TTS.
-        if !isPlayingQuestionTTS() {
-            await startSilenceDetectionListening()
-        }
+        // #149: that condition is no longer restated here — the choke point's
+        // capture predicate already covers ANY in-flight TTS, and every tail
+        // asking the same question in its own words is what this issue fixed.
+        await startSilenceDetectionListening()
         return duration
     }
 

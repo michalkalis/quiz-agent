@@ -56,6 +56,21 @@ extension Evaluation {
         case partiallyCorrect = "partially_correct"
         case partiallyIncorrect = "partially_incorrect"
         case skipped
+        /// A verdict this build does not know. Never sent by the backend — it is
+        /// the landing pad for one the backend adds later (#148).
+        case unknown
+
+        /// Safe decoder — the same fallback `Question.QuestionType` carries.
+        /// Without it a single unrecognised verdict string threw and killed the
+        /// decode of the WHOLE submit response, losing an evaluation the player
+        /// had already been charged for (the #133 V9 failure, one level up). A
+        /// shipped binary cannot be fixed retroactively, so the sixth verdict
+        /// has to degrade here rather than on the server.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = EvaluationResult(rawValue: rawValue) ?? .unknown
+        }
     }
 
     var isCorrect: Bool {
@@ -87,6 +102,8 @@ extension Evaluation {
             return "Partially Incorrect"
         case .skipped:
             return "Skipped"
+        case .unknown:
+            return "Answer recorded"
         }
     }
 
@@ -99,7 +116,7 @@ extension Evaluation {
             return "red"
         case .partiallyCorrect, .partiallyIncorrect:
             return "orange"
-        case .skipped:
+        case .skipped, .unknown:
             return "gray"
         }
     }

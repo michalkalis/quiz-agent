@@ -11,7 +11,9 @@ fact land hardest, and vary your approach across the batch however you see
 fit. Surprise us. There is no house style to imitate and no pattern list to
 follow; a batch that feels like one formula wrote it is a failure.
 
-## Non-negotiables
+{process_header}
+
+## THE CONTRACT (non-negotiables)
 
 1. **Grounding.** Each question's answer comes from ONE source fact below —
    never from your own knowledge. A weak fact is skipped, never forced. Copy
@@ -32,6 +34,7 @@ follow; a batch that feels like one formula wrote it is a failure.
    quirks) — those are dropped from non-English sessions.
 6. **Response format.** Emit exactly the output contract at the end of this
    prompt — field order, canonical short answers, honest flags.
+{craft_guards_section}
 
 ## This Order
 

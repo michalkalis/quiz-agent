@@ -1,0 +1,182 @@
+{
+  "q01": {
+    "arm": "craft",
+    "original_id": "141ac8e6-1f20-4d5d-9cd6-4388b4e10463",
+    "topic": "The History Of Chess",
+    "question": "What contains more items: the number of possible chess games, or all the atoms in the observable universe?"
+  },
+  "q02": {
+    "arm": "old",
+    "original_id": "2ac4e0ee-511a-4ad2-8840-9490f0f610c7",
+    "topic": "The History Of Board Games",
+    "question": "Which lasted continuously longer: the Royal Game of Ur, or the Roman Empire?"
+  },
+  "q03": {
+    "arm": "old",
+    "original_id": "6324b9b6-5ca0-4b34-b39b-ddfe6cefc6ca",
+    "topic": "The History Of Coffee",
+    "question": "What unexpected long-term consequence did the 1773 Boston Tea Party have on American culture?"
+  },
+  "q04": {
+    "arm": "free",
+    "original_id": "7bed55f5-c626-4a91-9286-21b65ec4f707",
+    "topic": "The Voyager Golden Record",
+    "question": "What element is electroplated onto the Voyager Golden Record's cover to serve as a radioactive clock for any future discoverers?"
+  },
+  "q05": {
+    "arm": "free",
+    "original_id": "ee666191-dd92-4b88-ac83-b3d20cbc0e5a",
+    "topic": "Undersea Internet Cables",
+    "question": "What causes approximately three-quarters of all submarine cable faults?"
+  },
+  "q06": {
+    "arm": "free",
+    "original_id": "2c8a0325-fdc2-4a16-bf14-9191beb75aa4",
+    "topic": "The History Of Chess",
+    "question": "What was 'The Turk,' the chess-playing 'machine' unveiled in 1770?"
+  },
+  "q07": {
+    "arm": "free",
+    "original_id": "bf609430-0cd2-4c23-8abf-31deb8c7298b",
+    "topic": "The History Of Chess",
+    "question": "What was the subject of the second book ever printed in English?"
+  },
+  "q08": {
+    "arm": "old",
+    "original_id": "b1534335-522a-45fc-a553-404b31b3b6d3",
+    "topic": "The History Of Coffee",
+    "question": "How did Pope Clement VIII resolve 17th-century debates about whether Catholics could drink coffee?"
+  },
+  "q09": {
+    "arm": "free",
+    "original_id": "9d401475-4eff-4a15-b18c-ec83b9726827",
+    "topic": "Black Holes And Event Horizons",
+    "question": "What surprising substance is a billion-solar-mass black hole LESS dense than?"
+  },
+  "q10": {
+    "arm": "old",
+    "original_id": "2e3e8cfc-17df-4ec4-92bc-14860b1019cf",
+    "topic": "The Mariana Trench",
+    "question": "Seven miles down in the Challenger Deep, researchers lowered a microphone expecting silence. What happened within the first three weeks?"
+  },
+  "q11": {
+    "arm": "craft",
+    "original_id": "8677748d-0dcc-4ccf-b040-6802dcee01c8",
+    "topic": "The Voyager Golden Record",
+    "question": "After public criticism over nudity on an earlier space plaque, NASA banned a photograph of a naked couple from the 1977 Voyager Golden Record — yet included anatomically correct nude figures anyway. Where did they hide them?"
+  },
+  "q12": {
+    "arm": "craft",
+    "original_id": "f2a11d0e-d102-4eb2-b44e-1d1eab372b57",
+    "topic": "Black Holes And Event Horizons",
+    "question": "What surprising physical property does a black hole with one billion times the mass of our Sun possess?"
+  },
+  "q13": {
+    "arm": "old",
+    "original_id": "cd3e3e31-2162-4603-9e8a-e802111b3630",
+    "topic": "Bird Migration And Navigation",
+    "question": "How do young migratory birds find their wintering grounds when they've never migrated before and no adults accompany them?"
+  },
+  "q14": {
+    "arm": "old",
+    "original_id": "8d05d77f-f715-46fc-a2db-475254571d3f",
+    "topic": "Untranslatable Words",
+    "question": "What six-letter English word meaning 'beautiful thinking' holds the record for shortest word containing all six vowels?"
+  },
+  "q15": {
+    "arm": "free",
+    "original_id": "25b531b3-d043-40aa-ab7d-a7671beff12f",
+    "topic": "The History Of Board Games",
+    "question": "What was the original purpose of The Landlord's Game, the direct ancestor of Monopoly?"
+  },
+  "q16": {
+    "arm": "free",
+    "original_id": "e902f59f-6fe5-485c-9d28-ef5836ab5d62",
+    "topic": "Bird Migration And Navigation",
+    "question": "How do juvenile birds navigate to winter homes they've never seen before?"
+  },
+  "q17": {
+    "arm": "craft",
+    "original_id": "b06844b6-1e2a-454a-b77c-4134868f396b",
+    "topic": "Bird Migration And Navigation",
+    "question": "When do the vast majority of migratory birds actually travel: during daylight hours or at night?"
+  },
+  "q18": {
+    "arm": "old",
+    "original_id": "22dd07c0-6ed7-4452-86b9-401bb8f60e7f",
+    "topic": "The Mariana Trench",
+    "question": "Scientists dropped a microphone into the deepest part of the Mariana Trench in 2015, expecting mostly silence. How long did it take for the recordings to fill the device's entire storage capacity?"
+  },
+  "q19": {
+    "arm": "free",
+    "original_id": "04a7dd32-1e04-4d70-ab2b-4102a46a6de1",
+    "topic": "Undersea Internet Cables",
+    "question": "How long did it take to transmit just one character across the first transatlantic undersea cable in 1858?"
+  },
+  "q20": {
+    "arm": "craft",
+    "original_id": "e9b051dd-da74-4e49-9ba8-1a765dbfff89",
+    "topic": "Undersea Internet Cables",
+    "question": "If every satellite suddenly failed tomorrow, what share of intercontinental internet traffic would still flow?"
+  },
+  "q21": {
+    "arm": "craft",
+    "original_id": "a9b21d23-ff71-49a2-8177-f147e8e79cab",
+    "topic": "The Voyager Golden Record",
+    "question": "The cover of the Voyager Golden Record contains a built-in clock using what radioactive element, designed to tell extraterrestrials how long ago it launched even after billions of years?"
+  },
+  "q22": {
+    "arm": "craft",
+    "original_id": "2e5e48d2-0733-48b0-81ca-97efdd155ede",
+    "topic": "Black Holes And Event Horizons",
+    "question": "Which has lower density: a billion-solar-mass black hole or Earth's atmosphere at sea level?"
+  },
+  "q23": {
+    "arm": "free",
+    "original_id": "43eb5b88-dcb9-4ba9-9b74-ba879579a63f",
+    "topic": "The History Of Board Games",
+    "question": "In what unlikely location was the board game Candy Land invented?"
+  },
+  "q24": {
+    "arm": "craft",
+    "original_id": "40b23204-dcd6-4e87-b405-cac77e8b0ba0",
+    "topic": "The Mariana Trench",
+    "question": "When scientists lowered a microphone into the deepest point on Earth in 2015, how long did its memory last?"
+  },
+  "q25": {
+    "arm": "craft",
+    "original_id": "80241660-ec7f-4aed-9469-aa32289794dd",
+    "topic": "How Cheese Is Made",
+    "question": "According to legend, how might the first cheese have been created by accident by a merchant crossing the desert around 1000 BCE?"
+  },
+  "q26": {
+    "arm": "free",
+    "original_id": "be0e9031-b987-4273-b8ed-8ef782906c3b",
+    "topic": "logic puzzles",
+    "question": "A hunter always lies on Mondays, Tuesdays, and Wednesdays, but tells the truth the other days. One day he announces: 'I lie every day.' What day is it?"
+  },
+  "q27": {
+    "arm": "old",
+    "original_id": "afbf3d96-da4e-4679-b4e4-c6f8ba9fcf78",
+    "topic": "Undersea Internet Cables",
+    "question": "Which carries more communication capacity: the first 1858 transatlantic cable, or a single modern fiber pair?"
+  },
+  "q28": {
+    "arm": "old",
+    "original_id": "f99c53ae-4aa1-4170-b254-e81ee7ee1116",
+    "topic": "The History Of Board Games",
+    "question": "Where was the board game Candy Land invented, and why was it designed with no reading or strategy required?"
+  },
+  "q29": {
+    "arm": "old",
+    "original_id": "184a09da-387d-477c-8ab0-e1438b199bd9",
+    "topic": "lateral thinking",
+    "question": "A man is found dead in a locked room. There is a puddle of water, some broken glass, and he is hanging from the ceiling. There is no furniture, no ladder, and no one else could have entered or left. How did he get up there?"
+  },
+  "q30": {
+    "arm": "craft",
+    "original_id": "a90a7cb2-4a6e-4ea1-b658-dfc310e0f03e",
+    "topic": "The History Of Board Games",
+    "question": "The board game Candy Land was invented in 1948 by a retired schoolteacher while she was doing what?"
+  }
+}

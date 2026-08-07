@@ -1,0 +1,16 @@
+{
+  "stages": {
+    "verifying": {
+      "deepseek.v3.2": {
+        "calls": 9,
+        "input_tokens": 6166,
+        "output_tokens": 2490,
+        "calls_without_usage": 0,
+        "cost_cents": 0.4465
+      }
+    }
+  },
+  "total_cost_cents_known": 0.4465,
+  "unpriced_models": [],
+  "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
+}

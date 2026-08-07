@@ -50,8 +50,13 @@ from typing import Any, Sequence
 # from the apps/quiz-pack-api/ working dir.
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _APP_DIR = os.path.dirname(_SCRIPT_DIR)
-if _APP_DIR not in sys.path:
-    sys.path.insert(0, _APP_DIR)
+# _APP_DIR must be FIRST, not merely present: the workspace venv's editable
+# .pth entries put apps/quiz-agent (which also owns a top-level `app`
+# package) ahead of apps/quiz-pack-api, so a plain membership check leaves
+# `import app` resolving to the wrong service under `uv run python scripts/…`.
+if _APP_DIR in sys.path:
+    sys.path.remove(_APP_DIR)
+sys.path.insert(0, _APP_DIR)
 
 from app import cost_tracking, llm_usage
 from app.db.models import GenerationOrder
@@ -394,6 +399,13 @@ async def _run(args: argparse.Namespace) -> int:
     persist = not args.dry_run
     order = _build_order(args)
     dedup_store = _build_dedup_store(args.dedup_store)
+    # #153 Phase 0.5 — the handler must be registered BEFORE _build_stages:
+    # generation/critique clients are constructed inside it and pick up the
+    # handler at construction time. Registering after (the original order)
+    # silently dropped every generation-stage call from the usage table —
+    # only lazily-created clients (verification) were counted.
+    usage_recorder = llm_usage.UsageRecorder()
+    llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(usage_recorder))
     stages = _build_stages(
         persist=persist,
         dedup_store=dedup_store,
@@ -427,11 +439,6 @@ async def _run(args: argparse.Namespace) -> int:
     # run (see app.cost_tracking for the shared-account caveat).
     tracker, tracker_token = cost_tracking.activate()
     usage_before = await cost_tracking.fetch_openrouter_usage()
-    # #153 Phase 0.5 — per-stage/model token usage for this run (durable
-    # per-arm cost data; see app.llm_usage module docstring for what it does
-    # and does not cover).
-    usage_recorder = llm_usage.UsageRecorder()
-    llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(usage_recorder))
     try:
         pack = await pack_generator.run(order)
     finally:

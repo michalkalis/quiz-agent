@@ -239,26 +239,33 @@ def test_chat_openai_openrouter_resolves_slug_and_base_url(monkeypatch):
     assert "openrouter.ai" in str(llm.openai_api_base)
 
 
-def test_chat_openai_attaches_usage_handler_when_set(monkeypatch):
-    """#153 Phase 0.5 — the registered usage-recording callback must reach
-    every client `chat_openai` builds, or per-call token counting silently
-    misses whichever call sites forget to check."""
-    from langchain_core.callbacks import BaseCallbackHandler
-
+def test_chat_openai_always_attaches_usage_proxy(monkeypatch):
+    """#153 Phase 0.5 — every client carries the usage PROXY, which resolves
+    the recorder at event time. Construction-time attachment of the handler
+    itself lost the worker's startup-built generation/critique clients (the
+    first Phase A run counted only verification calls)."""
     monkeypatch.setenv("LLM_GATEWAY", "direct")
-    handler = BaseCallbackHandler()
-    factory.set_usage_handler(handler)
+    llm = factory.chat_openai("gpt-4o")
+    assert factory._usage_proxy_handler() in (llm.callbacks or [])
+
+
+def test_usage_proxy_forwards_only_while_handler_registered():
+    """The proxy must forward to a handler registered AFTER the client was
+    built, and go quiet again once it is cleared — that late binding is the
+    whole point of the proxy."""
+    seen: list = []
+
+    class _Recorder:
+        def on_llm_end(self, response, **kwargs):
+            seen.append(response)
+
+    proxy = factory._usage_proxy_handler()
+    proxy.on_llm_end("before-registration")
+    assert seen == []
+    factory.set_usage_handler(_Recorder())
     try:
-        llm = factory.chat_openai("gpt-4o")
-        assert handler in (llm.callbacks or [])
+        proxy.on_llm_end("while-registered")
     finally:
         factory.set_usage_handler(None)
-
-
-def test_chat_openai_no_callbacks_when_usage_handler_unset(monkeypatch):
-    """Zero behavior change for quiz-agent's serve-time path, which never
-    registers a usage handler."""
-    monkeypatch.setenv("LLM_GATEWAY", "direct")
-    assert factory.get_usage_handler() is None
-    llm = factory.chat_openai("gpt-4o")
-    assert not llm.callbacks
+    proxy.on_llm_end("after-clear")
+    assert seen == ["while-registered"]

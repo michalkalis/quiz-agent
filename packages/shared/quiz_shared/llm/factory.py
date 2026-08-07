@@ -70,6 +70,34 @@ def get_usage_handler() -> Optional[Any]:
     return _usage_handler
 
 
+_usage_proxy: Optional[Any] = None
+
+
+def _usage_proxy_handler() -> Any:
+    """Singleton callback forwarding to the CURRENTLY registered handler.
+
+    Attached to every client unconditionally so registration order cannot
+    lose calls: the worker builds its generation/critique clients once at
+    startup, long before a per-order recorder registers — a directly
+    attached handler would miss them entirely (it silently dropped every
+    generation-stage call in the first #153 Phase A run; only lazily built
+    clients were counted). The proxy resolves the handler at event time and
+    no-ops when nothing is registered.
+    """
+    global _usage_proxy
+    if _usage_proxy is None:
+        from langchain_core.callbacks import BaseCallbackHandler
+
+        class _UsageProxy(BaseCallbackHandler):
+            def on_llm_end(self, response: Any, **kwargs: Any) -> None:
+                handler = _usage_handler
+                if handler is not None:
+                    handler.on_llm_end(response, **kwargs)
+
+        _usage_proxy = _UsageProxy()
+    return _usage_proxy
+
+
 # Bounds every openai_client() call so the voice-quiz hot path (TTS, Whisper,
 # translation, evaluation) never inherits the OpenAI SDK's 600s default.
 # ~30s covers that path's latency budget; 5s connect is generous for any
@@ -354,14 +382,16 @@ def chat_openai(model: str, **kwargs):
         kwargs.pop("temperature", None)
         kwargs.pop("top_p", None)
 
-    # #153 Phase 0.5 — attach the registered usage-recording callback (if
-    # any) so every client this call builds reports per-call token usage.
-    # No-op (kwargs unchanged) when nothing is registered.
-    if _usage_handler is not None:
-        callbacks = list(kwargs.get("callbacks") or [])
-        if _usage_handler not in callbacks:
-            callbacks.append(_usage_handler)
-        kwargs["callbacks"] = callbacks
+    # #153 Phase 0.5 — always attach the usage proxy so per-call token usage
+    # reaches whichever recorder is registered AT CALL TIME (see
+    # `_usage_proxy_handler` for why construction-time attachment loses the
+    # worker's startup-built clients). No-op at event time when nothing is
+    # registered.
+    callbacks = list(kwargs.get("callbacks") or [])
+    proxy = _usage_proxy_handler()
+    if proxy not in callbacks:
+        callbacks.append(proxy)
+    kwargs["callbacks"] = callbacks
 
     if is_bedrock_model(model):
         return _chat_bedrock(model, **kwargs)

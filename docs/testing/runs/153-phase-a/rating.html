@@ -1,0 +1,593 @@
+<title>Hodnotenie otázok — kolo 1</title>
+<style>
+  :root {
+    --bg: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --ink: #15171f;
+    --ink-soft: #3d4354;
+    --muted: #6b7285;
+    --line: #d9dce4;
+    --line-soft: #e8eaf0;
+    --accent: #2f39a6;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2e4f7;
+    --good: #1d7a4c;
+    --warn: #9a5b12;
+    --shadow: 0 1px 2px rgba(21, 23, 31, .06), 0 8px 24px rgba(21, 23, 31, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1016;
+      --surface: #161923;
+      --surface-2: #1c2030;
+      --ink: #e8eaf1;
+      --ink-soft: #c3c8d6;
+      --muted: #8f97ab;
+      --line: #2a2f3d;
+      --line-soft: #232838;
+      --accent: #8e9aff;
+      --accent-ink: #10131c;
+      --accent-soft: #262c47;
+      --good: #4fbd85;
+      --warn: #d9a44a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1016;
+    --surface: #161923;
+    --surface-2: #1c2030;
+    --ink: #e8eaf1;
+    --ink-soft: #c3c8d6;
+    --muted: #8f97ab;
+    --line: #2a2f3d;
+    --line-soft: #232838;
+    --accent: #8e9aff;
+    --accent-ink: #10131c;
+    --accent-soft: #262c47;
+    --good: #4fbd85;
+    --warn: #d9a44a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-inner {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: .7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .brand b { color: var(--ink); font-weight: 600; }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-num { font-size: 1.05rem; font-weight: 650; }
+  .stat-lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .track {
+    flex: 1 1 8rem;
+    min-width: 6rem;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--line-soft);
+    overflow: hidden;
+  }
+  .track > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    padding: .38rem .7rem;
+    font-size: .82rem;
+  }
+  button:hover { border-color: var(--accent); color: var(--ink); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.25rem 6rem; }
+
+  .lede { max-width: 42rem; margin-bottom: 2.5rem; }
+  .lede h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.15;
+    margin: 0 0 .6rem;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .lede p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .meta-line {
+    margin-top: 1rem;
+    display: flex;
+    gap: .5rem 1.4rem;
+    flex-wrap: wrap;
+    font-size: .78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-line b { color: var(--ink-soft); font-weight: 600; }
+
+  .cards { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.35rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    scroll-margin-top: 5rem;
+  }
+  .card[data-rated="1"] { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+  .head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .idx {
+    font-variant-numeric: tabular-nums;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: .12rem .45rem;
+  }
+  .card[data-rated="1"] .idx { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .chip {
+    font-size: .7rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: .1rem .55rem;
+  }
+  .chip.mcq { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+
+  .q {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.24rem;
+    line-height: 1.4;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .opts { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .opts li {
+    font-size: .9rem;
+    color: var(--ink-soft);
+    padding: .22rem .5rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  .opts li.correct {
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+    border-color: color-mix(in srgb, var(--good) 35%, transparent);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .opts .key { color: var(--muted); font-weight: 600; margin-right: .45rem; font-variant-numeric: tabular-nums; }
+
+  .answer { font-size: .95rem; }
+  .answer .lbl { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; margin-right: .5rem; }
+  .answer .val { font-weight: 650; color: var(--good); }
+
+  details.more { border-top: 1px dashed var(--line); padding-top: .7rem; }
+  details.more summary {
+    cursor: pointer;
+    font-size: .76rem;
+    color: var(--muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::before { content: "+ "; }
+  details.more[open] summary::before { content: "– "; }
+  details.more .body { font-size: .88rem; color: var(--ink-soft); margin-top: .6rem; display: grid; gap: .5rem; }
+  details.more a { color: var(--accent); word-break: break-word; }
+
+  .rate { border-top: 1px solid var(--line-soft); padding-top: .95rem; display: grid; gap: .6rem; }
+  .rate-top { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .rate-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+  .verdict { font-size: .8rem; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .verdict b { color: var(--ink); font-size: 1rem; }
+
+  .meter { display: flex; gap: 3px; }
+  .meter label { flex: 1 1 0; }
+  .meter input { position: absolute; opacity: 0; pointer-events: none; }
+  .meter span {
+    display: block;
+    text-align: center;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    padding: .42rem 0;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .meter label:hover span { border-color: var(--accent); color: var(--ink); }
+  .meter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .meter label.on span { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+  .meter label.peak span { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 700; }
+
+  textarea {
+    font: inherit;
+    font-size: .9rem;
+    width: 100%;
+    resize: vertical;
+    min-height: 2.6rem;
+    padding: .55rem .7rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); outline: none; background: var(--surface); }
+
+  .export {
+    margin-top: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    gap: .7rem;
+    box-shadow: var(--shadow);
+  }
+  .export-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .export p { margin: 0 auto 0 0; font-size: .85rem; color: var(--muted); max-width: 28rem; }
+  .export textarea {
+    display: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem;
+    min-height: 12rem;
+  }
+  .export textarea.show { display: block; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translate(-50%, 2rem);
+    background: var(--ink);
+    color: var(--bg);
+    padding: .5rem .95rem;
+    border-radius: 99px;
+    font-size: .84rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+  @media (max-width: 34rem) {
+    .meter { flex-wrap: wrap; }
+    .meter label { flex: 1 1 18%; }
+    .card { padding: 1.1rem 1rem 1rem; }
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="brand">Hodnotenie otázok</div>
+    <div class="stat"><span class="stat-num" id="doneN">0</span><span class="stat-lbl">z <span id="totalN">0</span> ohodnotených</span></div>
+    <div class="track"><i id="trackFill"></i></div>
+    <div class="stat"><span class="stat-num" id="avgN">–</span><span class="stat-lbl">priemer</span></div>
+    <button id="jumpBtn">Ďalšia neohodnotená</button>
+  </div>
+</div>
+
+<main>
+  <div class="lede">
+    <h1>Hodnotenie otázok — kolo 1</h1>
+    <p>Každú otázku ohodnoť na škále 1 až 10 a voliteľne pripíš dôvod. Hodnotenie sa priebežne ukladá v prehliadači, takže stránku môžeš zavrieť a vrátiť sa. Na konci si výsledok skopíruj alebo stiahni ako JSON.</p>
+    <div class="meta-line" id="metaLine"></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="export">
+    <div class="export-row">
+      <p>Hotové hodnotenia si vezmi so sebou: JSON obsahuje otázku, skóre aj dôvod.</p>
+      <button id="copyBtn" class="primary">Kopírovať JSON</button>
+      <button id="dlBtn">Stiahnuť JSON</button>
+      <button id="showBtn">Zobraziť JSON</button>
+      <button id="clearBtn">Vymazať hodnotenia</button>
+    </div>
+    <textarea id="jsonOut" readonly spellcheck="false" aria-label="Export JSON"></textarea>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script id="meta" type="application/json">{"title": "Hodnotenie otázok — kolo 1", "batch_id": "153-phase-a", "count": 30}</script>
+<script id="data" type="application/json">[{"id": "q01", "question": "What contains more items: the number of possible chess games, or all the atoms in the observable universe?", "options": null, "correct_answer": "Possible chess games", "alternative_answers": ["Chess games", "Possible games of chess"], "explanation": "Mathematician Claude Shannon calculated about 10^120 possible 40-move chess games. The observable universe contains roughly 10^80 atoms. There are more chess games than atoms by a factor of 100 billion billion billion billion.", "topic": "The History Of Chess", "difficulty": "medium", "source_url": "https://artsandculture.google.com/story/10-surprising-facts-about-chess-international-chess-federation-fide/MQWhPesGHzVCIQ?hl=en"}, {"id": "q02", "question": "Which lasted continuously longer: the Royal Game of Ur, or the Roman Empire?", "options": {"a": "The Royal Game of Ur", "b": "The Roman Empire"}, "correct_answer": "The Royal Game of Ur", "alternative_answers": [], "explanation": "The Royal Game of Ur spans 4,500 years from 2600 BCE to 1950s India—far outlasting Rome's roughly 1,200 years from founding to fall.", "topic": "The History Of Board Games", "difficulty": "medium", "source_url": "https://funfactco.com/blogs/fact-blasts/history-of-board-games"}, {"id": "q03", "question": "What unexpected long-term consequence did the 1773 Boston Tea Party have on American culture?", "options": null, "correct_answer": "Switched preference to coffee", "alternative_answers": ["Made coffee the national drink", "Americans chose coffee over tea", "Permanent shift to coffee"], "explanation": "The protest against British tea taxes created a lasting patriotic preference—Americans switched to coffee and never looked back.", "topic": "The History Of Coffee", "difficulty": "easy", "source_url": "https://www.aboutcoffee.org/origins/history-of-coffee"}, {"id": "q04", "question": "What element is electroplated onto the Voyager Golden Record's cover to serve as a radioactive clock for any future discoverers?", "options": null, "correct_answer": "Uranium-238", "alternative_answers": ["Uranium 238"], "explanation": "With a 4.51 billion year half-life, measuring its decay tells extraterrestrials precisely when humans launched this message into the void.", "topic": "The Voyager Golden Record", "difficulty": "hard", "source_url": "https://thekidshouldseethis.com/post/decoding-the-voyager-golden-record"}, {"id": "q05", "question": "What causes approximately three-quarters of all submarine cable faults?", "options": {"a": "Shark and fish bites", "b": "Anchors and fishing trawls", "c": "Undersea earthquakes and tsunamis", "d": "Intentional sabotage by foreign powers"}, "correct_answer": "Anchors and fishing trawls", "alternative_answers": [], "explanation": "Despite shark-bite legends, human activities—dropped anchors and fishing trawls—destroy cables far more often than any marine life.", "topic": "Undersea Internet Cables", "difficulty": "easy", "source_url": "https://www.pingdom.com/blog/fabulous-facts-you-didnt-know-about-submarine-data-cables"}, {"id": "q06", "question": "What was 'The Turk,' the chess-playing 'machine' unveiled in 1770?", "options": {"a": "An early steam-powered computer from the Industrial Revolution", "b": "A chess-playing dog trained by Hungarian nobility", "c": "A hoax with a hidden human player inside", "d": "A clockwork automaton that genuinely played chess"}, "correct_answer": "A hoax with a hidden human player inside", "alternative_answers": [], "explanation": "For 87 years, a concealed chess master operated the mechanical puppet—Edgar Allan Poe even wrote an essay trying to expose the secret, but the trick persisted until 1857.", "topic": "The History Of Chess", "difficulty": "medium", "source_url": "https://www.chesshouse.com/blogs/education/32-interesting-chess-facts-to-impress-your-friends"}, {"id": "q07", "question": "What was the subject of the second book ever printed in English?", "options": null, "correct_answer": "Chess", "alternative_answers": [], "explanation": "William Caxton's 'The Game and Playe of Chesse' followed only one other work in English—making chess literature older than most of the language's canon.", "topic": "The History Of Chess", "difficulty": "hard", "source_url": "https://artsandculture.google.com/story/10-surprising-facts-about-chess-international-chess-federation-fide/MQWhPesGHzVCIQ?hl=en"}, {"id": "q08", "question": "How did Pope Clement VIII resolve 17th-century debates about whether Catholics could drink coffee?", "options": null, "correct_answer": "Tasted and approved it", "alternative_answers": ["He drank it and approved", "Personal intervention tasting", "Declared it delicious"], "explanation": "After clergy condemned coffee as 'Satan's drink,' the Pope tried it, found it delicious, and declared it too good to leave to non-Christians—giving it papal blessing.", "topic": "The History Of Coffee", "difficulty": "medium", "source_url": "https://www.thecollector.com/history-of-coffee-surprising-facts"}, {"id": "q09", "question": "What surprising substance is a billion-solar-mass black hole LESS dense than?", "options": null, "correct_answer": "Air", "alternative_answers": ["Earth's atmosphere", "Atmosphere"], "explanation": "As black holes grow, their event horizon expands linearly while volume grows cubically—dropping density to roughly one-thousandth of a gram per cubic centimeter, lighter than Earth's atmosphere.", "topic": "Black Holes And Event Horizons", "difficulty": "hard", "source_url": "https://www.discovermagazine.com/ten-things-you-dont-know-about-black-holes-67"}, {"id": "q10", "question": "Seven miles down in the Challenger Deep, researchers lowered a microphone expecting silence. What happened within the first three weeks?", "options": null, "correct_answer": "It filled with data", "alternative_answers": ["Data capacity filled", "Memory was full", "It recorded constantly"], "explanation": "The hydrophone recorded earthquakes, typhoons, whale calls, and even ship engines. Life and sound permeate even the deepest point on Earth.", "topic": "The Mariana Trench", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/Mariana_Trench"}, {"id": "q11", "question": "After public criticism over nudity on an earlier space plaque, NASA banned a photograph of a naked couple from the 1977 Voyager Golden Record — yet included anatomically correct nude figures anyway. Where did they hide them?", "options": null, "correct_answer": "In a diagram of evolution", "alternative_answers": ["Vertebrate evolution diagram", "Evolution diagram", "Scientific diagram"], "explanation": "The record includes Jon Lomberg's 'Diagram of vertebrate evolution,' which shows an anatomically correct naked male and female with external organs. As a subtle change from the earlier Pioneer plaque, the woman waves instead of the man.", "topic": "The Voyager Golden Record", "difficulty": "hard", "source_url": "https://en.wikipedia.org/wiki/Voyager_Golden_Record"}, {"id": "q12", "question": "What surprising physical property does a black hole with one billion times the mass of our Sun possess?", "options": null, "correct_answer": "Lower density than air", "alternative_answers": ["Less dense than air", "Density of air", "Lower than atmospheric density"], "explanation": "As black holes grow more massive, their density decreases. A billion solar mass black hole has roughly one-thousandth of a gram per cubic centimeter — less dense than Earth's atmosphere — yet its gravity is still inescapable.", "topic": "Black Holes And Event Horizons", "difficulty": "hard", "source_url": "https://www.discovermagazine.com/ten-things-you-dont-know-about-black-holes-67"}, {"id": "q13", "question": "How do young migratory birds find their wintering grounds when they've never migrated before and no adults accompany them?", "options": null, "correct_answer": "Innate navigation abilities", "alternative_answers": ["Built-in navigation", "Instinctive migration", "Genetic programming"], "explanation": "Juvenile birds migrate alone using built-in magnetic sensing, star patterns, and other cues—arriving at destinations they've never seen, sometimes months after hatching.", "topic": "Bird Migration And Navigation", "difficulty": "medium", "source_url": "https://www.rspb.org.uk/birds-and-wildlife/bird-migration"}, {"id": "q14", "question": "What six-letter English word meaning 'beautiful thinking' holds the record for shortest word containing all six vowels?", "options": null, "correct_answer": "Eunoia", "alternative_answers": ["Eunoia"], "explanation": "From ancient Greek for 'well mind,' eunoia beats longer competitors like 'sequoia' and 'facetious' by packing all six vowels into just six letters.", "topic": "Untranslatable Words", "difficulty": "hard", "source_url": "https://blog.stephsmith.io/untranslatable-words"}, {"id": "q15", "question": "What was the original purpose of The Landlord's Game, the direct ancestor of Monopoly?", "options": null, "correct_answer": "To critique monopolies", "alternative_answers": ["Anti-capitalist education", "Teach about monopoly dangers"], "explanation": "Lizzie Magie designed it as anti-capitalist propaganda; Charles Darrow later copied it, removed the lesson, and sold it as celebration of wealth accumulation.", "topic": "The History Of Board Games", "difficulty": "medium", "source_url": "https://www.mentalfloss.com/history/board-games-surprising-origins"}, {"id": "q16", "question": "How do juvenile birds navigate to winter homes they've never seen before?", "options": {"a": "By following adult birds on their first journey", "b": "Using magnetic fields and star rotation alone", "c": "By memorizing landmarks during a practice flight", "d": "Through weather pattern recognition learned in the nest"}, "correct_answer": "Using magnetic fields and star rotation alone", "alternative_answers": [], "explanation": "Without parents or experience, they inherit magnetic field detection and star navigation—flying solo across continents on built-in instinct.", "topic": "Bird Migration And Navigation", "difficulty": "medium", "source_url": "https://www.allaboutbirds.org/news/the-basics-how-why-and-where-of-bird-migration"}, {"id": "q17", "question": "When do the vast majority of migratory birds actually travel: during daylight hours or at night?", "options": {"a": "During daylight hours", "b": "At night"}, "correct_answer": "At night", "alternative_answers": [], "explanation": "Most birds migrate at night to avoid predators, use cooler temperatures, and navigate by star positions. Radar studies show hundreds of millions of birds fly overhead in darkness — a hidden highway most people never notice.", "topic": "Bird Migration And Navigation", "difficulty": "easy", "source_url": "https://www.allaboutbirds.org/news/the-basics-how-why-and-where-of-bird-migration"}, {"id": "q18", "question": "Scientists dropped a microphone into the deepest part of the Mariana Trench in 2015, expecting mostly silence. How long did it take for the recordings to fill the device's entire storage capacity?", "options": null, "correct_answer": "23 days", "alternative_answers": ["twenty-three days", "less than a month", "about three weeks"], "explanation": "The hydrophone captured earthquakes, typhoons, baleen whales, and even distant boat engines—proving the deepest ocean is surprisingly noisy, not silent.", "topic": "The Mariana Trench", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/Mariana_Trench"}, {"id": "q19", "question": "How long did it take to transmit just one character across the first transatlantic undersea cable in 1858?", "options": null, "correct_answer": "2 minutes", "alternative_answers": ["two minutes", "120 seconds"], "explanation": "That glacial speed still destroyed the competition—ships took ten days to carry messages across the ocean.", "topic": "Undersea Internet Cables", "difficulty": "medium", "source_url": "https://www.pingdom.com/blog/fabulous-facts-you-didnt-know-about-submarine-data-cables"}, {"id": "q20", "question": "If every satellite suddenly failed tomorrow, what share of intercontinental internet traffic would still flow?", "options": {"a": "About 10%", "b": "About 50%", "c": "About 99%", "d": "Virtually none"}, "correct_answer": "About 99%", "alternative_answers": [], "explanation": "About 99% of intercontinental internet traffic travels through submarine fiber optic cables on the ocean floor. Satellites handle less than one percent, mainly serving remote areas where cables don't reach.", "topic": "Undersea Internet Cables", "difficulty": "medium", "source_url": "https://www.pingdom.com/blog/fabulous-facts-you-didnt-know-about-submarine-data-cables"}, {"id": "q21", "question": "The cover of the Voyager Golden Record contains a built-in clock using what radioactive element, designed to tell extraterrestrials how long ago it launched even after billions of years?", "options": null, "correct_answer": "Uranium-238", "alternative_answers": ["Uranium", "U-238"], "explanation": "Electroplated onto the cover is ultra-pure uranium-238 with a half-life of 4.51 billion years. By measuring the ratio of parent to daughter isotopes, any discoverer could calculate when the spacecraft left Earth.", "topic": "The Voyager Golden Record", "difficulty": "hard", "source_url": "https://www.planetary.org/articles/the-voyager-golden-records"}, {"id": "q22", "question": "Which has lower density: a billion-solar-mass black hole or Earth's atmosphere at sea level?", "options": {"a": "The black hole", "b": "Earth's atmosphere", "c": "They are equal", "d": "Density cannot be measured for black holes"}, "correct_answer": "The black hole", "alternative_answers": [], "explanation": "As black holes grow, their density drops dramatically. A billion-solar-mass black hole's event horizon spans three billion kilometers, making its average density roughly one-thousandth of a gram per cubic centimeter—less than air's density.", "topic": "Black Holes And Event Horizons", "difficulty": "hard", "source_url": "https://www.discovermagazine.com/ten-things-you-dont-know-about-black-holes-67"}, {"id": "q23", "question": "In what unlikely location was the board game Candy Land invented?", "options": null, "correct_answer": "A polio ward", "alternative_answers": ["Hospital polio ward", "San Diego hospital"], "explanation": "Retired teacher Eleanor Abbott created it for children she shared a San Diego hospital ward with—no strategy or reading required, so even severely ill kids could play.", "topic": "The History Of Board Games", "difficulty": "medium", "source_url": "https://www.mentalfloss.com/history/board-games-surprising-origins"}, {"id": "q24", "question": "When scientists lowered a microphone into the deepest point on Earth in 2015, how long did its memory last?", "options": {"a": "Under 1 day", "b": "23 days", "c": "6 months", "d": "Until retrieval 4 months later"}, "correct_answer": "23 days", "alternative_answers": [], "explanation": "The titanium-shelled hydrophone reached the Challenger Deep, seven miles down. Researchers expected sparse sound, but earthquakes, typhoons, whale calls, and ship noise filled the data capacity in just 23 days.", "topic": "The Mariana Trench", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/Mariana_Trench"}, {"id": "q25", "question": "According to legend, how might the first cheese have been created by accident by a merchant crossing the desert around 1000 BCE?", "options": null, "correct_answer": "Milk in a stomach pouch curdled", "alternative_answers": ["In a sheep's stomach pouch", "Rennet and heat curdled milk", "Desert heat with stomach lining"], "explanation": "An Arabian merchant reportedly stored milk in a pouch made from a sheep's stomach. The natural rennet in the lining plus desert heat caused the milk to separate into curds and whey — creating cheese and a thirst-quenching drink in one container.", "topic": "How Cheese Is Made", "difficulty": "medium", "source_url": "https://www.britannica.com/topic/cheese-making"}, {"id": "q26", "question": "A hunter always lies on Mondays, Tuesdays, and Wednesdays, but tells the truth the other days. One day he announces: 'I lie every day.' What day is it?", "options": null, "correct_answer": "Thursday", "alternative_answers": ["Thursday — first truth day after lying period", "Day after Wednesday", "First day of truth-telling week"], "explanation": "The hunter says 'I lie every day.' If this were a lying day (Monday–Wednesday), he'd be telling the truth — impossible. If it's a truth-telling day, he'd be lying — also impossible. The resolution: Thursday is the first day his statement becomes false in a new way. He used to lie Monday–Wednesday, so on Wednesday (lying) he'd falsely claim to lie every day. But on Thursday (truth), he cannot truthfully say he lies every day. The only consistent answer is Thursday: the statement is a lie, but he's supposed to tell the truth. Re-examining: on Thursday he tells the truth, so 'I lie every day' must be true — contradiction. The puzzle resolves as Thursday being the day after his last lying day, where the statement 'I lie every day' refers to his past pattern now ended. Most cleanly: he speaks on Thursday, and the statement is false because he no longer lies every day — but wait, he tells truth Thursday. The elegant resolution: it's Thursday, and he's lying about lying every day, which seems impossible... actually, re-solving: if he says 'I lie every day' on Thursday (truth day), it's false. Contradiction. The answer is Thursday because he's transitioning: he lied Monday-Wednesday, so 'every day' was almost true. On Thursday, as a truth day, he cannot say it. The puzzle works as: he says it on Thursday and is lying — but he can't. The intended answer is Thursday as the only day where the statement's falsity is newly established — he used to lie every day (Mon-Wed), and on Thursday he admits this past pattern ended. The cleanest resolution: it's Thursday, the first day he can truthfully say he USED TO lie every day, but actually he's saying 'I lie every day' falsely — meaning he doesn't. The puzzle's logic points to Thursday as the day where the statement becomes assessably false in a way that only works on a truth day if we interpret 'every day' as 'every day up to now including today' — which fails. After careful analysis: Thursday is when he can first truthfully reflect that his lying pattern has ended, making the statement 'I lie every day' a lie he tells on... no. Final resolution: The answer is Thursday because on Wednesday (lying) he'd say 'I tell the truth every day' falsely. On Thursday (truth), saying 'I lie every day' is false. The puzzle has no solution unless we allow that he's lying on Thursday — impossible. Therefore the answer must be that it's the day AFTER he stops: Thursday marks the first day he can say 'I lied every day' but actually says 'I lie' — present tense. The trick: 'I lie every day' is ambiguous between habit and future. On Thursday, he truthfully says he will lie every day from now on? No — he tells truth Thu-Sun. The canonical answer is Thursday: he spoke on Wednesday (lying day) saying 'I tell truth every day,' or the puzzle resolves as Thursday being when the statement 'I lie every day' is uttered as a lie about his past, which he can only do on... Re-reading: The hunter says 'I lie every day.' If Thursday: tells truth, statement must be true. But he doesn't lie every day. Contradiction. The puzzle as stated works if we interpret: he said it, and we deduce the day. If lying day: statement true — impossible. If truth day: statement false — impossible. Unless... 'every day' means 'every day of the week including today' — on Thursday, he doesn't lie, so statement false. But he tells truth. Dead end. The resolution: He said it on Thursday, and the statement is 'I lie every day' meaning 'I am lying right now' — which is a liar paradox, rendering the day Thursday by convention of such puzzles. The actual mechanism: on Wednesday (lying), he says 'I tell truth every day.' On Thursday (truth), if asked about lying, he says 'I lied Mon-Wed.' The puzzle as given has answer Thursday because it's the only day where the statement's evaluation creates a clean logical boundary — he used to lie every day (Mon-Wed = 3 days, 'every day' colloquially), and on Thursday he can say 'I lie every day' meaning 'I am in the habit of lying' — which is now false. As a truth-teller, he wouldn't. The puzzle resolves that he MUST be lying, so it's not Thursday... After deep analysis, the answer is Thursday: the puzzle contains a slight looseness where 'every day' is interpreted as 'habitually' and on Thursday he's acknowledging his past habit, but as a truth-teller he wouldn't claim present lying. The standard lateral answer: Thursday, as the day after his lying period, where the statement about lying 'every day' can be assessed as referring to completed past action.", "topic": "logic puzzles", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/Mariana_Trench"}, {"id": "q27", "question": "Which carries more communication capacity: the first 1858 transatlantic cable, or a single modern fiber pair?", "options": {"a": "The 1858 cable", "b": "A single modern fiber pair"}, "correct_answer": "A single modern fiber pair", "alternative_answers": [], "explanation": "The 1858 cable managed one character every two minutes; a single modern fiber pair handles 150 million simultaneous phone calls—an almost incomprehensible leap across 165 years.", "topic": "Undersea Internet Cables", "difficulty": "easy", "source_url": "https://www.pingdom.com/blog/fabulous-facts-you-didnt-know-about-submarine-data-cables"}, {"id": "q28", "question": "Where was the board game Candy Land invented, and why was it designed with no reading or strategy required?", "options": null, "correct_answer": "In a polio ward", "alternative_answers": ["San Diego polio ward", "Hospital polio ward", "For paralyzed children"], "explanation": "Eleanor Abbott created Candy Land in 1948 while recovering from polio, designing it so paralyzed children in her San Diego hospital ward could play without moving or reading.", "topic": "The History Of Board Games", "difficulty": "medium", "source_url": "https://www.mentalfloss.com/history/board-games-surprising-origins"}, {"id": "q29", "question": "A man is found dead in a locked room. There is a puddle of water, some broken glass, and he is hanging from the ceiling. There is no furniture, no ladder, and no one else could have entered or left. How did he get up there?", "options": null, "correct_answer": "He stood on a block of ice", "alternative_answers": ["He used a block of ice", "Ice block melted", "Stood on ice that melted", "Ice platform melted away", "Frozen water block"], "explanation": "The man placed a large block of ice beneath the noose, stood on it to tie and position himself, then waited for the ice to melt. The resulting puddle is the only remaining evidence of his platform. The broken glass may be from a window he entered through, or simply a drinking glass unrelated to the method — the key insight is that water in the room implies something that melted.", "topic": "lateral thinking", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/Mariana_Trench"}, {"id": "q30", "question": "The board game Candy Land was invented in 1948 by a retired schoolteacher while she was doing what?", "options": null, "correct_answer": "Recovering from polio in hospital", "alternative_answers": ["In a polio ward", "Recovering in hospital", "Treating polio patients"], "explanation": "Eleanor Abbott created Candy Land while convalescing in a San Diego polio ward. She designed it so children of all ages in the ward could play — no reading or strategy required, just color matching and hope.", "topic": "The History Of Board Games", "difficulty": "medium", "source_url": "https://www.mentalfloss.com/history/board-games-surprising-origins"}]</script>
+<script>
+(function () {
+  const QUESTIONS = JSON.parse(document.getElementById("data").textContent);
+  const META = JSON.parse(document.getElementById("meta").textContent);
+  const KEY = "quiz-ratings-" + (META.batch_id || "default");
+  const state = load();
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
+  ));
+
+  const cards = document.getElementById("cards");
+  const toastEl = document.getElementById("toast");
+  let toastTimer;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  QUESTIONS.forEach((q, i) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.id = "q" + i;
+    card.dataset.rated = state[q.id] && state[q.id].score ? "1" : "0";
+
+    const isMcq = q.options && Object.keys(q.options).length > 0;
+    const chips = [
+      isMcq ? '<span class="chip mcq">výber z možností</span>' : '<span class="chip">otvorená</span>',
+      q.topic ? '<span class="chip">' + esc(q.topic) + "</span>" : "",
+      q.difficulty ? '<span class="chip">' + esc(q.difficulty) + "</span>" : "",
+    ].join("");
+
+    let answerBlock;
+    if (isMcq) {
+      const correct = String(q.correct_answer).trim().toLowerCase();
+      answerBlock = '<ul class="opts">' + Object.keys(q.options).map((k) => {
+        const val = q.options[k];
+        const hit = k.trim().toLowerCase() === correct ||
+                    String(val).trim().toLowerCase() === correct;
+        return '<li class="' + (hit ? "correct" : "") + '"><span class="key">' +
+               esc(k.toUpperCase()) + "</span>" + esc(val) + "</li>";
+      }).join("") + "</ul>";
+    } else {
+      answerBlock = '<div class="answer"><span class="lbl">Odpoveď</span>' +
+                    '<span class="val">' + esc(q.correct_answer) + "</span></div>";
+    }
+
+    const extras = [];
+    if (q.explanation) extras.push("<div>" + esc(q.explanation) + "</div>");
+    if (q.alternative_answers && q.alternative_answers.length) {
+      extras.push('<div><span class="lbl">Uznané aj: </span>' +
+                  esc(q.alternative_answers.join(", ")) + "</div>");
+    }
+    if (q.source_url) {
+      extras.push('<div><a href="' + esc(q.source_url) + '" target="_blank" rel="noopener">' +
+                  esc(q.source_url) + "</a></div>");
+    }
+
+    const meter = Array.from({ length: 10 }, (_, n) => {
+      const v = n + 1;
+      return '<label data-v="' + v + '"><input type="radio" name="s' + i + '" value="' + v +
+             '"><span>' + v + "</span></label>";
+    }).join("");
+
+    card.innerHTML =
+      '<div class="head"><span class="idx">' + String(i + 1).padStart(2, "0") + "</span>" + chips + "</div>" +
+      '<p class="q">' + esc(q.question) + "</p>" +
+      answerBlock +
+      (extras.length ? '<details class="more"><summary>Kontext a zdroj</summary><div class="body">' +
+        extras.join("") + "</div></details>" : "") +
+      '<div class="rate">' +
+        '<div class="rate-top"><span class="rate-lbl">Skóre 1–10</span>' +
+        '<span class="verdict" data-role="verdict">neohodnotené</span></div>' +
+        '<div class="meter">' + meter + "</div>" +
+        '<textarea data-role="reason" rows="1" placeholder="Dôvod (nepovinné) — čo funguje, čo nie"></textarea>' +
+      "</div>";
+
+    const meterEl = card.querySelector(".meter");
+    const verdictEl = card.querySelector('[data-role="verdict"]');
+    const reasonEl = card.querySelector('[data-role="reason"]');
+
+    function paint(score) {
+      meterEl.querySelectorAll("label").forEach((l) => {
+        const v = Number(l.dataset.v);
+        l.classList.toggle("on", !!score && v <= score);
+        l.classList.toggle("peak", v === score);
+      });
+      verdictEl.innerHTML = score ? "<b>" + score + "</b> / 10" : "neohodnotené";
+      card.dataset.rated = score ? "1" : "0";
+    }
+
+    const saved = state[q.id];
+    if (saved) {
+      if (saved.score) {
+        const input = meterEl.querySelector('input[value="' + saved.score + '"]');
+        if (input) input.checked = true;
+      }
+      if (saved.reason) reasonEl.value = saved.reason;
+      autogrow(reasonEl);
+    }
+    paint(saved && saved.score ? saved.score : 0);
+
+    meterEl.addEventListener("change", (e) => {
+      const score = Number(e.target.value);
+      state[q.id] = Object.assign({}, state[q.id], {
+        index: i + 1, question: q.question, score: score,
+      });
+      paint(score);
+      save();
+      refresh();
+    });
+
+    reasonEl.addEventListener("input", () => {
+      state[q.id] = Object.assign({}, state[q.id], {
+        index: i + 1, question: q.question, reason: reasonEl.value.trim(),
+      });
+      autogrow(reasonEl);
+      save();
+    });
+
+    cards.appendChild(card);
+  });
+
+  function autogrow(el) {
+    el.style.height = "auto";
+    el.style.height = Math.max(el.scrollHeight, 42) + "px";
+  }
+
+  function scored() {
+    return QUESTIONS.map((q) => state[q.id]).filter((r) => r && r.score);
+  }
+
+  function refresh() {
+    const rows = scored();
+    const total = QUESTIONS.length;
+    document.getElementById("doneN").textContent = rows.length;
+    document.getElementById("totalN").textContent = total;
+    document.getElementById("trackFill").style.width = (rows.length / total * 100) + "%";
+    const avg = rows.length
+      ? (rows.reduce((a, r) => a + r.score, 0) / rows.length).toFixed(1)
+      : "–";
+    document.getElementById("avgN").textContent = avg;
+  }
+
+  document.getElementById("jumpBtn").addEventListener("click", () => {
+    const next = QUESTIONS.findIndex((q) => !(state[q.id] && state[q.id].score));
+    if (next < 0) { toast("Všetko ohodnotené."); return; }
+    document.getElementById("q" + next).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  function payload() {
+    return JSON.stringify({
+      batch_id: META.batch_id || null,
+      ratings: QUESTIONS.map((q, i) => ({
+        index: i + 1,
+        id: q.id,
+        question: q.question,
+        correct_answer: q.correct_answer,
+        score: state[q.id] && state[q.id].score ? state[q.id].score : null,
+        reason: state[q.id] && state[q.id].reason ? state[q.id].reason : "",
+      })),
+    }, null, 2);
+  }
+
+  const jsonOut = document.getElementById("jsonOut");
+
+  function showJson() {
+    jsonOut.value = payload();
+    jsonOut.classList.add("show");
+    autogrow(jsonOut);
+    jsonOut.focus();
+    jsonOut.select();
+  }
+
+  document.getElementById("showBtn").addEventListener("click", () => {
+    showJson();
+    toast("JSON je nižšie — označ a skopíruj.");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = payload();
+    const done = () => toast("Skopírované do schránky.");
+    const fallback = () => {
+      showJson();
+      try {
+        if (document.execCommand("copy")) { done(); return; }
+      } catch (e) {}
+      toast("Automatické kopírovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  document.getElementById("dlBtn").addEventListener("click", () => {
+    try {
+      const blob = new Blob([payload()], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "hodnotenie-" + (META.batch_id || "otazok") + ".json";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast("Stiahnuté.");
+    } catch (e) {
+      showJson();
+      toast("Sťahovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    }
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (!confirm("Naozaj vymazať všetky hodnotenia tejto dávky?")) return;
+    Object.keys(state).forEach((k) => delete state[k]);
+    save();
+    location.reload();
+  });
+
+  document.getElementById("metaLine").innerHTML = [
+    META.batch_id ? "Dávka <b>" + esc(META.batch_id) + "</b>" : "",
+    "Otázok <b>" + QUESTIONS.length + "</b>",
+  ].filter(Boolean).join(" · ");
+
+  refresh();
+})();
+</script>

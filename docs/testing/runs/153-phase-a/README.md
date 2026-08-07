@@ -79,11 +79,61 @@ page:      scripts/rating_page/build_page.py --arm old=old_10.json \
            --out-dir <run> --batch-id 153-phase-a --seed 153
 ```
 
+## Round 1 results (founder rated 2026-08-07, PDF export; 28/30 rated, mean 4.6)
+
+Per-arm means (raw → dedup-corrected, dropping "already saw this fact" repeats):
+
+| arm | raw | corrected | n |
+|-----|-----|-----------|---|
+| free (v5) | **6.3** | **6.1** | 10 → 9 |
+| old (v3) | 4.1 | 4.5 | 9 → 8 |
+| craft (v4) | 3.3 | 4.8 | 9 → 5 |
+
+Correction needed because the 3 arms share facts by design → the same fact
+appeared up to 3× in one shuffled page; founder scored repeats 1–3
+("uz bola"). Shuffle order made craft absorb most repeat penalties (q12,
+q21, q22, q24 all late duplicates). **free (v5) wins on both raw and
+corrected** — the constraint-density hypothesis holds. craft (v4, MORE
+constraints) ≈ old on corrected; adding constraints didn't help.
+
+**Cross-arm founder themes (prompt-independent, hit every arm):**
+1. **Answerability/deducibility** — dominant complaint ("kto to má vedieť
+   a prečo"): facts too niche to know OR deduce; a good question must be
+   guessable, not a random-fact lookup (q04, q06, q08, q10/18/24, q11, q23).
+2. **Two-option comparison gimmick is transparent** — the surprising option
+   is always correct, so the answer is predictable (q01, q02, q17, q27=2/10
+   "úplne jasná odpoveď aj bez znalosti").
+3. **Repeats within a sitting** rated 1–3 — production packs need
+   fact-level dedupe (known residual in dedup.py now founder-confirmed).
+4. **Open answers hard to produce/verify by voice** (q25); non-native
+   impossible (q14 'eunoia' = 2/10).
+5. **Questionable sources** (pingdom blog, q19).
+
+**Pipeline bugs surfaced (independent of prompt arm):**
+- **q26 (logic puzzle, free arm): WRONG answer shipped.** "Thursday" fails
+  the puzzle's own logic (statement is consistently false on any lying day
+  Mon–Wed; Thursday is a contradiction). Explanation field contains ~2 pages
+  of raw model rambling that never converges — verify stage passed it, and
+  the rating page rendered the full loop. Founder still gave 6 (!) but
+  flagged "vysvetlenie je mega dlhé".
+- **Puzzle-type topics get nonsense sources**: q26 and q29 (lateral
+  thinking) both cite the Mariana Trench Wikipedia page. Fact-sourcing
+  pipeline doesn't fit non-factual topics; exclude "logic puzzles"/"lateral
+  thinking" style topics from the fact pipeline until they get dedicated
+  handling.
+- Note: actual round topics differ from the seed-153 list above (8/10
+  forced topics yielded 0 facts → resample; see TODO follow-up).
+
+**Verdict:** v5-free is the best arm but absolute level (~6) is below bar
+and the top complaints are fact-selection + format-predictability, not
+prompt wording. Plan allows one in-phase iteration before Phase B.
+
 ## State
 
 - [x] Phase 0 hygiene landed (commit `e5e2ec01`)
 - [x] v4 + v5 prompts drafted; CLI levers --no-judges / --gen-prompt-file / --direct / --topics / --dump-facts / --facts-file
 - [x] Arms generated 2026-08-07 (old 12q · craft 11q · free 11q; shared facts.json, 88 facts; *.usage.json per arm — NOTE: generation-stage tokens missing in this round's usage files, proxy fix `a41ef38f` landed after; verification-only numbers are valid)
 - [x] rating.html + mapping.json built (3×10, seed 153) → founder rates (~30)
-- [ ] Founder ratings in → analysis → prompt locked → Phase B
+- [x] Founder ratings in (2026-08-07, mean 4.6; free 6.3 / old 4.1 / craft 3.3) → analysis above
+- [ ] Founder call: iterate v6 in-phase vs lock v5-free → Phase B
 - [ ] Follow-up before Phase B: per-topic sourcing yield (8/10 forced topics → 0 facts, resample covered; see TODO)

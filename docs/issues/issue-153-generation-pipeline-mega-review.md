@@ -96,7 +96,8 @@ Durable state after every step (`docs/testing/runs/153-*/` + this file's checkli
 - [~] Phase 0.5 per-stage cost logging (in progress)
 - [x] Phase 0.6 rating-page builder in repo (`scripts/rating_page/`), JSON export fixed (clipboard/download/visible-textarea fallback), blinding built in (mapping.json separate)
 - [x] Phase A prompt audit + variants (v4 draft + audit log: `docs/testing/runs/153-phase-a/README.md`; single reasoning-class variant — all matrix models are frontier)
-- [ ] Phase A blind round generated → founder rated → prompt locked
+- [x] Phase A blind round generated → founder rated 2026-08-07 (mean 4.6; free 6.3 · old 4.1 · craft 3.3 — v5-free wins, analysis in `docs/testing/runs/153-phase-a/README.md`)
+- [ ] Prompt lock pending founder call: in-phase v6 iteration (answerability + comparison-format fixes) vs lock v5-free as-is
 - [ ] B1 generated · B2 generated · B3 generated
 - [ ] Sittings 2–3 rated
 - [ ] Analysis + recommendations delivered

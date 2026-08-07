@@ -2,7 +2,7 @@
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Optional
 
@@ -84,6 +84,25 @@ class Fact:
         if self.expires_at is None:
             return False
         return datetime.now() > self.expires_at
+
+    # #153 experiment levers (--dump-facts / --facts-file): a JSON round trip
+    # so two experiment arms can generate from the IDENTICAL fact set —
+    # re-sourcing per arm would let fact variance confound the comparison.
+    def to_dict(self) -> dict:
+        data = asdict(self)
+        data["expires_at"] = (
+            self.expires_at.isoformat() if self.expires_at else None
+        )
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Fact":
+        payload = dict(data)
+        if payload.get("expires_at"):
+            payload["expires_at"] = datetime.fromisoformat(payload["expires_at"])
+        else:
+            payload["expires_at"] = None
+        return cls(**payload)
 
 
 @dataclass

@@ -8,6 +8,13 @@ from typing import Any
 
 from quiz_shared.models.question import Question
 
+# #153 Phase 0.4 — order-prompt marker for the founder's "reverse flow":
+# generate straight from the model (no web-found source facts), verify at the
+# end of the pipe. Travels on the prompt like MCQ_EMPHASIS_MARKER because the
+# order row has no column for it; `PackGenerator` turns it into the explicit
+# `OrderContext.direct_generation` bool the stages read.
+DIRECT_GENERATION_MARKER = "DIRECT GENERATION MODE"
+
 
 @dataclass
 class OrderContext:
@@ -41,6 +48,11 @@ class OrderContext:
     # so the chosen topics surface in progress/telemetry. None when the
     # heuristic path produced topics or the pool was dormant/empty.
     auto_topics: list[str] | None = None
+    # #153 Phase 0.4: True = skip fact sourcing entirely (SourcingStage
+    # returns no facts, GenerationStage's F8 source_url hard-fail stands
+    # down); end-of-pipe verification still runs, so a hallucinated answer
+    # is still caught — just later, which is the experiment's point.
+    direct_generation: bool = False
     facts: list[Any] = field(default_factory=list)
     questions: list[Question] = field(default_factory=list)
     scores: dict[str, dict[str, float]] = field(default_factory=dict)

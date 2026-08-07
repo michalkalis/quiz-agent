@@ -70,15 +70,33 @@ class SourcingStage:
         self,
         fact_sourcer: FactSourcer,
         topic_pool: TopicPool | None = None,
+        forced_topics: list[str] | None = None,
     ) -> None:
         self._fact_sourcer = fact_sourcer
         # #72 F-1: dormant by default. Only the CLI/batch path injects a pool
         # (Scope A) — the worker/live path leaves it None so its behavior stays
         # byte-identical until the no-category mode is exposed to the app.
         self._topic_pool = topic_pool
+        # #153 experiment lever (CLI --topics): explicit topic list that
+        # bypasses both derivation and pool sampling, so every experiment arm
+        # sources the SAME topics — topic taste must not proxy for arm.
+        self._forced_topics = forced_topics
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
-        topics = self._derive_topics(ctx)
+        # #153 Phase 0.4 — direct generation: no fact gathering at all. The
+        # generator falls back to its non-fact prompt path (source_facts=None)
+        # and end-of-pipe verification carries the whole truth burden.
+        if ctx.direct_generation:
+            ctx.facts = []
+            return StageResult(
+                info={"direct_generation": True, "facts": 0}, cost_cents=0
+            )
+
+        if self._forced_topics:
+            ctx.auto_topics = list(self._forced_topics)
+            topics = list(self._forced_topics)
+        else:
+            topics = self._derive_topics(ctx)
 
         # #72 F-1 (no-category mode): a missing topic signal (no category/theme,
         # generic-only prompt) used to fall straight through to the sources'

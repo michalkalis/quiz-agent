@@ -12,6 +12,7 @@ and the final ``done`` event SSE clients expect.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -20,7 +21,7 @@ from typing import Any, Dict
 
 import sentry_sdk
 
-from app import cost_tracking, order_budget
+from app import cost_tracking, llm_usage, order_budget
 from app.db.models import GenerationJob, GenerationOrder
 from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
@@ -37,6 +38,7 @@ from app.orchestrator.stages import (
     TopUpStage,
     VerificationStage,
 )
+from quiz_shared.llm import factory as llm_factory
 
 logger = logging.getLogger(__name__)
 
@@ -195,10 +197,20 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         # (see app.cost_tracking for the shared-account caveat).
         tracker, tracker_token = cost_tracking.activate()
         usage_before = await cost_tracking.fetch_openrouter_usage()
+        # #153 Phase 0.5 — per-stage/model token usage for this run. See
+        # app.llm_usage module docstring for the max_jobs=2 concurrency
+        # caveat (same shared-account tradeoff as the OpenRouter delta above).
+        usage_recorder = llm_usage.UsageRecorder()
+        llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(usage_recorder))
         try:
             pack = await generator.run(order_snapshot)
         finally:
             cost_tracking.deactivate(tracker_token)
+            llm_factory.set_usage_handler(None)
+            logger.info(
+                "process_order llm_usage order_id=%s usage=%s",
+                order_id, json.dumps(usage_recorder.summary()),
+            )
         if pack is None:
             raise RuntimeError("PackGenerator returned no pack — PersistStage missing")
 

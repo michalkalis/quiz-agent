@@ -202,7 +202,7 @@ class TestCliWiring:
         monkeypatch.setattr(
             generate_pack,
             "_build_stages",
-            lambda *, persist, dedup_store, judges=True, gen_prompt_file=None: [
+            lambda *, persist, dedup_store, **_levers: [
                 _StubSourcingStage([question], seen)
             ],
         )

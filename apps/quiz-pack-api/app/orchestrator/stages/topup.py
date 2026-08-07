@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import logging
 
+from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 
@@ -48,6 +49,18 @@ FLOOR_FRACTION = 0.8
 # rounds gives every question in the shortfall two more tries at surviving
 # verification/scoring/dedup before the floor check decides the outcome.
 MAX_TOPUP_ROUNDS = 2
+
+
+async def _run_substage(stage, ctx: OrderContext, sink: ProgressSink) -> StageResult:
+    """Run one inner sub-stage with `llm_usage.current_stage` pointed at its
+    own name (#153 Phase 0.5) — without this, every LLM call inside a top-up
+    round would attribute to "topup" instead of generation/verify/scoring,
+    exactly like the main walk."""
+    token = llm_usage.current_stage.set(stage.name)
+    try:
+        return await stage.run(ctx, sink)
+    finally:
+        llm_usage.current_stage.reset(token)
 
 
 class TopUpStage:
@@ -93,7 +106,9 @@ class TopUpStage:
             original_target = ctx.target_count
             ctx.target_count = shortfall
             try:
-                cost_cents += (await self._generation_stage.run(ctx, sink)).cost_cents
+                cost_cents += (
+                    await _run_substage(self._generation_stage, ctx, sink)
+                ).cost_cents
             finally:
                 ctx.target_count = original_target
 
@@ -101,7 +116,7 @@ class TopUpStage:
             # near-duplicate of a question already accepted in an earlier
             # round or the initial pass.
             ctx.questions = survivors_so_far + ctx.questions
-            cost_cents += (await self._dedup_stage.run(ctx, sink)).cost_cents
+            cost_cents += (await _run_substage(self._dedup_stage, ctx, sink)).cost_cents
 
             # DedupStage is idempotent on already-accepted survivors (see
             # module docstring), so the surviving list's first `n_old`
@@ -111,14 +126,18 @@ class TopUpStage:
             ctx.questions = ctx.questions[n_old:]
             if self._answerability_stage is not None:
                 cost_cents += (
-                    await self._answerability_stage.run(ctx, sink)
+                    await _run_substage(self._answerability_stage, ctx, sink)
                 ).cost_cents
-            cost_cents += (await self._verification_stage.run(ctx, sink)).cost_cents
-            cost_cents += (await self._scoring_stage.run(ctx, sink)).cost_cents
+            cost_cents += (
+                await _run_substage(self._verification_stage, ctx, sink)
+            ).cost_cents
+            cost_cents += (
+                await _run_substage(self._scoring_stage, ctx, sink)
+            ).cost_cents
             ctx.questions = old_kept + ctx.questions
             if self._composition_stage is not None:
                 cost_cents += (
-                    await self._composition_stage.run(ctx, sink)
+                    await _run_substage(self._composition_stage, ctx, sink)
                 ).cost_cents
             rounds += 1
             logger.info(

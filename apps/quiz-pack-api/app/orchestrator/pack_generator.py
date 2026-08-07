@@ -22,9 +22,14 @@ from typing import Callable, Protocol, Sequence
 
 import sentry_sdk
 
+from app import llm_usage
 from app.db.models import GenerationOrder, QuestionPack
 from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER
-from app.orchestrator.context import OrderContext, StageResult
+from app.orchestrator.context import (
+    DIRECT_GENERATION_MARKER,
+    OrderContext,
+    StageResult,
+)
 from app.orchestrator.progress_sink import ProgressSink
 
 logger = logging.getLogger(__name__)
@@ -124,6 +129,10 @@ class PackGenerator:
             # generation LLM, so MCQ emphasis must travel as an explicit
             # bool that GenerationStage hands to the generator.
             mcq_emphasis=MCQ_EMPHASIS_MARKER in (order.prompt or ""),
+            # #153 Phase 0.4 — same deterministic-marker mechanism as
+            # mcq_emphasis, same reason (no order column, prompt never
+            # reaches the generation LLM).
+            direct_generation=DIRECT_GENERATION_MARKER in (order.prompt or ""),
         )
 
         self.last_ctx = ctx
@@ -133,46 +142,56 @@ class PackGenerator:
 
         for index, stage in enumerate(self.stages, start=1):
             self.current_stage = stage.name
-            rss = _rss_mb()
-            sentry_sdk.add_breadcrumb(
-                category="pipeline",
-                message=f"stage {stage.name} start",
-                data={"order_id": str(order.id), "rss_mb": rss},
-            )
-            logger.info(
-                "stage start order_id=%s stage=%s rss_mb=%s",
-                order.id, stage.name, f"{rss:.0f}" if rss is not None else "n/a",
-            )
-            event_id = await sink.start_step(stage.name)
+            # #153 Phase 0.5 — attribute every LLM call this stage makes to
+            # its name (TopUpStage re-points this to each inner sub-stage;
+            # see app.orchestrator.stages.topup). Reset even on exception so
+            # a raised stage doesn't leak its name onto whatever runs next
+            # (the `failed` sink write below, then the caller).
+            stage_token = llm_usage.current_stage.set(stage.name)
             try:
-                # #139 — the belt over per-call client timeouts: a hang inside
-                # a stage becomes a caught TimeoutError here instead of an
-                # uncancellable ARQ job_timeout kill with zero diagnostics.
-                # (wait_for relies on cancellation, so a cancel-immune hang —
-                # e.g. a stuck sync bridge thread — still needs the per-call
-                # timeouts; this catches the cancel-responsive ones.)
-                result = await asyncio.wait_for(
-                    stage.run(ctx, sink), timeout=_STAGE_TIMEOUT_SECONDS
+                rss = _rss_mb()
+                sentry_sdk.add_breadcrumb(
+                    category="pipeline",
+                    message=f"stage {stage.name} start",
+                    data={"order_id": str(order.id), "rss_mb": rss},
                 )
-            except TimeoutError:
-                timeout_exc = TimeoutError(
-                    f"stage {stage.name!r} exceeded "
-                    f"STAGE_TIMEOUT_SECONDS={_STAGE_TIMEOUT_SECONDS:.0f}s"
+                logger.info(
+                    "stage start order_id=%s stage=%s rss_mb=%s",
+                    order.id, stage.name, f"{rss:.0f}" if rss is not None else "n/a",
                 )
-                await sink.start_step("failed", info={"error": repr(timeout_exc)})
-                raise timeout_exc from None
-            except Exception as exc:
-                await sink.start_step("failed", info={"error": repr(exc)})
-                raise
+                event_id = await sink.start_step(stage.name)
+                try:
+                    # #139 — the belt over per-call client timeouts: a hang
+                    # inside a stage becomes a caught TimeoutError here
+                    # instead of an uncancellable ARQ job_timeout kill with
+                    # zero diagnostics. (wait_for relies on cancellation, so
+                    # a cancel-immune hang — e.g. a stuck sync bridge thread
+                    # — still needs the per-call timeouts; this catches the
+                    # cancel-responsive ones.)
+                    result = await asyncio.wait_for(
+                        stage.run(ctx, sink), timeout=_STAGE_TIMEOUT_SECONDS
+                    )
+                except TimeoutError:
+                    timeout_exc = TimeoutError(
+                        f"stage {stage.name!r} exceeded "
+                        f"STAGE_TIMEOUT_SECONDS={_STAGE_TIMEOUT_SECONDS:.0f}s"
+                    )
+                    await sink.start_step("failed", info={"error": repr(timeout_exc)})
+                    raise timeout_exc from None
+                except Exception as exc:
+                    await sink.start_step("failed", info={"error": repr(exc)})
+                    raise
 
-            ctx.cost_cents += result.cost_cents
-            await sink.finish_step(stage.name, event_id, info=result.info)
+                ctx.cost_cents += result.cost_cents
+                await sink.finish_step(stage.name, event_id, info=result.info)
 
-            progress = int(index / total * 100)
-            await sink.publish(event_id, stage.name, progress, info=result.info)
+                progress = int(index / total * 100)
+                await sink.publish(event_id, stage.name, progress, info=result.info)
 
-            stage_pack = result.info.get("pack") if result.info else None
-            if isinstance(stage_pack, QuestionPack):
-                pack = stage_pack
+                stage_pack = result.info.get("pack") if result.info else None
+                if isinstance(stage_pack, QuestionPack):
+                    pack = stage_pack
+            finally:
+                llm_usage.current_stage.reset(stage_token)
 
         return pack

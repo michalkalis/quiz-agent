@@ -498,7 +498,10 @@ class GenerationStage:
                 and q.generation_metadata.pipeline == "logical_puzzle"
             )
         ]
-        if missing:
+        # #153 Phase 0.4: in direct-generation mode there are no source facts
+        # to attribute, so F8 has nothing to enforce — verification remains
+        # the truth gate for these questions.
+        if missing and not ctx.direct_generation:
             attributed = sum(
                 1 for f in (ctx.facts or []) if getattr(f, "source_url", None)
             )

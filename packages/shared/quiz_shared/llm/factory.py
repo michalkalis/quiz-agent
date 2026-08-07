@@ -38,7 +38,7 @@ a smart player, not an oracle). Both stay env-overridable via
 """
 
 import os
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import httpx
 from openai import AsyncOpenAI, OpenAI
@@ -49,6 +49,26 @@ DIRECT = "direct"
 OPENROUTER = "openrouter"
 
 BEDROCK_PREFIX = "bedrock:"
+
+# #153 Phase 0.5 — optional per-call usage callback (quiz-pack-api's
+# app.llm_usage), attached to every client `chat_openai` builds when set.
+# `None` by default: quiz-agent's serve-time chat calls never register one,
+# so this is a zero-behavior-change hook for that app. Typed loosely (not
+# `BaseCallbackHandler`) so this module keeps no import-time dependency on
+# langchain_core.callbacks beyond what chat_openai already needs lazily.
+_usage_handler: Optional[Any] = None
+
+
+def set_usage_handler(handler: Optional[Any]) -> None:
+    """Register (or clear, with `None`) the callback `chat_openai` attaches
+    to every client it builds. See `app.llm_usage` module docstring."""
+    global _usage_handler
+    _usage_handler = handler
+
+
+def get_usage_handler() -> Optional[Any]:
+    return _usage_handler
+
 
 # Bounds every openai_client() call so the voice-quiz hot path (TTS, Whisper,
 # translation, evaluation) never inherits the OpenAI SDK's 600s default.
@@ -333,6 +353,15 @@ def chat_openai(model: str, **kwargs):
     if not supports_sampling_params(model):
         kwargs.pop("temperature", None)
         kwargs.pop("top_p", None)
+
+    # #153 Phase 0.5 — attach the registered usage-recording callback (if
+    # any) so every client this call builds reports per-call token usage.
+    # No-op (kwargs unchanged) when nothing is registered.
+    if _usage_handler is not None:
+        callbacks = list(kwargs.get("callbacks") or [])
+        if _usage_handler not in callbacks:
+            callbacks.append(_usage_handler)
+        kwargs["callbacks"] = callbacks
 
     if is_bedrock_model(model):
         return _chat_bedrock(model, **kwargs)

@@ -237,3 +237,28 @@ def test_chat_openai_openrouter_resolves_slug_and_base_url(monkeypatch):
     llm = factory.chat_openai("gpt-4o-mini")
     assert llm.model_name == "openai/gpt-4o-mini"
     assert "openrouter.ai" in str(llm.openai_api_base)
+
+
+def test_chat_openai_attaches_usage_handler_when_set(monkeypatch):
+    """#153 Phase 0.5 — the registered usage-recording callback must reach
+    every client `chat_openai` builds, or per-call token counting silently
+    misses whichever call sites forget to check."""
+    from langchain_core.callbacks import BaseCallbackHandler
+
+    monkeypatch.setenv("LLM_GATEWAY", "direct")
+    handler = BaseCallbackHandler()
+    factory.set_usage_handler(handler)
+    try:
+        llm = factory.chat_openai("gpt-4o")
+        assert handler in (llm.callbacks or [])
+    finally:
+        factory.set_usage_handler(None)
+
+
+def test_chat_openai_no_callbacks_when_usage_handler_unset(monkeypatch):
+    """Zero behavior change for quiz-agent's serve-time path, which never
+    registers a usage handler."""
+    monkeypatch.setenv("LLM_GATEWAY", "direct")
+    assert factory.get_usage_handler() is None
+    llm = factory.chat_openai("gpt-4o")
+    assert not llm.callbacks

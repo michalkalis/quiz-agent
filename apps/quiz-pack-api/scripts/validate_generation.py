@@ -414,6 +414,7 @@ def _order_namespace(
         category=None,
         theme=None,
         mcq_bias=mcq_bias,
+        direct=False,
     )
 
 

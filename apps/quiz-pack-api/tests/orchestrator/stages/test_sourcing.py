@@ -542,3 +542,28 @@ async def test_topic_count_floor_stays_default_for_small_orders() -> None:
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert pool.last_count == 5
+
+
+# --- #153 forced topics (experiment lever) ----------------------------------
+
+
+@pytest.mark.asyncio
+async def test_forced_topics_bypass_derivation_and_pool() -> None:
+    """`--topics` must pin the sourced topic set exactly — every #153
+    experiment arm sources the SAME topics, otherwise topic taste proxies
+    for arm and poisons the comparison."""
+    sourcer = _FakeFactSourcer(
+        FactBatch(facts=_make_facts(5), sources_used=["wikipedia"])
+    )
+    pool = _StubPool(["pool topic that must not be used"])
+    forced = ["ancient Roman concrete", "bird migration and navigation"]
+    stage = SourcingStage(
+        sourcer, topic_pool=pool, forced_topics=forced
+    )  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=10, category="science", prompt="surprise me")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert sourcer.calls[0]["topics"] == forced
+    assert ctx.auto_topics == forced
+    assert pool.last_count is None

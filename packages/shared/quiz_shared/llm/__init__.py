@@ -17,10 +17,12 @@ from .factory import (
     chat_model,
     chat_openai,
     gateway,
+    get_usage_handler,
     is_bedrock_model,
     openai_client,
     provider_for_model,
     resolve_model,
+    set_usage_handler,
     supports_sampling_params,
 )
 
@@ -41,9 +43,11 @@ __all__ = [
     "chat_model",
     "chat_openai",
     "gateway",
+    "get_usage_handler",
     "is_bedrock_model",
     "openai_client",
     "provider_for_model",
     "resolve_model",
+    "set_usage_handler",
     "supports_sampling_params",
 ]

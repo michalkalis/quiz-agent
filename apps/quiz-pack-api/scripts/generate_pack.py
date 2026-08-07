@@ -53,7 +53,7 @@ _APP_DIR = os.path.dirname(_SCRIPT_DIR)
 if _APP_DIR not in sys.path:
     sys.path.insert(0, _APP_DIR)
 
-from app import cost_tracking
+from app import cost_tracking, llm_usage
 from app.db.models import GenerationOrder
 from app.orchestrator import PackGenerator, ProgressSink
 from app.orchestrator.pack_generator import Stage
@@ -68,6 +68,7 @@ from app.orchestrator.stages import (
     VerificationStage,
 )
 from app.orchestrator.stages.dedup import AsyncDuplicateFinder
+from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 
 logger = logging.getLogger("generate_pack")
@@ -164,6 +165,10 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
     prompt = args.prompt
     if args.mcq_bias:
         prompt = f"{prompt}\n\n{_mcq_bias_instruction()}"
+    if args.direct:
+        from app.orchestrator.context import DIRECT_GENERATION_MARKER
+
+        prompt = f"{prompt}\n\n{DIRECT_GENERATION_MARKER}".lstrip()
     return GenerationOrder(
         id=uuid.uuid4(),
         transaction_id=f"cli-{uuid.uuid4().hex[:12]}",
@@ -215,12 +220,42 @@ class _NoopScoringStage:
         return StageResult(info={"skipped": "no-judges run"}, cost_cents=0)
 
 
+class _FactsFileSourcingStage:
+    """Stands in for SourcingStage when ``--facts-file`` is given (#153).
+
+    Loads a fact set dumped by an earlier ``--dump-facts`` run so every
+    experiment arm generates from the IDENTICAL facts — re-sourcing per arm
+    would let fact variance confound the prompt comparison. Named "sourcing"
+    because PackGenerator requires the first stage to carry that name.
+    """
+
+    name = "sourcing"
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+
+    async def run(self, ctx, sink):
+        from app.orchestrator.context import StageResult
+        from app.sourcing.models import Fact
+
+        with open(self._path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        ctx.facts = [Fact.from_dict(entry) for entry in payload["facts"]]
+        ctx.auto_topics = payload.get("topics")
+        return StageResult(
+            info={"facts": len(ctx.facts), "facts_file": self._path},
+            cost_cents=0,
+        )
+
+
 def _build_stages(
     *,
     persist: bool,
     dedup_store: AsyncDuplicateFinder,
     judges: bool = True,
     gen_prompt_file: str | None = None,
+    forced_topics: list[str] | None = None,
+    facts_file: str | None = None,
 ) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode.
 
@@ -229,6 +264,8 @@ def _build_stages(
     gate — so an experiment arm ships ungated survivors for offline random
     selection; never use it for a real order. ``gen_prompt_file`` swaps the
     fact-first generation prompt (filename within ``prompts/``).
+    ``forced_topics`` pins the sourced topic set; ``facts_file`` replaces
+    sourcing entirely with a previously dumped fact set.
     """
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -237,7 +274,6 @@ def _build_stages(
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
     from app.verification.fact_verifier import FactVerifier
-    from quiz_shared.llm import factory as llm_factory
 
     # Lever A (issue #72 P1.1): source the gen/critique models from the dormant
     # feature flags, exactly as the API path's `_build_advanced_generator` does,
@@ -271,7 +307,13 @@ def _build_stages(
         # no-category run samples a diverse concrete topic set (no per-pack LLM
         # call). The worker/live path deliberately does NOT (stays byte-identical
         # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
-        SourcingStage(FactSourcer(), topic_pool=TopicPool()),
+        (
+            _FactsFileSourcingStage(facts_file)
+            if facts_file
+            else SourcingStage(
+                FactSourcer(), topic_pool=TopicPool(), forced_topics=forced_topics
+            )
+        ),
         generation,
         # 2026-08 perf fix: dedup runs right after generation, before
         # verification/scoring — a question dedup would discard anyway
@@ -322,6 +364,27 @@ def _write_out(questions: Sequence[Question], path: str) -> None:
         fh.write("\n")
 
 
+def _print_usage_table(summary: dict) -> None:
+    """Compact per-stage/model token+cost table (#153 Phase 0.5)."""
+    print()
+    print("llm usage by stage/model:")
+    for stage, models in summary["stages"].items():
+        for model, stats in models.items():
+            cost = (
+                f"{stats['cost_cents']:.2f}¢"
+                if stats["cost_cents"] is not None
+                else "cost UNKNOWN"
+            )
+            print(
+                f"  {stage:<14} {model:<32} calls={stats['calls']:<3} "
+                f"in={stats['input_tokens']:<8} out={stats['output_tokens']:<8} "
+                f"gaps={stats['calls_without_usage']:<3} {cost}"
+            )
+    print(f"  total known cost: {summary['total_cost_cents_known']:.2f}¢")
+    if summary["unpriced_models"]:
+        print(f"  unpriced models (cost omitted): {', '.join(summary['unpriced_models'])}")
+
+
 # ---------------------------------------------------------------------------
 # Run + report
 # ---------------------------------------------------------------------------
@@ -336,6 +399,12 @@ async def _run(args: argparse.Namespace) -> int:
         dedup_store=dedup_store,
         judges=not args.no_judges,
         gen_prompt_file=args.gen_prompt_file,
+        forced_topics=(
+            [t.strip() for t in args.topics.split(",") if t.strip()]
+            if args.topics
+            else None
+        ),
+        facts_file=args.facts_file,
     )
 
     def _sink_factory(_order_id: str) -> ProgressSink:
@@ -358,14 +427,33 @@ async def _run(args: argparse.Namespace) -> int:
     # run (see app.cost_tracking for the shared-account caveat).
     tracker, tracker_token = cost_tracking.activate()
     usage_before = await cost_tracking.fetch_openrouter_usage()
+    # #153 Phase 0.5 — per-stage/model token usage for this run (durable
+    # per-arm cost data; see app.llm_usage module docstring for what it does
+    # and does not cover).
+    usage_recorder = llm_usage.UsageRecorder()
+    llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(usage_recorder))
     try:
         pack = await pack_generator.run(order)
     finally:
         cost_tracking.deactivate(tracker_token)
+        llm_factory.set_usage_handler(None)
     usage_after = await cost_tracking.fetch_openrouter_usage()
 
     ctx = pack_generator.last_ctx
     questions = list(ctx.questions) if ctx else []
+
+    if args.dump_facts and ctx is not None:
+        with open(args.dump_facts, "w", encoding="utf-8") as fh:
+            json.dump(
+                {
+                    "topics": ctx.auto_topics,
+                    "facts": [f.to_dict() for f in ctx.facts],
+                },
+                fh,
+                ensure_ascii=False,
+                indent=2,
+            )
+        print(f"facts dumped: {args.dump_facts} ({len(ctx.facts)} facts)")
 
     llm_cost_usd: Decimal | None = None
     if usage_before is not None and usage_after is not None:
@@ -405,9 +493,18 @@ async def _run(args: argparse.Namespace) -> int:
     for i, q in enumerate(questions, start=1):
         source = q.source_url or "(no source)"
         print(f"  {i}. {q.question}  →  {q.correct_answer}   [{source}]")
+
+    usage_summary = usage_recorder.summary()
+    _print_usage_table(usage_summary)
+
     if args.out:
         _write_out(questions, args.out)
         print(f"out: wrote {len(questions)} questions to {args.out}")
+        usage_path = f"{args.out}.usage.json"
+        with open(usage_path, "w", encoding="utf-8") as fh:
+            json.dump(usage_summary, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        print(f"usage: wrote per-stage/model summary to {usage_path}")
     return 0
 
 
@@ -466,6 +563,42 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "Skip the persist stage (no DB writes). Pipeline still runs; "
             "HTTP calls hit real providers unless respx mocks are installed."
+        ),
+    )
+    parser.add_argument(
+        "--topics",
+        default=None,
+        help=(
+            "#153 experiment lever: comma-separated explicit topic list — "
+            "bypasses derivation and pool sampling so every arm sources the "
+            "SAME topics."
+        ),
+    )
+    parser.add_argument(
+        "--dump-facts",
+        default=None,
+        metavar="PATH",
+        help=(
+            "#153 experiment lever: after the run, dump the sourced facts "
+            "(+ topics) to PATH as JSON for --facts-file re-use by other arms."
+        ),
+    )
+    parser.add_argument(
+        "--facts-file",
+        default=None,
+        metavar="PATH",
+        help=(
+            "#153 experiment lever: skip sourcing; load the fact set dumped "
+            "by an earlier --dump-facts run so arms share identical facts."
+        ),
+    )
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help=(
+            "#153 Phase 0.4 direct-generation mode: skip fact sourcing "
+            "entirely (the LLM generates unconstrained by web-found facts); "
+            "end-of-pipe verification still runs and carries the truth gate."
         ),
     )
     parser.add_argument(

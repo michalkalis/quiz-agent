@@ -89,13 +89,13 @@ Durable state after every step (`docs/testing/runs/153-*/` + this file's checkli
 
 ## Checklist
 
-- [ ] Phase 0.1 composition rules + tests
-- [ ] Phase 0.2 fail-loud sourcing + resample
-- [ ] Phase 0.3 source credibility allowlist
-- [ ] Phase 0.4 direct-generation flag
-- [ ] Phase 0.5 per-stage cost logging
-- [ ] Phase 0.6 rating-page builder in repo, JSON export fixed
-- [ ] Phase A prompt audit + variants
+- [x] Phase 0.1 composition rules + tests (CompositionStage caps + DedupStage same-fact rule; commit `e5e2ec01`; known residual: same fact from two sources with disjoint wording — see dedup.py docstring)
+- [x] Phase 0.2 fail-loud sourcing + resample (empty topic → pool resample, `empty_topics`/`facts_per_topic` in stage info)
+- [x] Phase 0.3 source credibility allowlist (domain tiers, listicle/YouTube demotion with starvation guard)
+- [x] Phase 0.4 direct-generation flag (`--direct` / DIRECT_GENERATION_MARKER; F8 stands down, verification stays)
+- [~] Phase 0.5 per-stage cost logging (in progress)
+- [x] Phase 0.6 rating-page builder in repo (`scripts/rating_page/`), JSON export fixed (clipboard/download/visible-textarea fallback), blinding built in (mapping.json separate)
+- [x] Phase A prompt audit + variants (v4 draft + audit log: `docs/testing/runs/153-phase-a/README.md`; single reasoning-class variant — all matrix models are frontier)
 - [ ] Phase A blind round generated → founder rated → prompt locked
 - [ ] B1 generated · B2 generated · B3 generated
 - [ ] Sittings 2–3 rated

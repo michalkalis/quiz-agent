@@ -591,5 +591,42 @@
   ].filter(Boolean).join(" · ");
 
   refresh();
+
+  // Rescue panel: on load, dump EVERY stored quiz-* localStorage key (all
+  // batches, not just this page's) into visible textareas. Exists because
+  // the founder's ratings once survived only as a truncated PDF — the full
+  // texts sat in localStorage with no button-free way to see them. Renders
+  // only when there is something to show.
+  (function rescue() {
+    let keys = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf("quiz-") === 0) keys.push(k);
+      }
+    } catch (e) { return; }
+    if (!keys.length) return;
+    const wrap = document.createElement("section");
+    wrap.className = "export";
+    wrap.style.display = "block";
+    let html = '<p style="max-width:none"><b>Záloha uložených hodnotení</b> — ' +
+      "plný obsah úložiska prehliadača (všetky dávky). Klikni do poľa: text sa " +
+      "označí celý, potom ⌘C.</p>";
+    keys.sort().forEach((k) => {
+      let v = "";
+      try { v = localStorage.getItem(k) || ""; } catch (e) {}
+      let pretty = v;
+      try { pretty = JSON.stringify(JSON.parse(v), null, 2); } catch (e) {}
+      html += '<p style="margin-top:.8rem"><code>' + esc(k) + "</code></p>" +
+        '<textarea class="rescue-box" readonly rows="6" style="display:block;width:100%">' +
+        esc(pretty) + "</textarea>";
+    });
+    wrap.innerHTML = html;
+    document.querySelector("main").appendChild(wrap);
+    wrap.querySelectorAll(".rescue-box").forEach((t) => {
+      t.addEventListener("focus", () => t.select());
+      t.addEventListener("click", () => t.select());
+    });
+  })();
 })();
 </script>

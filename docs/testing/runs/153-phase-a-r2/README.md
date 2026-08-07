@@ -62,5 +62,12 @@ page:        scripts/rating_page/build_page.py --arm free=free_raw.json \
 
 - [x] Sourcing + grounding fixes landed, full quiz-pack-api suite green (872)
 - [x] v6 prompts written (free + guarded)
-- [ ] Arms generated → rating page built → founder rates
-- [ ] Analysis → prompt locked → Phase B
+- [x] Arms generated 2026-08-07 (free 11q · guarded 11q; 30 shared facts,
+      3 per topic, 0 empty topics, 0 resamples — sourcing fix verified live;
+      1 ungrounded question dropped per arm; cost ~38¢ known)
+- [x] rating.html built (16q after fact-dedupe: free 6 · guarded 10 — free
+      concentrated more questions on fewer facts, singles auto-keep their arm)
+- [ ] Founder rates → analysis → prompt locked → Phase B
+- Known open lever before Phase B: web-search source QUALITY (content-market
+  blogs, one YouTube hit) — shared facts keep the arm comparison fair, but
+  a domain-quality pass on Tavily results is worth doing before the matrix.

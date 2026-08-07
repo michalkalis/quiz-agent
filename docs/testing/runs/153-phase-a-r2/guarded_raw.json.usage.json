@@ -1,0 +1,32 @@
+{
+  "stages": {
+    "generating": {
+      "moonshotai.kimi-k2.5": {
+        "calls": 4,
+        "input_tokens": 64082,
+        "output_tokens": 16676,
+        "calls_without_usage": 0,
+        "cost_cents": 8.0139
+      },
+      "deepseek.v3.2": {
+        "calls": 137,
+        "input_tokens": 216199,
+        "output_tokens": 31643,
+        "calls_without_usage": 0,
+        "cost_cents": 9.5343
+      }
+    },
+    "verifying": {
+      "deepseek.v3.2": {
+        "calls": 8,
+        "input_tokens": 5855,
+        "output_tokens": 1185,
+        "calls_without_usage": 0,
+        "cost_cents": 0.2943
+      }
+    }
+  },
+  "total_cost_cents_known": 17.8425,
+  "unpriced_models": [],
+  "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
+}

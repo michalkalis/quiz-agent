@@ -82,8 +82,8 @@ page:      scripts/rating_page/build_page.py --arm old=old_10.json \
 ## State
 
 - [x] Phase 0 hygiene landed (commit `e5e2ec01`)
-- [x] v4 prompt drafted; CLI levers --no-judges / --gen-prompt-file / --direct
-- [ ] --topics / --dump-facts / --facts-file wired (CLI part pending cost-logging merge)
-- [ ] Arms generated (old_raw.json, new_raw.json, facts.json, *.usage.json)
-- [ ] rating.html + mapping.json built → founder rates (~30)
-- [ ] Winner locked → Phase B
+- [x] v4 + v5 prompts drafted; CLI levers --no-judges / --gen-prompt-file / --direct / --topics / --dump-facts / --facts-file
+- [x] Arms generated 2026-08-07 (old 12q · craft 11q · free 11q; shared facts.json, 88 facts; *.usage.json per arm — NOTE: generation-stage tokens missing in this round's usage files, proxy fix `a41ef38f` landed after; verification-only numbers are valid)
+- [x] rating.html + mapping.json built (3×10, seed 153) → founder rates (~30)
+- [ ] Founder ratings in → analysis → prompt locked → Phase B
+- [ ] Follow-up before Phase B: per-topic sourcing yield (8/10 forced topics → 0 facts, resample covered; see TODO)

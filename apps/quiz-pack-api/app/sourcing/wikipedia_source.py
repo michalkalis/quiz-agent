@@ -5,7 +5,7 @@ from typing import Optional
 
 import httpx
 
-from .models import Fact
+from .models import Fact, interleave_by_topic
 
 
 class WikipediaSource:
@@ -32,9 +32,14 @@ class WikipediaSource:
         async with httpx.AsyncClient(timeout=15.0) as client:
             if topics:
                 # Topic-scoped search only — skip the topic-agnostic feeds.
-                for topic in topics[:5]:
-                    topic_facts = await self._search_topic_facts(client, topic)
-                    facts.extend(topic_facts)
+                # #153 round-2: cover EVERY requested topic (the old `[:5]`
+                # cap silently starved topics 6+) and interleave so the
+                # `[:count]` truncation below trims depth, not whole topics.
+                per_topic = [
+                    await self._search_topic_facts(client, topic)
+                    for topic in topics
+                ]
+                facts.extend(interleave_by_topic(per_topic))
             else:
                 # "Did you know..." facts from main page
                 for lang in self.languages:

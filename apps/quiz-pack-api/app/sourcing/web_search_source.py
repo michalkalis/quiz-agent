@@ -9,7 +9,7 @@ from tavily import AsyncTavilyClient
 
 from app.cost_tracking import TAVILY_ADVANCED_SEARCH_CREDITS, add_tavily_credits
 
-from .models import Fact
+from .models import Fact, interleave_by_topic
 
 logger = logging.getLogger(__name__)
 
@@ -131,10 +131,15 @@ class WebSearchSource:
         if not topics:
             topics = ["science", "history", "geography", "nature"]
 
-        facts: list[Fact] = []
+        # #153 round-2: collect per topic and interleave before the final
+        # `[:count]` truncation — the old flat append meant truncation ate
+        # every topic after the first few (seed-153 run: 8/10 topics 0 facts).
+        per_topic_facts: list[list[Fact]] = []
         queries_per_topic = max(1, count // len(topics))
 
         for topic in topics:
+            facts: list[Fact] = []
+            per_topic_facts.append(facts)
             query_templates = [
                 f"surprising facts about {topic} that most people don't know",
                 f"interesting {topic} trivia pub quiz",
@@ -182,7 +187,7 @@ class WebSearchSource:
                     logger.warning("Tavily search failed for %r: %s", query, e)
                     continue
 
-        return facts[:count]
+        return interleave_by_topic(per_topic_facts)[:count]
 
     async def verify_claim(
         self, question: str, claimed_answer: str, max_results: int = 5

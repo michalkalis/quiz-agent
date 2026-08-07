@@ -135,5 +135,10 @@ prompt wording. Plan allows one in-phase iteration before Phase B.
 - [x] Arms generated 2026-08-07 (old 12q · craft 11q · free 11q; shared facts.json, 88 facts; *.usage.json per arm — NOTE: generation-stage tokens missing in this round's usage files, proxy fix `a41ef38f` landed after; verification-only numbers are valid)
 - [x] rating.html + mapping.json built (3×10, seed 153) → founder rates (~30)
 - [x] Founder ratings in (2026-08-07, mean 4.6; free 6.3 / old 4.1 / craft 3.3) → analysis above
-- [ ] Founder call: iterate v6 in-phase vs lock v5-free → Phase B
+- [x] Founder call 2026-08-07: in-phase iteration approved — FIRST fix fact
+      sourcing (yield + niche-ness + source quality), THEN round 2 with
+      free-style prompts again in both flavors (free + guarded), BOTH updated
+      with two new rules: answer must be guessable/deducible; ban transparent
+      two-option comparison questions.
+- [ ] Round 2: sourcing fix → v6 prompts → generate → rating page → founder rates → lock
 - [ ] Follow-up before Phase B: per-topic sourcing yield (8/10 forced topics → 0 facts, resample covered; see TODO)

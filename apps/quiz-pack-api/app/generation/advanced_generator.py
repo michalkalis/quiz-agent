@@ -776,7 +776,12 @@ class AdvancedQuestionGenerator:
         if not q_tokens:
             return None
         best = None
-        best_score = 0
+        # #153 round-2: a single shared content word is a coincidence, not an
+        # attribution (seed-153 q29: an invented riddle mentioning "water"
+        # matched the Mariana Trench fact and shipped with its citation).
+        # Require ≥2 shared tokens; weaker overlaps fall through to the
+        # marked fallback, which the orchestrator now drops/clears.
+        best_score = 1
         for fact in facts:
             f_tokens = _content_tokens(
                 getattr(fact, "text", None), getattr(fact, "excerpt", None)

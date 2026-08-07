@@ -257,18 +257,6 @@ class GenerationStage:
         prompt_seed = _compute_prompt_seed(
             ctx.prompt, ctx.language, ctx.category, ctx.theme
         )
-        # Issue #72 — per-question attribution now happens in the generator
-        # (`AdvancedQuestionGenerator._attribute_sources`), which matches each
-        # question to the specific fact it was built from within that
-        # sub-batch's slice. This global first-fact-with-URL is now only the
-        # last-resort net for the remainder the generator couldn't attribute
-        # (fact-free sub-batches, or facts without URLs) so F8 below still holds;
-        # it no longer stamps one URL onto an entire pack.
-        fallback_fact = next(
-            (f for f in ctx.facts if getattr(f, "source_url", None)),
-            None,
-        )
-
         # Issue #76 F-3b — one batched expiry classification per run. Dormant
         # when no classifier is injected (map stays empty → nothing stamped,
         # byte-identical to pre-#76). The classifier is fail-safe by contract:
@@ -310,23 +298,13 @@ class GenerationStage:
                 provenance = provenance.model_copy(update={"pipeline": "fact_first"})
             q.generation_metadata = provenance
 
-            if fallback_fact is not None:
-                if q.source_url is None:
-                    q.source_url = getattr(fallback_fact, "source_url", None)
-                    # 2026-07-27 live-run F-d: a pack-head URL stamped here is
-                    # not a real attribution — mark it so a fact-check pass
-                    # can treat the URL as untrusted instead of verifying the
-                    # question against a sibling fact's source.
-                    provenance = q.generation_metadata or GenerationProvenance()
-                    extra = dict(provenance.extra)
-                    extra.setdefault("source_attribution", "pack_fallback")
-                    q.generation_metadata = provenance.model_copy(
-                        update={"extra": extra}
-                    )
-                if q.source_excerpt is None:
-                    q.source_excerpt = getattr(
-                        fallback_fact, "excerpt", None
-                    ) or getattr(fallback_fact, "text", None)
+            # #153 round-2: the old "pack_fallback" stamping (a sibling fact's
+            # URL copied onto any question the generator couldn't attribute)
+            # is GONE. It defeated F8's purpose — an ungrounded question
+            # sailed through with a fake citation (seed-153 q26: an invented
+            # logic puzzle with a WRONG answer shipped citing the Mariana
+            # Trench Wikipedia page). Unattributable factual questions are now
+            # dropped below instead of dressed up.
 
             # Issue #76 F-3b — stamp expiry from the content class. `current` /
             # `semi-stable` expire at `now + TTL` (timezone-aware UTC, which the
@@ -478,7 +456,63 @@ class GenerationStage:
                     update={"pipeline": "logical_puzzle"}
                 )
 
-        ctx.questions = tagged
+        # #153 round-2: enforce grounding by dropping, not decorating. A
+        # factual-mode question that ends up with no source_url, or whose URL
+        # is only a fallback stamp ("unmatched_fallback" = the generator found
+        # no fact sharing ≥2 content words), is ungrounded — the model
+        # invented it or paraphrased beyond recognition. Shipping it with a
+        # sibling fact's citation is how seed-153 q26/q29 got Mariana-Trench
+        # sources on logic puzzles. Logical puzzles themselves are legitimate
+        # inventions: they keep flowing to the consistency judge, but any
+        # fallback-stamped URL on them is cleared (fake by construction).
+        # Direct-generation mode has no facts to ground against — skip.
+        grounded: list[Question] = []
+        dropped_ungrounded = 0
+        if ctx.facts and not ctx.direct_generation:
+            for q in tagged:
+                extra = (
+                    dict(q.generation_metadata.extra)
+                    if q.generation_metadata is not None
+                    else {}
+                )
+                fallback_marked = (
+                    extra.get("source_attribution") == "unmatched_fallback"
+                )
+                is_puzzle = (
+                    q.generation_metadata is not None
+                    and q.generation_metadata.pipeline == "logical_puzzle"
+                )
+                if is_puzzle:
+                    if fallback_marked:
+                        q.source_url = None
+                        q.source_excerpt = None
+                    grounded.append(q)
+                    continue
+                if q.source_url is None or fallback_marked:
+                    dropped_ungrounded += 1
+                    logger.warning(
+                        "GenerationStage dropped ungrounded question id=%s "
+                        "fallback_marked=%s question=%r",
+                        q.id,
+                        fallback_marked,
+                        q.question,
+                    )
+                    continue
+                grounded.append(q)
+            if tagged and not grounded:
+                # Every question in the batch was unattributable — that is a
+                # sourcing/attribution failure, not a trim. Fail loud rather
+                # than deliver an empty pack that downstream stages would
+                # treat as a mysterious shortfall.
+                raise ValueError(
+                    f"F8 violated: all {len(tagged)} questions ungrounded "
+                    f"after attribution (no question carries a real "
+                    f"source_url)"
+                )
+        else:
+            grounded = tagged
+
+        ctx.questions = grounded
 
         # F8 (task 2.15): every persisted question must carry a real source URL.
         # If the per-question fallback above couldn't fill `source_url` (e.g.
@@ -517,6 +551,7 @@ class GenerationStage:
                 "dropped_quality": dropped_quality,
                 "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,
+                "dropped_ungrounded": dropped_ungrounded,
             },
             cost_cents=0,
         )

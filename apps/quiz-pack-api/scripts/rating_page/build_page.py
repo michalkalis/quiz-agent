@@ -58,6 +58,12 @@ def main() -> None:
     ap.add_argument("--batch-id", required=True,
                     help="unique id; also namespaces localStorage so old ratings don't collide")
     ap.add_argument("--seed", type=int, required=True, help="shuffle seed (reproducible blinding)")
+    ap.add_argument("--dedupe-by-fact", action="store_true",
+                    help="show each source fact only once: when several arms built a "
+                         "question on the same fact (same source_url), keep one arm's "
+                         "version, chosen seeded + balanced across arms. Round-1 lesson: "
+                         "the founder rates repeats 1-3, which punishes whichever arm "
+                         "the shuffle puts later.")
     args = ap.parse_args()
 
     pool: list[tuple[str, dict]] = []
@@ -67,6 +73,30 @@ def main() -> None:
             raise SystemExit(f"--arm expects NAME=FILE, got: {spec}")
         for q in load_arm(Path(file)):
             pool.append((name, q))
+
+    if args.dedupe_by_fact:
+        rng = random.Random(args.seed)
+        by_fact: dict[str, list[tuple[str, dict]]] = {}
+        for i, (name, q) in enumerate(pool):
+            key = q.get("source_url") or f"__unsourced_{i}"
+            by_fact.setdefault(key, []).append((name, q))
+        arm_kept: dict[str, int] = {}
+        deduped: list[tuple[str, dict]] = []
+        dropped = 0
+        for items in by_fact.values():
+            if len(items) == 1:
+                chosen = items[0]
+            else:
+                low = min(arm_kept.get(n, 0) for n, _ in items)
+                chosen = rng.choice(
+                    [it for it in items if arm_kept.get(it[0], 0) == low]
+                )
+                dropped += len(items) - 1
+            arm_kept[chosen[0]] = arm_kept.get(chosen[0], 0) + 1
+            deduped.append(chosen)
+        pool = deduped
+        print(f"dedupe-by-fact: kept {len(pool)}, dropped {dropped} same-fact "
+              f"duplicates; per arm kept: {dict(sorted(arm_kept.items()))}")
 
     random.Random(args.seed).shuffle(pool)
 

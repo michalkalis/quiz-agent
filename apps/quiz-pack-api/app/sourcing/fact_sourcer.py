@@ -54,6 +54,13 @@ class FactSourcer:
             Deduplicated FactBatch with facts from all sources
         """
         per_source = max(count // len(self.sources), 5) if self.sources else 0
+        # #153 round-2: the per-source budget must scale with the topic list,
+        # or each source's own `facts[:count]` truncation starves every topic
+        # after the first few (seed-153 run: 8/10 topics yielded 0 facts
+        # because per_source=8 < 10 topics). Guarantee headroom for ~3 facts
+        # per topic per source; sources truncate topic-fair on their side.
+        if topics:
+            per_source = max(per_source, 3 * len(topics))
 
         # Gather from all sources concurrently
         tasks = {

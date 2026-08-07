@@ -58,6 +58,22 @@ def heuristic_surprise(text: str) -> float:
     return max(1.0, min(10.0, score))
 
 
+def interleave_by_topic(groups: list[list["Fact"]]) -> list["Fact"]:
+    """Round-robin merge of per-topic fact lists.
+
+    #153 round-2: sources truncate their result with ``facts[:count]``; a
+    positionally-ordered list makes that truncation eat whole topics from the
+    tail (seed-153 run: 8/10 topics → 0 facts). Interleaving first means a
+    truncation removes the deepest facts of each topic, never a topic outright.
+    """
+    merged: list[Fact] = []
+    for depth in range(max((len(g) for g in groups), default=0)):
+        for group in groups:
+            if depth < len(group):
+                merged.append(group[depth])
+    return merged
+
+
 @dataclass
 class Fact:
     """A verified interesting fact that can be turned into a quiz question."""

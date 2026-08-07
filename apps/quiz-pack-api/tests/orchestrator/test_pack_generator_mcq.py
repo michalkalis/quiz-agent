@@ -50,9 +50,9 @@ class _StubSourcingStage:
     """Minimal SourcingStage stand-in.
 
     Real `SourcingStage` calls `FactSourcer.gather_facts` — we sidestep
-    that to keep the test offline. The single fact must carry a
-    `source_url` so `GenerationStage`'s F8 fallback can backfill the
-    question's attribution.
+    that to keep the test offline. The generator stub attributes its own
+    question (#153 round-2: the stage drops unattributed questions instead
+    of backfilling them).
     """
 
     name = "sourcing"
@@ -86,6 +86,7 @@ class _StubMCQGenerator:
                 topic="Geography",
                 category="general",
                 difficulty="easy",
+                source_url="https://example.org/great-wall",
                 generation_metadata=GenerationProvenance(
                     reasoning_pattern="true_false"
                 ),

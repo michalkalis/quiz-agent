@@ -78,6 +78,11 @@ def _stub_question(idx: int, **overrides: Any) -> Question:
         topic="General",
         category="general",
         difficulty="medium",
+        # #153 round-2: attribution happens inside the generator, so stubs
+        # arrive attributed by default — the stage now DROPS unattributed
+        # factual questions instead of backfilling them. Tests exercising
+        # the ungrounded path override with `source_url=None`.
+        source_url=f"https://ex/stub{idx}",
     )
     base.update(overrides)
     return Question(**base)
@@ -103,7 +108,11 @@ def _make_ctx(
 
 @pytest.mark.asyncio
 async def test_post_processes_questions_with_order_metadata() -> None:
-    questions = [_stub_question(i) for i in range(3)]
+    # #153 round-2: attribution is the generator's job; stage-level stubs
+    # must arrive attributed or the ungrounded-drop filter removes them.
+    questions = [
+        _stub_question(i, source_url=f"https://ex/{i}") for i in range(3)
+    ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [
@@ -124,7 +133,9 @@ async def test_post_processes_questions_with_order_metadata() -> None:
 
 @pytest.mark.asyncio
 async def test_marks_pipeline_fact_first_when_facts_present() -> None:
-    questions = [_stub_question(i) for i in range(2)]
+    questions = [
+        _stub_question(i, source_url=f"https://ex/{i}") for i in range(2)
+    ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [Fact(text="paris is the capital", source_url="https://ex/1")]
@@ -145,13 +156,13 @@ async def test_preserves_existing_provenance_fields_when_marking_pipeline() -> N
     pre = GenerationProvenance(
         model="gpt-4o", provider="openai", critique_score=8.5
     )
-    questions = [_stub_question(0, generation_metadata=pre)]
+    questions = [
+        _stub_question(
+            0, generation_metadata=pre, source_url="https://ex/x"
+        )
+    ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
-    # F8 (task 2.15): fact needs `source_url` so the stage's fallback can
-    # backfill the question — otherwise the F8 invariant assert trips and
-    # this test (which exercises provenance preservation, not attribution)
-    # never reaches its assertions.
     ctx = _make_ctx(target_count=1, facts=[Fact(text="x", source_url="https://ex/x")])
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
@@ -163,23 +174,83 @@ async def test_preserves_existing_provenance_fields_when_marking_pipeline() -> N
 
 
 @pytest.mark.asyncio
-async def test_carries_source_url_and_excerpt_from_facts() -> None:
-    questions = [_stub_question(0)]
+async def test_drops_unattributed_factual_question() -> None:
+    """#153 round-2: the stage no longer backfills a missing ``source_url``
+    from the pack's facts (the old "pack_fallback" stamped a sibling fact's
+    URL onto invented questions — seed-153 q26 shipped a wrong-answer puzzle
+    citing the Mariana Trench Wikipedia page). A factual question the
+    generator could not attribute is dropped and counted, never decorated.
+    """
+    questions = [
+        _stub_question(0, source_url="https://wiki/attributed"),
+        _stub_question(1, source_url=None),  # ungrounded → dropped
+    ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
-    facts = [
-        Fact(
-            text="Paris is the capital of France.",
-            source_url="https://wiki/paris",
-            excerpt="Paris is the capital",
+    facts = [Fact(text="t", source_url="https://wiki/attributed", excerpt="e")]
+    ctx = _make_ctx(target_count=2, facts=facts)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 1
+    assert ctx.questions[0].source_url == "https://wiki/attributed"
+    assert result.info["dropped_ungrounded"] == 1
+
+
+@pytest.mark.asyncio
+async def test_drops_fallback_marked_factual_question() -> None:
+    """A question whose URL is only an ``unmatched_fallback`` stamp (the
+    generator found no fact sharing ≥2 content words) carries a fake
+    citation by construction — it must be dropped, not shipped."""
+    marked = GenerationProvenance(
+        extra={"source_attribution": "unmatched_fallback"}
+    )
+    questions = [
+        _stub_question(
+            0, source_url="https://sibling/fact", generation_metadata=marked
         )
     ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://sibling/fact")]
     ctx = _make_ctx(target_count=1, facts=facts)
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        # the only question in the batch is ungrounded → all-dropped guard
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_logical_puzzle_fallback_url_is_cleared_not_dropped() -> None:
+    """A lateral puzzle is a legitimate invention (consistency-judged, F8
+    exempt) — but a fallback-stamped URL on it is fake and must be cleared
+    (seed-153 q29: an ice-riddle citing the Mariana Trench page)."""
+    marked = GenerationProvenance(
+        reasoning_pattern="lateral_thinking",
+        extra={"source_attribution": "unmatched_fallback"},
+    )
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="A block of ice",
+            source_url="https://wiki/mariana_trench",
+            source_excerpt="unrelated",
+            generation_metadata=marked,
+        ),
+        _stub_question(1, source_url="https://ex/1"),
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=2, facts=facts)
 
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert ctx.questions[0].source_url == "https://wiki/paris"
-    assert ctx.questions[0].source_excerpt == "Paris is the capital"
+    assert len(ctx.questions) == 2
+    puzzle = ctx.questions[0]
+    assert puzzle.generation_metadata.pipeline == "logical_puzzle"
+    assert puzzle.source_url is None
+    assert puzzle.source_excerpt is None
 
 
 @pytest.mark.asyncio
@@ -212,7 +283,10 @@ async def test_normalises_non_uuid_question_ids() -> None:
     legacy ids with real UUIDs at the boundary — otherwise the e2e flow
     fails on the first persist call.
     """
-    questions = [_stub_question(0, id="q_abc123def456"), _stub_question(1)]
+    questions = [
+        _stub_question(0, id="q_abc123def456", source_url="https://ex/1"),
+        _stub_question(1, source_url="https://ex/1"),
+    ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [Fact(text="t", source_url="https://ex/1")]
@@ -228,12 +302,12 @@ async def test_normalises_non_uuid_question_ids() -> None:
 async def test_raises_when_no_question_has_source_url() -> None:
     """F8 (task 2.15) requires every persisted question to have `source_url`.
 
-    The wrap's fallback backfills questions from the first attributed
-    fact — but when no fact carries a URL (e.g. an OpenTriviaDB-only run
-    upstream of full sourcing rules), the gap must fail loudly so the
-    pack never reaches PersistStage with null attribution.
+    #153 round-2: with backfill gone, a batch where no question can be
+    attributed (e.g. no fact carries a URL) is dropped in full — and an
+    all-dropped batch must still fail loudly so the pack never silently
+    arrives empty at PersistStage.
     """
-    questions = [_stub_question(i) for i in range(3)]
+    questions = [_stub_question(i, source_url=None) for i in range(3)]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [Fact(text=f"t{i}") for i in range(5)]  # no source_url anywhere
@@ -255,6 +329,7 @@ async def test_logical_puzzle_persists_without_source_url() -> None:
         _stub_question(
             0,
             correct_answer="The candle",
+            source_url=None,
             generation_metadata=GenerationProvenance(
                 reasoning_pattern="lateral_thinking"
             ),
@@ -284,6 +359,7 @@ async def test_factual_question_without_source_url_still_fails_f8() -> None:
         _stub_question(
             0,
             correct_answer="Paris",
+            source_url=None,
             generation_metadata=GenerationProvenance(
                 reasoning_pattern="fact_recall"
             ),
@@ -311,6 +387,7 @@ async def test_open_fraction_routes_slice_through_open_pipeline() -> None:
             0,
             correct_answer="The candle",
             headline_answer="The candle",
+            source_url=None,
             generation_metadata=GenerationProvenance(
                 reasoning_pattern="lateral_thinking"
             ),

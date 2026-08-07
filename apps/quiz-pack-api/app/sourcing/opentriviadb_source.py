@@ -216,8 +216,14 @@ class OpenTriviaDBSource:
             if cat_name.lower() in topics_lower:
                 result.append((cat_id, cat_name))
 
+        if not result and topics:
+            # #153 round-2: a topic-scoped order whose topics map to no real
+            # opentdb category gets NOTHING from this source — the old
+            # General-bucket fallback flooded the batch with off-topic random
+            # trivia (seed-153 run: 48/88 facts were generic "General" items,
+            # the founder's top complaint: "kto to má vedieť a prečo").
+            return []
         if not result:
-            # Fallback to general
             result = [(9, "General")]
 
         return result

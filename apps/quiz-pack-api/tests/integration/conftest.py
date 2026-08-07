@@ -333,6 +333,10 @@ def generation_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockR
 # at least 3 results whose `content` contains the claimed answer (the agree
 # count drives `0.6 + (agreeing/total)*0.35`). Three lower-case "three"s land
 # us at the 0.95 ceiling without forcing the test to monkey-patch confidence.
+# Contents deliberately mention EVERY answer in `_TOPUP_FRIENDLY_QUESTIONS`
+# (three, nine, blue, eight, zero, ink, camouflage, suckers, octopus,
+# copper) — `FactVerifier._answer_supported` is a substring check per result,
+# and one canned route serves every verification query in the run.
 _TAVILY_VERIFY_RESPONSE = {
     "answer": "An octopus has three hearts.",
     "results": [
@@ -340,9 +344,10 @@ _TAVILY_VERIFY_RESPONSE = {
             "url": "https://example.com/octopus/anatomy",
             "title": "Octopus anatomy primer",
             "content": (
-                "Octopuses have three hearts — two branchial hearts pump blood "
-                "through the gills while one systemic heart circulates it to "
-                "the body."
+                "Octopuses have three hearts and nine brains, reach with "
+                "eight arms lined with suckers that taste food, and have "
+                "zero bones in the body — the octopus squirts ink and uses "
+                "camouflage to escape."
             ),
             "score": 0.95,
         },
@@ -350,8 +355,10 @@ _TAVILY_VERIFY_RESPONSE = {
             "url": "https://example.com/marine-bio/cephalopods",
             "title": "Cephalopod circulation",
             "content": (
-                "Cephalopod biology textbooks list three hearts as a defining "
-                "trait of the order Octopoda."
+                "Cephalopod textbooks list three hearts, nine brains, eight "
+                "arms with suckers, zero bones, defensive ink, camouflage "
+                "skin, and blue blood based on copper hemocyanin as defining "
+                "octopus traits."
             ),
             "score": 0.91,
         },
@@ -359,8 +366,10 @@ _TAVILY_VERIFY_RESPONSE = {
             "url": "https://example.com/zoology/hearts",
             "title": "Animals with multiple hearts",
             "content": (
-                "Among invertebrates, the octopus is famous for having three "
-                "hearts and copper-based hemocyanin in its blood."
+                "Among invertebrates, the octopus is famous for three hearts, "
+                "nine brains, eight arms, suckers, zero bones, ink jets, "
+                "instant camouflage, and copper-based hemocyanin making its "
+                "blood blue."
             ),
             "score": 0.87,
         },
@@ -499,17 +508,35 @@ def e2e_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockRouter:
 # because the generate_pack CLI now runs TopUpStage too (live-run F-b).
 # ---------------------------------------------------------------------------
 
+# #153 Phase 0.1 made "one fact backs one question per pack" a hard dedup
+# rule (fact key = source_url + answer, plus a 0.35 content-overlap check),
+# and CompositionStage caps questions-per-topic. Ten phrasings of ONE fact —
+# the previous shape here — now correctly collapses to a single survivor, so
+# the fixture carries ten DISTINCT octopus facts instead: distinct answers,
+# URLs, and topics. All answers appear verbatim in
+# ``_TAVILY_VERIFY_RESPONSE`` contents so ``FactVerifier`` still hits its
+# verified branch for every question.
 _TOPUP_FRIENDLY_QUESTIONS = [
-    ("How many hearts does an octopus have?", "https://example.com/octopus-hearts-1"),
-    ("An octopus's circulatory system relies on how many separate hearts?", "https://example.com/octopus-hearts-2"),
-    ("Marine biologists count how many hearts inside a live octopus?", "https://example.com/octopus-hearts-3"),
-    ("A healthy octopus pumps blood using how many hearts?", "https://example.com/octopus-hearts-4"),
-    ("Zoology textbooks list how many hearts for the common octopus?", "https://example.com/octopus-hearts-5"),
-    ("What number of hearts keeps an octopus's blue blood flowing?", "https://example.com/octopus-hearts-6"),
-    ("How many pumping hearts does the octopus species carry?", "https://example.com/octopus-hearts-7"),
-    ("Aquarium guides say an octopus has how many hearts?", "https://example.com/octopus-hearts-8"),
-    ("Cephalopod anatomy books describe how many hearts in an octopus?", "https://example.com/octopus-hearts-9"),
-    ("How many separate hearts circulate blood in an octopus's body?", "https://example.com/octopus-hearts-10"),
+    ("How many hearts pump blood through an octopus?", "three", ["3"],
+     "Marine Biology", "https://example.com/octopus-hearts"),
+    ("Counting the one in its head and one per arm, how many brains does an octopus use?", "nine", ["9"],
+     "Animal Anatomy", "https://example.com/octopus-brains"),
+    ("What colour is octopus blood?", "blue", [],
+     "Biochemistry", "https://example.com/octopus-blood"),
+    ("An octopus reaches for prey with how many arms?", "eight", ["8"],
+     "Ocean Life", "https://example.com/octopus-arms"),
+    ("How many bones support an octopus's body?", "zero", ["none"],
+     "Zoology", "https://example.com/octopus-bones"),
+    ("What does a startled octopus squirt to cover its escape?", "ink", [],
+     "Animal Behaviour", "https://example.com/octopus-ink"),
+    ("Which skill lets an octopus vanish against any seabed?", "camouflage", [],
+     "Natural History", "https://example.com/octopus-camouflage"),
+    ("An octopus tastes its food using what on its arms?", "suckers", [],
+     "Sea Creatures", "https://example.com/octopus-suckers"),
+    ("Which sea creature is nicknamed the escape artist of the aquarium?", "octopus", [],
+     "Aquarium Science", "https://example.com/octopus-escape"),
+    ("Which metal carries oxygen in an octopus's bloodstream?", "copper", [],
+     "Chemistry of Life", "https://example.com/octopus-copper"),
 ]
 
 
@@ -517,25 +544,25 @@ def _topup_friendly_generation_payload() -> dict:
     questions = [
         {
             "reasoning": {
-                "source_fact": "Octopuses possess three hearts and copper-based hemocyanin",
+                "source_fact": f"Octopus fact behind the answer '{answer}'",
                 "pattern_used": "Surprising biology",
-                "why_interesting": "Most people assume one heart",
+                "why_interesting": "Overturns a common assumption",
                 "universal_appeal": "Anatomy is universally relatable",
                 "boring_check": "Pinned to verified zoological fact",
             },
             "question": text,
             "type": "text",
-            "correct_answer": "three",
+            "correct_answer": answer,
             "possible_answers": None,
-            "alternative_answers": ["3"],
-            "topic": "Biology",
+            "alternative_answers": alternatives,
+            "topic": topic,
             "category": "science",
             "difficulty": "medium",
             "tags": ["zoology", "anatomy"],
             "language_dependent": False,
             "age_appropriate": "all",
             "source_url": url,
-            "source_excerpt": "Octopuses have three hearts.",
+            "source_excerpt": f"Octopus fact: {answer}.",
             "self_critique": {
                 "surprise_factor": 8,
                 "universal_appeal": 9,
@@ -546,7 +573,7 @@ def _topup_friendly_generation_payload() -> dict:
                 "reasoning": "Strong universal appeal",
             },
         }
-        for text, url in _TOPUP_FRIENDLY_QUESTIONS
+        for text, answer, alternatives, topic, url in _TOPUP_FRIENDLY_QUESTIONS
     ]
     return {"questions": questions}
 

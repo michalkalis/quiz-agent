@@ -267,6 +267,7 @@ class AdvancedQuestionGenerator:
         critique_temperature: float = 0.3,
         prompt_version: str = "v2_cot",
         verbose: bool = False,
+        fact_first_template: str | None = None,
     ):
         """Initialize advanced question generator.
 
@@ -279,6 +280,9 @@ class AdvancedQuestionGenerator:
             critique_temperature: Temperature for critique (0.3 for consistency)
             prompt_version: Prompt template version (v2_cot uses Chain of Thought)
             verbose: Enable verbose logging of raw responses and parsed fields
+            fact_first_template: Filename (within ``prompts/``) overriding the
+                default v3 fact-first template — the #153 Phase A prompt A/B
+                lever. ``None`` keeps ``question_generation_v3_fact_first.md``.
         """
         self.verbose = verbose
         self.generation_llm = llm_factory.chat_openai(
@@ -307,13 +311,24 @@ class AdvancedQuestionGenerator:
 
         self.prompt_builder = PromptBuilder(template_path=template_path)
 
-        # Load V3 fact-first template (used when source_facts provided)
+        # Load V3 fact-first template (used when source_facts provided).
+        # #153 Phase A: an explicit override must exist — a typo'd experiment
+        # arm silently falling back to the default template would poison the
+        # whole A/B comparison, so that path fails loud instead.
         v3_template_path = os.path.join(
-            current_dir, "..", "..", "prompts", "question_generation_v3_fact_first.md"
+            current_dir,
+            "..",
+            "..",
+            "prompts",
+            fact_first_template or "question_generation_v3_fact_first.md",
         )
         self.v3_prompt_builder = None
         if os.path.exists(v3_template_path):
             self.v3_prompt_builder = PromptBuilder(template_path=v3_template_path)
+        elif fact_first_template is not None:
+            raise FileNotFoundError(
+                f"fact_first_template override not found: {v3_template_path}"
+            )
 
         # Issue #46 task 46.B4b — open/logical branch template. Open-shape
         # questions (mechanism + lateral puzzles) are generated through this

@@ -58,6 +58,7 @@ from app.db.models import GenerationOrder
 from app.orchestrator import PackGenerator, ProgressSink
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
+    CompositionStage,
     DedupStage,
     GenerationStage,
     PersistStage,
@@ -198,8 +199,37 @@ def _build_dedup_store(name: str) -> AsyncDuplicateFinder:
     return _NoopQuestionStore()
 
 
-def _build_stages(*, persist: bool, dedup_store: AsyncDuplicateFinder) -> list[Stage]:
-    """Construct the standard pipeline. Persist is omitted in dry-run mode."""
+class _NoopScoringStage:
+    """Stands in for ScoringStage in a --no-judges experiment run (#153).
+
+    Top-up rounds still expect a scoring collaborator; this one keeps every
+    question and spends nothing, so the ungated arm behaves identically in
+    the main walk and in top-up.
+    """
+
+    name = "scoring"
+
+    async def run(self, ctx, sink):
+        from app.orchestrator.context import StageResult
+
+        return StageResult(info={"skipped": "no-judges run"}, cost_cents=0)
+
+
+def _build_stages(
+    *,
+    persist: bool,
+    dedup_store: AsyncDuplicateFinder,
+    judges: bool = True,
+    gen_prompt_file: str | None = None,
+) -> list[Stage]:
+    """Construct the standard pipeline. Persist is omitted in dry-run mode.
+
+    #153 Phase A experiment levers (CLI-only, worker path untouched):
+    ``judges=False`` omits ScoringStage — including its #147 fail-closed
+    gate — so an experiment arm ships ungated survivors for offline random
+    selection; never use it for a real order. ``gen_prompt_file`` swaps the
+    fact-first generation prompt (filename within ``prompts/``).
+    """
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.expiry_classifier import ExpiryClassifier
@@ -218,6 +248,7 @@ def _build_stages(*, persist: bool, dedup_store: AsyncDuplicateFinder) -> list[S
     generator = AdvancedQuestionGenerator(
         generation_model=feature_flags.generation_model() or llm_factory.GEN,
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+        fact_first_template=gen_prompt_file,
     )
 
     # Issue #76 F-3b — the founder's manual replenishment pass runs through
@@ -233,6 +264,7 @@ def _build_stages(*, persist: bool, dedup_store: AsyncDuplicateFinder) -> list[S
     verification = VerificationStage(FactVerifier())
     scoring = ScoringStage(MultiModelScorer())
     dedup = DedupStage(dedup_store, gold_standard_path=None)
+    composition = CompositionStage()
 
     stages: list[Stage] = [
         # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
@@ -246,12 +278,24 @@ def _build_stages(*, persist: bool, dedup_store: AsyncDuplicateFinder) -> list[S
         # should never pay for either, mirroring the worker's `_build_stages`.
         dedup,
         verification,
-        scoring,
+    ]
+    if judges:
+        stages.append(scoring)
+    stages += [
+        # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right
+        # after scoring, mirroring the worker's `_build_stages`.
+        composition,
         # 2026-07-27 live-run F-b: the CLI omitted TopUpStage, so every pack
         # that lost questions downstream just delivered short (the plain run
         # needed 11 batches for 100 questions). Same instances as the initial
         # pass, mirroring the worker's `_build_stages` (#103 F5).
-        TopUpStage(generation, verification, scoring, dedup),
+        TopUpStage(
+            generation,
+            verification,
+            scoring if judges else _NoopScoringStage(),
+            dedup,
+            composition_stage=composition,
+        ),
     ]
     if persist:
         from app.db.session import AsyncSessionLocal
@@ -287,7 +331,12 @@ async def _run(args: argparse.Namespace) -> int:
     persist = not args.dry_run
     order = _build_order(args)
     dedup_store = _build_dedup_store(args.dedup_store)
-    stages = _build_stages(persist=persist, dedup_store=dedup_store)
+    stages = _build_stages(
+        persist=persist,
+        dedup_store=dedup_store,
+        judges=not args.no_judges,
+        gen_prompt_file=args.gen_prompt_file,
+    )
 
     def _sink_factory(_order_id: str) -> ProgressSink:
         return _StdoutSink()  # type: ignore[return-value]
@@ -417,6 +466,25 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "Skip the persist stage (no DB writes). Pipeline still runs; "
             "HTTP calls hit real providers unless respx mocks are installed."
+        ),
+    )
+    parser.add_argument(
+        "--no-judges",
+        action="store_true",
+        help=(
+            "#153 experiment lever: omit the ScoringStage judge panel (and "
+            "its #147 fail-closed gate) so survivors ship ungated for "
+            "offline selection. Experiment runs only — never real orders."
+        ),
+    )
+    parser.add_argument(
+        "--gen-prompt-file",
+        default=None,
+        metavar="FILENAME",
+        help=(
+            "#153 experiment lever: filename within prompts/ replacing the "
+            "default question_generation_v3_fact_first.md template. Fails "
+            "loud when the file does not exist."
         ),
     )
     return parser.parse_args(argv)

@@ -64,6 +64,7 @@ class TopUpStage:
         floor_fraction: float = FLOOR_FRACTION,
         max_rounds: int = MAX_TOPUP_ROUNDS,
         answerability_stage=None,
+        composition_stage=None,
     ) -> None:
         self._generation_stage = generation_stage
         self._verification_stage = verification_stage
@@ -73,6 +74,10 @@ class TopUpStage:
         # round-trip check to the new tail, mirroring the main walk's
         # dedup → answerability → verify → score order.
         self._answerability_stage = answerability_stage
+        # #153 Phase 0.1 — optional; batch-composition caps (per-topic, T/F)
+        # are batch-level properties, so unlike verify/score they re-run on
+        # the FULL merged set after each round, not just the new tail.
+        self._composition_stage = composition_stage
         self._floor_fraction = floor_fraction
         self._max_rounds = max_rounds
 
@@ -111,6 +116,10 @@ class TopUpStage:
             cost_cents += (await self._verification_stage.run(ctx, sink)).cost_cents
             cost_cents += (await self._scoring_stage.run(ctx, sink)).cost_cents
             ctx.questions = old_kept + ctx.questions
+            if self._composition_stage is not None:
+                cost_cents += (
+                    await self._composition_stage.run(ctx, sink)
+                ).cost_cents
             rounds += 1
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",

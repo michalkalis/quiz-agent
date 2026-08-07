@@ -28,6 +28,7 @@ from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
 from app.orchestrator.stages import (
     AnswerabilityStage,
+    CompositionStage,
     DedupStage,
     GenerationStage,
     PersistStage,
@@ -104,15 +105,20 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     ]
     if answerability is not None:
         stages.append(answerability)
+    # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right after
+    # scoring, so judge scores decide which questions survive each cap.
+    composition = CompositionStage()
     stages += [
         verification,
         scoring,
+        composition,
         TopUpStage(
             generation,
             verification,
             scoring,
             dedup,
             answerability_stage=answerability,
+            composition_stage=composition,
         ),
         PersistStage(session_factory),
     ]

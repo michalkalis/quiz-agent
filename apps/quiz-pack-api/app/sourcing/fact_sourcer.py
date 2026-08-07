@@ -70,6 +70,14 @@ class FactSourcer:
             if isinstance(result, Exception):
                 print(f"Source '{name}' failed: {result}")
                 continue
+            if name == "wikipedia":
+                # #153 Phase 0.3: Wikipedia is a high-credibility source.
+                # Stamped here rather than in wikipedia_source.py (owned by a
+                # parallel #153 track) — every Fact it returns defaults to
+                # "medium" otherwise. OpenTriviaDB's "medium" default already
+                # matches spec, so it needs no stamping.
+                for fact in result:
+                    fact.credibility = "high"
             all_facts.extend(result)
             sources_used.append(name)
             print(f"Source '{name}': {len(result)} facts")
@@ -82,5 +90,11 @@ class FactSourcer:
         # Deduplicate
         batch = batch.deduplicate()
         print(f"After deduplication: {len(batch.facts)} unique facts")
+
+        # #153 Phase 0.2: tally the deduplicated result per requested topic so
+        # SourcingStage can see (and resample) a topic that yielded 0 facts.
+        # Broad-feed runs (topics=None) have no per-topic signal to tally.
+        if topics:
+            batch.facts_per_topic = batch.count_by_topic(topics)
 
         return batch

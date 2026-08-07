@@ -120,7 +120,7 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         result = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx, _NullSink()
         )
-        assert result.info == {"kept": 0, "dropped": 1}
+        assert result.info == {"kept": 0, "dropped": 1, "fact_dropped": 0}
         assert ctx.questions == []
 
         # Re-running on the stored question itself keeps it — the only match is
@@ -129,7 +129,7 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         result_self = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx_self, _NullSink()
         )
-        assert result_self.info == {"kept": 1, "dropped": 0}
+        assert result_self.info == {"kept": 1, "dropped": 0, "fact_dropped": 0}
         assert ctx_self.questions == [seeded]
     finally:
         async with factory() as session:

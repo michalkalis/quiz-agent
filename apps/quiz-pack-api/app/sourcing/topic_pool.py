@@ -63,14 +63,23 @@ class TopicPool:
                 self._topics = [t.strip() for t in raw if isinstance(t, str) and t.strip()]
         return self._topics
 
-    def sample(self, count: Optional[int] = None) -> Optional[list[str]]:
+    def sample(
+        self, count: Optional[int] = None, exclude: Optional[set[str]] = None
+    ) -> Optional[list[str]]:
         """Return ``count`` distinct topics drawn at random, or ``None``.
 
         Random (not fixed) so repeated "surprise me" packs draw a different
         spread; ``random.sample`` guarantees no duplicate topic in one pack.
+
+        ``exclude`` (#153 Phase 0.2, case-insensitive) is used by
+        ``SourcingStage``'s empty-topic resample: a replacement topic must not
+        repeat a topic the run already sourced (or already tried).
         """
         n = count or self._topic_count
         pool = self.load()
+        if exclude:
+            excluded_lower = {e.lower() for e in exclude}
+            pool = [t for t in pool if t.lower() not in excluded_lower]
         if not pool:
             return None
         return random.sample(pool, min(n, len(pool)))

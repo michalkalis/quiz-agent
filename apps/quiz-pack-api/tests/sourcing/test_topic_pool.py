@@ -46,6 +46,24 @@ def test_sample_returns_distinct_topics_from_pool(tmp_path: Path) -> None:
     assert set(sampled) <= set(topics)  # never invents an off-list topic
 
 
+def test_sample_excludes_given_topics_case_insensitively(tmp_path: Path) -> None:
+    """#153 Phase 0.2: SourcingStage's empty-topic resample must not redraw a
+    topic the run already sourced (or already tried as a replacement)."""
+    pool = _pool(tmp_path, ["Coral Reefs", "Jazz History", "Norse Mythology"])
+
+    sampled = pool.sample(2, exclude={"coral reefs"})
+
+    assert sampled is not None
+    assert "Coral Reefs" not in sampled
+    assert set(sampled) <= {"Jazz History", "Norse Mythology"}
+
+
+def test_sample_exclude_exhausting_pool_returns_none(tmp_path: Path) -> None:
+    pool = _pool(tmp_path, ["only one", "only two"])
+
+    assert pool.sample(5, exclude={"only one", "only two"}) is None
+
+
 def test_sample_caps_at_pool_size(tmp_path: Path) -> None:
     pool = _pool(tmp_path, ["only one", "only two"])
 

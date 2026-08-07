@@ -15,12 +15,17 @@ source — finer granularity is a Phase 3 concern (#37 cost-cap mid-flight).
 
 from __future__ import annotations
 
+import logging
+import math
 import re
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.sourcing.fact_sourcer import FactSourcer
-from app.sourcing.topic_pool import TopicPool
+from app.sourcing.models import FactBatch
+from app.sourcing.topic_pool import DEFAULT_TOPIC_COUNT, TopicPool
+
+logger = logging.getLogger(__name__)
 
 # #42 task 42.28 — at most this many salient tokens are mined from the free-text
 # prompt to steer sourcing toward what the order actually asked about.
@@ -81,7 +86,13 @@ class SourcingStage:
         # topic set from it first (free, no LLM call); an empty/missing pool
         # returns None and we keep today's broad-feed fallback.
         if topics is None and self._topic_pool is not None:
-            sampled = self._topic_pool.sample()
+            # #153: scale the no-category topic count with the order size —
+            # a 30-question order needs ≥15 topics, not the fixed 5-topic
+            # default, or a handful of topics end up carrying the whole pack.
+            # DEFAULT_TOPIC_COUNT stays the floor for small orders; sample()
+            # itself caps at the pool size.
+            topic_count = max(DEFAULT_TOPIC_COUNT, math.ceil(ctx.target_count / 2))
+            sampled = self._topic_pool.sample(topic_count)
             if sampled:
                 ctx.auto_topics = sampled
                 topics = sampled
@@ -90,12 +101,24 @@ class SourcingStage:
             count=ctx.target_count * 2,
             topics=topics,
         )
+
+        # #153 Phase 0.2: fail loud on any topic that sourced 0 facts instead
+        # of silently contributing nothing.
+        empty_topics, resampled_topics = await self._resample_empty_topics(
+            batch, topics, ctx
+        )
+
+        # #153 Phase 0.3: drop listicle/low-credibility facts once their topic
+        # already has enough trustworthy material (starvation-guarded).
+        batch, low_credibility_dropped = batch.drop_low_credibility_starved()
+
         # RC-2 (#72 P3.2): give the flat-defaulted facts a real, free surprise
         # score and actually rank by it — top_by_surprise() previously had zero
         # call sites, so the generation prompt's "prefer surprising facts" never
         # bit. Ordering only (n = all facts): the 2× dedup headroom downstream is
         # preserved, the facts are just surprise-first so generation anchors on
-        # the interesting ones.
+        # the interesting ones. #153 Phase 0.3: credibility now leads that
+        # ranking (see `FactBatch.top_by_surprise`).
         batch.score_surprise_heuristic()
         ctx.facts = batch.top_by_surprise(len(batch.facts))
 
@@ -110,9 +133,105 @@ class SourcingStage:
                 # #72 F-1: surfaces which topics the pool picked (None on the
                 # heuristic path) so a no-category run is auditable end-to-end.
                 "auto_topics": ctx.auto_topics,
+                # #153 Phase 0.2: always present so downstream analysis can see
+                # the per-topic fact distribution (empty for the broad-feed
+                # no-topics path, or when a test double doesn't populate it).
+                "facts_per_topic": dict(batch.facts_per_topic),
+                "empty_topics": empty_topics,
+                "resampled_topics": resampled_topics,
+                # #153 Phase 0.3
+                "low_credibility_dropped": low_credibility_dropped,
             },
             cost_cents=0,
         )
+
+    async def _resample_empty_topics(
+        self, batch: FactBatch, topics: list[str] | None, ctx: OrderContext
+    ) -> tuple[list[str], int]:
+        """#153 Phase 0.2: give a topic that sourced 0 facts one bounded shot
+        at a replacement before giving up on it loudly.
+
+        Reads `batch.facts_per_topic` (populated by `FactSourcer.gather_facts`
+        when `topics` is not None) rather than re-deriving counts from
+        `batch.facts` — a test double that returns a fixed batch without
+        setting it leaves the dict empty, so no topic is misreported as
+        "empty" from stale/mismatched fact tagging.
+
+        For each topic that yielded 0 facts: with no `TopicPool` wired
+        (worker path today), or once the shared replacement budget
+        (`len(topics)` total attempts across the whole run) is exhausted, the
+        topic is logged and reported in `empty_topics` rather than silently
+        contributing nothing. Otherwise a fresh, not-yet-tried topic is drawn
+        from the pool and sourced; a non-empty replacement resolves the
+        original topic (counted in `resampled_topics`), a still-empty one
+        consumes another unit of budget and tries again.
+        """
+        if not topics:
+            return [], 0
+
+        facts_per_topic = dict(batch.facts_per_topic)
+        empty = [t for t, n in facts_per_topic.items() if n == 0]
+        if not empty:
+            batch.facts_per_topic = facts_per_topic
+            return [], 0
+
+        used = {t.lower() for t in topics}
+        budget = len(topics)
+        attempts = 0
+        per_topic_count = max((ctx.target_count * 2) // max(len(topics), 1), 5)
+
+        empty_topics: list[str] = []
+        resampled_topics = 0
+
+        for topic in empty:
+            if self._topic_pool is None:
+                logger.warning(
+                    "Sourcing topic %r yielded 0 facts; no TopicPool wired, "
+                    "cannot resample.",
+                    topic,
+                )
+                empty_topics.append(topic)
+                continue
+
+            resolved = False
+            while attempts < budget:
+                replacement_sample = self._topic_pool.sample(1, exclude=used)
+                if not replacement_sample:
+                    break  # pool has no unused topic left to try
+                replacement = replacement_sample[0]
+                used.add(replacement.lower())
+                attempts += 1
+
+                replacement_batch = await self._fact_sourcer.gather_facts(
+                    count=per_topic_count, topics=[replacement]
+                )
+                replacement_count = len(replacement_batch.facts)
+                facts_per_topic[replacement] = replacement_count
+                if replacement_count > 0:
+                    logger.warning(
+                        "Sourcing topic %r yielded 0 facts; resampled "
+                        "replacement topic %r (%d facts).",
+                        topic,
+                        replacement,
+                        replacement_count,
+                    )
+                    batch.facts.extend(replacement_batch.facts)
+                    resampled_topics += 1
+                    resolved = True
+                    break
+
+            if not resolved:
+                logger.warning(
+                    "Sourcing topic %r yielded 0 facts; resample budget "
+                    "exhausted (%d/%d attempts), leaving it empty.",
+                    topic,
+                    attempts,
+                    budget,
+                )
+                empty_topics.append(topic)
+
+        batch.facts_per_topic = facts_per_topic
+        return empty_topics, resampled_topics
 
     @staticmethod
     def _derive_topics(ctx: OrderContext) -> list[str] | None:

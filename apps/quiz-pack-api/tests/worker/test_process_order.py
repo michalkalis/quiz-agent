@@ -305,6 +305,8 @@ async def test_happy_path(
         "answerability",
         "verifying",
         "scoring",
+        # #153 Phase 0.1 — deterministic batch caps right after scoring.
+        "composition",
         "topup",
         "persisting",
         "done",

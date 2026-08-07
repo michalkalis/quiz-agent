@@ -1,9 +1,12 @@
 """Data models for fact sourcing."""
 
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # RC-2 (#72 P3.2): every source stamps a flat fabricated `surprise_rating` and
 # `top_by_surprise()` had zero call sites, so the generation prompt's "prefer
@@ -25,6 +28,11 @@ _MARKER_BONUS = 1.5
 _MAX_MARKERS = 3  # cap so one loud fact can't dominate purely on adjectives
 _NUMBER_BONUS = 1.0
 _REWRAP_PENALTY = 2.0  # the OpenTDB re-wrap shape (RC-1) is known dull
+
+# #153 Phase 0.3: credibility tier ordering for ranking (lower = ranked first)
+# and the starvation-guard threshold for dropping low-credibility facts.
+_CREDIBILITY_RANK = {"high": 0, "medium": 1, "low": 2}
+_STARVATION_MIN_KEPT = 3
 
 
 def heuristic_surprise(text: str) -> float:
@@ -64,6 +72,12 @@ class Fact:
     tags: list[str] = field(default_factory=list)
     language: str = "en"  # source language
     verified: bool = False
+    # #153 Phase 0.3: source credibility tier ("high" | "medium" | "low"),
+    # stamped by each source (see web_search_source._classify_credibility for
+    # the domain rules). Default "medium" — sources that don't classify
+    # (Wikipedia/OpenTriviaDB stamp their own tier explicitly) fall here rather
+    # than being penalised or trusted by omission.
+    credibility: str = "medium"
 
     def is_expired(self) -> bool:
         """Check if this fact has expired."""
@@ -79,6 +93,12 @@ class FactBatch:
     facts: list[Fact] = field(default_factory=list)
     sourced_at: datetime = field(default_factory=datetime.now)
     sources_used: list[str] = field(default_factory=list)
+    # #153 Phase 0.2: per-topic fact yield, so a topic that sourced 0 facts is
+    # visible rather than silently contributing nothing. Populated by
+    # `FactSourcer.gather_facts` (via `count_by_topic`) when topics were
+    # requested; stays empty ({}) for the broad-feed (no-topics) path and for
+    # any test double that doesn't set it.
+    facts_per_topic: dict[str, int] = field(default_factory=dict)
 
     def deduplicate(self, similarity_threshold: float = 0.85) -> "FactBatch":
         """Remove near-duplicate facts based on text similarity."""
@@ -115,6 +135,23 @@ class FactBatch:
         filtered = [f for f in self.facts if f.topic.lower() in topics_lower]
         return FactBatch(facts=filtered, sourced_at=self.sourced_at, sources_used=self.sources_used)
 
+    def count_by_topic(self, topics: list[str]) -> dict[str, int]:
+        """Tally this batch's facts per requested topic (#153 Phase 0.2).
+
+        Case-insensitive match against `fact.topic` — sources vary the case
+        (Wikipedia keeps the requested topic verbatim, web search
+        title-cases it) — so a topic with facts under a different case still
+        counts. Every requested topic gets an entry, defaulting to 0, so a
+        topic that sourced nothing is explicit rather than absent.
+        """
+        counts = {t: 0 for t in topics}
+        topics_lower = {t.lower(): t for t in topics}
+        for fact in self.facts:
+            key = topics_lower.get(fact.topic.lower())
+            if key is not None:
+                counts[key] += 1
+        return counts
+
     def score_surprise_heuristic(self) -> "FactBatch":
         """Replace each fact's flat surprise_rating with the free text heuristic.
 
@@ -126,6 +163,62 @@ class FactBatch:
         return self
 
     def top_by_surprise(self, n: int) -> list[Fact]:
-        """Get top N most surprising facts."""
-        sorted_facts = sorted(self.facts, key=lambda f: f.surprise_rating, reverse=True)
+        """Get top N facts, credibility tier first, then most surprising.
+
+        #153 Phase 0.3: credibility now leads the ranking — a "high" fact
+        always outranks a "medium"/"low" one regardless of surprise score —
+        with surprise as the tiebreaker within a tier, preserving the
+        pre-existing ordering for the common case where every fact defaults
+        to "medium".
+        """
+        sorted_facts = sorted(
+            self.facts,
+            key=lambda f: (_CREDIBILITY_RANK.get(f.credibility, 1), -f.surprise_rating),
+        )
         return sorted_facts[:n]
+
+    def drop_low_credibility_starved(
+        self, min_kept: int = _STARVATION_MIN_KEPT
+    ) -> tuple["FactBatch", int]:
+        """Drop "low"-credibility facts once their topic already has enough
+        trustworthy material (#153 Phase 0.3 — the sdbif.org/YouTube listicle
+        complaint).
+
+        Per-topic starvation guard: a topic's "low" facts are only dropped
+        once that topic already has >= ``min_kept`` "medium"/"high" facts —
+        a thin topic keeps its low-credibility facts (logged) rather than
+        being left with fewer than ``min_kept`` sourced facts.
+
+        Returns ``(filtered_batch, dropped_count)`` so the caller can surface
+        the drop count in telemetry.
+        """
+        trustworthy_counts: dict[str, int] = {}
+        for fact in self.facts:
+            if fact.credibility != "low":
+                trustworthy_counts[fact.topic] = trustworthy_counts.get(fact.topic, 0) + 1
+
+        kept: list[Fact] = []
+        dropped = 0
+        for fact in self.facts:
+            if fact.credibility == "low" and trustworthy_counts.get(fact.topic, 0) >= min_kept:
+                dropped += 1
+                continue
+            if fact.credibility == "low":
+                logger.warning(
+                    "Keeping low-credibility fact for topic %r (only %d "
+                    "medium/high facts sourced) to avoid starvation: %r",
+                    fact.topic,
+                    trustworthy_counts.get(fact.topic, 0),
+                    fact.source_url,
+                )
+            kept.append(fact)
+
+        return (
+            FactBatch(
+                facts=kept,
+                sourced_at=self.sourced_at,
+                sources_used=self.sources_used,
+                facts_per_topic=self.facts_per_topic,
+            ),
+            dropped,
+        )

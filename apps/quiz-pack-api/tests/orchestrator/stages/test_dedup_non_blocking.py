@@ -131,7 +131,7 @@ async def test_heartbeat_keeps_ticking_during_slow_dedup_store_call() -> None:
     # would have delivered zero ticks).
     assert ticks >= 5, f"worker loop starved during dedup: only {ticks} tick(s)"
     # ...and the awaited verdict still landed: the near-duplicate was dropped.
-    assert result.info == {"kept": 0, "dropped": 1}
+    assert result.info == {"kept": 0, "dropped": 1, "fact_dropped": 0}
     assert ctx.questions == []
 
 

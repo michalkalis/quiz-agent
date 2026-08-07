@@ -6,6 +6,7 @@ task in Phase 2B (2.4–2.9).
 """
 
 from app.orchestrator.stages.answerability import AnswerabilityStage
+from app.orchestrator.stages.composition import CompositionStage
 from app.orchestrator.stages.dedup import DedupStage
 from app.orchestrator.stages.generation import GenerationStage
 from app.orchestrator.stages.persist import PersistStage
@@ -16,6 +17,7 @@ from app.orchestrator.stages.verification import VerificationStage
 
 __all__ = [
     "AnswerabilityStage",
+    "CompositionStage",
     "DedupStage",
     "GenerationStage",
     "PersistStage",

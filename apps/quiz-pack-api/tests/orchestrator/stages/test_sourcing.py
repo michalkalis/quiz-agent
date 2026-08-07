@@ -228,14 +228,23 @@ async def test_topics_none_when_no_metadata_and_prompt_all_stopwords() -> None:
 class _StubPool:
     """A TopicPool stand-in with a fixed ``sample()`` — keeps these wiring tests
     about the stage's routing, not the pool's file I/O (covered in
-    test_topic_pool.py). ``calls`` proves the stage only samples on no-signal."""
+    test_topic_pool.py). ``calls`` proves the stage only samples on no-signal;
+    ``last_count``/``last_exclude`` let #153 tests pin what the stage asked
+    for (topic-count scaling, empty-topic resample exclusion) without a real
+    pool's random sampling."""
 
     def __init__(self, sampled: list[str] | None) -> None:
         self._sampled = sampled
         self.calls = 0
+        self.last_count: int | None = None
+        self.last_exclude: set[str] | None = None
 
-    def sample(self, count: int | None = None) -> list[str] | None:
+    def sample(
+        self, count: int | None = None, exclude: set[str] | None = None
+    ) -> list[str] | None:
         self.calls += 1
+        self.last_count = count
+        self.last_exclude = exclude
         return self._sampled
 
 
@@ -363,3 +372,173 @@ async def test_emits_start_and_finish_through_pack_generator() -> None:
     kinds_steps = [(kind, step) for kind, step, _info in sink.events]
     assert ("start", "sourcing") in kinds_steps
     assert ("finish", "sourcing") in kinds_steps
+
+
+# --- #153 Phase 0.2: fail-loud sourcing + empty-topic resample -------------
+
+
+class _ScriptedFactSourcer:
+    """FactSourcer double returning one scripted `FactBatch` per call, in
+    order — lets a test drive the multi-call resample flow (the initial
+    combined-topics call, then a per-topic replacement call) deterministically."""
+
+    def __init__(self, batches: list[FactBatch]) -> None:
+        self._batches = list(batches)
+        self.calls: list[dict[str, Any]] = []
+
+    async def gather_facts(
+        self, count: int = 30, topics: list[str] | None = None
+    ) -> FactBatch:
+        self.calls.append({"count": count, "topics": topics})
+        return self._batches.pop(0)
+
+
+@pytest.mark.asyncio
+async def test_resamples_empty_topic_from_pool() -> None:
+    """The core Phase 0.2 contract: a topic that sourced 0 facts gets a
+    pool-drawn replacement sourced and merged in, and is NOT reported as
+    empty once the replacement succeeds."""
+    initial_batch = FactBatch(
+        facts=_make_facts(4, source="wikipedia"),
+        sources_used=["wikipedia"],
+        facts_per_topic={"volcanoes": 4, "empty topic": 0},
+    )
+    replacement_batch = FactBatch(
+        facts=_make_facts(2, source="wikipedia"), sources_used=["wikipedia"]
+    )
+    sourcer = _ScriptedFactSourcer([initial_batch, replacement_batch])
+    pool = _StubPool(["fresh topic"])
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
+    # All-stopword prompt so derived topics are exactly [category, theme].
+    ctx = _make_ctx(
+        target_count=3, category="volcanoes", theme="empty topic", prompt="make me a quiz"
+    )
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert sourcer.calls[1]["topics"] == ["fresh topic"]
+    assert result.info["empty_topics"] == []
+    assert result.info["resampled_topics"] == 1
+    assert result.info["facts_per_topic"]["fresh topic"] == 2
+    assert len(ctx.facts) == 6  # original 4 facts + the 2 resampled
+
+
+@pytest.mark.asyncio
+async def test_empty_topic_reported_when_no_pool_wired() -> None:
+    """Worker path (no TopicPool): an empty topic can't be resampled, so it
+    must be logged and surfaced on `StageResult.info`, never silently
+    dropped."""
+    batch = FactBatch(
+        facts=_make_facts(4, source="wikipedia"),
+        sources_used=["wikipedia"],
+        facts_per_topic={"volcanoes": 4, "empty topic": 0},
+    )
+    sourcer = _ScriptedFactSourcer([batch])
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]  # no pool
+    ctx = _make_ctx(
+        target_count=3, category="volcanoes", theme="empty topic", prompt="make me a quiz"
+    )
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["empty_topics"] == ["empty topic"]
+    assert result.info["resampled_topics"] == 0
+    assert len(sourcer.calls) == 1  # no resample call attempted
+
+
+@pytest.mark.asyncio
+async def test_resample_budget_exhausted_leaves_topic_empty() -> None:
+    """The replacement budget is shared across the whole run (<= the
+    original topic count) — once it's spent, a still-empty topic is reported
+    rather than retried indefinitely."""
+    initial_batch = FactBatch(
+        facts=_make_facts(2, source="wikipedia"),
+        sources_used=["wikipedia"],
+        facts_per_topic={"topic a": 0, "topic b": 0},
+    )
+    empty_replacement = FactBatch(facts=[], sources_used=["wikipedia"])
+    sourcer = _ScriptedFactSourcer([initial_batch, empty_replacement, empty_replacement])
+    pool = _StubPool(["replacement"])  # every draw is a still-empty replacement
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
+    # prompt="make me a quiz" is all-stopword (per test_topics_none_when_no_
+    # metadata_and_prompt_all_stopwords) so derived topics are EXACTLY
+    # [category, theme] — otherwise mined prompt tokens would inflate the
+    # budget (len(topics)) past the 2 this test pins.
+    ctx = _make_ctx(
+        target_count=3, category="topic a", theme="topic b", prompt="make me a quiz"
+    )
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    # Budget = 2 (original topic count); both attempts are spent on
+    # "topic a", so "topic b" never even gets a resample try.
+    assert result.info["empty_topics"] == ["topic a", "topic b"]
+    assert result.info["resampled_topics"] == 0
+    assert len(sourcer.calls) == 3  # initial + the 2 budgeted replacement tries
+
+
+@pytest.mark.asyncio
+async def test_facts_per_topic_always_present_when_no_topics_tracked() -> None:
+    """`facts_per_topic` must always be a key on `StageResult.info`, even when
+    the sourcer double didn't populate it (e.g. every pre-#153 test double)."""
+    sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["facts_per_topic"] == {}
+    assert result.info["empty_topics"] == []
+    assert result.info["resampled_topics"] == 0
+    assert result.info["low_credibility_dropped"] == 0
+
+
+@pytest.mark.asyncio
+async def test_low_credibility_dropped_reported_in_info() -> None:
+    """#153 Phase 0.3: the starvation-guarded drop count must reach
+    telemetry so a batch's listicle-source rate is auditable."""
+    topic = "Volcanoes"
+    trustworthy = [
+        Fact(text=f"Trustworthy {i}", topic=topic, credibility="medium") for i in range(3)
+    ]
+    low = Fact(text="Listicle claim", topic=topic, credibility="low")
+    batch = FactBatch(facts=[*trustworthy, low], sources_used=["web_search"])
+    sourcer = _FakeFactSourcer(batch)
+    stage = SourcingStage(sourcer)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3)
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["low_credibility_dropped"] == 1
+    assert len(ctx.facts) == 3
+
+
+# --- #153 topic-count scaling with order size ------------------------------
+
+
+@pytest.mark.asyncio
+async def test_topic_count_scales_with_target_count() -> None:
+    """A 30-question order must sample >= 15 topics from the pool — the fixed
+    5-topic default would leave a handful of topics carrying the whole pack."""
+    sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
+    pool = _StubPool([f"topic {i}" for i in range(15)])
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=30, category=None, theme=None, prompt="surprise me")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert pool.last_count == 15
+
+
+@pytest.mark.asyncio
+async def test_topic_count_floor_stays_default_for_small_orders() -> None:
+    """DEFAULT_TOPIC_COUNT (5) stays the floor — a 4-question order must not
+    sample fewer than 5 topics."""
+    sourcer = _FakeFactSourcer(FactBatch(facts=_make_facts(5), sources_used=["wikipedia"]))
+    pool = _StubPool([f"topic {i}" for i in range(10)])
+    stage = SourcingStage(sourcer, topic_pool=pool)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=4, category=None, theme=None, prompt="surprise me")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert pool.last_count == 5

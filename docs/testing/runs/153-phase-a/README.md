@@ -128,6 +128,23 @@ constraints) ≈ old on corrected; adding constraints didn't help.
 and the top complaints are fact-selection + format-predictability, not
 prompt wording. Plan allows one in-phase iteration before Phase B.
 
+**2026-08-08 full-text recovery:** the PDF's text layer carries the COMPLETE
+comments (only the visual render clips the last line) — extracted via
+pdftotext into `founder-ratings-full.json` (scores match the earlier read
+1:1, so the arm numbers above stand). Two signals the clipped read missed:
+- q11: "tie fakty su tak random… **treba davat viac vseobecne temy na
+  otazky**" — topic-pool generality is its own lever, separate from fact
+  sourcing.
+- q29: founder actually opened the cited Mariana-Trench URL and couldn't
+  find the claim — the fake-source bug was founder-visible (fixed in
+  round 2: ungrounded questions dropped).
+Bedrock-batch reasons (21/27, previously lost entirely) recovered the same
+way into `../153-baseline-2026-08-07/founder-ratings.json`; new explicit
+asks there: trustworthy sources ("tie zdroje musia byt doveryhodne"),
+topic-frequency caps (niche topic like jazz = 0–1 q per 30, brain was
+over-represented), fewer T/F, and "don't bend simple facts into
+mysterious-sounding questions" (anti-fake-mystery).
+
 ## State
 
 - [x] Phase 0 hygiene landed (commit `e5e2ec01`)

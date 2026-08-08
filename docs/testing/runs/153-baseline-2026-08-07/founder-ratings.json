@@ -1,44 +1,311 @@
 {
-  "batch": "Bedrock 2026-08-07, gen=Kimi K2.5, judges=DeepSeek V3.2 + GLM-5",
-  "rated": 23,
-  "total": 27,
-  "average": 6.8,
-  "ratings": [
-    {"n": 1,  "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "How much data can the human brain store (≈ entire internet)", "score": 9,  "note": "velmi zaujimave, aj odpovede zaujimave"},
-    {"n": 2,  "type": "open", "topic": "jazz",    "diff": "hard",   "q": "How did James Reese Europe die in WW1 (killed by drummer)", "score": 3,  "note": "nepoznam vobec, pre mna nezaujimave; ale zaujimavy pribeh"},
-    {"n": 3,  "type": "open", "topic": "jazz",    "diff": "medium", "q": "Jazz musician's brain during improvisation (parts turn off)", "score": 8,  "note": "zaujimavy fakt, ale nejednoznacna otazka; viac odpovedi moze byt pravdivych; stava sa castejsie"},
-    {"n": 4,  "type": "open", "topic": "jazz",    "diff": "medium", "q": "'Hipster' originated as slang of which 1940s group (jazz musicians)", "score": 9,  "note": ""},
-    {"n": 5,  "type": "open", "topic": "brain",   "diff": "hard",   "q": "What does alcohol damage if not neurons (connective tissue at neuron ends)", "score": 8,  "note": "zaujimave; ako sa vyhodnotia rozne formulacie odpovede?"},
-    {"n": 6,  "type": "open", "topic": "brain",   "diff": "medium", "q": "Brain begins slowing at what young age (24)", "score": 10, "note": "super ak pravda; POZOR na doveryhodnost zdrojov (sdbif.org listicle)"},
-    {"n": 7,  "type": "mcq",  "topic": "jazz",    "diff": "hard",   "q": "Which region uniquely produced jazz (USA)", "score": 6,  "note": "da sa cakat ze USA; nie moc zaujimava"},
-    {"n": 8,  "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "Short-term memory duration (20-30s)", "score": null, "note": "neohodnotena"},
-    {"n": 9,  "type": "mcq",  "topic": "brain",   "diff": "easy",   "q": "T/F we use most of our brain most of the time (True)", "score": 9,  "note": "super, ale pozor na zdroj"},
-    {"n": 10, "type": "open", "topic": "jazz",    "diff": "hard",   "q": "Jazz saxophonist with church in his honor (Coltrane)", "score": 8,  "note": "ok, ale neviem vobec"},
-    {"n": 11, "type": "open", "topic": "jazz",    "diff": "hard",   "q": "Lionel Hampton created virtuoso tradition for (vibraphone)", "score": 8,  "note": "ok, ale znova neviem odpoved ani zdaleka"},
-    {"n": 12, "type": "mcq",  "topic": "jazz",    "diff": "medium", "q": "T/F etymology of 'jazz' definitively established (False)", "score": 7,  "note": "kategoria history-of-jazz je mega specificka, o takej sme sa nebavili"},
-    {"n": 13, "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "T/F left-brained/right-brained personality types (False)", "score": 6,  "note": "zvlastna ucelova otazka; T/F asi nevhodne, chce viac kontextu"},
-    {"n": 14, "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "T/F Mozart effect unique benefits (False)", "score": 6,  "note": "menej true/false otazok, su menej zaujimave"},
-    {"n": 15, "type": "open", "topic": "brain",   "diff": "medium", "q": "Recall = doing what with fragments (reconstructing)", "score": 5,  "note": "divne formulovane; fakt zaujimavy, ale tazke uhadnut co ma byt odpovedou"},
-    {"n": 16, "type": "open", "topic": "brain",   "diff": "easy",   "q": "Which sense triggers vivid early memories (smell)", "score": 10, "note": "parada a super zdroj"},
-    {"n": 17, "type": "open", "topic": "brain",   "diff": "medium", "q": "Brain rebuilds memory from scratch each recall", "score": 2,  "note": "DUPLIKAT #15, len inak formatovana"},
-    {"n": 18, "type": "open", "topic": "general", "diff": "medium", "q": "Nokia originally made what (paper)", "score": 9,  "note": "ok ok"},
-    {"n": 19, "type": "open", "topic": "jazz",    "diff": "hard",   "q": "James Reese Europe directed which band (Hellfighters)", "score": 5,  "note": "nepoznam ani jeho ani kapelu"},
-    {"n": 20, "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "T/F forgetting only dysfunction (False)", "score": 8,  "note": "ok"},
-    {"n": 21, "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "T/F memory = unchanged stored file (False)", "score": 7,  "note": "brain otazok je vela a su dost podobne — na varku 30 by cakal 1-2 o mozgu"},
-    {"n": 22, "type": "open", "topic": "jazz",    "diff": "medium", "q": "Jazz combined which two creative approaches (composition+improvisation)", "score": 5,  "note": "na 30 otazok max 1 o jazze; odpoved je len hadanie, nejednoznacna"},
-    {"n": 23, "type": "open", "topic": "jazz",    "diff": "medium", "q": "Armstrong learned trumpet where (home for boys)", "score": 3,  "note": "nejednoznacne 'where' — mesto by malo byt tiez spravne; jednoduche otazky umelo poohybane aby zneli zaujimavo"},
-    {"n": 24, "type": "open", "topic": "jazz",    "diff": "medium", "q": "Declared himself father of jazz (Jelly Roll Morton)", "score": 5,  "note": "(komentar orezany v PDF)"},
-    {"n": 25, "type": "open", "topic": "jazz",    "diff": null,     "q": "Coltrane (DUPLIKAT #10?)", "score": null, "note": "neohodnotena"},
-    {"n": 26, "type": "open", "topic": "jazz",    "diff": "hard",   "q": "James Reese Europe death (DUPLIKAT #2)", "score": null, "note": "neohodnotena"},
-    {"n": 27, "type": "mcq",  "topic": "brain",   "diff": "medium", "q": "Brain slowing age 24/40/55/70 (DUPLIKAT #6 ako MCQ)", "score": null, "note": "neohodnotena"}
-  ],
-  "duplicate_pairs": [[15,17],[2,26],[10,25],[6,27]],
-  "themes": {
-    "topic_mix": "27 otazok = ~13 brain + ~12 jazz + 1-2 general; founder chce max 1-2 na temu v davke 30",
-    "duplicates": "4 duplikatne pary v jednej davke",
-    "ambiguous_open": [3, 15, 22, 23, 5],
-    "too_many_tf": "8 MCQ z toho 6 T/F; founder chce menej T/F",
-    "niche_obscure": "jazz-hard otazky o neznamych osobach skoruju 3-5",
-    "source_trust": "sdbif.org listicle ako zdroj — founder ziada doveryhodne zdroje"
+ "batch": "Bedrock 2026-08-07, gen=Kimi K2.5, judges=DeepSeek V3.2 + GLM-5",
+ "rated": 23,
+ "total": 27,
+ "average": 6.8,
+ "ratings": [
+  {
+   "n": 1,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "How much data can the human brain store (≈ entire internet)",
+   "score": 9,
+   "note": "velmi zaujimave, aj odpovede zaujimave",
+   "reason": "velmi zaujimave. aj tie odpovede su zaujimave, ze to viac ludi pochopi nez nejake terabajty a podobne jednotky."
+  },
+  {
+   "n": 2,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "How did James Reese Europe die in WW1 (killed by drummer)",
+   "score": 3,
+   "note": "nepoznam vobec, pre mna nezaujimave; ale zaujimavy pribeh",
+   "reason": "neviem no, nepoznam vobec, takze pre mna nezaujimave. ale zaujimavy pribeh."
+  },
+  {
+   "n": 3,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "Jazz musician's brain during improvisation (parts turn off)",
+   "score": 8,
+   "note": "zaujimavy fakt, ale nejednoznacna otazka; viac odpovedi moze byt pravdivych; stava sa castejsie",
+   "reason": "to je zaujimavy fakt, ale taka nejednoznacna otazka mi pride. v mozgu sa toho deje vela a to ze sa cast vypne, je len ciastocna odpoved. viac odpovedi moze byt pravdivych. toto sa stava castejsie, ze odpoved je nejednoznacna a moze ich byt viac spravnych."
+  },
+  {
+   "n": 4,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "'Hipster' originated as slang of which 1940s group (jazz musicians)",
+   "score": 9,
+   "note": "",
+   "reason": ""
+  },
+  {
+   "n": 5,
+   "type": "open",
+   "topic": "brain",
+   "diff": "hard",
+   "q": "What does alcohol damage if not neurons (connective tissue at neuron ends)",
+   "score": 8,
+   "note": "zaujimave; ako sa vyhodnotia rozne formulacie odpovede?",
+   "reason": "zaujimave. len teda som zvedavy jak sa vyhodnotia rozne formulacie odpovede. napriklad \"tissue at neuron ends that connects them\""
+  },
+  {
+   "n": 6,
+   "type": "open",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "Brain begins slowing at what young age (24)",
+   "score": 10,
+   "note": "super ak pravda; POZOR na doveryhodnost zdrojov (sdbif.org listicle)",
+   "reason": "super ak pravda. inak celkovo pozor na overovanie zdrojov. to ze je na nejakom webe napisane napriklad \"fakty o mozgu\", tak to neznamena, ze to je pravda. tie zdroje musia byt doveryhodne."
+  },
+  {
+   "n": 7,
+   "type": "mcq",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "Which region uniquely produced jazz (USA)",
+   "score": 6,
+   "note": "da sa cakat ze USA; nie moc zaujimava",
+   "reason": "neviem no, tak nejak sa da cakat ze usa. ale ok, preco nie. ani mi nepride az tak zaujimava ta otazka. ale to je moje subjektivne hodnotenie teraz."
+  },
+  {
+   "n": 8,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "Short-term memory duration (20-30s)",
+   "score": null,
+   "note": "neohodnotena",
+   "reason": ""
+  },
+  {
+   "n": 9,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "easy",
+   "q": "T/F we use most of our brain most of the time (True)",
+   "score": 9,
+   "note": "super, ale pozor na zdroj",
+   "reason": "super, ale znova pozor na zdroj ci je doveryhodny"
+  },
+  {
+   "n": 10,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "Jazz saxophonist with church in his honor (Coltrane)",
+   "score": 8,
+   "note": "ok, ale neviem vobec",
+   "reason": "ok, ale neviem vobec"
+  },
+  {
+   "n": 11,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "Lionel Hampton created virtuoso tradition for (vibraphone)",
+   "score": 8,
+   "note": "ok, ale znova neviem odpoved ani zdaleka",
+   "reason": "ok, ale znova neviem odpoved ani zdaleka"
+  },
+  {
+   "n": 12,
+   "type": "mcq",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "T/F etymology of 'jazz' definitively established (False)",
+   "score": 7,
+   "note": "kategoria history-of-jazz je mega specificka, o takej sme sa nebavili",
+   "reason": "inak teda kategoria \"history of jazz\" je mega specificka, o takej sme sa vobec nebavili. ale samozrejme obcas sa moze objavit v general otazkach, tak predpokladam ze to je ten pripad. inak teda taka meh otazka, aj ked zaujimavy fakt. pre mna nuda, subjektivne."
+  },
+  {
+   "n": 13,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "T/F left-brained/right-brained personality types (False)",
+   "score": 6,
+   "note": "zvlastna ucelova otazka; T/F asi nevhodne, chce viac kontextu",
+   "reason": "neviem, taka zvlastna otazka. je to len ucelova otazka na odpoved, ze sa ani nic nedozviem v zasade. mozno neni dobre ze to je true/false, nejak tam kontextu viac chyba."
+  },
+  {
+   "n": 14,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "T/F Mozart effect unique benefits (False)",
+   "score": 6,
+   "note": "menej true/false otazok, su menej zaujimave",
+   "reason": "hmm, dal by som menej true/false otazok. su menej zaujimave. a bolo by super, keby pri generovani akokolvek velkej varky su vygenerovane otazky viac roznorode s viac kategoriami."
+  },
+  {
+   "n": 15,
+   "type": "open",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "Recall = doing what with fragments (reconstructing)",
+   "score": 5,
+   "note": "divne formulovane; fakt zaujimavy, ale tazke uhadnut co ma byt odpovedou",
+   "reason": "tie otazky su prostre divne formulovane. ta podstata otazky je zaujiamva, samotny fakt je zaujimavy. len teda pride mi ze je fakt tazke uhadnut co je odpovedou, ze su take nejednoznacne."
+  },
+  {
+   "n": 16,
+   "type": "open",
+   "topic": "brain",
+   "diff": "easy",
+   "q": "Which sense triggers vivid early memories (smell)",
+   "score": 10,
+   "note": "parada a super zdroj",
+   "reason": "parada a super zdroj"
+  },
+  {
+   "n": 17,
+   "type": "open",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "Brain rebuilds memory from scratch each recall",
+   "score": 2,
+   "note": "DUPLIKAT #15, len inak formatovana",
+   "reason": "rovnaka otazka je uz vygenerovana, len mierne inak formatovana. rovnaky feedback inak."
+  },
+  {
+   "n": 18,
+   "type": "open",
+   "topic": "general",
+   "diff": "medium",
+   "q": "Nokia originally made what (paper)",
+   "score": 9,
+   "note": "ok ok",
+   "reason": "ok ok"
+  },
+  {
+   "n": 19,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "James Reese Europe directed which band (Hellfighters)",
+   "score": 5,
+   "note": "nepoznam ani jeho ani kapelu",
+   "reason": "neviem, pre mna neni moc zaujimava otazka, lebo ani jeho ani kapelu nepoznam. ale to je subjektivne hodnotenie."
+  },
+  {
+   "n": 20,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "T/F forgetting only dysfunction (False)",
+   "score": 8,
+   "note": "ok",
+   "reason": "ok"
+  },
+  {
+   "n": 21,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "T/F memory = unchanged stored file (False)",
+   "score": 7,
+   "note": "brain otazok je vela a su dost podobne — na varku 30 by cakal 1-2 o mozgu",
+   "reason": "tych brain otazok je vela a su dost podobne. to sa mi vobec nepaci. na varku 30 otazok by som cakal tak 1-2 otazky o mozgu. inak su vcelku zaujimave, aj tema je zaujimava."
+  },
+  {
+   "n": 22,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "Jazz combined which two creative approaches (composition+improvisation)",
+   "score": 5,
+   "note": "na 30 otazok max 1 o jazze; odpoved je len hadanie, nejednoznacna",
+   "reason": "rovnako aj jazz, na sadu 30 otazok, by mi stacila tak 1 otazka o jazze. max 1 fakt. mozog ma kazdy, takze moze byt viac otazok o mozgu, ale jazz zaujima male mnozstvo ludi, takze naco tak vela. max 1 naozaj. 0-1. inak ohladne tejto otazky - ta odpoved je len hadanie. neni jednoznacna. sice zaujimavy fakt, ale znova zle postavena a formulovana."
+  },
+  {
+   "n": 23,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "Armstrong learned trumpet where (home for boys)",
+   "score": 3,
+   "note": "nejednoznacne 'where' — mesto by malo byt tiez spravne; jednoduche otazky umelo poohybane aby zneli zaujimavo",
+   "reason": "to je znova nejednoznacne postavena otazka. odpovědnosti moze byt aj mesto a bude to spravne. mam pocit ze z jednoduchych otazok sa robia take poohybane, len aby posobili zaujimavejsie. chapem preco sa to robi, aby to prostre neboli len fact- based otazky, ale toto neni dobry pristup."
+  },
+  {
+   "n": 24,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "medium",
+   "q": "Declared himself father of jazz (Jelly Roll Morton)",
+   "score": 5,
+   "note": "(komentar orezany v PDF)",
+   "reason": ""
+  },
+  {
+   "n": 25,
+   "type": "open",
+   "topic": "jazz",
+   "diff": null,
+   "q": "Coltrane (DUPLIKAT #10?)",
+   "score": null,
+   "note": "neohodnotena",
+   "reason": ""
+  },
+  {
+   "n": 26,
+   "type": "open",
+   "topic": "jazz",
+   "diff": "hard",
+   "q": "James Reese Europe death (DUPLIKAT #2)",
+   "score": null,
+   "note": "neohodnotena",
+   "reason": ""
+  },
+  {
+   "n": 27,
+   "type": "mcq",
+   "topic": "brain",
+   "diff": "medium",
+   "q": "Brain slowing age 24/40/55/70 (DUPLIKAT #6 ako MCQ)",
+   "score": null,
+   "note": "neohodnotena",
+   "reason": ""
   }
+ ],
+ "duplicate_pairs": [
+  [
+   15,
+   17
+  ],
+  [
+   2,
+   26
+  ],
+  [
+   10,
+   25
+  ],
+  [
+   6,
+   27
+  ]
+ ],
+ "themes": {
+  "topic_mix": "27 otazok = ~13 brain + ~12 jazz + 1-2 general; founder chce max 1-2 na temu v davke 30",
+  "duplicates": "4 duplikatne pary v jednej davke",
+  "ambiguous_open": [
+   3,
+   15,
+   22,
+   23,
+   5
+  ],
+  "too_many_tf": "8 MCQ z toho 6 T/F; founder chce menej T/F",
+  "niche_obscure": "jazz-hard otazky o neznamych osobach skoruju 3-5",
+  "source_trust": "sdbif.org listicle ako zdroj — founder ziada doveryhodne zdroje"
+ },
+ "reasons_recovered": "2026-08-08 from PDF text layer"
 }

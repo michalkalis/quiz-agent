@@ -1,0 +1,248 @@
+{
+ "batch_id": "153-phase-a",
+ "source": "PDF text layer (pdftotext), 2026-08-08 recovery",
+ "rated": 28,
+ "total": 30,
+ "ratings": [
+  {
+   "id": "q01",
+   "arm": "craft",
+   "topic": "The History Of Chess",
+   "question": "What contains more items: the number of possible chess games, or all the atoms in the observable universe?",
+   "score": 6,
+   "reason": "znova ta odpoved sa da trochu predvidat. ze to je ta menej cakana odpoved z dvoch variant."
+  },
+  {
+   "id": "q02",
+   "arm": "old",
+   "topic": "The History Of Board Games",
+   "question": "Which lasted continuously longer: the Royal Game of Ur, or the Roman Empire?",
+   "score": 4,
+   "reason": "neviem co je Royal Game of Ur, takze neviem posudit. inak pre mna nezaujimava otazka. aj ten format neni zabavny, ze si vyberam z dvoch variant. a znova sa da odpoved predvidat, ze je menej ocakavana."
+  },
+  {
+   "id": "q03",
+   "arm": "old",
+   "topic": "The History Of Coffee",
+   "question": "What unexpected long-term consequence did the 1773 Boston Tea Party have on American culture?",
+   "score": 9,
+   "reason": "super"
+  },
+  {
+   "id": "q04",
+   "arm": "free",
+   "topic": "The Voyager Golden Record",
+   "question": "What element is electroplated onto the Voyager Golden Record's cover to serve as a radioactive clock for any future discoverers?",
+   "score": 6,
+   "reason": "pride mi to moc niche, aby to niekto vedel. zaujimave ale."
+  },
+  {
+   "id": "q05",
+   "arm": "free",
+   "topic": "Undersea Internet Cables",
+   "question": "What causes approximately three-quarters of all submarine cable faults?",
+   "score": 9,
+   "reason": ""
+  },
+  {
+   "id": "q06",
+   "arm": "free",
+   "topic": "The History Of Chess",
+   "question": "What was 'The Turk,' the chess-playing 'machine' unveiled in 1770?",
+   "score": 6,
+   "reason": "znova vcelku dost niche, aby to niekto vedel. a pride mi ze ta otazka je skor hard, tym ze je taka specificka. inak zaujimava a zaujimave odpovede."
+  },
+  {
+   "id": "q07",
+   "arm": "free",
+   "topic": "The History Of Chess",
+   "question": "What was the subject of the second book ever printed in English?",
+   "score": 8,
+   "reason": "zaujimave. ale pride mi ze aj subject prvej knihy by bol dost tazky uhadnut."
+  },
+  {
+   "id": "q08",
+   "arm": "old",
+   "topic": "The History Of Coffee",
+   "question": "How did Pope Clement VIII resolve 17th-century debates about whether Catholics could drink coffee?",
+   "score": 7,
+   "reason": "zaujimave, ale znova taky random fakt, ze neviem kto by to realne mohol vediet. urcite hard otazka."
+  },
+  {
+   "id": "q09",
+   "arm": "free",
+   "topic": "Black Holes And Event Horizons",
+   "question": "What surprising substance is a billion-solar-mass black hole LESS dense than?",
+   "score": 4,
+   "reason": "uff tak ten format otazky je naozaj divny a tazko pochopoitelny. a preco by mal clovek vediet to prirovnanie zrovna k vzduchu. moze byt x-krat menej husta nez napriklad nejaka hviezda alebo nieco, ale clovek nemusi vediet zrovna tento konkretny priklad/prepocet."
+  },
+  {
+   "id": "q10",
+   "arm": "old",
+   "topic": "The Mariana Trench",
+   "question": "Seven miles down in the Challenger Deep, researchers lowered a microphone expecting silence. What happened within the first three weeks?",
+   "score": 1,
+   "reason": "to je fakt hlupa otazka. aj odpoved je blba. da sa ocakavat ze nieco sa nahra, kdekolvek takmer."
+  },
+  {
+   "id": "q11",
+   "arm": "craft",
+   "topic": "The Voyager Golden Record",
+   "question": "After public criticism over nudity on an earlier space plaque, NASA banned a photograph of a naked couple from the 1977 Voyager Golden Record — yet included anatomically correct nude figures anyway. Where did they hide them?",
+   "score": 2,
+   "reason": "to je tak komplikovane strukturovana otazka a tak specificka, ze ju snad ani nikto nemoze vediet odpovedat. mozno to je len mnou samozrejme, ze to je bezne znama informacia. vseobecne, tie fakty su tak random, ze si myslim, ze malokto bude vediet odpoved. to je proste tazke a vzdy len niekto odpovie. treba davat viac vseobecne temy na otazky."
+  },
+  {
+   "id": "q12",
+   "arm": "craft",
+   "topic": "Black Holes And Event Horizons",
+   "question": "What surprising physical property does a black hole with one billion times the mass of our Sun possess?",
+   "score": 1,
+   "reason": "uz bola tato otazka a plati to iste co som k prvej pisal"
+  },
+  {
+   "id": "q13",
+   "arm": "old",
+   "topic": "Bird Migration And Navigation",
+   "question": "How do young migratory birds find their wintering grounds when they've never migrated before and no adults accompany them?",
+   "score": 8,
+   "reason": "ok, zaujimave"
+  },
+  {
+   "id": "q14",
+   "arm": "old",
+   "topic": "Untranslatable Words",
+   "question": "What six-letter English word meaning 'beautiful thinking' holds the record for shortest word containing all six vowels?",
+   "score": 2,
+   "reason": "pre non-native english speakera bez sance vediet odpoved. nikdy som to slovo nepocul."
+  },
+  {
+   "id": "q15",
+   "arm": "free",
+   "topic": "The History Of Board Games",
+   "question": "What was the original purpose of The Landlord's Game, the direct ancestor of Monopoly?",
+   "score": 7,
+   "reason": "ok"
+  },
+  {
+   "id": "q16",
+   "arm": "free",
+   "topic": "Bird Migration And Navigation",
+   "question": "How do juvenile birds navigate to winter homes they've never seen before?",
+   "score": 8,
+   "reason": "tato otazka uz bola, ale inak formatovana. tato mi pride lepsie formatovana. aj presnejsia odpoved."
+  },
+  {
+   "id": "q17",
+   "arm": "craft",
+   "topic": "Bird Migration And Navigation",
+   "question": "When do the vast majority of migratory birds actually travel: during daylight hours or at night?",
+   "score": 7,
+   "reason": "da sa predvidat odpoved, ale zaujimave"
+  },
+  {
+   "id": "q18",
+   "arm": "old",
+   "topic": "The Mariana Trench",
+   "question": "Scientists dropped a microphone into the deepest part of the Mariana Trench in 2015, expecting mostly silence. How long did it take for the recordings to fill the device's entire storage capacity?",
+   "score": 1,
+   "reason": "hrozna otazka. nezaujimava informacia, nikoho nezaujima ze sa nejaky storage plnim 23 dni"
+  },
+  {
+   "id": "q19",
+   "arm": "free",
+   "topic": "Undersea Internet Cables",
+   "question": "How long did it take to transmit just one character across the first transatlantic undersea cable in 1858?",
+   "score": 6,
+   "reason": "ok, aj ked tazke vediet. a pochybny zdroj."
+  },
+  {
+   "id": "q20",
+   "arm": "craft",
+   "topic": "Undersea Internet Cables",
+   "question": "If every satellite suddenly failed tomorrow, what share of intercontinental internet traffic would still flow?",
+   "score": 3,
+   "reason": "moze byt, ale znova dost nezaujimava otazka."
+  },
+  {
+   "id": "q21",
+   "arm": "craft",
+   "topic": "The Voyager Golden Record",
+   "question": "The cover of the Voyager Golden Record contains a built-in clock using what radioactive element, designed to tell extraterrestrials how long ago it launched even after billions of years?",
+   "score": 3,
+   "reason": "tato otazka uz bola, ale tato je lepsie formatovana. ale stale nezaujimave"
+  },
+  {
+   "id": "q22",
+   "arm": "craft",
+   "topic": "Black Holes And Event Horizons",
+   "question": "Which has lower density: a billion-solar-mass black hole or Earth's atmosphere at sea level?",
+   "score": 1,
+   "reason": ""
+  },
+  {
+   "id": "q23",
+   "arm": "free",
+   "topic": "The History Of Board Games",
+   "question": "In what unlikely location was the board game Candy Land invented?",
+   "score": 3,
+   "reason": "zaujimava informacia, ale znova, kto to ma vediet a preco."
+  },
+  {
+   "id": "q24",
+   "arm": "craft",
+   "topic": "The Mariana Trench",
+   "question": "When scientists lowered a microphone into the deepest point on Earth in 2015, how long did its memory last?",
+   "score": 1,
+   "reason": ""
+  },
+  {
+   "id": "q25",
+   "arm": "craft",
+   "topic": "How Cheese Is Made",
+   "question": "According to legend, how might the first cheese have been created by accident by a merchant crossing the desert around 1000 BCE?",
+   "score": 6,
+   "reason": "zaujimavy fakt, ale tazko odpovedatelna odpoved."
+  },
+  {
+   "id": "q26",
+   "arm": "free",
+   "topic": "logic puzzles",
+   "question": "A hunter always lies on Mondays, Tuesdays, and Wednesdays, but tells the truth the other days. One day he announces: 'I lie every day.' What day is it?",
+   "score": 6,
+   "reason": "vcelku zaujimave, ale mam pocit, ze tam chyba kontext. a vysvetlenie je mega dlhe, takto sa nemoze zobrazit v appke."
+  },
+  {
+   "id": "q27",
+   "arm": "old",
+   "topic": "Undersea Internet Cables",
+   "question": "Which carries more communication capacity: the first 1858 transatlantic cable, or a single modern fiber pair?",
+   "score": 2,
+   "reason": "zas uplne jasna odpoved aj bez znalosti"
+  },
+  {
+   "id": "q28",
+   "arm": "old",
+   "topic": "The History Of Board Games",
+   "question": "Where was the board game Candy Land invented, and why was it designed with no reading or strategy required?",
+   "score": null,
+   "reason": "hodnotim rovnako ako takmer tu istu otazku predtym"
+  },
+  {
+   "id": "q29",
+   "arm": "old",
+   "topic": "lateral thinking",
+   "question": "A man is found dead in a locked room. There is a puddle of water, some broken glass, and he is hanging from the ceiling. There is no furniture, no ladder, and no one else could have entered or left. How did he get up there?",
+   "score": 3,
+   "reason": "ok, ale zas si viem predstavit, ze viac odpovedi by mohlo byt spravnych, s tymto kontextom. a teda tuto informaciu som na https://en.wikipedia.org/wiki/Mariana_Trench nenasiel"
+  },
+  {
+   "id": "q30",
+   "arm": "craft",
+   "topic": "The History Of Board Games",
+   "question": "The board game Candy Land was invented in 1948 by a retired schoolteacher while she was doing what?",
+   "score": null,
+   "reason": "uz som hodnotil"
+  }
+ ]
+}

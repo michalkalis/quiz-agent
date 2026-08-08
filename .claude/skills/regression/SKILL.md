@@ -3,7 +3,7 @@ name: regression
 description: Run iOS regression scenarios (RS-01..RS-NN) end-to-end on the simulator. Drive UI via XcodeBuildMCP + curl HTTP listener, assert state-machine correctness, write per-run report, stop on first failure.
 allowed-tools: Agent, Read, Glob, Grep
 argument-hint: "[RS-01|RS-02|...|all] (default: all)"
-model: haiku
+model: sonnet
 ---
 
 # Run iOS Regression Scenarios

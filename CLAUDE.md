@@ -3,6 +3,7 @@
 Voice-first AI quiz platform for hands-free trivia while driving.
 
 Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/generation, issue #33) · `apps/web-ui` · `apps/ios-app` (SwiftUI) · `packages/shared` (Pydantic models).
+Why split: `quiz-agent` serves the live quiz hot path (must stay fast/cheap); `quiz-pack-api` runs slow, LLM-heavy pack generation — separate deploys so generation load can never degrade gameplay.
 
 ## Tasks & Indices
 
@@ -21,6 +22,7 @@ Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/gener
 | Start backend (:8002) | `cd apps/quiz-agent && uvicorn app.main:app --reload --port 8002` |
 | Quiz-pack-api tests | `cd apps/quiz-pack-api && pytest tests/ -v` |
 | Start quiz-pack-api (:8003) | `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` |
+| Lint/format | Python: `uvx ruff check` · Swift: `swiftformat` (both auto-run on Edit/Write via PostToolUse hook) |
 
 Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the rules files below.
 

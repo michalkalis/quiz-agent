@@ -100,7 +100,7 @@ async def _existing_keys(session: AsyncSession, keys: list[str]) -> set[str]:
     return set(rows.scalars())
 
 
-async def _apply(
+async def apply_source(
     session: AsyncSession, result: P.SourceResult, execute: bool
 ) -> tuple[int, int]:
     """Return (new, updated) for this round; write only when `execute`."""
@@ -149,7 +149,7 @@ async def _run(args: argparse.Namespace) -> int:
     try:
         async with AsyncSession(eng, expire_on_commit=False) as session:
             for result in results:
-                new, updated = await _apply(session, result, args.execute)
+                new, updated = await apply_source(session, result, args.execute)
                 counts = [result.seen, new, updated, result.skipped, result.unjoinable]
                 totals = [t + c for t, c in zip(totals, counts)]
                 print(

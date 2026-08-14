@@ -25,11 +25,11 @@ from typing import Any
 
 import httpx
 import pytest
+from app.db.models.question import QuestionRow
+from app.db.models.rating import Rating
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models.question import QuestionRow
-from app.db.models.rating import Rating
 from tests.api.conftest import TEST_ADMIN_KEY, _bearer
 
 ADMIN = {"X-Admin-Key": TEST_ADMIN_KEY}

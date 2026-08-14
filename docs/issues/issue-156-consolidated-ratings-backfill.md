@@ -1,8 +1,8 @@
 # Issue 156: Consolidate all historical founder ratings into the canonical store
 
-**Triage:** enhancement · ready-for-agent — start precondition: #154 store exists (local run OK before prod migration)
+**Triage:** enhancement · done
 **Reversibility:** b (writes backfill rows into the prod ratings store; additive + idempotent, but prod data write ⇒ founder heads-up before the prod run)
-**Status:** Agent work DONE 2026-08-14 (CLI + parsers + tests, local run 113 rows, prod `ratings.db` checked empty) — see the close-out block. Remaining: the founder-gated prod backfill run. Created from the gen-pipeline joint review 2026-08-09 (candidate 11; D19/D20/D21, P1). Depends on the #154 schema.
+**Status:** DONE 2026-08-14 — CLI + parsers + tests, prod backfill executed (founder-approved in-session) and verified via the prod export: 113 consolidated ratings across 5 rounds. Created from the gen-pipeline joint review 2026-08-09 (candidate 11; D19/D20/D21, P1). Depends on the #154 schema.
 **Created:** 2026-08-14
 
 ## Context
@@ -59,8 +59,8 @@ pytest on the parsers (fixture snippets per source format, idempotency test = ru
 - [x] July calibration is represented as a documented lost-data note, with zero synthetic rows (grep export for `backfill:july-calibration` returns nothing).
 - [x] Prod in-app `ratings.db` checked once; finding (empty or imported) recorded in this issue.
 - [x] `pytest tests/` green in quiz-pack-api.
-- [ ] **Prod backfill run** — founder-gated, not yet performed. The local run below is the proof; prod needs the same command against the prod DB.
-- [ ] **#154 export re-run on prod** with the consolidated per-round totals — awaiting the founder-gated prod run.
+- [x] **Prod backfill run** — DONE 2026-08-14 (founder approved in-session): dry-run then `--execute` over the fly proxy tunnel, 113 imported / 34 skipped / 0 unjoinable — identical to the local run; immediate second `--execute` = 0 new / 113 updated (idempotent).
+- [x] **#154 export re-run on prod** — `GET /v1/ratings/export` returns 113 rows: gold-library 25 · pilot-2026-07-11 27 · g3-corpus-blind-2026-07 10 · 153-baseline-2026-08-07 23 · 153-phase-a-r1 28.
 
 ## Close-out — agent run 2026-08-14
 

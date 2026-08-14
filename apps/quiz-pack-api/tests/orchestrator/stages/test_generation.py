@@ -225,8 +225,11 @@ async def test_logical_puzzle_fallback_url_is_cleared_not_dropped() -> None:
     """A lateral puzzle is a legitimate invention (consistency-judged, F8
     exempt) — but a fallback-stamped URL on it is fake and must be cleared
     (seed-153 q29: an ice-riddle citing the Mariana Trench page)."""
+    # #160: the marker comes from the generator's open branch (server-side),
+    # not from the stage re-deriving it off the model's label.
     marked = GenerationProvenance(
         reasoning_pattern="lateral_thinking",
+        pipeline="logical_puzzle",
         extra={"source_attribution": "unmatched_fallback"},
     )
     questions = [
@@ -319,8 +322,9 @@ async def test_raises_when_no_question_has_source_url() -> None:
 
 @pytest.mark.asyncio
 async def test_logical_puzzle_persists_without_source_url() -> None:
-    """Issue #46 task 46.B4 — a pure lateral puzzle (``verification_mode``
-    == "logical") is tagged ``pipeline == "logical_puzzle"`` and exempted
+    """Issue #46 task 46.B4 — a pure lateral puzzle arrives from the open
+    branch already tagged ``pipeline == "logical_puzzle"`` (#160: the stage
+    no longer derives the marker from the model's label) and is exempted
     from F8: it is invented, has no web source, and ships with
     ``source_url = null`` (D4/D5). Without the exemption the F8 invariant
     would reject it for lacking attribution.
@@ -331,7 +335,8 @@ async def test_logical_puzzle_persists_without_source_url() -> None:
             correct_answer="The candle",
             source_url=None,
             generation_metadata=GenerationProvenance(
-                reasoning_pattern="lateral_thinking"
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",
             ),
         )
     ]
@@ -389,7 +394,8 @@ async def test_open_fraction_routes_slice_through_open_pipeline() -> None:
             headline_answer="The candle",
             source_url=None,
             generation_metadata=GenerationProvenance(
-                reasoning_pattern="lateral_thinking"
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",
             ),
         )
     ]
@@ -973,3 +979,145 @@ async def test_passes_order_difficulty_to_generator() -> None:
     ctx.difficulty = "easy"
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
     assert gen.calls[-1]["difficulty"] == "easy"
+
+
+@pytest.mark.asyncio
+async def test_lying_lateral_label_does_not_buy_the_f8_exemption() -> None:
+    """#160 (gen-review P4): the stage used to re-derive `logical_puzzle`
+    from the model's own `pattern_used` label — so a generator labelling a
+    factual claim `lateral_thinking` skipped grounding (F8) and web
+    verification. The label alone must now buy nothing: without the
+    server-stamped marker the question is factual and F8 still fails it."""
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="Paris",
+            source_url=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking"  # label only, no marker
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+class _FakeShapeClassifier:
+    def __init__(self, verdict):
+        self._verdict = verdict
+        self.calls: list[str] = []
+
+    async def classify(self, question_text, possible_answers=None):
+        self.calls.append(question_text)
+        return self._verdict
+
+
+@pytest.mark.asyncio
+async def test_shape_classifier_confirms_genuine_puzzle() -> None:
+    """#160: a marker candidate the answer-blind classifier confirms keeps
+    its logical routing (and the classifier saw only the question, which the
+    fake's call log demonstrates by construction)."""
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="The candle",
+            source_url=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    classifier = _FakeShapeClassifier("logical")
+    stage = GenerationStage(gen, shape_classifier=classifier)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert classifier.calls == [ctx.questions[0].question]
+    assert ctx.questions[0].generation_metadata.pipeline == "logical_puzzle"
+    assert result.info["demoted_puzzles"] == 0
+
+
+@pytest.mark.asyncio
+async def test_shape_classifier_demotes_factual_marker_to_web_verification() -> None:
+    """#160: a `logical_puzzle` candidate the classifier calls "factual" is
+    demoted — it loses the F8 exemption and the logical-judge routing. Here
+    the demoted question has no source in a grounded batch, so F8 fails the
+    batch loudly instead of shipping an unverified claim as a "puzzle"."""
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="Paris",
+            source_url=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    classifier = _FakeShapeClassifier("factual")
+    stage = GenerationStage(gen, shape_classifier=classifier)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_shape_classifier_outage_fails_closed_to_factual() -> None:
+    """#160 (P4): a classifier outage (verdict None) is NOT a pass — the
+    candidate is demoted to the stricter factual path, same as a "factual"
+    verdict. Absence of the audit must never grant the verification bypass."""
+    questions = [
+        _stub_question(
+            0,
+            correct_answer="The candle",
+            source_url=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    classifier = _FakeShapeClassifier(None)
+    stage = GenerationStage(gen, shape_classifier=classifier)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[])
+
+    with pytest.raises(ValueError, match="F8 violated"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_options_carrying_question_is_mcq_regardless_of_label() -> None:
+    """#160: structure outranks the label — a question that carries
+    well-formed options surfaces as `text_multichoice` even when the model
+    self-tagged a non-MCQ pattern and `type: text` (previously it shipped as
+    free text with dangling options)."""
+    questions = [
+        _stub_question(
+            0,
+            type="text",
+            correct_answer="True",
+            possible_answers={"a": "True", "b": "False"},
+            source_url="https://ex/1",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="fact_recall"
+            ),
+        )
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=1, facts=facts)
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert ctx.questions[0].type == "text_multichoice"

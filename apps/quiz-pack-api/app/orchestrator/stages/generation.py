@@ -27,10 +27,10 @@ from app.generation.expiry_classifier import (
 from app.generation.pattern_routing import (
     PATTERNS_TO_MCQ,
     choose_question_type,
-    verification_mode,
 )
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.verification.shape_classifier import ShapeClassifier
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
 from quiz_shared.models.question import GenerationProvenance, Question
 
@@ -187,6 +187,7 @@ class GenerationStage:
         answer_normalizer: AnswerNormalizer | None = None,
         expiry_classifier: ExpiryClassifier | None = None,
         open_fraction: float = OPEN_SHAPE_FRACTION,
+        shape_classifier: ShapeClassifier | None = None,
     ) -> None:
         self._generator = generator
         # Issue #46 task 46.A2b — optional LLM normalizer for the ambiguous
@@ -201,6 +202,10 @@ class GenerationStage:
         # Issue #46 task 46.B4c — fraction of `target_count` generated through
         # the open/lateral-puzzle prompt instead of the factual pipeline.
         self._open_fraction = open_fraction
+        # #160 — independent answer-blind auditor of the `logical_puzzle`
+        # marker (P4: no model-controlled routing). `None` skips the audit —
+        # unit tests and callers that never produce open-branch puzzles.
+        self._shape_classifier = shape_classifier
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         topics = [t for t in (ctx.category, ctx.theme) if t] or None
@@ -294,7 +299,10 @@ class GenerationStage:
             q.category = normalize_category(q.category, order_category=ctx.category)
 
             provenance = q.generation_metadata or GenerationProvenance()
-            if ctx.facts:
+            # #160: never clobber the open branch's `logical_puzzle` marker —
+            # it is the server-audited routing signal (the old label-tagging
+            # loop used to restore it afterwards; that loop is gone).
+            if ctx.facts and provenance.pipeline != "logical_puzzle":
                 provenance = provenance.model_copy(update={"pipeline": "fact_first"})
             q.generation_metadata = provenance
 
@@ -413,7 +421,14 @@ class GenerationStage:
                 else None
             )
             desired_type = choose_question_type(pattern)
-            if desired_type == "text_multichoice" or q.type == "text_multichoice":
+            # #160: structure outranks the label — a question that CARRIES
+            # options is an MCQ whatever the model called it (a half-MCQ
+            # served as free text is the same defect the guard exists for).
+            if (
+                desired_type == "text_multichoice"
+                or q.type == "text_multichoice"
+                or q.possible_answers
+            ):
                 resolved_answer = _resolve_mcq_answer(
                     q.possible_answers, q.correct_answer
                 )
@@ -434,26 +449,42 @@ class GenerationStage:
             else:
                 tagged.append(q)
 
-        # Issue #46 task 46.B4 — open/logical branch tagging (post-route, D1).
-        # A question whose `verification_mode` is "logical" (a pure lateral
-        # puzzle, by reasoning pattern or open framing) has no external source
-        # to attribute — mark its provenance `pipeline = "logical_puzzle"` so
-        # (a) VerificationStage (46.B6) routes it to the consistency judge and
-        # (b) the F8 relaxation below skips it. Fail-safe: everything else
-        # stays factual and keeps the hard source_url requirement (D4/R3).
-        # Prompt-side generation through `question_generation_open.md` (46.B3)
-        # is deferred to 46.B4b; this tags the existing factual output so the
-        # contract + F8 relaxation are exercised end to end first.
-        for q in tagged:
-            pattern = (
-                q.generation_metadata.reasoning_pattern
-                if q.generation_metadata is not None
-                else None
-            )
-            if verification_mode(pattern, q.question) == "logical":
-                provenance = q.generation_metadata or GenerationProvenance()
-                q.generation_metadata = provenance.model_copy(
-                    update={"pipeline": "logical_puzzle"}
+        # #160 (gen-review P4, supersedes the 46.B4 label-tagging loop): the
+        # `logical_puzzle` marker — which exempts a question from F8 grounding
+        # AND routes it past web fact-checking to the consistency judge — may
+        # only originate from the server-controlled open branch (the generator
+        # stamps it in `_finalize_questions` for the `open_count` slice). The
+        # old loop here re-derived it from the model's own `pattern_used`
+        # label for EVERY question, so a generator labelling a factual claim
+        # `lateral_thinking` skipped the only truth gate. Now the stage
+        # AUDITS instead: each marker candidate gets an independent
+        # answer-blind classification (no answer, no label in the prompt);
+        # anything the classifier does not confirm as a self-contained puzzle
+        # — including classifier outages — is demoted to the stricter factual
+        # path (fail-closed).
+        demoted_puzzles = 0
+        if self._shape_classifier is not None:
+            for q in tagged:
+                if (
+                    q.generation_metadata is None
+                    or q.generation_metadata.pipeline != "logical_puzzle"
+                ):
+                    continue
+                verdict = await self._shape_classifier.classify(
+                    q.question, q.possible_answers
+                )
+                if verdict == "logical":
+                    continue
+                demoted_puzzles += 1
+                logger.warning(
+                    "GenerationStage demoted logical_puzzle id=%s to factual "
+                    "(classifier verdict=%s) — routed to web verification/F8 "
+                    "(#160)",
+                    q.id,
+                    verdict,
+                )
+                q.generation_metadata = q.generation_metadata.model_copy(
+                    update={"pipeline": None}
                 )
 
         # #153 round-2: enforce grounding by dropping, not decorating. A
@@ -552,6 +583,7 @@ class GenerationStage:
                 "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,
                 "dropped_ungrounded": dropped_ungrounded,
+                "demoted_puzzles": demoted_puzzles,
             },
             cost_cents=0,
         )

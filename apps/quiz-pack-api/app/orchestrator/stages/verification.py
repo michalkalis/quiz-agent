@@ -33,7 +33,6 @@ from typing import Optional
 
 import sentry_sdk
 
-from app.generation.pattern_routing import verification_mode
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.verification.fact_verifier import MAX_CONCURRENT_VERIFICATIONS, FactVerifier
@@ -193,12 +192,18 @@ class VerificationStage:
 def _is_logical(q: Question) -> bool:
     """True iff the question routes to the logical-consistency judge (D2).
 
-    Keyed on ``verification_mode`` derived from the generator's reasoning
-    pattern + question text — the same signal the open-branch generator
-    used to tag ``pipeline = "logical_puzzle"``.
+    #160 (gen-review P4): keyed on the server-audited
+    ``pipeline == "logical_puzzle"`` provenance marker — stamped only by the
+    server-controlled open branch and confirmed by the answer-blind
+    ShapeClassifier in GenerationStage. The old key derived
+    ``verification_mode`` from the generator's own ``pattern_used`` label, so
+    the model could label a factual claim ``lateral_thinking`` and route it
+    past web fact-checking (model-controlled routing).
     """
-    pattern = q.generation_metadata.reasoning_pattern if q.generation_metadata else None
-    return verification_mode(pattern, q.question) == "logical"
+    return (
+        q.generation_metadata is not None
+        and q.generation_metadata.pipeline == "logical_puzzle"
+    )
 
 
 def _stringify_answer(answer: object) -> str:

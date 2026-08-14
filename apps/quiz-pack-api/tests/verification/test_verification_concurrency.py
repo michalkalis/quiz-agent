@@ -152,7 +152,8 @@ async def test_logical_branch_runs_concurrently() -> None:
             category="general",
             difficulty="medium",
             generation_metadata=GenerationProvenance(
-                reasoning_pattern="lateral_thinking"
+                reasoning_pattern="lateral_thinking",
+                pipeline="logical_puzzle",  # #160: dispatch keys on the marker
             ),
         )
         for i in range(_BATCH)

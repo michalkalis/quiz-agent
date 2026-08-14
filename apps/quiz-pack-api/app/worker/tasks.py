@@ -93,6 +93,7 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         ctx["generator"],
         ctx.get("answer_normalizer"),
         expiry_classifier=ctx.get("expiry_classifier"),
+        shape_classifier=ctx.get("shape_classifier"),
     )
     verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
     scoring = ScoringStage(ctx["scorer"])

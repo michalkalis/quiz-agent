@@ -278,6 +278,7 @@ def _build_stages(
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
     from app.verification.fact_verifier import FactVerifier
+    from app.verification.shape_classifier import ShapeClassifier
 
     # Lever A (issue #72 P1.1): source the gen/critique models from the dormant
     # feature flags, exactly as the API path's `_build_advanced_generator` does,
@@ -300,6 +301,8 @@ def _build_stages(
         expiry_classifier=(
             ExpiryClassifier() if feature_flags.expiry_classification() else None
         ),
+        # #160 — answer-blind auditor of the logical_puzzle routing marker.
+        shape_classifier=ShapeClassifier(),
     )
     verification = VerificationStage(FactVerifier())
     scoring = ScoringStage(MultiModelScorer())

@@ -94,6 +94,11 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.verification.answerability import AnswerabilityChecker
 
     ctx["answerability_checker"] = AnswerabilityChecker()
+    # #160 — answer-blind auditor of the logical_puzzle routing marker (P4:
+    # no model-controlled routing); same mid-class model role as answerability.
+    from app.verification.shape_classifier import ShapeClassifier
+
+    ctx["shape_classifier"] = ShapeClassifier()
     ctx["scorer"] = MultiModelScorer()
     # 42.27 — DedupStage dedups against the canonical pgvector corpus (ChromaDB
     # is frozen read-only legacy). #150: the store is handed over ASYNC and

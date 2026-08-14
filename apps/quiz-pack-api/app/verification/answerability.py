@@ -27,7 +27,7 @@ from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 
 from app import feature_flags
-from app.generation.pattern_routing import answer_shape
+from app.generation.pattern_routing import audited_answer_shape
 
 logger = logging.getLogger(__name__)
 
@@ -169,12 +169,10 @@ class AnswerabilityChecker:
                 model_answer=model_answer,
             )
 
-        pattern = (
-            question.generation_metadata.reasoning_pattern
-            if question.generation_metadata is not None
-            else None
-        )
-        if answer_shape(pattern, question.question) == "open":
+        # #160: open-shape leniency keys on server-audited provenance + the
+        # question text itself — never the generator's own pattern label
+        # (which let a model claim an open pattern to skip the answer match).
+        if audited_answer_shape(question) == "open":
             # Sentence answers can't be fuzzy-matched meaningfully; the
             # gave-up/issue signals above are the whole check for open shapes.
             return AnswerabilityResult(passed=True, model_answer=model_answer)

@@ -167,10 +167,34 @@ def answer_shape(
     — including Estimation, Comparison Bet, Reverse Engineer, Odd-One-Out,
     True/False, Number Sequence (D1) — is ``"closed"``. Fail-safe to
     ``"closed"`` so a weak signal keeps Track A's short-answer enforcement.
+
+    #160 WARNING: ``pattern`` is the generator's own untrusted label — this
+    function is generation-side guidance only. Nothing downstream of
+    generation may gate or relax on it; use ``audited_answer_shape``.
     """
     if _normalize_pattern(pattern) in OPEN_SHAPE_PATTERNS:
         return "open"
     if _has_open_framing(question_text):
+        return "open"
+    return "closed"
+
+
+def audited_answer_shape(question) -> Literal["closed", "open"]:
+    """Answer shape from server-audited signals only (#160, gen-review P4).
+
+    Uses the provenance markers the server itself stamps — ``pipeline ==
+    "logical_puzzle"`` (open branch + ShapeClassifier audit) and
+    ``prompt_version == "open"`` (open-branch generation) — plus the question
+    text's own framing. The generator's ``pattern_used`` label deliberately
+    plays no role: trusting it let a model claim an open pattern and buy
+    answerability leniency for any question (model-controlled routing).
+    """
+    meta = question.generation_metadata
+    if meta is not None and (
+        meta.pipeline == "logical_puzzle" or meta.prompt_version == "open"
+    ):
+        return "open"
+    if _has_open_framing(question.question):
         return "open"
     return "closed"
 

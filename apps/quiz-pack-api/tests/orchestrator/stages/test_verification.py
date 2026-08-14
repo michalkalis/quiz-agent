@@ -278,10 +278,14 @@ async def test_dispatches_logical_questions_to_logical_verifier() -> None:
     puzzle pattern) must be judged by LogicalConsistencyVerifier, never sent
     to FactVerifier — a web search on a sourceless puzzle is exactly the
     spurious-match failure this branch exists to avoid."""
+    # #160: dispatch keys on the server-audited pipeline marker, not the
+    # generator's own reasoning_pattern label.
     puzzle = _stub_question(
         0,
         question="A man pushes his car to a hotel. What happened?",
-        generation_metadata=GenerationProvenance(reasoning_pattern="lateral_thinking"),
+        generation_metadata=GenerationProvenance(
+            reasoning_pattern="lateral_thinking", pipeline="logical_puzzle"
+        ),
     )
     factual = _stub_question(
         1,
@@ -392,3 +396,30 @@ async def test_threshold_default_matches_module_constant() -> None:
     """If the default threshold drifts silently, callers cannot reason about
     the drop policy. Pin it here so a behaviour change is loud."""
     assert DEFAULT_MIN_CONFIDENCE == 0.5
+
+
+@pytest.mark.asyncio
+async def test_lying_lateral_label_still_goes_to_fact_verifier() -> None:
+    """#160 (gen-review P4): a question whose generator self-tagged
+    `lateral_thinking` but which carries NO server-audited `logical_puzzle`
+    marker must be web-verified like any factual question — the label alone
+    used to route it past the only truth gate."""
+    liar = _stub_question(
+        0,
+        question="What is the capital of Australia?",
+        generation_metadata=GenerationProvenance(
+            reasoning_pattern="lateral_thinking"  # label only, no marker
+        ),
+    )
+    fact_verifier = _FakeFactVerifier(
+        {"q_0": VerificationResult(verdict="verified", confidence=0.9)}
+    )
+    logical_verifier = _FakeLogicalVerifier({})
+    stage = VerificationStage(fact_verifier, logical_verifier)  # type: ignore[arg-type]
+    ctx = _make_ctx([liar])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert logical_verifier.calls == []
+    factual_ids = {q["id"] for batch in fact_verifier.calls for q in batch}
+    assert factual_ids == {"q_0"}

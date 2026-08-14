@@ -21,6 +21,8 @@ import SwiftUI
 
 struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
+    /// #155 TestFlight-only rating affordance; nil (the default) = no chip.
+    var ratingEntry: QuestionRatingEntry?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     // Flipped in .onAppear purely to fire the result haptic once — no longer
@@ -79,6 +81,13 @@ struct ResultView: View {
                 )
             }
         }
+        // #155 (TestFlight/Debug only): rate the question just answered —
+        // `resultQuestion` first so an advanced quiz can't re-target the rating.
+        .questionRatingEntry(
+            ratingEntry,
+            questionId: (viewModel.resultQuestion ?? viewModel.currentQuestion)?.id,
+            questionText: questionStem
+        )
         .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
         .simultaneousGesture(
             DragGesture(minimumDistance: 4).onChanged { _ in pauseAutoAdvanceIfActive() }

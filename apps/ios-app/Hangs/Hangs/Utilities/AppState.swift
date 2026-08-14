@@ -24,6 +24,8 @@ final class AppState: ObservableObject {
     let packOrderService: PackOrderServiceProtocol
     /// StoreKit purchase of the custom-pack product (issue #140).
     let packPurchaseService: PackPurchaseServiceProtocol
+    /// In-app question ratings (#155), targeting the quiz-pack-api host.
+    let questionRatingService: QuestionRatingServiceProtocol
 
     /// The custom-pack order flow's view model (#146). Owned HERE, not in
     /// `SettingsView`'s `@State`: Settings is a pushed route that quiz-start
@@ -63,6 +65,7 @@ final class AppState: ObservableObject {
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 packOrderService = MockPackOrderService()
                 packPurchaseService = MockPackPurchaseService()
+                questionRatingService = MockQuestionRatingService()
                 storeManager.onPurchaseSuccess = { [weak self] in
                     await self?.quizViewModel?.notifyPremiumPurchased() ?? false
                 }
@@ -100,6 +103,7 @@ final class AppState: ObservableObject {
         self.storeManager = StoreManager()
         packOrderService = PackOrderService(authService: authService)
         packPurchaseService = StoreKitPackPurchaseService()
+        questionRatingService = QuestionRatingService(authService: authService)
 
         // Silence detection / barge-in (iOS 26 SpeechDetector; min target is 26.0).
         let resolved: SilenceDetectionServiceProtocol
@@ -211,7 +215,8 @@ final class AppState: ObservableObject {
         storeManager: StoreManager? = nil,
         authService: AuthService? = nil,
         packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
-        packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService()
+        packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
+        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService()
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -222,6 +227,7 @@ final class AppState: ObservableObject {
         self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
         self.packOrderService = packOrderService
         self.packPurchaseService = packPurchaseService
+        self.questionRatingService = questionRatingService
     }
 
     /// Create a new QuizViewModel with injected dependencies

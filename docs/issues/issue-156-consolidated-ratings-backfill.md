@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent — start precondition: #154 store exists (local run OK before prod migration)
 **Reversibility:** b (writes backfill rows into the prod ratings store; additive + idempotent, but prod data write ⇒ founder heads-up before the prod run)
-**Status:** Created from the gen-pipeline joint review 2026-08-09 (candidate 11; D19/D20/D21, P1). Depends on the #154 schema.
+**Status:** Agent work DONE 2026-08-14 (CLI + parsers + tests, local run 113 rows, prod `ratings.db` checked empty) — see the close-out block. Remaining: the founder-gated prod backfill run. Created from the gen-pipeline joint review 2026-08-09 (candidate 11; D19/D20/D21, P1). Depends on the #154 schema.
 **Created:** 2026-08-14
 
 ## Context
@@ -17,7 +17,7 @@ Founder ratings are scattered across 7 places in 6 formats with inconsistent que
 | G3 corpus blind sample | `docs/testing/runs/corpus-blind-sample-2026-07.md` | 1–5 | 10 | inline MD, answer key at bottom |
 | #153 baseline / Bedrock batch 2026-08-07 (same file) | `docs/testing/runs/153-baseline-2026-08-07/founder-ratings.json` (+ `questions-with-judge-scores.json`) | 1–10 | 23 | sequential `n` + truncated text → join to UUIDs by order/text |
 | #153 Phase A r1 | `docs/testing/runs/153-phase-a/founder-ratings-full.json` + `mapping.json` | 1–10 | 28 | blinded `qNN` → mapping → UUID |
-| In-app `ratings.db` | quiz-agent SQLite (local copies EMPTY; prod on Fly volume) | 1–5 | ? | `question_id` |
+| In-app `ratings.db` | quiz-agent SQLite (local copies EMPTY; prod on Fly volume) | 1–5 | **0** (prod checked 2026-08-14) | `question_id` |
 
 ## Agent Brief — 2026-08-14
 
@@ -52,10 +52,69 @@ pytest on the parsers (fixture snippets per source format, idempotency test = ru
 
 ## Acceptance
 
-- [ ] Backfill CLI imports gold library (human rows only), pilot 2026-07-11, G3 sample, #153 baseline, #153 Phase A r1; per-source imported/skipped/unjoinable counts printed; expected totals ≈ 53/27/10/23/28 minus explicitly reported skips.
-- [ ] Running the CLI twice yields identical row counts (idempotency pytest + live re-run).
-- [ ] #153 Phase A rows carry de-blinded arm + original UUID from mapping.json; baseline rows either a UUID join or a fail-loud unjoinable report.
-- [ ] Every backfilled row has raw score + scale bounds + source round + date; export normalizes 1–5 rounds onto the 10-scale without mutating raw values (pytest on normalization).
-- [ ] July calibration is represented as a documented lost-data note, with zero synthetic rows (grep export for `backfill:july-calibration` returns nothing).
-- [ ] Prod in-app `ratings.db` checked once; finding (empty or imported) recorded in this issue.
-- [ ] `pytest tests/` green in quiz-pack-api.
+- [x] Backfill CLI imports gold library (human rows only), pilot 2026-07-11, G3 sample, #153 baseline, #153 Phase A r1; per-source imported/skipped/unjoinable counts printed; expected totals ≈ 53/27/10/23/28 minus explicitly reported skips.
+- [x] Running the CLI twice yields identical row counts (idempotency pytest + live re-run).
+- [x] #153 Phase A rows carry de-blinded arm + original UUID from mapping.json; baseline rows either a UUID join or a fail-loud unjoinable report.
+- [x] Every backfilled row has raw score + scale bounds + source round + date; export normalizes 1–5 rounds onto the 10-scale without mutating raw values (pytest on normalization).
+- [x] July calibration is represented as a documented lost-data note, with zero synthetic rows (grep export for `backfill:july-calibration` returns nothing).
+- [x] Prod in-app `ratings.db` checked once; finding (empty or imported) recorded in this issue.
+- [x] `pytest tests/` green in quiz-pack-api.
+- [ ] **Prod backfill run** — founder-gated, not yet performed. The local run below is the proof; prod needs the same command against the prod DB.
+- [ ] **#154 export re-run on prod** with the consolidated per-round totals — awaiting the founder-gated prod run.
+
+## Close-out — agent run 2026-08-14
+
+**Delivered:** `apps/quiz-pack-api/scripts/backfill_ratings.py` (CLI) +
+`scripts/backfill_ratings_parsers.py` (one parser per round), tests in
+`tests/scripts/test_backfill_ratings_parsers.py` +
+`tests/scripts/test_backfill_ratings_import.py`. `upsert_rating` gained
+optional `scale_min`/`scale_max`/`rated_at`/`refresh_identity` so historical
+rounds keep their own scale and date through the one shared upsert contract.
+
+**Local run against the dev/test Postgres** (`--execute`, run twice — second
+run: 0 new / 113 updated, row count unchanged):
+
+| Round | source | seen | imported | skipped | unjoinable | scale | rated_at |
+|---|---|---|---|---|---|---|---|
+| Gold library | `backfill:gold-library` | 53 | 25 | 28 (`rated_by='auto'`) | 0 | 1–10 | 2026-06-07 |
+| Pilot | `backfill:pilot-2026-07-11` | 27 | 27 | 0 | 0 | 1–5 | 07-11 / 07-12 |
+| G3 blind sample | `backfill:g3-corpus-blind-2026-07` | 10 | 10 | 0 | 0 | 1–5 | 2026-07-15 |
+| #153 baseline | `backfill:153-baseline-2026-08-07` | 27 | 23 | 4 (`score: null`) | 0 | 1–10 | 2026-08-07 |
+| #153 Phase A r1 | `backfill:153-phase-a-r1` | 28 | 28 | 2 (`score: null`) | 0 | 1–10 | 2026-08-07 |
+| **Total** | | **147** | **113** | **34** | **0** | | |
+
+All 23 baseline rows and all 28 Phase A rows carry a question UUID; the other
+three rounds have no recoverable UUID (their questions were never persisted)
+and are identified by the question-text snapshot plus the source's own id in
+`extra`. Suite: **934 passed** (was 899).
+
+**July calibration 2026-07-09 — lost-data note.** The 36 per-question scores
+behind the rubric lived in a scratchpad that was never committed; only the
+aggregate conclusions survive in
+`docs/research/question-quality-founder-calibration-2026-07-09.md`. **Zero
+rows are written** and no `backfill:july-calibration` source exists — an
+invented score would silently become founder ground truth downstream. The CLI
+prints this note on every run so the gap stays visible.
+
+**Prod in-app `ratings.db` — checked 2026-08-14, read-only** (`fly ssh
+console -a quiz-agent-api`, sqlite opened `mode=ro`; the machine was already
+running and was left running): `/data/ratings.db` exists, tables
+`quiz_sessions`, `model_scores`, `question_ratings`; **`question_ratings` = 0
+rows.** Expected — the plumbing shipped without a UI. Source closed; #155 is
+what will start filling it.
+
+**Anomalies worth a founder look:**
+- G3 q6 (British tank / tea) was rated as a *split* score, `kreativita 5/5,
+  formát 3/5`. Imported as the mean (4.0) with both components in
+  `extra.score_components` and flagged by the CLI. Picking one half would
+  invent a verdict; dropping the row would lose a rated question.
+- G3 q5 was `~4/5` (approximate) — imported as 4.0, `extra.approximate=true`.
+- Gold library: 28 of 53 entries are `rated_by='auto'` (model self-ratings),
+  so the human gold signal is 25 rows, not 53.
+- The #153 baseline join is positional (`n` → question order) and only
+  *verified* by text overlap, because the founder's `q` field is shorthand,
+  not a quote. All 23 rated rows cleared the threshold; the 4 unrated ones
+  (n=8, 25, 26, 27 — two flagged DUPLIKAT) carry no score and were skipped.
+
+**Unblocked:** D19 critique re-anchoring (candidate 13) — no prompt was
+touched here.

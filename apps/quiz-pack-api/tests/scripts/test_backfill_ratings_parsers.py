@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts import backfill_ratings_md as MD
 from scripts import backfill_ratings_parsers as P
 
 
@@ -149,22 +150,22 @@ def _pilot(tmp_path: Path, ratings: str = PILOT_RATINGS, review: str = PILOT_REV
 
 class TestPilot:
     def test_both_round_tables_are_read(self, tmp_path):
-        result = P.parse_pilot(*_pilot(tmp_path))
+        result = MD.parse_pilot(*_pilot(tmp_path))
         assert [r.natural_key for r in result.rows] == ["B10", "A12", "C3"]
         assert result.seen == 3
 
     def test_round_two_rows_carry_the_round_two_date(self, tmp_path):
-        rows = {r.natural_key: r for r in P.parse_pilot(*_pilot(tmp_path)).rows}
+        rows = {r.natural_key: r for r in MD.parse_pilot(*_pilot(tmp_path)).rows}
         assert rows["B10"].rated_at.date().isoformat() == "2026-07-12"
         assert rows["A12"].rated_at.date().isoformat() == "2026-07-11"
 
     def test_blind_letter_is_resolved_to_the_model_it_stood_for(self, tmp_path):
-        rows = {r.natural_key: r for r in P.parse_pilot(*_pilot(tmp_path)).rows}
+        rows = {r.natural_key: r for r in MD.parse_pilot(*_pilot(tmp_path)).rows}
         assert rows["B10"].extra["model"] == "z-ai/glm-5.2"
         assert rows["C3"].extra["model"] == "google/gemini-3.1-pro-preview"
 
     def test_question_text_comes_from_the_review_file(self, tmp_path):
-        rows = {r.natural_key: r for r in P.parse_pilot(*_pilot(tmp_path)).rows}
+        rows = {r.natural_key: r for r in MD.parse_pilot(*_pilot(tmp_path)).rows}
         assert rows["A12"].question_text.startswith("Name the pop superstar")
         assert rows["B10"].score == 4.5
         assert rows["B10"].scale_max == 5
@@ -172,17 +173,17 @@ class TestPilot:
     def test_unknown_orig_id_means_the_files_drifted_apart(self, tmp_path):
         review = PILOT_REVIEW.replace("**A12.", "**A13.")
         with pytest.raises(P.ParseError):
-            P.parse_pilot(*_pilot(tmp_path, review=review))
+            MD.parse_pilot(*_pilot(tmp_path, review=review))
 
     def test_model_letter_contradicting_the_id_is_an_error(self, tmp_path):
         ratings = PILOT_RATINGS.replace("| A12 | A |", "| A12 | C |")
         with pytest.raises(P.ParseError):
-            P.parse_pilot(*_pilot(tmp_path, ratings=ratings))
+            MD.parse_pilot(*_pilot(tmp_path, ratings=ratings))
 
     def test_the_same_question_rated_twice_is_an_error(self, tmp_path):
         ratings = PILOT_RATINGS.replace("| C3 | C |", "| A12 | A |")
         with pytest.raises(P.ParseError):
-            P.parse_pilot(*_pilot(tmp_path, ratings=ratings))
+            MD.parse_pilot(*_pilot(tmp_path, ratings=ratings))
 
 
 # --------------------------------------------------------------------------
@@ -216,7 +217,7 @@ def _g3(tmp_path: Path, text: str) -> Path:
 
 class TestG3Sample:
     def test_inline_scores_and_the_answer_key_are_joined(self, tmp_path):
-        result = P.parse_g3_sample(_g3(tmp_path, _g3_doc(TEN_PLAIN)))
+        result = MD.parse_g3_sample(_g3(tmp_path, _g3_doc(TEN_PLAIN)))
         assert len(result.rows) == 10
         first = result.rows[0]
         assert first.natural_key == "q01"
@@ -227,13 +228,13 @@ class TestG3Sample:
     def test_comma_decimal_is_a_half_point(self, tmp_path):
         entries = list(TEN_PLAIN)
         entries[8] = ("3,5/5", "well phrased?")
-        rows = P.parse_g3_sample(_g3(tmp_path, _g3_doc(entries))).rows
+        rows = MD.parse_g3_sample(_g3(tmp_path, _g3_doc(entries))).rows
         assert rows[8].score == 3.5
 
     def test_approximate_score_is_imported_and_flagged(self, tmp_path):
         entries = list(TEN_PLAIN)
         entries[4] = ("~4/5 (fun)", "roughly")
-        result = P.parse_g3_sample(_g3(tmp_path, _g3_doc(entries)))
+        result = MD.parse_g3_sample(_g3(tmp_path, _g3_doc(entries)))
         assert result.rows[4].score == 4.0
         assert result.rows[4].extra["approximate"] is True
         assert any("approximate" in a for a in result.anomalies)
@@ -243,19 +244,19 @@ class TestG3Sample:
         # would invent a verdict; dropping the row would lose a rated question.
         entries = list(TEN_PLAIN)
         entries[5] = ("kreativita 5/5, formát 3/5", "idea good, hint gives it away")
-        result = P.parse_g3_sample(_g3(tmp_path, _g3_doc(entries)))
+        result = MD.parse_g3_sample(_g3(tmp_path, _g3_doc(entries)))
         assert result.rows[5].score == 4.0
         assert result.rows[5].extra["score_components"] == [5.0, 3.0]
         assert any("split score" in a for a in result.anomalies)
 
     def test_a_missing_question_means_the_sample_is_not_the_one_rated(self, tmp_path):
         with pytest.raises(P.ParseError):
-            P.parse_g3_sample(_g3(tmp_path, _g3_doc(TEN_PLAIN[:9])))
+            MD.parse_g3_sample(_g3(tmp_path, _g3_doc(TEN_PLAIN[:9])))
 
     def test_a_question_without_a_score_line_raises(self, tmp_path):
         doc = _g3_doc(TEN_PLAIN).replace("   - **Founder skóre: 4/5** — fine\n", "", 1)
         with pytest.raises(P.ParseError):
-            P.parse_g3_sample(_g3(tmp_path, doc))
+            MD.parse_g3_sample(_g3(tmp_path, doc))
 
 
 # --------------------------------------------------------------------------

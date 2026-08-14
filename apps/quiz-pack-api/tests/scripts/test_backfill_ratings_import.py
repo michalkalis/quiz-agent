@@ -21,6 +21,7 @@ from app.db.models.rating import Rating
 from sqlalchemy import delete, func, select
 
 from scripts import backfill_ratings as B
+from scripts import backfill_ratings_md as MD
 from scripts import backfill_ratings_parsers as P
 
 TEST_ROUND = "test-round-156"
@@ -122,7 +123,7 @@ class TestSourceCollection:
     def test_every_historical_round_is_wired_into_the_cli(self):
         rounds = [r.round for r in B.collect(P.REPO_ROOT, None)]
         assert rounds == [
-            P.GOLD_ROUND, P.PILOT_ROUND, P.G3_ROUND, P.BASELINE_ROUND, P.PHASE_A_ROUND
+            P.GOLD_ROUND, MD.PILOT_ROUND, MD.G3_ROUND, P.BASELINE_ROUND, P.PHASE_A_ROUND
         ]
 
     def test_the_lost_july_round_writes_no_rows(self):

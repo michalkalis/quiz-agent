@@ -47,6 +47,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E4
 from app.api.v1.ratings_store import upsert_rating  # noqa: E402
 from app.db import engine, normalize_async_url  # noqa: E402
 from app.db.models.rating import Rating  # noqa: E402
+from scripts import backfill_ratings_md as MD  # noqa: E402
 from scripts import backfill_ratings_parsers as P  # noqa: E402
 
 # The one round that cannot be backfilled: the 36 per-question scores behind
@@ -68,10 +69,10 @@ def collect(root: Path, only: list[str] | None) -> list[P.SourceResult]:
     phase_a = root / "docs/testing/runs/153-phase-a"
     sources = [
         lambda: P.parse_gold_library(root / "data/examples/gold_standard.json"),
-        lambda: P.parse_pilot(
+        lambda: MD.parse_pilot(
             pilot / "founder_ratings.md", pilot / "pilot_review.md"
         ),
-        lambda: P.parse_g3_sample(
+        lambda: MD.parse_g3_sample(
             root / "docs/testing/runs/corpus-blind-sample-2026-07.md"
         ),
         lambda: P.parse_baseline(

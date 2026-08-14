@@ -47,9 +47,18 @@ iOS unit tests (ViewModel: score selection, dictation guard, submit payload, TF-
 
 ## Acceptance
 
-- [ ] With the gating predicate forced true, question and result screens each show the rating button; forced false, neither does (unit/snapshot-level assertion, not manual only).
-- [ ] Panel submits {question UUID, rater, score 1–10, justification?} to the quiz-pack-api endpoint — asserted against a mocked network layer; a live row lands in the #154 store in one manual sim pass.
-- [ ] Dictation reuses the shared audio/STT instances (no second engine) and is blocked while quiz recording is active — unit test on the guard.
-- [ ] Submitting or cancelling the panel leaves quiz state-machine state unchanged (test: no transitions triggered).
-- [ ] Targeted iOS test suite green; no new strings ship untranslated (`xcstringstool sync` run if strings added).
-- [ ] TODO.md carries a pre-App-Store removal reminder line for the rating affordance.
+- [x] With the gating predicate forced true, question and result screens each show the rating button; forced false, neither does (unit/snapshot-level assertion, not manual only). — `QuestionRatingEntryTests` hosts both screens with the entry forced on/off and asserts `rating.entry`.
+- [~] Panel submits {question UUID, rater, score 1–10, justification?} to the quiz-pack-api endpoint — asserted against a mocked network layer; a live row lands in the #154 store in one manual sim pass. — payload asserted (`QuestionRatingSubmitTests`); **the live round-trip is NOT done** (needs a real bearer + a question row in prod; founder/manual leg). `rater` is intentionally not sent — the server derives it from the JWT subject.
+- [x] Dictation reuses the shared audio/STT instances (no second engine) and is blocked while quiz recording is active — unit test on the guard. — `QuestionRatingDictationTests`; the services come from `AppState.makeFeedbackVoice`, the same instances the quiz answers use.
+- [x] Submitting or cancelling the panel leaves quiz state-machine state unchanged (test: no transitions triggered). — `QuestionRatingQuizIsolationTests`; the VM holds no reference to `QuizViewModel`.
+- [x] Targeted iOS test suite green; no new strings ship untranslated (`xcstringstool sync` run if strings added). — 18 new tests + 51 in the touched existing suites, all green on iPhone 17 Pro (iOS 26.5). 11 new keys added to `Localizable.xcstrings` with EN source + SK translations (inserted directly in Xcode's format; no `xcstringstool sync` needed since no `.strings` sources exist).
+- [x] TODO.md carries a pre-App-Store removal reminder line for the rating affordance. — pre-existing line extended with the exact removal steps.
+
+## Implementation notes (2026-08-14)
+
+- Entry point is an optional `QuestionRatingEntry` value passed down from `ContentView`, **not** an `@EnvironmentObject` lookup: `QuestionView`/`ResultView` are hosted bare in dozens of unit tests and an environment lookup would crash all of them. Default `nil` = no affordance, which is also what an App Store build renders.
+- The rating client is a separate `QuestionRatingService` actor (pack-api host + bearer via `AuthService.sendAuthorized`), mirroring `PackOrderService`, rather than a method on `NetworkService` (which targets the quiz-agent host).
+- `display_name` is deliberately never sent: a hardcoded "founder" would mislabel other TestFlight raters, and identity is the JWT subject anyway.
+- The chip is an overlay in the top-trailing chrome row, with a PER-SCREEN trailing inset (voice question 64, MCQ question 96, result 108) because what sits at that edge differs (settings gear / merged counter / nav counter). A single shared inset clipped the question counter — caught by a simulator pass, fixed in `f88291b9`. No Pencil round — temporary debug surface.
+- Placement re-verified on the simulator after the fix: voice question screen (counter fully readable, clear gap left of the settings gear) and result screen (clear of both the counter and the verdict band). The panel itself opens from the chip and cancels cleanly.
+- **Open residual:** the MCQ variant of the top row (trailing inset 96) was NOT visually checked — no launch argument lands directly on an MCQ question, and starting a quiz under the UI-test mocks fails. It is a one-number change at the `QuestionView` call site if the merged row clashes.

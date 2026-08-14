@@ -79,6 +79,14 @@ struct ContentView: View {
         viewModel.beginQuizStart(packId: packId)
     }
 
+    /// #155: the TestFlight-only rating affordance for the question + result
+    /// screens. Gating lives inside the entry (`BuildChannel`), so an App Store
+    /// build builds this and renders nothing.
+    /// PRE-APP-STORE REMOVAL: delete this and its two call sites (see TODO.md).
+    private var ratingEntry: QuestionRatingEntry {
+        appState.makeQuestionRatingEntry(for: viewModel)
+    }
+
     @ViewBuilder
     private var mainContent: some View {
         ZStack {
@@ -100,7 +108,7 @@ struct ContentView: View {
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
                         } else {
-                            QuestionView(viewModel: viewModel)
+                            QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
                         }
 
                     case .showingResult:
@@ -108,7 +116,7 @@ struct ContentView: View {
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
                         } else {
-                            ResultView(viewModel: viewModel)
+                            ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
                         }
 
                     case .finished:

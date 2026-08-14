@@ -5827,6 +5827,127 @@
           }
         }
       }
+    },
+    "Rate question" : {
+      "comment" : "Rating panel title (TestFlight-only question rating, #155)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohodnotiť otázku"
+          }
+        }
+      }
+    },
+    "Rate this question" : {
+      "comment" : "Accessibility label for the TestFlight-only question rating button",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohodnotiť túto otázku"
+          }
+        }
+      }
+    },
+    "why? (optional)" : {
+      "comment" : "Rating panel section label above the optional justification field",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prečo? (voliteľné)"
+          }
+        }
+      }
+    },
+    "1 = worst · 10 = best" : {
+      "comment" : "Rating panel caption explaining the 1-10 scale direction",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 = najhoršie · 10 = najlepšie"
+          }
+        }
+      }
+    },
+    "Why this score? Say it or type it." : {
+      "comment" : "Rating panel placeholder in the justification field",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prečo toto hodnotenie? Povedz to alebo napíš."
+          }
+        }
+      }
+    },
+    "Save rating" : {
+      "comment" : "Rating panel submit button",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uložiť hodnotenie"
+          }
+        }
+      }
+    },
+    "Saved" : {
+      "comment" : "Rating panel submit button after the rating was stored",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uložené"
+          }
+        }
+      }
+    },
+    "Finish the quiz recording to dictate your note." : {
+      "comment" : "Rating panel: mic disabled because the quiz is currently recording",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokonči nahrávanie kvízu, aby si mohol diktovať poznámku."
+          }
+        }
+      }
+    },
+    "Invalid response from the rating service" : {
+      "comment" : "Rating error: malformed server response",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neplatná odpoveď zo služby hodnotení"
+          }
+        }
+      }
+    },
+    "The rating service returned an error. Please try again." : {
+      "comment" : "Fallback message when the ratings API returns a non-2xx response we can't parse",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Služba hodnotení vrátila chybu. Skús to znova."
+          }
+        }
+      }
+    },
+    "your rating" : {
+      "comment" : "Rating panel section label above the 1-10 score buttons",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoje hodnotenie"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

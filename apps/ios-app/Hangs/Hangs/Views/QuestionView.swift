@@ -16,6 +16,8 @@ import SwiftUI
 
 struct QuestionView: View {
     @ObservedObject var viewModel: QuizViewModel
+    /// #155 TestFlight-only rating affordance; nil (the default) = no chip.
+    var ratingEntry: QuestionRatingEntry?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
@@ -61,6 +63,17 @@ struct QuestionView: View {
                 }
             }
         }
+        // #155 (TestFlight/Debug only): rate the question on screen. Rating-only
+        // — it never reads an answer or moves the quiz state machine.
+        // The chip sits in the top row, left of what already occupies its
+        // trailing edge: the settings gear in voice mode, the NN/NN counter in
+        // the merged MCQ row (which it clipped at a single shared inset).
+        .questionRatingEntry(
+            ratingEntry,
+            questionId: viewModel.currentQuestion?.id,
+            questionText: viewModel.currentQuestion?.question,
+            trailingInset: (viewModel.currentQuestion?.isMultipleChoice ?? false) ? 96 : 64
+        )
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,

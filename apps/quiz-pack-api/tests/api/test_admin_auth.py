@@ -49,10 +49,12 @@ async def client() -> AsyncIterator[httpx.AsyncClient]:
     """Client against an app whose admin key is 'testkey'.
 
     `raise_app_exceptions=False` so a body that blows up *after* the gate
-    passes (the `/web` home template hits a Python 3.14 + Jinja2 LRUCache bug
-    in this env) surfaces as a 500 response rather than propagating — the gate
+    passes (e.g. the module-level `QuestionStorage()` having no DB in this
+    fixture app) surfaces as a 500 response rather than propagating — the gate
     let it through, which is all the positive test asserts. The 401/503 gate
     responses are real FastAPI HTTPException responses, unaffected by this.
+    (A previous comment blamed a "Python 3.14 + Jinja2 LRUCache bug"; the real
+    500 was the pre-Starlette-1.0 `TemplateResponse` signature, fixed with #154.)
     """
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=_build_app("testkey"), raise_app_exceptions=False),

@@ -59,8 +59,7 @@ async def home(
         "rejected": sum(1 for q in all_questions if q.review_status == "rejected"),
     }
 
-    return templates.TemplateResponse("home.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "home.html", {
         "questions": questions,
         "quality_scores": quality_scores,
         "stats": stats,
@@ -74,8 +73,7 @@ async def home(
 @router.get("/import", response_class=HTMLResponse)
 async def import_page(request: Request):
     """Import page."""
-    return templates.TemplateResponse("import.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "import.html", {
         "active_page": "import"
     })
 
@@ -106,23 +104,20 @@ async def import_questions(
         if added < len(questions_data):
             message += f" ({len(questions_data) - added} failed.)"
 
-        return templates.TemplateResponse("import.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "import.html", {
             "active_page": "import",
             "message": message,
             "message_type": "success"
         })
 
     except json.JSONDecodeError as e:
-        return templates.TemplateResponse("import.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "import.html", {
             "active_page": "import",
             "message": f"Invalid JSON: {str(e)}",
             "message_type": "error"
         })
     except Exception as e:
-        return templates.TemplateResponse("import.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "import.html", {
             "active_page": "import",
             "message": f"Import failed: {str(e)}",
             "message_type": "error"
@@ -137,8 +132,7 @@ async def review_list(request: Request):
     if pending:
         return RedirectResponse(url=f"/web/review/{pending[0].id}", status_code=302)
     else:
-        return templates.TemplateResponse("review.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "review.html", {
             "question": None,
             "active_page": "review"
         })
@@ -156,8 +150,7 @@ async def review_question(request: Request, question_id: str):
     total_pending = len(pending)
     current_index = next((i + 1 for i, q in enumerate(pending) if q.id == question_id), 1)
 
-    return templates.TemplateResponse("review.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "review.html", {
         "question": question,
         "current_index": current_index,
         "total_pending": total_pending,
@@ -248,8 +241,7 @@ async def stats_page(request: Request):
         "avg_quality_score": avg_quality
     }
 
-    return templates.TemplateResponse("stats.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "stats.html", {
         "stats": stats,
         "active_page": "stats"
     })

@@ -543,6 +543,23 @@ class AdvancedQuestionGenerator:
 
             print(f"Generated {len(raw_questions)} raw questions")
 
+            # #163 (gen-review D14): deterministic per-question craft gates run
+            # BEFORE the critic — a candidate a pure function will reject in
+            # ScoringStage anyway must not spend a paid critique call or win a
+            # pairwise-selection slot from a viable sibling. Batch-level gates
+            # (T/F imbalance, composition key balance) and the downstream
+            # enforcement itself stay where they are — defence in depth; this
+            # is a spend/slot optimisation, not a replacement.
+            if feature_flags.craft_guards_enforce():
+                raw_questions, prefiltered = self._prefilter_craft_gates(
+                    raw_questions
+                )
+                if prefiltered:
+                    print(
+                        f"Deterministic craft gates pre-filtered {prefiltered} "
+                        f"raw candidate(s) before critique (#163)"
+                    )
+
             # Stage 2: Critique each question (concurrently — the critique
             # model is a frontier judge since 2026-07-30; serial calls made
             # this stage the wall-clock bottleneck).
@@ -798,6 +815,48 @@ class AdvancedQuestionGenerator:
                 best_score = score
                 best = fact
         return best
+
+    @staticmethod
+    def _prefilter_craft_gates(
+        questions: List[Question],
+    ) -> tuple[List[Question], int]:
+        """#163 (gen-review D14): per-question deterministic craft gates.
+
+        Runs the pure per-question guards (stem leak, over-long answer,
+        imperial units) on raw candidates before the critique stage. Only
+        per-question gates belong here — batch-level ones (T/F key imbalance)
+        need the final batch and stay in ScoringStage/Composition, and
+        ``undated_record_reason`` is shadow-only by contract. The same guards
+        still enforce downstream, so a candidate slipping past here changes
+        cost, never delivery.
+        """
+        from ..scoring import craft_guards
+
+        viable: List[Question] = []
+        filtered = 0
+        for q in questions:
+            reason = craft_guards.stem_leak_reason(
+                q.question, q.correct_answer, q.possible_answers
+            )
+            if reason is None:
+                reason = craft_guards.long_answer_reason(
+                    q.correct_answer, q.possible_answers
+                )
+            if reason is None:
+                reason = craft_guards.units_reason(
+                    q.question, q.correct_answer, q.possible_answers
+                )
+            if reason is not None:
+                filtered += 1
+                logger.warning(
+                    "Pre-critique craft gate dropped candidate id=%s "
+                    "reason=%s (#163)",
+                    q.id,
+                    reason,
+                )
+                continue
+            viable.append(q)
+        return viable, filtered
 
     def _enforce_citation_integrity(
         self, questions: List[Question], facts: Optional[list]

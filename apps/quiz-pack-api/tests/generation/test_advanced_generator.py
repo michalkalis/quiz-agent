@@ -1077,3 +1077,73 @@ async def test_generate_batch_second_non_json_failure_propagates() -> None:
 
     # Bounded: exactly one retry, never a loop.
     assert fake_ainvoke.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_craft_gates_prefilter_runs_before_critique() -> None:
+    """#163 (gen-review D14): a raw candidate a deterministic guard will kill
+    in ScoringStage anyway must never spend a paid critique call or occupy a
+    pairwise-selection slot. The stem-leak question here must not reach
+    `_critique_question`; the viable sibling must."""
+    from quiz_shared.models.question import Question
+
+    gen = _make_generator_with_fake_llm(AsyncMock())
+
+    good = Question.from_dict(
+        {
+            "id": "q_good",
+            "question": "How many hearts does an octopus have?",
+            "correct_answer": "Three",
+        }
+    )
+    leaky = Question.from_dict(
+        {
+            "id": "q_leak",
+            "question": (
+                "Which country's propaganda made Napoleon short, per British "
+                "archives?"
+            ),
+            "correct_answer": "Britain",
+        }
+    )
+
+    critiqued: list[str] = []
+
+    async def _fake_batch(**kwargs):
+        return [good, leaky]
+
+    async def _fake_critique(q):
+        critiqued.append(q.id)
+        return {"overall_score": 8.0, "verdict": "keep"}
+
+    async def _fake_select(questions_with_scores, count):
+        return [q for q, _ in questions_with_scores][:count]
+
+    gen._generate_batch = _fake_batch
+    gen._critique_question = _fake_critique
+    gen._select_top_pairwise = _fake_select
+
+    questions = await gen.generate_questions(count=2, difficulty="medium")
+
+    assert critiqued == ["q_good"]  # the leaky candidate never cost a call
+    assert [q.id for q in questions] == ["q_good"]
+
+
+def test_prefilter_craft_gates_only_per_question_guards() -> None:
+    """#163: the pre-filter kills stem leaks but must NOT touch questions that
+    only batch-level or shadow-only guards would flag — those decisions belong
+    downstream (T/F imbalance needs the final batch; undated_record is
+    shadow-only by contract)."""
+    from quiz_shared.models.question import Question
+
+    tf = Question.from_dict(
+        {
+            "id": "q_tf",
+            "question": "True or false: bananas are berries?",
+            "correct_answer": "True",
+            "possible_answers": {"a": "True", "b": "False"},
+        }
+    )
+    viable, filtered = AdvancedQuestionGenerator._prefilter_craft_gates([tf])
+    assert filtered == 0
+    assert viable == [tf]

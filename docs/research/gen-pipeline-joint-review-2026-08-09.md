@@ -99,7 +99,7 @@
 14. Debug obrazovka: hodnotenie otázok — 10 samostatných tlačidiel + audio odôvodnenie; rating-only (D24, iOS + backend)
 15. Multi-rater hodnotiaci web s per-osoba atribúciou (D25)
 16. Eval kvality prekladov — vzorka preložených otázok (10 jazykov) do hodnotiaceho flow; preklad dnes nikto nekontroluje
-17. Entertainment otázky — zakladateľov stratený vstup (todo + príklad dobrej otázky), čaká na opätovné dodanie
+17. Entertainment otázky z aktuálneho diania — VSTUP OBNOVENÝ (zakladateľ, in-session 2026-08-14): otázky o nedávnom dianí, informácie vyhľadávané na nete; príklad žiadaného typu: známi hudobní producenti a ktorých umelcov majú pod sebou. Nadväzuje na dormantnú #76 F-3b infra (news sourcing + expiry TTL, flagy default off) — zapojiť do experimentálneho kola (D21) ako entertainment/news rameno. Zapísané aj v TODO.md (celkovo prioritné).
 
 ## ČASŤ 8 — Ochrana kvality do budúcna (poistky P1–P7)
 

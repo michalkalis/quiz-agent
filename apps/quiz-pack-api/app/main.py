@@ -41,6 +41,8 @@ init_sentry(get_settings().sentry_dsn)
 from .api.routes import router
 from .api.v1.appstore import router as appstore_v1_router
 from .api.v1.orders import router as orders_v1_router
+from .api.v1.ratings import router as ratings_v1_router
+from .web.rate import router as web_rate_router
 from .web.routes import router as web_router
 from .rate_limit import limiter
 
@@ -124,7 +126,14 @@ app.include_router(orders_v1_router, include_in_schema=False)
 # /v1/appstore/notifications; an /api alias would just be a second unauthenticated
 # entry point to the revocation writer for no caller.
 app.include_router(appstore_v1_router)
+# Ratings store (#154). Mounted BARE only, like appstore: the batch URL is
+# pasted into messages and typed by hand, and an /api alias would be a second
+# entry point to the admin export for no caller.
+app.include_router(ratings_v1_router)
 app.include_router(web_router)
+# The rating page is a SEPARATE /web router with no admin gate — the batch
+# UUID is the capability (#154 D25). `web_router` above stays admin-gated.
+app.include_router(web_rate_router)
 
 
 @app.get("/")
@@ -141,6 +150,8 @@ async def root():
             "order_retry": "POST /api/v1/orders/{order_id}/retry",
             "order_stream": "GET /api/v1/orders/{order_id}/stream",
             "web_ui": "GET /web - Admin question management web interface",
+            "rating_page": "GET /web/rate/{batch_id}?rater=NAME",
+            "ratings_export": "GET /v1/ratings/export",
             "generate": "POST /api/v1/generate",
             "generate_advanced": "POST /api/v1/generate/advanced",
             "import": "POST /api/v1/import",

@@ -1,0 +1,767 @@
+{#
+  Served multi-rater blind rating page (issue #154).
+
+  Adapted from scripts/rating_page/template.html — the static single-user page
+  stays as-is for offline fallback. Kept: 1-10 meter cards, reason textarea,
+  localStorage autosave, the rescue panel (offline backup of every stored
+  batch). Added: rater identity from the URL, server load of this rater's
+  saved ratings, debounced PUT per change with a visible save state.
+
+  Everything static lives in {% raw %} blocks: the CSS and JS are full of
+  braces and Jinja must not look at them. Only the title and the boot JSON are
+  interpolated.
+#}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+{% raw %}
+<style>
+  :root {
+    --bg: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --ink: #15171f;
+    --ink-soft: #3d4354;
+    --muted: #6b7285;
+    --line: #d9dce4;
+    --line-soft: #e8eaf0;
+    --accent: #2f39a6;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2e4f7;
+    --good: #1d7a4c;
+    --warn: #9a5b12;
+    --bad: #b3261e;
+    --shadow: 0 1px 2px rgba(21, 23, 31, .06), 0 8px 24px rgba(21, 23, 31, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1016;
+      --surface: #161923;
+      --surface-2: #1c2030;
+      --ink: #e8eaf1;
+      --ink-soft: #c3c8d6;
+      --muted: #8f97ab;
+      --line: #2a2f3d;
+      --line-soft: #232838;
+      --accent: #8e9aff;
+      --accent-ink: #10131c;
+      --accent-soft: #262c47;
+      --good: #4fbd85;
+      --warn: #d9a44a;
+      --bad: #ff8a80;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1016;
+    --surface: #161923;
+    --surface-2: #1c2030;
+    --ink: #e8eaf1;
+    --ink-soft: #c3c8d6;
+    --muted: #8f97ab;
+    --line: #2a2f3d;
+    --line-soft: #232838;
+    --accent: #8e9aff;
+    --accent-ink: #10131c;
+    --accent-soft: #262c47;
+    --good: #4fbd85;
+    --warn: #d9a44a;
+    --bad: #ff8a80;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-inner {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: .7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .brand b { color: var(--ink); font-weight: 600; }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-num { font-size: 1.05rem; font-weight: 650; }
+  .stat-lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .track {
+    flex: 1 1 8rem;
+    min-width: 6rem;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--line-soft);
+    overflow: hidden;
+  }
+  .track > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    padding: .38rem .7rem;
+    font-size: .82rem;
+  }
+  button:hover { border-color: var(--accent); color: var(--ink); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.25rem 6rem; }
+
+  .lede { max-width: 42rem; margin-bottom: 2.5rem; }
+  .lede h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.15;
+    margin: 0 0 .6rem;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .lede p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .meta-line {
+    margin-top: 1rem;
+    display: flex;
+    gap: .5rem 1.4rem;
+    flex-wrap: wrap;
+    font-size: .78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-line b { color: var(--ink-soft); font-weight: 600; }
+
+  .cards { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.35rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    scroll-margin-top: 5rem;
+  }
+  .card[data-rated="1"] { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+  .head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .idx {
+    font-variant-numeric: tabular-nums;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: .12rem .45rem;
+  }
+  .card[data-rated="1"] .idx { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .chip {
+    font-size: .7rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: .1rem .55rem;
+  }
+  .chip.mcq { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+  .chip.who { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); text-transform: none; letter-spacing: .02em; }
+
+  .q {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.24rem;
+    line-height: 1.4;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .opts { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .opts li {
+    font-size: .9rem;
+    color: var(--ink-soft);
+    padding: .22rem .5rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  .opts li.correct {
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+    border-color: color-mix(in srgb, var(--good) 35%, transparent);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .opts .key { color: var(--muted); font-weight: 600; margin-right: .45rem; font-variant-numeric: tabular-nums; }
+
+  .answer { font-size: .95rem; }
+  .answer .lbl { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; margin-right: .5rem; }
+  .answer .val { font-weight: 650; color: var(--good); }
+
+  details.more { border-top: 1px dashed var(--line); padding-top: .7rem; }
+  details.more summary {
+    cursor: pointer;
+    font-size: .76rem;
+    color: var(--muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::before { content: "+ "; }
+  details.more[open] summary::before { content: "– "; }
+  details.more .body { font-size: .88rem; color: var(--ink-soft); margin-top: .6rem; display: grid; gap: .5rem; }
+  details.more a { color: var(--accent); word-break: break-word; }
+
+  .rate { border-top: 1px solid var(--line-soft); padding-top: .95rem; display: grid; gap: .6rem; }
+  .rate-top { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .rate-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+  .verdict { font-size: .8rem; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .verdict b { color: var(--ink); font-size: 1rem; }
+  .savestate { font-size: .74rem; color: var(--muted); min-height: 1.1em; }
+  .savestate[data-state="saving"] { color: var(--muted); }
+  .savestate[data-state="saved"] { color: var(--good); }
+  .savestate[data-state="error"] { color: var(--bad); font-weight: 600; }
+
+  .meter { display: flex; gap: 3px; }
+  .meter label { flex: 1 1 0; }
+  .meter input { position: absolute; opacity: 0; pointer-events: none; }
+  .meter span {
+    display: block;
+    text-align: center;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    padding: .42rem 0;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .meter label:hover span { border-color: var(--accent); color: var(--ink); }
+  .meter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .meter label.on span { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+  .meter label.peak span { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 700; }
+
+  textarea {
+    font: inherit;
+    font-size: .9rem;
+    width: 100%;
+    resize: vertical;
+    min-height: 2.6rem;
+    padding: .55rem .7rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); outline: none; background: var(--surface); }
+
+  .export {
+    margin-top: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    gap: .7rem;
+    box-shadow: var(--shadow);
+  }
+  .export-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .export p { margin: 0 auto 0 0; font-size: .85rem; color: var(--muted); max-width: 28rem; }
+  .export textarea {
+    display: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem;
+    min-height: 12rem;
+  }
+  .export textarea.show { display: block; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translate(-50%, 2rem);
+    background: var(--ink);
+    color: var(--bg);
+    padding: .5rem .95rem;
+    border-radius: 99px;
+    font-size: .84rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+  @media (max-width: 34rem) {
+    .meter { flex-wrap: wrap; }
+    .meter label { flex: 1 1 18%; }
+    .card { padding: 1.1rem 1rem 1rem; }
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="brand">Hodnotenie otázok · <b id="raterName">–</b></div>
+    <div class="stat"><span class="stat-num" id="doneN">0</span><span class="stat-lbl">z <span id="totalN">0</span> ohodnotených</span></div>
+    <div class="track"><i id="trackFill"></i></div>
+    <div class="stat"><span class="stat-num" id="avgN">–</span><span class="stat-lbl">priemer</span></div>
+    <button id="jumpBtn">Ďalšia neohodnotená</button>
+  </div>
+</div>
+{% endraw %}
+
+<main>
+  <div class="lede">
+    <h1>{{ title }}</h1>
+    {% raw %}
+    <p>Každú otázku ohodnoť na škále 1 až 10 a voliteľne pripíš dôvod. Hodnotenie sa ukladá na server pod tvojím menom, takže stránku môžeš zavrieť a pokračovať aj na inom zariadení. Kópia zostáva aj v prehliadači.</p>
+    <div class="meta-line" id="metaLine"></div>
+    {% endraw %}
+  </div>
+
+  {% raw %}
+  <div class="cards" id="cards"></div>
+
+  <div class="export">
+    <div class="export-row">
+      <p>Záložný export: JSON obsahuje otázku, skóre aj dôvod. Server má vlastnú kópiu, toto je poistka.</p>
+      <button id="copyBtn" class="primary">Kopírovať JSON</button>
+      <button id="dlBtn">Stiahnuť JSON</button>
+      <button id="showBtn">Zobraziť JSON</button>
+      <button id="retryBtn">Doposlať neuložené</button>
+    </div>
+    <textarea id="jsonOut" readonly spellcheck="false" aria-label="Export JSON"></textarea>
+  </div>
+  {% endraw %}
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script id="boot" type="application/json">{{ boot_json|safe }}</script>
+{% raw %}
+<script>
+(function () {
+  const BOOT = JSON.parse(document.getElementById("boot").textContent);
+  const QUESTIONS = BOOT.questions || [];
+  const BATCH_ID = BOOT.batch_id;
+  const API = "/v1/ratings/batches/" + encodeURIComponent(BATCH_ID);
+  const SAVE_DEBOUNCE_MS = 800;
+
+  // --- rater identity -------------------------------------------------------
+  // D25: no auth. The name in the URL is the attribution. Missing → ask once
+  // and rewrite the URL so a reload (or a shared link) keeps the identity.
+  let RATER = (BOOT.rater || "").trim();
+  if (!RATER) {
+    RATER = (window.prompt("Zadaj svoje meno — hodnotenia sa ukladajú pod ním:") || "").trim();
+    if (RATER) {
+      const u = new URL(window.location.href);
+      u.searchParams.set("rater", RATER);
+      window.history.replaceState(null, "", u.toString());
+    }
+  }
+  document.getElementById("raterName").textContent = RATER || "bez mena (len lokálne)";
+
+  const KEY = "quiz-ratings-" + BATCH_ID + (RATER ? "-" + RATER : "");
+  const state = loadLocal();
+  const pending = {};   // qid -> debounce timer
+  const unsaved = {};   // qid -> true while the server copy is behind
+
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveLocal() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
+  ));
+
+  const cards = document.getElementById("cards");
+  const toastEl = document.getElementById("toast");
+  const flags = {};  // qid -> the card's save-state element
+  let toastTimer;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  function setFlag(qid, stateName, text) {
+    const el = flags[qid];
+    if (!el) return;
+    el.dataset.state = stateName;
+    el.textContent = text;
+  }
+
+  // --- server sync ----------------------------------------------------------
+
+  function push(qid) {
+    if (!RATER) { setFlag(qid, "error", "Bez mena sa na server neukladá."); return; }
+    const entry = state[qid];
+    if (!entry || !entry.score) return;
+    unsaved[qid] = true;
+    setFlag(qid, "saving", "Ukladám…");
+    fetch(API + "/ratings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rater: RATER, qid: qid, score: entry.score, reason: entry.reason || null,
+      }),
+    }).then((r) => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      delete unsaved[qid];
+      setFlag(qid, "saved", "Uložené na server.");
+    }).catch(() => {
+      setFlag(qid, "error", "Neuložené — je v prehliadači, skús „Doposlať neuložené“.");
+    });
+  }
+
+  function queuePush(qid) {
+    clearTimeout(pending[qid]);
+    pending[qid] = setTimeout(() => push(qid), SAVE_DEBOUNCE_MS);
+  }
+
+  // --- cards ----------------------------------------------------------------
+
+  QUESTIONS.forEach((q, i) => {
+    const qid = q.qid;
+    const meta = q.meta || {};
+    const card = document.createElement("article");
+    card.className = "card";
+    card.id = "card" + i;
+    card.dataset.rated = state[qid] && state[qid].score ? "1" : "0";
+
+    const options = meta.options || null;
+    const isMcq = options && Object.keys(options).length > 0;
+    const chips = [
+      isMcq ? '<span class="chip mcq">výber z možností</span>' : '<span class="chip">otvorená</span>',
+      meta.topic ? '<span class="chip">' + esc(meta.topic) + "</span>" : "",
+      meta.difficulty ? '<span class="chip">' + esc(meta.difficulty) + "</span>" : "",
+    ].join("");
+
+    let answerBlock = "";
+    if (isMcq) {
+      const correct = String(q.answer).trim().toLowerCase();
+      answerBlock = '<ul class="opts">' + Object.keys(options).map((k) => {
+        const val = options[k];
+        const hit = k.trim().toLowerCase() === correct ||
+                    String(val).trim().toLowerCase() === correct;
+        return '<li class="' + (hit ? "correct" : "") + '"><span class="key">' +
+               esc(k.toUpperCase()) + "</span>" + esc(val) + "</li>";
+      }).join("") + "</ul>";
+    } else if (q.answer != null && q.answer !== "") {
+      answerBlock = '<div class="answer"><span class="lbl">Odpoveď</span>' +
+                    '<span class="val">' + esc(q.answer) + "</span></div>";
+    }
+
+    const extras = [];
+    if (meta.explanation) extras.push("<div>" + esc(meta.explanation) + "</div>");
+    if (meta.alternative_answers && meta.alternative_answers.length) {
+      extras.push('<div><span class="lbl">Uznané aj: </span>' +
+                  esc(meta.alternative_answers.join(", ")) + "</div>");
+    }
+    if (meta.source_url) {
+      extras.push('<div><a href="' + esc(meta.source_url) + '" target="_blank" rel="noopener">' +
+                  esc(meta.source_url) + "</a></div>");
+    }
+
+    const meter = Array.from({ length: 10 }, (_, n) => {
+      const v = n + 1;
+      return '<label data-v="' + v + '"><input type="radio" name="s' + i + '" value="' + v +
+             '"><span>' + v + "</span></label>";
+    }).join("");
+
+    card.innerHTML =
+      '<div class="head"><span class="idx">' + String(i + 1).padStart(2, "0") + "</span>" + chips + "</div>" +
+      '<p class="q">' + esc(q.question) + "</p>" +
+      answerBlock +
+      (extras.length ? '<details class="more"><summary>Kontext a zdroj</summary><div class="body">' +
+        extras.join("") + "</div></details>" : "") +
+      '<div class="rate">' +
+        '<div class="rate-top"><span class="rate-lbl">Skóre 1–10</span>' +
+        '<span class="verdict" data-role="verdict">neohodnotené</span></div>' +
+        '<div class="meter">' + meter + "</div>" +
+        '<textarea data-role="reason" rows="1" placeholder="Dôvod (nepovinné) — čo funguje, čo nie"></textarea>' +
+        '<div class="savestate" data-role="save"></div>' +
+      "</div>";
+
+    const meterEl = card.querySelector(".meter");
+    const verdictEl = card.querySelector('[data-role="verdict"]');
+    const reasonEl = card.querySelector('[data-role="reason"]');
+    flags[qid] = card.querySelector('[data-role="save"]');
+
+    function paint(score) {
+      meterEl.querySelectorAll("label").forEach((l) => {
+        const v = Number(l.dataset.v);
+        l.classList.toggle("on", !!score && v <= score);
+        l.classList.toggle("peak", v === score);
+      });
+      verdictEl.innerHTML = score ? "<b>" + score + "</b> / 10" : "neohodnotené";
+      card.dataset.rated = score ? "1" : "0";
+    }
+    card.__paint = paint;
+    card.__meter = meterEl;
+    card.__reason = reasonEl;
+    card.__qid = qid;
+
+    applySaved(card);
+
+    meterEl.addEventListener("change", (e) => {
+      const score = Number(e.target.value);
+      state[qid] = Object.assign({}, state[qid], {
+        index: i + 1, question: q.question, score: score,
+      });
+      paint(score);
+      saveLocal();
+      refresh();
+      queuePush(qid);
+    });
+
+    reasonEl.addEventListener("input", () => {
+      state[qid] = Object.assign({}, state[qid], {
+        index: i + 1, question: q.question, reason: reasonEl.value.trim(),
+      });
+      autogrow(reasonEl);
+      saveLocal();
+      if (state[qid].score) queuePush(qid);
+    });
+
+    cards.appendChild(card);
+  });
+
+  function applySaved(card) {
+    const saved = state[card.__qid];
+    if (saved) {
+      if (saved.score) {
+        const input = card.__meter.querySelector('input[value="' + saved.score + '"]');
+        if (input) input.checked = true;
+      }
+      if (saved.reason) card.__reason.value = saved.reason;
+      autogrow(card.__reason);
+    }
+    card.__paint(saved && saved.score ? saved.score : 0);
+  }
+
+  function autogrow(el) {
+    el.style.height = "auto";
+    el.style.height = Math.max(el.scrollHeight, 42) + "px";
+  }
+
+  function scored() {
+    return QUESTIONS.map((q) => state[q.qid]).filter((r) => r && r.score);
+  }
+
+  function refresh() {
+    const rows = scored();
+    const total = QUESTIONS.length;
+    document.getElementById("doneN").textContent = rows.length;
+    document.getElementById("totalN").textContent = total;
+    document.getElementById("trackFill").style.width = (total ? rows.length / total * 100 : 0) + "%";
+    const avg = rows.length
+      ? (rows.reduce((a, r) => a + r.score, 0) / rows.length).toFixed(1)
+      : "–";
+    document.getElementById("avgN").textContent = avg;
+  }
+
+  // --- initial load from the server (resume across devices) -----------------
+
+  function hydrate() {
+    if (!RATER) return;
+    fetch(API + "?rater=" + encodeURIComponent(RATER), { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+      .then((data) => {
+        const saved = data.ratings || {};
+        let n = 0;
+        Object.keys(saved).forEach((qid) => {
+          // Server is canonical: it is the copy every device shares.
+          state[qid] = Object.assign({}, state[qid], {
+            score: saved[qid].score,
+            reason: saved[qid].reason || "",
+          });
+          n++;
+        });
+        if (n) {
+          saveLocal();
+          Array.prototype.forEach.call(cards.children, (card) => {
+            if (saved[card.__qid]) { applySaved(card); setFlag(card.__qid, "saved", "Uložené na server."); }
+          });
+          toast("Načítaných " + n + " uložených hodnotení.");
+        }
+        refresh();
+      })
+      .catch(() => toast("Server sa neozval — pracuješ z lokálnej kópie."));
+  }
+
+  // --- controls -------------------------------------------------------------
+
+  document.getElementById("jumpBtn").addEventListener("click", () => {
+    const next = QUESTIONS.findIndex((q) => !(state[q.qid] && state[q.qid].score));
+    if (next < 0) { toast("Všetko ohodnotené."); return; }
+    document.getElementById("card" + next).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("retryBtn").addEventListener("click", () => {
+    const keys = Object.keys(unsaved);
+    if (!keys.length) { toast("Všetko je uložené na serveri."); return; }
+    keys.forEach(push);
+  });
+
+  function payload() {
+    return JSON.stringify({
+      batch_id: BATCH_ID,
+      rater: RATER || null,
+      ratings: QUESTIONS.map((q, i) => ({
+        index: i + 1,
+        id: q.qid,
+        question: q.question,
+        answer: q.answer,
+        score: state[q.qid] && state[q.qid].score ? state[q.qid].score : null,
+        reason: state[q.qid] && state[q.qid].reason ? state[q.qid].reason : "",
+      })),
+    }, null, 2);
+  }
+
+  const jsonOut = document.getElementById("jsonOut");
+
+  function showJson() {
+    jsonOut.value = payload();
+    jsonOut.classList.add("show");
+    autogrow(jsonOut);
+    jsonOut.focus();
+    jsonOut.select();
+  }
+
+  document.getElementById("showBtn").addEventListener("click", () => {
+    showJson();
+    toast("JSON je nižšie — označ a skopíruj.");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = payload();
+    const done = () => toast("Skopírované do schránky.");
+    const fallback = () => {
+      showJson();
+      try {
+        if (document.execCommand("copy")) { done(); return; }
+      } catch (e) {}
+      toast("Automatické kopírovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  document.getElementById("dlBtn").addEventListener("click", () => {
+    try {
+      const blob = new Blob([payload()], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "hodnotenie-" + BATCH_ID + ".json";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast("Stiahnuté.");
+    } catch (e) {
+      showJson();
+      toast("Sťahovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    }
+  });
+
+  document.getElementById("metaLine").innerHTML = [
+    "Dávka <b>" + esc(BATCH_ID) + "</b>",
+    "Otázok <b>" + QUESTIONS.length + "</b>",
+    RATER ? "Hodnotí <b>" + esc(RATER) + "</b>" : "",
+  ].filter(Boolean).join(" · ");
+
+  refresh();
+  hydrate();
+
+  // Rescue panel: on load, dump EVERY stored quiz-* localStorage key (all
+  // batches, not just this page's) into visible textareas. Exists because the
+  // founder's ratings once survived only as a truncated PDF — the full texts
+  // sat in localStorage with no button-free way to see them. Kept even though
+  // the server now stores everything: it is the offline backup for exactly the
+  // case where the server copy failed.
+  (function rescue() {
+    let keys = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf("quiz-") === 0) keys.push(k);
+      }
+    } catch (e) { return; }
+    if (!keys.length) return;
+    const wrap = document.createElement("section");
+    wrap.className = "export";
+    wrap.style.display = "block";
+    let html = '<p style="max-width:none"><b>Záloha uložených hodnotení</b> — ' +
+      "plný obsah úložiska prehliadača (všetky dávky). Klikni do poľa: text sa " +
+      "označí celý, potom ⌘C.</p>";
+    keys.sort().forEach((k) => {
+      let v = "";
+      try { v = localStorage.getItem(k) || ""; } catch (e) {}
+      let pretty = v;
+      try { pretty = JSON.stringify(JSON.parse(v), null, 2); } catch (e) {}
+      html += '<p style="margin-top:.8rem"><code>' + esc(k) + "</code></p>" +
+        '<textarea class="rescue-box" readonly rows="6" style="display:block;width:100%">' +
+        esc(pretty) + "</textarea>";
+    });
+    wrap.innerHTML = html;
+    document.querySelector("main").appendChild(wrap);
+    wrap.querySelectorAll(".rescue-box").forEach((t) => {
+      t.addEventListener("focus", () => t.select());
+      t.addEventListener("click", () => t.select());
+    });
+  })();
+})();
+</script>
+{% endraw %}

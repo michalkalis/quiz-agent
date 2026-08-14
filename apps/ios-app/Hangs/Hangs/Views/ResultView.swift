@@ -83,10 +83,13 @@ struct ResultView: View {
         }
         // #155 (TestFlight/Debug only): rate the question just answered —
         // `resultQuestion` first so an advanced quiz can't re-target the rating.
+        // Trailing inset clears the nav's NN/NN counter, so the chip never
+        // lands on the verdict band below it.
         .questionRatingEntry(
             ratingEntry,
             questionId: (viewModel.resultQuestion ?? viewModel.currentQuestion)?.id,
-            questionText: questionStem
+            questionText: questionStem,
+            trailingInset: 108
         )
         .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
         .simultaneousGesture(

@@ -70,6 +70,12 @@ private struct QuestionRatingEntryModifier: ViewModifier {
     let entry: QuestionRatingEntry?
     let questionId: String?
     let questionText: String?
+    /// Insets that park the chip in the top chrome row, LEFT of whatever
+    /// already sits at its trailing edge (settings gear / NN-NN counter). The
+    /// trailing inset differs per screen because those elements differ — a
+    /// single value clipped the question counter (sim check 2026-08-14).
+    let topInset: CGFloat
+    let trailingInset: CGFloat
 
     @State private var presentation: QuestionRatingPresentation?
 
@@ -83,8 +89,8 @@ private struct QuestionRatingEntryModifier: ViewModifier {
                             viewModel: entry.makeViewModel(questionId, questionText)
                         )
                     }
-                    .padding(.trailing, 12)
-                    .padding(.top, 58)
+                    .padding(.trailing, trailingInset)
+                    .padding(.top, topInset)
                 }
                 .sheet(item: $presentation) { presentation in
                     QuestionRatingSheet(viewModel: presentation.viewModel)
@@ -98,13 +104,23 @@ private struct QuestionRatingEntryModifier: ViewModifier {
 extension View {
     /// Overlay the TestFlight-only rating chip and its panel. No-op when the
     /// entry is absent/disabled or there is no question to rate.
+    /// `trailingInset` must clear whatever the screen already draws at the
+    /// trailing edge of its top row.
     func questionRatingEntry(
         _ entry: QuestionRatingEntry?,
         questionId: String?,
-        questionText: String? = nil
+        questionText: String? = nil,
+        topInset: CGFloat = 17,
+        trailingInset: CGFloat
     ) -> some View {
         modifier(
-            QuestionRatingEntryModifier(entry: entry, questionId: questionId, questionText: questionText)
+            QuestionRatingEntryModifier(
+                entry: entry,
+                questionId: questionId,
+                questionText: questionText,
+                topInset: topInset,
+                trailingInset: trailingInset
+            )
         )
     }
 }

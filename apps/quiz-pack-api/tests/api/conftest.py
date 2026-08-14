@@ -1,4 +1,5 @@
-"""Shared fixtures for the /v1/orders API tests (test_orders, test_orders_access).
+"""Shared fixtures for the /v1/orders API tests (test_orders, test_orders_access)
+and the /v1/ratings tests (test_ratings, test_ratings_page — see `ratings_client`).
 
 Moved out of test_orders.py (#95) so both modules use one wiring instead of
 cross-module fixture imports (ruff F811). The DB-touching fixtures chain off
@@ -33,12 +34,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from app.api.deps import get_arq_pool, get_jws_verifier
 from app.api.v1 import orders as orders_module
 from app.api.v1.orders import router as orders_router
+from app.api.v1.ratings import router as ratings_router
 from app.config import Settings, get_settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.session import get_session
 from app.storekit import AppleJWSVerifier
+from app.web.rate import router as web_rate_router
+from app.web.routes import router as admin_web_router
 from quiz_shared.auth.tokens import TokenService
-from tests._isolation import truncate_order_graph
+from tests._isolation import truncate_order_graph, truncate_ratings
 from tests.storekit._chain_fixtures import TestChain
 
 APP_ROOT = Path(__file__).resolve().parents[2]
@@ -207,6 +211,48 @@ async def per_request_client(
     test_app.dependency_overrides[get_session] = _override_session
     test_app.dependency_overrides[get_jws_verifier] = lambda: verifier
     test_app.dependency_overrides[get_arq_pool] = lambda: arq_mock
+    test_app.dependency_overrides[get_settings] = lambda: test_settings
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=test_app),
+        base_url="http://test",
+    ) as ac:
+        yield ac
+
+
+@pytest_asyncio.fixture
+async def _clean_ratings(test_session: AsyncSession) -> AsyncIterator[None]:
+    """Start each ratings test from an empty ratings/batches slate (#154)."""
+    await truncate_ratings(test_session)
+    yield
+
+
+@pytest_asyncio.fixture
+async def ratings_client(
+    test_session: AsyncSession,
+    _clean_ratings: None,
+) -> AsyncIterator[httpx.AsyncClient]:
+    """Client for the #154 ratings surface.
+
+    Mounts all three routers that share the auth boundary under test — the
+    ratings API, the UNGATED rating page, and the admin `/web` tool — because
+    the property that matters is the *difference* between them: proving the
+    rate page is open is only meaningful next to a `/web/` that still 401s in
+    the same app.
+    """
+    async def _override_session() -> AsyncIterator[AsyncSession]:
+        yield test_session
+
+    test_settings = Settings(
+        admin_api_key=TEST_ADMIN_KEY,
+        auth_jwt_secret=TEST_JWT_SECRET,
+    )
+
+    test_app = FastAPI()
+    test_app.include_router(ratings_router)
+    test_app.include_router(web_rate_router)
+    test_app.include_router(admin_web_router)
+    test_app.dependency_overrides[get_session] = _override_session
     test_app.dependency_overrides[get_settings] = lambda: test_settings
 
     async with httpx.AsyncClient(

@@ -41,3 +41,15 @@ async def truncate_revoked_transactions(session: AsyncSession) -> None:
     """
     await session.execute(text("TRUNCATE revoked_transactions"))
     await session.commit()
+
+
+async def truncate_ratings(session: AsyncSession) -> None:
+    """Empty `ratings` + `rating_batches` (#154).
+
+    Separate from the order graph: ratings hang off rating batches, not orders.
+    Truncating both at the START of a test is what makes the upsert assertions
+    ("two raters → two rows", "same rater twice → one row") mean anything —
+    counted against a DB carrying a previous run's rows they would be noise.
+    """
+    await session.execute(text("TRUNCATE ratings, rating_batches CASCADE"))
+    await session.commit()

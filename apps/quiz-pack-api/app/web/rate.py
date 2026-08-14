@@ -47,10 +47,14 @@ async def rate_page(
     """Serve the rating page for one batch. 404 on an unknown/malformed id."""
     batch = await load_batch(session, batch_id)
 
+    # Starlette 1.x signature is (request, name, context). The legacy
+    # (name, {"request": ...}) form the admin pages in `routes.py` still use
+    # was REMOVED in Starlette 1.0 and now raises — see the note in the #154
+    # report; fixing those pages is out of this issue's scope.
     return templates.TemplateResponse(
+        request,
         "rate.html",
         {
-            "request": request,
             "title": batch.title,
             "batch_id": str(batch.id),
             # Blinded payload only. `batch.mapping` is deliberately not passed.

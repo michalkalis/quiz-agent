@@ -65,7 +65,8 @@ pytest on the parsers (fixture snippets per source format, idempotency test = ru
 ## Close-out — agent run 2026-08-14
 
 **Delivered:** `apps/quiz-pack-api/scripts/backfill_ratings.py` (CLI) +
-`scripts/backfill_ratings_parsers.py` (one parser per round), tests in
+`scripts/backfill_ratings_parsers.py` (shared row model + the JSON rounds) +
+`scripts/backfill_ratings_md.py` (the two hand-written markdown rounds), tests in
 `tests/scripts/test_backfill_ratings_parsers.py` +
 `tests/scripts/test_backfill_ratings_import.py`. `upsert_rating` gained
 optional `scale_min`/`scale_max`/`rated_at`/`refresh_identity` so historical

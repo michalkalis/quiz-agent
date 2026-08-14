@@ -19,7 +19,7 @@
 7. Architektúra out-of-the-box + alternatívne paradigmy — `[x]`
 8. Ochrana kvality do budúcna (anti-degradácia) — `[x]` (poistky P1–P7 nižšie)
 
-**Otvorené po session:** zakladateľov stratený vstup — nové todo o entertainment otázkach s príkladom dobrej/zábavnej otázky (zadané ~12.–13. 8.): NENÁJDENÉ v repo (TODO.md bez zmien od 7. 8., nič necommitnuté) ani v Sentry feedbacku. Čaká sa na opätovné dodanie od zakladateľa; zapracuje sa do prompt rekalibrácie (D12/D28) a entertainment vetvy.
+**Otvorené po session:** zakladateľov vstup — nové todo o entertainment otázkach s príkladom dobrej/zábavnej otázky (zadané ~12.–13. 8. z mobilu cez remote control na mba). LOKALIZOVANÉ: sedí lokálne na mba (mba nevie pushovať — neplatné GitHub creds); mba je momentálne nedostupný (LAN aj Tailscale timeout). Recovery: po prebudení mba pull cez LAN → zapracovať do prompt rekalibrácie (D12/D28) a entertainment vetvy (kandidát 17).
 
 ## Rozhodnutia zakladateľa (časť 1 + prierezové)
 

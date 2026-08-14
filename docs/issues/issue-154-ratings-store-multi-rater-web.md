@@ -53,10 +53,17 @@ Rating pages are static files generated per run into `docs/testing/runs/<run>/` 
 
 ## Acceptance
 
-- [ ] Alembic migration adds the two tables; `pytest tests/` green including new ratings tests; boot-time migration check passes.
-- [ ] CLI registers a batch from ≥2 arm JSON files and prints a working `/web/rate/{token}?rater=…` URL; served page contains no arm/mapping data (assert response body has no arm identifiers).
-- [ ] Two different `rater` values rating the same batch produce separately attributed rows; re-rating by the same rater does not duplicate that rater's effective score.
-- [ ] Reloading the page as the same rater shows previously saved scores (server-side, not just localStorage — verify with a fresh browser profile or curl).
-- [ ] POST with an invalid batch token is rejected; `/web/rate/...` works without admin key; existing `/web` admin pages still require it.
-- [ ] In-app-shaped POST (question UUID + bearer JWT, no batch) persists with source `in-app` — covered by a pytest, iOS wiring itself is #155.
-- [ ] Export script emits JSONL with raw score, scale bounds, normalized score, rater, source, timestamp for every rating in the store.
+Implemented 2026-08-14 (commits `6c541e9d`, `e8cd21c2`, `8c2431d6`, `07be35dc`) — committed, **not deployed**; the prod migration is the founder-gated step.
+
+- [x] Alembic migration adds the two tables; `pytest tests/` green including new ratings tests; boot-time migration check passes. — revision `a7fa4d9d6751` (additive only; autogenerate's spurious `drop_index(ix_questions_embedding_ivfflat)` removed by hand). 899 passed, 0 skipped, twice. Local boot logged `Migrations at head (a7fa4d9d6751) — OK`.
+- [x] CLI registers a batch from ≥2 arm JSON files and prints a working `/web/rate/{token}?rater=…` URL; served page contains no arm/mapping data. — `scripts/rating_page/publish_batch.py`, verified end-to-end against a local uvicorn; leak asserted on the raw bytes of both the page and the JSON view.
+- [x] Two different `rater` values rating the same batch produce separately attributed rows; re-rating by the same rater does not duplicate that rater's effective score. — DB-enforced via `UNIQUE(dedupe_key)` + `ON CONFLICT DO UPDATE`; a re-rate returns the same `rating_id`.
+- [x] Reloading the page as the same rater shows previously saved scores (server-side, not just localStorage). — `GET /v1/ratings/batches/{id}?rater=` verified by curl; the page hydrates from it on load.
+- [x] POST with an invalid batch token is rejected; `/web/rate/...` works without admin key; existing `/web` admin pages still require it. — unknown/malformed batch → 404 (identical answers, no id-space probing); `/web/rate/…` 200 and `/web/` 401 in the same app.
+- [x] In-app-shaped POST (question UUID + bearer JWT, no batch) persists with source `in-app`. — `POST /v1/ratings` via `require_user`; rater = JWT subject, display name is cosmetic (`extra`).
+- [x] Export script emits JSONL with raw score, scale bounds, normalized score, rater, source, timestamp for every rating. — `scripts/rating_page/export_ratings.py` over `GET /v1/ratings/export`.
+
+## Follow-ups found while implementing
+
+- **Admin `/web` pages are broken on the installed Starlette (1.3.1)** — `web/routes.py` still calls `templates.TemplateResponse("name", {"request": …})`, a signature removed in Starlette 1.0, so every admin page 500s (`TypeError: cannot use 'tuple' as a dict key`). Pre-existing, unrelated to this issue, left untouched; `tests/api/test_admin_auth.py` masks it with `raise_app_exceptions=False` and its comment misattributes the cause to a "Python 3.14 + Jinja2 LRUCache bug". The new rate route uses the current `(request, name, context)` signature.
+- Prod migration + deploy are still to do (founder-gated).

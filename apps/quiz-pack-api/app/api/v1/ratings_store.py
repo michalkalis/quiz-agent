@@ -35,6 +35,10 @@ async def upsert_rating(
     blinded_qid: Optional[str] = None,
     question_id: Optional[str] = None,
     extra: Optional[dict[str, Any]] = None,
+    scale_min: int = SCORE_MIN,
+    scale_max: int = SCORE_MAX,
+    rated_at: Optional[datetime] = None,
+    refresh_identity: bool = False,
 ) -> tuple[uuid.UUID, datetime]:
     """Insert-or-update this rater's score, keyed by `dedupe_key`.
 
@@ -45,9 +49,31 @@ async def upsert_rating(
     Only score/reason/timestamps are updated — identity columns are derived
     from the key, and `extra` is first-write-only so a later blank display name
     cannot erase the one already recorded.
+
+    `scale_min`/`scale_max`/`rated_at` default to the live 1–10 form and "now";
+    the #156 backfill passes a historical round's own scale and date so the
+    export can normalise instead of rewriting raw scores. `refresh_identity`
+    additionally lets a file-driven re-import correct the snapshot columns —
+    safe there because the source file, not a rater's form, is the truth.
     """
     now = datetime.now(timezone.utc)
+    when = rated_at or now
     amount = Decimal(str(score))
+    updates: dict[str, Any] = {
+        "score": amount,
+        "reason": reason,
+        "rated_at": when,
+        "updated_at": now,
+    }
+    if refresh_identity:
+        updates.update(
+            question_text=question_text,
+            question_id=question_id,
+            blinded_qid=blinded_qid,
+            scale_min=scale_min,
+            scale_max=scale_max,
+            extra=extra,
+        )
     stmt = (
         pg_insert(Rating)
         .values(
@@ -59,24 +85,16 @@ async def upsert_rating(
             question_text=question_text,
             rater=rater,
             score=amount,
-            scale_min=SCORE_MIN,
-            scale_max=SCORE_MAX,
+            scale_min=scale_min,
+            scale_max=scale_max,
             reason=reason,
             source=source,
-            rated_at=now,
+            rated_at=when,
             extra=extra,
             created_at=now,
             updated_at=now,
         )
-        .on_conflict_do_update(
-            index_elements=["dedupe_key"],
-            set_={
-                "score": amount,
-                "reason": reason,
-                "rated_at": now,
-                "updated_at": now,
-            },
-        )
+        .on_conflict_do_update(index_elements=["dedupe_key"], set_=updates)
         .returning(Rating.id, Rating.rated_at)
     )
     row = (await session.execute(stmt)).one()

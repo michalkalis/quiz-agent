@@ -175,5 +175,5 @@ async def test_logical_branch_runs_concurrently() -> None:
 
     assert elapsed < _DELAY * 4, f"logical branch took {elapsed:.2f}s — sequential?"
     # Same verdicts as before: every puzzle verified, none dropped, order kept.
-    assert result.info == {"verified": _BATCH, "dropped": 0}
+    assert result.info == {"verified": _BATCH, "dropped": 0, "withheld": 0}
     assert [q.id for q in ctx.questions] == [q.id for q in puzzles]

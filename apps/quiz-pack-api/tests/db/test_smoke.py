@@ -58,7 +58,7 @@ def test_alembic_upgrade_head_is_idempotent() -> None:
     # Head pin — bump this when a migration is added (ratings store, #154).
     # It is what makes "at head" mean the head THIS build expects, not merely
     # "some revision".
-    assert "a7fa4d9d6751" in (current.stdout + current.stderr)
+    assert "f2a91c4b8e57" in (current.stdout + current.stderr)
     # First run is allowed to be a no-op too (DB may already be at head from a
     # prior pytest invocation), so we don't assert on it — its purpose is only
     # to guarantee the DB is at head before the second-run idempotency check.

@@ -9,12 +9,16 @@ merges the per-question verdict back onto each `Question`:
 - `generation_metadata.extra["verification_notes"]` — str  (verifier reasoning)
 
 Questions whose verification confidence falls below `min_confidence` are
-dropped from `ctx.questions`. Questions the verifier explicitly held for
-review (`held_for_review`, e.g. search/judge unavailable) are exempt — kept
-and tagged rather than dropped at confidence 0 (RC-9, #72). The drop count is
-reported via the
-`StageResult.info["dropped"]` field — PackGenerator forwards it onto the
-sink's `publish(...)` call, so SSE clients see how many were filtered.
+dropped from `ctx.questions`. Questions the verifier could NOT check —
+`held_for_review` (search/judge unavailable) or no verdict record at all —
+are **withheld** (#158, gen-review part-4 verdict: fail closed, an unverified
+question never reaches a pack or the corpus; there is no review queue).
+Supersedes RC-9's keep-and-tag (#72): the top-up loop regenerates the
+shortfall, and a systemic verifier outage breaches TopUp's 80% floor, which
+fails the order loud instead of delivering unverified content. Counts are
+reported via `StageResult.info` (`dropped`, `withheld`) — PackGenerator
+forwards them onto the sink's `publish(...)` call, so SSE clients see how
+many were filtered.
 
 Drop policy is intentionally simple: a single confidence threshold. The
 Phase 3 score-aware policy lives in `ScoringStage` (task 2.7) and the
@@ -24,7 +28,10 @@ follow-up #37 work; we do not stack the two thresholds here.
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Optional
+
+import sentry_sdk
 
 from app.generation.pattern_routing import verification_mode
 from app.orchestrator.context import OrderContext, StageResult
@@ -32,6 +39,8 @@ from app.orchestrator.progress_sink import ProgressSink
 from app.verification.fact_verifier import MAX_CONCURRENT_VERIFICATIONS, FactVerifier
 from app.verification.logical_verifier import LogicalConsistencyVerifier
 from quiz_shared.models.question import GenerationProvenance, Question
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MIN_CONFIDENCE = 0.5
 _VERIFIED_VERDICTS = frozenset({"verified", "likely_correct"})
@@ -112,14 +121,20 @@ class VerificationStage:
 
         kept: list[Question] = []
         dropped = 0
+        withheld = 0
 
         for q in ctx.questions:
             record = by_id.get(q.id)
             if record is None:
-                # No verdict came back — keep the question rather than silently
-                # dropping it. A missing verdict is a verifier bug, not a
-                # signal that the question is wrong.
-                kept.append(q)
+                # #158 fail-closed: no verdict came back — a verifier bug, but
+                # "unchecked" can never mean "deliverable". Withhold; the
+                # top-up loop regenerates the shortfall.
+                withheld += 1
+                logger.warning(
+                    "VerificationStage withheld id=%s: no verdict record "
+                    "returned by the verifier (fail-closed, #158)",
+                    q.id,
+                )
                 continue
 
             verification = record.get("verification")
@@ -138,10 +153,17 @@ class VerificationStage:
                 extra["held_for_review"] = True
             q.generation_metadata = provenance.model_copy(update={"extra": extra})
 
-            # RC-9 (#72): a question the verifier could not check (search/judge
-            # unavailable) is held for review, never dropped at low confidence.
+            # #158 fail-closed (supersedes RC-9 keep-and-tag): the verifier
+            # could not check this question (search/judge unavailable) — it
+            # never leaves the pipeline. No review queue exists by design.
             if held:
-                kept.append(q)
+                withheld += 1
+                logger.warning(
+                    "VerificationStage withheld id=%s: held_for_review "
+                    "(verifier unavailable) — fail-closed, #158; notes=%s",
+                    q.id,
+                    notes,
+                )
                 continue
             if confidence < self._min_confidence:
                 dropped += 1
@@ -150,8 +172,20 @@ class VerificationStage:
 
         ctx.questions = kept
 
+        if withheld:
+            # Visibility for the outage class behind withholds (Tavily/judge
+            # down): warn-level Sentry — one transient search failure self-heals
+            # via top-up, a systemic outage breaches the 80% floor and pages
+            # through the order-failure path.
+            message = (
+                f"order {ctx.order_id} verification withheld {withheld} "
+                "unverifiable question(s) (fail-closed, #158)"
+            )
+            logger.warning(message)
+            sentry_sdk.capture_message(message, level="warning")
+
         return StageResult(
-            info={"verified": len(kept), "dropped": dropped},
+            info={"verified": len(kept), "dropped": dropped, "withheld": withheld},
             cost_cents=0,
         )
 

@@ -136,18 +136,18 @@ async def test_drops_questions_below_confidence_threshold() -> None:
 
 
 @pytest.mark.asyncio
-async def test_held_for_review_question_is_kept_despite_low_confidence() -> None:
-    """RC-9 (#72): a question the verifier could not check (search/judge
-    unavailable) is tagged `held_for_review` and MUST be kept for human
-    review, not dropped at confidence 0. Dropping unverifiable-but-possibly-
-    good questions is exactly how verification used to select FOR crisp recall
-    answers and against estimation/reasoning ones."""
+async def test_held_for_review_question_is_withheld() -> None:
+    """#158 fail-closed (gen-review part-4 verdict, supersedes RC-9 #72):
+    a question the verifier could not check (search/judge unavailable) is
+    `held_for_review` — and a held question never reaches a pack or the
+    corpus. There is no review queue by design; the top-up loop regenerates
+    the shortfall, and a systemic verifier outage breaches TopUp's 80% floor,
+    failing the order loud instead of delivering unverified content."""
     verdicts = {
-        # Below the 0.5 threshold, but held — must survive the drop.
         "q_0": VerificationResult(
             verdict="unverified", confidence=0.3, held_for_review=True
         ),
-        # Same low confidence, NOT held — must still drop (strictness preserved).
+        # Low confidence, NOT held — a normal drop (verifier worked).
         "q_1": VerificationResult(verdict="likely_wrong", confidence=0.3),
     }
     verifier = _FakeFactVerifier(verdicts)
@@ -156,11 +156,34 @@ async def test_held_for_review_question_is_kept_despite_low_confidence() -> None
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert {q.id for q in ctx.questions} == {"q_0"}  # held kept, unheld dropped
+    assert ctx.questions == []  # held withheld, low-confidence dropped
     assert result.info["dropped"] == 1
-    extra = ctx.questions[0].generation_metadata.extra
-    assert extra["held_for_review"] is True
-    assert extra["verified"] is False
+    assert result.info["withheld"] == 1
+    assert result.info["verified"] == 0
+
+
+@pytest.mark.asyncio
+async def test_missing_verdict_record_is_withheld() -> None:
+    """#158 fail-closed: no verdict record for a question is a verifier bug,
+    but "unchecked" can never mean "deliverable" — the old behavior kept it
+    silently, which shipped unverified content on a paid pack."""
+
+    class _AmnesiacVerifier(_FakeFactVerifier):
+        async def verify_batch(self, questions):  # type: ignore[override]
+            records = await super().verify_batch(questions)
+            return [r for r in records if r["id"] != "q_1"]
+
+    verifier = _AmnesiacVerifier(
+        {"q_0": VerificationResult(verdict="verified", confidence=0.9)}
+    )
+    stage = VerificationStage(verifier)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert {q.id for q in ctx.questions} == {"q_0"}
+    assert result.info["withheld"] == 1
+    assert result.info["dropped"] == 0
 
 
 @pytest.mark.asyncio
@@ -230,7 +253,7 @@ async def test_no_questions_returns_zero_counts() -> None:
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert result.info == {"verified": 0, "dropped": 0}
-    assert verifier.calls == []
+    assert verifier.calls == []  # early return has no withheld key — nothing ran
 
 
 class _FakeLogicalVerifier:
@@ -324,17 +347,19 @@ class _FakeWebSearch:
 
 
 @pytest.mark.asyncio
-async def test_judge_failure_keeps_questions_through_the_whole_stage() -> None:
-    """A flaky judge must cost the pack nothing but a review flag.
+async def test_judge_failure_withholds_and_never_counts_as_dropped() -> None:
+    """A judge outage must read as "withheld (unverifiable)", never as
+    "dropped (proven wrong)".
 
-    Adversarial audit 2026-07-30: with the REAL verifiers wired in, a Gemini
-    429/timeout (`_complete` → None) made both branches return a sub-threshold
-    verdict with `held_for_review` unset, so this stage silently deleted the
-    questions and reported them as `dropped` — indistinguishable from answers
-    proven wrong. On a paid pack that burns top-up spend and can fail the order
-    as refund-eligible for questions nobody ever showed to be wrong. Driving
-    the real classes through the stage is the point: unit-level holds are
-    worthless if the stage still drops them.
+    Adversarial audit 2026-07-30 found a Gemini 429/timeout (`_complete` →
+    None) once made both real verifier classes return a sub-threshold verdict
+    with `held_for_review` unset, so the stage deleted the questions as
+    `dropped` — indistinguishable from wrong answers. The real classes must
+    still mark the outage as held; since #158 (fail-closed) a held question
+    is withheld from the pack rather than kept for review, and the distinct
+    `withheld` counter is what keeps the outage legible. Driving the real
+    classes through the stage is the point: unit-level holds are worthless
+    if the stage misclassifies them.
     """
     fact_verifier = FactVerifier(gemini_api_key="test-key")
     fact_verifier.search = _FakeWebSearch()  # type: ignore[assignment]
@@ -357,10 +382,9 @@ async def test_judge_failure_keeps_questions_through_the_whole_stage() -> None:
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert {q.id for q in ctx.questions} == {"q_0", "q_1"}
+    assert ctx.questions == []
     assert result.info["dropped"] == 0
-    for q in ctx.questions:
-        assert q.generation_metadata.extra["held_for_review"] is True
+    assert result.info["withheld"] == 2
 
 
 @pytest.mark.asyncio

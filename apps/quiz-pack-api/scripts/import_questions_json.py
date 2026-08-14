@@ -58,8 +58,25 @@ from scripts.migrate_pending_to_postgres import (  # noqa: E402
 logger = logging.getLogger("import_questions_json")
 
 
+def _verification_block_reason(q: Question) -> str | None:
+    """#158 fail-closed corpus guard: why this row must NOT be imported.
+
+    A pipeline row the verifier held (`held_for_review`) or explicitly failed
+    (`verified: False`) never enters the corpus, under any `--review-status`.
+    Rows without verification keys (hand-curated content that never ran the
+    pipeline) are not blocked — the guard targets pipeline provenance.
+    """
+    extra = q.generation_metadata.extra if q.generation_metadata else {}
+    if extra.get("held_for_review"):
+        return "held_for_review"
+    if extra.get("verified") is False:
+        return "verified=False"
+    return None
+
+
 def _load_questions(paths: List[Path], review_status: str) -> List[Question]:
     by_id: dict[str, Question] = {}
+    rejected = 0
     for path in paths:
         raw_list = json.loads(path.read_text())
         for raw in raw_list:
@@ -67,8 +84,21 @@ def _load_questions(paths: List[Path], review_status: str) -> List[Question]:
             payload.setdefault("embedding_model", EMBEDDING_MODEL)
             payload.setdefault("embedding_dim", EMBEDDING_DIM)
             q = Question.model_validate(payload)
+            reason = _verification_block_reason(q)
+            if reason is not None:
+                rejected += 1
+                logger.error(
+                    "REJECTED (fail-closed, #158): id=%s %s — unverified/held "
+                    "questions never enter the corpus. Question: %.80s",
+                    q.id,
+                    reason,
+                    q.question,
+                )
+                continue
             by_id.setdefault(q.id, q)
         logger.info("Read %d row(s) from %s", len(raw_list), path)
+    if rejected:
+        print(f"REJECTED unverified/held rows: {rejected} (see log above)")
     return list(by_id.values())
 
 

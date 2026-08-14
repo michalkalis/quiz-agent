@@ -49,6 +49,10 @@ GENERATION_FLOW = "fun-redesign-72"
 # (decisions 3, 2d). An unregistered category falls through to v3 unchanged.
 _CATEGORY_PROMPT_FILES = {
     "entertainment": "question_generation_entertainment.md",
+    # #162 (gen-review D15): the kids safety/age template finally has a call
+    # site — a `category="kids"` order previously fell through to generic v3
+    # with zero child-safety rules.
+    "kids": "question_generation_kids.md",
 }
 
 # 2026-07-30 (generation review A2) — every fact-first template must carry

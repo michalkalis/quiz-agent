@@ -363,3 +363,50 @@ async def test_entertainment_order_stamps_category_and_version_through_generate_
     prompt_text = fake_ainvoke.await_args.args[0][0].content
     assert "pop-culture" in prompt_text.lower()
     assert "The Matrix" in prompt_text
+
+
+def test_kids_prompt_registered_at_construction() -> None:
+    """#162 (gen-review D15): the kids safety/age template had ZERO call sites —
+    a `category="kids"` order was written by the generic v3 prompt with no
+    child-safety rules at all. Registration is the entire fix (the general-map
+    design this file documents), so pin it the same way as entertainment."""
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    assert "kids" in gen.category_prompt_builders
+    assert isinstance(gen.category_prompt_builders["kids"], PromptBuilder)
+
+
+def test_kids_order_dispatches_to_kids_builder() -> None:
+    """#162: a fact-first `kids` order renders through the kids builder (safety
+    rules present, distinct prompt_version for provenance) while the fact-first
+    `{facts_section}` + `{mcq_patterns_section}` injections still run — same
+    compose-don't-replace contract the entertainment dispatch test pins."""
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    prompt, prompt_version, use_open, use_fact_first = gen._build_batch_prompt(
+        count=10,
+        difficulty="easy",
+        topics=None,
+        categories=["kids"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+        source_facts=_SOURCE_FACTS,
+        mcq_patterns={"odd_one_out"},
+    )
+    assert use_open is False
+    assert use_fact_first is True
+    assert prompt_version == "v3_fact_first_kids"
+    # Kids sentinel: the safety block exists in no other template.
+    assert "SAFETY (NON-NEGOTIABLE)" in prompt
+    assert "Ages 8-14" in prompt
+    # Fact-first injections survived the dispatch.
+    assert "The Matrix" in prompt
+    assert "odd_one_out" in prompt

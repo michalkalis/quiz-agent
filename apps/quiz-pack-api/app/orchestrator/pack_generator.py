@@ -129,11 +129,21 @@ class PackGenerator:
             # generation LLM, so MCQ emphasis must travel as an explicit
             # bool that GenerationStage hands to the generator.
             mcq_emphasis=MCQ_EMPHASIS_MARKER in (order.prompt or ""),
-            # #153 Phase 0.4 — same deterministic-marker mechanism as
-            # mcq_emphasis, same reason (no order column, prompt never
-            # reaches the generation LLM).
-            direct_generation=DIRECT_GENERATION_MARKER in (order.prompt or ""),
+            # #157 (D4): direct mode comes from the server-side order column
+            # only — never from customer prompt text.
+            direct_generation=(
+                getattr(order, "generation_mode", None) == "direct"
+            ),
         )
+        if DIRECT_GENERATION_MARKER in (order.prompt or ""):
+            # #157 (D4): the legacy marker used to activate direct mode from
+            # customer text. It is inert now; log the attempt so abuse stays
+            # visible.
+            logger.warning(
+                "ignored DIRECT GENERATION MODE marker in order prompt "
+                "order_id=%s (direct mode is server-side only, #157)",
+                order.id,
+            )
 
         self.last_ctx = ctx
 

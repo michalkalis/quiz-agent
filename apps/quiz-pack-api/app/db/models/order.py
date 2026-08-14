@@ -44,6 +44,12 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     theme: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(16), nullable=False)
+    # #157 (D4): server-side direct-generation switch. NULL = grounded.
+    # Set only by internal paths (CLI, experiments) — never from customer
+    # input; the old in-prompt marker is ignored by PackGenerator.
+    generation_mode: Mapped[Optional[str]] = mapped_column(
+        String(16), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         String(32), nullable=False, default="pending", server_default="pending"
     )
@@ -102,5 +108,9 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
         CheckConstraint(
             "status IN ('pending','in_progress','delivered','failed','refunded')",
             name="ck_orders_status",
+        ),
+        CheckConstraint(
+            "generation_mode IS NULL OR generation_mode IN ('grounded','direct')",
+            name="ck_orders_generation_mode",
         ),
     )

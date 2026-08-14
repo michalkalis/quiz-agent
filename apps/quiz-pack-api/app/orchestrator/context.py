@@ -8,11 +8,10 @@ from typing import Any
 
 from quiz_shared.models.question import Question
 
-# #153 Phase 0.4 — order-prompt marker for the founder's "reverse flow":
-# generate straight from the model (no web-found source facts), verify at the
-# end of the pipe. Travels on the prompt like MCQ_EMPHASIS_MARKER because the
-# order row has no column for it; `PackGenerator` turns it into the explicit
-# `OrderContext.direct_generation` bool the stages read.
+# #157 (D4): direct mode is activated ONLY by `GenerationOrder.generation_mode
+# == "direct"` — a server-side column customer input can never set. This legacy
+# in-prompt marker is kept solely so PackGenerator can log attempts to smuggle
+# it inside customer order text; it has no activating effect.
 DIRECT_GENERATION_MARKER = "DIRECT GENERATION MODE"
 
 

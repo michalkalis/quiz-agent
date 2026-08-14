@@ -170,10 +170,6 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
     prompt = args.prompt
     if args.mcq_bias:
         prompt = f"{prompt}\n\n{_mcq_bias_instruction()}"
-    if args.direct:
-        from app.orchestrator.context import DIRECT_GENERATION_MARKER
-
-        prompt = f"{prompt}\n\n{DIRECT_GENERATION_MARKER}".lstrip()
     return GenerationOrder(
         id=uuid.uuid4(),
         transaction_id=f"cli-{uuid.uuid4().hex[:12]}",
@@ -184,6 +180,9 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
         target_count=args.target_count,
         language=args.language,
         status="in_progress",
+        # #157 (D4): direct mode travels as a server-side column, never as
+        # marker text inside the prompt.
+        generation_mode="direct" if args.direct else None,
     )
 
 

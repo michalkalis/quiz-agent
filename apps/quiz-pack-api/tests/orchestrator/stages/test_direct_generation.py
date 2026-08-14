@@ -1,22 +1,27 @@
-"""Direct-generation mode tests (#153 Phase 0.4).
+"""Direct-generation mode tests (#153 Phase 0.4, reworked by #157/D4).
 
 The founder's "reverse flow": generate unconstrained by web-found facts,
-verify at the end of the pipe. The mode is an OrderContext bool carried by a
-prompt marker (no order column — same mechanism as ``mcq_emphasis``).
+verify at the end of the pipe. Since #157 the mode is activated ONLY by the
+server-side ``GenerationOrder.generation_mode`` column — the old in-prompt
+marker was a confirmed hole (customer order text could switch off sourcing +
+grounding checks on its own paid pack) and is now inert.
 
 - `test_sourcing_short_circuits_in_direct_mode`: SourcingStage must gather
   NOTHING (no Tavily/Wikipedia spend) and say so in its info — a direct arm
   that silently sourced facts would invalidate the facts-vs-direct
   comparison the mode exists for.
-- `test_marker_sets_context_flag`: the prompt marker is the only transport
-  for the flag; if PackGenerator stops translating it, the mode silently
-  degrades to the fact-sourced path.
-- `test_cli_direct_flag_appends_marker`: the CLI lever must actually emit
-  the marker.
+- `test_generation_mode_column_sets_context_flag`: the order column is the
+  only transport for the flag.
+- `test_marker_in_customer_prompt_is_inert_and_logged`: the D4 hole stays
+  closed — marker text in a customer prompt must not activate direct mode,
+  and the attempt must be visible in logs.
+- `test_cli_direct_flag_sets_generation_mode`: the CLI lever sets the column,
+  not prompt text.
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 import pytest
@@ -43,6 +48,34 @@ class _NullSink:
         pass
 
 
+def _order(prompt: str, generation_mode: str | None = None):
+    from app.db.models import GenerationOrder
+
+    return GenerationOrder(
+        id=uuid.uuid4(),
+        transaction_id=f"txn_{uuid.uuid4().hex[:8]}",
+        product_id="pack_10",
+        prompt=prompt,
+        target_count=10,
+        language="en",
+        status="in_progress",
+        generation_mode=generation_mode,
+    )
+
+
+class _RecordingSourcing:
+    name = "sourcing"
+
+    def __init__(self, seen: dict):
+        self._seen = seen
+
+    async def run(self, ctx, sink):
+        from app.orchestrator.context import StageResult
+
+        self._seen["direct"] = ctx.direct_generation
+        return StageResult(cost_cents=0)
+
+
 @pytest.mark.asyncio
 async def test_sourcing_short_circuits_in_direct_mode():
     ctx = OrderContext(
@@ -61,43 +94,45 @@ async def test_sourcing_short_circuits_in_direct_mode():
 
 
 @pytest.mark.asyncio
-async def test_marker_sets_context_flag():
-    from app.db.models import GenerationOrder
+async def test_generation_mode_column_sets_context_flag():
     from app.orchestrator import PackGenerator
-    from app.orchestrator.context import StageResult
 
     seen: dict[str, bool] = {}
-
-    class _RecordingSourcing:
-        name = "sourcing"
-
-        async def run(self, ctx, sink):
-            seen["direct"] = ctx.direct_generation
-            return StageResult(cost_cents=0)
-
-    order = GenerationOrder(
-        id=uuid.uuid4(),
-        transaction_id="txn_direct_marker",
-        product_id="pack_10",
-        prompt=f"surprising facts\n\n{DIRECT_GENERATION_MARKER}",
-        target_count=10,
-        language="en",
-        status="in_progress",
-    )
     generator = PackGenerator(
-        stages=[_RecordingSourcing()], sink_factory=lambda _oid: _NullSink()
+        stages=[_RecordingSourcing(seen)], sink_factory=lambda _oid: _NullSink()
     )
-    await generator.run(order)
+    await generator.run(_order("surprising facts", generation_mode="direct"))
 
     assert seen == {"direct": True}
 
 
-def test_cli_direct_flag_appends_marker():
+@pytest.mark.asyncio
+async def test_marker_in_customer_prompt_is_inert_and_logged(caplog):
+    from app.orchestrator import PackGenerator
+
+    seen: dict[str, bool] = {}
+    generator = PackGenerator(
+        stages=[_RecordingSourcing(seen)], sink_factory=lambda _oid: _NullSink()
+    )
+    with caplog.at_level(logging.WARNING):
+        await generator.run(
+            _order(f"surprising facts\n\n{DIRECT_GENERATION_MARKER}")
+        )
+
+    assert seen == {"direct": False}
+    assert any(
+        "DIRECT GENERATION MODE marker" in rec.getMessage()
+        for rec in caplog.records
+    )
+
+
+def test_cli_direct_flag_sets_generation_mode():
     args = generate_pack._parse_args(
         ["--prompt", "space oddities", "--direct", "--dry-run"]
     )
     order = generate_pack._build_order(args)
-    assert DIRECT_GENERATION_MARKER in order.prompt
+    assert order.generation_mode == "direct"
+    assert DIRECT_GENERATION_MARKER not in order.prompt
 
     plain = generate_pack._parse_args(["--prompt", "space oddities", "--dry-run"])
-    assert DIRECT_GENERATION_MARKER not in generate_pack._build_order(plain).prompt
+    assert generate_pack._build_order(plain).generation_mode is None

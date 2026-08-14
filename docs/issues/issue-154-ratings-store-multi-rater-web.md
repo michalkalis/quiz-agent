@@ -1,8 +1,8 @@
 # Issue 154: Canonical ratings store + multi-rater rating web
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · done
 **Reversibility:** b (additive Alembic migration on quiz-pack-api Postgres — founder gate before prod migration per backend deploy rules)
-**Status:** Created from the gen-pipeline joint review 2026-08-09 (candidates 15 + shared backend of 14; decisions D20/D21/D24/D25/D29). Founder picks 2026-08-14 in-session: web hosted inside quiz-pack-api; in-app access = button → panel (that half is #155).
+**Status:** Created from the gen-pipeline joint review 2026-08-09 (candidates 15 + shared backend of 14; decisions D20/D21/D24/D25/D29). Founder picks 2026-08-14 in-session: web hosted inside quiz-pack-api; in-app access = button → panel (that half is #155). **DONE + DEPLOYED prod 2026-08-14** — founder approved the migration gate in-session; migration `a7fa4d9d6751` applied migrate-before-deploy, both machines booted at head, live auth-boundary checks green. Residual: the page JS has not been exercised in a real browser — first real batch verifies.
 **Created:** 2026-08-14
 
 Block 1 of the review's execution order: the rating infrastructure everything else (experiment round D21, judge calibration, frozen eval set P1) stands on.
@@ -53,7 +53,7 @@ Rating pages are static files generated per run into `docs/testing/runs/<run>/` 
 
 ## Acceptance
 
-Implemented 2026-08-14 (commits `6c541e9d`, `e8cd21c2`, `8c2431d6`, `07be35dc`) — committed, **not deployed**; the prod migration is the founder-gated step.
+Implemented 2026-08-14 (commits `6c541e9d`, `e8cd21c2`, `8c2431d6`, `07be35dc`) — deployed to prod 2026-08-14 (founder-approved migration gate).
 
 - [x] Alembic migration adds the two tables; `pytest tests/` green including new ratings tests; boot-time migration check passes. — revision `a7fa4d9d6751` (additive only; autogenerate's spurious `drop_index(ix_questions_embedding_ivfflat)` removed by hand). 899 passed, 0 skipped, twice. Local boot logged `Migrations at head (a7fa4d9d6751) — OK`.
 - [x] CLI registers a batch from ≥2 arm JSON files and prints a working `/web/rate/{token}?rater=…` URL; served page contains no arm/mapping data. — `scripts/rating_page/publish_batch.py`, verified end-to-end against a local uvicorn; leak asserted on the raw bytes of both the page and the JSON view.

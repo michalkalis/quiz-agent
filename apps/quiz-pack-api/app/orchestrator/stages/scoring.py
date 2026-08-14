@@ -186,6 +186,7 @@ class ScoringStage:
         veto_enforce = feature_flags.veto_enforce()
         veto_consult = veto_enforce or feature_flags.veto_shadow()
         craft_enforce = feature_flags.craft_guards_enforce()
+        quorum = feature_flags.judge_quorum()
 
         # Craft guards (#72 reviewer upgrade) — deterministic, computed for
         # every batch (free); enforcement is flag-gated. T/F key balance is a
@@ -288,16 +289,22 @@ class ScoringStage:
                         veto_reason,
                     )
 
-            # #147 fail-closed: no real verdict → the question is unjudged, so
-            # it cannot be delivered and the gate below has nothing to decide
-            # on. Counted here (at the gate, after the deterministic drops) so
-            # the count means "would have shipped unjudged".
-            if not any(is_judge_verdict(s) for s in model_scores):
+            # #147 fail-closed + #159 quorum (gen-review P4): fewer than
+            # `judge_quorum()` real verdicts → the question is unjudged — a
+            # single (possibly skewed) judge is not a panel — so it cannot be
+            # delivered and the gate below has nothing to decide on. Counted
+            # here (at the gate, after the deterministic drops) so the count
+            # means "would have shipped under-judged".
+            verdict_count = sum(1 for s in model_scores if is_judge_verdict(s))
+            if verdict_count < quorum:
                 judge_failures += 1
                 logger.warning(
-                    "ScoringStage judge outage: question id=%s reached the ship "
-                    "gate with zero judge verdicts — withheld",
+                    "ScoringStage judge outage: question id=%s reached the "
+                    "ship gate with %d judge verdict(s), below the quorum "
+                    "of %d — withheld (#159)",
                     q.id,
+                    verdict_count,
+                    quorum,
                 )
                 continue
 
@@ -324,8 +331,9 @@ class ScoringStage:
         if judge_failures:
             self._report_judge_outage(ctx, judge_failures, len(payload), info)
             raise JudgePanelUnavailable(
-                f"{judge_failures} question(s) reached the ship gate with zero "
-                "judge verdicts — refusing to deliver an ungated pack",
+                f"{judge_failures} question(s) reached the ship gate below "
+                f"the {quorum}-judge verdict quorum — refusing to deliver an "
+                "ungated pack",
                 info=info,
             )
         return StageResult(info=info, cost_cents=0)
@@ -343,8 +351,8 @@ class ScoringStage:
         """
         message = (
             f"order {ctx.order_id} scoring gate failed: {judge_failures} of "
-            f"{batch_size} question(s) had zero judge verdicts "
-            "(judge panel unavailable)"
+            f"{batch_size} question(s) fell below the judge-verdict quorum "
+            "(judge panel unavailable or partial)"
         )
         logger.error(message)
         with sentry_sdk.new_scope() as scope:

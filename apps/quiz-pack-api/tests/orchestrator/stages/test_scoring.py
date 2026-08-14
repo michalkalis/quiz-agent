@@ -132,9 +132,9 @@ def _make_ctx(questions: list[Question]) -> OrderContext:
 @pytest.mark.asyncio
 async def test_scores_keyed_by_question_id() -> None:
     scores = {
-        "q_0": {"gpt-4.1-mini": 8.5},
-        "q_1": {"gpt-4.1-mini": 7.0},
-        "q_2": {"gpt-4.1-mini": 6.5},
+        "q_0": {"gpt-4.1-mini": 8.5, "gemini-2.5-flash": 8.5},
+        "q_1": {"gpt-4.1-mini": 7.0, "gemini-2.5-flash": 7.0},
+        "q_2": {"gpt-4.1-mini": 6.5, "gemini-2.5-flash": 6.5},
     }
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
@@ -155,7 +155,7 @@ async def test_unjudged_question_fails_the_stage() -> None:
     no judge verdict at all (q_1) is enough to fail the whole stage — it is
     withheld, never delivered, and the order goes back through the retry
     machinery instead of shipping a partly-ungated paid pack."""
-    scores = {"q_0": {"gpt-4.1-mini": 9.0}}  # q_1 deliberately unjudged
+    scores = {"q_0": {"gpt-4.1-mini": 9.0, "gemini-2.5-flash": 9.0}}  # q_1 deliberately unjudged
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_stub_question(0), _stub_question(1)])
@@ -175,7 +175,7 @@ async def test_drops_question_below_overall_floor() -> None:
     dropped from `ctx.questions`, with the drop surfaced in StageResult.info.
     Before 42.29 the scorers only warned — false confidence that shipped junk."""
     scores = {
-        "q_0": {"gpt-4.1-mini": 8.0},  # good — kept
+        "q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0},  # good — kept
         "q_1": {"gpt-4.1-mini": 2.0, "claude-sonnet-4.6": 2.5},  # mean 2.25 — dropped
     }
     scorer = _FakeMultiModelScorer(scores)
@@ -197,8 +197,8 @@ async def test_drops_mcq_with_low_distractor_quality() -> None:
     distractor_quality below MIN_DISTRACTOR_QUALITY, 4) must still be dropped.
     This is the dim that catches give-away options no overall score reflects."""
     scores = {
-        "q_0": {"gpt-4.1-mini": 8.5},  # great overall...
-        "q_1": {"gpt-4.1-mini": 8.0},  # ...also great overall, but bad distractors
+        "q_0": {"gpt-4.1-mini": 8.5, "gemini-2.5-flash": 8.5},  # great overall...
+        "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0},  # ...also great overall, but bad distractors
     }
     dims = {"q_1": {"distractor_quality": 2}}  # below the floor of 4
     scorer = _FakeMultiModelScorer(scores, dims=dims)
@@ -301,8 +301,8 @@ async def test_veto_shadow_flags_starboard_class_but_keeps_it(
     monkeypatch.setenv("VETO_SHADOW", "1")
     monkeypatch.setenv("VETO_ENFORCE", "0")
     scores = {
-        "q_0": {"gpt-4.1-mini": 4.0},  # clears the 3.0 floor — not score-dropped
-        "q_1": {"gpt-4.1-mini": 8.0},  # good
+        "q_0": {"gpt-4.1-mini": 4.0, "gemini-2.5-flash": 4.0},  # clears the 3.0 floor — not score-dropped
+        "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0},  # good
     }
     # Per-dimension scorer names (2026-07-30 redesign): answerability is a
     # real scored dimension — q_0 reads as a boring dead-end recall Q.
@@ -334,8 +334,8 @@ async def test_veto_enforce_drops_flagged_question(
     monkeypatch.delenv("VETO_SHADOW", raising=False)
     monkeypatch.setenv("VETO_ENFORCE", "1")
     scores = {
-        "q_0": {"gpt-4.1-mini": 4.0},
-        "q_1": {"gpt-4.1-mini": 8.0},
+        "q_0": {"gpt-4.1-mini": 4.0, "gemini-2.5-flash": 4.0},
+        "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0},
     }
     dims = {
         "q_0": {"surprise_delight": 2, "answerability": 2},
@@ -361,8 +361,8 @@ async def test_veto_enforce_drops_by_default(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.delenv("VETO_SHADOW", raising=False)
     monkeypatch.delenv("VETO_ENFORCE", raising=False)
     scores = {
-        "q_0": {"gpt-4.1-mini": 4.0},
-        "q_1": {"gpt-4.1-mini": 8.0},
+        "q_0": {"gpt-4.1-mini": 4.0, "gemini-2.5-flash": 4.0},
+        "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0},
     }
     dims = {
         "q_0": {"surprise_delight": 2, "answerability": 2},
@@ -401,7 +401,7 @@ async def test_craft_guard_shadow_flags_but_keeps(
     """CRAFT_GUARDS_ENFORCE defaults ON since 2026-08 (prod parity); shadow
     mode (flag, keep) now requires the explicit rollback value."""
     monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "0")
-    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scores = {"q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}, "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
@@ -418,7 +418,7 @@ async def test_craft_guard_enforce_drops_stem_leak(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("CRAFT_GUARDS_ENFORCE", "1")
-    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scores = {"q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}, "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
@@ -437,7 +437,7 @@ async def test_craft_guard_enforce_drops_by_default(
     """2026-08: CRAFT_GUARDS_ENFORCE defaults ON (prod parity) — with no env
     var set at all, the stem-leak question is dropped, not just flagged."""
     monkeypatch.delenv("CRAFT_GUARDS_ENFORCE", raising=False)
-    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 8.0}}
+    scores = {"q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}, "q_1": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx([_leaky_question(0), _stub_question(1)])
@@ -464,7 +464,7 @@ async def test_craft_guard_enforce_rebalances_all_true_batch(
         )
         for i in range(5)
     ] + [_stub_question(5)]
-    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scores = {q.id: {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0} for q in questions}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx(questions)
@@ -490,7 +490,7 @@ async def test_craft_guard_enforce_drops_imperial_units(
         ),
         _stub_question(1),
     ]
-    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scores = {q.id: {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0} for q in questions}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx(questions)
@@ -518,7 +518,7 @@ async def test_undated_record_is_shadow_only_even_under_enforce(
         ),
         _stub_question(1),
     ]
-    scores = {q.id: {"gpt-4.1-mini": 8.0} for q in questions}
+    scores = {q.id: {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0} for q in questions}
     scorer = _FakeMultiModelScorer(scores)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
     ctx = _make_ctx(questions)
@@ -610,7 +610,7 @@ async def test_healthy_run_reports_zero_judge_failures() -> None:
     """The counter must be trustworthy in both directions — a healthy panel
     reports 0, so a non-zero value in an order's step log always means the
     judges were actually down."""
-    scores = {"q_0": {"gpt-4.1-mini": 8.0}, "q_1": {"gpt-4.1-mini": 4.0}}
+    scores = {"q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 8.0}, "q_1": {"gpt-4.1-mini": 4.0, "gemini-2.5-flash": 4.0}}
     stage = ScoringStage(_FakeMultiModelScorer(scores))  # type: ignore[arg-type]
     ctx = _make_ctx([_stub_question(0), _stub_question(1)])
 
@@ -653,7 +653,7 @@ async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> No
     behaviour becomes the rollback path, not the default)."""
     monkeypatch.delenv("VETO_SHADOW", raising=False)
     monkeypatch.setenv("VETO_ENFORCE", "0")
-    scores = {"q_0": {"gpt-4.1-mini": 4.0}}
+    scores = {"q_0": {"gpt-4.1-mini": 4.0, "gemini-2.5-flash": 4.0}}
     dims = {"q_0": {"surprise_delight": 2, "clever_framing": 2}}
     scorer = _FakeMultiModelScorer(scores, dims=dims)
     stage = ScoringStage(scorer)  # type: ignore[arg-type]
@@ -663,3 +663,54 @@ async def test_veto_dormant_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> No
 
     assert [q.id for q in ctx.questions] == ["q_0"]
     assert result.info["veto_shadow_flagged"] == 0
+
+
+@pytest.mark.asyncio
+async def test_single_judge_verdict_fails_the_quorum() -> None:
+    """#159 (gen-review P4): #147 closed the 0-judge hole; this closes the
+    1-of-3 one. A single (possibly skewed) judge is not a panel — a question
+    with only one real verdict is withheld and the stage fails through the
+    same #147 retry machinery instead of letting one judge ship it."""
+    scores = {"q_0": {"gpt-4.1-mini": 9.0}}  # one real verdict — below quorum
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0)])
+
+    with pytest.raises(JudgePanelUnavailable) as exc_info:
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert exc_info.value.info["judge_failures"] == 1
+    assert ctx.questions == []
+
+
+@pytest.mark.asyncio
+async def test_two_judge_verdicts_meet_the_quorum() -> None:
+    """#159: two of three judges responding is a functioning panel — the
+    question passes on their mean and the run reports no judge failures."""
+    scores = {"q_0": {"gpt-4.1-mini": 8.0, "gemini-2.5-flash": 7.0}}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert result.info["judge_failures"] == 0
+
+
+@pytest.mark.asyncio
+async def test_judge_quorum_env_is_the_rollback_lever(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#159: JUDGE_QUORUM=1 restores the pre-#159 single-judge gate — the
+    rollback path must actually work, or the quorum can't ship safely."""
+    monkeypatch.setenv("JUDGE_QUORUM", "1")
+    scores = {"q_0": {"gpt-4.1-mini": 8.0}}
+    scorer = _FakeMultiModelScorer(scores)
+    stage = ScoringStage(scorer)  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(0)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert result.info["judge_failures"] == 0

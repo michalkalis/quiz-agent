@@ -212,6 +212,19 @@ def duel_ring_neighbours() -> int:
     return _int_env("DUEL_RING_NEIGHBOURS", default=3)
 
 
+def judge_quorum() -> int:
+    """#159 (gen-review P4): minimum count of REAL judge verdicts a question
+    needs before the ship gate may act on its score.
+
+    Default **2** — one judge of three is not a panel, and #147 already
+    established that an unjudged question is withheld. ``JUDGE_QUORUM=1`` is
+    the rollback lever only (restores the pre-#159 single-judge gate); raising
+    or lowering it otherwise is a threshold change gated by P6 (eval data +
+    founder approval).
+    """
+    return _int_env("JUDGE_QUORUM", default=2)
+
+
 def gate_v2() -> bool:
     """#135 D7 (T6): the redesigned scoring gate — 5 dimensions, a 3-family
     judge panel (GPT + Gemini + cheap Chinese frontier), ONE call per judge

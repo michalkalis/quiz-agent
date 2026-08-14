@@ -116,6 +116,14 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
         yield s
 
 
+@pytest.fixture(autouse=True)
+def _two_judge_panel(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#159 judge quorum: same as tests/integration/conftest.py — the mocked
+    env has only the OpenAI endpoint, so a default panel would field one judge
+    and every question would miss the 2-verdict quorum."""
+    monkeypatch.setenv("JUDGE_MODELS", "gpt-5.6-sol,gpt-4.1-mini")
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def _clean_order_tables(session: AsyncSession) -> None:
     """Start each test from an empty order graph (mirrors tests/api, tests/integration).

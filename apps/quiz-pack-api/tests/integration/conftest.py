@@ -28,6 +28,16 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 
 
 @pytest.fixture(autouse=True)
+def _two_judge_panel(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#159 judge quorum: the mocked test env serves only the OpenAI endpoint,
+    so the default panel would field a single judge and every question would
+    fall below the 2-verdict quorum. Two OpenAI-family ids keep a genuine
+    2-judge panel on the one mocked endpoint — the quorum stays enforced
+    instead of being rolled back via JUDGE_QUORUM=1."""
+    monkeypatch.setenv("JUDGE_MODELS", "gpt-5.6-sol,gpt-4.1-mini")
+
+
+@pytest.fixture(autouse=True)
 def _block_external_http() -> Iterator[respx.MockRouter]:
     """Block any unmocked HTTPS request during integration tests.
 

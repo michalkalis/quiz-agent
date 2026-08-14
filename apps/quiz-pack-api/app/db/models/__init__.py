@@ -17,6 +17,7 @@ from .question import (
     question_to_row,
     row_to_question,
 )
+from .rating import RATING_SOURCES, Rating, RatingBatch
 from .revoked_transaction import RevokedTransaction
 
 __all__ = [
@@ -27,7 +28,10 @@ __all__ = [
     "ORDER_STATUSES",
     "QuestionPack",
     "QuestionRow",
+    "RATING_SOURCES",
     "REVIEW_STATUSES",
+    "Rating",
+    "RatingBatch",
     "RevokedTransaction",
     "append_step",
     "question_to_row",

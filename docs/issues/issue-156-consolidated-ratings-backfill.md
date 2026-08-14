@@ -81,7 +81,7 @@ run: 0 new / 113 updated, row count unchanged):
 | Pilot | `backfill:pilot-2026-07-11` | 27 | 27 | 0 | 0 | 1–5 | 07-11 / 07-12 |
 | G3 blind sample | `backfill:g3-corpus-blind-2026-07` | 10 | 10 | 0 | 0 | 1–5 | 2026-07-15 |
 | #153 baseline | `backfill:153-baseline-2026-08-07` | 27 | 23 | 4 (`score: null`) | 0 | 1–10 | 2026-08-07 |
-| #153 Phase A r1 | `backfill:153-phase-a-r1` | 28 | 28 | 2 (`score: null`) | 0 | 1–10 | 2026-08-07 |
+| #153 Phase A r1 | `backfill:153-phase-a-r1` | 30 | 28 | 2 (`score: null`) | 0 | 1–10 | 2026-08-07 |
 | **Total** | | **147** | **113** | **34** | **0** | | |
 
 All 23 baseline rows and all 28 Phase A rows carry a question UUID; the other

@@ -169,3 +169,46 @@ def test_attribute_sources_skips_facts_without_url() -> None:
     q = _q("Largest planet?", answer="Jupiter", excerpt="Jupiter largest planet")
     gen._attribute_sources([q], [no_url])
     assert q.source_url is None  # nothing to attribute → defer to F8 gate
+
+
+# ---------------------------------------------------------------------------
+# #161 (gen-review D13) — server-side citation integrity: a fabricated
+# citation is an absolute ban. `_enforce_citation_integrity` runs BEFORE
+# `_attribute_sources`, so a stripped slot can be refilled with a genuine
+# fact match (or fall to the marked fallback → F8 drop).
+# ---------------------------------------------------------------------------
+
+
+def test_citation_integrity_strips_fabricated_url_in_direct_mode() -> None:
+    """Direct mode has no facts — any model-emitted citation is fabricated by
+    definition and pretends verifiability the pipeline never established."""
+    gen = _generator()
+    q = _q("Invented question", answer="42",
+           url="https://model.test/hallucinated", excerpt="made-up excerpt")
+    stripped = gen._enforce_citation_integrity([q], None)
+    assert stripped == 1
+    assert q.source_url is None
+    assert q.source_excerpt is None
+    extra = q.generation_metadata.extra
+    assert extra["source_attribution"] == "fabricated_citation_stripped"
+
+
+def test_citation_integrity_strips_url_not_among_sourced_facts() -> None:
+    gen = _generator()
+    q = _q("A Roman legion question", answer="5000",
+           url="https://model.test/not-a-fact-url")
+    stripped = gen._enforce_citation_integrity([q], [_ROMAN, _OCEAN])
+    assert stripped == 1
+    assert q.source_url is None
+    # After stripping, normal attribution refills from the real matching fact.
+    gen._attribute_sources([q], [_ROMAN, _OCEAN])
+    assert q.source_url == "https://example.test/roman-army"
+
+
+def test_citation_integrity_keeps_url_matching_a_sourced_fact() -> None:
+    gen = _generator()
+    q = _q("A Roman legion question", answer="5000",
+           url="https://example.test/roman-army")
+    stripped = gen._enforce_citation_integrity([q], [_ROMAN, _OCEAN])
+    assert stripped == 0
+    assert q.source_url == "https://example.test/roman-army"

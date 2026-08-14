@@ -681,8 +681,11 @@ async def test_mcq_item_source_url_reaches_question() -> None:
     """2026-07-27 live-run F-d — the structured MCQ contract had no source
     fields, so every MCQ depended on the token-overlap matcher (the
     airport/Alexandria misattribution). A model-emitted `source_url` /
-    `source_excerpt` must now land on the Question verbatim."""
+    `source_excerpt` must land on the Question verbatim — provided the URL is
+    backed by a fact the batch actually saw (#161/D13: an unbacked citation
+    is fabricated and gets stripped, see test_source_attribution.py)."""
     from app.generation.advanced_generator import MCQBatchOutput, MCQQuestionItem
+    from app.sourcing.models import Fact
 
     batch_out = MCQBatchOutput(
         questions=[
@@ -712,7 +715,13 @@ async def test_mcq_item_source_url_reaches_question() -> None:
         excluded_topics=None,
         avoid_questions=None,
         user_bad_examples=None,
-        source_facts=None,
+        source_facts=[
+            Fact(
+                text="Runways are numbered by magnetic compass heading.",
+                source_url="https://example.com/runway-numbering",
+                excerpt="Runways are numbered by magnetic heading.",
+            )
+        ],
         mcq_patterns={"true_false"},
     )
 

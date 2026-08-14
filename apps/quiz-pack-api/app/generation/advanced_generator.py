@@ -9,6 +9,7 @@ This implements:
 
 import asyncio
 import json
+import logging
 import re
 from typing import List, Optional, Dict, Any, Literal
 from langchain_core.messages import HumanMessage
@@ -24,6 +25,8 @@ from .pattern_routing import verification_mode
 from .examples import example_corpus_path
 from ..scoring.multi_model_scorer import resolve_correct_answer
 from .. import feature_flags
+
+logger = logging.getLogger(__name__)
 
 try:
     from ..sourcing.models import Fact
@@ -792,6 +795,38 @@ class AdvancedQuestionGenerator:
                 best = fact
         return best
 
+    def _enforce_citation_integrity(
+        self, questions: List[Question], facts: Optional[list]
+    ) -> int:
+        """#161 (gen-review D13): a fabricated citation is an absolute ban.
+
+        The generation model writes ``source_url``/``source_excerpt`` fields
+        itself and nothing validated them — a citation is only kept when it
+        matches a fact this batch was actually given. In direct mode (no
+        facts) every model-emitted citation is fabricated by definition and
+        is stripped; in grounded mode a non-matching URL is stripped and the
+        slot handed back to ``_attribute_sources`` (a genuine match refills
+        it, otherwise the fallback mark → F8 drops the question fail-closed).
+        Returns the strip count.
+        """
+        allowed = {getattr(f, "source_url", None) for f in (facts or [])}
+        allowed.discard(None)
+        stripped = 0
+        for q in questions:
+            if q.source_url and q.source_url not in allowed:
+                logger.warning(
+                    "Stripped fabricated citation on question id=%s url=%r "
+                    "(not among the %d sourced fact URLs — #161/D13)",
+                    q.id,
+                    q.source_url,
+                    len(allowed),
+                )
+                q.source_url = None
+                q.source_excerpt = None
+                self._mark_source_attribution(q, "fabricated_citation_stripped")
+                stripped += 1
+        return stripped
+
     def _attribute_sources(
         self, questions: List[Question], facts: Optional[list]
     ) -> None:
@@ -1134,6 +1169,10 @@ class AdvancedQuestionGenerator:
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
+
+        # #161 (D13): strip model-fabricated citations BEFORE attribution, so
+        # a cleared slot can be re-filled with a genuine fact match below.
+        self._enforce_citation_integrity(questions, source_facts)
 
         # Issue #72 — link each question to the specific source fact it was built
         # from (within this sub-batch's disjoint slice), so packs stop citing one

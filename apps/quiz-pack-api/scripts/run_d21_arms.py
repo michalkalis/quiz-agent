@@ -95,7 +95,10 @@ async def _gather(topics: list[str], news: bool, out_path: Path) -> None:
         # OpenTDB off: pseudo-facts ("the answer to X is Y") must not enter
         # generation (joint-review D6; rewriter not built yet).
         sourcer = FactSourcer(enable_opentdb=False)
-    batch = await sourcer.gather_facts(count=3 * len(topics), topics=topics)
+    # Facts in surplus (D5): news pages carry boilerplate the generator must
+    # skip past, so the news pool gets double the per-topic budget.
+    per_topic = 6 if news else 3
+    batch = await sourcer.gather_facts(count=per_topic * len(topics), topics=topics)
     payload = {"topics": topics, "facts": [f.to_dict() for f in batch.facts]}
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     print(f"{out_path.name}: {len(batch.facts)} facts across {len(topics)} topics")
@@ -134,8 +137,8 @@ async def _batch_with_retry(gen, count: int, label: str, brief: dict):
 async def _run_arm(name: str, cfg: dict, out_dir: Path) -> dict:
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.prompt_builder import PromptBuilder
+    from app import llm_usage
     from quiz_shared.llm import factory as llm_factory
-    from quiz_shared.llm import usage as llm_usage
 
     recorder = llm_usage.UsageRecorder()
     llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(recorder))

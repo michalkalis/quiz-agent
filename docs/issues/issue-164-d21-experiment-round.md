@@ -60,11 +60,16 @@ implicitné: všetky ramená sú surové). Persona c (auto) vyradená v D23.
 - [x] Nový direct prompt v1 + persona a/b varianty
 - [x] Multi-rater web mobilný (rate.html responsive pass)
 - [x] Fakty: 24 shared + 24 news
-- [~] Generovanie 11 ramien (beží)
-- [ ] Publikácia batchu + linky pre raterov
-- [ ] Deploy quiz-pack-api (mobile web) — pred hodnotením
-- [ ] ČAKÁ NA ĽUDÍ: ohodnotenie 88 otázok
-- [ ] Replay + korelácie (jeden príkaz, po ratingoch)
+- [x] Generovanie 11 ramien — 88/88 otázok OK (usage: ~150k in / 42k out tokenov)
+- [x] Deploy quiz-pack-api (mobile web) — health 200
+- [x] Publikované 2026-08-15, batch `c1f109ec-9cc9-432c-88fd-d41e39292aec` (88 otázok, seed 20260815, bez dedupe — všetky otázky musia byť ohodnotené):
+      `https://quiz-pack-api.fly.dev/web/rate/c1f109ec-9cc9-432c-88fd-d41e39292aec?rater=michal` · druhý hodnotiteľ `?rater=rater2` (meno v URL = atribúcia; nemeniť uprostred hodnotenia)
+- [ ] ČAKÁ NA ĽUDÍ: ohodnotenie 88 otázok (dá sa na viackrát, uloží a pokračuje)
+- [ ] Replay + korelácie — po ratingoch, presné príkazy:
+      1. `uv run --no-sync python scripts/rating_page/export_ratings.py --base-url https://quiz-pack-api.fly.dev --admin-key $QUIZ_PACK_ADMIN_API_KEY --out ratings_export.jsonl`
+      2. env zrkadliaci prod: `LLM_GATEWAY=openrouter LLM_ROLE_CRITIQUE=bedrock:deepseek.v3.2 VERIFY_MODEL=bedrock:deepseek.v3.2` + `JUDGE_MODELS` prečítať z prod secrets (`fly ssh console -a quiz-pack-api -C env`) — POZOR, bez toho sudcovský panel beží na code-default, nie prod paneli
+      3. `... uv run --no-sync python scripts/replay_d21_layers.py`
+      4. `uv run --no-sync python scripts/correlate_d21.py --ratings ratings_export.jsonl --batch-id c1f109ec-9cc9-432c-88fd-d41e39292aec --rater michal`
 - [ ] P1: zmraziť ohodnotené otázky ako eval set (nadväzné issue)
 
 ## Náklady (odhad, schválený)

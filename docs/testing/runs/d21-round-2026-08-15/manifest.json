@@ -1,0 +1,138 @@
+{
+  "round": "d21-2026-08-15",
+  "per_arm": 8,
+  "shared_topics": [
+    "animal biology oddities",
+    "space exploration",
+    "everyday food science",
+    "world geography surprises",
+    "history of inventions",
+    "money and trade",
+    "the human body",
+    "sports history"
+  ],
+  "news_topics": [
+    "music industry recent news",
+    "famous music producers and their artists",
+    "film and streaming industry recent events",
+    "pop culture recent moments"
+  ],
+  "arms": {
+    "g-v3": {
+      "mode": "grounded",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_v3_fact_first.md"
+    },
+    "g-v5free": {
+      "mode": "grounded",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_v5_free.md"
+    },
+    "g-v6free": {
+      "mode": "grounded",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_v6_free.md"
+    },
+    "d-base": {
+      "mode": "direct",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_direct.md"
+    },
+    "d-persona-a": {
+      "mode": "direct",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_direct_persona_a.md"
+    },
+    "d-persona-b": {
+      "mode": "direct",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": "question_generation_direct_persona_b.md"
+    },
+    "d-gemini": {
+      "mode": "direct",
+      "model": "gemini-3.1-pro-preview",
+      "prompt": "question_generation_direct.md"
+    },
+    "d-deepseek": {
+      "mode": "direct",
+      "model": "bedrock:deepseek.v3.2",
+      "prompt": "question_generation_direct.md"
+    },
+    "d-opus": {
+      "mode": "direct",
+      "model": "claude-opus-5",
+      "prompt": "question_generation_direct.md"
+    },
+    "d-fable": {
+      "mode": "direct",
+      "model": "claude-fable-5",
+      "prompt": "question_generation_direct.md"
+    },
+    "e-news": {
+      "mode": "news",
+      "model": "bedrock:moonshotai.kimi-k2.5",
+      "prompt": null,
+      "categories": [
+        "entertainment"
+      ]
+    }
+  },
+  "results": [
+    {
+      "arm": "g-v3",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "g-v5free",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "g-v6free",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-base",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-persona-a",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-persona-b",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-gemini",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-deepseek",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-opus",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "d-fable",
+      "count": 8,
+      "status": "ok"
+    },
+    {
+      "arm": "e-news",
+      "count": 8,
+      "status": "ok"
+    }
+  ],
+  "llm_gateway": "openrouter"
+}

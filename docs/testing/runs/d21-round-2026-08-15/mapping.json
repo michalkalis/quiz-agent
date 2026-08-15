@@ -1,0 +1,530 @@
+{
+  "q01": {
+    "arm": "d-base",
+    "original_id": "temp_e5a0f0f4",
+    "topic": "everyday food science",
+    "question": "What everyday food found in 3,000-year-old Egyptian tombs was still edible when archaeologists opened them?"
+  },
+  "q02": {
+    "arm": "g-v5free",
+    "original_id": "temp_28fd4fb0",
+    "topic": "History Of Inventions",
+    "question": "Which Renaissance figure first sketched the concept of contact lenses in the 1500s, three centuries before they could actually be made?"
+  },
+  "q03": {
+    "arm": "e-news",
+    "original_id": "temp_88e97ecc",
+    "topic": "Music Industry Recent News",
+    "question": "In 2026, which industry began treating concerts by BTS, Bad Bunny and metal legends as major demand drivers they watch 'very carefully' for tourism impact?"
+  },
+  "q04": {
+    "arm": "d-opus",
+    "original_id": "temp_d6d80768",
+    "topic": "money and trade",
+    "question": "In a 1667 treaty the Dutch gave up their claim to Manhattan in exchange for the tiny island of Run — prized as a source of which spice?"
+  },
+  "q05": {
+    "arm": "g-v3",
+    "original_id": "temp_7613999a",
+    "topic": "Animal biology oddities",
+    "question": "Which Arctic animal changes its eye color from gold in summer to blue in winter, a seasonal trick found in no other mammal?"
+  },
+  "q06": {
+    "arm": "g-v6free",
+    "original_id": "temp_2fb77920",
+    "topic": "History of inventions",
+    "question": "Who performed the first documented successful C-section in 1500 — on his own wife?"
+  },
+  "q07": {
+    "arm": "d-fable",
+    "original_id": "temp_a30bcef0",
+    "topic": "Space exploration",
+    "question": "After months on the International Space Station, astronauts return to Earth temporarily changed in one measurable way — by up to about five centimetres. What has increased?"
+  },
+  "q08": {
+    "arm": "g-v6free",
+    "original_id": "temp_2a147269",
+    "topic": "Space exploration",
+    "question": "The Sun is exactly 400 times wider than the Moon — but by what multiple is it also farther away, letting them appear the same size in our sky?"
+  },
+  "q09": {
+    "arm": "e-news",
+    "original_id": "temp_1fa2c523",
+    "topic": "Pop Culture Recent Moments",
+    "question": "Billie Eilish is making her feature-film acting debut in 2026 as which troubled literary heroine?"
+  },
+  "q10": {
+    "arm": "d-deepseek",
+    "original_id": "temp_1dab30f9",
+    "topic": "world geography surprises",
+    "question": "What is the name of the smallest mountain range in the world, a tiny cluster of peaks rising abruptly from the plains of California's Central Valley?"
+  },
+  "q11": {
+    "arm": "g-v5free",
+    "original_id": "temp_0bf3b608",
+    "topic": "world geography surprises",
+    "question": "Which US state lies closest to the African continent—a counterintuitive answer that eastward reach beats southern latitude?"
+  },
+  "q12": {
+    "arm": "d-persona-b",
+    "original_id": "temp_cf8a7e25",
+    "topic": "everyday food science",
+    "question": "What is the only food that archaeologists have found edible after three thousand years in a tomb?"
+  },
+  "q13": {
+    "arm": "d-gemini",
+    "original_id": "temp_59131494",
+    "topic": "everyday food science",
+    "question": "What popular tropical fruit makes your mouth tingle because it contains an enzyme that actively digests the proteins in your tongue and cheeks?"
+  },
+  "q14": {
+    "arm": "e-news",
+    "original_id": "temp_51eda6e7",
+    "topic": "Film And Streaming Industry Recent Events",
+    "question": "What did veteran festival director Marco Müller say festivals should reveal, not become the last stop before streaming?"
+  },
+  "q15": {
+    "arm": "d-persona-b",
+    "original_id": "temp_caaba6ba",
+    "topic": "sports history",
+    "question": "The marathon's official distance of 42.195 kilometers was standardized at the 1908 London Olympics for what specific reason?"
+  },
+  "q16": {
+    "arm": "g-v6free",
+    "original_id": "temp_dd097818",
+    "topic": "sports history",
+    "question": "What color underwear are Major League Baseball umpires required to wear on the job?"
+  },
+  "q17": {
+    "arm": "g-v6free",
+    "original_id": "temp_d660d5af",
+    "topic": "Everyday food science",
+    "question": "Skittles get their red color from an ingredient hiding behind the name 'carminic acid' — what creature is actually boiled to make it?"
+  },
+  "q18": {
+    "arm": "e-news",
+    "original_id": "temp_9c755915",
+    "topic": "Music Industry Recent News",
+    "question": "For a limited 2023 reprint of her lyrics book 'How To Be Invisible,' Kate Bush signed some copies with a handwritten message in what surprising form?"
+  },
+  "q19": {
+    "arm": "d-base",
+    "original_id": "temp_713ca338",
+    "topic": "world geography surprises",
+    "question": "By dollar value, which country ranks as the world's second-largest food exporter — behind only the United States?"
+  },
+  "q20": {
+    "arm": "d-persona-b",
+    "original_id": "temp_ce0334e6",
+    "topic": "the human body",
+    "question": "Your stomach lining is under constant assault from acid strong enough to dissolve metal. How often does your body completely replace this entire lining with fresh cells?"
+  },
+  "q21": {
+    "arm": "d-deepseek",
+    "original_id": "temp_99fb86b0",
+    "topic": "animal biology oddities",
+    "question": "If you want to know what color eggs a hen will lay without waiting, there's one specific place you should look on the bird itself. Where?"
+  },
+  "q22": {
+    "arm": "d-fable",
+    "original_id": "temp_495208d5",
+    "topic": "Money and trade",
+    "question": "On the Pacific island of Yap, traditional money takes a famously impractical form — some pieces weigh several tonnes and never physically move when they change owners. What is this money made of?"
+  },
+  "q23": {
+    "arm": "e-news",
+    "original_id": "temp_361fe75d",
+    "topic": "Music Industry Recent News",
+    "question": "After Doja Cat publicly called Tyga 'a pussy' for using AI in his 2026 album $tarface, what was Tyga's surprising response?"
+  },
+  "q24": {
+    "arm": "d-base",
+    "original_id": "temp_a7dc6fac",
+    "topic": "the human body",
+    "question": "Your body contains one organ that can survive in total darkness for decades. What is it?"
+  },
+  "q25": {
+    "arm": "d-gemini",
+    "original_id": "temp_fd6ae6e9",
+    "topic": "animal biology oddities",
+    "question": "Which Australian marsupial is biologically unique for producing cube-shaped droppings, an adaptation that stops them from rolling off rocks?"
+  },
+  "q26": {
+    "arm": "d-deepseek",
+    "original_id": "temp_c1aac704",
+    "topic": "space exploration",
+    "question": "Thirteen years before Sputnik 1 shocked the world by entering orbit, another human-made object had already briefly entered space. What kind of object was it?"
+  },
+  "q27": {
+    "arm": "d-deepseek",
+    "original_id": "temp_72d4077a",
+    "topic": "world geography surprises",
+    "question": "Twelve countries make up the continent of South America. Eleven of them have a coastline. Which one does not?"
+  },
+  "q28": {
+    "arm": "d-fable",
+    "original_id": "temp_2ea8628f",
+    "topic": "World geography surprises",
+    "question": "Only one continent stretches across all four hemispheres — northern, southern, eastern and western. Which one?"
+  },
+  "q29": {
+    "arm": "d-gemini",
+    "original_id": "temp_7c13ded5",
+    "topic": "space exploration",
+    "question": "Upon splashing down in the Pacific and arriving in Hawaii, the Apollo 11 astronauts legally had to fill out what standard, mundane piece of travel paperwork?"
+  },
+  "q30": {
+    "arm": "d-fable",
+    "original_id": "temp_f4cf5534",
+    "topic": "The human body",
+    "question": "Which horseshoe-shaped bone in the human throat is the only bone in the body that is not directly connected to any other bone?"
+  },
+  "q31": {
+    "arm": "d-deepseek",
+    "original_id": "temp_3c7472e8",
+    "topic": "history of inventions",
+    "question": "Frederic Baur, the man who designed the iconic Pringles can, had a very specific final wish for his remains. What was it?"
+  },
+  "q32": {
+    "arm": "g-v5free",
+    "original_id": "temp_b242b283",
+    "topic": "Animal Biology Oddities",
+    "question": "Which mammal is the only one known to change its eye color seasonally, turning blue in winter and gold in summer?"
+  },
+  "q33": {
+    "arm": "g-v3",
+    "original_id": "temp_68be59b3",
+    "topic": "Everyday food science",
+    "question": "What gives original red Skittles their color—a dye extracted from crushed beetles or a petroleum-based synthetic?"
+  },
+  "q34": {
+    "arm": "g-v5free",
+    "original_id": "temp_63623c56",
+    "topic": "World Geography Surprises",
+    "question": "Which country spans the most time zones—twelve in total—despite most of its land lying in just one?"
+  },
+  "q35": {
+    "arm": "d-base",
+    "original_id": "temp_c46d1caf",
+    "topic": "world geography surprises",
+    "question": "At what South American landmark can sailors see two different colored ocean waters meeting side by side?"
+  },
+  "q36": {
+    "arm": "d-gemini",
+    "original_id": "temp_01f0c9a6",
+    "topic": "space exploration",
+    "question": "In 1971, Apollo 14 astronaut Alan Shepard attached the head of a six-iron to a lunar excavation tool to play what sport on the surface of the Moon?"
+  },
+  "q37": {
+    "arm": "d-persona-b",
+    "original_id": "temp_affc92a6",
+    "topic": "money and trade",
+    "question": "During the Dutch tulip mania of the 1630s, what could a single rare tulip bulb buy at peak market price?"
+  },
+  "q38": {
+    "arm": "d-opus",
+    "original_id": "temp_87a98c58",
+    "topic": "Everyday food science",
+    "question": "You lower a raw egg into a glass of water and instead of settling on the bottom it floats up to the surface. What does that tell you about the egg?"
+  },
+  "q39": {
+    "arm": "d-fable",
+    "original_id": "temp_a445633d",
+    "topic": "Sports history",
+    "question": "Beneath its thin plating, the Olympic gold medal is actually made mostly of which metal?"
+  },
+  "q40": {
+    "arm": "d-persona-b",
+    "original_id": "temp_28371761",
+    "topic": "the human body",
+    "question": "What common plant can cows digest but humans cannot extract a single calorie from, even if we chewed it for hours?"
+  },
+  "q41": {
+    "arm": "d-persona-a",
+    "original_id": "temp_2939331f",
+    "topic": "space exploration",
+    "question": "On Venus, something we experience daily lasts longer than something we experience yearly. Which is longer there?"
+  },
+  "q42": {
+    "arm": "d-persona-a",
+    "original_id": "temp_a0967d37",
+    "topic": "everyday food science",
+    "question": "Archaeologists once tasted honey from an Egyptian tomb. If sealed properly, what's the actual shelf life of honey?"
+  },
+  "q43": {
+    "arm": "d-base",
+    "original_id": "temp_76768ec4",
+    "topic": "space exploration",
+    "question": "How many times farther from Earth is a geostationary TV satellite compared to the International Space Station — roughly 5 times, 20 times, or 90 times?"
+  },
+  "q44": {
+    "arm": "e-news",
+    "original_id": "temp_59e8c725",
+    "topic": "Film And Streaming Industry Recent Events",
+    "question": "While many festivals have become promotional stops for streaming releases, which major festival has notably refused to fully embrace films from streaming platforms?"
+  },
+  "q45": {
+    "arm": "g-v3",
+    "original_id": "temp_1e290aec",
+    "topic": "Space exploration",
+    "question": "The Sun is 400 times wider than the Moon, yet they look identical in Earth's sky. How many times farther away is the Sun?"
+  },
+  "q46": {
+    "arm": "d-persona-b",
+    "original_id": "temp_7d7d10eb",
+    "topic": "space exploration",
+    "question": "What 1970s NASA spacecraft, launched when Gerald Ford was president, is still sending daily signals from beyond the solar system?"
+  },
+  "q47": {
+    "arm": "d-base",
+    "original_id": "temp_f0dfd823",
+    "topic": "animal biology oddities",
+    "question": "How many hearts does an octopus have?"
+  },
+  "q48": {
+    "arm": "d-persona-b",
+    "original_id": "temp_32d529b4",
+    "topic": "space exploration",
+    "question": "NASA's Voyager 1 probe has been flying away from Earth since 1977 and entered interstellar space in 2012. When is it expected to finally lose all electrical power and go completely silent?"
+  },
+  "q49": {
+    "arm": "d-fable",
+    "original_id": "temp_47c30823",
+    "topic": "Everyday food science",
+    "question": "Every popcorn kernel contains a tiny amount of one everyday substance, sealed inside its hard shell — when heated, it builds up huge pressure and blasts the kernel inside out. What is that substance?"
+  },
+  "q50": {
+    "arm": "d-base",
+    "original_id": "temp_2f1419d4",
+    "topic": "history of inventions",
+    "question": "The Eiffel Tower was originally built to stand for how many years before being dismantled?"
+  },
+  "q51": {
+    "arm": "d-base",
+    "original_id": "temp_8d465968",
+    "topic": "space exploration",
+    "question": "NASA launched a space probe in 1977 that's still working today. How long does its signal take to reach Earth?"
+  },
+  "q52": {
+    "arm": "g-v3",
+    "original_id": "temp_5bdb870a",
+    "topic": "Everyday food science",
+    "question": "What tiny insect are you eating when you choose strawberry-flavored candy with a bright red shell?"
+  },
+  "q53": {
+    "arm": "g-v6free",
+    "original_id": "temp_31921e16",
+    "topic": "Animal biology oddities",
+    "question": "Which animal turns its eyeballs blue every winter to see better in the dark — and golden again come summer?"
+  },
+  "q54": {
+    "arm": "d-fable",
+    "original_id": "temp_e569eb8c",
+    "topic": "Animal biology oddities",
+    "question": "How many hearts pump blood through the body of an octopus?"
+  },
+  "q55": {
+    "arm": "g-v3",
+    "original_id": "temp_c614dee1",
+    "topic": "Animal biology oddities",
+    "question": "Which Arctic animal changes its eye color from gold to deep blue each winter, the only mammal known to do this?"
+  },
+  "q56": {
+    "arm": "d-persona-a",
+    "original_id": "temp_c939316d",
+    "topic": "the human body",
+    "question": "Your appendix was once essential for digesting something cows still eat every day. What?"
+  },
+  "q57": {
+    "arm": "d-persona-a",
+    "original_id": "temp_46719dbc",
+    "topic": "sports history",
+    "question": "At the 1904 Olympics, marathon gold went to a runner who spent eleven miles of the race in what vehicle?"
+  },
+  "q58": {
+    "arm": "d-opus",
+    "original_id": "temp_0bb6ec68",
+    "topic": "Money and trade",
+    "question": "During Zimbabwe's hyperinflation, the central bank printed the biggest-denomination banknote in the country's history in 2009. What number was on it?"
+  },
+  "q59": {
+    "arm": "g-v6free",
+    "original_id": "temp_af3ff9f2",
+    "topic": "animal biology oddities",
+    "question": "What color do reindeer eyeballs turn during winter to help them see in dim Arctic light?"
+  },
+  "q60": {
+    "arm": "d-persona-a",
+    "original_id": "temp_9a6ad36a",
+    "topic": "world geography surprises",
+    "question": "Which nation has a coastline nearly six times longer than Russia's, thanks to countless islands and jagged Arctic shorelines?"
+  },
+  "q61": {
+    "arm": "d-deepseek",
+    "original_id": "temp_2491e441",
+    "topic": "space exploration",
+    "question": "The Apollo 10 lunar module, named 'Snoopy,' has a unique distinction among all the Apollo lunar modules that didn't land on the Moon. Where is it?"
+  },
+  "q62": {
+    "arm": "d-persona-a",
+    "original_id": "temp_1d35978c",
+    "topic": "animal biology oddities",
+    "question": "Which slow-moving mammal can voluntarily hold its breath underwater for forty minutes, nearly twice as long as a dolphin typically manages?"
+  },
+  "q63": {
+    "arm": "d-gemini",
+    "original_id": "temp_b37654e7",
+    "topic": "everyday food science",
+    "question": "What tropical fruit contains bromelain, an enzyme that breaks down proteins, meaning the fruit is quite literally digesting your mouth while you eat it?"
+  },
+  "q64": {
+    "arm": "d-persona-b",
+    "original_id": "temp_0bf51571",
+    "topic": "sports history",
+    "question": "What material were professional tennis rackets made of until 1980, when Bjorn Borg's own company finally replaced it?"
+  },
+  "q65": {
+    "arm": "d-fable",
+    "original_id": "temp_419056b0",
+    "topic": "Space exploration",
+    "question": "On which planet of our solar system does a single rotation take longer than a full orbit around the Sun — in other words, its day is longer than its year?"
+  },
+  "q66": {
+    "arm": "e-news",
+    "original_id": "temp_44fee94f",
+    "topic": "Famous Music Producers And Their Artists",
+    "question": "Which alternative rock pioneers did Cypress Hill collaborate with for the Judgment Night soundtrack, bridging two wildly different genres?"
+  },
+  "q67": {
+    "arm": "d-gemini",
+    "original_id": "temp_06917570",
+    "topic": "world geography surprises",
+    "question": "If you measure continuous land borders, France shares its longest border not with Spain or Belgium, but with what massive country on another continent?"
+  },
+  "q68": {
+    "arm": "g-v6free",
+    "original_id": "temp_0e5e49fb",
+    "topic": "money and trade",
+    "question": "How much does it cost the U.S. Mint to produce one penny?"
+  },
+  "q69": {
+    "arm": "d-gemini",
+    "original_id": "temp_eb754da7",
+    "topic": "world geography surprises",
+    "question": "Due to one of its overseas territories, France actually shares its longest land border with which South American country?"
+  },
+  "q70": {
+    "arm": "g-v5free",
+    "original_id": "temp_81b24c97",
+    "topic": "Everyday Food Science",
+    "question": "Which common kitchen spice contains myristicin, a compound that can act as a hallucinogen if consumed in large doses?"
+  },
+  "q71": {
+    "arm": "d-opus",
+    "original_id": "temp_43edcac8",
+    "topic": "animal biology oddities",
+    "question": "A giraffe's towering neck contains exactly the same number of neck vertebrae as your own. How many is that?"
+  },
+  "q72": {
+    "arm": "d-opus",
+    "original_id": "temp_85248248",
+    "topic": "Animal biology oddities",
+    "question": "Which animal has fingerprints so close to a human's in their loops and whorls that experts can struggle to tell the two apart?"
+  },
+  "q73": {
+    "arm": "g-v6free",
+    "original_id": "temp_580aab5e",
+    "topic": "world geography surprises",
+    "question": "Which country has the most time zones in the world?"
+  },
+  "q74": {
+    "arm": "g-v3",
+    "original_id": "temp_299cb375",
+    "topic": "World geography surprises",
+    "question": "Which U.S. state sits closest to Africa—Florida, Maine, Massachusetts, or North Carolina?"
+  },
+  "q75": {
+    "arm": "d-gemini",
+    "original_id": "temp_3905f9ac",
+    "topic": "animal biology oddities",
+    "question": "To protect its brain from massive deceleration forces, what specific body part does a woodpecker wrap completely around its skull before every strike?"
+  },
+  "q76": {
+    "arm": "g-v5free",
+    "original_id": "temp_5c5fd143",
+    "topic": "everyday food science",
+    "question": "Which common baking spice contains a compound called myristicin that acts as a hallucinogen if consumed in large doses?"
+  },
+  "q77": {
+    "arm": "d-opus",
+    "original_id": "temp_5273fc27",
+    "topic": "space exploration",
+    "question": "In 1970, a spacecraft became the first ever to land softly on another planet and radio data back from its surface. Which planet?"
+  },
+  "q78": {
+    "arm": "g-v3",
+    "original_id": "temp_1b0085a4",
+    "topic": "History of inventions",
+    "question": "London got its first traffic lights in 1868, outside Parliament. What powered vehicles were they designed to control?"
+  },
+  "q79": {
+    "arm": "e-news",
+    "original_id": "temp_5f7e8edb",
+    "topic": "Pop Culture Recent Moments",
+    "question": "Billie Eilish is making her feature film acting debut playing which troubled protagonist from a landmark 1963 novel?"
+  },
+  "q80": {
+    "arm": "d-persona-a",
+    "original_id": "temp_8cb8b390",
+    "topic": "space exploration",
+    "question": "Voyager 1, now fourteen billion miles from Earth, carries less computer memory than what everyday object in your desk drawer?"
+  },
+  "q81": {
+    "arm": "d-deepseek",
+    "original_id": "temp_8f8fe5f4",
+    "topic": "history of inventions",
+    "question": "The scientist who invented the adhesive for Post-it Notes was actually trying to invent something else entirely. What kind of adhesive was he *supposed* to be making?"
+  },
+  "q82": {
+    "arm": "g-v5free",
+    "original_id": "temp_41df3c61",
+    "topic": "sports history",
+    "question": "The famous Stanley Cup was originally baptized with what longer, more bureaucratic official name?"
+  },
+  "q83": {
+    "arm": "d-persona-a",
+    "original_id": "temp_c7cd6a52",
+    "topic": "everyday food science",
+    "question": "Archaeologists once tasted something sweet from an Egyptian tomb built three millennia ago. What was it?"
+  },
+  "q84": {
+    "arm": "d-deepseek",
+    "original_id": "temp_ac3398a4",
+    "topic": "animal biology oddities",
+    "question": "The giraffe's scientific name, *Giraffa camelopardalis*, translates to reveal what two animals ancient observers thought it resembled?"
+  },
+  "q85": {
+    "arm": "d-opus",
+    "original_id": "temp_2fdbc425",
+    "topic": "everyday food science",
+    "question": "The big round holes in Swiss cheese like Emmental are bubbles of gas made by bacteria as the cheese ripens. Which gas?"
+  },
+  "q86": {
+    "arm": "d-opus",
+    "original_id": "temp_fce0330f",
+    "topic": "Space exploration",
+    "question": "NASA's Mars rover Opportunity was designed to work for about 90 Martian days after landing in 2004. Roughly how long did it actually keep going?"
+  },
+  "q87": {
+    "arm": "g-v3",
+    "original_id": "temp_15084893",
+    "topic": "World geography surprises",
+    "question": "Which US state sits closest to Africa — not Florida or Georgia, but one most Americans would never guess?"
+  },
+  "q88": {
+    "arm": "g-v5free",
+    "original_id": "temp_55b0656b",
+    "topic": "history of inventions",
+    "question": "William Phelps Eno, who invented the stop sign and was called the father of traffic safety, never actually did what one might expect?"
+  }
+}

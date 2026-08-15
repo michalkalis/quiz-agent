@@ -211,6 +211,7 @@
     line-height: 1.4;
     margin: 0;
     text-wrap: pretty;
+    overflow-wrap: break-word;
   }
 
   .opts { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none; }
@@ -337,9 +338,35 @@
     * { transition: none !important; }
   }
   @media (max-width: 34rem) {
-    .meter { flex-wrap: wrap; }
-    .meter label { flex: 1 1 18%; }
+    main { padding: 1.5rem .9rem 5rem; }
+    .bar-inner { padding: .6rem .9rem; gap: .75rem 1rem; }
     .card { padding: 1.1rem 1rem 1rem; }
+    .q { font-size: 1.12rem; }
+
+    /* Touch targets: 1-10 score buttons wrap two-per-row-of-five and grow
+       tall enough to hit the ~44px minimum; label (not just the span) is
+       the real tap target since the radio input sits under it. */
+    .meter { flex-wrap: wrap; gap: 6px; }
+    .meter label { flex: 1 1 18%; }
+    .meter span {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .95rem;
+      padding: 0;
+    }
+
+    button { padding: .62rem 1rem; font-size: .92rem; min-height: 44px; }
+    .bar-inner button { padding: .55rem .85rem; min-height: 40px; }
+
+    /* >=16px stops iOS Safari auto-zooming the page when a textarea is
+       focused (showJson()/copy fallback focus jsonOut programmatically,
+       and the reason field is typed into directly). */
+    textarea { font-size: 16px; }
+
+    .export-row { gap: .55rem; }
+    .export-row button { flex: 1 1 auto; }
   }
 </style>
 

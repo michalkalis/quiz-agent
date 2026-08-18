@@ -72,29 +72,79 @@ implicitné: všetky ramená sú surové). Persona c (auto) vyradená v D23.
       4. `uv run --no-sync python scripts/correlate_d21.py --ratings ratings_export.jsonl --batch-id c1f109ec-9cc9-432c-88fd-d41e39292aec --rater michal`
 - [ ] P1: zmraziť ohodnotené otázky ako eval set (nadväzné issue)
 
-## Výsledky (2026-08-18)
+## Výsledky a uzavretie (2026-08-18)
 
-Per-arm human mean (obaja raters, 8 q/rameno):
-d-opus 8.38 · d-fable 7.75 · g-v5free 7.38 · d-gemini 7.00 · d-base 6.88 ·
-d-deepseek 6.88 · g-v6free 6.31 · g-v3 6.25 · d-persona-b 5.88 · e-news 5.25 ·
-d-persona-a 5.00
+**Interpretačný rámec (rozhodnutie zakladateľa):** rater „michal" = cieľová
+produktová metrika (zábavnosť/hrateľnosť v aute) — voči nej sa hodnotia ramená,
+prompty aj vrstvy. Rater „svitlanka" = editorský/faktický pohľad — nie škála
+kvality, ale zdroj reálnych chýb, ktoré má chytať pipeline. Súhrnné „both"
+čísla z prvého behu correlate sú preto zavádzajúce a nižšie sa nepoužívajú.
 
-Korelácie vrstiev s ľuďmi (Spearman, both/michal/svitlanka):
-critique .18/.19/.05 · duely (within-arm) .15/.00/.14 · answerability .24/.22/.13 ·
-judges panel .21/.24/.13 · verify .08/.11/.08
+### Os 1 — produktová metrika (michal, 8 q/rameno)
 
-**Kľúčový nález: inter-rater Spearman = −0.04 (n=88)** — hodnotitelia sa na
-per-otázkovej kvalite prakticky nezhodujú; per-otázkové korelácie vrstiev sú tým
-zhora ohraničené šumom. Per-arm poradie je konzistentnejšie (d-opus top u oboch;
-persona varianty a e-news dole u oboch; nezhoda hlavne d-fable/d-base/g-v3).
+d-fable **9.12** · d-base 8.38 · d-opus 8.25 · g-v3 8.00 · g-v5free 7.50 ·
+g-v6free 7.50 · d-deepseek 6.88 · d-gemini 6.75 · d-persona-b 6.12 ·
+e-news 4.88 · d-persona-a 3.88
 
-Interpretačné dôsledky (na spoločnú session, nerozhodnuté):
-- Žiadna vrstva pipeline nekoreluje silno (max ~.24); verify a duely prakticky nulové.
-- Persona prompty (D23a/b) škodia vs. d-base u oboch raterov.
-- Frontier direct (Opus/Fable) > grounded Kimi ramená; v5-free ostáva najlepší Kimi prompt.
-- e-news slabé — news mód potrebuje repromptovanie, nie zahodenie (8 q, malá vzorka).
+Závery pre prompt/model:
+- **Direct v1 prompt vyhráva nad grounded promptami aj na tom istom modeli**
+  (Kimi: d-base 8.38 > g-v3 8.00 > v5free/v6free 7.50). Kandidát na kanonický prompt.
+- **Frontier direct je top** (d-fable 9.12); persona varianty (D23a/b) jasne
+  škodia (3.88/6.12 vs base 8.38) → vyradiť.
+- e-news 4.88 — najslabšie rameno; reprompt, nie zahodenie (n=8).
 
-Artefakty: `apps/quiz-pack-api/ratings_export.jsonl`, replay + correlate výstupy
+Vrstvy vs. michal (Spearman): judges .24 · answerability .22 (pass 7.33 vs
+fail 6.05) · critique .19 · verify .11 · **duely .00**. Žiadna vrstva
+nepredikuje zábavnosť silno; duely sú na tejto osi mŕtve.
+
+### Os 2 — editorské nálezy (svitlanka) a či ich pipeline chytila
+
+Reálne faktické/logické chyby + verdikt verify vrstvy z replaya:
+
+| Q | Rameno | Chyba | verify |
+|---|---|---|---|
+| q27 | d-deepseek | JA má DVE vnútrozemské krajiny (Bolívia+Paraguaj), otázka tvrdí jednu | ❌ verified |
+| q35 | d-base | „dve farby oceánu na Cape Horn" = geografický mýtus (reálne Encontro das Águas) | ❌ verified |
+| q46 | d-persona-b | Voyager 1 štartoval za Cartera, nie Forda | ❌ verified |
+| q33 | g-v3 | červené Skittles už karmín nepoužívajú (prítomný čas = nepravda) | ❌ (nedetegované) |
+| q24 | d-base | „orgán prežije v tme" — logický nezmysel | ✅ likely_wrong |
+| q52 | g-v3 | košenila nie je chrobák (beetle) | ✅ likely_wrong |
+| q68 | g-v6free | cena výroby penny — zastaraný údaj | ✅ likely_wrong |
+
+- Verify chytila **3 zo 7** tvrdých chýb. Jej verdikt pritom s editorskou osou
+  súhlasí (svitlanka mean: likely_wrong 3.0 vs verified 6.3) → verify je reálny,
+  ale deravý detektor chýb; nízka korelácia s michalom je očakávaná (meria
+  správnosť, nie zábavu). Chýbajú jej hlavne chyby vyžadujúce web-grounding
+  (q27, q35, q46 sú z parametrickej pamäte direct módu).
+- **Frontier direct ramená (d-opus, d-fable) nemajú ani jednu editorsky
+  nájdenú faktickú chybu**; Kimi direct (d-base) má 2, DeepSeek 1.
+- 16 z jej 88 hodnotení sú jednotky za **duplicity** — artefakt dizajnu kola
+  (ramená zdieľajú fakty/témy, publikované zámerne bez dedupe). Nie sú to dáta
+  o kvalite otázok a z jej škály sa vylučujú.
+
+**Inter-rater Spearman = −0.04 (n=88), po vylúčení duplicít −0.05 (n=72)** —
+nezhoda nie je artefakt duplicít, sú to skutočne dve nezávislé osi. Per-otázkové
+korelácie vrstiev proti zmiešanej škále sú preto bezcenné; správna referencia
+vrstiev = michal (zábava) + binárne editorské nálezy (chybovosť).
+
+### Metodika ďalšieho kola (zafixované)
+
+1. **Dve oddelené osi:** michal hodnotí 1–10 (produktová metrika). Druhý rater
+   dostane editorský checklist (faktická chyba / logická diera / zastaraný údaj /
+   duplicita + komentár), NIE škálu 1–10.
+2. **Dedupe pred publikáciou** (alebo duplicitné položky explicitne označené
+   a vylúčené z korelácií).
+3. Korelácie vrstiev sa počítajú len proti michal osi; editorské nálezy sa
+   vyhodnocujú ako recall detekčných vrstiev (verify/critique), nie Spearmanom.
+
+### Stav rozhodnutí
+
+- Vyradené (dáta jednoznačné, oba osi): persona prompty D23a/b, duely ako vrstva.
+- Na schválenie zakladateľom (interaktívne): kanonický prompt + gen model,
+  osud critique/answerability/verify vrstiev, e-news reprompt. Zapíše sa sem.
+
+Artefakty: `ratings_export.jsonl`, replay + correlate výstupy (aj per-rater
+`correlations_michal.json` / `correlations_svitlanka.json`)
 v `docs/testing/runs/d21-round-2026-08-15/`.
 
 ## Náklady (odhad, schválený)

@@ -39,6 +39,7 @@ async def upsert_rating(
     scale_max: int = SCORE_MAX,
     rated_at: Optional[datetime] = None,
     refresh_identity: bool = False,
+    update_extra: bool = False,
 ) -> tuple[uuid.UUID, datetime]:
     """Insert-or-update this rater's score, keyed by `dedupe_key`.
 
@@ -48,7 +49,9 @@ async def upsert_rating(
 
     Only score/reason/timestamps are updated — identity columns are derived
     from the key, and `extra` is first-write-only so a later blank display name
-    cannot erase the one already recorded.
+    cannot erase the one already recorded. The web checklist path (D21b) opts
+    into `update_extra` so re-submitted flags replace the stored ones —
+    including an explicit clear.
 
     `scale_min`/`scale_max`/`rated_at` default to the live 1–10 form and "now";
     the #156 backfill passes a historical round's own scale and date so the
@@ -65,6 +68,8 @@ async def upsert_rating(
         "rated_at": when,
         "updated_at": now,
     }
+    if update_extra:
+        updates["extra"] = extra
     if refresh_identity:
         updates.update(
             question_text=question_text,
@@ -159,6 +164,9 @@ def export_line(r: Rating) -> str:
         "scale_max": r.scale_max,
         "score_normalized_10": normalize_to_10(r.score, r.scale_min, r.scale_max),
         "reason": r.reason,
+        # Top-level convenience for the D21b correlate/eval scripts; the same
+        # dict also rides inside `extra`.
+        "flags": (r.extra or {}).get("flags"),
         "source": r.source,
         "rated_at": r.rated_at.isoformat(),
         "extra": r.extra,

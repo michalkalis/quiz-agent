@@ -68,3 +68,16 @@ async def test_admin_web_pages_still_require_the_key(
 ) -> None:
     """The open rate route must not have opened the admin tool next to it."""
     assert (await ratings_client.get("/web/import")).status_code == 401
+
+
+async def test_rate_page_carries_the_editorial_checklist(
+    ratings_client: httpx.AsyncClient,
+) -> None:
+    """D21b: every rater card gets the 4 checklist chips next to the meter."""
+    batch_id = await _register(ratings_client)
+    resp = await ratings_client.get(f"/web/rate/{batch_id}?rater=Michal")
+    assert resp.status_code == 200
+    for label in ("faktická chyba", "logická diera", "zastaraný údaj", "duplicita"):
+        assert label in resp.text
+    for key in ("fact_error", "logic_flaw", "stale", "duplicate"):
+        assert key in resp.text

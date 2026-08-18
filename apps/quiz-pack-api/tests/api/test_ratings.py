@@ -234,10 +234,118 @@ async def test_get_batch_returns_only_this_raters_ratings(
             "score": 8.0,
             "reason": None,
             "rated_at": mine.json()["ratings"]["q01"]["rated_at"],
+            "flags": None,
         }
     }
     anon = await ratings_client.get(f"/v1/ratings/batches/{batch_id}")
     assert anon.json()["ratings"] == {}
+
+
+# --- editorial checklist flags (D21b) ----------------------------------------
+
+
+async def test_flags_persist_and_hydrate(
+    ratings_client: httpx.AsyncClient, test_session: AsyncSession
+) -> None:
+    """Checklist flags live in extra["flags"] and come back on GET (resume)."""
+    batch_id = await _register(ratings_client)
+    resp = await ratings_client.put(
+        f"/v1/ratings/batches/{batch_id}/ratings",
+        json={
+            "rater": "Michal",
+            "qid": "q01",
+            "score": 7,
+            "flags": {"fact_error": True, "stale": False},
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    row = (await test_session.execute(select(Rating))).scalars().one()
+    assert row.extra == {"flags": {"fact_error": True, "stale": False}}
+
+    mine = await ratings_client.get(f"/v1/ratings/batches/{batch_id}?rater=Michal")
+    assert mine.json()["ratings"]["q01"]["flags"] == {
+        "fact_error": True,
+        "stale": False,
+    }
+
+
+async def test_flags_resubmit_replaces_and_clears(
+    ratings_client: httpx.AsyncClient, test_session: AsyncSession
+) -> None:
+    """A re-rate must be able to change AND clear flags — not just add them."""
+    batch_id = await _register(ratings_client)
+    url = f"/v1/ratings/batches/{batch_id}/ratings"
+    base = {"rater": "Michal", "qid": "q01", "score": 5}
+    for flags in ({"duplicate": True}, {"logic_flaw": True}, {}):
+        resp = await ratings_client.put(url, json={**base, "flags": flags})
+        assert resp.status_code == 200, resp.text
+
+    row = (await test_session.execute(select(Rating))).scalars().one()
+    await test_session.refresh(row)
+    assert row.extra == {"flags": {}}
+
+
+async def test_omitted_flags_leave_stored_flags_alone(
+    ratings_client: httpx.AsyncClient, test_session: AsyncSession
+) -> None:
+    """A score-only push (older device, pre-hydrate race) must not wipe flags."""
+    batch_id = await _register(ratings_client)
+    url = f"/v1/ratings/batches/{batch_id}/ratings"
+    await ratings_client.put(
+        url,
+        json={"rater": "Michal", "qid": "q01", "score": 5, "flags": {"stale": True}},
+    )
+    resp = await ratings_client.put(
+        url, json={"rater": "Michal", "qid": "q01", "score": 9}
+    )
+    assert resp.status_code == 200, resp.text
+
+    row = (await test_session.execute(select(Rating))).scalars().one()
+    await test_session.refresh(row)
+    assert float(row.score) == 9.0
+    assert row.extra == {"flags": {"stale": True}}
+
+
+async def test_unknown_flag_key_is_422(ratings_client: httpx.AsyncClient) -> None:
+    batch_id = await _register(ratings_client)
+    resp = await ratings_client.put(
+        f"/v1/ratings/batches/{batch_id}/ratings",
+        json={
+            "rater": "Michal",
+            "qid": "q01",
+            "score": 5,
+            "flags": {"arm_leak": True},
+        },
+    )
+    assert resp.status_code == 422
+
+
+async def test_export_carries_top_level_flags(
+    ratings_client: httpx.AsyncClient,
+) -> None:
+    """The correlate/eval scripts read `flags` without digging into extra."""
+    batch_id = await _register(ratings_client)
+    await ratings_client.put(
+        f"/v1/ratings/batches/{batch_id}/ratings",
+        json={
+            "rater": "Michal",
+            "qid": "q01",
+            "score": 3,
+            "flags": {"fact_error": True},
+        },
+    )
+    await ratings_client.put(
+        f"/v1/ratings/batches/{batch_id}/ratings",
+        json={"rater": "Michal", "qid": "q02", "score": 8},
+    )
+
+    resp = await ratings_client.get("/v1/ratings/export", headers=ADMIN)
+    assert resp.status_code == 200
+    rows = {r["blinded_qid"]: r for line in resp.text.splitlines() if line.strip()
+            for r in [json.loads(line)]}
+    assert rows["q01"]["flags"] == {"fact_error": True}
+    assert rows["q02"]["flags"] is None
 
 
 # --- in-app path (#155 wiring, backend half here) ----------------------------

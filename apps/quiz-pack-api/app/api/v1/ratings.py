@@ -99,7 +99,10 @@ async def get_batch(
         for r in rows.scalars():
             if r.blinded_qid:
                 saved[r.blinded_qid] = SavedRating(
-                    score=float(r.score), reason=r.reason, rated_at=r.rated_at
+                    score=float(r.score),
+                    reason=r.reason,
+                    rated_at=r.rated_at,
+                    flags=(r.extra or {}).get("flags"),
                 )
 
     return BatchViewResponse(
@@ -142,6 +145,10 @@ async def put_web_rating(
         score=payload.score,
         reason=payload.reason,
         source="web",
+        # D21b checklist: omitted flags leave the stored ones alone; an
+        # explicit {} clears them (update_extra opts into the overwrite).
+        extra={"flags": payload.flags} if payload.flags is not None else None,
+        update_extra=payload.flags is not None,
     )
     return RatingSavedResponse(
         rating_id=rating_id,

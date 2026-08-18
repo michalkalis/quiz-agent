@@ -282,6 +282,20 @@
   .meter label.on span { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
   .meter label.peak span { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 700; }
 
+  /* D21b editorial checklist — one row of toggle chips under the meter */
+  .echk { display: flex; flex-wrap: wrap; gap: 6px; }
+  .echk button {
+    font: inherit; font-size: .78rem; cursor: pointer;
+    min-height: 44px; padding: 0 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+  }
+  .echk button:hover { border-color: var(--bad); color: var(--ink); }
+  .echk button.on {
+    background: color-mix(in srgb, var(--bad) 18%, transparent);
+    border-color: var(--bad); color: var(--bad); font-weight: 600;
+  }
+  .savestate[data-state="pending"] { color: var(--muted); font-style: italic; }
+
   textarea {
     font: inherit;
     font-size: .9rem;
@@ -432,6 +446,14 @@
   }
   document.getElementById("raterName").textContent = RATER || "bez mena (len lokálne)";
 
+  // D21b editorial checklist — keys must match the API's RATING_FLAGS.
+  const FLAG_DEFS = [
+    ["fact_error", "faktická chyba"],
+    ["logic_flaw", "logická diera"],
+    ["stale", "zastaraný údaj"],
+    ["duplicate", "duplicita"],
+  ];
+
   const KEY = "quiz-ratings-" + BATCH_ID + (RATER ? "-" + RATER : "");
   const state = loadLocal();
   const pending = {};   // qid -> debounce timer
@@ -480,6 +502,9 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         rater: RATER, qid: qid, score: entry.score, reason: entry.reason || null,
+        // Undefined = never touched on this device — leave the server copy
+        // alone (protects flags set on another device before hydrate lands).
+        flags: entry.flags === undefined ? undefined : entry.flags,
       }),
     }).then((r) => {
       if (!r.ok) throw new Error("HTTP " + r.status);
@@ -555,6 +580,9 @@
         '<div class="rate-top"><span class="rate-lbl">Skóre 1–10</span>' +
         '<span class="verdict" data-role="verdict">neohodnotené</span></div>' +
         '<div class="meter">' + meter + "</div>" +
+        '<div class="echk" data-role="echk">' + FLAG_DEFS.map(([key, label]) =>
+          '<button type="button" data-flag="' + key + '">' + label + "</button>"
+        ).join("") + "</div>" +
         '<textarea data-role="reason" rows="1" placeholder="Dôvod (nepovinné) — čo funguje, čo nie"></textarea>' +
         '<div class="savestate" data-role="save"></div>' +
       "</div>";
@@ -562,7 +590,15 @@
     const meterEl = card.querySelector(".meter");
     const verdictEl = card.querySelector('[data-role="verdict"]');
     const reasonEl = card.querySelector('[data-role="reason"]');
+    const echkEl = card.querySelector('[data-role="echk"]');
     flags[qid] = card.querySelector('[data-role="save"]');
+
+    function paintChecklist(saved) {
+      const on = (saved && saved.flags) || {};
+      echkEl.querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("on", !!on[b.dataset.flag]);
+      });
+    }
 
     function paint(score) {
       meterEl.querySelectorAll("label").forEach((l) => {
@@ -574,6 +610,7 @@
       card.dataset.rated = score ? "1" : "0";
     }
     card.__paint = paint;
+    card.__paintChecklist = paintChecklist;
     card.__meter = meterEl;
     card.__reason = reasonEl;
     card.__qid = qid;
@@ -600,6 +637,25 @@
       if (state[qid].score) queuePush(qid);
     });
 
+    echkEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-flag]");
+      if (!btn) return;
+      const current = Object.assign({}, (state[qid] && state[qid].flags) || {});
+      current[btn.dataset.flag] = !current[btn.dataset.flag];
+      state[qid] = Object.assign({}, state[qid], {
+        index: i + 1, question: q.question, flags: current,
+      });
+      paintChecklist(state[qid]);
+      saveLocal();
+      if (state[qid].score) {
+        queuePush(qid);
+      } else {
+        // The API needs a score on every row — the checklist rides along with
+        // the next score push; until then it lives only in this browser.
+        setFlag(qid, "pending", "Checklist zapísaný lokálne — na server sa uloží so skóre.");
+      }
+    });
+
     cards.appendChild(card);
   });
 
@@ -614,6 +670,7 @@
       autogrow(card.__reason);
     }
     card.__paint(saved && saved.score ? saved.score : 0);
+    card.__paintChecklist(saved);
   }
 
   function autogrow(el) {
@@ -652,6 +709,7 @@
             score: saved[qid].score,
             reason: saved[qid].reason || "",
           });
+          if (saved[qid].flags != null) state[qid].flags = saved[qid].flags;
           n++;
         });
         if (n) {
@@ -691,6 +749,7 @@
         answer: q.answer,
         score: state[q.qid] && state[q.qid].score ? state[q.qid].score : null,
         reason: state[q.qid] && state[q.qid].reason ? state[q.qid].reason : "",
+        flags: state[q.qid] && state[q.qid].flags ? state[q.qid].flags : null,
       })),
     }, null, 2);
   }

@@ -20,6 +20,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 SCORE_MIN = 1
 SCORE_MAX = 10
 
+# D21b editorial checklist (issue-164 follow-up): every web rater ticks these
+# alongside the 1–10 score. Stored under `Rating.extra["flags"]` — no schema
+# migration, the score column stays required.
+RATING_FLAGS = ("fact_error", "logic_flaw", "stale", "duplicate")
+
 
 class BatchQuestion(BaseModel):
     """The rater-visible shape of one question.
@@ -64,6 +69,7 @@ class SavedRating(BaseModel):
     score: float
     reason: Optional[str]
     rated_at: datetime
+    flags: Optional[dict[str, bool]] = None
 
 
 class BatchViewResponse(BaseModel):
@@ -82,6 +88,8 @@ class WebRatingRequest(BaseModel):
     qid: str
     score: float = Field(ge=SCORE_MIN, le=SCORE_MAX)
     reason: Optional[str] = None
+    # Omitted = leave stored flags untouched; {} = explicitly clear them.
+    flags: Optional[dict[str, bool]] = None
 
     @field_validator("rater")
     @classmethod
@@ -90,6 +98,18 @@ class WebRatingRequest(BaseModel):
         if not rater:
             raise ValueError("rater must not be blank")
         return rater
+
+    @field_validator("flags")
+    @classmethod
+    def _known_flags_only(
+        cls, v: Optional[dict[str, bool]]
+    ) -> Optional[dict[str, bool]]:
+        if v is None:
+            return v
+        unknown = sorted(set(v) - set(RATING_FLAGS))
+        if unknown:
+            raise ValueError(f"unknown flags: {unknown}")
+        return v
 
 
 class InAppRatingRequest(BaseModel):

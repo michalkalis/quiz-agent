@@ -1,0 +1,602 @@
+{
+  "q01": {
+    "arm": "f-base",
+    "original_id": "temp_7826d202",
+    "topic": "Transport and aviation firsts",
+    "question": "Eight years before Lindbergh's famous solo crossing, aviators John Alcock and Arthur Brown completed the first nonstop transatlantic flight in 1919 — taking off from Newfoundland and ending nose-down in a soft bog in which country?"
+  },
+  "q02": {
+    "arm": "f-base",
+    "original_id": "temp_7bf10181",
+    "topic": "Games and toys history",
+    "question": "Before it hit toy shelves in the 1950s, the squishy modelling compound Play-Doh was sold for a completely different job around the house. What was it originally used for?"
+  },
+  "q03": {
+    "arm": "e-news-f",
+    "original_id": "temp_129610b9",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "Which 1970s rock epic is the only song ever to be the UK Christmas Number One twice, its second reign coming after its lead singer's death in 1991?"
+  },
+  "q04": {
+    "arm": "f-base",
+    "original_id": "temp_69f53cfa",
+    "topic": "Money and trade",
+    "question": "On the Pacific island of Yap, the traditional currency called rai takes the form of enormous carved discs — some wider than a car and far too heavy to move. What are these coins made of?"
+  },
+  "q05": {
+    "arm": "f-base",
+    "original_id": "temp_6edb568c",
+    "topic": "Weather and natural phenomena",
+    "question": "The mouth of one river at Lake Maracaibo sees so much lightning — on well over a hundred nights a year — that it's often called the lightning capital of the world. In which South American country is it?"
+  },
+  "q06": {
+    "arm": "f-base",
+    "original_id": "temp_6e779d97",
+    "topic": "Space exploration",
+    "question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun — its day is literally longer than its year. Which planet?"
+  },
+  "q07": {
+    "arm": "e-news-f",
+    "original_id": "temp_864bdb29",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "Who is the only artist in history to score five number-one albums on the US Billboard 200 before turning nineteen?"
+  },
+  "q08": {
+    "arm": "f-base",
+    "original_id": "temp_e70f09a9",
+    "topic": "Famous landmarks and their secrets",
+    "question": "Tourists in London point at the clock tower of the Palace of Westminster and call it Big Ben — but strictly speaking, Big Ben is the name of what?"
+  },
+  "q09": {
+    "arm": "f-base",
+    "original_id": "temp_5e04fe6a",
+    "topic": "Famous landmarks and their secrets",
+    "question": "Every summer, the Eiffel Tower measurably grows — by as much as 15 centimetres. What causes this seasonal growth spurt?"
+  },
+  "q10": {
+    "arm": "f-base",
+    "original_id": "temp_8a3866d9",
+    "topic": "Chemistry in everyday life",
+    "question": "A well-known kitchen trick says a rock-hard avocado ripens much faster if you seal it in a paper bag with a banana. That works because ripening bananas give off which gas, which acts as a plant hormone?"
+  },
+  "q11": {
+    "arm": "f-base",
+    "original_id": "temp_6a527197",
+    "topic": "Money and trade",
+    "question": "Europe's very first paper banknotes were issued back in 1661 by a private bank in which country — one that, rather ironically, is today racing to become one of the world's first completely cashless societies?"
+  },
+  "q12": {
+    "arm": "f-base",
+    "original_id": "temp_0e2e7e81",
+    "topic": "Engineering marvels",
+    "question": "Despite its name, San Francisco's Golden Gate Bridge has never been painted gold. Its distinctive reddish colour — kept partly so ships can spot it in thick fog — has an official name. What is it?"
+  },
+  "q13": {
+    "arm": "f-base",
+    "original_id": "temp_d821d9db",
+    "topic": "Ancient civilizations daily life",
+    "question": "Contrary to legend, the pyramid builders of Giza were not slaves but paid workers. Alongside bread, what drink made up a core part of their daily rations?"
+  },
+  "q14": {
+    "arm": "f-base",
+    "original_id": "temp_03b0d704",
+    "topic": "Ancient civilizations daily life",
+    "question": "Ancient Roman laundry workers whitened togas by soaking them in a liquid collected from pots on street corners — a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid was it?"
+  },
+  "q15": {
+    "arm": "f-base",
+    "original_id": "temp_db7396d0",
+    "topic": "Maps and borders quirks",
+    "question": "In the Bering Strait, Big Diomede and Little Diomede sit less than 4 kilometres apart, yet the International Date Line runs between them — earning them the nicknames Tomorrow Island and Yesterday Isle. Which two countries do they belong to?"
+  },
+  "q16": {
+    "arm": "e-news-f",
+    "original_id": "temp_fd44166c",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "After its original nine-week reign at UK number one in the mid-1970s, Queen's Bohemian Rhapsody was finally dethroned by a song that shares one of Freddie Mercury's most famous sung exclamations — which band knocked it off the top?"
+  },
+  "q17": {
+    "arm": "f-base",
+    "original_id": "temp_54da8abe",
+    "topic": "Chemistry in everyday life",
+    "question": "Hemoglobin gets its punch from a single iron atom at the heart of the molecule. Chlorophyll, the green pigment in plants, has a remarkably similar structure — but which metal sits at its center instead?"
+  },
+  "q18": {
+    "arm": "e-news-f",
+    "original_id": "temp_c72c7f6a",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "Which hip-hop legend holds the record for the most Grammy nominations, sixteen in total, without ever winning a single one?"
+  },
+  "q19": {
+    "arm": "f-base",
+    "original_id": "temp_af132cbf",
+    "topic": "Transport and aviation firsts",
+    "question": "Eight years before Charles Lindbergh's celebrated solo crossing, two British airmen completed the first-ever nonstop transatlantic flight in 1919, ending it nose-down in an Irish bog. Name either of the two men."
+  },
+  "q20": {
+    "arm": "f-base",
+    "original_id": "temp_9a0f45fb",
+    "topic": "Famous landmarks and their secrets",
+    "question": "Nearly 300 metres up the Eiffel Tower hides a small private apartment with wallpaper, wooden furniture and a grand piano — a retreat where its owner once hosted Thomas Edison. Who had this secret flat built for himself?"
+  },
+  "q21": {
+    "arm": "f-base",
+    "original_id": "temp_51f93f46",
+    "topic": "Records and extremes in nature",
+    "question": "The cheetah gets all the glory, but the true speed record for any animal on Earth — over 300 kilometres per hour — belongs to a bird of prey in its hunting dive. Which bird?"
+  },
+  "q22": {
+    "arm": "e-news-k",
+    "original_id": "temp_f4ffc0f1",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "Which 2026 BTS album sold over four million copies in its first week and held number one on the Billboard 200 for three straight weeks?"
+  },
+  "q23": {
+    "arm": "f-base",
+    "original_id": "temp_8a7b35b5",
+    "topic": "Everyday food science",
+    "question": "White chocolate contains cocoa butter, sugar and milk — but it is completely missing the dark component that gives milk and dark chocolate both their colour and their classic chocolatey taste. What is that missing component called?"
+  },
+  "q24": {
+    "arm": "f-base",
+    "original_id": "temp_eca52c68",
+    "topic": "Engineering marvels",
+    "question": "When the Hoover Dam was built in the 1930s, workers embedded hundreds of kilometres of steel pipes inside the structure and pumped ice-cold water through them. Without this trick, engineers calculated the dam would have needed over a century to finish doing what?"
+  },
+  "q25": {
+    "arm": "f-base",
+    "original_id": "temp_f0200dcf",
+    "topic": "Space exploration",
+    "question": "After six months floating on the International Space Station, astronauts return to Earth with up to five extra centimetres of something they quickly lose again. Five centimetres of what?"
+  },
+  "q26": {
+    "arm": "f-base",
+    "original_id": "temp_ce8a21f6",
+    "topic": "Art and artists surprises",
+    "question": "When the Mona Lisa vanished from the Louvre in 1911, French police hauled in a young Spanish-born painter living in Paris for questioning as a suspect. Who was he?"
+  },
+  "q27": {
+    "arm": "e-news-f",
+    "original_id": "temp_93396eda",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "question": "For Live Aid in 1985, David Bowie recorded a UK chart-topping duet cover of 'Dancing in the Street' with which fellow rock legend?"
+  },
+  "q28": {
+    "arm": "f-base",
+    "original_id": "temp_c6fe9517",
+    "topic": "weather and natural phenomena",
+    "question": "High above powerful thunderstorms, ghostly red flashes called 'sprites' sometimes shoot upward toward the edge of space, lasting just a fraction of a second. What happening in the storm below triggers them?"
+  },
+  "q29": {
+    "arm": "f-base",
+    "original_id": "temp_88e72b9b",
+    "topic": "Money and trade",
+    "question": "In the 1630s, the Dutch Republic experienced history's most famous speculative bubble, when a single rare bulb could briefly cost as much as a grand Amsterdam canal house. Which flower drove the frenzy?"
+  },
+  "q30": {
+    "arm": "f-base",
+    "original_id": "temp_ecdb82cb",
+    "topic": "Animal biology oddities",
+    "question": "A giraffe's neck can be over two metres long, yet it contains exactly the same number of neck vertebrae as yours. How many is that?"
+  },
+  "q31": {
+    "arm": "e-news-k",
+    "original_id": "temp_4c71fcef",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "question": "As of 2026, which K-pop group became the first where every member has completed the spicy wing challenge on Hot Ones?"
+  },
+  "q32": {
+    "arm": "e-news-k",
+    "original_id": "temp_940ae1e2",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "In 2025's Spider-Man: Brand New Day, director Destin Daniel Cretton kept Sadie Sink's role secret for what reason?"
+  },
+  "q33": {
+    "arm": "f-base",
+    "original_id": "temp_2f65b6a6",
+    "topic": "Technology origins and firsts",
+    "question": "In 1973, Motorola engineer Martin Cooper stood on a Manhattan sidewalk and made history's very first call of its kind — cheekily dialling his direct rival at Bell Labs to gloat. What kind of device was he holding?"
+  },
+  "q34": {
+    "arm": "e-news-f",
+    "original_id": "temp_0b8ef396",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "The all-time Grammy record was held for decades not by a pop star but by a classical conductor — which superstar finally took the title of most decorated artist in Grammy history with her thirty-second trophy?"
+  },
+  "q35": {
+    "arm": "f-base",
+    "original_id": "temp_3fcf64cb",
+    "topic": "History of inventions",
+    "question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set — an accident that led him to invent which kitchen appliance?"
+  },
+  "q36": {
+    "arm": "f-base",
+    "original_id": "temp_dc21e8d6",
+    "topic": "Everyday food science",
+    "question": "Popcorn kernels explode because a small amount of something sealed inside each kernel suddenly turns to high-pressure steam when heated. What is that something?"
+  },
+  "q37": {
+    "arm": "f-base",
+    "original_id": "temp_da53cd00",
+    "topic": "World geography surprises",
+    "question": "Only one country on Earth has territory in all four hemispheres — northern, southern, eastern and western. Which Pacific island nation is it?"
+  },
+  "q38": {
+    "arm": "f-base",
+    "original_id": "temp_91a977ea",
+    "topic": "Space exploration",
+    "question": "In 2021, NASA's little helicopter Ingenuity made the first powered flight on another planet, on Mars. Tucked aboard as a tribute was a postage-stamp-sized piece of wing fabric taken from which pioneering aircraft?"
+  },
+  "q39": {
+    "arm": "f-base",
+    "original_id": "temp_c0ea54eb",
+    "topic": "Animal biology oddities",
+    "question": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?"
+  },
+  "q40": {
+    "arm": "e-news-f",
+    "original_id": "temp_8b16aec1",
+    "topic": "Major Music And Film Awards Recent Winners",
+    "question": "Frank Sinatra and Stevie Wonder each won the Grammy for Album of the Year three times — but who in 2024 became the first artist in history to win it four times?"
+  },
+  "q41": {
+    "arm": "e-news-f",
+    "original_id": "temp_5bf4a952",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "question": "In 2026, Deep Purple fans witnessed rock history when the guitarist who wrote the legendary 'Smoke on the Water' riff joined the band on stage for the first time since 1993 — who is he?"
+  },
+  "q42": {
+    "arm": "f-base",
+    "original_id": "temp_1d2409b9",
+    "topic": "Famous landmarks and their secrets",
+    "question": "When the Washington Monument was completed in 1884, its very tip was crowned with a small pyramid of a metal that was then more precious than silver — but is dirt cheap today. Which metal?"
+  },
+  "q43": {
+    "arm": "f-base",
+    "original_id": "temp_6ac3b02c",
+    "topic": "The human body",
+    "question": "One living tissue in the human body contains no blood vessels at all and takes its oxygen straight from the surrounding air — which is exactly why it stays perfectly transparent. Which tissue is it?"
+  },
+  "q44": {
+    "arm": "f-base",
+    "original_id": "temp_7396d811",
+    "topic": "Sports history",
+    "question": "The All England Club, home of the Wimbledon Championships since 1877, was actually founded in 1868 for a completely different lawn game — which one?"
+  },
+  "q45": {
+    "arm": "e-news-f",
+    "original_id": "temp_9d5d118c",
+    "topic": "Famous Music Producers And The Artists They Make Hits For",
+    "question": "Which song became the first rap single ever to reach number one on the US Billboard Hot 100, back in 1990?"
+  },
+  "q46": {
+    "arm": "f-base",
+    "original_id": "temp_19eada6b",
+    "topic": "Weather and natural phenomena",
+    "question": "Every so often, parts of Europe wake up to eerie 'blood rain' that leaves cars and snow coated in a reddish film. This colour comes from dust swept thousands of kilometres north from which desert?"
+  },
+  "q47": {
+    "arm": "f-base",
+    "original_id": "temp_495812a8",
+    "topic": "The human body",
+    "question": "A newborn baby has roughly 300 bones, yet an adult has only about 206 — and not a single one is ever lost. What happens to explain the difference?"
+  },
+  "q48": {
+    "arm": "e-news-k",
+    "original_id": "temp_2e9fab43",
+    "topic": "Famous Music Producers And The Artists They Make Hits For",
+    "question": "Which guitarist who sang 'Rock and Roll, Hoochie Koo' also produced records for both Steely Dan and Weird Al Yankovic?"
+  },
+  "q49": {
+    "arm": "f-base",
+    "original_id": "temp_d06dd1ff",
+    "topic": "Technology origins and firsts",
+    "question": "In the early 1990s, computer scientists at the University of Cambridge invented the world's first webcam for a very practical reason: to spare themselves pointless trips down the corridor. What everyday object was the camera pointed at?"
+  },
+  "q50": {
+    "arm": "f-base",
+    "original_id": "temp_410adb24",
+    "topic": "Everyday food science",
+    "question": "Bananas are very slightly radioactive, thanks to the naturally radioactive isotope of which chemical element they are famously rich in?"
+  },
+  "q51": {
+    "arm": "f-base",
+    "original_id": "temp_c3bf0c23",
+    "topic": "Everyday food science",
+    "question": "Chili plants make capsaicin to punish mammals, whose chewing teeth destroy the seeds. But one whole group of animals literally cannot feel the burn — and conveniently swallows the seeds whole and spreads them far away. Which group?"
+  },
+  "q52": {
+    "arm": "f-base",
+    "original_id": "temp_da8ca97f",
+    "topic": "Games and toys history",
+    "question": "Founded in Kyoto in 1889 to make handmade playing cards, which Japanese company went on to become one of the biggest names in video games?"
+  },
+  "q53": {
+    "arm": "f-base",
+    "original_id": "temp_2934f4ee",
+    "topic": "ancient civilizations daily life",
+    "question": "Bone analysis of gladiators buried at Ephesus shows they ate a mostly plant-based diet — so dominated by one grain that Romans nicknamed them 'hordearii', meaning eaters of what?"
+  },
+  "q54": {
+    "arm": "f-base",
+    "original_id": "temp_9934a838",
+    "topic": "Art and artists surprises",
+    "question": "In 1911, an Italian handyman walked out of the Louvre with a painting hidden under his coat, claiming he wanted to return it to Italy — a theft that made the artwork world-famous. Which painting was it?"
+  },
+  "q55": {
+    "arm": "f-base",
+    "original_id": "temp_000b21d5",
+    "topic": "Famous rulers and royal quirks",
+    "question": "Queen Elizabeth II visited more than a hundred countries during her reign, yet she never once carried a document that every other British traveller must have. Which document?"
+  },
+  "q56": {
+    "arm": "f-base",
+    "original_id": "temp_4da95c14",
+    "topic": "Chemistry in everyday life",
+    "question": "That famously puffy pocket of gas in a bag of potato crisps isn't ordinary air — manufacturers use a specific gas because oxygen would turn the frying oil rancid. Which gas?"
+  },
+  "q57": {
+    "arm": "e-news-f",
+    "original_id": "temp_059a9874",
+    "topic": "Major Music And Film Awards Recent Winners",
+    "question": "Which film took home more Academy Awards: James Cameron's Titanic or the 1959 epic Ben-Hur?"
+  },
+  "q58": {
+    "arm": "e-news-k",
+    "original_id": "temp_fae810d8",
+    "topic": "Major music and film awards recent winners",
+    "question": "Which actor won the 2022 Best Actor Oscar for 'The Whale' but also starred in the 1997 live-action comedy 'George of the Jungle' swinging on vines in a loincloth?"
+  },
+  "q59": {
+    "arm": "e-news-f",
+    "original_id": "temp_7ce22554",
+    "topic": "Major Music And Film Awards Recent Winners",
+    "question": "At the 2026 Oscars, Michael B. Jordan won Best Actor for the vampire hit Sinners — and the film's screenplay Oscar went to which director, his longtime collaborator from Creed and Black Panther?"
+  },
+  "q60": {
+    "arm": "f-base",
+    "original_id": "temp_f6363671",
+    "topic": "Ocean and deep sea mysteries",
+    "question": "Scientists warn that the wreck of the Titanic, resting almost four kilometres deep, may largely disintegrate within a few decades. What is slowly eating away its iron hull?"
+  },
+  "q61": {
+    "arm": "e-news-f",
+    "original_id": "temp_6b3cdc60",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "During its original nine-week run at UK number one in the 1970s, Queen's Bohemian Rhapsody was finally dethroned by an ABBA song whose title Freddie Mercury actually sings inside Bohemian Rhapsody itself — which song?"
+  },
+  "q62": {
+    "arm": "f-base",
+    "original_id": "temp_97a1ce6e",
+    "topic": "Ocean and deep sea mysteries",
+    "question": "On the floor of the Gulf of Mexico, explorers have filmed actual underwater lakes — with distinct shorelines and rippling surfaces — resting on the seabed. What ingredient makes their water dense enough to pool beneath the ocean?"
+  },
+  "q63": {
+    "arm": "e-news-f",
+    "original_id": "temp_3984c622",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "In 2026, Spider-Man: Brand New Day raced to two billion dollars worldwide in just 20 days — yet which film still holds the all-time speed record, hitting two billion in only 11 days?"
+  },
+  "q64": {
+    "arm": "f-base",
+    "original_id": "temp_4da1eabd",
+    "topic": "World geography surprises",
+    "question": "For nearly fifty years, Canada and Denmark fought the world's politest territorial dispute — the so-called Whisky War — by taking turns planting flags and leaving bottles of liquor on which tiny uninhabited Arctic island?"
+  },
+  "q65": {
+    "arm": "f-base",
+    "original_id": "temp_5a77d95e",
+    "topic": "Money and trade",
+    "question": "The name of the American dollar goes back to the 'thaler' — silver coins first struck in the 1520s in the mining town of Joachimsthal. In which present-day European country does that town lie?"
+  },
+  "q66": {
+    "arm": "e-news-f",
+    "original_id": "temp_c8c878df",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "Titanic's famous sweep of eleven Oscars in 1998 only tied, rather than broke, the record set by which 1959 epic?"
+  },
+  "q67": {
+    "arm": "f-base",
+    "original_id": "temp_663fd5cb",
+    "topic": "Space exploration",
+    "question": "In 1971, Apollo 14 commander Alan Shepard smuggled a modified club head to the Moon and became the first person to play which sport there?"
+  },
+  "q68": {
+    "arm": "f-base",
+    "original_id": "temp_e72ec6a3",
+    "topic": "Weather and natural phenomena",
+    "question": "One place on Earth sees lightning storms on roughly 260 nights every year — so reliably that sailors once used the flashes as a natural lighthouse. Over which large Venezuelan lake does this famous 'everlasting storm' rage?"
+  },
+  "q69": {
+    "arm": "f-base",
+    "original_id": "temp_d453c3e2",
+    "topic": "Weather and natural phenomena",
+    "question": "A desert is defined by how little precipitation falls, not by heat — which is why the largest desert on Earth is not the Sahara. Which continent holds the title?"
+  },
+  "q70": {
+    "arm": "e-news-k",
+    "original_id": "temp_3b3ec56c",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "question": "In 2026, what milestone did BLACKPINK achieve by going 'four-for-four'—with Jisoo's appearance completing the set?"
+  },
+  "q71": {
+    "arm": "f-base",
+    "original_id": "temp_fa83d4d3",
+    "topic": "Sports history",
+    "question": "The last Olympic gold medals made of solid gold were handed out in 1912. Ever since, they've been made almost entirely of a different metal, with just a few grams of gold plating on top. Which metal?"
+  },
+  "q72": {
+    "arm": "f-base",
+    "original_id": "temp_facafead",
+    "topic": "World geography surprises",
+    "question": "Thanks to far-flung overseas territories stretching from the Pacific to the Caribbean, which country spans twelve time zones — more than any other nation on Earth?"
+  },
+  "q73": {
+    "arm": "f-base",
+    "original_id": "temp_41de8c8b",
+    "topic": "Music history milestones",
+    "question": "In December 1965, two Gemini 6 astronauts smuggled a harmonica and sleigh bells aboard and made history with the first live musical performance in space. Which festive song did they play?"
+  },
+  "q74": {
+    "arm": "f-base",
+    "original_id": "temp_5c74792d",
+    "topic": "Famous rulers and royal quirks",
+    "question": "In 1698, one ruler was so determined to drag his nobles into Western European fashion that he taxed their beards — even handing out tokens as proof of payment. Which famously reform-minded Russian tsar was it?"
+  },
+  "q75": {
+    "arm": "f-base",
+    "original_id": "temp_66903752",
+    "topic": "Music history milestones",
+    "question": "In January 1969, which band gave their very last public performance — an unannounced lunchtime concert on the rooftop of their London office building, broken up by the police?"
+  },
+  "q76": {
+    "arm": "f-base",
+    "original_id": "temp_3144614e",
+    "topic": "Plants and fungi oddities",
+    "question": "The largest known living organism on Earth sprawls under about nine square kilometres of forest in Oregon, USA — and it's neither a plant nor an animal. What kind of organism is it?"
+  },
+  "q77": {
+    "arm": "f-base",
+    "original_id": "temp_c248265a",
+    "topic": "Classic films and pop culture history",
+    "question": "In the 1939 classic The Wizard of Oz, gentle snowfall wakes Dorothy in the poppy field. The 'snow' sprinkled over Judy Garland was made of a material now banned in much of the world — what was it?"
+  },
+  "q78": {
+    "arm": "f-base",
+    "original_id": "temp_ddc5143e",
+    "topic": "Music history milestones",
+    "question": "When MTV went on air for the very first time in August 1981, it deliberately opened with a Buggles song whose title predicted exactly what the channel would do to an older medium. What was the song?"
+  },
+  "q79": {
+    "arm": "f-base",
+    "original_id": "temp_1a497e4d",
+    "topic": "Animal biology oddities",
+    "question": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?"
+  },
+  "q80": {
+    "arm": "e-news-k",
+    "original_id": "temp_b9edf0a1",
+    "topic": "Famous Music Producers And The Artists They Make Hits For",
+    "question": "Which producer released albums with Paul McCartney, The Rolling Stones, and Madonna all within three months in 2026?"
+  },
+  "q81": {
+    "arm": "e-news-k",
+    "original_id": "temp_b513fd07",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "In 2025's Spider-Man: Brand New Day, director Destin Daniel Cretton kept which Stranger Things actress's character secret because knowing it would spoil the story?"
+  },
+  "q82": {
+    "arm": "f-base",
+    "original_id": "temp_1987cef7",
+    "topic": "ocean and deep sea mysteries",
+    "question": "In the pitch-black deep sea, the tiny male of which fish bites into the much larger female and permanently fuses with her body — living out his days as little more than an attached sperm supply?"
+  },
+  "q83": {
+    "arm": "f-base",
+    "original_id": "temp_3b898dd2",
+    "topic": "Classic films and pop culture history",
+    "question": "In the legendary shower scene of Alfred Hitchcock's 1960 thriller Psycho, the blood swirling down the drain looked terrifyingly real on black-and-white film — yet it was actually which sweet kitchen product?"
+  },
+  "q84": {
+    "arm": "e-news-f",
+    "original_id": "temp_95b07732",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "The first draft script for which blockbuster vampire saga featured its heroine as a star athlete being chased by the FBI on jet skis?"
+  },
+  "q85": {
+    "arm": "e-news-k",
+    "original_id": "temp_291672e5",
+    "topic": "major music and film awards recent winners",
+    "question": "Which rapper made Grammy history in 2026 by becoming the most-awarded rapper of all time?"
+  },
+  "q86": {
+    "arm": "e-news-f",
+    "original_id": "temp_1265bf64",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?"
+  },
+  "q87": {
+    "arm": "f-base",
+    "original_id": "temp_d0141a57",
+    "topic": "Chemistry in everyday life",
+    "question": "When you mix baking soda with vinegar and it fizzes up dramatically, which gas is being released in all those bubbles?"
+  },
+  "q88": {
+    "arm": "f-base",
+    "original_id": "temp_15149c3b",
+    "topic": "Art and artists surprises",
+    "question": "In 1911 the Mona Lisa vanished from the Louvre, stolen by a former museum worker who kept it hidden in his small Paris flat for over two years. He was finally caught when he tried to sell the painting in the country where he insisted it truly belonged. Which country?"
+  },
+  "q89": {
+    "arm": "e-news-k",
+    "original_id": "temp_c5cfa68e",
+    "topic": "Major Music And Film Awards Recent Winners",
+    "question": "What 2026 animated film about a K-pop girl group secretly saving the world from demons won both Best Animated Feature and Best Original Song at the Academy Awards?"
+  },
+  "q90": {
+    "arm": "e-news-f",
+    "original_id": "temp_473feb63",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "question": "Ryan Gosling's 2026 space blockbuster Project Hail Mary was directed by the same duo behind which beloved animated comedy hit?"
+  },
+  "q91": {
+    "arm": "f-base",
+    "original_id": "temp_2e1d9181",
+    "topic": "Everyday food science",
+    "question": "Archaeologists opening ancient Egyptian tombs have found sealed pots of a certain food that, after roughly 3,000 years, was still perfectly safe to eat. Which food?"
+  },
+  "q92": {
+    "arm": "e-news-f",
+    "original_id": "temp_0dfdac7a",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "question": "In 2026, Grimes released a full collaboration with which famous Japanese virtual pop star — a synthetic singing voice with no human performer, whose songs are written by tens of thousands of bedroom producers?"
+  },
+  "q93": {
+    "arm": "f-base",
+    "original_id": "temp_47ffeacf",
+    "topic": "Games and toys history",
+    "question": "Long before children squeezed it into shapes, Play-Doh was sold as a household cleaning product. In the era of coal heating, homeowners rolled the soft putty across one surface in particular to lift off the soot. What was it made to clean?"
+  },
+  "q94": {
+    "arm": "e-news-f",
+    "original_id": "temp_73e4c982",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "question": "Which Scottish band grew so sick of their own 1994 mega-hit 'Love Is All Around', the theme from Four Weddings and a Funeral, that after 15 weeks at UK Number One they deliberately stopped producing the single?"
+  },
+  "q95": {
+    "arm": "f-base",
+    "original_id": "temp_d404e8a2",
+    "topic": "History of inventions",
+    "question": "In 1957, two American engineers sealed a pair of shower curtains together, trapping pockets of air, and tried to sell the result as textured wallpaper. It flopped — but their invention became world-famous as which packaging material?"
+  },
+  "q96": {
+    "arm": "f-base",
+    "original_id": "temp_11a61dd7",
+    "topic": "Sports history",
+    "question": "The marathon's oddly precise distance of 42.195 kilometres dates from the 1908 London Olympics, when the course was stretched so the race could start on the lawn of which royal residence?"
+  },
+  "q97": {
+    "arm": "f-base",
+    "original_id": "temp_b7f9a7fc",
+    "topic": "Animal biology oddities",
+    "question": "An octopus's blood carries oxygen using copper instead of iron. What colour does that make its blood?"
+  },
+  "q98": {
+    "arm": "e-news-f",
+    "original_id": "temp_7ec488dd",
+    "topic": "Major Music And Film Awards Recent Winners",
+    "question": "By 2024, the Marvel Cinematic Universe had racked up a record fourteen Oscar nominations in one single category without ever winning it — which category?"
+  },
+  "q99": {
+    "arm": "f-base",
+    "original_id": "temp_a2f29d7f",
+    "topic": "Classic films and pop culture history",
+    "question": "Alfred Hitchcock's 1960 thriller Psycho is famous for its shower scene — but it broke a second Hollywood bathroom taboo, reportedly becoming the first major American film to show which everyday fixture actually being used on screen?"
+  },
+  "q100": {
+    "arm": "f-base",
+    "original_id": "temp_80d12507",
+    "topic": "Ocean and deep sea mysteries",
+    "question": "Point Nemo in the South Pacific is the spot in the ocean farthest from any land — more than 2,600 kilometres in every direction. Because nobody is ever nearby, space agencies use it as a deliberate crash zone for what?"
+  }
+}

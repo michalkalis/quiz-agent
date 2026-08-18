@@ -1,0 +1,907 @@
+[
+  {
+    "arm": "f-base",
+    "id": "temp_8e39e937",
+    "rule": "answer",
+    "question": "The largest known living organism on Earth sprawls across roughly 9 square kilometres of Oregon's Blue Mountains and is thousands of years old — yet it's not a tree, not a whale, and most of it is hidden underground. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_3ea654e2",
+    "rule": "answer",
+    "question": "The Statue of Liberty is famous for its green colour today — but when it was unveiled in 1886, it looked completely different. What colour was it then?",
+    "matched": [
+      "brown"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_58f0094c",
+    "rule": "answer",
+    "question": "Forget blue whales and giant sequoias — the largest known living organism on Earth sprawls invisibly beneath a forest in Oregon, covering roughly nine square kilometres. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_62b406fa",
+    "rule": "answer",
+    "question": "The two Diomede Islands in the Bering Strait sit less than 4 kilometres apart, yet locals nickname them 'Tomorrow Island' and 'Yesterday Isle' because the International Date Line runs between them. Which two countries do they belong to?",
+    "matched": [
+      "russia and the usa",
+      "united states and russia",
+      "usa and russia"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_d4f4e848",
+    "rule": "answer",
+    "question": "Measured by area, the largest known living organism on Earth isn't a whale or a giant tree — it sprawls unseen beneath nearly 10 square kilometres of forest in Oregon. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_ef44c9c0",
+    "rule": "answer",
+    "question": "In 1911, an Italian handyman walked out of the Louvre with a painting hidden under his workman's smock — a theft that turned a modestly admired portrait into the most famous artwork on the planet. Which painting did he steal?",
+    "matched": [
+      "la gioconda",
+      "la joconde",
+      "mona lisa"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_9d33edd2",
+    "rule": "embedding",
+    "question": "Decades before it filled nursery classrooms, the squishy compound we now know as Play-Doh was sold in American hardware stores as a cleaning product. What was it originally used to clean?",
+    "duplicate_of": {
+      "arm": "f-base",
+      "id": "temp_7bf10181",
+      "sim": 0.89
+    }
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_887ccad3",
+    "rule": "answer",
+    "question": "In 1698, which Russian tsar — fresh from a tour of Western Europe — imposed a tax on beards, making men pay for a special token that proved they had bought the right to stay unshaven?",
+    "matched": [
+      "peter i",
+      "peter i of russia",
+      "peter the great",
+      "tsar peter the great"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_98dd3125",
+    "rule": "answer",
+    "question": "Despite its name, the Golden Gate Bridge in San Francisco has never been painted gold. Chosen partly so ships could spot it in thick fog, what is the official name of its famous colour?",
+    "matched": [
+      "international orange",
+      "international orange colour"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_15c790a3",
+    "rule": "answer",
+    "question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun — meaning its day is longer than its year. Which planet?",
+    "matched": [
+      "venus"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_52e90a90",
+    "rule": "answer",
+    "question": "Two small islands nicknamed Tomorrow Island and Yesterday Isle sit less than 4 kilometres apart, yet their clocks differ by about 21 hours because the International Date Line runs between them. Which two countries do they belong to?",
+    "matched": [
+      "russia and america",
+      "russia and the united states",
+      "united states and russia",
+      "usa and russia"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_4b3685c7",
+    "rule": "answer",
+    "question": "In 1957, two American engineers sealed a pair of plastic shower curtains together and tried to sell the air-pocketed result as trendy textured wallpaper. Nobody wanted it on their walls, but it went on to protect countless fragile parcels. What did they accidentally invent?",
+    "matched": [
+      "air bubble wrap",
+      "bubble packaging",
+      "bubble wrap",
+      "bubblewrap"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_a95b5702",
+    "rule": "answer",
+    "question": "In the 1630s, the Dutch Republic saw one of history's most famous speculative bubbles, with single rare specimens reportedly trading for the price of a grand Amsterdam house before the market crashed in 1637. What were people so frantically buying and selling?",
+    "matched": [
+      "tulips"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_6b67fd38",
+    "rule": "answer",
+    "question": "One transparent part of the human body contains no blood vessels at all — it takes most of its oxygen directly from the surrounding air instead. Which part is it?",
+    "matched": [
+      "cornea",
+      "cornea of the eye"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_4113680b",
+    "rule": "embedding",
+    "question": "The marathon's strangely precise distance of 42.195 kilometres traces back to the 1908 Olympic Games, where the course was laid out to start below the walls of Windsor Castle and finish right in front of the royal box. Which city hosted those Games?",
+    "duplicate_of": {
+      "arm": "f-base",
+      "id": "temp_11a61dd7",
+      "sim": 0.924
+    }
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_6f009458",
+    "rule": "answer",
+    "question": "In ancient Rome, laundry workers called fullers whitened togas by treading them in a liquid so valuable it was collected in public pots on street corners — and Emperor Vespasian even taxed the trade in it. What was this cleaning liquid?",
+    "matched": [
+      "human urine",
+      "pee",
+      "urine"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_7a813c77",
+    "rule": "answer",
+    "question": "Charles Lindbergh is often wrongly remembered as the first to fly the Atlantic nonstop — but two British aviators actually did it in June 1919, ending their crossing nose-down in an Irish bog. By what pair of surnames is this duo known?",
+    "matched": [
+      "alcock and brown"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_ea764cde",
+    "rule": "answer",
+    "question": "When MTV went on air for the very first time in August 1981, it opened with a music video whose title cheekily announced the death of an older medium. What was the song called?",
+    "matched": [
+      "video killed the radio star",
+      "video killed the radio star by the buggles"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_87789def",
+    "rule": "answer",
+    "question": "For the shower scene in his black-and-white thriller Psycho, Alfred Hitchcock decided ordinary stage blood didn't look convincing on screen — so what sweet kitchen product swirled down the drain instead?",
+    "matched": [
+      "bosco chocolate syrup",
+      "chocolate sauce",
+      "chocolate syrup"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_b2200ed5",
+    "rule": "answer",
+    "question": "The largest known living organism on Earth isn't a whale or a giant tree — it sprawls across roughly nine square kilometres of Oregon's Blue Mountains, almost entirely hidden underground. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_b307f1d9",
+    "rule": "answer",
+    "question": "The two Diomede Islands sit less than four kilometres apart, yet because the International Date Line runs right between them, their clocks differ by about 21 hours. Which two countries do they belong to?",
+    "matched": [
+      "russia and the united states",
+      "united states and russia",
+      "usa and russia"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_a8979c37",
+    "rule": "answer",
+    "question": "The world's first webcam was rigged up at the University of Cambridge in 1991, streaming a live image to researchers' desks so they could avoid pointless trips down the corridor. What was the camera pointed at?",
+    "matched": [
+      "coffee machine",
+      "coffee maker",
+      "coffee pot"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_b3a12718",
+    "rule": "answer",
+    "question": "In 1698, which Russian tsar — determined to make his nobles look more Western European — introduced a tax on wearing a beard?",
+    "matched": [
+      "peter i",
+      "peter i of russia",
+      "peter the great",
+      "tsar peter the great"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_ef866d7a",
+    "rule": "answer",
+    "question": "The Golden Gate Bridge in San Francisco is neither golden nor red — its official paint shade is called 'International' what?",
+    "matched": [
+      "international orange"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_5f5cf328",
+    "rule": "answer",
+    "question": "The octopus is famous for its strange body plan — eight arms, blue blood, and an unusual number of hearts. How many hearts does an octopus have?",
+    "matched": [
+      "three",
+      "three hearts"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_0c7a0129",
+    "rule": "answer",
+    "question": "In the Bering Strait, two small islands sit less than four kilometres apart — yet the time difference between them is almost a full day, earning them the nicknames Tomorrow Island and Yesterday Island. Which two countries do they belong to?",
+    "matched": [
+      "russia and america",
+      "russia and the united states",
+      "united states and russia",
+      "usa and russia"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_8eb8f2c6",
+    "rule": "answer",
+    "question": "In 1957, two American engineers sealed a pair of shower curtains together, trapping pockets of air between them — hoping to sell the result as trendy textured wallpaper. Nobody wanted it on their walls, but it became famous as which packaging material?",
+    "matched": [
+      "air bubble wrap",
+      "bubble packaging",
+      "bubble wrap",
+      "bubblewrap"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_d107155e",
+    "rule": "answer",
+    "question": "One part of your body is so exceptional that it contains no blood vessels at all and takes its oxygen straight from the surrounding air. Which transparent layer at the very front of the eye is it?",
+    "matched": [
+      "cornea"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_aada157c",
+    "rule": "answer",
+    "question": "The marathon's oddly precise distance of 42.195 kilometres traces back to the 1908 London Olympics, when the course was stretched so the race could start on the lawn of which royal residence, in view of the royal family?",
+    "matched": [
+      "windsor",
+      "windsor castle"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_3f0c68b5",
+    "rule": "answer",
+    "question": "Charles Lindbergh became world-famous in 1927 for flying the Atlantic alone — but the first nonstop transatlantic flight had already happened eight years earlier, ending in an Irish bog. Which British duo made that 1919 crossing?",
+    "matched": [
+      "alcock and brown"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_934bf247",
+    "rule": "answer",
+    "question": "Forget the blue whale — the largest known living organism on Earth spreads across roughly 9 square kilometres of Oregon's Blue Mountains, mostly hidden underground. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_1e361db5",
+    "rule": "answer",
+    "question": "Archaeologists opening ancient Egyptian tombs have found pots of which everyday food still perfectly edible after some 3,000 years?",
+    "matched": [
+      "honey"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_9e4e73cc",
+    "rule": "answer",
+    "question": "On which planet of our solar system does a single day last longer than its entire year?",
+    "matched": [
+      "venus"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_e3ef1c61",
+    "rule": "answer",
+    "question": "In 1945, radar engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active magnetron. Which kitchen appliance did that sticky accident lead to?",
+    "matched": [
+      "microwave",
+      "microwave oven"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_6657f767",
+    "rule": "answer",
+    "question": "On the Micronesian island of Yap, traditional money takes the form of enormous carved discs — some over three metres across and far too heavy to move. What are these discs made of?",
+    "matched": [
+      "limestone",
+      "rock",
+      "stone"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_bb800eb9",
+    "rule": "answer",
+    "question": "One transparent part at the front of the human eye contains no blood vessels at all — it absorbs its oxygen directly from the air. What is it called?",
+    "matched": [
+      "cornea"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_a56e95db",
+    "rule": "answer",
+    "question": "Point Nemo in the South Pacific lies farther from land than any other spot in the ocean — so far that the nearest humans are often astronauts passing overhead. Space agencies use this remoteness for a very practical purpose: it serves as the world's crash site, or 'cemetery', for what?",
+    "matched": [
+      "old satellites",
+      "retired spacecraft",
+      "space debris",
+      "space stations",
+      "spacecraft"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_ab305c0b",
+    "rule": "answer",
+    "question": "Roman launderers kept the city's white togas gleaming by soaking them in an everyday liquid collected in pots on street corners — a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid?",
+    "matched": [
+      "human urine",
+      "pee",
+      "urine"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_f2d15dd6",
+    "rule": "answer",
+    "question": "Charles Lindbergh's famous 1927 flight was only the first SOLO nonstop crossing of the Atlantic. The very first nonstop crossing happened eight years earlier, when two British aviators flew from Newfoundland to Ireland and ended their journey nose-first in a bog. Name either of the two pilots.",
+    "matched": [
+      "alcock",
+      "alcock and brown",
+      "arthur brown",
+      "arthur whitten brown",
+      "brown",
+      "john alcock"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_6adda495",
+    "rule": "answer",
+    "question": "When MTV went on air in August 1981, the very first music video it played had a title that cheekily announced what the new channel was about to do to the music industry. Which song by The Buggles was it?",
+    "matched": [
+      "video killed the radio star"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_4c0f0d35",
+    "rule": "answer",
+    "question": "Alfred Hitchcock shot Psycho in black and white, which let his crew fake the blood in the famous shower scene with a sweet kitchen ingredient that looked perfect on camera. What did they use?",
+    "matched": [
+      "bosco chocolate syrup",
+      "chocolate sauce",
+      "chocolate syrup"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_ce2ba137",
+    "rule": "answer",
+    "question": "The largest known living organism on Earth sprawls across roughly 9 square kilometres of forest in Oregon — and it's neither a plant nor an animal. What kind of organism is it?",
+    "matched": [
+      "armillaria",
+      "fungus",
+      "honey fungus",
+      "mushroom"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_b6a8c3e5",
+    "rule": "answer",
+    "question": "The cheetah gets all the fame, but the true speed record in the animal kingdom belongs to a bird that tops 300 kilometres per hour in its hunting dive. Which bird?",
+    "matched": [
+      "peregrine",
+      "peregrine falcon"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_74bd9562",
+    "rule": "answer",
+    "question": "The Diomede Islands sit less than 4 kilometres apart, yet the International Date Line runs between them — so locals call them 'Tomorrow Island' and 'Yesterday Isle'. Which two countries own them?",
+    "matched": [
+      "russia and america",
+      "russia and the united states",
+      "russia and the usa",
+      "united states and russia",
+      "usa and russia"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_d2268a2f",
+    "rule": "answer",
+    "question": "The world's first webcam, rigged up by computer scientists at Cambridge University in the early 1990s, pointed at a single everyday object — purely to save researchers a disappointing walk down the corridor. What was it watching?",
+    "matched": [
+      "coffee machine",
+      "coffee maker",
+      "coffee pot"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_7d07ee4c",
+    "rule": "answer",
+    "question": "One Australian marsupial is the only animal known to produce cube-shaped droppings — handy, because the little blocks don't roll off the rocks it uses to mark territory. Which animal?",
+    "matched": [
+      "common wombat",
+      "wombat"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_5b741000",
+    "rule": "answer",
+    "question": "Thanks to far-flung overseas territories scattered from the Pacific to the Caribbean, one country covers twelve time zones — more than Russia, more than the United States, more than anyone. Which country?",
+    "matched": [
+      "france",
+      "french republic"
+    ]
+  },
+  {
+    "arm": "f-base",
+    "id": "temp_304fda1d",
+    "rule": "answer",
+    "question": "In 1957, two American engineers sealed a pair of shower curtains together, trapping pockets of air between them, and tried to sell the result as a trendy new wallpaper. Nobody wanted it on their walls, but it went on to conquer the world as which packaging material?",
+    "matched": [
+      "air bubble wrap",
+      "bubble packaging",
+      "bubble wrap",
+      "bubblewrap"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_30112180",
+    "rule": "answer",
+    "question": "Eminem's 'Rap God' holds a Guinness World Record for the most words in a hit single — roughly how many words does he cram into its six minutes?",
+    "matched": [
+      "c"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_e5fdb167",
+    "rule": "answer",
+    "question": "Which epic 1970s rock song is the only single ever to be the UK's Christmas Number One twice?",
+    "matched": [
+      "bohemian rhapsody",
+      "bohemian rhapsody by queen",
+      "queens bohemian rhapsody"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_68585e9e",
+    "rule": "answer",
+    "question": "In 2026, 'Rein Me In' by Sam Fender and Olivia Dean broke a chart record held by Frankie Laine since the 1950s to become the longest-reigning UK Number One single ever — how many weeks did it spend at the top?",
+    "matched": [
+      "c"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_695b4b2c",
+    "rule": "answer",
+    "question": "In 2026, Sam Fender and Olivia Dean's duet 'Rein Me In' became the longest-running UK number-one single of all time, smashing a record that had stood for seventy-three years — how many weeks did it spend at the top?",
+    "matched": [
+      "c"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_9fb2ec1c",
+    "rule": "answer",
+    "question": "During its original nine-week reign at UK number one in the mid-seventies, Queen's 'Bohemian Rhapsody' was finally dethroned by a hit whose title is a phrase Freddie Mercury cries out in the song's operatic section — what was that song?",
+    "matched": [
+      "abbas mamma mia",
+      "mamma mia",
+      "mamma mia by abba"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_ee023ace",
+    "rule": "embedding",
+    "question": "Justin Bieber is the only artist in history to land five number-one albums on the US Billboard 200 before turning what age?",
+    "duplicate_of": {
+      "arm": "e-news-f",
+      "id": "temp_864bdb29",
+      "sim": 0.893
+    }
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_f3b675e7",
+    "rule": "answer",
+    "question": "The 2026 sci-fi blockbuster Project Hail Mary, starring Ryan Gosling as a lone astronaut, was directed by Phil Lord and Christopher Miller — the same duo behind which hit animated comedy?",
+    "matched": [
+      "lego movie"
+    ]
+  },
+  {
+    "arm": "e-news-f",
+    "id": "temp_cb49ab30",
+    "rule": "answer",
+    "question": "In 2024, who became the first artist ever to win the Grammy for Album of the Year four times?",
+    "matched": [
+      "swift",
+      "taylor swift"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_185511bc",
+    "rule": "answer",
+    "question": "Which 2013 Beyoncé album arrived as a complete surprise with 17 videos released simultaneously, changing how major artists release music?",
+    "matched": [
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_c4d37cec",
+    "rule": "answer",
+    "question": "Which guitarist who sang 'Rock and Roll, Hoochie Koo' also produced records for both Steely Dan and Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_17eab329",
+    "rule": "answer",
+    "question": "Which 2013 Beyoncé album arrived as a complete surprise with 17 videos released simultaneously, changing how major artists release music?",
+    "matched": [
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_1e510bab",
+    "rule": "answer",
+    "question": "In 2025's Spider-Man: Brand New Day, director Destin Daniel Cretton kept which Stranger Things actress's character secret because knowing it would spoil the story?",
+    "matched": [
+      "sadie sink",
+      "sink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_0a866592",
+    "rule": "answer",
+    "question": "As of 2026, which K-pop group became the first where every member has completed the spicy wing challenge on Hot Ones?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_58a154f7",
+    "rule": "answer",
+    "question": "Which guitarist who sang 'Rock and Roll, Hoochie Koo' also produced records for both Steely Dan and Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_e0da2429",
+    "rule": "answer",
+    "question": "Which 2013 Beyoncé album arrived as a complete surprise with 17 videos released simultaneously, changing how major artists release music?",
+    "matched": [
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_2449f5d3",
+    "rule": "answer",
+    "question": "In 2025's Spider-Man: Brand New Day, director Destin Daniel Cretton kept which Stranger Things actress's character secret because knowing it would spoil the story?",
+    "matched": [
+      "sadie sink",
+      "sink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_0b61c91e",
+    "rule": "answer",
+    "question": "As of 2026, which K-pop group became the first where every member has completed the spicy wing challenge on Hot Ones?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_8f2eac0e",
+    "rule": "answer",
+    "question": "Which guitarist famous for 'Rock and Roll, Hoochie Koo' also produced records for both Steely Dan and Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_52606c83",
+    "rule": "answer",
+    "question": "Which guitarist, famous for the 1974 classic 'Rock and Roll, Hoochie Koo,' later produced albums for both Patti Smith and Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_908929d2",
+    "rule": "answer",
+    "question": "Which 2013 Beyoncé album arrived as a complete surprise with 17 videos, changing how the entire music industry rolls out releases?",
+    "matched": [
+      "beyonce",
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_8eadfd3b",
+    "rule": "answer",
+    "question": "Which guitarist who sang the 1974 hit 'Rock and Roll, Hoochie Koo' later produced albums for both punk icon Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_2d53b50f",
+    "rule": "answer",
+    "question": "In December 2013, which superstar released a complete album with 17 accompanying videos as a total surprise, fundamentally changing how major artists launch records?",
+    "matched": [
+      "beyonce",
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_9498a39c",
+    "rule": "answer",
+    "question": "In 2025's 'Spider-Man: Brand New Day,' director Destin Daniel Cretton kept Sadie Sink's role secret for what specific reason?",
+    "matched": [
+      "story impact"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_77068de3",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show 'Hot Ones'?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_51d68bd8",
+    "rule": "answer",
+    "question": "Which 1970s rock guitarist who sang 'Rock and Roll, Hoochie Koo' later produced albums for both punk pioneer Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_43bc3cd1",
+    "rule": "answer",
+    "question": "In December 2013, which superstar singer released a complete album with 17 accompanying videos as a total surprise, fundamentally changing how major artists launch records?",
+    "matched": [
+      "beyonce",
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_d6dc8aaa",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show Hot Ones?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_7ea68f5b",
+    "rule": "answer",
+    "question": "Which guitarist who sang the 1974 hit 'Rock and Roll, Hoochie Koo' later produced albums for both punk icon Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_d0686cb4",
+    "rule": "answer",
+    "question": "In December 2013, which superstar released a complete album with 17 accompanying videos as a total surprise, fundamentally changing how major artists launch records?",
+    "matched": [
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_2ebc7b7d",
+    "rule": "embedding",
+    "question": "In 2025's 'Spider-Man: Brand New Day,' director Destin Daniel Cretton kept Sadie Sink's role secret for what specific reason?",
+    "duplicate_of": {
+      "arm": "e-news-k",
+      "id": "temp_940ae1e2",
+      "sim": 0.955
+    }
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_7c229c98",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show 'Hot Ones'?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_df632b39",
+    "rule": "answer",
+    "question": "Which 1970s rock guitarist who sang 'Rock and Roll, Hoochie Koo' later produced albums for both punk pioneer Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_15782140",
+    "rule": "answer",
+    "question": "In December 2013, which superstar released a complete album with 17 accompanying videos as a total surprise, fundamentally changing how major artists launch records?",
+    "matched": [
+      "beyonce",
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_ecb67faf",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show 'Hot Ones'?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_281a8065",
+    "rule": "answer",
+    "question": "Which guitarist who sang the 1974 hit 'Rock and Roll, Hoochie Koo' later produced albums for both punk icon Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_5af44abe",
+    "rule": "answer",
+    "question": "In December 2013, which superstar released a complete album with 17 accompanying videos as a total surprise, fundamentally changing how major artists launch records?",
+    "matched": [
+      "beyonce",
+      "beyoncé"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_8cab3f7a",
+    "rule": "embedding",
+    "question": "In 2025's 'Spider-Man: Brand New Day,' director Destin Daniel Cretton kept Sadie Sink's role secret for what specific reason?",
+    "duplicate_of": {
+      "arm": "e-news-k",
+      "id": "temp_940ae1e2",
+      "sim": 0.957
+    }
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_b8867774",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show 'Hot Ones'?",
+    "matched": [
+      "blackpink"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_be5f5577",
+    "rule": "answer",
+    "question": "Which guitarist who sang the 1974 hit 'Rock and Roll, Hoochie Koo' later produced albums for both punk icon Patti Smith and parody superstar Weird Al Yankovic?",
+    "matched": [
+      "derringer",
+      "rick derringer"
+    ]
+  },
+  {
+    "arm": "e-news-k",
+    "id": "temp_c3d90ddd",
+    "rule": "answer",
+    "question": "In 2026, which K-pop group became the first where all four members individually completed interviews on the spicy-wing challenge show 'Hot Ones'?",
+    "matched": [
+      "blackpink"
+    ]
+  }
+]

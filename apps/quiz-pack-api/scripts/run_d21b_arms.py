@@ -174,6 +174,12 @@ async def _run_arm(name: str, cfg: dict, out_dir: Path) -> dict:
     llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(recorder))
     try:
         gen = AdvancedQuestionGenerator(generation_model=cfg["model"])
+        # OpenRouter reserves the model's FULL output cap (64k for Fable)
+        # against remaining credit per request → 402 on a low balance even
+        # though a 4-question batch needs ~4-8k tokens. Cap explicitly.
+        gen.generation_llm = llm_factory.chat_openai(
+            cfg["model"], temperature=0.8, max_tokens=16384
+        )
         if cfg["mode"] == "news":
             # v2 reprompt rides the category dispatch: replace the registered
             # entertainment builder (v2 keeps every required fact-first
@@ -181,8 +187,17 @@ async def _run_arm(name: str, cfg: dict, out_dir: Path) -> dict:
             gen.category_prompt_builders["entertainment"] = PromptBuilder(
                 template_path=str(_prompts_dir() / cfg["prompt"])
             )
-            _, slices = _news_fact_slices(out_dir)
-            facts, categories, topics = slices[name], cfg["categories"], NEWS_TOPICS
+            if cfg.get("facts_file"):
+                # top-up path: a dedicated fresh-facts file for this arm only
+                # (the seeded 2:1 slice of facts_news.json stays untouched)
+                from app.sourcing.models import Fact
+
+                payload = json.loads((out_dir / cfg["facts_file"]).read_text())
+                facts = [Fact.from_dict(f) for f in payload["facts"]]
+            else:
+                _, slices = _news_fact_slices(out_dir)
+                facts = slices[name]
+            categories, topics = cfg["categories"], NEWS_TOPICS
         else:  # direct
             gen.prompt_builder = PromptBuilder(
                 template_path=str(_prompts_dir() / cfg["prompt"])
@@ -247,12 +262,21 @@ async def _generate(args) -> int:
     unknown = [n for n in names if n not in ARMS]
     if unknown:
         raise SystemExit(f"unknown arm(s): {unknown}")
+    if args.target is not None and not args.arm:
+        raise SystemExit("--target requires --arm (single-arm top-up runs only)")
 
     results = []
     for name in names:
-        print(f"== arm {name} ({ARMS[name]['mode']}, {ARMS[name]['model']})")
+        cfg = dict(ARMS[name])
+        if args.target is not None:
+            cfg["target"] = args.target
+        if args.facts_file:
+            if cfg["mode"] != "news":
+                raise SystemExit("--facts-file only applies to news arms")
+            cfg["facts_file"] = args.facts_file
+        print(f"== arm {name} ({cfg['mode']}, {cfg['model']})")
         try:
-            results.append(await _run_arm(name, ARMS[name], out_dir))
+            results.append(await _run_arm(name, cfg, out_dir))
         except Exception as exc:  # noqa: BLE001 — never substitute, report loudly
             results.append({"arm": name, "count": 0, "status": f"FAILED: {exc}"})
 
@@ -261,7 +285,10 @@ async def _generate(args) -> int:
         "seed": SEED,
         "direct_topics": DIRECT_TOPICS,
         "news_topics": NEWS_TOPICS,
-        "arms": {n: {**ARMS[n]} for n in names},
+        "arms": {
+            n: {**ARMS[n], **({"target": args.target} if args.target is not None else {})}
+            for n in names
+        },
         "results": results,
         "llm_gateway": os.environ.get("LLM_GATEWAY", "direct"),
     }
@@ -281,6 +308,16 @@ def main() -> int:
         p.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
         if cmd == "generate":
             p.add_argument("--arm", default=None, help="run a single arm")
+            p.add_argument(
+                "--target", type=int, default=None,
+                help="override raw target for a top-up run (single --arm only; "
+                "back up the arm's .json first — the run overwrites it)",
+            )
+            p.add_argument(
+                "--facts-file", default=None,
+                help="news-arm top-up: use this facts file (in --out-dir) "
+                "instead of the arm's seeded facts_news.json slice",
+            )
     args = parser.parse_args()
     return asyncio.run(_source(args) if args.cmd == "source" else _generate(args))
 

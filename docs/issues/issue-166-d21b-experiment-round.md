@@ -57,12 +57,24 @@ founderov príklad (producenti ↔ ich umelci).
 - [x] Deploy quiz-pack-api do prod 2026-08-18 (bez migrácie; flags overené v live OpenAPI)
 - [x] `source`: 48 news faktov (6 tém × 8, Tavily) v `docs/testing/runs/d21b-round-2026-08-18/`
 - [x] `generate --arm e-news-k`: 13/13 OK (Kimi/Bedrock, ~4 ¢; vzorka kvalitná, 1 interná duplicita — chytí dedupe)
-- [x] **[HUMAN] OpenRouter top-up** — dobité 2026-08-18 (zostatok ~13,4 $)
-- [~] `generate --arm f-base` (88 raw) a `--arm e-news-f` (26 raw)
-- [ ] Dedupe (`scripts/dedupe_d21b.py --keep f-base=70 --keep e-news-f=20 --keep e-news-k=10`)
-      → publish batch (raters michal + svitlanka) → URLs founderovi
-- [ ] Po 2×100 ratingoch: replay + korelácie + rozšírenie eval setu → záver
-      o critique/judges/verify a prod prepnutí
+- [x] **[HUMAN] OpenRouter top-up** — dobité 2026-08-18 (60 $ total)
+- [x] Generovanie všetkých ramien 2026-08-18 — vo viacerých pasoch (pooly:
+      f-base 124, e-news-f 34, e-news-k 55 raw). Prvý pas mal priveľa duplicít
+      (f-base 31/88; e-news-k len ~4 rôzne odpovede z 13 — Kimi sa fixuje na
+      málo faktov), preto `--target`/`--facts-file` top-up flagy v
+      `run_d21b_arms.py` + čerstvé fakty len pre Kimi (`facts_news_k2.json`,
+      26 nových, URL-disjunktné s pôvodnými). OpenRouter 402 na nízkom
+      zostatku = rezervácia plného 64k output capu → explicitný
+      `max_tokens=16384` v skripte.
+- [x] Dedupe: kept 70/70 + 20/20 + 10/10 (dropped 88; `dedupe_report.json`)
+- [x] Publish 2026-08-18: batch `df12c686-a914-4715-a71b-6b94190a19bd`, 100 q,
+      rateri michal + svitlanka; mapping v run dir; checklist flagy overené
+      v live HTML (4/4 prítomné)
+- [ ] **[HUMAN] ratingy 2×100** (URLs poslané founderovi)
+- [ ] Po ratingoch: replay + korelácie + rozšírenie eval setu → záver
+      o critique/judges/verify a prod prepnutí. **Pozor: OpenRouter kredit
+      vyčerpaný (60/60 $) — sudcovské replaye cez OpenRouter budú potrebovať
+      ďalší top-up.**
 
 ## Kritérium hotovosti
 

@@ -1,16 +1,18 @@
 {
   "stages": {
     "unattributed": {
-      "moonshotai.kimi-k2.5": {
-        "calls": 4,
-        "input_tokens": 65516,
-        "output_tokens": 5862,
+      "anthropic/claude-fable-5": {
+        "calls": 9,
+        "input_tokens": 27086,
+        "output_tokens": 33151,
         "calls_without_usage": 0,
-        "cost_cents": 5.3965
+        "cost_cents": null
       }
     }
   },
-  "total_cost_cents_known": 5.3965,
-  "unpriced_models": [],
+  "total_cost_cents_known": 0.0,
+  "unpriced_models": [
+    "anthropic/claude-fable-5"
+  ],
   "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
 }

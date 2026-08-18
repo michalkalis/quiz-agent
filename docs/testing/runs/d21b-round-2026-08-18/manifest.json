@@ -43,16 +43,16 @@
       "categories": [
         "entertainment"
       ],
-      "target": 13,
+      "target": 16,
       "publish": 10
     }
   },
   "results": [
     {
       "arm": "e-news-k",
-      "count": 13,
+      "count": 16,
       "status": "ok"
     }
   ],
-  "llm_gateway": "openrouter"
+  "llm_gateway": "direct"
 }

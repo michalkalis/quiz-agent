@@ -12,11 +12,11 @@
 3. Rozšíriť zmrazený eval set (#165) o nové ohodnotené otázky.
 4. Až po vyhodnotení: rozhodnutie o prod prepnutí gen modelu.
 
-## Parametre (founder in-session 2026-08-18 — nemeniť)
+## Parametre (founder in-session 2026-08-18 — nemeniť; total revidovaný founderom 150 → 100 ešte 2026-08-18: režeme len f-base, e-news ramená ostávajú)
 
 | Rameno | Model | Prompt | Publikovať | Raw (overgen) |
 |---|---|---|---|---|
-| f-base | Fable 5 (OpenRouter) | direct v1 | 120 | 150 |
+| f-base | Fable 5 (OpenRouter) | direct v1 | 70 | 88 |
 | e-news-f | Fable 5 | entertainment **v2** | 20 | 26 |
 | e-news-k | Kimi K2.5 (Bedrock) | entertainment **v2** | 10 | 13 |
 
@@ -42,7 +42,7 @@ founderov príklad (producenti ↔ ich umelci).
 - `scripts/run_d21b_arms.py source|generate` — news fakty (Tavily, 6 tém × 8)
   + surové ramená s rotáciou topic okien a kumulatívnym `avoid_questions`;
   out `docs/testing/runs/d21b-round-2026-08-18/`.
-- `scripts/dedupe_d21b.py --keep f-base=120 --keep e-news-f=20 --keep e-news-k=10`
+- `scripts/dedupe_d21b.py --keep f-base=70 --keep e-news-f=20 --keep e-news-k=10`
   → `<arm>.dedup.json` + `dedupe_report.json`; fail-loud pri vyčerpaní poolu.
 - `scripts/rating_page/publish_batch.py --arm f-base=….dedup.json … --seed …
   --save-mapping` (bez `--dedupe-by-fact` — nahradené novým dedupe).
@@ -57,17 +57,16 @@ founderov príklad (producenti ↔ ich umelci).
 - [x] Deploy quiz-pack-api do prod 2026-08-18 (bez migrácie; flags overené v live OpenAPI)
 - [x] `source`: 48 news faktov (6 tém × 8, Tavily) v `docs/testing/runs/d21b-round-2026-08-18/`
 - [x] `generate --arm e-news-k`: 13/13 OK (Kimi/Bedrock, ~4 ¢; vzorka kvalitná, 1 interná duplicita — chytí dedupe)
-- [ ] **[HUMAN] OpenRouter top-up ~15 $** (zostatok 3,39 $; Fable ramená ≈ 12 $) — potom:
-      `cd apps/quiz-pack-api && set -a; source ../../.env; set +a; export LLM_GATEWAY=openrouter;`
-      `uv run --no-sync python scripts/run_d21b_arms.py generate --arm f-base` (a `--arm e-news-f`)
-- [ ] Dedupe (`scripts/dedupe_d21b.py --keep f-base=120 --keep e-news-f=20 --keep e-news-k=10`)
+- [x] **[HUMAN] OpenRouter top-up** — dobité 2026-08-18 (zostatok ~13,4 $)
+- [~] `generate --arm f-base` (88 raw) a `--arm e-news-f` (26 raw)
+- [ ] Dedupe (`scripts/dedupe_d21b.py --keep f-base=70 --keep e-news-f=20 --keep e-news-k=10`)
       → publish batch (raters michal + svitlanka) → URLs founderovi
-- [ ] Po 2×150 ratingoch: replay + korelácie + rozšírenie eval setu → záver
+- [ ] Po 2×100 ratingoch: replay + korelácie + rozšírenie eval setu → záver
       o critique/judges/verify a prod prepnutí
 
 ## Kritérium hotovosti
 
-Publikovaná dávka 150 otázok bez duplicít, obaja rateri hodnotia oboma osami;
+Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;
 po ohodnotení spočítané korelácie vrstiev proti michal osi + recall verify/
 critique proti flagom; eval set rozšírený; founder rozhodnutie o vrstvách a
 prod gen modeli zaznamenané tu.

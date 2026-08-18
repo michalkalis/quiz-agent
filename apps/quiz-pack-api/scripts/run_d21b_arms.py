@@ -1,7 +1,8 @@
 """D21b experiment round — raw generation, canonical config (issue-164 follow-up).
 
-Founder-approved parameters (in-session 2026-08-18): 150 published questions =
-120 f-base (Fable 5 + direct v1) + 20 e-news-f (Fable 5) + 10 e-news-k (Kimi),
+Founder-approved parameters (in-session 2026-08-18, total revised 150 -> 100
+same day): 100 published questions =
+70 f-base (Fable 5 + direct v1) + 20 e-news-f (Fable 5) + 10 e-news-k (Kimi),
 both e-news arms on the reprompted entertainment v2 prompt. Arms overgenerate
 ~25% so the answer-first dedupe (dedupe_d21b.py) can drop repeats and still
 hit the publish targets. Raw generation: no critique/duels/gates/judges.
@@ -86,7 +87,7 @@ ARMS = {
     "f-base": {
         "mode": "direct", "model": FABLE,
         "prompt": "question_generation_direct.md",
-        "target": 150, "publish": 120,
+        "target": 88, "publish": 70,
     },
     "e-news-f": {
         "mode": "news", "model": FABLE, "prompt": ENTERTAINMENT_V2,

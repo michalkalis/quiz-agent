@@ -1,0 +1,92 @@
+{
+  "batch_id": "c1f109ec-9cc9-432c-88fd-d41e39292aec",
+  "raters": [
+    "svitlanka"
+  ],
+  "n": 88,
+  "per_arm_human_mean": {
+    "d-opus": {
+      "mean": 8.5,
+      "n": 8
+    },
+    "g-v5free": {
+      "mean": 7.25,
+      "n": 8
+    },
+    "d-gemini": {
+      "mean": 7.25,
+      "n": 8
+    },
+    "d-deepseek": {
+      "mean": 6.88,
+      "n": 8
+    },
+    "d-fable": {
+      "mean": 6.38,
+      "n": 8
+    },
+    "d-persona-a": {
+      "mean": 6.12,
+      "n": 8
+    },
+    "e-news": {
+      "mean": 5.62,
+      "n": 8
+    },
+    "d-persona-b": {
+      "mean": 5.62,
+      "n": 8
+    },
+    "d-base": {
+      "mean": 5.38,
+      "n": 8
+    },
+    "g-v6free": {
+      "mean": 5.12,
+      "n": 8
+    },
+    "g-v3": {
+      "mean": 4.5,
+      "n": 8
+    }
+  },
+  "layers": {
+    "critique": {
+      "n": 88,
+      "spearman": 0.052,
+      "pearson": 0.078
+    },
+    "duels": {
+      "arms": 11,
+      "mean_within_arm_spearman": 0.144
+    },
+    "answerability": {
+      "n": 88,
+      "spearman": 0.129,
+      "pearson": 0.107,
+      "mean_when_passed": 6.42,
+      "mean_when_failed": 5.67
+    },
+    "judges_panel_mean": {
+      "n": 88,
+      "spearman": 0.125,
+      "pearson": 0.092
+    },
+    "judge:judge": {
+      "n": 88,
+      "spearman": 0.125,
+      "pearson": 0.092
+    },
+    "verify": {
+      "n": 88,
+      "spearman": 0.08,
+      "pearson": 0.042,
+      "mean_by_verdict": {
+        "verified": 6.3,
+        "uncertain": 7.38,
+        "likely_wrong": 3.0,
+        "likely_correct": 6.14
+      }
+    }
+  }
+}

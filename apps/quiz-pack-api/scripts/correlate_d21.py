@@ -106,7 +106,10 @@ def main() -> int:
             if score is None:
                 continue
             raters_seen.add(row.get("rater"))
-            per_q.setdefault(row["qid"], []).append(float(score))
+            qid = row.get("blinded_qid") or row.get("qid")
+            if qid is None:
+                continue
+            per_q.setdefault(qid, []).append(float(score))
     human = {qid: sum(v) / len(v) for qid, v in per_q.items()}
     if not human:
         raise SystemExit("no ratings matched the batch/rater filter — check inputs")

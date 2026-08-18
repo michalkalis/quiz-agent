@@ -86,7 +86,7 @@ async def _layer_duels(pairs, results):
     same prompt/parser/judge model) but keeps per-question win counts instead
     of a top-N selection — selection loses the granularity correlation needs.
     """
-    from langchain.schema import HumanMessage
+    from langchain_core.messages import HumanMessage
 
     from app.generation.advanced_generator import AdvancedQuestionGenerator
 

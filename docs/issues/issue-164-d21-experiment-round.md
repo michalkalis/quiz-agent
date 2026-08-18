@@ -64,13 +64,38 @@ implicitné: všetky ramená sú surové). Persona c (auto) vyradená v D23.
 - [x] Deploy quiz-pack-api (mobile web) — health 200
 - [x] Publikované 2026-08-15, batch `c1f109ec-9cc9-432c-88fd-d41e39292aec` (88 otázok, seed 20260815, bez dedupe — všetky otázky musia byť ohodnotené):
       `https://quiz-pack-api.fly.dev/web/rate/c1f109ec-9cc9-432c-88fd-d41e39292aec?rater=michal` · druhý hodnotiteľ `?rater=rater2` (meno v URL = atribúcia; nemeniť uprostred hodnotenia)
-- [ ] ČAKÁ NA ĽUDÍ: ohodnotenie 88 otázok (dá sa na viackrát, uloží a pokračuje)
-- [ ] Replay + korelácie — po ratingoch, presné príkazy:
+- [x] Ohodnotené 2026-08-18: michal 88/88, druhý rater hodnotil pod menom `svitlanka` (nie `rater2`) 88/88
+- [x] Replay + korelácie hotové 2026-08-18 (fix: stale langchain import v replay skripte; correlate číta `blinded_qid`). Výsledky nižšie. Pôvodné príkazy:
       1. `uv run --no-sync python scripts/rating_page/export_ratings.py --base-url https://quiz-pack-api.fly.dev --admin-key $QUIZ_PACK_ADMIN_API_KEY --out ratings_export.jsonl`
       2. env zrkadliaci prod: `LLM_GATEWAY=openrouter LLM_ROLE_CRITIQUE=bedrock:deepseek.v3.2 VERIFY_MODEL=bedrock:deepseek.v3.2` + `JUDGE_MODELS` prečítať z prod secrets (`fly ssh console -a quiz-pack-api -C env`) — POZOR, bez toho sudcovský panel beží na code-default, nie prod paneli
       3. `... uv run --no-sync python scripts/replay_d21_layers.py`
       4. `uv run --no-sync python scripts/correlate_d21.py --ratings ratings_export.jsonl --batch-id c1f109ec-9cc9-432c-88fd-d41e39292aec --rater michal`
 - [ ] P1: zmraziť ohodnotené otázky ako eval set (nadväzné issue)
+
+## Výsledky (2026-08-18)
+
+Per-arm human mean (obaja raters, 8 q/rameno):
+d-opus 8.38 · d-fable 7.75 · g-v5free 7.38 · d-gemini 7.00 · d-base 6.88 ·
+d-deepseek 6.88 · g-v6free 6.31 · g-v3 6.25 · d-persona-b 5.88 · e-news 5.25 ·
+d-persona-a 5.00
+
+Korelácie vrstiev s ľuďmi (Spearman, both/michal/svitlanka):
+critique .18/.19/.05 · duely (within-arm) .15/.00/.14 · answerability .24/.22/.13 ·
+judges panel .21/.24/.13 · verify .08/.11/.08
+
+**Kľúčový nález: inter-rater Spearman = −0.04 (n=88)** — hodnotitelia sa na
+per-otázkovej kvalite prakticky nezhodujú; per-otázkové korelácie vrstiev sú tým
+zhora ohraničené šumom. Per-arm poradie je konzistentnejšie (d-opus top u oboch;
+persona varianty a e-news dole u oboch; nezhoda hlavne d-fable/d-base/g-v3).
+
+Interpretačné dôsledky (na spoločnú session, nerozhodnuté):
+- Žiadna vrstva pipeline nekoreluje silno (max ~.24); verify a duely prakticky nulové.
+- Persona prompty (D23a/b) škodia vs. d-base u oboch raterov.
+- Frontier direct (Opus/Fable) > grounded Kimi ramená; v5-free ostáva najlepší Kimi prompt.
+- e-news slabé — news mód potrebuje repromptovanie, nie zahodenie (8 q, malá vzorka).
+
+Artefakty: `apps/quiz-pack-api/ratings_export.jsonl`, replay + correlate výstupy
+v `docs/testing/runs/d21-round-2026-08-15/`.
 
 ## Náklady (odhad, schválený)
 

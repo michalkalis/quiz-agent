@@ -54,9 +54,14 @@ founderov príklad (producenti ↔ ich umelci).
 
 - [x] Rating web: checklist flagy pre všetkých raterov (API+UI+testy, 967 zelených)
 - [x] Prompt v2 + generovacia a dedupe infra
-- [ ] Deploy quiz-pack-api (bez migrácie) — checklist musí byť live pred publikáciou
-- [ ] `source` + `generate` (LLM_GATEWAY=openrouter; over OpenRouter kredit ~12 $)
-- [ ] Dedupe → publish batch (raters michal + svitlanka) → URLs founderovi
+- [x] Deploy quiz-pack-api do prod 2026-08-18 (bez migrácie; flags overené v live OpenAPI)
+- [x] `source`: 48 news faktov (6 tém × 8, Tavily) v `docs/testing/runs/d21b-round-2026-08-18/`
+- [x] `generate --arm e-news-k`: 13/13 OK (Kimi/Bedrock, ~4 ¢; vzorka kvalitná, 1 interná duplicita — chytí dedupe)
+- [ ] **[HUMAN] OpenRouter top-up ~15 $** (zostatok 3,39 $; Fable ramená ≈ 12 $) — potom:
+      `cd apps/quiz-pack-api && set -a; source ../../.env; set +a; export LLM_GATEWAY=openrouter;`
+      `uv run --no-sync python scripts/run_d21b_arms.py generate --arm f-base` (a `--arm e-news-f`)
+- [ ] Dedupe (`scripts/dedupe_d21b.py --keep f-base=120 --keep e-news-f=20 --keep e-news-k=10`)
+      → publish batch (raters michal + svitlanka) → URLs founderovi
 - [ ] Po 2×150 ratingoch: replay + korelácie + rozšírenie eval setu → záver
       o critique/judges/verify a prod prepnutí
 

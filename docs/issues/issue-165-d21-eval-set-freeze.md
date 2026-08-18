@@ -1,7 +1,7 @@
 # #165 — Zmraziť D21 otázky ako eval set
 
-**Triage:** enhancement · ready
-**Status:** P1 nadväzník na #164 — Experimentálne kolo D21; dáta kompletné lokálne, čaká na implementáciu skriptu + klasifikáciu flagov.
+**Triage:** enhancement · done
+**Status:** DONE 2026-08-18 (commit `5c5fee0b`). Eval set `docs/testing/eval-sets/d21-2026-08.jsonl` (88 riadkov, žiadne chýbajúce labely), flags v `docs/testing/runs/d21-round-2026-08-15/svitlanka_flags.json` (ručný pass, 22 flagged riadkov, 10 hard-error), helper `apps/quiz-pack-api/scripts/eval_d21_set.py` reprodukuje judges Spearman .242 (`--include-duplicates`) + verify recall 4/10 (likely_wrong proti fact/logic/stale flagom, precision 1.0). README v eval-sets adresári.
 
 ## Cieľ
 
@@ -30,14 +30,14 @@ komentárov (~25 netriviálnych, zvyšok clean) — zoznam chýb je v issue-164
 
 ## Kroky
 
-- [ ] Skript `scripts/build_d21_eval_set.py` → jeden commitnutý JSONL
+- [x] Skript `scripts/build_d21_eval_set.py` → jeden commitnutý JSONL
       (`docs/testing/eval-sets/d21-2026-08.jsonl`), deterministický join
       podľa `blinded_qid`
-- [ ] Klasifikácia svitlanka komentárov na flagy (fact/logic/stale/dup) —
+- [x] Klasifikácia svitlanka komentárov na flagy (fact/logic/stale/dup) —
       súčasť skriptu alebo jednorazový ručný pass, výsledok v JSONL
-- [ ] README riadok v eval-sets adresári: čo je label, čo je flag, ako
+- [x] README riadok v eval-sets adresári: čo je label, čo je flag, ako
       počítať korelácie (Spearman proti michal; recall proti flagom)
-- [ ] Krátky helper na vyhodnotenie nového judge/vrstvy proti setu
+- [x] Krátky helper na vyhodnotenie nového judge/vrstvy proti setu
       (Spearman + recall) — môže byť rozšírenie `correlate_d21.py`
 
 ## Kritérium hotovosti

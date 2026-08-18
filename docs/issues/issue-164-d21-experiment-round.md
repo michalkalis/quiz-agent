@@ -137,11 +137,28 @@ vrstiev = michal (zábava) + binárne editorské nálezy (chybovosť).
 3. Korelácie vrstiev sa počítajú len proti michal osi; editorské nálezy sa
    vyhodnocujú ako recall detekčných vrstiev (verify/critique), nie Spearmanom.
 
-### Stav rozhodnutí
+### Rozhodnutia zakladateľa (in-session 2026-08-18)
 
-- Vyradené (dáta jednoznačné, oba osi): persona prompty D23a/b, duely ako vrstva.
-- Na schválenie zakladateľom (interaktívne): kanonický prompt + gen model,
-  osud critique/answerability/verify vrstiev, e-news reprompt. Zapíše sa sem.
+1. **Gen model:** Fable 5 + direct v1 = víťaz a kanonická konfigurácia pre
+   ďalšie generovanie. Kimi K2.5 a Opus 5 (oba s direct v1) ostávajú ako
+   kandidáti — situácie ich použitia zatiaľ neurčené. (Direct testovaný na 5
+   modeloch; Gemini 3.1 Pro 6.75 a DeepSeek 6.88 vypadli.)
+2. **Vrstvy:** verify (posilniť web-groundingom) + answerability ostávajú.
+   Critique a judges panel — ŽIADNY finálny záver: testovacia sada mala priveľa
+   zlých otázok a 88 ks je málo. Validita zvyšných vrstiev sa pretestuje
+   v ďalšom kole na kvalitnejšej a väčšej sade (generovanej už kanonickou
+   konfiguráciou), ktorú znova ohodnotia obaja raters podľa novej metodiky.
+3. **e-news:** reprompt (konkrétne fakty, známe mená; zapracovať founderov
+   príklad s producentmi) + otestovať v tom istom ďalšom kole.
+
+Vyradené s konečnou platnosťou (dáta jednoznačné): persona prompty D23a/b,
+duely ako vrstva, grounded prompty v3/v5/v6 ako kanonické (direct v1 ich bije
+na tom istom modeli).
+
+**Ďalší krok:** experimentálne kolo D21b — väčšia sada (Fable direct v1 +
+e-news reprompt), hodnotenie na dvoch osiach s dedupe, re-validácia
+critique/judges/verify. Prod prepnutie generovania až po potvrdení v D21b.
+Kolo D21 týmto uzavreté.
 
 Artefakty: `ratings_export.jsonl`, replay + correlate výstupy (aj per-rater
 `correlations_michal.json` / `correlations_svitlanka.json`)

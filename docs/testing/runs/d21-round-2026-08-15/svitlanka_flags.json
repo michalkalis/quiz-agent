@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "source": "Manual classification pass over svitlanka's 88 editorial comments (rater axis 2, batch c1f109ec), 2026-08-18.",
+    "rules": "fact_error = comment asserts a claim in the question/answer is factually wrong or a myth. logic_flaw = the question is logically incoherent. stale = the underlying datum is outdated or a moving estimate. duplicate = repeats a fact/topic already used in the batch (design artifact of D21 — arms shared facts/topics, published without dedupe). Minor wording imprecision (q02, q08, q56) is NOT flagged — svitlanka herself scored those 6-9.",
+    "hard_errors_cross_check": "The 7 hard errors listed in issue-164 § Os 2 are exactly: q24, q27, q33, q35, q46, q52, q68. All flagged below.",
+    "note_on_issue_164_dup_count": "issue-164 says all 16 of svitlanka's 1.0 scores were duplicates; in fact 3 of the 1.0s are not duplicates (q14 too niche/abstract, q24 logic nonsense, q35 myth). Flags below are the precise classification; duplicate = 14 items (incl. q12 scored 3.0 and q53 scored 1.0 with rewrite)."
+  },
+  "flags": {
+    "q12": {"fact_error": true, "duplicate": true, "note": "'edible' claim is a misleading myth; also a rephrase of q01's tomb-food fact"},
+    "q17": {"fact_error": true, "note": "stem asserts insects are boiled alive for carmine; they are dried and crushed"},
+    "q24": {"logic_flaw": true, "note": "'organ survives in darkness' — all organs live in darkness; nonsensical premise"},
+    "q27": {"fact_error": true, "note": "South America has TWO landlocked countries (Bolivia + Paraguay), question claims one"},
+    "q33": {"fact_error": true, "stale": true, "note": "red Skittles no longer use carmine; present tense makes the question false"},
+    "q35": {"fact_error": true, "note": "'two ocean colors at Cape Horn' is a geographic myth (real phenomenon is Encontro das Aguas, Brazil)"},
+    "q42": {"duplicate": true},
+    "q45": {"duplicate": true},
+    "q46": {"fact_error": true, "note": "Voyager 1 launched under Carter (Sep 1977), not Ford"},
+    "q48": {"stale": true, "note": "Voyager 1 shutdown date is a moving estimate (2026-2030); exact-date answer is disputed"},
+    "q52": {"fact_error": true, "duplicate": true, "note": "cochineal is a scale insect, not a beetle; fact also repeats in batch"},
+    "q53": {"duplicate": true},
+    "q54": {"duplicate": true},
+    "q55": {"duplicate": true},
+    "q59": {"duplicate": true},
+    "q65": {"duplicate": true},
+    "q68": {"stale": true, "note": "US penny production-cost figure outdated (~3.7 cents per recent Mint reports)"},
+    "q69": {"duplicate": true},
+    "q76": {"duplicate": true},
+    "q79": {"duplicate": true},
+    "q83": {"duplicate": true},
+    "q87": {"duplicate": true}
+  }
+}

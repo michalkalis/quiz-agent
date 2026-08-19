@@ -76,6 +76,19 @@ founderov príklad (producenti ↔ ich umelci).
       vyčerpaný (60/60 $) — sudcovské replaye cez OpenRouter budú potrebovať
       ďalší top-up.**
 
+## Náklady Fable 5 vs. custom packy (founder 2026-08-19 — súčasť rozhodnutia po D21b)
+
+Fable 5 = 10 $/M vstup, 50 $/M výstup. Namerané v tomto kole: ~10 ¢/publikovanú
+otázku len za generovanie (direct mode, vrát. overgenu) vs. Kimi < 1 ¢. Custom
+pack_30 by s Fable gen stúpol z COGS ~4,20 $ na ~7 $+ → pri cene 4,99 € strata
+na každom predaji. **Rozhodnutie o riešení až po vyhodnotení D21b.** Founder
+sa prikláňa k **Anthropic Batch API cez priamy Anthropic účet** (−50 % na
+asynchrónne dávky; pack gen je aj tak background job) → gen packu ~1,5 $.
+Dôsledky, ak sa potvrdí: firemný Anthropic účet (pravidlo company accounts),
+batch cesta v LLM factory popri OpenRouter, ANTHROPIC_API_KEY v prod secrets.
+Alternatívy na stole: dvojúrovňová stratégia (Fable len korpus/oficiálne packy,
+custom na lacnom modeli) a hybrid (lacný generátor + Fable výber/edit).
+
 ## Kritérium hotovosti
 
 Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;

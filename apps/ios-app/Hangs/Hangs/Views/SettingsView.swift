@@ -762,7 +762,7 @@ struct SettingsView: View {
     // MARK: - Feedback group (#109)
 
     // Manual entry point for the in-app beta feedback sheet — mirrors the
-    // shake-to-report gesture but is always discoverable. Captures a screenshot
+    // TestFlight/Debug-only feedback chip but is always discoverable. Captures a screenshot
     // of the Settings screen (still removable in the sheet) + the current quiz
     // state before presenting.
 

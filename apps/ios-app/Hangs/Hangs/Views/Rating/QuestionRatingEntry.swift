@@ -23,6 +23,12 @@ import SwiftUI
 struct QuestionRatingEntry {
     let isEnabled: Bool
     let makeViewModel: @MainActor (_ questionId: String, _ questionText: String?) -> QuestionRatingViewModel
+    /// #109: opens the feedback sheet (ContentView owns the presentation, so
+    /// the screenshot is captured before the sheet appears). Optional so tests
+    /// and previews can build an entry without the feedback flow; nil = no
+    /// feedback chip. Declared last so existing trailing-closure call sites
+    /// keep binding to `makeViewModel`.
+    var openFeedback: (() -> Void)? = nil
 }
 
 @MainActor
@@ -66,6 +72,25 @@ struct QuestionRatingEntryButton: View {
     }
 }
 
+/// #109: the feedback chip next to the rating chip — same visual language.
+/// Replaces the shake gesture, which misfired constantly in a moving car.
+struct FeedbackEntryButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "exclamationmark.bubble")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .frame(width: 30, height: 30)
+                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "Send feedback", comment: "Accessibility label for the TestFlight-only feedback button"))
+        .accessibilityIdentifier("feedback.entry")
+    }
+}
+
 private struct QuestionRatingEntryModifier: ViewModifier {
     let entry: QuestionRatingEntry?
     let questionId: String?
@@ -84,10 +109,15 @@ private struct QuestionRatingEntryModifier: ViewModifier {
         if let entry, entry.isEnabled, let questionId {
             content
                 .overlay(alignment: .topTrailing) {
-                    QuestionRatingEntryButton {
-                        presentation = QuestionRatingPresentation(
-                            viewModel: entry.makeViewModel(questionId, questionText)
-                        )
+                    HStack(spacing: 8) {
+                        if let openFeedback = entry.openFeedback {
+                            FeedbackEntryButton(action: openFeedback)
+                        }
+                        QuestionRatingEntryButton {
+                            presentation = QuestionRatingPresentation(
+                                viewModel: entry.makeViewModel(questionId, questionText)
+                            )
+                        }
                     }
                     .padding(.trailing, trailingInset)
                     .padding(.top, topInset)

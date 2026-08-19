@@ -3,8 +3,9 @@
 //  Hangs
 //
 //  In-app beta feedback sheet (#109, phase 2 — typing only). Presented from the
-//  shake gesture (screenshot of the current screen) or the Settings "Send
-//  feedback" row (screenshot of Settings). Voice dictation lands in phase 3.
+//  TestFlight/Debug-only feedback chip (screenshot of the current screen) or the
+//  Settings "Send feedback" row (screenshot of Settings). Voice dictation lands
+//  in phase 3.
 //
 
 import SwiftUI

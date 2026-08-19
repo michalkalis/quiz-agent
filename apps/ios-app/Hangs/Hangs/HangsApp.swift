@@ -37,8 +37,9 @@ struct HangsApp: App {
             // Structured Logs (experimental in sentry-cocoa 8.x; moves to options.enableLogs in 9.0)
             options.experimental.enableLogs = true
 
-            // #109: our own in-app feedback UI (shake + Settings row → FeedbackView)
-            // replaces Sentry's shake widget so there is exactly one feedback flow.
+            // #109: our own in-app feedback UI (feedback chip + Settings row →
+            // FeedbackView) replaces Sentry's shake widget so there is exactly one
+            // feedback flow (the original shake trigger misfired in a moving car).
             // Sentry stays for crashes only; its useShakeGesture/showFormForScreenshots
             // are intentionally left at their defaults (off).
 

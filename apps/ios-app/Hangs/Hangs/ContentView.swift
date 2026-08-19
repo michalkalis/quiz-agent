@@ -26,7 +26,7 @@ struct ContentView: View {
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
     @State private var screenAwakeWriter = ScreenAwakeWriter()
-    // #109: shake-to-report. Built at shake time with a screenshot of the
+    // #109: in-app feedback. Built at tap time with a screenshot of the
     // current screen + a snapshot of the quiz state; drives the feedback sheet.
     @State private var feedbackPresentation: FeedbackPresentation?
 
@@ -84,7 +84,26 @@ struct ContentView: View {
     /// build builds this and renders nothing.
     /// PRE-APP-STORE REMOVAL: delete this and its two call sites (see TODO.md).
     private var ratingEntry: QuestionRatingEntry {
-        appState.makeQuestionRatingEntry(for: viewModel)
+        var entry = appState.makeQuestionRatingEntry(for: viewModel)
+        entry.openFeedback = { presentFeedback() }
+        return entry
+    }
+
+    /// #109: capture the CURRENT screen, then present the feedback sheet.
+    /// Capture must happen before presentation so the shot shows the reported
+    /// screen, not the sheet. Ignored while one is open. (Replaces the former
+    /// shake gesture, which misfired constantly in a moving car.)
+    private func presentFeedback() {
+        guard feedbackPresentation == nil else { return }
+        let screenshot = ScreenshotCapture.captureKeyWindow()
+        feedbackPresentation = FeedbackPresentation(
+            viewModel: FeedbackViewModel(
+                networkService: appState.networkService,
+                context: FeedbackContext.capture(from: viewModel),
+                screenshot: screenshot,
+                voice: appState.makeFeedbackVoice(for: viewModel)
+            )
+        )
     }
 
     @ViewBuilder
@@ -240,21 +259,6 @@ struct ContentView: View {
         // (found via RS-pack-nav-start, #111 T4).
         .onReceive(viewModel.$quizState) { newState in
             navModel.handleQuizStateChange(newState)
-        }
-        // #109: shake anywhere → capture the CURRENT screen, then present the
-        // feedback sheet. Capture must happen before presentation so the shot
-        // shows the reported screen, not the sheet. Ignored while one is open.
-        .onShake {
-            guard feedbackPresentation == nil else { return }
-            let screenshot = ScreenshotCapture.captureKeyWindow()
-            feedbackPresentation = FeedbackPresentation(
-                viewModel: FeedbackViewModel(
-                    networkService: appState.networkService,
-                    context: FeedbackContext.capture(from: viewModel),
-                    screenshot: screenshot,
-                    voice: appState.makeFeedbackVoice(for: viewModel)
-                )
-            )
         }
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)

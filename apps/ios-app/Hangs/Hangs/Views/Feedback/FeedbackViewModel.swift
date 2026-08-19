@@ -15,7 +15,7 @@ import Sentry
 import UIKit
 
 /// Snapshot of the app state at the moment feedback was triggered. Captured on
-/// the MainActor by the presenter (shake handler / Settings row) so the report
+/// the MainActor by the presenter (feedback chip / Settings row) so the report
 /// reflects the screen the user was actually on, not a later state.
 struct FeedbackContext: Sendable {
     var quizState: String
@@ -82,8 +82,8 @@ extension AppState {
 }
 
 /// Identifiable holder so a freshly-built `FeedbackViewModel` can drive a
-/// `.sheet(item:)` presentation — the presenter builds one per trigger (shake /
-/// Settings row) and stores it in `@State`, keeping the VM's identity stable
+/// `.sheet(item:)` presentation — the presenter builds one per trigger (feedback
+/// chip / Settings row) and stores it in `@State`, keeping the VM's identity stable
 /// across body re-evaluations so typed text survives.
 struct FeedbackPresentation: Identifiable {
     let id = UUID()
@@ -179,7 +179,7 @@ final class FeedbackViewModel: ObservableObject {
     var isDictating: Bool { micState == .dictating }
 
     /// The quiz is actively holding the shared mic, so dictation must stay blocked
-    /// (single-engine rule). Shake-to-report itself is unaffected — only the mic
+    /// (single-engine rule). Opening the feedback sheet is unaffected — only the mic
     /// button is disabled.
     var isBlockedByQuizRecording: Bool { voice?.isQuizRecording() ?? false }
 

@@ -70,11 +70,31 @@ founderov príklad (producenti ↔ ich umelci).
 - [x] Publish 2026-08-18: batch `df12c686-a914-4715-a71b-6b94190a19bd`, 100 q,
       rateri michal + svitlanka; mapping v run dir; checklist flagy overené
       v live HTML (4/4 prítomné)
-- [ ] **[HUMAN] ratingy 2×100** (URLs poslané founderovi)
+- [~] **[HUMAN] ratingy 2×100** — michal 100/100 hotové 2026-08-18/20
+      (0 checklist flagov); **svitlanka 0/100 — čaká sa**
 - [ ] Po ratingoch: replay + korelácie + rozšírenie eval setu → záver
       o critique/judges/verify a prod prepnutí. **Pozor: OpenRouter kredit
       vyčerpaný (60/60 $) — sudcovské replaye cez OpenRouter budú potrebovať
       ďalší top-up.**
+
+## Výsledky — os 1 produktová metrika (michal, 100/100, 2026-08-20)
+
+| Rameno | n | Priemer | Medián | ≥8 | ≤4 |
+|---|---|---|---|---|---|
+| f-base (Fable direct v1) | 70 | **8.01** | 8.5 | 47 (67 %) | 5 |
+| e-news-f (Fable, ent. v2) | 20 | **7.85** | 7.5 | 10 | 1 |
+| e-news-k (Kimi, ent. v2) | 10 | 7.20 | 8.0 | 6 | 1 |
+| celkovo | 100 | 7.90 | 8.0 | 63 | 7 |
+
+- **Fable direct v1 potvrdený na veľkej vzorke**: D21 9.12 (n=8) → 8.01 (n=70);
+  pokles je očakávaná regresia k priemeru, úroveň drží (29 % otázok = 10/10).
+- **Entertainment reprompt v2 = najväčší skok kola: 4.88 → 7.85** (Fable).
+  Kimi na tom istom prompte 7.20 (n=10) — použiteľný, ale slabší a pri
+  generovaní sa fixoval na málo faktov.
+- **0 checklist flagov od michala** — žiadna nájdená faktická/logická chyba;
+  dôvody nízkych skóre sú výlučne štylistické (príliš očividné q23/q67,
+  prekomplikované znenie q29/q38/q34, niche fakt q22). Recall analýza
+  verify/critique potrebuje editorskú os (svitlanka).
 
 ## Náklady Fable 5 vs. custom packy (founder 2026-08-19 — súčasť rozhodnutia po D21b)
 

@@ -1,0 +1,56 @@
+{
+  "batch_id": "df12c686-a914-4715-a71b-6b94190a19bd",
+  "raters": [
+    "michal"
+  ],
+  "n": 100,
+  "per_arm_human_mean": {
+    "f-base": {
+      "mean": 8.01,
+      "n": 70
+    },
+    "e-news-f": {
+      "mean": 7.85,
+      "n": 20
+    },
+    "e-news-k": {
+      "mean": 7.2,
+      "n": 10
+    }
+  },
+  "layers": {
+    "critique": {
+      "n": 100,
+      "spearman": 0.205,
+      "pearson": 0.187
+    },
+    "answerability": {
+      "n": 100,
+      "spearman": 0.056,
+      "pearson": 0.046,
+      "mean_when_passed": 7.93,
+      "mean_when_failed": 7.64
+    },
+    "judges_panel_mean": {
+      "n": 100,
+      "spearman": 0.175,
+      "pearson": 0.155
+    },
+    "judge:judge": {
+      "n": 100,
+      "spearman": 0.175,
+      "pearson": 0.155
+    },
+    "verify": {
+      "n": 100,
+      "spearman": 0.015,
+      "pearson": -0.01,
+      "mean_by_verdict": {
+        "verified": 7.9,
+        "likely_correct": 8.0,
+        "likely_wrong": 8.0,
+        "uncertain": 8.0
+      }
+    }
+  }
+}

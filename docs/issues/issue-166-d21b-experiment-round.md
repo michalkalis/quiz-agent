@@ -72,10 +72,44 @@ founderov príklad (producenti ↔ ich umelci).
       v live HTML (4/4 prítomné)
 - [~] **[HUMAN] ratingy 2×100** — michal 100/100 hotové 2026-08-18/20
       (0 checklist flagov); **svitlanka 0/100 — čaká sa**
-- [ ] Po ratingoch: replay + korelácie + rozšírenie eval setu → záver
-      o critique/judges/verify a prod prepnutí. **Pozor: OpenRouter kredit
-      vyčerpaný (60/60 $) — sudcovské replaye cez OpenRouter budú potrebovať
-      ďalší top-up.**
+- [x] Replay 4 vrstiev (bez duelov) nad publikovanou 100 — 2026-08-21,
+      `replay/replay_results.json` (pozor: run-dir `replay/` = dedup súbory,
+      nie raw pooly; manifest musel dostať všetky 3 ramená). Env zrkadlil
+      prod (JUDGE_MODELS z fly: deepseek.v3.2 + zai.glm-5).
+- [x] Agentný fact-check 100 q (5× Sonnet subagent s webom) —
+      `factcheck_agent_2026-08-21.json`
+- [x] Korelácie — `replay/correlations.json`; závery nižšie
+- [ ] Rozšírenie zmrazeného eval setu (#165 — D21 eval set freeze) o D21b
+      otázky vrát. fact-check anotácií
+- [ ] [HUMAN] founder rozhodnutie o vrstvách + prod prepnutí gen modelu
+
+## Výsledky — os 2 (fact-check) a vrstvy (2026-08-21)
+
+**Fact-check (agentná editorská os):** 6/100 reálnych problémov — 4 fact_error
++ 2 stale, **všetky v e-news ramenách** (e-news-f 3/20, e-news-k 3/10);
+f-base **70/70 fakticky čistý**. Nálezy: q03 (Last Christmas prekonal
+„jediný 2× UK Christmas No.1"), q18 (Snoop 16→20 nominácií), q32+q81
+(Spider-Man: Brand New Day je 2026, nie 2025), q48 (Derringer neprodukoval
+Steely Dan), q63 ($2B za 17, nie 20 dní).
+
+**Korelácie vrstiev vs. michal (n=100, Spearman):** critique .205 ·
+judges .175 · answerability .056 · verify .015 — žiadna vrstva nepredikuje
+zábavnosť (konzistentné s D21: .19/.24/.22/.11).
+
+**Recall detekčných vrstiev proti 6 chybám: 0/6.** Verify dalo 5/6
+„verified" s conf .88–.95 (len q32 „uncertain"); critique factual_accuracy
+9–10 na všetkých 6. Falošné alarmy na čistých: verify 1 (q31), critique 1
+(q89 fa=1). Verify je na news otázkach z 2026 slepé — chyby chytil až
+web-grounded Claude fact-check (6/6).
+
+**Návrh záverov (na founder potvrdenie):**
+1. Prod gen → Fable 5 + direct v1 potvrdené (8.01 @ n=70, 0 faktických chýb).
+2. Critique + judges na Fable kvalite nepridávajú signál (ani zábava, ani
+   fakticita) → kandidáti na vyradenie z pipeline pre f-base tok.
+3. e-news potrebuje nový web-grounded fact-check krok (Claude + web, ako
+   agentná os) — súčasné verify (DeepSeek) na aktuálnych faktoch zlyháva;
+   stale riziko je vlastné news otázkam → pri publikácii news packov
+   kontrola čerstvosti.
 
 ## Výsledky — os 1 produktová metrika (michal, 100/100, 2026-08-20)
 

@@ -1,0 +1,609 @@
+[
+ {
+  "qid": "q01",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q02",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q03",
+  "verdict": "stale",
+  "confidence": "high",
+  "note": "Bohemian Rhapsody is no longer the only song to be UK Christmas No.1 twice: Wham!'s 'Last Christmas' also hit Christmas No.1 twice (2023 and 2024, per Official Charts Company) — https://www.officialcharts.com/chart-news/christmas-number-1-2024-whams-last-christmas-makes-official-chart-history-again-andrew-ridgeley/",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q04",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q05",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q06",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q07",
+  "verdict": "ok",
+  "confidence": "medium",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q08",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q09",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q10",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q100",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q11",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q12",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q13",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q14",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q15",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q16",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q17",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q18",
+  "verdict": "stale",
+  "confidence": "high",
+  "note": "Snoop Dogg's Grammy nomination count without a win has since risen to 20 (per Wikipedia 'List of awards and nominations received by Snoop Dogg' and 2026 HuffPost/BET coverage), not sixteen — https://en.wikipedia.org/wiki/List_of_awards_and_nominations_received_by_Snoop_Dogg",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q19",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q20",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q21",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q22",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q23",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q24",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q25",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q26",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q27",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q28",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q29",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q30",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q31",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q32",
+  "verdict": "fact_error",
+  "confidence": "high",
+  "note": "Question states 'In 2025's Spider-Man: Brand New Day' but the film released July 31, 2026, not 2025 (https://www.imdb.com/title/tt22084616/, https://www.landmarkcinemas.com/movie-news/spider-man-brand-new-day-to-release-in-july-2026).",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q33",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q34",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q35",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q36",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q37",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q38",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q39",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q40",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q41",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q42",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q43",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q44",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q45",
+  "verdict": "ok",
+  "confidence": "high",
+  "note": "False alarm — export artifact (field possible_answers nebol v chunk exporte); c = Ice Ice Baby, správne.",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q46",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q47",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q48",
+  "verdict": "fact_error",
+  "confidence": "high",
+  "note": "Rick Derringer produced Weird Al Yankovic's records (confirmed) but never produced Steely Dan — he was only a session guitarist on Steely Dan tracks like 'Show Biz Kids', not a producer; https://www.soapcentral.com/music/news-which-steely-dan-songs-rick-derringer-play-on-what-know-grammy-award-winning-song-writer-passes-away",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q49",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q50",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q51",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q52",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q53",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q54",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q55",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q56",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q57",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q58",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q59",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q60",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q61",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q62",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q63",
+  "verdict": "fact_error",
+  "confidence": "high",
+  "note": "Premise says Brand New Day hit $2B in 20 days, but it actually took 17 days (release July 31 2026); Endgame's 11-day record answer is correct. Source: https://deadline.com/2026/08/box-office-global-spider-man-brand-new-day-2-1237042050/",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q64",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q65",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q66",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q67",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q68",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q69",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q70",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q71",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q72",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q73",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q74",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q75",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q76",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q77",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q78",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q79",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q80",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q81",
+  "verdict": "fact_error",
+  "confidence": "high",
+  "note": "Spider-Man: Brand New Day released July 31, 2026, not 2025 as the question states; https://thescreendaily.com/spider-man-brand-new-day-release-date/",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q82",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q83",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q84",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q85",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q86",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q87",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q88",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q89",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-k"
+ },
+ {
+  "qid": "q90",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q91",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q92",
+  "verdict": "ok",
+  "confidence": "medium",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q93",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q94",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q95",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q96",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q97",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ },
+ {
+  "qid": "q98",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "e-news-f"
+ },
+ {
+  "qid": "q99",
+  "verdict": "ok",
+  "confidence": "high",
+  "arm": "f-base"
+ }
+]

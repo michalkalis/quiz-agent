@@ -91,10 +91,15 @@ founderov príklad (producenti ↔ ich umelci).
 - **Entertainment reprompt v2 = najväčší skok kola: 4.88 → 7.85** (Fable).
   Kimi na tom istom prompte 7.20 (n=10) — použiteľný, ale slabší a pri
   generovaní sa fixoval na málo faktov.
-- **0 checklist flagov od michala** — žiadna nájdená faktická/logická chyba;
-  dôvody nízkych skóre sú výlučne štylistické (príliš očividné q23/q67,
-  prekomplikované znenie q29/q38/q34, niche fakt q22). Recall analýza
-  verify/critique potrebuje editorskú os (svitlanka).
+- **Pozor na interpretáciu flagov:** michal fakticitu aktívne nekontroloval
+  (founder 2026-08-21) — 0 flagov ≠ 0 chýb. Dôvody nízkych skóre sú
+  štylistické (príliš očividné q23/q67, prekomplikované znenie q29/q38/q34,
+  niche fakt q22), ale editorská os chýba.
+- **Editorská os (founder 2026-08-21):** svitlanka toto kolo hodnotiť nebude
+  a founder sa faktickej kontrole chce vyhnúť → náhrada = agentný
+  web-grounded fact-check všetkých 100 otázok (Claude subagenti s vyhľadávaním);
+  founderovi sa predložia len podozrivé nálezy na potvrdenie. Recall
+  verify/critique sa počíta proti tejto osi.
 
 ## Náklady Fable 5 vs. custom packy (founder 2026-08-19 — súčasť rozhodnutia po D21b)
 
@@ -108,6 +113,11 @@ Dôsledky, ak sa potvrdí: firemný Anthropic účet (pravidlo company accounts)
 batch cesta v LLM factory popri OpenRouter, ANTHROPIC_API_KEY v prod secrets.
 Alternatívy na stole: dvojúrovňová stratégia (Fable len korpus/oficiálne packy,
 custom na lacnom modeli) a hybrid (lacný generátor + Fable výber/edit).
+
+Update founder 2026-08-21: Batch API potvrdený ako preferovaný smer; custom
+pack smie byť spočiatku stratový (loss leader na akvizíciu platiacich),
+cena sa stiahne časom (lacnejšie modely alebo iné riešenie). Finálne
+rozhodnutie stále až po vyhodnotení D21b.
 
 ## Kritérium hotovosti
 

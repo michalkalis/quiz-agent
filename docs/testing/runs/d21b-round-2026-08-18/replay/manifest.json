@@ -1,0 +1,68 @@
+{
+ "round": "d21b-2026-08-18",
+ "seed": 20260818,
+ "direct_topics": [
+  "animal biology oddities",
+  "space exploration",
+  "everyday food science",
+  "world geography surprises",
+  "history of inventions",
+  "money and trade",
+  "the human body",
+  "sports history",
+  "ocean and deep sea mysteries",
+  "weather and natural phenomena",
+  "ancient civilizations daily life",
+  "famous landmarks and their secrets",
+  "transport and aviation firsts",
+  "music history milestones",
+  "classic films and pop culture history",
+  "plants and fungi oddities",
+  "chemistry in everyday life",
+  "maps and borders quirks",
+  "records and extremes in nature",
+  "technology origins and firsts",
+  "art and artists surprises",
+  "games and toys history",
+  "famous rulers and royal quirks",
+  "engineering marvels"
+ ],
+ "news_topics": [
+  "famous music producers and the artists they make hits for",
+  "biggest music artists recent releases and chart records",
+  "blockbuster films and famous directors recent releases",
+  "hit TV and streaming series recent seasons and finales",
+  "major music and film awards recent winners",
+  "famous artist collaborations and reunions recent"
+ ],
+ "arms": {
+  "f-base": {
+   "mode": "direct",
+   "model": "openrouter",
+   "prompt": "direct v1"
+  },
+  "e-news-f": {
+   "mode": "news",
+   "model": "openrouter",
+   "prompt": "question_generation_entertainment_v2.md"
+  },
+  "e-news-k": {
+   "mode": "news",
+   "model": "bedrock:moonshotai.kimi-k2.5",
+   "prompt": "question_generation_entertainment_v2.md",
+   "categories": [
+    "entertainment"
+   ],
+   "target": 16,
+   "publish": 10
+  }
+ },
+ "results": [
+  {
+   "arm": "e-news-k",
+   "count": 16,
+   "status": "ok"
+  }
+ ],
+ "llm_gateway": "direct"
+}

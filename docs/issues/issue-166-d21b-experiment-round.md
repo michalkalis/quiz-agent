@@ -87,6 +87,28 @@ founderov príklad (producenti ↔ ich umelci).
       (minimálne pre news/entertainment). Implementácia = nová session
       (handoff v docs/handoffs/).
 
+## Implementácia (2026-08-24, poradie schválené founderom in-session)
+
+Inkrement 1 = (1)+(2) naraz (presne meraná D21b konfigurácia), staré verify
+ostáva ako poistka. Inkrement 2 = (3) web fact-check cez firemný Anthropic
+účet (natívne web search — vzor, ktorý chytil 6/6; účet aj tak treba na
+korpus-regrow).
+
+- [x] Inkrement 1 v kóde (commit `81825633`): DIRECT_GENERATION default on
+      (sourcing skip, F8 stand-down), GEN_PROMPT_VERSION=direct_v1,
+      BEST_OF_N off (bez overgen/critique/duelov), JUDGE_GATE off
+      (ScoringStage bez panelu drží deterministické brány), max_tokens=32768
+      na gen LLM (OpenRouter 402 gotcha). Každá zmena má env rollback páku.
+      Testy 978 passed 2×; reálny smoke (Fable/OpenRouter, direct v1) OK.
+- [x] Prod secret pripravený: `LLM_ROLE_GEN=claude-fable-5` staged
+      (aplikuje sa najbližším deployom; dnešná hodnota bola
+      `bedrock:moonshotai.kimi-k2.5` = rollback).
+- [ ] **[HUMAN] Fly billing** — deploy zlyháva: „account has overdue
+      invoices" → founder musí uhradiť na fly.io/dashboard/michal-kalis/billing
+- [ ] Deploy quiz-pack-api + skúšobný pack e2e (po odblokovaní billingu)
+- [ ] Inkrement 2: web-grounded fact-check namiesto verify — predpoklad
+      [HUMAN] firemný Anthropic účet + ANTHROPIC_API_KEY
+
 ## Výsledky — os 2 (fact-check) a vrstvy (2026-08-21)
 
 **Fact-check (agentná editorská os):** 6/100 reálnych problémov — 4 fact_error

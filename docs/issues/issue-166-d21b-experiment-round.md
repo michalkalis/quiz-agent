@@ -110,8 +110,14 @@ korpus-regrow).
       ~4,23 $ pred zmenou; extrapolácia pack_30 ≈ 2,5 $ aj s Fable gen.
       Prod overený: LLM_ROLE_GEN=claude-fable-5, sourcing skip (direct),
       citation-strip aktívny. Objednávka 13ccb5a2, pack 5cb50f9b.
-- [ ] Inkrement 2: web-grounded fact-check namiesto verify — predpoklad
-      [HUMAN] firemný Anthropic účet + ANTHROPIC_API_KEY
+- [~] Inkrement 2: web-grounded fact-check namiesto verify — **kód hotový
+      2026-08-24** (`6aa295cf`): FactVerifier = adversariálny Claude
+      fact-check s natívnym web_search (FACTCHECK rola claude-sonnet-5,
+      `LLM_ROLE_FACTCHECK` override; factory `anthropic_client()`),
+      verdikty ok/fact_error/logic_flaw/stale, problem = drop, výpadok =
+      fail-closed withhold (#158); náklady cez StageResult.cost_cents.
+      Testy 986 passed 2×. Zostáva: [HUMAN] ANTHROPIC_API_KEY do `.env`
+      → `fly secrets set -a quiz-pack-api` → deploy → skúšobný pack e2e.
 
 ## Výsledky — os 2 (fact-check) a vrstvy (2026-08-21)
 

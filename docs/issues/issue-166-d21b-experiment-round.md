@@ -138,6 +138,33 @@ korpus-regrow).
       lacné grounded API kandidáti pre bod 2. Bedrock modely len v bode 2
       (Bedrock nemá natívny web search). Tavily už v ostrom toku nebeží
       nikde — zvážiť zrušenie plateného plánu.
+- [~] **Inkrement 3 — validácia 2026-08-24 večer** (commit `3c6971a7`, harness
+      `scripts/factcheck_eval_166.py`, výsledky
+      `docs/testing/runs/d21b-round-2026-08-18/factcheck-eval-166/`):
+      1. **Lacný variant (Tavily 2×advanced + kompresia + single-turn) latku
+         NEPREŠIEL.** Sonnet 5: recall 4/6 (2 FP, 4,6 ¢/q) — q48 principiálne
+         nechytateľný (snippety samotné omyl potvrdzujú, nekrológy opakujú
+         „produced Steely Dan"); q18 nestabilné medzi behmi. Haiku 4.5:
+         6/6 ale 32 FP (nepoužiteľný). Potvrdený dôvod zlyhania starého
+         verify — architektúra, nie len prevedenie.
+      2. **native max_searches 5→3 latku NEPREŠIEL:** recall 3/6 pri 17,2 ¢/q
+         (takmer žiadna úspora — cenu ženú input tokeny web výsledkov, nie
+         počet hľadaní). 5→3 sa NEnasadzuje.
+      3. **Tier router NAPÍSANÝ a validovaný na D21b:** signál = source_url/
+         fact_ids (zdrojovaná generácia) OR fresh-text markery (rok ≥ Y-2,
+         recency frázy, rekordy/superlatívy). Chytá 6/6 (q48 len provenance
+         vetvou), evergreen ušetrí 65/70. V kóde dormant
+         (`FACTCHECK_TIER_ROUTING` opt-in) — čaká founder potvrdenie
+         definície news + flip na default-on.
+      4. **Bonus nálezy — kandidáti na chyby, ktoré agentný baseline prehliadol:**
+         q89 (KPop Demon Hunters je 2025 film, otázka tvrdí 2026 — flagli
+         native aj Sonnet), q95 (Chavannes bol švajčiarsky, nie „American
+         engineers" — flagli 3 varianty), q37 (Kiribati „jediná krajina vo
+         4 hemisférach" — Snopes: FR/UK/US tiež). Na founder potvrdenie;
+         ak reálne, eval set (#165) treba doplniť.
+      Otvorené: in-pipeline FactVerifier (max 5) nebol na D21b recall-meraný
+      (6/6 pochádza z 5×-subagent behu) — pred spoliehaním sa na news-tier
+      zvážiť native max5 beh (~18 $).
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

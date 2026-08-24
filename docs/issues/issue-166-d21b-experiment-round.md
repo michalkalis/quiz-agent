@@ -120,12 +120,24 @@ korpus-regrow).
       `generation_metadata.extra` (9/9 „ok" 0.9, notes s reálnymi zdrojmi —
       Britannica, Snopes atď.), žiadne 429 (retry_count 0, concurrency 8 OK).
       Objednávka d46add92, pack 0b543fbd.
-- [ ] **Cost flag pre foundera:** fact-check stál ~180 ¢/pack_10 (≈ 18 ¢/q;
-      celkovo 262 ¢ = gen 82 ¢ + fact-check ~180 ¢) — výrazne nad odhadom
-      +10–30 ¢. Dôvod: web výsledky sa účtujú ako input tokeny × multi-turn
-      resume. Extrapolácia pack_30 ≈ 7–8 $ (vs. 4,23 $ pred D21b). Páky na
-      zníženie (max_searches < 5, selektívny fact-check len news/fresh
-      kategórií, batch otázok na call) = founder call, neimplementované.
+- [x] Cost flag: fact-check ~180 ¢/pack_10 (≈ 18 ¢/q; celkovo 262 ¢ = gen
+      82 ¢ + fact-check) — nad odhadom; dôvod: web výsledky = input tokeny ×
+      multi-turn resume. Pack_30 ≈ 7–8 $. **Founder 2026-08-24 večer schválil
+      3-bodový plán zlacnenia (inkrement 3):**
+      1. Dvojúrovňová kontrola — evergreen otázky lacná/žiadna web kontrola
+         (D21b: f-base 70/70 čistý), plný web fact-check len news/fresh.
+      2. Lacný variant (vlastný search Exa/Tavily + kompresia kódom +
+         single-turn model) validovať na D21b sade — akceptačná latka
+         recall 6/6 na q03/q18/q32/q48/q63/q81
+         (`docs/testing/runs/d21b-round-2026-08-18/factcheck_agent_2026-08-21.json`)
+         + nízke falošné alarmy; bez prejdenia latky sa prod fact-check nemení.
+      3. Hneď: `_MAX_WEB_SEARCHES` 5 → 2–3 (validovať na D21b sade);
+         korpus regrow fact-check cez Anthropic Batch API (−50 %).
+      Prieskum hotových riešení: FacTool/SAFE/Loki/OpenFactCheck = mŕtvy
+      2024 výskumný kód, žiadny drop-in; Perplexity Sonar / Exa /answer =
+      lacné grounded API kandidáti pre bod 2. Bedrock modely len v bode 2
+      (Bedrock nemá natívny web search). Tavily už v ostrom toku nebeží
+      nikde — zvážiť zrušenie plateného plánu.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

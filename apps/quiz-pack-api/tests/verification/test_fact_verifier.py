@@ -1,186 +1,233 @@
-"""Unit tests for FactVerifier agreement + hold-for-review (issue #72 P1.2 / RC-9).
+"""Unit tests for the web-grounded Claude fact-check (#166 increment 2).
 
 Why these scenarios:
 
-The pre-#72 verifier scored agreement with a naive ``answer_lower in content``
-substring test. Crisp recall answers ("Starboard") match their source verbatim
-and pass; estimation/reasoning answers ("about 4 million") never substring-match
-a source that writes the figure as "4,000,000", so they scored agreement=0 and
-were dropped at the 0.5 confidence gate. Verification therefore *selected FOR*
-boring, first-degree-recall questions — the exact RC-9 failure #72 exists to fix.
+The verifier replaced Tavily+arbiter (0/6 recall on 2026-news errors in
+D21b) with the validated adversarial Claude+web pattern (6/6). Its contract
+with ``VerificationStage`` is numeric: problem verdicts must land BELOW the
+0.5 confidence gate (dropped), ``ok`` at or above it (kept), and anything
+the checker could not judge must be ``held_for_review`` (withheld,
+fail-closed per #158/#147 — an outage is never evidence for or against an
+answer, and unchecked content never ships).
 
-- ``test_estimation_answer_agrees_via_numeric_value`: proves the numeric-aware
-  agreement lets an estimate pass when sources state the same magnitude
-  differently — so it is NOT dropped.
-- ``test_judge_unavailable_holds_instead_of_dropping``: when the search/judge
-  is unavailable we cannot conclude "wrong"; the question is tagged
-  ``held_for_review`` (kept) rather than dropped at confidence 0.
-- ``test_judge_failure_holds_instead_of_dropping``: same policy for a judge
-  that *is* configured but fails mid-call (429/timeout → ``_complete`` returns
-  ``None``, prose instead of JSON, or a raising client). The adversarial audit
-  2026-07-30 found this fallback returned confidence 0.3 with
-  ``held_for_review`` unset, so a rate-limited Gemini deleted paid questions
-  exactly as if their answers had been shown wrong.
-- ``_answer_supported`` / ``_numbers_in`` unit cases pin the strictness contract:
-  numeric tolerance for estimates, strict substring for recall answers.
+- verdict-mapping tests pin that numeric contract per verdict.
+- failure-mode tests (API error, refusal, prose reply, unknown verdict,
+  missing key) pin fail-closed: every one must hold, never drop or keep.
+- the pause_turn test pins the server-side tool-loop resume so a long web
+  search turn is continued instead of silently truncated.
 """
 
 from __future__ import annotations
 
+import json
+from types import SimpleNamespace
 from typing import Any, Optional
 
 import pytest
 
-from app.verification.fact_verifier import (
-    FactVerifier,
-    _answer_supported,
-    _numbers_in,
-)
+from app.verification.fact_verifier import FactVerifier, _parse_verdict_json
 
 
-class _FakeSearch:
-    """WebSearchSource double returning a canned ``verify_claim`` payload."""
-
-    def __init__(
-        self,
-        results: list[dict[str, Any]],
-        answer: Optional[str] = None,
-        error: Optional[str] = None,
-    ) -> None:
-        self._payload: dict[str, Any] = {"results": results}
-        if answer is not None:
-            self._payload["answer"] = answer
-        if error is not None:
-            self._payload["error"] = error
-
-    async def verify_claim(
-        self, question: str, claimed_answer: str, max_results: int = 5
-    ) -> dict[str, Any]:
-        return self._payload
-
-
-# --- _numbers_in / _answer_supported: the agreement contract --------------
-
-
-def test_numbers_in_parses_commas_and_scale_words() -> None:
-    assert _numbers_in("4 million") == [4_000_000.0]
-    assert 4_000_000.0 in _numbers_in("population is 4,000,000 people")
-    assert _numbers_in("3.5 billion") == [3_500_000_000.0]
-
-
-def test_answer_supported_strict_for_recall_answers() -> None:
-    # Non-numeric recall answers keep the strict verbatim-substring test:
-    # present -> supported, absent -> not supported (strictness preserved).
-    assert _answer_supported("Starboard", "the right side is called starboard") is True
-    assert _answer_supported("Starboard", "the left side is called port") is False
-
-
-def test_answer_supported_numeric_tolerance() -> None:
-    # An estimate matches a source stating the same magnitude differently,
-    # but not a clearly different figure.
-    assert _answer_supported("about 4 million", "the population is 4,000,000") is True
-    assert _answer_supported("about 4 million", "the population is 9,000,000") is False
-
-
-# --- verify(): the drop-prevention contract -------------------------------
-
-
-@pytest.mark.asyncio
-async def test_estimation_answer_agrees_via_numeric_value() -> None:
-    """A non-substring estimation answer is NOT dropped: numeric agreement
-    lets it reach a 'verified' verdict above the 0.5 gate."""
-    verifier = FactVerifier()
-    verifier.search = _FakeSearch(  # type: ignore[assignment]
-        results=[
-            {"url": "u1", "content": "The metro population is 4,000,000 residents.", "score": 0.9},
-            {"url": "u2", "content": "About 4 million people live there.", "score": 0.8},
-            {"url": "u3", "content": "Census figure: 4,000,000.", "score": 0.85},
-        ]
+def _response(
+    text: Optional[str],
+    stop_reason: str = "end_turn",
+    content: Optional[list[Any]] = None,
+) -> SimpleNamespace:
+    """Minimal Anthropic Message double (content blocks + usage)."""
+    if content is None:
+        content = []
+        if text is not None:
+            content = [SimpleNamespace(type="text", text=text)]
+    return SimpleNamespace(
+        stop_reason=stop_reason,
+        content=content,
+        usage=SimpleNamespace(input_tokens=100, output_tokens=50),
     )
 
-    result = await verifier.verify("How many people live in X?", "about 4 million")
 
-    assert result.verdict == "verified"
-    assert result.held_for_review is False
-    assert result.confidence >= 0.5  # above VerificationStage drop threshold
-    assert all(s["agrees_with_answer"] for s in result.sources)
+class _FakeAnthropic:
+    """AsyncAnthropic double returning canned responses in order."""
+
+    def __init__(self, responses: list[Any]) -> None:
+        self._responses = list(responses)
+        self.requests: list[dict[str, Any]] = []
+        self.messages = SimpleNamespace(create=self._create)
+
+    async def _create(self, **kwargs: Any) -> Any:
+        self.requests.append(kwargs)
+        item = self._responses.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
 
 
-@pytest.mark.asyncio
-async def test_judge_unavailable_holds_instead_of_dropping(monkeypatch) -> None:
-    """When sources do not confirm and the judge is unavailable, the verifier
-    holds the question for review (kept) rather than dropping it at conf 0."""
+def _verifier(responses: list[Any]) -> tuple[FactVerifier, _FakeAnthropic]:
     verifier = FactVerifier()
-    verifier.search = _FakeSearch(  # type: ignore[assignment]
-        results=[
-            {"url": "u1", "content": "An article about the city's history and culture.", "score": 0.5},
-            {"url": "u2", "content": "No population figure appears here.", "score": 0.4},
-            {"url": "u3", "content": "Unrelated content about local tourism.", "score": 0.3},
-        ]
-    )
-    # Judge unavailable: no GOOGLE_API_KEY and not on the OpenRouter gateway.
-    monkeypatch.setattr(verifier, "_available", lambda: False)
-
-    result = await verifier.verify("How many people live in X?", "about 4 million")
-
-    assert result.held_for_review is True
-    assert result.verdict == "unverified"
+    client = _FakeAnthropic(responses)
+    verifier._client = client  # type: ignore[assignment]
+    return verifier, client
 
 
-async def _judge_returns_none(prompt: str) -> None:
-    """What a 429/timeout looks like: `_complete` swallows and returns None."""
-    return None
+def _verdict_json(verdict: str, confidence: str = "high", **extra: Any) -> str:
+    return json.dumps({"verdict": verdict, "confidence": confidence, **extra})
 
 
-async def _judge_returns_prose(prompt: str) -> str:
-    """A reply with no JSON object → ValueError inside the parse block."""
-    return "I think the claimed answer is roughly in the right ballpark."
-
-
-async def _judge_raises(prompt: str) -> str:
-    raise TimeoutError("gemini rate limited")
+# --- verdict mapping: the numeric contract with VerificationStage ----------
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "judge",
-    [_judge_returns_none, _judge_returns_prose, _judge_raises],
-    ids=["returns_none", "returns_prose", "raises"],
+    ("confidence", "expected"), [("high", 0.9), ("medium", 0.7), ("low", 0.5)]
 )
-async def test_judge_failure_holds_instead_of_dropping(judge) -> None:
-    """A judge that fails mid-call must HOLD the question, not delete it.
-
-    Adversarial audit 2026-07-30: the exception fallback returned
-    confidence 0.3 with `held_for_review` unset, which VerificationStage scores
-    identically to "the answer is probably wrong" — so a rate-limited Gemini
-    silently dropped questions from a paid pack and pushed the order toward the
-    top-up/shortfall path. A judge failure is not evidence against the answer.
-    """
-    verifier = FactVerifier(gemini_api_key="test-key")
-    verifier.search = _FakeSearch(  # type: ignore[assignment]
-        results=[
-            {"url": "u1", "content": "An article about the city's history.", "score": 0.5},
-            {"url": "u2", "content": "No population figure appears here.", "score": 0.4},
-            {"url": "u3", "content": "Unrelated content about local tourism.", "score": 0.3},
-        ]
+async def test_ok_verdict_lands_at_or_above_the_gate(confidence, expected) -> None:
+    verifier, client = _verifier(
+        [_response("Checked the fact.\n" + _verdict_json("ok", confidence))]
     )
-    verifier._complete = judge  # type: ignore[assignment]
 
-    result = await verifier.verify("How many people live in X?", "about 4 million")
+    result = await verifier.verify("Q?", "A")
 
-    assert result.held_for_review is True
-    assert result.verdict == "unverified"
-    assert result.confidence < 0.5  # below the gate, so only `held` saves it
+    assert result.verdict == "ok"
+    assert result.confidence == pytest.approx(expected)
+    assert result.confidence >= 0.5  # VerificationStage keeps it
+    assert result.held_for_review is False
+    # The adversarial prompt + web_search tool actually went out.
+    request = client.requests[0]
+    assert request["tools"][0]["type"] == "web_search_20260209"
+    assert "Q?" in request["messages"][0]["content"]
 
 
 @pytest.mark.asyncio
-async def test_search_unavailable_holds_instead_of_dropping() -> None:
-    """A total search failure is held for review, not dropped at confidence 0."""
-    verifier = FactVerifier()
-    verifier.search = _FakeSearch(results=[], error="tavily timeout")  # type: ignore[assignment]
+@pytest.mark.parametrize("verdict", ["fact_error", "logic_flaw", "stale"])
+async def test_problem_verdicts_land_below_the_gate(verdict) -> None:
+    """fact_error/logic_flaw/stale = drop (founder-approved policy 2026-08-24):
+    confidence 0.0 puts them under the stage's 0.5 gate without a stage change."""
+    verifier, _ = _verifier(
+        [
+            _response(
+                _verdict_json(
+                    verdict,
+                    note="superseded per https://example.com",
+                    correct_answer="B",
+                )
+            )
+        ]
+    )
 
-    result = await verifier.verify("How many people live in X?", "about 4 million")
+    result = await verifier.verify("Q?", "A")
+
+    assert result.verdict == verdict
+    assert result.confidence == 0.0  # below the gate → dropped, not withheld
+    assert result.held_for_review is False
+    assert result.alternative_answers == ["B"]
+    assert "example.com" in result.notes
+
+
+@pytest.mark.asyncio
+async def test_json_is_found_after_prose_and_citations() -> None:
+    """Real replies carry search narration (which may contain braces) before
+    the trailing verdict object — the parser must take the LAST verdict JSON."""
+    text = (
+        'I searched {"query": "test"} and found sources.\n'
+        "The answer holds.\n" + _verdict_json("ok", "medium")
+    )
+    verifier, _ = _verifier([_response(text)])
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.verdict == "ok"
+    assert result.confidence == pytest.approx(0.7)
+
+
+# --- fail-closed: could-not-check must hold, never drop or keep ------------
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "responses",
+    [
+        [TimeoutError("anthropic timed out")],
+        [_response(None, stop_reason="refusal")],
+        [_response("I could not reach a conclusion, sorry.")],
+        [_response(_verdict_json("maybe_wrong"))],
+    ],
+    ids=["api_error", "refusal", "prose_no_json", "unknown_verdict"],
+)
+async def test_failures_hold_instead_of_dropping(responses) -> None:
+    verifier, _ = _verifier(responses)
+
+    result = await verifier.verify("Q?", "A")
 
     assert result.held_for_review is True
-    assert result.confidence == 0.0
     assert result.verdict == "unverified"
+    assert result.confidence == 0.0
+
+
+@pytest.mark.asyncio
+async def test_missing_api_key_holds_without_calling_api(monkeypatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    verifier = FactVerifier()
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.held_for_review is True
+    assert "ANTHROPIC_API_KEY" in result.notes
+
+
+# --- cost accounting -------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_cost_covers_tokens_and_web_searches() -> None:
+    """The direct-Anthropic path is invisible to Tavily/OpenRouter cost
+    signals — each verdict must carry its own cost (tokens + $10/1k searches)
+    so total_cost_cents doesn't silently lose the verify stage."""
+    resp = _response(_verdict_json("ok"))
+    resp.usage = SimpleNamespace(
+        input_tokens=1_000_000,
+        output_tokens=0,
+        server_tool_use=SimpleNamespace(web_search_requests=3),
+    )
+    verifier, _ = _verifier([resp])
+
+    result = await verifier.verify("Q?", "A")
+
+    # 1M input tokens at $3/1M = 300¢, plus 3 searches at 1¢.
+    assert result.cost_cents == pytest.approx(303.0)
+
+
+# --- pause_turn: server-side tool loop resume ------------------------------
+
+
+@pytest.mark.asyncio
+async def test_pause_turn_is_resumed() -> None:
+    paused = _response(None, stop_reason="pause_turn")
+    paused.content = [SimpleNamespace(type="server_tool_use", text="")]
+    verifier, client = _verifier([paused, _response(_verdict_json("ok"))])
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.verdict == "ok"
+    assert len(client.requests) == 2
+    # The resume re-sends the paused assistant turn so the server continues.
+    resumed = client.requests[1]["messages"]
+    assert resumed[1]["role"] == "assistant"
+    assert resumed[1]["content"] is paused.content
+
+
+@pytest.mark.asyncio
+async def test_endless_pause_turn_holds() -> None:
+    paused = _response(None, stop_reason="pause_turn")
+    verifier, _ = _verifier([paused] * 10)
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.held_for_review is True
+
+
+# --- _parse_verdict_json ---------------------------------------------------
+
+
+def test_parse_verdict_json_handles_fences_and_absence() -> None:
+    assert _parse_verdict_json('```json\n{"verdict": "ok"}\n```')["verdict"] == "ok"
+    assert _parse_verdict_json("no json here") is None
+    assert _parse_verdict_json('broken {"verdict": ') is None

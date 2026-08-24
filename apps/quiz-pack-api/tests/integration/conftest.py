@@ -25,6 +25,10 @@ import respx
 # providers is mocked by respx — the placeholders never reach the wire.
 os.environ.setdefault("TAVILY_API_KEY", "tvly-test-placeholder")
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
+# #166 increment 2: FactVerifier fail-closes (withholds every question) when
+# ANTHROPIC_API_KEY is absent — the placeholder routes it into the mocked
+# /v1/messages endpoint instead.
+os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
 
 
 @pytest.fixture(autouse=True)
@@ -172,6 +176,7 @@ def sourcing_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockRou
 # Canned payloads (issue #36 task 2.11c — generation + critique mocks)
 # ---------------------------------------------------------------------------
 
+
 # Question payload mirrors what ``AdvancedQuestionGenerator._parse_response``
 # expects from the V3 fact-first prompt: top-level ``questions`` list of dicts
 # with ``question``, ``correct_answer``, ``type``, ``source_url``, etc.
@@ -277,9 +282,7 @@ def _request_prompt_text(body: dict) -> str:
         content = message.get("content", "")
         if isinstance(content, list):
             chunks.extend(
-                str(part.get("text", ""))
-                for part in content
-                if isinstance(part, dict)
+                str(part.get("text", "")) for part in content if isinstance(part, dict)
             )
         else:
             chunks.append(str(content))
@@ -339,14 +342,10 @@ def generation_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockR
 # Canned payloads (issue #36 task 2.11d — verifier + scorer mocks)
 # ---------------------------------------------------------------------------
 
-# `FactVerifier.verify` reaches `verified` confidence ≈ 0.95 when Tavily returns
-# at least 3 results whose `content` contains the claimed answer (the agree
-# count drives `0.6 + (agreeing/total)*0.35`). Three lower-case "three"s land
-# us at the 0.95 ceiling without forcing the test to monkey-patch confidence.
-# Contents deliberately mention EVERY answer in `_TOPUP_FRIENDLY_QUESTIONS`
-# (three, nine, blue, eight, zero, ink, camouflage, suckers, octopus,
-# copper) — `FactVerifier._answer_supported` is a substring check per result,
-# and one canned route serves every verification query in the run.
+# Historical shape from the pre-#166 Tavily-based verifier; since #166
+# increment 2 verification runs on the Anthropic route above, and this
+# payload only serves sourcing's Tavily calls (FactSourcer just needs
+# URL-bearing results).
 _TAVILY_VERIFY_RESPONSE = {
     "answer": "An octopus has three hearts.",
     "results": [
@@ -402,17 +401,23 @@ _SCORING_PAYLOAD = {
     "reasoning": "Strong universal-appeal trivia with a verified answer.",
 }
 
-# Anthropic Messages envelope — registered so a future scorer config that
-# enables ANTHROPIC_API_KEY in CI doesn't leak real HTTPS through the
-# egress guard. Not exercised by the verifier (Gemini) or scorer (OpenAI-only)
-# in this test, but kept here so 2.11e can compose it unchanged.
+# Anthropic Messages envelope — #166 increment 2: this is the fact-check
+# route. FactVerifier now calls the direct Anthropic API and parses the
+# trailing verdict JSON out of the reply text; an "ok"/high verdict keeps
+# every question (the pre-#166 verified branch equivalent).
+_FACTCHECK_PAYLOAD = {
+    "verdict": "ok",
+    "confidence": "high",
+    "note": "No problem found; canned integration verdict.",
+    "correct_answer": None,
+}
 _ANTHROPIC_MESSAGES_RESPONSE = {
     "id": "msg_test_123",
     "type": "message",
     "role": "assistant",
-    "model": "claude-sonnet-4-6",
+    "model": "claude-sonnet-5",
     "stop_reason": "end_turn",
-    "content": [{"type": "text", "text": json.dumps(_SCORING_PAYLOAD)}],
+    "content": [{"type": "text", "text": json.dumps(_FACTCHECK_PAYLOAD)}],
     "usage": {"input_tokens": 120, "output_tokens": 180},
 }
 
@@ -433,14 +438,12 @@ def _scoring_openai_dispatch(request: httpx.Request) -> httpx.Response:
 def register_verify_score_mocks(router: respx.MockRouter) -> None:
     """Register HTTP routes for the verification + scoring stages.
 
-    - Tavily ``/search`` returns three results all containing the lowercase
-      claimed answer (``three``) so ``FactVerifier`` hits the verified branch
-      without needing Gemini.
+    - Anthropic ``/v1/messages`` returns the canned "ok"/high fact-check
+      verdict, so ``FactVerifier`` (#166 increment 2) keeps every question.
     - OpenAI ``/v1/chat/completions`` returns the scoring payload for any
       model — sufficient for ``MultiModelScorer`` with only ``OPENAI_API_KEY``.
-    - Anthropic ``/v1/messages`` is registered defensively for completeness;
-      no test in this group triggers it because ``langchain_anthropic`` is
-      absent from the venv.
+    - Tavily ``/search`` stays registered for sourcing-path callers composed
+      on top of this group (verification no longer calls Tavily).
     """
     router.post("https://api.tavily.com/search").mock(
         return_value=httpx.Response(200, json=_TAVILY_VERIFY_RESPONSE)
@@ -527,26 +530,76 @@ def e2e_http_mocks(_block_external_http: respx.MockRouter) -> respx.MockRouter:
 # ``_TAVILY_VERIFY_RESPONSE`` contents so ``FactVerifier`` still hits its
 # verified branch for every question.
 _TOPUP_FRIENDLY_QUESTIONS = [
-    ("How many hearts pump blood through an octopus?", "three", ["3"],
-     "Marine Biology", "https://example.com/octopus-hearts"),
-    ("Counting the one in its head and one per arm, how many brains does an octopus use?", "nine", ["9"],
-     "Animal Anatomy", "https://example.com/octopus-brains"),
-    ("What colour is octopus blood?", "blue", [],
-     "Biochemistry", "https://example.com/octopus-blood"),
-    ("An octopus reaches for prey with how many arms?", "eight", ["8"],
-     "Ocean Life", "https://example.com/octopus-arms"),
-    ("How many bones support an octopus's body?", "zero", ["none"],
-     "Zoology", "https://example.com/octopus-bones"),
-    ("What does a startled octopus squirt to cover its escape?", "ink", [],
-     "Animal Behaviour", "https://example.com/octopus-ink"),
-    ("Which skill lets an octopus vanish against any seabed?", "camouflage", [],
-     "Natural History", "https://example.com/octopus-camouflage"),
-    ("An octopus tastes its food using what on its arms?", "suckers", [],
-     "Sea Creatures", "https://example.com/octopus-suckers"),
-    ("Which sea creature is nicknamed the escape artist of the aquarium?", "octopus", [],
-     "Aquarium Science", "https://example.com/octopus-escape"),
-    ("Which metal carries oxygen in an octopus's bloodstream?", "copper", [],
-     "Chemistry of Life", "https://example.com/octopus-copper"),
+    (
+        "How many hearts pump blood through an octopus?",
+        "three",
+        ["3"],
+        "Marine Biology",
+        "https://example.com/octopus-hearts",
+    ),
+    (
+        "Counting the one in its head and one per arm, how many brains does an octopus use?",
+        "nine",
+        ["9"],
+        "Animal Anatomy",
+        "https://example.com/octopus-brains",
+    ),
+    (
+        "What colour is octopus blood?",
+        "blue",
+        [],
+        "Biochemistry",
+        "https://example.com/octopus-blood",
+    ),
+    (
+        "An octopus reaches for prey with how many arms?",
+        "eight",
+        ["8"],
+        "Ocean Life",
+        "https://example.com/octopus-arms",
+    ),
+    (
+        "How many bones support an octopus's body?",
+        "zero",
+        ["none"],
+        "Zoology",
+        "https://example.com/octopus-bones",
+    ),
+    (
+        "What does a startled octopus squirt to cover its escape?",
+        "ink",
+        [],
+        "Animal Behaviour",
+        "https://example.com/octopus-ink",
+    ),
+    (
+        "Which skill lets an octopus vanish against any seabed?",
+        "camouflage",
+        [],
+        "Natural History",
+        "https://example.com/octopus-camouflage",
+    ),
+    (
+        "An octopus tastes its food using what on its arms?",
+        "suckers",
+        [],
+        "Sea Creatures",
+        "https://example.com/octopus-suckers",
+    ),
+    (
+        "Which sea creature is nicknamed the escape artist of the aquarium?",
+        "octopus",
+        [],
+        "Aquarium Science",
+        "https://example.com/octopus-escape",
+    ),
+    (
+        "Which metal carries oxygen in an octopus's bloodstream?",
+        "copper",
+        [],
+        "Chemistry of Life",
+        "https://example.com/octopus-copper",
+    ),
 ]
 
 

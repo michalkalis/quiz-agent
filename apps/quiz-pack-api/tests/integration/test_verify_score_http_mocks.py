@@ -8,22 +8,21 @@ in unchanged.
 
 Coverage rationale:
 
-- ``test_verification_stage_keeps_all_five_questions``: Tavily mock returns
-  three results that all contain the lowercase claimed answer ("three"), so
-  ``FactVerifier`` reaches the heuristic verified branch (confidence ≈ 0.95).
-  Tests that every question survives the stage's drop filter — the
-  acceptance line "verifier returns the 5 questions it was given (none
-  dropped)" depends on this happy-path behaviour.
+- ``test_verification_stage_keeps_all_five_questions``: the Anthropic
+  ``/v1/messages`` mock returns an "ok"/high fact-check verdict (#166
+  increment 2), so ``FactVerifier`` keeps every question. Tests that every
+  question survives the stage's drop filter — the acceptance line "verifier
+  returns the 5 questions it was given (none dropped)" depends on this
+  happy-path behaviour.
 - ``test_scoring_stage_fills_ctx_scores_for_all``: confirms the stage writes
   one ``ctx.scores`` entry per question id with the OpenAI mock returning a
   valid scoring payload. The keys-by-id check guards the join between
   questions and per-model scores that downstream review tooling depends on.
 
-Gemini and Anthropic providers are intentionally NOT configured for these
-tests: ``GOOGLE_API_KEY`` and ``ANTHROPIC_API_KEY`` are unset so the verifier
-takes the heuristic Tavily-only path and the scorer's default-model list is
-OpenAI-only. The Anthropic ``/v1/messages`` route is still registered in the
-fixture so a future config change can't silently leak real HTTPS.
+``GOOGLE_API_KEY`` stays unset (the scorer's default-model list is
+OpenAI-only); ``ANTHROPIC_API_KEY`` gets a placeholder because the #166
+fact-checker fail-closes (withholds everything) without one — its HTTP goes
+to the mocked ``/v1/messages`` route, never real HTTPS.
 """
 
 from __future__ import annotations
@@ -43,11 +42,11 @@ from quiz_shared.models.question import Question
 
 @pytest.fixture(autouse=True)
 def _llm_api_keys(monkeypatch: pytest.MonkeyPatch) -> None:
-    """OpenAI + Tavily need env-var keys; Gemini/Anthropic stay unset."""
+    """OpenAI + Tavily + Anthropic need env-var keys; Gemini stays unset."""
     monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-mocks")
     monkeypatch.setenv("TAVILY_API_KEY", "test-key-for-mocks")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-for-mocks")
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 class _RecordingSink:

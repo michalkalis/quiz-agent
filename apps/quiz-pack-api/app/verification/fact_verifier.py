@@ -1,351 +1,258 @@
-"""Automated fact verification using Tavily search + an LLM evidence arbiter.
+"""Web-grounded Claude fact-check (#166 increment 2, replaces Tavily+arbiter).
 
-Two-stage pipeline:
-1. Tavily search — find evidence for/against the claimed answer (~$0.005/query)
-2. LLM arbiter (factory ``VERIFY`` role, ``VERIFY_MODEL`` env override) —
-   analyze evidence if Tavily inconclusive
+The previous verifier (Tavily snippet agreement + a DeepSeek evidence
+arbiter) was blind on fresh facts: D21b measured recall 0/6 on the planted
+2026-news errors, while the agentic Claude fact-check pattern (adversarial
+prompt + web search, ``docs/testing/runs/d21b-round-2026-08-18/
+factcheck_agent_2026-08-21.json``) caught 6/6. This module reimplements that
+validated pattern in-pipeline: one Claude call per question with the native
+server-side ``web_search`` tool, returning an editorial verdict
+``ok | fact_error | logic_flaw | stale``.
+
+Drop policy (founder-approved 2026-08-24): ``fact_error``/``logic_flaw``/
+``stale`` are dropped; ``ok`` is kept. Mapped onto the existing numeric
+contract so ``VerificationStage`` stays unchanged: problem verdicts carry
+confidence 0.0 (below the 0.5 gate → dropped), ``ok`` carries ≥0.5.
+
+Failure policy — fail closed (#158, #147 precedent): a missing key, an API
+error, a refusal, or an unparseable reply is never evidence for OR against
+the answer, so the question is ``held_for_review`` → the stage withholds it
+and the top-up loop regenerates the shortfall. A systemic outage breaches
+TopUp's 80% floor and fails the order loud instead of shipping unverified
+content.
 """
 
 import asyncio
 import json
 import os
-import re
 from dataclasses import dataclass, field
 from typing import Optional
 
 from quiz_shared.llm import factory as llm_factory
 
-from ..sourcing.web_search_source import WebSearchSource
-
-# #150 — verification fans out one Tavily search (+ an arbiter call on any
-# inconclusive verdict) per question, and was the last per-question stage
-# still running them one at a time while dedup's neighbours (answerability,
-# scoring) already gathered under a bound. Same knob convention as
-# SCORER_MAX_CONCURRENT in app/scoring/multi_model_scorer.py; the default is
-# the answerability stage's 8, sized for the search provider rather than the
-# judge panel.
+# #150 — bound on concurrent per-question fact-check calls (same knob
+# convention as SCORER_MAX_CONCURRENT); default matches the answerability
+# stage's 8, now sized for Anthropic rate limits rather than Tavily.
 MAX_CONCURRENT_VERIFICATIONS = int(os.getenv("VERIFIER_MAX_CONCURRENT", "8"))
+
+# Server-side web-search cap per question. The D21b agent rarely needed more
+# than a handful of searches per verdict; 5 bounds worst-case cost (~5¢/q at
+# $10 per 1k searches) without starving the adversarial pass.
+_MAX_WEB_SEARCHES = 5
+
+# pause_turn resumes: the server-side tool loop can pause a long turn; each
+# resume re-sends the paused assistant turn. Bounded so a wedged turn cannot
+# loop forever (#139: no unbounded hangs).
+_MAX_PAUSE_RESUMES = 3
+
+_PROBLEM_VERDICTS = frozenset({"fact_error", "logic_flaw", "stale"})
+_CONFIDENCE_TO_SCORE = {"high": 0.9, "medium": 0.7, "low": 0.5}
 
 
 @dataclass
 class VerificationResult:
     """Result of fact-checking a question-answer pair."""
 
-    verdict: (
-        str  # "verified" | "likely_correct" | "uncertain" | "likely_wrong" | "wrong"
-    )
-    confidence: float  # 0.0 - 1.0
+    verdict: str  # "ok" | "fact_error" | "logic_flaw" | "stale" | "unverified"
+    confidence: float  # 0.0 - 1.0 (VerificationStage drops below 0.5)
     sources: list[dict] = field(default_factory=list)  # [{url, excerpt, agrees}]
     alternative_answers: list[str] = field(default_factory=list)
     notes: str = ""
     held_for_review: bool = False
+    # Cost of this check in cents (tokens + web searches). The direct
+    # Anthropic path is invisible to both order-level cost signals (Tavily
+    # credits, OpenRouter delta), so VerificationStage sums this into
+    # StageResult.cost_cents.
+    cost_cents: float = 0.0
 
 
-_SCALE = {
-    "thousand": 1_000,
-    "million": 1_000_000,
-    "billion": 1_000_000_000,
-    "trillion": 1_000_000_000_000,
-}
-_NUM_RE = re.compile(
-    r"(\d[\d,]*\.?\d*)\s*(thousand|million|billion|trillion)?", re.IGNORECASE
-)
+_PROMPT_TEMPLATE = """You are an adversarial fact-checker for a trivia quiz. Your job is to find problems with a question-answer pair, not to confirm it. Assume the question may have been written months ago: superlative or "only/most recent/current" claims can have been overtaken by newer events, so check for developments up to today.
 
+QUESTION: {question}
+CLAIMED ANSWER: {claimed_answer}
+TOPIC: {topic}
 
-def _numbers_in(text: str) -> list[float]:
-    """All numeric magnitudes in ``text``, honouring comma grouping + scale words.
+Use web search to actively try to disprove the pair: verify the core fact, and search for newer events that could have invalidated it. Prefer primary or authoritative sources.
 
-    ``"4,000,000"`` → ``4e6``; ``"4 million"`` → ``4e6``; ``"3.5 billion"`` →
-    ``3.5e9``. Powers the RC-9 numeric-agreement check so an estimation answer
-    (``"about 4 million"``) can match a source that writes the figure
-    differently (``"4,000,000"``).
-    """
-    out: list[float] = []
-    for digits, scale in _NUM_RE.findall(text):
-        try:
-            value = float(digits.replace(",", ""))
-        except ValueError:
-            continue
-        if scale:
-            value *= _SCALE[scale.lower()]
-        out.append(value)
-    return out
+Give exactly one verdict:
+- "fact_error" — the claimed answer is factually wrong, or the question asserts something false
+- "logic_flaw" — the question is ambiguous, self-contradictory, or has multiple defensible answers
+- "stale" — the pair was true once but has been superseded by newer events
+- "ok" — you found no problem
 
-
-def _answer_supported(claimed_answer: str, content_lower: str) -> bool:
-    """Whether ``content_lower`` supports ``claimed_answer`` (RC-9).
-
-    Crisp/recall answers keep the strict verbatim-substring test, so factual
-    claims stay tightly gated. Numeric *estimation* answers (``"about 4
-    million"``, ``"~30%"``) additionally match when the source states a value
-    within 10% — so a non-substring estimate is no longer scored as
-    disagreement and dropped. Verification used to select FOR boring,
-    crisp-recall answers precisely because estimates never substring-matched.
-    """
-    answer_lower = claimed_answer.lower()
-    if answer_lower in content_lower:
-        return True
-    answer_nums = _numbers_in(answer_lower)
-    if not answer_nums:
-        return False  # non-numeric recall answer → strict substring only
-    target = answer_nums[0]
-    if target == 0:
-        return False
-    return any(
-        abs(n - target) <= 0.10 * abs(target) for n in _numbers_in(content_lower)
-    )
+End your reply with ONLY a single JSON object on its own line:
+{{"verdict": "ok|fact_error|logic_flaw|stale", "confidence": "high|medium|low", "note": "one-sentence justification with a source URL for any problem found", "correct_answer": "the actual answer if the claimed one is wrong, else null"}}"""
 
 
 class FactVerifier:
-    """Verifies question-answer pairs using web search and LLM analysis."""
+    """Fact-checks question-answer pairs with Claude + native web search.
 
-    def __init__(
-        self,
-        tavily_api_key: Optional[str] = None,
-        gemini_api_key: Optional[str] = None,
-    ):
-        self._tavily_api_key = tavily_api_key
-        self._search: Optional[WebSearchSource] = None
-        self.gemini_api_key = gemini_api_key or os.getenv("GOOGLE_API_KEY")
+    Contract #53: the Anthropic SDK client comes from
+    ``quiz_shared.llm.factory.anthropic_client()`` — never constructed here.
+    The OpenAI-compatible gateway path cannot serve Anthropic's server-side
+    web-search tool, so this role is a direct-provider carve-out analogous to
+    audio/image (``direct=True``).
+    """
+
+    def __init__(self, model: Optional[str] = None):
+        self._model = model or llm_factory.FACTCHECK
         self._client = None
 
-    @property
-    def search(self) -> WebSearchSource:
-        """Lazy — a FactVerifier is built at routes-module import, and
-        WebSearchSource raises without TAVILY_API_KEY. The key must only be
-        required when a verification actually runs, not to import the app."""
-        if self._search is None:
-            self._search = WebSearchSource(api_key=self._tavily_api_key)
-        return self._search
-
-    @search.setter
-    def search(self, value: WebSearchSource) -> None:
-        self._search = value
-
     def _available(self) -> bool:
-        """Whether the LLM judge is reachable.
+        """Whether the fact-check backend is reachable.
 
-        Issue #53: the judge now runs through the OpenAI-compatible factory
-        client. Under the OpenRouter gateway one key serves Gemini; in direct
-        mode an explicit/ambient ``GOOGLE_API_KEY`` still marks it configured.
+        An injected client (tests) is always available; otherwise the
+        Anthropic key must be present. No key → every question is held →
+        withheld by the stage (fail-closed, never silently skipped).
         """
-        from app import feature_flags
+        return self._client is not None or bool(os.getenv("ANTHROPIC_API_KEY"))
 
-        if llm_factory.is_bedrock_model(
-            feature_flags.verify_model() or llm_factory.VERIFY
-        ):
-            return True
-        return (
-            bool(self.gemini_api_key) or llm_factory.gateway() == llm_factory.OPENROUTER
-        )
+    async def _call(self, prompt: str) -> tuple[Optional[str], float]:
+        """One fact-check turn: ``(final reply text, cost in cents)``.
 
-    async def _complete(self, prompt: str) -> Optional[str]:
-        """Single LLM boundary: raw model text, or ``None`` on any failure."""
+        A ``None`` text covers every way the backend goes silent — API errors
+        after SDK retries, a safety refusal, or a turn still paused after
+        ``_MAX_PAUSE_RESUMES`` — all of which read as "could not check", not
+        as a verdict. Cost is accumulated across pause_turn resumes; billed
+        tokens/searches count even when the turn ultimately fails.
+        """
+        cost_cents = 0.0
         try:
             if self._client is None:
-                from app import feature_flags
+                self._client = llm_factory.anthropic_client()
 
-                # #135 D9 (2026-08-03): evidence arbitration runs on the
-                # cheaper factory VERIFY role (founder carve-out from the
-                # frontier-only policy); VERIFY_MODEL env switches it back.
-                # chat_model routes bedrock: ids to Bedrock; the OpenAI path
-                # defaults to the generation timeout.
-                self._client = llm_factory.chat_model(
-                    feature_flags.verify_model() or llm_factory.VERIFY
+            messages = [{"role": "user", "content": prompt}]
+            tools = [
+                {
+                    "type": "web_search_20260209",
+                    "name": "web_search",
+                    "max_uses": _MAX_WEB_SEARCHES,
+                }
+            ]
+            response = None
+            for _ in range(1 + _MAX_PAUSE_RESUMES):
+                # Always the direct Anthropic id — this path never routes
+                # through a gateway, so no resolve_model remap applies.
+                response = await self._client.messages.create(
+                    model=self._model,
+                    max_tokens=4096,
+                    tools=tools,
+                    messages=messages,
                 )
-            response = await self._client.ainvoke(prompt)
-            return llm_factory.message_text(response)
+                cost_cents += self._record_usage(response)
+                if response.stop_reason != "pause_turn":
+                    break
+                # Server-side tool loop paused mid-turn — re-send the paused
+                # assistant turn so the server resumes where it left off.
+                messages = [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response.content},
+                ]
+
+            if response is None or response.stop_reason in ("refusal", "pause_turn"):
+                return None, cost_cents
+
+            text = "".join(
+                block.text
+                for block in response.content
+                if getattr(block, "type", None) == "text"
+            )
+            return text or None, cost_cents
         except Exception:
-            return None
+            return None, cost_cents
+
+    def _record_usage(self, response) -> float:
+        """Report token usage (#153 recorder) and return this call's cost in
+        cents (tokens at list price + $10/1k web searches).
+
+        The recorder's normal interception point is the LangChain factory
+        path; this call goes through the native Anthropic SDK, so report
+        directly — otherwise the fact-check stage would be an invisible cost
+        gap in every per-order summary.
+        """
+        try:
+            from app import llm_usage
+
+            usage = response.usage
+            handler = llm_factory.get_usage_handler()
+            record = getattr(handler, "record_direct", None)
+            if record is not None:
+                record(self._model, usage.input_tokens, usage.output_tokens)
+            searches = getattr(
+                getattr(usage, "server_tool_use", None), "web_search_requests", 0
+            )
+            return (
+                llm_usage.cost_cents_for(
+                    self._model, usage.input_tokens, usage.output_tokens
+                )
+                + (searches or 0) * 1.0
+            )
+        except Exception:  # accounting must never fail a verification
+            return 0.0
 
     async def verify(
         self, question: str, claimed_answer: str, topic: str = ""
     ) -> VerificationResult:
-        """Verify a question-answer pair.
-
-        Stage 1: Search for evidence via Tavily
-        Stage 2: If inconclusive, analyze with Gemini Flash
-        """
-        # Stage 1: Tavily search
-        search_results = await self.search.verify_claim(
-            question=question,
-            claimed_answer=claimed_answer,
-            max_results=5,
-        )
-
-        if "error" in search_results and not search_results.get("results"):
-            # RC-9: search unavailable ≠ wrong answer. Hold for review instead
-            # of dropping at confidence 0 (a conf-0 drop silently sheds
-            # possibly-good questions whenever the search tool is down).
-            return VerificationResult(
-                verdict="unverified",
-                confidence=0.0,
-                held_for_review=True,
-                notes=f"Search unavailable ({search_results.get('error')}); held for review",
-            )
-
-        sources = []
-        for result in search_results.get("results", []):
-            content = (result.get("content") or "").lower()
-            agrees = _answer_supported(claimed_answer, content)
-            sources.append(
-                {
-                    "url": result.get("url", ""),
-                    "excerpt": (result.get("content") or "")[:300],
-                    "agrees_with_answer": agrees,
-                    "relevance_score": result.get("score", 0),
-                }
-            )
-
-        agreeing = sum(1 for s in sources if s["agrees_with_answer"])
-        total = len(sources)
-
-        # Quick verdict if evidence is clear
-        if total >= 3 and agreeing >= 3:
-            return VerificationResult(
-                verdict="verified",
-                confidence=min(0.95, 0.6 + (agreeing / total) * 0.35),
-                sources=sources,
-                notes=f"{agreeing}/{total} sources confirm the answer",
-            )
-
-        if total >= 3 and agreeing == 0:
-            # No sources agree — likely wrong, but check with Gemini
-            return await self._verify_with_gemini(
-                question, claimed_answer, sources, search_results.get("answer")
-            )
-
-        # Inconclusive — use Gemini for deeper analysis
-        if total > 0:
-            return await self._verify_with_gemini(
-                question, claimed_answer, sources, search_results.get("answer")
-            )
-
-        return VerificationResult(
-            verdict="uncertain",
-            confidence=0.2,
-            sources=sources,
-            notes="Insufficient search results",
-        )
-
-    async def _verify_with_gemini(
-        self,
-        question: str,
-        claimed_answer: str,
-        sources: list[dict],
-        tavily_answer: Optional[str],
-    ) -> VerificationResult:
-        """Stage 2: Use Gemini Flash to analyze search evidence."""
+        """Fact-check one question-answer pair (see module docstring)."""
         if not self._available():
-            return self._judge_unusable(sources, "Gemini unavailable")
+            return self._held("ANTHROPIC_API_KEY not configured")
 
-        # Build evidence summary for Gemini
-        evidence_lines = []
-        for i, src in enumerate(sources, 1):
-            agreement = (
-                "AGREES" if src["agrees_with_answer"] else "DOES NOT MENTION answer"
+        prompt = _PROMPT_TEMPLATE.format(
+            question=question, claimed_answer=claimed_answer, topic=topic or "n/a"
+        )
+        text, cost_cents = await self._call(prompt)
+        if text is None:
+            return self._held(
+                "fact-check call failed (API error or refusal)", cost_cents
             )
-            evidence_lines.append(
-                f"Source {i} ({src['url']}): {agreement}\n  Excerpt: {src['excerpt'][:200]}"
+
+        data = _parse_verdict_json(text)
+        if data is None:
+            return self._held(
+                "fact-check reply had no parseable verdict JSON", cost_cents
             )
 
-        if tavily_answer:
-            evidence_lines.append(f"\nTavily synthesized answer: {tavily_answer}")
+        verdict = str(data.get("verdict", "")).strip().lower()
+        note = str(data.get("note") or "")
+        correct = data.get("correct_answer")
+        alternatives = [str(correct)] if correct and correct != claimed_answer else []
 
-        evidence_text = "\n".join(evidence_lines)
-
-        prompt = f"""You are a fact-checker for a trivia quiz app. Verify this question-answer pair.
-
-QUESTION: {question}
-CLAIMED ANSWER: {claimed_answer}
-
-SEARCH EVIDENCE:
-{evidence_text}
-
-Respond in JSON only:
-{{
-  "verdict": "verified" | "likely_correct" | "uncertain" | "likely_wrong" | "wrong",
-  "confidence": 0.0-1.0,
-  "reasoning": "Brief explanation",
-  "correct_answer": "The actual correct answer if different, or null",
-  "alternative_answers": ["other valid answers if any"]
-}}
-
-Rules:
-- "verified": Multiple reliable sources confirm the answer
-- "likely_correct": Evidence leans toward correct but not definitive
-- "uncertain": Not enough evidence either way
-- "likely_wrong": Evidence suggests a different answer
-- "wrong": Sources clearly contradict the claimed answer
-- Be conservative — "uncertain" is better than a wrong verdict"""
-
-        try:
-            text = await self._complete(prompt)
-            if text is None:
-                raise RuntimeError("Gemini call failed")
-            text = text.strip()
-
-            # Parse JSON from response
-            if text.startswith("```"):
-                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-
-            start = text.find("{")
-            end = text.rfind("}") + 1
-            if start == -1 or end <= start:
-                raise ValueError("No JSON in Gemini response")
-
-            data = json.loads(text[start:end])
-
-            alternatives = data.get("alternative_answers", [])
-            if data.get("correct_answer") and data["correct_answer"] != claimed_answer:
-                alternatives.insert(0, data["correct_answer"])
-
+        if verdict in _PROBLEM_VERDICTS:
             return VerificationResult(
-                verdict=data.get("verdict", "uncertain"),
-                confidence=float(data.get("confidence", 0.5)),
-                sources=sources,
+                verdict=verdict,
+                confidence=0.0,  # below the stage gate → dropped
                 alternative_answers=alternatives,
-                notes=data.get("reasoning", ""),
+                notes=note,
+                cost_cents=cost_cents,
             )
-
-        except Exception as e:
-            return self._judge_unusable(sources, f"Gemini analysis failed ({e})")
-
-    def _judge_unusable(self, sources: list[dict], reason: str) -> VerificationResult:
-        """Verdict for a question the judge could not rule on.
-
-        Covers both ways the judge goes silent: no key/gateway at all, and a
-        live judge that 429s, times out (``_complete`` → ``None``) or answers
-        with prose instead of JSON. RC-9: neither is evidence *against* the
-        answer. Source agreement can still carry a verdict on its own;
-        without it the question is held for review rather than dropped at low
-        confidence, because dropping here selects FOR crisp recall answers
-        that happen to substring-match and against estimation/reasoning ones.
-        """
-        agreeing = sum(1 for s in sources if s["agrees_with_answer"])
-        total = len(sources)
-        if agreeing > total / 2:
+        if verdict == "ok":
+            score = _CONFIDENCE_TO_SCORE.get(
+                str(data.get("confidence", "")).strip().lower(), 0.5
+            )
             return VerificationResult(
-                verdict="likely_correct",
-                confidence=0.5 + (agreeing / max(total, 1)) * 0.2,
-                sources=sources,
-                notes=f"{reason}; heuristic verdict based on source agreement",
+                verdict="ok", confidence=score, notes=note, cost_cents=cost_cents
             )
+
+        # Unknown verdict string — a checker bug, not evidence either way.
+        return self._held(
+            f"fact-check returned unknown verdict {verdict!r}", cost_cents
+        )
+
+    def _held(self, reason: str, cost_cents: float = 0.0) -> VerificationResult:
+        """Fail-closed verdict: could not check → withhold, never drop/keep."""
         return VerificationResult(
             verdict="unverified",
-            confidence=0.3,
-            sources=sources,
+            confidence=0.0,
             held_for_review=True,
-            notes=f"{reason}; insufficient source agreement — held for review",
+            notes=f"{reason}; held (fail-closed, #158)",
+            cost_cents=cost_cents,
         )
 
     async def verify_batch(self, questions: list[dict]) -> list[dict]:
-        """Verify a batch of question-answer pairs, concurrently.
+        """Verify a batch concurrently, bounded by `MAX_CONCURRENT_VERIFICATIONS`.
 
-        Bounded by `MAX_CONCURRENT_VERIFICATIONS` (#150), mirroring
-        `MultiModelScorer.score_batch`. `gather` preserves input order, so
-        the returned list is positionally identical to the sequential
-        version — callers index it by ``id`` regardless.
+        `gather` preserves input order, so the returned list is positionally
+        identical to the sequential version — callers index it by ``id``.
 
         Args:
             questions: List of {"question": str, "correct_answer": str, "id": str, "topic": str}
@@ -370,3 +277,22 @@ Rules:
             }
 
         return list(await asyncio.gather(*(_verify_one(q) for q in questions)))
+
+
+def _parse_verdict_json(text: str) -> Optional[dict]:
+    """Last ``{"verdict": ...}`` object in ``text``, or ``None``.
+
+    The prompt asks for a trailing JSON object, but the reply may also carry
+    prose, search citations, or a code fence — scan from the last candidate
+    opening brace and decode leniently.
+    """
+    idx = text.rfind('{"verdict"')
+    if idx == -1:
+        idx = text.rfind("{")
+    if idx == -1:
+        return None
+    try:
+        data, _ = json.JSONDecoder().raw_decode(text[idx:])
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None

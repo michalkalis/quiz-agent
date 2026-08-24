@@ -90,8 +90,32 @@ _PRICE_TABLE_USD_PER_1M: dict[str, dict[str, float]] = {
     # (quiz_shared.llm.factory.ANSWERABILITY = "deepseek-v4-flash" ->
     # OpenRouter slug "deepseek/deepseek-v4-flash").
     "deepseek-v4-flash": {"input": 0.15, "output": 0.60},
+    # #166 increment 2 — FACTCHECK role on the direct Anthropic API (list
+    # price; the 2026 intro discount is lower, so this over- rather than
+    # under-states cost). Token cost only: the server-side web_search tool's
+    # $10/1k-searches fee is billed per request, not per token, and is not
+    # counted here.
+    "claude-sonnet-5": {"input": 3.00, "output": 15.00},
 }
 _PRICE_KEYS_BY_LENGTH_DESC = sorted(_PRICE_TABLE_USD_PER_1M, key=len, reverse=True)
+
+
+def cost_cents_for(model: str, input_tokens: int, output_tokens: int) -> float:
+    """List-price cost in cents for one call; 0.0 when the model is unpriced.
+
+    #166 increment 2: the direct-Anthropic fact-check is invisible to both
+    order-level cost signals (Tavily credits, OpenRouter account delta), so
+    its stage computes per-call cost from token counts via this table and
+    reports it through ``StageResult.cost_cents`` instead.
+    """
+    price = _price_for_model(model)
+    if price is None:
+        return 0.0
+    usd = (
+        input_tokens * price["input"] / 1_000_000
+        + output_tokens * price["output"] / 1_000_000
+    )
+    return usd * 100
 
 
 def _price_for_model(model_id: str) -> dict[str, float] | None:
@@ -198,7 +222,9 @@ def _extract_usage(response: LLMResult) -> tuple[int | None, int | None]:
     present so the caller can count the call without fabricating zero
     tokens."""
     if response.llm_output:
-        usage = response.llm_output.get("token_usage") or response.llm_output.get("usage")
+        usage = response.llm_output.get("token_usage") or response.llm_output.get(
+            "usage"
+        )
         if usage:
             input_tokens = usage.get("prompt_tokens", usage.get("input_tokens"))
             output_tokens = usage.get("completion_tokens", usage.get("output_tokens"))
@@ -210,7 +236,9 @@ def _extract_usage(response: LLMResult) -> tuple[int | None, int | None]:
     for gen_list in response.generations:
         for gen in gen_list:
             message = getattr(gen, "message", None)
-            usage_metadata = getattr(message, "usage_metadata", None) if message else None
+            usage_metadata = (
+                getattr(message, "usage_metadata", None) if message else None
+            )
             if usage_metadata:
                 found = True
                 total_in += usage_metadata.get("input_tokens", 0) or 0
@@ -235,3 +263,15 @@ class UsageCallbackHandler(BaseCallbackHandler):
         model = _extract_model_name(response) or "unknown-model"
         input_tokens, output_tokens = _extract_usage(response)
         self._recorder.record(stage, model, input_tokens, output_tokens)
+
+    def record_direct(
+        self, model: str, input_tokens: int | None, output_tokens: int | None
+    ) -> None:
+        """Record a call made outside the LangChain path (#166 increment 2).
+
+        The web-grounded fact-check runs on the native Anthropic SDK, which
+        the `chat_openai` callback interception never sees — the caller
+        reports token counts here so the verify stage doesn't become an
+        invisible cost gap in per-order summaries.
+        """
+        self._recorder.record(current_stage.get(), model, input_tokens, output_tokens)

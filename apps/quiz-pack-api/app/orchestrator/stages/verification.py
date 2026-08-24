@@ -42,7 +42,12 @@ from quiz_shared.models.question import GenerationProvenance, Question
 logger = logging.getLogger(__name__)
 
 DEFAULT_MIN_CONFIDENCE = 0.5
-_VERIFIED_VERDICTS = frozenset({"verified", "likely_correct"})
+# "ok" — FactVerifier's web-grounded Claude fact-check (#166 increment 2);
+# "verified"/"likely_correct" — LogicalConsistencyVerifier's older scale.
+# FactVerifier maps its problem verdicts (fact_error/logic_flaw/stale) to
+# confidence 0.0, so the single min_confidence gate below implements the
+# founder-approved drop policy for both vocabularies unchanged.
+_VERIFIED_VERDICTS = frozenset({"ok", "verified", "likely_correct"})
 
 
 class VerificationStage:
@@ -121,6 +126,13 @@ class VerificationStage:
         kept: list[Question] = []
         dropped = 0
         withheld = 0
+        # #166 increment 2: the fact-check runs on the direct Anthropic API,
+        # invisible to both order-level cost signals (Tavily credits,
+        # OpenRouter delta) — each verdict carries its own cost instead.
+        cost_cents = sum(
+            float(getattr(record.get("verification"), "cost_cents", 0.0))
+            for record in by_id.values()
+        )
 
         for q in ctx.questions:
             record = by_id.get(q.id)
@@ -172,8 +184,8 @@ class VerificationStage:
         ctx.questions = kept
 
         if withheld:
-            # Visibility for the outage class behind withholds (Tavily/judge
-            # down): warn-level Sentry — one transient search failure self-heals
+            # Visibility for the outage class behind withholds (Anthropic
+            # fact-check or logical judge down): warn-level Sentry — one transient search failure self-heals
             # via top-up, a systemic outage breaches the 80% floor and pages
             # through the order-failure path.
             message = (
@@ -185,7 +197,7 @@ class VerificationStage:
 
         return StageResult(
             info={"verified": len(kept), "dropped": dropped, "withheld": withheld},
-            cost_cents=0,
+            cost_cents=int(round(cost_cents)),
         )
 
 

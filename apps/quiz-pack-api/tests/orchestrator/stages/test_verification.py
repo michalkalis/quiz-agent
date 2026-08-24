@@ -68,7 +68,9 @@ class _FakeFactVerifier:
         self._verdicts = verdicts
         self.calls: list[list[dict[str, Any]]] = []
 
-    async def verify_batch(self, questions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def verify_batch(
+        self, questions: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         self.calls.append(questions)
         out: list[dict[str, Any]] = []
         for q in questions:
@@ -133,6 +135,27 @@ async def test_drops_questions_below_confidence_threshold() -> None:
     assert surviving_ids == {"q_0", "q_1", "q_2"}
     assert result.info["dropped"] == 2
     assert result.info["verified"] == 3
+
+
+@pytest.mark.asyncio
+async def test_factcheck_verdicts_keep_ok_and_drop_problems() -> None:
+    """#166 increment 2 vocabulary: "ok" counts as verified/kept; the problem
+    verdicts (fact_error/logic_flaw/stale) arrive at confidence 0.0 and must
+    be dropped — the founder-approved drop policy rides the existing gate."""
+    verdicts = {
+        "q_0": VerificationResult(verdict="ok", confidence=0.9),
+        "q_1": VerificationResult(verdict="fact_error", confidence=0.0),
+        "q_2": VerificationResult(verdict="stale", confidence=0.0),
+        "q_3": VerificationResult(verdict="logic_flaw", confidence=0.0),
+    }
+    stage = VerificationStage(_FakeFactVerifier(verdicts))  # type: ignore[arg-type]
+    ctx = _make_ctx([_stub_question(i) for i in range(4)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert {q.id for q in ctx.questions} == {"q_0"}
+    assert ctx.questions[0].generation_metadata.extra["verified"] is True
+    assert result.info == {"verified": 1, "dropped": 3, "withheld": 0}
 
 
 @pytest.mark.asyncio
@@ -332,47 +355,33 @@ async def test_logical_questions_fall_back_to_fact_verifier_when_unwired() -> No
     assert factual_ids == {"q_0"}
 
 
-class _FakeWebSearch:
-    """WebSearchSource double whose sources mention neither answer.
-
-    Forces `FactVerifier.verify` past its 3/3-agreement shortcut and into the
-    Gemini judge — the path the audit found deletes questions on judge failure.
-    """
-
-    async def verify_claim(
-        self, question: str, claimed_answer: str, max_results: int = 5
-    ) -> dict[str, Any]:
-        return {
-            "results": [
-                {"url": f"u{i}", "content": "An unrelated article.", "score": 0.4}
-                for i in range(3)
-            ]
-        }
-
-
 @pytest.mark.asyncio
 async def test_judge_failure_withholds_and_never_counts_as_dropped() -> None:
-    """A judge outage must read as "withheld (unverifiable)", never as
+    """A checker outage must read as "withheld (unverifiable)", never as
     "dropped (proven wrong)".
 
-    Adversarial audit 2026-07-30 found a Gemini 429/timeout (`_complete` →
-    None) once made both real verifier classes return a sub-threshold verdict
-    with `held_for_review` unset, so the stage deleted the questions as
-    `dropped` — indistinguishable from wrong answers. The real classes must
-    still mark the outage as held; since #158 (fail-closed) a held question
-    is withheld from the pack rather than kept for review, and the distinct
-    `withheld` counter is what keeps the outage legible. Driving the real
-    classes through the stage is the point: unit-level holds are worthless
-    if the stage misclassifies them.
+    Adversarial audit 2026-07-30 found a judge 429/timeout once made both
+    real verifier classes return a sub-threshold verdict with
+    `held_for_review` unset, so the stage deleted the questions as `dropped`
+    — indistinguishable from wrong answers. The real classes must still mark
+    the outage as held; since #158 (fail-closed) a held question is withheld
+    from the pack rather than kept for review, and the distinct `withheld`
+    counter is what keeps the outage legible. Driving the real classes
+    through the stage is the point: unit-level holds are worthless if the
+    stage misclassifies them. Since #166 increment 2 the factual branch is
+    the Claude web fact-check — its outage shape is a raising API call.
     """
-    fact_verifier = FactVerifier(gemini_api_key="test-key")
-    fact_verifier.search = _FakeWebSearch()  # type: ignore[assignment]
+    fact_verifier = FactVerifier()
+
+    async def _factcheck_unavailable(prompt: str):
+        return None, 0.0
+
+    fact_verifier._call = _factcheck_unavailable  # type: ignore[assignment]
     logical_verifier = LogicalConsistencyVerifier(gemini_api_key="test-key")
 
     async def _judge_unavailable(prompt: str) -> None:
         return None
 
-    fact_verifier._complete = _judge_unavailable  # type: ignore[assignment]
     logical_verifier._complete = _judge_unavailable  # type: ignore[assignment]
 
     factual = _stub_question(0, question="How many people live in X?")

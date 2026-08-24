@@ -134,6 +134,13 @@ NORMALIZE = _role("LLM_ROLE_NORMALIZE", "gemini-3.1-pro-preview")
 # VERIFY_MODEL env (feature_flags.verify_model) switches it back if
 # verification quality drops.
 VERIFY = "deepseek-v4-pro"
+# #166 increment 2 (founder decision 2026-08-24): web-grounded fact-check on
+# the direct Anthropic API with the native server-side web_search tool —
+# D21b measured 6/6 planted-error recall on this exact pattern (Sonnet + web)
+# vs 0/6 for the Tavily+arbiter verify it replaces. Sonnet-class is the
+# validated tier; frontier (Fable) is not needed here. Served only via
+# ``anthropic_client()`` (no gateway remap applies).
+FACTCHECK = _role("LLM_ROLE_FACTCHECK", "claude-sonnet-5")
 SCORE_OPENAI = "gpt-5.6-sol"
 # Second judge family. Google, not Anthropic: generation now runs on a Claude
 # model, and an Anthropic judge scoring Anthropic output is the documented
@@ -305,6 +312,34 @@ def openai_client(
     base_url, api_key = _base_url_and_key(direct)
     cls = AsyncOpenAI if async_ else OpenAI
     return cls(api_key=api_key, base_url=base_url, timeout=timeout)
+
+
+def anthropic_client(*, timeout: Union[httpx.Timeout, float, None] = None):
+    """Native async Anthropic SDK client (#166 increment 2, FACTCHECK role).
+
+    Anthropic's server-side ``web_search`` tool is not served by any
+    OpenAI-compatible gateway, so — like audio/image (``direct=True``) —
+    this capability stays on the canonical provider regardless of
+    ``LLM_GATEWAY``. The SDK reads ``ANTHROPIC_API_KEY`` from the
+    environment; call sites never touch the key (contract #53).
+
+    Lazy import: the ``anthropic`` package is a quiz-pack-api dependency
+    only — quiz-agent imports this module without it installed. Fails loud
+    when missing, mirroring the Bedrock path.
+    """
+    try:
+        from anthropic import AsyncAnthropic
+    except ImportError as exc:  # pragma: no cover - exercised via unit test stub
+        raise RuntimeError(
+            "anthropic_client() requires the 'anthropic' package. Add it to "
+            "this app's dependencies (and the Dockerfile pip list, per "
+            "memory project_dockerfile_drift)."
+        ) from exc
+
+    # GENERATION_TIMEOUT bounds (#139: no unbounded hangs) — a web-grounded
+    # fact-check turn runs several server-side searches, so the hot-path
+    # DEFAULT_TIMEOUT is too tight.
+    return AsyncAnthropic(timeout=timeout if timeout is not None else 300.0)
 
 
 def _chat_bedrock(model_id: str, **kwargs):

@@ -81,7 +81,11 @@ founderov príklad (producenti ↔ ich umelci).
 - [x] Korelácie — `replay/correlations.json`; závery nižšie
 - [ ] Rozšírenie zmrazeného eval setu (#165 — D21 eval set freeze) o D21b
       otázky vrát. fact-check anotácií
-- [ ] [HUMAN] founder rozhodnutie o vrstvách + prod prepnutí gen modelu
+- [x] [HUMAN] founder rozhodnutie 2026-08-24: **schválené všetky 3 návrhy** —
+      (1) prod gen → Fable 5 + direct v1, (2) critique + judges vyradiť
+      z gen pipeline, (3) verify nahradiť Claude web-grounded fact-checkom
+      (minimálne pre news/entertainment). Implementácia = nová session
+      (handoff v docs/handoffs/).
 
 ## Výsledky — os 2 (fact-check) a vrstvy (2026-08-21)
 

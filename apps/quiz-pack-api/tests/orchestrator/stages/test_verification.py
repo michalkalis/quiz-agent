@@ -155,7 +155,7 @@ async def test_factcheck_verdicts_keep_ok_and_drop_problems() -> None:
 
     assert {q.id for q in ctx.questions} == {"q_0"}
     assert ctx.questions[0].generation_metadata.extra["verified"] is True
-    assert result.info == {"verified": 1, "dropped": 3, "withheld": 0}
+    assert result.info == {"verified": 1, "dropped": 3, "withheld": 0, "evergreen_skipped": 0}
 
 
 @pytest.mark.asyncio

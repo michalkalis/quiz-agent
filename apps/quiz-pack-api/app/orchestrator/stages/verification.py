@@ -37,6 +37,7 @@ from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.verification.fact_verifier import MAX_CONCURRENT_VERIFICATIONS, FactVerifier
 from app.verification.logical_verifier import LogicalConsistencyVerifier
+from app.verification.tier_router import needs_web_factcheck, tier_routing_enabled
 from quiz_shared.models.question import GenerationProvenance, Question
 
 logger = logging.getLogger(__name__)
@@ -81,11 +82,22 @@ class VerificationStage:
         # Dispatch by verification mode (D2). Logical questions only divert
         # to the consistency judge when one is wired; otherwise they stay
         # on FactVerifier (R2 fail-safe — never skip verification).
+        #
+        # #166 increment 3: evergreen questions additionally skip the web
+        # fact-check (deterministic tier_router; founder-approved policy
+        # grounded in D21b: 70/70 direct-gen evergreen clean, all 6 errors in
+        # news-sourced arms). This is a deliberate no-check tier, not a
+        # fail-open path — #158's fail-closed rule still governs every
+        # question that *does* route to a verifier.
+        route_tiers = tier_routing_enabled()
         factual: list[Question] = []
         logical: list[Question] = []
+        evergreen_ids: set[object] = set()
         for q in ctx.questions:
             if self._logical_verifier is not None and _is_logical(q):
                 logical.append(q)
+            elif route_tiers and not needs_web_factcheck(q):
+                evergreen_ids.add(q.id)
             else:
                 factual.append(q)
 
@@ -135,6 +147,19 @@ class VerificationStage:
         )
 
         for q in ctx.questions:
+            if q.id in evergreen_ids:
+                # Evergreen tier: kept without a web check, marked so the
+                # decision is auditable per question (and distinguishable
+                # from a verified "ok" in generation_metadata).
+                provenance = q.generation_metadata or GenerationProvenance()
+                extra = dict(provenance.extra)
+                extra["factcheck_tier"] = "evergreen"
+                q.generation_metadata = provenance.model_copy(
+                    update={"extra": extra}
+                )
+                kept.append(q)
+                continue
+
             record = by_id.get(q.id)
             if record is None:
                 # #158 fail-closed: no verdict came back — a verifier bug, but
@@ -157,6 +182,7 @@ class VerificationStage:
 
             provenance = q.generation_metadata or GenerationProvenance()
             extra = dict(provenance.extra)
+            extra["factcheck_tier"] = "web"
             extra["verified"] = verified_flag
             extra["verification_score"] = confidence
             extra["verification_notes"] = notes
@@ -196,7 +222,12 @@ class VerificationStage:
             sentry_sdk.capture_message(message, level="warning")
 
         return StageResult(
-            info={"verified": len(kept), "dropped": dropped, "withheld": withheld},
+            info={
+                "verified": len(kept),
+                "dropped": dropped,
+                "withheld": withheld,
+                "evergreen_skipped": len(evergreen_ids),
+            },
             cost_cents=int(round(cost_cents)),
         )
 

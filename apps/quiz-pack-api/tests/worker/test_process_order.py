@@ -124,6 +124,17 @@ def _two_judge_panel(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("JUDGE_MODELS", "gpt-5.6-sol,gpt-4.1-mini")
 
 
+@pytest.fixture(autouse=True)
+def _grounded_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#166: this module tests WORKER semantics (retries, budget, row updates)
+    and injects failures through the fact sourcer (_BoomSourcer) — under the
+    new direct-generation default SourcingStage would skip that seam entirely
+    and test_happy_path's F8 source_url assertion only holds when facts flow.
+    Pin the grounded pipeline; the direct default itself is covered in
+    tests/orchestrator/test_pack_generator.py and the order e2e."""
+    monkeypatch.setenv("DIRECT_GENERATION", "0")
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def _clean_order_tables(session: AsyncSession) -> None:
     """Start each test from an empty order graph (mirrors tests/api, tests/integration).
@@ -576,6 +587,7 @@ async def test_failed_attempt_records_cumulative_spend(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],
     pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """#145 F2: spend was assigned on the SUCCESS path only, so a failed
     attempt recorded nothing and an order could burn a dozen paid runs without
@@ -584,6 +596,9 @@ async def test_failed_attempt_records_cumulative_spend(
     total, while `total_cost_cents` (the delivered pack's cost) stays 0."""
     order_id, job_id = await _create_order_and_job(session, target_count=3)
 
+    # #166 turned the judge panel off by default; this test injects its
+    # mid-pipeline failure through the scorer, so keep the seam alive.
+    monkeypatch.setenv("JUDGE_GATE", "1")
     worker_ctx["job_try"] = 1
     worker_ctx["scorer"] = _BoomAfterGeneration()
 

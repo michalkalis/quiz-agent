@@ -229,3 +229,41 @@ async def test_hanging_stage_fails_with_timeout(monkeypatch) -> None:
     ]
     assert len(failed_starts) == 1
     assert "STAGE_TIMEOUT_SECONDS" in failed_starts[0]["error"]
+
+
+# --- #166 D21b — direct generation is the server-side default -----------------
+
+
+@pytest.mark.asyncio
+async def test_direct_generation_default_on(monkeypatch) -> None:
+    """#166 (founder 2026-08-24): with nothing set, every order runs direct —
+    SourcingStage skips fact gathering and the generator's direct v1 prompt
+    carries the batch. The lever stays server-side (#157: customer text can
+    never set it)."""
+    monkeypatch.delenv("DIRECT_GENERATION", raising=False)
+    stage = FakeStage("sourcing")
+    gen = PackGenerator(stages=[stage], sink_factory=lambda _oid: RecordingSink())
+
+    await gen.run(_make_order())
+
+    assert gen.last_ctx is not None
+    assert gen.last_ctx.direct_generation is True
+
+
+@pytest.mark.asyncio
+async def test_direct_generation_env_rollback(monkeypatch) -> None:
+    """DIRECT_GENERATION=0 restores the grounded sourcing + fact-first flow;
+    an order whose server-side generation_mode column says "direct" stays
+    direct regardless (#157 still the only per-order lever)."""
+    monkeypatch.setenv("DIRECT_GENERATION", "0")
+    stage = FakeStage("sourcing")
+    gen = PackGenerator(stages=[stage], sink_factory=lambda _oid: RecordingSink())
+
+    await gen.run(_make_order())
+    assert gen.last_ctx is not None
+    assert gen.last_ctx.direct_generation is False
+
+    direct_order = _make_order()
+    direct_order.generation_mode = "direct"
+    await gen.run(direct_order)
+    assert gen.last_ctx.direct_generation is True

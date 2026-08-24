@@ -250,6 +250,52 @@ def gate_v2_clustered() -> bool:
     return _truthy(os.getenv("GATE_V2_CLUSTERED"))
 
 
+# --- #166 D21b — founder-approved pipeline slim-down (2026-08-24) -------------
+# Fable 5 + the direct v1 prompt is the canonical prod generation config;
+# best-of-N (critique + pairwise duels) and the LLM judge gate leave the flow —
+# on D21b data neither predicts fun (Spearman ≤ .21) nor catches real errors
+# (recall 0/6). Deterministic craft/distractor gates stay. Every removal keeps
+# an env rollback lever, per the #135 traceability convention above.
+
+
+def direct_generation_default() -> bool:
+    """#166: direct generation is the prod default — no fact sourcing, the
+    generator's generic (direct v1) prompt path carries the batch.
+
+    ``True`` by default. Set ``DIRECT_GENERATION=0`` to restore the grounded
+    sourcing + v3 fact-first flow. An order whose server-side
+    ``generation_mode`` column is ``"direct"`` stays direct regardless (#157).
+    """
+    return _default_on(os.getenv("DIRECT_GENERATION"))
+
+
+def generation_prompt_version() -> str:
+    """#166: prompt template version for the generic (non-fact) generation path.
+
+    Default ``direct_v1`` (``question_generation_direct.md`` — 8.01 @ n=70,
+    0 factual errors in D21b). Set ``GEN_PROMPT_VERSION=v2_cot`` to restore
+    the pre-#166 default template.
+    """
+    return (os.getenv("GEN_PROMPT_VERSION") or "").strip() or "direct_v1"
+
+
+def best_of_n() -> bool:
+    """#166: best-of-N over-generation + critique + pairwise duels, now OFF
+    by default (duels already ruled out in D21 #164; critique added no signal
+    on D21b). Set ``BEST_OF_N=1`` to restore the full selection pipeline.
+    """
+    return _truthy(os.getenv("BEST_OF_N"))
+
+
+def judge_gate() -> bool:
+    """#166: the LLM judge panel in ScoringStage, now OFF by default — the
+    stage keeps its deterministic craft-guard and distractor gates but makes
+    no judge calls and cannot fail on judge quorum. Set ``JUDGE_GATE=1`` to
+    restore the panel (quorum semantics per ``judge_quorum`` return too).
+    """
+    return _truthy(os.getenv("JUDGE_GATE"))
+
+
 def judge_models() -> list[str] | None:
     """#135 T2: override the gate judge panel (comma-separated factory ids).
 

@@ -107,8 +107,13 @@ async def test_generation_mode_column_sets_context_flag():
 
 
 @pytest.mark.asyncio
-async def test_marker_in_customer_prompt_is_inert_and_logged(caplog):
+async def test_marker_in_customer_prompt_is_inert_and_logged(caplog, monkeypatch):
     from app.orchestrator import PackGenerator
+
+    # #166 made direct the server-side DEFAULT; pin the grounded flow so this
+    # test still proves the #157 point — customer prompt text alone can never
+    # flip the mode.
+    monkeypatch.setenv("DIRECT_GENERATION", "0")
 
     seen: dict[str, bool] = {}
     generator = PackGenerator(

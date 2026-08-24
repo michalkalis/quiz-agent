@@ -1147,3 +1147,13 @@ def test_prefilter_craft_gates_only_per_question_guards() -> None:
     viable, filtered = AdvancedQuestionGenerator._prefilter_craft_gates([tf])
     assert filtered == 0
     assert viable == [tf]
+
+
+def test_direct_v1_prompt_version_loads_direct_template() -> None:
+    """#166 D21b: prompt_version="direct_v1" must load the exact template the
+    approved config was measured with (question_generation_direct.md, 8.01 @
+    n=70) — a silent fallback to the generic template would invalidate the
+    whole prod switch."""
+    gen = AdvancedQuestionGenerator(prompt_version="direct_v1")
+    assert "question_generation_direct.md" in gen.prompt_builder.template_path
+    assert "Direct, v1" in gen.prompt_builder.template

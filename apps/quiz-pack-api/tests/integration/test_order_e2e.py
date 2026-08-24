@@ -437,7 +437,12 @@ async def test_order_e2e_full(
     - After worker completes, order.status == 'delivered'.
     - 0 < job.total_cost_cents < 100 (real pipeline costs something, Phase-2
       sanity ceiling; Phase 3 will tighten with per-tier caps).
-    - Every persisted Question has a non-null source_url (F8 enforcement).
+    - Questions persisted under the pack. #166 D21b: the prod default is now
+      DIRECT generation (no fact sourcing), so questions legitimately carry no
+      source_url — verification is the truth gate. The old F8 every-question-
+      has-a-source assertion only holds for the grounded flow
+      (DIRECT_GENERATION=0), covered by unit tests in
+      tests/orchestrator/stages/test_generation.py.
     - SSE stream has ≥ 5 events including a terminal 'done'.
     """
     tx_id = f"e2e-full-{uuid.uuid4().hex[:8]}"
@@ -469,8 +474,9 @@ async def test_order_e2e_full(
         "expected real LLM calls (>0) under the per-pack ceiling (<100)."
     )
 
-    # 5. Questions persisted with correct pack_id AND F8: every question must
-    #    have a non-null source_url (no LLM-hallucinated attribution).
+    # 5. Questions persisted with correct pack_id. #166: the direct-mode
+    #    default means no sourced facts, so no per-question source_url is
+    #    required here (F8 stands down; verification is the truth gate).
     from app.db.models import QuestionRow
 
     pack_id = uuid.UUID(snapshot["pack_id"])
@@ -480,11 +486,6 @@ async def test_order_e2e_full(
         )
     ).scalars().all()
     assert len(rows) > 0, f"expected ≥1 question for pack {pack_id}, found 0"
-    missing_source = [r.id for r in rows if not r.source_url]
-    assert not missing_source, (
-        f"F8 violation: {len(missing_source)} questions persisted without "
-        f"source_url: {missing_source[:5]}"
-    )
 
     # 6. SSE stream: connect after job is done — replay path only.
     stream_url = f"/v1/orders/{order_id}/stream"

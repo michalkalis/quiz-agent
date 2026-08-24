@@ -38,6 +38,8 @@ def _build_advanced_generator() -> AdvancedQuestionGenerator:
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
         generation_temperature=0.8,
         critique_temperature=0.3,
+        # #166 D21b: direct_v1 by default; GEN_PROMPT_VERSION=v2_cot rolls back.
+        prompt_version=feature_flags.generation_prompt_version(),
     )
 
 

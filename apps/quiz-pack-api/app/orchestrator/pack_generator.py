@@ -22,7 +22,7 @@ from typing import Callable, Protocol, Sequence
 
 import sentry_sdk
 
-from app import llm_usage
+from app import feature_flags, llm_usage
 from app.db.models import GenerationOrder, QuestionPack
 from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER
 from app.orchestrator.context import (
@@ -130,9 +130,12 @@ class PackGenerator:
             # bool that GenerationStage hands to the generator.
             mcq_emphasis=MCQ_EMPHASIS_MARKER in (order.prompt or ""),
             # #157 (D4): direct mode comes from the server-side order column
-            # only — never from customer prompt text.
+            # only — never from customer prompt text. #166 D21b: direct is
+            # additionally the server-side DEFAULT (env flag, founder
+            # 2026-08-24); DIRECT_GENERATION=0 restores the grounded flow.
             direct_generation=(
                 getattr(order, "generation_mode", None) == "direct"
+                or feature_flags.direct_generation_default()
             ),
         )
         if DIRECT_GENERATION_MARKER in (order.prompt or ""):

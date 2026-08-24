@@ -714,3 +714,83 @@ async def test_judge_quorum_env_is_the_rollback_lever(
 
     assert [q.id for q in ctx.questions] == ["q_0"]
     assert result.info["judge_failures"] == 0
+
+
+# --- #166 D21b — judges-off mode (scorer=None) --------------------------------
+# Founder 2026-08-24: the LLM judge panel leaves the default flow (on D21b data
+# it predicted neither fun nor factuality — Spearman ≤ .21, recall 0/6). The
+# stage must keep its deterministic gates without a single judge call, and the
+# #147/#159 fail-closed machinery must not fire (there is no panel to be
+# unavailable).
+
+
+@pytest.mark.asyncio
+async def test_no_judges_keeps_questions_without_scoring() -> None:
+    """scorer=None delivers the batch without judge calls, empty ctx.scores —
+    CompositionStage then falls back to generation order (its documented
+    judges-off behaviour)."""
+    stage = ScoringStage(None)
+    ctx = _make_ctx([_stub_question(i) for i in range(3)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1", "q_2"]
+    assert ctx.scores == {}
+    assert result.info["scored"] == 0
+    assert result.info["judge_failures"] == 0
+
+
+@pytest.mark.asyncio
+async def test_no_judges_never_raises_judge_panel_unavailable() -> None:
+    """Without a panel there is no quorum to miss: the #147/#159 fail-closed
+    path must stay silent, or every judges-off order would fail permanently."""
+    stage = ScoringStage(None)
+    ctx = _make_ctx([_stub_question(0)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["judge_failures"] == 0
+    assert len(ctx.questions) == 1
+
+
+@pytest.mark.asyncio
+async def test_no_judges_still_enforces_craft_guards(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Removing the judges must NOT remove the deterministic craft guards —
+    they are founder-calibrated rules (#72), not judge output. A stem that
+    leaks its own answer still drops."""
+    monkeypatch.delenv("CRAFT_GUARDS_ENFORCE", raising=False)
+    stage = ScoringStage(None)
+    leaky = _stub_question(
+        0,
+        question="Is the answer to this question simply the word answer?",
+        correct_answer="answer",
+    )
+    ctx = _make_ctx([leaky, _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["craft_dropped"] == 1
+
+
+@pytest.mark.asyncio
+async def test_no_judges_still_drops_low_distractor_quality() -> None:
+    """The distractor gate is deterministic (#42 task 42.6) — in judge mode it
+    rides on the panel's score dicts, so with the panel gone the stage must
+    compute it directly. A duplicate-distractor MCQ still drops."""
+    stage = ScoringStage(None)
+    broken_mcq = _stub_question(
+        0,
+        question="Which planet is known as the red planet?",
+        correct_answer="Mars",
+        possible_answers={"a": "Mars", "b": "Venus", "c": "Venus", "d": "Venus"},
+        type="text_multichoice",
+    )
+    ctx = _make_ctx([broken_mcq, _stub_question(1)])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["dropped_low_score"] == 1

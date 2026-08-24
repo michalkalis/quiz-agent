@@ -96,7 +96,9 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         shape_classifier=ctx.get("shape_classifier"),
     )
     verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
-    scoring = ScoringStage(ctx["scorer"])
+    # #166 D21b: the LLM judge panel is out of the default flow (JUDGE_GATE=1
+    # restores it); scorer=None keeps the stage's deterministic gates only.
+    scoring = ScoringStage(ctx["scorer"] if feature_flags.judge_gate() else None)
     dedup = DedupStage(ctx["question_store"], ctx.get("gold_standard_path"))
     answerability = None
     if feature_flags.answerability_check() and ctx.get("answerability_checker"):

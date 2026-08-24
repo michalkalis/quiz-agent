@@ -1121,3 +1121,38 @@ async def test_options_carrying_question_is_mcq_regardless_of_label() -> None:
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert ctx.questions[0].type == "text_multichoice"
+
+
+# --- #166 D21b — best-of-N flag-gated off (founder 2026-08-24) ----------------
+
+
+@pytest.mark.asyncio
+async def test_best_of_n_off_by_default(monkeypatch) -> None:
+    """#166: overgen + critique + pairwise duels leave the default flow — on
+    D21b data critique predicted neither fun nor factuality. The stage must
+    ask the generator for a plain batch (enable_best_of_n=False) so no
+    critique/duel calls are ever made for a paid order."""
+    monkeypatch.delenv("BEST_OF_N", raising=False)
+    gen = _FakeGenerator([_stub_question(i) for i in range(3)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3)
+    ctx.direct_generation = True
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["enable_best_of_n"] is False
+
+
+@pytest.mark.asyncio
+async def test_best_of_n_env_rollback(monkeypatch) -> None:
+    """BEST_OF_N=1 is the rollback lever restoring the full selection
+    pipeline (#135 traceability convention: old and new reachable via env)."""
+    monkeypatch.setenv("BEST_OF_N", "1")
+    gen = _FakeGenerator([_stub_question(i) for i in range(3)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3)
+    ctx.direct_generation = True
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["enable_best_of_n"] is True

@@ -76,6 +76,8 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     ctx["generator"] = AdvancedQuestionGenerator(
         generation_model=feature_flags.generation_model() or llm_factory.GEN,
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+        # #166 D21b: direct_v1 by default; GEN_PROMPT_VERSION=v2_cot rolls back.
+        prompt_version=feature_flags.generation_prompt_version(),
     )
     # 46.A2b — fail-safe to drop when GOOGLE_API_KEY is absent.
     ctx["answer_normalizer"] = AnswerNormalizer()

@@ -59,7 +59,11 @@ from app import feature_flags
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring import craft_guards
-from app.scoring.multi_model_scorer import MultiModelScorer, is_judge_verdict
+from app.scoring.multi_model_scorer import (
+    MultiModelScorer,
+    compute_distractor_quality,
+    is_judge_verdict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -151,11 +155,21 @@ def _shadow_veto_reason(model_scores: list[dict]) -> str | None:
 
 
 class ScoringStage:
-    """Scores via MultiModelScorer; drops questions below the quality gate."""
+    """Scores via MultiModelScorer; drops questions below the quality gate.
+
+    **#166 D21b (founder 2026-08-24): ``scorer=None`` runs the stage without
+    the LLM judge panel** — no ``score_batch`` call, no score gate, no quorum
+    fail-closed, no veto (it reads judge dimensions). The deterministic checks
+    stay: craft guards (stem leak, T/F balance, units, …) and the
+    ``compute_distractor_quality`` gate, which in judge mode arrives attached
+    to the panel's score dicts. ``ctx.scores`` stays empty, so
+    ``CompositionStage`` falls back to generation order — its documented
+    judges-off behaviour.
+    """
 
     name = "scoring"
 
-    def __init__(self, scorer: MultiModelScorer) -> None:
+    def __init__(self, scorer: MultiModelScorer | None) -> None:
         self._scorer = scorer
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
@@ -165,26 +179,30 @@ class ScoringStage:
                 cost_cents=0,
             )
 
-        payload = [
-            {
-                "id": q.id,
-                "question": q.question,
-                "correct_answer": _stringify_answer(q.correct_answer),
-                "difficulty": q.difficulty,
-                "topic": q.topic,
-                "possible_answers": q.possible_answers,
+        judges_on = self._scorer is not None
+        scores_by_id: dict = {}
+        if judges_on:
+            payload = [
+                {
+                    "id": q.id,
+                    "question": q.question,
+                    "correct_answer": _stringify_answer(q.correct_answer),
+                    "difficulty": q.difficulty,
+                    "topic": q.topic,
+                    "possible_answers": q.possible_answers,
+                }
+                for q in ctx.questions
+            ]
+            results = await self._scorer.score_batch(payload)
+            scores_by_id = {
+                r.get("id"): r.get("model_scores", [])
+                for r in results
+                if r.get("id") is not None
             }
-            for q in ctx.questions
-        ]
-        results = await self._scorer.score_batch(payload)
-        scores_by_id = {
-            r.get("id"): r.get("model_scores", [])
-            for r in results
-            if r.get("id") is not None
-        }
 
         veto_enforce = feature_flags.veto_enforce()
-        veto_consult = veto_enforce or feature_flags.veto_shadow()
+        # The veto reads judge-scored dimensions — inert without a panel.
+        veto_consult = judges_on and (veto_enforce or feature_flags.veto_shadow())
         craft_enforce = feature_flags.craft_guards_enforce()
         quorum = feature_flags.judge_quorum()
 
@@ -211,15 +229,17 @@ class ScoringStage:
 
             # Keep the per-model overall map in ctx.scores for downstream
             # review tooling (advisory) — including for dropped questions, so
-            # an audit can see *why* they failed the gate.
-            per_model: dict[str, float] = {}
-            for score in model_scores:
-                name = score.get("model_name")
-                overall = score.get("overall_score")
-                if name is None or overall is None:
-                    continue
-                per_model[name] = float(overall)
-            ctx.scores[q.id] = per_model
+            # an audit can see *why* they failed the gate. Judges-off runs
+            # write nothing, so CompositionStage keeps generation order.
+            if judges_on:
+                per_model: dict[str, float] = {}
+                for score in model_scores:
+                    name = score.get("model_name")
+                    overall = score.get("overall_score")
+                    if name is None or overall is None:
+                        continue
+                    per_model[name] = float(overall)
+                ctx.scores[q.id] = per_model
 
             # #99 D2-subset telemetry — shadow-only BY CONTRACT (see
             # craft_guards.undated_record_reason): counted and logged for
@@ -288,6 +308,23 @@ class ScoringStage:
                         q.id,
                         veto_reason,
                     )
+
+            if not judges_on:
+                # #166: judge score gate off — the deterministic distractor
+                # check (in judge mode attached to every panel score dict,
+                # #42 task 42.6) still runs directly.
+                dq = compute_distractor_quality(q.correct_answer, q.possible_answers)
+                if dq is not None and dq < MIN_DISTRACTOR_QUALITY:
+                    dropped += 1
+                    logger.warning(
+                        "ScoringStage dropped question id=%s reason="
+                        "distractor_quality_below_%d",
+                        q.id,
+                        MIN_DISTRACTOR_QUALITY,
+                    )
+                    continue
+                kept.append(q)
+                continue
 
             # #147 fail-closed + #159 quorum (gen-review P4): fewer than
             # `judge_quorum()` real verdicts → the question is unjudged — a

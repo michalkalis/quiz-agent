@@ -99,3 +99,30 @@ def test_truthy_toggles_enable(monkeypatch: pytest.MonkeyPatch, value: str) -> N
 def test_non_truthy_toggles_stay_off(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
     monkeypatch.setenv("VETO_SHADOW", value)
     assert feature_flags.veto_shadow() is False
+
+
+# --- #166 D21b — pipeline slim-down flags (founder 2026-08-24) ----------------
+
+
+def test_d21b_slimdown_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The approved prod config needs NO env: direct generation with the
+    direct v1 prompt, no best-of-N (critique/duels), no LLM judge gate."""
+    for var in ("DIRECT_GENERATION", "GEN_PROMPT_VERSION", "BEST_OF_N", "JUDGE_GATE"):
+        monkeypatch.delenv(var, raising=False)
+    assert feature_flags.direct_generation_default() is True
+    assert feature_flags.generation_prompt_version() == "direct_v1"
+    assert feature_flags.best_of_n() is False
+    assert feature_flags.judge_gate() is False
+
+
+def test_d21b_slimdown_rollback_levers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every #166 removal keeps an env rollback (the #135 traceability
+    convention): one env var restores the pre-#166 behaviour."""
+    monkeypatch.setenv("DIRECT_GENERATION", "0")
+    monkeypatch.setenv("GEN_PROMPT_VERSION", "v2_cot")
+    monkeypatch.setenv("BEST_OF_N", "1")
+    monkeypatch.setenv("JUDGE_GATE", "1")
+    assert feature_flags.direct_generation_default() is False
+    assert feature_flags.generation_prompt_version() == "v2_cot"
+    assert feature_flags.best_of_n() is True
+    assert feature_flags.judge_gate() is True

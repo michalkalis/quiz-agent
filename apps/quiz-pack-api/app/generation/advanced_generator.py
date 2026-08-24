@@ -292,9 +292,15 @@ class AdvancedQuestionGenerator:
                 lever. ``None`` keeps ``question_generation_v3_fact_first.md``.
         """
         self.verbose = verbose
+        # #166: explicit output cap. Under the OpenRouter gateway an unset
+        # max_tokens reserves the model's FULL output cap (64k for Fable 5)
+        # against remaining credit per request → 402 on a low balance even
+        # though a batch needs a fraction of that (D21b gotcha, issue-166).
+        # 32768 matches the Bedrock path's default in the factory.
         self.generation_llm = llm_factory.chat_openai(
             generation_model,
             temperature=generation_temperature,
+            max_tokens=32768,
         )
         self.critique_llm = llm_factory.chat_openai(
             critique_model,
@@ -307,7 +313,13 @@ class AdvancedQuestionGenerator:
 
         # Load appropriate prompt template
         current_dir = os.path.dirname(__file__)
-        if prompt_version == "v2_cot":
+        if prompt_version == "direct_v1":
+            # #166 D21b — the canonical prod prompt for the no-facts path
+            # (founder 2026-08-24: Fable 5 + direct v1, 8.01 @ n=70).
+            template_path = os.path.join(
+                current_dir, "..", "..", "prompts", "question_generation_direct.md"
+            )
+        elif prompt_version == "v2_cot":
             template_path = os.path.join(
                 current_dir, "..", "..", "prompts", "question_generation_v2_cot.md"
             )

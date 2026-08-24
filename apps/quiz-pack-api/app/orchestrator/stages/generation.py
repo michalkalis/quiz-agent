@@ -16,6 +16,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
+from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.classification import normalize_category, normalize_difficulty
@@ -226,6 +227,11 @@ class GenerationStage:
         questions = await self._generator.generate_questions(
             count=ctx.target_count,
             open_count=open_count,
+            # #166 D21b — best-of-N (overgen + critique + pairwise duels) is
+            # flag-gated and OFF by default: on D21b data critique predicted
+            # neither fun nor factuality, duels were ruled out in D21 (#164).
+            # BEST_OF_N=1 restores the full selection pipeline.
+            enable_best_of_n=feature_flags.best_of_n(),
             # 2026-07-27 live-run F-e: None = mixed batch with per-question
             # assessment; an explicit order difficulty becomes the prompt's
             # target level (the model still reports its honest per-question

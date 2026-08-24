@@ -165,7 +165,9 @@ výstup; výsledky 29 dní; spend cap Start tieru 500 $/mes.
 vygenerovať čo najrýchlejšie.** Custom packy teda pôjdu realtime API
 (paralelné volania = jediná rýchlostná páka aj proti dnešnému ~30–40 min
 pipeline). Batch API ostáva relevantné len tam, kde latencia nehrá rolu:
-korpus, oficiálne/mesačné packy, eval replaye. Cenové páky pre custom packy
+korpus, oficiálne/mesačné packy, eval replaye — **founder 2026-08-24 potvrdil
+korpus-cez-batch ako smer, ktorý sa ide robiť čoskoro (TODO položka
+„Spoločný korpus — regrow cez Anthropic Batch API").** Cenové páky pre custom packy
 na stole (rozhodnutie po D21b): loss leader s Fable realtime (schválené
 08-21 ako štart) → časom lacnejší model (Kimi 7.20 použiteľný) alebo hybrid
 (lacný generátor + Fable výber/edit).

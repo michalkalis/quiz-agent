@@ -103,9 +103,13 @@ korpus-regrow).
 - [x] Prod secret pripravený: `LLM_ROLE_GEN=claude-fable-5` staged
       (aplikuje sa najbližším deployom; dnešná hodnota bola
       `bedrock:moonshotai.kimi-k2.5` = rollback).
-- [ ] **[HUMAN] Fly billing** — deploy zlyháva: „account has overdue
-      invoices" → founder musí uhradiť na fly.io/dashboard/michal-kalis/billing
-- [ ] Deploy quiz-pack-api + skúšobný pack e2e (po odblokovaní billingu)
+- [x] [HUMAN] Fly billing uhradený founderom 2026-08-24
+- [x] Deploy quiz-pack-api 2026-08-24 + skúšobný pack e2e: admin order
+      pack_10 doručený za **3 min 17 s**, 10/10 otázok, **84 ¢ celkovo**
+      (LLM 68 ¢ + Tavily verify 16 ¢) — vs. ~30–40 min a pack_30 COGS
+      ~4,23 $ pred zmenou; extrapolácia pack_30 ≈ 2,5 $ aj s Fable gen.
+      Prod overený: LLM_ROLE_GEN=claude-fable-5, sourcing skip (direct),
+      citation-strip aktívny. Objednávka 13ccb5a2, pack 5cb50f9b.
 - [ ] Inkrement 2: web-grounded fact-check namiesto verify — predpoklad
       [HUMAN] firemný Anthropic účet + ANTHROPIC_API_KEY
 

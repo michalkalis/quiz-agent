@@ -110,14 +110,25 @@ korpus-regrow).
       ~4,23 $ pred zmenou; extrapolácia pack_30 ≈ 2,5 $ aj s Fable gen.
       Prod overený: LLM_ROLE_GEN=claude-fable-5, sourcing skip (direct),
       citation-strip aktívny. Objednávka 13ccb5a2, pack 5cb50f9b.
-- [~] Inkrement 2: web-grounded fact-check namiesto verify — **kód hotový
-      2026-08-24** (`6aa295cf`): FactVerifier = adversariálny Claude
-      fact-check s natívnym web_search (FACTCHECK rola claude-sonnet-5,
-      `LLM_ROLE_FACTCHECK` override; factory `anthropic_client()`),
-      verdikty ok/fact_error/logic_flaw/stale, problem = drop, výpadok =
-      fail-closed withhold (#158); náklady cez StageResult.cost_cents.
-      Testy 986 passed 2×. Zostáva: [HUMAN] ANTHROPIC_API_KEY do `.env`
-      → `fly secrets set -a quiz-pack-api` → deploy → skúšobný pack e2e.
+- [x] Inkrement 2: web-grounded fact-check namiesto verify — kód `6aa295cf`
+      (FactVerifier = adversariálny Claude fact-check s natívnym web_search,
+      FACTCHECK rola claude-sonnet-5, verdikty ok/fact_error/logic_flaw/stale,
+      problem = drop, výpadok = fail-closed withhold #158; náklady cez
+      StageResult.cost_cents). Testy 986 passed 2×. **NASADENÉ 2026-08-24**
+      (ANTHROPIC_API_KEY secret + deploy) a e2e overené: admin pack_10
+      doručený za **5 min 15 s**, 9/10 otázok, verdikty v
+      `generation_metadata.extra` (9/9 „ok" 0.9, notes s reálnymi zdrojmi —
+      Britannica, Snopes atď.), žiadne 429 (retry_count 0, concurrency 8 OK).
+      Objednávka d46add92, pack 0b543fbd.
+- [ ] **Cost flag pre foundera:** fact-check stál ~180 ¢/pack_10 (≈ 18 ¢/q;
+      celkovo 262 ¢ = gen 82 ¢ + fact-check ~180 ¢) — výrazne nad odhadom
+      +10–30 ¢. Dôvod: web výsledky sa účtujú ako input tokeny × multi-turn
+      resume. Extrapolácia pack_30 ≈ 7–8 $ (vs. 4,23 $ pred D21b). Páky na
+      zníženie (max_searches < 5, selektívny fact-check len news/fresh
+      kategórií, batch otázok na call) = founder call, neimplementované.
+- [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
+      (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
+      (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).
 
 ## Výsledky — os 2 (fact-check) a vrstvy (2026-08-21)
 

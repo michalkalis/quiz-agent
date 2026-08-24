@@ -155,14 +155,20 @@ rozhodnutie stále až po vyhodnotení D21b.
 
 Parametre Batch API (overené v oficiálnych docs 2026-08-24, na founder
 otázku): väčšina dávok < 1 h, garantovaný strop 24 h (nestihnuté requesty
-expirujú NEúčtované → bezpečný fallback na realtime API); limit dávky
-100 000 requestov / 256 MB (pack ~90 requestov = zanedbateľné); Batch API
-má vlastné rate limity (Start tier: 1 000 volaní/min, 200 000 requestov vo
-fronte) — pre náš objem neobmedzené; POZOR: nový účet štartuje na znížených
-Evaluation-tier limitoch, rastú automaticky s históriou; zľava 50 % na vstup
-aj výstup, kombinovateľná s prompt cachingom; výsledky na stiahnutie 29 dní;
-spend cap Start tieru 500 $/mes. Implementačná poistka do návrhu: ak dávka
-nie je hotová do ~2–3 h, dorobiť zvyšok cez realtime API.
+expirujú NEúčtované); limit dávky 100 000 requestov / 256 MB; vlastné rate
+limity (Start tier: 1 000 volaní/min, 200 000 requestov vo fronte); nový
+účet štartuje na znížených Evaluation-tier limitoch; zľava 50 % na vstup aj
+výstup; výsledky 29 dní; spend cap Start tieru 500 $/mes.
+
+**Update founder 2026-08-24: Batch API pre CUSTOM packy VYRADENÉ — latencia
+(typicky < 1 h, strop 24 h) je pre zákaznícku objednávku pridlhá; pack sa má
+vygenerovať čo najrýchlejšie.** Custom packy teda pôjdu realtime API
+(paralelné volania = jediná rýchlostná páka aj proti dnešnému ~30–40 min
+pipeline). Batch API ostáva relevantné len tam, kde latencia nehrá rolu:
+korpus, oficiálne/mesačné packy, eval replaye. Cenové páky pre custom packy
+na stole (rozhodnutie po D21b): loss leader s Fable realtime (schválené
+08-21 ako štart) → časom lacnejší model (Kimi 7.20 použiteľný) alebo hybrid
+(lacný generátor + Fable výber/edit).
 
 ## Kritérium hotovosti
 

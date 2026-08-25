@@ -229,6 +229,32 @@ korpus-regrow).
          (harness + uložené evidence.jsonl) PRED nasadením.** Founder
          explicitne zrušil skoršie „Bedrock nevyužívať" PRE OVEROVANIE
          (generovanie ostáva Fable direct).
+         **VALIDOVANÉ 2026-08-25, latku NEDOSIAHOL po 2 architektonických
+         iteráciách → STOP, nenasadené** (harness
+         `scripts/bedrock_verifier_eval_166.py`, výsledky
+         `…/d21b-round-2026-08-18/bedrock-verifier-166/`):
+         - Architektúra: uložené Tavily evidence URL + Wikipedia search API
+           (Tavily narazila na pay-as-you-go limit → wiki search + download
+           zadarmo cez wiki API/HTTP) → celé stránky → haiku-4.5 keywords →
+           kódová extrakcia pasáží → sudca sonnet-4.6 na Bedrocku.
+           ~6,6 ¢/q (LLM časť kryjú AWS kredity → efektívne ~3,2 ¢/q).
+         - v1: recall 5/7 (chytila q95, minula q48 unparseable + q63),
+           15 FP. v2 (premise-entity wiki search, extrakcia rozložená po
+           celej stránke, retry, prísnejšia kalibrácia): recall 5/7
+           (chytila q48 — prvý lacný variant vôbec, minula q63 + q95),
+           12 FP. Union 6/7; q63 nechytil nikdy.
+         - Zistenia: (a) sudca funguje, keď fakt v pasážach JE — gap je
+           retrieval; (b) q63 pravda je v tabuľke „Fastest to $2 billion",
+           ktorú Wikipedia extracts API (plaintext) ZAHADZUJE — triedu
+           tabuľkových faktov tento fetch nevidí; (c) q95 chytenie závisí
+           od toho, či do poolu padne Sealed Air (národnosť je tam, nie
+           v článku Bubble wrap) — pool je krehký na formuláciu query;
+           (d) FP úroveň 12–15 je nad latkou aj po kalibračnom prompte.
+         - Bonus: q45 má v eval sade poškodenú odpoveď („c") — data bug
+           join-u odpovedí, obe iterácie ju právom flagli; ďalšie FP
+           kandidáty na reálne chyby mimo referencie: q02 (Play-Doh 30. vs
+           50. roky), q28 (sprites smer), q58 (Oscar 2022 vs 2023), q73
+           (prvá hudba vo vesmíre), q91 (med v hrobkách).
       2. **Prompt caching pri plnom native checku** — dominantný náklad je
          opakované preposielanie narastajúcej konverzácie pri pause_turn
          resumoch; cache breakpointy by mali opakovaný prefix účtovať

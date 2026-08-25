@@ -165,6 +165,33 @@ korpus-regrow).
       Otvorené: in-pipeline FactVerifier (max 5) nebol na D21b recall-meraný
       (6/6 pochádza z 5×-subagent behu) — pred spoliehaním sa na news-tier
       zvážiť native max5 beh (~18 $).
+- [x] **Founder verifikácia flagov 2026-08-25** (všetkých 9 kedy flagnutých
+      otázok, verdikty v
+      `docs/testing/runs/d21b-round-2026-08-18/factcheck_founder_verdicts_2026-08-25.json`):
+      1. **Nová referenčná sada = 7 chýb:** q03, q32, q48, q63, q81 potvrdené
+         + **q89 a q95 potvrdené ako chyby, ktoré baseline prehliadol**
+         (baseline recall teda 5/7, nie 100 %). **q18 vyradená** — samotná
+         Wikipedia je nekonzistentná (16 vs 17 vs 20 nominácií); pravidlo:
+         ak je nejednoznačná aj wiki, otázku vyradiť celú. **q37 očistená**
+         (wiki sama uvádza Kiribati ako jedinú krajinu s HLAVNÝM územím
+         vo 4 pologuliach) — flag zamietnutý.
+      2. **Dopad na tier router:** q95 je f-base evergreen bez source_url
+         a bez fresh markerov („In 1957…") → router by ju POSLAL na
+         evergreen-skip a chybu nechytil. Premisa „evergreen = čistý,
+         žiadny check" má potvrdený protipríklad; f-base nebol 70/70 čistý,
+         ale 69/70. Router proti novej sade chytá 6/7. Rozhodnutie o
+         evergreen vetve sa vracia founderovi (skip vs lacný check —
+         q95 chytili všetky 3 lacné varianty, teda trieda evergreen chýb
+         je snippet-checkovateľná, na rozdiel od q48).
+      3. **Founder source-trust politika pre fact-check aj generovanie:**
+         Wikipedia prvá (vrátane zdrojov, ktoré wiki sama cituje — brať ako
+         dôveryhodné), potom doménové autority (IMDb pre film), až potom
+         ostatné médiá; nízkodôveryhodné agregátory (newsbreak, sacnilk,
+         theurbanlist, coloradosound — všetko generačné zdroje potvrdených
+         chýb) nepoužívať ako oporu pravdy. Pri časovo premenlivých faktoch
+         overiť aktuálnosť článku; ak sa nedá, zdroj vynechať. Founder idea
+         na zváženie: samostatný pipeline krok na posúdenie dôveryhodnosti
+         zdroja.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).
@@ -173,7 +200,9 @@ korpus-regrow).
 
 **Fact-check (agentná editorská os):** 6/100 reálnych problémov — 4 fact_error
 + 2 stale, **všetky v e-news ramenách** (e-news-f 3/20, e-news-k 3/10);
-f-base **70/70 fakticky čistý**. Nálezy: q03 (Last Christmas prekonal
+f-base **70/70 fakticky čistý**. *(Korekcia 2026-08-25 po founder verifikácii:
+referenčná sada je 7 chýb — q18 vyradená ako nerozhodnuteľná, q89+q95 doplnené;
+f-base teda 69/70, baseline recall 5/7 — viď founder verdikty vyššie.)* Nálezy: q03 (Last Christmas prekonal
 „jediný 2× UK Christmas No.1"), q18 (Snoop 16→20 nominácií), q32+q81
 (Spider-Man: Brand New Day je 2026, nie 2025), q48 (Derringer neprodukoval
 Steely Dan), q63 ($2B za 17, nie 20 dní).

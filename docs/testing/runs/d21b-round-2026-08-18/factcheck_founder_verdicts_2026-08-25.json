@@ -1,0 +1,20 @@
+{
+  "reviewed_by": "michal",
+  "reviewed_at": "2026-08-25",
+  "context": "Founder manually verified all 9 questions ever flagged on the D21b set (6 baseline errors + 3 increment-3 candidates) before any tier-router flag flip. Reference for #166 fact-check eval.",
+  "verdicts": {
+    "q03": {"verdict": "error_confirmed", "note": "Stale flag correct (Last Christmas 2023+2024). Fact is on Wikipedia — truth lookup should go Wikipedia first, then other trusted sources; check article freshness for time-mutable facts, drop a source whose freshness can't be verified."},
+    "q18": {"verdict": "indeterminate_drop_question", "note": "Wikipedia itself is inconsistent: table says 17, prose says 16, Snoop's own claim 20 (incl. producer noms). When even Wikipedia is ambiguous, drop the question entirely. Stale-flag correctness cannot be judged; q18 removed from eval reference."},
+    "q32": {"verdict": "error_confirmed", "note": "2025 vs 2026 release confirmed. IMDb-class portals count as source of truth for film facts; source credibility should be assessable, possibly as its own pipeline step."},
+    "q48": {"verdict": "error_confirmed", "note": "Wikipedia (Rick Derringer): played guitar for Steely Dan, did not produce. A better question would say 'collaborated with'."},
+    "q63": {"verdict": "error_confirmed", "note": "Wikipedia + its cited Variety source (2B in ~3 weeks, Aug 16) contradict the 20-day premise. Sources cited BY Wikipedia count as trustworthy."},
+    "q81": {"verdict": "error_confirmed", "note": "Same as q32."},
+    "q89": {"verdict": "error_confirmed", "note": "Wikipedia unambiguously says 2025 film. Watch what gets parsed from source pages (2026 = ceremony year only)."},
+    "q95": {"verdict": "error_confirmed", "note": "Chavannes was Swiss — 'American engineers' wrong; Wikipedia should have been the generation source; nationality claim was unnecessary for the question."},
+    "q37": {"verdict": "question_ok", "note": "Wikipedia itself states Kiribati is the only country whose MAIN territory spans all four hemispheres — standard answer stands, flag rejected."}
+  },
+  "resulting_reference_set": ["q03", "q32", "q48", "q63", "q81", "q89", "q95"],
+  "excluded_as_indeterminate": ["q18"],
+  "cleared": ["q37"],
+  "source_trust_policy": "Wikipedia first (incl. sources Wikipedia itself cites), then domain authorities (IMDb for film), then other reputable outlets. Avoid low-trust aggregators (newsbreak, sacnilk, theurbanlist, coloradosound were all generation sources of confirmed errors). Verify article freshness for time-mutable facts; if freshness unverifiable, exclude the source. If even Wikipedia is ambiguous, drop the question."
+}

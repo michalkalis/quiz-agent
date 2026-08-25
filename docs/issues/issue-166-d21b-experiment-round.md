@@ -217,6 +217,25 @@ korpus-regrow).
          (D21b native max5 beh ≈ 18 $ = founder call).
       4. Zamietnuté prompt experimenty v3/v4 lacného variantu archivované:
          `judge_claude-sonnet-5.v3.jsonl` (recall 5/7, q95+q48 miss).
+- [ ] **Follow-up smery (founder 2026-08-25 večer, pre korpusové kolo):**
+      1. **Bedrock verifier s vlastným search okruhom:** Bedrock nemá
+         Anthropic natívny web search → vlastná slučka: Tavily search +
+         stiahnutie CELÝCH stránok + kódová extrakcia relevantných pasáží
+         (model navrhne kľúčové slová, kód vytiahne pasáže, sudca dostane
+         len tie) + Bedrock model ako sudca. Tokeny kryjú AWS kredity
+         (~zadarmo). POZOR: staré verify (DeepSeek + Tavily úryvky) malo
+         recall 0/6 — výhra musí prísť z celých stránok + extrakcie, nie
+         z výmeny modelu. **Brána: validácia na founder referencii 7 chýb
+         (harness + uložené evidence.jsonl) PRED nasadením.** Founder
+         explicitne zrušil skoršie „Bedrock nevyužívať" PRE OVEROVANIE
+         (generovanie ostáva Fable direct).
+      2. **Prompt caching pri plnom native checku** — dominantný náklad je
+         opakované preposielanie narastajúcej konverzácie pri pause_turn
+         resumoch; cache breakpointy by mali opakovaný prefix účtovať
+         ~10 %. Odhad úspory 30–50 % tokenovej zložky, NEOVERENÉ (meranie
+         ~50 ¢). Founder: nemerať teraz, len zapísať.
+      3. Batch API (−50 %) potvrdené do budúcna — patrí do korpusového
+         kola (TODO riadok „Spoločný korpus").
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

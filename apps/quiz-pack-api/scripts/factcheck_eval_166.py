@@ -1,8 +1,11 @@
 """#166 increment 3 — validate cheaper fact-check variants on the D21b set.
 
-Acceptance bar (founder 2026-08-24): recall 6/6 on the known D21b errors
-(q03/q18/q32/q48/q63/q81) and no increase in false alarms on the 94 clean
-questions. A variant that misses the bar does not ship.
+Reference set (founder-verified 2026-08-25, see
+``factcheck_founder_verdicts_2026-08-25.json`` in the run dir): 7 confirmed
+errors q03/q32/q48/q63/q81/q89/q95; q18 is excluded entirely (even Wikipedia
+is ambiguous on it — neither a hit nor a false alarm); the remaining 92
+questions are clean. A variant that misses the bar does not ship (outcome
+2026-08-25: no cheap variant reached it — full check stays for every tier).
 
 Variants:
   search              Tavily evidence for every question (2 advanced queries,
@@ -42,7 +45,11 @@ RUN_DIR = (
 )
 OUT_DIR = RUN_DIR / "factcheck-eval-166"
 
-BAD_QIDS = frozenset({"q03", "q18", "q32", "q48", "q63", "q81"})
+BAD_QIDS = frozenset({"q03", "q32", "q48", "q63", "q81", "q89", "q95"})
+# q18 (Snoop nomination count): even Wikipedia is internally inconsistent, so
+# the founder excluded it from the reference — neither a catch nor a false
+# alarm.
+EXCLUDED_QIDS = frozenset({"q18"})
 CONCURRENCY = 8
 
 # List prices USD/1M (Haiku is eval-only, not in app.llm_usage's prod table).
@@ -367,7 +374,7 @@ def cmd_report(paths: list[str]) -> None:
         missed = sorted(BAD_QIDS - set(caught))
         false_alarms = sorted(
             q for q, r in by_qid.items()
-            if q not in BAD_QIDS and r.get("verdict") in _PROBLEM
+            if q not in BAD_QIDS | EXCLUDED_QIDS and r.get("verdict") in _PROBLEM
         )
         held = sorted(
             q for q, r in by_qid.items()
@@ -378,7 +385,10 @@ def cmd_report(paths: list[str]) -> None:
         tavily = sum(r.get("tavily_cost_cents", 0) for r in records)
         n = len(records)
         print(f"\n=== {p} (n={n}) ===")
-        print(f"recall:       {len(caught)}/6  caught={caught}  missed={missed}")
+        print(
+            f"recall:       {len(caught)}/{len(BAD_QIDS)}  "
+            f"caught={caught}  missed={missed}"
+        )
         print(f"false alarms: {len(false_alarms)}  {false_alarms}")
         print(f"held/unparseable: {len(held)}  {held}")
         for q in sorted(BAD_QIDS | set(false_alarms)):

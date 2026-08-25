@@ -72,7 +72,7 @@ QUESTION: {question}
 CLAIMED ANSWER: {claimed_answer}
 TOPIC: {topic}
 
-Use web search to actively try to disprove the pair: verify the core fact, and search for newer events that could have invalidated it. Prefer primary or authoritative sources.
+Use web search to actively try to disprove the pair: verify the core fact, and search for newer events that could have invalidated it. Prefer primary or authoritative sources: Wikipedia (and the sources Wikipedia itself cites) and domain authorities (e.g. IMDb for film, official chart/records bodies) outrank news sites, and news sites outrank aggregators and listicles — never trust a low-quality aggregator over them. If authoritative sources genuinely contradict each other on a fact the pair depends on, the pair is not safely usable — verdict "logic_flaw".
 
 Give exactly one verdict:
 - "fact_error" — the claimed answer is factually wrong, or the question asserts something false

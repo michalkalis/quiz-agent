@@ -20,10 +20,16 @@ Validated on the D21b set 2026-08-24: combined routing sends 6/6 known
 errors to the web check (recall preserved) and exempts 65/70 clean
 evergreen questions (cost).
 
-Dormant by default until the founder signs off the routing definition
-(what exactly counts as "news") — set ``FACTCHECK_TIER_ROUTING=1`` to
-enable; unset/0 keeps the increment-2 behavior (every factual question
-gets the web check).
+Founder decision 2026-08-25: stays dormant. The founder's manual
+verification of all flagged questions added q95 — an evergreen error with
+no textual marker — to the reference set, so "evergreen = clean" no longer
+holds (69/70, not 70/70), and no cheap check reached the bar on q95's error
+class (snippets don't surface it; only agentic page-reading does). Every
+factual question therefore keeps the full web check; the cost lever is the
+Batch API (-50%) for latency-insensitive corpus generation, not weaker
+checking. Do not enable ``FACTCHECK_TIER_ROUTING`` without a new evergreen
+policy validated on the founder reference set
+(``factcheck_founder_verdicts_2026-08-25.json``).
 """
 
 from __future__ import annotations

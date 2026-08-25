@@ -179,10 +179,15 @@ korpus-regrow).
          a bez fresh markerov („In 1957…") → router by ju POSLAL na
          evergreen-skip a chybu nechytil. Premisa „evergreen = čistý,
          žiadny check" má potvrdený protipríklad; f-base nebol 70/70 čistý,
-         ale 69/70. Router proti novej sade chytá 6/7. Rozhodnutie o
-         evergreen vetve sa vracia founderovi (skip vs lacný check —
-         q95 chytili všetky 3 lacné varianty, teda trieda evergreen chýb
-         je snippet-checkovateľná, na rozdiel od q48).
+         ale 69/70. Router proti novej sade chytá 6/7.
+         *KOREKCIA (2026-08-25 popoludní):* pôvodné tvrdenie „q95 chytili
+         3 lacné varianty" bolo NESPRÁVNE — chytili ju native check a
+         nekalibrovaná Haiku (32 FP); kalibrovaný lacný Sonnet variant ju
+         nechytá takmer nikdy (0/6 stabilné behy; švajčiarska národnosť je
+         v snippetoch len okrajovo v low-cred zdroji). 2 iterácie promptu
+         (source-trust váženie, kontrola vedľajších opisov osôb) latku
+         nedosiahli (1/4, nestabilné) — q95 trieda je architektonicky mimo
+         dosahu snippetov, rovnako ako q48.
       3. **Founder source-trust politika pre fact-check aj generovanie:**
          Wikipedia prvá (vrátane zdrojov, ktoré wiki sama cituje — brať ako
          dôveryhodné), potom doménové autority (IMDb pre film), až potom
@@ -192,6 +197,26 @@ korpus-regrow).
          overiť aktuálnosť článku; ak sa nedá, zdroj vynechať. Founder idea
          na zváženie: samostatný pipeline krok na posúdenie dôveryhodnosti
          zdroja.
+- [x] **Inkrement 3 UZAVRETÝ (founder rozhodnutia 2026-08-25 in-session):**
+      1. **Plný web check ostáva pre VŠETKY otázky** (evergreen aj news) —
+         po korekcii vyššie lacný check stratil opodstatnenie (platí sa,
+         q95 triedu aj tak nechytí) a evergreen-skip má známy protipríklad.
+         Tier router ostáva dormant (kód ponechaný, docstring aktualizovaný);
+         `FACTCHECK_TIER_ROUTING` nezapínať bez novej validácie na founder
+         referencii. Lacný checker (CheapFactChecker) NEBOL shipnutý —
+         napísaný a zmazaný v ten istý deň po neprejdenej latke.
+      2. **Cesta k nižším nákladom = Batch API (−50 %), nie slabší check.**
+         Founder: batch použiť aj na ďalšie fázy pipeline, nielen gen;
+         korpusové otázky (aj entertainment) sa robia do zásoby, latencia
+         nevadí. Custom packy: bez zisku OK, stratové nie — pri fact-check
+         18 ¢/q treba pri návrhu batch/pricingu overiť, či pack_30
+         (COGS ≈ 7–8 $) neporušuje túto hranicu.
+      3. Do prod promptu plného checku pridaná founder hierarchia zdrojov
+         (wiki + jej citácie > doménové autority > médiá > agregátory;
+         konflikt autorít = logic_flaw). Nevalidované na native behu
+         (D21b native max5 beh ≈ 18 $ = founder call).
+      4. Zamietnuté prompt experimenty v3/v4 lacného variantu archivované:
+         `judge_claude-sonnet-5.v3.jsonl` (recall 5/7, q95+q48 miss).
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

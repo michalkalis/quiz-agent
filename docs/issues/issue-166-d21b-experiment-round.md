@@ -255,6 +255,20 @@ korpus-regrow).
            kandidáty na reálne chyby mimo referencie: q02 (Play-Doh 30. vs
            50. roky), q28 (sprites smer), q58 (Oscar 2022 vs 2023), q73
            (prvá hudba vo vesmíre), q91 (med v hrobkách).
+         **Nadväzujúca Haiku validácia (founder ask 2026-08-25 večer):**
+         native check (Anthropic API + web search) na Haiku 4.5, sada 20
+         otázok (7 chýb + 13 kandidátov), harness
+         `scripts/haiku_native_eval_166.py`, výsledky `native_haiku45.jsonl`.
+         Recall 4/7 (chytila q03/q48/q63/q81 — q63 jediná lacná metóda;
+         minula q32/q89/q95), 6 flagov mimo referencie, 6,9 ¢/q (vs 18 ¢
+         Sonnet 5). Starší Sonnet 4.6 NIE JE lacnejší než Sonnet 5
+         (3/15 vs 2/10 USD/M — pozn.: `llm_usage` tabuľka má pre
+         claude-sonnet-5 starú cenu 3/15, nadhodnocuje). Porovnanie
+         všetkých 6 metód na 20 otázkach + nové flagy pre foundera:
+         artifact „Flagované otázky D21b". Čaká sa founder posúdenie
+         13 kandidátov (q45 = data bug odpovede „c" v eval sade).
+         Blocker vyriešený: Anthropic API kredit bol vyčerpaný,
+         founder dobil 2026-08-25.
       2. **Prompt caching pri plnom native checku** — dominantný náklad je
          opakované preposielanie narastajúcej konverzácie pri pause_turn
          resumoch; cache breakpointy by mali opakovaný prefix účtovať

@@ -391,6 +391,13 @@ odpoveď) opravený štrukturálne: normalizácia presunutá do
 `AdvancedQuestionGenerator._finalize_questions` (`app/generation/mcq_answer.py`),
 takže ju neobíde ani skript volajúci `_generate_batch` priamo.
 
+Import do prod korpusu (founder 2026-08-26): 89 otázok, ktoré prešli kontrolou
+(11 vyradených, 5 s opravou znenia/odpovede), naimportovaných do prod
+`questions` ako `approved` s embeddingami — súbor
+`corpus_import_2026-08-26.json` v run adresári (deterministické UUID
+z temp id, uuid5 namespace `quiz-agent/d21b-2026-08-18`; temp id zachované
+v provenance extra). Prod approved: 41 → 130.
+
 ## Kritérium hotovosti
 
 Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;

@@ -13,7 +13,9 @@ Provider swap (#166 provider research, founder-approved 2026-08-26): the
 default backend is now OpenAI ``gpt-5-mini`` via the Responses API
 ``web_search`` tool — on the founder reference set it caught 7/7 errors at
 ~4 ¢/q vs 5/7 at ~18 ¢/q for the previous Sonnet 5 + Anthropic web_search
-path (40-question validation, ``scripts/openai_native_eval_166.py``). The
+path (40-question validation, results in ``docs/testing/runs/
+d21b-round-2026-08-18/factcheck-eval-166/`` and issue-166 § Follow-up
+smery; the eval harness lands with PR #35). The
 Anthropic path is kept verbatim: any ``claude*`` model id routes to it, so
 ``LLM_ROLE_FACTCHECK=claude-sonnet-5`` is the rollback lever.
 

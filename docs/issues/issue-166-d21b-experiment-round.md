@@ -320,6 +320,20 @@ korpus-regrow).
            **4,04 ¢/q** na n=40. Výsledky
            `native_openai_gpt-5-mini_40.jsonl`. Ďalší krok = founder
            rozhodnutie o implementácii OpenAI cesty vo FactVerifier.
+         - **IMPLEMENTOVANÉ A NASADENÉ 2026-08-26** (founder zelená
+           in-session; PR #36, squash-merge `4b2d7465`): FactVerifier
+           dispatchuje podľa model id (`claude*` → Anthropic cesta bez
+           zmeny, inak OpenAI Responses + `web_search`), default roly
+           FACTCHECK = `gpt-5-mini`, **rollback =
+           `LLM_ROLE_FACTCHECK=claude-sonnet-5`** (env, bez deployu).
+           Testy 995 passed 2× + 624 quiz-agent; prod smoke cez
+           `POST /api/v1/verify` po deployi OK (verdikt „ok", reálny
+           search, NASA citácia). Pack-level e2e nebežal: anon-bootstrap
+           vyžaduje App Attest (bez zariadenia token nevydá) a lokálny
+           AUTH_JWT_SECRET nesedí s prod — overený bol priamo zmenený
+           komponent. Pozn.: job „Test Quiz Pack API (integration)"
+           v Backend CI padá identicky aj na main (dni pred touto zmenou)
+           — samostatný fix mimo #166.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

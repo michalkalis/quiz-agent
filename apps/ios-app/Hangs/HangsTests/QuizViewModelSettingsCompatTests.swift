@@ -281,11 +281,25 @@ struct QuizSettingsBackwardCompatTests {
     @Test("legacy single category migrates to a one-element categories list")
     func legacyCategoryMigrates() throws {
         var json = legacyMinimalJSON
-        json["category"] = "adults"
+        json["category"] = "science-nature"
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.categories == ["adults"])
+        #expect(settings.categories == ["science-nature"])
+    }
+
+    /// Ids retired by a taxonomy change (2026-08 revamp) must be dropped on
+    /// decode: a stale selection like "disney" matches zero approved questions,
+    /// so keeping it would silently filter every quiz to empty. Dropping
+    /// degrades to All Categories, which always has content.
+    @Test("retired category ids are dropped on decode")
+    func retiredCategoryIdsAreDropped() throws {
+        var json = legacyMinimalJSON
+        json["categories"] = ["disney", "science-nature", "adults"]
+
+        let settings = try decodeSettings(json)
+
+        #expect(settings.categories == ["science-nature"])
     }
 
     /// A blob with neither key (v1-era, no filter picked) decodes to the
@@ -302,12 +316,12 @@ struct QuizSettingsBackwardCompatTests {
     @Test("categories list wins over a stale legacy category key")
     func categoriesListWinsOverLegacy() throws {
         var json = legacyMinimalJSON
-        json["categories"] = ["kids", "disney"]
-        json["category"] = "adults"
+        json["categories"] = ["science-nature", "history"]
+        json["category"] = "sports"
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.categories == ["kids", "disney"])
+        #expect(settings.categories == ["science-nature", "history"])
     }
 
     // MARK: - Missing required key still throws

@@ -58,7 +58,7 @@ struct SetRecapView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            Text("SET RESULT · \(viewModel.recapEntries.first?.category ?? "")")
+            Text("SET RESULT · \(viewModel.recapEntries.first.map { Config.categoryDisplayName(for: $0.category) } ?? "")")
                 .textCase(.uppercase)
                 .font(.hangsMono(11, weight: .medium))
                 .tracking(2)

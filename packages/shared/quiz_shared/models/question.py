@@ -119,7 +119,12 @@ class Question(BaseModel):
     topic: str = Field(..., description="Topic: Geography, History, Science, etc.")
     category: str = Field(
         ...,
-        description="Category: adults, children, harry-potter, music, general, etc.",
+        description=(
+            "Interest category the app's picker filters on (science-nature, "
+            "history, geography-world, movies-music, sports, food-everyday — "
+            "see CATEGORY_TAXONOMY in the quiz-agent admin API); custom packs "
+            "may carry free-form categories, reached via pack selection."
+        ),
     )
     difficulty: str = Field(..., description="Difficulty: easy | medium | hard")
     tags: List[str] = Field(

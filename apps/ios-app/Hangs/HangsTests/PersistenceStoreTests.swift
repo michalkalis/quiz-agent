@@ -86,7 +86,7 @@ struct PersistenceStoreSessionTests {
             language: "sk",
             audioMode: "media",
             numberOfQuestions: 20,
-            categories: ["adults"],
+            categories: ["science-nature"],
             difficulty: "hard",
             autoAdvanceDelay: 5,
             answerTimeLimit: 45,

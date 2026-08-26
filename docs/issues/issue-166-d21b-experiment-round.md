@@ -2,6 +2,9 @@
 
 **Triage:** experiment · in-progress (2026-08-18)
 **Nadväzuje na:** #164 — Experimentálne kolo D21 (§ Rozhodnutia zakladateľa, § Metodika ďalšieho kola) · #165 — D21 eval set freeze (baseline čísla).
+**Dĺžka nad cap (~300 riadkov), priznane:** živý experimentálny log jedného
+kola — split uprostred by rozbil kontext; research bloky sa priebežne
+presúvajú do `docs/research/` (naposledy provider comparison 2026-08-26).
 
 ## Cieľ
 
@@ -276,7 +279,35 @@ korpus-regrow).
          ~10 %. Odhad úspory 30–50 % tokenovej zložky, NEOVERENÉ (meranie
          ~50 ¢). Founder: nemerať teraz, len zapísať.
       3. Batch API (−50 %) potvrdené do budúcna — patrí do korpusového
-         kola (TODO riadok „Spoločný korpus").
+         kola (TODO riadok „Spoločný korpus"). **Korekcia 2026-08-26
+         (provider research):** Anthropic Batch web search podporuje
+         (−50 % len tokeny, search fee 1 ¢/hľadanie ostáva v plnej výške —
+         pri native checku je search fee dominantná zložka, takže reálna
+         úspora je malá); OpenAI Batch web_search NEPODPORUJE; Gemini Batch
+         nejasné (docs mlčia); Perplexity batch nemá.
+      4. **Provider research mimo Anthropic (founder ask 2026-08-26),
+         VALIDOVANÉ na 20q + 40q sade** — plný writeup (výsledky per
+         provider, ceny, 40q validácia) presunutý do
+         `docs/research/factcheck-provider-comparison-2026-08-26.md`.
+         Súhrn: **gpt-5-mini + Responses web_search recall 7/7 @ 4,04 ¢/q
+         (n=40)** — prvá metóda s plným recallom; Gemini 3.5 Flash 6/7 @
+         ~1,9 ¢; gpt-5.4-mini aj gemini-3.7-flash nepoužiteľné. Jediný
+         otvorený flag z čistej sady: q92 (Hatsune Miku, čaká founder
+         verdikt, skôr nitpick).
+         - **IMPLEMENTOVANÉ A NASADENÉ 2026-08-26** (founder zelená
+           in-session; PR #36, squash-merge `4b2d7465`): FactVerifier
+           dispatchuje podľa model id (`claude*` → Anthropic cesta bez
+           zmeny, inak OpenAI Responses + `web_search`), default roly
+           FACTCHECK = `gpt-5-mini`, **rollback =
+           `LLM_ROLE_FACTCHECK=claude-sonnet-5`** (env, bez deployu).
+           Testy 995 passed 2× + 624 quiz-agent; prod smoke cez
+           `POST /api/v1/verify` po deployi OK (verdikt „ok", reálny
+           search, NASA citácia). Pack-level e2e nebežal: anon-bootstrap
+           vyžaduje App Attest (bez zariadenia token nevydá) a lokálny
+           AUTH_JWT_SECRET nesedí s prod — overený bol priamo zmenený
+           komponent. Pozn.: job „Test Quiz Pack API (integration)"
+           v Backend CI padá identicky aj na main (dni pred touto zmenou)
+           — samostatný fix mimo #166.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).
@@ -390,6 +421,13 @@ uplatnia pri prípadnom importe do korpusu. Root cause q45 (bare-letter MCQ
 odpoveď) opravený štrukturálne: normalizácia presunutá do
 `AdvancedQuestionGenerator._finalize_questions` (`app/generation/mcq_answer.py`),
 takže ju neobíde ani skript volajúci `_generate_batch` priamo.
+
+Import do prod korpusu (founder 2026-08-26): 89 otázok, ktoré prešli kontrolou
+(11 vyradených, 5 s opravou znenia/odpovede), naimportovaných do prod
+`questions` ako `approved` s embeddingami — súbor
+`corpus_import_2026-08-26.json` v run adresári (deterministické UUID
+z temp id, uuid5 namespace `quiz-agent/d21b-2026-08-18`; temp id zachované
+v provenance extra). Prod approved: 41 → 130.
 
 ## Kritérium hotovosti
 

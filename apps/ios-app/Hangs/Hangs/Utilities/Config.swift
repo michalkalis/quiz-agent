@@ -92,18 +92,25 @@ nonisolated enum Config {
     ]
 
     /// Available category options for quiz settings (nil = All Categories)
-    /// Order: All → core → themed packs. Backend filters on whatever id is sent.
+    /// Interest-based taxonomy (2026-08 revamp) — mirrors the backend
+    /// `CATEGORY_TAXONOMY` in `apps/quiz-agent/app/api/admin.py`. Age is a
+    /// separate axis (`ageAppropriateOptions`); fandom/themed content lives in
+    /// packs, not here. Backend filters on whatever id is sent.
     static let categoryOptions: [(id: String?, display: String)] = [
         (nil, String(localized: "All Categories", comment: "Quiz category option: no category filter")),
-        ("general", String(localized: "General", comment: "Quiz category option")),
-        ("adults", String(localized: "Adults", comment: "Quiz category option: adult-oriented questions")),
-        ("kids", String(localized: "Kids", comment: "Quiz category option: kid-friendly questions")),
-        ("wizarding-world", String(localized: "Wizarding World", comment: "Quiz category option (themed pack; brand-adjacent — see 56.4 Don't-translate pass)")),
-        ("superheroes", String(localized: "Superheroes", comment: "Quiz category option (themed pack)")),
-        ("disney", String(localized: "Disney", comment: "Quiz category option (themed pack; brand name — see 56.4 Don't-translate pass)")),
-        ("football", String(localized: "Football", comment: "Quiz category option (themed pack)")),
-        ("sports-mix", String(localized: "Sports Mix", comment: "Quiz category option (themed pack)")),
+        ("science-nature", String(localized: "Science & Nature", comment: "Quiz category option")),
+        ("history", String(localized: "History", comment: "Quiz category option")),
+        ("geography-world", String(localized: "Geography & World", comment: "Quiz category option")),
+        ("movies-music", String(localized: "Movies & Music", comment: "Quiz category option")),
+        ("sports", String(localized: "Sports", comment: "Quiz category option")),
+        ("food-everyday", String(localized: "Food & Everyday Life", comment: "Quiz category option")),
     ]
+
+    /// Human-readable (localized) name for a category id: taxonomy ids map
+    /// through `categoryOptions`; free-form pack categories display as-is.
+    static func categoryDisplayName(for id: String) -> String {
+        categoryOptions.first { $0.id == id }?.display ?? id
+    }
 
     /// Available age-appropriate filter options (nil = no filter / show all)
     /// Values match `Question.age_appropriate` on the backend.

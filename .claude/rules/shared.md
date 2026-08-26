@@ -2,8 +2,18 @@
 
 ## Git Workflow
 
-Solo project — push directly to main. No feature branches or PRs needed.
-Agent may push to `origin/main` at its own discretion in-session — no per-push approval needed. Destructive ops (force-push, reset --hard, amend, history rewrites) still require a heads-up.
+**PR workflow with independent review (founder, 2026-08-26).** Every change lands on `main` through a pull request — no direct pushes (soft lock: repo ruleset with admin bypass reserved for emergencies only; using the bypass requires an explicit founder heads-up).
+
+Flow per change/feature:
+1. Branch from `main`: `<type>/<slug>` (e.g. `feat/166-fact-check`, `fix/timer-crash`). Commits on the branch follow Conventional Commits as before.
+2. Push the branch and open a PR (`gh pr create`) with a conventional title and a short body (what + why, issue ref).
+3. Wait for the independent review: the **Claude Code Review** GitHub Action (fresh cloud context, no session bias) posts inline findings on every PR, plus path-filtered CI.
+4. Address review findings: fix or explicitly rebut each one in the PR thread. Pushing fixes re-triggers the review.
+5. Merge autonomously (**squash**, PR title becomes the commit subject) once the review is clean/addressed and CI is green. Product-level findings (UX, scope, monetization) go to the founder before merge; technical findings the agent resolves itself.
+
+Granularity: one PR per coherent change — roughly what was previously one push-worthy checkpoint. Don't batch unrelated work into one PR; don't split one logical change across PRs. Docs-only/memory-only housekeeping follows the same flow (review is cheap on tiny diffs).
+
+Destructive ops (force-push, reset --hard, amend, history rewrites) still require a heads-up. Force-push to your own un-merged PR branch after a rebase is fine.
 
 ### Commit Messages
 Follow Conventional Commits: `<type>(<scope>): <subject>`

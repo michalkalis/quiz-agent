@@ -1,0 +1,31 @@
+{
+  "reviewed_by": "michal",
+  "reviewed_at": "2026-08-26",
+  "context": "Founder verdicts on the 12 new section-C candidates from the method-comparison artifact (Haiku 4.5 native vs Bedrock v1/v2 vs baseline), plus q37 re-opened and q45 reclassified. Extends the 2026-08-25 reference set for #166 fact-check eval. Arm→model: f-base + e-news-f = claude-fable-5, e-news-k = bedrock kimi-k2.5.",
+  "verdicts": {
+    "q68": {"arm": "f-base", "verdict": "error_confirmed", "note": "Hold to Wikipedia: 140-160 storm nights/yr, question's 260 is wrong. Haiku's verdict was not wrong per se — it chose the wrong source (NASA 297-300 over wiki). Reinforces source hierarchy: Wikipedia first."},
+    "q45": {"arm": "e-news-f", "verdict": "data_bug_not_fact_error", "note": "MCQ question — stored answer is the option letter 'c' without its text. Not a fact-verification failure; check the same answer-storage/join path for other MCQs."},
+    "q76": {"arm": "f-base", "verdict": "ok_false_flag", "note": "Question specifies the organism is under a forest, which excludes Posidonia seagrass. Haiku judged it wrongly; question and answer are correct."},
+    "q58": {"arm": "e-news-k", "verdict": "error_confirmed", "note": "Wikipedia itself says the 95th ceremony honours 2022 films but was held in 2023, and oscars.org states 2023. Question's '2022 Best Actor Oscar' is wrong — should be 2023."},
+    "q77": {"arm": "f-base", "verdict": "error_confirmed", "note": "Founder: 'ok' — agrees with the flag (asbestos-snow is an unsubstantiated legend; per unverifiable-premise rule the question goes out)."},
+    "q91": {"arm": "f-base", "verdict": "error_confirmed", "note": "Founder: this is less about verification method and more that Wikipedia should be preferred — wiki explicitly calls tomb-honey a myth."},
+    "q73": {"arm": "f-base", "verdict": "ambiguous_premise_confirmed", "note": "Founder: real watch-out — question ambiguity ('first live musical performance' vs 'first instruments in space') must be caught."},
+    "q70": {"arm": "e-news-k", "verdict": "drop_question", "note": "Founder: the whole question is weird — discard entirely, don't spend effort on it."},
+    "q02": {"arm": "f-base", "verdict": "ok_false_flag", "note": "Founder: no problem in question or premise; Bedrock v2 flag is incorrect, question fully valid."},
+    "q28": {"arm": "f-base", "verdict": "ok_false_flag", "note": "Founder sees no problem; Bedrock v2 sprite-direction nitpick rejected."},
+    "q07": {"arm": "e-news-f", "verdict": "not_judged", "note": "Founder can't judge the exclusivity claim. Separate signal: dislikes chart/record-count questions ('who won what how many times') — boring, penalize in generation/scoring."},
+    "q40": {"arm": "e-news-f", "verdict": "acceptable", "note": "Incomplete enumeration (Paul Simon missing) not ideal, but founder has no problem with it — keep."},
+    "q37": {"arm": "f-base", "verdict": "needs_rewording", "note": "Re-opened after 08-25 clearing: France also qualifies, so the question must be reworded so Kiribati is the ONLY true answer (e.g. 'main territory'). Answer itself stands."}
+  },
+  "eval_reference_impact": {
+    "add_to_error_reference": ["q58", "q68", "q70", "q77", "q91"],
+    "premise_ambiguity_reference": ["q73", "q37"],
+    "confirmed_false_flags": ["q02", "q28", "q76"],
+    "excluded": ["q07 (not judged)", "q45 (data bug)"]
+  },
+  "generation_model_breakdown": {
+    "e-news-k (kimi-k2.5, 10 published)": "6 confirmed-bad: q32, q48, q81, q89 (ref 08-25) + q58, q70 — 60% error rate",
+    "e-news-f (fable-5 news, 20 published)": "2 confirmed errors: q03, q63; plus q18 indeterminate, q45 data bug — ~10%",
+    "f-base (fable-5 direct, 70 published)": "4 hard errors: q95, q68, q77, q91; plus q73 ambiguity, q37 rewording — ~6% hard-error rate"
+  }
+}

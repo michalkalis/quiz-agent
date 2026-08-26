@@ -371,6 +371,17 @@ na stole (rozhodnutie po D21b): loss leader s Fable realtime (schválené
 08-21 ako štart) → časom lacnejší model (Kimi 7.20 použiteľný) alebo hybrid
 (lacný generátor + Fable výber/edit).
 
+## Founder verdikty na nové flagy (2026-08-26)
+
+Founder posúdil 12 kandidátov z porovnávacieho artefaktu + reklasifikoval q45
+a znovuotvoril q37. Plné verdikty: `docs/testing/runs/d21b-round-2026-08-18/`
+`factcheck_founder_verdicts_2026-08-26.json`. Súhrn: nové potvrdené chyby
+q58, q68, q70 (vyradiť), q77, q91; nejednoznačná premisa q73; q37 treba
+preformulovať (Kiribati má byť jediná pravdivá odpoveď); false flagy q02,
+q28, q76; q45 = data bug (MCQ odpoveď uložená ako písmeno „c"). Rozpad podľa
+gen modelu: **Kimi K2.5 (e-news-k) 6/10 otázok chybných (60 %)** vs. Fable 5
+news ~10 % a Fable 5 direct ~6 % tvrdých chýb.
+
 ## Kritérium hotovosti
 
 Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;

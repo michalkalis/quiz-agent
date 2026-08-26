@@ -77,5 +77,5 @@ public listing + IAP products + the API credentials to automate metadata going f
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #50 App Store Connect listing + ASC API setup — [plan](../issues/issue-50-app-store-connect-setup.md) (launch decisions #5/#7; **needs founder**: create app record + IAP + ASC API key on Apple acct, then agent wires fastlane + drafts SK/CZ/EN metadata — pack purchasing only; launch blocker) — **Founder decision 2026-06-09: not started, founder will do `[HUMAN]` steps**; exact step-by-step → `docs/artifacts/asc-setup-instructions-2026-06-09.html`. Agent unblocks once ASC API key lands in `.env`
+> - [ ] #50 App Store Connect listing + ASC API setup — [plan](../issues/issue-50-app-store-connect-setup.md) (launch decisions #5/#7; **needs founder**: create app record + IAP + ASC API key on Apple acct, then agent wires fastlane + drafts SK/CZ/EN metadata — pack purchasing only; launch blocker) — **Founder decision 2026-06-09: not started, founder will do `[HUMAN]` steps**; exact step-by-step → `docs/artifacts/asc-setup-instructions-2026-06-09.html`. Agent unblocks once ASC API key lands in `.env`
 

@@ -51,5 +51,5 @@ The two strings differ only by a trailing period, which is what the founder saw.
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #126 Slovak answers scored against English option text — [plan](../issues/issue-126-answer-trailing-punctuation-false-negative.md) — TF 2026-07-28, LIKELY. **Overturns the founder's punctuation theory** (every deterministic path already strips '.'): only the question sentence is translated, options + `correct_answer` stay English, so "Pravda"/"Nepravda" fail deterministically and open answers fall to a non-deterministic LLM judge — exactly the "sometimes correct" pattern. Founder call: translate options vs. back-translate the spoken answer.
+> - [ ] #126 Slovak answers scored against English option text — [plan](../issues/issue-126-answer-trailing-punctuation-false-negative.md) — TF 2026-07-28, LIKELY. **Overturns the founder's punctuation theory** (every deterministic path already strips '.'): only the question sentence is translated, options + `correct_answer` stay English, so "Pravda"/"Nepravda" fail deterministically and open answers fall to a non-deterministic LLM judge — exactly the "sometimes correct" pattern. Founder call: translate options vs. back-translate the spoken answer.
 

@@ -46,5 +46,5 @@ Constraints:
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #136 Audio session activates at app launch — Spotify pauses before any quiz — [plan](../issues/issue-136-audio-session-on-launch-pauses-music.md) — **fix SHIPPED 2026-08-04 (option B)**: eager launch call removed, Home arms a quiet mixable session, quiz session unchanged; full HangsTests 922/922. Remaining = `[HUMAN]` founder A2DP device check (fallback (A) if it still ducks) + re-run #124 device A/B after.
+> - [~] #136 Audio session activates at app launch — Spotify pauses before any quiz — [plan](../issues/issue-136-audio-session-on-launch-pauses-music.md) — **fix SHIPPED 2026-08-04 (option B)**: eager launch call removed, Home arms a quiet mixable session, quiz session unchanged; full HangsTests 922/922. Remaining = `[HUMAN]` founder A2DP device check (fallback (A) if it still ducks) + re-run #124 device A/B after.
 

@@ -72,5 +72,5 @@ Whichever is chosen, `MyPacksView` must stop being a read-only screen for failed
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #146 Paid pack order unrecoverable once Settings is dismissed — [plan](../issues/issue-146-pack-retry-credential-durability.md) — **agent-side DONE 2026-08-06 (Option B)**: iOS owns the order VM on `AppState` + My-packs retry action; backend `POST /v1/orders/{id}/retry` now also authorises on the owner's bearer JWT, so no StoreKit proof needs to survive a quiz start or relaunch. Backend DEPLOYED prod 2026-08-14; remaining = `[HUMAN]` one on-device retry after a real failure + screenshot verify
+> - [~] #146 Paid pack order unrecoverable once Settings is dismissed — [plan](../issues/issue-146-pack-retry-credential-durability.md) — **agent-side DONE 2026-08-06 (Option B)**: iOS owns the order VM on `AppState` + My-packs retry action; backend `POST /v1/orders/{id}/retry` now also authorises on the owner's bearer JWT, so no StoreKit proof needs to survive a quiz start or relaunch. Backend DEPLOYED prod 2026-08-14; remaining = `[HUMAN]` one on-device retry after a real failure + screenshot verify
 

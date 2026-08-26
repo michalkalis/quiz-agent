@@ -57,5 +57,5 @@ Two known triggers fire near cold launch and could be the racing pair: `HomeView
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #121 Voice-command HUD flickers on cold launch — [plan](../issues/issue-121-voice-hud-flicker-cold-launch.md) — TF 2026-07-28. Green "LISTENING FOR COMMANDS" bar shows → hides → shows within the first 5–10 s; hide→show half CONFIRMED against Sentry (exhausted cold-mic settle loop flips `commandAvailability`), the premature first beat is LIKELY a `startListening()` reentrancy race. Founder call: own issue or fold into #100 — iOS driving-loop robustness.
+> - [ ] #121 Voice-command HUD flickers on cold launch — [plan](../issues/issue-121-voice-hud-flicker-cold-launch.md) — TF 2026-07-28. Green "LISTENING FOR COMMANDS" bar shows → hides → shows within the first 5–10 s; hide→show half CONFIRMED against Sentry (exhausted cold-mic settle loop flips `commandAvailability`), the premature first beat is LIKELY a `startListening()` reentrancy race. Founder call: own issue or fold into #100 — iOS driving-loop robustness.
 

@@ -59,5 +59,5 @@ No screenshot. The report does not say whether the founder saw the system volume
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #124 App raises volume automatically on Home — [plan](../issues/issue-124-home-auto-volume-raise.md) — TF 2026-07-28, LIKELY not CONFIRMED. Two candidates both fire on Home with no user action: Voice-Processing I/O armed by the command listener (primary) vs. the volume **domain** flipping to the app on `setActive(true)` (secondary). Verifier refuted the "`.defaultToSpeaker` = louder" reading. Needs a device A/B; founder input: HUD jump vs. actually louder, and was Bluetooth connected.
+> - [ ] #124 App raises volume automatically on Home — [plan](../issues/issue-124-home-auto-volume-raise.md) — TF 2026-07-28, LIKELY not CONFIRMED. Two candidates both fire on Home with no user action: Voice-Processing I/O armed by the command listener (primary) vs. the volume **domain** flipping to the app on `setActive(true)` (secondary). Verifier refuted the "`.defaultToSpeaker` = louder" reading. Needs a device A/B; founder input: HUD jump vs. actually louder, and was Bluetooth connected.
 

@@ -85,5 +85,5 @@ The design session must answer:
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #122 Voice commands: no recognition feedback + Slovak wake word — [plan](../issues/issue-122-voice-command-feedback-and-lexicon.md) — **Track A (ambient glow, Variant C) IMPLEMENTED 2026-07-28**: `VoiceFeedbackPhase` + `AmbientGlowWash`/`GlowSweepLine` (reusable per rule V1), throttled no-match amber breath, CmdListenBar lit states + Slovak caption; 21 new tests + sim check green. Remaining: **Track B** — "štart" double-duties as quiz-start and recording-start; founder picks the replacement word ('spusti' / 'začni' / 'nahraj'), precision outranks recall per #120.
+> - [~] #122 Voice commands: no recognition feedback + Slovak wake word — [plan](../issues/issue-122-voice-command-feedback-and-lexicon.md) — **Track A (ambient glow, Variant C) IMPLEMENTED 2026-07-28**: `VoiceFeedbackPhase` + `AmbientGlowWash`/`GlowSweepLine` (reusable per rule V1), throttled no-match amber breath, CmdListenBar lit states + Slovak caption; 21 new tests + sim check green. Remaining: **Track B** — "štart" double-duties as quiz-start and recording-start; founder picks the replacement word ('spusti' / 'začni' / 'nahraj'), precision outranks recall per #120.
 

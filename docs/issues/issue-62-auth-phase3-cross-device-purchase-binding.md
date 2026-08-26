@@ -52,5 +52,5 @@ Phase 2 (#61) gives a recoverable Apple account. Phase 3 closes the loop on **fu
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #62 Auth Phase 3 — cross-device + full purchase binding — [plan](../issues/issue-62-auth-phase3-cross-device-purchase-binding.md) — StoreKit V2 receipt→`apple_sub` (model = quiz-pack-api JWS verifier, not reusable as-is), full reinstall/cross-device entitlement recovery, passkey decision gate (`ASAuthorizationAccountCreationProvider`, iOS 26). Depends #61 + #50; post-MVP.
+> - [ ] #62 Auth Phase 3 — cross-device + full purchase binding — [plan](../issues/issue-62-auth-phase3-cross-device-purchase-binding.md) — StoreKit V2 receipt→`apple_sub` (model = quiz-pack-api JWS verifier, not reusable as-is), full reinstall/cross-device entitlement recovery, passkey decision gate (`ASAuthorizationAccountCreationProvider`, iOS 26). Depends #61 + #50; post-MVP.
 

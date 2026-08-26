@@ -54,5 +54,5 @@ AI-navigable) gain phone visibility without leaving the file-based system.
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #71 Process: GitHub mirror refresh — **scope reduced 2026-07-06**: Ralph-restore struck (founder 2026-07-05: no autonomous loops); push audit resolved 2026-06-22; AI-news routine disabled 2026-06-25. Survives only: run `mirror-issues.sh` to refresh the stale GitHub Issues mirror — [plan](../issues/issue-71-restore-ralph-and-process-drift.md)
+> - [ ] #71 Process: GitHub mirror refresh — **scope reduced 2026-07-06**: Ralph-restore struck (founder 2026-07-05: no autonomous loops); push audit resolved 2026-06-22; AI-news routine disabled 2026-06-25. Survives only: run `mirror-issues.sh` to refresh the stale GitHub Issues mirror — [plan](../issues/issue-71-restore-ralph-and-process-drift.md)
 

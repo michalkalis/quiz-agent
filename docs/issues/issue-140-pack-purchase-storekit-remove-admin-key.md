@@ -50,7 +50,7 @@
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #140 Pack purchase on real StoreKit, retire user-facing admin key — [plan](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md) — agent side DONE 2026-08-04 (StoreKit purchase + JWS order path, entries ungated, admin door Debug-only); #138 flow redesign builds on it. Remaining = the two `[HUMAN]` items below.
+> - [~] #140 Pack purchase on real StoreKit, retire user-facing admin key — [plan](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md) — agent side DONE 2026-08-04 (StoreKit purchase + JWS order path, entries ungated, admin door Debug-only); #138 flow redesign builds on it. Remaining = the two `[HUMAN]` items below.
 
-- [ ] `[HUMAN]` #140 founder leg 1: **create the ASC consumable, Product ID exactly `pack_30`** + set the price (open decision — premium; suggested €9.99, COGS ≈ $4.23/pack) + SK/EN metadata. Exact numbered steps: [issue § Founder leg](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md). Prefer a branded product id instead? Say so BEFORE creating (2-line change).
+> - [ ] `[HUMAN]` #140 founder leg 1: **create the ASC consumable, Product ID exactly `pack_30`** + set the price (open decision — premium; suggested €9.99, COGS ≈ $4.23/pack) + SK/EN metadata. Exact numbered steps: [issue § Founder leg](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md). Prefer a branded product id instead? Say so BEFORE creating (2-line change).
 

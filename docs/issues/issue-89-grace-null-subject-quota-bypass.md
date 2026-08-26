@@ -52,5 +52,5 @@ Pick the option that matches how legacy clients actually behave (they send `user
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #89 Bug: grace null-subject quota bypass (MEDIUM) — [plan](../issues/issue-89-grace-null-subject-quota-bypass.md) — from 2026-07-07 auth review. No-bearer + no `user_id` while `LEGACY_USER_ID_GRACE=on` → session `user_id=None` → every `if … and session.user_id:` quota gate skipped → unlimited free questions. Fix = mint a server-side throwaway subject (counted) or reject; interim hardening until #65 flips grace off — **scheduled via #96 P6**
+> - [ ] #89 Bug: grace null-subject quota bypass (MEDIUM) — [plan](../issues/issue-89-grace-null-subject-quota-bypass.md) — from 2026-07-07 auth review. No-bearer + no `user_id` while `LEGACY_USER_ID_GRACE=on` → session `user_id=None` → every `if … and session.user_id:` quota gate skipped → unlimited free questions. Fix = mint a server-side throwaway subject (counted) or reject; interim hardening until #65 flips grace off — **scheduled via #96 P6**
 

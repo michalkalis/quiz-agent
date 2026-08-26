@@ -54,5 +54,5 @@ Verified on top of #104 (`f78a207`) — expected-fixed confirmed at the mechanis
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #106 Question TTS sometimes silent, first question worst (P1, car test 2026-07-16) — [plan](../issues/issue-106-first-question-tts-silent.md) — **verified fixed-by-#104 at mechanism level 2026-07-17** (no SCO in media mode, one stable SCO in call mode → the Q1 cold-negotiation race can't occur; stuck first play now fails loud via 5s stall timer). Remaining = **founder on-device leg**: several fresh quiz starts in the car, Q1 TTS audible every time
+> - [~] #106 Question TTS sometimes silent, first question worst (P1, car test 2026-07-16) — [plan](../issues/issue-106-first-question-tts-silent.md) — **verified fixed-by-#104 at mechanism level 2026-07-17** (no SCO in media mode, one stable SCO in call mode → the Q1 cold-negotiation race can't occur; stuck first play now fails loud via 5s stall timer). Remaining = **founder on-device leg**: several fresh quiz starts in the car, Q1 TTS audible every time
 

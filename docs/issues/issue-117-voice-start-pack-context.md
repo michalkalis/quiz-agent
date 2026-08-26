@@ -16,5 +16,5 @@ Saying "start" while looking at a delivered pack (OrderProgress with the "Start 
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #117 Voice "start" plays the visible delivered pack — [plan](../issues/issue-117-voice-start-pack-context.md) — filed 2026-07-20 from #111 residual R1 (founder-confirmed follow-up): saying "start" on a delivered pack screen starts a *generic* quiz, not that pack — voice-first gap in the #95 pack flow. **triaged, needs /prepare-issue**; coordinate with #113 — QuizViewModel decomposition (routeCommand moves there).
+> - [ ] #117 Voice "start" plays the visible delivered pack — [plan](../issues/issue-117-voice-start-pack-context.md) — filed 2026-07-20 from #111 residual R1 (founder-confirmed follow-up): saying "start" on a delivered pack screen starts a *generic* quiz, not that pack — voice-first gap in the #95 pack flow. **triaged, needs /prepare-issue**; coordinate with #113 — QuizViewModel decomposition (routeCommand moves there).
 

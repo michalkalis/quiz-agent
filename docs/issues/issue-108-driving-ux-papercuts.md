@@ -68,5 +68,5 @@ Both parts landed on `main`; touched suites green (45 tests/9 suites impl run + 
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [~] #108 Driving UX papercuts bundle (P2, car test 2026-07-16) — [plan](../issues/issue-108-driving-ux-papercuts.md) — **A + C agent-side DONE 2026-07-17/18** (A: re-record starts recording immediately + single-flight guard z oponentúry; C: `ScreenAwakeController`, obrazovka nezhasína počas hry ani na result screene; testy zelené). **B timer-in-button implemented 2026-07-18** (variant D — odpočet priamo v CTA tlačidle na confirm sheete aj oboch result obrazovkách; testy zelené). Remaining: founder on-device legs for A/B/C + `.pen` ⌘S save
+> - [~] #108 Driving UX papercuts bundle (P2, car test 2026-07-16) — [plan](../issues/issue-108-driving-ux-papercuts.md) — **A + C agent-side DONE 2026-07-17/18** (A: re-record starts recording immediately + single-flight guard z oponentúry; C: `ScreenAwakeController`, obrazovka nezhasína počas hry ani na result screene; testy zelené). **B timer-in-button implemented 2026-07-18** (variant D — odpočet priamo v CTA tlačidle na confirm sheete aj oboch result obrazovkách; testy zelené). Remaining: founder on-device legs for A/B/C + `.pen` ⌘S save
 

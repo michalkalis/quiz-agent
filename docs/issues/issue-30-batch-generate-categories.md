@@ -193,5 +193,5 @@ After each batch generation and approval cycle, query the local question store c
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #30 Grow `general` → ~500 approved (repurposed loop; the `[x]` #30 line above covers the original prod-sync scope) — [plan](../issues/issue-30-batch-generate-categories.md) — re-runnable task 30.G (+30.M migrate, 30.done, 30.docfix); `launch-issue30.sh`, `MAX_ITERS=6`/run on mba. **PARKED 2026-06-12 (founder): ALL question generation paused pending a proper review of the whole generation process (same concern as #42 Track F) — removed from overnight queue, do NOT run until the review unparks it**
+> - [ ] #30 Grow `general` → ~500 approved (repurposed loop; the `[x]` #30 line above covers the original prod-sync scope) — [plan](../issues/issue-30-batch-generate-categories.md) — re-runnable task 30.G (+30.M migrate, 30.done, 30.docfix); `launch-issue30.sh`, `MAX_ITERS=6`/run on mba. **PARKED 2026-06-12 (founder): ALL question generation paused pending a proper review of the whole generation process (same concern as #42 Track F) — removed from overnight queue, do NOT run until the review unparks it**
 

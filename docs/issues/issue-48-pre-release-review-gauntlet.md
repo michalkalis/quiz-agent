@@ -96,5 +96,5 @@ data-handling hygiene we have not formally audited.
 
 ## TODO detail (migrované z TODO.md 2026-08-26)
 
-- [ ] #48 Pre-release review gauntlet (App Store) — architecture → security → `/code-review ultra` — [plan](../issues/issue-48-pre-release-review-gauntlet.md) (gate before App Store submission; reviews are **interactive**, only the remediation phase is Ralph-able) — **Founder decision 2026-06-09: defer, not yet** — run later once MCQ + design blockers are closer to done
+> - [ ] #48 Pre-release review gauntlet (App Store) — architecture → security → `/code-review ultra` — [plan](../issues/issue-48-pre-release-review-gauntlet.md) (gate before App Store submission; reviews are **interactive**, only the remediation phase is Ralph-able) — **Founder decision 2026-06-09: defer, not yet** — run later once MCQ + design blockers are closer to done
 

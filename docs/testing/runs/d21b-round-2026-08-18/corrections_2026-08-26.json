@@ -1,0 +1,51 @@
+{
+  "created_at": "2026-08-26",
+  "based_on": "factcheck_founder_verdicts_2026-08-25.json + factcheck_founder_verdicts_2026-08-26.json",
+  "batch_id": "df12c686-a914-4715-a71b-6b94190a19bd",
+  "policy": "The blinded prod rating batch is left UNTOUCHED while svitlanka's rating pass (0/100) is pending — editing questions between raters would skew inter-rater comparison, and broken questions are themselves rating signal. Apply this file when (if ever) D21b questions are imported into the canonical corpus: skip `exclusions`, apply `fixes` by original_id.",
+  "exclusions": {
+    "q03": "temp id in mapping.json — error_confirmed (Last Christmas chart years)",
+    "q18": "indeterminate_drop_question (Wikipedia inconsistent)",
+    "q32": "error_confirmed (2025 vs 2026 release)",
+    "q48": "error_confirmed (Derringer played, did not produce)",
+    "q63": "error_confirmed ($2bn/20 days premise)",
+    "q70": "founder: weird question, drop entirely",
+    "q77": "error_confirmed (asbestos snow unsubstantiated legend)",
+    "q81": "error_confirmed",
+    "q89": "error_confirmed",
+    "q91": "error_confirmed (tomb honey is a myth per Wikipedia)",
+    "q95": "error_confirmed (bubble wrap engineers claim)"
+  },
+  "fixes": {
+    "q37": {
+      "original_id": "temp_da53cd00",
+      "field": "question",
+      "new_value": "Only one country on Earth has its main territory spread across all four hemispheres — northern, southern, eastern and western. Which Pacific island nation is it?",
+      "reason": "Founder 08-26: Kiribati must be the only true answer; 'main territory' excludes France's overseas territories."
+    },
+    "q58": {
+      "original_id": "temp_fae810d8",
+      "field": "question",
+      "new_value": "Which actor won the Best Actor Oscar in 2023 for 'The Whale' but also starred in the 1997 live-action comedy 'George of the Jungle' swinging on vines in a loincloth?",
+      "reason": "Founder 08-26: ceremony was held in 2023 (95th, honouring 2022 films); oscars.org states 2023."
+    },
+    "q68": {
+      "original_id": "temp_e72ec6a3",
+      "field": "question",
+      "new_value": "One place on Earth sees lightning storms on up to 160 nights every year — so reliably that sailors once used the flashes as a natural lighthouse. Over which large Venezuelan lake does this famous 'everlasting storm' rage?",
+      "reason": "Founder 08-26: hold to Wikipedia (140-160 nights/yr); the generated '260' is unsupported there."
+    },
+    "q73": {
+      "original_id": "temp_41de8c8b",
+      "field": "question",
+      "new_value": "In December 1965, two Gemini 6 astronauts smuggled a harmonica and sleigh bells aboard and played the first musical instruments in space. Which song did they perform?",
+      "reason": "Premise fix (optional): 'first live musical performance' is inaccurate (Popovich sang in space in 1962); Gemini 6's claim is first instruments played in space."
+    },
+    "q45": {
+      "original_id": "temp_9d5d118c",
+      "field": "correct_answer",
+      "new_value": "Ice Ice Baby",
+      "reason": "Data bug: LLM emitted option letter 'c'; eval script bypassed the GenerationStage normalizer. Root cause fixed 2026-08-26 by normalizing in AdvancedQuestionGenerator._finalize_questions."
+    }
+  }
+}

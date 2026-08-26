@@ -382,6 +382,14 @@ q28, q76; q45 = data bug (MCQ odpoveď uložená ako písmeno „c"). Rozpad pod
 gen modelu: **Kimi K2.5 (e-news-k) 6/10 otázok chybných (60 %)** vs. Fable 5
 news ~10 % a Fable 5 direct ~6 % tvrdých chýb.
 
+Follow-up 2026-08-26: opravné znenia (q37, q58, q68, q73) + vyradenia (11
+otázok) zapísané v `corrections_2026-08-26.json` v run adresári — blind dávka
+v prod rating DB sa NEmení, kým beží svitlankino hodnotenie; korekcie sa
+uplatnia pri prípadnom importe do korpusu. Root cause q45 (bare-letter MCQ
+odpoveď) opravený štrukturálne: normalizácia presunutá do
+`AdvancedQuestionGenerator._finalize_questions` (`app/generation/mcq_answer.py`),
+takže ju neobíde ani skript volajúci `_generate_batch` priamo.
+
 ## Kritérium hotovosti
 
 Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;

@@ -20,6 +20,7 @@ from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.classification import normalize_category, normalize_difficulty
+from app.generation.mcq_answer import resolve_mcq_answer
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -60,35 +61,6 @@ def _is_uuid(value: str) -> bool:
         return True
     except (ValueError, TypeError, AttributeError):
         return False
-
-
-def _resolve_mcq_answer(
-    possible_answers: dict | None, correct_answer: object
-) -> str | None:
-    """Full option text for a well-formed MCQ, else None (= drop).
-
-    Well-formed: ≥2 options, every option text non-blank, and
-    `correct_answer` resolves to an option — either as its key letter
-    ("c", the prompt contract) or as its full text. Pilot 2026-07-11
-    shipped bare-letter answers and blank-text options to founder review
-    across all three candidate models; storing the resolved text keeps
-    `correct_answer` self-contained for the TTS reveal, review renders
-    and the evaluator regardless of which form the model emitted.
-    """
-    if isinstance(correct_answer, list):
-        correct_answer = correct_answer[0] if correct_answer else None
-    if not possible_answers or len(possible_answers) < 2 or not correct_answer:
-        return None
-    if any(not str(v).strip() for v in possible_answers.values()):
-        return None
-    wanted = str(correct_answer).strip().lower()
-    for key, value in possible_answers.items():
-        if str(key).strip().lower() == wanted:
-            return str(value)
-    for value in possible_answers.values():
-        if str(value).strip().lower() == wanted:
-            return str(value)
-    return None
 
 
 def _violates_answer_brevity(answer: object) -> str | None:
@@ -435,7 +407,7 @@ class GenerationStage:
                 or q.type == "text_multichoice"
                 or q.possible_answers
             ):
-                resolved_answer = _resolve_mcq_answer(
+                resolved_answer = resolve_mcq_answer(
                     q.possible_answers, q.correct_answer
                 )
                 if resolved_answer is None:

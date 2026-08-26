@@ -135,7 +135,10 @@ async def test_generate_batch_passes_mcq_through_when_pattern_in_set() -> None:
     assert q.possible_answers is not None
     assert len(q.possible_answers) == 2
     assert q.possible_answers == {"a": "True", "b": "False"}
-    assert q.correct_answer == "a"
+    # D21b q45 (2026-08-26): the letter key the LLM emits must already be
+    # resolved to option text at the generator boundary — eval scripts call
+    # `_generate_batch` directly and never pass through GenerationStage.
+    assert q.correct_answer == "True"
     assert q.generation_metadata is not None
     assert q.generation_metadata.reasoning_pattern == "true_false"
 
@@ -599,7 +602,9 @@ async def test_mcq_sub_batch_uses_structured_output() -> None:
     # The whole point of 42.25 — every question is a real MCQ, not free text.
     assert all(q.type == "text_multichoice" for q in questions)
     assert all(q.possible_answers for q in questions)
-    assert questions[0].correct_answer == "b"
+    # D21b q45 (2026-08-26): letter key resolved to option text at the
+    # generator boundary, same as the free-text path.
+    assert questions[0].correct_answer == "False"
     # The pattern is lifted into typed provenance for downstream routing/analytics.
     assert questions[0].generation_metadata.reasoning_pattern == "true_false"
     # Gateway-safe binding: function_calling, not the json_schema default.

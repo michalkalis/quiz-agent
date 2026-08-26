@@ -21,6 +21,7 @@ import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder, STRUCTURED_MCQ_FORMAT_NOTE
+from .mcq_answer import resolve_mcq_answer
 from .pattern_routing import verification_mode
 from .examples import example_corpus_path
 from ..scoring.multi_model_scorer import resolve_correct_answer
@@ -1244,6 +1245,16 @@ class AdvancedQuestionGenerator:
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
+
+        # D21b q45 (2026-08-26): resolve letter-key MCQ answers to option text
+        # here, not only in GenerationStage — eval scripts call
+        # `_generate_batch` directly and skip the stage. Unresolvable MCQs
+        # are left as-is; the stage remains the drop/enforcement point.
+        for q in questions:
+            if q.possible_answers:
+                resolved = resolve_mcq_answer(q.possible_answers, q.correct_answer)
+                if resolved is not None:
+                    q.correct_answer = resolved
 
         # #161 (D13): strip model-fabricated citations BEFORE attribution, so
         # a cleared slot can be re-filled with a genuine fact match below.

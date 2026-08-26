@@ -134,13 +134,16 @@ NORMALIZE = _role("LLM_ROLE_NORMALIZE", "gemini-3.1-pro-preview")
 # VERIFY_MODEL env (feature_flags.verify_model) switches it back if
 # verification quality drops.
 VERIFY = "deepseek-v4-pro"
-# #166 increment 2 (founder decision 2026-08-24): web-grounded fact-check on
-# the direct Anthropic API with the native server-side web_search tool —
-# D21b measured 6/6 planted-error recall on this exact pattern (Sonnet + web)
-# vs 0/6 for the Tavily+arbiter verify it replaces. Sonnet-class is the
-# validated tier; frontier (Fable) is not needed here. Served only via
-# ``anthropic_client()`` (no gateway remap applies).
-FACTCHECK = _role("LLM_ROLE_FACTCHECK", "claude-sonnet-5")
+# #166 increment 2 (founder decision 2026-08-24): web-grounded fact-check
+# with a native server-side web-search tool — D21b measured 6/6 planted-error
+# recall on this pattern vs 0/6 for the Tavily+arbiter verify it replaced.
+# Provider research 2026-08-26 (founder-approved swap): gpt-5-mini + the
+# OpenAI Responses ``web_search`` tool beat the Sonnet 5 baseline on the
+# founder reference (7/7 recall @ ~4 ¢/q vs 5/7 @ ~18 ¢/q, 40q validation).
+# A ``claude*`` id routes FactVerifier back to the Anthropic path — rollback
+# is ``LLM_ROLE_FACTCHECK=claude-sonnet-5``. Both paths are direct-provider
+# carve-outs (no gateway serves either server-side search tool).
+FACTCHECK = _role("LLM_ROLE_FACTCHECK", "gpt-5-mini")
 SCORE_OPENAI = "gpt-5.6-sol"
 # Second judge family. Google, not Anthropic: generation now runs on a Claude
 # model, and an Anthropic judge scoring Anthropic output is the documented

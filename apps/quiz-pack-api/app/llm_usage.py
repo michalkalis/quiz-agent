@@ -96,6 +96,11 @@ _PRICE_TABLE_USD_PER_1M: dict[str, dict[str, float]] = {
     # $10/1k-searches fee is billed per request, not per token, and is not
     # counted here.
     "claude-sonnet-5": {"input": 3.00, "output": 15.00},
+    # #166 provider swap (2026-08-26) — FACTCHECK role on the direct OpenAI
+    # Responses API (list price, verified developers.openai.com/api/docs/
+    # pricing 2026-08-26). Token cost only: the web_search tool's $10/1k-calls
+    # fee is per call, not per token — FactVerifier adds it separately.
+    "gpt-5-mini": {"input": 0.25, "output": 2.00},
 }
 _PRICE_KEYS_BY_LENGTH_DESC = sorted(_PRICE_TABLE_USD_PER_1M, key=len, reverse=True)
 

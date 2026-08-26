@@ -420,6 +420,46 @@ _ANTHROPIC_MESSAGES_RESPONSE = {
     "content": [{"type": "text", "text": json.dumps(_FACTCHECK_PAYLOAD)}],
     "usage": {"input_tokens": 120, "output_tokens": 180},
 }
+# #166 provider swap (2026-08-26): the default FACTCHECK backend is the
+# OpenAI Responses API (gpt-5-mini + web_search), so the fact-check mock
+# lives on ``/v1/responses``; the Anthropic route above stays for the
+# claude rollback path.
+_OPENAI_RESPONSES_RESPONSE = {
+    "id": "resp_test_123",
+    "object": "response",
+    "created_at": 1756200000,
+    "model": "gpt-5-mini",
+    "status": "completed",
+    "parallel_tool_calls": True,
+    "tool_choice": "auto",
+    "tools": [],
+    "output": [
+        {
+            "id": "msg_test_123",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": json.dumps(_FACTCHECK_PAYLOAD),
+                    "annotations": [],
+                }
+            ],
+        }
+    ],
+    # Realistic web-grounded token volume (search results land in input
+    # tokens). Deliberately NOT tiny: gpt-5-mini is ~12× cheaper than the
+    # old Sonnet default, and e2e's cost guardrail asserts total_cost_cents
+    # > 0 — a 120-token mock would round the whole pack's cost to zero.
+    "usage": {
+        "input_tokens": 40_000,
+        "output_tokens": 4_000,
+        "total_tokens": 44_000,
+        "input_tokens_details": {"cached_tokens": 0},
+        "output_tokens_details": {"reasoning_tokens": 0},
+    },
+}
 
 
 def _scoring_openai_dispatch(request: httpx.Request) -> httpx.Response:
@@ -438,8 +478,10 @@ def _scoring_openai_dispatch(request: httpx.Request) -> httpx.Response:
 def register_verify_score_mocks(router: respx.MockRouter) -> None:
     """Register HTTP routes for the verification + scoring stages.
 
-    - Anthropic ``/v1/messages`` returns the canned "ok"/high fact-check
-      verdict, so ``FactVerifier`` (#166 increment 2) keeps every question.
+    - OpenAI ``/v1/responses`` returns the canned "ok"/high fact-check
+      verdict, so ``FactVerifier`` (#166, gpt-5-mini default since the
+      2026-08-26 provider swap) keeps every question; Anthropic
+      ``/v1/messages`` returns the same verdict for the claude rollback path.
     - OpenAI ``/v1/chat/completions`` returns the scoring payload for any
       model — sufficient for ``MultiModelScorer`` with only ``OPENAI_API_KEY``.
     - Tavily ``/search`` stays registered for sourcing-path callers composed
@@ -450,6 +492,9 @@ def register_verify_score_mocks(router: respx.MockRouter) -> None:
     )
     router.post("https://api.openai.com/v1/chat/completions").mock(
         side_effect=_scoring_openai_dispatch
+    )
+    router.post("https://api.openai.com/v1/responses").mock(
+        return_value=httpx.Response(200, json=_OPENAI_RESPONSES_RESPONSE)
     )
     router.post("https://api.anthropic.com/v1/messages").mock(
         return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
@@ -495,6 +540,9 @@ def register_e2e_mocks(router: respx.MockRouter) -> None:
     )
     router.post("https://api.openai.com/v1/chat/completions").mock(
         side_effect=_openai_e2e_dispatch
+    )
+    router.post("https://api.openai.com/v1/responses").mock(
+        return_value=httpx.Response(200, json=_OPENAI_RESPONSES_RESPONSE)
     )
     router.post("https://api.anthropic.com/v1/messages").mock(
         return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)
@@ -659,6 +707,9 @@ def register_e2e_mocks_full(router: respx.MockRouter) -> None:
     )
     router.post("https://api.openai.com/v1/chat/completions").mock(
         side_effect=_topup_friendly_openai_dispatch
+    )
+    router.post("https://api.openai.com/v1/responses").mock(
+        return_value=httpx.Response(200, json=_OPENAI_RESPONSES_RESPONSE)
     )
     router.post("https://api.anthropic.com/v1/messages").mock(
         return_value=httpx.Response(200, json=_ANTHROPIC_MESSAGES_RESPONSE)

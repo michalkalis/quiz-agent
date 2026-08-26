@@ -62,7 +62,9 @@ class _FakeAnthropic:
 
 
 def _verifier(responses: list[Any]) -> tuple[FactVerifier, _FakeAnthropic]:
-    verifier = FactVerifier()
+    # Explicit claude model: since the 2026-08-26 provider swap the default
+    # FACTCHECK backend is OpenAI — these tests pin the Anthropic path.
+    verifier = FactVerifier(model="claude-sonnet-5")
     client = _FakeAnthropic(responses)
     verifier._client = client  # type: ignore[assignment]
     return verifier, client
@@ -163,14 +165,20 @@ async def test_failures_hold_instead_of_dropping(responses) -> None:
 
 
 @pytest.mark.asyncio
-async def test_missing_api_key_holds_without_calling_api(monkeypatch) -> None:
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    verifier = FactVerifier()
+@pytest.mark.parametrize(
+    ("model", "key"),
+    [("claude-sonnet-5", "ANTHROPIC_API_KEY"), ("gpt-5-mini", "OPENAI_API_KEY")],
+)
+async def test_missing_api_key_holds_without_calling_api(
+    monkeypatch, model, key
+) -> None:
+    monkeypatch.delenv(key, raising=False)
+    verifier = FactVerifier(model=model)
 
     result = await verifier.verify("Q?", "A")
 
     assert result.held_for_review is True
-    assert "ANTHROPIC_API_KEY" in result.notes
+    assert key in result.notes
 
 
 # --- cost accounting -------------------------------------------------------
@@ -222,6 +230,147 @@ async def test_endless_pause_turn_holds() -> None:
     result = await verifier.verify("Q?", "A")
 
     assert result.held_for_review is True
+
+
+# --- OpenAI Responses path (#166 provider swap, 2026-08-26) ----------------
+#
+# The default FACTCHECK backend is now gpt-5-mini + the Responses web_search
+# tool (7/7 recall @ ~4 ¢/q on the founder reference vs 5/7 @ ~18 ¢/q for
+# Sonnet 5). Same numeric contract and the same fail-closed policy as the
+# Anthropic path; ``claude*`` ids keep routing to the Anthropic client
+# (rollback lever LLM_ROLE_FACTCHECK=claude-sonnet-5).
+
+
+def _openai_response(
+    text: Optional[str],
+    status: str = "completed",
+    n_searches: int = 0,
+    input_tokens: int = 100,
+    output_tokens: int = 50,
+) -> SimpleNamespace:
+    """Minimal OpenAI Responses double (output items + usage)."""
+    output: list[Any] = [
+        SimpleNamespace(type="web_search_call") for _ in range(n_searches)
+    ]
+    if text is not None:
+        output.append(
+            SimpleNamespace(
+                type="message",
+                content=[SimpleNamespace(type="output_text", text=text)],
+            )
+        )
+    return SimpleNamespace(
+        status=status,
+        output=output,
+        usage=SimpleNamespace(
+            input_tokens=input_tokens, output_tokens=output_tokens
+        ),
+    )
+
+
+class _FakeOpenAI:
+    """AsyncOpenAI double returning canned Responses in order."""
+
+    def __init__(self, responses: list[Any]) -> None:
+        self._responses = list(responses)
+        self.requests: list[dict[str, Any]] = []
+        self.responses = SimpleNamespace(create=self._create)
+
+    async def _create(self, **kwargs: Any) -> Any:
+        self.requests.append(kwargs)
+        item = self._responses.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def _openai_verifier(responses: list[Any]) -> tuple[FactVerifier, _FakeOpenAI]:
+    verifier = FactVerifier(model="gpt-5-mini")
+    client = _FakeOpenAI(responses)
+    verifier._client = client  # type: ignore[assignment]
+    return verifier, client
+
+
+@pytest.mark.asyncio
+async def test_openai_ok_verdict_keeps_and_sends_web_search_tool() -> None:
+    verifier, client = _openai_verifier(
+        [_openai_response("Checked.\n" + _verdict_json("ok"), n_searches=2)]
+    )
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.verdict == "ok"
+    assert result.confidence == pytest.approx(0.9)
+    assert result.held_for_review is False
+    request = client.requests[0]
+    assert request["tools"] == [{"type": "web_search"}]
+    assert "Q?" in request["input"]
+
+
+@pytest.mark.asyncio
+async def test_openai_problem_verdict_lands_below_the_gate() -> None:
+    verifier, _ = _openai_verifier(
+        [
+            _openai_response(
+                _verdict_json("fact_error", correct_answer="B", note="see url")
+            )
+        ]
+    )
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.verdict == "fact_error"
+    assert result.confidence == 0.0
+    assert result.alternative_answers == ["B"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "responses",
+    [
+        [TimeoutError("openai timed out")],
+        [_openai_response(_verdict_json("ok"), status="incomplete")],
+        [_openai_response(None)],
+        [_openai_response("no verdict json in this reply")],
+    ],
+    ids=["api_error", "truncated_incomplete", "empty_output", "prose_no_json"],
+)
+async def test_openai_failures_hold_instead_of_dropping(responses) -> None:
+    """Fail-closed parity with the Anthropic path — incl. a response
+    truncated at max_output_tokens (status != completed), which must never
+    be read as a verdict."""
+    verifier, _ = _openai_verifier(responses)
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.held_for_review is True
+    assert result.verdict == "unverified"
+
+
+@pytest.mark.asyncio
+async def test_openai_cost_covers_tokens_and_web_searches() -> None:
+    """gpt-5-mini list price $0.25/1M input; searches at $10/1k = 1¢ each."""
+    verifier, _ = _openai_verifier(
+        [
+            _openai_response(
+                _verdict_json("ok"),
+                n_searches=3,
+                input_tokens=1_000_000,
+                output_tokens=0,
+            )
+        ]
+    )
+
+    result = await verifier.verify("Q?", "A")
+
+    # 1M input tokens at $0.25/1M = 25¢, plus 3 searches at 1¢.
+    assert result.cost_cents == pytest.approx(28.0)
+
+
+def test_default_model_routes_to_openai_and_claude_routes_back() -> None:
+    """The role default is the OpenAI path; a claude id is the rollback."""
+    assert FactVerifier(model="gpt-5-mini")._is_anthropic() is False
+    assert FactVerifier(model="claude-sonnet-5")._is_anthropic() is True
 
 
 # --- _parse_verdict_json ---------------------------------------------------

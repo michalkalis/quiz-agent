@@ -1,13 +1,21 @@
-"""Web-grounded Claude fact-check (#166 increment 2, replaces Tavily+arbiter).
+"""Web-grounded LLM fact-check (#166 increment 2, replaces Tavily+arbiter).
 
 The previous verifier (Tavily snippet agreement + a DeepSeek evidence
 arbiter) was blind on fresh facts: D21b measured recall 0/6 on the planted
 2026-news errors, while the agentic Claude fact-check pattern (adversarial
 prompt + web search, ``docs/testing/runs/d21b-round-2026-08-18/
-factcheck_agent_2026-08-21.json``) caught 6/6. This module reimplements that
-validated pattern in-pipeline: one Claude call per question with the native
-server-side ``web_search`` tool, returning an editorial verdict
+factcheck_agent_2026-08-21.json``) caught 6/6. This module implements that
+validated pattern in-pipeline: one LLM call per question with the provider's
+native server-side web-search tool, returning an editorial verdict
 ``ok | fact_error | logic_flaw | stale``.
+
+Provider swap (#166 provider research, founder-approved 2026-08-26): the
+default backend is now OpenAI ``gpt-5-mini`` via the Responses API
+``web_search`` tool — on the founder reference set it caught 7/7 errors at
+~4 ¢/q vs 5/7 at ~18 ¢/q for the previous Sonnet 5 + Anthropic web_search
+path (40-question validation, ``scripts/openai_native_eval_166.py``). The
+Anthropic path is kept verbatim: any ``claude*`` model id routes to it, so
+``LLM_ROLE_FACTCHECK=claude-sonnet-5`` is the rollback lever.
 
 Drop policy (founder-approved 2026-08-24): ``fact_error``/``logic_flaw``/
 ``stale`` are dropped; ``ok`` is kept. Mapped onto the existing numeric
@@ -35,10 +43,17 @@ from quiz_shared.llm import factory as llm_factory
 # stage's 8, now sized for Anthropic rate limits rather than Tavily.
 MAX_CONCURRENT_VERIFICATIONS = int(os.getenv("VERIFIER_MAX_CONCURRENT", "8"))
 
-# Server-side web-search cap per question. The D21b agent rarely needed more
+# Server-side web-search cap per question (Anthropic path only — the OpenAI
+# Responses web_search tool exposes no per-request cap; measured usage on the
+# 40q validation averaged ~4 searches/q). The D21b agent rarely needed more
 # than a handful of searches per verdict; 5 bounds worst-case cost (~5¢/q at
 # $10 per 1k searches) without starving the adversarial pass.
 _MAX_WEB_SEARCHES = 5
+
+# Output budget for the OpenAI Responses path (reasoning + reply). 4096
+# matched the Anthropic path's max_tokens and was never hit across the 60
+# eval calls of the 2026-08-26 provider validation.
+_MAX_OUTPUT_TOKENS_OPENAI = 4096
 
 # pause_turn resumes: the server-side tool loop can pause a long turn; each
 # resume re-sends the paused assistant turn. Bounded so a wedged turn cannot
@@ -85,29 +100,107 @@ End your reply with ONLY a single JSON object on its own line:
 
 
 class FactVerifier:
-    """Fact-checks question-answer pairs with Claude + native web search.
+    """Fact-checks question-answer pairs with an LLM + native web search.
 
-    Contract #53: the Anthropic SDK client comes from
-    ``quiz_shared.llm.factory.anthropic_client()`` — never constructed here.
-    The OpenAI-compatible gateway path cannot serve Anthropic's server-side
-    web-search tool, so this role is a direct-provider carve-out analogous to
-    audio/image (``direct=True``).
+    Contract #53: SDK clients come from ``quiz_shared.llm.factory``
+    (``openai_client(direct=True)`` / ``anthropic_client()``) — never
+    constructed here. Neither provider's server-side web-search tool is
+    served by an OpenAI-compatible gateway, so this role is a
+    direct-provider carve-out analogous to audio/image (``direct=True``).
+
+    The model id picks the backend: ``claude*`` → Anthropic messages +
+    ``web_search_20260209``; anything else → OpenAI Responses +
+    ``web_search``.
     """
 
     def __init__(self, model: Optional[str] = None):
         self._model = model or llm_factory.FACTCHECK
         self._client = None
 
+    def _is_anthropic(self) -> bool:
+        return self._model.startswith("claude")
+
     def _available(self) -> bool:
         """Whether the fact-check backend is reachable.
 
         An injected client (tests) is always available; otherwise the
-        Anthropic key must be present. No key → every question is held →
-        withheld by the stage (fail-closed, never silently skipped).
+        active provider's key must be present. No key → every question is
+        held → withheld by the stage (fail-closed, never silently skipped).
         """
-        return self._client is not None or bool(os.getenv("ANTHROPIC_API_KEY"))
+        if self._client is not None:
+            return True
+        key = "ANTHROPIC_API_KEY" if self._is_anthropic() else "OPENAI_API_KEY"
+        return bool(os.getenv(key))
 
     async def _call(self, prompt: str) -> tuple[Optional[str], float]:
+        if self._is_anthropic():
+            return await self._call_anthropic(prompt)
+        return await self._call_openai(prompt)
+
+    async def _call_openai(self, prompt: str) -> tuple[Optional[str], float]:
+        """One Responses-API fact-check turn: ``(reply text, cost cents)``.
+
+        Mirrors ``_call_anthropic``'s failure contract: a ``None`` text is
+        "could not check" (API error after SDK retries, a non-completed
+        response — e.g. truncated at ``max_output_tokens`` — or an empty
+        reply), never a verdict. Cost = tokens at list price + $10/1k
+        web-search calls, billed even when the turn ultimately fails.
+        """
+        cost_cents = 0.0
+        try:
+            if self._client is None:
+                self._client = llm_factory.openai_client(
+                    async_=True,
+                    direct=True,
+                    timeout=llm_factory.GENERATION_TIMEOUT,
+                )
+
+            response = await self._client.responses.create(
+                model=self._model,
+                tools=[{"type": "web_search"}],
+                input=prompt,
+                max_output_tokens=_MAX_OUTPUT_TOKENS_OPENAI,
+            )
+            cost_cents = self._record_usage_openai(response)
+
+            if getattr(response, "status", None) != "completed":
+                return None, cost_cents
+            text = "".join(
+                getattr(content, "text", "")
+                for item in response.output
+                if getattr(item, "type", None) == "message"
+                for content in getattr(item, "content", [])
+            )
+            return text or None, cost_cents
+        except Exception:
+            return None, cost_cents
+
+    def _record_usage_openai(self, response) -> float:
+        """Report token usage (#153 recorder) and return the call's cost in
+        cents (tokens at list price + $10/1k web-search tool calls)."""
+        try:
+            from app import llm_usage
+
+            usage = response.usage
+            handler = llm_factory.get_usage_handler()
+            record = getattr(handler, "record_direct", None)
+            if record is not None:
+                record(self._model, usage.input_tokens, usage.output_tokens)
+            searches = sum(
+                1
+                for item in response.output
+                if getattr(item, "type", None) == "web_search_call"
+            )
+            return (
+                llm_usage.cost_cents_for(
+                    self._model, usage.input_tokens, usage.output_tokens
+                )
+                + searches * 1.0
+            )
+        except Exception:  # accounting must never fail a verification
+            return 0.0
+
+    async def _call_anthropic(self, prompt: str) -> tuple[Optional[str], float]:
         """One fact-check turn: ``(final reply text, cost in cents)``.
 
         A ``None`` text covers every way the backend goes silent — API errors
@@ -195,7 +288,8 @@ class FactVerifier:
     ) -> VerificationResult:
         """Fact-check one question-answer pair (see module docstring)."""
         if not self._available():
-            return self._held("ANTHROPIC_API_KEY not configured")
+            key = "ANTHROPIC_API_KEY" if self._is_anthropic() else "OPENAI_API_KEY"
+            return self._held(f"{key} not configured")
 
         prompt = _PROMPT_TEMPLATE.format(
             question=question, claimed_answer=claimed_answer, topic=topic or "n/a"

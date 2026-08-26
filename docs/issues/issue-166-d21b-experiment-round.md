@@ -70,8 +70,9 @@ founderov príklad (producenti ↔ ich umelci).
 - [x] Publish 2026-08-18: batch `df12c686-a914-4715-a71b-6b94190a19bd`, 100 q,
       rateri michal + svitlanka; mapping v run dir; checklist flagy overené
       v live HTML (4/4 prítomné)
-- [~] **[HUMAN] ratingy 2×100** — michal 100/100 hotové 2026-08-18/20
-      (0 checklist flagov); **svitlanka 0/100 — čaká sa**
+- [x] **[HUMAN] ratingy** — michal 100/100 hotové 2026-08-18/20
+      (0 checklist flagov); svitlanka hodnotiť NEBUDE (founder 2026-08-26,
+      položka zrušená — korelácia raterov sa pre D21b nepočíta)
 - [x] Replay 4 vrstiev (bez duelov) nad publikovanou 100 — 2026-08-21,
       `replay/replay_results.json` (pozor: run-dir `replay/` = dedup súbory,
       nie raw pooly; manifest musel dostať všetky 3 ramená). Env zrkadlil

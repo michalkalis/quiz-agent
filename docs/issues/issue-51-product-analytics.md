@@ -116,3 +116,8 @@ Map the PRD metrics to concrete events with properties:
 ## Súvisiace issues
 [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-57-loop-verification-backbone|#57 Autonomous loop hardening]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #51 Product analytics for PRD success metrics — [plan](../issues/issue-51-product-analytics.md) (launch decision #11; **Founder decision 2026-06-09: free tool — reuse Sentry** (already integrated, EU-aligned, no second SDK; Firebase fallback)) — **decomposed 2026-06-10 into 51.1–51.5**: 51.1 event taxonomy **✓ DONE 2026-06-11** (`docs/product/analytics-events.md`, 9 events, all PRD metrics traced) → **⏳ BLOCKED on founder gate 51.2 (~5-min skim of the taxonomy — the only thing holding 51.3/51.4)** → 51.3 backend + 51.4 iOS instrumentation → 51.5 e2e verify + Sentry dashboard. NB pre 51.3/51.4: file:line anchors in analytics-events.md are stale (June snapshot) — re-grep triggers fresh, don't trust the doc's line numbers
+

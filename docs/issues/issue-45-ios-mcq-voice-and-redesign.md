@@ -153,3 +153,8 @@ Human:        45.7-signoff · 45.11 (light/dark vs .pen) · 45.13 (snapshot re-r
 ## Súvisiace issues
 [[issue-22-chroma-client-split|#22 ChromaDBClient]] · [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-44-screenshot-verify-step|#44 Mandatory screenshot-verify step]] · [[issue-52-design-refresh-sweep|#52 iOS design-refresh sweep]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #45 iOS MCQ voice + design-port redesign — [plan](../issues/issue-45-ios-mcq-voice-and-redesign.md) (Ralph loop on mba completed 2026-06-07; 45.1–45.6 done) — **reclassified 2026-06-10** after confirming mba builds iOS on system Xcode 26.5 + iOS 26 SDK (license OK): 45.8/45.9/45.10/45.12 → `[ ]` agent (each + 1-min morning sign-off), queued in `overnight-queue.md`; genuine human tail = 45.7 (reveal-UX decision), 45.11 (light/dark vs `.pen`), 45.13 (snapshot re-record + judgment)
+

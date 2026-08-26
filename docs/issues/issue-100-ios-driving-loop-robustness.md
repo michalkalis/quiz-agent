@@ -37,3 +37,8 @@ One sweep, each item its own commit; findings 1–4 are the priority, 5 is clean
 ## 5. Out of scope
 
 Barge-in (dead feature — separate P2, see handoff), monetization (#101/#102), pack backend (#103), the open April timer bug beyond what findings 1–4 touch.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #100 iOS driving-loop robustness (MVP-review blockers) — **★ LAUNCH GATE** — [plan](../issues/issue-100-ios-driving-loop-robustness.md) — from the 2026-07-16 pre-MVP review (7 parallel reviewers + first-hand verify). 5 confirmed defects on the core voice loop, all iOS-only (ships to TestFlight independently): double-tap "Next" → blank question dead-end (`QuizViewModel.swift:1159` re-entrancy), streaming-path answer double-submit (`QuizViewModel+Recording.swift:465`), no mic recovery after a phone call (`AudioService.swift:433` `.ended` never reactivates), two-engine crash race (`SilenceDetectionService.swift:215`), banned `nonisolated(unsafe)` (`AudioService.swift:134`). Do FIRST.
+

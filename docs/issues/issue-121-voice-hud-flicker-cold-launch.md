@@ -54,3 +54,8 @@ Two known triggers fire near cold launch and could be the racing pair: `HomeView
 - Commit `c95b6885` (`fix(ios): voice-command status latched "Unavailable" after a cold-launch mic race`) — the prior fix for the same cold-mic settle failure; this issue is the flicker that fix converted a silent latch into.
 - [#119 — voice-command recognition quality](issue-119-voice-command-recognition-quality.md) and [#120 — transcriber abstraction + Slovak commands](issue-120-transcriber-abstraction-slovak-commands.md) — adjacent voice work, but recognition *accuracy* and engine choice are explicitly OUT of scope here.
 - Out of scope: retuning the settle-retry budget as a standalone change (it is a symptom knob), and any change to the Settings voice-status row's wording.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #121 Voice-command HUD flickers on cold launch — [plan](../issues/issue-121-voice-hud-flicker-cold-launch.md) — TF 2026-07-28. Green "LISTENING FOR COMMANDS" bar shows → hides → shows within the first 5–10 s; hide→show half CONFIRMED against Sentry (exhausted cold-mic settle loop flips `commandAvailability`), the premature first beat is LIKELY a `startListening()` reentrancy race. Founder call: own issue or fold into #100 — iOS driving-loop robustness.
+

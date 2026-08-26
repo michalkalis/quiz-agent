@@ -69,3 +69,8 @@ Whichever is chosen, `MyPacksView` must stop being a read-only screen for failed
 - [x] Retry credentials/state are cleared exactly when the order reaches a terminal delivered state (or refunded / retry budget exhausted) — asserted, so a stale proof cannot linger indefinitely. — `clearRetainedOrderCredentials()` on delivered / refunded / 422 `retryRefused`; `failed` deliberately keeps its id (the retry target). Four tests in `OrderPackViewModelTests`.
 - [x] The existing #138 guarantee still holds: no path produces a second paid create where a retry was intended. — `refunded` is now non-retryable precisely because a cleared order id would let "Try again" fall through to a paid create; asserted in `refundedOrderIsTerminalAndCleared`.
 - [ ] iOS suite green for the touched targets (80 tests / 11 suites green); UI change screenshot-verified per `docs/testing/screenshot-verify-procedure.md` — **open (non-gating founder leg)**.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #146 Paid pack order unrecoverable once Settings is dismissed — [plan](../issues/issue-146-pack-retry-credential-durability.md) — **agent-side DONE 2026-08-06 (Option B)**: iOS owns the order VM on `AppState` + My-packs retry action; backend `POST /v1/orders/{id}/retry` now also authorises on the owner's bearer JWT, so no StoreKit proof needs to survive a quiz start or relaunch. Backend DEPLOYED prod 2026-08-14; remaining = `[HUMAN]` one on-device retry after a real failure + screenshot verify
+

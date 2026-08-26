@@ -54,3 +54,8 @@ This is **not** [#107 — Slovak quiz serves untranslated English question](issu
 - [#63 — question-quality review](issue-63-question-quality-review.md) — owns the 2026-07-27 live run (164 `pending_review`, `category=general` rows, not yet imported); worth ruling in/out as the source.
 
 **Out of scope here:** translation quality/fluency in general, the #107 fallback path, the review/import gate for the 2026-07-27 batch, and any change to the freemium or pack-ordering flow.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #128 Idiom questions break in translation ("murder of crows" → "vražda") — [plan](../issues/issue-128-idiom-questions-break-in-translation.md) — TF 2026-07-28, CONFIRMED. **Repo-side fix landed 2026-07-28 (`d25c768e`):** language-portability HARD RULE in all 8 generation prompts + widened `language_dependent` docstring/field description + Sentry-flagged serving guard in `question_to_dict_translated` (observational, serves as before); tests 465 + 685 green. Corpus audit found the exact crow row (`kids_30_05`, shared kids corpus, mistagged `false`) + siblings (`kids_27_08` flamboyance, "saved by the bell"). **Open founder decisions:** ~~custom-pack filter bypass~~ (CLOSED 2026-07-30 via #134 — pack serving now filters `language_dependent` for non-EN sessions) · retro-screen/retire the corpus rows (needs prod query — did `kids_30_05` survive the archive-to-31?) · scorer dimension deferred to #99.
+

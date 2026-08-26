@@ -81,3 +81,8 @@ Gaps: no in-app screenshot renderer (Sentry's auto-attach is Sentry-only) · `Lo
 - #77 / #64 — single-audio-engine rule (why shared service instances are mandatory)
 - #51 — analytics-on-Sentry decision (the `feedback.received` notification rides the same rail)
 - #101 — staging env used for e2e before prod
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #109 In-app beta feedback — voice-dictated + screenshot + logs → own backend inbox — [plan](../issues/issue-109-beta-voice-feedback.md) — **agent-side DONE 2026-07-20 via workflow** (backend `e933c50`+`bc695d9` review-fixed · iOS typing sheet `d784445` · dictation + WAV tee `0c295fe`+`2197918` · verify `7af65d1`): backend 437 green, iOS 36 targeted green, **staging deployed + e2e smoke 201→admin GET OK** (migration 0007 applied). **PROD DEPLOYED 2026-07-20** (founder OK in-session; migration 0007 applied migrate-before-deploy via quiz-pack-db proxy, health 200, feedback route live) + **staging TF build triggered run 29747331119 SUCCESS**. Remaining: `.env` ADMIN_API_KEY nesedí so stagingom (2 konfliktné riadky — reconcile) · `[HUMAN]` on-device: shake → nadiktuj SK feedback → agent ho prečíta z inboxu (overí aj WAV + Sentry event + logy v release builde)
+

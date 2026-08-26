@@ -93,3 +93,8 @@ data-handling hygiene we have not formally audited.
 ## Súvisiace issues
 [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]] · [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-45-ios-mcq-voice-and-redesign|#45 iOS MCQ voice + design-port redesign]] · [[issue-46-answer-shape-and-logical-branch|#46 Canonical-answer enforcement + branch for open/logical questions]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #48 Pre-release review gauntlet (App Store) — architecture → security → `/code-review ultra` — [plan](../issues/issue-48-pre-release-review-gauntlet.md) (gate before App Store submission; reviews are **interactive**, only the remediation phase is Ralph-able) — **Founder decision 2026-06-09: defer, not yet** — run later once MCQ + design blockers are closer to done
+

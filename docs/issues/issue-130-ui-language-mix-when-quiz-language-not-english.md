@@ -57,3 +57,8 @@ Interface languages beyond English and Slovak. Any change to the quiz-language l
 
 - Existing Slovak localization work: #56 (String Catalog localization) — the app already has the machinery, just not the translations.
 - [`docs/issues/issue-128-idiom-questions-break-in-translation.md`](issue-128-idiom-questions-break-in-translation.md) — the content-side twin (questions that don't survive translation).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #130 UI stays English when the quiz language is Slovak — mixed-language app — [plan](../issues/issue-130-ui-language-mix-when-quiz-language-not-english.md) · [research](../research/research-130-ui-vs-content-language.md) — researched + **founder picked Option B on 2026-07-28**: two decoupled lists, many quiz-content languages vs. exactly two interface languages (English + Slovak). Implemented: string catalog re-synced (141 keys had never been extracted) and all 430 keys translated to Slovak with plural variations; `sk` declared as a supported localization so the iOS per-app language picker appears; Settings gained scope captions + a read-only App language row deep-linking to iOS; English leaks fixed (difficulty value, voice-command status, audio/speech/purchase/persistence error text). 787 unit tests green, verified in Slovak on the simulator. This also lands #56's deferred `56.6 [HUMAN]` catalog-populate + plural step. Remaining: **founder review of the Slovak wording**.
+

@@ -124,3 +124,8 @@ Implemented per fix direction 1+2 (visibility + 3rd attempt); deployed staging �
 - #100 — iOS driving-loop robustness (unrelated; confirmed not already fixing this)
 - #77 — Voice commands hands-free (unrelated voice-command vocabulary issue, different subsystem)
 - TODO "Founder-reported iOS bug batch (2026-07-11)" — prior fix batch; did not include this
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [~] #107 Slovak quiz serves an English question (P1, car test 2026-07-16, repeat report) — [plan](../issues/issue-107-slovak-english-question-leak.md) — **agent-side DONE 2026-07-17**: 3 translation attempts + fail-loud Sentry capture with calibration data (lengths/ratio/session); feedback path too; 416 backend tests green, review CLEAN; deployed staging+prod. **Founder step: backend has NO SENTRY_DSN in any Fly env** (discovered this run) — create Sentry project + set the secret (exact steps in the issue Acceptance) or paste the DSN to the agent
+

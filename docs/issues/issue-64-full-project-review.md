@@ -74,3 +74,8 @@ read — captured here so they don't propagate:
 - [ ] HTML report saved to `docs/artifacts/full-project-review-2026-06-21.html`
 - [ ] Spin-off issues #65–#71 created and listed in `docs/issues/INDEX.md`
 - [ ] Founder has triaged #65 (critical) and decided sequencing vs. the launch path
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #64 Full-project review — findings ledger — [plan](../issues/issue-64-full-project-review.md) · [report](../artifacts/full-project-review-2026-06-21.html) — **founder-requested 2026-06-21** complete review (iOS+backend code/arch/tech/services, UX/UI/product+competitive, security+cost, Claude Code opportunities, issues/TODO/GitHub process). 12-reviewer multi-agent workflow (`wf_d97f64e0-0ac`, 25 agents, 126 findings) + adversarial verify + **top-level first-hand spot-check of every load-bearing claim**. 2 critical / 25 high / 51 medium / 48 low. Scorecard low-points: content-pipeline / voice-audio / UX-product / competitive all 5/10; high-points iOS-arch + process 8/10. Spun off the actionable subset → #65–#71. **Verification corrected 2 stale reviewer claims**: MCQ structured-output (task 42.25) is ALREADY shipped (commit `7805002`, wired) — "implement it" refuted; `generate_pack.py` NoopQuestionStore citation stale (real dedup defect is elsewhere, → #70); `set_premium` is correctly admin-guarded. Cross-refs #56 (SK l10n is the 0-translations blocker) / #63 (un-park) / #42 / #60 / #48
+

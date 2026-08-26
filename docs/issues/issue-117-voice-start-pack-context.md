@@ -13,3 +13,8 @@ Saying "start" while looking at a delivered pack (OrderProgress with the "Start 
 - A "visible pack context" seam consumed by `routeCommand`'s `.start` when `quizState == .idle` — e.g. derived from the #111 `NavigationModel` route/`orderProgressPresented`, or a `lastDeliveredPackId` the OrderProgress/MyPacks screens set.
 - Distinguishable mock fixtures per packId so the RS can tell pack vs generic start — #111's `testRSPackNavStart` pass 2 cannot (`MockNetworkService` returns the same quiz fixture for any packId), which is exactly how the gap stayed invisible.
 - Coordinate with [#113 — QuizViewModel decomposition](issue-113-quizviewmodel-decomposition.md) (`routeCommand` moves there); cheap to fold in if #113 runs first.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+- [ ] #117 Voice "start" plays the visible delivered pack — [plan](../issues/issue-117-voice-start-pack-context.md) — filed 2026-07-20 from #111 residual R1 (founder-confirmed follow-up): saying "start" on a delivered pack screen starts a *generic* quiz, not that pack — voice-first gap in the #95 pack flow. **triaged, needs /prepare-issue**; coordinate with #113 — QuizViewModel decomposition (routeCommand moves there).
+

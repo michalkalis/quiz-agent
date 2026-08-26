@@ -7,7 +7,10 @@ dependencies = [
     "pydantic>=2.0.0",
     "sqlalchemy>=2.0.0",
     "python-dotenv>=1.0.0",
-    "openai>=1.0.0",
+    # <3: openai 3.x swaps httpx for httpx2, which respx can't intercept —
+    # quiz-pack-api HTTP-mock tests would hit the real API. Lift only after
+    # migrating the test mocks (and re-validating prod images) to 3.x.
+    "openai>=1.0.0,<3",
     # quiz_shared/llm/factory.py — explicit httpx.Timeout on openai_client();
     # already an openai transitive dep, declared directly now that we import
     # it (project_dockerfile_drift: don't rely on a transitive-only import).

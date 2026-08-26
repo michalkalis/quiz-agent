@@ -18,7 +18,6 @@ Usage (from apps/quiz-pack-api/):
 import argparse
 import asyncio
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -85,12 +84,11 @@ def _cost_cents(model: str, usage: dict, n_searches: int) -> float:
 
 
 async def cmd_run(model: str, set_size: int = 20) -> None:
-    import httpx
-
     from app.verification.fact_verifier import (
         _PROMPT_TEMPLATE,
         _parse_verdict_json,
     )
+    from quiz_shared.llm import factory as llm_factory
 
     subset = SUBSET if set_size == 20 else subset40()
     out_path = _out_path(model, set_size)
@@ -116,10 +114,12 @@ async def cmd_run(model: str, set_size: int = 20) -> None:
     ]
     print(f"openai native[{model}]: {len(questions)} to do ({len(done)} stored)")
 
-    headers = {"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"}
+    # direct=True: the Responses web_search tool is OpenAI-only, not on the
+    # OpenRouter gateway.
+    client = llm_factory.openai_client(async_=True, direct=True, timeout=300)
     sem = asyncio.Semaphore(CONCURRENCY)
 
-    async def one(client: httpx.AsyncClient, q: dict) -> None:
+    async def one(q: dict) -> None:
         async with sem:
             prompt = _PROMPT_TEMPLATE.format(
                 question=q["question"],
@@ -127,19 +127,13 @@ async def cmd_run(model: str, set_size: int = 20) -> None:
                 topic=q["topic"] or "n/a",
             )
             try:
-                resp = await client.post(
-                    "https://api.openai.com/v1/responses",
-                    headers=headers,
-                    json={
-                        "model": model,
-                        "tools": [{"type": "web_search"}],
-                        "input": prompt,
-                        "max_output_tokens": _MAX_OUTPUT_TOKENS,
-                    },
-                    timeout=300,
+                resp = await client.responses.create(
+                    model=model,
+                    tools=[{"type": "web_search"}],
+                    input=prompt,
+                    max_output_tokens=_MAX_OUTPUT_TOKENS,
                 )
-                resp.raise_for_status()
-                d = resp.json()
+                d = resp.model_dump()
             except Exception as e:
                 append_jsonl(
                     out_path, {"qid": q["qid"], "verdict": "unverified", "note": str(e)}
@@ -174,14 +168,13 @@ async def cmd_run(model: str, set_size: int = 20) -> None:
             )
             print(f"  {q['qid']} {data.get('verdict', 'unverified')} ({n_searches} searches)")
 
-    async with httpx.AsyncClient() as client:
-        await asyncio.gather(*(one(client, q) for q in questions))
+    await asyncio.gather(*(one(q) for q in questions))
     print(f"verdicts -> {out_path}")
 
 
-def cmd_recost(model: str) -> None:
+def cmd_recost(model: str, set_size: int = 20) -> None:
     """Rewrite llm_cost_cents from stored usage after a price correction."""
-    out_path = _out_path(model)
+    out_path = _out_path(model, set_size)
     records = [json.loads(line) for line in out_path.read_text().split("\n") if line]
     for r in records:
         if "usage" in r:
@@ -205,7 +198,7 @@ def main() -> None:
     if args.cmd == "run":
         asyncio.run(cmd_run(args.model, args.set))
     elif args.cmd == "recost":
-        cmd_recost(args.model)
+        cmd_recost(args.model, args.set)
     else:
         cmd_report([str(_out_path(args.model, args.set))])
 

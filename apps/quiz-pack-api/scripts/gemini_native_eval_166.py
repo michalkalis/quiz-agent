@@ -96,7 +96,10 @@ async def cmd_run(model: str) -> None:
         "https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent"
     )
-    params = {"key": os.environ["GOOGLE_API_KEY"]}
+    # Key travels as a header, never in the URL: httpx error messages embed
+    # the full request URL (query params included), and those strings get
+    # persisted verbatim into the committed JSONL below on any non-2xx.
+    headers = {"x-goog-api-key": os.environ["GOOGLE_API_KEY"]}
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def one(client: httpx.AsyncClient, q: dict) -> None:
@@ -109,7 +112,6 @@ async def cmd_run(model: str) -> None:
             try:
                 resp = await client.post(
                     url,
-                    params=params,
                     json={
                         "contents": [{"parts": [{"text": prompt}]}],
                         "tools": [{"google_search": {}}],
@@ -154,7 +156,7 @@ async def cmd_run(model: str) -> None:
                 f"({len(queries)} queries)"
             )
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers=headers) as client:
         await asyncio.gather(*(one(client, q) for q in questions))
     print(f"verdicts -> {out_path}")
 

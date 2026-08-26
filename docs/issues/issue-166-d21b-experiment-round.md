@@ -276,7 +276,42 @@ korpus-regrow).
          ~10 %. Odhad úspory 30–50 % tokenovej zložky, NEOVERENÉ (meranie
          ~50 ¢). Founder: nemerať teraz, len zapísať.
       3. Batch API (−50 %) potvrdené do budúcna — patrí do korpusového
-         kola (TODO riadok „Spoločný korpus").
+         kola (TODO riadok „Spoločný korpus"). **Korekcia 2026-08-26
+         (provider research):** Anthropic Batch web search podporuje
+         (−50 % len tokeny, search fee 1 ¢/hľadanie ostáva v plnej výške —
+         pri native checku je search fee dominantná zložka, takže reálna
+         úspora je malá); OpenAI Batch web_search NEPODPORUJE; Gemini Batch
+         nejasné (docs mlčia); Perplexity batch nemá.
+      4. **Provider research mimo Anthropic (founder ask 2026-08-26),
+         VALIDOVANÉ na 20q sade** (7 chýb + 13 kandidátov, produkčný
+         adversarial prompt, harnessy `scripts/openai_native_eval_166.py`
+         + `scripts/gemini_native_eval_166.py`, výsledky
+         `…/factcheck-eval-166/native_openai_*.jsonl` + `native_gemini_*`):
+         - **OpenAI gpt-5-mini + Responses web_search: recall 7/7,
+           5,0 ¢/q** (0,25/2 USD/M + $10/1k searches, Ø 4,15 searchov/q) —
+           prvá metóda vôbec s plným recallom, chytila aj q63 (tabuľkový
+           fakt) aj q95. Flagy mimo referencie: 7, z toho q77+q91 sú
+           founder-potvrdené chyby a q73 potvrdená ambiguita (verdikty
+           2026-08-26), q45 data bug, q37 needs-rewording → čisté FP len 2
+           (q28, q76).
+         - gpt-5.4-mini: 2/7 — nepoužiteľný (3× drahšie tokeny k tomu).
+         - **Gemini 3.5 Flash + Google Search grounding: recall 6/7,
+           ~1,9 ¢/q nominálne** (0,75/3,75 USD/M promo + $14/1k grounded
+           requestov; free tier 5 000 grounded req/mesiac → pri našom
+           objeme fakticky zadarmo). Minula len q63. Flagy mimo ref: 6,
+           čistý FP len q76. GOOGLE_API_KEY nový (AI Studio projekt
+           quiz-agent, prepay billing zapnutý founderom 2026-08-26);
+           grounding vyžaduje billing, free-tier kľúč má nulovú kvótu.
+         - gemini-3.7-flash: negroundoval (0 search queries na všetkých
+           20) → 4/7 len z pamäte za 0,23 ¢/q — ako grounded check
+           nevalidný.
+         - Perplexity Sonar (len cenový research, netestované): sonar
+           $1/$1 za M + $5–12/1k requestov podľa search_context_size →
+           odhad ~1–2 ¢/q; sonar-pro $3/$15 + $6–14/1k.
+         - Odporúčanie: gpt-5-mini je kvalitou aj cenou pred prod Sonnet 5
+           native (5/7 @ ~18 ¢); pred výmenou v pipeline validovať na
+           plnej 100q sade + founder approval (pravidlo model-swap len
+           s eval dátami + schválením).
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

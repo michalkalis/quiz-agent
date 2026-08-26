@@ -148,6 +148,49 @@ class ReviewStatusUpdateResponse(BaseModel):
     not_found_ids: List[str] = []
 
 
+#: Canonical interest-based category taxonomy (2026-08 revamp). The iOS picker
+#: (`Config.categoryOptions`) mirrors this list; pack questions keep free-form
+#: categories and are reached via pack selection, not this filter.
+CATEGORY_TAXONOMY = (
+    "science-nature",
+    "history",
+    "geography-world",
+    "movies-music",
+    "sports",
+    "food-everyday",
+)
+
+
+class CategoryAssignment(BaseModel):
+    """One question-id → category assignment."""
+
+    id: str
+    category: Literal[
+        "science-nature",
+        "history",
+        "geography-world",
+        "movies-music",
+        "sports",
+        "food-everyday",
+    ]
+
+
+class SetCategoryRequest(BaseModel):
+    """Request to re-categorize existing questions."""
+
+    assignments: List[CategoryAssignment] = Field(..., min_length=1)
+
+
+class SetCategoryResponse(BaseModel):
+    """Response from a category update."""
+
+    success: bool
+    updated_count: int
+    unchanged_count: int
+    not_found_count: int
+    not_found_ids: List[str] = []
+
+
 class QuestionStats(BaseModel):
     """Statistics about questions in database."""
 
@@ -343,6 +386,55 @@ async def set_review_status(
     )
 
     return ReviewStatusUpdateResponse(
+        success=True,
+        updated_count=updated,
+        unchanged_count=unchanged,
+        not_found_count=len(not_found_ids),
+        not_found_ids=not_found_ids,
+    )
+
+
+@router.post("/questions/set-category", response_model=SetCategoryResponse)
+@limiter.limit("5/minute")
+async def set_category(
+    request: Request,
+    payload: SetCategoryRequest,
+    store: QuestionStore = Depends(get_question_store),
+    _: str = Depends(verify_admin_key),
+):
+    """Re-categorize existing questions by ID (bulk, one category per question).
+
+    The category filter the app exposes must match what the corpus actually
+    holds, so corpus curation needs a way to move questions between taxonomy
+    categories without re-importing. Same get + upsert path as the
+    review-status endpoint: the stored embedding is reused, never recomputed.
+    """
+    updated = 0
+    unchanged = 0
+    not_found_ids: List[str] = []
+
+    for assignment in payload.assignments:
+        question = store.get(assignment.id)
+        if question is None:
+            not_found_ids.append(assignment.id)
+            continue
+        if question.category == assignment.category:
+            unchanged += 1
+            continue
+        question.category = assignment.category
+        if store.upsert(question):
+            updated += 1
+        else:
+            not_found_ids.append(assignment.id)
+
+    logger.info(
+        "Admin set-category: %d updated (%d unchanged, %d not found)",
+        updated,
+        unchanged,
+        len(not_found_ids),
+    )
+
+    return SetCategoryResponse(
         success=True,
         updated_count=updated,
         unchanged_count=unchanged,

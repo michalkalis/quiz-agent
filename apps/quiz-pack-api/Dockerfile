@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir \
     fastapi>=0.104.0 \
     uvicorn>=0.24.0 \
     langchain>=0.3.9 \
-    langchain-openai>=0.2.10 \
+    "langchain-openai>=0.2.10,<1.5" \
     langchain-aws>=0.2.27 \
     anthropic>=0.42.0 \
     tavily-python>=0.5.0 \

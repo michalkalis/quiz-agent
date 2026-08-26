@@ -104,6 +104,8 @@ langsmith_cache/
 chroma_data/
 **/chroma_data/
 apps/quiz-agent/data/
+# Two pilot-2026-07-11 ratings files are force-added (git add -f) despite this
+# ignore: scripts/backfill_ratings.py + its tests read them, so CI needs them.
 apps/quiz-pack-api/data/
 apps/question-generator/data/
 data/backups/

@@ -29,7 +29,7 @@ WORKDIR /build/app
 RUN pip install --no-cache-dir \
     fastapi>=0.104.0 \
     uvicorn>=0.24.0 \
-    openai>=1.0.0 \
+    "openai>=1.0.0,<3" \
     python-multipart>=0.0.6 \
     requests>=2.31.0 \
     rich>=13.0.0 \

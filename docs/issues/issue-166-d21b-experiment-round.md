@@ -310,8 +310,16 @@ korpus-regrow).
            odhad ~1–2 ¢/q; sonar-pro $3/$15 + $6–14/1k.
          - Odporúčanie: gpt-5-mini je kvalitou aj cenou pred prod Sonnet 5
            native (5/7 @ ~18 ¢); pred výmenou v pipeline validovať na
-           plnej 100q sade + founder approval (pravidlo model-swap len
+           väčšej sade + founder approval (pravidlo model-swap len
            s eval dátami + schválením).
+         - **Rozšírená validácia 40q (founder ask, 2026-08-26):** +20
+           čistých otázok (deterministický výber, `subset40()`), recall
+           stále **7/7**, na čistej dvadsiatke jediný flag q92 (Hatsune
+           Miku „no human performer" — hlas je samplovaný z reálnej
+           herečky; kandidát na founder verdikt, skôr nitpick). Priemer
+           **4,04 ¢/q** na n=40. Výsledky
+           `native_openai_gpt-5-mini_40.jsonl`. Ďalší krok = founder
+           rozhodnutie o implementácii OpenAI cesty vo FactVerifier.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).

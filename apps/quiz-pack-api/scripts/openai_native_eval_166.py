@@ -41,6 +41,19 @@ from factcheck_eval_166 import (  # noqa: E402
 )
 from haiku_native_eval_166 import SUBSET  # noqa: E402
 
+
+def subset40() -> list[str]:
+    """SUBSET (20 flagged/candidate qids) + 20 clean questions.
+
+    Founder ask 2026-08-26: validate gpt-5-mini on ~40 before any pipeline
+    swap — the extra 20 are clean ground to measure the false-alarm rate.
+    Deterministic spread: every 4th of the sorted remaining qids (q18, the
+    founder-excluded indeterminate one, is skipped).
+    """
+    all_qids = sorted(q["qid"] for q in load_questions())
+    remaining = [q for q in all_qids if q not in SUBSET and q != "q18"]
+    return list(SUBSET) + remaining[::4]
+
 # List prices USD/1M tokens (in, cached-in, out) + web search USD/1k calls.
 # Verified 2026-08-26 against developers.openai.com/api/docs/pricing: web
 # search (standard tool) is $10/1k calls and search-result content tokens are
@@ -56,8 +69,9 @@ CONCURRENCY = 4
 _MAX_OUTPUT_TOKENS = 4096
 
 
-def _out_path(model: str) -> Path:
-    return OUT_DIR / f"native_openai_{model.replace('.', '')}.jsonl"
+def _out_path(model: str, set_size: int = 20) -> Path:
+    suffix = "" if set_size == 20 else f"_{set_size}"
+    return OUT_DIR / f"native_openai_{model.replace('.', '')}{suffix}.jsonl"
 
 
 def _cost_cents(model: str, usage: dict, n_searches: int) -> float:
@@ -70,7 +84,7 @@ def _cost_cents(model: str, usage: dict, n_searches: int) -> float:
     return (tokens_usd + n_searches * _SEARCH_USD_PER_1K / 1000) * 100
 
 
-async def cmd_run(model: str) -> None:
+async def cmd_run(model: str, set_size: int = 20) -> None:
     import httpx
 
     from app.verification.fact_verifier import (
@@ -78,7 +92,14 @@ async def cmd_run(model: str) -> None:
         _parse_verdict_json,
     )
 
-    out_path = _out_path(model)
+    subset = SUBSET if set_size == 20 else subset40()
+    out_path = _out_path(model, set_size)
+    # Reuse stored 20-set verdicts (same model + prompt) so the 40-set run
+    # only pays for the extra clean questions.
+    base_path = _out_path(model)
+    if set_size != 20 and not out_path.exists() and base_path.exists():
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(base_path.read_text())
     # A held/unverified record (API error, truncation) is not "done" — drop
     # it so a rerun retries that question.
     if out_path.exists():
@@ -91,7 +112,7 @@ async def cmd_run(model: str) -> None:
 
     done = done_qids(out_path)
     questions = [
-        q for q in load_questions() if q["qid"] in SUBSET and q["qid"] not in done
+        q for q in load_questions() if q["qid"] in subset and q["qid"] not in done
     ]
     print(f"openai native[{model}]: {len(questions)} to do ({len(done)} stored)")
 
@@ -179,13 +200,14 @@ def main() -> None:
     for name in ("run", "recost", "report"):
         p = sub.add_parser(name)
         p.add_argument("--model", required=True, choices=sorted(_PRICES))
+        p.add_argument("--set", type=int, default=20, choices=(20, 40))
     args = ap.parse_args()
     if args.cmd == "run":
-        asyncio.run(cmd_run(args.model))
+        asyncio.run(cmd_run(args.model, args.set))
     elif args.cmd == "recost":
         cmd_recost(args.model)
     else:
-        cmd_report([str(_out_path(args.model))])
+        cmd_report([str(_out_path(args.model, args.set))])
 
 
 if __name__ == "__main__":

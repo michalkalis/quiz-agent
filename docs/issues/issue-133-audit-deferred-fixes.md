@@ -110,3 +110,8 @@ Suggested next step: one verification pass (same adversarial-verifier pattern) o
 **Deploys this run:** quiz-agent → **prod deployed + verified** (health 200, docs up; code-only, no migration; V8 strip + pgvector shim make any deploy order safe). quiz-agent **staging NOT deployed** — mba's fly keyring auth is gone and `.env` FLY_API_TOKEN is scoped to the prod app only (staging → unauthorized). Founder fix, either: (1) on mba run `flyctl auth login`, then `cd ~/code/quiz-agent && fly deploy -c apps/quiz-agent/fly.staging.toml`; or (2) mint a staging deploy token (`fly tokens create deploy -a quiz-agent-api-staging`) and add it to `.env` as a second var. quiz-pack-api → NOT deployed (gate above). No TestFlight build (per policy).
 
 **2026-07-31 addendum:** quiz-agent staging deployed from laptop (health 200) and a staging deploy token installed on mba `.env` as `FLY_API_TOKEN_STAGING` — the staging fly-auth blocker is gone. mba i133 worktree/branch cleaned up, mba on main.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] **[HUMAN] ASC refund notifications — posledný krok #133 gate 2 (refund pipeline je live od 2026-07-31).** Founder spustí Claude-app session so vstavaným prehliadačom (prompt dodaný v chate 2026-07-31; podstata: App Store Connect → Hangs → App Information → App Store Server Notifications → **Production aj Sandbox URL** = `https://quiz-pack-api.fly.dev/v1/appstore/notifications`, **Version 2**, Save + over uložené). Kým to nie je nastavené, Apple refundácie neprichádzajú a kredity sa pri refunde neodoberajú. Detail v [issue #133 CLOSE-OUT](../issues/issue-133-audit-deferred-fixes.md).
+

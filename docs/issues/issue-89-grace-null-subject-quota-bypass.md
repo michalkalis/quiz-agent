@@ -49,3 +49,8 @@ Pick the option that matches how legacy clients actually behave (they send `user
 - This closes fully when `LEGACY_USER_ID_GRACE=off` **and** `APP_ATTEST_REQUIRED=on` — confirm the flag state on the Fly deploy as part of #65. This issue hardens the interim.
 - Prod has no real users yet (founder only) so the live risk is currently theoretical, but it should not survive to the paid launch.
 - Cross-refs #65 (authenticate production endpoints / grace flip-off), #87 (monthly free quota), #60 (anonymous identity).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #89 Bug: grace null-subject quota bypass (MEDIUM) — [plan](../issues/issue-89-grace-null-subject-quota-bypass.md) — from 2026-07-07 auth review. No-bearer + no `user_id` while `LEGACY_USER_ID_GRACE=on` → session `user_id=None` → every `if … and session.user_id:` quota gate skipped → unlimited free questions. Fix = mint a server-side throwaway subject (counted) or reject; interim hardening until #65 flips grace off — **scheduled via #96 P6**
+

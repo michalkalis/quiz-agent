@@ -65,3 +65,8 @@ User-facing name becomes **Trubbo**. Everything else was judged 2026-07-07 again
 
 - ASC name uniqueness is the only availability check performed; trademark/domain clearance for "Trubbo" is a separate founder call (one-time, outside this issue).
 - Cross-refs: #50 (ASC listing — metadata drafts there should use Trubbo when it runs) · #56 (String Catalog — Session 1 touches 2 keys) · #86 (Pencil design sync).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #92 Rename app: Hangs → Trubbo — [plan](../issues/issue-92-rename-trubbo.md) — founder decision 2026-07-07. **Display/brand rename only; all identifiers stay** (bundle ID, schemes, Sentry `carquiz`, StoreKit — judged in plan, mirrors the CarQuiz→Hangs precedent). 3 Opus sessions: **S1 iOS in-app ✅ DONE 2026-07-07** (xcconfig + wordmark + onboarding strings/xcstrings; 12/12 targeted tests + 4/4 sim visual checks; sk-carry moot — sk lives on unmerged #56 branch, re-pair on merge) · **S2 `.pen` + living docs ✅ DONE 2026-07-13** (via #96 P4 — `.pen` `99ca8fb`, docs `a9ec437`) · **S3 TestFlight ship ✅ DONE 2026-07-13** (via #96 P7 — build uploaded as Trubbo; founder confirms name on device). `[HUMAN]`: ~~ASC name save~~ ✅ **saved (founder confirmed 2026-07-12 — availability gate CLEARED)** + `.pen` ⌘S after S2. **S2 → #96 P4 · S3 → #96 P7**
+

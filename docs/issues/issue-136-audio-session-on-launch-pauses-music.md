@@ -43,3 +43,8 @@ Constraints:
 - [x] Home command listening runs in the mixable configuration (unit test pins the category/options used on Home vs. in-quiz), OR the (A) fallback is recorded in this file with the spike evidence.
 - [x] Full targeted audio/voice suites green (full `HangsTests`: 922/922); note in #124 what changed. *(Note added to issue-124.)*
 - [ ] `[HUMAN]` Founder device check: cold-launch + sit on Home while Spotify plays over car/AirPods A2DP — music must keep playing, unducked. If it still audibly ducks/pauses, invoke the approved fallback (A): drop the quiet session too, Home voice commands sacrificed.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #136 Audio session activates at app launch — Spotify pauses before any quiz — [plan](../issues/issue-136-audio-session-on-launch-pauses-music.md) — **fix SHIPPED 2026-08-04 (option B)**: eager launch call removed, Home arms a quiet mixable session, quiz session unchanged; full HangsTests 922/922. Remaining = `[HUMAN]` founder A2DP device check (fallback (A) if it still ducks) + re-run #124 device A/B after.
+

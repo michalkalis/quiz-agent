@@ -51,3 +51,8 @@ Verified on top of #104 (`f78a207`) — expected-fixed confirmed at the mechanis
 - #104 — car audio session / Call Mode HFP flapping (CONFIRMED root mechanism this issue rides on; fix there, don't duplicate)
 - #100 — iOS driving-loop robustness (interruption/mic-recovery; different code path, doesn't touch this)
 - #59 — P0 voice-screen audio fixes (`4eb149d`, origin of the HFP-in-Media-Mode regression that #104 addresses)
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #106 Question TTS sometimes silent, first question worst (P1, car test 2026-07-16) — [plan](../issues/issue-106-first-question-tts-silent.md) — **verified fixed-by-#104 at mechanism level 2026-07-17** (no SCO in media mode, one stable SCO in call mode → the Q1 cold-negotiation race can't occur; stuck first play now fails loud via 5s stall timer). Remaining = **founder on-device leg**: several fresh quiz starts in the car, Q1 TTS audible every time
+

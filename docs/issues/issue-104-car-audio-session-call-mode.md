@@ -73,3 +73,8 @@ Root-cause fix landed on `main`; all sim-verifiable acceptance green (33 tests /
 - #82 — UX papercuts (item 1 re-exposed the Call Mode toggle)
 
 ~~Open product question~~ — **resolved 2026-07-17, see "Founder decision" above** (two modes + Settings mic picker).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #104 Car audio: Bluetooth "phone call" flapping + mic never captures (**P0**, founder car test 2026-07-16) — [plan](../issues/issue-104-car-audio-session-call-mode.md) — **agent-side DONE 2026-07-17** (media mode drops HFP → no call UI; call mode holds one stable session → no flapping; streaming start waits out transient 0 Hz route + teardown-race fixed; observer-duplication latent bug fixed; picker copy + tests; 33 targeted tests green, review CLEAN). Remaining = **founder on-device car legs** (see issue Acceptance [HUMAN])
+

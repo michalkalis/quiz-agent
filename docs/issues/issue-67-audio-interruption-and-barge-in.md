@@ -52,3 +52,8 @@ infrastructure** with a TODO so it isn't mistaken for working. Recommend decidin
 - [ ] Either `setTTSPlaybackActive(true)` is wired before TTS **or** the barge-in infrastructure is explicitly removed with a documented TODO
 - [ ] Existing RS regression scenarios pass
 - [ ] `[HUMAN]` real-device confirm: phone-call interruption mid-question recovers cleanly (AirPods)
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #67 Bug: audio interruption + barge-in — **Part A ✓ shipped via #77 task 77.2 (`ce349bd`, 2026-07-03); Part B barge-in deferred post-MVP (founder 2026-07-05). Remaining: `[HUMAN]` on-device phone-call-interruption recovery check** — [plan](../issues/issue-67-audio-interruption-and-barge-in.md) — Was: **HIGH (verified).** Part A: phone-call interruption during streaming STT calls batch `stopRecording()` (guards on nil `audioRecorder`) → `AVAudioEngine` keeps running, VM stranded; `stopStreamingRecording()` never called from `handleInterruption`. Part B: barge-in structurally dead — `setTTSPlaybackActive(true)` never called in prod (needs session-design decision)
+

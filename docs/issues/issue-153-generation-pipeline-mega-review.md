@@ -102,3 +102,8 @@ Durable state after every step (`docs/testing/runs/153-*/` + this file's checkli
 - [ ] Sittings 2–3 rated
 - [ ] Analysis + recommendations delivered
 - [ ] Founder decisions recorded; prod changes gated on them
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] **#153 Generation pipeline mega review** — [plan](../issues/issue-153-generation-pipeline-mega-review.md) — Phase A kolo 1 OHODNOTENÉ 2026-08-07 (priemer 4.6; v5-free vyhral 6.3 vs old 4.1 / craft 3.3; analýza v `docs/testing/runs/153-phase-a/README.md`); founder call: in-phase iterácia → opravy sourcingu + grounding zavedené (topic-fair budgety, žiadny General balast, drop nepodložených otázok, ≥2-token atribúcia), prompty v6 free+guarded (winnable answer + zákaz priehľadných porovnaní), rating page `--dedupe-by-fact`; kolo 2 sa generuje (`docs/testing/runs/153-phase-a-r2/`) → founder ohodnotí → lock → Phase B
+

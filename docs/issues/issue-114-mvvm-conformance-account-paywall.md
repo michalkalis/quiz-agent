@@ -170,3 +170,8 @@ Adjacent (same rule, small): `MyPacksView.swift:14` calls PackOrderService direc
 | 6 · Split             | ✅ done | multi-session: 2 build (account T1–T3 · paywall+rest T4–T6) + review gate (T7); `issue-114-execution-prompts.md` written |
 
 **Last updated:** 2026-07-20 · **Prep complete** (all six phases ✅). · **Gate attempts:** P3 0/3 (passed) · P5 2/3 (passed cycle 2)
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #114 MVVM conformance — AccountViewModel + PaywallViewModel + DI seams + auth→Sentry (iOS arch-review Top 10 items 4/8/10) — [plan](../issues/issue-114-mvvm-conformance-account-paywall.md) · [sessions](../issues/issue-114-execution-prompts.md) — **prep complete 2026-07-20** via /prepare-issue on branch `arch-review-ios` (P5 impl-plan dual gate cycle 2: ready-check READY · design-soundness SOUND 0.85; P3 plan gate READY · SOUND 0.83); 7 atomic tasks → 2 build sessions (account T1–T3 · paywall+rest T4–T6) + a mandatory maker≠checker review gate (T7). Behavior-preserving refactor (fail-loud SIWA parity + #102 `.activating` semantics preserved). **class-b-adjacent (SIWA + purchase orchestration) → ready-for-human**; founder may flip to ready-for-agent with the T7 adversarial leg (per the #93 subscription-IAP precedent).
+

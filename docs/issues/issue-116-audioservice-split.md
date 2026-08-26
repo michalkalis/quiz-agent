@@ -128,3 +128,8 @@ Single construction site `Utilities/AppState.swift:65` (`AudioService()`); every
 | 6 · Split             | ✅ done | 3-session execution-prompts file (T1–T2 / T3–T4 / T5–T6); ready-for-agent, start-gated on #104 |
 
 **Last updated:** 2026-07-20 (Phase 6 split — **prep complete**) · **Next:** — (ready-for-agent; do not start until #104 founder on-device legs pass) · **Gate attempts:** P3 1/3 (PASSED) · P5 2/3 (PASSED cycle 2)
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #116 Split AudioService into 5 focused audio units (iOS arch-review Top 10 item 7) — [plan](../issues/issue-116-audioservice-split.md) · [sessions](../issues/issue-116-execution-prompts.md) — **prep complete 2026-07-20** via /prepare-issue on branch `arch-review-ios` (both dual gates green: plan READY·SOUND 0.88, impl READY·SOUND 0.87 cycle 2); pure internal, call-site-neutral decomposition of the 1,246-line `AudioService.swift` behind the unchanged protocol; 6 atomic tasks (locked order, one unit per commit), class a, ready-for-agent, **split into 3 sequential sessions** (T1–T2 / T3–T4 / T5–T6). **START GATED on #104 — car audio founder on-device car legs** (decision 6); final [HUMAN] on-device interruption+streaming leg (Acceptance 7)
+

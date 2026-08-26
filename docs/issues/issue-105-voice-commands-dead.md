@@ -55,3 +55,8 @@ Implemented per fix direction; targeted suites green (26 tests / 3 suites final 
 - #100 — iOS driving-loop robustness (command-path double-submit + engine-start race; does NOT fix this, unshipped in build 22)
 - #104 — audio-session / shared-AVAudioEngine cluster (H3 lives there; do not duplicate)
 - TODO "Founder-reported iOS bug batch (2026-07-11)" — prior en-US SpeechAnalyzer asset-install fix
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #105 Voice commands dead everywhere + question-screen hints "repeat"→"start" (**P0**, car test 2026-07-16) — [plan](../issues/issue-105-voice-commands-dead.md) — **agent-side DONE 2026-07-17**: Sentry refuted the assets hypothesis (ready in all 3 car-test sessions); speech authorization now requested at launch (was never requested anywhere), denied → fail-loud in Settings row + Sentry; two console-only failure branches instrumented; hint fixed to "start"/"skip"; review caught a Swift 6 launch-crash blocker (TCC callback isolation) → fixed. Remaining = **founder on-device leg**: grant the new permission dialog, test commands in quiet + car
+

@@ -81,3 +81,8 @@ Size **M**. New code is markdown skill prompts + (optionally) one Workflow scrip
 ## Cross-refs
 
 #57 (loop-verification backbone — `/ready-check`, DoR C1–C7) · #71 (Ralph restore) · research `docs/research/issue-prep-pipeline-research-2026-06-27.md`.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #75 Automated issue-prep orchestrator (research→plan→review→split) — [plan](../issues/issue-75-prep-orchestrator.md) · [research](../research/issue-prep-pipeline-research-2026-06-27.md) — **founder-requested 2026-06-27**: one trigger on a prompt or existing issue runs the full 6-phase prep chain as fresh-subagent phases with a live `## Prep progress` block; **cadence = stop only when a gate repeatedly fails or a product question surfaces** (founder choice). Reuses `/deep-research` + `/ready-check` + DoR C1–C7; new pieces = `/split-issue` (Phase 0), the orchestrator, and a **design-soundness critic** (substance gate that hunts for flaws + checks prior-art/forward-compat, distinct from ready-check's form gate). All phases on **Opus 4.8**; research must cite external best-practices + prior-art (founder notes 2026-06-27). Unattended night "prep-Ralph" deferred (D7). **2026-06-28:** research on disk + build-vs-adopt (Spec Kit) recorded; **all skills authored** — **75.1 `/split-issue`** (dry-run-verified on #66) + **75.7 `/design-soundness`** + **75.2 `/prepare-issue` orchestrator** (`.claude/skills/prepare-issue/SKILL.md`; folds in 75.3 phase-wiring / 75.4 all-Opus / 75.5 class-b/c-guard — a single-prompt skill isn't separable into those modules). **Only 75.6 left = the end-to-end dry-run** (first live exercise of `/design-soundness` + the splitter's large-issue path, both still unproven). See `docs/handoffs/handoff-2026-06-28-2010.md`.
+

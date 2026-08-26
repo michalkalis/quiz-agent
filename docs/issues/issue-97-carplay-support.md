@@ -108,3 +108,8 @@ Plain refactors, valuable regardless of CarPlay, shipped behind the existing tes
 - Competitive white space: `docs/research/competitive-analysis-voice-driving-trivia-2026-06-27.md`
 - Voice stack: #77 — voice commands · #45 — iOS MCQ voice + redesign
 - MVP stability constraint: #96 — iOS MVP completion
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #97 CarPlay support (hands-free quiz on the car head unit) — **HIGH priority (founder, 2026-07-15)** — [plan](../issues/issue-97-carplay-support.md) · [research](../research/carplay-support-research-2026-07-16.md) — **PLANNED 2026-07-16** (16-agent workflow: recon + 3 web lanes + 9 adversarial verifications + design-soundness critique; top-level spot-check of the load-bearing claim first-hand). Path: **Voice-Based Conversational entitlement** (`carplay-voice-based-conversation`, iOS 26.4 Feb 2026; ChatGPT shipped under it Mar 2026) — pitch as hands-free voice companion, never "trivia game" (games are excluded from CarPlay platform-wide; rejection risk HIGH, fallback = today's zero-entitlement audio passthrough). **Post-MVP isolation locked:** compile-flag `CARPLAY` + dedicated build config/scheme + config-scoped Info.plist scene manifest + entitlement withheld from Hangs-Prod/match profile + repeatable Release-Prod isolation guard (re-verified each phase) — mainline TestFlight mechanically untouched until Phase 6. Phases 0–6; Phase 1 `[HUMAN]` (founder files entitlement request, agent drafts justification first — starts immediately, nothing blocks on Apple); other `[HUMAN]` gates: 5.2 real-car mic/echo validation, 6.1 match profile regen, 6.3 App Review timing.
+

@@ -56,3 +56,8 @@ No screenshot. The report does not say whether the founder saw the system volume
 - [#116 — split AudioService into focused audio units](issue-116-audioservice-split.md) — the natural landing spot for any session-lifecycle refactor this motivates; gated on #104 car legs.
 - [#119 — voice-command recognition quality](issue-119-voice-command-recognition-quality.md) and [#120 — transcriber abstraction + Slovak commands](issue-120-transcriber-abstraction-slovak-commands.md) — own the listener engine lifecycle this touches; neither mentions volume.
 - [#105 — voice commands dead](issue-105-voice-commands-dead.md) — source of the cold-launch 0 Hz settle loop referenced above.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #124 App raises volume automatically on Home — [plan](../issues/issue-124-home-auto-volume-raise.md) — TF 2026-07-28, LIKELY not CONFIRMED. Two candidates both fire on Home with no user action: Voice-Processing I/O armed by the command listener (primary) vs. the volume **domain** flipping to the app on `setActive(true)` (secondary). Verifier refuted the "`.defaultToSpeaker` = louder" reading. Needs a device A/B; founder input: HUD jump vs. actually louder, and was Bluetooth connected.
+

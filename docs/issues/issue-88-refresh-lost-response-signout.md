@@ -47,3 +47,8 @@ Bound the grace so it can't be abused: only the single most-recent used token qu
 
 - Do not weaken the theft defence to fix this — the fix must keep revoking on genuine reuse. RFC 9700 explicitly permits a short reuse-grace for exactly this lost-response case.
 - Cross-refs #61 (Sign in with Apple), #62 (cross-device binding — same refresh surface).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #88 Bug: lost refresh response → silent sign-out (HIGH) — [plan](../issues/issue-88-refresh-lost-response-signout.md) — from 2026-07-07 auth review. Dropped `/auth/refresh` response mid-rotation → backend revokes the whole token family on the honest client's retry → SIWA user dropped to anon (cellular blip while driving = the trigger). Fix = backend immediate-successor reuse-grace (RFC 9700): replay of the just-used token whose successor is still unused → re-issue that successor, don't revoke; keep revoking on older-token/used-successor replay — **scheduled via #96 P6**
+

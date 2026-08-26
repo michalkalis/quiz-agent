@@ -190,3 +190,8 @@ After each batch generation and approval cycle, query the local question store c
 ## Súvisiace issues
 [[issue-27-pending-store-question-pipeline|#27 PendingStore]] · [[issue-28-ios-category-picker-expansion|#28 iOS category picker]] · [[issue-29-backfill-existing-questions|#29 Backfill `source_url` / `source_excerpt` on existing questions]] · [[issue-42-question-quality-and-mcq|#42 Question quality sweep + multichoice activation]] · [[issue-62-auth-phase3-cross-device-purchase-binding|#62 Auth Phase 3]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #30 Grow `general` → ~500 approved (repurposed loop; the `[x]` #30 line above covers the original prod-sync scope) — [plan](../issues/issue-30-batch-generate-categories.md) — re-runnable task 30.G (+30.M migrate, 30.done, 30.docfix); `launch-issue30.sh`, `MAX_ITERS=6`/run on mba. **PARKED 2026-06-12 (founder): ALL question generation paused pending a proper review of the whole generation process (same concern as #42 Track F) — removed from overnight queue, do NOT run until the review unparks it**
+

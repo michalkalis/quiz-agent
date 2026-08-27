@@ -23,6 +23,12 @@ CATEGORIES: tuple[str, ...] = (
     "disney",
     "football",
     "sports-mix",
+    # #167 (D7): entertainment had its own generation prompt since #76 but no
+    # taxonomy id, so every entertainment question was normalized to "general"
+    # and became unreachable through the player's category filter. Both iOS
+    # mirrors (Config.categoryOptions, QuizSettings.categoryOptions) change with
+    # it. No `_CATEGORY_ALIASES` entry — the id is the word itself.
+    "entertainment",
 )
 
 DIFFICULTIES: tuple[str, ...] = ("easy", "medium", "hard")

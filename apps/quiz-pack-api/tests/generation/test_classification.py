@@ -67,11 +67,22 @@ def test_junk_category_falls_back_to_general() -> None:
 
 def test_explicit_order_category_always_wins() -> None:
     # Themed/custom-pack orders: the customer named the category, even
-    # off-taxonomy ("entertainment" has its own prompt but no filter id).
-    assert normalize_category("general", order_category="entertainment") == (
-        "entertainment"
-    )
+    # off-taxonomy (e.g. a one-off "cycling" pack, played by pack_id).
+    assert normalize_category("general", order_category="cycling") == "cycling"
     assert normalize_category("adults", order_category="Kids") == "kids"
+
+
+def test_entertainment_is_a_first_class_taxonomy_id() -> None:
+    """#167 (D7): entertainment has had its own generation prompt since #76 but
+    was NOT in `CATEGORIES` — so a model-classified entertainment question fell
+    through the unknown branch to "general" and became invisible to the player's
+    entertainment filter, the one place those questions are meant to surface.
+
+    Asserted on the no-order-category path on purpose: with an explicit order
+    category the value passes through regardless (the test above), so only this
+    call can distinguish "in the taxonomy" from "the customer named it".
+    """
+    assert normalize_category("entertainment") == "entertainment"
 
 
 # --- prompt builder: per-question instructions ------------------------------

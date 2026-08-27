@@ -266,7 +266,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 ## Status
 
 - ✅ Split done 2026-08-26 (this doc). Decisions Founder 1-5 + D1-D10 locked; class `a` confirmed (no migration, no schema, prod flags untouched).
-- ⬜ Session A — backend seams + prompt + taxonomy (167.1-167.4)
+- ✅ Session A — backend seams + prompt + taxonomy (167.1-167.4) · delivered 2026-08-27
 - ⬜ Session B — `source_facts.py` (167.5)
 - ⬜ Session C — `filter_postcutoff.py` (167.6-167.7)
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
@@ -275,6 +275,15 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
 > When a session lands, add a short **"Session X delivered — exact symbols for Y"** note here (issue-61 convention) so the next session does not have to re-read the diff. Session B owes E the exact `source_facts.py` CLI signature; Session C owes E the exact output filenames and `reason` vocabulary.
+
+### Session A delivered — exact symbols
+
+- **Mode resolution** is `app/orchestrator/pack_generator.py::_resolve_direct_generation(generation_mode: str | None) -> bool` — module-level, called from `PackGenerator.run` when building `OrderContext.direct_generation`. `"direct"` → True, `"grounded"` → False, anything else (incl. `None`) → `feature_flags.direct_generation_default()`.
+- **CLI:** `--grounded` sits in an unnamed `parser.add_mutually_exclusive_group()` alongside `--direct` in `scripts/generate_pack.py::_parse_args`. Both flags together → argparse exit 2. `_build_order` sets `generation_mode="direct" if args.direct else ("grounded" if args.grounded else None)`.
+- ⚠️ **Carried cost for anyone touching `_build_order`:** `scripts/validate_generation.py::_order_namespace` hand-builds that namespace and now also passes `grounded=False`. A new `_build_order` attribute must be added there too (its regression test `test_order_namespace_satisfies_build_order` catches it, but only in a full run).
+- **Prompt:** `_CATEGORY_PROMPT_FILES["entertainment"] == "question_generation_entertainment_v2.md"` (`app/generation/advanced_generator.py`). The dispatched `prompt_version` string is unchanged: `"v3_fact_first_entertainment"`. v1 stays on disk; rollback is that one dict value.
+- **Taxonomy:** `"entertainment"` appended last in `CATEGORIES` (`app/generation/classification.py`), no `_CATEGORY_ALIASES` entry. This closes the gap Session D flagged — `normalize_category("entertainment")` no longer collapses to `"general"`.
+- **Owed to Session E:** `--grounded` is now honoured end-to-end, so 167.10's command works as written. Nothing in this session changed sourcing config or any prod flag default.
 
 ### Session D delivered — exact symbols
 

@@ -30,7 +30,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.generation.advanced_generator import AdvancedQuestionGenerator
+from app.generation.advanced_generator import (
+    _CATEGORY_PROMPT_FILES,
+    AdvancedQuestionGenerator,
+)
 from app.generation.prompt_builder import PromptBuilder
 
 
@@ -55,6 +58,29 @@ def test_entertainment_prompt_registered_at_construction() -> None:
     )
     assert "entertainment" in gen.category_prompt_builders
     assert isinstance(gen.category_prompt_builders["entertainment"], PromptBuilder)
+
+
+def test_entertainment_dispatch_points_at_v2_template() -> None:
+    """#167 (D3): entertainment orders must render through the **v2** template.
+
+    The registry entry is the entire promotion — and the entire rollback (put v1
+    back on this one line). Registration alone (the test above) cannot tell v1
+    from v2, so without this assert the promotion could silently revert during a
+    merge and the only symptom would be differently-toned questions in the
+    corpus. v1 stays on disk on purpose; the assert on the *loaded builder's*
+    path, not just the dict, is what proves the file that actually loaded is v2.
+    """
+    assert (
+        _CATEGORY_PROMPT_FILES["entertainment"]
+        == "question_generation_entertainment_v2.md"
+    )
+    gen = AdvancedQuestionGenerator(
+        generation_model="gpt-4o",
+        critique_model="gpt-4o-mini",
+        prompt_version="v3_fact_first",
+    )
+    builder = gen.category_prompt_builders["entertainment"]
+    assert builder.template_path.endswith("question_generation_entertainment_v2.md")
 
 
 # A fact whose `text` carries a distinctive token, so asserting it lands in the

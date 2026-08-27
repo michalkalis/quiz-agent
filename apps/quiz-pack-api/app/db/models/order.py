@@ -44,9 +44,13 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     theme: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(16), nullable=False)
-    # #157 (D4): server-side direct-generation switch. NULL = grounded.
-    # Set only by internal paths (CLI, experiments) — never from customer
-    # input; the old in-prompt marker is ignored by PackGenerator.
+    # #157 (D4): server-side generation-mode switch. Set only by internal
+    # paths (CLI, experiments) — never from customer input; the old in-prompt
+    # marker is ignored by PackGenerator.
+    # #167 (D2): both values are authoritative — "direct" skips sourcing,
+    # "grounded" forces it. NULL (the app/API path) inherits the global
+    # DIRECT_GENERATION default, which has been ON since #166 — so NULL is no
+    # longer a synonym for grounded.
     generation_mode: Mapped[Optional[str]] = mapped_column(
         String(16), nullable=True
     )

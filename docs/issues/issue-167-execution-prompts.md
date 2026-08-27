@@ -267,10 +267,10 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 
 - ✅ Split done 2026-08-26 (this doc). Decisions Founder 1-5 + D1-D10 locked; class `a` confirmed (no migration, no schema, prod flags untouched).
 - ✅ Session A — backend seams + prompt + taxonomy (167.1-167.4) · delivered 2026-08-27
-- ⬜ Session B — `source_facts.py` (167.5)
+- ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
-- ⬜ Session E — pilot runbook Segment 1 (167.9-167.12) · blocked on A+B+C
+- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing) — see the note below.** Nothing was generated, nothing was published, nothing was spent.
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
@@ -285,6 +285,22 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - **Taxonomy:** `"entertainment"` appended last in `CATEGORIES` (`app/generation/classification.py`), no `_CATEGORY_ALIASES` entry. This closes the gap Session D flagged — `normalize_category("entertainment")` no longer collapses to `"general"`.
 - **Owed to Session E:** `--grounded` is now honoured end-to-end, so 167.10's command works as written. Nothing in this session changed sourcing config or any prod flag default.
 
+### Session B delivered — exact `source_facts.py` CLI signature
+
+`apps/quiz-pack-api/scripts/source_facts.py`. Both flags are **required**; there are no others (no `--per-topic`, no `--count`, no news switch).
+
+```
+uv run --no-sync python scripts/source_facts.py \
+    --topics "music producers and their artists,2026 album releases,2026 awards and nominations (Oscars, Grammys),new 2026 films and series,2026 tours and festivals,2026 streaming hits" \
+    --out facts_167.json
+```
+
+- `--topics` — ONE comma-separated string (same shape as `generate_pack.py --topics`); split on `,` + strip, empty entries dropped. ⚠️ Founder topic 3 contains a comma (`2026 awards and nominations (Oscars, Grammys)`) → passing the locked list verbatim yields **7** topics, not 6, and the `Grammys)` fragment sources nothing. Session E must either drop the parenthetical or split the list itself.
+- `--out` — path to the fact file; parent dirs are created. Written shape is exactly `{"topics": [...], "facts": [...]}` (`Fact.to_dict()` entries), i.e. what `generate_pack.py --facts-file` reads. Written **before** the thin-yield gate, so a failed run still leaves the file for inspection.
+- Exit codes: **0** = ≥ 40 facts; **1** = thin yield (or an empty topic list). On a thin yield stdout carries `THIN YIELD: <n> facts < 40 required — per-topic tally:`, one `  <count>  <topic>` line per topic ascending, then `weakest topics (< <share> facts each): …`.
+- Sourcing config (D4, asserted by tests): `FactSourcer(enable_opentdb=False)` — Wikipedia **ON**, `ENABLE_NEWS_SOURCING` never set or read. Per-topic request budget is `8 × len(topics)` (`PER_TOPIC_BUDGET`); the gate constant is `MIN_FACTS = 40`.
+- Needs `TAVILY_API_KEY` in the environment (web-search source raises `ValueError` without it). The repo-root `.env` is **not** visible from a git worktree.
+
 ### Session D delivered — exact symbols
 
 - **Category id `"entertainment"`** is now in **both** iOS mirrors, appended last in each so the order stays parallel: `Config.categoryOptions` (`apps/ios-app/Hangs/Hangs/Utilities/Config.swift`) and `QuizSettings.categoryOptions` (`apps/ios-app/Hangs/Hangs/Models/QuizSettings.swift`). `HomeView.swift:342` renders the picker straight off `Config.categoryOptions` — no UI change was needed.
@@ -292,6 +308,32 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ⚠️ **Correction to the recon snapshot / the Session D prompt:** the catalog path from `apps/ios-app/` is `Hangs/Hangs/Localizable.xcstrings`, **not** `Hangs/Localizable.xcstrings` — the prompt's `xcstringstool sync` and `jq` commands silently no-op (`warning: Skipping sync … could not be read`) on the wrong path. Also `xcstringstool sync` **requires `--stringsdata`**, which only a build produces; the working invocation is a `xcodebuild build` first, then `xcstringstool sync <abs path to .xcstrings> --stringsdata <DerivedData>/Build/Intermediates.noindex/Hangs.build/Debug-Local-iphonesimulator/Hangs.build/Objects-normal/arm64/*.stringsdata --skip-marking-strings-stale`. Sessions touching strings should use that form.
 - **Parity test:** `HangsTests/HomeCategoryMultiSelectTests.swift` → `"the two category mirrors must not drift"`, asserting `QuizSettings.categoryOptions == Config.categoryOptions.map { $0.id }`. Full `HangsTests`: 1014 tests / 183 suites green on iOS 26.5 (iPhone 17 Pro).
 - **Still owed by Session A** for this to be end-to-end: `"entertainment"` in the backend `CATEGORIES` (`app/generation/classification.py`) — until then `normalize_category("entertainment")` collapses to `"general"`.
+
+### Session E attempted 2026-08-27 — BLOCKED at 167.9, two independent provider failures
+
+**Terminal state: no generation run, no publish, no corpus write, no spend.** The preflight passed and the pilot stopped at the first paid step, so the Fable 5 generation budget was never touched.
+
+**Preflight (all green):**
+
+- `TAVILY_API_KEY` (41 chars) and `QUIZ_PACK_ADMIN_API_KEY` (64 chars) both resolve; `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `OPENROUTER_API_KEY` present, `LLM_GATEWAY` unset (direct).
+- `scripts/source_facts.py` and `scripts/filter_postcutoff.py` present on `main`; `generate_pack.py --help` lists `--direct | --grounded` as a mutually-exclusive pair.
+- `quiz_shared.llm.factory.GEN == "claude-fable-5"` — D10's canonical model, confirmed rather than assumed.
+
+**Blocker 1 — Tavily pay-as-you-go limit exhausted (account level, not fixable by an agent).**
+Every one of the 12 web-search queries returned `This request exceeds the pay-as-you-go limit. You can increase your limit on the Tavily dashboard.` Confirmed independently with a single raw `POST https://api.tavily.com/search` → **HTTP 433** with the same body, so this is an account/billing wall, not a query, key, or topic problem. A second sourcing round was deliberately **not** run: the D4 remedy ("exactly one retry with narrower phrasings of the weakest topics") is written for a *thin yield*, and here every topic returned 0 for one shared account-level reason, so a retry would issue ~48 more 433s and learn nothing the raw probe did not already establish. Consistent with `project_166_bedrock_verifier_failed_2026_08_25` ("Tavily limit vyčerpaný").
+
+**Blocker 2 — `WikipediaSource` silently yields 0 facts (latent, wider than #167).**
+D4 deliberately keeps the Wikipedia leg ON, so it should have partially covered for Tavily. It returned 0 facts for *every* topic tried, including trivially-covered ones (`Taylor Swift`, `2026 in film`, `68th Annual Grammy Awards`). Root cause: Wikimedia now rejects `api.php` requests with no `User-Agent` — raw probe returns **403 "Please set a user-agent and respect our robot policy … phabricator.wikimedia.org/T400119"**. `wikipedia_source.py::_search_topic_facts` swallows the failure in its `try/except` and returns `[]`, so the degradation is invisible in logs. Filed under `## Follow-ups` in the parent issue. **This one is agent-fixable** and worth doing regardless of #167 — it affects every grounded run.
+
+**Result of the one command that ran:** `facts_167.json` written with `0` facts across the 6 topics, exit 1, thin-yield tally listing all six topics at 0. The file was not committed (a 0-fact artifact fails A11 and would mislead a resumed session).
+
+**Mechanical deviation from the locked topic string (carry forward):** founder topic 3 is `2026 awards and nominations (Oscars, Grammys)`; `--topics` splits on `,`, so the verbatim string yields **7** topics with a dead `Grammys)` fragment (Session B flagged this). It was passed as `2026 awards and nominations (Oscars and Grammys)` — comma → `and`, semantically identical, and the tally confirms exactly **6** topics. Any resumed Session E must keep this substitution.
+
+**To unblock, in order:**
+
+1. **Founder action** — raise the Tavily pay-as-you-go limit on the Tavily dashboard (or confirm a different sourcing provider, which reopens D5 and is a product/architecture call, not an agent substitution).
+2. ~~**Agent action (independent, do first)** — fix the `WikipediaSource` User-Agent 403~~ — **DONE 2026-08-27**: the module now sends `User-Agent: QuizAgentBot/1.0 (…)` on every Wikimedia call and logs a warning on non-200 instead of returning `[]` silently. Real call for `Taylor Swift` yields 5 facts, so the D4 Wikipedia leg contributes again.
+3. Re-run Session E from 167.9 unchanged. Nothing in A/B/C/D needs redoing.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

@@ -91,14 +91,13 @@ async def _run(args: argparse.Namespace) -> int:
 def _print_thin_yield(tally: dict[str, int], total: int, topic_count: int) -> None:
     """Name the topics that starved, so the retry can rephrase exactly those."""
     share = math.ceil(MIN_FACTS / topic_count)
+    ascending = sorted(tally.items(), key=lambda kv: (kv[1], kv[0]))
     print(f"THIN YIELD: {total} facts < {MIN_FACTS} required — per-topic tally:")
-    for topic, count in sorted(tally.items(), key=lambda kv: (kv[1], kv[0])):
+    for topic, count in ascending:
         print(f"  {count:4d}  {topic}")
     # A total below MIN_FACTS guarantees at least one topic under its share,
     # so this list is never empty when the gate fires.
-    weak = [
-        t for t, c in sorted(tally.items(), key=lambda kv: (kv[1], kv[0])) if c < share
-    ]
+    weak = [t for t, c in ascending if c < share]
     print(f"weakest topics (< {share} facts each): {', '.join(weak)}")
 
 

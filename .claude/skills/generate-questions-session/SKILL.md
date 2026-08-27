@@ -7,11 +7,11 @@ argument-hint: "[count] [--category science-nature|history|geography-world|movie
 
 # Generate Questions — Session Mode (subscription tokens)
 
-Temporary alternative to `/generate-questions`. The prod pipeline (`generate_pack.py` → paid APIs) stays untouched and remains the default; this skill mirrors its **current** shape (#166 D21b: direct generation, no sourcing, judge gate OFF) but runs every LLM step inside Claude Code subagents, so the cost lands on the Claude subscription instead of API keys. Delete this skill when the experiment ends.
+Temporary alternative to `/generate-questions`. The prod pipeline (`generate_pack.py` → paid APIs) stays untouched and remains the default; this skill mirrors its **current** shape (per #166 — fact-check provider swap, round D21b: direct generation, no sourcing, judge gate OFF) but runs every LLM step inside Claude Code subagents, so the cost lands on the Claude subscription instead of API keys. Delete this skill when the experiment ends.
 
 **Parity contract (do not drift):**
 - Direct generation on a frontier Claude model (prod default is Fable 5 + `direct_v1` prompt) — no sourcing step, no judge panel.
-- Fact-check is web-grounded (prod swapped to web-search fact-check in #166); ambiguous or unverifiable → question is dropped, never imported.
+- Fact-check is web-grounded (prod swapped to web-search fact-check in #166 — fact-check provider swap); ambiguous or unverifiable → question is dropped, never imported.
 - Deterministic guards run the **actual prod code** (`app/scoring/craft_guards.py`, `compute_distractor_quality`) via `run_guards.py` in this skill dir — free, no LLM.
 - Import uses the unchanged `scripts/import_questions_json.py`, always `--review-status pending_review`. (Embeddings during import are a cents-level OpenAI call — the only non-subscription cost.)
 
@@ -22,7 +22,7 @@ Temporary alternative to `/generate-questions`. The prod pipeline (`generate_pac
 | Arg | Default | Notes |
 |-----|---------|-------|
 | positional count | 30 | target question count |
-| `--category` | mixed across all 6 | canonical taxonomy: `science-nature, history, geography-world, movies-music, sports, food-everyday` (source: `apps/quiz-pack-api/scripts/recategorize_corpus.py`; do NOT use the stale 8-value list in `app/generation/classification.py`) |
+| `--category` | mixed across all 6 | canonical taxonomy: `science-nature, history, geography-world, movies-music, sports, food-everyday` (source: repo-root `scripts/recategorize_corpus.py`; do NOT use the stale 8-value list in `app/generation/classification.py`) |
 | `--difficulty` | mixed | |
 | `--no-import` | off | stop after guards, leave final JSON on disk |
 
@@ -58,7 +58,7 @@ Reads `corpus.csv` + all `generated_*.json`. Drops near-duplicates vs corpus and
 Each subagent verifies its batch with WebSearch/WebFetch under the founder source-trust hierarchy: Wikipedia first (with citations), then authoritative primary sources; never aggregators; if even Wikipedia is ambiguous → drop the question. Per question it writes into the dict:
 - `generation_metadata: {"extra": {"verified": true, "verification_score": <0.9 high | 0.7 medium>, "verification_notes": "<one-line reasoning + source>"}}` — only for questions it could positively verify. Score < 0.9 requires a note why.
 - `source_url` + `source_excerpt` from the confirming source.
-- Anything unverified, wrong, stale, or ambiguous goes to `dropped_factcheck.json` with a reason — never `verified: false` rows into the import file (the importer's fail-closed guard #158 would block them anyway; we drop earlier and loudly).
+- Anything unverified, wrong, stale, or ambiguous goes to `dropped_factcheck.json` with a reason — never `verified: false` rows into the import file (the importer's fail-closed guard (#158 — fail-closed verification) would block them anyway; we drop earlier and loudly).
 
 Output: `<run_dir>/verified_<batch>.json`. Returns counts + drop reasons only.
 

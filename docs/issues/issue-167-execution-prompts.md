@@ -268,10 +268,39 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Split done 2026-08-26 (this doc). Decisions Founder 1-5 + D1-D10 locked; class `a` confirmed (no migration, no schema, prod flags untouched).
 - ⬜ Session A — backend seams + prompt + taxonomy (167.1-167.4)
 - ⬜ Session B — `source_facts.py` (167.5)
-- ⬜ Session C — `filter_postcutoff.py` (167.6-167.7)
+- ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ⬜ Session D — iOS category + Slovak string (167.8)
 - ⬜ Session E — pilot runbook Segment 1 (167.9-167.12) · blocked on A+B+C
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
 > When a session lands, add a short **"Session X delivered — exact symbols for Y"** note here (issue-61 convention) so the next session does not have to re-read the diff. Session B owes E the exact `source_facts.py` CLI signature; Session C owes E the exact output filenames and `reason` vocabulary.
+
+### Session C delivered — exact output filenames + reason vocabulary
+
+`apps/quiz-pack-api/scripts/filter_postcutoff.py`, fully offline, exit code always `0` (the "< 20 accepted" escalation is the runbook's call, not the script's).
+
+**CLI:** `filter_postcutoff.py <batch.json> [--facts-file FACTS] [--merge-with ACCEPTED]` — `<batch.json>` is the positional `generate_pack.py --out` file.
+
+**Output filenames** (written next to the input, `<stem>` = the input's stem):
+
+| Input | Accepted file | Rejected file |
+|---|---|---|
+| `pilot_167.json` | `pilot_167_accepted.json` | `pilot_167_rejected.json` |
+| `pilot_167_r2.json` | `pilot_167_r2_accepted.json` | `pilot_167_r2_rejected.json` |
+
+Both are plain JSON arrays in the same shape `_write_out` produces. Accepted rows are **byte-identical** to the input rows (no added keys) so `build_page.py` / `publish_batch.py` / the importer read them directly; rejected rows carry exactly one extra key, `reason`.
+
+**`reason` vocabulary** (the complete set — exported as module constants `REASON_NO_YEAR`, `REASON_FRESHNESS_CURRENT`, `REASON_DUPLICATE_ROUND1`):
+
+| `reason` | Meaning |
+|---|---|
+| `no_2026_token` | no year token ≥ 2026 in `question`, in the answer (MCQ keys resolved to option text), or in the joined fact excerpt |
+| `freshness_current` | year leg passed but `freshness_tag == "current"` — the news class the pilot excludes |
+| `duplicate_round1` | `--merge-with` only: duplicates an already-accepted row on `_fact_key`, question-Jaccard ≥ 0.60, or `_fact_tokens`-Jaccard ≥ 0.35 |
+
+The year leg is checked first, so a row failing both legs is reported as `no_2026_token`.
+
+**⚠️ `--merge-with` writes the UNION.** In merge mode `<stem>_accepted.json` contains the `--merge-with` rows first, then round-2 survivors — so the single file Session E publishes already *is* the merged result D6's "≥ 20 accepted" is counted on. The tally prints `merged total: N`. Round 1's own `*_accepted.json` is never modified.
+
+**Stdout tally** (parse-free, for the 167.11 report): `input rows` / `accepted` / `rejected` / one indented line per `reason` present / `merged with` + `merged total` in merge mode / `wrote <path>` twice. Without `--facts-file` it prints a `WARNING: no --facts-file — excerpt leg of the predicate is off.` line; Session E always passes it.

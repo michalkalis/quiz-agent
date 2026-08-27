@@ -59,9 +59,11 @@ def main() -> int:
         reasons = guard_reasons(q)
         (rejects if reasons else passed).append({**q, "_guard_reasons": reasons} if reasons else q)
 
+    # T/F balance is a batch-level property: prod resolves the excess set from the
+    # full pre-drop batch (scoring.py), so build it from `questions`, not `passed`.
     tf_items = [
         (q["id"], key)
-        for q in passed
+        for q in questions
         if (key := true_false_key(q.get("correct_answer"), q.get("possible_answers")))
     ]
     excess_ids = set(tf_imbalance_excess(tf_items))

@@ -269,9 +269,17 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ⬜ Session A — backend seams + prompt + taxonomy (167.1-167.4)
 - ⬜ Session B — `source_facts.py` (167.5)
 - ⬜ Session C — `filter_postcutoff.py` (167.6-167.7)
-- ⬜ Session D — iOS category + Slovak string (167.8)
+- ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
 - ⬜ Session E — pilot runbook Segment 1 (167.9-167.12) · blocked on A+B+C
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
 > When a session lands, add a short **"Session X delivered — exact symbols for Y"** note here (issue-61 convention) so the next session does not have to re-read the diff. Session B owes E the exact `source_facts.py` CLI signature; Session C owes E the exact output filenames and `reason` vocabulary.
+
+### Session D delivered — exact symbols
+
+- **Category id `"entertainment"`** is now in **both** iOS mirrors, appended last in each so the order stays parallel: `Config.categoryOptions` (`apps/ios-app/Hangs/Hangs/Utilities/Config.swift`) and `QuizSettings.categoryOptions` (`apps/ios-app/Hangs/Hangs/Models/QuizSettings.swift`). `HomeView.swift:342` renders the picker straight off `Config.categoryOptions` — no UI change was needed.
+- **String catalog key** is `"Entertainment"` (English source key, comment `Quiz category option`), `sk` = **`"Zábava"`**, state `translated`, in `apps/ios-app/Hangs/Hangs/Localizable.xcstrings`.
+- ⚠️ **Correction to the recon snapshot / the Session D prompt:** the catalog path from `apps/ios-app/` is `Hangs/Hangs/Localizable.xcstrings`, **not** `Hangs/Localizable.xcstrings` — the prompt's `xcstringstool sync` and `jq` commands silently no-op (`warning: Skipping sync … could not be read`) on the wrong path. Also `xcstringstool sync` **requires `--stringsdata`**, which only a build produces; the working invocation is a `xcodebuild build` first, then `xcstringstool sync <abs path to .xcstrings> --stringsdata <DerivedData>/Build/Intermediates.noindex/Hangs.build/Debug-Local-iphonesimulator/Hangs.build/Objects-normal/arm64/*.stringsdata --skip-marking-strings-stale`. Sessions touching strings should use that form.
+- **Parity test:** `HangsTests/HomeCategoryMultiSelectTests.swift` → `"the two category mirrors must not drift"`, asserting `QuizSettings.categoryOptions == Config.categoryOptions.map { $0.id }`. Full `HangsTests`: 1014 tests / 183 suites green on iOS 26.5 (iPhone 17 Pro).
+- **Still owed by Session A** for this to be end-to-end: `"entertainment"` in the backend `CATEGORIES` (`app/generation/classification.py`) — until then `normalize_category("entertainment")` collapses to `"general"`.

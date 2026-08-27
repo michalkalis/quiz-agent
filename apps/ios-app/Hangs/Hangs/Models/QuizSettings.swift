@@ -228,7 +228,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
     static let categoryOptions: [String?] = [
         nil, "science-nature", "history", "geography-world",
-        "movies-music", "sports", "food-everyday",
+        "movies-music", "sports", "food-everyday", "entertainment",
     ]
 
     /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.

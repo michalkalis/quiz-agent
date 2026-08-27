@@ -66,4 +66,16 @@ struct HomeCategoryMultiSelectTests {
         settings.categories = ["science-nature", "history"]
         #expect(settings.categoryDisplayName().contains("2"))
     }
+
+    // The taxonomy lives in two places: `Config.categoryOptions` (id + display,
+    // what the picker renders) and `QuizSettings.categoryOptions` (ids only,
+    // what `QuizSettings` validation keeps on load). Until now only a code
+    // comment held them together — and drift is silent-but-destructive: a
+    // category offered by the picker but missing from the validation mirror is
+    // filtered out of a restored setting, so the user's saved choice vanishes.
+    @Test("the two category mirrors must not drift")
+    func categoryMirrorsMatch() {
+        #expect(QuizSettings.categoryOptions == Config.categoryOptions.map { $0.id },
+                "QuizSettings.categoryOptions must mirror Config.categoryOptions ids, in order")
+    }
 }

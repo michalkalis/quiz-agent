@@ -7,7 +7,7 @@ Hotové položky (do 2026-08-26) sú v [`docs/archive/todo/TODO-done-archive-202
 States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues/issue-NN-*.md` series — when an item needs a detailed plan, create `docs/issues/issue-NN-{slug}.md` and link it from the line.
 
 - [ ] **★ TOP PRIORITA (founder 2026-08-12):** Entertainment otázky z nedávneho diania — web-search sourcing (Tavily) — [detail](TODO-details.md) — potrebuje vlastný design/prep round, kontext #153
-- [ ] Research: audio otázky — čo sa dá legálne prehrávať v kvíze (founder 2026-08-19) — [detail](TODO-details.md) — výstup = research doc v `docs/research/`
+- [x] Research: audio otázky — čo sa dá legálne prehrávať v kvíze (founder 2026-08-19) — DONE 2026-08-27 → [research doc](../research/audio-questions-legal-feasibility-2026-08.md); pesničky/film-TV legálne NIE, voľné zvuky + hymny + TTS + PD klasika ÁNO; implementácia = vlastný `/prepare-issue` round
 - [ ] Entertainment otázky z aktuálneho diania (founder ~2026-08-12, prioritné) — [detail](TODO-details.md) — news-sourcing infra z #76 je dormantná; ide cez gen-pipeline review plán
 - [~] #166 — Experimentálne kolo D21b → implementácia záverov — [plan](../issues/issue-166-d21b-experiment-round.md) — inkrementy 1–3 nasadené a uzavreté 2026-08-25; plný web check ostáva, zlacnenie = Batch API
 - [ ] Spoločný korpus — regrow cez Anthropic Batch API — [plan](../issues/issue-166-d21b-experiment-round.md) — founder 2026-08-24 potvrdil smer; predpoklad = firemný Anthropic účet + vlastný prep round

@@ -30,6 +30,9 @@ A single play-through containing N questions. Server-side state in memory; not p
 **Question**
 A unit of content with prompt, expected answer, optional images/sources, difficulty, category, language. Backend Pydantic model in `packages/shared/`.
 
+**Category**
+The interest-based filter axis the app's picker exposes (2026-08 revamp, PR #39). Six canonical ids — `science-nature`, `history`, `geography-world`, `movies-music`, `sports`, `food-everyday` — defined in `CATEGORY_TAXONOMY` (`apps/quiz-agent/app/api/admin.py`) and mirrored by iOS `Config.categoryOptions`. Age is a separate axis (`age_appropriate`); fandom/themed content (Harry Potter, Disney, …) is pack material with free-form categories, reached via pack selection, never via this picker. Distinct from **topic**, the free-text per-question label (e.g. "Space exploration") used by generation and analytics.
+
 **Question type**
 The five `QuestionType` values: `text`, `text_multichoice`, `audio`, `image`, `video`. Full taxonomy — data shapes, pattern→type routing, evaluation, and per-surface implementation status — in `docs/reference/question-types.md`. Use those exact identifiers; don't invent type names.
 

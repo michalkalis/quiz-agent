@@ -267,7 +267,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 
 - ✅ Split done 2026-08-26 (this doc). Decisions Founder 1-5 + D1-D10 locked; class `a` confirmed (no migration, no schema, prod flags untouched).
 - ✅ Session A — backend seams + prompt + taxonomy (167.1-167.4) · delivered 2026-08-27
-- ⬜ Session B — `source_facts.py` (167.5)
+- ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
 - ⬜ Session E — pilot runbook Segment 1 (167.9-167.12) · blocked on A+B+C
@@ -284,6 +284,22 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - **Prompt:** `_CATEGORY_PROMPT_FILES["entertainment"] == "question_generation_entertainment_v2.md"` (`app/generation/advanced_generator.py`). The dispatched `prompt_version` string is unchanged: `"v3_fact_first_entertainment"`. v1 stays on disk; rollback is that one dict value.
 - **Taxonomy:** `"entertainment"` appended last in `CATEGORIES` (`app/generation/classification.py`), no `_CATEGORY_ALIASES` entry. This closes the gap Session D flagged — `normalize_category("entertainment")` no longer collapses to `"general"`.
 - **Owed to Session E:** `--grounded` is now honoured end-to-end, so 167.10's command works as written. Nothing in this session changed sourcing config or any prod flag default.
+
+### Session B delivered — exact `source_facts.py` CLI signature
+
+`apps/quiz-pack-api/scripts/source_facts.py`. Both flags are **required**; there are no others (no `--per-topic`, no `--count`, no news switch).
+
+```
+uv run --no-sync python scripts/source_facts.py \
+    --topics "music producers and their artists,2026 album releases,2026 awards and nominations (Oscars, Grammys),new 2026 films and series,2026 tours and festivals,2026 streaming hits" \
+    --out facts_167.json
+```
+
+- `--topics` — ONE comma-separated string (same shape as `generate_pack.py --topics`); split on `,` + strip, empty entries dropped. ⚠️ Founder topic 3 contains a comma (`2026 awards and nominations (Oscars, Grammys)`) → passing the locked list verbatim yields **7** topics, not 6, and the `Grammys)` fragment sources nothing. Session E must either drop the parenthetical or split the list itself.
+- `--out` — path to the fact file; parent dirs are created. Written shape is exactly `{"topics": [...], "facts": [...]}` (`Fact.to_dict()` entries), i.e. what `generate_pack.py --facts-file` reads. Written **before** the thin-yield gate, so a failed run still leaves the file for inspection.
+- Exit codes: **0** = ≥ 40 facts; **1** = thin yield (or an empty topic list). On a thin yield stdout carries `THIN YIELD: <n> facts < 40 required — per-topic tally:`, one `  <count>  <topic>` line per topic ascending, then `weakest topics (< <share> facts each): …`.
+- Sourcing config (D4, asserted by tests): `FactSourcer(enable_opentdb=False)` — Wikipedia **ON**, `ENABLE_NEWS_SOURCING` never set or read. Per-topic request budget is `8 × len(topics)` (`PER_TOPIC_BUDGET`); the gate constant is `MIN_FACTS = 40`.
+- Needs `TAVILY_API_KEY` in the environment (web-search source raises `ValueError` without it). The repo-root `.env` is **not** visible from a git worktree.
 
 ### Session D delivered — exact symbols
 

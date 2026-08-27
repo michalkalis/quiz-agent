@@ -283,7 +283,8 @@ Každé kritérium je falzifikovateľné a menuje spôsob overenia. Príkazy sa 
 ## Follow-ups (mimo #167, do TODO)
 
 - **Auto-archive expirovaných otázok** — dnes nič neprechádza na `archived`, monitoring ich iba počíta (`apps/quiz-agent/app/monitoring/question_monitor.py:71-79`). Founder decision 2 to explicitne odkladá; bez toho korpus ticho tichne.
-- **Úzky web pass na D5** (Tavily vs OpenAI Responses `web_search` ako sourcing provider) pred scale-upom / pred zrušením Tavily plánu.
+- **Úzky web pass na D5** (Tavily vs OpenAI Responses `web_search` ako sourcing provider) pred scale-upom / pred zrušením Tavily plánu. **Povýšené na blokujúce** — Session E narazila na vyčerpaný Tavily pay-as-you-go limit (HTTP 433), pilot sa bez druhého providera alebo zvýšeného limitu nedá spustiť.
+- **`WikipediaSource` ticho vracia 0 faktov** (`apps/quiz-pack-api/app/sourcing/wikipedia_source.py`) — Wikimedia od T400119 vracia **403 „Please set a user-agent"** na `api.php` bez `User-Agent` hlavičky; `_search_topic_facts` chybu prehltne (`try/except` → `[]`), takže sourcing degraduje bez jediného varovania. Overené 2026-08-27 raw sondou: `en.wikipedia.org/w/api.php?action=query&list=search…` → 403. Dopad je širší než #167: Wikipedia noha je zapnutá vo všetkých grounded behoch (D4 ju drží zámerne ON) a od tejto zmeny neprispieva ničím.
 - **Kadencia obnovy** entertainment zásoby (až po founder ratingu pilota).
 
 

@@ -1,11 +1,23 @@
 """Wikipedia fact sourcing — extracts interesting facts from Wikipedia APIs."""
 
+import logging
 import re
 from typing import Optional
 
 import httpx
 
 from .models import Fact, interleave_by_topic
+
+logger = logging.getLogger(__name__)
+
+# Wikimedia rejects UA-less API requests with HTTP 403 (phabricator T400119),
+# so every call below must identify the bot and a contact. Shape follows the
+# Wikimedia user-agent policy: product/version (contact) library/version.
+USER_AGENT = (
+    "QuizAgentBot/1.0 "
+    "(https://github.com/michalkalis/quiz-agent; michal.kalis@gmail.com) "
+    f"httpx/{httpx.__version__}"
+)
 
 
 class WikipediaSource:
@@ -29,7 +41,9 @@ class WikipediaSource:
         """
         facts: list[Fact] = []
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(
+            timeout=15.0, headers={"User-Agent": USER_AGENT}
+        ) as client:
             if topics:
                 # Topic-scoped search only — skip the topic-agnostic feeds.
                 # #153 round-2: cover EVERY requested topic (the old `[:5]`
@@ -68,6 +82,9 @@ class WikipediaSource:
 
             resp = await client.get(url, params=params)
             if resp.status_code != 200:
+                logger.warning(
+                    "Wikipedia DYK failed (%s): HTTP %s", lang, resp.status_code
+                )
                 return facts
 
             data = resp.json()
@@ -104,6 +121,9 @@ class WikipediaSource:
 
             resp = await client.get(url)
             if resp.status_code != 200:
+                logger.warning(
+                    "Wikipedia featured feed failed (%s): HTTP %s", lang, resp.status_code
+                )
                 return facts
 
             data = resp.json()
@@ -169,6 +189,12 @@ class WikipediaSource:
 
             resp = await client.get(url, params=params)
             if resp.status_code != 200:
+                # Never silent: a UA/rate-limit rejection here used to look
+                # exactly like "this topic has no facts", so grounded runs
+                # yielded 0 Wikipedia facts with nothing in the logs.
+                logger.warning(
+                    "Wikipedia search failed for %r: HTTP %s", topic, resp.status_code
+                )
                 return facts
 
             data = resp.json()

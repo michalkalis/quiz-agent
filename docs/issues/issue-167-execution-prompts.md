@@ -332,7 +332,7 @@ D4 deliberately keeps the Wikipedia leg ON, so it should have partially covered 
 **To unblock, in order:**
 
 1. **Founder action** — raise the Tavily pay-as-you-go limit on the Tavily dashboard (or confirm a different sourcing provider, which reopens D5 and is a product/architecture call, not an agent substitution).
-2. **Agent action (independent, do first)** — fix the `WikipediaSource` User-Agent 403 so the D4 Wikipedia leg actually contributes; it changes the fact yield of the pilot and of every other grounded run.
+2. ~~**Agent action (independent, do first)** — fix the `WikipediaSource` User-Agent 403~~ — **DONE 2026-08-27**: the module now sends `User-Agent: QuizAgentBot/1.0 (…)` on every Wikimedia call and logs a warning on non-200 instead of returning `[]` silently. Real call for `Taylor Swift` yields 5 facts, so the D4 Wikipedia leg contributes again.
 3. Re-run Session E from 167.9 unchanged. Nothing in A/B/C/D needs redoing.
 
 ### Session C delivered — exact output filenames + reason vocabulary

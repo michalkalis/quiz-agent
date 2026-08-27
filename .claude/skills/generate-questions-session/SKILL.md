@@ -44,7 +44,7 @@ Run dir: `apps/quiz-pack-api/data/session_runs/<YYYY-MM-DD-HHMM>/` (never commit
 ### 2. Generation — subagent, `model: fable` (parity with prod gen model; no swaps without founder approval)
 
 One subagent per batch of ≤10 questions, max 3 concurrent. Each subagent:
-- Reads `apps/quiz-pack-api/prompts/question_generation.md` and the JSON response contract in `app/generation/prompt_builder.py` (`prose_response_format`), plus gold-standard examples via the path used by `load_gold_standard`. Builds the direct_v1-style prompt itself — do not invent a new rubric.
+- Reads `apps/quiz-pack-api/prompts/question_generation_direct.md` (the template `direct_v1` resolves to in `app/generation/advanced_generator.py` — NOT the legacy `question_generation.md`) and the JSON response contract in `app/generation/prompt_builder.py` (`prose_response_format`), plus gold-standard examples via the path used by `load_gold_standard`. Builds the direct_v1-style prompt itself — do not invent a new rubric.
 - Gets an avoid-list: ~10 sampled question texts from `corpus.csv` (passed by file path, subagent reads it itself).
 - Writes `<run_dir>/generated_<batch>.json`: a JSON array of full `Question` dicts (`packages/shared/quiz_shared/models/question.py`): required `id` (generate `uuid4` hex — the importer does NOT auto-generate ids), `question`, `correct_answer`, `topic`, `category`, `difficulty`; plus `type` (`text` or `text_multichoice`), `possible_answers` for MCQ, `alternative_answers`, `explanation`, `language_dependent`, `age_appropriate`, `source: "generated"`, `review_status: "pending_review"`. Leave `generation_metadata` empty — fact-check fills it.
 - Returns ONLY: batch file path + count.

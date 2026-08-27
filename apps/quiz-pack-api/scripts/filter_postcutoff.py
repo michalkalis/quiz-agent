@@ -25,10 +25,22 @@ fact file simply falls back to its question/answer text — an accepted
 degradation, not a bug.
 
 Every rejected row carries a ``reason``: ``no_2026_token`` /
-``freshness_current``.
+``freshness_current`` / ``duplicate_round1``.
+
+``--merge-with <already-accepted.json>`` turns on the second mode: D6's remedy
+for a thin first round is exactly one repeat round, and this is the only
+cross-round uniqueness guard there is (the CLI's ``--dedup-store`` defaults to
+``noop``, so the pipeline's own dedup sees nothing of round 1). The three drop
+legs mirror ``DedupStage`` one-for-one and the helpers are IMPORTED from it —
+never reimplemented — so the thresholds cannot silently fork. In merge mode the
+accepted output is the UNION (round-1 rows first, then round-2 survivors), so
+the single file that the rating page publishes is the merged result that D6's
+"≥ 20 accepted" is counted on.
 
     uv run --no-sync python scripts/filter_postcutoff.py pilot_167.json \
         --facts-file facts_167.json
+    uv run --no-sync python scripts/filter_postcutoff.py pilot_167_r2.json \
+        --facts-file facts_167_r2.json --merge-with pilot_167_accepted.json
 """
 
 from __future__ import annotations
@@ -37,12 +49,21 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.orchestrator.stages.dedup import _normalize_url
+from app.orchestrator.stages.dedup import (
+    DEFAULT_FACT_JACCARD_THRESHOLD,
+    DEFAULT_IN_BATCH_JACCARD_THRESHOLD,
+    _fact_key,
+    _fact_tokens,
+    _jaccard,
+    _normalize_url,
+    _tokenize,
+)
 from quiz_shared.models.question import Question
 
 # "Post-cutoff" is year 2026 (founder decision 5 — Fable 5's cutoff is Jan
@@ -53,6 +74,7 @@ _YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 
 REASON_NO_YEAR = "no_2026_token"
 REASON_FRESHNESS_CURRENT = "freshness_current"
+REASON_DUPLICATE_ROUND1 = "duplicate_round1"
 
 
 # ---------------------------------------------------------------------------
@@ -126,6 +148,45 @@ def _rejection_reason(question: Question, excerpt: str | None) -> str | None:
 
 
 # ---------------------------------------------------------------------------
+# Cross-round uniqueness (167.7)
+# ---------------------------------------------------------------------------
+
+
+class _Round1Index:
+    """Dedup fingerprints of the already-accepted rows of an earlier round.
+
+    All three legs reuse ``DedupStage``'s own helpers and thresholds; the
+    helpers take a ``Question`` INSTANCE, so callers rehydrate the dumped dicts
+    before handing anything over.
+    """
+
+    def __init__(self, questions: Sequence[Question]) -> None:
+        self._fact_keys = {
+            key for key in (_fact_key(q) for q in questions) if key is not None
+        }
+        self._question_tokens = [_tokenize(q.question) for q in questions]
+        self._fact_tokens = [_fact_tokens(q) for q in questions]
+
+    def is_duplicate(self, question: Question) -> bool:
+        fact_key = _fact_key(question)
+        if fact_key is not None and fact_key in self._fact_keys:
+            return True
+        q_tokens = _tokenize(question.question)
+        if q_tokens and any(
+            _jaccard(q_tokens, seen) >= DEFAULT_IN_BATCH_JACCARD_THRESHOLD
+            for seen in self._question_tokens
+        ):
+            return True
+        # Mirrors the same-fact content-overlap check at dedup.py:164-174 —
+        # catches "same fact, different URL, reworded below 0.60".
+        fact_tokens = _fact_tokens(question)
+        return bool(fact_tokens) and any(
+            _jaccard(fact_tokens, seen) >= DEFAULT_FACT_JACCARD_THRESHOLD
+            for seen in self._fact_tokens
+        )
+
+
+# ---------------------------------------------------------------------------
 # I/O + CLI
 # ---------------------------------------------------------------------------
 
@@ -150,13 +211,22 @@ def _write_json(path: Path, rows: list[dict[str, Any]]) -> None:
 def filter_batch(
     rows: list[dict[str, Any]],
     excerpts: dict[str, str],
+    round1: Sequence[Question] = (),
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Split ``rows`` into (accepted, rejected-with-reason)."""
+    """Split ``rows`` into (accepted, rejected-with-reason).
+
+    ``round1`` (from ``--merge-with``) adds the cross-round duplicate leg; it
+    is NOT part of the returned accepted list — the CLI prepends it when it
+    writes the merged file.
+    """
+    index = _Round1Index(round1) if round1 else None
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     for row in rows:
         question = Question.model_validate(row)
         reason = _rejection_reason(question, _excerpt_for(question, excerpts))
+        if reason is None and index is not None and index.is_duplicate(question):
+            reason = REASON_DUPLICATE_ROUND1
         if reason is None:
             accepted.append(row)
         else:
@@ -184,6 +254,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "leg to question/answer text only."
         ),
     )
+    ap.add_argument(
+        "--merge-with",
+        default=None,
+        help=(
+            "An earlier round's *_accepted.json. Round-2 rows duplicating any "
+            "of it are dropped as duplicate_round1; the accepted output is the "
+            "union of both rounds."
+        ),
+    )
     return ap.parse_args(argv)
 
 
@@ -192,13 +271,15 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = _load_batch(args.batch)
     excerpts = _load_fact_excerpts(args.facts_file) if args.facts_file else {}
+    round1_rows = _load_batch(args.merge_with) if args.merge_with else []
+    round1 = [Question.model_validate(row) for row in round1_rows]
 
-    accepted, rejected = filter_batch(rows, excerpts)
+    accepted, rejected = filter_batch(rows, excerpts, round1)
 
     batch_path = Path(args.batch)
     accepted_path = batch_path.parent / f"{batch_path.stem}_accepted.json"
     rejected_path = batch_path.parent / f"{batch_path.stem}_rejected.json"
-    _write_json(accepted_path, accepted)
+    _write_json(accepted_path, round1_rows + accepted)
     _write_json(rejected_path, rejected)
 
     counts: dict[str, int] = {}
@@ -209,11 +290,14 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  input rows:        {len(rows)}")
     print(f"  accepted:          {len(accepted)}")
     print(f"  rejected:          {len(rejected)}")
-    for reason in (REASON_NO_YEAR, REASON_FRESHNESS_CURRENT):
+    for reason in (REASON_NO_YEAR, REASON_FRESHNESS_CURRENT, REASON_DUPLICATE_ROUND1):
         if reason in counts:
             print(f"    {reason}: {counts[reason]}")
     if not args.facts_file:
         print("  WARNING: no --facts-file — excerpt leg of the predicate is off.")
+    if args.merge_with:
+        print(f"  merged with:       {args.merge_with} ({len(round1_rows)} rows)")
+        print(f"  merged total:      {len(round1_rows) + len(accepted)}")
     print(f"  wrote {accepted_path}")
     print(f"  wrote {rejected_path}")
     return 0

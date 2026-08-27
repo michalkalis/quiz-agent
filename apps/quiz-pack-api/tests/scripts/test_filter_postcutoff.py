@@ -1,16 +1,21 @@
-"""Tests for `scripts/filter_postcutoff.py` (issue #167, task 167.6).
+"""Tests for `scripts/filter_postcutoff.py` (issue #167, tasks 167.6 + 167.7).
 
-Why these tests matter: the pilot generates *post-cutoff settled facts*, which
-the expiry classifier labels `evergreen` → `freshness_tag = NULL`,
-indistinguishable from a genuinely timeless row and from a classifier fail-safe
-(D1). This filter is therefore the ONLY gate that measures the defining
-property of the question class; if its predicate is wrong, nothing downstream
-catches it.
-
-The excerpt leg is best-effort by construction: a row whose model-emitted
-`source_url` is absent from the fact file loses the excerpt and falls back to
-its own text. That is an ACCEPTED degradation (D6) — asserted here so a future
-reader does not "fix" it into a hard failure.
+Why these tests matter:
+- **167.6** — the pilot generates *post-cutoff settled facts*, which the expiry
+  classifier labels `evergreen` → `freshness_tag = NULL`, indistinguishable
+  from a genuinely timeless row and from a classifier fail-safe (D1). This
+  filter is therefore the ONLY gate that measures the defining property of the
+  question class; if its predicate is wrong, nothing downstream catches it.
+- The excerpt leg is best-effort by construction: a row whose model-emitted
+  `source_url` is absent from the fact file loses the excerpt and falls back to
+  its own text. That is an ACCEPTED degradation (D6) — asserted here so a
+  future reader does not "fix" it into a hard failure.
+- **167.7** — D6's remedy for a thin round is exactly one repeat round, and
+  `--merge-with` is the only cross-round uniqueness guard that exists: the CLI
+  runs with `--dedup-store noop`, so the pipeline's own dedup sees nothing of
+  round 1. The thresholds must be the SAME objects `DedupStage` uses — a
+  silently forked copy would drift from the calibrated values, which is what
+  the `__module__` assertion falsifies.
 """
 
 from __future__ import annotations
@@ -18,6 +23,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from app.orchestrator.stages.dedup import (
+    DEFAULT_FACT_JACCARD_THRESHOLD,
+    DEFAULT_IN_BATCH_JACCARD_THRESHOLD,
+    _fact_key,
+    _fact_tokens,
+    _jaccard,
+    _tokenize,
+)
 from quiz_shared.models.question import Question
 
 from scripts import filter_postcutoff
@@ -49,8 +62,7 @@ def _write(path: Path, payload) -> Path:
 
 def _facts_file(tmp_path: Path, *facts) -> Path:
     return _write(
-        tmp_path / "facts.json",
-        {"topics": ["2026 album releases"], "facts": list(facts)},
+        tmp_path / "facts.json", {"topics": ["2026 album releases"], "facts": list(facts)}
     )
 
 
@@ -163,7 +175,9 @@ class TestPostCutoffPredicate:
                 "excerpt": "A 2026 release calendar.",
             },
         )
-        accepted, rejected = _run(tmp_path, [kept, dropped], "--facts-file", str(facts))
+        accepted, rejected = _run(
+            tmp_path, [kept, dropped], "--facts-file", str(facts)
+        )
         assert [r["id"] for r in accepted] == ["q-unjoined-dated"]
         assert [(r["id"], r["reason"]) for r in rejected] == [
             ("q-unjoined-undated", "no_2026_token")
@@ -180,3 +194,143 @@ class TestPostCutoffPredicate:
         assert accepted == [rows[0]]
         assert "reason" not in accepted[0]
         assert rejected[0]["reason"] == "freshness_current"
+
+
+class TestMergeWithCrossRoundUniqueness:
+    """167.7 — the only cross-round uniqueness guard (dedup store is noop)."""
+
+    def test_helpers_come_from_dedup_stage(self):
+        # Falsifies a silent fork: if someone copies the helpers (and with them
+        # the calibrated thresholds) into the script, this fails.
+        assert filter_postcutoff._jaccard.__module__ == "app.orchestrator.stages.dedup"
+        assert filter_postcutoff._fact_key.__module__ == "app.orchestrator.stages.dedup"
+        assert (
+            filter_postcutoff._fact_tokens.__module__ == "app.orchestrator.stages.dedup"
+        )
+        assert filter_postcutoff._tokenize.__module__ == "app.orchestrator.stages.dedup"
+
+    def test_drops_on_fact_key_match_only(self, tmp_path: Path):
+        # Same fact key (normalized URL + answer), wording far apart: proves the
+        # fact-key leg alone drops an open-vs-MCQ style rephrasing.
+        round1_row = _row(id="r1-fact-key")
+        round2_row = _row(
+            id="r2-fact-key",
+            question="Which studio veteran shaped that 2026 record?",
+            source_url="https://www.example.com/producers-2026/",
+        )
+        q1 = Question.model_validate(round1_row)
+        q2 = Question.model_validate(round2_row)
+        assert _fact_key(q1) == _fact_key(q2)
+        assert (
+            _jaccard(_tokenize(q1.question), _tokenize(q2.question))
+            < DEFAULT_IN_BATCH_JACCARD_THRESHOLD
+        )
+        assert (
+            _jaccard(_fact_tokens(q1), _fact_tokens(q2))
+            < DEFAULT_FACT_JACCARD_THRESHOLD
+        )
+
+        merge_with = _write(tmp_path / "round1_accepted.json", [round1_row])
+        accepted, rejected = _run(
+            tmp_path, [round2_row], "--merge-with", str(merge_with)
+        )
+        assert [(r["id"], r["reason"]) for r in rejected] == [
+            ("r2-fact-key", "duplicate_round1")
+        ]
+        assert [r["id"] for r in accepted] == ["r1-fact-key"]
+
+    def test_drops_on_question_jaccard_only(self, tmp_path: Path):
+        # Near-verbatim restatement with a different backing fact: the question
+        # leg fires while the fact-token leg stays under its threshold.
+        round1_row = _row(
+            id="r1-question",
+            question="In 2026 which festival headliner replaced the band at short notice?",
+            correct_answer="Marla Quinn and the Northern Lights Orchestra of Reykjavik",
+            source_url="https://example.com/festivals/a",
+        )
+        round2_row = _row(
+            id="r2-question",
+            question=(
+                "In 2026 which festival headliner replaced the band at short "
+                "notice again?"
+            ),
+            correct_answer="Devon Cross Symphonic Ensemble Touring Company from Adelaide",
+            source_url="https://example.com/festivals/b",
+        )
+        q1 = Question.model_validate(round1_row)
+        q2 = Question.model_validate(round2_row)
+        assert _fact_key(q1) != _fact_key(q2)
+        assert (
+            _jaccard(_tokenize(q1.question), _tokenize(q2.question))
+            >= DEFAULT_IN_BATCH_JACCARD_THRESHOLD
+        )
+        assert (
+            _jaccard(_fact_tokens(q1), _fact_tokens(q2))
+            < DEFAULT_FACT_JACCARD_THRESHOLD
+        )
+
+        merge_with = _write(tmp_path / "round1_accepted.json", [round1_row])
+        _, rejected = _run(tmp_path, [round2_row], "--merge-with", str(merge_with))
+        assert [(r["id"], r["reason"]) for r in rejected] == [
+            ("r2-question", "duplicate_round1")
+        ]
+
+    def test_drops_on_fact_token_jaccard_only(self, tmp_path: Path):
+        # "Same fact, different URL, reworded below 0.60" — the case the first
+        # two legs both miss, mirroring dedup.py:164-174.
+        round1_row = _row(
+            id="r1-fact-tokens",
+            question="Who directed the 2026 sci-fi film Ember Tide?",
+            correct_answer="Priya Raman",
+            source_url="https://example.com/films/a",
+        )
+        round2_row = _row(
+            id="r2-fact-tokens",
+            question="Ember Tide, the 2026 sci-fi feature, was directed by whom?",
+            correct_answer="Priya Raman",
+            source_url="https://example.com/films/b",
+        )
+        q1 = Question.model_validate(round1_row)
+        q2 = Question.model_validate(round2_row)
+        assert _fact_key(q1) != _fact_key(q2)
+        assert (
+            _jaccard(_tokenize(q1.question), _tokenize(q2.question))
+            < DEFAULT_IN_BATCH_JACCARD_THRESHOLD
+        )
+        assert (
+            _jaccard(_fact_tokens(q1), _fact_tokens(q2))
+            >= DEFAULT_FACT_JACCARD_THRESHOLD
+        )
+
+        merge_with = _write(tmp_path / "round1_accepted.json", [round1_row])
+        _, rejected = _run(tmp_path, [round2_row], "--merge-with", str(merge_with))
+        assert [(r["id"], r["reason"]) for r in rejected] == [
+            ("r2-fact-tokens", "duplicate_round1")
+        ]
+
+    def test_near_miss_pair_survives_and_output_is_the_union(
+        self, tmp_path: Path, capsys
+    ):
+        # Same topic, genuinely different fact: all three legs stay under their
+        # thresholds, so round 2 adds to the batch instead of collapsing into it.
+        round1_row = _row(
+            id="r1-near-miss",
+            question="Who directed the 2026 sci-fi film Ember Tide?",
+            correct_answer="Priya Raman",
+            source_url="https://example.com/films/a",
+        )
+        round2_row = _row(
+            id="r2-near-miss",
+            question="Which 2026 documentary won the Sundance grand jury prize?",
+            correct_answer="Salt of the Delta",
+            source_url="https://example.com/films/z",
+        )
+        merge_with = _write(tmp_path / "round1_accepted.json", [round1_row])
+        accepted, rejected = _run(
+            tmp_path, [round2_row], "--merge-with", str(merge_with)
+        )
+        assert rejected == []
+        # The union is what D6's ">= 20 accepted" is counted on, and it is the
+        # single file the rating page publishes.
+        assert [r["id"] for r in accepted] == ["r1-near-miss", "r2-near-miss"]
+        assert "merged total:      2" in capsys.readouterr().out

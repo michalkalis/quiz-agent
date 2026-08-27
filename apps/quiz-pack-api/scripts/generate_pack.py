@@ -181,8 +181,12 @@ def _build_order(args: argparse.Namespace) -> GenerationOrder:
         language=args.language,
         status="in_progress",
         # #157 (D4): direct mode travels as a server-side column, never as
-        # marker text inside the prompt.
-        generation_mode="direct" if args.direct else None,
+        # marker text inside the prompt. #167 (D2): --grounded is the explicit
+        # opposite; neither flag leaves the column NULL, which inherits the
+        # server-side DIRECT_GENERATION default.
+        generation_mode=(
+            "direct" if args.direct else ("grounded" if args.grounded else None)
+        ),
     )
 
 
@@ -601,13 +605,28 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "by an earlier --dump-facts run so arms share identical facts."
         ),
     )
-    parser.add_argument(
+    # #167 (D2): the two generation modes are mutually exclusive, and each one
+    # pins the order's `generation_mode` column against the server-side
+    # DIRECT_GENERATION default. Omitting both leaves the column NULL, which
+    # inherits that default (unchanged behaviour).
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
         "--direct",
         action="store_true",
         help=(
             "#153 Phase 0.4 direct-generation mode: skip fact sourcing "
             "entirely (the LLM generates unconstrained by web-found facts); "
             "end-of-pipe verification still runs and carries the truth gate."
+        ),
+    )
+    mode_group.add_argument(
+        "--grounded",
+        action="store_true",
+        help=(
+            "#167: force the grounded fact-first flow even while the "
+            "server-side DIRECT_GENERATION default is on — sourcing runs (or "
+            "--facts-file is joined) and the attribution gates (ungrounded "
+            "drop + F8 source_url) stay armed."
         ),
     )
     parser.add_argument(

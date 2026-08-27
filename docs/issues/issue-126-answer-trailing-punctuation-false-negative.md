@@ -48,3 +48,8 @@ The two strings differ only by a trailing period, which is what the founder saw.
 - [#128 — idiom questions break in translation](issue-128-idiom-questions-break-in-translation.md) — same field test, same Slovak-session translation area, different failure (a fabricated fact rather than a mis-scored answer). Corpus/generation-side; keep separate.
 - [#125 — MCQ UI minimal redesign](issue-125-mcq-ui-minimal-redesign.md) — touches how options are presented; if option translation ships, the two overlap on the client.
 - **Out of scope here:** STT accuracy and the ElevenLabs engine choice ([#120 — transcriber abstraction + Slovak commands](issue-120-transcriber-abstraction-slovak-commands.md)), voice *command* recognition ([#122 — voice command feedback and lexicon](issue-122-voice-command-feedback-and-lexicon.md)), and any change to how questions are generated.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #126 Slovak answers scored against English option text — [plan](../issues/issue-126-answer-trailing-punctuation-false-negative.md) — TF 2026-07-28, LIKELY. **Overturns the founder's punctuation theory** (every deterministic path already strips '.'): only the question sentence is translated, options + `correct_answer` stay English, so "Pravda"/"Nepravda" fail deterministically and open answers fall to a non-deterministic LLM judge — exactly the "sometimes correct" pattern. Founder call: translate options vs. back-translate the spoken answer.
+

@@ -49,7 +49,10 @@ GENERATION_FLOW = "fun-redesign-72"
 # special-case, so kids/themed register later by adding one line — no new branch
 # (decisions 3, 2d). An unregistered category falls through to v3 unchanged.
 _CATEGORY_PROMPT_FILES = {
-    "entertainment": "question_generation_entertainment.md",
+    # #167 (D3): v2 is the live entertainment template. v1
+    # (question_generation_entertainment.md) is deliberately kept on disk as a
+    # one-line rollback — change this value back, nothing else.
+    "entertainment": "question_generation_entertainment_v2.md",
     # #162 (gen-review D15): the kids safety/age template finally has a call
     # site — a `category="kids"` order previously fell through to generic v3
     # with zero child-safety rules.

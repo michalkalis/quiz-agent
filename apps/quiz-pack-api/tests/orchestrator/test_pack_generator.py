@@ -267,3 +267,41 @@ async def test_direct_generation_env_rollback(monkeypatch) -> None:
     direct_order.generation_mode = "direct"
     await gen.run(direct_order)
     assert gen.last_ctx.direct_generation is True
+
+
+@pytest.mark.asyncio
+async def test_generation_mode_resolves_over_global_default(monkeypatch) -> None:
+    """#167 (D2): an explicit order overrides the global default; NULL inherits
+    it, so the app/API path is byte-identical.
+
+    Before #167 the resolution was `mode == "direct" or global_default()`, which
+    made `"grounded"` unreachable while `DIRECT_GENERATION` was on (its shipped
+    default since #166) — the CLI could ask for a grounded, fact-sourced run and
+    silently get a direct one, with the two attribution gates the grounded flow
+    depends on disabled. The matrix below is the contract: the column wins in
+    *both* directions, and only its absence consults the flag. The NULL rows are
+    the no-regression half — the app/API path never writes the column, so those
+    two asserts are what prove #167 changed nothing for real customer orders.
+    """
+    gen = PackGenerator(
+        stages=[FakeStage("sourcing")], sink_factory=lambda _oid: RecordingSink()
+    )
+
+    async def _resolved(mode: str | None) -> bool:
+        order = _make_order()
+        order.generation_mode = mode
+        await gen.run(order)
+        assert gen.last_ctx is not None
+        return gen.last_ctx.direct_generation
+
+    # Global default ON (the shipped #166 state).
+    monkeypatch.setenv("DIRECT_GENERATION", "1")
+    assert await _resolved("direct") is True
+    assert await _resolved("grounded") is False  # regressed before #167
+    assert await _resolved(None) is True
+
+    # Global default OFF (the #166 rollback switch).
+    monkeypatch.setenv("DIRECT_GENERATION", "0")
+    assert await _resolved("direct") is True
+    assert await _resolved("grounded") is False
+    assert await _resolved(None) is False

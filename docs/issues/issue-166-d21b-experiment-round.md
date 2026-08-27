@@ -2,6 +2,9 @@
 
 **Triage:** experiment · in-progress (2026-08-18)
 **Nadväzuje na:** #164 — Experimentálne kolo D21 (§ Rozhodnutia zakladateľa, § Metodika ďalšieho kola) · #165 — D21 eval set freeze (baseline čísla).
+**Dĺžka nad cap (~300 riadkov), priznane:** živý experimentálny log jedného
+kola — split uprostred by rozbil kontext; research bloky sa priebežne
+presúvajú do `docs/research/` (naposledy provider comparison 2026-08-26).
 
 ## Cieľ
 
@@ -276,7 +279,35 @@ korpus-regrow).
          ~10 %. Odhad úspory 30–50 % tokenovej zložky, NEOVERENÉ (meranie
          ~50 ¢). Founder: nemerať teraz, len zapísať.
       3. Batch API (−50 %) potvrdené do budúcna — patrí do korpusového
-         kola (TODO riadok „Spoločný korpus").
+         kola (TODO riadok „Spoločný korpus"). **Korekcia 2026-08-26
+         (provider research):** Anthropic Batch web search podporuje
+         (−50 % len tokeny, search fee 1 ¢/hľadanie ostáva v plnej výške —
+         pri native checku je search fee dominantná zložka, takže reálna
+         úspora je malá); OpenAI Batch web_search NEPODPORUJE; Gemini Batch
+         nejasné (docs mlčia); Perplexity batch nemá.
+      4. **Provider research mimo Anthropic (founder ask 2026-08-26),
+         VALIDOVANÉ na 20q + 40q sade** — plný writeup (výsledky per
+         provider, ceny, 40q validácia) presunutý do
+         `docs/research/factcheck-provider-comparison-2026-08-26.md`.
+         Súhrn: **gpt-5-mini + Responses web_search recall 7/7 @ 4,04 ¢/q
+         (n=40)** — prvá metóda s plným recallom; Gemini 3.5 Flash 6/7 @
+         ~1,9 ¢; gpt-5.4-mini aj gemini-3.7-flash nepoužiteľné. Jediný
+         otvorený flag z čistej sady: q92 (Hatsune Miku, čaká founder
+         verdikt, skôr nitpick).
+         - **IMPLEMENTOVANÉ A NASADENÉ 2026-08-26** (founder zelená
+           in-session; PR #36, squash-merge `4b2d7465`): FactVerifier
+           dispatchuje podľa model id (`claude*` → Anthropic cesta bez
+           zmeny, inak OpenAI Responses + `web_search`), default roly
+           FACTCHECK = `gpt-5-mini`, **rollback =
+           `LLM_ROLE_FACTCHECK=claude-sonnet-5`** (env, bez deployu).
+           Testy 995 passed 2× + 624 quiz-agent; prod smoke cez
+           `POST /api/v1/verify` po deployi OK (verdikt „ok", reálny
+           search, NASA citácia). Pack-level e2e nebežal: anon-bootstrap
+           vyžaduje App Attest (bez zariadenia token nevydá) a lokálny
+           AUTH_JWT_SECRET nesedí s prod — overený bol priamo zmenený
+           komponent. Pozn.: job „Test Quiz Pack API (integration)"
+           v Backend CI padá identicky aj na main (dni pred touto zmenou)
+           — samostatný fix mimo #166.
 - [ ] Pozorovanie z e2e: v packu prešli 2 near-duplicitné Zanzibar otázky
       (dedup ich nechytil); 10. otázka padla v pipeline pred persistom
       (nie je v DB — gate/dedup/fact-check drop, log sa nezachoval).
@@ -391,9 +422,23 @@ odpoveď) opravený štrukturálne: normalizácia presunutá do
 `AdvancedQuestionGenerator._finalize_questions` (`app/generation/mcq_answer.py`),
 takže ju neobíde ani skript volajúci `_generate_batch` priamo.
 
+Import do prod korpusu (founder 2026-08-26): 89 otázok, ktoré prešli kontrolou
+(11 vyradených, 5 s opravou znenia/odpovede), naimportovaných do prod
+`questions` ako `approved` s embeddingami — súbor
+`corpus_import_2026-08-26.json` v run adresári (deterministické UUID
+z temp id, uuid5 namespace `quiz-agent/d21b-2026-08-18`; temp id zachované
+v provenance extra). Prod approved: 41 → 130.
+
 ## Kritérium hotovosti
 
 Publikovaná dávka 100 otázok bez duplicít, obaja rateri hodnotia oboma osami;
 po ohodnotení spočítané korelácie vrstiev proti michal osi + recall verify/
 critique proti flagom; eval set rozšírený; founder rozhodnutie o vrstvách a
 prod gen modeli zaznamenané tu.
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] **Experimentálne kolo D21b (gen-review blok 3b) → implementácia záverov** — inkrement 1 NASADENÝ v prode 2026-08-24 (Fable + direct v1 default, critique/duely a judge panel mimo toku; skúšobný pack_10 doručený za 3:17 min / 84 ¢ vs. ~30–40 min predtým; extrapolácia pack_30 ≈ 2,5 $). Inkrement 2 (web fact-check namiesto verify) **NASADENÝ + e2e overený 2026-08-24 večer**: pack_10 za 5:15 min, 9/10 otázok, verdikty web-grounded (9/9 ok, reálne zdroje), žiadne 429. Fact-check ≈ 18 ¢/otázku (pack 262 ¢; pack_30 ≈ 7–8 $) → **founder 2026-08-24 schválil inkrement 3 (zlacnenie): dvojúrovňová kontrola (evergreen lacno, news plný web check) + lacný variant validovaný na D21b sade (latka 6/6) + max_searches 2–3 + Batch API pre korpus** — **inkrement 3 UZAVRETÝ 2026-08-25**: founder manuálne overil všetkých 9 flagnutých otázok (referencia = 7 chýb: q18 von — aj wiki nejednoznačná, q89+q95 dnu, q37 OK) → q95 je evergreen chyba, ktorú lacný variant nechytá (korekcia pôvodného záveru) a skip by ju pustil ⇒ **rozhodnutie: plný web check ostáva pre všetky otázky, tier router ostáva dormant, zlacnenie = Batch API (−50 %) aj pre ďalšie fázy pipeline, nie slabší check**; custom packy bez zisku OK / stratové nie; + founder hierarchia zdrojov (wiki prvá) v prod fact-check prompte; detaily: [issue-166](../issues/issue-166-d21b-experiment-round.md) § Implementácia.
+
+> - [ ] **Spoločný korpus — regrow cez Anthropic Batch API (founder 2026-08-24: potvrdený smer, ide sa naň čoskoro).** Kurátorovaný korpus (dnes len 31 approved otázok po culle) sa dogeneruje Fable 5 cez Batch API (−50 %, latencia nevadí — korpus nie je zákaznícka objednávka; gen ~5 ¢/otázku namiesto ~10 ¢). **Founder 2026-08-25: batch použiť na ČO NAJVIAC fáz pipeline (aj fact-check ~18→9 ¢/q — Message Batches podporujú web_search), nielen gen; korpusové otázky vrátane entertainment sa robia do zásoby. Overovanie pre korpus: kandidát = Bedrock verifier s vlastným search okruhom (Tavily + celé stránky + kódová extrakcia pasáží; AWS kredity ≈ zadarmo) — brána: validácia na founder referencii 7 chýb PRED použitím; + poznámka prompt caching pri native checku — detaily [issue-166](../issues/issue-166-d21b-experiment-round.md) § Follow-up smery.** Custom packy naopak VŽDY realtime (founder 2026-08-24 — čo najrýchlejšie doručenie, batch vyradený). Predpoklady: (1) founder rozhodnutie o vrstvách + prod gen modeli po D21b (otvorené v [issue-166](../issues/issue-166-d21b-experiment-round.md)), (2) firemný Anthropic účet + ANTHROPIC_API_KEY v prod secrets, (3) batch cesta v LLM factory popri OpenRouter. Pozn.: nový Anthropic účet štartuje na znížených Evaluation-tier limitoch. Potrebuje vlastný prep round (/prepare-issue) — rozsah korpusu a kategórie = produktové rozhodnutie s founderom.
+

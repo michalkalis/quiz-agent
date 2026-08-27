@@ -415,6 +415,10 @@ def _order_namespace(
         theme=None,
         mcq_bias=mcq_bias,
         direct=False,
+        # #167 (D2): both mode flags off → `generation_mode` stays NULL, so the
+        # validation harness keeps inheriting the server-side default exactly as
+        # it did before the flag pair existed.
+        grounded=False,
     )
 
 

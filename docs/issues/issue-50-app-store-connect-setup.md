@@ -74,3 +74,8 @@ public listing + IAP products + the API credentials to automate metadata going f
 ## Súvisiace issues
 [[issue-30-batch-generate-categories|#30 Batch-generate questions for new categories]] · [[issue-33-quiz-pack-api-phase-1|#33 quiz-pack-api Phase 1]] · [[issue-36-quiz-pack-api-phase-2|#36 quiz-pack-api Phase 2]] · [[issue-49-daily-limit-cost-research|#49 Daily free-limit cost research]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #50 App Store Connect listing + ASC API setup — [plan](../issues/issue-50-app-store-connect-setup.md) (launch decisions #5/#7; **needs founder**: create app record + IAP + ASC API key on Apple acct, then agent wires fastlane + drafts SK/CZ/EN metadata — pack purchasing only; launch blocker) — **Founder decision 2026-06-09: not started, founder will do `[HUMAN]` steps**; exact step-by-step → `docs/artifacts/asc-setup-instructions-2026-06-09.html`. Agent unblocks once ASC API key lands in `.env`
+

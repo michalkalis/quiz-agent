@@ -186,6 +186,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
             let legacy = try decoder.container(keyedBy: LegacyKeys.self)
             categories = try (legacy.decodeIfPresent(String.self, forKey: .category)).map { [$0] } ?? []
         }
+        // Drop ids retired by taxonomy changes (2026-08 revamp): a stale
+        // selection like "disney" would silently filter every quiz to empty.
+        // Dropping degrades to "All Categories", which always has content.
+        categories = categories.filter { Self.categoryOptions.contains($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
         answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
@@ -223,9 +227,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
     static let categoryOptions: [String?] = [
-        nil, "general", "adults", "kids",
-        "wizarding-world", "superheroes", "disney",
-        "football", "sports-mix",
+        nil, "science-nature", "history", "geography-world",
+        "movies-music", "sports", "food-everyday", "entertainment",
     ]
 
     /// Valid age-appropriate options (nil means no filter). Mirrors `Config.ageAppropriateOptions`.
@@ -276,7 +279,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
             language: "sk",
             audioMode: "media",
             numberOfQuestions: 20,
-            categories: ["adults"],
+            categories: ["science-nature"],
             difficulty: "hard",
             autoAdvanceDelay: 5,
             answerTimeLimit: 45,

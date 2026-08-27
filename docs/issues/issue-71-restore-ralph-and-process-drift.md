@@ -51,3 +51,8 @@ AI-navigable) gain phone visibility without leaving the file-based system.
 - [ ] GitHub Issues includes #59–#71 — **surviving task: run `scripts/mirror-issues.sh` to refresh the stale GitHub Issues mirror**
 - ~~[ ] A new `docs/research/ai-news-YYYY-MM-DD.md` (≥ 2026-06-21) confirms the routine is live~~ — routine disabled 2026-06-25
 - ~~[ ] Stale `.claude/scheduled_tasks.lock` removed~~ — moot, routine disabled 2026-06-25
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #71 Process: GitHub mirror refresh — **scope reduced 2026-07-06**: Ralph-restore struck (founder 2026-07-05: no autonomous loops); push audit resolved 2026-06-22; AI-news routine disabled 2026-06-25. Survives only: run `mirror-issues.sh` to refresh the stale GitHub Issues mirror — [plan](../issues/issue-71-restore-ralph-and-process-drift.md)
+

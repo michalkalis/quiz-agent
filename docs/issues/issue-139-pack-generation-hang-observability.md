@@ -48,3 +48,8 @@ Belt: per-stage `asyncio.wait_for` (`STAGE_TIMEOUT_SECONDS`). Observability: sta
 - [x] Memory finding recorded above: 216–255 MB of 512 MB across a full run — well under the ~80% action threshold; no action.
 - [x] Founder's order retried post-deploy: every failure reason now concretely visible (stage-timeout → TimeoutError with stage name; provider non-JSON body → #142; cross-loop pool bug → found & fixed same day). `delivered` itself is blocked on OpenRouter top-up (founder leg) — one manual retry left.
 - [x] quiz-pack-api suite green (791 passed, LLM_GATEWAY=direct pinned, verified twice); deployed to prod 4× on 2026-08-04 (releases v34–v37).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [~] #139 Pack generation hangs silently → FAILED with zero diagnostics — [plan](../issues/issue-139-pack-generation-hang-observability.md) — **agent-side SHIPPED+deployed 2026-08-04** (per-call LLM timeouts, cancel-path reporting, sweep Sentry, job heartbeat, pack_30-sized budgets, dedup-bridge engine fix, monotonic retry budget; forced failure verified in Sentry; RSS 216–255 MB/512 → no OOM). Remaining = **founder: top up OpenRouter** (balance $0.71; one pack_30 attempt ≈ $4.23) → then one manual retry of `7dbef479…` (1 of 3 left). New: #142 non-JSON provider response — **fixed 2026-08-05** (bounded retry + raw-body logging at both generation call sites; sub-batching deferred pending eval + founder approval).
+

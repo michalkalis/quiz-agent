@@ -31,11 +31,11 @@ struct HomeCategoryMultiSelectTests {
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore()
         )
-        vm.settings.categories = ["kids", "disney"]
+        vm.settings.categories = ["science-nature", "history"]
 
         await vm.startNewQuiz()
 
-        #expect(network.capturedCategories == ["kids", "disney"],
+        #expect(network.capturedCategories == ["science-nature", "history"],
                 "the Home multi-select must reach the session request or it's a silent no-op")
     }
 
@@ -60,10 +60,22 @@ struct HomeCategoryMultiSelectTests {
         settings.categories = []
         #expect(settings.categoryDisplayName() == Config.categoryOptions[0].display)
 
-        settings.categories = ["kids"]
-        #expect(settings.categoryDisplayName() == Config.categoryOptions.first { $0.id == "kids" }?.display)
+        settings.categories = ["science-nature"]
+        #expect(settings.categoryDisplayName() == Config.categoryOptions.first { $0.id == "science-nature" }?.display)
 
-        settings.categories = ["kids", "disney"]
+        settings.categories = ["science-nature", "history"]
         #expect(settings.categoryDisplayName().contains("2"))
+    }
+
+    // The taxonomy lives in two places: `Config.categoryOptions` (id + display,
+    // what the picker renders) and `QuizSettings.categoryOptions` (ids only,
+    // what `QuizSettings` validation keeps on load). Until now only a code
+    // comment held them together — and drift is silent-but-destructive: a
+    // category offered by the picker but missing from the validation mirror is
+    // filtered out of a restored setting, so the user's saved choice vanishes.
+    @Test("the two category mirrors must not drift")
+    func categoryMirrorsMatch() {
+        #expect(QuizSettings.categoryOptions == Config.categoryOptions.map { $0.id },
+                "QuizSettings.categoryOptions must mirror Config.categoryOptions ids, in order")
     }
 }

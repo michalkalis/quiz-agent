@@ -60,6 +60,21 @@ def _rss_mb() -> float | None:
         return None
 
 
+def _resolve_direct_generation(generation_mode: str | None) -> bool:
+    """Three-way resolution of the per-order generation mode (#167 D2).
+
+    The `generation_mode` column (CHECK-constrained to `direct|grounded`) is
+    authoritative in both directions; only its absence defers to the global
+    `DIRECT_GENERATION` flag. That NULL arm is what keeps the app/API path —
+    which never writes the column — behaving exactly as before.
+    """
+    if generation_mode == "direct":
+        return True
+    if generation_mode == "grounded":
+        return False
+    return feature_flags.direct_generation_default()
+
+
 class Stage(Protocol):
     """One step in the pack-generation pipeline.
 
@@ -133,9 +148,13 @@ class PackGenerator:
             # only — never from customer prompt text. #166 D21b: direct is
             # additionally the server-side DEFAULT (env flag, founder
             # 2026-08-24); DIRECT_GENERATION=0 restores the grounded flow.
-            direct_generation=(
-                getattr(order, "generation_mode", None) == "direct"
-                or feature_flags.direct_generation_default()
+            # #167 (D2): the column is authoritative in BOTH directions — the
+            # old `or` swallowed "grounded" whenever the global default was on,
+            # so a per-order grounded run was impossible. NULL (the only value
+            # the app/API path ever writes) still inherits the global default,
+            # which keeps that path byte-identical.
+            direct_generation=_resolve_direct_generation(
+                getattr(order, "generation_mode", None)
             ),
         )
         if DIRECT_GENERATION_MARKER in (order.prompt or ""):

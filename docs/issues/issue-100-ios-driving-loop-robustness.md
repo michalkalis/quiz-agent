@@ -1,6 +1,6 @@
 # #100 — iOS driving-loop robustness (MVP-review blockers)
 
-**Triage:** bug · ready-for-agent
+**Triage:** bug · agent-side DONE 2026-07-16 · re-verified 2026-08-26
 **Status:** Planned 2026-07-16 from the pre-MVP review (7-agent parallel review + top-level first-hand verification of the load-bearing findings). **This is the real launch gate** — five defects in the core voice loop that can stall, dead-end, or crash the app mid-drive. All iOS-only, no backend/infra dependency, so this ships to TestFlight independently of #101/#102/#103.
 
 ## 1. Why
@@ -37,3 +37,24 @@ One sweep, each item its own commit; findings 1–4 are the priority, 5 is clean
 ## 5. Out of scope
 
 Barge-in (dead feature — separate P2, see handoff), monetization (#101/#102), pack backend (#103), the open April timer bug beyond what findings 1–4 touch.
+
+## Uzavretie (2026-08-26)
+
+Všetkých 5 fixov shipnutých už **2026-07-16** (v deň spísania issue), TODO riadok len ostal omylom otvorený:
+
+| # | Fix commit | Dnešný stav (po #113 dekompozícii QuizViewModel) |
+|---|-----------|--------------------------------------------------|
+| 1 | `3c20f96f` | `isAdvancing` guard drží v `advanceToNextQuestionOrFinish()` (`QuizViewModel.swift:1774`), nastavený pred awaitmi; oba callery (Next button aj auto-advance) idú cez neho |
+| 2 | `e22c49e0` | capture-then-clear `transcribedAnswer` na vstupe `confirmAnswer()` (`RecordingCoordinator+Confirmation.swift:31`), + `isSubmittingAnswer` single-flight v `resubmitAnswer`; navyše `question_id` + 409 mismatch server-side (`dec4fe8a`, #133 — audit-deferred fixes) |
+| 3 | `a669e39b` | `.ended` + `.shouldResume` → `setActive(true)` (`AudioService.swift:566-589`, helper `shouldResumeSession`) |
+| 4 | `969a2a13` | identity re-check `shouldStartEngine` po sleepe pred `engine.start()` (`SilenceDetectionService+Engine.swift:223`); + `startInFlight` single-flight (`39706c71`, #133) |
+| 5 | `63b0c2a6` | `grep nonisolated(unsafe)` v module čistý — observer tokeny v `OSAllocatedUnfairLock` |
+
+Re-verifikácia 2026-08-26 (2 nezávislé code-read agenty + cielený test beh): všetky guardy prežili augustové prestavby; regresné testy `QuizViewModelAdvanceRaceTests` / `QuizViewModelSubmissionRaceTests` / `QuizViewModelResubmitTests` / `SilenceDetectionServiceTests` / interruption suites v `AudioServiceTests.swift` — **61/61 green** na sim.
+
+**Ostáva (`[HUMAN]`):** founder on-device — telefonát mid-question → mic sa zotaví na ďalší tap (zdieľaný leg s #67 Part A).
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #100 iOS driving-loop robustness (MVP-review blockers) — **★ LAUNCH GATE** — [plan](../issues/issue-100-ios-driving-loop-robustness.md) — from the 2026-07-16 pre-MVP review (7 parallel reviewers + first-hand verify). 5 confirmed defects on the core voice loop, all iOS-only (ships to TestFlight independently): double-tap "Next" → blank question dead-end (`QuizViewModel.swift:1159` re-entrancy), streaming-path answer double-submit (`QuizViewModel+Recording.swift:465`), no mic recovery after a phone call (`AudioService.swift:433` `.ended` never reactivates), two-engine crash race (`SilenceDetectionService.swift:215`), banned `nonisolated(unsafe)` (`AudioService.swift:134`). Do FIRST.
+

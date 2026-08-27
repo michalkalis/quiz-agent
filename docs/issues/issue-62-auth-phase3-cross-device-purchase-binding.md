@@ -49,3 +49,8 @@ Phase 2 (#61) gives a recoverable Apple account. Phase 3 closes the loop on **fu
 ## Súvisiace issues
 [[issue-48-pre-release-review-gauntlet|#48 Pre-release review gauntlet]] · [[issue-50-app-store-connect-setup|#50 App Store Connect listing + ASC API setup]] · [[issue-58-authentication|#58 Authentication]] · [[issue-60-auth-phase1-anonymous-identity|#60 Auth Phase 1]] · [[issue-61-auth-phase2-sign-in-with-apple|#61 Auth Phase 2]]
 <!-- obsidian-links:end -->
+
+## TODO detail (migrované z TODO.md 2026-08-26)
+
+> - [ ] #62 Auth Phase 3 — cross-device + full purchase binding — [plan](../issues/issue-62-auth-phase3-cross-device-purchase-binding.md) — StoreKit V2 receipt→`apple_sub` (model = quiz-pack-api JWS verifier, not reusable as-is), full reinstall/cross-device entitlement recovery, passkey decision gate (`ASAuthorizationAccountCreationProvider`, iOS 26). Depends #61 + #50; post-MVP.
+

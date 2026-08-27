@@ -165,7 +165,7 @@ struct QuestionView: View {
             closeChip
             // #56: interpolated literal so the compiler extracts "%@ · Q%lld";
             // uppercased as a display modifier (ViewInspector matches the source).
-            Text("\(question.category) · Q\(currentQuestionNumber)")
+            Text("\(Config.categoryDisplayName(for: question.category)) · Q\(currentQuestionNumber)")
                 .textCase(.uppercase)
                 .font(.hangsMono(11, weight: .medium))
                 .tracking(2)
@@ -215,10 +215,10 @@ struct QuestionView: View {
                 if question.isMultipleChoice {
                     // #56: interpolated literal so the compiler extracts
                     // "%@ · QUESTION %lld"; uppercased as a display modifier.
-                    Text("\(question.category) · QUESTION \(currentQuestionNumber)")
+                    Text("\(Config.categoryDisplayName(for: question.category)) · QUESTION \(currentQuestionNumber)")
                         .textCase(.uppercase)
                 } else {
-                    Text(verbatim: question.category.lowercased())
+                    Text(verbatim: Config.categoryDisplayName(for: question.category).lowercased())
                 }
             }
             .font(.hangsMono(11, weight: .medium))

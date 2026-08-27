@@ -16,6 +16,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from app.generation.pattern_routing import PATTERNS_TO_MCQ
 from app.orchestrator.context import OrderContext, StageResult
 from quiz_shared.models.question import Question
@@ -83,6 +85,38 @@ class TestNoCategoryPrompt:
         assert args.prompt == ""
         order = generate_pack._build_order(args)
         assert order.prompt == ""
+
+
+class TestGenerationModeFlags:
+    """#167 (D2): the CLI must be able to ask for a *grounded* run.
+
+    `DIRECT_GENERATION` has been on by default since #166, and the only per-run
+    lever was `--direct` — so an operator who needed the fact-sourced flow (the
+    #167 entertainment pilot needs it: direct mode disables both attribution
+    gates the post-cutoff filter joins on) had no way to say so without flipping
+    a server-side env flag. `--grounded` is that lever, and it travels the same
+    server-side `generation_mode` column as `--direct`, never as prompt text.
+    """
+
+    def test_grounded_flag_sets_generation_mode(self):
+        args = generate_pack._parse_args(["--prompt", "pop culture", "--grounded"])
+        assert generate_pack._build_order(args).generation_mode == "grounded"
+
+        args = generate_pack._parse_args(["--prompt", "pop culture", "--direct"])
+        assert generate_pack._build_order(args).generation_mode == "direct"
+
+        # Neither flag → NULL, which inherits the server-side default. This is
+        # the no-regression assert: every existing invocation is unchanged.
+        args = generate_pack._parse_args(["--prompt", "pop culture"])
+        assert generate_pack._build_order(args).generation_mode is None
+
+    def test_direct_and_grounded_are_mutually_exclusive(self):
+        """Asking for both is an operator mistake, not a silent precedence
+        rule — argparse must reject it at parse time (exit 2) rather than let
+        `--direct` quietly win and run the wrong pipeline on a paid batch."""
+        with pytest.raises(SystemExit) as exc:
+            generate_pack._parse_args(["--prompt", "x", "--direct", "--grounded"])
+        assert exc.value.code == 2
 
 
 class TestOutFlag:

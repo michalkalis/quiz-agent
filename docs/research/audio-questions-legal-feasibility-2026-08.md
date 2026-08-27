@@ -24,7 +24,7 @@ Oficiálne preview API sú slepá ulička:
 | Apple Music / iTunes Search | 30s previews len na promo store obsahu (povinný store link + „courtesy of iTunes"); „not be used for independent entertainment value" — kvíz je presne to |
 | Deezer | 30s previews existujú, ale ToU nedávajú komerčnú certifikáciu; rhythm/quiz hry potrebujú osobitnú licenciu mimo API |
 
-Reálna prax trhu: SongPop má priame dohody s labelmi (Conduit Labs → deal s Universal Music Group). Heardle bežal na sivej zóne, Spotify ho kúpil a **sám zavrel po 9 mesiacoch** — licenčná matematika snippet hier nevychádza ani vlastníkovi rights infraštruktúry. SOZA sadzobníky pokrývajú verejné produkcie/vysielanie, nie interaktívny in-app playback — potrebný by bol bespoke deal s labelmi (masters) + publishermi, s minimálnymi garanciami.
+Reálna prax trhu: SongPop má priame dohody s labelmi. Heardle bežal na sivej zóne, Spotify ho kúpil a **sám zavrel po 9 mesiacoch** — licenčná matematika snippet hier nevychádza ani vlastníkovi rights infraštruktúry. SOZA sadzobníky pokrývajú verejné produkcie/vysielanie, nie interaktívny in-app playback — potrebný by bol bespoke deal s labelmi (masters) + publishermi, s minimálnymi garanciami.
 
 ### 2. Film/TV — právne to isté ako hudba, náhrada = public domain prejavy
 

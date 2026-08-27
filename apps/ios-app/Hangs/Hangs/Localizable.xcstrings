@@ -1,7 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
+    "" : {
+
+    },
     "%@ / month" : {
       "localizations" : {
         "sk" : {
@@ -471,7 +473,7 @@
       }
     },
     "After each question" : {
-      "comment" : "Answer reveal option: today's per-question result screen",
+      "comment" : "Answer reveal setting: today's per-question result screen",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -572,7 +574,7 @@
       }
     },
     "At the end of the set" : {
-      "comment" : "Answer reveal option: deferred reveal in the end-of-set recap",
+      "comment" : "Answer reveal setting: deferred reveal, one recap after the last question",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -1448,6 +1450,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Predvolene po anglicky"
+          }
+        }
+      }
+    },
+    "Entertainment" : {
+      "comment" : "Quiz category option",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zábava"
           }
         }
       }
@@ -2427,7 +2440,7 @@
       }
     },
     "Microphone access is off — you can still type. Enable it in Settings to dictate." : {
-      "comment" : "Feedback sheet: mic disabled because permission was denied",
+      "comment" : "Feedback sheet: mic disabled because permission was denied\nRating panel: mic disabled because permission was denied",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -3311,7 +3324,7 @@
       }
     },
     "Reached the 2-minute dictation limit. Tap Dictate to add more." : {
-      "comment" : "Feedback sheet: dictation auto-stopped at the 120-second cap",
+      "comment" : "Feedback sheet: dictation auto-stopped at the 120-second cap\nRating panel: dictation auto-stopped at the 120-second cap",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -3805,6 +3818,7 @@
       }
     },
     "Send feedback" : {
+      "comment" : "Accessibility label for the TestFlight-only feedback button",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -4236,6 +4250,7 @@
       }
     },
     "Start quiz" : {
+      "comment" : "Accessibility label: play this custom pack from Home",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
@@ -5318,7 +5333,7 @@
       }
     },
     "Your session expired. Please sign in again to continue." : {
-      "comment" : "Pack-order error: the request was still unauthorized after a token refresh",
+      "comment" : "Pack-order error: the request was still unauthorized after a token refresh\nRating error: the request was still unauthorized after a token refresh",
       "localizations" : {
         "sk" : {
           "stringUnit" : {

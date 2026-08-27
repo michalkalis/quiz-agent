@@ -104,6 +104,7 @@ nonisolated enum Config {
         ("movies-music", String(localized: "Movies & Music", comment: "Quiz category option")),
         ("sports", String(localized: "Sports", comment: "Quiz category option")),
         ("food-everyday", String(localized: "Food & Everyday Life", comment: "Quiz category option")),
+        ("entertainment", String(localized: "Entertainment", comment: "Quiz category option")),
     ]
 
     /// Human-readable (localized) name for a category id: taxonomy ids map

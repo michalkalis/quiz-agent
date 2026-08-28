@@ -116,6 +116,11 @@ async def create_session(
         )
         session.language = body.language
         session.include_images = body.include_images
+        # TestFlight builds may see pending_review questions (founder rule,
+        # 2026-08-28); the value is whitelisted so a garbage header can never
+        # widen the pool — anything but the exact literal stays App Store-safe.
+        if request.headers.get("X-Build-Channel") == "testflight":
+            session.build_channel = "testflight"
         if body.category:
             session.category = body.category
         # #82: the retriever filters on preferred_categories — session.category

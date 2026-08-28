@@ -105,6 +105,14 @@ class QuizSession(BaseModel):
         None, description="Current category filter (e.g., 'music', 'movies', 'all')"
     )
     language: str = Field("en", description="Preferred language code (ISO 639-1)")
+    build_channel: Optional[str] = Field(
+        None,
+        description=(
+            "Client install channel ('testflight' when the app announced a "
+            "TestFlight/dev install via X-Build-Channel). None = App Store or "
+            "unknown, which always means approved-only question serving."
+        ),
+    )
     include_images: bool = Field(
         False,
         description=(

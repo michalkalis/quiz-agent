@@ -31,6 +31,12 @@ extension RecordingCoordinator {
                 switch event {
                 case let .partialTranscript(text):
                     self.liveTranscript = text
+                    // Streaming has no local VAD, so a content-bearing partial
+                    // is the speech signal: it keeps a spoken-but-lost answer
+                    // on the tier-1 retry path instead of the unattended skip.
+                    if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        self.speechDetectedDuringAutoRecord = true
+                    }
 
                 case let .committedTranscript(text):
                     self.liveTranscript = text

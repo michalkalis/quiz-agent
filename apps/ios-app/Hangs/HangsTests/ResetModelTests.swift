@@ -131,6 +131,56 @@ struct ResetModelTests {
         #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 2)
     }
 
+    /// WHY: an auto-started recording (answer window expired, user never tapped
+    /// Record) that hears dead air must NOT loop "didn't catch that" banners
+    /// with fresh answer windows — that reads as a broken timer (TF build 53
+    /// feedback). It skips straight to the tier-3 no-answer path: no error
+    /// message, counter untouched.
+    @Test("unattended dead air skips instead of entering tier-1 retry")
+    func unattendedSilenceSkipsWithoutRetry() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .recording
+        viewModel.recordingCoordinator.handleTranscriptionFailure(unattendedSilence: true)
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 0)
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    /// WHY: the founder's exact TF build 53 trace — answer window expires,
+    /// auto-record opens, ElevenLabs commits dead air on its own. The empty
+    /// commit must resolve as the unattended skip, not tier-1 "didn't catch
+    /// that" + a fresh answer window (PR #52 review finding: the flags are
+    /// cleared before the handlers run on the forced-commit path, so the
+    /// spontaneous-commit path here is the one that still sees them live).
+    @Test("empty spontaneous commit during auto-record skips without retry")
+    func emptyCommitDuringAutoRecordSkips() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .recording
+        viewModel.recordingCoordinator.setIsAutoRecording(true)
+        viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = false
+        await viewModel.recordingCoordinator.handleCommittedTranscript("")
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 0)
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    /// WHY: the unattended skip must NOT swallow a spoken-but-lost answer — if
+    /// the driver answered out loud during auto-record (a content-bearing
+    /// partial arrived) and the commit still came back empty (network blip),
+    /// the tier-1 "didn't catch that" retry is owed, not a silent skip
+    /// (PR #52 review finding #2).
+    @Test("empty commit after detected speech keeps the tier-1 retry")
+    func emptyCommitAfterSpeechRetries() async throws {
+        let viewModel = Fixtures.makeViewModel()
+        viewModel.quizState = .recording
+        viewModel.recordingCoordinator.setIsAutoRecording(true)
+        viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = true
+        await viewModel.recordingCoordinator.handleCommittedTranscript("")
+        #expect(viewModel.recordingCoordinator.consecutiveTranscriptionFailures == 1)
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage != nil)
+    }
+
     /// WHY: score/questionsAnswered are derived from currentSession (#113 T7),
     /// which kills the stale-projection bug — "Play Again" from CompletionView
     /// calls startNewQuiz() without resetState(), and the stored counters used

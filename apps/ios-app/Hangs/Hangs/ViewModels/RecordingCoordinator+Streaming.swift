@@ -31,6 +31,12 @@ extension RecordingCoordinator {
                 switch event {
                 case let .partialTranscript(text):
                     self.liveTranscript = text
+                    // Streaming has no local VAD, so a content-bearing partial
+                    // is the speech signal: it keeps a spoken-but-lost answer
+                    // on the tier-1 retry path instead of the unattended skip.
+                    if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        self.speechDetectedDuringAutoRecord = true
+                    }
 
                 case let .committedTranscript(text):
                     self.liveTranscript = text
@@ -77,6 +83,14 @@ extension RecordingCoordinator {
         // resurrect the confirmation sheet with stale voice text.
         let epoch = submissionEpoch()
 
+        // Dead air on an auto-started recording is "time's up", not a
+        // transcription failure to retry (TF build 53). Two arrival paths:
+        // ElevenLabs can commit spontaneously (its own VAD cap — the flags are
+        // still live here), or the commit was forced by stopRecordingAndSubmit(),
+        // whose prefix already cleared the flags and left us its snapshot.
+        let wasUnattended = wasUnattendedRecording
+            || (isAutoRecording() && !speechDetectedDuringAutoRecord)
+
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
         taskBag.cancel(.sttCommitWatchdog)
@@ -105,7 +119,7 @@ extension RecordingCoordinator {
         // Escalate as a transcription failure (retry prompt → auto-skip), never
         // an empty confirmation sheet (#54 task 54.4, founder #5).
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            handleTranscriptionFailure()
+            handleTranscriptionFailure(unattendedSilence: wasUnattended)
             return
         }
 

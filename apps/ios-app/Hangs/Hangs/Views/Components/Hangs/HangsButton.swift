@@ -57,6 +57,10 @@ struct HangsPrimaryButton: View {
                 }
                 Text(title)
                     .font(.hangsButton)
+                    // Localized titles ("Nahrávať") outgrow the EN layout —
+                    // scale down, never wrap inside the fixed-height capsule.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 if let trailingIcon {
                     Image(systemName: trailingIcon)
                         .font(.system(size: 15, weight: .semibold))
@@ -114,6 +118,8 @@ struct HangsSecondaryButton: View {
                 }
                 Text(title)
                     .font(.hangsBody(16, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(maxWidth: .infinity)

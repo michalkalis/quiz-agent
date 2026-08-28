@@ -26,6 +26,13 @@ struct RecordingState {
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
+    /// Snapshot taken by `stopRecordingAndSubmit()` BEFORE it clears the
+    /// auto-record flags: the recording was auto-started by the answer-window
+    /// expiry and heard no speech. The empty-transcript / watchdog handlers
+    /// read it after the reset — dead air then means "time's up", not a
+    /// transcription failure to retry (TF build 53 feedback).
+    var wasUnattendedRecording: Bool = false
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
@@ -46,6 +53,7 @@ struct RecordingState {
         liveTranscript = ""
         isStreamingSTT = false
         speechDetectedDuringAutoRecord = false
+        wasUnattendedRecording = false
         isStoppingRecording = false
     }
 

@@ -139,6 +139,10 @@ struct AnswerConfirmationView: View {
                     editFocused = false
                     onConfirm()
                 }
+                // An emptied edit field must not be confirmable: confirmAnswer()
+                // drops empty answers after closing the sheet, which would eat
+                // the answer and strand the quiz in .processing.
+                .disabled(transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
                     ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
                     : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))

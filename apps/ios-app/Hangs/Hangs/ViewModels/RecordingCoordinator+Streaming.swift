@@ -77,6 +77,11 @@ extension RecordingCoordinator {
         // resurrect the confirmation sheet with stale voice text.
         let epoch = submissionEpoch()
 
+        // Snapshot before the reset below: an auto-started recording (the answer
+        // window expired, the user never tapped Record) that commits dead air is
+        // "time's up", not a transcription failure to retry (TF build 53).
+        let wasUnattended = isAutoRecording()
+
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
         taskBag.cancel(.sttCommitWatchdog)
@@ -105,7 +110,7 @@ extension RecordingCoordinator {
         // Escalate as a transcription failure (retry prompt → auto-skip), never
         // an empty confirmation sheet (#54 task 54.4, founder #5).
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            handleTranscriptionFailure()
+            handleTranscriptionFailure(unattendedSilence: wasUnattended)
             return
         }
 

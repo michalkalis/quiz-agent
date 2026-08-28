@@ -188,7 +188,9 @@ struct AnswerTile: View {
             Text(value)
                 .font(.hangsBody(16, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .lineLimit(2)
+                // Slovak option texts run long; 2 lines truncated real answers
+                // mid-word (TF build 53 feedback). The grid row grows instead.
+                .lineLimit(3)
                 .minimumScaleFactor(0.7)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)

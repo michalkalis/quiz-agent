@@ -207,11 +207,12 @@ extension RecordingCoordinator {
 
             Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
 
+            let wasUnattended = self.isAutoRecording()
             self.cleanupStreamingSTT()
             self.cancelAutoStopRecordingTimer()
             self.setIsAutoRecording(false)
             self.speechDetectedDuringAutoRecord = false
-            self.handleTranscriptionFailure()
+            self.handleTranscriptionFailure(unattendedSilence: wasUnattended)
         }
         taskBag.add(task, key: .sttCommitWatchdog)
     }
@@ -240,8 +241,19 @@ extension RecordingCoordinator {
     /// visually via `errorMessage`; we intentionally don't announce them via TTS.
     /// Tier 1–2: Show retry prompt
     /// Tier 3: Auto-skip after 2+ failures
+    /// `unattendedSilence`: the recording was auto-started by the answer-window
+    /// expiry and came back empty — the user never opted in, so looping "didn't
+    /// catch that" banners with fresh answer windows reads as a broken timer
+    /// (TF build 53 feedback). Skip straight to tier-3 behavior: no answer, move on.
     /// (Internal, not private — also called from +Streaming and +Submission.)
-    func handleTranscriptionFailure() {
+    func handleTranscriptionFailure(unattendedSilence: Bool = false) {
+        if unattendedSilence {
+            consecutiveTranscriptionFailures = 0
+            transition(to: .askingQuestion)
+            Task { await self.skipQuestion() }
+            return
+        }
+
         consecutiveTranscriptionFailures += 1
 
         switch consecutiveTranscriptionFailures {

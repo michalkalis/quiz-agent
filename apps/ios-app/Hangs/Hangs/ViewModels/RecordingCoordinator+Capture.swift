@@ -56,6 +56,8 @@ extension RecordingCoordinator {
         abortSkipUndoWindow()
 
         cancelAnswerTimer()
+        // A fresh recording invalidates the previous stop's unattended snapshot.
+        wasUnattendedRecording = false
         setErrorMessage(nil)
         transition(to: .recording)
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
@@ -207,7 +209,9 @@ extension RecordingCoordinator {
 
             Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
 
-            let wasUnattended = self.isAutoRecording()
+            // Snapshotted by stopRecordingAndSubmit() before its flag resets —
+            // the watchdog always fires after that prefix armed it.
+            let wasUnattended = self.wasUnattendedRecording
             self.cleanupStreamingSTT()
             self.cancelAutoStopRecordingTimer()
             self.setIsAutoRecording(false)

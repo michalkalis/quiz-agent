@@ -77,10 +77,13 @@ extension RecordingCoordinator {
         // resurrect the confirmation sheet with stale voice text.
         let epoch = submissionEpoch()
 
-        // Snapshot before the reset below: an auto-started recording (the answer
-        // window expired, the user never tapped Record) that commits dead air is
-        // "time's up", not a transcription failure to retry (TF build 53).
-        let wasUnattended = isAutoRecording()
+        // Dead air on an auto-started recording is "time's up", not a
+        // transcription failure to retry (TF build 53). Two arrival paths:
+        // ElevenLabs can commit spontaneously (its own VAD cap — the flags are
+        // still live here), or the commit was forced by stopRecordingAndSubmit(),
+        // whose prefix already cleared the flags and left us its snapshot.
+        let wasUnattended = wasUnattendedRecording
+            || (isAutoRecording() && !speechDetectedDuringAutoRecord)
 
         // Stop streaming recording
         cancelAutoStopRecordingTimer()

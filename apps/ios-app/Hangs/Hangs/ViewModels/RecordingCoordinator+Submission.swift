@@ -22,6 +22,10 @@ extension RecordingCoordinator {
         emitEarcon(.gotIt) // 77.10 got-it tone — recording stopped / auto-submitted
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
+        // Snapshot BEFORE the resets below — the empty-transcript and watchdog
+        // handlers run after this prefix and need to know the recording was
+        // auto-started with no speech (answer window expired, dead air).
+        wasUnattendedRecording = isAutoRecording() && !speechDetectedDuringAutoRecord
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
 
@@ -173,7 +177,7 @@ extension RecordingCoordinator {
                 // Handle "speech not understood" errors gracefully - let user re-record
                 if case let .serverError(statusCode, _) = error, statusCode == 400 {
                     await MainActor.run {
-                        self.handleTranscriptionFailure()
+                        self.handleTranscriptionFailure(unattendedSilence: self.wasUnattendedRecording)
                     }
 
                     Logger.network.warning("⚠️ Speech not understood, tier \(self.consecutiveTranscriptionFailures, privacy: .public) escalation")

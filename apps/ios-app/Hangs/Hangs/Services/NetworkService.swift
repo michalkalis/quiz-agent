@@ -220,6 +220,13 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // TestFlight/dev installs announce themselves so the backend may widen
+        // the question pool to pending_review content. App Store builds send
+        // nothing — absence of the header always means approved-only.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+
         var body: [String: Any] = [
             "max_questions": maxQuestions,
             "difficulty": difficulty,

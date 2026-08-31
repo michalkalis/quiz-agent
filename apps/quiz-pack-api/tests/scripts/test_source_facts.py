@@ -162,6 +162,33 @@ class TestSourceMix:
 
         assert stub.calls == [{"enable_opentdb": False}]
 
+    def test_provider_defaults_to_tavily(self, tmp_path, stub_sourcer):
+        # D5: `--provider` defaults to Tavily and the default run constructs
+        # FactSourcer exactly as it did before the switch existed — the
+        # rollback path must stay identical, not merely equivalent.
+        stub = stub_sourcer({t: 11 for t in TOPICS})
+        out = tmp_path / "facts_167.json"
+
+        source_facts.main(["--topics", ",".join(TOPICS), "--out", str(out)])
+
+        assert "web_search_provider" not in stub.calls[0]
+
+    def test_openai_provider_is_passed_through(self, tmp_path, stub_sourcer):
+        # D5 (founder 2026-08-31): the pilot re-run sources through OpenAI
+        # Responses web_search because the Tavily limit is exhausted. If the
+        # flag stopped reaching FactSourcer the run would silently go back to
+        # the exhausted provider and return 0 facts.
+        stub = stub_sourcer({t: 11 for t in TOPICS})
+        out = tmp_path / "facts_167.json"
+
+        source_facts.main(
+            ["--topics", ",".join(TOPICS), "--out", str(out), "--provider", "openai"]
+        )
+
+        assert stub.calls == [
+            {"enable_opentdb": False, "web_search_provider": "openai"}
+        ]
+
     def test_news_mode_is_never_enabled(self, tmp_path, stub_sourcer, monkeypatch):
         # D4: recency comes from the locked topic list, not the provider's news
         # narrowing. The script must neither set nor depend on the env var.

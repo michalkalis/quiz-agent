@@ -7,7 +7,12 @@ from typing import Optional
 from .models import Fact, FactBatch
 from .wikipedia_source import WikipediaSource
 from .opentriviadb_source import OpenTriviaDBSource
+from .openai_web_search_source import OpenAIWebSearchSource
 from .web_search_source import WebSearchSource
+
+# #167 D5: selectable web-search backend. "tavily" is the default and the
+# rollback — every existing caller (prod included) gets the unchanged path.
+_WEB_SEARCH_PROVIDERS = ("tavily", "openai")
 
 
 class FactSourcer:
@@ -19,7 +24,13 @@ class FactSourcer:
         enable_opentdb: bool = True,
         enable_web_search: bool = True,  # Tavily API key configured in .env
         wikipedia_languages: Optional[list[str]] = None,
+        web_search_provider: str = "tavily",
     ):
+        if web_search_provider not in _WEB_SEARCH_PROVIDERS:
+            raise ValueError(
+                f"unknown web_search_provider {web_search_provider!r} "
+                f"(expected one of {_WEB_SEARCH_PROVIDERS})"
+            )
         self.sources = {}
 
         if enable_wikipedia:
@@ -28,7 +39,11 @@ class FactSourcer:
             )
         if enable_opentdb:
             self.sources["opentdb"] = OpenTriviaDBSource()
-        if enable_web_search:
+        if enable_web_search and web_search_provider == "openai":
+            # #167 D5: OpenAI Responses web_search. No news mode exists on this
+            # path by design (D4) — recency comes from the topic list.
+            self.sources["web_search"] = OpenAIWebSearchSource()
+        elif enable_web_search:
             # #76 F-3b: recency-aware news sourcing, default off. Follows the
             # inline os.getenv() truthy convention used across the gen layer.
             news_mode = (os.getenv("ENABLE_NEWS_SOURCING") or "").strip().lower() in {

@@ -69,7 +69,7 @@ Lifted verbatim by id from the parent plan's `## Resolved design decisions` and 
 | **D2** | `generation_mode` becomes authoritative **both ways**: `"direct"` → True, `"grounded"` → False, `NULL` → global default. App/API path never sets the column → stays `NULL` → byte-identical behaviour. No migration. |
 | **D3** | Promote `entertainment` → `question_generation_entertainment_v2.md` in `_CATEGORY_PROMPT_FILES`. v1 is not deleted (one-line rollback). |
 | **D4** | **No `news_mode`.** Recency is carried by the locked topic list, not the provider mode. `FactSourcer(enable_opentdb=False)` — **Wikipedia stays ON** (deliberate deviation from D21b, which was written for a weekly news window). Sourcing is a **separate script run BEFORE generation** (`scripts/source_facts.py`); `--dump-facts` cannot substitute (it writes only after a successful run). Every generation command carries `--grounded`, even with `--facts-file` — direct mode disables both attribution gates (ungrounded-drop + F8), and D6's offline join depends on them. Thin-yield gate: **< 40 facts → exit 1**. |
-| **D5** | Provider = **Tavily** for the pilot (only implemented sourcing source; credibility classifier is built on it). Whether OpenAI Responses `web_search` can also serve as *sourcing* is the single open external question — **does not block the pilot**, must be closed before any scale-up or before cancelling the Tavily plan. |
+| **D5** | **CLOSED — founder decision 2026-08-31.** Provider = **OpenAI Responses `web_search`** (`gpt-5-mini`, the #166 fact-check integration), because the Tavily pay-as-you-go limit is exhausted and the founder chose not to top it up. Every sourcing command carries `--provider openai`. **Tavily is the rollback** (`FactSourcer` default stays `"tavily"`, prod path unchanged). Same credibility classifier for both (imported, not copied); a candidate fact with no URL citation is dropped. No news mode either way (D4). |
 | **D6** | **Post-cutoff acceptance filter** (`scripts/filter_postcutoff.py`, fully offline) is the real gate. Accept if (1) a year token **≥ 2026** appears in `question`/`answer`/**or the excerpt of the fact it came from**, **and** (2) `freshness_tag != "current"`. Excerpt leg is **best-effort**, joined offline from the fact file by normalized `source_url`. Remedy when `accepted < 20`: **exactly one** repeat round with narrower topic phrasings, second round filtered with `--merge-with` for cross-round uniqueness; still < 20 → **escalate to founder in-session**, never publish a short batch as done, never lower the bar yourself. `EXPIRY_CLASSIFICATION=1` is **telemetry only** for the pilot run. |
 | **D7** | Backend `CATEGORIES` + **both** iOS mirrors (`Config.categoryOptions` and `QuizSettings.categoryOptions`) change together. `xcstringstool sync` is mandatory. **No aliases** added to `_CATEGORY_ALIASES`. |
 | **D8** | Three segments with an explicit agent/founder boundary. **Segment 1 (agent, terminal)** ends at a published rating batch of **≥ 20 post-filter rows** + saved mapping + `facts_167.json`. **Segment 2** is the founder's rating. **Segment 3** is a *separate* agent run after the rating. |
@@ -270,7 +270,8 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
-- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing) — see the note below.** Nothing was generated, nothing was published, nothing was spent.
+- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing).** Nothing was generated, published, or spent. **Unblocked 2026-08-31** by the OpenAI sourcing provider (D5 closed) — re-run with `--provider openai`, see the note below.
+- ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
@@ -331,9 +332,28 @@ D4 deliberately keeps the Wikipedia leg ON, so it should have partially covered 
 
 **To unblock, in order:**
 
-1. **Founder action** — raise the Tavily pay-as-you-go limit on the Tavily dashboard (or confirm a different sourcing provider, which reopens D5 and is a product/architecture call, not an agent substitution).
-2. ~~**Agent action (independent, do first)** — fix the `WikipediaSource` User-Agent 403~~ — **DONE 2026-08-27**: the module now sends `User-Agent: QuizAgentBot/1.0 (…)` on every Wikimedia call and logs a warning on non-200 instead of returning `[]` silently. Real call for `Taylor Swift` yields 5 facts, so the D4 Wikipedia leg contributes again.
-3. Re-run Session E from 167.9 unchanged. Nothing in A/B/C/D needs redoing.
+1. **Re-run Session E from 167.9 with `--provider openai`** (see "OpenAI sourcing provider delivered" below for the exact CLI). Everything else in the runbook is unchanged; nothing in A/B/C/D needs redoing.
+2. ~~**Founder action** — raise the Tavily pay-as-you-go limit~~ — **superseded 2026-08-31**: the founder chose not to top Tavily up and to source through OpenAI Responses `web_search` instead (D5 closed). Topping the limit up stays available as the rollback: drop `--provider openai`.
+3. ~~**Agent action (independent, do first)** — fix the `WikipediaSource` User-Agent 403~~ — **DONE 2026-08-27**: the module now sends `User-Agent: QuizAgentBot/1.0 (…)` on every Wikimedia call and logs a warning on non-200 instead of returning `[]` silently. Real call for `Taylor Swift` yields 5 facts, so the D4 Wikipedia leg contributes again.
+
+### OpenAI sourcing provider delivered — exact CLI (D5, 2026-08-31)
+
+`apps/quiz-pack-api/app/sourcing/openai_web_search_source.py` — `OpenAIWebSearchSource`, same public interface as `WebSearchSource` (`get_facts(count, topics)`), one Responses call per topic with `tools=[{"type": "web_search"}]` on `gpt-5-mini` (client from `quiz_shared.llm.factory.openai_client(async_=True, direct=True)`, contract #53). Fails loud at construction without `OPENAI_API_KEY`. Facts are built **only** from `url_citation` annotations: the model's claimed URL must match a real citation (host + path), and the citation's URL is what ships — an uncited candidate is logged and dropped, because F8 and D6's offline join both die on a URL-less fact. Credibility is the shared classifier imported from `web_search_source.py`, not a copy. No news mode, no time-range narrowing (D4).
+
+**Exact CLI for the Session E re-run (step 167.9)** — from `apps/quiz-pack-api/`, repo-root `.env` loaded for `OPENAI_API_KEY`:
+
+```
+uv run --no-sync python scripts/source_facts.py \
+  --provider openai \
+  --topics "music producers and their artists, 2026 album releases, 2026 awards and nominations (Oscars and Grammys), new 2026 films and series, 2026 tours and festivals, 2026 streaming hits" \
+  --out facts_167.json
+```
+
+Keep the `(Oscars and Grammys)` substitution — `--topics` splits on `,` (carried forward from the 2026-08-27 attempt). Everything else in 167.9 is unchanged: `MIN_FACTS = 40` thin-yield gate, exit 1 + per-topic tally on a thin yield, `FactSourcer(enable_opentdb=False)` (Wikipedia ON).
+
+**Cost order of magnitude:** ~1 `gpt-5-mini` Responses call per topic; #166 measured ~4-5 ¢ per web-searched call (tokens at list price + $10/1k searches), so a 6-topic sourcing round is roughly **25-30 ¢**. Not recorded into any order cost signal — this is the CLI path (no order to bill).
+
+**Rollback:** drop `--provider openai`. `FactSourcer`'s default is still `"tavily"`, so every existing caller including prod constructs exactly what it did before.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

@@ -20,10 +20,17 @@ the model cutoff and cannot contribute a post-cutoff fact.
 A thin yield exits 1 with a per-topic tally rather than writing a small fact
 file that would silently starve generation downstream.
 
-Usage (from apps/quiz-pack-api/, .env loaded for TAVILY_API_KEY):
+The web-search provider is selectable (D5, founder decision 2026-08-31):
+`--provider tavily` (default, `TAVILY_API_KEY`) or `--provider openai`
+(OpenAI Responses `web_search`, `OPENAI_API_KEY`). The pilot runs on
+`openai` because the Tavily pay-as-you-go limit is exhausted; Tavily stays
+the rollback. Neither provider gets a news window (D4).
+
+Usage (from apps/quiz-pack-api/, .env loaded for the provider's key):
 
     uv run --no-sync python scripts/source_facts.py \
         --topics "music producers and their artists,2026 album releases" \
+        --provider openai \
         --out facts_167.json
 """
 
@@ -59,6 +66,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         required=True,
         help="path to write the fact file consumed by generate_pack.py --facts-file",
     )
+    parser.add_argument(
+        "--provider",
+        choices=("tavily", "openai"),
+        default="tavily",
+        help="web-search backend (D5): tavily (default, rollback) or openai",
+    )
     return parser.parse_args(argv)
 
 
@@ -71,7 +84,12 @@ async def _run(args: argparse.Namespace) -> int:
         return 1
 
     # Wikipedia ON, OpenTriviaDB OFF, news mode untouched — see module docstring.
-    sourcer = FactSourcer(enable_opentdb=False)
+    # The provider is only passed when it deviates from FactSourcer's default,
+    # so the Tavily run constructs exactly what it constructed before D5.
+    sourcer_kwargs: dict = {"enable_opentdb": False}
+    if args.provider != "tavily":
+        sourcer_kwargs["web_search_provider"] = args.provider
+    sourcer = FactSourcer(**sourcer_kwargs)
     batch = await sourcer.gather_facts(
         count=PER_TOPIC_BUDGET * len(topics), topics=topics
     )

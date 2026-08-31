@@ -2059,10 +2059,10 @@ Respond in JSON only:
                 elif ch == "\\":
                     escaped = True
                 elif ch == '"':
-                    nxt = next(
-                        (c for c in text[i + 1:] if not c.isspace()),
-                        "",
-                    )
+                    j = i + 1
+                    while j < len(text) and text[j].isspace():
+                        j += 1
+                    nxt = text[j] if j < len(text) else ""
                     if nxt in (",", ":", "}", "]", ""):
                         in_string = False
                     else:

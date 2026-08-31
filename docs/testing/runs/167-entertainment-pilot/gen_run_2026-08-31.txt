@@ -1,0 +1,135 @@
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_5253a146 url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.generation.advanced_generator: Batch JSON was malformed (Expecting ',' delimiter: line 422 column 8 (char 25713)) — salvaged 20 of 20 question objects, 0 lost
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=4b2048b1-339e-4624-8639-6a8a8930f26c fallback_marked=False question='In very old silent films, people often seem to walk and move in a comically fast, jerky way — yet audiences at the time saw nothing funny about it. Why does the footage look sped-up to us today?'
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=d2cc9338-9ccd-4d22-a255-2907d43d034b (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=c16d4eb4-fc85-4775-af17-6369f2837e24: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order ae7fe298-2080-4092-85bb-f12d6dd6483c verification withheld 1 unverifiable question(s) (fail-closed, #158)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=a0494b1c-d851-46fb-9023-259877975d8b reason=answerability_surprise_veto(surprise=3.0<=3.0,answerability=2.5<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=d21fca2e-e9b5-412a-8193-eeba87ed47a9 reason=answerability_surprise_veto(surprise=2.0<=3.0,answerability=1.0<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=c61f70c4-ca44-4e6e-ac1e-b55a838290bf reason=answerability_surprise_veto(surprise=2.0<=3.0,answerability=1.5<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=3cc48e17-57cf-4668-b994-118cb67b7d7c reason=answerability_surprise_veto(surprise=3.0<=3.0,answerability=2.5<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=fe7ed726-4135-425a-880d-f82a3478d5aa reason=answerability_surprise_veto(surprise=2.0<=3.0,answerability=3.0<=3.0)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=8ece2d4b-a5f8-405b-b81d-b03dfd1a0fdf topic='2026 Tours And Festivals' over per-topic cap 2
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_6a069b69 url='https://en.wikipedia.org/wiki/555_(telephone_number)' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=2b809c6b-1696-429d-bf2b-f869b61cedf7 fallback_marked=False question="In American movies and TV shows, characters almost always give phone numbers starting with '555'. Why do filmmakers deliberately use this prefix instead of realistic-looking numbers?"
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=1fefebd5-f06e-4251-8796-d56b181035b4 (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=0599fd07-f004-4c3d-9bd4-a77d1aef3a8c (fact key reuse url=en.wikipedia.org/wiki/98th_academy_awards answer=sinners)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=cec2bd16-0c63-4032-a939-4a319a394f95 (fact key reuse url=megadeth.com/blogs/news/track-listing-reveal answer=megadeth)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=c3fd6bcc-4399-4e06-83a9-8e417ea5d249 (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=super mario)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=1e2da55b-adcc-4c89-a3f0-28b4d34d60aa: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order ae7fe298-2080-4092-85bb-f12d6dd6483c verification withheld 1 unverifiable question(s) (fail-closed, #158)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=659cb67e-128e-46db-aec4-b4f65886e093 reason=answerability_surprise_veto(surprise=3.0<=3.0,answerability=2.0<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=0f1d3ac6-7e2e-4912-966a-4c754c5dc2bf reason=answerability_surprise_veto(surprise=2.0<=3.0,answerability=2.5<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=dd3808a5-ac33-4f67-bf35-be1729a5ca96 reason=answerability_surprise_veto(surprise=2.0<=3.0,answerability=3.0<=3.0)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=d7158c06-bc3e-4306-ab3e-6c696eb80630 topic='2026 Awards And Nominations (Oscars And Grammys)' over per-topic cap 2
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=da492baf-2e3d-439a-9a42-65f1ac5ecf27 topic='2026 Awards And Nominations (Oscars And Grammys)' over per-topic cap 2
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=05e1a189-6ce1-44aa-92e6-b072fc8858a3 topic='New 2026 Films And Series' over per-topic cap 2
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=d47d9c87-e4a5-4862-a944-99605f4ea34c topic='2026 Tours And Festivals' over per-topic cap 2
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_2c0b7344 url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=bb886204-d535-40ec-bcb4-960b52236119 fallback_marked=False question='When you watch silent films from the 1910s and 1920s today, people often seem to walk and move in a comically fast, jerky way. Yet audiences at the time saw nothing unusual. Why does the footage look sped-up to us?'
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=7a876d86-0173-4c13-aa99-5d5539df6f0b (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=74a48126-5172-4e0a-a29c-efa9cdc15b5d (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=spider man brand new day)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=154f58b3-3721-40ce-b47b-60bdfa8cf510 (fact key reuse url=glastonburyfestivals.co.uk/info/?direct=true answer=glastonbury)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=33ac973e-0d06-4506-b7e9-6b7bb3618598 (fact key reuse url=en.wikipedia.org/wiki/nigel_godrich answer=radiohead)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=7da6c4bd-dbb6-4685-88d5-a4462178009d (fact key reuse url=en.wikipedia.org/wiki/2026_in_american_music answer=a ap rocky)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=bf701b7c-084f-4849-8714-f69b6ed78f91 (fact key reuse url=au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075 answer=drake)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=81c44526-7314-4a6b-91e8-1356e07d010a (fact key reuse url=megadeth.com/blogs/news/track-listing-reveal answer=megadeth)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=6dcf7b6a-9fbe-4d15-b003-2a7ead91b868 (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=34f16383-571e-46d0-aa75-03a50f850194: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order ae7fe298-2080-4092-85bb-f12d6dd6483c verification withheld 1 unverifiable question(s) (fail-closed, #158)
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'At the 2026 Academy Awards, which vampire film broke the all-time record by earn' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'At the 2026 Academy Awards, which vampire film broke the all-time record by earn' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'Which pulled in more Netflix views in the first half of 2026: the film War Machi' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'Which pulled in more Netflix views in the first half of 2026: the film War Machi' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'Ruth E. Carter, the most Oscar-nominated Black woman in history as of 2026, earn' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'Ruth E. Carter, the most Oscar-nominated Black woman in history as of 2026, earn' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'In which year did a woman win the Academy Award for Best Cinematography for the ' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'In which year did a woman win the Academy Award for Best Cinematography for the ' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'Which horned Star Wars villain, famously cut in half back in 1999, returned as t' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'Which horned Star Wars villain, famously cut in half back in 1999, returned as t' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question 'In May 2026, the Eurovision Song Contest celebrated its seventieth edition in wh' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question 'In May 2026, the Eurovision Song Contest celebrated its seventieth edition in wh' — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question "The 2026 hit Obsession became Focus Features' biggest domestic release ever and " — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question "The 2026 hit Obsession became Focus Features' biggest domestic release ever and " — dropped
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol produced no scores for question "On 'Dai Dai', the official 2026 World Cup anthem that hit number one on Billboar" — dropped
+WARNING app.scoring.multi_model_scorer: Judge gemini-3.1-pro-preview produced no scores for question "On 'Dai Dai', the official 2026 World Cup anthem that hit number one on Billboar" — dropped
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=39fee6f8-6e24-4006-b953-21b909024f45 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=29d38dfa-cdb8-4c3c-8b0a-a630fa8316e1 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=1ba9ad23-c9b3-4476-a5d0-f79736a74942 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=889f8b8b-1611-43fa-b10c-ccd3bd12443e reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=feb8c3d1-f97f-4402-bd95-f06c9b267034 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=f5190545-f8e9-481d-b24a-1abe2f35c5e0 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=abedcb18-1457-481d-8d98-6522b61b9ffe reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=7bcd6844-f93b-42ca-b12a-e76a5f647ce2 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+ERROR app.orchestrator.stages.scoring: order ae7fe298-2080-4092-85bb-f12d6dd6483c scoring gate failed: 8 of 8 question(s) fell below the judge-verdict quorum (judge panel unavailable or partial)
+[00] start  sourcing
+[00] finish sourcing {'facts': 46, 'facts_file': '../../docs/testing/runs/167-entertainment-pilot/facts_167.json'}
+[01] start  generating
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at lower frame rate, played faster' not found in explanation for: In very old silent films, people often seem to walk and move in a comically fast...
+  ⚠ Answer/explanation mismatch: answer 'To let the land rest' not found in explanation for: Glastonbury Festival deliberately took the whole of 2026 off — for what farm-ins...
+  ⚠ Answer/explanation mismatch: answer 'Two' not found in explanation for: Demand for Belgium's Tomorrowland festival is so enormous that in 2026 the full ...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which horned Star Wars villain, seemingly killed off in 1999's The Phantom Menac...
+  ⚠ Diversity warning: 9/20 (45%) questions start with 'Which' (target: ≤30%)
+[01] finish generating {'questions': 20, 'dropped_quality': 0, 'normalized_quality': 0, 'dropped_mcq_missing_options': 0, 'dropped_ungrounded': 1, 'demoted_puzzles': 0}
+[02] start  dedup
+[02] finish dedup {'kept': 19, 'dropped': 1, 'fact_dropped': 1}
+[03] start  verifying
+[03] finish verifying {'verified': 17, 'dropped': 1, 'withheld': 1, 'evergreen_skipped': 0}
+[04] start  scoring
+[04] finish scoring {'scored': 17, 'dropped_low_score': 0, 'veto_shadow_flagged': 0, 'veto_dropped': 5, 'craft_flagged': 0, 'craft_dropped': 0, 'undated_shadow_flagged': 0, 'judge_failures': 0}
+[05] start  composition
+[05] finish composition {'kept': 11, 'topic_cap': 2, 'tf_cap': 2, 'topic_cap_dropped': 1, 'tf_cap_dropped': 0}
+[06] start  topup
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Avoids viewers calling real phone numbers' not found in explanation for: In American movies and TV shows, characters almost always give phone numbers sta...
+  ⚠ Answer/explanation mismatch: answer 'Sinners' not found in explanation for: At the 2026 Academy Awards, which film set an all-time record with sixteen nomin...
+  ⚠ Answer/explanation mismatch: answer 'Spider-Man: Brand New Day' not found in explanation for: In 2026, which film finally took Avengers: Endgame's record for the biggest open...
+  ⚠ Answer/explanation mismatch: answer 'Best Cinematography' not found in explanation for: At the 2026 Oscars, a woman won which behind-the-camera category for the very fi...
+  ⚠ Answer/explanation mismatch: answer 'Megadeth' not found in explanation for: Which thrash metal giants, founded by a guitarist fired from Metallica, said far...
+  ⚠ Answer/explanation mismatch: answer 'Burna Boy' not found in explanation for: On the chart-topping official anthem of the 2026 World Cup, Shakira teamed up wi...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: Which of these two awards has Alien star Sigourney Weaver actually won: an Oscar...
+  ⚠ Answer/explanation mismatch: answer 'The Oscar' not found in explanation for: Hamilton creator Lin-Manuel Miranda has won Tonys, Emmys and Grammys — but which...
+  ⚠ Diversity warning: 6/18 (33%) questions start with 'Which' (target: ≤30%)
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at fewer frames than played back' not found in explanation for: When you watch silent films from the 1910s and 1920s today, people often seem to...
+  ⚠ Answer/explanation mismatch: answer 'Rick Rubin' not found in explanation for: The legendary hip-hop label Def Jam was founded by which super-producer while he...
+  ⚠ Answer/explanation mismatch: answer 'Spider-Man: Brand New Day' not found in explanation for: Avengers: Endgame held the record for the biggest North American opening weekend...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Which Swedish hitmaker, the pen behind smashes for stars like Britney Spears, Ta...
+  ⚠ Answer/explanation mismatch: answer 'A$AP Rocky' not found in explanation for: In 2026, which rapper, known to tabloid readers as Rihanna's partner, ended an e...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which horned Star Wars villain, famously cut in half back in 1999, returned as t...
+[07] start  failed {'error': "JudgePanelUnavailable('8 question(s) reached the ship gate below the 2-judge verdict quorum — refusing to deliver an ungated pack')"}
+Traceback (most recent call last):
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/scripts/generate_pack.py", line 662, in <module>
+    sys.exit(cli_main())
+             ^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/scripts/generate_pack.py", line 658, in cli_main
+    return asyncio.run(_run(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/scripts/generate_pack.py", line 449, in _run
+    pack = await pack_generator.run(order)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/app/orchestrator/pack_generator.py", line 203, in run
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/app/orchestrator/stages/topup.py", line 135, in run
+    await _run_substage(self._scoring_stage, ctx, sink)
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/app/orchestrator/stages/topup.py", line 61, in _run_substage
+    return await stage.run(ctx, sink)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-af92ef6e3a8388526/apps/quiz-pack-api/app/orchestrator/stages/scoring.py", line 370, in run
+    raise JudgePanelUnavailable(
+app.orchestrator.stages.scoring.JudgePanelUnavailable: 8 question(s) reached the ship gate below the 2-judge verdict quorum — refusing to deliver an ungated pack
+EXIT=1

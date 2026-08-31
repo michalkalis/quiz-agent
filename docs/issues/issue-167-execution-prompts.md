@@ -359,7 +359,7 @@ Keep the `(Oscars and Grammys)` substitution — `--topics` splits on `,` (carri
 
 **Terminal state: 46 facts sourced and committed; no batch generated, nothing published, no corpus write.** Spend ≈ **$1-2** (one OpenAI sourcing round + ~4 probe calls + two Fable 5 generation attempts that produced nothing usable).
 
-**167.9 — PASSED, and D5 is validated.** `facts_167.json` = **46 facts** across the 6 locked topics (24 Wikipedia + 22 OpenAI `web_search`), **46/46 carry a `source_url`**, exit 0 over the `MIN_FACTS = 40` gate. Domains: `en.wikipedia.org` (35), `about.netflix.com`, `au.rollingstone.com`, `theguardian.com`, `glastonburyfestivals.co.uk`, `faq.tomorrowland.com`, `disneyplus.com`. Keep the `(Oscars and Grammys)` substitution.
+**167.9 — PASSED, and D5 is validated.** `docs/testing/runs/167-entertainment-pilot/facts_167.json` = **46 facts** across the 6 locked topics (24 Wikipedia + 22 OpenAI `web_search`), **46/46 carry a `source_url`**, exit 0 over the `MIN_FACTS = 40` gate. Domains: `en.wikipedia.org` (35), `about.netflix.com`, `au.rollingstone.com`, `theguardian.com`, `glastonburyfestivals.co.uk`, `faq.tomorrowland.com`, `disneyplus.com`. Keep the `(Oscars and Grammys)` substitution.
 
 ⚠️ **Getting there needed two fixes to `OpenAIWebSearchSource` — the provider as merged in PR #54 yields exactly 0 facts.** First run: 5/6 topics `status="incomplete"`, 6th had every candidate dropped as uncited → 24 facts, all Wikipedia, exit 1.
 
@@ -384,7 +384,7 @@ Both times the whole grounded batch is lost, only the single open-shape question
 
 Whichever wins, `_parse_response` should log the failing content to a file instead of `content[:500]` — the 500-char preview never contains the offending offset.
 
-**Resume from 167.10** once the parser is fixed: `facts_167.json` is committed and reusable (A11 needs it to be OLDER than `pilot_167.json`, which is still true), so no re-sourcing and no re-spend on 167.9.
+**Resume from 167.10** once the parser is fixed: the fact file is committed and reusable (A11 needs it to be OLDER than `pilot_167.json`, which is still true), so no re-sourcing and no re-spend on 167.9. It lives in the run dir per the File Placement rule (D21/D21b precedent), so from `apps/quiz-pack-api/` the flag is `--facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json`.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

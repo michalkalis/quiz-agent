@@ -1941,16 +1941,27 @@ Respond in JSON only:
                 return []
 
             json_str = content[start:end]
-            data = json.loads(json_str)
-
-            # Handle both formats
-            if "questions" in data:
-                questions_data = data["questions"]
-            elif "question" in data:
-                questions_data = [data]
+            try:
+                data = json.loads(json_str)
+            except json.JSONDecodeError as decode_error:
+                # #167 — Entertainment otázky z nedávneho diania: a single
+                # unescaped `"` inside one title (pop-culture titles produce
+                # them often) made this one whole-batch `json.loads` fail and
+                # sank all ~29 questions of the batch. Salvage the individually
+                # parseable question objects instead; if salvage finds nothing
+                # we re-raise into the existing handler and behave as before.
+                questions_data = self._salvage_question_objects(json_str, decode_error)
+                if not questions_data:
+                    raise
             else:
-                print(f"Unexpected JSON structure: {data}")
-                return []
+                # Handle both formats
+                if "questions" in data:
+                    questions_data = data["questions"]
+                elif "question" in data:
+                    questions_data = [data]
+                else:
+                    print(f"Unexpected JSON structure: {data}")
+                    return []
 
             # Convert to Question objects
             for q_data in questions_data:
@@ -1976,6 +1987,172 @@ Respond in JSON only:
             print(f"Error parsing response: {e}")
 
         return questions
+
+    # ------------------------------------------------------------------
+    # #167 — per-question salvage for a malformed generation batch
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _scan_object_spans(text: str) -> List[tuple]:
+        """String-aware brace scan → spans of every balanced ``{...}`` object.
+
+        Returns ``(start, end, depth)`` triples, ``depth`` being the nesting
+        level the object's opening brace sits at (root object = 0, a question
+        object inside ``{"questions": [...]}`` = 2). String state and backslash
+        escapes are tracked so braces inside string values never move the depth
+        — a naive regex would split on those and is why this is hand-rolled.
+
+        An unescaped inner quote desynchronises the *string* state for the rest
+        of that value, but titles do not contain braces, so the structural depth
+        stays correct and the damage is confined to the one broken object.
+        """
+        spans: List[tuple] = []
+        stack: List[tuple] = []
+        depth = 0
+        in_string = False
+        escaped = False
+        for i, ch in enumerate(text):
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == '"':
+                    in_string = False
+                continue
+            if ch == '"':
+                in_string = True
+            elif ch in "{[":
+                if ch == "{":
+                    stack.append((i, depth))
+                depth += 1
+            elif ch in "}]":
+                depth -= 1
+                if depth < 0:
+                    # Structurally broken beyond repair — keep what we found.
+                    break
+                if ch == "}" and stack:
+                    obj_start, obj_depth = stack.pop()
+                    spans.append((obj_start, i + 1, obj_depth))
+        spans.sort(key=lambda span: span[0])
+        return spans
+
+    @staticmethod
+    def _escape_inner_quotes(text: str) -> str:
+        """Escape quotes that sit *inside* a JSON string value.
+
+        A `"` encountered while inside a string is treated as the string's
+        terminator only when the next non-whitespace character is one of
+        ``, : } ]`` (or end of input) — i.e. it is in a position where JSON
+        structure may legally continue. Anything else is an inner quote and
+        gets a backslash. Character content is preserved exactly; the result is
+        re-validated by ``json.loads``, so a mis-detection degrades to "not
+        salvaged" rather than to a silently wrong question.
+        """
+        out: List[str] = []
+        in_string = False
+        escaped = False
+        for i, ch in enumerate(text):
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == '"':
+                    nxt = next(
+                        (c for c in text[i + 1:] if not c.isspace()),
+                        "",
+                    )
+                    if nxt in (",", ":", "}", "]", ""):
+                        in_string = False
+                    else:
+                        out.append("\\")
+            elif ch == '"':
+                in_string = True
+            out.append(ch)
+        return "".join(out)
+
+    @staticmethod
+    def _snippet(text: str) -> str:
+        """One-line, length-capped excerpt of a payload, safe for a log line."""
+        return re.sub(r"\s+", " ", text).strip()[:120]
+
+    def _salvage_question_objects(
+        self,
+        json_str: str,
+        decode_error: json.JSONDecodeError,
+    ) -> List[Dict[str, Any]]:
+        """Recover the individually parseable question objects from a batch
+        whose whole-batch ``json.loads`` failed.
+
+        Only ever called on the failure branch (which returned ``[]`` before),
+        so it can add questions but never remove any. Each candidate object is
+        parsed on its own; one bounded repair attempt (inner-quote escaping) is
+        made for the ones that fail. Returns ``[]`` when nothing is recoverable,
+        which puts the caller back on today's behaviour.
+        """
+        by_depth: Dict[int, List[tuple]] = {}
+        for start, end, depth in self._scan_object_spans(json_str):
+            # Depth 0 is the whole batch — the thing that just failed to parse.
+            # Question objects sit at depth 2 in the canonical
+            # `{"questions": [ … ]}` reply; the small window tolerates one extra
+            # wrapper level without ever scanning nested sub-objects such as
+            # `reasoning`.
+            if 1 <= depth <= 3:
+                by_depth.setdefault(depth, []).append((start, end))
+
+        # Objects sharing a depth never nest, so the shallowest level that
+        # yields a real question object *is* the question-array level.
+        for depth in sorted(by_depth):
+            salvaged: List[Dict[str, Any]] = []
+            lost: List[tuple] = []
+            for start, end in by_depth[depth]:
+                raw = json_str[start:end]
+                obj, item_error = self._parse_question_object(raw)
+                if obj is not None:
+                    salvaged.append(obj)
+                elif '"question"' in raw:
+                    lost.append((item_error, raw))
+            if not salvaged:
+                continue
+            for item_error, raw in lost:
+                logger.warning(
+                    "Salvage: dropped 1 unparseable question object (%s) — "
+                    "snippet: %s",
+                    item_error,
+                    self._snippet(raw),
+                )
+            logger.warning(
+                "Batch JSON was malformed (%s) — salvaged %d of %d question "
+                "objects, %d lost",
+                decode_error,
+                len(salvaged),
+                len(salvaged) + len(lost),
+                len(lost),
+            )
+            return salvaged
+
+        return []
+
+    def _parse_question_object(
+        self, raw: str
+    ) -> tuple:
+        """Parse one candidate object; one bounded inner-quote repair retry.
+
+        Returns ``(question_dict, None)`` or ``(None, error)``.
+        """
+        error: Optional[Exception] = None
+        repaired = self._escape_inner_quotes(raw)
+        for attempt in (raw, repaired) if repaired != raw else (raw,):
+            try:
+                obj = json.loads(attempt)
+            except json.JSONDecodeError as exc:
+                error = exc
+                continue
+            if isinstance(obj, dict) and "question" in obj:
+                return obj, None
+            error = ValueError("object has no 'question' key")
+        return None, error
 
     def _check_answer_explanation_consistency(self, question: Question) -> None:
         """Log a warning if explanation text doesn't mention the correct answer."""

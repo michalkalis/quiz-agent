@@ -270,7 +270,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
-- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), now BLOCKED at 167.10 (generation).** Nothing published, nothing imported. See "Session E re-run 2026-08-31" below.
+- 🟡 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), then blocked at 167.10 (generation JSON parse).** → **UNBLOCKED 2026-08-31: per-question salvage landed in `_parse_response`.** Nothing published, nothing imported. **Resume at 167.10** with the committed `docs/testing/runs/167-entertainment-pilot/facts_167.json` and `LLM_GATEWAY=openrouter`. See "Session E re-run 2026-08-31" below.
 - ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
@@ -376,7 +376,7 @@ Sourcing loads fine (`finish sourcing {'facts': 46}`), then the one big fact-fir
 
 Both times the whole grounded batch is lost, only the single open-shape question survives (it legitimately has no fact), and **F8 fires correctly**: `all 1 questions ungrounded after attribution`. Not a token-cap truncation — 34 k *characters* ≈ 9 k tokens against a `max_tokens=32768` cap. `"Expecting ',' delimiter"` deep in a line is the signature of an **unescaped `"` inside a string value**, which entertainment content produces far more than other categories (album / film / song titles are full of quotes). `_parse_response` is a single `json.loads` over the entire batch with **no salvage and no repair**, so one bad character costs all ~29 questions.
 
-**This is a defect in the shared prod generation path, not one of the two remedies the runbook authorises** (thin yield at 167.9, `accepted < 20` at 167.11), so Session E stopped rather than spend a third blind generation round. **Founder call needed on the fix:**
+**This is a defect in the shared prod generation path, not one of the two remedies the runbook authorises** (thin yield at 167.9, `accepted < 20` at 167.11), so Session E stopped rather than spend a third blind generation round. The options put to the founder were:
 
 1. **Per-question salvage** (recommended, additive and fail-safe): on `JSONDecodeError`, `raw_decode` each candidate object in the array and keep the ones that parse. Cannot make the happy path worse — today that branch returns `[]` — and F8 still guards grounding.
 2. **Structured outputs / JSON-schema mode** on the generation call, the way #166 did for fact-check. Cleanest, but changes the prod generation contract.
@@ -384,7 +384,17 @@ Both times the whole grounded batch is lost, only the single open-shape question
 
 Whichever wins, `_parse_response` should log the failing content to a file instead of `content[:500]` — the 500-char preview never contains the offending offset.
 
-**Resume from 167.10** once the parser is fixed: the fact file is committed and reusable (A11 needs it to be OLDER than `pilot_167.json`, which is still true), so no re-sourcing and no re-spend on 167.9. It lives in the run dir per the File Placement rule (D21/D21b precedent), so from `apps/quiz-pack-api/` the flag is `--facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json`.
+#### ✅ UNBLOCKED 2026-08-31 — per-question salvage landed (option 1 + a bounded form of 3)
+
+Driver decision 2026-08-31: **option 1**, the purely additive one. Shipped in `apps/quiz-pack-api/app/generation/advanced_generator.py`:
+
+- The whole-batch `json.loads` stays the **primary** path and is byte-identical on success — salvage lives strictly on the `JSONDecodeError` branch that used to return `[]`. A test monkeypatches the salvage entry point to raise, so a well-formed batch can never reach it.
+- On failure, `_salvage_question_objects` splits the payload into individual question objects with a **string-aware brace-depth scan** (tracks in-string state + backslash escapes; no regex) and parses each one on its own. Survivors are kept; each loss gets a `logger.warning` with the parse error and a one-line sanitized snippet, plus a summary `salvaged X of Y question objects, N lost`.
+- Each individually unparseable object gets **one bounded repair retry** (option 3, scoped): quotes inside a JSON string are escaped when the next non-whitespace character is not one of `, : } ]`. Character content is preserved and the result is re-validated by `json.loads`, so a mis-detection degrades to "not salvaged", never to a silently wrong question. This is exactly the `Who directed "Dune"?` corruption that blocked the pilot.
+- If salvage recovers nothing, behaviour is today's: empty list, existing logging, no raise.
+- Tests: `apps/quiz-pack-api/tests/generation/test_parse_response_salvage.py` (4 — happy path untouched, one broken object costs one question not the batch, inner-quote repair, garbled payload → `[]`).
+
+**Resume from 167.10.** The fact file is committed and reusable (A11 needs it to be OLDER than `pilot_167.json`, which is still true), so no re-sourcing and no re-spend on 167.9. It lives in the run dir per the File Placement rule (D21/D21b precedent), so from `apps/quiz-pack-api/` the flag is `--facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json`. **Generation needs `LLM_GATEWAY=openrouter`** (see the environment correction above) — without it `claude-fable-5` returns `404 model_not_found`.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

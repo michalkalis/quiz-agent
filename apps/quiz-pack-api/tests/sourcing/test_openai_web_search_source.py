@@ -127,6 +127,76 @@ async def test_uncited_fact_is_dropped(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_page_the_tool_opened_counts_as_a_citation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Regression, #167 pilot 2026-08-31: this module asks for a bare JSON
+    # array, and the Responses API attaches `url_citation` annotations only
+    # to inline-cited prose — so a real reply carries NONE and every
+    # candidate was dropped, silently starving the whole sourcing run. A
+    # page the search tool actually opened is the stronger anchor and must
+    # count. The integrity property is unchanged: a URL the tool never
+    # visited is still rejected.
+    response = SimpleNamespace(
+        status="completed",
+        output=[
+            SimpleNamespace(
+                type="web_search_call",
+                action=SimpleNamespace(type="open_page", url=WIKI_URL),
+            ),
+            SimpleNamespace(
+                type="message",
+                content=[
+                    SimpleNamespace(
+                        type="output_text",
+                        text=json.dumps(
+                            [
+                                {
+                                    "fact": "Kendrick Lamar won Album of the Year at the 68th Grammys.",
+                                    "excerpt": "Album of the Year was awarded to Kendrick Lamar.",
+                                    "source_url": WIKI_URL,
+                                },
+                                {
+                                    "fact": "A claim pointing at a page the tool never opened.",
+                                    "excerpt": "Unsupported sentence.",
+                                    "source_url": "https://example.invalid/never-opened",
+                                },
+                            ]
+                        ),
+                        annotations=[],
+                    )
+                ],
+            ),
+        ],
+    )
+    source = _source(monkeypatch, response)
+
+    facts = await source.get_facts(count=5, topics=["2026 awards"])
+
+    assert [f.text for f in facts] == [
+        "Kendrick Lamar won Album of the Year at the 68th Grammys."
+    ]
+    assert facts[0].source_url == WIKI_URL
+
+
+@pytest.mark.asyncio
+async def test_reply_budget_leaves_room_after_reasoning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `gpt-5-mini` spends ~3k tokens reasoning before writing a fact, so the
+    # fact-check path's 4096 truncated the reply and five of six pilot topics
+    # returned `status="incomplete"` with nothing usable. The budget must
+    # stay well clear of that reasoning floor.
+    response = _response([], citations=[])
+    source = _source(monkeypatch, response)
+
+    await source.get_facts(count=5, topics=["2026 awards"])
+
+    kwargs = source.client.responses.create.await_args.kwargs
+    assert kwargs["max_output_tokens"] >= 8192
+
+
+@pytest.mark.asyncio
 async def test_no_time_range_narrowing_is_requested(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

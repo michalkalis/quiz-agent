@@ -1,0 +1,654 @@
+{
+  "topics": [
+    "music producers and their artists",
+    "2026 album releases",
+    "2026 awards and nominations (Oscars and Grammys)",
+    "new 2026 films and series",
+    "2026 tours and festivals",
+    "2026 streaming hits"
+  ],
+  "facts": [
+    {
+      "text": "List of best-selling music artists: The following list of best-selling music artists includes musical artists from the 20th century to the present with claims of 75 million or more record",
+      "source_url": "https://en.wikipedia.org/wiki/List_of_best-selling_music_artists",
+      "source_name": "Wikipedia (en) — List of best-selling music artists",
+      "excerpt": null,
+      "topic": "music producers and their artists",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Journals (album): second compilation album by the Canadian singer Justin Bieber. It was released through Island Records on December 23, 2013. The album features guest appearances",
+      "source_url": "https://en.wikipedia.org/wiki/Journals_(album)",
+      "source_name": "Wikipedia (en) — Journals (album)",
+      "excerpt": null,
+      "topic": "2026 album releases",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Sigourney Weaver: Golden Globe Awards, and a Grammy Award, in addition to nominations for three Academy Awards, four Primetime Emmy Awards, and a Tony Award. Born in New",
+      "source_url": "https://en.wikipedia.org/wiki/Sigourney_Weaver",
+      "source_name": "Wikipedia (en) — Sigourney Weaver",
+      "excerpt": null,
+      "topic": "2026 awards and nominations (Oscars and Grammys)",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Wonder Man (TV series): Television label. Sharing continuity with the films of the MCU, the series follows actors Simon Williams and Trevor Slattery. Guest served as showrunner",
+      "source_url": "https://en.wikipedia.org/wiki/Wonder_Man_(TV_series)",
+      "source_name": "Wikipedia (en) — Wonder Man (TV series)",
+      "excerpt": null,
+      "topic": "new 2026 films and series",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Dice (band): Judge Australian tour, new music and future of popular axed festivals&quot;. PerthNow. 14 May 2024. Retrieved 17 June 2024. &quot;Yours &amp; Owls Festival – DICE&quot;. Yours",
+      "source_url": "https://en.wikipedia.org/wiki/Dice_(band)",
+      "source_name": "Wikipedia (en) — Dice (band)",
+      "excerpt": null,
+      "topic": "2026 tours and festivals",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Shyolk: &quot;Top Radio Hits Lithuania Weekly Chart&quot;. TopHit. Retrieved 4 April 2026. &quot;Top Radio Hits Moldova Weekly Chart&quot;. TopHit. Retrieved 8 February 2026. Ivanova",
+      "source_url": "https://en.wikipedia.org/wiki/Shyolk",
+      "source_name": "Wikipedia (en) — Shyolk",
+      "excerpt": null,
+      "topic": "2026 streaming hits",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Electronic dance music: a DJ mix, by segueing from one recording to another. EDM producers also perform their music live in a concert or festival setting in what is sometimes",
+      "source_url": "https://en.wikipedia.org/wiki/Electronic_dance_music",
+      "source_name": "Wikipedia (en) — Electronic dance music",
+      "excerpt": null,
+      "topic": "music producers and their artists",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Omen (Soulfly album): Gorania of About.com praised the album, &quot;it is brutal and fast, though not necessarily as intense or interesting as the releases marking Cavalera&#039;s early and",
+      "source_url": "https://en.wikipedia.org/wiki/Omen_(Soulfly_album)",
+      "source_name": "Wikipedia (en) — Omen (Soulfly album)",
+      "excerpt": null,
+      "topic": "2026 album releases",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Lin-Manuel Miranda:  three Tony Awards, two Laurence Olivier Awards, two Emmy Awards, and five Grammy Awards, along with nominations for two Academy Awards. He received",
+      "source_url": "https://en.wikipedia.org/wiki/Lin-Manuel_Miranda",
+      "source_name": "Wikipedia (en) — Lin-Manuel Miranda",
+      "excerpt": null,
+      "topic": "2026 awards and nominations (Oscars and Grammys)",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Captain America: Brave New World: films had been used to establish aspects of the MCU, and they felt it was interesting to introduce adamantium as a &quot;geopolitical football&quot;. The film originally",
+      "source_url": "https://en.wikipedia.org/wiki/Captain_America:_Brave_New_World",
+      "source_name": "Wikipedia (en) — Captain America: Brave New World",
+      "excerpt": null,
+      "topic": "new 2026 films and series",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Robbie Williams: and eighth studio albums and their accompanying tours, focusing instead on his solo commitments. He continued to write music with his colleagues and has",
+      "source_url": "https://en.wikipedia.org/wiki/Robbie_Williams",
+      "source_name": "Wikipedia (en) — Robbie Williams",
+      "excerpt": null,
+      "topic": "2026 tours and festivals",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Siluet: January 2026. &quot;Top All Internet Hits Russia Weekly Chart: Oct 16, 2025&quot;. TopHit. October 17, 2025. Retrieved December 18, 2025. &quot;Top All Internet Hits Russia",
+      "source_url": "https://en.wikipedia.org/wiki/Siluet",
+      "source_name": "Wikipedia (en) — Siluet",
+      "excerpt": null,
+      "topic": "2026 streaming hits",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Interesting Drug: its lyrics and music video. The song would later appear on the 1990 compilation album, Bona Drag. In the years since its release, &quot;Interesting Drug&quot; has",
+      "source_url": "https://en.wikipedia.org/wiki/Interesting_Drug",
+      "source_name": "Wikipedia (en) — Interesting Drug",
+      "excerpt": null,
+      "topic": "music producers and their artists",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Count Your Blessings: the album&#039;s release) has explained the drastic evolution in style between Count Your Blessings and later releases as simply being due to the fact that",
+      "source_url": "https://en.wikipedia.org/wiki/Count_Your_Blessings",
+      "source_name": "Wikipedia (en) — Count Your Blessings",
+      "excerpt": null,
+      "topic": "2026 album releases",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Emma Thompson: three BAFTA Awards, two Golden Globe Awards, and a Primetime Emmy Award as well as a nomination for two Grammy Awards. In 2018, she was made a dame by Queen",
+      "source_url": "https://en.wikipedia.org/wiki/Emma_Thompson",
+      "source_name": "Wikipedia (en) — Emma Thompson",
+      "excerpt": null,
+      "topic": "2026 awards and nominations (Oscars and Grammys)",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Kanchana (film series): horror comedy films. The success of the film inspired several other horror comedy films including the Aranmanai film series (2014) and Darling (2015)",
+      "source_url": "https://en.wikipedia.org/wiki/Kanchana_(film_series)",
+      "source_name": "Wikipedia (en) — Kanchana (film series)",
+      "excerpt": null,
+      "topic": "new 2026 films and series",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Slipknot (band): two bands, they shared numerous UK festival dates together through 2000, including the 2000 Reading and Leeds Festivals. Durst later praised Slipknot&#039;s music",
+      "source_url": "https://en.wikipedia.org/wiki/Slipknot_(band)",
+      "source_name": "Wikipedia (en) — Slipknot (band)",
+      "excerpt": null,
+      "topic": "2026 tours and festivals",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Wonder Man (TV series): television series created by Destin Daniel Cretton and Andrew Guest for the streaming service Disney+, based on the Marvel Comics character Simon Williams /",
+      "source_url": "https://en.wikipedia.org/wiki/Wonder_Man_(TV_series)",
+      "source_name": "Wikipedia (en) — Wonder Man (TV series)",
+      "excerpt": null,
+      "topic": "2026 streaming hits",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Intelligent dance music: for discussion of English artists appearing on the compilation. The term has been widely criticised and dismissed by artists associated with it, particularly",
+      "source_url": "https://en.wikipedia.org/wiki/Intelligent_dance_music",
+      "source_name": "Wikipedia (en) — Intelligent dance music",
+      "excerpt": null,
+      "topic": "music producers and their artists",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Toxic (2026 film): &quot;Toxic: Yash film is an interesting experiment that doesn&#039;t quite pull off a subversion&quot;. The News Minute. Retrieved 26 August 2026. Prakash, BVS. &quot;Toxic",
+      "source_url": "https://en.wikipedia.org/wiki/Toxic_(2026_film)",
+      "source_name": "Wikipedia (en) — Toxic (2026 film)",
+      "excerpt": null,
+      "topic": "2026 album releases",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Glenn Close: Globe Awards, in addition to nominations for eight Academy Awards, three Grammy Awards, two British Academy Film Awards, and a Laurence Olivier Award. She",
+      "source_url": "https://en.wikipedia.org/wiki/Glenn_Close",
+      "source_name": "Wikipedia (en) — Glenn Close",
+      "excerpt": null,
+      "topic": "2026 awards and nominations (Oscars and Grammys)",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "List of Scream (film series) characters: from directors Matt Bettinelli-Olpin and Tyler Gillett, and producer Chad Villella. The series comprises seven films: Scream (1996), Scream 2 (1997), Scream",
+      "source_url": "https://en.wikipedia.org/wiki/List_of_Scream_(film_series)_characters",
+      "source_name": "Wikipedia (en) — List of Scream (film series) characters",
+      "excerpt": null,
+      "topic": "new 2026 films and series",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "David Bowie: its special effects and dancing, although in later years critics acknowledged the tour&#039;s strengths and influence on concert tours by other artists, such",
+      "source_url": "https://en.wikipedia.org/wiki/David_Bowie",
+      "source_name": "Wikipedia (en) — David Bowie",
+      "excerpt": null,
+      "topic": "2026 tours and festivals",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Zivert: June 2026. &quot;Credo&quot;: &quot;Top Radio Hits Moldova Weekly Chart: Jan 19, 2023&quot;. TopHit. 19 January 2023. Retrieved 9 March 2025. &quot;YATL&quot;: &quot;Top Radio Hits Moldova",
+      "source_url": "https://en.wikipedia.org/wiki/Zivert",
+      "source_name": "Wikipedia (en) — Zivert",
+      "excerpt": null,
+      "topic": "2026 streaming hits",
+      "surprise_rating": 5.0,
+      "expires_at": null,
+      "tags": [],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Rick Rubin founded Def Jam Recordings while studying film at New York University.",
+      "source_url": "https://en.wikipedia.org/wiki/Rick_Rubin",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Rubin founded Def Jam Recordings while studying film at New York University.",
+      "topic": "Music Producers And Their Artists",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "music producers and their artists"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Boards of Canada's 2026 album Inferno was their first album in 13 years.",
+      "source_url": "https://www.theguardian.com/music/2026/may/23/boards-of-canada-inferno-review-after-13-years-away-their-prodigal-return-is-a-big-disappointment",
+      "source_name": "theguardian.com",
+      "excerpt": "This is the first album in 13 years from Boards of Canada, and from the opening notes – an analogue synth rising and falling like a sound effect in a forgotten 1960s radio play – you’re thrust back into one of the most instantly recognisable worlds in electronic music.",
+      "topic": "2026 Album Releases",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 album releases"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Sinners received a record sixteen nominations and won four awards.",
+      "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Sinners received a record sixteen nominations and won four awards.",
+      "topic": "2026 Awards And Nominations (Oscars And Grammys)",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 awards and nominations (oscars and grammys)"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Spider-Man: Brand New Day had the biggest opening weekend ever in the United States and Canada with $360 million, outdoing Avengers: Endgame (2019).",
+      "source_url": "https://en.wikipedia.org/wiki/2026_in_film",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Spider-Man: Brand New Day had the  in the United States and Canada with $360 million, outdoing  (2019).",
+      "topic": "New 2026 Films And Series",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "new 2026 films and series"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "There will be no Glastonbury in 2026 as the Festival is taking a fallow year.",
+      "source_url": "https://www.glastonburyfestivals.co.uk/info/?direct=true",
+      "source_name": "glastonburyfestivals.co.uk",
+      "excerpt": "There will be no Glastonbury in 2026 as the Festival is taking a fallow year.",
+      "topic": "2026 Tours And Festivals",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 tours and festivals"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "His & Hers was the #1 most-watched show on Netflix in the first half of 2026 with 104 million views.",
+      "source_url": "https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026?pubDate=20260818",
+      "source_name": "about.netflix.com",
+      "excerpt": "We saw big audiences for new stories such as His & Hers (104M) — the #1 most watched show in the half — along with Run Away (50M) and Nemesis Season 1 (33M), which was recently renewed for a second season.",
+      "topic": "2026 Streaming Hits",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 streaming hits"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Nigel Godrich has been dubbed Radiohead's \"sixth member\".",
+      "source_url": "https://en.wikipedia.org/wiki/Nigel_Godrich",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "He has been dubbed the band's \"sixth member\", an allusion to Beatles producer George Martin being called the \"fifth Beatle\".",
+      "topic": "Music Producers And Their Artists",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "music producers and their artists"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "The Protomen released Act III: This City Made Us in 2026, their first studio album in nearly seventeen years.",
+      "source_url": "https://en.wikipedia.org/wiki/2026_in_American_music",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "* 9 – The Protomen released their first studio album in nearly seventeen years, Act III: This City Made Us, which serves as the conclusion to their three-act rock opera inspired by the story of the Mega Man video game franchise.",
+      "topic": "2026 Album Releases",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 album releases"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "With her fifth Best Costume Design nomination, Ruth E. Carter became the most-nominated Black woman in Oscar history across all categories.",
+      "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "With her fifth Best Costume Design nomination, Ruth E. Carter became the most-nominated Black woman in Oscar history across all categories.",
+      "topic": "2026 Awards And Nominations (Oscars And Grammys)",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 awards and nominations (oscars and grammys)"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "The Super Mario Galaxy Movie became the first film of 2026 to cross $1 billion.",
+      "source_url": "https://en.wikipedia.org/wiki/2026_in_film",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "The Super Mario Galaxy Movie became the first film of 2026 to cross $1 billion.",
+      "topic": "New 2026 Films And Series",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "new 2026 films and series"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Tomorrowland Belgium 2026 took place on Weekend 1: July 17-19, 2026 and Weekend 2: July 24-26, 2026.",
+      "source_url": "https://faq.tomorrowland.com/hc/en-us/articles/4402621418132-Where-and-when-will-Tomorrowland-Belgium-2026-take-place",
+      "source_name": "faq.tomorrowland.com",
+      "excerpt": "Tomorrowland Belgium 2026 will take place on:\n\n  * Weekend 1: July 17-19, 2026\n  * Weekend 2: July 24-26, 2026",
+      "topic": "2026 Tours And Festivals",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 tours and festivals"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "War Machine was Netflix’s biggest title in the first half of 2026 with 147 million views.",
+      "source_url": "https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026?pubDate=20260818",
+      "source_name": "about.netflix.com",
+      "excerpt": "War Machine was our biggest title in the half with 147M views.",
+      "topic": "2026 Streaming Hits",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 streaming hits"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Eight of Max Martin's Billboard Hot 100 number-one singles debuted at number one on the chart.",
+      "source_url": "https://en.wikipedia.org/wiki/Max_Martin",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Eight of these songs debuted at number one on the chart.",
+      "topic": "Music Producers And Their Artists",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "music producers and their artists"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "A$AP Rocky released Don't Be Dumb in 2026, his first studio album in eight years.",
+      "source_url": "https://en.wikipedia.org/wiki/2026_in_American_music",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "* 16 – ASAP Rocky released his first studio album in eight years, Don't Be Dumb, over three years after its original announcement in December 2022.",
+      "topic": "2026 Album Releases",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 album releases"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Best Cinematography winner Autumn Durald Arkapaw became the first female and Black winner in the category as well as the first Filipino winner; she was also the first woman of color to be nominated in the category.",
+      "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Best Cinematography winner Autumn Durald Arkapaw became the first female and Black winner in the category as well as the first Filipino winner; she was also the first woman of color to be nominated in the category.",
+      "topic": "2026 Awards And Nominations (Oscars And Grammys)",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 awards and nominations (oscars and grammys)"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Star Wars: Maul – Shadow Lord released on April 6, 2026, with a two-episode premiere.",
+      "source_url": "https://www.disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord",
+      "source_name": "disneyplus.com",
+      "excerpt": "Star Wars: Maul – Shadow Lord released on April 6, 2026, with a two-episode premiere.",
+      "topic": "New 2026 Films And Series",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "new 2026 films and series"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Victoria Swarovski and Michael Ostrowski were announced as the hosts of the 70th Eurovision Song Contest in Vienna, which was scheduled for 12 | 14 | 16 May 2026.",
+      "source_url": "https://www.eurovision.com/stories/eurovision-2026-hosts-victoria-swarovski-michael-strowski/",
+      "source_name": "eurovision.com",
+      "excerpt": "You'll be able to watch Victoria Swarovski and Michael Ostrowski welcome the world to Vienna when the 70th Eurovision Song Contest takes place on 12 | 14 | 16 May 2026.",
+      "topic": "2026 Tours And Festivals",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 tours and festivals"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Spotify reported that Drake became the most-streamed artist in a single day of 2026 after releasing three surprise albums.",
+      "source_url": "https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/",
+      "source_name": "au.rollingstone.com",
+      "excerpt": "According to Spotify, the rapper became the most-streamed artist in a single day of 2026, thanks to his three-album drop.",
+      "topic": "2026 Streaming Hits",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 streaming hits"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Megadeth announced and detailed a self-titled final album due January 23, 2026.",
+      "source_url": "https://www.megadeth.com/blogs/news/track-listing-reveal",
+      "source_name": "megadeth.com",
+      "excerpt": "MEGADETH have revealed the full track listing for their self-titled final album that’s due out January 23, 2026.",
+      "topic": "2026 Album Releases",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 album releases"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Obsession became Focus Features' highest grossing domestic release in its history, and is one of the most profitable in history having been produced on a $750,000 budget.",
+      "source_url": "https://en.wikipedia.org/wiki/2026_in_film",
+      "source_name": "en.wikipedia.org",
+      "excerpt": "Obsession became Focus Features' highest grossing domestic release in its history, and is one of the most profitable in history having been produced on a $750,000 budget.",
+      "topic": "New 2026 Films And Series",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "new 2026 films and series"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "high"
+    },
+    {
+      "text": "Organizers announced that the Coachella Music Festival 2026 had officially sold out less than a week after the festival unveiled its full lineup.",
+      "source_url": "https://au.rollingstone.com/music/music-news/coachella-2026-sold-out-84007/",
+      "source_name": "au.rollingstone.com",
+      "excerpt": "Next year’s Coachella Music Festival has officially sold out, organizers announced Monday — less than a week after the fest unveiled the full lineup slotted for April 10-12 and 17-19 with Sabrina Carpenter, Karol G, Justin Bieber, and Anyma as 2026’s headliners.",
+      "topic": "2026 Tours And Festivals",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 tours and festivals"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    },
+    {
+      "text": "Shakira and Burna Boy’s \"Dai Dai\" rose to No. 1 on the Billboard Global 200 in the chart dated July 18, 2026, making it the first official FIFA World Cup anthem to simultaneously top both Billboard global charts.",
+      "source_url": "https://www.musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm",
+      "source_name": "musictimes.com",
+      "excerpt": "\"Dai Dai\" has risen to No. 1 on the Billboard Global 200 in the chart dated July 18, making it the first official FIFA World Cup anthem to simultaneously top both Billboard global charts.",
+      "topic": "2026 Streaming Hits",
+      "surprise_rating": 6.0,
+      "expires_at": null,
+      "tags": [
+        "2026 streaming hits"
+      ],
+      "language": "en",
+      "verified": false,
+      "credibility": "medium"
+    }
+  ]
+}

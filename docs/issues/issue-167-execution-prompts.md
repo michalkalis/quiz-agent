@@ -270,7 +270,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
-- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing).** Nothing was generated, published, or spent. **Unblocked 2026-08-31** by the OpenAI sourcing provider (D5 closed) — re-run with `--provider openai`, see the note below.
+- 🛑 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), now BLOCKED at 167.10 (generation).** Nothing published, nothing imported. See "Session E re-run 2026-08-31" below.
 - ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
@@ -354,6 +354,37 @@ Keep the `(Oscars and Grammys)` substitution — `--topics` splits on `,` (carri
 **Cost order of magnitude:** ~1 `gpt-5-mini` Responses call per topic; #166 measured ~4-5 ¢ per web-searched call (tokens at list price + $10/1k searches), so a 6-topic sourcing round is roughly **25-30 ¢**. Not recorded into any order cost signal — this is the CLI path (no order to bill).
 
 **Rollback:** drop `--provider openai`. `FactSourcer`'s default is still `"tavily"`, so every existing caller including prod constructs exactly what it did before.
+
+### Session E re-run 2026-08-31 — 167.9 PASSED, BLOCKED at 167.10 (generation JSON parse)
+
+**Terminal state: 46 facts sourced and committed; no batch generated, nothing published, no corpus write.** Spend ≈ **$1-2** (one OpenAI sourcing round + ~4 probe calls + two Fable 5 generation attempts that produced nothing usable).
+
+**167.9 — PASSED, and D5 is validated.** `facts_167.json` = **46 facts** across the 6 locked topics (24 Wikipedia + 22 OpenAI `web_search`), **46/46 carry a `source_url`**, exit 0 over the `MIN_FACTS = 40` gate. Domains: `en.wikipedia.org` (35), `about.netflix.com`, `au.rollingstone.com`, `theguardian.com`, `glastonburyfestivals.co.uk`, `faq.tomorrowland.com`, `disneyplus.com`. Keep the `(Oscars and Grammys)` substitution.
+
+⚠️ **Getting there needed two fixes to `OpenAIWebSearchSource` — the provider as merged in PR #54 yields exactly 0 facts.** First run: 5/6 topics `status="incomplete"`, 6th had every candidate dropped as uncited → 24 facts, all Wikipedia, exit 1.
+
+1. **`_MAX_OUTPUT_TOKENS` 4096 → 16384.** Copied from the fact-check path, but `gpt-5-mini` spends ~3 000 tokens on *reasoning* before writing a fact (measured: `reasoning_tokens=3008` of a 3789-token reply), so the JSON array was truncated. The bare `status` was logged without `incomplete_details`, which hid the cause for a whole run — the warning now carries it.
+2. **Attribution widened from `url_citation` annotations to "pages the search tool actually opened"** (`_trusted_urls`). The Responses API attaches `url_citation` annotations only to *inline-cited prose*; this module asks for a bare JSON array, so a real reply carries **zero** annotations (measured `ann count: 0`) and 100 % of candidates were dropped. `web_search_call` items with `action.type == "open_page"` carry the URL the tool really fetched — a **stronger** anchor, not a weaker one. The integrity property is unchanged: a URL the tool never visited is still rejected, and the URL that ships is still the tool's, never the model's. Covered by `test_page_the_tool_opened_counts_as_a_citation` + `test_reply_budget_leaves_room_after_reasoning`.
+
+**⚠️ Environment correction — generation needs `LLM_GATEWAY=openrouter`.** The 2026-08-27 preflight recorded "`LLM_GATEWAY` unset (direct)" as green, but it never reached generation. With the gateway unset, `factory.chat_openai` routes **every** model to the direct OpenAI endpoint, so `claude-fable-5` returns `404 model_not_found`. `run_d21b_arms.py:15` already says it: "Fable/Opus need `LLM_GATEWAY=openrouter` — Bedrock Claude is locked". Same canonical Fable 5 (D10), just the documented route. Also: the repo-root `.env` cannot be `source`d from a worktree — pass `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `OPENROUTER_API_KEY` / `AWS_*` / `GOOGLE_API_KEY` inline per command.
+
+**🛑 BLOCKER — fact-first generation returns unparseable JSON (reproducible, 2 of 2 runs).**
+Sourcing loads fine (`finish sourcing {'facts': 46}`), then the one big fact-first call fails at `advanced_generator.py:1944` (`json.loads`):
+
+- run 1: `JSON decode error: Expecting ',' delimiter: line 538 column 6 (char 34135)`
+- run 2: `JSON decode error: Expecting ',' delimiter: line 404 column 8 (char 26606)`
+
+Both times the whole grounded batch is lost, only the single open-shape question survives (it legitimately has no fact), and **F8 fires correctly**: `all 1 questions ungrounded after attribution`. Not a token-cap truncation — 34 k *characters* ≈ 9 k tokens against a `max_tokens=32768` cap. `"Expecting ',' delimiter"` deep in a line is the signature of an **unescaped `"` inside a string value**, which entertainment content produces far more than other categories (album / film / song titles are full of quotes). `_parse_response` is a single `json.loads` over the entire batch with **no salvage and no repair**, so one bad character costs all ~29 questions.
+
+**This is a defect in the shared prod generation path, not one of the two remedies the runbook authorises** (thin yield at 167.9, `accepted < 20` at 167.11), so Session E stopped rather than spend a third blind generation round. **Founder call needed on the fix:**
+
+1. **Per-question salvage** (recommended, additive and fail-safe): on `JSONDecodeError`, `raw_decode` each candidate object in the array and keep the ones that parse. Cannot make the happy path worse — today that branch returns `[]` — and F8 still guards grounding.
+2. **Structured outputs / JSON-schema mode** on the generation call, the way #166 did for fact-check. Cleanest, but changes the prod generation contract.
+3. **Escape-repair pass** before `json.loads`. Cheapest, but heuristic.
+
+Whichever wins, `_parse_response` should log the failing content to a file instead of `content[:500]` — the 500-char preview never contains the offending offset.
+
+**Resume from 167.10** once the parser is fixed: `facts_167.json` is committed and reusable (A11 needs it to be OLDER than `pilot_167.json`, which is still true), so no re-sourcing and no re-spend on 167.9.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

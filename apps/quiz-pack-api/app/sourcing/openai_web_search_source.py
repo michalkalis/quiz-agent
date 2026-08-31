@@ -19,6 +19,11 @@ Two properties this source must keep:
   (``app/orchestrator/stages/generation.py:547``) and #167 D6's offline
   excerpt join both key on ``source_url``, so a candidate the model states
   without a matching URL citation is dropped rather than emitted URL-less.
+  "Cited" means *the search tool really fetched that page*: the trusted set
+  is the response's ``url_citation`` annotations **plus** the URLs of the
+  ``web_search_call`` items the tool actually opened (see
+  ``_trusted_urls``). A bare-JSON reply carries no annotations at all
+  (measured, 2026-08-31), so annotations alone dropped 100 % of candidates.
 
 Cost is *not* recorded into the order-level signals: this source is the CLI
 pilot path (``scripts/source_facts.py``), which has no order to bill. If it
@@ -44,9 +49,12 @@ logger = logging.getLogger(__name__)
 # previous Sonnet 5 path. Model swaps need eval data + approval.
 SOURCING_MODEL = "gpt-5-mini"
 
-# Reply budget (reasoning + the JSON array). Matches the fact-check path's
-# 4096, which was never hit across the #166 validation calls.
-_MAX_OUTPUT_TOKENS = 4096
+# Reply budget (reasoning + the JSON array). The fact-check path's 4096 was
+# copied here and proved far too small: sourcing spends ~3k tokens on
+# reasoning alone before the first fact is written, so five of six #167 pilot
+# topics came back ``status="incomplete"`` with nothing usable (measured
+# 2026-08-31). 16384 leaves the JSON array room after the reasoning budget.
+_MAX_OUTPUT_TOKENS = 16384
 
 # Fewer facts than this per topic and the call is not worth its latency; the
 # caller's `count` budget is spread across topics on top of it.
@@ -115,10 +123,15 @@ class OpenAIWebSearchSource:
                     max_output_tokens=_MAX_OUTPUT_TOKENS,
                 )
                 if getattr(response, "status", None) != "completed":
+                    # Carry the reason: an "incomplete" with
+                    # reason="max_output_tokens" is a budget problem, not a
+                    # search problem, and the bare status hid that for a
+                    # whole pilot run.
                     logger.warning(
-                        "OpenAI web search for %r ended %r — no facts taken",
+                        "OpenAI web search for %r ended %r (%s) — no facts taken",
                         topic,
                         getattr(response, "status", None),
+                        getattr(response, "incomplete_details", None),
                     )
                     continue
                 facts.extend(self._facts_from_response(response, topic))
@@ -132,6 +145,7 @@ class OpenAIWebSearchSource:
 
     def _facts_from_response(self, response, topic: str) -> list[Fact]:
         text, citations = _text_and_citations(response)
+        citations = _trusted_urls(response, citations)
         facts: list[Fact] = []
 
         for item in _parse_fact_array(text):
@@ -184,6 +198,31 @@ def _text_and_citations(response) -> tuple[str, list[str]]:
                 if url and url not in urls:
                     urls.append(url)
     return "".join(text_parts), urls
+
+
+def _trusted_urls(response, citations: list[str]) -> list[str]:
+    """``citations`` plus every page the ``web_search`` tool actually opened.
+
+    The Responses API only attaches ``url_citation`` annotations to *prose*
+    it cites inline; a reply that is nothing but a JSON array — which is
+    exactly what this module asks for — carries none, so annotations alone
+    reject every candidate (measured on the #167 pilot: 100 % dropped).
+
+    The ``web_search_call`` items are the stronger anchor anyway: an
+    ``open_page``/``find_in_page`` action URL is a page the tool really
+    fetched, not a URL the model merely wrote down. The integrity property
+    is unchanged — a claimed URL the search tool never visited is still
+    rejected, and the URL that ships is still the tool's, never the model's.
+    """
+    urls = list(citations)
+    for item in getattr(response, "output", []) or []:
+        if getattr(item, "type", None) != "web_search_call":
+            continue
+        action = getattr(item, "action", None)
+        url = getattr(action, "url", None) if action is not None else None
+        if url and url not in urls:
+            urls.append(url)
+    return urls
 
 
 def _parse_fact_array(text: str) -> list:

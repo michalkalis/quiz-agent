@@ -27,6 +27,12 @@ struct QuestionView: View {
     /// #125: true while more of the stem sits below the fold — drives the
     /// bottom fade + "SCROLL ↓" overflow cue on the MCQ stem.
     @State private var showScrollCue = false
+    /// TF build 53 feedback: a long stem auto-scrolls to its end after a short
+    /// beat, so a driver reads the whole question hands-free. One position +
+    /// overflow pair serves both stem ScrollViews — MCQ and voice are exclusive
+    /// branches, never on screen together.
+    @State private var stemScroll = ScrollPosition()
+    @State private var stemOverflow: CGFloat = 0
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -83,7 +89,11 @@ struct QuestionView: View {
             viewModel.handleAnswerConfirmationDismissed()
         }) {
             AnswerConfirmationView(
-                isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty,
+                // `!isEditingTranscript`: deleting the whole prefill while editing
+                // must not flip the sheet into the Transcribing spinner — the
+                // "dialog vanished" bug from TF build 53 feedback.
+                isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty
+                    && !viewModel.isEditingTranscript,
                 transcribedAnswer: $viewModel.transcribedAnswer,
                 autoConfirmCountdown: viewModel.autoConfirmCountdown,
                 autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
@@ -543,12 +553,21 @@ struct QuestionView: View {
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
             .scrollIndicators(.visible)
+            .scrollPosition($stemScroll)
             .onScrollGeometryChange(for: Bool.self) { g in
                 // Is there more stem below the fold? (taller than the viewport
                 // AND not scrolled to the end.)
                 g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
             } action: { _, more in
                 showScrollCue = more
+            }
+            .onScrollGeometryChange(for: CGFloat.self) { g in
+                max(0, g.contentSize.height - g.containerSize.height)
+            } action: { _, overflow in
+                stemOverflow = overflow
+            }
+            .task(id: question.id) {
+                await autoScrollStemIfNeeded()
             }
             .overlay(alignment: .bottom) {
                 if showScrollCue {
@@ -557,6 +576,19 @@ struct QuestionView: View {
             }
         }
         .frame(minHeight: floor)
+    }
+
+    /// Drift a too-tall stem to its end at reading pace after a short beat
+    /// (TF build 53 feedback: "the question text could auto-scroll"). A user
+    /// drag interrupts the animation, so manual reading always wins.
+    private func autoScrollStemIfNeeded() async {
+        stemScroll.scrollTo(edge: .top)
+        guard !reduceMotion else { return }
+        try? await Task.sleep(for: .seconds(3))
+        guard !Task.isCancelled, stemOverflow > 0 else { return }
+        withAnimation(.linear(duration: max(2, Double(stemOverflow) / 28))) {
+            stemScroll.scrollTo(edge: .bottom)
+        }
     }
 
     /// Bottom fade + a small mono "SCROLL ↓" cue — the visible overflow
@@ -630,6 +662,15 @@ struct QuestionView: View {
                         generatedByBadge(question, horizontalPadding: 24)
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
+                }
+                .scrollPosition($stemScroll)
+                .onScrollGeometryChange(for: CGFloat.self) { g in
+                    max(0, g.contentSize.height - g.containerSize.height)
+                } action: { _, overflow in
+                    stemOverflow = overflow
+                }
+                .task(id: question.id) {
+                    await autoScrollStemIfNeeded()
                 }
             }
 

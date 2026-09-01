@@ -54,6 +54,37 @@ def test_metadata_filter_still_restricts_to_approved():
     assert filters["review_status"] == "approved"
 
 
+def test_metadata_filter_testflight_channel_adds_pending_review():
+    # Founder rule (2026-08-28): TestFlight installs field-test fresh corpus
+    # before approval, so a session created with build_channel="testflight"
+    # must admit pending_review alongside approved.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language="en"
+    )
+    session.build_channel = "testflight"
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert set(filters["review_status"]["$in"]) == {"approved", "pending_review"}
+
+
+def test_metadata_filter_unknown_channel_stays_approved_only():
+    # Fail-closed: anything except the exact "testflight" literal (App Store
+    # installs send no channel at all) must never widen the review gate —
+    # unreviewed questions reaching App Store users would be a content-quality
+    # incident, not a cosmetic bug.
+    retriever = _retriever()
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language="en"
+    )
+    session.build_channel = "TESTFLIGHT"  # wrong case = untrusted
+
+    filters = retriever._build_metadata_filters("medium", session)
+
+    assert filters["review_status"] == "approved"
+
+
 def test_metadata_filter_excludes_image_by_default():
     # #68: image questions are unsuitable while driving — a session that did
     # not opt in must never be served an image question, or a driver gets a

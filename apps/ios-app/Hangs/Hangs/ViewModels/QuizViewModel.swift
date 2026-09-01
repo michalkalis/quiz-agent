@@ -1156,6 +1156,12 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// See `RecordingCoordinator.beginEditingTranscript`.
+    /// True from the pencil tap until confirm/cancel — the sheet uses it to keep
+    /// the transcript branch up while the user empties the field mid-edit.
+    var isEditingTranscript: Bool {
+        recordingCoordinator.transcriptWasEdited
+    }
+
     func beginEditingTranscript() {
         recordingCoordinator.beginEditingTranscript()
     }

@@ -1,0 +1,104 @@
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_cb424e20 url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.generation.advanced_generator: Batch JSON was malformed (Expecting ',' delimiter: line 506 column 6 (char 30956)) — salvaged 23 of 23 question objects, 0 lost
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=2eb89264-4fa9-46e7-b03a-fbf5ac321f3c fallback_marked=False question='Silent films from the 1920s often look comically sped-up when we watch them today, even though the actors on set moved at completely normal speed. What causes this jerky, fast-motion effect?'
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=1f8784cd-9f58-4111-a875-a7d4c6a63d37: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=a272b284-155d-4244-a177-4a872cf172c1: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order 8622814a-1927-475c-9488-5b442aecfed4 verification withheld 2 unverifiable question(s) (fail-closed, #158)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=06e53331-11c5-4619-91b5-14452c9506cc reason=answerability_surprise_veto(surprise=1.5<=3.0,answerability=1.5<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=1763bccd-1405-46cb-ac6c-21e65e8fba61 reason=answerability_surprise_veto(surprise=2.5<=3.0,answerability=1.0<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=816bc701-c342-4452-bc5c-909ed7ed15e2 reason=answerability_surprise_veto(surprise=3.0<=3.0,answerability=3.0<=3.0)
+WARNING app.orchestrator.stages.scoring: ScoringStage craft-guard dropped id=62a5ddaa-2e37-4c1d-9043-da94d5b7e441 reason=long_answer(7w)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=24d730f5-a08a-4df1-b97a-ece1243077c3 reason=answerability_surprise_veto(surprise=1.5<=3.0,answerability=3.0<=3.0)
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_176fab31 url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=8e38d298-5224-45de-9ffb-93198cb50fb1 fallback_marked=False question='Silent films from the 1910s and 1920s often look comically sped-up when we watch them today — yet audiences back then saw perfectly natural movement. What causes this effect?'
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=0497bb1e-8451-4104-b08f-7f22e1206204 (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=the super mario galaxy movie)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=3527aaef-885c-40b9-b7cd-7739c8bb98d6 (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=388b0649-c81a-4bba-99d1-3bca537e0eae (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=6c9b1559-0934-4cf8-b8c0-54f813effc8b (fact key reuse url=megadeth.com/blogs/news/track-listing-reveal answer=megadeth)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=60652a56-115d-4a49-b1d8-27c53d0901e2 (fact key reuse url=musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm answer=burna boy)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=3490fc3c-2a41-41e2-89a6-629f12b66c18 (fact key reuse url=en.wikipedia.org/wiki/sigourney_weaver answer=a grammy)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=4de17a81-36f7-49ff-9613-53a5fa4461e7 (fact key reuse url=en.wikipedia.org/wiki/nigel_godrich answer=radiohead)
+WARNING app.orchestrator.stages.scoring: ScoringStage VETO dropped id=8ac9e0b5-be9a-4050-8de5-dd66754ab48c reason=answerability_surprise_veto(surprise=2.5<=3.0,answerability=2.5<=3.0)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=7b63c759-3a9f-4136-b457-14c0772474d8 topic='2026 Awards And Nominations (Oscars And Grammys)' over per-topic cap 5
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_aae58a0b url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped question id=ffa711e9-19ca-4416-9b8e-2e11ffb2e1d1 reason=mcq_missing_options pattern=comparison_bet_older_larger answer='Sinners' options=None
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=d3cea4ec-4cbb-4185-a3cd-01b934a23df4 fallback_marked=False question='People in silent films from the 1910s and 1920s often seem to walk and gesture in a comically fast, jerky way — yet audiences at the time saw nothing unusual. Why do those films look sped-up to us today?'
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=e0ee1359-89b4-4c1e-8370-40891392ee2e (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=spider man brand new day)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=b1385708-7bcf-40b0-bde7-05a9b6e61935 (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=the super mario galaxy movie)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=8e1f2d7a-572d-43d7-970a-25d037703ac7 (fact key reuse url=glastonburyfestivals.co.uk/info/?direct=true answer=it took a fallow year)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=8795d7d7-95b8-42f8-aaed-919b20b627d2 (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=b256867a-eb73-40a0-b650-2d82bcce97e6 (fact key reuse url=megadeth.com/blogs/news/track-listing-reveal answer=megadeth)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=6b7df69a-032b-46d2-9715-dcd89ada311e (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=e3336844-717c-487e-a6de-6268c6596d0d (fact key reuse url=en.wikipedia.org/wiki/98th_academy_awards answer=best cinematography)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=afb68573-ff9b-4d85-8239-10c20591a21f: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=d456c703-fc35-41b0-b1d1-a289a3ef3ee1: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order 8622814a-1927-475c-9488-5b442aecfed4 verification withheld 2 unverifiable question(s) (fail-closed, #158)
+[00] start  sourcing
+[00] finish sourcing {'facts': 46, 'facts_file': '../../docs/testing/runs/167-entertainment-pilot/facts_167.json'}
+[01] start  generating
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at fewer frames per second' not found in explanation for: Silent films from the 1920s often look comically sped-up when we watch them toda...
+  ⚠ Answer/explanation mismatch: answer 'Boards of Canada' not found in explanation for: Which Scottish electronic duo, misleadingly named after a North American country...
+  ⚠ Answer/explanation mismatch: answer 'It took a fallow year' not found in explanation for: Why was there no Glastonbury Festival in 2026?...
+  ⚠ Answer/explanation mismatch: answer 'Costumes' not found in explanation for: In 2026, Ruth E. Carter became the most Oscar-nominated Black woman in history —...
+  ⚠ Answer/explanation mismatch: answer 'The Super Mario Galaxy Movie' not found in explanation for: What was the first film of 2026 to cross one billion dollars at the worldwide bo...
+  ⚠ Answer/explanation mismatch: answer 'Two' not found in explanation for: Demand for Belgium's Tomorrowland dance festival is so huge that its 2026 editio...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Which Swedish super-producer, the hitmaker behind smashes for both Britney Spear...
+  ⚠ Answer/explanation mismatch: answer 'A$AP Rocky' not found in explanation for: Which rapper, at least as famous for being Rihanna's partner as for his music, e...
+  ⚠ Answer/explanation mismatch: answer 'A woman won for the first time' not found in explanation for: What historic first happened in the Best Cinematography category at the 2026 Osc...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which double-bladed-lightsaber villain, seemingly finished off back in 1999's Th...
+  ⚠ Answer/explanation mismatch: answer 'Three' not found in explanation for: Drake became Spotify's most-streamed artist in a single day of 2026 after surpri...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: Which of these awards does Alien star Sigourney Weaver actually have: an Oscar o...
+  ⚠ Diversity warning: 9/23 (39%) questions start with 'Which' (target: ≤30%)
+[01] finish generating {'questions': 23, 'dropped_quality': 0, 'normalized_quality': 0, 'dropped_mcq_missing_options': 0, 'dropped_ungrounded': 1, 'demoted_puzzles': 0}
+[02] start  dedup
+[02] finish dedup {'kept': 23, 'dropped': 0, 'fact_dropped': 0}
+[03] start  verifying
+[03] finish verifying {'verified': 20, 'dropped': 1, 'withheld': 2, 'evergreen_skipped': 0}
+[04] start  scoring
+[04] finish scoring {'scored': 20, 'dropped_low_score': 0, 'veto_shadow_flagged': 0, 'veto_dropped': 4, 'craft_flagged': 0, 'craft_dropped': 1, 'undated_shadow_flagged': 0, 'judge_failures': 0}
+[05] start  composition
+[05] finish composition {'kept': 15, 'topic_cap': 5, 'tf_cap': 2, 'topic_cap_dropped': 0, 'tf_cap_dropped': 0}
+[06] start  topup
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at slower frame rate than played back' not found in explanation for: Silent films from the 1910s and 1920s often look comically sped-up when we watch...
+  ⚠ Answer/explanation mismatch: answer 'The Super Mario Galaxy Movie' not found in explanation for: The first film of 2026 to cross one billion dollars worldwide wasn't a superhero...
+  ⚠ Answer/explanation mismatch: answer 'c' not found in explanation for: War Machine was Netflix's single biggest title in the first half of 2026 — rough...
+  ⚠ Answer/explanation mismatch: answer 'Burna Boy' not found in explanation for: Shakira's 2026 FIFA World Cup anthem 'Dai Dai' topped the Billboard Global 200 —...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: Which film earned more Academy Award nominations: Titanic at the 1998 ceremony, ...
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at lower frame rate, played back faster' not found in explanation for: People in silent films from the 1910s and 1920s often seem to walk and gesture i...
+  ⚠ Answer/explanation mismatch: answer 'Spider-Man: Brand New Day' not found in explanation for: With a 360-million-dollar opening weekend in 2026, which superhero film finally ...
+  ⚠ Answer/explanation mismatch: answer 'The Super Mario Galaxy Movie' not found in explanation for: The first film to cross one billion dollars worldwide in 2026 was not a superher...
+  ⚠ Answer/explanation mismatch: answer 'It took a fallow year' not found in explanation for: Why did the Glastonbury Festival deliberately skip the summer of 2026 entirely?...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Britney Spears, Katy Perry and The Weeknd all owe massive hits to one songwriter...
+  ⚠ Answer/explanation mismatch: answer 'Sinners' not found in explanation for: At the Oscars ceremony held in 2026, which film earned a record sixteen nominati...
+[07] start  failed {'error': "ValueError('pack shortfall: 18/30 questions survived after 2 top-up round(s) — below the 80% floor (24.0)')"}
+Traceback (most recent call last):
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-ae9e1fc57075232e0/apps/quiz-pack-api/scripts/generate_pack.py", line 682, in <module>
+    sys.exit(cli_main())
+             ^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-ae9e1fc57075232e0/apps/quiz-pack-api/scripts/generate_pack.py", line 678, in cli_main
+    return asyncio.run(_run(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-ae9e1fc57075232e0/apps/quiz-pack-api/scripts/generate_pack.py", line 454, in _run
+    pack = await pack_generator.run(order)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-ae9e1fc57075232e0/apps/quiz-pack-api/app/orchestrator/pack_generator.py", line 203, in run
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-ae9e1fc57075232e0/apps/quiz-pack-api/app/orchestrator/stages/topup.py", line 151, in run
+    raise ValueError(
+ValueError: pack shortfall: 18/30 questions survived after 2 top-up round(s) — below the 80% floor (24.0)

@@ -199,7 +199,7 @@ class TranslationService:
                     messages=[
                         {
                             "role": "system",
-                            "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
+                            "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Titles of works (films, series, songs, albums, books, games) get their official {target_lang_name} release title ONLY if you are certain of it; when unsure, keep the original title verbatim — never invent or calque a translated title. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
                         },
                         {
                             "role": "user",
@@ -367,7 +367,11 @@ class TranslationService:
             f"never words borrowed from languages closely related to {target_lang_name}. "
             "Use "
             f"the established {target_lang_name} form of proper names where one exists; "
-            "otherwise keep the original name. Keep numbers and units unchanged. "
+            "otherwise keep the original name. Titles of works (films, series, songs, "
+            f"albums, books, games) get their official {target_lang_name} release title "
+            "ONLY if you are certain of it; when unsure, keep the original title "
+            "verbatim — never invent or calque a translated title. "
+            "Keep numbers and units unchanged. "
             "'options' is a map of option letters to answer texts: keep the letters "
             "unchanged and translate only the texts. 'correct_answer' and "
             "'headline_answer' must match the wording used in 'options' when both are "

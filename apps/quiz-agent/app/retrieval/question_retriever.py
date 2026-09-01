@@ -240,10 +240,18 @@ class QuestionRetriever:
                 pack_filters["language_dependent"] = False
             return pack_filters
 
+        # TestFlight/dev installs also see pending_review questions so the
+        # founder can field-test fresh corpus before approving it; App Store
+        # clients (build_channel None) stay approved-only (founder, 2026-08-28).
+        allowed_statuses = (
+            {"$in": ["approved", "pending_review"]}
+            if session.build_channel == "testflight"
+            else "approved"
+        )
         filters = {
             "difficulty": difficulty,
             "type": {"$in": allowed_types},
-            "review_status": "approved",  # ONLY use human-reviewed approved questions
+            "review_status": allowed_statuses,
             # A normal quiz never serves custom-pack questions — those are private,
             # user-scoped paid content. pack_id IS NULL keeps the shared free quiz
             # to the curated global corpus (#95).

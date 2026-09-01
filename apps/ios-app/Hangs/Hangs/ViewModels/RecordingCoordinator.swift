@@ -54,6 +54,13 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.speechDetectedDuringAutoRecord = newValue }
     }
 
+    /// See `RecordingState.wasUnattendedRecording` — snapshot of "auto-started
+    /// and heard no speech", taken at stop time, read by the failure handlers.
+    var wasUnattendedRecording: Bool {
+        get { recordingState.wasUnattendedRecording }
+        set { recordingState.wasUnattendedRecording = newValue }
+    }
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool {
         get { recordingState.isStoppingRecording }

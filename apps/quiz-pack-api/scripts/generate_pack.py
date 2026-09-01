@@ -264,6 +264,7 @@ def _build_stages(
     gen_prompt_file: str | None = None,
     forced_topics: list[str] | None = None,
     facts_file: str | None = None,
+    per_topic_cap: int | None = None,
 ) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode.
 
@@ -274,6 +275,9 @@ def _build_stages(
     fact-first generation prompt (filename within ``prompts/``).
     ``forced_topics`` pins the sourced topic set; ``facts_file`` replaces
     sourcing entirely with a previously dumped fact set.
+    ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
+    (#167); ``None`` keeps today's scaled default, so the worker/API path —
+    which never sets it — stays byte-identical.
     """
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -311,7 +315,7 @@ def _build_stages(
     verification = VerificationStage(FactVerifier())
     scoring = ScoringStage(MultiModelScorer())
     dedup = DedupStage(dedup_store, gold_standard_path=None)
-    composition = CompositionStage()
+    composition = CompositionStage(per_topic_cap=per_topic_cap)
 
     stages: list[Stage] = [
         # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
@@ -423,6 +427,7 @@ async def _run(args: argparse.Namespace) -> int:
             else None
         ),
         facts_file=args.facts_file,
+        per_topic_cap=args.per_topic_cap,
     )
 
     def _sink_factory(_order_id: str) -> ProgressSink:
@@ -627,6 +632,21 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "server-side DIRECT_GENERATION default is on — sourcing runs (or "
             "--facts-file is joined) and the attribution gates (ungrounded "
             "drop + F8 source_url) stay armed."
+        ),
+    )
+    parser.add_argument(
+        "--per-topic-cap",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "#167: override CompositionStage's per-topic cap for this run. "
+            "The default scales from 2-per-30 and assumes ~target/2 sourced "
+            "topics; a batch with a deliberately small locked topic set (the "
+            "entertainment pilot: 6 themes x ~5 questions) cannot reach its "
+            "target under it, and the top-up loop pays for the full "
+            "judge/verify/score pipeline chasing the impossible remainder. "
+            "Omit to keep the scaled default."
         ),
     )
     parser.add_argument(

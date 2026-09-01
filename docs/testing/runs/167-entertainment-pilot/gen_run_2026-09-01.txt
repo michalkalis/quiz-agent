@@ -1,0 +1,78 @@
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_83286cd4 url='https://en.wikipedia.org/wiki/Frame_rate' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.generation.advanced_generator: Batch JSON was malformed (Expecting ',' delimiter: line 428 column 8 (char 27731)) — salvaged 21 of 21 question objects, 0 lost
+WARNING app.generation.expiry_classifier: ExpiryClassifier: LLM returned no content; leaving 22 questions unclassified
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=ddc88430-bd58-423e-9cc2-668e09c321dc fallback_marked=False question='When you watch old silent comedies from the 1910s and 1920s, everyone seems to scurry around in a comically fast, jerky way — yet audiences at the time saw normal-looking motion. What causes this speed-up when we watch them today?'
+WARNING app.orchestrator.stages.verification: VerificationStage withheld id=1c381bce-181a-4b57-bb22-1a5c335e1b68: held_for_review (verifier unavailable) — fail-closed, #158; notes=fact-check call failed (API error or refusal); held (fail-closed, #158)
+WARNING app.orchestrator.stages.verification: order 03b8f77a-e99b-4a09-aad9-3699812ad844 verification withheld 1 unverifiable question(s) (fail-closed, #158)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=28cf9da8-1b31-4256-9f84-e4e6331266f9 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=048bdf78-1166-4fa4-ac57-3b8c50c0930a reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=42be9713-2a1a-45af-856a-ffbe4693af25 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=18acc7b5-a30d-4aa2-8e11-f0c8a3e47152 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=2180df47-62a8-4f9f-8d08-bb93b2d6aa7d reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=fc35092d-820b-4689-ad77-131b589fa40f reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=9262c29b-63fe-4d68-a9df-726a98c7b530 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=7b171756-9171-49f3-b110-8fe1596d5847 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=44a81440-5fe1-48ab-95cb-86f0f609b42d reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=47b9fb52-b73e-43ab-9877-d67194a1dd34 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=6669b0e5-c0dd-4e91-9623-ba4a29a3d65b reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=4ad0abbe-f4fc-4cde-94ff-ccfb23701dc7 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=4bca7bec-e429-4032-a026-064fd7348d49 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=579d4021-0315-43e9-b1c0-41139094ba6a reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=0ae66d10-cea2-4d2b-8adf-17ce7d7d89e8 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=5016d106-397b-4187-b19c-641477b92b5b reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=728edf60-bdf6-4be8-945e-f1f4346b4a72 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=ab32fd5c-371f-4fa4-b323-0a06d826eab3 reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+WARNING app.orchestrator.stages.scoring: ScoringStage judge outage: question id=e368fcd0-ab02-4bc5-8e10-75f5292d0a3a reached the ship gate with 0 judge verdict(s), below the quorum of 2 — withheld (#159)
+ERROR app.orchestrator.stages.scoring: order 03b8f77a-e99b-4a09-aad9-3699812ad844 scoring gate failed: 19 of 19 question(s) fell below the judge-verdict quorum (judge panel unavailable or partial)
+[00] start  sourcing
+[00] finish sourcing {'facts': 46, 'facts_file': '../../docs/testing/runs/167-entertainment-pilot/facts_167.json'}
+[01] start  generating
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Filmed at fewer frames than modern playback' not found in explanation for: When you watch old silent comedies from the 1910s and 1920s, everyone seems to s...
+  ⚠ Answer/explanation mismatch: answer 'A fallow year' not found in explanation for: Glastonbury Festival deliberately took 2026 off so its farmland could recover — ...
+  ⚠ Answer/explanation mismatch: answer 'c' not found in explanation for: His & Hers was Netflix's most-watched series of the first half of 2026 — roughly...
+  ⚠ Answer/explanation mismatch: answer 'Costumes' not found in explanation for: In 2026, Ruth E. Carter became the most Oscar-nominated Black woman in history —...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: True or false: Belgium's Tomorrowland festival squeezed its entire 2026 edition ...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Which Swedish super-producer, the hitmaker behind smashes for Britney Spears and...
+  ⚠ Answer/explanation mismatch: answer 'A$AP Rocky' not found in explanation for: Which rapper, famous as Rihanna's partner, finally ended an eight-year album dro...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: In 2026, Disney+ launched the series Shadow Lord around which Star Wars villain,...
+  ⚠ Answer/explanation mismatch: answer 'Less than a week' not found in explanation for: After unveiling its full 2026 lineup, how quickly did Coachella completely sell ...
+  ⚠ Answer/explanation mismatch: answer 'Wonder Man' not found in explanation for: Trevor Slattery, Ben Kingsley's washed-up fake Mandarin from Iron Man 3, resurfa...
+[01] finish generating {'questions': 21, 'dropped_quality': 0, 'normalized_quality': 0, 'dropped_mcq_missing_options': 0, 'dropped_ungrounded': 1, 'demoted_puzzles': 0}
+[02] start  dedup
+[02] finish dedup {'kept': 21, 'dropped': 0, 'fact_dropped': 0}
+[03] start  verifying
+[03] finish verifying {'verified': 19, 'dropped': 1, 'withheld': 1, 'evergreen_skipped': 0}
+[04] start  scoring
+[05] start  failed {'error': "JudgePanelUnavailable('19 question(s) reached the ship gate below the 2-judge verdict quorum — refusing to deliver an ungated pack')"}
+Traceback (most recent call last):
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-a546df1261b55eb75/apps/quiz-pack-api/scripts/generate_pack.py", line 682, in <module>
+    sys.exit(cli_main())
+             ^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-a546df1261b55eb75/apps/quiz-pack-api/scripts/generate_pack.py", line 678, in cli_main
+    return asyncio.run(_run(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-a546df1261b55eb75/apps/quiz-pack-api/scripts/generate_pack.py", line 454, in _run
+    pack = await pack_generator.run(order)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-a546df1261b55eb75/apps/quiz-pack-api/app/orchestrator/pack_generator.py", line 203, in run
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michalkalis/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/.claude/worktrees/agent-a546df1261b55eb75/apps/quiz-pack-api/app/orchestrator/stages/scoring.py", line 370, in run
+    raise JudgePanelUnavailable(
+app.orchestrator.stages.scoring.JudgePanelUnavailable: 19 question(s) reached the ship gate below the 2-judge verdict quorum — refusing to deliver an ungated pack
+WARNING app.scoring.multi_model_scorer: Judge gpt-5.6-sol failed on surprise_delight (attempt 1): APIStatusError("Error code: 402 - {'error': {'message': 'This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.', 'code': 402, 'metadata': {'reason': 'in_flight_budget_exhausted', 'limit_source': 'openrouter_in_flight_budget', 'remedy_hint': 'Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.', 'headers': {'Retry-After': '120'}, 'provider_name': None}}, 'user_id': 'user_3Ez710X4ybMaBHxsX2shQyOPS2U'}")
+
+[... 532 further identical 'Judge <model> failed on <dimension> (attempt N): 402 in_flight_budget_exhausted' warnings stripped for size; 533 total across gpt-5.6-sol and gemini-3.1-pro-preview ...]

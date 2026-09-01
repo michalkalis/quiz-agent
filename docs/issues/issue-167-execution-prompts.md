@@ -217,14 +217,15 @@ Read first:
 
 Preflight (fail loud, before spending anything):
 - TAVILY_API_KEY and QUIZ_PACK_ADMIN_API_KEY must resolve from the repo-root .env. QUIZ_PACK_ADMIN_API_KEY is NOT ADMIN_API_KEY (that one is quiz-agent's and 401s against prod). If either is missing, STOP and ask the founder in-session — do not proceed, do not substitute.
+- OpenRouter BALANCE, not the key's monthly cap: curl GET https://openrouter.ai/api/v1/credits and require total_credits - total_usage >= ~15. GET /api/v1/key reports "limit"/"limit_remaining", which is a per-key monthly CEILING and reads green on an empty account — that is exactly what let the 2026-09-01 attempt spend ~$3 and then die at the judge panel with 533x 402 in_flight_budget_exhausted. If the balance is short, STOP and ask the founder to top up; never lower JUDGE_QUORUM to get past it.
 
 Run from apps/quiz-pack-api/:
 1) 167.9 — sourcing FIRST, as its own step:
    uv run --no-sync python scripts/source_facts.py --topics "music producers and their artists, 2026 album releases, 2026 awards and nominations (Oscars, Grammys), new 2026 films and series, 2026 tours and festivals, 2026 streaming hits" --out facts_167.json
    That topic string is a locked founder decision — paste it verbatim, do not reword or extend it. On exit 1 (thin yield, <40 facts): EXACTLY ONE retry with narrower phrasings of the topics the tally named as weakest. If the second attempt is still <40, escalate to the founder in-session and stop; never lower the 40 threshold.
 2) 167.10 — generate + verify/score:
-   EXPIRY_CLASSIFICATION=1 uv run --no-sync python scripts/generate_pack.py --grounded --category entertainment --facts-file facts_167.json --target-count 30 --dry-run --out pilot_167.json
-   --grounded is MANDATORY even with --facts-file: without it both attribution gates (ungrounded-drop and F8) are off, and the offline join in step 3 depends on them. It is --target-count, not --count. EXPIRY_CLASSIFICATION=1 is shell-local telemetry; do not put it in fly.toml. The run is fail-loud by design: an empty fact set raises F8 and no batch is produced — that is correct, not a bug to work around. Then run the offline verify and /score-questions.
+   EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py --grounded --category entertainment --facts-file facts_167.json --target-count 30 --per-topic-cap 5 --dry-run --out pilot_167.json
+   --grounded is MANDATORY even with --facts-file: without it both attribution gates (ungrounded-drop and F8) are off, and the offline join in step 3 depends on them. It is --target-count, not --count. --per-topic-cap 5 is MANDATORY too (PR #58): the 6 locked themes cannot reach 30 questions under CompositionStage's default cap of 2, and the top-up loop then burns the paid pipeline on an unreachable target. LLM_GATEWAY=openrouter is required or claude-fable-5 returns 404 model_not_found. EXPIRY_CLASSIFICATION=1 is shell-local telemetry; do not put it in fly.toml. The run is fail-loud by design: an empty fact set raises F8 and no batch is produced — that is correct, not a bug to work around. Then run the offline verify and /score-questions.
 3) 167.11 — post-cutoff filter:
    uv run --no-sync python scripts/filter_postcutoff.py pilot_167.json --facts-file facts_167.json
    If accepted < 20: EXACTLY ONE repeat of steps 1-3 with narrower topic phrasings, and run round 2's filter with --merge-with pilot_167_accepted.json (cross-round uniqueness). Merged result is what counts toward >= 20. If still < 20 after that round, ESCALATE to the founder in-session with accepted/rejected counts and sample reasons, publish nothing, and stop — that is a valid terminal state for this session.
@@ -429,14 +430,7 @@ With **$0.07 left on the key**, `#159`'s 2-judge quorum can never be met, and th
 1. **Raise the key's monthly limit** at `https://openrouter.ai/workspaces/default/keys/…` (the URL the 402 body prints), or top the account up. The month's usage is $49.93 of $50; a $20-30 headroom is enough for one full pilot round.
 2. Wait for the monthly reset, then re-run.
 
-**Resume command once credit exists** — unchanged from the runbook, `facts_167.json` is still valid and still older than any `pilot_167.json`:
-
-```
-EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py \
-  --grounded --category entertainment \
-  --facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json \
-  --target-count 30 --dry-run --out pilot_167.json
-```
+**Resume command once credit exists** — ⚠️ **superseded**: this copy predates `--per-topic-cap` (PR #58). Use the one in "Session E re-run 2026-09-01" below, which carries `--per-topic-cap 5`; without it the run hits the un-winnable top-up loop this note's date did not yet know about.
 
 **⚠️ Two carried observations for the resumed run:**
 

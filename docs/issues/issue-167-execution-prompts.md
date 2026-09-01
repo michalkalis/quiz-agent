@@ -481,6 +481,38 @@ EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/g
 
 **Carried observation:** fact-check again held exactly 1 question (`notes=fact-check call failed (API error or refusal)`), same ~5% rate as 2026-08-31 — the `_MAX_OUTPUT_TOKENS_OPENAI = 4096` suspicion in the previous note still stands and is still unlogged.
 
+### Session E re-run 2026-09-01 (r3) — balance OK, judges OK, **blocked on fact-pool yield** (4. príčina)
+
+**Terminal state: no batch file, nothing published, no corpus write.** `pilot_167.json` nevznikol — beh padol na `[06] topup` → `[07] failed`, pred `_write_out`. Log: `docs/testing/runs/167-entertainment-pilot/gen_run_2026-09-01-r3.txt` (104 riadkov, netreba stripovať — **0× HTTP 402**). Sourcing sa **nespúšťal** (167.9 ostáva done, `facts_167.json` reused).
+
+**✅ Obe predchádzajúce steny sú preč.** Zostatok pred behom `/api/v1/credits` → `total_credits 95`, `total_usage 74.404` = **$20.60** (founder dobil). Sudcovia bežali čisto: `judge_failures: 0`, **žiadne 402**. `--per-topic-cap 5` fungoval podľa návrhu (`topic_cap: 5`, `topic_cap_dropped: 0`, len 1 drop nad cap v `composition`). Per-question salvage opäť `salvaged 23 of 23 question objects, 0 lost`.
+
+**Stage tally (celá pipeline dobehla až po topup):**
+
+| Stage | Result |
+|---|---|
+| `[00] sourcing` | `facts: 46` z commitnutého fact filu |
+| `[01] generating` | `questions: 23`, `dropped_ungrounded: 1` |
+| `[02] dedup` | `kept: 23`, `dropped: 0`, `fact_dropped: 0` |
+| `[03] verifying` | `verified: 20`, `dropped: 1`, `withheld: 2` |
+| `[04] scoring` | `scored: 20`, `veto_dropped: 4`, `craft_dropped: 1`, `judge_failures: 0` |
+| `[05] composition` | `kept: 15` (`topic_cap: 5`, `topic_cap_dropped: 0`) |
+| `[06] topup` → `[07] failed` | `ValueError('pack shortfall: 18/30 questions survived after 2 top-up round(s) — below the 80% floor (24.0)')` |
+
+**🛑 BLOCKER — viazaným obmedzením je veľkosť fact poolu, nie model/parsing/kredit.** Dva top-up okruhy zdvihli pack z 15 na iba **18/30**; `MAX_TOPUP_ROUNDS = 2` (`topup.py:51`) sa vyčerpal a 80% podlaha (24) padla. Príčina je v dedup dôvodoch top-up okruhov: **10 zo 14** `DedupStage same-fact dropped` je `fact key reuse` (napr. `en.wikipedia.org/wiki/2026_in_film`, `megadeth.com/blogs/news/track-listing-reveal`), zvyšné 4 `content overlap >= 0.35`. Model už nemá z čoho tvoriť nové otázky — **46 faktov je po všetkých bránach vyčerpaných na ~15–18 unikátnych otázok**, nie na 30.
+
+**Dôsledok pre A13: tento okruh nemohol splniť `accepted >= 20` ani keby 80% podlaha neexistovala** — doručilo by sa 18 riadkov *pred* post-cutoff filtrom, ktorý ešte ďalej reže. Shortfall teda nie je „skoro dobré", je to štrukturálny nedostatok vstupu.
+
+**Spend tohto pokusu ≈ $6.5** — OpenRouter `total_usage` 74.404 → **79.357** = **$4.95** (`usage_daily` 1.871 → 6.824, to isté číslo), OpenAI fact-check ≈ **$1.5** za ~3 okruhy verifikácie (23 otázok + dva top-up okruhy). Zostatok po behu: **$15.64**. Vyššie než odhadovaných $3–4 práve preto, že dva top-up okruhy sú plné pipeline okruhy (generation → dedup → verify → score).
+
+**Governance stop.** Founder autorizoval 2026-09-01 **jeden** okruh (~$3–4) s inštrukciou „ak okruh zlyhá alebo `accepted < 20`, STOP a report". Agent teda **nespustil** druhý okruh, **neznížil** `--target-count`, `JUDGE_QUORUM` ani 80% podlahu. Toto je platný terminálny stav.
+
+**Founder decision needed — dve reálne cesty (obe menia zadanie, preto ich agent nesmie zvoliť sám):**
+1. **Rozšíriť fact pool** (odporúčané, drží Founder 4 „~30 otázok"): znovu spustiť 167.9 s viac/užšími témami na cieľ **~90–120 faktov** namiesto 46. Pomer tohto behu je ~1 doručená otázka na ~3 fakty, takže 30 otázok potrebuje ~90+ faktov. Stojí to jeden sourcing beh (OpenAI `web_search`, rádovo desiatky centov) + jeden plný gen okruh.
+2. **Znížiť `--target-count` na ~20** (drží rozpočet, mení Founder 4): 80% podlaha klesne na 16, pack sa doručí, ale A13 (`accepted >= 20`) po post-cutoff filtri **pravdepodobne aj tak padne** — 18 doručených mínus filter. Preto je to slabšia cesta.
+
+**Carried observation:** fact-check tentokrát zadržal **2** otázky (`notes=fact-check call failed (API error or refusal)`), ~9 % z 23 — mierne nad ~5 % z predchádzajúcich behov. `_MAX_OUTPUT_TOKENS_OPENAI = 4096` (`fact_verifier.py:58`) podozrenie stále stojí a stále je nelogované.
+
 ### Session C delivered — exact output filenames + reason vocabulary
 
 `apps/quiz-pack-api/scripts/filter_postcutoff.py`, fully offline, exit code always `0` (the "< 20 accepted" escalation is the runbook's call, not the script's).

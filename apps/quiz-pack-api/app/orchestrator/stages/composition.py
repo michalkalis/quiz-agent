@@ -5,7 +5,9 @@ batch-level defects: 27 questions drew on ~2 themes (13+13) and 6 of 8 MCQs
 were true/false. Founder-approved rules, enforced here with zero LLM calls:
 
 - **Topic cap** — at most 2 questions per (normalized) topic per 30-pack,
-  scaled as ``max(1, ceil(2 * target / 30))`` for other sizes.
+  scaled as ``max(1, ceil(2 * target / 30))`` for other sizes. Overridable
+  per run via the constructor (``--per-topic-cap`` on the CLI, #167) for
+  batches with a deliberately small locked topic set.
 - **True/false cap** — at most 2 T/F questions per 30-pack, same scaling.
 
 Runs after ``ScoringStage`` (in the main walk and inside every top-up round)
@@ -51,13 +53,30 @@ class CompositionStage:
 
     name = "composition"
 
+    def __init__(self, per_topic_cap: int | None = None) -> None:
+        """``per_topic_cap`` overrides the scaled per-topic cap for this run.
+
+        #167: the entertainment pilot locks a small themed topic set (6
+        themes x ~5 questions), so the "~target/2 topics" assumption behind
+        the scaled cap does not hold — a cap of 2 made 30 questions
+        arithmetically unreachable from 6 topics and the top-up loop burned
+        the full judge/verify/score pipeline chasing an impossible target.
+        Operator-set (CLI only); ``None`` keeps the scaled default, which is
+        what the API/worker path always uses.
+        """
+        self._per_topic_cap = per_topic_cap
+
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         target = ctx.target_count
         # Topic cap keeps a floor of 2: topic sampling yields ~target/2
         # topics (#153 sourcing rule), so a cap of 1 on a small pack would
         # mathematically guarantee a shortfall. T/F has no such risk (the
         # format is substitutable), so its floor stays 1.
-        topic_cap = _scaled_cap(PER_30_TOPIC_CAP, target, floor=2)
+        topic_cap = (
+            self._per_topic_cap
+            if self._per_topic_cap is not None
+            else _scaled_cap(PER_30_TOPIC_CAP, target, floor=2)
+        )
         tf_cap = _scaled_cap(PER_30_TF_CAP, target)
 
         # Judge-score order when available (mean of per-model overalls from

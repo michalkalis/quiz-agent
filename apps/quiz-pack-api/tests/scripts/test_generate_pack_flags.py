@@ -206,6 +206,81 @@ class TestTopUpWiring:
         assert topup._dedup_stage in stages
 
 
+class TestPerTopicCapFlag:
+    """#167 — `--per-topic-cap` exists because the entertainment pilot burned
+    ~$10 in an un-winnable top-up loop: 6 locked themes under CompositionStage's
+    scaled cap of 2 can compose at most 12 questions, so `--target-count 30`
+    left a shortfall no amount of regeneration could close, and every top-up
+    round re-ran the paid judge/verify/score pipeline. The flag must reach the
+    stage, and its absence must leave every other caller — above all the
+    worker/API path, which never sets it — on today's scaled cap.
+    """
+
+    @staticmethod
+    def _composition_stage(monkeypatch, **levers):
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        from app.orchestrator.stages import CompositionStage
+
+        stages = generate_pack._build_stages(
+            persist=False, dedup_store=generate_pack._NoopQuestionStore(), **levers
+        )
+        return next(s for s in stages if isinstance(s, CompositionStage))
+
+    def test_flag_absent_leaves_scaled_cap(self, monkeypatch):
+        args = generate_pack._parse_args(["--prompt", "pop culture", "--dry-run"])
+        assert args.per_topic_cap is None
+        assert self._composition_stage(monkeypatch)._per_topic_cap is None
+
+    def test_flag_reaches_the_composition_stage(self, monkeypatch):
+        args = generate_pack._parse_args(
+            ["--prompt", "pop culture", "--per-topic-cap", "5", "--dry-run"]
+        )
+        assert args.per_topic_cap == 5
+        stage = self._composition_stage(monkeypatch, per_topic_cap=args.per_topic_cap)
+        assert stage._per_topic_cap == 5
+
+    def test_override_also_reaches_the_topup_loop(self, monkeypatch):
+        """TopUpStage re-applies composition to the full merged set after each
+        round. If it held a *separate*, un-overridden CompositionStage, the
+        override would be undone on the first top-up round — the exact loop
+        this flag exists to stop."""
+        from app.orchestrator.stages import TopUpStage
+
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        built = generate_pack._build_stages(
+            persist=False,
+            dedup_store=generate_pack._NoopQuestionStore(),
+            per_topic_cap=5,
+        )
+        topup = next(s for s in built if isinstance(s, TopUpStage))
+        assert topup._composition_stage._per_topic_cap == 5
+
+    def test_app_path_composition_stage_is_unchanged(self):
+        """The lever is CLI-only. A paid customer order must never inherit a
+        loosened composition cap from an operator experiment, so the worker's
+        own pipeline — and the top-up stage it feeds — must still build the
+        stage with the scaled default (`None`)."""
+        from app.orchestrator.stages import CompositionStage, TopUpStage
+        from app.worker.tasks import _build_stages as build_worker_stages
+
+        stages = build_worker_stages(
+            {
+                "generator": object(),
+                "fact_verifier": object(),
+                "scorer": object(),
+                "question_store": object(),
+                "fact_sourcer": object(),
+                "session_factory": object(),
+            }
+        )
+        composition = next(s for s in stages if isinstance(s, CompositionStage))
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+        assert composition._per_topic_cap is None
+        assert topup._composition_stage is composition
+
+
 class _StubSourcingStage:
     """Records the prompt the pipeline carries and emits one fixed question.
 

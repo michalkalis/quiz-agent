@@ -217,14 +217,15 @@ Read first:
 
 Preflight (fail loud, before spending anything):
 - TAVILY_API_KEY and QUIZ_PACK_ADMIN_API_KEY must resolve from the repo-root .env. QUIZ_PACK_ADMIN_API_KEY is NOT ADMIN_API_KEY (that one is quiz-agent's and 401s against prod). If either is missing, STOP and ask the founder in-session — do not proceed, do not substitute.
+- OpenRouter BALANCE, not the key's monthly cap: curl GET https://openrouter.ai/api/v1/credits and require total_credits - total_usage >= ~15. GET /api/v1/key reports "limit"/"limit_remaining", which is a per-key monthly CEILING and reads green on an empty account — that is exactly what let the 2026-09-01 attempt spend ~$3 and then die at the judge panel with 533x 402 in_flight_budget_exhausted. If the balance is short, STOP and ask the founder to top up; never lower JUDGE_QUORUM to get past it.
 
 Run from apps/quiz-pack-api/:
 1) 167.9 — sourcing FIRST, as its own step:
    uv run --no-sync python scripts/source_facts.py --topics "music producers and their artists, 2026 album releases, 2026 awards and nominations (Oscars, Grammys), new 2026 films and series, 2026 tours and festivals, 2026 streaming hits" --out facts_167.json
    That topic string is a locked founder decision — paste it verbatim, do not reword or extend it. On exit 1 (thin yield, <40 facts): EXACTLY ONE retry with narrower phrasings of the topics the tally named as weakest. If the second attempt is still <40, escalate to the founder in-session and stop; never lower the 40 threshold.
 2) 167.10 — generate + verify/score:
-   EXPIRY_CLASSIFICATION=1 uv run --no-sync python scripts/generate_pack.py --grounded --category entertainment --facts-file facts_167.json --target-count 30 --dry-run --out pilot_167.json
-   --grounded is MANDATORY even with --facts-file: without it both attribution gates (ungrounded-drop and F8) are off, and the offline join in step 3 depends on them. It is --target-count, not --count. EXPIRY_CLASSIFICATION=1 is shell-local telemetry; do not put it in fly.toml. The run is fail-loud by design: an empty fact set raises F8 and no batch is produced — that is correct, not a bug to work around. Then run the offline verify and /score-questions.
+   EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py --grounded --category entertainment --facts-file facts_167.json --target-count 30 --per-topic-cap 5 --dry-run --out pilot_167.json
+   --grounded is MANDATORY even with --facts-file: without it both attribution gates (ungrounded-drop and F8) are off, and the offline join in step 3 depends on them. It is --target-count, not --count. --per-topic-cap 5 is MANDATORY too (PR #58): the 6 locked themes cannot reach 30 questions under CompositionStage's default cap of 2, and the top-up loop then burns the paid pipeline on an unreachable target. LLM_GATEWAY=openrouter is required or claude-fable-5 returns 404 model_not_found. EXPIRY_CLASSIFICATION=1 is shell-local telemetry; do not put it in fly.toml. The run is fail-loud by design: an empty fact set raises F8 and no batch is produced — that is correct, not a bug to work around. Then run the offline verify and /score-questions.
 3) 167.11 — post-cutoff filter:
    uv run --no-sync python scripts/filter_postcutoff.py pilot_167.json --facts-file facts_167.json
    If accepted < 20: EXACTLY ONE repeat of steps 1-3 with narrower topic phrasings, and run round 2's filter with --merge-with pilot_167_accepted.json (cross-round uniqueness). Merged result is what counts toward >= 20. If still < 20 after that round, ESCALATE to the founder in-session with accepted/rejected counts and sample reasons, publish nothing, and stop — that is a valid terminal state for this session.
@@ -270,7 +271,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Session B — `source_facts.py` (167.5) — delivered 2026-08-27
 - ✅ Session C — `filter_postcutoff.py` (167.6-167.7), delivered 2026-08-27 — see the note below.
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
-- 🟡 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), then blocked at 167.10 (generation JSON parse).** → **UNBLOCKED 2026-08-31: per-question salvage landed in `_parse_response`.** → **resume 2026-08-31: salvage CONFIRMED working (20/20, 0 lost), pipeline ran clean through composition, then BLOCKED at 167.10 top-up by the OpenRouter key's exhausted $50 monthly limit.** Nothing published, nothing imported. **Needs a founder billing action before any further attempt** — see "Session E resume 2026-08-31 — salvage works, blocked on OpenRouter monthly limit" below.
+- 🟡 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), then blocked at 167.10 (generation JSON parse).** → **UNBLOCKED 2026-08-31: per-question salvage landed in `_parse_response`.** → **resume 2026-08-31: salvage CONFIRMED working (20/20, 0 lost), pipeline ran clean through composition, then BLOCKED at 167.10 top-up by the OpenRouter key's exhausted $50 monthly limit.** Nothing published, nothing imported. **Needs a founder billing action before any further attempt** — see "Session E resume 2026-08-31 — salvage works, blocked on OpenRouter monthly limit" below. → **re-run 2026-09-01 after the monthly reset: STILL BLOCKED, and the monthly limit was never the whole story — the OpenRouter *account balance* is down to $0.60 (`/api/v1/credits`: `total_credits 75`, `total_usage 74.40`), so every judge call 402s on `in_flight_budget_exhausted` regardless of the reset key limit.** See "Session E re-run 2026-09-01 — topic cap fixed, blocked on the OpenRouter account balance" below.
 - ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
 - ⬜ 167.13 `[F]` — founder rating (not an agent session)
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
@@ -429,19 +430,56 @@ With **$0.07 left on the key**, `#159`'s 2-judge quorum can never be met, and th
 1. **Raise the key's monthly limit** at `https://openrouter.ai/workspaces/default/keys/…` (the URL the 402 body prints), or top the account up. The month's usage is $49.93 of $50; a $20-30 headroom is enough for one full pilot round.
 2. Wait for the monthly reset, then re-run.
 
-**Resume command once credit exists** — unchanged from the runbook, `facts_167.json` is still valid and still older than any `pilot_167.json`:
-
-```
-EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py \
-  --grounded --category entertainment \
-  --facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json \
-  --target-count 30 --dry-run --out pilot_167.json
-```
+**Resume command once credit exists** — ⚠️ **superseded**: this copy predates `--per-topic-cap` (PR #58). Use the one in "Session E re-run 2026-09-01" below, which carries `--per-topic-cap 5`; without it the run hits the un-winnable top-up loop this note's date did not yet know about.
 
 **⚠️ Two carried observations for the resumed run:**
 
 - **Fact-check held 1 question per generation round** (3 total across the 3 rounds), `notes=fact-check call failed (API error or refusal)`. `FactVerifier._call_openai` swallows the exception and returns `None`, so the cause is invisible — and `_MAX_OUTPUT_TOKENS_OPENAI = 4096` (`fact_verifier.py:58`) is the *same* cap that truncated `OpenAIWebSearchSource` once `gpt-5-mini` spent ~3 000 tokens on reasoning. Worth logging `incomplete_details` there before assuming it is a transient API error. Rate is low (~5 %), so it did not block anything.
 - **Yield, not parsing, is now the binding constraint.** 46 facts → 20 generated → 11 after composition. A resumed run should expect top-up to fire, and `accepted ≥ 20` at 167.11 is not guaranteed from one round — the D6 second-round remedy is the likely path.
+
+### Session E re-run 2026-09-01 — topic cap fixed, blocked on the OpenRouter account balance
+
+**Terminal state: no batch file, nothing published, no corpus write.** `pilot_167.json` was never written — the run raises at stage `[04] scoring`, before `_write_out`. Spend this attempt ≈ **$2.9** (OpenRouter `usage_daily` $1.87 for the Fable 5 generation call, since every judge call 402'd and cost nothing; OpenAI fact-check ≈ $1 over 21 questions). Sourcing was **not** re-run (167.9 stays done, `facts_167.json` reused). Log: `docs/testing/runs/167-entertainment-pilot/gen_run_2026-09-01.txt` (the 533 repeated judge-402 warnings are stripped to one representative line).
+
+**✅ The un-winnable top-up loop is fixed** — `--per-topic-cap N` landed in PR #58 (`fix(backend): #167 — --per-topic-cap CLI override for the composition topic cap`, merged to main 2026-09-01). `CompositionStage(per_topic_cap=…)` overrides the scaled 2-per-30 cap; the worker/API path never passes it and is byte-identical. The Session E command now carries `--per-topic-cap 5` (6 locked themes x ~5 questions = the founder's locked design). **The fix was not exercised this run** — the pipeline died at scoring, upstream of composition and top-up.
+
+**Also worth recording: `TopUpStage` was never unbounded.** `MAX_TOPUP_ROUNDS = 2` (`topup.py:51`) has always capped it. The 2026-08-27 ~$10 burn was not an infinite loop — it was 2 extra full-pipeline rounds chasing a target the topic cap made arithmetically unreachable (6 topics x cap 2 = 12 max vs. `--target-count 30`), each round re-running generation → dedup → verify → score, ending in the 80% floor `ValueError` with nothing delivered.
+
+**Stage tally (all green until scoring):**
+
+| Stage | Result |
+|---|---|
+| `[00] sourcing` | `facts: 46` from the committed fact file |
+| `[01] generating` | `questions: 21`, `dropped_ungrounded: 1` — salvage again `21 of 21, 0 lost` |
+| `[02] dedup` | `kept: 21`, `dropped: 0`, `fact_dropped: 0` |
+| `[03] verifying` | `verified: 19`, `dropped: 1`, `withheld: 1` |
+| `[04] scoring` → `[05] failed` | `JudgePanelUnavailable('19 question(s) reached the ship gate below the 2-judge verdict quorum')` |
+
+**🛑 BLOCKER — the OpenRouter *account balance* is exhausted, which is a different wall from the monthly key limit.**
+
+The monthly limit **did** reset as expected. That is not enough:
+
+```
+/api/v1/key      "limit": 50,  "limit_remaining": 48.13   ← the monthly CAP, looks healthy
+/api/v1/credits  "total_credits": 75, "total_usage": 74.40 ← the actual BALANCE: $0.60 left
+```
+
+533 judge calls returned **402** `{"reason": "in_flight_budget_exhausted", "limit_source": "openrouter_in_flight_budget"}` across `gpt-5.6-sol` and `gemini-3.1-pro-preview`. With $0.60 of balance the #159 2-judge quorum can never be met and the fail-closed gate correctly refuses an ungated pack. `JUDGE_QUORUM=1` was deliberately **not** set — that is lowering a threshold, which Session E is forbidden to do on its own.
+
+**⚠️ Preflight correction for the next attempt — check the balance, not the cap.** The 2026-08-31 note pointed the next session at `GET /api/v1/key`, and its `limit_remaining: 48.13` read as "cleared to spend". It is not: `limit` is a per-key monthly *ceiling*, `credits` is the money. **Any future Session E preflight must call `GET https://openrouter.ai/api/v1/credits` and require `total_credits - total_usage` ≥ ~$15** before spending anything, in addition to the key check.
+
+**Founder action to unblock:** top the OpenRouter account up (`https://openrouter.ai/credits`). One full pilot round needs roughly $10-15 of headroom on top of the ~$3 already spent this month. Raising the key's monthly limit does nothing on its own — the limit is already $48 clear.
+
+**Resume command once the balance exists** (unchanged apart from the new cap flag; `facts_167.json` is still valid and still older than any `pilot_167.json`):
+
+```
+EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py \
+  --grounded --category entertainment \
+  --facts-file ../../docs/testing/runs/167-entertainment-pilot/facts_167.json \
+  --target-count 30 --per-topic-cap 5 --dry-run --out pilot_167.json
+```
+
+**Carried observation:** fact-check again held exactly 1 question (`notes=fact-check call failed (API error or refusal)`), same ~5% rate as 2026-08-31 — the `_MAX_OUTPUT_TOKENS_OPENAI = 4096` suspicion in the previous note still stands and is still unlogged.
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

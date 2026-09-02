@@ -1,7 +1,7 @@
 # #169 — Session gateway: dev pipeline na Claude Code subscription
 
-**Triage:** backend/content · in-progress (agent)
-**Status:** implementing
+**Triage:** backend/content · in-review (PR)
+**Status:** T1–T6 DONE 2026-09-02; PR open, čaká na nezávislý review
 **Created:** 2026-09-02
 **Reversibility:** `a` — additívne; `LLM_GATEWAY` unset/`direct`/`openrouter` = nezmenené správanie. Nikdy nenasadené na Fly (dev-only prepínač).
 
@@ -52,11 +52,22 @@ Override: `LLM_SESSION_MAP="gpt-5-mini=haiku,..."`. Per-role env (`LLM_ROLE_*`) 
 ## Tasks
 
 - [x] T1 `session_cli.py` adaptér + factory hooky (`gateway`, `is_session_model`, `resolve_model`, `chat_openai`, `provider_for_model`, `supports_sampling_params`)
-- [ ] T2 testy: fake `claude` binárka na PATH (flagy, stdin prompt, JSON parse, structured output → tool_calls, chybové stavy), `resolve_model` mapovanie v session gateway, passthrough embeddings
-- [ ] T3 `FactVerifier._call_session` + preflight bez API kľúča v session režime + test
-- [ ] T4 `translate_arms_backends.py` transport `session` + test
-- [ ] T5 `/generate-questions --session` (skill nastaví `LLM_GATEWAY=session`, preflight `claude auth status`); zrušiť `generate-questions-session` skill; README/backend rules jedna sekcia
-- [ ] T6 smoke: 3 otázky dry-run cez session, porovnať funnel s API behom; TODO + memory
+- [x] T2 testy: fake `claude` binárka na PATH (flagy, stdin prompt, JSON parse, structured output → tool_calls, chybové stavy), `resolve_model` mapovanie v session gateway, passthrough embeddings
+- [x] T3 `FactVerifier._call_session` + preflight bez API kľúča v session režime + test
+- [x] T4 `translate_arms_backends.py` transport `session` + test
+- [x] T5 `/generate-questions --session` (skill nastaví `LLM_GATEWAY=session`, preflight `claude auth status`); zrušiť `generate-questions-session` skill; README/backend rules jedna sekcia
+- [x] T6 smoke: 3 otázky dry-run cez session, porovnať funnel s API behom; TODO + memory
+
+## Smoke 2026-09-02 (T6)
+
+`LLM_GATEWAY=session python scripts/generate_pack.py --dry-run --target-count 3` (direct gen, default CLI flags): 3/3 vygenerované → dedup 3 → fact-check 3/3 verified (session:sonnet + WebSearch) → scoring → 3 finálne; `cost_cents: 0`, žiadny API kľúč okrem `OPENAI_API_KEY` (nepoužitý, dedup noop). Tokeny: gen 1 volanie (17.7k in / 3.7k out, fable) · fact-check 3 volania (59k in) · **scoring 42 volaní (168k in, opus)**.
+
+**Zistenia:**
+- `generate_pack.py` má sudcov (ScoringStage) **zapnutých by default** (`--no-judges` ich vypne; #167 runbook ho používa). Prod worker beží s `judge_gate` OFF. V session režime je to 80 % spotreby kvóty (opus). → founder call: má skill `--session` pridávať `--no-judges` (parita s prod workerom, šetrí kvótu), alebo držať CLI default (parita s API CLI behom)?
+- `(no source)` pri všetkých 3 otázkach = vlastnosť direct-gen cesty (zdroje plní len sourcing stage v grounded režime), nie session.
+- `LLM_SESSION_CONCURRENCY` default 4 < `VERIFIER_MAX_CONCURRENT` 8 → fact-check v session režime beží pomalšie (zámer: kvóta + lokálne subprocesy).
+- Anthropic vetva má `_MAX_WEB_SEARCHES=5`; session vetva ohraničuje `max_turns=8` (nie počet searchov) — bez nákladového dopadu na subscription.
+- Line caps prekročené: `factory.py` 568 (bolo 468), `fact_verifier.py` 444, `translate_arms_backends.py` 341 — kandidáti na split v samostatnom refactore (#152 collector).
 
 ## Verification
 

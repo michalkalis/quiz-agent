@@ -116,4 +116,3 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [ ] Doc refresh — zosúladiť PRD/READMEs/backend rules so shipped realitou (auth existuje); **remove web-ui** z monorepo layoutu + CI (founder decision #11)
 - [ ] Debt fixes (typed question API contract + `/verify-api` · Dockerfile deps z pyproject · CHROMA_PATH deploy check) — **overiť, že each surface sa reálne používa** (founder decision #10)
 - [~] Founder-reported iOS bug/UX batch (2026-07-12) — [detail](TODO-details.md) — otvorené ostáva len „start“/„stop“/„skip“ voice commands (diagnostikované, nie code fix) + founder ⌘S v Pencile
-- [ ] Quiz Please podcast → question-source mining (founder 2026-09-02) — anglický kvízový podcast (traja chalani si dávajú navzájom kvízy); nápad: stiahnuť epizódy, speech-to-text prepis, zanalyzovať otázky/témy a využiť ako zdroj/inšpiráciu pre náš korpus — treba doriešiť dostupnosť/licenciu epizód a scraping/transcription pipeline

@@ -24,6 +24,14 @@ it reads is unchanged for the life of an order, so it is idempotent on the
 same input. That means the merged list's already-accepted prefix always
 survives dedup unchanged, so only the new (dedup-filtered) batch needs to
 pay for verify/score each round, not the whole merged list.
+
+Spent facts are excluded from each round's fact pool (#167, founder directive
+2026-09-02): a fact already backing a surviving question can only produce a
+question dedup will drop as same-fact reuse, so feeding it to the generator
+again buys a guaranteed-dead question at full generation + fact-check price.
+See `app.orchestrator.stages.spent_facts` for the predicate, which mirrors
+DedupStage's own same-fact logic. The initial round is untouched (no kept
+questions exist yet, so nothing is spent).
 """
 
 from __future__ import annotations
@@ -33,6 +41,7 @@ import logging
 from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.stages.spent_facts import filter_spent_facts
 
 logger = logging.getLogger(__name__)
 
@@ -98,19 +107,45 @@ class TopUpStage:
         target = ctx.target_count
         cost_cents = 0
         rounds = 0
+        # Recomputed from the FULL pool each round rather than shrunk in place:
+        # later stages (composition caps) can drop a survivor, which un-spends
+        # its fact, and only a recompute against the current `ctx.questions`
+        # stays in step with what dedup will actually compare against.
+        original_facts = ctx.facts
+        exhausted = False
 
         while len(ctx.questions) < target and rounds < self._max_rounds:
             shortfall = target - len(ctx.questions)
             survivors_so_far = ctx.questions
             n_old = len(survivors_so_far)
             original_target = ctx.target_count
+            round_facts = original_facts
+            if original_facts:
+                round_facts, spent = filter_spent_facts(
+                    original_facts, survivors_so_far
+                )
+                logger.info(
+                    "TopUpStage round=%d fact pool: %d spent, %d remain",
+                    rounds + 1, spent, len(round_facts),
+                )
+                if not round_facts:
+                    logger.warning(
+                        "TopUpStage round=%d skipped: fact pool exhausted — "
+                        "top-up round would only produce dedup-doomed "
+                        "questions (%d/%d facts already spent)",
+                        rounds + 1, spent, len(original_facts),
+                    )
+                    exhausted = True
+                    break
             ctx.target_count = shortfall
+            ctx.facts = round_facts
             try:
                 cost_cents += (
                     await _run_substage(self._generation_stage, ctx, sink)
                 ).cost_cents
             finally:
                 ctx.target_count = original_target
+                ctx.facts = original_facts
 
             # Merge before dedup so a top-up round can't reintroduce a
             # near-duplicate of a question already accepted in an earlier
@@ -159,6 +194,7 @@ class TopUpStage:
                 "final_count": final_count,
                 "target_count": target,
                 "topup_rounds": rounds,
+                "fact_pool_exhausted": exhausted,
             },
             cost_cents=cost_cents,
         )

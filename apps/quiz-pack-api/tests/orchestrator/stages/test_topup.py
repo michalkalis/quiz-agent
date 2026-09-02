@@ -17,10 +17,24 @@ Why these scenarios:
   deduped against what's ALREADY accepted (not just against itself) — the
   bug this stage exists to avoid is reintroducing a near-duplicate of an
   earlier-round question.
+
+Spent-fact exclusion (#167, founder directive 2026-09-02) — intent: **generation
+must never pay for a question that dedup is guaranteed to kill.**
+
+- `test_spent_facts_are_excluded_from_topup_pool`: the directive itself.
+- `test_exhausted_fact_pool_skips_the_round`: nothing left to write on → the
+  round is skipped with a loud warning and the pack delivers short, rather
+  than buying a batch dedup will drop wholesale.
+- `test_initial_fact_pool_is_restored_after_topup`: the filter is scoped to
+  the top-up generation call; `ctx.facts` is the untouched pool everywhere
+  else, so the initial round's behaviour is unchanged.
+- `test_direct_generation_passes_empty_facts_through`: direct-mode orders
+  carry no facts, so the filter is inert by construction.
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any
 
@@ -28,6 +42,7 @@ import pytest
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.stages.topup import TopUpStage
+from app.sourcing.models import Fact
 from quiz_shared.models.question import Question
 
 
@@ -72,9 +87,12 @@ class _FakeGenStage:
 
     def __init__(self) -> None:
         self.calls: list[int] = []
+        # #167: the fact pool as the generator actually received it, per round.
+        self.facts_seen: list[list[Any]] = []
 
     async def run(self, ctx: OrderContext, sink: Any) -> StageResult:
         self.calls.append(ctx.target_count)
+        self.facts_seen.append(list(ctx.facts))
         ctx.questions = [
             _stub_question(f"round{len(self.calls)}-{i}")
             for i in range(ctx.target_count)
@@ -204,3 +222,133 @@ async def test_merges_existing_before_dedup() -> None:
 
     assert len(dedup.seen_batches) == 1
     assert len(dedup.seen_batches[0]) == 10  # 7 existing + 3 new, merged
+
+
+# ---------------------------------------------------------------------------
+# Spent-fact exclusion (#167)
+# ---------------------------------------------------------------------------
+
+_SPENT_URL = "https://en.wikipedia.org/wiki/2026_in_film"
+
+_SPENT_FACT = Fact(
+    text=(
+        "Paul Thomas Anderson's One Battle After Another was released in "
+        "September 2026 and stars Leonardo DiCaprio."
+    ),
+    source_url=_SPENT_URL,
+    topic="Film",
+)
+_FRESH_FACT = Fact(
+    text="Wicked: For Good opened in November 2026, directed by Jon M. Chu.",
+    source_url=_SPENT_URL,
+    topic="Film",
+)
+
+
+def _question_on_spent_fact() -> Question:
+    return Question(
+        id=f"q_{uuid.uuid4().hex}",
+        question="Which actor stars in One Battle After Another?",
+        correct_answer="Leonardo DiCaprio",
+        topic="Film",
+        category="entertainment",
+        difficulty="medium",
+        source_url=_SPENT_URL,
+    )
+
+
+@pytest.mark.asyncio
+async def test_spent_facts_are_excluded_from_topup_pool() -> None:
+    """The founder directive: a fact already backing a surviving question is
+    not handed to the generator again. In the #167 pilot it was, and every
+    question written on it died in dedup as `fact key reuse` — after its
+    generation and fact-check had already been billed."""
+    gen = _FakeGenStage()
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", drop_n=0),
+        _FakeDropStage("scoring", drop_n=0),
+        _PassthroughDedupStage(),
+    )
+    ctx = _make_ctx(target_count=10, initial=8)
+    ctx.questions[0] = _question_on_spent_fact()
+    ctx.facts = [_SPENT_FACT, _FRESH_FACT]
+
+    await stage.run(ctx, _RecordingSink())
+
+    assert gen.facts_seen == [[_FRESH_FACT]]
+
+
+@pytest.mark.asyncio
+async def test_exhausted_fact_pool_skips_the_round(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Every remaining fact is spent → the round is skipped with a loud
+    warning and the pack delivers short (above the floor), rather than paying
+    for a batch dedup is guaranteed to drop in full."""
+    gen = _FakeGenStage()
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", drop_n=0),
+        _FakeDropStage("scoring", drop_n=0),
+        _PassthroughDedupStage(),
+    )
+    ctx = _make_ctx(target_count=10, initial=9)  # 9/10 is above the 80% floor
+    ctx.questions[0] = _question_on_spent_fact()
+    ctx.facts = [_SPENT_FACT]
+
+    with caplog.at_level(logging.WARNING):
+        result = await stage.run(ctx, _RecordingSink())
+
+    assert gen.calls == []  # no generation paid for
+    assert result.info["topup_rounds"] == 0
+    assert result.info["fact_pool_exhausted"] is True
+    assert len(ctx.questions) == 9  # short, but not a crash
+    assert "fact pool exhausted" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_initial_fact_pool_is_restored_after_topup() -> None:
+    """The filter is scoped to the top-up generation call only — `ctx.facts`
+    is the full sourced pool before and after, so the initial round (which
+    runs before this stage) is untouched by construction."""
+    gen = _FakeGenStage()
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", drop_n=0),
+        _FakeDropStage("scoring", drop_n=0),
+        _PassthroughDedupStage(),
+    )
+    ctx = _make_ctx(target_count=10, initial=8)
+    ctx.questions[0] = _question_on_spent_fact()
+    pool = [_SPENT_FACT, _FRESH_FACT]
+    ctx.facts = pool
+
+    await stage.run(ctx, _RecordingSink())
+
+    assert ctx.facts == pool
+
+
+@pytest.mark.asyncio
+async def test_direct_generation_passes_empty_facts_through() -> None:
+    """Direct-generation orders source no facts (#153 Phase 0.4), so the
+    exclusion is inert: the generator still sees an empty pool and the round
+    runs normally. Pins that #167 cannot starve the direct path."""
+    gen = _FakeGenStage()
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", drop_n=0),
+        _FakeDropStage("scoring", drop_n=0),
+        _PassthroughDedupStage(),
+    )
+    ctx = _make_ctx(target_count=10, initial=7)
+    ctx.direct_generation = True
+    ctx.facts = []
+
+    result = await stage.run(ctx, _RecordingSink())
+
+    assert gen.calls == [3]
+    assert gen.facts_seen == [[]]
+    assert ctx.facts == []
+    assert result.info["final_count"] == 10
+    assert result.info["fact_pool_exhausted"] is False

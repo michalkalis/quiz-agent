@@ -63,6 +63,7 @@ from app.db.models import GenerationOrder
 from app.orchestrator import PackGenerator, ProgressSink
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
+    AnswerabilityStage,
     CompositionStage,
     DedupStage,
     GenerationStage,
@@ -212,22 +213,6 @@ def _build_dedup_store(name: str) -> AsyncDuplicateFinder:
     return _NoopQuestionStore()
 
 
-class _NoopScoringStage:
-    """Stands in for ScoringStage in a --no-judges experiment run (#153).
-
-    Top-up rounds still expect a scoring collaborator; this one keeps every
-    question and spends nothing, so the ungated arm behaves identically in
-    the main walk and in top-up.
-    """
-
-    name = "scoring"
-
-    async def run(self, ctx, sink):
-        from app.orchestrator.context import StageResult
-
-        return StageResult(info={"skipped": "no-judges run"}, cost_cents=0)
-
-
 class _FactsFileSourcingStage:
     """Stands in for SourcingStage when ``--facts-file`` is given (#153).
 
@@ -279,11 +264,15 @@ def _build_stages(
 ) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode.
 
+    #169 prod parity: this walk is the same one `app/worker/tasks.py::
+    _build_stages` builds — same stages, same order, same feature flags; only
+    the transport (``LLM_GATEWAY``) may differ. ``judges=False`` means what
+    ``JUDGE_GATE=0`` means in prod: ``ScoringStage(None)``, i.e. no judge
+    calls but the stage's deterministic craft/distractor guards still run.
+
     #153 Phase A experiment levers (CLI-only, worker path untouched):
-    ``judges=False`` omits ScoringStage — including its #147 fail-closed
-    gate — so an experiment arm ships ungated survivors for offline random
-    selection; never use it for a real order. ``gen_prompt_file`` swaps the
-    fact-first generation prompt (filename within ``prompts/``).
+    ``gen_prompt_file`` swaps the fact-first generation prompt (filename
+    within ``prompts/``).
     ``forced_topics`` pins the sourced topic set; ``facts_file`` replaces
     sourcing entirely with a previously dumped fact set.
     ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
@@ -296,7 +285,9 @@ def _build_stages(
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
+    from app.verification.answerability import AnswerabilityChecker
     from app.verification.fact_verifier import FactVerifier
+    from app.verification.logical_verifier import LogicalConsistencyVerifier
     from app.verification.shape_classifier import ShapeClassifier
 
     # Lever A (issue #72 P1.1): source the gen/critique models from the dormant
@@ -308,6 +299,10 @@ def _build_stages(
     generator = AdvancedQuestionGenerator(
         generation_model=feature_flags.generation_model() or llm_factory.GEN,
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+        # #169 prod parity: the worker (`worker.py on_startup`) and the API
+        # path both pass this flag; without it the CLI silently fell back to
+        # the ctor default `v2_cot` — the pre-#166 template.
+        prompt_version=feature_flags.generation_prompt_version(),
         fact_first_template=gen_prompt_file,
     )
 
@@ -323,10 +318,22 @@ def _build_stages(
         # #160 — answer-blind auditor of the logical_puzzle routing marker.
         shape_classifier=ShapeClassifier(),
     )
-    verification = VerificationStage(FactVerifier())
-    scoring = ScoringStage(MultiModelScorer())
+    # 46.B6 / #169 parity: the logical-consistency judge for lateral puzzles
+    # is wired in the worker; without it here a CLI run silently verified
+    # lateral puzzles on the factual path.
+    verification = VerificationStage(FactVerifier(), LogicalConsistencyVerifier())
+    # #166 D21b parity with `tasks._build_stages`: judges off means
+    # `ScoringStage(None)` — deterministic craft + distractor gates still run.
+    scoring = ScoringStage(MultiModelScorer() if judges else None)
     dedup = DedupStage(dedup_store, gold_standard_path=None)
     composition = CompositionStage(per_topic_cap=per_topic_cap)
+    # #135 D10 — early round-trip answerability check between dedup and
+    # verification, behind the same flag the worker honours.
+    answerability = (
+        AnswerabilityStage(AnswerabilityChecker())
+        if feature_flags.answerability_check()
+        else None
+    )
 
     stages: list[Stage] = [
         # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
@@ -345,11 +352,12 @@ def _build_stages(
         # verification/scoring — a question dedup would discard anyway
         # should never pay for either, mirroring the worker's `_build_stages`.
         dedup,
-        verification,
     ]
-    if judges:
-        stages.append(scoring)
+    if answerability is not None:
+        stages.append(answerability)
     stages += [
+        verification,
+        scoring,
         # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right
         # after scoring, mirroring the worker's `_build_stages`.
         composition,
@@ -360,8 +368,9 @@ def _build_stages(
         TopUpStage(
             generation,
             verification,
-            scoring if judges else _NoopScoringStage(),
+            scoring,
             dedup,
+            answerability_stage=answerability,
             composition_stage=composition,
         ),
     ]

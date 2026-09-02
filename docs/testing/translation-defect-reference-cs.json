@@ -1,0 +1,332 @@
+{
+  "_meta": {
+    "purpose": "Reference set that validates the MQM-Quiz translation judge for Czech (issue #168 — batch translation pipeline SK/CS, DD6). Built by Session C (task T5). Consumed by scripts/translation_judge_eval.py (task T9).",
+    "language": "cs",
+    "bar": "Every item with severity 'critical' must be caught. Zero critical findings on items with origin 'control'. Major/minor recall is reported and explicitly non-gating.",
+    "item_count": 12,
+    "composition": {
+      "real": 0,
+      "synthetic": 8,
+      "control": 4
+    },
+    "severity_counts": {
+      "critical": 5,
+      "major": 2,
+      "minor": 1,
+      "none": 4
+    },
+    "no_real_defects": "This set contains ZERO mined real defects, and the count was not padded to hide it. Two reasons, both stated plainly. First, DD6 anticipates it: every recorded translation incident in this repo is Slovak, because Slovak is the only non-English language the founder has field-tested. Second, the retiring prod SQLite cache (/data/translations.db on quiz-agent-api), the one place that might hold real Czech rows, could NOT be pulled: the execution environment has no Fly authentication token, and prod was deliberately not touched. Mining that file later can only enrich this set.",
+    "consequence": "Because this set is synthetic-only, DD6 gives Czech one gate Slovak does not: before the CS cutover the founder spot-checks 20 randomly sampled CS approvals on the rating web, and any critical defect found there fails the bar and re-opens the judge. A green run against this file is therefore necessary but not sufficient for Czech.",
+    "defect_classes": "The five synthetic classes named in DD6 reproduce mechanically in Czech: answer flip, unit change, untranslated string, title mistranslation, register calque. Several are deliberate Czech counterparts of a Slovak item in translation-defect-reference-sk.json, so a judge that passes only on Slovak is visible as a Czech miss.",
+    "authored_questions": "English source questions are authored in the style of the corpus (6-category taxonomy) rather than copied from prod rows: the defect being measured lives in the source/target relation, not in the source question.",
+    "qid_namespace": "cs-s* synthetic, cs-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge."
+  },
+  "items": [
+    {
+      "qid": "cs-s01",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "answer_flip",
+      "severity": "critical",
+      "source": {
+        "question": "Which river flows through Prague?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "The Vltava", "b": "The Elbe", "c": "The Oder", "d": "The Morava"},
+        "correct_answer": "The Vltava",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "The Vltava runs through Prague and joins the Elbe further north."
+      },
+      "target": {
+        "question": "Která řeka protéká Prahou?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Vltava", "b": "Labe", "c": "Odra", "d": "Morava"},
+        "correct_answer": "Labe",
+        "correct_answer_key": "b",
+        "alternative_answers": [],
+        "explanation": "Labe protéká Prahou a severněji se vlévá do Vltavy."
+      },
+      "note": "Options are translated correctly but the correct answer moved from key a to key b, and the explanation was rewritten to agree with the wrong answer. Every player who answers correctly is marked wrong.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s02",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "answer_flip",
+      "severity": "critical",
+      "source": {
+        "question": "Which element has the chemical symbol Fe?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Iron",
+        "alternative_answers": ["Fe"],
+        "explanation": "Fe comes from the Latin ferrum, meaning iron."
+      },
+      "target": {
+        "question": "Který prvek má chemickou značku Fe?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Olovo",
+        "alternative_answers": ["Fe"],
+        "explanation": "Značka Fe pochází z latinského plumbum."
+      },
+      "note": "Free-text answer flip: iron became lead, with a matching false explanation, so nothing inside the Czech text betrays the error. Only a source comparison catches it.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s03",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "unit_change",
+      "severity": "critical",
+      "source": {
+        "question": "How tall is Mount Everest above sea level?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About 8,849 metres",
+        "alternative_answers": ["8,849 m", "roughly 8.8 kilometres"],
+        "explanation": "The summit stands 8,849 metres above sea level."
+      },
+      "target": {
+        "question": "Jak vysoký je Mount Everest nad mořskou hladinou?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Přibližně 8 849 mil",
+        "alternative_answers": ["8 849 mil"],
+        "explanation": "Vrchol se tyčí 8 849 mil nad mořskou hladinou."
+      },
+      "note": "The number was preserved and the unit was swapped from metres to miles, which turns a mountain into an orbit. Any player answering with the true figure is graded wrong.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s04",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "untranslated_string",
+      "severity": "major",
+      "source": {
+        "question": "Who painted the ceiling of the Sistine Chapel?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Michelangelo",
+        "alternative_answers": ["Michelangelo Buonarroti"],
+        "explanation": "Michelangelo painted the ceiling between 1508 and 1512."
+      },
+      "target": {
+        "question": "Who painted the ceiling of the Sistine Chapel?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Michelangelo",
+        "alternative_answers": ["Michelangelo Buonarroti"],
+        "explanation": "Michelangelo maloval strop v letech 1508 až 1512."
+      },
+      "note": "The stem was passed through untranslated while the explanation was translated. The player hears English mid-session, but the answer is a proper noun, so grading still works. Major rather than critical, in deliberate contrast with cs-s05.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s05",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "untranslated_string",
+      "severity": "critical",
+      "source": {
+        "question": "True or false: the Danube is the second longest river in Europe.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Only the Volga is longer."
+      },
+      "target": {
+        "question": "Pravda nebo nepravda: Dunaj je druhá nejdelší řeka v Evropě.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Delší je pouze Volha."
+      },
+      "note": "The Czech counterpart of the real Slovak defect sk-r06: the stem is Czech but the option values stayed English, so a player who says 'Pravda' matches neither the key nor the value and MCQ grading has no fallback. Critical because grading breaks, not merely display.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s06",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "title_mistranslation",
+      "severity": "critical",
+      "source": {
+        "question": "Which 1972 film features the line 'I'm gonna make him an offer he can't refuse'?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The Godfather",
+        "alternative_answers": ["Godfather"],
+        "explanation": "The line is spoken by Vito Corleone in The Godfather."
+      },
+      "target": {
+        "question": "Ve kterém filmu z roku 1972 zazní replika 'Dám mu nabídku, která se neodmítá'?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Kmotřenec",
+        "alternative_answers": ["Kmotřenec"],
+        "explanation": "Repliku pronáší Vito Corleone ve filmu Kmotřenec."
+      },
+      "note": "The title names a different family role: 'kmotřenec' is a godson, not a godfather. The Czech reads fluently, so only a source comparison exposes it. Counterpart of sk-s05.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s07",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "register_calque",
+      "severity": "major",
+      "source": {
+        "question": "Why do onions make you cry when you chop them?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "They release a sulphur compound that irritates the eyes",
+        "alternative_answers": ["a sulphur compound irritates the eyes"],
+        "explanation": "Cutting an onion releases a volatile sulphur compound that reacts with moisture in the eye."
+      },
+      "target": {
+        "question": "Proč cibule dělají tebe plakat, když je sekáš?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Oni uvolňují sirnou sloučeninu, která dělá podráždění očí",
+        "alternative_answers": ["sirná sloučenina dělá podráždění očí"],
+        "explanation": "Krájení cibule uvolňuje těkavou sirnou sloučeninu, která dělá reakci s vlhkostí v oku."
+      },
+      "note": "English syntax carried over word for word: the causative 'make you cry', the wrong pronoun case, a redundant subject pronoun, and 'dělá podráždění' where Czech uses a single verb. A host reading this aloud sounds like machine output, though the fact survives.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s08",
+      "language": "cs",
+      "origin": "synthetic",
+      "defect_category": "register_calque",
+      "severity": "minor",
+      "source": {
+        "question": "How often should you rotate the tyres on a car?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About every 10,000 kilometres",
+        "alternative_answers": ["every 10,000 km"],
+        "explanation": "Swapping tyre positions periodically evens out tread wear."
+      },
+      "target": {
+        "question": "Jak často byste měli rotovat pneumatiky na autě?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Přibližně každých 10 000 kilometrů",
+        "alternative_answers": ["každých 10 000 km"],
+        "explanation": "Pravidelné rotování pneumatik rovnoměrně rozloží opotřebení dezénu."
+      },
+      "note": "'rotovat pneumatiky' is a straight loan of the English phrase; Czech drivers say 'prohodit' or 'střídat pneumatiky'. Purely a register slip, fully understood.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-c01",
+      "language": "cs",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which 2010 Christopher Nolan film is about entering people's dreams?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Inception",
+        "alternative_answers": [],
+        "explanation": "Inception follows a team that plants an idea inside a target's dream."
+      },
+      "target": {
+        "question": "Který film Christophera Nolana z roku 2010 je o vstupování do snů jiných lidí?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Inception",
+        "alternative_answers": [],
+        "explanation": "Film Inception sleduje tým, který zasadí myšlenku do snu svého cíle."
+      },
+      "note": "Control, adversarial to the untranslated-string and title checks: keeping the original title verbatim is the documented correct behaviour when no certain Czech release title exists, so the identical answer string must not be flagged.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-c02",
+      "language": "cs",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which J.R.R. Tolkien novel was published in three volumes in 1954 and 1955?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The Lord of the Rings",
+        "alternative_answers": [],
+        "explanation": "Tolkien's novel appeared in three volumes across 1954 and 1955."
+      },
+      "target": {
+        "question": "Který román J. R. R. Tolkiena vyšel ve třech svazcích v letech 1954 a 1955?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Pán prstenů",
+        "alternative_answers": [],
+        "explanation": "Tolkienův román vyšel ve třech svazcích v letech 1954 a 1955."
+      },
+      "note": "Control, the mirror image of cs-c01: here an established Czech title exists and is used correctly, so the changed answer string must not be flagged as a title mistranslation. It is also the Czech form, not the Slovak 'Pán prsteňov', which a judge sharing one glossary across both languages may confuse.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-c03",
+      "language": "cs",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Roughly how long is the Danube?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About 2,850 kilometres",
+        "alternative_answers": ["2,850 km"],
+        "explanation": "The Danube runs about 2,850 kilometres from the Black Forest to the Black Sea."
+      },
+      "target": {
+        "question": "Jak dlouhý je přibližně Dunaj?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Přibližně 2 850 kilometrů",
+        "alternative_answers": ["2 850 km"],
+        "explanation": "Dunaj měří přibližně 2 850 kilometrů od Černého lesa k Černému moři."
+      },
+      "note": "Control, adversarial to the number and unit checks: the value and unit are identical, only the thousands separator follows Czech convention. A judge that reads a formatting difference as a number change fails here.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-c04",
+      "language": "cs",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "True or false: the Pacific is the largest ocean on Earth.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "The Pacific covers about a third of the Earth's surface."
+      },
+      "target": {
+        "question": "Pravda nebo nepravda: Tichý oceán je největší oceán na Zemi.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Pravda", "b": "Nepravda"},
+        "correct_answer": "Pravda",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Tichý oceán pokrývá přibližně třetinu zemského povrchu."
+      },
+      "note": "Control and the direct counterpart of cs-s05: the same shape translated the way it should be, keys unchanged and values localized. A judge that flags this has learned the wrong lesson from the defect.",
+      "evidence": null
+    }
+  ]
+}

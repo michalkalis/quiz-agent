@@ -1,0 +1,591 @@
+{
+  "_meta": {
+    "purpose": "Reference set that validates the MQM-Quiz translation judge for Slovak (issue #168 — batch translation pipeline SK/CS, DD6). Built by Session C (task T5). Consumed by scripts/translation_judge_eval.py (task T9).",
+    "language": "sk",
+    "bar": "Every item with severity 'critical' must be caught. Zero critical findings on items with origin 'control'. Major/minor recall is reported and explicitly non-gating.",
+    "item_count": 22,
+    "composition": {
+      "real": 8,
+      "synthetic": 7,
+      "control": 7
+    },
+    "severity_counts": {
+      "critical": 9,
+      "major": 4,
+      "minor": 2,
+      "none": 7
+    },
+    "real_defect_sources": [
+      "commit 783e1285 (TestFlight build 53 feedback) — the 'Sinners' -> 'Grešníci' invented film title, fixed by a title rule in apps/quiz-agent/app/translation/translator.py:202,367-375",
+      "docs/issues/issue-128-idiom-questions-break-in-translation.md:14-18 — the murder-of-crows collective noun served in a Slovak session (corpus row kids_30_05)",
+      "docs/research/generation-review-2026-07-30.md:90-92 — durably cached gpt-4o-mini calques 'zázvorové mačky', 'farba zrakovej vnímania', 'všetky ostatné siedme planéty'",
+      "commit d30be53f — a Czech form ('soustavy') surfacing inside an otherwise correct Slovak translation from claude-opus-5",
+      "docs/issues/issue-126-answer-trailing-punctuation-false-negative.md:16-24 — MCQ option values reaching a Slovak session in English, so a spoken Slovak answer can never match",
+      "docs/issues/issue-03-translation-validation.md:1-8 — a truncated fragment ('suchy bodliak') served as the whole translated question",
+      "docs/issues/issue-107-slovak-english-question-leak.md:8-13 — the translator's fail-open to raw English mid-Slovak session (mechanism only, no strings recorded; reproduced synthetically in sk-s04)"
+    ],
+    "not_mined": "The retiring prod SQLite cache (/data/translations.db on quiz-agent-api) was NOT mined: the execution environment has no Fly authentication token, so the read-only pull was impossible and prod was deliberately not touched. Every 'real' item below is instead evidenced by a repo document or a git commit, which is why this set carries 7 real items rather than a synthetic-only fallback. Mining the cache stays available later and can only enrich this set — it is not a prerequisite for the DD6 bar.",
+    "authored_questions": "The English source questions are authored in the style of the corpus (6-category taxonomy) rather than copied from prod rows. The defect being measured lives in the source/target relation, not in the source question, so a corpus-identical stem buys nothing. The real items reproduce the exact defective Slovak strings recorded in the sources above.",
+    "qid_namespace": "sk-r* real, sk-s* synthetic, sk-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge."
+  },
+  "items": [
+    {
+      "qid": "sk-r01",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "title_mistranslation",
+      "severity": "critical",
+      "source": {
+        "question": "Which 2025 horror film directed by Ryan Coogler stars Michael B. Jordan as twin brothers?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Sinners",
+        "alternative_answers": [],
+        "explanation": "Ryan Coogler's 2025 horror film cast Michael B. Jordan in a dual role as twins."
+      },
+      "target": {
+        "question": "Ktorý horor z roku 2025 v réžii Ryana Cooglera obsadil Michaela B. Jordana do dvojrole dvojčiat?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Grešníci",
+        "alternative_answers": [],
+        "explanation": "Horor Grešníci z roku 2025 obsadil Michaela B. Jordana do dvojrole dvojčiat."
+      },
+      "note": "The title is an invented form: neither the original title nor a known Slovak release title. A player who names the film correctly is graded against a word that does not exist, and the title as displayed is unrecognisable.",
+      "evidence": "commit 783e1285 — the translation prompt gained a rule to keep original titles unless the official localized title is certain, explicitly citing this case."
+    },
+    {
+      "qid": "sk-r02",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "idiom_calque",
+      "severity": "critical",
+      "source": {
+        "question": "What do you call a group of crows when they're all hanging out together, a flock, a herd, or a murder?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "A murder",
+        "alternative_answers": ["murder", "a murder of crows"],
+        "explanation": "English collective nouns give a group of crows the name 'a murder'."
+      },
+      "target": {
+        "question": "Ako nazývate skupinu vrán, keď sa všetky spolu zdržujú, stádo, kŕdeľ alebo vražda?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Vražda",
+        "alternative_answers": ["vražda", "vražda vrán"],
+        "explanation": "Skupina vrán sa nazýva vražda."
+      },
+      "note": "The fact holds only as an English lexical convention. Translated literally the Slovak answer 'vražda' means homicide and is simply false, while the genuinely correct Slovak word 'kŕdeľ' sits in the same list as a distractor, so a player who knows Slovak is scored wrong. The pipeline excludes language_dependent rows, so this item measures the judge's backstop when a row is mistagged, which is exactly how it reached a live session. Source and target are the strings as served.",
+      "evidence": "docs/issues/issue-128-idiom-questions-break-in-translation.md:14-18 — founder TestFlight field test, corpus row kids_30_05 mistagged language_dependent=false; English text confirmed in docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json:7523,7527."
+    },
+    {
+      "qid": "sk-r03",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "lexical_calque",
+      "severity": "critical",
+      "source": {
+        "question": "Roughly what share of ginger cats are male?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About 80 percent",
+        "alternative_answers": ["80 percent", "four out of five"],
+        "explanation": "The gene for the orange coat sits on the X chromosome, so roughly four in five orange cats are male."
+      },
+      "target": {
+        "question": "Približne aký podiel zázvorových mačiek tvoria samce?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Približne 80 percent",
+        "alternative_answers": ["80 percent", "štyri z piatich"],
+        "explanation": "Gén pre oranžovú srsť je na chromozóme X, takže približne štyri z piatich zázvorových mačiek sú samce."
+      },
+      "note": "'Ginger' as a coat colour became the spice: 'zázvorové mačky' reads as cats made of ginger. Slovak uses 'ryšavé' for that coat. The stem names a category that does not exist, so the question cannot be understood as intended.",
+      "evidence": "docs/research/generation-review-2026-07-30.md:89-91 — a gpt-4o-mini calque served and durably cached."
+    },
+    {
+      "qid": "sk-r04",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "fluency_grammar",
+      "severity": "major",
+      "source": {
+        "question": "In physics, what property of light determines the colour we perceive with our eyes?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Its wavelength",
+        "alternative_answers": ["wavelength"],
+        "explanation": "The wavelength of visible light determines the colour the eye perceives."
+      },
+      "target": {
+        "question": "Ktorá vlastnosť svetla vo fyzike určuje farba zrakovej vnímania?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jeho vlnová dĺžka",
+        "alternative_answers": ["vlnová dĺžka"],
+        "explanation": "Vlnová dĺžka viditeľného svetla určuje farbu, ktorú oko vníma."
+      },
+      "note": "'farba zrakovej vnímania' is broken on two counts: the case of the object is wrong and the adjective does not agree with the noun. A native host would not say the sentence aloud, but a player can still recover the meaning and answer correctly.",
+      "evidence": "docs/research/generation-review-2026-07-30.md:89-91 — the exact cached string."
+    },
+    {
+      "qid": "sk-r05",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "related_language_interference",
+      "severity": "major",
+      "source": {
+        "question": "Which two planets in our solar system have no moons?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Mercury and Venus",
+        "alternative_answers": ["Mercury, Venus"],
+        "explanation": "Mercury and Venus are the only planets in the solar system without natural satellites."
+      },
+      "target": {
+        "question": "Ktoré dve planéty našej slnečnej soustavy nemajú mesiace?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Merkúr a Venuša",
+        "alternative_answers": ["Merkúr, Venuša"],
+        "explanation": "Merkúr a Venuša sú jediné planéty slnečnej soustavy bez prirodzených satelitov."
+      },
+      "note": "'soustavy' is the Czech form; Slovak is 'sústavy'. A word borrowed from the closely related language inside otherwise correct Slovak. Meaning survives, register does not.",
+      "evidence": "commit d30be53f — a sample run surfaced this exact form from claude-opus-5, and the translation prompt gained a related-language guard because of it."
+    },
+    {
+      "qid": "sk-r06",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "untranslated_string",
+      "severity": "critical",
+      "source": {
+        "question": "True or false: Mount Everest is the highest mountain above sea level.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Mount Everest reaches 8,849 metres above sea level."
+      },
+      "target": {
+        "question": "Pravda alebo nepravda: Mount Everest je najvyšší vrch nad morskou hladinou.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Mount Everest dosahuje 8 849 metrov nad morskou hladinou."
+      },
+      "note": "The stem is Slovak but the option values stayed English, which is the mechanism behind the field-test failures: a player who says 'Pravda' matches neither the key nor the value, and MCQ grading has no fallback, so a correct answer is scored wrong every time. Critical because grading breaks, not merely display.",
+      "evidence": "docs/issues/issue-126-answer-trailing-punctuation-false-negative.md — two founder screenshots, MCQ branch confirmed in code."
+    },
+    {
+      "qid": "sk-r07",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "fluency_grammar",
+      "severity": "minor",
+      "source": {
+        "question": "Which planet is more massive than all the other seven planets combined?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jupiter",
+        "alternative_answers": [],
+        "explanation": "Jupiter's mass is more than twice that of every other planet in the solar system put together."
+      },
+      "target": {
+        "question": "Ktorá planéta má väčšiu hmotnosť než všetky ostatné siedme planéty dohromady?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jupiter",
+        "alternative_answers": [],
+        "explanation": "Hmotnosť Jupitera je viac než dvojnásobkom hmotnosti všetkých ostatných planét dohromady."
+      },
+      "note": "'všetky ostatné siedme planéty' mangles the numeral phrase; correct Slovak is 'všetkých ostatných sedem planét'. Awkward but unambiguous, so the player answers correctly.",
+      "evidence": "docs/research/generation-review-2026-07-30.md:89-91 — the exact cached string."
+    },
+    {
+      "qid": "sk-r08",
+      "language": "sk",
+      "origin": "real",
+      "defect_category": "truncated_output",
+      "severity": "critical",
+      "source": {
+        "question": "Which plant breaks off at the stem and rolls across the desert in the wind?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Tumbleweed",
+        "alternative_answers": ["a tumbleweed"],
+        "explanation": "A tumbleweed detaches from its root and is blown along the ground, scattering seeds as it goes."
+      },
+      "target": {
+        "question": "suchy bodliak",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Tumbleweed",
+        "alternative_answers": ["stepný bežec"],
+        "explanation": "Rastlina sa odlomí od koreňa a vietor ju ženie po zemi, pričom rozsieva semená."
+      },
+      "note": "The model returned a two-word fragment instead of a translated question sentence, and the output was served with no validation at all. The Slovak string is the artefact recorded in the issue; the English stem is reconstructed to give it a plausible pair, because the source row was never quoted. Critical: there is no question left to answer.",
+      "evidence": "docs/issues/issue-03-translation-validation.md:1-8 — a GPT-4o-mini translation call returned 'suchy bodliak' as the whole translated question."
+    },
+    {
+      "qid": "sk-s01",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "answer_flip",
+      "severity": "critical",
+      "source": {
+        "question": "Which river flows through Bratislava?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "The Danube", "b": "The Vltava", "c": "The Rhine", "d": "The Elbe"},
+        "correct_answer": "The Danube",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "The Danube runs through Bratislava on its way from Vienna to Budapest."
+      },
+      "target": {
+        "question": "Ktorá rieka preteká Bratislavou?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Dunaj", "b": "Vltava", "c": "Rýn", "d": "Labe"},
+        "correct_answer": "Vltava",
+        "correct_answer_key": "b",
+        "alternative_answers": [],
+        "explanation": "Vltava preteká Bratislavou na ceste z Viedne do Budapešti."
+      },
+      "note": "Options are translated correctly but the correct answer moved from key a to key b. Every player who answers correctly is marked wrong, and the explanation now states something false.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s02",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "answer_flip",
+      "severity": "critical",
+      "source": {
+        "question": "Which element has the chemical symbol Au?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Gold",
+        "alternative_answers": ["Au"],
+        "explanation": "Au comes from the Latin aurum, meaning gold."
+      },
+      "target": {
+        "question": "Ktorý prvok má chemickú značku Au?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Striebro",
+        "alternative_answers": ["Au"],
+        "explanation": "Značka Au pochádza z latinského argentum."
+      },
+      "note": "Free-text answer flip: gold became silver, and the explanation was rewritten to be consistent with the wrong answer, so nothing inside the Slovak text betrays the error. Only a source comparison catches it.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s03",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "unit_change",
+      "severity": "critical",
+      "source": {
+        "question": "How deep is the Mariana Trench at its deepest point?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About 11 kilometres",
+        "alternative_answers": ["11 km", "roughly 11 kilometres"],
+        "explanation": "The Challenger Deep reaches roughly 10.9 kilometres below sea level."
+      },
+      "target": {
+        "question": "Aký hlboký je Mariánsky priekop v najhlbšom bode?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Približne 11 míľ",
+        "alternative_answers": ["11 míľ"],
+        "explanation": "Challenger Deep siaha približne 10,9 míle pod hladinu mora."
+      },
+      "note": "The number was preserved and the unit was swapped from kilometres to miles, which multiplies the stated depth by 1.6. Any player answering with the true figure is graded wrong.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s04",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "untranslated_string",
+      "severity": "major",
+      "source": {
+        "question": "Who painted the ceiling of the Sistine Chapel?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Michelangelo",
+        "alternative_answers": ["Michelangelo Buonarroti"],
+        "explanation": "Michelangelo painted the ceiling between 1508 and 1512."
+      },
+      "target": {
+        "question": "Who painted the ceiling of the Sistine Chapel?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Michelangelo",
+        "alternative_answers": ["Michelangelo Buonarroti"],
+        "explanation": "Michelangelo maľoval strop v rokoch 1508 až 1512."
+      },
+      "note": "The stem was passed through untranslated while the explanation was translated. The player hears English mid-session, but the answer is a proper noun, so grading still works. Major rather than critical, in deliberate contrast with sk-r06 where the untranslated part breaks grading. Synthetic because no strings were recorded, but the mechanism is real: the serve-time translator falls back to the original English after failed attempts, so English questions surfaced mid-Slovak session (docs/issues/issue-107-slovak-english-question-leak.md:8-13).",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s05",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "title_mistranslation",
+      "severity": "critical",
+      "source": {
+        "question": "Which 1972 film features the line 'I'm gonna make him an offer he can't refuse'?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The Godfather",
+        "alternative_answers": ["Godfather"],
+        "explanation": "The line is spoken by Vito Corleone in The Godfather."
+      },
+      "target": {
+        "question": "V ktorom filme z roku 1972 zaznie replika 'Dám mu ponuku, ktorá sa neodmieta'?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Krstný syn",
+        "alternative_answers": ["Krstný syn"],
+        "explanation": "Repliku vyslovuje Vito Corleone vo filme Krstný syn."
+      },
+      "note": "The title names a different family role: 'krstný syn' is a godson, not a godfather. The Slovak reads fluently, so only a source comparison exposes it.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s06",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "register_calque",
+      "severity": "minor",
+      "source": {
+        "question": "How often should you rotate the tyres on a car?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About every 10,000 kilometres",
+        "alternative_answers": ["every 10,000 km"],
+        "explanation": "Swapping tyre positions periodically evens out tread wear."
+      },
+      "target": {
+        "question": "Ako často by ste mali rotovať pneumatiky na aute?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Približne každých 10 000 kilometrov",
+        "alternative_answers": ["každých 10 000 km"],
+        "explanation": "Pravidelné rotovanie pneumatík rovnomerne rozloží opotrebenie dezénu."
+      },
+      "note": "'rotovať pneumatiky' is a straight loan of the English phrase; Slovak drivers say 'prehodiť' or 'striedať pneumatiky'. Purely a register slip, fully understood.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-s07",
+      "language": "sk",
+      "origin": "synthetic",
+      "defect_category": "register_calque",
+      "severity": "major",
+      "source": {
+        "question": "Why do onions make you cry when you chop them?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "They release a sulphur compound that irritates the eyes",
+        "alternative_answers": ["a sulphur compound irritates the eyes"],
+        "explanation": "Cutting an onion releases a volatile sulphur compound that reacts with moisture in the eye."
+      },
+      "target": {
+        "question": "Prečo cibule robia teba plakať, keď ich sekáš?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Oni uvoľňujú sírnu zlúčeninu, ktorá robí podráždenie očí",
+        "alternative_answers": ["sírna zlúčenina robí podráždenie očí"],
+        "explanation": "Krájanie cibule uvoľňuje prchavú sírnu zlúčeninu, ktorá robí reakciu s vlhkosťou v oku."
+      },
+      "note": "English syntax carried over word for word: the causative 'make you cry', the wrong pronoun case, a redundant subject pronoun, and 'robí podráždenie' where Slovak uses a single verb. A host reading this aloud sounds like machine output, though the fact is still conveyed.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c01",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which 2010 Christopher Nolan film is about entering people's dreams?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Inception",
+        "alternative_answers": [],
+        "explanation": "Inception follows a team that plants an idea inside a target's dream."
+      },
+      "target": {
+        "question": "Ktorý film Christophera Nolana z roku 2010 je o vstupovaní do snov iných ľudí?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Inception",
+        "alternative_answers": [],
+        "explanation": "Film Inception sleduje tím, ktorý zasadí myšlienku do sna svojho cieľa."
+      },
+      "note": "Control, adversarial to the untranslated-string and title checks: keeping the original title verbatim is the documented correct behaviour when no certain Slovak release title exists, so the identical answer string must not be flagged.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c02",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which J.R.R. Tolkien novel was published in three volumes in 1954 and 1955?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The Lord of the Rings",
+        "alternative_answers": [],
+        "explanation": "Tolkien's novel appeared in three volumes across 1954 and 1955."
+      },
+      "target": {
+        "question": "Ktorý román J. R. R. Tolkiena vyšiel v troch zväzkoch v rokoch 1954 a 1955?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Pán prsteňov",
+        "alternative_answers": [],
+        "explanation": "Tolkienov román vyšiel v troch zväzkoch v rokoch 1954 a 1955."
+      },
+      "note": "Control, the mirror image of sk-c01: here an established Slovak title exists and is used correctly, so the changed answer string must not be flagged as a title mistranslation.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c03",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Roughly how long is the Danube?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "About 2,850 kilometres",
+        "alternative_answers": ["2,850 km"],
+        "explanation": "The Danube runs about 2,850 kilometres from the Black Forest to the Black Sea."
+      },
+      "target": {
+        "question": "Aký dlhý je približne Dunaj?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Približne 2 850 kilometrov",
+        "alternative_answers": ["2 850 km"],
+        "explanation": "Dunaj meria približne 2 850 kilometrov od Čierneho lesa po Čierne more."
+      },
+      "note": "Control, adversarial to the number and unit checks: the value and unit are identical, only the thousands separator follows Slovak convention. A judge that reads a formatting difference as a number change fails here.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c04",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "What is the capital of Australia?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Canberra", "b": "Sydney", "c": "Melbourne", "d": "Perth"},
+        "correct_answer": "Canberra",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Canberra was chosen as a compromise capital between Sydney and Melbourne."
+      },
+      "target": {
+        "question": "Ktoré mesto je hlavným mestom Austrálie?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Canberra", "b": "Sydney", "c": "Melbourne", "d": "Perth"},
+        "correct_answer": "Canberra",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Canberra bola zvolená ako kompromis medzi Sydney a Melbourne."
+      },
+      "note": "Control, adversarial to the untranslated-string and length-ratio checks: all four options are proper nouns that stay identical by design, while the stem is legitimately longer in Slovak than in English.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c05",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Who wrote the play Hamlet?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "William Shakespeare",
+        "alternative_answers": ["Shakespeare"],
+        "explanation": "Shakespeare wrote Hamlet around 1600."
+      },
+      "target": {
+        "question": "Kto napísal hru Hamlet?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "William Shakespeare",
+        "alternative_answers": ["Shakespeare"],
+        "explanation": "Shakespeare napísal Hamleta okolo roku 1600."
+      },
+      "note": "Control: a personal name correctly kept in its original form, with the Slovak declension applied only in the explanation. Must not be read as an untranslated answer.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c06",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "What happens to your body temperature when you have a fever?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "It rises above normal",
+        "alternative_answers": ["it goes up", "it increases"],
+        "explanation": "A fever pushes the body's set point above the usual 37 degrees Celsius."
+      },
+      "target": {
+        "question": "Čo sa deje s telesnou teplotou, keď máte horúčku?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Stúpne nad normálnu hodnotu",
+        "alternative_answers": ["stúpne", "zvýši sa"],
+        "explanation": "Horúčka posunie nastavenú teplotu tela nad bežných 37 stupňov Celzia."
+      },
+      "note": "Control, adversarial to an over-eager calque check: the Slovak is deliberately not word for word, and a judge that treats every restructured sentence as a mistranslation fails here.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c07",
+      "language": "sk",
+      "origin": "control",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "True or false: the Pacific is the largest ocean on Earth.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "True", "b": "False"},
+        "correct_answer": "True",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "The Pacific covers about a third of the Earth's surface."
+      },
+      "target": {
+        "question": "Pravda alebo nepravda: Tichý oceán je najväčší oceán na Zemi.",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Pravda", "b": "Nepravda"},
+        "correct_answer": "Pravda",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Tichý oceán pokrýva približne tretinu zemského povrchu."
+      },
+      "note": "Control and the direct counterpart of sk-r06: the same question translated the way it should be, keys unchanged and values localized. A judge that flags this has learned the wrong lesson from the real defect.",
+      "evidence": null
+    }
+  ]
+}

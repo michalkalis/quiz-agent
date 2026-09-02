@@ -15,13 +15,29 @@ Why these matter:
 from __future__ import annotations
 
 import os
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
+from langchain_core.messages import HumanMessage, SystemMessage
+from scripts import translate_arms as ta
 from scripts.rating_page.build_page import blind_question
 from scripts.translate_arms import DIFFICULTIES, sample_questions, to_arm_item
-from scripts.translate_arms_backends import build_prompt, parse_translation
+from scripts.translate_arms_backends import (
+    ARMS,
+    build_prompt,
+    parse_translation,
+    run_session_arm,
+)
 
-CATS = ("science-nature", "history", "geography-world", "movies-music", "sports", "food-everyday")
+CATS = (
+    "science-nature",
+    "history",
+    "geography-world",
+    "movies-music",
+    "sports",
+    "food-everyday",
+)
 
 
 def _corpus(per_cell: int = 5) -> list[dict]:
@@ -58,7 +74,10 @@ class TestSampling:
         assert len(picked) == 35
         assert len(cells) == 18
         # No cell may run away with the draw.
-        counts = [sum(1 for q in picked if (q["category"], q["difficulty"]) == c) for c in cells]
+        counts = [
+            sum(1 for q in picked if (q["category"], q["difficulty"]) == c)
+            for c in cells
+        ]
         assert max(counts) - min(counts) <= 1
 
     def test_same_seed_same_sample(self):
@@ -84,7 +103,12 @@ class TestSampling:
         """Legacy rows outside the 6-category taxonomy are approved corpus too;
         dropping them would shrink an already-thin sample."""
         corpus = _corpus(per_cell=1) + [
-            {"id": "legacy-1", "category": "trivia", "difficulty": "easy", "question": "q"}
+            {
+                "id": "legacy-1",
+                "category": "trivia",
+                "difficulty": "easy",
+                "question": "q",
+            }
         ]
         picked = sample_questions(corpus, count=19, seed=3)
         assert "legacy-1" in {q["id"] for q in picked}
@@ -129,7 +153,9 @@ class TestArmItemShape:
 
 class TestPromptAndParsing:
     def test_prompt_carries_the_language_and_the_source_payload(self):
-        prompt = build_prompt({"question": "Who wrote Hamlet?", "correct_answer": "Shakespeare"}, "sk")
+        prompt = build_prompt(
+            {"question": "Who wrote Hamlet?", "correct_answer": "Shakespeare"}, "sk"
+        )
         assert "Slovak" in prompt
         assert "Who wrote Hamlet?" in prompt
 
@@ -137,7 +163,8 @@ class TestPromptAndParsing:
         """Only the player-facing payload is translated; feeding the model the
         source_url invites it to 'translate' a URL."""
         prompt = build_prompt(
-            {"question": "q", "source_url": "http://example.test/leak", "topic": "T"}, "cs"
+            {"question": "q", "source_url": "http://example.test/leak", "topic": "T"},
+            "cs",
         )
         assert "example.test/leak" not in prompt
 
@@ -158,3 +185,100 @@ class TestPromptAndParsing:
     def test_non_json_reply_fails_loud(self):
         with pytest.raises(ValueError, match="no JSON object"):
             parse_translation("Sure! Here is the translation.")
+
+
+class _FakeSessionChatModel:
+    """Stands in for `ChatClaudeSession` without spawning `claude -p`."""
+
+    def __init__(self, text: str) -> None:
+        self._text = text
+        self.messages: list[Any] | None = None
+
+    def invoke(self, messages):
+        self.messages = messages
+        return SimpleNamespace(content=self._text)
+
+
+class TestSessionTransport:
+    """#169 — the Opus arm must run on the Claude Code subscription as a pure
+    transport swap: same prompt/parser as `sync`, no OpenRouter/OpenAI key,
+    and it must kick in automatically once LLM_GATEWAY=session is set so the
+    existing arm config 'just works' without a founder edit to ARMS."""
+
+    _TEXT = (
+        '{"question": "Kto?", "possible_answers": null, "correct_answer": "X", '
+        '"alternative_answers": [], "explanation": "E"}'
+    )
+
+    def test_produces_the_same_parsed_shape_as_sync(self, monkeypatch):
+        """A rater must not be able to tell from the output which transport
+        produced it — session is only allowed to change how the text gets
+        fetched, never the fields that reach `to_arm_item`."""
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        fake = _FakeSessionChatModel(self._TEXT)
+        monkeypatch.setattr(
+            "scripts.translate_arms_backends.factory.chat_openai",
+            lambda model_id, **kw: fake,
+        )
+        question = {
+            "id": "q1",
+            "question": "Who wrote Hamlet?",
+            "correct_answer": "Shakespeare",
+        }
+
+        run = run_session_arm(ARMS["opus"], [question], "sk")
+
+        assert run.transport == "session"
+        assert run.cost_usd == 0.0
+        assert run.failures == []
+        assert run.translations["q1"] == parse_translation(self._TEXT)
+        # Same messages the `sync` transport sends: system + one user turn.
+        assert [type(m) for m in fake.messages] == [SystemMessage, HumanMessage]
+
+    def test_non_claude_arms_are_never_silently_replaced_by_claude(self, monkeypatch):
+        """An arm test compares models: under LLM_GATEWAY=session the Gemini and
+        GPT-4.1 arms must not auto-route to a Claude tier (PR #67 review)."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        assert ta.uses_session_transport(ARMS["gemini"].model) is False
+        assert ta.uses_session_transport(ARMS["gpt41"].model) is False
+        assert ta.session_gateway_rejects(ARMS["gemini"].model) is True
+        assert ta.session_gateway_rejects(ARMS["opus"].model) is False
+
+    def test_run_arm_fails_loud_for_a_non_claude_arm_under_session_gateway(
+        self, monkeypatch
+    ):
+        """Fail loud beats a silent model swap: the blind rating would otherwise
+        compare three identical Opus outputs labelled as different models."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        with pytest.raises(RuntimeError, match="not Claude-family"):
+            ta.run_arm("gemini", [], "sk")
+
+    def test_llm_gateway_session_auto_routes_the_existing_opus_arm(self, monkeypatch):
+        """The Opus arm's `ArmSpec` route stays 'batch' — LLM_GATEWAY=session
+        alone must be enough to run it on the subscription (#169), or the
+        founder would have to hand-edit ARMS every time they toggle it."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        assert ta.uses_session_transport(ARMS["opus"].model) is True
+
+    def test_run_arm_dispatches_to_session_under_llm_gateway_session(self, monkeypatch):
+        """The dispatch itself — not just the predicate — must route `opus`
+        (route 'batch') to the subscription transport, and never touch the
+        batch adapter, once LLM_GATEWAY=session is active."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        calls: list[str] = []
+        monkeypatch.setattr(
+            ta,
+            "run_session_arm",
+            lambda spec, sample, language: calls.append(spec.name) or "session-result",
+        )
+        monkeypatch.setattr(
+            ta,
+            "run_batch_arm",
+            lambda *a, **k: pytest.fail("must not use batch under session gateway"),
+        )
+
+        result = ta.run_arm("opus", [{"id": "1"}], "sk")
+
+        assert calls == ["opus"]
+        assert result == "session-result"

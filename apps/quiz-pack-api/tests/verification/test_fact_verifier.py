@@ -15,6 +15,8 @@ answer, and unchecked content never ships).
   missing key) pin fail-closed: every one must hold, never drop or keep.
 - the pause_turn test pins the server-side tool-loop resume so a long web
   search turn is continued instead of silently truncated.
+- the session tests (#169) pin the subscription transport: same prompt and
+  same contract as the API branches, reachable with no provider key, free.
 """
 
 from __future__ import annotations
@@ -262,9 +264,7 @@ def _openai_response(
     return SimpleNamespace(
         status=status,
         output=output,
-        usage=SimpleNamespace(
-            input_tokens=input_tokens, output_tokens=output_tokens
-        ),
+        usage=SimpleNamespace(input_tokens=input_tokens, output_tokens=output_tokens),
     )
 
 
@@ -380,3 +380,129 @@ def test_parse_verdict_json_handles_fences_and_absence() -> None:
     assert _parse_verdict_json('```json\n{"verdict": "ok"}\n```')["verdict"] == "ok"
     assert _parse_verdict_json("no json here") is None
     assert _parse_verdict_json('broken {"verdict": ') is None
+
+
+# --- session transport (#169) ----------------------------------------------
+#
+# The Claude Code subscription is a third *transport*, not a third pipeline:
+# the founder constraint is that the backend pipeline stays the source of
+# truth and the session path mirrors it 1:1. These tests pin exactly that —
+# same prompt in, same numeric contract out, same fail-closed behaviour —
+# plus the two things unique to the transport: it must be reachable with no
+# provider API key at all, and it must never be billed as API cost.
+
+
+class _FakeSessionChat:
+    """``ChatClaudeSession`` double: records prompts, returns canned replies."""
+
+    def __init__(self, replies: list[Any]) -> None:
+        self._replies = list(replies)
+        self.prompts: list[str] = []
+
+    async def ainvoke(self, prompt: Any, **_: Any) -> Any:
+        self.prompts.append(prompt)
+        item = self._replies.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return SimpleNamespace(content=item)
+
+
+def _session_verifier(
+    monkeypatch, model: str, replies: list[Any]
+) -> tuple[FactVerifier, _FakeSessionChat, list[dict[str, Any]]]:
+    """FactVerifier whose session branch builds the stub via the factory."""
+    from quiz_shared.llm import factory as llm_factory
+
+    chat = _FakeSessionChat(replies)
+    calls: list[dict[str, Any]] = []
+
+    def _fake_chat_openai(model_id: str, **kwargs: Any) -> Any:
+        calls.append({"model": model_id, **kwargs})
+        return chat
+
+    monkeypatch.setattr(llm_factory, "chat_openai", _fake_chat_openai)
+    return FactVerifier(model=model), chat, calls
+
+
+@pytest.mark.asyncio
+async def test_session_gateway_routes_factcheck_without_any_api_key(
+    monkeypatch,
+) -> None:
+    """LLM_GATEWAY=session must reach the subscription with no provider key
+    present: the whole point is a dev run that cannot bill the API. Reading
+    the raw role id instead of the gateway-resolved one would send this to
+    OpenAI and hold every question on the missing-key preflight."""
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    verifier, chat, calls = _session_verifier(
+        monkeypatch, "gpt-5-mini", ["Checked.\n" + _verdict_json("ok")]
+    )
+
+    result = await verifier.verify("Q?", "A", topic="film")
+
+    assert result.verdict == "ok"
+    assert result.confidence == pytest.approx(0.9)
+    assert result.held_for_review is False
+    # gpt-5-mini is the web-grounded FACTCHECK role → sonnet tier, and the
+    # web tools + agentic turn budget are what make it a fact-*check*.
+    assert calls == [{"model": "session:sonnet", "web": True, "max_turns": 8}]
+    # Same adversarial prompt as the API branches — transport-only swap.
+    assert "Q?" in chat.prompts[0] and "adversarial fact-checker" in chat.prompts[0]
+
+
+@pytest.mark.asyncio
+async def test_session_role_override_routes_without_gateway_flip(monkeypatch) -> None:
+    """LLM_ROLE_FACTCHECK=session:haiku must route on the id alone, so one
+    role can be moved to the subscription while the rest of the pipeline
+    stays on the paid API (the per-role lever documented in #169)."""
+    monkeypatch.delenv("LLM_GATEWAY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    verifier, _, calls = _session_verifier(
+        monkeypatch, "session:haiku", [_verdict_json("stale", note="superseded")]
+    )
+
+    result = await verifier.verify("Q?", "A")
+
+    assert calls[0]["model"] == "session:haiku"
+    assert result.verdict == "stale"
+    assert result.confidence == 0.0  # below the gate → dropped, same contract
+
+
+@pytest.mark.asyncio
+async def test_session_verdicts_are_free(monkeypatch) -> None:
+    """The subscription is a flat fee, so a session verdict must add 0¢ to
+    the order total — any non-zero here would inflate pack COGS with money
+    that was never spent (tokens are reported via the factory usage proxy)."""
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    verifier, _, _ = _session_verifier(monkeypatch, "gpt-5-mini", [_verdict_json("ok")])
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.cost_cents == 0.0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "replies",
+    [
+        [RuntimeError("claude -p exited 1: not logged in")],
+        [TimeoutError("claude -p (sonnet) exceeded 300s")],
+        [""],
+        ["I could not reach a conclusion, sorry."],
+    ],
+    ids=["cli_error", "timeout", "empty_reply", "prose_no_json"],
+)
+async def test_session_failures_hold_instead_of_dropping(monkeypatch, replies) -> None:
+    """Fail-closed parity with both API branches: a missing CLI, a logged-out
+    subscription or a timeout is not evidence about the answer, so the
+    question is withheld — never dropped, never kept unchecked (#158)."""
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    verifier, _, _ = _session_verifier(monkeypatch, "gpt-5-mini", replies)
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.held_for_review is True
+    assert result.verdict == "unverified"
+    assert result.confidence == 0.0
+    assert result.cost_cents == 0.0

@@ -37,6 +37,7 @@ a smart player, not an oracle). Both stay env-overridable via
 ``app.feature_flags``.
 """
 
+import logging
 import os
 from typing import Any, Optional, Union
 
@@ -45,8 +46,14 @@ from openai import AsyncOpenAI, OpenAI
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
+logger = logging.getLogger(__name__)
+
 DIRECT = "direct"
 OPENROUTER = "openrouter"
+# #169 — dev-only: every chat role runs on the Claude Code subscription via
+# ``claude -p`` (see session_cli.py). Never set on Fly.
+SESSION = "session"
+SESSION_PREFIX = "session:"
 
 BEDROCK_PREFIX = "bedrock:"
 
@@ -221,8 +228,76 @@ def _strip_bedrock_prefix(model_id: str) -> str:
     return model_id[len(BEDROCK_PREFIX) :] if is_bedrock_model(model_id) else model_id
 
 
+def is_session_model(model_id: str) -> bool:
+    """True when ``model_id`` runs on the Claude Code subscription (``session:``)."""
+    return model_id.startswith(SESSION_PREFIX)
+
+
+# #169 — prod id → subscription tier under ``LLM_GATEWAY=session``. Claude ids
+# map 1:1; non-Claude ids map by *class* (founder 2026-09-02: everything on
+# Claude, as cheap as the role allows). gpt-5-mini is the web-grounded
+# FACTCHECK role → sonnet (haiku is a candidate once validated on the #166
+# 7-error reference); deepseek-v4-flash is the deliberately flash-class
+# ANSWERABILITY proxy (#135 D10) → haiku. Anything else is frontier class →
+# opus. ``LLM_SESSION_MAP="gpt-5-mini=haiku,..."`` overrides per id.
+_SESSION_ALIAS_FOR_ID = {
+    "claude-fable-5": "fable",
+    "claude-opus-5": "opus",
+    "claude-sonnet-5": "sonnet",
+    "gpt-5-mini": "sonnet",
+    "deepseek-v4-flash": "haiku",
+    # Frontier-class judges/critique/normalize (mostly OFF in prod defaults).
+    "gpt-5.6-sol": "opus",
+    "gemini-3.1-pro-preview": "opus",
+    "deepseek-v4-pro": "opus",
+}
+# Non-chat ids stay on OpenAI even in session mode (embeddings/audio/image
+# have no subscription equivalent — founder carve-out).
+_NON_CHAT_ID_MARKERS = (
+    "text-embedding",
+    "whisper",
+    "tts",
+    "transcribe",
+    "gpt-image",
+    "dall-e",
+)
+_session_map_warned: set[str] = set()
+
+
+def _session_map_override() -> dict[str, str]:
+    raw = os.getenv("LLM_SESSION_MAP") or ""
+    pairs = (item.split("=", 1) for item in raw.split(",") if "=" in item)
+    return {k.strip(): v.strip() for k, v in pairs}
+
+
+def session_model_for(model_id: str) -> str:
+    """``LLM_GATEWAY=session`` resolution of a chat model id (see table above)."""
+    if is_session_model(model_id) or any(m in model_id for m in _NON_CHAT_ID_MARKERS):
+        return model_id
+    bare = _strip_bedrock_prefix(model_id)
+    alias = _session_map_override().get(model_id) or _SESSION_ALIAS_FOR_ID.get(bare)
+    if alias is None:
+        lowered = bare.lower()
+        for tier in ("haiku", "sonnet", "opus", "fable"):
+            if tier in lowered:
+                alias = tier
+                break
+    if alias is None:
+        alias = "opus"
+        if model_id not in _session_map_warned:
+            _session_map_warned.add(model_id)
+            logger.warning(
+                "session gateway: no tier mapping for %r -> session:opus "
+                "(frontier default; override via LLM_SESSION_MAP)",
+                model_id,
+            )
+    return SESSION_PREFIX + alias
+
+
 def supports_sampling_params(model_id: str) -> bool:
     """Whether the model accepts ``temperature``/``top_p`` (see prefix list)."""
+    if is_session_model(model_id):
+        return False  # ``claude -p`` exposes no sampling params
     bare = _strip_bedrock_prefix(model_id)
     # Bedrock ids look like "anthropic.claude-fable-5-…" / "us.anthropic.…";
     # match the family anywhere in the id, not just as a prefix.
@@ -239,6 +314,8 @@ def provider_for_model(model_id: str) -> str:
     all mislabelled, defeating the point of recording the model (issue #72 —
     distinguish question sources).
     """
+    if is_session_model(model_id):
+        return "anthropic"
     bare = _strip_bedrock_prefix(model_id)
     slug = _REMAP_OPENROUTER.get(bare, bare)
     if "/" in slug:
@@ -263,9 +340,9 @@ def provider_for_model(model_id: str) -> str:
 def gateway() -> str:
     """Active gateway, read fresh each call so tests/env flips take effect."""
     value = os.getenv("LLM_GATEWAY", DIRECT).strip().lower()
-    if value not in (DIRECT, OPENROUTER):
+    if value not in (DIRECT, OPENROUTER, SESSION):
         raise ValueError(
-            f"LLM_GATEWAY must be {DIRECT!r} or {OPENROUTER!r}, got {value!r}"
+            f"LLM_GATEWAY must be {DIRECT!r}, {OPENROUTER!r} or {SESSION!r}, got {value!r}"
         )
     return value
 
@@ -278,9 +355,14 @@ def resolve_model(model_id: str) -> str:
     caller can always force a specific slug. ``bedrock:`` ids are never
     remapped — they identify the provider and exact model in one string.
     """
+    if is_session_model(model_id):
+        return model_id
+    active = gateway()
+    if active == SESSION:
+        return session_model_for(model_id)  # bedrock: ids map too (no AWS spend)
     if is_bedrock_model(model_id):
         return model_id
-    if gateway() == OPENROUTER:
+    if active == OPENROUTER:
         return _REMAP_OPENROUTER.get(model_id, model_id)
     return model_id
 
@@ -293,7 +375,9 @@ def _base_url_and_key(direct: bool) -> tuple[Optional[str], Optional[str]]:
     lets the SDK use its default endpoint; a ``None`` key lets the SDK read the
     provider's env var, preserving today's behavior exactly.
     """
-    if direct or gateway() == DIRECT:
+    # ``session`` behaves like ``direct`` here: the OpenAI SDK client only
+    # serves what the subscription cannot (embeddings, audio, image).
+    if direct or gateway() in (DIRECT, SESSION):
         return None, os.getenv("OPENAI_API_KEY")
     return OPENROUTER_BASE_URL, os.getenv("OPENROUTER_API_KEY")
 
@@ -416,6 +500,8 @@ def chat_openai(model: str, **kwargs):
     order died with zero diagnostics on 2026-08-03. The Bedrock path keeps
     boto3's own bounded connect/read defaults.
     """
+    if gateway() == SESSION:
+        model = session_model_for(model)  # #169: every chat role → subscription
     if not supports_sampling_params(model):
         kwargs.pop("temperature", None)
         kwargs.pop("top_p", None)
@@ -433,6 +519,8 @@ def chat_openai(model: str, **kwargs):
 
     if is_bedrock_model(model):
         return _chat_bedrock(model, **kwargs)
+    if is_session_model(model):
+        return _chat_session(model, **kwargs)
 
     from langchain_openai import ChatOpenAI
 
@@ -446,6 +534,26 @@ def chat_openai(model: str, **kwargs):
         base_url=base_url,
         **kwargs,
     )
+
+
+def _chat_session(model_id: str, **kwargs):
+    """``ChatClaudeSession`` for a ``session:`` id (#169) — ``claude -p`` transport.
+
+    Lazy import: ``langchain-core`` is a quiz-pack-api dependency only.
+    ``timeout``/``request_timeout`` (httpx.Timeout or seconds) collapse to
+    the subprocess deadline; sampling params were already dropped by
+    ``chat_openai`` (``supports_sampling_params`` is False for session ids).
+    """
+    from .session_cli import ChatClaudeSession, session_alias
+
+    raw_timeout = kwargs.pop("timeout", None) or kwargs.pop("request_timeout", None)
+    if isinstance(raw_timeout, httpx.Timeout):
+        timeout = raw_timeout.read or GENERATION_TIMEOUT.read
+    elif isinstance(raw_timeout, (int, float)):
+        timeout = float(raw_timeout)
+    else:
+        timeout = GENERATION_TIMEOUT.read
+    return ChatClaudeSession(alias=session_alias(model_id), timeout=timeout, **kwargs)
 
 
 # Explicit alias for new call sites; ``chat_openai`` remains for existing ones.

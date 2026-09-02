@@ -1,0 +1,561 @@
+[
+  {
+    "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+    "question": "Púšť je definovaná tým, ako málo zrážok tam spadne, nie teplotou — preto najväčšou púšťou na Zemi nie je Sahara. Ktorý kontinent drží tento titul?",
+    "possible_answers": null,
+    "correct_answer": "Antarktída",
+    "alternative_answers": [
+      "Antarktika"
+    ],
+    "explanation": "Vnútrozemie Antarktídy dostáva také malé množstvo snehu, že celý tento zamrznutý kontinent sa považuje za púšť — oveľa väčšiu než je Sahara.",
+    "topic": "Weather and natural phenomena",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+    "question": "Ktorá japonská spoločnosť, založená v roku 1889 v Kjóte na výrobu ručne vyrábaných hracích kariet, sa neskôr stala jedným z najväčších mien vo videohrách?",
+    "possible_answers": null,
+    "correct_answer": "Nintendo",
+    "alternative_answers": [
+      "Nintento",
+      "Nintendu"
+    ],
+    "explanation": "Nintendo strávilo desaťročia predajom hracích kariet hanafuda – a dokonca skúšalo aj taxíky a instantnú ryžu – než v 70. a 80. rokoch prerazilo vo videohrách.",
+    "topic": "Games and toys history",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "61765172-71c1-5487-97c2-827d5b89bd9f",
+    "question": "Takmer 300 metrov nad zemou na Eiffelovej veži je ukrytý malý súkromný byt s tapetami, dreveným nábytkom a veľkým klavírom — útočisko, kde jeho majiteľ raz hostil Thomasa Edisona. Kto si dal tento tajný byt postaviť pre seba?",
+    "possible_answers": null,
+    "correct_answer": "Gustave Eiffel",
+    "alternative_answers": [
+      "Eiffel",
+      "pán Eiffel",
+      "dizajnér veže Gustave Eiffel",
+      "staviteľ Eiffelovej veže",
+      "Gustave Eiffel, konštruktér veže"
+    ],
+    "explanation": "Inžinier veže si ponechal útulný byt pre seba neďaleko vrcholu a údajne odmietal veľkorysé ponuky na jeho prenájom — dnes môžu návštevníci nahliadnuť dovnútra na figuríny Eiffela a Edisona.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+    "question": "V januári 1969 ktorá skupina odohrala svoje úplne posledné verejné vystúpenie — neohlásený obedňajší koncert na streche svojej kancelárskej budovy v Londýne, ktorý ukončila polícia?",
+    "possible_answers": null,
+    "correct_answer": "The Beatles",
+    "alternative_answers": [
+      "Beatles",
+      "Bítls",
+      "Bítlsi"
+    ],
+    "explanation": "The Beatles hrali asi 42 minút na streche sídla spoločnosti Apple Corps na Savile Row, kým ich nepožiadala polícia, aby prestali — toto vystúpenie sa stalo ich posledným živým koncertom v histórii.",
+    "topic": "Music history milestones",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "84a82a8f-b5f4-44da-80d0-58f7da931d58",
+    "question": "Gouda, Edam a Leyden sú známe syry, ktoré majú spoločnú krajinu pôvodu. Ktorý národ svetu dal túto trojicu?",
+    "possible_answers": {
+      "a": "Holandsko",
+      "b": "Švajčiarsko",
+      "c": "Francúzsko",
+      "d": "Belgicko"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [
+      "Holandská",
+      "Holandský",
+      "Holanďania",
+      "Holandské"
+    ],
+    "explanation": "Gouda je pomenovaná podľa holandského mesta, kde sa ňou obchodovalo, a Holandsko zostáva jedným z najväčších svetových vývozcov syra napriek svojej malej veľkosti.",
+    "topic": "General",
+    "difficulty": "easy",
+    "source_url": "https://opentdb.com"
+  },
+  {
+    "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+    "question": "Bod Nemo v južnom Pacifiku je miesto v oceáne najvzdialenejšie od každej pevniny — viac ako 2 600 kilometrov na všetky strany. Pretože v jeho okolí nikdy nikto nie je, vesmírne agentúry ho využívajú ako zámernú zónu pre pády čoho?",
+    "possible_answers": null,
+    "correct_answer": "Vyslúžilé vesmírne lode",
+    "alternative_answers": [
+      "Vesmírne lode",
+      "Staré satelity",
+      "Vyradené satelity",
+      "Vesmírne stanice",
+      "Vesmírny odpad"
+    ],
+    "explanation": "Stovky vyradených satelitov a vesmírnych staníc, vrátane ruskej Mir, boli navedené na zánik v tomto 'cintoríne vesmírnych lodí' — často sú najbližšími ľuďmi astronauti prelietajúci nad hlavou.",
+    "topic": "Ocean and deep sea mysteries",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a9f2146c-6ca9-50ac-90ce-48951240c579",
+    "question": "Na pacifickom ostrove Yap tradičná mena nazývaná rai má podobu obrovských vyrezávaných diskov — niektoré sú širšie než auto a príliš ťažké na to, aby sa dali premiestniť. Z čoho sú tieto mince vyrobené?",
+    "possible_answers": null,
+    "correct_answer": "Kameň",
+    "alternative_answers": [
+      "Vápenec",
+      "Skala",
+      "Kameňa"
+    ],
+    "explanation": "Keďže obrovské vápenaté disky sa nedajú prenášať, vlastníctvo sa mení len verejnou dohodou — jeden známy kameň sa stále považuje za peniaze, aj keď sa potopil na dno mora.",
+    "topic": "Money and trade",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+    "question": "V Beringovom prielive sú Veľký Dioméd a Malý Dioméd vzdialené menej než 4 kilometre, no medzi nimi prechádza medzinárodná dátumová hranica — preto sa im prezýva Ostrov zajtrajška a Ostrov včerajška. Ktorým dvom krajinám patria?",
+    "possible_answers": null,
+    "correct_answer": "Rusko a USA",
+    "alternative_answers": [
+      "USA a Rusko",
+      "Rusko a Amerika",
+      "Spojené štáty a Rusko",
+      "Rusko a Spojené štáty"
+    ],
+    "explanation": "Veľký Dioméd patrí Rusku a Malý Dioméd patrí USA, takže za jasného dňa môžu obyvatelia na americkej strane doslova vidieť cez vodu do zajtrajška.",
+    "topic": "Maps and borders quirks",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+    "question": "Po svojom pôvodnom deväťtýždňovom prvenstve v rebríčku UK v polovici 70. rokov bola Queenina Bohemian Rhapsody konečne zosadená piesňou, ktorá obsahuje jeden z najslávnejších pokrikov Freddieho Mercuryho — ktorá kapela ju zosadila z trónu?",
+    "possible_answers": null,
+    "correct_answer": "ABBA",
+    "alternative_answers": [
+      "Abba"
+    ],
+    "explanation": "Tou piesňou bola ABBA a ich Mamma Mia — nahradila skladbu, ktorej operná časť známe spieva 'mamma mia, mamma mia, mamma mia, let me go'. Osud rebríčkov býva málokedy takýto poetický.",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "difficulty": "medium",
+    "source_url": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+    "id": "cdfdb9aa-c960-42b5-b6e3-614604013673",
+    "question": "Pravda alebo lož? Staroveké olympijské hry boli výslovne zakázané cisárom Theodosiom I.",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Lož"
+    },
+    "correct_answer": "Lož",
+    "alternative_answers": [
+      "Nie je pravda",
+      "Nesprávne",
+      "Nie",
+      "Nie je to pravda"
+    ],
+    "explanation": "Historici sa zhodujú, že dekréty Theodosia I. proti pohanským rituálom výslovne nespomínali olympijské hry. Hry pravdepodobne skončili v dôsledku širších kultúrnych a politických zmien.",
+    "topic": "Ancient Olympics",
+    "difficulty": "medium",
+    "source_url": "https://www.smithsonianmag.com/history/nine-things-you-didnt-know-about-the-ancient-olympic-games-180984672"
+  },
+  {
+    "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+    "question": "Banány sú veľmi mierne rádioaktívne vďaka prirodzene rádioaktívnemu izotopu ktorého chemického prvku, na ktorý sú známe tým, že ho obsahujú vo veľkom množstve?",
+    "possible_answers": null,
+    "correct_answer": "Draslík",
+    "alternative_answers": [
+      "Kalium",
+      "K"
+    ],
+    "explanation": "Malá časť prírodného draslíka je rádioaktívny izotop draslík-40 — tento jav je taký známy, že fyzici žartom merajú malé dávky radiácie v 'ekvivalentných dávkach banánov'.",
+    "topic": "Everyday food science",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "dd858794-8374-5c0f-809f-2a3a6df2b927",
+    "question": "Napriek svojmu názvu Golden Gate Bridge v San Franciscu nikdy nebol natretý na zlatú farbu. Jeho výrazná načervenalá farba — ktorá sa ponechala aj preto, aby ju lode mohli lepšie vidieť v hustej hmle — má oficiálny názov. Aký je to názov?",
+    "possible_answers": null,
+    "correct_answer": "Medzinárodná oranžová",
+    "alternative_answers": [
+      "Internacionálna oranžová",
+      "Medzinárodná oranžová farba",
+      "International Orange"
+    ],
+    "explanation": "Architekt Irving Morrow presadil tento odtieň namiesto námorníctvom preferovaných čierno-žltých pruhov, a medzinárodná oranžová je charakteristickou farbou mosta od jeho otvorenia v roku 1937.",
+    "topic": "Engineering marvels",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+    "question": "Názov amerického dolára pochádza zo slova „tolar“ — strieborných mincí, ktoré sa začali raziť v 1520. rokoch v baníckom meste Jáchymov (vtedy Joachimsthal). V ktorej dnešnej európskej krajine sa toto mesto nachádza?",
+    "possible_answers": null,
+    "correct_answer": "Česká republika",
+    "alternative_answers": [
+      "Česko",
+      "Česká republika"
+    ],
+    "explanation": "Joachimsthal je dnes Jáchymov v Čechách; jeho mince „joachimsthaler“ sa skracovali na „tolar,“ čo sa cez holandský a španielsky obchod dostalo do anglického slova „dollar“.",
+    "topic": "Money and trade",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "944c79db-14c3-41e4-8fa1-b13d54ed78fb",
+    "question": "Cestujete cez Africký roh a potrebujete si vymeniť peniaze. Čo by ste v Etiópii míňali, pomenované podľa starého slova pre striebro?",
+    "possible_answers": {
+      "a": "Birr",
+      "b": "Dinar",
+      "c": "Šiling",
+      "d": "Kwacha"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [
+      "bir",
+      "birr",
+      "byr"
+    ],
+    "explanation": "Mena Etiópie je birr, čo v amharčine znamená 'striebro'. Mnohí cestovatelia sa domnievajú, že Etiópia, podobne ako susedná Keňa či Somálsko, používa šiling, ale má svoju vlastnú menu.",
+    "topic": "General",
+    "difficulty": "hard",
+    "source_url": "https://opentdb.com"
+  },
+  {
+    "id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+    "question": "V roku 2026 Grimes vydala plnú spoluprácu s ktorou slávnou japonskou virtuálnou popovou hviezdou — syntetickým speváckym hlasom bez ľudského interpreta, ktorého piesne píšu desaťtisíce domácich producentov?",
+    "possible_answers": null,
+    "correct_answer": "Hatsune Miku",
+    "alternative_answers": [
+      "Miku",
+      "Miku Hatsune"
+    ],
+    "explanation": "Grimes priznala, že objavenie Miku pre ňu bolo 'ako nôž do srdca', pretože si želala, aby tento nápad vymyslela ona sama. Tyrkysovovlasá vocaloidka vystupuje na skutočných koncertoch ako hologram už roky, aj keď je úplne len softvér.",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "difficulty": "hard",
+    "source_url": "https://www.nme.com/features/music-interviews/grimes-hatsune-miku-miku-maxxing-beyond-borders-interview-3963206"
+  },
+  {
+    "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+    "question": "All England Club, ktorý je domovom Wimbledonského šampionátu od roku 1877, bol v skutočnosti založený v roku 1868 pre úplne inú hru na tráve — ktorú?",
+    "possible_answers": null,
+    "correct_answer": "Kroket",
+    "alternative_answers": [
+      "kroket",
+      "croquet"
+    ],
+    "explanation": "Pôvodne sa volal All England Croquet Club a tenis na trávniku pridal až o niekoľko rokov neskôr — a kroket sa stále nachádza v jeho oficiálnom názve.",
+    "topic": "Sports history",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+    "question": "V roku 1973 stál inžinier Motoroly Martin Cooper na chodníku v Manhattane a uskutočnil prvý hovor svojho druhu v histórii — s úsmevom zavolal svojmu priamemu rivalovi z Bell Labs, aby sa pochválil. Aké zariadenie držal v ruke?",
+    "possible_answers": null,
+    "correct_answer": "Mobilný telefón",
+    "alternative_answers": [
+      "Mobilný telefón",
+      "Mobil",
+      "Mobilný",
+      "Mobilný aparát",
+      "Mobilné zariadenie"
+    ],
+    "explanation": "Cooperov ručný prototyp mal veľkosť tehly a vážil vyše kilogramu. Jeho prvý čin s týmto prístrojom bol hovor superovi z Bell Labs Joelovi Engelovi, ktorému oznámil, že Motorola bola rýchlejšia.",
+    "topic": "Technology origins and firsts",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+    "question": "Kráľovná Alžbeta II. navštívila počas svojej vlády viac než sto krajín, no nikdy nenosila doklad, ktorý musí mať každý iný britský cestovateľ. Aký doklad?",
+    "possible_answers": null,
+    "correct_answer": "Cestovný pas",
+    "alternative_answers": [
+      "Pas",
+      "Jej cestovný pas",
+      "Cestovný pas jej veličenstva"
+    ],
+    "explanation": "Britské cestovné pasy sa vydávajú v mene panovníka, takže kráľovná žiadny nepotrebovala – na rozdiel od iných členov kráľovskej rodiny, vrátane princa Filipa, ktorí museli pas nosiť ako každý iný.",
+    "topic": "Famous rulers and royal quirks",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+    "question": "Každé leto Eiffelova veža merateľne narastie — až o 15 centimetrov. Čo spôsobuje tento sezónny nárast?",
+    "possible_answers": null,
+    "correct_answer": "Teplo rozťahuje železo",
+    "alternative_answers": [
+      "tepelné rozťahovanie",
+      "železo sa rozťahuje teplom",
+      "teplo",
+      "kov sa rozťahuje v teple"
+    ],
+    "explanation": "Železná konštrukcia veže sa počas letných horúčav rozťahuje a v zime opäť zmršťuje, takže jej oficiálna výška sa počas roka ticho mení — strana vystavená slnku sa rozťahuje ešte viac, čo spôsobuje, že vrchol sa mierne nakláňa od slnka.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+    "question": "Rekord v počte Grammy mal desaťročia nie popová hviezda, ale klasický dirigent — ktorá superstar konečne získala titul najviac oceneného umelca v histórii Grammy so svojou tridsiatou druhou trofejou?",
+    "possible_answers": null,
+    "correct_answer": "Beyoncé",
+    "alternative_answers": [
+      "Beyonce",
+      "Beyoncé Knowles",
+      "Beyonce Knowles"
+    ],
+    "explanation": "Rekord, ktorý prekonala, patril dirigentovi Georgovi Soltimu, ktorého zbierka Grammy za klasickú hudbu zostala neprekonaná desaťročia, až kým Beyoncé nezískala svoju tridsiatu druhú cenu a nestala sa tak najviac ocenenou umelkyňou v histórii.",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "difficulty": "easy",
+    "source_url": "https://www.newsbreak.com/closer-weekly-561369/4833504478572-15-iconic-celebs-who-hold-unexpected-world-records"
+  },
+  {
+    "id": "8bd2aa09-dcd5-4f16-9894-4eee0772c7ff",
+    "question": "V Japonsku pestovatelia formujú známe ovocie do nezvyčajného tvaru tak, že ho nechávajú rásť vo pevných kontajneroch, vďaka čomu sa oveľa ľahšie ukladá na poličku. Aký tvar majú tieto vzácne, drahé novinky?",
+    "possible_answers": {
+      "a": "Kocka",
+      "b": "Pyramída",
+      "c": "Valec",
+      "d": "Srdce"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [
+      "Kocka",
+      "Kockový tvar",
+      "Štvorec"
+    ],
+    "explanation": "Japonskí farmári pestujú štvorcové (kockovité) melóny vo štvorcových kontajneroch. Ľahšie sa ukladajú a skladujú, ale predávajú sa ako drahé rarity, nie ako bežné ovocie.",
+    "topic": "General",
+    "difficulty": "easy",
+    "source_url": "https://www.weareteachers.com/fun-food-facts"
+  },
+  {
+    "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+    "question": "Ktorý austrálsky vačkovec žijúci v norách je jediným zvieraťom, o ktorom je známe, že produkuje kockovité výkaly?",
+    "possible_answers": null,
+    "correct_answer": "Vombat",
+    "alternative_answers": [
+      "Ten vombat",
+      "Obyčajný vombat",
+      "Vombat obyčajný"
+    ],
+    "explanation": "Kocky vznikajú vďaka nerovnakej elasticite čriev vombata a ploché výkaly sa neskotúľajú – čo je praktické na označovanie teritória na skalách a pňoch.",
+    "topic": "Animal biology oddities",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+    "question": "Na rozdiel od legendy, stavitelia pyramíd v Gíze neboli otroci, ale platení pracovníci. Popri chlebe, aký nápoj tvoril základnú časť ich denného prídela?",
+    "possible_answers": null,
+    "correct_answer": "Pivo",
+    "alternative_answers": [
+      "Pivko",
+      "Sladové pivo"
+    ],
+    "explanation": "Egyptské pivo bolo husté, mierne alkoholické a výživné — prakticky tekutý chlieb — a pracovníci ho dostávali denne, takže bolo rovnako pokrmom a odmenou ako aj osviežením.",
+    "topic": "Ancient civilizations daily life",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "90acd238-7a28-4ad3-8163-485485a361dc",
+    "question": "Ktorá krajina má viac sáun na obyvateľa: Fínsko alebo Švédsko?",
+    "possible_answers": {
+      "a": "Fínsko",
+      "b": "Švédsko"
+    },
+    "correct_answer": "Fínsko",
+    "alternative_answers": [
+      "Finsko"
+    ],
+    "explanation": "Fínsko má jednu saunu na každých 1,59 obyvateľa, čo z neho robí krajinu s najväčším počtom sáun na obyvateľa.",
+    "topic": "Geography",
+    "difficulty": "medium",
+    "source_url": "https://www.sciencefocus.com/science/fun-facts"
+  },
+  {
+    "id": "87be1cdf-0382-5a7c-bb70-4634f65cd625",
+    "question": "Ktorá skladba sa ako prvý rapový singel vôbec dostala na prvé miesto amerického rebríčka Billboard Hot 100, a to v roku 1990?",
+    "possible_answers": {
+      "a": "Rapper's Delight",
+      "b": "Walk This Way",
+      "c": "Ice Ice Baby",
+      "d": "U Can't Touch This"
+    },
+    "correct_answer": "Ice Ice Baby",
+    "alternative_answers": [
+      "Aj s ajs bejby",
+      "Ajs ajs bejby",
+      "Ice ice bejby"
+    ],
+    "explanation": "Vanilla Ice predbehol všetkých rapových priekopníkov a dostal sa na vrchol rebríčka Hot 100 vďaka ikonickej basovej linke vypožičanej zo skladby 'Under Pressure' od skupín Queen a David Bowieho, a to nielen v USA, ale aj vo Veľkej Británii.",
+    "topic": "Famous Music Producers And The Artists They Make Hits For",
+    "difficulty": "medium",
+    "source_url": "https://www.funtrivia.com/quiz/music/miami-sound-artists-from-the-magic-city-425261.html"
+  },
+  {
+    "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+    "question": "Maratón má nezvyčajne presnú dĺžku 42,195 kilometra od olympiády v Londýne v roku 1908, keď bola trať predĺžená, aby mohol pretek začať na trávniku ktorého kráľovského sídla?",
+    "possible_answers": null,
+    "correct_answer": "Windsorský zámok",
+    "alternative_answers": [
+      "Windsor",
+      "Zámok Windsor",
+      "Windsorský hrad"
+    ],
+    "explanation": "Trasa viedla od Windsorského zámku až do kráľovskej lóže na štadióne White City — a táto kráľovská výnimka sa neskôr stala oficiálnou dĺžkou maratónu po celom svete.",
+    "topic": "Sports history",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+    "question": "Biela čokoláda obsahuje kakaové maslo, cukor a mlieko — ale úplne jej chýba tmavá zložka, ktorá dáva mliečnej aj horkej čokoláde ich farbu a typickú čokoládovú chuť. Ako sa táto chýbajúca zložka volá?",
+    "possible_answers": null,
+    "correct_answer": "Kakaová sušina",
+    "alternative_answers": [
+      "kakaová hmota",
+      "kakaový prášok",
+      "čokoládová sušina",
+      "kakaové sušiny"
+    ],
+    "explanation": "Kakaová sušina je pomletá ne-tuková časť kakaového bôbu, a bez nej je biela čokoláda v podstate len osladený kakaový tuk — preto ju niektorí puristi odmietajú nazývať čokoládou.",
+    "topic": "Everyday food science",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+    "question": "Na dne Mexického zálivu objavili prieskumníci skutočné podvodné jazerá – s jasnými brehmi a zvlneným povrchom – ktoré spočívajú na morskom dne. Aká zložka spôsobuje, že je ich voda natoľko hustá, že sa môže hromadiť pod oceánom?",
+    "possible_answers": null,
+    "correct_answer": "Soľ",
+    "alternative_answers": [
+      "extrémna slanosť",
+      "slaný roztok",
+      "vysoká salinita",
+      "veľmi slaná voda"
+    ],
+    "explanation": "Tieto soľné jazierka sú niekoľkonásobne slanšie ako okolitá morská voda, preto je voda dostatočne ťažká na to, aby sa usadila v preliačinách — a sú tak toxické, že tvory, ktoré do nich vplávajú, sú často prakticky naložené tam, kde zahynú.",
+    "topic": "Ocean and deep sea mysteries",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+    "question": "Aby žiadny americký dôstojník nemohol nikdy prevýšiť prvého prezidenta krajiny, bol mu posmrtne udelený najvyšší vojenský hodnosť. V ktorom roku sa to stalo?",
+    "possible_answers": {
+      "a": "1799",
+      "b": "1901",
+      "c": "1976",
+      "d": "2001"
+    },
+    "correct_answer": "c",
+    "alternative_answers": [
+      "devätnásť sedemdesiatšesť",
+      "sedemdesiatšesť",
+      "tisíc deväťsto sedemdesiatšesť"
+    ],
+    "explanation": "V roku 1976, pri dvojstom výročí USA, bol George Washington povýšený na generála armád, čo mu navždy zaručilo najvyšší hodnostný stupeň, takmer 180 rokov po jeho smrti.",
+    "topic": "History",
+    "difficulty": "hard",
+    "source_url": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+    "id": "0b27e5c2-4f06-51bb-bc66-55fe7d86e514",
+    "question": "Keď bol Washingtonov monument dokončený v roku 1884, jeho samotný vrchol bol korunovaný malou pyramídou z kovu, ktorý bol vtedy vzácnejší ako striebro — no dnes je veľmi lacný. O ktorý kov ide?",
+    "possible_answers": null,
+    "correct_answer": "Hliník",
+    "alternative_answers": [
+      "Aluminium",
+      "Aluminij",
+      "Alumínium"
+    ],
+    "explanation": "V roku 1884 bol hliník mimoriadne ťažko získateľný a stál viac ako striebro, takže 22-centimetrová hliníková pyramída bola výstavným kúskom — už o dva roky neskôr však nový spôsob tavenia spôsobil, že kov výrazne zlacnel a stal sa bežným.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "question": "Ktoré režisérske duo preskočilo z radostne absurdného filmu The Lego Movie na vesmírny blockbuster Project Hail Mary s Ryanom Goslingom, ktorý má vyjsť v roku 2026?",
+    "possible_answers": null,
+    "correct_answer": "Phil Lord a Christopher Miller",
+    "alternative_answers": [
+      "Lord a Miller",
+      "Christopher Miller a Phil Lord",
+      "Phil Lord a Chris Miller",
+      "Lord & Miller"
+    ],
+    "explanation": "Táto dvojica priniesla svoju typickú rýchlu, veselú energiu do sfilmovania románu Andyho Weira, autora titulu Marťan, a z potenciálne pochmúrneho príbehu o prežití urobila jeden z najpríťažlivejších blockbusterov roku 2026.",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "difficulty": "hard",
+    "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
+  },
+  {
+    "id": "cb16489b-0ef0-4534-8a12-07c0a7617e5c",
+    "question": "Ktorá planéta je na povrchu horúcejšia: Merkúr, najbližšie k Slnku, alebo Venuša?",
+    "possible_answers": {
+      "a": "Merkúr",
+      "b": "Venuša"
+    },
+    "correct_answer": "b",
+    "alternative_answers": [
+      "venuša"
+    ],
+    "explanation": "Venuša je najhorúcejšia planéta, okolo 460 °C, pretože jej husté oblaky zadržiavajú teplo zo Slnka v nekontrolovanom skleníkovom efekte, a tak prekonáva aj Merkúr.",
+    "topic": "Space",
+    "difficulty": "easy",
+    "source_url": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+    "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+    "question": "V 30. rokoch 17. storočia zažila Holandská republika najznámejšiu špekulatívnu bublinu v dejinách, keď mohla jednotlivá vzácna cibuľka stáť toľko ako veľký amsterdamský dom pri kanáli. Ktorý kvet spôsobil tento ošiaľ?",
+    "possible_answers": null,
+    "correct_answer": "Tulipán",
+    "alternative_answers": [
+      "tulipán",
+      "tulipány",
+      "cibuľka tulipánu",
+      "tulipánová cibuľka"
+    ],
+    "explanation": "Na vrchole tulipánovej mánie sa exotické pásikavé odrody, ako napríklad Semper Augustus, predávali za obrovské sumy — až do náhleho kolapsu trhu vo februári 1637.",
+    "topic": "Money and trade",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+    "question": "Turisti v Londýne ukazujú na hodinovú vežu Westminsterského paláca a nazývajú ju Big Ben — ale striktne vzaté, Big Ben je názov čoho?",
+    "possible_answers": null,
+    "correct_answer": "Zvonu",
+    "alternative_answers": [
+      "Veľkého zvonu",
+      "Jeho zvonu",
+      "Zvonu vo vnútri veže"
+    ],
+    "explanation": "Big Ben je prezývka Veľkého zvonu, ktorý odbíja hodiny vo vnútri veže, ktorá bola v roku 2012 pri diamantovom jubileu kráľovnej premenovaná na Elizabeth Tower.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+    "question": "Ktorý herec pracoval ako stolár predtým, než bol obsadený do úlohy Hana Sola v pôvodných Hviezdnych vojnách?",
+    "possible_answers": null,
+    "correct_answer": "Harrison Ford",
+    "alternative_answers": [
+      "Harisn Ford",
+      "Herrison Ford",
+      "Ford"
+    ],
+    "explanation": "Ford povedal, že ho dosť prekvapilo, keď mu ponúkli túto rolu. Jeho stolárske zručnosti mu vraj pomohli získať prácu v štúdiu, kde si ho všimli.",
+    "topic": "Film",
+    "difficulty": "easy",
+    "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  }
+]

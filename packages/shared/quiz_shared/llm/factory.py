@@ -543,6 +543,14 @@ def _chat_session(model_id: str, **kwargs):
     ``timeout``/``request_timeout`` (httpx.Timeout or seconds) collapse to
     the subprocess deadline; sampling params were already dropped by
     ``chat_openai`` (``supports_sampling_params`` is False for session ids).
+
+    ``LLM_SESSION_TIMEOUT`` (seconds) overrides that deadline. Call sites size
+    their timeout for the HTTP API, but ``claude -p`` is a materially slower
+    transport: measured 2026-09-02, one #167 fact-first batch (30 questions,
+    36.7k in / 38.7k out) takes **412 s** on ``session:fable`` and so dies on
+    the 300 s ``GENERATION_TIMEOUT`` every time, whatever the fact-pool size.
+    Unset = today's behaviour exactly; it is a transport belt, never a quality
+    gate, and the stage belt (``STAGE_TIMEOUT_SECONDS``) still caps the stage.
     """
     from .session_cli import ChatClaudeSession, session_alias
 
@@ -553,6 +561,9 @@ def _chat_session(model_id: str, **kwargs):
         timeout = float(raw_timeout)
     else:
         timeout = GENERATION_TIMEOUT.read
+    override = os.getenv("LLM_SESSION_TIMEOUT")
+    if override:
+        timeout = float(override)
     return ChatClaudeSession(alias=session_alias(model_id), timeout=timeout, **kwargs)
 
 

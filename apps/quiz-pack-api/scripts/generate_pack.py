@@ -256,6 +256,17 @@ class _FactsFileSourcingStage:
         )
 
 
+def _judges_enabled(no_judges: bool) -> bool:
+    """Judge panel on/off for this run.
+
+    #169 (founder 2026-09-02): session runs never pay for judges — D21 showed
+    the panel adds no signal, and on the subscription it was ~80 % of the
+    quota (42 opus calls for 3 questions). Parity with the prod worker, where
+    ``judge_gate`` is OFF. ``--no-judges`` stays the explicit lever elsewhere.
+    """
+    return not (no_judges or llm_factory.gateway() == llm_factory.SESSION)
+
+
 def _build_stages(
     *,
     persist: bool,
@@ -419,7 +430,7 @@ async def _run(args: argparse.Namespace) -> int:
     stages = _build_stages(
         persist=persist,
         dedup_store=dedup_store,
-        judges=not args.no_judges,
+        judges=_judges_enabled(args.no_judges),
         gen_prompt_file=args.gen_prompt_file,
         forced_topics=(
             [t.strip() for t in args.topics.split(",") if t.strip()]
@@ -681,7 +692,10 @@ def cli_main(argv: Sequence[str] | None = None) -> int:
         from quiz_shared.llm.session_cli import ensure_subscription_login
 
         ensure_subscription_login()
-        print("[session gateway] LLM steps run on the Claude Code subscription (unpriced tokens)")
+        print(
+            "[session gateway] LLM steps run on the Claude Code subscription "
+            "(unpriced tokens); judge panel OFF (founder 2026-09-02, D21: no signal)"
+        )
     return asyncio.run(_run(args))
 
 

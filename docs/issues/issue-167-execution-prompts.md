@@ -224,7 +224,7 @@ Run from apps/quiz-pack-api/:
    uv run --no-sync python scripts/source_facts.py --topics "music producers and their artists, 2026 album releases, 2026 awards and nominations (Oscars, Grammys), new 2026 films and series, 2026 tours and festivals, 2026 streaming hits" --out facts_167.json
    That topic string is a locked founder decision — paste it verbatim, do not reword or extend it. On exit 1 (thin yield, <40 facts): EXACTLY ONE retry with narrower phrasings of the topics the tally named as weakest. If the second attempt is still <40, escalate to the founder in-session and stop; never lower the 40 threshold.
 2) 167.10 — generate + verify/score:
-   EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py --grounded --category entertainment --facts-file facts_167.json --target-count 30 --per-topic-cap 5 --dry-run --out pilot_167.json
+   EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=openrouter uv run --no-sync python scripts/generate_pack.py --grounded --no-judges --category entertainment --facts-file facts_167.json --target-count 30 --per-topic-cap 5 --dry-run --out pilot_167.json
    --grounded is MANDATORY even with --facts-file: without it both attribution gates (ungrounded-drop and F8) are off, and the offline join in step 3 depends on them. It is --target-count, not --count. --per-topic-cap 5 is MANDATORY too (PR #58): the 6 locked themes cannot reach 30 questions under CompositionStage's default cap of 2, and the top-up loop then burns the paid pipeline on an unreachable target. LLM_GATEWAY=openrouter is required or claude-fable-5 returns 404 model_not_found. EXPIRY_CLASSIFICATION=1 is shell-local telemetry; do not put it in fly.toml. The run is fail-loud by design: an empty fact set raises F8 and no batch is produced — that is correct, not a bug to work around. Then run the offline verify and /score-questions.
 3) 167.11 — post-cutoff filter:
    uv run --no-sync python scripts/filter_postcutoff.py pilot_167.json --facts-file facts_167.json
@@ -265,6 +265,9 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 ---
 
 ## Status
+
+> **⚠️ Supersession sweep 2026-09-02 (founder + driver):** D21b inkrement 1 (2026-08-24) vyradil sudcovský panel z toku — sudcovia „nepridávali nič". Runbook príkazy tu ale vznikli 2026-08-26 bez `--no-judges` (CLI default = sudcovia ZAPNUTÍ, `generate_pack.py:422`), takže pilotné behy ich spúšťali a spálili väčšinu z ~$21. **Všetky generovacie príkazy v oboch issue súboroch teraz nesú `--no-judges` — to je jediná platná podoba.** Akýkoľvek starší príkaz bez tohto flagu (v logoch, PR históriách, poznámkach nižšie) je superseded. Vedľajší efekt `--no-judges`: odpadá aj answerability/surprise veto v ScoringStage — pre founder-ratený pilot akceptované (finálny filter = founder rating). Fact-check (web, gpt-5-mini) OSTÁVA — to je platný D21b verdikt.
+
 
 - ✅ Split done 2026-08-26 (this doc). Decisions Founder 1-5 + D1-D10 locked; class `a` confirmed (no migration, no schema, prod flags untouched).
 - ✅ Session A — backend seams + prompt + taxonomy (167.1-167.4) · delivered 2026-08-27

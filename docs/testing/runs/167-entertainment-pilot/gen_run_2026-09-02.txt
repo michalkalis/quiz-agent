@@ -1,0 +1,114 @@
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_b0b013cb url='https://en.wikipedia.org/wiki/Projection_screen' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=063626bd-696f-4b37-a02a-967beb016029 fallback_marked=False question='If you stand close to a big cinema screen, you will notice it is covered in thousands of tiny holes. Why are cinema screens perforated like this?'
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=a75ca972-05d4-4976-816a-a7868ea52e8c topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=6abdfd14-6027-4762-abfd-d89e808cc10c topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=555d0fba-606d-42f6-bef1-a7f77defc823 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=966537fb-5abc-49e9-8568-cd1cfa3d6262 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=f82f2307-393e-4207-8a52-71b89aeb76b6 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=2b6c93d8-2889-496c-8b75-f57f184e7862 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=61607c1e-9530-4c8f-9f3c-02a814677750 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=a9b71afc-7665-4d32-bf2a-6c2a51321b87 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=f09864d4-b238-4feb-ad1c-4214727aa5e3 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=6d9eeed6-1c45-4161-8e20-1322cb5cb2f6 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=d0a71fe3-30c8-4aee-94c3-6ded703944d4 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=8c9492f1-c7c8-43cd-a79a-2385efd7a891 topic='Music & Artists' over per-topic cap 5
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_583efcae url='https://en.wikipedia.org/wiki/Wagon-wheel_effect' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=55e8090e-eb2d-4c85-9cb4-a8007e0248a0 fallback_marked=False question="In many films and TV shows, a speeding car's wheels seem to spin slowly backwards, or stand still, even though the car is clearly racing forward. What causes this illusion?"
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=a3bba0dd-64aa-4c99-b79a-c1dbf1d5b776 (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=62e8b7b3-c6d8-4543-9444-6190335db30c (fact key reuse url=en.wikipedia.org/wiki/2026_in_film answer=under one million dollars)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=e29a0bd4-39ef-476f-982e-36d36e3450ea over true/false cap 2
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=82ac5b0e-8141-4b35-868e-3a596185304d (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=b68c32b5-a33d-4953-b03c-3bbc1c5fc6a3 (fact key reuse url=disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord answer=darth maul)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=4982537d-b443-4a14-913f-df452cfcafe9 topic='Music & Artists' over per-topic cap 5
+[session gateway] LLM steps run on the Claude Code subscription (unpriced tokens); judge panel OFF (founder 2026-09-02, D21: no signal)
+[00] start  sourcing
+[00] finish sourcing {'facts': 160, 'facts_file': 'facts_167_wide.json'}
+[01] start  generating
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Speakers sit behind the screen' not found in explanation for: If you stand close to a big cinema screen, you will notice it is covered in thou...
+  ⚠ Answer/explanation mismatch: answer 'Def Jam Recordings' not found in explanation for: Producer Rick Rubin founded which legendary hip-hop label while he was still a f...
+  ⚠ Answer/explanation mismatch: answer 'Sinners' not found in explanation for: Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen n...
+  ⚠ Answer/explanation mismatch: answer 'Glastonbury' not found in explanation for: Which famous British music festival skipped 2026 entirely to give its farmland a...
+  ⚠ Answer/explanation mismatch: answer 'c' not found in explanation for: Netflix's biggest title of the first half of 2026, War Machine, drew roughly how...
+  ⚠ Answer/explanation mismatch: answer 'Radiohead' not found in explanation for: George Martin was called the fifth Beatle. Producer Nigel Godrich has been dubbe...
+  ⚠ Answer/explanation mismatch: answer 'Belgium' not found in explanation for: Tomorrowland, the giant electronic music festival that runs over two weekends ev...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Which pop producer, rarely seen on a stage himself, has had eight of his number-...
+  ⚠ Answer/explanation mismatch: answer 'A$AP Rocky' not found in explanation for: Which rapper ended an eight-year wait between studio albums in 2026 with Don't B...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic...
+  ⚠ Answer/explanation mismatch: answer 'Vienna' not found in explanation for: The seventieth Eurovision Song Contest, held in May 2026, was staged in which ci...
+  ⚠ Answer/explanation mismatch: answer 'Drake' not found in explanation for: Which rapper became Spotify's most-streamed artist in a single day of 2026 after...
+  ⚠ Answer/explanation mismatch: answer 'Megadeth' not found in explanation for: Which thrash metal band, formed by a guitarist fired from Metallica, released a ...
+  ⚠ Answer/explanation mismatch: answer 'Burna Boy' not found in explanation for: Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever ...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: Sigourney Weaver has been nominated for all four of these awards, but has won on...
+  ⚠ Answer/explanation mismatch: answer 'Ted Lasso' not found in explanation for: Which streaming comedy earned a record twenty Emmy nominations for its debut sea...
+  ⚠ Answer/explanation mismatch: answer 'Sweden' not found in explanation for: The theatrical rock band Ghost, fronted by a singer dressed as a demonic pope, c...
+  ⚠ Answer/explanation mismatch: answer 'Rango' not found in explanation for: Which 2011 animated Western reunited Johnny Depp with the director of his Pirate...
+  ⚠ Answer/explanation mismatch: answer 'The Little Mermaid' not found in explanation for: Which 2023 remake became the most-streamed live-action Disney film premiere on D...
+  ⚠ Answer/explanation mismatch: answer 'Harry Styles' not found in explanation for: Which British pop star scored the global number-one singles Aperture and America...
+  ⚠ Answer/explanation mismatch: answer 'Coachella' not found in explanation for: Which Californian desert festival sold out for 2026 less than a week after annou...
+  ⚠ Diversity warning: 12/30 (40%) questions start with 'Which' (target: ≤30%)
+[01] finish generating {'questions': 30, 'dropped_quality': 0, 'normalized_quality': 0, 'dropped_mcq_missing_options': 0, 'dropped_ungrounded': 1, 'demoted_puzzles': 0}
+[02] start  dedup
+[02] finish dedup {'kept': 30, 'dropped': 0, 'fact_dropped': 0}
+[03] start  verifying
+[03] finish verifying {'verified': 28, 'dropped': 2, 'withheld': 0, 'evergreen_skipped': 0}
+[04] start  composition
+[04] finish composition {'kept': 16, 'topic_cap': 5, 'tf_cap': 2, 'topic_cap_dropped': 12, 'tf_cap_dropped': 0}
+[05] start  topup
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Frame rate strobes the rotating spokes' not found in explanation for: In many films and TV shows, a speeding car's wheels seem to spin slowly backward...
+  ⚠ Answer/explanation mismatch: answer 'Harry Styles' not found in explanation for: Which former One Direction member scored two global number-one singles in 2026 w...
+  ⚠ Answer/explanation mismatch: answer 'France' not found in explanation for: The animated superhero franchise Miraculous, starring Ladybug and Cat Noir, was ...
+  ⚠ Answer/explanation mismatch: answer 'A$AP Rocky' not found in explanation for: Which rapper, also famous as Rihanna's partner, ended an eight-year album drough...
+  ⚠ Answer/explanation mismatch: answer 'Costume Design' not found in explanation for: The most-nominated Black woman in Oscar history, with five nominations by 2026, ...
+  ⚠ Answer/explanation mismatch: answer 'Best Cinematography' not found in explanation for: At the 2026 Academy Awards, which category crowned a woman as its winner for the...
+  ⚠ Answer/explanation mismatch: answer 'Rango' not found in explanation for: Which 2011 animated Western reunited the director and the star of the Pirates of...
+  ⚠ Answer/explanation mismatch: answer 'Trevor Slattery' not found in explanation for: The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor fro...
+  ⚠ Diversity warning: 5/13 (38%) questions start with 'Which' (target: ≤30%)
+  ⚠ Answer/explanation mismatch: answer 'Best Cinematography' not found in explanation for: At the 2026 Academy Awards, which category crowned its first female winner in Os...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which Star Wars villain, famously sliced in half in 1999's The Phantom Menace, g...
+  ⚠ Answer/explanation mismatch: answer '17 weeks' not found in explanation for: In 1998, the Goo Goo Dolls ballad Iris set a then-record on a US Billboard radio...
+[05] finish topup {'final_count': 27, 'target_count': 30, 'topup_rounds': 2, 'fact_pool_exhausted': False}
+
+pack_id: dry-run:37b6979a-487e-4752-99f9-f5a1002c15cd
+questions: 27
+cost_cents: 0
+  search (Tavily): 0¢ (0 credits)
+  llm: UNMEASURED — OpenRouter usage snapshot unavailable (gateway not 'openrouter', key missing, or API failure)
+  1. Producer Rick Rubin founded which legendary hip-hop label while he was still a film student at New York University?  →  Def Jam Recordings   [https://en.wikipedia.org/wiki/Rick_Rubin]
+  2. Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?  →  Sinners   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  3. Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?  →  Spider-Man: Brand New Day   [https://en.wikipedia.org/wiki/2026_in_film]
+  4. Which famous British music festival skipped 2026 entirely to give its farmland a rest, a so-called fallow year?  →  Glastonbury   [https://www.glastonburyfestivals.co.uk/info/?direct=true]
+  5. Netflix's biggest title of the first half of 2026, War Machine, drew roughly how many views in those six months?  →  Well over one hundred million   [https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026?pubDate=20260818]
+  6. George Martin was called the fifth Beatle. Producer Nigel Godrich has been dubbed the sixth member of which band?  →  Radiohead   [https://en.wikipedia.org/wiki/Nigel_Godrich]
+  7. The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?  →  Super Mario   [https://en.wikipedia.org/wiki/2026_in_film]
+  8. Tomorrowland, the giant electronic music festival that runs over two weekends every July, takes place in which country?  →  Belgium   [https://faq.tomorrowland.com/hc/en-us/articles/4402621418132-Where-and-when-will-Tomorrowland-Belgium-2026-take-place]
+  9. Which pop producer, rarely seen on a stage himself, has had eight of his number-one singles debut at the very top of the US Billboard Hot 100?  →  Max Martin   [https://en.wikipedia.org/wiki/Max_Martin]
+  10. True or false: at the 2026 Academy Awards, a woman won the Oscar for Best Cinematography for the first time in history.  →  True   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  11. The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic villain?  →  Darth Maul   [https://www.disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord]
+  12. Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?  →  Drake   [https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/]
+  13. The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?  →  Under one million dollars   [https://en.wikipedia.org/wiki/2026_in_film]
+  14. Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever to top Billboard's global chart, paired her with which Afrobeats superstar?  →  Burna Boy   [https://www.musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm]
+  15. Which streaming comedy earned a record twenty Emmy nominations for its debut season in 2021?  →  Ted Lasso   [https://en.wikipedia.org/wiki/Ted_Lasso]
+  16. Which Californian desert festival sold out for 2026 less than a week after announcing its lineup?  →  Coachella   [https://au.rollingstone.com/music/music-news/coachella-2026-sold-out-84007/]
+  17. Which city hosted the seventieth Eurovision Song Contest in May 2026?  →  Vienna   [https://www.eurovision.com/stories/eurovision-2026-hosts-victoria-swarovski-michael-strowski/]
+  18. Which former One Direction member scored two global number-one singles in 2026 with 'Aperture' and 'American Girls'?  →  Harry Styles   [https://en.wikipedia.org/wiki/Harry_Styles]
+  19. The animated superhero franchise Miraculous, starring Ladybug and Cat Noir, was created in which country?  →  France   [https://en.wikipedia.org/wiki/Miraculous_(franchise)]
+  20. Which rapper, also famous as Rihanna's partner, ended an eight-year album drought in 2026 with 'Don't Be Dumb'?  →  A$AP Rocky   [https://en.wikipedia.org/wiki/2026_in_American_music]
+  21. The most-nominated Black woman in Oscar history, with five nominations by 2026, works behind the camera in which craft category?  →  Costume Design   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  22. Which thrash metal band, founded by a guitarist fired from Metallica, released a self-titled farewell album in January 2026?  →  Megadeth   [https://www.megadeth.com/blogs/news/track-listing-reveal]
+  23. Which 2011 animated Western reunited the director and the star of the Pirates of the Caribbean films?  →  Rango   [https://en.wikipedia.org/wiki/Rango_(2011_film)]
+  24. Van Halen's self-titled 1978 debut, often called one of the greatest first albums in rock, reached number one on the Billboard album chart. True or false?  →  False   [https://en.wikipedia.org/wiki/Van_Halen_(album)]
+  25. How many times has Glenn Close been nominated for an Academy Award without ever taking one home?  →  Eight   [https://en.wikipedia.org/wiki/Glenn_Close]
+  26. The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor from Iron Man 3, who once posed as a supervillain?  →  Trevor Slattery   [https://en.wikipedia.org/wiki/Wonder_Man_(TV_series)]
+  27. The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?  →  Hundreds of thousands   [https://en.wikipedia.org/wiki/2026_in_film]
+
+llm usage by stage/model:
+  generating     session:fable                    calls=5   in=194643   out=55715    gaps=0   cost UNKNOWN
+  generating     session:opus                     calls=3   in=13997    out=4819     gaps=0   cost UNKNOWN
+  verifying      session:sonnet                   calls=43  in=1259120  out=33129    gaps=0   cost UNKNOWN
+  total known cost: 0.00¢
+  unpriced models (cost omitted): session:fable, session:opus, session:sonnet
+out: wrote 27 questions to pilot_167.json
+usage: wrote per-stage/model summary to pilot_167.json.usage.json
+EXIT=0

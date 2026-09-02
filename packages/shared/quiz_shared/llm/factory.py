@@ -246,6 +246,10 @@ _SESSION_ALIAS_FOR_ID = {
     "claude-sonnet-5": "sonnet",
     "gpt-5-mini": "sonnet",
     "deepseek-v4-flash": "haiku",
+    # Frontier-class judges/critique/normalize (mostly OFF in prod defaults).
+    "gpt-5.6-sol": "opus",
+    "gemini-3.1-pro-preview": "opus",
+    "deepseek-v4-pro": "opus",
 }
 # Non-chat ids stay on OpenAI even in session mode (embeddings/audio/image
 # have no subscription equivalent — founder carve-out).

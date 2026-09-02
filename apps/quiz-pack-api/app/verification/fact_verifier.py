@@ -19,6 +19,11 @@ smery; the eval harness lands with PR #35). The
 Anthropic path is kept verbatim: any ``claude*`` model id routes to it, so
 ``LLM_ROLE_FACTCHECK=claude-sonnet-5`` is the rollback lever.
 
+Session transport (#169): when the FACTCHECK id resolves to a ``session:``
+alias (``LLM_GATEWAY=session``, or ``LLM_ROLE_FACTCHECK=session:haiku``) the
+same prompt runs on the Claude Code subscription via ``claude -p`` with
+``WebSearch``/``WebFetch`` — transport only, no API key needed, cost 0.
+
 Drop policy (founder-approved 2026-08-24): ``fact_error``/``logic_flaw``/
 ``stale`` are dropped; ``ok`` is kept. Mapped onto the existing numeric
 contract so ``VerificationStage`` stays unchanged: problem verdicts carry
@@ -34,11 +39,18 @@ content.
 
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Optional
 
 from quiz_shared.llm import factory as llm_factory
+
+logger = logging.getLogger(__name__)
+
+# #169 — the subscription path has no server-side max_uses knob, so the turn
+# budget is what bounds its web-search loop.
+_MAX_SESSION_TURNS = 8
 
 # #150 — bound on concurrent per-question fact-check calls (same knob
 # convention as SCORER_MAX_CONCURRENT); default matches the answerability
@@ -110,7 +122,8 @@ class FactVerifier:
     served by an OpenAI-compatible gateway, so this role is a
     direct-provider carve-out analogous to audio/image (``direct=True``).
 
-    The model id picks the backend: ``claude*`` → Anthropic messages +
+    The resolved model id picks the backend: a ``session:`` id → ``claude -p``
+    + WebSearch (#169, no provider key); ``claude*`` → Anthropic messages +
     ``web_search_20260209``; anything else → OpenAI Responses +
     ``web_search``.
     """
@@ -122,22 +135,59 @@ class FactVerifier:
     def _is_anthropic(self) -> bool:
         return self._model.startswith("claude")
 
+    def _session_model(self) -> Optional[str]:
+        """The ``session:`` id this role resolves to, or ``None`` (#169).
+
+        The branch reads the *gateway-resolved* id (``LLM_GATEWAY=session``
+        maps FACTCHECK onto a subscription alias); direct/OpenRouter modes
+        yield none, so the API branches keep ``self._model`` verbatim.
+        """
+        resolved = llm_factory.resolve_model(self._model)
+        return resolved if llm_factory.is_session_model(resolved) else None
+
     def _available(self) -> bool:
         """Whether the fact-check backend is reachable.
 
-        An injected client (tests) is always available; otherwise the
-        active provider's key must be present. No key → every question is
-        held → withheld by the stage (fail-closed, never silently skipped).
+        An injected client (tests) is always available; so is the session
+        transport (#169), which authenticates through the subscription and
+        needs no provider key. Otherwise the active provider's key must be
+        present. No key → every question is held → withheld by the stage
+        (fail-closed, never silently skipped).
         """
-        if self._client is not None:
+        if self._client is not None or self._session_model() is not None:
             return True
         key = "ANTHROPIC_API_KEY" if self._is_anthropic() else "OPENAI_API_KEY"
         return bool(os.getenv(key))
 
     async def _call(self, prompt: str) -> tuple[Optional[str], float]:
+        session_model = self._session_model()
+        if session_model is not None:
+            return await self._call_session(prompt, session_model)
         if self._is_anthropic():
             return await self._call_anthropic(prompt)
         return await self._call_openai(prompt)
+
+    async def _call_session(
+        self, prompt: str, model: str
+    ) -> tuple[Optional[str], float]:
+        """One subscription fact-check turn: ``(reply text, 0.0 cents)``.
+
+        Transport swap only (#169): same prompt, parsing and fail-closed
+        contract as the API branches — any exception (no ``claude`` CLI, not
+        logged in, timeout, bad envelope) is a ``None`` text, never a
+        verdict. Cost is 0 by construction (flat-fee subscription); tokens
+        still reach ``llm_usage`` via the factory usage proxy.
+        """
+        try:
+            if self._client is None:
+                self._client = llm_factory.chat_openai(
+                    model, web=True, max_turns=_MAX_SESSION_TURNS
+                )
+            response = await self._client.ainvoke(prompt)
+            return llm_factory.message_text(response) or None, 0.0
+        except Exception:
+            logger.exception("session fact-check call failed (%s)", model)
+            return None, 0.0
 
     async def _call_openai(self, prompt: str) -> tuple[Optional[str], float]:
         """One Responses-API fact-check turn: ``(reply text, cost cents)``.

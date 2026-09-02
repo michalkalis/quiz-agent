@@ -20,6 +20,7 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 All LLM calls go through `quiz_shared.llm.factory`. Call sites ask it for a client (and, where the model is configurable, `resolve_model(id)`); they **never** read an API key or hardcode a `base_url`. One env var routes the whole pipeline:
 - `LLM_GATEWAY=direct` (default) — canonical provider endpoints, today's behavior. This is the rollback lever.
 - `LLM_GATEWAY=openrouter` — chat + embeddings + Gemini verification + Claude scoring all route through OpenRouter on one key/balance.
+- `LLM_GATEWAY=session` — **dev-only (#169 — session gateway)**: every chat role runs on the Claude Code subscription via `claude -p` (`session:<fable|opus|sonnet|haiku>` ids, `quiz_shared/llm/session_cli.py`); non-Claude ids map to a Claude tier by class (table in `factory.session_model_for`, override `LLM_SESSION_MAP`). Embeddings/audio/image stay on OpenAI. Transport only — prompts, parsers, guards and feature flags are unchanged, so the API pipeline remains the source of truth. Never set on Fly. Requires `claude auth status` = claude.ai login; API-key auth is refused.
 
 Use `factory.openai_client(async_=…)` (native OpenAI SDK) or `factory.chat_openai(model, …)` (LangChain). **Audio (TTS/Whisper) and image (gpt-image-1) pass `direct=True`** — OpenRouter does not serve them, so they stay on canonical OpenAI under either gateway. When adding a new model, add its OpenRouter slug to `_REMAP_OPENROUTER` in the factory, not at the call site.
 

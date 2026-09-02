@@ -675,6 +675,13 @@ def cli_main(argv: Sequence[str] | None = None) -> int:
     """Entrypoint — importable so tests can drive the CLI in-process."""
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = _parse_args(argv)
+    if llm_factory.gateway() == llm_factory.SESSION:
+        # #169: one-shot preflight — a logged-out CLI would otherwise surface
+        # only as every question held_for_review, not as one loud failure.
+        from quiz_shared.llm.session_cli import ensure_subscription_login
+
+        ensure_subscription_login()
+        print("[session gateway] LLM steps run on the Claude Code subscription (unpriced tokens)")
     return asyncio.run(_run(args))
 
 

@@ -24,6 +24,12 @@ dependencies = [
     "boto3>=1.34.0",
     "tavily-python>=0.5.0",
     "google-generativeai>=0.8.0",
+    # #168 T1 — DeepL is the non-LLM translation arm of the phase-1 arm test
+    # (DD8) and calls its own SDK synchronously, skipping the batch path (DD7).
+    # Script-only (scripts/translate_arms.py), never reachable from a FastAPI
+    # route, so it is deliberately absent from the Dockerfile pip list — same
+    # rule the Dockerfile header states for gradio/geopandas/boto3.
+    "deepl>=1.18.0",
     "jinja2>=3.1.0",
     "python-multipart>=0.0.6",
     "slowapi>=0.1.9",

@@ -84,6 +84,29 @@ def test_chat_openai_session_returns_session_client_without_sampling_param_error
     assert llm.alias == "sonnet"
 
 
+def test_session_timeout_defaults_to_the_http_generation_belt(monkeypatch):
+    """Unset LLM_SESSION_TIMEOUT must leave the pre-existing deadline alone —
+    the override is additive, so a session run that does not ask for it keeps
+    behaving exactly as it did before this knob existed."""
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    monkeypatch.delenv("LLM_SESSION_TIMEOUT", raising=False)
+    llm = factory.chat_openai("claude-fable-5", max_tokens=32768)
+    assert llm.timeout == factory.GENERATION_TIMEOUT.read
+
+
+def test_session_timeout_override_wins_over_the_call_sites_http_timeout(monkeypatch):
+    """``claude -p`` is a slower transport than the HTTP API the call sites
+    sized their timeout for: a #167 fact-first batch measured 412 s on
+    session:fable and so could never finish inside the 300 s
+    GENERATION_TIMEOUT. The override is what makes a full-size batch
+    reachable at all — without it the run dies mid-call every time,
+    regardless of fact-pool size."""
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    monkeypatch.setenv("LLM_SESSION_TIMEOUT", "1500")
+    llm = factory.chat_openai("claude-fable-5", max_tokens=32768)
+    assert llm.timeout == 1500.0
+
+
 def test_base_url_and_key_session_behaves_like_direct(monkeypatch):
     """The OpenAI SDK client under session mode only ever serves embeddings/
     audio/image (no subscription equivalent) — it must hit canonical OpenAI,

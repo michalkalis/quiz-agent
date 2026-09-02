@@ -1,0 +1,632 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entertainment pilot #167</title>
+<style>
+  :root {
+    --bg: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --ink: #15171f;
+    --ink-soft: #3d4354;
+    --muted: #6b7285;
+    --line: #d9dce4;
+    --line-soft: #e8eaf0;
+    --accent: #2f39a6;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2e4f7;
+    --good: #1d7a4c;
+    --warn: #9a5b12;
+    --shadow: 0 1px 2px rgba(21, 23, 31, .06), 0 8px 24px rgba(21, 23, 31, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1016;
+      --surface: #161923;
+      --surface-2: #1c2030;
+      --ink: #e8eaf1;
+      --ink-soft: #c3c8d6;
+      --muted: #8f97ab;
+      --line: #2a2f3d;
+      --line-soft: #232838;
+      --accent: #8e9aff;
+      --accent-ink: #10131c;
+      --accent-soft: #262c47;
+      --good: #4fbd85;
+      --warn: #d9a44a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1016;
+    --surface: #161923;
+    --surface-2: #1c2030;
+    --ink: #e8eaf1;
+    --ink-soft: #c3c8d6;
+    --muted: #8f97ab;
+    --line: #2a2f3d;
+    --line-soft: #232838;
+    --accent: #8e9aff;
+    --accent-ink: #10131c;
+    --accent-soft: #262c47;
+    --good: #4fbd85;
+    --warn: #d9a44a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-inner {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: .7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .brand b { color: var(--ink); font-weight: 600; }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-num { font-size: 1.05rem; font-weight: 650; }
+  .stat-lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .track {
+    flex: 1 1 8rem;
+    min-width: 6rem;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--line-soft);
+    overflow: hidden;
+  }
+  .track > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    padding: .38rem .7rem;
+    font-size: .82rem;
+  }
+  button:hover { border-color: var(--accent); color: var(--ink); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.25rem 6rem; }
+
+  .lede { max-width: 42rem; margin-bottom: 2.5rem; }
+  .lede h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.15;
+    margin: 0 0 .6rem;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .lede p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .meta-line {
+    margin-top: 1rem;
+    display: flex;
+    gap: .5rem 1.4rem;
+    flex-wrap: wrap;
+    font-size: .78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-line b { color: var(--ink-soft); font-weight: 600; }
+
+  .cards { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.35rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    scroll-margin-top: 5rem;
+  }
+  .card[data-rated="1"] { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+  .head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .idx {
+    font-variant-numeric: tabular-nums;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: .12rem .45rem;
+  }
+  .card[data-rated="1"] .idx { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .chip {
+    font-size: .7rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: .1rem .55rem;
+  }
+  .chip.mcq { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+
+  .q {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.24rem;
+    line-height: 1.4;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .opts { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .opts li {
+    font-size: .9rem;
+    color: var(--ink-soft);
+    padding: .22rem .5rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  .opts li.correct {
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+    border-color: color-mix(in srgb, var(--good) 35%, transparent);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .opts .key { color: var(--muted); font-weight: 600; margin-right: .45rem; font-variant-numeric: tabular-nums; }
+
+  .answer { font-size: .95rem; }
+  .answer .lbl { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; margin-right: .5rem; }
+  .answer .val { font-weight: 650; color: var(--good); }
+
+  details.more { border-top: 1px dashed var(--line); padding-top: .7rem; }
+  details.more summary {
+    cursor: pointer;
+    font-size: .76rem;
+    color: var(--muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::before { content: "+ "; }
+  details.more[open] summary::before { content: "– "; }
+  details.more .body { font-size: .88rem; color: var(--ink-soft); margin-top: .6rem; display: grid; gap: .5rem; }
+  details.more a { color: var(--accent); word-break: break-word; }
+
+  .rate { border-top: 1px solid var(--line-soft); padding-top: .95rem; display: grid; gap: .6rem; }
+  .rate-top { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .rate-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+  .verdict { font-size: .8rem; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .verdict b { color: var(--ink); font-size: 1rem; }
+
+  .meter { display: flex; gap: 3px; }
+  .meter label { flex: 1 1 0; }
+  .meter input { position: absolute; opacity: 0; pointer-events: none; }
+  .meter span {
+    display: block;
+    text-align: center;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    padding: .42rem 0;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .meter label:hover span { border-color: var(--accent); color: var(--ink); }
+  .meter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .meter label.on span { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+  .meter label.peak span { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 700; }
+
+  textarea {
+    font: inherit;
+    font-size: .9rem;
+    width: 100%;
+    resize: vertical;
+    min-height: 2.6rem;
+    padding: .55rem .7rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); outline: none; background: var(--surface); }
+
+  .export {
+    margin-top: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    gap: .7rem;
+    box-shadow: var(--shadow);
+  }
+  .export-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .export p { margin: 0 auto 0 0; font-size: .85rem; color: var(--muted); max-width: 28rem; }
+  .export textarea {
+    display: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem;
+    min-height: 12rem;
+  }
+  .export textarea.show { display: block; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translate(-50%, 2rem);
+    background: var(--ink);
+    color: var(--bg);
+    padding: .5rem .95rem;
+    border-radius: 99px;
+    font-size: .84rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+  @media (max-width: 34rem) {
+    .meter { flex-wrap: wrap; }
+    .meter label { flex: 1 1 18%; }
+    .card { padding: 1.1rem 1rem 1rem; }
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="brand">Hodnotenie otázok</div>
+    <div class="stat"><span class="stat-num" id="doneN">0</span><span class="stat-lbl">z <span id="totalN">0</span> ohodnotených</span></div>
+    <div class="track"><i id="trackFill"></i></div>
+    <div class="stat"><span class="stat-num" id="avgN">–</span><span class="stat-lbl">priemer</span></div>
+    <button id="jumpBtn">Ďalšia neohodnotená</button>
+  </div>
+</div>
+
+<main>
+  <div class="lede">
+    <h1>Entertainment pilot #167</h1>
+    <p>Každú otázku ohodnoť na škále 1 až 10 a voliteľne pripíš dôvod. Hodnotenie sa priebežne ukladá v prehliadači, takže stránku môžeš zavrieť a vrátiť sa. Na konci si výsledok skopíruj alebo stiahni ako JSON.</p>
+    <div class="meta-line" id="metaLine"></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="export">
+    <div class="export-row">
+      <p>Hotové hodnotenia si vezmi so sebou: JSON obsahuje otázku, skóre aj dôvod.</p>
+      <button id="copyBtn" class="primary">Kopírovať JSON</button>
+      <button id="dlBtn">Stiahnuť JSON</button>
+      <button id="showBtn">Zobraziť JSON</button>
+      <button id="clearBtn">Vymazať hodnotenia</button>
+    </div>
+    <textarea id="jsonOut" readonly spellcheck="false" aria-label="Export JSON"></textarea>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script id="meta" type="application/json">{"title": "Entertainment pilot #167", "batch_id": "167-entertainment-pilot", "count": 21}</script>
+<script id="data" type="application/json">[{"id": "q01", "question": "The most-nominated Black woman in Oscar history, with five nominations by 2026, works behind the camera in which craft category?", "options": null, "correct_answer": "Costume Design", "alternative_answers": ["Best Costume Design", "Costumes", "Costume designer"], "explanation": "Ruth E. Carter, who dressed the world of Black Panther, collected her fifth costume nomination in 2026 and passed every actress on the list.", "topic": "Academy Awards 2026", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"}, {"id": "q02", "question": "Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?", "options": {"a": "Avengers: Endgame", "b": "Spider-Man: Brand New Day"}, "correct_answer": "Spider-Man: Brand New Day", "alternative_answers": [], "explanation": "Brand New Day opened to three hundred and sixty million dollars, taking the domestic opening record that Endgame had held since 2019.", "topic": "Film", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/2026_in_film"}, {"id": "q03", "question": "Which city hosted the seventieth Eurovision Song Contest in May 2026?", "options": null, "correct_answer": "Vienna", "alternative_answers": ["Vienna, Austria", "Wien"], "explanation": "Austria's win in 2025 earned it the hosting rights, and Vienna staged the anniversary edition with presenters Victoria Swarovski and Michael Ostrowski.", "topic": "Eurovision Song Contest", "difficulty": "easy", "source_url": "https://www.eurovision.com/stories/eurovision-2026-hosts-victoria-swarovski-michael-strowski/"}, {"id": "q04", "question": "The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?", "options": null, "correct_answer": "Super Mario", "alternative_answers": ["Mario", "Super Mario Bros", "The Super Mario Galaxy Movie", "Super Mario Galaxy"], "explanation": "The Super Mario Galaxy Movie beat every superhero and sequel to the billion-dollar mark that year.", "topic": "Film", "difficulty": "easy", "source_url": "https://en.wikipedia.org/wiki/2026_in_film"}, {"id": "q05", "question": "Which thrash metal band, founded by a guitarist fired from Metallica, released a self-titled farewell album in January 2026?", "options": null, "correct_answer": "Megadeth", "alternative_answers": [], "explanation": "Dave Mustaine closed more than four decades of Megadeth with an album that simply carried the band's own name.", "topic": "Megadeth", "difficulty": "medium", "source_url": "https://www.megadeth.com/blogs/news/track-listing-reveal"}, {"id": "q06", "question": "Tomorrowland, the giant electronic music festival that runs over two weekends every July, takes place in which country?", "options": null, "correct_answer": "Belgium", "alternative_answers": [], "explanation": "The festival is so popular it is split across two full weekends in July, and fans fly in from every continent.", "topic": "Music & Artists", "difficulty": "easy", "source_url": "https://faq.tomorrowland.com/hc/en-us/articles/4402621418132-Where-and-when-will-Tomorrowland-Belgium-2026-take-place"}, {"id": "q07", "question": "Which rapper, also famous as Rihanna's partner, ended an eight-year album drought in 2026 with 'Don't Be Dumb'?", "options": null, "correct_answer": "A$AP Rocky", "alternative_answers": ["ASAP Rocky", "A$AP Rocky", "Rakim Mayers"], "explanation": "Despite constant headlines from fashion runways and his relationship with Rihanna, it was his first studio album since 2018.", "topic": "A$AP Rocky", "difficulty": "easy", "source_url": "https://en.wikipedia.org/wiki/2026_in_American_music"}, {"id": "q08", "question": "Netflix's biggest title of the first half of 2026, War Machine, drew roughly how many views in those six months?", "options": {"a": "Hundreds of thousands", "b": "Around ten million", "c": "Well over one hundred million", "d": "Several billion"}, "correct_answer": "Well over one hundred million", "alternative_answers": [], "explanation": "Netflix reported one hundred and forty-seven million views, more people than live in Russia.", "topic": "TV & Streaming", "difficulty": "medium", "source_url": "https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026?pubDate=20260818"}, {"id": "q09", "question": "At the 2026 Oscars, which craft category crowned its first-ever female winner, nearly a century after the first ceremony?", "options": null, "correct_answer": "Cinematography", "alternative_answers": ["Best Cinematography", "Cinematographer", "Camera work"], "explanation": "Autumn Durald Arkapaw took the award, becoming the first woman, the first Black winner and the first Filipino winner in the category.", "topic": "Film", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"}, {"id": "q10", "question": "The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?", "options": {"a": "Under one million dollars", "b": "Around ten million dollars", "c": "Around one hundred million dollars", "d": "Around one billion dollars"}, "correct_answer": "Under one million dollars", "alternative_answers": [], "explanation": "It was made for around seven hundred and fifty thousand dollars, then became its studio's biggest domestic release ever.", "topic": "Film", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/2026_in_film"}, {"id": "q11", "question": "True or false: at the 2026 Academy Awards, a woman won the Oscar for Best Cinematography for the first time in history.", "options": {"a": "True", "b": "False"}, "correct_answer": "True", "alternative_answers": [], "explanation": "Autumn Durald Arkapaw broke the barrier in 2026, nearly a hundred years after the category was created.", "topic": "Film", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"}, {"id": "q12", "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?", "options": null, "correct_answer": "Sinners", "alternative_answers": [], "explanation": "The bloodsoaked thriller out-nominated every film in Academy history and took home four statuettes on the night.", "topic": "Film", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"}, {"id": "q13", "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?", "options": null, "correct_answer": "Drake", "alternative_answers": ["Aubrey Graham"], "explanation": "Releasing three albums with no warning flooded playlists worldwide and handed him the biggest streaming day of any artist that year.", "topic": "Viral / Trending", "difficulty": "easy", "source_url": "https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/"}, {"id": "q14", "question": "Which Californian desert festival sold out for 2026 less than a week after announcing its lineup?", "options": null, "correct_answer": "Coachella", "alternative_answers": ["Coachella Music Festival", "Coachella Valley Music and Arts Festival"], "explanation": "Demand was so high that tickets vanished within days of the poster going public, months before the gates opened in April.", "topic": "Viral / Trending", "difficulty": "easy", "source_url": "https://au.rollingstone.com/music/music-news/coachella-2026-sold-out-84007/"}, {"id": "q15", "question": "The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor from Iron Man 3, who once posed as a supervillain?", "options": null, "correct_answer": "Trevor Slattery", "alternative_answers": ["Slattery", "Trevor"], "explanation": "Ben Kingsley's fake Mandarin returns as a struggling Hollywood actor, and the show follows the two performers chasing roles in a superhero-filled movie business.", "topic": "Wonder Man (TV series)", "difficulty": "hard", "source_url": "https://en.wikipedia.org/wiki/Wonder_Man_(TV_series)"}, {"id": "q16", "question": "Glastonbury Festival went ahead as usual in the summer of 2026. True or false?", "options": {"a": "True", "b": "False"}, "correct_answer": "False", "alternative_answers": [], "explanation": "2026 was a fallow year, when the festival skips a summer entirely so the farmland it sits on can recover.", "topic": "Music & Artists", "difficulty": "easy", "source_url": "https://www.glastonburyfestivals.co.uk/info/?direct=true"}, {"id": "q17", "question": "The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?", "options": {"a": "Hundreds of thousands", "b": "A few million", "c": "Tens of millions", "d": "Over a hundred million"}, "correct_answer": "Hundreds of thousands", "alternative_answers": [], "explanation": "It was shot for about 750 thousand dollars, which turned a modest indie horror into one of the most profitable movies in cinema history.", "topic": "Viral / Trending", "difficulty": "medium", "source_url": "https://en.wikipedia.org/wiki/2026_in_film"}, {"id": "q18", "question": "Which former One Direction member scored two global number-one singles in 2026 with 'Aperture' and 'American Girls'?", "options": null, "correct_answer": "Harry Styles", "alternative_answers": ["Styles", "Harry Edward Styles"], "explanation": "Both songs came from his 2026 album Occasionally, extending a solo run that has already collected six Brit Awards and three Grammys.", "topic": "Harry Styles", "difficulty": "easy", "source_url": "https://en.wikipedia.org/wiki/Harry_Styles"}, {"id": "q19", "question": "Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever to top Billboard's global chart, paired her with which Afrobeats superstar?", "options": null, "correct_answer": "Burna Boy", "alternative_answers": [], "explanation": "The Colombian and Nigerian stars hit number one on the Billboard Global 200 in July 2026, days before performing the first ever World Cup halftime show.", "topic": "Viral / Trending", "difficulty": "medium", "source_url": "https://www.musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm"}, {"id": "q20", "question": "Which famous British music festival skipped 2026 entirely to give its farmland a rest, a so-called fallow year?", "options": null, "correct_answer": "Glastonbury", "alternative_answers": ["Glastonbury Festival", "Glasto"], "explanation": "The festival takes place on a working farm and periodically takes a year off so the fields and the local community can recover.", "topic": "Music & Artists", "difficulty": "medium", "source_url": "https://www.glastonburyfestivals.co.uk/info/?direct=true"}, {"id": "q21", "question": "The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic villain?", "options": null, "correct_answer": "Darth Maul", "alternative_answers": ["Maul"], "explanation": "The horned Sith from The Phantom Menace returned as the lead of his own show, which premiered with two episodes in April 2026.", "topic": "TV & Streaming", "difficulty": "easy", "source_url": "https://www.disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord"}]</script>
+<script>
+(function () {
+  const QUESTIONS = JSON.parse(document.getElementById("data").textContent);
+  const META = JSON.parse(document.getElementById("meta").textContent);
+  const KEY = "quiz-ratings-" + (META.batch_id || "default");
+  const state = load();
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
+  ));
+
+  const cards = document.getElementById("cards");
+  const toastEl = document.getElementById("toast");
+  let toastTimer;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  QUESTIONS.forEach((q, i) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.id = "q" + i;
+    card.dataset.rated = state[q.id] && state[q.id].score ? "1" : "0";
+
+    const isMcq = q.options && Object.keys(q.options).length > 0;
+    const chips = [
+      isMcq ? '<span class="chip mcq">výber z možností</span>' : '<span class="chip">otvorená</span>',
+      q.topic ? '<span class="chip">' + esc(q.topic) + "</span>" : "",
+      q.difficulty ? '<span class="chip">' + esc(q.difficulty) + "</span>" : "",
+    ].join("");
+
+    let answerBlock;
+    if (isMcq) {
+      const correct = String(q.correct_answer).trim().toLowerCase();
+      answerBlock = '<ul class="opts">' + Object.keys(q.options).map((k) => {
+        const val = q.options[k];
+        const hit = k.trim().toLowerCase() === correct ||
+                    String(val).trim().toLowerCase() === correct;
+        return '<li class="' + (hit ? "correct" : "") + '"><span class="key">' +
+               esc(k.toUpperCase()) + "</span>" + esc(val) + "</li>";
+      }).join("") + "</ul>";
+    } else {
+      answerBlock = '<div class="answer"><span class="lbl">Odpoveď</span>' +
+                    '<span class="val">' + esc(q.correct_answer) + "</span></div>";
+    }
+
+    const extras = [];
+    if (q.explanation) extras.push("<div>" + esc(q.explanation) + "</div>");
+    if (q.alternative_answers && q.alternative_answers.length) {
+      extras.push('<div><span class="lbl">Uznané aj: </span>' +
+                  esc(q.alternative_answers.join(", ")) + "</div>");
+    }
+    if (q.source_url) {
+      extras.push('<div><a href="' + esc(q.source_url) + '" target="_blank" rel="noopener">' +
+                  esc(q.source_url) + "</a></div>");
+    }
+
+    const meter = Array.from({ length: 10 }, (_, n) => {
+      const v = n + 1;
+      return '<label data-v="' + v + '"><input type="radio" name="s' + i + '" value="' + v +
+             '"><span>' + v + "</span></label>";
+    }).join("");
+
+    card.innerHTML =
+      '<div class="head"><span class="idx">' + String(i + 1).padStart(2, "0") + "</span>" + chips + "</div>" +
+      '<p class="q">' + esc(q.question) + "</p>" +
+      answerBlock +
+      (extras.length ? '<details class="more"><summary>Kontext a zdroj</summary><div class="body">' +
+        extras.join("") + "</div></details>" : "") +
+      '<div class="rate">' +
+        '<div class="rate-top"><span class="rate-lbl">Skóre 1–10</span>' +
+        '<span class="verdict" data-role="verdict">neohodnotené</span></div>' +
+        '<div class="meter">' + meter + "</div>" +
+        '<textarea data-role="reason" rows="1" placeholder="Dôvod (nepovinné) — čo funguje, čo nie"></textarea>' +
+      "</div>";
+
+    const meterEl = card.querySelector(".meter");
+    const verdictEl = card.querySelector('[data-role="verdict"]');
+    const reasonEl = card.querySelector('[data-role="reason"]');
+
+    function paint(score) {
+      meterEl.querySelectorAll("label").forEach((l) => {
+        const v = Number(l.dataset.v);
+        l.classList.toggle("on", !!score && v <= score);
+        l.classList.toggle("peak", v === score);
+      });
+      verdictEl.innerHTML = score ? "<b>" + score + "</b> / 10" : "neohodnotené";
+      card.dataset.rated = score ? "1" : "0";
+    }
+
+    const saved = state[q.id];
+    if (saved) {
+      if (saved.score) {
+        const input = meterEl.querySelector('input[value="' + saved.score + '"]');
+        if (input) input.checked = true;
+      }
+      if (saved.reason) reasonEl.value = saved.reason;
+      autogrow(reasonEl);
+    }
+    paint(saved && saved.score ? saved.score : 0);
+
+    meterEl.addEventListener("change", (e) => {
+      const score = Number(e.target.value);
+      state[q.id] = Object.assign({}, state[q.id], {
+        index: i + 1, question: q.question, score: score,
+      });
+      paint(score);
+      save();
+      refresh();
+    });
+
+    reasonEl.addEventListener("input", () => {
+      state[q.id] = Object.assign({}, state[q.id], {
+        index: i + 1, question: q.question, reason: reasonEl.value.trim(),
+      });
+      autogrow(reasonEl);
+      save();
+    });
+
+    cards.appendChild(card);
+  });
+
+  function autogrow(el) {
+    el.style.height = "auto";
+    el.style.height = Math.max(el.scrollHeight, 42) + "px";
+  }
+
+  function scored() {
+    return QUESTIONS.map((q) => state[q.id]).filter((r) => r && r.score);
+  }
+
+  function refresh() {
+    const rows = scored();
+    const total = QUESTIONS.length;
+    document.getElementById("doneN").textContent = rows.length;
+    document.getElementById("totalN").textContent = total;
+    document.getElementById("trackFill").style.width = (rows.length / total * 100) + "%";
+    const avg = rows.length
+      ? (rows.reduce((a, r) => a + r.score, 0) / rows.length).toFixed(1)
+      : "–";
+    document.getElementById("avgN").textContent = avg;
+  }
+
+  document.getElementById("jumpBtn").addEventListener("click", () => {
+    const next = QUESTIONS.findIndex((q) => !(state[q.id] && state[q.id].score));
+    if (next < 0) { toast("Všetko ohodnotené."); return; }
+    document.getElementById("q" + next).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  function payload() {
+    return JSON.stringify({
+      batch_id: META.batch_id || null,
+      ratings: QUESTIONS.map((q, i) => ({
+        index: i + 1,
+        id: q.id,
+        question: q.question,
+        correct_answer: q.correct_answer,
+        score: state[q.id] && state[q.id].score ? state[q.id].score : null,
+        reason: state[q.id] && state[q.id].reason ? state[q.id].reason : "",
+      })),
+    }, null, 2);
+  }
+
+  const jsonOut = document.getElementById("jsonOut");
+
+  function showJson() {
+    jsonOut.value = payload();
+    jsonOut.classList.add("show");
+    autogrow(jsonOut);
+    jsonOut.focus();
+    jsonOut.select();
+  }
+
+  document.getElementById("showBtn").addEventListener("click", () => {
+    showJson();
+    toast("JSON je nižšie — označ a skopíruj.");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = payload();
+    const done = () => toast("Skopírované do schránky.");
+    const fallback = () => {
+      showJson();
+      try {
+        if (document.execCommand("copy")) { done(); return; }
+      } catch (e) {}
+      toast("Automatické kopírovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  document.getElementById("dlBtn").addEventListener("click", () => {
+    try {
+      const blob = new Blob([payload()], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "hodnotenie-" + (META.batch_id || "otazok") + ".json";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast("Stiahnuté.");
+    } catch (e) {
+      showJson();
+      toast("Sťahovanie nejde — JSON je nižšie, skopíruj ho ručne.");
+    }
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (!confirm("Naozaj vymazať všetky hodnotenia tejto dávky?")) return;
+    Object.keys(state).forEach((k) => delete state[k]);
+    save();
+    location.reload();
+  });
+
+  document.getElementById("metaLine").innerHTML = [
+    META.batch_id ? "Dávka <b>" + esc(META.batch_id) + "</b>" : "",
+    "Otázok <b>" + QUESTIONS.length + "</b>",
+  ].filter(Boolean).join(" · ");
+
+  refresh();
+
+  // Rescue panel: on load, dump EVERY stored quiz-* localStorage key (all
+  // batches, not just this page's) into visible textareas. Exists because
+  // the founder's ratings once survived only as a truncated PDF — the full
+  // texts sat in localStorage with no button-free way to see them. Renders
+  // only when there is something to show.
+  (function rescue() {
+    let keys = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf("quiz-") === 0) keys.push(k);
+      }
+    } catch (e) { return; }
+    if (!keys.length) return;
+    const wrap = document.createElement("section");
+    wrap.className = "export";
+    wrap.style.display = "block";
+    let html = '<p style="max-width:none"><b>Záloha uložených hodnotení</b> — ' +
+      "plný obsah úložiska prehliadača (všetky dávky). Klikni do poľa: text sa " +
+      "označí celý, potom ⌘C.</p>";
+    keys.sort().forEach((k) => {
+      let v = "";
+      try { v = localStorage.getItem(k) || ""; } catch (e) {}
+      let pretty = v;
+      try { pretty = JSON.stringify(JSON.parse(v), null, 2); } catch (e) {}
+      html += '<p style="margin-top:.8rem"><code>' + esc(k) + "</code></p>" +
+        '<textarea class="rescue-box" readonly rows="6" style="display:block;width:100%">' +
+        esc(pretty) + "</textarea>";
+    });
+    wrap.innerHTML = html;
+    document.querySelector("main").appendChild(wrap);
+    wrap.querySelectorAll(".rescue-box").forEach((t) => {
+      t.addEventListener("focus", () => t.select());
+      t.addEventListener("click", () => t.select());
+    });
+  })();
+})();
+</script>

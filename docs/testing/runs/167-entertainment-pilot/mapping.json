@@ -1,0 +1,128 @@
+{
+  "q01": {
+    "arm": "e-2026",
+    "original_id": "c05166c7-1bfb-42d7-bdeb-052e277ab2c9",
+    "topic": "Academy Awards 2026",
+    "question": "The most-nominated Black woman in Oscar history, with five nominations by 2026, works behind the camera in which craft category?"
+  },
+  "q02": {
+    "arm": "e-2026",
+    "original_id": "c61342e2-106a-4fcc-8664-5e972859829e",
+    "topic": "Film",
+    "question": "Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?"
+  },
+  "q03": {
+    "arm": "e-2026",
+    "original_id": "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1",
+    "topic": "Eurovision Song Contest",
+    "question": "Which city hosted the seventieth Eurovision Song Contest in May 2026?"
+  },
+  "q04": {
+    "arm": "e-2026",
+    "original_id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+    "topic": "Film",
+    "question": "The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?"
+  },
+  "q05": {
+    "arm": "e-2026",
+    "original_id": "d5ee198f-5fa2-4b18-985d-73e74458756f",
+    "topic": "Megadeth",
+    "question": "Which thrash metal band, founded by a guitarist fired from Metallica, released a self-titled farewell album in January 2026?"
+  },
+  "q06": {
+    "arm": "e-2026",
+    "original_id": "8a79020d-adbd-4051-a97d-eb44f78e441a",
+    "topic": "Music & Artists",
+    "question": "Tomorrowland, the giant electronic music festival that runs over two weekends every July, takes place in which country?"
+  },
+  "q07": {
+    "arm": "e-2026",
+    "original_id": "6ac73d97-28fe-4841-b20a-1a2114860aef",
+    "topic": "A$AP Rocky",
+    "question": "Which rapper, also famous as Rihanna's partner, ended an eight-year album drought in 2026 with 'Don't Be Dumb'?"
+  },
+  "q08": {
+    "arm": "e-2026",
+    "original_id": "c640e4c6-c6d9-4daf-b12a-67b7116a64ed",
+    "topic": "TV & Streaming",
+    "question": "Netflix's biggest title of the first half of 2026, War Machine, drew roughly how many views in those six months?"
+  },
+  "q09": {
+    "arm": "e-2026",
+    "original_id": "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+    "topic": "Film",
+    "question": "At the 2026 Oscars, which craft category crowned its first-ever female winner, nearly a century after the first ceremony?"
+  },
+  "q10": {
+    "arm": "e-2026",
+    "original_id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+    "topic": "Film",
+    "question": "The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?"
+  },
+  "q11": {
+    "arm": "e-2026",
+    "original_id": "e5e1cfa6-3708-41e7-a615-f1d4a8f95af7",
+    "topic": "Film",
+    "question": "True or false: at the 2026 Academy Awards, a woman won the Oscar for Best Cinematography for the first time in history."
+  },
+  "q12": {
+    "arm": "e-2026",
+    "original_id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
+    "topic": "Film",
+    "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?"
+  },
+  "q13": {
+    "arm": "e-2026",
+    "original_id": "a8290869-57c6-4d6e-bb1d-914828225559",
+    "topic": "Viral / Trending",
+    "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?"
+  },
+  "q14": {
+    "arm": "e-2026",
+    "original_id": "04a17a4a-1ff9-40ae-b781-76a2df8555d0",
+    "topic": "Viral / Trending",
+    "question": "Which Californian desert festival sold out for 2026 less than a week after announcing its lineup?"
+  },
+  "q15": {
+    "arm": "e-2026",
+    "original_id": "7d8f5670-87e8-4b6f-b088-736148b704c6",
+    "topic": "Wonder Man (TV series)",
+    "question": "The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor from Iron Man 3, who once posed as a supervillain?"
+  },
+  "q16": {
+    "arm": "e-2026",
+    "original_id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+    "topic": "Music & Artists",
+    "question": "Glastonbury Festival went ahead as usual in the summer of 2026. True or false?"
+  },
+  "q17": {
+    "arm": "e-2026",
+    "original_id": "4634fc00-9e53-485e-8234-e5e2d570a886",
+    "topic": "Viral / Trending",
+    "question": "The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?"
+  },
+  "q18": {
+    "arm": "e-2026",
+    "original_id": "932f7686-ee1e-4bfa-aecf-86a1212e5aac",
+    "topic": "Harry Styles",
+    "question": "Which former One Direction member scored two global number-one singles in 2026 with 'Aperture' and 'American Girls'?"
+  },
+  "q19": {
+    "arm": "e-2026",
+    "original_id": "967f25c3-e0dd-4fd0-81a3-a067d49a1e31",
+    "topic": "Viral / Trending",
+    "question": "Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever to top Billboard's global chart, paired her with which Afrobeats superstar?"
+  },
+  "q20": {
+    "arm": "e-2026",
+    "original_id": "207ba422-848b-486f-8b5b-801e8190705b",
+    "topic": "Music & Artists",
+    "question": "Which famous British music festival skipped 2026 entirely to give its farmland a rest, a so-called fallow year?"
+  },
+  "q21": {
+    "arm": "e-2026",
+    "original_id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+    "topic": "TV & Streaming",
+    "question": "The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic villain?"
+  }
+}

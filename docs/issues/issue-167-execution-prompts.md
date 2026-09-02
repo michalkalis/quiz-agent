@@ -278,7 +278,8 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ Session D — iOS category + Slovak string (167.8) · delivered 2026-08-27
 - 🟡 Session E — pilot runbook Segment 1 (167.9-167.12) · **attempted 2026-08-27, BLOCKED at 167.9 (sourcing)** → **re-run 2026-08-31: 167.9 PASSED (46 facts), then blocked at 167.10 (generation JSON parse).** → **UNBLOCKED 2026-08-31: per-question salvage landed in `_parse_response`.** → **resume 2026-08-31: salvage CONFIRMED working (20/20, 0 lost), pipeline ran clean through composition, then BLOCKED at 167.10 top-up by the OpenRouter key's exhausted $50 monthly limit.** Nothing published, nothing imported. **Needs a founder billing action before any further attempt** — see "Session E resume 2026-08-31 — salvage works, blocked on OpenRouter monthly limit" below. → **re-run 2026-09-01 after the monthly reset: STILL BLOCKED, and the monthly limit was never the whole story — the OpenRouter *account balance* is down to $0.60 (`/api/v1/credits`: `total_credits 75`, `total_usage 74.40`), so every judge call 402s on `in_flight_budget_exhausted` regardless of the reset key limit.** See "Session E re-run 2026-09-01 — topic cap fixed, blocked on the OpenRouter account balance" below.
 - ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
-- ⬜ 167.13 `[F]` — founder rating (not an agent session)
+- ✅ **Session E — pilot runbook Segment 1 (167.9–167.12) · DELIVERED 2026-09-02** na founder GO, celé cez #169 session gateway. Batch `1eb9a19d-f64a-4de7-9005-100b235a6003`, 21 riadkov, rating URL vráti 200. Detaily nižšie v „Session E delivered 2026-09-02".
+- ⬜ 167.13 `[F]` — founder rating (not an agent session) — **čaká na foundera, toto je teraz jediná otvorená vec**
 - ⬜ Session F — Segment 3 import + class bar (167.14) · blocked on 167.13
 
 > When a session lands, add a short **"Session X delivered — exact symbols for Y"** note here (issue-61 convention) so the next session does not have to re-read the diff. Session B owes E the exact `source_facts.py` CLI signature; Session C owes E the exact output filenames and `reason` vocabulary.
@@ -517,6 +518,47 @@ EXPIRY_CLASSIFICATION=1 LLM_GATEWAY=session uv run --no-sync python scripts/gene
 2. **Znížiť `--target-count` na ~20** (drží rozpočet, mení Founder 4): 80% podlaha klesne na 16, pack sa doručí, ale A13 (`accepted >= 20`) po post-cutoff filtri **pravdepodobne aj tak padne** — 18 doručených mínus filter. Preto je to slabšia cesta.
 
 **Carried observation:** fact-check tentokrát zadržal **2** otázky (`notes=fact-check call failed (API error or refusal)`), ~9 % z 23 — mierne nad ~5 % z predchádzajúcich behov. `_MAX_OUTPUT_TOKENS_OPENAI = 4096` (`fact_verifier.py:58`) podozrenie stále stojí a stále je nelogované.
+
+### Session E delivered 2026-09-02 — pilot published, Segment 1 uzavretý
+
+**Terminálny agentský stav dosiahnutý.** Rating batch **`1eb9a19d-f64a-4de7-9005-100b235a6003`**, 21 otázok, jedno rameno `e-2026`, seed 167, bez `--dedupe-by-fact`.
+Rating URL (curl → **200**): `https://quiz-pack-api.fly.dev/web/rate/1eb9a19d-f64a-4de7-9005-100b235a6003?rater=michal`
+Artefakty: `docs/testing/runs/167-entertainment-pilot/` (fact pooly, oba pilot JSONy, accepted/rejected, oba logy, `mapping_published.json`, `rating.html`, `merge_facts.py`).
+
+**Transport = `session` (subscription), nie API.** `cost_cents: 0` na generovaní aj fact-checku; sudcovia hard OFF (PR #68). Model parita s D10 držaná: `claude-fable-5` → `session:fable`, fact-check `gpt-5-mini` → `session:sonnet` + WebSearch.
+
+**Funnel (dve kolá):**
+
+| Stage | Kolo 1 | Kolo 2 |
+|---|---|---|
+| `[00] sourcing` | 160 faktov / 36 tém | 203 faktov / 48 tém |
+| `[01] generating` | 30 (`dropped_ungrounded: 1`) | 29 (`dropped_ungrounded: 1`) |
+| `[02] dedup` | kept 30, dropped 0 | kept 29, dropped 0 |
+| `[03] verifying` | verified **28**, dropped 2, withheld **0** | verified **29**, dropped 0, withheld **0** |
+| `[04] composition` | kept 16 (`topic_cap_dropped: 12`) | kept 16 (`topic_cap_dropped: 13`) |
+| `[05] topup` | **27** / 30, 2 kolá, `fact_pool_exhausted: False` | **27** / 30, 2 kolá, `fact_pool_exhausted: False` |
+| `filter_postcutoff` | **19** accepted / 8 rejected | **2** accepted / 25 rejected |
+| **merged union** | — | **21 accepted** ≥ 20 → A13 ✅ |
+
+**Reject dôvody:** kolo 1 — 8× `no_2026_token`. Kolo 2 — 12× `no_2026_token`, **13× `duplicate_round1`** (cross-round guard z 167.7 reálne zabral, to je jeho prvé ostré meranie). `freshness_current`: **0×** v oboch kolách.
+
+**D6 false-negative meranie (nikdy predtým nemerané): ~0 z 8.** Všetkých 8 rejectov kola 1 sú vecne správne evergreen otázky bez post-cutoff obsahu — Rick Rubin / Def Jam, Nigel Godrich / Radiohead, Max Martin, Ted Lasso (2021), Miraculous, Rango (2011), Van Halen (1978), Glenn Close. Filter teda **neodrezáva dobré post-cutoff otázky**, len oddeľuje evergreen; jeho prah netreba mäkčiť.
+
+**`freshness_tag` distribúcia** (publikovaných 21): **19× `NULL` (evergreen), 2× `semi-stable`, 0× `current`.** Presne D1 očakávanie — generátor nezišiel do news triedy.
+
+**Salvage rate: 0 %** — malformed-JSON salvage sa nespustil ani raz (v oboch kolách bola dávka syntakticky čistá), na rozdiel od 100 % spúšťania cez OpenRouter. **Spent-fact exclusion (#66):** `fact_pool_exhausted: False` v oboch kolách a top-up doručil +11 resp. +11 otázok — r3 blocker („46 faktov vyčerpaných na 15–18 otázok") je odstránený širším poolom; per-round `spent/remain` čísla sú INFO-level a v CLI logu (WARNING+) nie sú vidno.
+
+**Náklady: API $0** (autorizované bolo $1–2). Dôvod je zlá správa, nie úspora → ⚠️ **OpenAI účet je bez kreditu**: každé `web_search` volanie vrátilo `429 credit_balance_exhausted`, potvrdené aj surovým `POST /v1/responses` probe. Platená sourcing noha doručila **0 faktov**; celý pool je z Wikipedie. Subscription spotreba: ~10 `claude -p` volaní na generovanie (~37 k in / ~39 k out na fact-first batch) + ~57 fact-check volaní so `WebSearch`.
+
+**⚠️ Tri prostredové veci, ktoré musí vedieť každá ďalšia session v session režime:**
+
+1. **`LLM_SESSION_TIMEOUT` je povinný pri plnej dávke** (commit `75ac4ff9`). `claude -p` je pomalší transport než HTTP API: jeden fact-first batch (30 otázok, 36.7 k in / 38.7 k out) trvá **412 s** a na 300 s `GENERATION_TIMEOUT` padal **vždy** — pri 160 aj pri 46 faktoch, takže to nie je otázka veľkosti poolu. #169 smoke bežal len `--target-count 3`, preto sa to neukázalo. Beh išiel s `LLM_SESSION_TIMEOUT=1500 STAGE_TIMEOUT_SECONDS=5400`. Ani jedno nie je kvalitatívna brána.
+2. **Spánok Macu zabije `claude -p` podproces** a rodičovský python ostane visieť na mŕtvej rúre (nezomrie, len nič nerobí). Dlhé behy spúšťať cez `nohup … caffeinate -ims …` a odpojene.
+3. **Wikipedia má strop 4 fakty na tému.** Cesta k väčšiemu poolu je preto **viac pod-formulácií**, nie „užšie formulácie" — 6 zamknutých tém sa rozpísalo na 18 + 12 + 12 pod-formulácií a zlúčilo cez `merge_facts.py` (dedup podľa normalizovanej url + textu).
+
+**Publikovaný súbor je `pilot_167_r2_accepted.json`** — nie `pilot_167_accepted.json`. `--merge-with` píše UNION (Session C nižšie), takže jeden súbor už je výsledok oboch kôl.
+
+**Nasleduje 167.13 — founder rating.** Nič sa neimportovalo do korpusu (to je Session F).
 
 ### Session C delivered — exact output filenames + reason vocabulary
 

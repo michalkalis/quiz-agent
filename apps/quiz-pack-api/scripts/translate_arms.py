@@ -52,6 +52,7 @@ from scripts.translate_arms_backends import (
     run_batch_arm,
     run_deepl_arm,
     run_session_arm,
+    session_gateway_rejects,
     uses_session_transport,
 )
 
@@ -219,6 +220,12 @@ def run_arm(arm: str, sample: list[dict], language: str):
         return run_deepl_arm(sample, language)
     if spec.route == "session" or uses_session_transport(spec.model):
         return run_session_arm(spec, sample, language)
+    if session_gateway_rejects(spec.model):
+        raise RuntimeError(
+            f"arm {arm!r} ({spec.model}) is not Claude-family; the session gateway "
+            "would substitute a Claude tier and the arm test would stop measuring "
+            f"{spec.model}. Drop it from --arms or unset LLM_GATEWAY."
+        )
     return run_batch_arm(spec, sample, language)
 
 

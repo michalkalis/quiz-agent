@@ -244,8 +244,31 @@ def run_sync_arm(
 def uses_session_transport(model: Optional[str]) -> bool:
     """True when ``model`` runs on the Claude Code subscription (#169) — lets
     ``LLM_GATEWAY=session`` auto-route the existing ``opus`` arm (route
-    ``"batch"``) to the subscription with no edit to ``ARMS``."""
-    return bool(model) and factory.is_session_model(factory.resolve_model(model))
+    ``"batch"``) to the subscription with no edit to ``ARMS``.
+
+    Only Claude-family ids auto-route: an arm test compares *models*, so a
+    Gemini/GPT arm must never be silently replaced by Claude (review of PR
+    #67). Non-Claude arms under the session gateway are rejected by the
+    caller instead."""
+    if not model:
+        return False
+    if factory.is_session_model(model):
+        return True
+    return (
+        factory.gateway() == factory.SESSION
+        and factory.provider_for_model(model) == "anthropic"
+    )
+
+
+def session_gateway_rejects(model: Optional[str]) -> bool:
+    """A non-Claude LLM arm cannot run while ``LLM_GATEWAY=session`` (#169):
+    its batch/sync transport would resolve to a Claude tier and the arm would
+    stop measuring the model it is named after. Fail loud, never substitute."""
+    return (
+        bool(model)
+        and factory.gateway() == factory.SESSION
+        and not uses_session_transport(model)
+    )
 
 
 def run_session_arm(

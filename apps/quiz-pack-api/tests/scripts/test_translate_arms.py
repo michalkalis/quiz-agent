@@ -236,6 +236,24 @@ class TestSessionTransport:
         # Same messages the `sync` transport sends: system + one user turn.
         assert [type(m) for m in fake.messages] == [SystemMessage, HumanMessage]
 
+    def test_non_claude_arms_are_never_silently_replaced_by_claude(self, monkeypatch):
+        """An arm test compares models: under LLM_GATEWAY=session the Gemini and
+        GPT-4.1 arms must not auto-route to a Claude tier (PR #67 review)."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        assert ta.uses_session_transport(ARMS["gemini"].model) is False
+        assert ta.uses_session_transport(ARMS["gpt41"].model) is False
+        assert ta.session_gateway_rejects(ARMS["gemini"].model) is True
+        assert ta.session_gateway_rejects(ARMS["opus"].model) is False
+
+    def test_run_arm_fails_loud_for_a_non_claude_arm_under_session_gateway(
+        self, monkeypatch
+    ):
+        """Fail loud beats a silent model swap: the blind rating would otherwise
+        compare three identical Opus outputs labelled as different models."""
+        monkeypatch.setenv("LLM_GATEWAY", "session")
+        with pytest.raises(RuntimeError, match="not Claude-family"):
+            ta.run_arm("gemini", [], "sk")
+
     def test_llm_gateway_session_auto_routes_the_existing_opus_arm(self, monkeypatch):
         """The Opus arm's `ArmSpec` route stays 'batch' — LLM_GATEWAY=session
         alone must be enough to run it on the subscription (#169), or the

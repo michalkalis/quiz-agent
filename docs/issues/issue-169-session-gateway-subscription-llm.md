@@ -7,7 +7,7 @@
 
 ## Why
 
-Founder (2026-09-02): dočasne presunúť čo najviac vývojovej práce s LLM (generovanie otázok, fact-check, eval harnessy, prekladový arm test) z platených API na Claude Code subscription, ktorú už platí a nevie minúť. Podmienky: **backend API pipeline je vždy zdroj pravdy**, subscription cesta ju kopíruje 1:1 a nič nevymýšľa navyše (sudcovia ostávajú vypnutí tak, ako sú v prode); obe cesty sa musia udržiavať súčasne; embeddings a generovanie obrázkov ostávajú na API; ne-Claude modely nahradiť Claude modelmi, čo najlacnejšie.
+Founder (2026-09-02): dočasne presunúť čo najviac vývojovej práce s LLM (generovanie otázok, fact-check, eval harnessy, prekladový arm test z #168 — batch predprekladová pipeline SK/CS) z platených API na Claude Code subscription, ktorú už platí a nevie minúť. Podmienky: **backend API pipeline je vždy zdroj pravdy**, subscription cesta ju kopíruje 1:1 a nič nevymýšľa navyše (sudcovia ostávajú vypnutí tak, ako sú v prode); obe cesty sa musia udržiavať súčasne; embeddings a generovanie obrázkov ostávajú na API; ne-Claude modely nahradiť Claude modelmi, čo najlacnejšie.
 
 Politika overená 2026-09-02 (code.claude.com/docs/en/headless, /authentication, /errors): `claude -p` na subscription je oficiálne podporovaný pre vlastné skripty (`claude setup-token` existuje presne na to); ráta sa do session/týždenných limitov subscription. Zakázané je len ponúkať subscription login v produktoch tretích strán cez Agent SDK — netýka sa nás.
 
@@ -27,7 +27,7 @@ Politika overená 2026-09-02 (code.claude.com/docs/en/headless, /authentication,
 - `chat_openai()` pre `session:` id vracia `ChatClaudeSession` (`quiz_shared/llm/session_cli.py`), LangChain `BaseChatModel`, ktorý spustí `claude -p` ako subproces. Podporuje presne to, čo call sites používajú: `ainvoke(str | [HumanMessage])` → `AIMessage` s `content`, `usage_metadata`, `response_metadata`; `with_structured_output(model, method="function_calling", include_raw=True)` cez `bind_tools` → `--json-schema` → `tool_calls`.
 - Headless flagy: `--output-format json --max-turns 1|2 --no-session-persistence --tools "" --setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}'` (réžia ~6.5k vs ~39k tokenov/volanie bez nich, merané 2026-09-02). Prompt cez stdin. `CLAUDECODE` env odstránené (nested volanie zo session funguje, overené). Timeout = `GENERATION_TIMEOUT`. Súbežnosť: semafor `LLM_SESSION_CONCURRENCY` (default 4).
 - Web-grounded fact-check: `FactVerifier` dostane tretiu vetvu `_call_session` (`--tools WebSearch,WebFetch --allowedTools ...`, `max_turns` 8), rovnaký prompt a parser ako OpenAI/Anthropic vetvy; `cost_cents = 0`.
-- #168 arm test: `translate_arms_backends.py` dostane transport `session` (Opus arm cez subscription); batch/sync/deepl nezmenené.
+- Arm test #168 — batch predprekladová pipeline SK/CS: `translate_arms_backends.py` dostane transport `session` (Opus arm cez subscription); batch/sync/deepl nezmenené.
 - Usage: tokeny sa hlásia do `llm_usage` (model `session:<alias>` = unpriced → cost 0 / `unpriced_models`), aby sa spotreba dala vidieť.
 
 ### Mapovanie id → session alias (`LLM_GATEWAY=session`)
@@ -37,17 +37,17 @@ Politika overená 2026-09-02 (code.claude.com/docs/en/headless, /authentication,
 | claude-fable-5 | fable | parita s GEN |
 | claude-opus-5 / claude-sonnet-5 / claude-haiku-* | opus / sonnet / haiku | 1:1 |
 | gpt-5.6-sol, gemini-3.1-pro-preview, deepseek-v4-pro, gpt-4.1, gemini-2.5-pro | opus | frontier trieda (critique/judge/normalize/verify — väčšina OFF v prode) |
-| gpt-5-mini (FACTCHECK) | sonnet | web fact-check presnosť; haiku = kandidát po validácii na 7-chybovej referencii z #166 |
-| deepseek-v4-flash (ANSWERABILITY) | haiku | flash-trieda je zámer (#135 D10) |
+| gpt-5-mini (FACTCHECK) | sonnet | web fact-check presnosť; haiku = kandidát po validácii na 7-chybovej referencii z #166 — fact-check provider swap |
+| deepseek-v4-flash (ANSWERABILITY) | haiku | flash-trieda je zámer (#135 — gen pipeline founder feedback round 2, D10) |
 | bedrock:* a neznáme | opus | + warning log |
 
 Override: `LLM_SESSION_MAP="gpt-5-mini=haiku,..."`. Per-role env (`LLM_ROLE_*`) funguje aj so `session:` id.
 
 ### Mimo scope / follow-up
 
-- Sourcing (`openai_web_search_source`, `topic_planner`) — v prod defaulte (direct gen) sa nespúšťa; session vetva až keď #167 pilot dostane GO.
+- Sourcing (`openai_web_search_source`, `topic_planner`) — v prod defaulte (direct gen) sa nespúšťa; session vetva až keď pilot #167 — entertainment otázky z nedávneho diania dostane GO.
 - `score-questions` skill drift (staré 5 dimenzií) — samostatná oprava alebo zrušenie.
-- Batch API (#168 LD1) sa v session režime nepoužíva (sync `claude -p`).
+- Batch API (#168 — batch predprekladová pipeline SK/CS, LD1) sa v session režime nepoužíva (sync `claude -p`).
 
 ## Tasks
 
@@ -63,11 +63,11 @@ Override: `LLM_SESSION_MAP="gpt-5-mini=haiku,..."`. Per-role env (`LLM_ROLE_*`) 
 `LLM_GATEWAY=session python scripts/generate_pack.py --dry-run --target-count 3` (direct gen, default CLI flags): 3/3 vygenerované → dedup 3 → fact-check 3/3 verified (session:sonnet + WebSearch) → scoring → 3 finálne; `cost_cents: 0`, žiadny API kľúč okrem `OPENAI_API_KEY` (nepoužitý, dedup noop). Tokeny: gen 1 volanie (17.7k in / 3.7k out, fable) · fact-check 3 volania (59k in) · **scoring 42 volaní (168k in, opus)**.
 
 **Zistenia:**
-- `generate_pack.py` má sudcov (ScoringStage) **zapnutých by default** (`--no-judges` ich vypne; #167 runbook ho používa). Prod worker beží s `judge_gate` OFF. V session režime je to 80 % spotreby kvóty (opus). → founder call: má skill `--session` pridávať `--no-judges` (parita s prod workerom, šetrí kvótu), alebo držať CLI default (parita s API CLI behom)?
+- `generate_pack.py` má sudcov (ScoringStage) **zapnutých by default** (`--no-judges` ich vypne; runbook #167 — entertainment otázky ho používa). Prod worker beží s `judge_gate` OFF. V session režime je to 80 % spotreby kvóty (opus). → founder call: má skill `--session` pridávať `--no-judges` (parita s prod workerom, šetrí kvótu), alebo držať CLI default (parita s API CLI behom)?
 - `(no source)` pri všetkých 3 otázkach = vlastnosť direct-gen cesty (zdroje plní len sourcing stage v grounded režime), nie session.
 - `LLM_SESSION_CONCURRENCY` default 4 < `VERIFIER_MAX_CONCURRENT` 8 → fact-check v session režime beží pomalšie (zámer: kvóta + lokálne subprocesy).
 - Anthropic vetva má `_MAX_WEB_SEARCHES=5`; session vetva ohraničuje `max_turns=8` (nie počet searchov) — bez nákladového dopadu na subscription.
-- Line caps prekročené: `factory.py` 568 (bolo 468), `fact_verifier.py` 444, `translate_arms_backends.py` 341 — kandidáti na split v samostatnom refactore (#152 collector).
+- Line caps prekročené: `factory.py` 568 (bolo 468), `fact_verifier.py` 444, `translate_arms_backends.py` 341 — kandidáti na split v samostatnom refactore (#152 — arch review small findings collector).
 
 ## Verification
 

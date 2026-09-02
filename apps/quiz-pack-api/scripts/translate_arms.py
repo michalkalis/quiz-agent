@@ -26,6 +26,11 @@ through `fly proxy -p 5433:5432 -a quiz-pack-db` in another shell):
 
     uv run --no-sync python scripts/translate_arms.py --seed 168            # plan
     uv run --no-sync python scripts/translate_arms.py --seed 168 --execute
+
+  #169: `LLM_GATEWAY=session` before either command runs the `opus` arm on the
+  Claude Code subscription (`claude -p`) instead of OpenRouter batch — same
+  model, prompt and parser, transport only; requires `claude auth status` to
+  be a claude.ai login, no OPENROUTER_API_KEY/OPENAI_API_KEY needed for it.
 """
 
 import argparse
@@ -46,6 +51,8 @@ from scripts.translate_arms_backends import (
     ARMS,
     run_batch_arm,
     run_deepl_arm,
+    run_session_arm,
+    uses_session_transport,
 )
 
 
@@ -58,9 +65,16 @@ def _configure_environment() -> None:
     process that merely imports this module — including the test suite, whose
     conftest deliberately pins `LLM_GATEWAY=direct` to keep its provider mocks
     hermetic.
+
+    #169: a founder-set `LLM_GATEWAY=session` is left alone so the Opus arm
+    runs on the Claude Code subscription (`uses_session_transport`) instead of
+    being silently pinned back to `openrouter`; any other value (including
+    unset) still gets the `openrouter` pin above.
     """
     load_dotenv_from_ancestors(Path(__file__).resolve())
-    os.environ["LLM_GATEWAY"] = "openrouter"
+    if os.getenv("LLM_GATEWAY", "").strip().lower() != "session":
+        os.environ["LLM_GATEWAY"] = "openrouter"
+
 
 CATEGORIES = (
     "science-nature",
@@ -131,12 +145,7 @@ def sample_questions(rows: list[dict[str, Any]], count: int, seed: int) -> list[
     for bucket in cells.values():
         rng.shuffle(bucket)
 
-    order = [
-        (c, d)
-        for d in DIFFICULTIES
-        for c in CATEGORIES
-        if cells.get((c, d))
-    ]
+    order = [(c, d) for d in DIFFICULTIES for c in CATEGORIES if cells.get((c, d))]
     # Cells outside the canonical taxonomy (legacy/free-form) still count as
     # eligible corpus; append them so they can fill a thin draw.
     order += sorted(k for k in cells if k not in order)
@@ -208,6 +217,8 @@ def run_arm(arm: str, sample: list[dict], language: str):
     spec = ARMS[arm]
     if spec.route == "deepl":
         return run_deepl_arm(sample, language)
+    if spec.route == "session" or uses_session_transport(spec.model):
+        return run_session_arm(spec, sample, language)
     return run_batch_arm(spec, sample, language)
 
 
@@ -221,9 +232,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     languages = [x.strip() for x in args.languages.split(",") if x.strip()]
 
-    url = args.database_url or os.getenv("PROD_DATABASE_URL") or os.getenv("DATABASE_URL")
+    url = (
+        args.database_url or os.getenv("PROD_DATABASE_URL") or os.getenv("DATABASE_URL")
+    )
     if not url:
-        print("no database URL — set PROD_DATABASE_URL or pass --database-url", file=sys.stderr)
+        print(
+            "no database URL — set PROD_DATABASE_URL or pass --database-url",
+            file=sys.stderr,
+        )
         return 1
 
     rows = asyncio.run(fetch_eligible(url))
@@ -266,10 +282,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8"
             )
             spend[f"{arm}/{language}"] = run.cost_usd
-            print(f"[{arm}/{language}] wrote {out} ({len(items)} items, {run.transport})")
+            print(
+                f"[{arm}/{language}] wrote {out} ({len(items)} items, {run.transport})"
+            )
             if run.failures:
                 failed = True
-                print(f"[{arm}/{language}] {len(run.failures)} failures: {run.failures[:5]}")
+                print(
+                    f"[{arm}/{language}] {len(run.failures)} failures: {run.failures[:5]}"
+                )
 
     print("\ncost (USD, None = provider did not report it):")
     for key, value in spend.items():

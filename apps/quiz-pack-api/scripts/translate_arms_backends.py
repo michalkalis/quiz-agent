@@ -4,7 +4,7 @@ Split out of ``translate_arms.py`` so each file stays inside the repo's
 ~300-line limit. Nothing here touches the database or writes files: an arm
 takes source questions in, returns translated payloads (and what it cost) out.
 
-Three routes, because the providers genuinely differ:
+Four routes, because the providers genuinely differ:
 
 - **batch** — the DD7 adapter (``quiz_shared.llm.batch``). Opus 5 and
   Gemini 2.5 Pro have OpenRouter batch endpoints.
@@ -13,6 +13,9 @@ Three routes, because the providers genuinely differ:
   ``openai/gpt-4.1:batch`` but its batch API rejects the model, so the GPT-4.1
   arm lands here. The *model* never changes (standing rule: no substitutions);
   only the transport does, and loudly.
+- **session** — #169: the Opus arm on the Claude Code subscription
+  (``claude -p``) instead of OpenRouter. Same messages and parser as
+  ``sync``; transport only, cost always 0 (not billed per call).
 - **deepl** — the non-LLM arm. Synchronous SDK, one call per string, no batch
   path at all (DD7).
 
@@ -32,6 +35,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from quiz_shared.llm import batch as batch_api
 from quiz_shared.llm import factory
 
@@ -74,7 +78,7 @@ class ArmSpec:
     name: str
     #: OpenRouter slug or direct id for LLM arms; ``None`` for DeepL.
     model: Optional[str]
-    route: str  # "batch" | "deepl"
+    route: str  # "batch" | "sync" | "session" | "deepl"
 
 
 ARMS: dict[str, ArmSpec] = {
@@ -183,7 +187,9 @@ def run_batch_arm(
         )
         return run_sync_arm(spec, questions, language, log=log)
 
-    log(f"  [{spec.name}/{language}] batch {job.id} submitted ({len(requests)} requests)")
+    log(
+        f"  [{spec.name}/{language}] batch {job.id} submitted ({len(requests)} requests)"
+    )
     deadline = time.monotonic() + timeout_s
     while not job.is_terminal:
         if time.monotonic() > deadline:
@@ -233,6 +239,53 @@ def run_sync_arm(
             log(f"  [{spec.name}/{language}] {i}/{len(questions)} sync")
     translations, parse_failures = _collect(questions, texts)
     return ArmRun(translations, None, "sync", failures + parse_failures)
+
+
+def uses_session_transport(model: Optional[str]) -> bool:
+    """True when ``model`` runs on the Claude Code subscription (#169) — lets
+    ``LLM_GATEWAY=session`` auto-route the existing ``opus`` arm (route
+    ``"batch"``) to the subscription with no edit to ``ARMS``."""
+    return bool(model) and factory.is_session_model(factory.resolve_model(model))
+
+
+def run_session_arm(
+    spec: ArmSpec,
+    questions: Sequence[Mapping[str, Any]],
+    language: str,
+    *,
+    log: Callable[[str], None] = print,
+) -> ArmRun:
+    """One ``claude -p`` call per question on the Claude Code subscription.
+
+    #169: transport swap only — same messages and ``parse_translation`` path
+    as ``run_sync_arm``. ``session_model_for`` (not ``resolve_model``) picks
+    the tier so this also works when called directly (explicit selection),
+    with no OpenRouter/OpenAI key. Cost is always 0.
+    """
+    model_id = (
+        spec.model
+        if factory.is_session_model(spec.model)
+        else factory.session_model_for(spec.model)
+    )
+    chat_model = factory.chat_openai(model_id)
+    texts: dict[str, str] = {}
+    failures: list[str] = []
+    for i, q in enumerate(questions, 1):
+        qid = str(q["id"])
+        try:
+            response = chat_model.invoke(
+                [
+                    SystemMessage(content=_SYSTEM),
+                    HumanMessage(content=build_prompt(q, language)),
+                ]
+            )
+            texts[qid] = factory.message_text(response)
+        except Exception as exc:
+            failures.append(f"{qid}: {exc}")
+        if i % 10 == 0:
+            log(f"  [{spec.name}/{language}] {i}/{len(questions)} session")
+    translations, parse_failures = _collect(questions, texts)
+    return ArmRun(translations, 0.0, "session", failures + parse_failures)
 
 
 # --------------------------------------------------------------------------

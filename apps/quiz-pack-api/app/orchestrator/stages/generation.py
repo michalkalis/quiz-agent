@@ -393,15 +393,21 @@ class GenerationStage:
         # bypass the check entirely) and must reject blank option texts or
         # an answer that resolves to no option — both shipped bare-letter
         # answers to founder review.
-        # Founder blind rating 2026-09-03 — deterministic inline-option repair,
-        # BEFORE the type tagging below so the routing sees the real structure.
-        # A question that recites "closer to 400 years, 1,400 years, or 3,800
-        # years?" inside a `text` stem is an MCQ the model forgot to declare;
-        # the player had to speak a bucket the voice grader then had to match,
-        # and iOS never raised the option picker. Pure function, no LLM call,
-        # and it never guesses: an answer that resolves to no single option
-        # leaves the question exactly as generated.
-        inline_counts = inline_options.apply_to_questions(kept)
+        # Founder blind rating 2026-09-03 — the deterministic inline-option
+        # repair. A question that recites "closer to 400 years, 1,400 years,
+        # or 3,800 years?" inside a `text` stem is an MCQ the model forgot to
+        # declare; the player had to speak a bucket the voice grader then had
+        # to match, and iOS never raised the option picker.
+        #
+        # It runs at the generator boundary (`_finalize_questions`), which the
+        # eval scripts share, so here the stage only SURFACES the counts that
+        # pass produced — re-running it would report zeros on the very run
+        # where it fired. A generator that reports none (a test double, a
+        # different implementation) still gets repaired here, before the type
+        # tagging below, so the routing never sees an unrepaired batch.
+        inline_counts = getattr(self._generator, "inline_option_counts", None)
+        if inline_counts is None:
+            inline_counts = inline_options.apply_to_questions(kept)
 
         tagged: list[Question] = []
         dropped_mcq_missing_options = 0
@@ -450,6 +456,13 @@ class GenerationStage:
                             q.id,
                             pattern,
                         )
+                        # The branch's premise is "this is a free-text
+                        # question", so the field must say so: `q.type` is the
+                        # model's self-report and may still claim MCQ (an
+                        # MCQ-emphasis order renders that in the prompt
+                        # schema), which would persist a typed MCQ with zero
+                        # options and fail `proxy_mcq_valid`.
+                        q.type = "text"
                         tagged.append(q)
                         continue
                     dropped_mcq_missing_options += 1

@@ -29,6 +29,7 @@ from typing import Any, Optional, Sequence
 
 import pytest
 
+from app.generation import inline_options
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -1241,12 +1242,19 @@ async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
     question. `true_false` is the exception and still drops (asserted in
     `test_tags_mcq_type_from_pattern_and_drops_when_options_missing`).
     """
+    # Both arrive SELF-TAGGED `text_multichoice` with no options — the shape
+    # an MCQ-emphasis order provokes, since it renders `text_multichoice` in
+    # the prompt schema (PR #76 review). Keeping the question means keeping it
+    # as free text: a persisted MCQ with zero options fails `proxy_mcq_valid`
+    # and shows the player an empty picker.
     questions = [
         _stub_question(
             0,
             question="Chocolate, coffee and tea all reached Europe within a "
             "century of each other. Which of the three arrived first?",
+            type="text_multichoice",
             correct_answer="Chocolate",
+            possible_answers=None,
             generation_metadata=GenerationProvenance(
                 reasoning_pattern="Pattern 12: The Comparison Bet"
             ),
@@ -1255,7 +1263,9 @@ async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
             1,
             question="Which of these doesn't belong: violin, cello, flute, "
             "double bass?",
+            type="text_multichoice",
             correct_answer="Flute",
+            possible_answers=None,
             generation_metadata=GenerationProvenance(
                 reasoning_pattern="Pattern 9: The Odd One Out"
             ),
@@ -1269,5 +1279,40 @@ async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
 
     assert len(ctx.questions) == 2
     assert [q.type for q in ctx.questions] == ["text", "text"]
+    assert all(q.possible_answers is None for q in ctx.questions)
     assert result.info["dropped_mcq_missing_options"] == 0
     assert result.info["mcq_label_kept_as_text"] == 2
+
+
+@pytest.mark.asyncio
+async def test_inline_option_counts_come_from_the_generator() -> None:
+    """The repair runs at the generator boundary, so the stage must REPORT
+    those counts, not recompute them.
+
+    Re-running `apply_to_questions` over questions the generator already
+    repaired reports zeros — indistinguishable in the audit trail from a
+    repair that never fired, which is the one thing these counters exist to
+    reveal (PR #76 review). `test_generate_batch_repairs_inline_option_stems`
+    covers the repair itself at that boundary.
+    """
+    repaired = _stub_question(
+        0,
+        question="How many bones are inside an elephant's trunk?",
+        type="text_multichoice",
+        correct_answer="Zero",
+        possible_answers={"a": "Zero", "b": "40", "c": "400"},
+    )
+    gen = _FakeGenerator([repaired])
+    gen.inline_option_counts = inline_options.Counts(
+        inline_options_to_mcq=1,
+        stem_options_stripped=2,
+        inline_options_unmatched=3,
+    )
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["inline_options_to_mcq"] == 1
+    assert result.info["stem_options_stripped"] == 2
+    assert result.info["inline_options_unmatched"] == 3

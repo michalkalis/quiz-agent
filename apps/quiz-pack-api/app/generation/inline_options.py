@@ -136,6 +136,12 @@ class Counts:
     stem_options_stripped: int = 0
     inline_options_unmatched: int = 0
 
+    def add(self, other: "Counts") -> None:
+        """Accumulate another pass's counts (one per generated sub-batch)."""
+        self.inline_options_to_mcq += other.inline_options_to_mcq
+        self.stem_options_stripped += other.stem_options_stripped
+        self.inline_options_unmatched += other.inline_options_unmatched
+
     def as_info(self) -> dict[str, int]:
         return {
             "inline_options_to_mcq": self.inline_options_to_mcq,

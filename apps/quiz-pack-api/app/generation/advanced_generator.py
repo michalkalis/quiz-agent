@@ -315,6 +315,10 @@ class AdvancedQuestionGenerator:
         self.generation_model = generation_model
         self.critique_model = critique_model
         self.prompt_version = prompt_version
+        # Inline-option repairs applied by `_finalize_questions`, accumulated
+        # across a call's sub-batches and reset per `generate_questions`. Set
+        # here too because the eval scripts call `_generate_batch` directly.
+        self.inline_option_counts = inline_options.Counts()
 
         # Load appropriate prompt template
         current_dir = os.path.dirname(__file__)
@@ -495,6 +499,14 @@ class AdvancedQuestionGenerator:
         # unset below). The static prompt prefix stays cacheable regardless —
         # see CACHE_BREAKPOINT_MARKER, which now sits ABOVE the example
         # sections in the fact-first templates.
+        # Founder blind rating 2026-09-03 — per-call accumulator for the
+        # inline-option repair `_finalize_questions` applies to every
+        # sub-batch below. `GenerationStage` reads it for `StageResult.info`
+        # instead of re-running the repair: a second pass over questions the
+        # generator already repaired reports zeros, which reads in the audit
+        # trail exactly like a repair that never fired (PR #76 review).
+        self.inline_option_counts = inline_options.Counts()
+
         open_questions: List[Question] = []
         if open_count > 0:
             print(f"Generating {open_count} open-shape questions...")
@@ -1258,7 +1270,7 @@ class AdvancedQuestionGenerator:
         # in the stage would keep shipping to every blind rating.
         # `GenerationStage` still runs it — idempotent, and it is where the
         # counts are reported (same defence-in-depth as the craft gates).
-        inline_options.apply_to_questions(questions)
+        self.inline_option_counts.add(inline_options.apply_to_questions(questions))
 
         # D21b q45 (2026-08-26): resolve letter-key MCQ answers to option text
         # here, not only in GenerationStage — eval scripts call

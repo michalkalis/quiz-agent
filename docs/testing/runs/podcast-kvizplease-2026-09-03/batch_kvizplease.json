@@ -1,0 +1,551 @@
+[
+ {
+  "question": "Jakým výrazem se obvykle označuje první díl seriálu?",
+  "correct_answer": "pilot",
+  "topic": "Rozehřívačka · televizní terminologie",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=351s",
+  "id": "ep160-0551"
+ },
+ {
+  "question": "Ze které země pocházejí sauny?",
+  "correct_answer": "Finsko",
+  "topic": "Rozehřívačka · sauny",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=184s",
+  "id": "ep160-0304"
+ },
+ {
+  "question": "Dominantou kterého města je Braniborská brána?",
+  "correct_answer": "Berlín",
+  "topic": "Rozehřívačka · evropské památky",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=338s",
+  "id": "ep160-0538"
+ },
+ {
+  "question": "Jak se latinsky řekne hořčík?",
+  "correct_answer": "magnesium",
+  "topic": "Rozehřívačka · chemické prvky",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=361s",
+  "id": "ep160-0601"
+ },
+ {
+  "question": "Jakým třípísmenným slovem označujeme herce, který hraje výhradně beze slov a za pomoci pantomimy?",
+  "correct_answer": "mim",
+  "topic": "Rozehřívačka · divadelní terminologie",
+  "difficulty": "medium",
+  "explanation": "⚠ odpoveď doplnená LLM (v nahrávke nezaznela). Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=192s",
+  "id": "ep160-0312"
+ },
+ {
+  "question": "Která země má vlajku tvořenou třemi svislými pruhy, zleva modrý, bílý a červený?",
+  "correct_answer": "Francie",
+  "topic": "Rozehřívačka · vlajky",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=234s",
+  "id": "ep160-0354"
+ },
+ {
+  "question": "Jakým druhem rostliny je ginkgo biloba?",
+  "correct_answer": "listnatý strom",
+  "topic": "Rozehřívačka · botanika",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=219s",
+  "id": "ep160-0339"
+ },
+ {
+  "question": "Jak se nazývá činnost, při které se vyhazují a chytají předměty, například míčky?",
+  "correct_answer": "žonglování",
+  "topic": "Rozehřívačka · žonglování",
+  "difficulty": "easy",
+  "explanation": "⚠ odpoveď doplnená LLM (v nahrávke nezaznela). Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=335s",
+  "id": "ep160-0535"
+ },
+ {
+  "question": "Jaké je hlavní město Norska?",
+  "correct_answer": "Oslo",
+  "topic": "Rozehřívačka · hlavní města",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=216s",
+  "id": "ep160-0336"
+ },
+ {
+  "question": "Natto jsou fermentované sojové boby s lepkavou až slizkou konzistencí a výraznou vůní. K jakému dennímu jídlu se tradičně podává?",
+  "correct_answer": "ke snídani",
+  "topic": "Tématické kolo: Japonská kuchyně · natto",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=1276s",
+  "id": "ep160-2116"
+ },
+ {
+  "question": "Tempura (krevety nebo zelenina obalené v těstíčku z mouky, vejce a ledové vody, smažené v oleji) není japonským vynálezem. Techniku smažení v těstíčku přivezli do Japonska v 16. století evropští obchodníci a misionáři, i samotný název pravděpodobně pochází z latinského 'Quatuor Tempora'. Ze které země tihle misionáři připluli?",
+  "correct_answer": "Portugalsko",
+  "topic": "Tématické kolo: Japonská kuchyně · tempura",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=576s",
+  "id": "ep160-0936"
+ },
+ {
+  "question": "V sushi barech se jednotlivé druhy ryb často označují japonskými názvy (saké je losos, maguro tuňák, eby kreveta). Jakou rybu dostaneme, pokud si objednáme druh zvaný unagi?",
+  "correct_answer": "úhoř (sladkovodní)",
+  "topic": "Tématické kolo: Japonská kuchyně · sushi",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=704s",
+  "id": "ep160-1144"
+ },
+ {
+  "question": "U jídla by si člověk měl dát velký pozor na manipulaci s hůlkami a rozhodně je nikdy nezapichovat do jídla, hlavně do rýže. Proč je tohle tabu?",
+  "correct_answer": "protože svisle zapíchnuté hůlky do rýže se používají při pohřebních rituálech (miska se pokládá zemřelému k oltáři)",
+  "topic": "Tématické kolo: Japonská kuchyně · japonská stolovací etiketa",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=1162s",
+  "id": "ep160-1922"
+ },
+ {
+  "question": "Jak dlouhá byla nejdelší sushi rolka zapsaná v Guinnessově knize rekordů (vytvořená 20. listopadu 2016 v japonské prefektuře Kumamoto)?",
+  "correct_answer": "28,45 m",
+  "topic": "Tipovačka · Guinnessův rekord sushi",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=1607s",
+  "id": "ep160-2647"
+ },
+ {
+  "question": "Na kolik vojvodství se v současné době dělí Polsko?",
+  "correct_answer": "16",
+  "topic": "Tipovačka · polská administrativa",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=2063s",
+  "id": "ep160-3423"
+ },
+ {
+  "question": "Jak se jmenoval první polský postkomunistický prezident, který zastával úřad hlavy státu v letech 1990 až 1995?",
+  "correct_answer": "Lech Wałęsa",
+  "topic": "Tématické kolo: Polsko · polská historie",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=2259s",
+  "id": "ep160-3739"
+ },
+ {
+  "question": "Ve městě Świebodzin v lubušském vojvodství v Polsku se nachází svého druhu druhá největší socha na světě. Co tato socha zobrazuje?",
+  "correct_answer": "Ježíše Krista (socha Krista Krále)",
+  "topic": "Tématické kolo: Polsko · socha Krista Krále",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=2780s",
+  "id": "ep160-4620"
+ },
+ {
+  "question": "Jaké dvě řeky jsou v Polsku největší a odvádějí vodu až z 90 % jeho území?",
+  "correct_answer": "Odra a Wisła (Vla)",
+  "topic": "Tématické kolo: Polsko · polské řeky",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=2445s",
+  "id": "ep160-4045"
+ },
+ {
+  "question": "Jak se nazývají dvě největší města, která jsou centrem pomořského vojvodství v Polsku?",
+  "correct_answer": "Gdaňsk a Gdyně",
+  "topic": "Tématické kolo: Polsko · polské vojvodství",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=2557s",
+  "id": "ep160-4237"
+ },
+ {
+  "question": "Hádej herce z pěti postupných nápověd: 1) Narodil se 5. května 1960 v Praze. 2) Zahrál si např. ve filmech Mission Impossible, Van Helsing nebo Edith Piaf. 3) Je jedním z nejznámějších českých videoherních dabérů. 4) Z českých filmů např. Román pro ženy nebo série Kameňák. 5) Jeho typickým znakem je pleš.",
+  "correct_answer": "Marek Vašut",
+  "topic": "Hádačka · hádačka — herec",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty... · CZ-lokálna otázka",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=3153s",
+  "id": "ep160-5233"
+ },
+ {
+  "question": "Ve kterém roce byl spáchán atentát na Františka Ferdinanda?",
+  "correct_answer": "1914",
+  "topic": "Atentáty (paywall teaser) · atentát na Františka Ferdinanda",
+  "difficulty": "easy",
+  "explanation": "⚠ odpoveď doplnená LLM (v nahrávke nezaznela). Epizóda: Kvíz: Japonská kuchyně, Polsko, atentáty...",
+  "source_url": "https://www.youtube.com/watch?v=c8u-yTa2jqc&t=4980s",
+  "id": "ep160-8300"
+ },
+ {
+  "question": "Ze které země pochází metalová skupina Metallica?",
+  "correct_answer": "Spojené státy americké",
+  "topic": "Rozehřívačka · hudba",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=94s",
+  "id": "ep156-0134"
+ },
+ {
+  "question": "Na které lidské končetině byste našli vřetenní kost?",
+  "correct_answer": "Ruka (paže/předloktí)",
+  "topic": "Rozehřívačka · anatomie",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=156s",
+  "id": "ep156-0236"
+ },
+ {
+  "question": "Jaké číselné označení nese v neonacistickém slangu pozdrav 'Hitler'?",
+  "correct_answer": "88",
+  "topic": "Rozehřívačka · historie / extremismus",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=100s",
+  "id": "ep156-0140"
+ },
+ {
+  "question": "Jaké křestní jméno měl americký režisér a fotograf Kubrick?",
+  "correct_answer": "Stanley",
+  "topic": "Rozehřívačka · film",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=174s",
+  "id": "ep156-0254"
+ },
+ {
+  "question": "Který orgán lidského těla je latinsky označován jako musculus?",
+  "correct_answer": "Sval",
+  "topic": "Rozehřívačka · latinské názvosloví",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=77s",
+  "id": "ep156-0117"
+ },
+ {
+  "question": "Kterému státu patří ostrov Ibiza?",
+  "correct_answer": "Španělsko",
+  "topic": "Rozehřívačka · geografie",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=187s",
+  "id": "ep156-0307"
+ },
+ {
+  "question": "Jaká barva je nejčastěji spojená s dopravcem FlixBus?",
+  "correct_answer": "Zelená",
+  "topic": "Rozehřívačka · doprava",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=164s",
+  "id": "ep156-0244"
+ },
+ {
+  "question": "Kolik písmenek T se píše v názvu města Rotterdam?",
+  "correct_answer": "Dvě",
+  "topic": "Rozehřívačka · geografie",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=88s",
+  "id": "ep156-0128"
+ },
+ {
+  "question": "Kalium je latinské označení kterého chemického prvku?",
+  "correct_answer": "Draslík",
+  "topic": "Rozehřívačka · chemie",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=169s",
+  "id": "ep156-0249"
+ },
+ {
+  "question": "Jaká je hodnota šachové figury věž?",
+  "correct_answer": "Pět",
+  "topic": "Tematické kolo: Věže · šachy",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=1516s",
+  "id": "ep156-2516"
+ },
+ {
+  "question": "Jaké je vychýlení vrcholu Šikmé věže v Pise oproti její základně? (tolerance 50 cm)",
+  "correct_answer": "4 m (400 cm)",
+  "topic": "Tematické kolo: Věže · architektura",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=1299s",
+  "id": "ep156-2139"
+ },
+ {
+  "question": "Ve kterém roce byla otevřena nejvyšší věž světa Burdž Chalífa? (tolerance 3 roky)",
+  "correct_answer": "2010",
+  "topic": "Tematické kolo: Věže · architektura",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=1137s",
+  "id": "ep156-1857"
+ },
+ {
+  "question": "Ve kterém evropském hlavním městě se nachází most s tak významnou a ikonickou věží, že je jediným mostem, který je součástí celosvětové asociace vysokých věží a mrakodrapů?",
+  "correct_answer": "Bratislava (Most SNP)",
+  "topic": "Tematické kolo: Věže · architektura",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=1015s",
+  "id": "ep156-1655"
+ },
+ {
+  "question": "Jaká byla celková délka Berlínské zdi?",
+  "correct_answer": "165 km",
+  "topic": "Tipovačka · historie",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2012s",
+  "id": "ep156-3332"
+ },
+ {
+  "question": "Kolik gramů vody průměrně obsahuje 100 g zelené papriky?",
+  "correct_answer": "93,3 g",
+  "topic": "Tipovačka · potraviny",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2081s",
+  "id": "ep156-3441"
+ },
+ {
+  "question": "Jaký přídomek na P nese volební systém pro volby do poslanecké sněmovny v České republice?",
+  "correct_answer": "Poměrný",
+  "topic": "Tematické kolo: Poslanecká sněmovna · politika ČR",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže... · CZ-lokálna otázka",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2449s",
+  "id": "ep156-4049"
+ },
+ {
+  "question": "Kolik poslanců musí být přítomno, aby byla poslanecká sněmovna usnášeníschopná?",
+  "correct_answer": "67 (1/3 z 200 poslanců)",
+  "topic": "Tematické kolo: Poslanecká sněmovna · politika ČR",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže... · CZ-lokálna otázka",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2509s",
+  "id": "ep156-4149"
+ },
+ {
+  "question": "Sídlo poslanecké sněmovny se nachází na Praze 1 ve třech blocích domů a paláců mezi dvěma náměstími. Uveďte alespoň jedno z nich.",
+  "correct_answer": "Malostranské náměstí nebo Valdštejnské náměstí",
+  "topic": "Tematické kolo: Poslanecká sněmovna · politika ČR",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže... · CZ-lokálna otázka",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2269s",
+  "id": "ep156-3749"
+ },
+ {
+  "question": "Kolik poslaneckých hlasů je potřeba pro přijetí usnesení, jako je například přehlasování prezidentského veta či vyslovení nedůvěry vládě?",
+  "correct_answer": "101 (absolutní většina)",
+  "topic": "Tematické kolo: Poslanecká sněmovna · politika ČR",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže... · CZ-lokálna otázka",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=2553s",
+  "id": "ep156-4233"
+ },
+ {
+  "question": "Hádej slovenské město podle nápověd: 1) nachází se v něm most s věží; 2) leží 165 km severovýchodně od Bratislavy a sídlí zde Univerzita Mateja Bela; 3) ve středověku se jmenovalo Nový Zvolen; 4) jeho česká partnerská města jsou Havířov a Hradec Králové; 5) je to krajské město a kraj se jmenuje podle něj.",
+  "correct_answer": "Banská Bystrica",
+  "topic": "Hádačka · geografie Slovensko",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Věže, Poslanecká sněmovna, slovník současné mládeže...",
+  "source_url": "https://www.youtube.com/watch?v=q-h6gJL8MIg&t=3204s",
+  "id": "ep156-5324"
+ },
+ {
+  "question": "Jaké bílkoviny škodí osobám trpícím celiakií?",
+  "correct_answer": "Lepek (gluten)",
+  "topic": "Rozehřívačka 1 (Vojta) · nutrition",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=239s",
+  "id": "ep154-0359"
+ },
+ {
+  "question": "Anchorage je hlavním městem kterého amerického státu?",
+  "correct_answer": "Aljaška",
+  "topic": "Rozehřívačka 1 (Vojta) · US geography",
+  "difficulty": "medium",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=184s",
+  "id": "ep154-0304"
+ },
+ {
+  "question": "Ligr je hybridním potomkem kterých dvou zvířat?",
+  "correct_answer": "Lev a tygr",
+  "topic": "Rozehřívačka 1 (Vojta) · animal hybrids",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=244s",
+  "id": "ep154-0404"
+ },
+ {
+  "question": "Jakým výrazem označujeme kolečkové brusle, které mají všechna kolečka v jedné řadě?",
+  "correct_answer": "Inline brusle",
+  "topic": "Rozehřívačka 1 (Vojta) · sports equipment",
+  "difficulty": "easy",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=207s",
+  "id": "ep154-0327"
+ },
+ {
+  "question": "Jakým výrazem na B se označuje těleso vzniklé ze spolykaného nestravitelného materiálu?",
+  "correct_answer": "Bezoár",
+  "topic": "Rozehřívačka 1 (Vojta) · biology/medicine",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=231s",
+  "id": "ep154-0351"
+ },
+ {
+  "question": "Zkratkou KKK se označuje která rasistická militantní organizace?",
+  "correct_answer": "Ku Klux Klan",
+  "topic": "Rozehřívačka 2 (Kuba) · history/politics",
+  "difficulty": "easy",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=333s",
+  "id": "ep154-0533"
+ },
+ {
+  "question": "Jak se jmenuje princezna z názvu filmu Studia Ghibli?",
+  "correct_answer": "Princezna Mononoke",
+  "topic": "Rozehřívačka 2 (Kuba) · anime film",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=329s",
+  "id": "ep154-0529"
+ },
+ {
+  "question": "Roku 1095 bylo papežem Urbanem II. vyhlášeno jaké významné válečné tažení?",
+  "correct_answer": "Křížová výprava",
+  "topic": "Rozehřívačka 2 (Kuba) · medieval history",
+  "difficulty": "easy",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=352s",
+  "id": "ep154-0552"
+ },
+ {
+  "question": "Jaká slova se skrývají ve zkratce hudebního žánru DNB?",
+  "correct_answer": "Drum and Bass",
+  "topic": "Rozehřívačka 2 (Kuba) · music genres",
+  "difficulty": "easy",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=324s",
+  "id": "ep154-0524"
+ },
+ {
+  "question": "Uveďte alespoň jednoho ze známých malířů, jehož dílo bylo převedeno do Lego podoby v rámci série Lego Art.",
+  "correct_answer": "Přijímán kterýkoli z: Hokusai (Velká vlna), Leonardo da Vinci (Mona Lisa), Andy Warhol (Marilyn Monroe), Claude Monet (Most nad řekou), Vincent van Gogh, Keith Haring",
+  "topic": "Tématické kolo 1: LEGO · Lego Art",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=945s",
+  "id": "ep154-1545"
+ },
+ {
+  "question": "Lego produkty jsou známé označením věkové kategorie od 4 let do 99. Kvůli narozeninám jedné významné osoby však Lego provedlo aktualizaci tohoto hodnocení a nově tak zní od 4 let do 100 plus. Kdo se dočkal takové pocty?",
+  "correct_answer": "Sir David Attenborough",
+  "topic": "Tématické kolo 1: LEGO · Lego trivia",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=551s",
+  "id": "ep154-0911"
+ },
+ {
+  "question": "V roce 2026 uvedlo LEGO na trh stavebnici známé stavby, která se rovnou stala stavebnicí s největším počtem dílků. O jakou významnou španělskou stavbu jde?",
+  "correct_answer": "Sagrada Familia",
+  "topic": "Tématické kolo 1: LEGO · Lego architecture",
+  "difficulty": "easy",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1023s",
+  "id": "ep154-1703"
+ },
+ {
+  "question": "Lego se dočkalo také velkého množství PC her. V jedné z nich se však potkávají postavy z nejrůznějších světů – z Pána prstenů, DC Comics, Harryho Pottera, ale také z Knight Ridera, Simpsonových nebo Doktora Who. O jakou hru jde?",
+  "correct_answer": "Lego Dimensions",
+  "topic": "Tématické kolo 1: LEGO · Lego video games",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1078s",
+  "id": "ep154-1758"
+ },
+ {
+  "question": "Jakou frekvenci v hertzích má první struna kytary (struna E) při použití standardního ladění?",
+  "correct_answer": "82,41 Hz",
+  "topic": "Tipovačka · music/guitar",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1418s",
+  "id": "ep154-2338"
+ },
+ {
+  "question": "V kolika zemích světa najdeme zábavní park Legoland?",
+  "correct_answer": "10",
+  "topic": "Tipovačka · Legoland parks",
+  "difficulty": "hard",
+  "explanation": "odpoveď potvrdil moderátor. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1199s",
+  "id": "ep154-1959"
+ },
+ {
+  "question": "Jedním velmi ikonickým sloganem je 'Ve vesmíru tě nikdo neuslyší křičet.' Který film je spojen s touto větou?",
+  "correct_answer": "Vetřelec (Alien)",
+  "topic": "Tématické kolo 2: Slogany · movie taglines",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1829s",
+  "id": "ep154-3029"
+ },
+ {
+  "question": "Která slavná firma je spojena se sloganem 'Think Different'?",
+  "correct_answer": "Apple",
+  "topic": "Tématické kolo 2: Slogany · brand slogans",
+  "difficulty": "easy",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1676s",
+  "id": "ep154-2756"
+ },
+ {
+  "question": "Slogan zní: 'Nezískáte 500 milionů přátel, aniž byste si udělali i pár nepřátel.' O který film jde?",
+  "correct_answer": "Sociální síť (The Social Network)",
+  "topic": "Tématické kolo 2: Slogany · movie taglines",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=1894s",
+  "id": "ep154-3134"
+ },
+ {
+  "question": "Ze sloganu 'There's something about your first piece' se v českém překladu stal slogan 'Kluci chtěj, holky chtěj, jenom jim to moc nejde.' Kterého amerického filmu z roku 1999 se tento slogan týká?",
+  "correct_answer": "Prci, prci, prcičky (American Pie)",
+  "topic": "Tématické kolo 2: Slogany · movie taglines",
+  "difficulty": "medium",
+  "explanation": "súťažiaci odpovedal správne. Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=2001s",
+  "id": "ep154-3321"
+ },
+ {
+  "question": "Poznej koktejl. Indicie: 1) dle legendy první zmínky pocházejí z 19. století, kdy jej pili piráti pro zlepšení morálky; 2) smícháním s jahodovým daiquiri vznikne variace zvaná Miami Vice nebo 'tekoucí láva'; 3) současná podoba je známá z 20. století z Portorika, které jej prohlásilo za svůj národní nápoj; 4) podle tohoto koktejlu se jmenuje píseň Ruperta Holmese z roku 1979.",
+  "correct_answer": "Piña colada",
+  "topic": "Hádačka · cocktails",
+  "difficulty": "medium",
+  "explanation": "⚠ odpoveď doplnená LLM (v nahrávke nezaznela). Epizóda: Kvíz: Pivní zeměpis, slogany, LEGO...",
+  "source_url": "https://www.youtube.com/watch?v=8bdSiiUzNlM&t=2311s",
+  "id": "ep154-3831"
+ }
+]

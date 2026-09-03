@@ -1,6 +1,6 @@
 # Kvízové podcasty ako zdroj otázok — bezplatná extrakcia a využitie
 
-**Dátum:** 2026-09-03 · **Stav:** prieskum + overený pilot, čaká na rozhodnutie foundera
+**Dátum:** 2026-09-03 · **Stav:** ZAPARKOVANÉ (founder 2026-09-03) — využiť neskôr, teraz nezasahovať do generovania
 **Zadanie:** vyextrahovať otázky/odpovede z podcastu „Kvíz, please!“ a podobných SK/EN podcastov,
 bez platených služieb (žiadny ElevenLabs), a navrhnúť ich využitie.
 
@@ -84,3 +84,11 @@ Rating nemá vplyv na korpus (import je samostatný skript, nespúšťať). Expo
 **NPR (EN) — skúsené, slabý výnos:** Ask Me Another (transkripty sú len 4-min segmenty, slovné hry) 8 otázok/2 epizódy; Wait Wait (novinový kvíz, väčšina otázok zastará do roka) 9 otázok, 5 evergreen. Spolu 17 → `npr_qa.json`. Verdikt: ako zdroj otázok nie; ako inšpirácia formátov („Bluff the Listener“ = 3 príbehy, jeden pravdivý) áno.
 
 **Ďalší krok:** founder ohodnotí batch → export → porovnať priemer/rozptyl s generovanými batchmi (rovnaká 1–10 rubrika) → rozhodnúť o ďalších epizódach a o nových formátoch/témach.
+
+## 6. Founder verdikt (2026-09-03) — zaparkované
+
+- Čiastočné hodnotenie: 31/61 otázok, priemer **8.1/10**, medián 9 (bez dôvodov). Pre porovnanie generované dávky: 7.0–7.9 (veľké), 9.2–9.7 (malé entertainment). Jediná nízka (4): „Hlavné mesto Nórska“ = príliš primitívna. Export: `docs/testing/runs/podcast-kvizplease-2026-09-03/founder-ratings-partial.json`.
+- Founder: otázky zaujímavé, niektoré primitívne, **super na inšpiráciu**, plus výrazne národne špecifické.
+- Rozhodnutie: **výstupy využiť až neskôr** — s generovanými otázkami je spokojný a nechce nič pokaziť. Žiadne ďalšie epizódy, žiadne zmeny promptov/topic poolu teraz.
+- Keď sa k tomu vrátime: (1) témy z banky do topic poolu, (2) formáty tipovačka/hádačka/blesk ako nové herné módy, (3) národne špecifické otázky ako vzor pre SK/CS vetvu.
+

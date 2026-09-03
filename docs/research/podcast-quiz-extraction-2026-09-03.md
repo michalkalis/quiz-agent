@@ -62,7 +62,25 @@ Poznámky: ffmpeg na tomto Macu je rozbitý (neoficiálny tap), dekódovanie MP3
 - **Jazyk:** korpus je CZ, appka generuje EN (founder pravidlo) so SK/CS vetvou (#168). Pre exempláre treba preklad alebo použiť EN podcasty na štýl a CZ len na témy/kalibráciu.
 - **Rýchle kolá strácajú odpovede** v prepise (súťažiaci hovorí cez moderátora) — LLM ich doplní z vlastných znalostí, treba označiť provenience.
 
-**Otázky na foundera:**
-1. Ísť do plnej extrakcie Kvíz, please! (~10k otázok, ~7 h výpočtu na Macu, 0 €) — áno/nie?
-2. Účel: len inšpirácia (témy + kalibrácia + exempláre) alebo aj priamy import? Pri importe najprv osloviť autorov.
-3. Pridať EN podcasty s hotovými transkriptami (NPR) ako druhý zdroj?
+**Founder rozhodnutia (2026-09-03):** nie celý korpus, najprv pár epizód → ohodnotiť → potom rozhodnúť · **len inšpirácia, priamy import určite nie** (možno nové témy/kategórie) · NPR skúsiť.
+
+## 5. Kolo 1: 3 epizódy extrahované, 61 otázok na hodnotení
+
+**Extrakcia** (YouTube titulky → Sonnet, 0 €): epizódy Japonská kuchyně/Polsko/atentáty · Věže/Poslanecká sněmovna/slang · Pivní zeměpis/slogany/LEGO → **153 otázok** (52 + 53 + 48). Voľne dostupný je len prvých ~55 min každej epizódy (zvyšok za paywallom), t. j. ~50 zo 70 otázok. Odpoveď potvrdená v nahrávke: 141/153, doplnená LLM: 7, neznáma: 5. CZ-lokálnych: 53/153 (tretina).
+
+**Hodnotiaci batch** `1d2085e8` (61 otázok, stratifikované podľa kola, CZ-lokálne obmedzené na 5, LLM-doplnené odpovede označené ⚠ v poznámke, link na YouTube s časom):
+`https://quiz-pack-api.fly.dev/web/rate/1d2085e8-a564-4c2a-9376-b2cc3fa39e54?rater=michal`
+Rating nemá vplyv na korpus (import je samostatný skript, nespúšťať). Export: `scripts/rating_page/export_ratings.py`.
+
+**Formáty kôl (inšpirácia pre nové herné módy):**
+- *Rozehřívačka* — 60 s rýchlych otázok na hráča (10–15 Q), skóre = počet správnych. → kandidát na „blesk“ režim v aute.
+- *Tematické kolo* — 10 otázok na jednu úzku tému (LEGO, veže, japonská kuchyňa). → náš top-up okruh, ale témy sú konkrétnejšie než naše kategórie.
+- *Tipovačka* — 5 číselných odhadov (kto je bližšie, vyhráva). → nový formát bez „správne/nesprávne“, ideálny pre hlas.
+- *Hádačka* — postupné nápovedy k jednému pojmu, skorší tip = viac bodov. → hlasovo prirodzené, zatiaľ nemáme.
+- *Co je čtvrté?* — doplň štvrtý prvok trojice. · *Slovník mládeže* — vysvetli slang.
+
+**Banka tém:** 377 unikátnych okruhov z názvov 128 bežných epizód → `docs/testing/runs/podcast-kvizplease-2026-09-03/themes-160-episodes.md`. Nápadne časté a u nás chýbajúce: značky a slogany, seriály/telenovely, hry (LEGO, Pokémon, karty), „bizarné zákony“, deti slávnych, zaniknuté štáty.
+
+**NPR (EN) — skúsené, slabý výnos:** Ask Me Another (transkripty sú len 4-min segmenty, slovné hry) 8 otázok/2 epizódy; Wait Wait (novinový kvíz, väčšina otázok zastará do roka) 9 otázok, 5 evergreen. Spolu 17 → `npr_qa.json`. Verdikt: ako zdroj otázok nie; ako inšpirácia formátov („Bluff the Listener“ = 3 príbehy, jeden pravdivý) áno.
+
+**Ďalší krok:** founder ohodnotí batch → export → porovnať priemer/rozptyl s generovanými batchmi (rovnaká 1–10 rubrika) → rozhodnúť o ďalších epizódach a o nových formátoch/témach.

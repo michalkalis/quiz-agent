@@ -1,0 +1,381 @@
+# Kvíz, please! — banka tém zo 160 epizód (z názvov, RSS 2026-09-03)
+
+Každá epizóda má 3 tematické okruhy v názve. Zdroj inšpirácie pre topic pool / nové kategórie, nie na import.
+
+- Japonská kuchyně
+- Polsko
+- Atentáty
+- České občanství
+- Řešíme vraždy
+- Tramvaje
+- Hotely
+- Streameři a streamování
+- Formule 1
+- Věže
+- Poslanecká sněmovna
+- Slovník současné mládeže
+- Morava
+- Nultá léta
+- Masožravci
+- Pivní zeměpis
+- Slogany
+- LEGO
+- Divné texty
+- Filmová ocenění
+- Klíče
+- Řemeslo
+- Telenovely
+- Co je čtvrté?
+- Roboti
+- Psí plemena
+- Festivaly
+- Bizarní zákony
+- Trojice
+- Apple
+- Shrek
+- Převyprávěné písně
+- Barvy
+- Rakovina
+- Krimi seriály
+- Pokémon
+- Volejbal
+- Řeky a vodní plochy
+- Žáby
+- Fantasy
+- Koření
+- Chalupáři
+- Nářadí a nástroje
+- Poloostrovy
+- Plyny
+- Mimozemšťani
+- Texty českých písní
+- Tábory
+- Hlodavci
+- Uši
+- Stříbro
+- Top 10 Instagramu
+- William Shakespeare
+- Společná odpověď
+- Superhrdinové
+- Středozemní moře
+- Čeština 2.0
+- Těhotenství
+- Králové a královny
+- Thajsko
+- Fiktivní místa
+- Mikrokosmos
+- Archaismy
+- Večerníčky
+- Vláda České republiky
+- Vzory mužského rodu
+- Sedm hříchů
+- Děti slavných
+- Ženy v politice
+- Děti
+- Nacistické Německo
+- Zaniklé státy
+- Covid-19
+- České podcasty
+- Koně
+- My Little Pony
+- Egypt
+- Reality show
+- Kostky
+- Mezinárodní organizace
+- Od bodu dále
+- Koruna česká
+- Britské filmy a seriály
+- Největší
+- Britská politika
+- Koktejly
+- Tento kvíz
+- Parky
+- Tlak
+- Každodenní latina
+- Skandinávie
+- Holky z naší školky
+- Plazi
+- Desky
+- Hospodské kratochvíle
+- Filmové písně
+- Řecké báje a pověsti
+- Mikrostáty
+- Andělé
+- Dopravní značky
+- Český fotbal
+- Feminismus
+- Žurnalistika
+- Deskovky
+- Zahrady
+- Ve kterém roce
+- Domande in lingua straniera
+- Muzikály
+- Protektorát Čechy a Morava
+- Smrt
+- Špatně popsané filmy
+- Konspirační teorie
+- Lehké a těžké
+- Neobvyklá zvířátka
+- České videohry
+- Cesta chleba
+- Maďarská kuchyně
+- České idiomy
+- Brány a branky
+- Detektivky
+- Fast foody
+- Předpony
+- V lese
+- Český bulvár
+- Tresty
+- Duchové a strašidelná místa
+- Pohanství
+- V obchodním centru
+- Matematika základní školy
+- Draci
+- Americké jednotky
+- Kryptozoologie
+- LGBTQ+
+- Astrologie
+- Lvi
+- Sourozenci
+- Drogy
+- Pivo
+- Kořeny
+- Významné sportovní soutěže
+- Kdo to řekl?
+- Pod vodou
+- Horko
+- Honzova knihovnička
+- Záporáci a padouši
+- Zima
+- České zpěvačky
+- Východní Asie
+- Prázdniny
+- Sítě
+- Tabule
+- USA
+- Český politický bizár
+- Praha
+- Chyba v textu
+- Austrálie
+- Automobilky
+- Českoslovenští prezidenti
+- Kde se překlad netrefil
+- Netradičně tradiční sporty
+- Schody
+- Pán prstenů
+- Hudba 20. století
+- Monarchie
+- Romové
+- Hazard
+- Zdi
+- Dálnice
+- Filmová hudba
+- Základy přírodopisu
+- Lodě
+- Problémy
+- Vaření
+- Písně o lásce
+- Lehká atletika
+- Ústava České republiky
+- 20. století
+- Moře
+- Vojtův playlist
+- Sportovní terminologie
+- Ryby
+- Karty
+- Slovenský špeciál 🇸🇰
+- Skákal pes
+- Chaty
+- Dobré téma
+- Na přání posluchačů II
+- Honzův byt
+- Stromy
+- Největší Češi
+- Výlet po Evropě
+- Led
+- Život
+- Zimní sporty
+- Špatné písně
+- Sametová revoluce
+- Slovanské jazyky
+- Bonbony a cukrovinky
+- Kořen slova CHOD
+- Vodní nádrže
+- Kočky
+- Druhá světová válka
+- Látky a materiály
+- Jižní Amerika
+- Tanec
+- Umělecké slohy
+- Nový/nová/nové
+- Doktoři
+- Auta
+- Pohádkové postavy
+- Tetování
+- Pruhy
+- Fotbal
+- Stejné iniciály
+- Právo a justice
+- Slavné filmové hlášky
+- Vodní sporty
+- Bývalá Jugoslávie
+- Běžný den
+- Pošta
+- Vlna
+- Britské seriály
+- Dinosauři
+- Hesla a motta
+- Slovo v písni
+- James Bond
+- Hody
+- Fobie
+- Slavní padesátníci
+- Cyklistika
+- Nemoci
+- Řecká abeceda
+- Čeští panovníci
+- Pseudonymy
+- Basketbal
+- Brouci
+- Hory
+- Paměť
+- Homonyma
+- Na přání posluchačů
+- Zlato
+- Nula
+- Vlastivěda
+- Přírodověda
+- Fyzika a chemie
+- NěcoLOGové
+- Tanky
+- Český a slovenský rap
+- Díry
+- Hvězdy
+- Ptáci
+- Léto v muzice
+- Ostrovy
+- Jazyky
+- Mistrovství
+- Ticho
+- Létání
+- Významné ženy
+- Cizí termíny
+- Voda
+- Slavní vrazi
+- Český/česká/české
+- Geometrie
+- Kulaté
+- Otázky z MČR v Hospodském kvízu
+- Korea
+- Hokej
+- Rostliny
+- Slavné dvojice
+- České seriály
+- O pejskovi a kočičce
+- Benelux
+- Rock a metal
+- Ohrožené a vzácné druhy
+- Bubliny
+- Lidské tělo
+- Móda
+- Slavné věty
+- Ruce
+- Tenis
+- Finanční instituce
+- Města a obce
+- Podvody a podvodníci
+- Antika
+- Umělá inteligence
+- Láska
+- Grand Theft Auto
+- Slavné slogany
+- Půlky
+- Čeští spisovatelé
+- Bizarní soutěže
+- Víra
+- Nápoje
+- Hračky
+- Zelenina
+- Počasí
+- Arabský poloostrov
+- První pomoc
+- Hlášky českých filmů
+- Legendy českého internetu
+- Písmo
+- Kde
+- Kdy
+- Kdo
+- Proč a jak?
+- Státy USA
+- Čeští olympijští medailisti
+- První republika
+- Florbal
+- Kliky
+- Etiketa podle Ladislava Špačka
+- Poezie
+- Zbraně
+- Mytologické bytosti
+- Sex
+- Afrika
+- Teplo
+- Hvězdné války
+- QWERTYUIOP
+- Žlutá
+- Vlajky
+- -ismy
+- Sedm divů světa
+- Hudební nástroje
+- Moravskoslezský kraj
+- Čas
+- Cesty
+- Palindromy
+- Hollywood
+- Houby
+- Zkratky
+- Zákony
+- Žirafy
+- 1. fotbalová liga
+- Čísla
+- Sitcomy
+- Bezpečnost
+- YouTube
+- Státní svátky
+- Britská muzika
+- Světové značky
+- Pravěk
+- Káva
+- Gaming
+- Sportovní pravidla
+- Přezdívky a pseudonymy
+- Planeta Země
+- Televizní soutěže
+- Autoškola
+- Mléčné výrobky
+- Tekutiny
+- Hvězdná brána
+- Finance
+- Česko a Československo
+- Devadesátky
+- Doprava
+- Pixarovky
+- NHL
+- Karel IV
+- Karetní a stolní hry
+- Obchod
+- Slavné citáty
+- Hlavní města
+- Jídlo
+- Literatura
+- Sociální sítě
+- New York
+- První světová válka
+- Čeština ze základky
+- Slavné páry
+- Vynálezy a jejich vynálezci
+- Vesmír
+- Ostrava
+- Historie IT
+- Olympijské hry
+- České herečky
+- Evropa

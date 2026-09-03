@@ -62,12 +62,26 @@ class _RecordingSink:
 
 
 class _FakeGenerator:
-    def __init__(self, questions: list[Question]) -> None:
+    """Stand-in for `AdvancedQuestionGenerator`.
+
+    `repairs_inline_options` mirrors the one thing `_finalize_questions` does
+    that this stage depends on: it repairs inline-option stems and reports the
+    counts into whatever `inline_options.collect()` block the caller opened.
+    Tests that assert those counts must use it, otherwise they assert zeros
+    against a generator that never repairs anything.
+    """
+
+    def __init__(
+        self, questions: list[Question], repairs_inline_options: bool = False
+    ) -> None:
         self._questions = questions
+        self._repairs_inline_options = repairs_inline_options
         self.calls: list[dict[str, Any]] = []
 
     async def generate_questions(self, **kwargs: Any) -> list[Question]:
         self.calls.append(kwargs)
+        if self._repairs_inline_options:
+            inline_options.apply_to_questions(self._questions)
         return self._questions
 
 
@@ -1203,7 +1217,7 @@ async def test_inline_option_stems_become_mcq_before_type_tagging() -> None:
             ),
         ),
     ]
-    gen = _FakeGenerator(questions)
+    gen = _FakeGenerator(questions, repairs_inline_options=True)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=3, facts=[Fact(text="t", source_url="https://ex/1")])
 
@@ -1285,34 +1299,70 @@ async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
 
 
 @pytest.mark.asyncio
-async def test_inline_option_counts_come_from_the_generator() -> None:
-    """The repair runs at the generator boundary, so the stage must REPORT
-    those counts, not recompute them.
+async def test_inline_option_counts_are_collected_per_call_not_per_generator() -> None:
+    """Counts must follow the order that caused them, not the generator object.
 
-    Re-running `apply_to_questions` over questions the generator already
-    repaired reports zeros — indistinguishable in the audit trail from a
-    repair that never fired, which is the one thing these counters exist to
-    reveal (PR #76 review). `test_generate_batch_repairs_inline_option_stems`
-    covers the repair itself at that boundary.
+    The generator is a worker-wide singleton shared by two concurrent jobs
+    across minutes of awaited LLM I/O, so counting on instance state let one
+    order zero another's numbers mid-flight and publish its repairs under the
+    wrong order (PR #76 review). The collector is a ContextVar opened around
+    each `generate_questions` call, so two runs on the SAME generator report
+    only their own repairs. `test_generate_batch_repairs_inline_option_stems`
+    covers the repair itself at the real `_finalize_questions` boundary.
     """
-    repaired = _stub_question(
-        0,
-        question="How many bones are inside an elephant's trunk?",
-        type="text_multichoice",
-        correct_answer="Zero",
-        possible_answers={"a": "Zero", "b": "40", "c": "400"},
+    defect = "How many hearts does an octopus have: one, two, or three?"
+    gen = _FakeGenerator(
+        [_stub_question(0, question=defect, correct_answer="Three")],
+        repairs_inline_options=True,
     )
-    gen = _FakeGenerator([repaired])
-    gen.inline_option_counts = inline_options.Counts(
-        inline_options_to_mcq=1,
-        stem_options_stripped=2,
-        inline_options_unmatched=3,
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+
+    first = await stage.run(  # type: ignore[arg-type]
+        _make_ctx(target_count=1, facts=facts), sink=_RecordingSink()
+    )
+    # Same generator, fresh order: the question is already repaired, so this
+    # run reports nothing — none of the first order's repairs leak into it.
+    second = await stage.run(  # type: ignore[arg-type]
+        _make_ctx(target_count=1, facts=facts), sink=_RecordingSink()
+    )
+
+    assert first.info["inline_options_to_mcq"] == 1
+    assert second.info["inline_options_to_mcq"] == 0
+
+
+@pytest.mark.asyncio
+async def test_self_tagged_mcq_without_options_is_still_repaired() -> None:
+    """Structure outranks the label inside the repair too.
+
+    An MCQ-emphasis order renders `"type": "text_multichoice"` into the prompt
+    schema and the model copies it while emitting `possible_answers: null`.
+    Reading that label as "already an MCQ" sent the question down the
+    stem-strip path, which bails without options — so this shape shipped with
+    its options still recited in the stem and every counter at 0 (PR #76
+    review).
+    """
+    gen = _FakeGenerator(
+        [
+            _stub_question(
+                0,
+                question="How many hearts does an octopus have: one, two, "
+                "or three?",
+                type="text_multichoice",
+                possible_answers=None,
+                correct_answer="Three",
+            )
+        ],
+        repairs_inline_options=True,
     )
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
+    question = ctx.questions[0]
+    assert question.question == "How many hearts does an octopus have?"
+    assert question.type == "text_multichoice"
+    assert question.possible_answers == {"a": "One", "b": "Two", "c": "Three"}
+    assert question.correct_answer == "Three"
     assert result.info["inline_options_to_mcq"] == 1
-    assert result.info["stem_options_stripped"] == 2
-    assert result.info["inline_options_unmatched"] == 3

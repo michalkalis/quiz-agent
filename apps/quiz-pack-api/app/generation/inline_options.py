@@ -23,10 +23,12 @@ phrasing needs). Anything ambiguous is left untouched and counted.
 
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import logging
 import re
 from dataclasses import dataclass
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -148,6 +150,30 @@ class Counts:
             "stem_options_stripped": self.stem_options_stripped,
             "inline_options_unmatched": self.inline_options_unmatched,
         }
+
+
+# Where `apply_to_questions` reports what it repaired. A ContextVar, not
+# state on the generator: that generator is a worker-wide singleton shared by
+# `max_jobs=2` concurrent orders across minutes of awaited LLM I/O, so one
+# order's reset landed inside another's window and the two mixed their counts
+# (PR #76 review). Each asyncio task carries its own context — and a task
+# spawned inside a collector (the sub-batch fan-out) inherits it — so the
+# counts stay with the order that caused them. Same pattern as
+# `cost_tracking.activate()` / `llm_usage.current_stage`.
+_active_counts: contextvars.ContextVar[Counts | None] = contextvars.ContextVar(
+    "inline_option_counts", default=None
+)
+
+
+@contextlib.contextmanager
+def collect() -> Iterator[Counts]:
+    """Collect the repairs made anywhere inside this block."""
+    counts = Counts()
+    token = _active_counts.set(counts)
+    try:
+        yield counts
+    finally:
+        _active_counts.reset(token)
 
 
 def _parse_options(raw: str) -> list[str] | None:
@@ -298,8 +324,13 @@ def normalise(
     Free text carrying its own options becomes an MCQ; an MCQ reciting its
     own options loses the recitation. Everything else is left alone.
     """
-    is_mcq = question_type == "text_multichoice" or bool(possible_answers)
-    if is_mcq:
+    # Structure only — the module's own doctrine. Keying off the model's
+    # `type` label sent a question labelled `text_multichoice` with no options
+    # to `_strip_mcq_stem`, which bails on its first line, so the octopus
+    # "one, two, or three?" shape shipped with its options still recited and
+    # no counter raised (PR #76 review). An MCQ-emphasis order provokes
+    # exactly that label (it is rendered into the prompt schema).
+    if possible_answers:
         return _strip_mcq_stem(question, possible_answers)
 
     clause = find_option_clause(question)
@@ -335,7 +366,12 @@ def _strip_mcq_stem(question: str, possible_answers: dict | None) -> Normalisati
 
 
 def apply_to_questions(questions: Sequence[Any]) -> Counts:
-    """Normalise ``Question`` objects in place; return the counts to report."""
+    """Normalise ``Question`` objects in place.
+
+    Returns this pass's counts and, when a caller up the stack opened a
+    ``collect()`` block, adds them there too — that is how ``GenerationStage``
+    reports repairs made deep inside the generator without re-running them.
+    """
     counts = Counts()
     for q in questions:
         result = normalise(
@@ -372,4 +408,7 @@ def apply_to_questions(questions: Sequence[Any]) -> Counts:
             # made the two numbers overlap. This one means what it says: MCQs
             # that already had options and merely recited them.
             counts.stem_options_stripped += 1
+    active = _active_counts.get()
+    if active is not None:
+        active.add(counts)
     return counts

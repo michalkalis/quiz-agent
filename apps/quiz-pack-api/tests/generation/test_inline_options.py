@@ -208,6 +208,23 @@ class TestNormalise:
         }
         assert result.correct_answer == "500 tonnes"
 
+    def test_converts_a_self_tagged_mcq_that_never_got_options(self) -> None:
+        # PR #76 review: reading the model's `type` label first sent this to
+        # the stem-strip path, which bails without options — so the question
+        # kept reciting its choices and no counter fired. An MCQ-emphasis
+        # order provokes exactly this label/structure mismatch.
+        result = normalise(
+            "How many hearts does an octopus have: one, two, or three?",
+            "text_multichoice",
+            "Three",
+            None,
+        )
+        assert result is not None
+        assert result.kind == "to_mcq"
+        assert result.question == "How many hearts does an octopus have?"
+        assert result.possible_answers == {"a": "One", "b": "Two", "c": "Three"}
+        assert result.correct_answer == "Three"
+
     def test_unmatched_answer_leaves_the_question_untouched(self) -> None:
         result = normalise(
             "How heavy was the phone: closer to a chocolate bar, a bag of "

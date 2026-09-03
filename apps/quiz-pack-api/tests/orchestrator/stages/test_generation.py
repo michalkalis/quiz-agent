@@ -29,6 +29,7 @@ from typing import Any, Optional, Sequence
 
 import pytest
 
+from app.generation import inline_options
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -61,12 +62,26 @@ class _RecordingSink:
 
 
 class _FakeGenerator:
-    def __init__(self, questions: list[Question]) -> None:
+    """Stand-in for `AdvancedQuestionGenerator`.
+
+    `repairs_inline_options` mirrors the one thing `_finalize_questions` does
+    that this stage depends on: it repairs inline-option stems and reports the
+    counts into whatever `inline_options.collect()` block the caller opened.
+    Tests that assert those counts must use it, otherwise they assert zeros
+    against a generator that never repairs anything.
+    """
+
+    def __init__(
+        self, questions: list[Question], repairs_inline_options: bool = False
+    ) -> None:
         self._questions = questions
+        self._repairs_inline_options = repairs_inline_options
         self.calls: list[dict[str, Any]] = []
 
     async def generate_questions(self, **kwargs: Any) -> list[Question]:
         self.calls.append(kwargs)
+        if self._repairs_inline_options:
+            inline_options.apply_to_questions(self._questions)
         return self._questions
 
 
@@ -1156,3 +1171,198 @@ async def test_best_of_n_env_rollback(monkeypatch) -> None:
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert gen.calls[0]["enable_best_of_n"] is True
+
+
+@pytest.mark.asyncio
+async def test_inline_option_stems_become_mcq_before_type_tagging() -> None:
+    """Founder blind rating 2026-09-03 — a `text` question that recites its
+    own options is an MCQ the model forgot to declare.
+
+    It shipped as free text: the player had to *say* "about 3,800 years" for
+    the voice grader to match, and iOS never raised the option picker. The
+    repair must run BEFORE the 42.9a type tagging so the routing below sees
+    the real structure, and its counts must reach `StageResult.info` — that
+    is the only signal a future batch regressed.
+    """
+    questions = [
+        _stub_question(
+            0,
+            question="The Great Pyramid was the tallest structure for how "
+            "long: closer to 400 years, 1,400 years, or 3,800 years?",
+            correct_answer="About 3,800 years",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 11: The Estimation Challenge"
+            ),
+        ),
+        _stub_question(
+            1,
+            question="Which of these mammals cannot inject venom: platypus, "
+            "slow loris, shrew, or hedgehog?",
+            type="text_multichoice",
+            correct_answer="Hedgehog",
+            possible_answers={
+                "a": "Platypus",
+                "b": "Slow loris",
+                "c": "Shrew",
+                "d": "Hedgehog",
+            },
+            generation_metadata=GenerationProvenance(reasoning_pattern="odd_one_out"),
+        ),
+        _stub_question(
+            2,
+            question="Which is older: the Sun or the Moon?",
+            correct_answer="Neither — they formed together",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 12: The Comparison Bet"
+            ),
+        ),
+    ]
+    gen = _FakeGenerator(questions, repairs_inline_options=True)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    by_text = {q.question: q for q in ctx.questions}
+    converted = by_text[
+        "The Great Pyramid was the tallest structure for how long?"
+    ]
+    assert converted.type == "text_multichoice"
+    assert converted.possible_answers == {
+        "a": "400 years",
+        "b": "1,400 years",
+        "c": "3,800 years",
+    }
+    assert converted.correct_answer == "3,800 years"
+    assert (
+        "platypus" not in by_text["Which of these mammals cannot inject venom?"].question
+    )
+    assert result.info["inline_options_to_mcq"] == 1
+    assert result.info["stem_options_stripped"] == 1
+    # The comparison-bet answer resolves to neither listed option, so the
+    # question is left exactly as generated rather than converted on a guess.
+    assert result.info["inline_options_unmatched"] == 1
+
+
+@pytest.mark.asyncio
+async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
+    """The `Pattern NN` label fix must not turn into a content deleter.
+
+    Once numbered labels reach the MCQ route, the fail-loud guard would drop
+    every such question that carries no options — including good free-text
+    ones the normaliser cannot repair: a comma-only odd-one-out list (no "or"
+    to split on) and an open comparison bet. Both read fine as spoken
+    questions, so a label-only MCQ claim with nothing to build from keeps the
+    question. `true_false` is the exception and still drops (asserted in
+    `test_tags_mcq_type_from_pattern_and_drops_when_options_missing`).
+    """
+    # Both arrive SELF-TAGGED `text_multichoice` with no options — the shape
+    # an MCQ-emphasis order provokes, since it renders `text_multichoice` in
+    # the prompt schema (PR #76 review). Keeping the question means keeping it
+    # as free text: a persisted MCQ with zero options fails `proxy_mcq_valid`
+    # and shows the player an empty picker.
+    questions = [
+        _stub_question(
+            0,
+            question="Chocolate, coffee and tea all reached Europe within a "
+            "century of each other. Which of the three arrived first?",
+            type="text_multichoice",
+            correct_answer="Chocolate",
+            possible_answers=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 12: The Comparison Bet"
+            ),
+        ),
+        _stub_question(
+            1,
+            question="Which of these doesn't belong: violin, cello, flute, "
+            "double bass?",
+            type="text_multichoice",
+            correct_answer="Flute",
+            possible_answers=None,
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 9: The Odd One Out"
+            ),
+        ),
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=2, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 2
+    assert [q.type for q in ctx.questions] == ["text", "text"]
+    assert all(q.possible_answers is None for q in ctx.questions)
+    assert result.info["dropped_mcq_missing_options"] == 0
+    assert result.info["mcq_label_kept_as_text"] == 2
+
+
+@pytest.mark.asyncio
+async def test_inline_option_counts_are_collected_per_call_not_per_generator() -> None:
+    """Counts must follow the order that caused them, not the generator object.
+
+    The generator is a worker-wide singleton shared by two concurrent jobs
+    across minutes of awaited LLM I/O, so counting on instance state let one
+    order zero another's numbers mid-flight and publish its repairs under the
+    wrong order (PR #76 review). The collector is a ContextVar opened around
+    each `generate_questions` call, so two runs on the SAME generator report
+    only their own repairs. `test_generate_batch_repairs_inline_option_stems`
+    covers the repair itself at the real `_finalize_questions` boundary.
+    """
+    defect = "How many hearts does an octopus have: one, two, or three?"
+    gen = _FakeGenerator(
+        [_stub_question(0, question=defect, correct_answer="Three")],
+        repairs_inline_options=True,
+    )
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+
+    first = await stage.run(  # type: ignore[arg-type]
+        _make_ctx(target_count=1, facts=facts), sink=_RecordingSink()
+    )
+    # Same generator, fresh order: the question is already repaired, so this
+    # run reports nothing — none of the first order's repairs leak into it.
+    second = await stage.run(  # type: ignore[arg-type]
+        _make_ctx(target_count=1, facts=facts), sink=_RecordingSink()
+    )
+
+    assert first.info["inline_options_to_mcq"] == 1
+    assert second.info["inline_options_to_mcq"] == 0
+
+
+@pytest.mark.asyncio
+async def test_self_tagged_mcq_without_options_is_still_repaired() -> None:
+    """Structure outranks the label inside the repair too.
+
+    An MCQ-emphasis order renders `"type": "text_multichoice"` into the prompt
+    schema and the model copies it while emitting `possible_answers: null`.
+    Reading that label as "already an MCQ" sent the question down the
+    stem-strip path, which bails without options — so this shape shipped with
+    its options still recited in the stem and every counter at 0 (PR #76
+    review).
+    """
+    gen = _FakeGenerator(
+        [
+            _stub_question(
+                0,
+                question="How many hearts does an octopus have: one, two, "
+                "or three?",
+                type="text_multichoice",
+                possible_answers=None,
+                correct_answer="Three",
+            )
+        ],
+        repairs_inline_options=True,
+    )
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    question = ctx.questions[0]
+    assert question.question == "How many hearts does an octopus have?"
+    assert question.type == "text_multichoice"
+    assert question.possible_answers == {"a": "One", "b": "Two", "c": "Three"}
+    assert question.correct_answer == "Three"
+    assert result.info["inline_options_to_mcq"] == 1

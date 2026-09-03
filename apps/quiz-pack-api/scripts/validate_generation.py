@@ -119,12 +119,13 @@ def _pattern_of(q: "Question") -> str | None:
     # normalizes in `choose_question_type`; without it the pattern proxies
     # false-fail on batches whose patterns are all title-form (seen on the
     # 2026-07-12 100-question assemble).
-    from app.generation.pattern_routing import _normalize_pattern
+    # 2026-09-03: use the router's own normalisation rather than a copy of an
+    # older version of it — live labels also cite the Library entry by number
+    # ("Pattern 12: The Comparison Bet"), which the local copy proxied as an
+    # unknown pattern and could fail a batch the router had routed to MCQ.
+    from app.generation.pattern_routing import normalize_mcq_pattern
 
-    normalized = _normalize_pattern(raw)
-    if normalized.startswith("the_"):
-        normalized = normalized[len("the_") :]
-    return normalized
+    return normalize_mcq_pattern(raw)
 
 
 def _norm_text(text: str) -> str:

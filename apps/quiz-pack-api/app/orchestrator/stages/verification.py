@@ -107,7 +107,7 @@ class VerificationStage:
             payload = [
                 {
                     "id": q.id,
-                    "question": q.question,
+                    "question": _question_with_options(q),
                     "correct_answer": _stringify_answer(q.correct_answer),
                     "topic": q.topic,
                 }
@@ -247,6 +247,24 @@ def _is_logical(q: Question) -> bool:
         q.generation_metadata is not None
         and q.generation_metadata.pipeline == "logical_puzzle"
     )
+
+
+def _question_with_options(q: Question) -> str:
+    """The stem the verifier should judge — with an MCQ's options attached.
+
+    An MCQ's claimed answer is only ever "the right one of these", never an
+    exact measurement: "3,800 years" is the correct bucket for a pyramid that
+    held the record for ~3,871 years, and "Tens of thousands of years" is a
+    range. Sending the bare stem asked the web verifier to confirm an exact
+    figure and let it drop correct questions as `fact_error` — a risk the
+    inline-option repair sharpens, because the options it lifts OUT of the
+    stem are exactly the context the verifier used to read (PR #76 review,
+    finding 5). Free-text questions are unchanged.
+    """
+    if not q.possible_answers:
+        return q.question
+    options = " / ".join(str(v) for v in q.possible_answers.values())
+    return f"{q.question} (multiple choice — the options are: {options})"
 
 
 def _stringify_answer(answer: object) -> str:

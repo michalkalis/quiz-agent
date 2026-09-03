@@ -9,6 +9,23 @@ bare-letter answer ("c") in 2026-08.
 from __future__ import annotations
 
 
+_OPTION_KEYS = frozenset("abcdef")
+
+
+def is_bare_option_key(correct_answer: object) -> bool:
+    """True when the answer is only an option letter ("c") with no text.
+
+    Pilot 2026-07-11: models that intend an MCQ and fail to emit the options
+    still answer with the key letter, which is meaningless on its own — such a
+    question is unusable as free text and must not be kept as one.
+    """
+    if isinstance(correct_answer, list):
+        correct_answer = correct_answer[0] if correct_answer else None
+    if not isinstance(correct_answer, str):
+        return False
+    return correct_answer.strip().lower() in _OPTION_KEYS
+
+
 def resolve_mcq_answer(
     possible_answers: dict | None, correct_answer: object
 ) -> str | None:

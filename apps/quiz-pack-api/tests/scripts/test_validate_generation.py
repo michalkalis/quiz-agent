@@ -118,6 +118,23 @@ def test_pattern_diversity_passes_at_threshold():
     assert vg.proxy_pattern_diversity(batch).passed is True
 
 
+def test_pattern_diversity_reads_numbered_library_labels_as_one_pattern():
+    # 2026-09-03: live labels cite the Library entry by number. The gate kept
+    # its own older copy of the router's normalisation, so "Pattern 12: The
+    # Comparison Bet" and "The Comparison Bet (Pattern 12)" counted as two
+    # distinct patterns here while the router treated both as one MCQ key —
+    # a batch could pass diversity on nothing but relabelled duplicates.
+    batch = [
+        _q(generation_metadata={"reasoning_pattern": p})
+        for p in (
+            "Pattern 12: The Comparison Bet",
+            "The Comparison Bet (Pattern 12)",
+            "comparison_bet",
+        )
+    ]
+    assert vg.proxy_pattern_diversity(batch).passed is False
+
+
 def test_pattern_diversity_fails_below_threshold():
     batch = [_q(generation_metadata={"reasoning_pattern": p}) for p in ("estimation", "odd_one_out")]
     assert vg.proxy_pattern_diversity(batch).passed is False

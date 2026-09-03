@@ -20,15 +20,18 @@ from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.classification import normalize_category, normalize_difficulty
-from app.generation.mcq_answer import resolve_mcq_answer
+from app.generation.mcq_answer import is_bare_option_key, resolve_mcq_answer
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
     ExpiryClassifier,
 )
+from app.generation import inline_options
 from app.generation.pattern_routing import (
+    MCQ_ONLY_PATTERNS,
     PATTERNS_TO_MCQ,
     choose_question_type,
+    normalize_mcq_pattern,
 )
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
@@ -196,46 +199,60 @@ class GenerationStage:
         if open_count == 0 and ctx.target_count >= OPEN_SHAPE_MIN_ORDER:
             open_count = 1
 
-        questions = await self._generator.generate_questions(
-            count=ctx.target_count,
-            open_count=open_count,
-            # #166 D21b — best-of-N (overgen + critique + pairwise duels) is
-            # flag-gated and OFF by default: on D21b data critique predicted
-            # neither fun nor factuality, duels were ruled out in D21 (#164).
-            # BEST_OF_N=1 restores the full selection pipeline.
-            enable_best_of_n=feature_flags.best_of_n(),
-            # 2026-07-27 live-run F-e: None = mixed batch with per-question
-            # assessment; an explicit order difficulty becomes the prompt's
-            # target level (the model still reports its honest per-question
-            # value, normalized below).
-            difficulty=ctx.difficulty,
-            topics=topics,
-            categories=categories,
-            source_facts=ctx.facts or None,
-            # Issue #42 task 42.9b — the generator passes these into the
-            # `{mcq_patterns_section}` of the prompt so the LLM emits
-            # `possible_answers` + key-letter `correct_answer` for any
-            # MCQ-routed pattern. The downstream 42.9a step (below) then
-            # tags the question type from the LLM's chosen pattern.
-            mcq_patterns=set(PATTERNS_TO_MCQ),
-            # #42 task 42.20 blocker fix (root cause D): the order prompt is
-            # never handed to the generation LLM, so MCQ emphasis travels as
-            # this explicit bool and the generator injects the hard quota
-            # into `{mcq_patterns_section}` itself.
-            mcq_emphasis=ctx.mcq_emphasis,
-            # V18 (2026-07-30) — the gold-bias exemplar sampler keys off
-            # `question_type == "text_multichoice"`
-            # (`app/generation/examples.py:76`) and the example pack is built
-            # ONCE per invocation (`advanced_generator.py:445`), before the MCQ
-            # sub-batch fan-out. Leaving this at the "text" default meant
-            # MCQ-emphasis orders got type-blind exemplars — the MCQ sub-batches
-            # never saw the option-dict payload shape. `ctx.mcq_emphasis` is the
-            # trigger because `mcq_patterns` above is a constant (non-empty on
-            # every order, so it can't discriminate) and emphasis is the same
-            # flag the generator itself gates its MCQ path on
-            # (`advanced_generator.py:482`).
-            question_type="text_multichoice" if ctx.mcq_emphasis else "text",
-        )
+        # Founder blind rating 2026-09-03 — the deterministic inline-option
+        # repair. A question that recites "closer to 400 years, 1,400 years,
+        # or 3,800 years?" inside a `text` stem is an MCQ the model forgot to
+        # declare: the player had to speak a bucket the voice grader then had
+        # to match, and iOS never raised the option picker.
+        #
+        # The repair itself runs at the generator boundary
+        # (`_finalize_questions`), which the eval/rating scripts share. This
+        # block only COLLECTS what it did, so `StageResult.info` reports the
+        # run's real numbers — re-running the repair here would report zeros
+        # on the very run where it fired, and warn twice per unmatched
+        # question. The collector is call-local (a ContextVar), so two
+        # concurrent orders in one worker cannot mix their counts.
+        with inline_options.collect() as inline_counts:
+            questions = await self._generator.generate_questions(
+                count=ctx.target_count,
+                open_count=open_count,
+                # #166 D21b — best-of-N (overgen + critique + pairwise duels) is
+                # flag-gated and OFF by default: on D21b data critique predicted
+                # neither fun nor factuality, duels were ruled out in D21 (#164).
+                # BEST_OF_N=1 restores the full selection pipeline.
+                enable_best_of_n=feature_flags.best_of_n(),
+                # 2026-07-27 live-run F-e: None = mixed batch with per-question
+                # assessment; an explicit order difficulty becomes the prompt's
+                # target level (the model still reports its honest per-question
+                # value, normalized below).
+                difficulty=ctx.difficulty,
+                topics=topics,
+                categories=categories,
+                source_facts=ctx.facts or None,
+                # Issue #42 task 42.9b — the generator passes these into the
+                # `{mcq_patterns_section}` of the prompt so the LLM emits
+                # `possible_answers` + key-letter `correct_answer` for any
+                # MCQ-routed pattern. The downstream 42.9a step (below) then
+                # tags the question type from the LLM's chosen pattern.
+                mcq_patterns=set(PATTERNS_TO_MCQ),
+                # #42 task 42.20 blocker fix (root cause D): the order prompt is
+                # never handed to the generation LLM, so MCQ emphasis travels as
+                # this explicit bool and the generator injects the hard quota
+                # into `{mcq_patterns_section}` itself.
+                mcq_emphasis=ctx.mcq_emphasis,
+                # V18 (2026-07-30) — the gold-bias exemplar sampler keys off
+                # `question_type == "text_multichoice"`
+                # (`app/generation/examples.py:76`) and the example pack is built
+                # ONCE per invocation (`advanced_generator.py:445`), before the MCQ
+                # sub-batch fan-out. Leaving this at the "text" default meant
+                # MCQ-emphasis orders got type-blind exemplars — the MCQ sub-batches
+                # never saw the option-dict payload shape. `ctx.mcq_emphasis` is the
+                # trigger because `mcq_patterns` above is a constant (non-empty on
+                # every order, so it can't discriminate) and emphasis is the same
+                # flag the generator itself gates its MCQ path on
+                # (`advanced_generator.py:482`).
+                question_type="text_multichoice" if ctx.mcq_emphasis else "text",
+            )
 
         prompt_seed = _compute_prompt_seed(
             ctx.prompt, ctx.language, ctx.category, ctx.theme
@@ -390,8 +407,10 @@ class GenerationStage:
         # bypass the check entirely) and must reject blank option texts or
         # an answer that resolves to no option — both shipped bare-letter
         # answers to founder review.
+
         tagged: list[Question] = []
         dropped_mcq_missing_options = 0
+        mcq_label_kept_as_text = 0
         for q in kept:
             pattern = (
                 q.generation_metadata.reasoning_pattern
@@ -411,6 +430,40 @@ class GenerationStage:
                     q.possible_answers, q.correct_answer
                 )
                 if resolved_answer is None:
+                    # 2026-09-03: the `Pattern NN` label fix above re-activated
+                    # this route for labels that used to miss it entirely, so
+                    # the drop must not widen with it. With NO options at all
+                    # there is nothing half-built to reject — only a label
+                    # claiming a shape the question never had — so the
+                    # free-text question is kept rather than deleted on the
+                    # strength of the model's own untrusted self-report
+                    # (#160). The decision reads structure and answer shape,
+                    # never `q.type` — that field is the model's self-report
+                    # too. Two shapes are NOT usable as free text and still
+                    # drop: `true_false` (whose spoken answer is the word
+                    # "True") and a bare option key ("c"), the pilot
+                    # 2026-07-11 gemini shape.
+                    if (
+                        not q.possible_answers
+                        and not is_bare_option_key(q.correct_answer)
+                        and normalize_mcq_pattern(pattern) not in MCQ_ONLY_PATTERNS
+                    ):
+                        mcq_label_kept_as_text += 1
+                        logger.info(
+                            "GenerationStage kept question id=%s as text "
+                            "(pattern=%s claims MCQ, no options to build one)",
+                            q.id,
+                            pattern,
+                        )
+                        # The branch's premise is "this is a free-text
+                        # question", so the field must say so: `q.type` is the
+                        # model's self-report and may still claim MCQ (an
+                        # MCQ-emphasis order renders that in the prompt
+                        # schema), which would persist a typed MCQ with zero
+                        # options and fail `proxy_mcq_valid`.
+                        q.type = "text"
+                        tagged.append(q)
+                        continue
                     dropped_mcq_missing_options += 1
                     logger.warning(
                         "GenerationStage dropped question id=%s reason=mcq_missing_options "
@@ -560,8 +613,10 @@ class GenerationStage:
                 "dropped_quality": dropped_quality,
                 "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,
+                "mcq_label_kept_as_text": mcq_label_kept_as_text,
                 "dropped_ungrounded": dropped_ungrounded,
                 "demoted_puzzles": demoted_puzzles,
+                **inline_counts.as_info(),
             },
             cost_cents=0,
         )

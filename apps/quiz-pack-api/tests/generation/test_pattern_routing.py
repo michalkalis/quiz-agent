@@ -290,3 +290,40 @@ class TestQuestionTypeValidator:
     def test_empty_type_raises(self) -> None:
         with pytest.raises(ValidationError):
             Question(**_base_question_kwargs(type=""))
+
+
+# Founder blind rating 2026-09-03: the live labels cite the Library entry by
+# number ("Pattern 12: The Comparison Bet"), a shape neither the `the_` strip
+# nor the `comparison_bet` alias survived — so that alias was dead in practice
+# and every numbered label routed to free text.
+class TestNumberedLibraryLabels:
+    @pytest.mark.parametrize(
+        ("pattern", "expected"),
+        [
+            ("Pattern 12: The Comparison Bet", "text_multichoice"),
+            ("The Comparison Bet (Pattern 12)", "text_multichoice"),
+            ("Pattern 9: The Odd One Out", "text_multichoice"),
+            ("Pattern 5: The Historical Quirk", "text"),
+            ("Pattern 13: The Reverse Engineer (with a narrative)", "text"),
+        ],
+    )
+    def test_numbered_library_labels_route(self, pattern: str, expected: str) -> None:
+        assert choose_question_type(pattern) == expected
+
+    def test_estimation_challenge_stays_free_text(self) -> None:
+        # #72 P1.4 decision #2: the Library's Estimation pattern is the OPEN
+        # numeric form; `order_of_magnitude` is its separate MCQ form. Routing
+        # the label to MCQ would make GenerationStage drop every open estimate
+        # that (correctly) carries no options — the inline-option normaliser
+        # converts the bucketed ones from their structure instead.
+        assert choose_question_type("Pattern 11: The Estimation Challenge") == "text"
+
+    def test_verification_mode_ignores_the_numbered_label(self) -> None:
+        # The MCQ label normalisation is deliberately NOT shared with
+        # `verification_mode`: a model that writes "Pattern 10: The Lateral
+        # Thinking Puzzle" over a factual claim must not thereby buy itself an
+        # exemption from web fact-checking (#160).
+        assert (
+            verification_mode("Pattern 10: The Lateral Thinking Puzzle", "Why?")
+            == "factual"
+        )

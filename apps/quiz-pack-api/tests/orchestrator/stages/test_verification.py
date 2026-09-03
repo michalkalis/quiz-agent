@@ -432,3 +432,35 @@ async def test_lying_lateral_label_still_goes_to_fact_verifier() -> None:
     assert logical_verifier.calls == []
     factual_ids = {q["id"] for batch in fact_verifier.calls for q in batch}
     assert factual_ids == {"q_0"}
+
+
+@pytest.mark.asyncio
+async def test_mcq_options_travel_with_the_stem_to_the_verifier() -> None:
+    """An MCQ's answer is the right BUCKET, not an exact measurement.
+
+    "3,800 years" is the correct option for a pyramid that held the record
+    for ~3,871 years. Sent as a bare stem plus that claim, the web verifier is
+    asked to confirm an exact figure and can drop a correct question as
+    `fact_error` — and the inline-option repair sharpens the risk, because the
+    options it lifts out of the stem are the very context the verifier used to
+    read there. Free-text questions must keep travelling unchanged.
+    """
+    mcq = _stub_question(
+        0,
+        question="The Great Pyramid was the tallest structure for how long?",
+        type="text_multichoice",
+        correct_answer="3,800 years",
+        possible_answers={"a": "400 years", "b": "1,400 years", "c": "3,800 years"},
+    )
+    free_text = _stub_question(1, question="What is the capital of France?")
+    fact_verifier = _FakeFactVerifier({})
+    stage = VerificationStage(fact_verifier)  # type: ignore[arg-type]
+
+    await stage.run(_make_ctx([mcq, free_text]), sink=_RecordingSink())  # type: ignore[arg-type]
+
+    sent = {q["id"]: q["question"] for batch in fact_verifier.calls for q in batch}
+    assert "400 years / 1,400 years / 3,800 years" in sent["q_0"]
+    assert sent["q_0"].startswith(
+        "The Great Pyramid was the tallest structure for how long?"
+    )
+    assert sent["q_1"] == "What is the capital of France?"

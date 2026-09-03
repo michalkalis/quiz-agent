@@ -41,6 +41,12 @@ from quiz_shared.llm import factory
 
 LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech"}
 DEEPL_TARGETS = {"sk": "SK", "cs": "CS"}
+#: Per-request completion cap for the LLM arms. Reasoning models (Gemini 2.5
+#: Pro) spend "thinking" tokens inside this budget before the visible JSON, so
+#: the old 2000 truncated 18/35 SK and 14/35 CS Gemini outputs mid-object in
+#: the 2026-09-02 arm run (parse failed loud, as designed). 8000 leaves room
+#: for thinking + a ~600-token payload; Opus/GPT-4.1 ignore the extra headroom.
+MAX_TOKENS = 8000
 
 #: The fields an arm must return. Kept in one place so the prompt, the DeepL
 #: arm and the parser cannot drift apart.
@@ -174,7 +180,7 @@ def run_batch_arm(
     requests = [
         batch_api.BatchRequest(
             custom_id=str(q["id"]),
-            body={"messages": _messages(q, language), "max_tokens": 2000},
+            body={"messages": _messages(q, language), "max_tokens": MAX_TOKENS},
         )
         for q in questions
     ]
@@ -230,7 +236,7 @@ def run_sync_arm(
             resp = client.chat.completions.create(
                 model=model,
                 messages=_messages(q, language),
-                max_tokens=2000,
+                max_tokens=MAX_TOKENS,
             )
             texts[qid] = resp.choices[0].message.content or ""
         except Exception as exc:

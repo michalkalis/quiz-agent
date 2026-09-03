@@ -341,3 +341,120 @@ class TestCliWiring:
         entries = json.loads(out.read_text(encoding="utf-8"))
         assert [e["id"] for e in entries] == [question.id]
         assert entries[0]["review_status"] == "pending_review"
+
+
+class TestProdParityWiring:
+    """#169 — the prod worker path is the source of truth; the CLI (used with
+    ``LLM_GATEWAY=session``) must run the SAME stages/prompts, only the
+    transport differs. Four defects were live before this locked them in: the
+    CLI silently generated on the pre-#166 `v2_cot` template, dropped
+    ScoringStage entirely under `--no-judges` (losing the deterministic craft
+    and distractor gates prod keeps), never ran the answerability gate, and
+    never wired the logical-consistency verifier. Each assert below pins one
+    of those; a CLI batch that diverges here is not comparable to a paid pack.
+    """
+
+    @staticmethod
+    def _stages(monkeypatch, **levers):
+        # Constructor-time env only (no network at build time).
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        # Transport must not leak into a wiring test (test hermeticity).
+        monkeypatch.setenv("LLM_GATEWAY", "direct")
+        return generate_pack._build_stages(
+            persist=False, dedup_store=generate_pack._NoopQuestionStore(), **levers
+        )
+
+    def test_generation_uses_feature_flag_prompt_version(self, monkeypatch):
+        """worker.py and api/routes.py pass `generation_prompt_version()`; the
+        CLI must read the same flag, not the ctor default `v2_cot`."""
+        from app import feature_flags
+        from app.orchestrator.stages import GenerationStage
+
+        monkeypatch.delenv("GEN_PROMPT_VERSION", raising=False)
+        generation = next(
+            s for s in self._stages(monkeypatch) if isinstance(s, GenerationStage)
+        )
+        assert generation._generator.prompt_version == "direct_v1"
+        assert (
+            generation._generator.prompt_version
+            == feature_flags.generation_prompt_version()
+        )
+
+        # The rollback lever must reach the CLI too.
+        monkeypatch.setenv("GEN_PROMPT_VERSION", "v2_cot")
+        generation = next(
+            s for s in self._stages(monkeypatch) if isinstance(s, GenerationStage)
+        )
+        assert generation._generator.prompt_version == "v2_cot"
+
+    def test_no_judges_keeps_scoring_stage_with_no_panel(self, monkeypatch):
+        """Prod with `JUDGE_GATE=0` runs `ScoringStage(None)` — judges off,
+        deterministic gates on. Omitting the stage (the old CLI behaviour)
+        also dropped those gates, so a session run shipped questions prod
+        would have rejected."""
+        from app.orchestrator.stages import ScoringStage, TopUpStage
+
+        stages = self._stages(monkeypatch, judges=False)
+        scoring = [s for s in stages if isinstance(s, ScoringStage)]
+        assert len(scoring) == 1
+        assert scoring[0]._scorer is None
+        # Top-up reuses that same instance, as the worker does — not a
+        # stand-in that skips the gates on every backfill round.
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+        assert topup._scoring_stage is scoring[0]
+
+    def test_judges_on_wires_the_panel(self, monkeypatch):
+        from app.orchestrator.stages import ScoringStage
+
+        scoring = next(
+            s
+            for s in self._stages(monkeypatch, judges=True)
+            if isinstance(s, ScoringStage)
+        )
+        assert scoring._scorer is not None
+
+    def test_answerability_stage_wired_by_default_and_into_topup(self, monkeypatch):
+        """`answerability_check()` is True by default (#135 D10), so prod runs
+        the early gate; the CLI had no such stage at all — neither in the main
+        walk nor in top-up."""
+        from app.orchestrator.stages import (
+            AnswerabilityStage,
+            DedupStage,
+            TopUpStage,
+            VerificationStage,
+        )
+
+        monkeypatch.delenv("ANSWERABILITY_CHECK", raising=False)
+        stages = self._stages(monkeypatch)
+        answerability = next(s for s in stages if isinstance(s, AnswerabilityStage))
+        # EARLY: after dedup, before verification — an unclear question must
+        # not pay for search or judges (worker `_build_stages` ordering).
+        dedup_i = stages.index(next(s for s in stages if isinstance(s, DedupStage)))
+        verify_i = stages.index(
+            next(s for s in stages if isinstance(s, VerificationStage))
+        )
+        assert dedup_i < stages.index(answerability) < verify_i
+        assert [s.name for s in stages].count("answerability") == 1
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+        assert topup._answerability_stage is answerability
+
+    def test_answerability_flag_off_removes_the_stage(self, monkeypatch):
+        from app.orchestrator.stages import AnswerabilityStage, TopUpStage
+
+        monkeypatch.setenv("ANSWERABILITY_CHECK", "0")
+        stages = self._stages(monkeypatch)
+        assert not any(isinstance(s, AnswerabilityStage) for s in stages)
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+        assert topup._answerability_stage is None
+
+    def test_logical_verifier_wired(self, monkeypatch):
+        """46.B6: lateral puzzles divert to the consistency judge only when one
+        is wired. Unwired, the CLI verified them on the factual path."""
+        from app.orchestrator.stages import VerificationStage
+        from app.verification.logical_verifier import LogicalConsistencyVerifier
+
+        verification = next(
+            s for s in self._stages(monkeypatch) if isinstance(s, VerificationStage)
+        )
+        assert isinstance(verification._logical_verifier, LogicalConsistencyVerifier)

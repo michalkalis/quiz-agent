@@ -1,0 +1,507 @@
+[
+  {
+    "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+    "question": "Poušť se vymezuje podle toho, jak málo zde prší, nikoli podle tepla – a právě proto není největší pouští na Zemi Sahara. Který kontinent drží tento primát?",
+    "possible_answers": null,
+    "correct_answer": "Antarktida",
+    "alternative_answers": [
+      "Antarktida"
+    ],
+    "explanation": "Ve vnitrozemí Antarktidy napadá tak málo sněhu, že celý tento zamrzlý kontinent lze považovat za poušť – a to za poušť mnohem větší než Sahara.",
+    "topic": "Weather and natural phenomena",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+    "question": "Která japonská společnost, založená v Kjótu v roce 1889 za účelem výroby ručně vyráběných hracích karet, se později stala jednou z nejvýznamnějších firem v oblasti videoher?",
+    "possible_answers": null,
+    "correct_answer": "Nintendo",
+    "alternative_answers": [],
+    "explanation": "Společnost Nintendo desítky let prodávala hrací karty hanafuda – a dokonce se pokusila proniknout i na trh s taxíky a instantní rýží –, než v 70. a 80. letech minulého století zaznamenala obrovský úspěch s videohrami.",
+    "topic": "Games and toys history",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "61765172-71c1-5487-97c2-827d5b89bd9f",
+    "question": "Téměř 300 metrů nad zemí se v Eiffelově věži skrývá malý soukromý byt s tapetami, dřevěným nábytkem a klavírem – útočiště, kde jeho majitel kdysi hostil Thomase Edisona. Kdo si nechal tento tajný byt postavit?",
+    "possible_answers": null,
+    "correct_answer": "Gustave Eiffel",
+    "alternative_answers": [
+      "Eiffel",
+      "pan Eiffel",
+      "Projektant věže Gustave Eiffel"
+    ],
+    "explanation": "Inženýr, který věž navrhl, si pro sebe ponechal útulný byt nedaleko vrcholu a údajně odmítl i velmi štědré nabídky na jeho pronájem – dnes si návštěvníci mohou uvnitř prohlédnout figuríny Eiffela a Edisona.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+    "question": "Která kapela v lednu 1969 odehrála své úplně poslední veřejné vystoupení – neohlášený polední koncert na střeše své londýnské kancelářské budovy, který byl přerušen policií?",
+    "possible_answers": null,
+    "correct_answer": "The Beatles",
+    "alternative_answers": [
+      "Beatles"
+    ],
+    "explanation": "Beatles hráli asi 42 minut na střeše sídla své společnosti Apple Corps na Savile Row, než je policie vyzvala, aby přestali – ukázalo se, že to bylo poslední živé vystoupení nejslavnější kapely v historii.",
+    "topic": "Music history milestones",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "84a82a8f-b5f4-44da-80d0-58f7da931d58",
+    "question": "Gouda, Edam a Leyden jsou známé sýry, které pocházejí ze stejné země. Která země dala světu tuto trojici?",
+    "possible_answers": {
+      "a": "Nizozemsko",
+      "b": "Švýcarsko",
+      "c": "Francie",
+      "d": "Belgie"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [],
+    "explanation": "Sýr Gouda nese jméno po nizozemském městě, kde se s ním obchodovalo, a Nizozemsko zůstává i přes svou malou rozlohu jedním z největších vývozců sýrů na světě.",
+    "topic": "General",
+    "difficulty": "easy",
+    "source_url": "https://opentdb.com"
+  },
+  {
+    "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+    "question": "Bod Nemo v jižním Pacifiku je místo v oceánu, které je nejdále od jakékoli pevniny – více než 2 600 kilometrů ve všech směrech. Jelikož se v jeho blízkosti nikdy nikdo nenachází, využívají ho vesmírné agentury jako určenou zónu pro havárie. K čemu?",
+    "possible_answers": null,
+    "correct_answer": "Vyřazené kosmické lodě",
+    "alternative_answers": [
+      "Kosmická loď",
+      "Staré satelity",
+      "Vyřazené družice",
+      "Vesmírné stanice",
+      "Kosmický odpad"
+    ],
+    "explanation": "Stovky vyřazených satelitů a vesmírných stanic, včetně ruské stanice Mir, byly nasměrovány ke svému zániku na tento „hřbitov kosmických lodí“ — často jsou jedinými lidmi, kteří se k nim přiblíží, astronauti letící nad nimi.",
+    "topic": "Ocean and deep sea mysteries",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a9f2146c-6ca9-50ac-90ce-48951240c579",
+    "question": "Na tichomořském ostrově Yap má tradiční měna zvaná „rai“ podobu obrovských vyřezávaných disků – některé jsou širší než auto a příliš těžké na to, aby se s nimi dalo hýbat. Z čeho jsou tyto mince vyrobeny?",
+    "possible_answers": null,
+    "correct_answer": "Kámen",
+    "alternative_answers": [
+      "Vápenec",
+      "Rock"
+    ],
+    "explanation": "Jelikož se tyto obrovské vápencové disky nedají přenášet, vlastnictví se mění jednoduše na základě veřejné dohody – jeden slavný kámen se stále považuje za platidlo, i když se potopil na dno moře.",
+    "topic": "Money and trade",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+    "question": "V Beringově průlivu leží ostrovy Velký Dioméd a Malý Dioméd ve vzdálenosti méně než 4 kilometry od sebe, přesto mezi nimi prochází mezinárodní datová hranice – díky čemuž si vysloužily přezdívky „Ostrov zítřka“ a „Ostrov včerejška“. Kterým dvěma zemím patří?",
+    "possible_answers": null,
+    "correct_answer": "Rusko a USA",
+    "alternative_answers": [
+      "USA a Rusko",
+      "Rusko a Amerika",
+      "Spojené státy a Rusko",
+      "Rusko a Spojené státy"
+    ],
+    "explanation": "Velký Diomede patří Rusku a Malý Diomede Americe, takže za jasného počasí mohou obyvatelé vesnice na americké straně doslova nahlédnout přes vodu do zítřka.",
+    "topic": "Maps and borders quirks",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+    "question": "Poté, co se skladba „Bohemian Rhapsody“ skupiny Queen v polovině 70. let držela devět týdnů na prvním místě britské hitparády, byla nakonec sesazena skladbou, která obsahuje jedno z nejslavnějších Freddieho Mercuryho zpěvných zvolání – která kapela ji sesadila z vrcholu?",
+    "possible_answers": null,
+    "correct_answer": "Otec",
+    "alternative_answers": [
+      "Otec"
+    ],
+    "explanation": "Tou písní byla „Mamma Mia“ od skupiny ABBA – nahradila skladbu, v jejíž operní pasáži se proslavilo opakované volání „mamma mia, mamma mia, mamma mia, let me go“. Osud v hitparádách málokdy býval tak poetický.",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "difficulty": "medium",
+    "source_url": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+    "id": "cdfdb9aa-c960-42b5-b6e3-614604013673",
+    "question": "Pravda, nebo lež? Starověké olympijské hry byly císařem Theodosiem I. výslovně zakázány.",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Nepravda"
+    },
+    "correct_answer": "Nepravda",
+    "alternative_answers": [],
+    "explanation": "Historici se shodují, že nařízení Theodosia I. proti pohanským obřadům se výslovně nezmiňovala o olympijských hrách. Hry pravděpodobně skončily v důsledku širších kulturních a politických změn.",
+    "topic": "Ancient Olympics",
+    "difficulty": "medium",
+    "source_url": "https://www.smithsonianmag.com/history/nine-things-you-didnt-know-about-the-ancient-olympic-games-180984672"
+  },
+  {
+    "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+    "question": "Banány jsou velmi mírně radioaktivní díky přirozeně radioaktivnímu izotopu jakého chemického prvku, kterým jsou, jak je známo, bohaté?",
+    "possible_answers": null,
+    "correct_answer": "Draslík",
+    "alternative_answers": [
+      "Draslík",
+      "K"
+    ],
+    "explanation": "Nepatrný zlomek přírodního draslíku tvoří radioaktivní izotop draslík-40 – tento jev je tak dobře známý, že fyzici pro žert měří malé dávky záření v „dávkách ekvivalentních banánu“.",
+    "topic": "Everyday food science",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "dd858794-8374-5c0f-809f-2a3a6df2b927",
+    "question": "Navzdory svému názvu nebyl most Golden Gate v San Franciscu nikdy natřen na zlatou barvu. Jeho charakteristická načervenalá barva – která slouží mimo jiné k tomu, aby ho lodě mohly spatřit i v husté mlze – má oficiální název. Jaký je?",
+    "possible_answers": null,
+    "correct_answer": "Mezinárodní oranžová",
+    "alternative_answers": [
+      "Barva „International Orange“"
+    ],
+    "explanation": "Poradenský architekt Irving Morrow prosadil tuto barvu namísto černých a žlutých pruhů, které upřednostňovalo námořnictvo, a od otevření mostu v roce 1937 je „International Orange“ jeho charakteristickým znakem.",
+    "topic": "Engineering marvels",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+    "question": "Název amerického dolaru pochází ze slova „thaler“ – stříbrných mincí, které se poprvé razily ve 20. letech 16. století v hornickém městě Joachimsthal. V které ze současných evropských zemí se toto město nachází?",
+    "possible_answers": null,
+    "correct_answer": "Česká republika",
+    "alternative_answers": [
+      "Česko",
+      "Česká republika"
+    ],
+    "explanation": "Joachimsthal je dnes Jáchymov v Čechách; název jeho mincí „Joachimsthaler“ se zkrátil na „thaler“, z čehož se prostřednictvím nizozemského a španělského obchodu vyvinulo anglické slovo „dollar“.",
+    "topic": "Money and trade",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "944c79db-14c3-41e4-8fa1-b13d54ed78fb",
+    "question": "Cestujete po Africkém rohu a potřebujete si vyměnit peníze. Jaká měna se v Etiopii používá a její název je odvozen od starého slova pro stříbro?",
+    "possible_answers": {
+      "a": "Birr",
+      "b": "Oběd",
+      "c": "šiling",
+      "d": "Dobré ráno"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [],
+    "explanation": "Měnou Etiopie je birr, což v amharštině znamená „stříbro“. Mnoho cestovatelů se domnívá, že Etiopie, stejně jako její sousedé Keňa a Somálsko, používá šiling, ale ve skutečnosti má svou vlastní měnu.",
+    "topic": "General",
+    "difficulty": "hard",
+    "source_url": "https://opentdb.com"
+  },
+  {
+    "id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+    "question": "V roce 2026 vydala Grimes kompletní společný projekt s kterou slavnou japonskou virtuální popovou hvězdou – syntetickým zpěvným hlasem bez lidského interpreta, jejíž písně skládají desítky tisíc domácích producentů?",
+    "possible_answers": null,
+    "correct_answer": "Hatsune Miku",
+    "alternative_answers": [
+      "Miku",
+      "Miku Hatsune"
+    ],
+    "explanation": "Grimes přiznala, že objev Miku pro ni byl „jako nůž do srdce“, protože si přála, aby ten nápad vymyslela sama. Tato Vocaloidka s tyrkysovými vlasy už léta vystupuje jako hlavní hvězda koncertů v reálném světě v podobě hologramu, a to i přesto, že je čistě softwarová.",
+    "topic": "Famous Artist Collaborations And Reunions Recent",
+    "difficulty": "hard",
+    "source_url": "https://www.nme.com/features/music-interviews/grimes-hatsune-miku-miku-maxxing-beyond-borders-interview-3963206"
+  },
+  {
+    "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+    "question": "All England Club, kde se od roku 1877 koná wimbledonský turnaj, byl ve skutečnosti založen již v roce 1868 pro zcela jinou hru na trávníku – o kterou se jednalo?",
+    "possible_answers": null,
+    "correct_answer": "Kroket",
+    "alternative_answers": [],
+    "explanation": "Začalo to jako All England Croquet Club a teprve o několik let později se k tomu přidal lawn tennis – a slovo „croquet“ se dodnes zachovalo v plném oficiálním názvu tohoto areálu.",
+    "topic": "Sports history",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+    "question": "V roce 1973 stál inženýr společnosti Motorola Martin Cooper na chodníku na Manhattanu a uskutečnil vůbec první hovor svého druhu v historii – s jistou dávkou drzosti zavolal svému přímému rivalovi z Bell Labs, aby se mu pochlubil. Jaké zařízení držel v ruce?",
+    "possible_answers": null,
+    "correct_answer": "Mobilní telefon",
+    "alternative_answers": [
+      "Mobilní telefon",
+      "Mobilní telefon",
+      "Mobilní telefon",
+      "Mobilní telefon do ruky",
+      "Mobilní telefon"
+    ],
+    "explanation": "Cooperův ruční prototyp o velikosti cihly vážil přes kilogram a první, co s ním udělal, bylo, že zavolal Joelovi Engelovi z Bell Labs a oznámil mu, že ho Motorola předběhla.",
+    "topic": "Technology origins and firsts",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+    "question": "Královna Alžběta II. během své vlády navštívila více než sto zemí, přesto však nikdy neměla u sebe doklad, který musí mít každý jiný britský cestovatel. O jaký doklad se jedná?",
+    "possible_answers": null,
+    "correct_answer": "Cestovní pas",
+    "alternative_answers": [
+      "Cestovní pas",
+      "Její pas"
+    ],
+    "explanation": "Britské pasy se vydávají na jméno panovníka, takže královna sama žádný nepotřebovala – i když ostatní členové královské rodiny, včetně prince Filipa, je museli nosit stejně jako všichni ostatní.",
+    "topic": "Famous rulers and royal quirks",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+    "question": "Každé léto se Eiffelova věž znatelně prodlužuje – až o 15 centimetrů. Co je příčinou tohoto sezónního růstového spurtu?",
+    "possible_answers": null,
+    "correct_answer": "Teplo způsobuje roztažení železa",
+    "alternative_answers": [
+      "tepelná roztažnost",
+      "kov se při zahřátí roztahuje",
+      "teplo",
+      "železo se roztahuje"
+    ],
+    "explanation": "Kované železo věže se v letním horku roztahuje a v zimě se zase smršťuje, takže se její oficiální výška v závislosti na ročním období nenápadně mění – strana obrácená ke slunci se roztahuje ještě více, což způsobuje, že se vrchol věže mírně naklání směrem od slunce.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+    "question": "Rekord v počtu cen Grammy držel po celá desetiletí nikoli popová hvězda, ale dirigent klasické hudby – která superhvězda si nakonec se svou třicátou druhou trofejí připsala titul nejvíce oceněného umělce v historii cen Grammy?",
+    "possible_answers": null,
+    "correct_answer": "Beyoncé",
+    "alternative_answers": [
+      "Beyoncé",
+      "Beyoncé Knowlesová",
+      "Beyoncé Knowlesová"
+    ],
+    "explanation": "Rekord, který překonala, patřil dirigentovi Georgovi Soltimu, jehož počet cen Grammy za klasickou hudbu zůstal po celá desetiletí nepřekonán, dokud se Beyoncé díky svému třicátému druhému vítězství nestala nejúspěšnější umělkyní všech dob.",
+    "topic": "Biggest Music Artists Recent Releases And Chart Records",
+    "difficulty": "easy",
+    "source_url": "https://www.newsbreak.com/closer-weekly-561369/4833504478572-15-iconic-celebs-who-hold-unexpected-world-records"
+  },
+  {
+    "id": "8bd2aa09-dcd5-4f16-9894-4eee0772c7ff",
+    "question": "V Japonsku zemědělci dodávají známému druhu ovoce neobvyklý tvar tím, že ho pěstují v pevných nádobách, díky čemuž se mnohem snáze skládá na regály. Jaký tvar mají tyto ceněné a drahé novinky?",
+    "possible_answers": {
+      "a": "Krychle",
+      "b": "Pyramida",
+      "c": "Válec",
+      "d": "Srdce"
+    },
+    "correct_answer": "a",
+    "alternative_answers": [],
+    "explanation": "Japonští zemědělci pěstují čtvercové (krychlovité) vodní melouny v čtvercových nádobách. Tyto melouny se snáze skládají na sebe a skladují, prodávají se však spíše jako drahé kuriozity než jako běžné ovoce.",
+    "topic": "General",
+    "difficulty": "easy",
+    "source_url": "https://www.weareteachers.com/fun-food-facts"
+  },
+  {
+    "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+    "question": "Který australský vačnatec žijící v norách je jediným známým zvířetem, které produkuje výkaly ve tvaru krychle?",
+    "possible_answers": null,
+    "correct_answer": "Wombat",
+    "alternative_answers": [
+      "Vombat",
+      "Wombat obecný"
+    ],
+    "explanation": "Kostky vznikají díky nerovnoměrné pružnosti v střevech vačice a tyto pelety s plochými stranami se neodvalují – což se hodí k vyznačování teritoria na skalách a kládách.",
+    "topic": "Animal biology oddities",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+    "question": "Na rozdíl od toho, co se traduje, stavitelé pyramid v Gíze nebyli otroci, ale placení dělníci. Jaký nápoj tvořil vedle chleba hlavní součást jejich denních přídělů?",
+    "possible_answers": null,
+    "correct_answer": "Pivo",
+    "alternative_answers": [
+      "Ale"
+    ],
+    "explanation": "Egyptské pivo bylo husté, mělo nízký obsah alkoholu a bylo výživné – prakticky tekutý chléb – a dělníci ho dostávali každý den, takže pro ně představovalo stejně tak potravu a mzdu jako osvěžení.",
+    "topic": "Ancient civilizations daily life",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "90acd238-7a28-4ad3-8163-485485a361dc",
+    "question": "Která země má více saun na obyvatele: Finsko nebo Švédsko?",
+    "possible_answers": {
+      "a": "Finsko",
+      "b": "Švédsko"
+    },
+    "correct_answer": "Finsko",
+    "alternative_answers": [],
+    "explanation": "Ve Finsku připadá jedna sauna na 1,59 obyvatele, což z něj činí zemi s nejvyšším počtem saun na obyvatele.",
+    "topic": "Geography",
+    "difficulty": "medium",
+    "source_url": "https://www.sciencefocus.com/science/fun-facts"
+  },
+  {
+    "id": "87be1cdf-0382-5a7c-bb70-4634f65cd625",
+    "question": "Která skladba se v roce 1990 stala vůbec prvním rapovým singlem, který se dostal na první místo americké hitparády Billboard Hot 100?",
+    "possible_answers": {
+      "a": "Rapper's Delight",
+      "b": "Pojď tudy",
+      "c": "Ice Ice Baby",
+      "d": "Na tohle nesáhneš"
+    },
+    "correct_answer": "Ice Ice Baby",
+    "alternative_answers": [],
+    "explanation": "Vanilla Ice předběhl všechny průkopníky rapu a vybojoval si první místo v žebříčku Hot 100, když se díky basové lince převzaté ze skladby „Under Pressure“ skupiny Queen a Davida Bowieho dostal na první místo jak v USA, tak ve Velké Británii.",
+    "topic": "Famous Music Producers And The Artists They Make Hits For",
+    "difficulty": "medium",
+    "source_url": "https://www.funtrivia.com/quiz/music/miami-sound-artists-from-the-magic-city-425261.html"
+  },
+  {
+    "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+    "question": "Podivně přesná délka maratonu, která činí 42,195 kilometrů, pochází z olympijských her v Londýně v roce 1908, kdy byla trať prodloužena, aby závod mohl začít na trávníku které královské rezidence?",
+    "possible_answers": null,
+    "correct_answer": "Hrad Windsor",
+    "alternative_answers": [
+      "Windsor",
+      "Hrad Windsor"
+    ],
+    "explanation": "Trasa vedla od hradu Windsor až ke královské lóži na stadionu White City – a tato královská vzdálenost se později stala oficiální maratonskou vzdáleností po celém světě.",
+    "topic": "Sports history",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+    "question": "Bílá čokoláda obsahuje kakaové máslo, cukr a mléko – zcela v ní však chybí ta tmavá složka, která dává mléčné i hořké čokoládě jak jejich barvu, tak i jejich klasickou čokoládovou chuť. Jak se ta chybějící složka nazývá?",
+    "possible_answers": null,
+    "correct_answer": "Kakaová hmota",
+    "alternative_answers": [
+      "kakaová hmota",
+      "kakaový prášek",
+      "čokoládová hmota",
+      "kakaová hmota"
+    ],
+    "explanation": "Kakaová hmota je mletá beztučná část kakaového bobu, a bez ní je bílá čokoláda v podstatě jen oslazený kakaový tuk – a právě proto ji někteří puristé odmítají vůbec nazývat čokoládou.",
+    "topic": "Everyday food science",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+    "question": "Na dně Mexického zálivu natočili průzkumníci skutečná podvodní jezera – s jasně vymezenými břehy a zvlněným povrchem –, která leží na mořském dně. Jaká složka způsobuje, že je jejich voda natolik hustá, že se může hromadit pod hladinou oceánu?",
+    "possible_answers": null,
+    "correct_answer": "Sůl",
+    "alternative_answers": [
+      "extrémní slanost",
+      "starosti",
+      "vysoká salinita",
+      "extrémně slaná voda"
+    ],
+    "explanation": "Tyto slané jezírka jsou několikrát slanější než okolní moře, takže voda je natolik hustá, že se usazuje v prohlubních – a jsou tak toxická, že živočichové, kteří do nich vplavou, často uhynou a zůstanou tam jako nakládaní.",
+    "topic": "Ocean and deep sea mysteries",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+    "question": "Aby se zajistilo, že žádný americký důstojník nikdy nebude mít vyšší hodnost než první prezident země, byl tento posmrtně povýšen do nejvyšší vojenské hodnosti. V kterém roce k tomu došlo?",
+    "possible_answers": {
+      "a": "1799",
+      "b": "1901",
+      "c": "1976",
+      "d": "2001"
+    },
+    "correct_answer": "c",
+    "alternative_answers": [],
+    "explanation": "V roce 1976, u příležitosti dvoustého výročí založení Spojených států, byl George Washington jmenován generálem všech armád, čímž mu bylo navždy zaručeno, že bude mít vyšší hodnost než kdokoli jiný – a to téměř 180 let po jeho smrti.",
+    "topic": "History",
+    "difficulty": "hard",
+    "source_url": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+    "id": "0b27e5c2-4f06-51bb-bc66-55fe7d86e514",
+    "question": "Když byl v roce 1884 dokončen Washingtonův památník, jeho samý vrchol byl korunován malou pyramidou z kovu, který byl tehdy cennější než stříbro – dnes je však levný jako bláto. O jaký kov se jedná?",
+    "possible_answers": null,
+    "correct_answer": "Hliník",
+    "alternative_answers": [
+      "Hliník"
+    ],
+    "explanation": "V roce 1884 bylo rafinování hliníku nesmírně obtížné a stálo více než stříbro, takže 22 centimetrů vysoká hliníková pyramida byla opravdovým skvostem – o pouhé dva roky později však nový proces tavení učinil tento kov levným a běžným.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "question": "Která režisérská dvojice přešla od vesele absurdního filmu „The Lego Movie“ k vesmírnému trháku „Project Hail Mary“ s Ryanem Goslingem z roku 2026?",
+    "possible_answers": null,
+    "correct_answer": "Phil Lord a Christopher Miller",
+    "alternative_answers": [
+      "Lord a Miller",
+      "Christopher Miller a Phil Lord",
+      "Phil Lord a Chris Miller",
+      "Lord & Miller"
+    ],
+    "explanation": "Tato dvojice vnesla svou charakteristickou rychlou a veselou energii do románu Andyho Weira, autora knihy Marťan, a proměnila tak potenciálně ponurý příběh o přežití v jeden z nejoblíbenějších kasovních trháků roku 2026.",
+    "topic": "Blockbuster Films And Famous Directors Recent Releases",
+    "difficulty": "hard",
+    "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
+  },
+  {
+    "id": "cb16489b-0ef0-4534-8a12-07c0a7617e5c",
+    "question": "Která planeta má na povrchu vyšší teplotu: Merkur, který je nejblíže Slunci, nebo Venuše?",
+    "possible_answers": {
+      "a": "Rtuť",
+      "b": "Venuše"
+    },
+    "correct_answer": "b",
+    "alternative_answers": [],
+    "explanation": "Venuše je nejteplejší planetou – teplota na ní dosahuje přibližně 460 °C –, protože její hustá oblačnost zadržuje sluneční teplo a způsobuje tak nekontrolovatelný skleníkový efekt, čímž překonává dokonce i Merkur.",
+    "topic": "Space",
+    "difficulty": "easy",
+    "source_url": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+    "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+    "question": "V 30. letech 17. století zažila Nizozemská republika nejslavnější spekulativní bublinu v dějinách, kdy jediná vzácná cibulka mohla na krátkou dobu stát stejně jako honosný dům u amsterdamského kanálu. Která květina vyvolala tuto horečku?",
+    "possible_answers": null,
+    "correct_answer": "Tulipán",
+    "alternative_answers": [
+      "vznikl",
+      "tulipán",
+      "cibule tulipánu"
+    ],
+    "explanation": "Na vrcholu tulipánové mánie se exotické pruhované odrůdy, jako například Semper Augustus, prodávaly za jmění – až do chvíle, kdy se trh v únoru 1637 téměř přes noc zhroutil.",
+    "topic": "Money and trade",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+    "question": "Turisté v Londýně ukazují na věž s hodinami u Westminsterského paláce a říkají jí Big Ben – ale co je, přísně vzato, Big Ben vlastně zač?",
+    "possible_answers": null,
+    "correct_answer": "Zvon",
+    "alternative_answers": [
+      "Velký zvon",
+      "Jeho zvon",
+      "Zvon uvnitř věže"
+    ],
+    "explanation": "Big Ben je přezdívka Velkého zvonu, který odbíjí hodiny uvnitř věže, která byla v roce 2012 u příležitosti diamantového jubilea královny přejmenována na Elizabeth Tower.",
+    "topic": "Famous landmarks and their secrets",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+    "question": "Který herec pracoval jako tesař, než dostal roli Hana Sola v původním filmu „Hvězdné války“?",
+    "possible_answers": null,
+    "correct_answer": "Harrison Ford",
+    "alternative_answers": [],
+    "explanation": "Ford uvedl, že ho nabídka této role docela překvapila. Jeho tesařské dovednosti mu prý pomohly získat práci ve studiu, kde si ho všimli.",
+    "topic": "Film",
+    "difficulty": "easy",
+    "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  }
+]

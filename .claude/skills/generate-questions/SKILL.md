@@ -24,7 +24,7 @@ Map `$ARGUMENTS` to the CLI flags accepted by `scripts/generate_pack.py`:
 | `--language <code>` | `--language` | `en` | ISO 639-1 (`en`/`sk`/`cs`) |
 | `--prompt "<text>"` | `--prompt` | inferred | If omitted, build from theme/category/topics |
 | `--dry-run` | `--dry-run` | off | Skip persistence (no DB writes) |
-| `--session` | env `LLM_GATEWAY=session` | off | Run every LLM step on the Claude Code subscription instead of paid APIs (#169 — session gateway). Same pipeline, same prompts/guards; only the transport changes. Embeddings still need `OPENAI_API_KEY`. |
+| `--session` | env `LLM_GATEWAY=session` | off | Run every LLM step on the Claude Code subscription instead of paid APIs (#169 — session gateway). Same pipeline, same prompts/guards; only the transport changes. Judge panel is always OFF in session runs (founder 2026-09-02: D21 showed judges add nothing; parity with the prod worker). Embeddings still need `OPENAI_API_KEY`. |
 
 If `--prompt` is not supplied, synthesize one from the user's words (e.g. `"<count> questions about <theme or topic> for <category>"`). When ambiguous, ask the user via `AskUserQuestion` for the missing piece (prompt, language, or category) rather than guessing.
 

@@ -1,0 +1,172 @@
+[
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Diane Guerrero: Most Likely To Be Superlative",
+    "episode_url": "https://www.npr.org/transcripts/612156044",
+    "game": "Celebrity Superlatives quiz",
+    "question": "What did Sandra Bullock's high school classmates vote her most likely to do?",
+    "answer": "Most likely to brighten your day",
+    "evergreen": true,
+    "topic": "celebrity trivia"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Diane Guerrero: Most Likely To Be Superlative",
+    "episode_url": "https://www.npr.org/transcripts/612156044",
+    "game": "Celebrity Superlatives quiz",
+    "question": "What did Gillian Anderson's high school classmates vote her most likely to do?",
+    "answer": "Most likely to get arrested (she was later caught gluing school locks shut as a prank on graduation night)",
+    "evergreen": true,
+    "topic": "celebrity trivia"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Diane Guerrero: Most Likely To Be Superlative",
+    "episode_url": "https://www.npr.org/transcripts/612156044",
+    "game": "Celebrity Superlatives quiz",
+    "question": "What did Oprah Winfrey's high school classmates vote her?",
+    "answer": "Most popular",
+    "evergreen": true,
+    "topic": "celebrity trivia"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Diane Guerrero: Most Likely To Be Superlative",
+    "episode_url": "https://www.npr.org/transcripts/612156044",
+    "game": "Celebrity Superlatives quiz",
+    "question": "What did Chris Pratt's Washington state high school classmates vote him?",
+    "answer": "Class clown",
+    "evergreen": true,
+    "topic": "celebrity trivia"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Real Or Fake Academic Article",
+    "episode_url": "https://www.npr.org/transcripts/620003883",
+    "game": "Real Or Fake Academia",
+    "question": "According to a study published in the European Journal of Physics, why does toast tend to fall butter-side down?",
+    "answer": "Because the height of a typical dining table and the angle at which toast falls don't allow enough rotations for it to land butter-side up",
+    "evergreen": true,
+    "topic": "science / physics"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Real Or Fake Academic Article",
+    "episode_url": "https://www.npr.org/transcripts/620003883",
+    "game": "Real Or Fake Academia",
+    "question": "A real study by a French physicist concluded that cats can be classified as which two states of matter, depending on circumstances?",
+    "answer": "Solid or liquid (a cat takes the shape of its container, like a liquid, but is displaced when the container is filled with water, like a solid)",
+    "evergreen": true,
+    "topic": "science / physics"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Real Or Fake Academic Article",
+    "episode_url": "https://www.npr.org/transcripts/620003883",
+    "game": "Real Or Fake Academia",
+    "question": "According to an Oxford University study, out of an average of 150 Facebook friends, how many are part of a support clique you could actually depend on?",
+    "answer": "About 4.1",
+    "evergreen": false,
+    "topic": "social media / sociology"
+  },
+  {
+    "show": "Ask Me Another",
+    "episode_title": "Real Or Fake Academic Article",
+    "episode_url": "https://www.npr.org/transcripts/620003883",
+    "game": "Real Or Fake Academia",
+    "question": "What is notable about the content of the real academic article titled \"The Unsuccessful Self-Treatment Of A Case Of Writer's Block\" (published in the Journal of Applied Behavior Analysis)?",
+    "answer": "It is a single blank page",
+    "evergreen": true,
+    "topic": "academia / humor"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Not My Job (guest quiz)",
+    "question": "In 2017, a Flamin' Hot Cheeto shaped like what sold for just under $100,000?",
+    "answer": "Harambe the gorilla",
+    "evergreen": true,
+    "topic": "pop culture / novelty auctions"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Not My Job (guest quiz)",
+    "question": "What is \"Doritos Roulette\"?",
+    "answer": "A snack pack in which one in six chips is extremely/painfully spicy",
+    "evergreen": true,
+    "topic": "food / consumer products"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Not My Job (guest quiz)",
+    "question": "The Cheeto snack was reportedly invented by accident in the 1930s when a farmer was doing what?",
+    "answer": "Cleaning out a clogged animal feed grinder, from which the first puffed corn snack popped out",
+    "evergreen": true,
+    "topic": "food history"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Listener Limerick Challenge",
+    "question": "According to a hotel inspector for AAA, why should you avoid walking barefoot on hotel room carpets even after housekeeping has cleaned?",
+    "answer": "They are 'germ traps' that can still contain mites or mold",
+    "evergreen": true,
+    "topic": "health / travel facts"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Listener Limerick Challenge",
+    "question": "Experts say golf provides almost no exercise benefit (comparable to darts or chair yoga) if you do what while playing?",
+    "answer": "Use a golf cart instead of walking the course",
+    "evergreen": true,
+    "topic": "health / sports"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Who's Alzo This Time? (news quiz)",
+    "question": "Amazon announced it is expanding what kind of aerial package delivery to 500 American cities?",
+    "answer": "Drone delivery",
+    "evergreen": false,
+    "topic": "business / tech (2026 news)"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Panel news questions",
+    "question": "Neighbors complained that a new 'nearly silent' roller coaster engineered by Universal Studios in Southern California failed to account for what specific noise?",
+    "answer": "The screaming of the riders",
+    "evergreen": false,
+    "topic": "entertainment / theme parks (2026 news)"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Lightning Fill in the Blank",
+    "question": "On Monday, climate scientists reported that the world's what had hit their highest temperatures on record?",
+    "answer": "Oceans",
+    "evergreen": false,
+    "topic": "climate news (2026)"
+  },
+  {
+    "show": "Wait Wait... Don't Tell Me!",
+    "episode_title": "Wait Wait for August 29, 2026: With Not My Job guest Carisa Hendrix",
+    "episode_url": "https://www.npr.org/transcripts/g-s1-141022",
+    "game": "Lightning Fill in the Blank",
+    "question": "This week, health officials confirmed the U.S. had surpassed 2,700 cases of what disease in 2026?",
+    "answer": "Measles",
+    "evergreen": false,
+    "topic": "public health news (2026)"
+  }
+]

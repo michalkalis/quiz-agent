@@ -1,0 +1,109 @@
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_2cf27dda url='https://en.wikipedia.org/wiki/Cinema_of_the_United_States' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=495a09b7-37cc-4396-94ce-a0eacbb8637b fallback_marked=False question='American film-making began around New York and New Jersey, yet within about a decade most producers had relocated to Los Angeles. Why did the industry move to Hollywood?'
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=07282d64-153d-42d0-86ee-267151cf0475 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=b9f0f35c-f5a9-4e96-8dc7-d5d7c08a1653 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=6a6d9130-eba4-4b8f-bdbb-51b9523e73d9 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=788299a1-2846-4740-a9f6-00fc82a6fd8c topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=1c20c315-575e-4636-a800-4428dd020558 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=6146cf6c-10cc-41ef-abaf-bba35ac257eb topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=ee5758a8-b5f2-4b65-90f3-4eab51727af1 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=ae74ecc6-cb48-4002-94f1-5156f7a02401 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=dea9a61c-4b99-480a-9688-df3bae1cba45 topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=c7ed87a4-de93-4414-9965-8dbee76eea30 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=5c367801-d8ad-4a20-98e2-3f8f18d98770 topic='Music & Artists' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=7027e235-b2c8-46ab-b5ad-c726471e984e topic='Film' over per-topic cap 5
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=de302258-2882-4c6c-bd2d-c406832c471b topic='Music & Artists' over per-topic cap 5
+WARNING app.generation.advanced_generator: Stripped fabricated citation on question id=temp_127652a1 url='https://en.wikipedia.org/wiki/Clapperboard' (not among the 0 sourced fact URLs — #161/D13)
+WARNING app.orchestrator.stages.generation: GenerationStage dropped ungrounded question id=ccafaef4-9152-4d71-b695-d23116c86d2e fallback_marked=False question='On a film set, picture and sound are usually recorded on separate devices. Before each take, an assistant holds a board with the scene number in front of the camera and snaps its hinged top down with a loud clap. Why the clap, and why does it have to be on camera?'
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=81479d6c-01f9-4bc6-b86b-88ce2be2c798 (fact key reuse url=disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord answer=darth maul)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=d080f538-d4ba-465f-b42c-eb362e5a50b9 (fact key reuse url=disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord answer=darth maul)
+WARNING app.orchestrator.stages.dedup: DedupStage same-fact dropped id=fe8073f1-a37b-44f5-94e7-6ead5a8970bb (content overlap >= 0.35 with an earlier batchmate)
+WARNING app.orchestrator.stages.composition: CompositionStage dropped id=1b39564b-268e-4a6c-9f53-7f11d1251cde topic='Music & Artists' over per-topic cap 5
+[session gateway] LLM steps run on the Claude Code subscription (unpriced tokens); judge panel OFF (founder 2026-09-02, D21: no signal)
+[00] start  sourcing
+[00] finish sourcing {'facts': 203, 'facts_file': 'facts_167_r2_pool.json'}
+[01] start  generating
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'Sunshine and escaping Edison's patent enforcement' not found in explanation for: American film-making began around New York and New Jersey, yet within about a de...
+  ⚠ Answer/explanation mismatch: answer 'Film' not found in explanation for: Rick Rubin founded Def Jam Recordings while he was still a university student. W...
+  ⚠ Answer/explanation mismatch: answer 'Sinners' not found in explanation for: At the 2026 Academy Awards, one film smashed the all-time record for nominations...
+  ⚠ Answer/explanation mismatch: answer 'b' not found in explanation for: Glastonbury Festival went ahead as usual in the summer of 2026. True or false?...
+  ⚠ Answer/explanation mismatch: answer 'Radiohead' not found in explanation for: Producer Nigel Godrich has been dubbed the unofficial 'sixth member' of which Br...
+  ⚠ Answer/explanation mismatch: answer 'The Super Mario Galaxy Movie' not found in explanation for: The first film of 2026 to cross one billion dollars worldwide was based on a vid...
+  ⚠ Answer/explanation mismatch: answer 'Max Martin' not found in explanation for: Which Swedish hitmaker behind Britney Spears, Katy Perry and The Weeknd has had ...
+  ⚠ Answer/explanation mismatch: answer 'Cinematography' not found in explanation for: At the 2026 Oscars, which craft category crowned its first-ever female winner, n...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which Star Wars villain became the title character of the 2026 Disney+ series Sh...
+  ⚠ Answer/explanation mismatch: answer 'Drake' not found in explanation for: In 2026, which rapper became Spotify's most-streamed artist in a single day afte...
+  ⚠ Answer/explanation mismatch: answer 'Megadeth' not found in explanation for: Which thrash metal band, founded by a guitarist fired from Metallica, released a...
+  ⚠ Answer/explanation mismatch: answer 'Burna Boy' not found in explanation for: Shakira's official 2026 FIFA World Cup anthem 'Dai Dai' paired her with which Ni...
+  ⚠ Answer/explanation mismatch: answer 'Rango' not found in explanation for: Gore Verbinski, director of the first three Pirates of the Caribbean films, won ...
+  ⚠ Answer/explanation mismatch: answer 'Oscar' not found in explanation for: Hamilton creator Lin-Manuel Miranda has won Tonys, Emmys and Grammys, but which ...
+  ⚠ Answer/explanation mismatch: answer 'Three' not found in explanation for: How many credited directors shared the job on the 2018 animated hit Spider-Man: ...
+  ⚠ Answer/explanation mismatch: answer 'Third' not found in explanation for: When Kalush Orchestra won Eurovision 2022 with 'Stefania', it was Ukraine's how-...
+  ⚠ Answer/explanation mismatch: answer 'Dreams' not found in explanation for: Which 1977 Fleetwood Mac song had its biggest streaming week ever in 2020, after...
+  ⚠ Answer/explanation mismatch: answer 'Boy bands' not found in explanation for: The Spice Girls were assembled by managers in the 1990s specifically to compete ...
+  ⚠ Answer/explanation mismatch: answer 'Amy Winehouse' not found in explanation for: Which singer won five Grammys in a single night in 2008, tying the record for a ...
+[01] finish generating {'questions': 29, 'dropped_quality': 0, 'normalized_quality': 0, 'dropped_mcq_missing_options': 0, 'dropped_ungrounded': 1, 'demoted_puzzles': 0}
+[02] start  dedup
+[02] finish dedup {'kept': 29, 'dropped': 0, 'fact_dropped': 0}
+[03] start  verifying
+[03] finish verifying {'verified': 29, 'dropped': 0, 'withheld': 0, 'evergreen_skipped': 0}
+[04] start  composition
+[04] finish composition {'kept': 16, 'topic_cap': 5, 'tf_cap': 2, 'topic_cap_dropped': 13, 'tf_cap_dropped': 0}
+[05] start  topup
+Generating 1 open-shape questions...
+  ⚠ Answer/explanation mismatch: answer 'To sync sound with picture' not found in explanation for: On a film set, picture and sound are usually recorded on separate devices. Befor...
+  ⚠ Answer/explanation mismatch: answer 'Eight years' not found in explanation for: A$AP Rocky's 2026 album Don't Be Dumb ended a wait of how many years since his p...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which Star Wars villain, chopped in half in The Phantom Menace, got his own seri...
+  ⚠ Answer/explanation mismatch: answer 'Ted Lasso' not found in explanation for: Which comedy set a record in 2021 with twenty Emmy nominations for its very firs...
+  ⚠ Answer/explanation mismatch: answer 'Boy bands' not found in explanation for: In the 1990s, the Spice Girls were deliberately assembled by their managers to c...
+  ⚠ Answer/explanation mismatch: answer 'Rango' not found in explanation for: Which 2011 animated Western reunited Johnny Depp with the director of his first ...
+  ⚠ Diversity warning: 5/13 (38%) questions start with 'Which' (target: ≤30%)
+  ⚠ Answer/explanation mismatch: answer 'Justin Bieber' not found in explanation for: Which Canadian pop superstar has a Latin Grammy Award in his trophy cabinet?...
+  ⚠ Answer/explanation mismatch: answer 'Darth Maul' not found in explanation for: Which Star Wars villain, famously sliced in half in the 1999 prequel, headlined ...
+  ⚠ Answer/explanation mismatch: answer 'c' not found in explanation for: Netflix's most-watched series of the first half of 2026, His & Hers, racked up r...
+  ⚠ Diversity warning: 2/3 (67%) questions start with 'Which' (target: ≤30%)
+[05] finish topup {'final_count': 27, 'target_count': 30, 'topup_rounds': 2, 'fact_pool_exhausted': False}
+
+pack_id: dry-run:df7a80a5-8cbe-42db-9599-9d7b9b88421f
+questions: 27
+cost_cents: 0
+  search (Tavily): 0¢ (0 credits)
+  llm: UNMEASURED — OpenRouter usage snapshot unavailable (gateway not 'openrouter', key missing, or API failure)
+  1. Rick Rubin founded Def Jam Recordings while he was still a university student. What subject was he studying at the time?  →  Film   [https://en.wikipedia.org/wiki/Rick_Rubin]
+  2. At the 2026 Academy Awards, one film smashed the all-time record for nominations with sixteen. Which film?  →  Sinners   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  3. Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?  →  Spider-Man: Brand New Day   [https://en.wikipedia.org/wiki/2026_in_film]
+  4. Glastonbury Festival went ahead as usual in the summer of 2026. True or false?  →  False   [https://www.glastonburyfestivals.co.uk/info/?direct=true]
+  5. Producer Nigel Godrich has been dubbed the unofficial 'sixth member' of which British band?  →  Radiohead   [https://en.wikipedia.org/wiki/Nigel_Godrich]
+  6. By 2026, the most-nominated Black woman in Oscar history had collected five nominations, none of them for acting. In which craft does she work?  →  Costume design   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  7. The first film of 2026 to cross one billion dollars worldwide was based on a video game. Which film?  →  The Super Mario Galaxy Movie   [https://en.wikipedia.org/wiki/2026_in_film]
+  8. War Machine was Netflix's biggest title of the first half of 2026. Roughly how many views did Netflix report for it in that period?  →  About 150 million   [https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026?pubDate=20260818]
+  9. Which Swedish hitmaker behind Britney Spears, Katy Perry and The Weeknd has had eight of his songs debut straight at number one on the Billboard Hot 100?  →  Max Martin   [https://en.wikipedia.org/wiki/Max_Martin]
+  10. At the 2026 Oscars, which craft category crowned its first-ever female winner, nearly a century after the first ceremony?  →  Cinematography   [https://en.wikipedia.org/wiki/98th_Academy_Awards]
+  11. Which Star Wars villain became the title character of the 2026 Disney+ series Shadow Lord?  →  Darth Maul   [https://www.disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord]
+  12. Which capital city hosted the seventieth Eurovision Song Contest in May 2026?  →  Vienna   [https://www.eurovision.com/stories/eurovision-2026-hosts-victoria-swarovski-michael-strowski/]
+  13. In 2026, which rapper became Spotify's most-streamed artist in a single day after dropping three surprise albums at once?  →  Drake   [https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/]
+  14. Shakira's official 2026 FIFA World Cup anthem 'Dai Dai' paired her with which Nigerian Afrobeats star?  →  Burna Boy   [https://www.musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm]
+  15. Brad Pitt has won two Oscars, but he has also won two of which major television award?  →  Primetime Emmy   [https://en.wikipedia.org/wiki/Brad_Pitt]
+  16. Which 1977 Fleetwood Mac song had its biggest streaming week ever in 2020, after a viral TikTok of a man skateboarding while sipping cranberry juice?  →  Dreams   [https://en.wikipedia.org/wiki/Dreams_(Fleetwood_Mac_song)]
+  17. In 2026, one of the world's most famous music festivals did not happen at all, so the farm it is held on could rest for a year. Which festival?  →  Glastonbury   [https://www.glastonburyfestivals.co.uk/info/?direct=true]
+  18. A$AP Rocky's 2026 album Don't Be Dumb ended a wait of how many years since his previous studio album?  →  Eight years   [https://en.wikipedia.org/wiki/2026_in_American_music]
+  19. Which thrash metal band, founded by a guitarist who had been thrown out of Metallica, said goodbye in 2026 with a self-titled final album?  →  Megadeth   [https://www.megadeth.com/blogs/news/track-listing-reveal]
+  20. The 2026 film Obsession became one of the most profitable movies ever made. Roughly how big was its production budget?  →  Under a million dollars   [https://en.wikipedia.org/wiki/2026_in_film]
+  21. Which comedy set a record in 2021 with twenty Emmy nominations for its very first season?  →  Ted Lasso   [https://en.wikipedia.org/wiki/Ted_Lasso]
+  22. Which of these does Sigourney Weaver actually have on her shelf: an Oscar or a Grammy?  →  A Grammy   [https://en.wikipedia.org/wiki/Sigourney_Weaver]
+  23. U2's 360 Degree Tour, launched in 2009, set the all-time record for the highest-grossing concert tour. In which year was that record finally broken?  →  2019   [https://en.wikipedia.org/wiki/U2]
+  24. In the 1990s, the Spice Girls were deliberately assembled by their managers to compete with what kind of act then ruling British pop?  →  Boy bands   [https://en.wikipedia.org/wiki/Spice_Girls]
+  25. When Kalush Orchestra won Eurovision in 2022 with Stefania, how many Eurovision titles did Ukraine have in total?  →  Three   [https://en.wikipedia.org/wiki/Kalush_Orchestra]
+  26. Which 2011 animated Western reunited Johnny Depp with the director of his first Pirates of the Caribbean films?  →  Rango   [https://en.wikipedia.org/wiki/Rango_(2011_film)]
+  27. Justin Bieber owns a music award normally reserved for Spanish- and Portuguese-language artists. Which award?  →  A Latin Grammy   [https://en.wikipedia.org/wiki/Justin_Bieber]
+
+llm usage by stage/model:
+  generating     session:fable                    calls=5   in=141239   out=72115    gaps=0   cost UNKNOWN
+  generating     session:opus                     calls=3   in=14023    out=4179     gaps=0   cost UNKNOWN
+  verifying      session:sonnet                   calls=42  in=1221874  out=35359    gaps=0   cost UNKNOWN
+  total known cost: 0.00¢
+  unpriced models (cost omitted): session:fable, session:opus, session:sonnet
+out: wrote 27 questions to pilot_167_r2.json
+usage: wrote per-stage/model summary to pilot_167_r2.json.usage.json
+EXIT=0

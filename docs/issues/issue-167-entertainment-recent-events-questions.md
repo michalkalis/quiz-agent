@@ -1,6 +1,6 @@
 # #167 — Entertainment otázky z nedávneho diania (web-search sourcing)
 
-**Triage:** feature · ready-for-human
+**Triage:** feature · done (2026-09-03)
 **Status:** 167.1–167.13 hotové, latka triedy uzavretá (A17). **Otvorené je len 167.14 (import do prod korpusu) a to čaká na foundera: OpenAI účet je na nule** (`429 credit_balance_exhausted` pri embeddingoch, 2026-09-03) — dovtedy nie je pre agenta čo spustiť, opakovaný beh 167.14 padne rovnako. Po dobití = `ready-for-agent`, zopakovať dry-run + `--execute`. Prep history: `/prepare-issue` Phase 1–6, 6 agentských sessions + 1 founder brána → [`issue-167-execution-prompts.md`](issue-167-execution-prompts.md)
 **Created:** 2026-08-26
 **Reversibility:** `a` — reversible (žiadna migrácia, žiadna schéma, prod flagy nedotknuté, všetko flag/config-gated) — plné posúdenie v D9

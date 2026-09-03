@@ -114,6 +114,64 @@ _TEXT_RESPONSE = """{
 }"""
 
 
+_INLINE_OPTIONS_RESPONSE = """{
+  "questions": [
+    {
+      "id": "q_test_inline",
+      "reasoning": {
+        "pattern_used": "Pattern 11: The Estimation Challenge",
+        "why_interesting": "stub",
+        "universal_appeal": "stub",
+        "boring_check": "stub"
+      },
+      "question": "How many bones are inside an elephant's trunk: closer to zero, 40, or 400?",
+      "type": "text",
+      "correct_answer": "Zero",
+      "possible_answers": null,
+      "alternative_answers": [],
+      "topic": "Animals",
+      "category": "general",
+      "difficulty": "medium",
+      "tags": [],
+      "language_dependent": false,
+      "age_appropriate": "all"
+    }
+  ]
+}"""
+
+
+@pytest.mark.asyncio
+async def test_generate_batch_repairs_inline_option_stems() -> None:
+    """Founder blind rating 2026-09-03 — the repair must live at the generator
+    boundary, for the same reason MCQ answer resolution does.
+
+    The rating arms (`run_d21_arms.py`, `run_d21b_arms.py`,
+    `bedrock_raw_sample.py`) call `_generate_batch` directly and never reach
+    `GenerationStage`, so a fix applied only in the stage would keep shipping
+    the defect to every blind rating the founder scores.
+    """
+    fake_ainvoke = AsyncMock(return_value=_llm_response(_INLINE_OPTIONS_RESPONSE))
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+
+    questions = await gen._generate_batch(
+        count=1,
+        difficulty="medium",
+        topics=None,
+        categories=["general"],
+        question_type="text",
+        excluded_topics=None,
+        avoid_questions=None,
+        user_bad_examples=None,
+    )
+
+    assert len(questions) == 1
+    q = questions[0]
+    assert q.question == "How many bones are inside an elephant's trunk?"
+    assert q.type == "text_multichoice"
+    assert q.possible_answers == {"a": "Zero", "b": "40", "c": "400"}
+    assert q.correct_answer == "Zero"
+
+
 @pytest.mark.asyncio
 async def test_generate_batch_passes_mcq_through_when_pattern_in_set() -> None:
     fake_ainvoke = AsyncMock(return_value=_llm_response(_MCQ_RESPONSE))

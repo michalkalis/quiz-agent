@@ -80,6 +80,16 @@ class TestClauseDetector:
                 "two, and almost unrelated to the other. Which is it?",
             ),
             (
+                # A stem ending on a copula is still a complete question —
+                # the "don't end mid-phrase" guard must not swallow it.
+                "If you drew one continuous line with a ballpoint pen until "
+                "the ink ran out, how long would it be: closer to 200 metres, "
+                "2 kilometres, or 20 kilometres?",
+                ["200 metres", "2 kilometres", "20 kilometres"],
+                "If you drew one continuous line with a ballpoint pen until "
+                "the ink ran out, how long would it be?",
+            ),
+            (
                 "One of these two has been on Earth far longer than the "
                 "other: sharks or trees. Which came first?",
                 ["Sharks", "Trees"],
@@ -116,27 +126,36 @@ class TestClauseDetector:
             # An enumeration with no alternation is a list of subjects, not
             # a set of answers to choose between.
             "Name the three primary colours: red, green, blue?",
+            # PR #76 review, finding 2: the colon rule used to take ANY
+            # preamble as the whole question, so the real question ended up
+            # shredded into "options" and the stem became the throat-clearing.
+            "Here's the catch: is a tomato a fruit or a vegetable?",
+            "Here's a hint: is it Mercury, Venus, or Mars?",
+            # ...and the head must not end mid-phrase.
+            "Over its 30-year life, is the total distance closer to: once "
+            "around the Earth, once to the Moon, or three times to the Moon?",
+            # Finding 4: a noun phrase between the subject and the comparator
+            # means the list starts before the comparison does.
+            "It has a big library. Is the number of books closer to 80, 800, "
+            "or 8,000?",
         ],
     )
     def test_ignores_stems_without_an_option_enumeration(self, stem: str) -> None:
         assert find_option_clause(stem) is None
 
-    def test_extracts_options_without_rewriting_an_unsafe_stem(self) -> None:
-        # No deletion of this trailing clause leaves a grammatical question,
-        # so the options are extracted and the stem is left alone.
-        clause = find_option_clause(
+    def test_declines_a_stem_it_cannot_rewrite(self) -> None:
+        # PR #76 review, finding 3: no deletion of this trailing clause leaves
+        # a grammatical question. Converting anyway would move the recitation
+        # defect from free text (2a) to MCQ (2b) instead of fixing it, so the
+        # whole question is left as generated.
+        stem = (
             "The Arctic tern flies from the Arctic to the Antarctic and back "
             "every year. Over its roughly 30-year life, is its total distance "
             "closer to once around the Earth, once to the Moon, or three "
             "times to the Moon and back?"
         )
-        assert clause is not None
-        assert clause.stem is None
-        assert clause.options == [
-            "Once around the Earth",
-            "Once to the Moon",
-            "Three times to the Moon and back",
-        ]
+        assert find_option_clause(stem) is None
+        assert normalise(stem, "text", "Three times to the Moon and back", None) is None
 
 
 class TestAnswerMatching:
@@ -147,11 +166,19 @@ class TestAnswerMatching:
         assert match_option("About 3,800 years", options) == 2
 
     def test_thousands_separator_is_not_a_list_separator(self) -> None:
-        clause = find_option_clause("Is the number closer to 80, 800, or 8,000?")
+        clause = find_option_clause(
+            "Papua New Guinea has more living languages than any other "
+            "country on Earth. Is the number closer to 80, 800, or 8,000?"
+        )
         assert clause is not None
         assert clause.options == ["80", "800", "8,000"]
         # "80" must not match inside "800"/"8,000" — word boundaries only.
         assert match_option("About 800", clause.options) == 1
+
+    def test_matches_an_option_ending_in_a_non_word_character(self) -> None:
+        # PR #76 review, finding 8: `\b` has no boundary after "%", so every
+        # percentage bucket came back unmatched and stayed free text.
+        assert match_option("About 60%", ["30%", "60%", "90%"]) == 1
 
     def test_ambiguous_answer_matches_nothing(self) -> None:
         assert match_option("years", ["400 years", "1,400 years"]) is None
@@ -245,6 +272,7 @@ class TestApplyToQuestions:
                 "closer to walking speed, sprinting speed, or highway "
                 "driving speed?",
                 correct_answer="Sprinting speed",
+                alternative_answers=["As fast as a sprinter"],
             ),
             _question(
                 id="strip",
@@ -270,12 +298,19 @@ class TestApplyToQuestions:
 
         counts = apply_to_questions(questions)
 
+        # PR #76 review, finding 10: a conversion always rewrites its stem, so
+        # counting it under both headings made the two numbers overlap.
+        # `stem_options_stripped` now means MCQs that merely recited options
+        # they already had.
         assert counts == Counts(
             inline_options_to_mcq=1,
-            stem_options_stripped=2,
+            stem_options_stripped=1,
             inline_options_unmatched=1,
         )
         assert questions[0].type == "text_multichoice"
+        # Alternatives phrase the OLD open answer; the MCQ path routes on
+        # option membership, so they are cleared rather than left behind.
+        assert questions[0].alternative_answers == []
         assert questions[0].question == "How fast does a large raindrop hit the ground?"
         assert questions[0].correct_answer == "Sprinting speed"
         assert questions[1].question == (

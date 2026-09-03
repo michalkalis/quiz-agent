@@ -21,6 +21,7 @@ import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
 from .prompt_builder import PromptBuilder, STRUCTURED_MCQ_FORMAT_NOTE
+from . import inline_options
 from .mcq_answer import resolve_mcq_answer
 from .pattern_routing import verification_mode
 from .examples import example_corpus_path
@@ -1248,6 +1249,16 @@ class AdvancedQuestionGenerator:
             )
             # Extract self-critique if present (from V2/V3 CoT prompt)
             # This will be in the parsed data if using V2/V3 prompt
+
+        # Founder blind rating 2026-09-03 — repair questions that recite their
+        # own options inside the stem, for the same reason the answer
+        # resolution below lives here: the rating arms (`run_d21_arms.py`,
+        # `run_d21b_arms.py`, `bedrock_raw_sample.py`) call `_generate_batch`
+        # directly and never reach `GenerationStage`, so a defect fixed only
+        # in the stage would keep shipping to every blind rating.
+        # `GenerationStage` still runs it — idempotent, and it is where the
+        # counts are reported (same defence-in-depth as the craft gates).
+        inline_options.apply_to_questions(questions)
 
         # D21b q45 (2026-08-26): resolve letter-key MCQ answers to option text
         # here, not only in GenerationStage — eval scripts call

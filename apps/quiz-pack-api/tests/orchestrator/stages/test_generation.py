@@ -1219,24 +1219,27 @@ async def test_inline_option_stems_become_mcq_before_type_tagging() -> None:
         "c": "3,800 years",
     }
     assert converted.correct_answer == "3,800 years"
-    assert "platypus" not in by_text["Which of these mammals cannot inject venom?"].question
+    assert (
+        "platypus" not in by_text["Which of these mammals cannot inject venom?"].question
+    )
     assert result.info["inline_options_to_mcq"] == 1
-    assert result.info["stem_options_stripped"] == 2
+    assert result.info["stem_options_stripped"] == 1
     # The comparison-bet answer resolves to neither listed option, so the
     # question is left exactly as generated rather than converted on a guess.
     assert result.info["inline_options_unmatched"] == 1
 
 
 @pytest.mark.asyncio
-async def test_comparison_bet_label_without_options_is_kept_as_text() -> None:
+async def test_numbered_mcq_labels_without_options_are_kept_as_text() -> None:
     """The `Pattern NN` label fix must not turn into a content deleter.
 
-    Once "Pattern 12: The Comparison Bet" reaches the MCQ route, the fail-loud
-    guard would drop every such question that carries no options — including
-    perfectly good free-text ones ("Chocolate, coffee and tea all reached
-    Europe within a century. Which arrived first?"). Comparison Bet has a
-    legitimate open form, so a label-only MCQ claim with nothing to build from
-    keeps the question; `true_false` (asserted elsewhere) still drops.
+    Once numbered labels reach the MCQ route, the fail-loud guard would drop
+    every such question that carries no options — including good free-text
+    ones the normaliser cannot repair: a comma-only odd-one-out list (no "or"
+    to split on) and an open comparison bet. Both read fine as spoken
+    questions, so a label-only MCQ claim with nothing to build from keeps the
+    question. `true_false` is the exception and still drops (asserted in
+    `test_tags_mcq_type_from_pattern_and_drops_when_options_missing`).
     """
     questions = [
         _stub_question(
@@ -1248,14 +1251,23 @@ async def test_comparison_bet_label_without_options_is_kept_as_text() -> None:
                 reasoning_pattern="Pattern 12: The Comparison Bet"
             ),
         ),
+        _stub_question(
+            1,
+            question="Which of these doesn't belong: violin, cello, flute, "
+            "double bass?",
+            correct_answer="Flute",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 9: The Odd One Out"
+            ),
+        ),
     ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
-    ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
+    ctx = _make_ctx(target_count=2, facts=[Fact(text="t", source_url="https://ex/1")])
 
     result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert len(ctx.questions) == 1
-    assert ctx.questions[0].type == "text"
+    assert len(ctx.questions) == 2
+    assert [q.type for q in ctx.questions] == ["text", "text"]
     assert result.info["dropped_mcq_missing_options"] == 0
-    assert result.info["mcq_label_kept_as_text"] == 1
+    assert result.info["mcq_label_kept_as_text"] == 2

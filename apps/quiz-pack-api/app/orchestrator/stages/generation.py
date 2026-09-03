@@ -20,7 +20,7 @@ from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.classification import normalize_category, normalize_difficulty
-from app.generation.mcq_answer import resolve_mcq_answer
+from app.generation.mcq_answer import is_bare_option_key, resolve_mcq_answer
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -28,7 +28,7 @@ from app.generation.expiry_classifier import (
 )
 from app.generation import inline_options
 from app.generation.pattern_routing import (
-    OPEN_FORM_MCQ_PATTERNS,
+    MCQ_ONLY_PATTERNS,
     PATTERNS_TO_MCQ,
     choose_question_type,
     normalize_mcq_pattern,
@@ -427,15 +427,21 @@ class GenerationStage:
                 if resolved_answer is None:
                     # 2026-09-03: the `Pattern NN` label fix above re-activated
                     # this route for labels that used to miss it entirely, so
-                    # the drop must not widen with it. When the ONLY MCQ signal
-                    # is a label whose pattern has a legitimate open form, and
-                    # the question carries no options to repair, keep the
-                    # free-text question rather than delete it on the strength
-                    # of the model's own untrusted self-report (#160).
+                    # the drop must not widen with it. With NO options at all
+                    # there is nothing half-built to reject — only a label
+                    # claiming a shape the question never had — so the
+                    # free-text question is kept rather than deleted on the
+                    # strength of the model's own untrusted self-report
+                    # (#160). The decision reads structure and answer shape,
+                    # never `q.type` — that field is the model's self-report
+                    # too. Two shapes are NOT usable as free text and still
+                    # drop: `true_false` (whose spoken answer is the word
+                    # "True") and a bare option key ("c"), the pilot
+                    # 2026-07-11 gemini shape.
                     if (
                         not q.possible_answers
-                        and q.type != "text_multichoice"
-                        and normalize_mcq_pattern(pattern) in OPEN_FORM_MCQ_PATTERNS
+                        and not is_bare_option_key(q.correct_answer)
+                        and normalize_mcq_pattern(pattern) not in MCQ_ONLY_PATTERNS
                     ):
                         mcq_label_kept_as_text += 1
                         logger.info(

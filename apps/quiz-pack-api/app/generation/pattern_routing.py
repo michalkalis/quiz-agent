@@ -67,15 +67,17 @@ _MCQ_PATTERN_ALIASES: dict[str, str] = {
 _PATTERN_NUMBER_PREFIX_RE = re.compile(r"^pattern_\d+:?_?")
 _PATTERN_NUMBER_SUFFIX_RE = re.compile(r"_\([^()]*\)$")
 
-# Patterns whose non-MCQ form is a legitimate question. #160's doctrine —
-# structure outranks the label — cuts both ways: a question the model merely
-# LABELLED `comparison_bet` while carrying no options is a well-formed
-# free-text question ("Chocolate, coffee and tea all reached Europe within a
-# century. Which arrived first?"), not a half-built MCQ, so `GenerationStage`
-# keeps it as text instead of dropping it. `true_false`, `odd_one_out`,
-# `year_guess` and `order_of_magnitude` have no such form — without options
-# they are broken questions and stay droppable.
-OPEN_FORM_MCQ_PATTERNS: frozenset[str] = frozenset({"comparison_bet_older_larger"})
+# The one MCQ pattern with NO legitimate free-text form: "True or false: X"
+# with no options is a question whose spoken answer is the word "True" — the
+# voice evaluator's worst case, and the reason `GenerationStage`'s fail-loud
+# drop exists (see this module's header). Every other MCQ pattern reads fine
+# as free text when the model wrote the choices into the stem instead of the
+# option dict — a numbered odd-one-out ("Which doesn't belong: A, B, C, D?")
+# and an open comparison bet ("Chocolate, coffee and tea all reached Europe
+# within a century. Which arrived first?") are good questions, so routing
+# them to MCQ on a LABEL alone must never delete them (#160: the label is the
+# model's untrusted self-report). PR #76 review, finding 1.
+MCQ_ONLY_PATTERNS: frozenset[str] = frozenset({"true_false"})
 
 
 def normalize_mcq_pattern(pattern: str | None) -> str:

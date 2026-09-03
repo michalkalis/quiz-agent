@@ -51,16 +51,22 @@ def normalise_batch(questions: list[dict[str, Any]]) -> tuple[Counts, list[dict]
             )
             continue
         record = {"kind": result.kind, "before": q["question"], "after": result.question}
-        if result.question != q["question"]:
-            counts.stem_options_stripped += 1
         q["question"] = result.question
         if result.kind == "to_mcq":
             q["type"] = "text_multichoice"
             q["possible_answers"] = result.possible_answers
             q["correct_answer"] = result.correct_answer
+            # Alternatives phrase the old open answer; the MCQ path routes on
+            # option membership, so they would be dead metadata.
+            q["alternative_answers"] = []
             counts.inline_options_to_mcq += 1
             record["options"] = result.possible_answers
             record["answer"] = result.correct_answer
+        else:
+            # Conversions always rewrite the stem; counting them here too made
+            # the two numbers overlap. This one means MCQs that already had
+            # options and merely recited them.
+            counts.stem_options_stripped += 1
         changes.append(record)
     return counts, changes
 

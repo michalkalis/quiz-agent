@@ -36,8 +36,11 @@ def test_converts_and_stays_loadable_as_a_question() -> None:
 
     counts, changes = normalise_batch.normalise_batch(questions)
 
+    # A conversion always rewrites its stem; `stem_options_stripped` counts
+    # only MCQs that already had options and merely recited them, so the two
+    # numbers never double-count the same question (PR #76 review, finding 10).
     assert counts.inline_options_to_mcq == 1
-    assert counts.stem_options_stripped == 1
+    assert counts.stem_options_stripped == 0
     assert changes[0]["before"] != changes[0]["after"]
     restored = Question.from_dict(questions[0])
     assert restored.type == "text_multichoice"

@@ -55,6 +55,38 @@ _LIST_SPLIT_RE = re.compile(r",(?!\d)")
 _OR_RE = re.compile(r"\bor\b", re.IGNORECASE)
 
 # --- residue rules: each yields a stem that is grammatical by construction --
+#
+# Every rule DELETES an enumeration and must leave a question behind, so each
+# carries guards that the remainder still asks something. Without them the
+# colon rule treats any preamble as the whole stem: "Here's the catch: is a
+# tomato a fruit or a vegetable?" became "Here's the catch?" with the real
+# question shredded into two options (PR #76 review, finding 2).
+
+# The remainder must still ASK something.
+_QUESTION_WORD_RE = re.compile(
+    r"\b(?:how|what|which|who|whom|whose|when|where|why|name|guess)\b",
+    re.IGNORECASE,
+)
+# ...and must not end mid-phrase: "...is its total distance closer to: X, Y,
+# or Z?" would otherwise leave "...closer to?" behind.
+# Prepositions and conjunctions only — a copula ending ("how long would it
+# be") is a complete question, and the shapes a trailing "is" would catch
+# ("The answer is: X or Y?") are already rejected for having no question word.
+_DANGLING_HEAD_RE = re.compile(
+    r"\b(?:to|of|than|like|as|at|in|on|by|with|from|and|or|between|about)$",
+    re.IGNORECASE,
+)
+# An "option" opening with a verb or a preposition is a clause the detector cut
+# in the wrong place ("is a tomato a fruit", "of books closer to 80"), not an
+# answer a player could say.
+_OPTION_BAD_OPENER_RE = re.compile(
+    r"^(?:is|are|was|were|do|does|did|can|could|will|would|has|have|which|who|"
+    r"what|of|in|on|for|with|than|to|by|at|from)\b",
+    re.IGNORECASE,
+)
+# A comparator inside an option means the list started before the comparison
+# did ("Is the number of books closer to 80, 800, or 8,000?").
+_OPTION_COMPARATOR_RE = re.compile(r"\bclos(?:er|est)\s+to\b", re.IGNORECASE)
 
 # "<stem>: <options>?"  →  "<stem>?"
 _COLON_TAIL_RE = re.compile(r"^(?P<head>.+?):\s*(?P<list>[^:?]+?)\s*\?\s*$", re.DOTALL)
@@ -62,26 +94,30 @@ _COLON_TAIL_RE = re.compile(r"^(?P<head>.+?):\s*(?P<list>[^:?]+?)\s*\?\s*$", re.
 _COLON_MID_RE = re.compile(
     r"^(?P<head>.+?):\s*(?P<list>[^:?.]+?)\.\s*(?P<tail>[^.?]+\?)\s*$", re.DOTALL
 )
-# "<setup.> Is it <options>?"  →  "<setup.> Which is it?"  (closed table)
+# "<setup.> Is it <options>?"  →  "<setup.> Which is it?"  (closed table). The
+# comparator is matched INSIDE the pattern so the list is anchored to it; a
+# noun phrase between the subject and "closer to" leaves that phrase at the
+# head of the list, where the option guards above reject it.
 _SENTENCE_TAIL_RE = re.compile(
     r"^(?P<head>.*[.!?])\s+(?P<subject>is it|is the number)\s+"
-    r"(?P<list>[^:?]+?)\s*\?\s*$",
+    r"(?:clos(?:er|est)\s+to\s+)?(?P<list>[^:?]+?)\s*\?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
 _SENTENCE_TAIL_REPLACEMENT = {"is it": "Which is it?", "is the number": "How many?"}
-# "<stem> closer to <options>?" — options are extractable but no rewrite is
-# safe ("...is its total distance closer to?"), so the stem is left alone.
-_BARE_ESTIMATE_RE = re.compile(
-    r"clos(?:er|est)\s+to\s+(?P<list>[^:?]+?)\s*\?\s*$", re.IGNORECASE | re.DOTALL
-)
 
 
 @dataclass(frozen=True)
 class Clause:
-    """Extracted options plus the stem they should be spoken from."""
+    """Extracted options plus the stem they should be spoken from.
+
+    There is no "options without a rewrite" case: converting a question while
+    leaving the recitation in its stem just trades defect 2a for defect 2b
+    (PR #76 review, finding 3), so a clause the detector cannot rewrite is no
+    clause at all.
+    """
 
     options: list[str]
-    stem: str | None  # None = options found, but no safe rewrite exists
+    stem: str
 
 
 @dataclass(frozen=True)
@@ -125,9 +161,23 @@ def _parse_options(raw: str) -> list[str] | None:
             return None
         if any(ch in part for ch in _OPTION_REJECT_CHARS):
             return None
+        if _OPTION_COMPARATOR_RE.search(part):
+            return None
+    if _OPTION_BAD_OPENER_RE.match(parts[0]):
+        return None
     if len({_normalise(p) for p in parts}) != len(parts):
         return None
     return [_capitalise(p) for p in parts]
+
+
+def _is_still_a_question(text: str) -> bool:
+    """Would the residue read as a question on its own?"""
+    stripped = text.rstrip().rstrip(",;:")
+    return bool(
+        stripped
+        and _QUESTION_WORD_RE.search(stripped)
+        and not _DANGLING_HEAD_RE.search(stripped)
+    )
 
 
 def _capitalise(option: str) -> str:
@@ -149,10 +199,15 @@ def _normalise(text: str) -> str:
 
 
 def _contains_as_word(haystack: str, needle: str) -> bool:
-    """``needle in haystack`` with word boundaries — "80" is not in "800"."""
+    """``needle in haystack`` on word boundaries — "80" is not in "800".
+
+    Lookarounds, not ``\\b``: an option ending in a non-word character ("60%",
+    "3 km/h") has no trailing word boundary, so ``\\b`` never matched it and
+    every percentage bucket came back unmatched (PR #76 review, finding 8).
+    """
     if not haystack or not needle:
         return False
-    return bool(re.search(rf"\b{re.escape(needle)}\b", haystack))
+    return bool(re.search(rf"(?<!\w){re.escape(needle)}(?!\w)", haystack))
 
 
 def match_option(
@@ -202,18 +257,19 @@ def find_option_clause(question: str) -> Clause | None:
     match = _COLON_MID_RE.match(text)
     if match:
         options = _parse_options(match.group("list"))
-        if options:
-            head = match.group("head").rstrip().rstrip(",;:")
-            if head:
-                return Clause(options, f"{head}. {match.group('tail').strip()}")
+        tail = match.group("tail").strip()
+        head = match.group("head").rstrip().rstrip(",;:")
+        # The closing clause carries the question here, so it is what must
+        # survive as one ("... the other: sharks or trees. Which came first?").
+        if options and head and _is_still_a_question(tail):
+            return Clause(options, f"{head}. {tail}")
 
     match = _COLON_TAIL_RE.match(text)
     if match:
         options = _parse_options(match.group("list"))
-        if options:
-            head = match.group("head").rstrip().rstrip(",;:")
-            if head:
-                return Clause(options, f"{head}?")
+        head = match.group("head").rstrip().rstrip(",;:")
+        if options and _is_still_a_question(head):
+            return Clause(options, f"{head}?")
 
     match = _SENTENCE_TAIL_RE.match(text)
     if match:
@@ -221,12 +277,6 @@ def find_option_clause(question: str) -> Clause | None:
         if options:
             replacement = _SENTENCE_TAIL_REPLACEMENT[match.group("subject").lower()]
             return Clause(options, f"{match.group('head').strip()} {replacement}")
-
-    match = _BARE_ESTIMATE_RE.search(text)
-    if match:
-        options = _parse_options(match.group("list"))
-        if options:
-            return Clause(options, None)
     return None
 
 
@@ -254,7 +304,7 @@ def normalise(
         return Normalisation(kind="unmatched")
     return Normalisation(
         kind="to_mcq",
-        question=clause.stem or question,
+        question=clause.stem,
         possible_answers={KEYS[i]: opt for i, opt in enumerate(clause.options)},
         correct_answer=clause.options[index],
     )
@@ -265,7 +315,7 @@ def _strip_mcq_stem(question: str, possible_answers: dict | None) -> Normalisati
     if not possible_answers or len(possible_answers) < _MIN_MCQ_STEM_OPTIONS:
         return None
     clause = find_option_clause(question)
-    if clause is None or clause.stem is None or clause.stem == question:
+    if clause is None or clause.stem == question:
         return None
     values = [str(v) for v in possible_answers.values()]
     matched = {
@@ -301,13 +351,19 @@ def apply_to_questions(questions: Sequence[Any]) -> Counts:
                 q.correct_answer,
             )
             continue
-        stem_changed = result.question != q.question
         q.question = result.question
         if result.kind == "to_mcq":
             q.type = "text_multichoice"
             q.possible_answers = result.possible_answers
             q.correct_answer = result.correct_answer
+            # Alternatives are a free-text-evaluator concept; the MCQ path
+            # routes on `possible_answers` membership, so phrasings of the
+            # old open answer are now dead metadata.
+            q.alternative_answers = []
             counts.inline_options_to_mcq += 1
-        if stem_changed:
+        else:
+            # Conversions always rewrite the stem, so counting them here too
+            # made the two numbers overlap. This one means what it says: MCQs
+            # that already had options and merely recited them.
             counts.stem_options_stripped += 1
     return counts

@@ -1156,3 +1156,106 @@ async def test_best_of_n_env_rollback(monkeypatch) -> None:
     await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
     assert gen.calls[0]["enable_best_of_n"] is True
+
+
+@pytest.mark.asyncio
+async def test_inline_option_stems_become_mcq_before_type_tagging() -> None:
+    """Founder blind rating 2026-09-03 — a `text` question that recites its
+    own options is an MCQ the model forgot to declare.
+
+    It shipped as free text: the player had to *say* "about 3,800 years" for
+    the voice grader to match, and iOS never raised the option picker. The
+    repair must run BEFORE the 42.9a type tagging so the routing below sees
+    the real structure, and its counts must reach `StageResult.info` — that
+    is the only signal a future batch regressed.
+    """
+    questions = [
+        _stub_question(
+            0,
+            question="The Great Pyramid was the tallest structure for how "
+            "long: closer to 400 years, 1,400 years, or 3,800 years?",
+            correct_answer="About 3,800 years",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 11: The Estimation Challenge"
+            ),
+        ),
+        _stub_question(
+            1,
+            question="Which of these mammals cannot inject venom: platypus, "
+            "slow loris, shrew, or hedgehog?",
+            type="text_multichoice",
+            correct_answer="Hedgehog",
+            possible_answers={
+                "a": "Platypus",
+                "b": "Slow loris",
+                "c": "Shrew",
+                "d": "Hedgehog",
+            },
+            generation_metadata=GenerationProvenance(reasoning_pattern="odd_one_out"),
+        ),
+        _stub_question(
+            2,
+            question="Which is older: the Sun or the Moon?",
+            correct_answer="Neither — they formed together",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 12: The Comparison Bet"
+            ),
+        ),
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=3, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    by_text = {q.question: q for q in ctx.questions}
+    converted = by_text[
+        "The Great Pyramid was the tallest structure for how long?"
+    ]
+    assert converted.type == "text_multichoice"
+    assert converted.possible_answers == {
+        "a": "400 years",
+        "b": "1,400 years",
+        "c": "3,800 years",
+    }
+    assert converted.correct_answer == "3,800 years"
+    assert "platypus" not in by_text["Which of these mammals cannot inject venom?"].question
+    assert result.info["inline_options_to_mcq"] == 1
+    assert result.info["stem_options_stripped"] == 2
+    # The comparison-bet answer resolves to neither listed option, so the
+    # question is left exactly as generated rather than converted on a guess.
+    assert result.info["inline_options_unmatched"] == 1
+
+
+@pytest.mark.asyncio
+async def test_comparison_bet_label_without_options_is_kept_as_text() -> None:
+    """The `Pattern NN` label fix must not turn into a content deleter.
+
+    Once "Pattern 12: The Comparison Bet" reaches the MCQ route, the fail-loud
+    guard would drop every such question that carries no options — including
+    perfectly good free-text ones ("Chocolate, coffee and tea all reached
+    Europe within a century. Which arrived first?"). Comparison Bet has a
+    legitimate open form, so a label-only MCQ claim with nothing to build from
+    keeps the question; `true_false` (asserted elsewhere) still drops.
+    """
+    questions = [
+        _stub_question(
+            0,
+            question="Chocolate, coffee and tea all reached Europe within a "
+            "century of each other. Which of the three arrived first?",
+            correct_answer="Chocolate",
+            generation_metadata=GenerationProvenance(
+                reasoning_pattern="Pattern 12: The Comparison Bet"
+            ),
+        ),
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=1, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert len(ctx.questions) == 1
+    assert ctx.questions[0].type == "text"
+    assert result.info["dropped_mcq_missing_options"] == 0
+    assert result.info["mcq_label_kept_as_text"] == 1

@@ -26,9 +26,12 @@ from app.generation.expiry_classifier import (
     Classification,
     ExpiryClassifier,
 )
+from app.generation import inline_options
 from app.generation.pattern_routing import (
+    OPEN_FORM_MCQ_PATTERNS,
     PATTERNS_TO_MCQ,
     choose_question_type,
+    normalize_mcq_pattern,
 )
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
@@ -390,8 +393,19 @@ class GenerationStage:
         # bypass the check entirely) and must reject blank option texts or
         # an answer that resolves to no option — both shipped bare-letter
         # answers to founder review.
+        # Founder blind rating 2026-09-03 — deterministic inline-option repair,
+        # BEFORE the type tagging below so the routing sees the real structure.
+        # A question that recites "closer to 400 years, 1,400 years, or 3,800
+        # years?" inside a `text` stem is an MCQ the model forgot to declare;
+        # the player had to speak a bucket the voice grader then had to match,
+        # and iOS never raised the option picker. Pure function, no LLM call,
+        # and it never guesses: an answer that resolves to no single option
+        # leaves the question exactly as generated.
+        inline_counts = inline_options.apply_to_questions(kept)
+
         tagged: list[Question] = []
         dropped_mcq_missing_options = 0
+        mcq_label_kept_as_text = 0
         for q in kept:
             pattern = (
                 q.generation_metadata.reasoning_pattern
@@ -411,6 +425,27 @@ class GenerationStage:
                     q.possible_answers, q.correct_answer
                 )
                 if resolved_answer is None:
+                    # 2026-09-03: the `Pattern NN` label fix above re-activated
+                    # this route for labels that used to miss it entirely, so
+                    # the drop must not widen with it. When the ONLY MCQ signal
+                    # is a label whose pattern has a legitimate open form, and
+                    # the question carries no options to repair, keep the
+                    # free-text question rather than delete it on the strength
+                    # of the model's own untrusted self-report (#160).
+                    if (
+                        not q.possible_answers
+                        and q.type != "text_multichoice"
+                        and normalize_mcq_pattern(pattern) in OPEN_FORM_MCQ_PATTERNS
+                    ):
+                        mcq_label_kept_as_text += 1
+                        logger.info(
+                            "GenerationStage kept question id=%s as text "
+                            "(pattern=%s claims MCQ, no options to build one)",
+                            q.id,
+                            pattern,
+                        )
+                        tagged.append(q)
+                        continue
                     dropped_mcq_missing_options += 1
                     logger.warning(
                         "GenerationStage dropped question id=%s reason=mcq_missing_options "
@@ -560,8 +595,10 @@ class GenerationStage:
                 "dropped_quality": dropped_quality,
                 "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,
+                "mcq_label_kept_as_text": mcq_label_kept_as_text,
                 "dropped_ungrounded": dropped_ungrounded,
                 "demoted_puzzles": demoted_puzzles,
+                **inline_counts.as_info(),
             },
             cost_cents=0,
         )

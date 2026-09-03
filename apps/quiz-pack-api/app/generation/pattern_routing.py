@@ -17,6 +17,7 @@ to the set don't require touching the orchestrator stage.
 
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 
@@ -54,6 +55,41 @@ _MCQ_PATTERN_ALIASES: dict[str, str] = {
     "comparison_bet": "comparison_bet_older_larger",
 }
 
+# Founder blind rating 2026-09-03: the alias above was dead in practice. The
+# live labels cite the Library entry by number — "Pattern 12: The Comparison
+# Bet", "The Comparison Bet (Pattern 12)" — and neither shape survives the
+# `the_` strip, so every one of them routed to free text. Strip the citation
+# (numbering prefix, trailing parenthetical) before the alias lookup. This is
+# deliberately scoped to MCQ routing and NOT folded into `_normalize_pattern`:
+# that helper also feeds `verification_mode`, where widening the match would
+# hand a "Pattern 10: The Lateral Thinking Puzzle" label the right to skip web
+# fact-checking on the model's own say-so (#160).
+_PATTERN_NUMBER_PREFIX_RE = re.compile(r"^pattern_\d+:?_?")
+_PATTERN_NUMBER_SUFFIX_RE = re.compile(r"_\([^()]*\)$")
+
+# Patterns whose non-MCQ form is a legitimate question. #160's doctrine —
+# structure outranks the label — cuts both ways: a question the model merely
+# LABELLED `comparison_bet` while carrying no options is a well-formed
+# free-text question ("Chocolate, coffee and tea all reached Europe within a
+# century. Which arrived first?"), not a half-built MCQ, so `GenerationStage`
+# keeps it as text instead of dropping it. `true_false`, `odd_one_out`,
+# `year_guess` and `order_of_magnitude` have no such form — without options
+# they are broken questions and stay droppable.
+OPEN_FORM_MCQ_PATTERNS: frozenset[str] = frozenset({"comparison_bet_older_larger"})
+
+
+def normalize_mcq_pattern(pattern: str | None) -> str:
+    """Canonical MCQ routing key for a generator-emitted pattern label.
+
+    Absorbs the label drift seen in live batches: Library-title casing, a
+    leading ``the_``, and the ``Pattern NN`` citation in either position.
+    """
+    normalized = _normalize_pattern(pattern)
+    normalized = _PATTERN_NUMBER_SUFFIX_RE.sub("", normalized)
+    normalized = _PATTERN_NUMBER_PREFIX_RE.sub("", normalized)
+    normalized = normalized.removeprefix("the_")
+    return _MCQ_PATTERN_ALIASES.get(normalized, normalized)
+
 
 def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoice"]:
     """Return the ``Question.type`` value for a generator-emitted pattern.
@@ -62,17 +98,13 @@ def choose_question_type(pattern: str | None) -> Literal["text", "text_multichoi
     routing is fail-safe: a typo in the LLM's pattern label degrades
     to free-form text, not a half-built MCQ missing options.
 
-    Labels are normalized before lookup, and a leading ``the_`` is
-    stripped: despite 42.9b's exact-snake_case-key prompt instruction,
-    the first live batch (2026-06-10 BLOCKER) showed the LLM derives
-    labels from the Pattern Library titles ("The Odd One Out" →
-    ``the_odd_one_out``), which exact matching silently routed to text.
+    Labels are normalized before lookup (see ``normalize_mcq_pattern``):
+    despite 42.9b's exact-snake_case-key prompt instruction, the first live
+    batch (2026-06-10 BLOCKER) showed the LLM derives labels from the
+    Pattern Library titles ("The Odd One Out" → ``the_odd_one_out``), which
+    exact matching silently routed to text.
     """
-    normalized = _normalize_pattern(pattern)
-    if normalized.startswith("the_"):
-        normalized = normalized[len("the_") :]
-    normalized = _MCQ_PATTERN_ALIASES.get(normalized, normalized)
-    if normalized in PATTERNS_TO_MCQ:
+    if normalize_mcq_pattern(pattern) in PATTERNS_TO_MCQ:
         return "text_multichoice"
     return "text"
 

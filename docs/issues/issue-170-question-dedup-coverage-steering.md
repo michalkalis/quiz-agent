@@ -41,6 +41,8 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 
 ### A. Code recon
 
+> **Koreň ciest:** každá cesta bez prefixu v tomto dokumente (`app/…`, `scripts/…`, `alembic/versions/…`, `prompts/…`, `tests/…`) je relatívna k **`apps/quiz-pack-api/`**. Cesty začínajúce `packages/shared/` sú od koreňa repa. `apps/quiz-agent` sa v tomto issue nemení vôbec.
+
 **Direct prompt path (the gap is real).**
 - `prompts/question_generation_direct.md`: `{topics}` in the order header; `{topic_section}` + `{avoid_section}` sit one line each after `**Question Type:**`. Empty → the placeholder collapses to a blank line, no heading text reaches the model.
 - `app/generation/prompt_builder.py:233-236` builds `topic_section` (`**Preferred Topics:** …` + optional `**Avoid Topics:** …`); `:239-243` builds `avoid_section` (`**Do NOT repeat…**` + `avoid_questions[:10]`, the hard cap of 10); `:283` `topics` falls back to the literal `"any"`.
@@ -53,10 +55,12 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 
 **Dedup / persist / schema.**
 - `dedup.py`: 4 checks, first match drops — cosine ≥ `0.85` (`:113-125`, `:214-227`), Jaccard vs gold ≥ `0.80` (`:229-238`), in-batch Jaccard ≥ `0.60` (`:118-124,145-152`), same-fact (`_fact_key` = normalized url+answer, or content Jaccard ≥ `0.35`) (`:153-181`). Calibration note `:60-68` records the 2026-08-07 rated batch (dup pairs 0.39–0.52 vs noisiest non-dup 0.21) and the **accepted residual**: same fact / disjoint wording = 0.735 cosine vs a 0.738 non-dup → not separable by any threshold today. Helpers `_normalize_answer:255-256`, `_normalize_url:258-262`.
-- `pgvector_client.py:275-303` `find_duplicates(question_text, threshold=0.85)` — `cosine_distance`, `ORDER BY … LIMIT 10`, similarity filtered client-side, no self-id exclusion. `_embedding_for:312-317` embeds **`question.question` only — the answer is not in the embedding**, which is exactly the 0.735/0.738 blind spot.
+- `pgvector_client.py:292-303` `find_duplicates(question_text, threshold=0.85)` — `cosine_distance`, `ORDER BY … LIMIT 10`, similarita sa filtruje až client-side. Self-match **nie je defekt**: docstring `:302-303` hovorí, že `DedupStage` vylučuje vlastné id, takže re-run je idempotentný; skutočný limit je `LIMIT 10` **pred** prahom (D2). `_embedding_for:333-338` embedduje **`question.question` only — the answer is not in the embedding**, which is exactly the 0.735/0.738 blind spot.
 - `persist.py:79-86,96-115` writes a pre-computed `embedding` (`text-embedding-3-small`, `:41`); it does not embed.
 - Convention to follow: `spent_facts.py:52-59` **imports** `_fact_key/_fact_tokens/_jaccard/_normalize_answer/_normalize_url` from `dedup.py` and wraps non-`Question` inputs in a duck-typed dataclass (`:64-75`), pinned by a `__module__` test (`:34-36`). Any new stage must do the same — never reimplement.
-- `app/db/models/question.py`: has `category`(String64), `topic`(String128), `correct_answer`, `embedding Vector(1536)` (`:33`), `embedding_model/dim`, indexes `ix_questions_pack_id`, `ix_questions_language_category_review_status` (`:121-131`). **No `subtopic`, no taxonomy-id, no normalized-answer column.**
+- `app/db/models/question.py`: has `category`(String64), `topic`(String128), `correct_answer`, `embedding Vector(1536)` (`:33`), `embedding_model/dim`, indexes `ix_questions_pack_id` (partial, `pack_id IS NOT NULL`, `:121-123`), `ix_questions_language_category_review_status` (`:126-131`). **No `subtopic`, no taxonomy-id, no normalized-answer column.** `language` je **nullable** (`:68`; shared model `packages/shared/quiz_shared/models/question.py:151-153`: „None = legacy/unspecified").
+- **Kto skladá stage-y (kľúčové pre locked 3):** dve nezávislé miesta — `app/worker/tasks.py:92,102` (zákaznícke pack objednávky) a `scripts/generate_pack.py:313,328` (korpusové CLI behy). `ctx.pack_id` (`app/orchestrator/context.py:43`) je NULL **až do `PersistStage` (`persist.py:91`)**, takže ako predikát „toto je pack" vo fáze generation/dedup **nefunguje**. Na úrovni riadkov pack rozlišuje `questions.pack_id`; korpusový importér `import_questions_json.py` ho nikdy nenastavuje → korpus = `pack_id IS NULL`.
+- `spent_facts.py:130-146` `filter_spent_facts(facts, kept_questions, fact_jaccard_threshold=DEFAULT_FACT_JACCARD_THRESHOLD)` → `SpentFactIndex(:88-102)`; jediný volajúci je `topup.py:124` (default). Prah je teda už dnes parameter, nie konštanta v tele.
 - Alembic head = **`f2a91c4b8e57`** (`f2a91c4b8e57_order_generation_mode.py`). Vector index exists but is **ivfflat, not HNSW**: `1c5e0fa7b3d4_core_entities_issue_33_task_1_5.py:256-257` (`USING ivfflat (embedding vector_cosine_ops) WITH (lists=100)`); no `hnsw` anywhere. Stack: `pgvector>=0.3.0` (`pyproject.toml:45`), `pgvector/pgvector:pg16` (`docker-compose.yml`) → HNSW supported.
 
 **Cost / roles / judge.**
@@ -74,13 +78,7 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 
 ### B. Build-vs-adopt
 
-| Need | Call | Reason |
-|---|---|---|
-| Coverage-cell weighted sampling | **Build (stdlib)** | `random.choices(cells, weights=…)` with inverse-coverage weights is ~10 lines; a sampling lib is dead weight. |
-| Answer normalisation | **Adopt in-repo** | Import `_normalize_answer`/`_fact_key` from `dedup.py` per the `spent_facts.py:52-59` precedent; keeps the `__module__` anti-fork test honest. |
-| HNSW index | **Adopt (pgvector native)** | `CREATE INDEX … USING hnsw (embedding vector_cosine_ops)`, one migration; pg16 image supports it. See open question 2 on whether it is warranted. |
-| Gray-zone pairwise judge | **Adopt in-repo** | `MultiModelScorer` (`multi_model_scorer.py:516`) with a single cheap model. A new client would fork gateway routing, key gating and cost accounting. |
-| Per-category subtopic list | **Build** | `TopicPool` is flat/un-keyed; no library fits a domain taxonomy. Source = manual vs model-proposed (product question below). |
+**Build:** váženie buniek (`random.choices` + inverzné váhy, ~10 riadkov — sampling knižnica je mŕtva váha) a per-kategória zoznam podtém (`TopicPool` je plochý/un-keyed, doménovú taxonómiu žiadna knižnica nepokryje). **Adopt in-repo:** normalizácia odpovede (`_normalize_answer`/`_fact_key` z `dedup.py` podľa precedensu `spent_facts.py:52-59`) a seam sudcu šedej zóny (`llm_factory` + `app/llm_usage.py`; korekcia v D7 — nie celá trieda `MultiModelScorer`). **Adopt native, ale OUT:** HNSW index (D9).
 
 ### Files touched
 
@@ -95,24 +93,18 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 | `app/generation/prompt_builder.py` | likely unchanged (placeholders already correct) |
 | `packages/shared/quiz_shared/llm/factory.py` | new cheap-judge role + session/openrouter map entries |
 | new: coverage-map module + per-category subtopic data file | cell counting + allocation |
-| `scripts/generate_pack.py` | flags for coverage mode / judge switch |
+| `app/orchestrator/stages/topup.py` | odovzdá `profile.fact_jaccard` do `filter_spent_facts` (D6) |
+| `scripts/generate_pack.py` | číta 4 env flagy + CLI prepínače a injektuje ich do stage-ov (D5) |
+| `app/worker/tasks.py` | **nemení sa** — to je hranica pre custom packy (D5) |
 | `tests/orchestrator/stages/test_{dedup,generation,persist}.py`, `tests/db/test_pgvector_dedup.py` | new cases |
 
-**Reversibility assessment:** **class `b`** — an alembic migration is required (new columns on `questions` + a vector-index change). Everything else is additive behind flags, but the migration alone routes this to `ready-for-human`, never Ralph.
+**Reversibility assessment:** class `b` (viď hlavičku) — migrácia routuje issue na `ready-for-human`, nie Ralph.
 
-### Open technical questions
+### Open technical questions → všetky uzavreté v Phase 2
 
-1. **Re-embedding backfill.** Switching embedded text to question+answer invalidates every existing `questions.embedding`. Full backfill in the migration, or dual-write + cutover? Mixed old/new embeddings silently corrupt cosine dedup.
-2. **Is HNSW warranted?** ivfflat `lists=100` already exists and `find_duplicates` is `LIMIT 10` over a low-hundreds corpus. Measure first; it may be a no-op that costs a migration.
-3. **Coverage-cell cardinality.** 9 categories × ~15 subtopics × ~3 types ≈ 400 cells against a corpus in the low hundreds → nearly every cell reads zero-coverage and the weighting degenerates to uniform random. Needs coarser cells or a smoothing rule.
-4. **Judge switch vs #169.** A gray-zone judge under `LLM_GATEWAY=session` is disabled by `_judges_enabled` (`generate_pack.py:244`) if it reuses the judge flag. Separate flag, or accept OFF in session runs?
-5. **Recalibration data.** `dedup.py:60-68` was calibrated on the 2026-08-07 rated batch; batch `353c88ca` (82 q, 2026-09-02) is still unrated — threshold recalibration blocks on founder ratings.
-6. **Subtopic assignment.** Generator returns it in the JSON (prompt change, unvalidated) or a classifier pass (extra LLM call per question)?
+1 re-embedding backfill → **D2** · 2 HNSW → **D9** (OUT + `EXPLAIN` warning) · 3 kardinalita buniek → **D1/D3** · 4 judge vs #169 → **D7** · 5 rekalibrácia na dávke `353c88ca` → follow-up, blokovaný na founder ratingu · 6 priradenie podtémy → **D4** (z pridelenej bunky, nula LLM volaní).
 
-### Product questions for founder — **oba vyriešené**
-
-1. **Subtopic source** → locked 5: model navrhne, founder jednorazovo schváli, výsledok je statický súbor v repe. Detail v D4.
-2. **Per-category answer cap number** → locked 6 + 6a: východiskové hodnoty per kategória navrhuje D6, founder ich doladí cez env bez zásahu do kódu. Žiadna otvorená produktová otázka nezostáva.
+**Product questions for founder — oba vyriešené:** zdroj podtém → locked 5 + D4; číslo stropu → locked 6/6a + D6 (východiskové hodnoty v tabuľke, founder doladí cez env). Žiadna otvorená produktová otázka nezostáva.
 
 ## Scope
 
@@ -120,8 +112,8 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 - **Podtémový layer:** statický `app/generation/subtopics.json` v tvare `{language: {category: [subtopic, …]}}` (~15–20 podtém na kategóriu), vyrobený novým `scripts/propose_subtopics.py` (session gateway) a **jednorazovo schválený founderom pred akoukoľvek ďalšou úlohou** (locked 5, D4). Runtime ho len číta, žiadny LLM.
 - **Mapa pokrytia** buniek `(language, category, subtopic)` = jeden `GROUP BY` nad `questions` + deterministické vážené vzorkovanie buniek pre dávku (D3).
 - **Pozitívne riadenie direct promptu:** pridelené bunky do `{topic_section}` a ≤ ~10 už obsadených odpovedí tej bunky do `{avoid_section}` (dnes obe prázdne) — za flagom `COVERAGE_STEERING`, default OFF.
-- **Register odpovedí:** `answer_key` (normalizovaná odpoveď) na `questions` + **deterministický backfill `answer_key` nad existujúcim korpusom** (bez LLM, D2) + **per-kategória strop** opakovaných odpovedí v `DedupStage` — flag `ANSWER_CAP`, default OFF, hodnoty konfigurovateľné (D6).
-- **Per-kategória prísnosť dedupu** (cap aj cosine prah) ako jeden konfiguračný mechanizmus — locked 6a (D6).
+- **Register odpovedí:** `answer_key` (normalizovaná odpoveď) na `questions` + **deterministický backfill `answer_key` + `language='en'` nad existujúcim korpusom** (bez LLM, D2) + **per-kategória strop** opakovaných odpovedí v `DedupStage` — flag `ANSWER_CAP`, default OFF, hodnoty konfigurovateľné (D6).
+- **Per-kategória prísnosť dedupu** ako jeden profil `DEDUP_STRICTNESS_PER_CATEGORY` (cap + oba cosine prahy + in-batch Jaccard + fact content-Jaccard; presná `fact_key` zhoda ostáva globálna) — locked 6a (D6).
 - **Embedding otázka+odpoveď** ako **samostatný stĺpec** `embedding_qa` + backfill skript — flag `DEDUP_QA_EMBEDDING`, default OFF (D2).
 - **Lacný LLM sudca pre šedú zónu** cosine 0.70–0.85, vlastný flag + tvrdý strop volaní na beh (D7).
 - **Migrácia** (class `b`): 4 nullable stĺpce + 2 btree indexy na heade `f2a91c4b8e57` (D8).
@@ -129,7 +121,7 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 
 **Out (vedome, s dôvodom)**
 - **HNSW / akákoľvek zmena vector indexu** — D9. Detekcia nie je nákladový problém (research §1) a pri tomto počte riadkov je migrácia riziko bez merateľného zisku.
-- **Custom packy** — locked 3. Žiadny pack ↔ korpus dedup; obe nové generačné/dedup správania sa zapínajú **volajúcim** (CLI/worker korpusové behy), app/API pack cesta ich nikdy nenastaví (D5).
+- **Custom packy** — locked 3. Žiadny pack ↔ korpus dedup. Hranica je konštrukčná: zákaznícky stage builder `app/worker/tasks.py:92,102` sa **nemení**, nové správanie je konštruktorový parameter napĺňaný len v `scripts/generate_pack.py`, a každý nový dotaz filtruje `pack_id IS NULL` (D5, D10). `ctx.pack_id` sa ako predikát **nepoužíva** — je NULL až do `PersistStage`.
 - **UX „otaguj ako duplikát"**, per-user expozícia, novelty score do scoringu — locked 7, samostatné follow-upy.
 - **Zmena promptu mimo `{topic_section}`/`{avoid_section}`** — locked 4. Šablóna, model, teplota, poradie stage-ov ostávajú byte-identické.
 - **Globálne prekalibrovanie prahu 0.85** (question-only) — globálny **default** ostáva nedotknutý; QA cesta má vlastnú konštantu (D2), per-kategória odchýlky (ktoré prepisujú oba prahy) rieši D6. Rekalibrácia na dávke `353c88ca` je follow-up, blokovaný na founder ratingu, nie na tomto issue.
@@ -142,10 +134,17 @@ Otvorené pre plán: podtémy pre bunky ručne (~10–20 na kategóriu) vs. navr
 - **A1** (fail-loud gate lámal merge s flagmi OFF) → D2: kontrola pokrytia `embedding_qa` beží **len pri `DEDUP_QA_EMBEDDING` ON**; povinnosť importéra tiež.
 - **A2** (`answer_key` bez backfillu = tichý under-enforce) → D2: deterministický `--answer-key-only` backfill v tom istom skripte + Scope „In".
 - **A3** (`subtopics.json` bez schémy/zdroja/poradia) → D4 + Scope: schéma `{language: {category: […]}}`, `scripts/propose_subtopics.py`, founder sign-off ako **prvá úloha**.
-- **B1** (locked 6a nebolo implementované) → D6: `DEDUP_COSINE_PER_CATEGORY` prepisuje **oba** prahy; zjednotenie dropov a first-match poradie vysvetlené.
+- **B1** (locked 6a nebolo implementované) → D6: per-kategória hodnota prepisuje **oba** cosine prahy; zjednotenie dropov a first-match poradie vysvetlené (v cykle 2 rozšírené na celý profil).
 - **B2** (mapa prázdna v čase guardu) → D4 + Quality guard: aplikovaný subtopic backfill = vstupná podmienka; coverage modul fail-loud pri kategórii bez tagov.
 - **B3** (mäkký tripwire) → Quality guard metrika 1: `B ≥ A` bez rezervy, CI párového rozdielu, slepá founder otázka „cítiš rozdiel", + otvorene priznaná potreba ~145 q/rameno pri 0.5 bodu → founder call.
 - Nity: prah ambiguita (B1), jazyk v kľúči `subtopics.json` (A3), metrika 2 validuje len steering, `LIMIT 10` pred prahom (D2), `EXPLAIN` warning aj v coverage module (D9), sebapotvrdzujúca mapa priznaná (D4).
+
+### Gate cycle 2 → fixes
+- **A1** (NULL `language` na legacy riadkoch = tiché pod-vynucovanie) → D2: backfill `language='en'` v `--answer-key-only`, `COALESCE(language,'en')` v mape aj v strope, + fail-loud počet NULL riadkov v D4 guarde.
+- **B1** (packy chránené len disciplínou; `ctx.pack_id` je NULL až v `PersistStage`) → D5/D10/Scope: konštruktorová injektáž len z `scripts/generate_pack.py`, `app/worker/tasks.py` sa nemení, riadkový filter `pack_id IS NULL`.
+- **B2** (uvoľnenie nedosiahlo viažuce droppery) → D6: jeden `DEDUP_STRICTNESS_PER_CATEGORY` profil (cosine oba + in-batch + fact-jaccard + cap); presná `fact_key` zhoda ostáva globálna; do `spent_facts` cez existujúci parameter na `topup.py:124`.
+- **B3** (poradová pasca metriky 2) → Quality guard: obe ramená `--dry-run` nad zamrznutým korpusom, publikácia až po oboch, poradie sa zapisuje; metrika 2 priznane smerová, nie so silou (aj A-nit 3).
+- Nity: koreň ciest `apps/quiz-pack-api/` (§A), oprava cite `_embedding_for:333-338`, oprava recon vety o self-id, D2 počty scope-nuté na `pack_id IS NULL`, očakávané `K = 7–20` a sila riadenia 2–3× (D3).
 
 **Build-vs-adopt (z Phase 1 §B, potvrdené s jednou korekciou).** Adoptujeme: normalizáciu odpovede (`_normalize_answer`/`_fact_key` importované z `dedup.py` podľa precedensu `spent_facts.py:52-59`), `llm_factory` role registry + `app/llm_usage.py` účtovanie, `random.choices` zo stdlib. **Korekcia D7:** Phase 1 navrhla adoptovať `MultiModelScorer` — jeho verejné API je `score_question` (5-dimenzionálna rubrika kvality, kvórum, parsing skóre), z čoho pre párový dedup verdikt nesedí nič; použiteľné je len `_get_client` (`multi_model_scorer.py:616-631`), čo sú **tri riadky nad `llm_factory.chat_openai`**. Adoptujeme teda ten istý seam (factory + usage), nie triedu.
 
@@ -159,7 +158,7 @@ Prepnutie textu embeddingu invaliduje každý existujúci `questions.embedding` 
 
 **Riešenie:** nový nullable `embedding_qa` (+ `embedding_qa_model`). Pôvodný `embedding` sa **nemení a ostáva pre retrieval**. QA vetva dedupu má vlastný SQL predikát `embedding_qa IS NOT NULL` a vlastný prah `DEFAULT_QA_COSINE_THRESHOLD = 0.90` (research §1: produkčné QA pipeline embeddujú otázku+odpoveď a prahujú na 0.90; prahy nie sú prenosné medzi vstupmi, takže zdediť 0.85 by bolo tichým posunom citlivosti).
 
-**Prečo sa nemôže ticho zmiešať:** dva rôzne stĺpce sa fyzicky nedajú porovnať navzájom; a keďže NULL riadky by boli pre QA vetvu neviditeľné (a dedup by ticho strácal recall), `DedupStage` **fail-loud** overí pokrytie: `COUNT(*) WHERE embedding IS NOT NULL AND embedding_qa IS NULL` musí byť 0, inak beh spadne s inštrukciou dobehnúť backfill. **Kontrola sa spúšťa výhradne keď je `DEDUP_QA_EMBEDDING` ON** (A1) — pri flagu OFF (default aj stav pri merge) sa nevykoná vôbec, takže existujúce direct/CLI behy sú migráciou nedotknuté a „merge tohto issue nič v prode nezapína" platí doslova. Rovnako povinnosť importéra plniť `embedding_qa` (D10) vzniká až so zapnutým flagom. Nikdy neprepne na tichý fallback.
+**Prečo sa nemôže ticho zmiešať:** dva rôzne stĺpce sa fyzicky nedajú porovnať navzájom; a keďže NULL riadky by boli pre QA vetvu neviditeľné (a dedup by ticho strácal recall), `DedupStage` **fail-loud** overí pokrytie: `COUNT(*) WHERE pack_id IS NULL AND embedding IS NOT NULL AND embedding_qa IS NULL` musí byť 0, inak beh spadne s inštrukciou dobehnúť backfill. Predikát `pack_id IS NULL` je tam zámerne (nit gate B): počíta **presne tie riadky, ktoré QA dotaz dedupu naozaj číta** (korpus, D5) — inak by importovaný zákaznícky pack zhodil korpusový beh za riadky, ktoré sa nikdy nedotazujú. **Kontrola sa spúšťa výhradne keď je `DEDUP_QA_EMBEDDING` ON** (A1) — pri flagu OFF (default aj stav pri merge) sa nevykoná vôbec, takže existujúce direct/CLI behy sú migráciou nedotknuté a „merge tohto issue nič v prode nezapína" platí doslova. Rovnako povinnosť importéra plniť `embedding_qa` (D10) vzniká až so zapnutým flagom. Nikdy neprepne na tichý fallback.
 
 **Recall strop QA dotazu:** `find_duplicates` reže `LIMIT 10` **pred** prahovým filtrom (`pgvector_client.py:292-303`), takže s rastúcim korpusom môže skutočný najbližší pár vypadnúť z okna. Nový QA dotaz preto filtruje prahom **v SQL** (`WHERE cosine_distance <= 1 - threshold`) a `LIMIT` aplikuje až nad filtrom; pôvodný `find_duplicates` sa nemení (hot path, locked 4).
 
@@ -169,10 +168,19 @@ Zamietnuté: (a) prepis na mieste + dual-write — nemá ako odlíšiť už prep
 
 **`answer_key` backfill v tom istom skripte (A2).** Bez neho by strop z D6 rátal len riadky persistnuté po migrácii a ticho pod-vynucoval proti celému existujúcemu korpusu. Ten istý skript preto v jednom prechode nad `answer_key IS NULL` dopočíta `answer_key = _normalize_answer(correct_answer)` (import z `dedup.py` podľa precedensu `spent_facts.py:52-59`) — **deterministicky, bez LLM a bez OpenAI volania**. Keďže `ANSWER_CAP` nezávisí od `DEDUP_QA_EMBEDDING`, skript má prepínač `--answer-key-only`, ktorý beží úplne zadarmo a bez sieťového volania.
 
+**NULL `language` na legacy riadkoch — jedno pravidlo, tri miesta (A1).** `questions.language` je nullable a shared model ho dokumentuje ako „None = legacy/unspecified" (`packages/shared/quiz_shared/models/question.py:151-153`). Bunka (D1) aj strop (D6) sú kľúčované jazykom, takže `WHERE language = 'en'` by legacy riadky preskočil, mapa by čítala takmer nuly a strop by ticho pod-vynucoval — presne trieda chyby, ktorú cyklus 1 zavrel pre `answer_key` (A2), a fail-loud guard z D4 ju nechytí (podtému tie riadky mať môžu).
+
+Pravidlo: **`language = 'en'` je jediná legálna interpretácia NULL** (otázky sú do odvolania English-only, founder → memory `feedback_questions_english_only`), a presadzuje sa dvojito:
+1. **Zápisom:** ten istý backfill skript v prechode `--answer-key-only` doplní `language = 'en'` tam, kde je NULL — deterministicky, bez LLM, nad **rovnakou množinou riadkov, ktorú číta dedup/coverage dotaz** (`pack_id IS NULL`; pack riadky sa nechávajú tak, D5). Po ňom je NULL prázdna množina.
+2. **Čítaním (belt-and-braces):** modul mapy pokrytia aj dotaz stropu používajú `COALESCE(language, 'en')` v `GROUP BY` aj v `WHERE`, takže riadok vložený mimo backfillu (starý import, ručný INSERT) sa nikdy nestratí. Index `ix_questions_lang_category_*` (D8) sa tým nestáva nepoužiteľným len preto, že po bode 1 je NULL prázdna — `COALESCE` je poistka, nie horúca cesta.
+3. **Hlásením:** guard z D4 dostáva druhý fail-loud počet — `COUNT(*) WHERE pack_id IS NULL AND language IS NULL` sa reportuje pri každej steerovanej dávke a **nenulová hodnota je warning s inštrukciou dobehnúť `--answer-key-only`** (nie hard fail, lebo `COALESCE` už správnu odpoveď dáva; ticho ale nezostane).
+
 ### D3 — Váženie pokrytia: `1/(count + K)` so samokalibrujúcim `K`
 Požiadavka: pri malom korpuse sa musí degradovať na uniformné, pri rastúcom začať riadiť — bez magickej konštanty, ktorá po naplnení korpusu prestane platiť.
 
 Váha bunky `w_i = 1 / (count_i + K)`, kde `K = max(1, round(N_kategórie / počet_buniek_kategórie))` (priemerné obsadenie bunky). Vlastnosti: pri prázdnom korpuse sú všetky `count_i = 0` a `K = 1` → **presne uniformné**; pri `count` rádovo pod `K` je pomer váh blízko 1 (jemné riadenie); až keď obsadenie prerastie priemer, pomer váh rastie a steering sa zapne. Žiadny prah „od N riadkov", škáluje sa sám.
+
+**Konkrétne čísla pre experimentálnu kategóriu (nit gate B).** Jedna čerstvo backfillnutá kategória, ~15 buniek, 100–300 riadkov → `K = round(N/15)` = **7 (pri 100) až 20 (pri 300)**. Sila riadenia z toho vychádza takto: prázdna bunka (`count=0`) má váhu `1/K`, priemerne obsadená (`count=K`) `1/2K`, dvojnásobne obsadená (`count=2K`) `1/3K` — čiže **prázdna bunka je vyberaná ~2× častejšie než priemerná a ~3× častejšie než dvojnásobne obsadená**, nezávisle od N. To je zámerne mierne riadenie (locked 2: duplikát nie je tragédia), nie tvrdá kvóta; a je to výrazne ďalej od uniformnej distribúcie než stav pred backfillom, kde sú všetky `count_i = 0` a pomer je presne 1:1. Degenerácia na uniformné teda nastáva **iba** bez aplikovaného subtopic backfillu — čo D4/B2 už rieši fail-loudom, nie tichým poklesom.
 
 Determinizmus a testovateľnosť: `random.Random(seed).choices(cells, weights=…, k=…)` (stdlib, Phase 1 §B), `seed` = `--coverage-seed` na CLI, inak `order_id`. Test = fixný seed + fixné počty → fixný zoznam buniek; plus dva okrajové testy: všetky counts 0 → distribúcia sa štatisticky nelíši od uniformnej; jedna bunka výrazne prekročí `K` → jej podiel klesne.
 
@@ -187,24 +195,38 @@ Riziko, ktoré tým vzniká a je vedome prijaté: model môže pridelenú podté
 
 **Backfill je predpoklad, nie doplnok (B2).** Kým `--apply` nedobehne, má každý existujúci riadok `subtopic` NULL, všetky `count_i = 0` a váženie z D3 je preukázateľne **uniformné** — arm B v quality guard by potom meral „náhodná podtéma v `{topic_section}`", nie coverage steering, a metrika 2 by hodnotila mechanizmus, ktorý sa nikdy nezapol. Preto: (a) **aplikovaný subtopic backfill nad kategóriou experimentu je uvedená vstupná podmienka quality guard** (viď sekcia nižšie), a (b) modul mapy pokrytia **fail-loud** spadne, keď kategória, pre ktorú sa žiada alokácia, nemá **ani jeden** riadok s neprázdnym `subtopic` — nikdy nesteeruje naslepo a nikdy ticho nedegraduje na uniformné.
 
-### D5 — Ako sa nové správanie zapína: volajúcim, nie globálne
-Locked 3 (packy nedotknuté) a locked 4 (kvalita sa nesmie zmeniť) sú splnené **konštrukciou**, nie disciplínou: všetky štyri flagy sú `_truthy`-štýl default OFF (`app/feature_flags.py:29-30`) a v prode sa nenastavujú (žiadne Fly secrets) až do founder podpisu. Coverage allocation sa navyše aplikuje **iba** keď je beh direct (`ctx.direct_generation`) a flag ON — grounded cesta #167 si témy nesie z `SourcingStage._forced_topics` (`stages/sourcing.py:80-86`) a coverage do nej nezasahuje, inak by dva zdroje tém bojovali o ten istý `{topic_section}`.
+### D5 — Ako sa nové správanie zapína: **injektážou v CLI stage builderi**, nie env flagom vo vnútri stage-u
+Cyklus 2 (flaw 1) ukázal, že pôvodná formulácia bola disciplína, nie konštrukcia: `ctx.direct_generation` sa cez `_resolve_direct_generation` (`pack_generator.py:156-158`) zapne aj pre zákaznícku pack objednávku, takže process-wide env flag by riadil aj packy a menil im prahy → porušenie locked 3. A navrhnutý predikát `ctx.pack_id is None` **nefunguje**: `pack_id` sa na kontext zapisuje až v `PersistStage` (`persist.py:91`), teda po generation aj dedup — vo chvíli rozhodovania je NULL pre každý beh.
 
-Štyri **nezávislé** flagy (`COVERAGE_STEERING`, `DEDUP_QA_EMBEDDING`, `ANSWER_CAP`, `DEDUP_GRAYZONE_JUDGE`), nie jeden spoločný — inak by regresia v ratovanom porovnaní nebola priraditeľná ku konkrétnej zmene a rollback by vypol aj to, čo fungovalo.
+**Skutočná konštrukčná hranica sú dve nezávislé miesta skladania stage-ov.** Zákaznícku cestu skladá `app/worker/tasks.py:92,102`, korpusovú `scripts/generate_pack.py:313,328`. Preto: **žiadny zo štyroch mechanizmov nečíta env vnútri stage-u.** Každý je *konštruktorový parameter* (`coverage_allocator=None`, `strictness=None`, `qa_embedding=False`, `grayzone_judge=None`) s default hodnotou = dnešné správanie, a naplniť ho môže **iba `scripts/generate_pack.py`** (z env flagov + CLI prepínačov). `app/worker/tasks.py` sa v tomto issue **nemení ani o riadok** — to je overiteľné diffom a je to test: `tests/worker/test_tasks.py` tvrdí, že stage-y zložené workerom majú všetky štyri parametre na defaulte. Custom pack sa tak nedá zapnúť ani omylom nastaveným prod secretom.
+
+**Predikát na úrovni riadkov (ten istý dôvod, druhá vrstva).** Všetky nové dotazy — mapa pokrytia, počet pre strop odpovedí, QA cosine dotaz aj fail-loud počty z D2 — filtrujú `WHERE pack_id IS NULL`, čo je v tejto schéme presne „korpusový riadok" (`ix_questions_pack_id` je partial `pack_id IS NOT NULL`, `question.py:121-123`; importér korpusu `pack_id` nikdy nenastavuje). Pack riadky sa teda ani nečítajú, ani nepočítajú, ani neovplyvňujú prahy.
+
+Coverage allocation navyše beží **iba** na direct vetve (`ctx.direct_generation`) — grounded cesta #167 si témy nesie z `SourcingStage._forced_topics` (`stages/sourcing.py:80-86`), inak by dva zdroje tém bojovali o ten istý `{topic_section}`.
+
+Štyri **nezávislé** flagy (`COVERAGE_STEERING`, `DEDUP_QA_EMBEDDING`, `ANSWER_CAP`, `DEDUP_GRAYZONE_JUDGE`), všetky default OFF (`_truthy` štýl, `app/feature_flags.py:29-30`) a **čítané výhradne v `scripts/generate_pack.py`**, nie v stage-och. Nie jeden spoločný flag — inak by regresia v ratovanom porovnaní nebola priraditeľná ku konkrétnej zmene a rollback by vypol aj to, čo fungovalo.
 
 ### D6 — Per-kategória prísnosť: strop odpovedí + cosine prah, jeden mechanizmus
 Locked 1 + 6 + **6a**: per kategória, žiadne fixné globálne číslo, skôr voľnejšie, a `entertainment` **najvoľnejšie zo všetkých**. Strop sa počíta nad `(language, category, answer_key)` v korpuse; pri prekročení `DedupStage` zahodí kandidáta s dôvodom `answer_cap` (vlastný counter v `StageResult.info`, aby sa v metrikách nezliaval s kosínusovými dropmi).
 
-Prísnosť má **dve páky a jednu konfiguračnú formu** — `ANSWER_CAP_PER_CATEGORY="entertainment=6,kids=4,…"` a `DEDUP_COSINE_PER_CATEGORY="entertainment=0.92,…"` (kv reťazec ako existujúce env flagy, fallback `ANSWER_CAP_DEFAULT=3`). Vyšší cosine prah = **menej** dropov, čiže voľnejší dedup; obe páky idú tým istým smerom a ladia sa nezávisle.
+**Prísnosť je jeden profil na kategóriu, nie sada nezávislých env premenných (B2 cyklus 2).** Cyklus 2 ukázal, že prepis len cosine prahu je pre `entertainment` pravdepodobne bez efektu: `DedupStage` zahadzuje pri **prvej** zhode a v poradí za kosínusom stoja globálne konštanty — in-batch Jaccard `0.60` (`dedup.py:52`, kontrola `:118-124`) a same-fact vetva (`fact_key` `:153-163`, content Jaccard `0.35` `:57-66,165-181`). Práve tie sú pri „veľa otázok o jednom albume/festivale" **viažucim dropperom** (zdieľané entity → vysoký prekryv tokenov otázka+odpoveď), takže `entertainment=0.92` by uvoľnil vetvu, ktorá aj tak nedropovala.
 
-**Ktorý prah `DEDUP_COSINE_PER_CATEGORY` prepisuje: oba (B1).** `DedupStage` zahadzuje pri **prvej** zhode a kosínusová kontrola je prvá v poradí (`dedup.py:105-160`), takže dropy question-only a QA vetvy sú **zjednotenie** — kandidát padne, ak ho zhodí ktorákoľvek. Keby per-kategória hodnota prepisovala len QA prah (D2), bola by pri `DEDUP_QA_EMBEDDING` OFF (default aj stav pri merge) úplne bez účinku a pri oboch vetvách ON by ju prísnejší question-only `0.85` (`dedup.py:53`) predbehol skôr, než sa k QA vetve vôbec dôjde → locked 6a by nebolo implementované ani v jednom stave. Jedna hodnota per kategória preto nastavuje **obe** hranice: question-only prah (globálny default `0.85`) aj QA prah (globálny default `0.90`, D2) sa pre danú kategóriu posunú na ňu. Globálne defaulty ostávajú nedotknuté pre každú kategóriu bez záznamu, takže `entertainment=0.92` uvoľní obe vetvy naraz a nič mimo `entertainment` sa nehne.
+Preto jedna konfiguračná forma: **`DEDUP_STRICTNESS_PER_CATEGORY`** — kv reťazec ako existujúce env flagy, jedna položka na kategóriu, ktorá nesie **všetky tri prahy naraz** (`cosine`, `in_batch`, `fact_jaccard`) plus `cap`, napr. `entertainment=cosine:0.92,in_batch:0.72,fact:0.45,cap:6`. Kategória bez záznamu drží globálne defaulty, ktoré sa **nemenia** (`0.85`/`0.90`, `0.60`, `0.35`, `ANSWER_CAP_DEFAULT=3`). Jedna položka = jedno rozhodnutie „ako voľná je táto kategória", ladí sa naraz a nedá sa uvoľniť polovične — presne to zlyhanie, ktoré cyklus 2 našiel. Vyšší prah = menej dropov v každej z troch vetiev, takže všetky páky idú tým istým smerom.
 
-| Kategória | Cap | Cosine prah | Prečo |
-|---|---|---|---|
-| `entertainment` | **6** | **0.92** | Founder verdikt 2026-09-03 (memory `project_167_pilot_verdict_2026_09_03`, issue-167 § Follow-ups „per-category dedup strictness"): táto trieda znesie výrazne voľnejší dedup než evergreen korpus — post-cutoff fakty sa točia okolo malého počtu aktuálnych entít (jeden album, jeden festival), takže prísny strop by zhadzoval legitímne rôzne otázky. #170 to vlastní, z #167 implementácia nepríde. |
-| `wizarding-world`, `superheroes`, `disney` | **5** | default | Uzavreté fandomy s desiatkami, nie tisíckami entít; príliš tvrdý strop by tu zhadzoval legitímne rôzne otázky o tej istej postave. |
-| `kids`, `football` | **4** | default | Užší kánon (známe zvieratá/farby; top kluby a hráči), opakovanie je prirodzené. |
-| `general`, `adults`, `sports-mix` | **3** | default | Široký priestor odpovedí — tretie opakovanie tej istej entity je už signál mode collapse. |
+**Čo zostáva globálne a prečo:** presná zhoda `fact_key` (normalizované source_url + odpoveď, `dedup.py:153-163`). Identický zdroj **a** identická odpoveď je skutočný duplikát v každej kategórii — nie je to podobnostný prah, ktorý by sa dal „uvoľniť", je to rovnosť; jeho zvoľnenie by znamenalo vpustiť doslovné opakovania toho istého faktu, čo locked 2 nežiada ani pre `entertainment`.
+
+**Ako profil dorazí do `spent_facts.py`:** nekopíruje sa. `filter_spent_facts(facts, kept, fact_jaccard_threshold=…)` (`spent_facts.py:130-146`) už dnes berie prah ako parameter s defaultom `DEDUP_FACT_JACCARD_THRESHOLD` importovaným z `dedup.py`; jediný volajúci `topup.py:124` ho vynecháva. Zmena je jednoargumentová: `TopUpStage` dostane ten istý `strictness` objekt konštruktorom (D5) a odovzdá `profile.fact_jaccard`. Tým ostáva zrkadlo `spent_facts` ↔ `dedup` identické — obe vetvy čítajú tú istú hodnotu z toho istého profilu — a `__module__` anti-fork test (`spent_facts.py:52-59` precedens) platí ďalej. Worker `TopUpStage` profil nedostane → default, packy nedotknuté.
+
+**Ktorý cosine prah profil prepisuje: oba (B1, cyklus 1).** `DedupStage` zahadzuje pri **prvej** zhode a kosínusová kontrola je prvá v poradí (`dedup.py:105-160`), takže dropy question-only a QA vetvy sú **zjednotenie** — kandidát padne, ak ho zhodí ktorákoľvek. Keby per-kategória hodnota prepisovala len QA prah (D2), bola by pri `DEDUP_QA_EMBEDDING` OFF (default aj stav pri merge) úplne bez účinku a pri oboch vetvách ON by ju prísnejší question-only `0.85` (`dedup.py:53`) predbehol skôr, než sa k QA vetve vôbec dôjde → locked 6a by nebolo implementované ani v jednom stave. Jedna hodnota per kategória preto nastavuje **obe** hranice: question-only prah (globálny default `0.85`) aj QA prah (globálny default `0.90`, D2) sa pre danú kategóriu posunú na ňu. Globálne defaulty ostávajú nedotknuté pre každú kategóriu bez záznamu, takže `entertainment=0.92` uvoľní obe vetvy naraz a nič mimo `entertainment` sa nehne.
+
+Východiskové profily (`cap` / `cosine` / `in_batch` / `fact`; „default" = globálna hodnota, teda `0.85`–`0.90` / `0.60` / `0.35`):
+
+| Kategória | Cap | Cosine | In-batch | Fact | Prečo |
+|---|---|---|---|---|---|
+| `entertainment` | **6** | **0.92** | **0.72** | **0.45** | Founder verdikt 2026-09-03 (memory `project_167_pilot_verdict_2026_09_03`, issue-167 § Follow-ups „per-category dedup strictness"): táto trieda znesie výrazne voľnejší dedup než evergreen korpus — post-cutoff fakty sa točia okolo malého počtu aktuálnych entít (jeden album, jeden festival), takže prísny strop by zhadzoval legitímne rôzne otázky. #170 to vlastní, z #167 implementácia nepríde. |
+| `wizarding-world`, `superheroes`, `disney` | **5** | default | default | default | Uzavreté fandomy s desiatkami, nie tisíckami entít; príliš tvrdý strop by tu zhadzoval legitímne rôzne otázky o tej istej postave. |
+| `kids`, `football` | **4** | default | default | default | Užší kánon (známe zvieratá/farby; top kluby a hráči), opakovanie je prirodzené. |
+| `general`, `adults`, `sports-mix` | **3** | default | default | default | Široký priestor odpovedí — tretie opakovanie tej istej entity je už signál mode collapse. |
 
 Cap **nie je** brána kvality, je to brzda odpadu (locked 2: duplikát nie je tragédia). Preto je voľný a preto sa pri jeho dosiahnutí nič neregeneruje — kandidát len padne. Čísla sú návrh, founder ich doladí bez zásahu do kódu.
 
@@ -232,7 +254,7 @@ Poctivo o existujúcom stave: `ivfflat … WITH (lists=100)` (`1c5e0fa7b3d4_…:
 
 ### D10 — Second-order lens
 - **Grounded #167:** nedotknuté — coverage beží len na direct vetve (D5); `SpentFactIndex` rieši tú istú vec v rámci behu, `answer_key` je jeho trvalý korpusový ekvivalent, nie konkurent. Voľnejšia prísnosť pre `entertainment` (D6) je jediná väzba a je konfiguračná.
-- **Custom packy:** nedotknuté — flagy OFF v prode + app/API cesta ich nenastavuje (D5). Žiadny pack ↔ korpus dedup nikde nepribúda.
+- **Custom packy:** nedotknuté **konštrukciou, nie flagom** (D5): stage-y zákazníckej cesty skladá `app/worker/tasks.py:92,102`, ktorý sa v tomto issue nemení — všetky štyri mechanizmy sú konštruktorové parametre napĺňané výhradne v `scripts/generate_pack.py`, takže ani zle nastavený prod secret ich na packu nezapne. Navyše každý nový dotaz filtruje `pack_id IS NULL`, takže pack riadky nevstupujú do mapy, stropu ani prahov. Žiadny pack ↔ korpus dedup nikde nepribúda.
 - **Rating web / import:** `import_questions_json.py` musí popri `embedding` plniť aj `embedding_qa` (rovnaká dávková slučka, druhý vstupný text), inak by importované riadky prepadli fail-loud kontrolou z D2 — to je žiadané, hlási sa hlasno.
 - **Korpusový runbook (#169):** mapa pokrytia, subtopic backfill aj `--dry-run` behy idú cez session gateway s nulovým marginálnym nákladom; jediné platené ostávajú OpenAI embeddingy (D2, rádovo centy).
 - **SK/CS vetva (#168):** `language` v kľúči bunky aj stropu (D1) → jazykové vetvy sa navzájom neriedia.
@@ -245,13 +267,19 @@ Locked 4 je tvrdá brána: **kvalita sa nesmie znížiť ani zmeniť**. Preto pl
 
 **Vstupná podmienka (B2).** `subtopics.json` je schválený a commitnutý **a** `backfill_subtopics.py --apply` dobehol nad kategóriou experimentu. Bez toho je mapa pokrytia prázdna, váženie uniformné a arm B nemeria steering, ale náhodnú podtému (D4). Experiment sa v takom stave **nespúšťa**.
 
-**Experiment (arm A vs arm B).** Rovnaká kategória, rovnaký model (kanonický Fable 5), rovnaký prompt súbor, **N = 30 otázok na rameno**. Arm A = flag OFF (dnešný stav), arm B = `COVERAGE_STEERING=1`. Obe dávky sa publikujú na **produkčný rating web** neoznačené a premiešané (rovnaký postup ako slepé dávky #168 / PR #70) — founder nevie, ktorá otázka je z ktorého ramena.
+**Experiment (arm A vs arm B).** Rovnaká kategória, rovnaký model (kanonický Fable 5), rovnaký prompt súbor, **N = 30 otázok na rameno**. Arm A = flag OFF (dnešný stav), arm B = `COVERAGE_STEERING=1`.
+
+**Obe ramená bežia proti zamrznutému stavu korpusu (B3, cyklus 2).** Keby sa rameno A publikovalo pred behom B, rameno B by dedupovalo proti korpusu o 30 otázok väčšiemu — a s aplikovaným subtopic backfillom aj proti posunutej mape pokrytia. `dedup drop rate` (metrika 2) by tak závisel od poradia behov, čo je jediná metrika odpadu, ktorú máme. Preto: **obe ramená sa spustia s `--dry-run` (žiadny persist, výstup do JSON)** nad identickým stavom DB — medzi nimi sa do `questions` nezapíše ani riadok — a **až po dobehnutí oboch** ide jeden publikačný krok, ktorý oba JSON výstupy naimportuje a pošle na rating web. Poradie behov (ktoré rameno išlo prvé) sa **zapisuje do výsledkov**, aby prípadný zvyšný efekt poradia (napr. cache providera) bolo vidieť. Zamrznutie sa overí triviálne: `SELECT count(*) FROM questions` pred prvým a po druhom behu musí sedieť.
+
+Publikácia: obe dávky idú na **produkčný rating web** neoznačené a premiešané (rovnaký postup ako slepé dávky #168 / PR #70) — founder nevie, ktorá otázka je z ktorého ramena.
 
 **Metrika 1 — kvalita (tvrdá brána, musí prejsť; B3):** bodový odhad ramena B **≥ A** na priemere **aj mediáne** founder ratingu (škála 1–10, baseline f-base 8.01 z D21b) — **žiadna tolerančná rezerva**. Predchádzajúca verzia pripúšťala −0.3 priemeru na n = 30, čo je menej než jedna SE rozdielu, takže skutočná polbodová regresia by prešla častejšie, než by padla; locked 4 („nesmie sa znížiť ani zmeniť") sa takou latkou nedá presadiť. K číslam sa **reportuje 95 % CI párového rozdielu B − A** (bootstrap nad ratingami) — nie ako brána, ale aby bolo čierne na bielom, aká veľká regresia sa ešte do dát zmestí. Tretí prvok je kvalitatívny a rieši to „ani zmeniť": founder dostane **slepú otázku** „líši sa niečím táto dávka od bežnej — téma, štýl, opakovanie, nuda?" ešte pred odhalením ramien; „áno, cítim rozdiel" = **no-go aj pri vyhovujúcich číslach**.
 
 **Poctivo o sile testu (a čo z toho plynie founderovi).** n = 30 na rameno na `B ≥ A` ako *dôkaz* nestačí. Pri typickej SD ~1.5 bodu je SE rozdielu ~0.39, takže s 80 % silou sa detegujú až rozdiely ~1.1 bodu; na spoľahlivé zachytenie 0.5 bodu by bolo treba **~145 otázok na rameno** (290 spolu), na 0.3 bodu ~390 na rameno. To je ručný founder rating v tom rozsahu. Plán latku neznižuje ani ju sám nedvíha: `B ≥ A` + slepá otázka je najsilnejšie, čo n = 30 unesie, a **rozhodnutie je founderovo** — buď akceptuje, že guard chytí len hrubú regresiu, alebo objedná väčšiu dávku podľa čísel vyššie. Agent väčšiu dávku sám nespustí a menšiu nevyhlási za dostatočnú.
 
 **Metrika 2 — odpad (musí sa zlepšiť):** `dedup drop rate` = `dropped / (kept + dropped)` z `StageResult.info` `DedupStage` na rovnakej kategórii a rovnakom počte vygenerovaných kandidátov. Rameno B musí byť **striktne nižšie** než A. Drop dôvody sa reportujú rozpadnuté (cosine / jaccard / in-batch / same-fact / `answer_cap`), aby sa zlepšenie nedalo predstierať posunom medzi kategóriami dropov. Meria sa s **troma dedup flagmi OFF** (podľa rozdelenia vyššie), takže táto brána validuje **výhradne `COVERAGE_STEERING`** — nie `ANSWER_CAP` ani ostatné, tie majú vlastnú neratovanú validáciu nižšie.
+
+**Poctivo: metrika 2 je smerový signál, nie test so silou (A-nit 3, cyklus 2).** Pri N = 30 na rameno a dnešnej miere dropov ide rádovo o jednotky udalostí na rameno, takže rozdiel 1–2 dropov je v šume — „striktne nižšie" je preto **nutná, nie postačujúca** podmienka a nesmie sa reportovať ako dôkaz úspory. Ak je rozdiel ≤ 2 drop udalosti, reportuje sa explicitne ako **neurčitý** a rozhodnutie o zapnutí sa opiera o metriku 1 plus founder verdikt; skutočné meranie odpadu prichádza až z prvého plného korpusového behu so zapnutým flagom (sledované v `StageResult.info`), nie z tohto experimentu.
 
 **Validácia dedup flagov (bez ratingu):** `DEDUP_QA_EMBEDDING` + `ANSWER_CAP` + `DEDUP_GRAYZONE_JUDGE` sa zapnú nad tou istou dávkou kandidátov a **zahodené riadky sa vypíšu s dôvodom a s párom, voči ktorému padli**; founder prezrie vzorku. Brána: **žiadny false drop** (dve reálne odlišné otázky označené za duplikát) vo vzorke; sudca šedej zóny navyše hlási počet volaní a či narazil na `GRAYZONE_JUDGE_MAX_CALLS`.
 
@@ -266,9 +294,9 @@ Locked 4 je tvrdá brána: **kvalita sa nesmie znížiť ani zmeniť**. Preto pl
 |-------|-------|---------------------|
 | 1 · Research          | ✅ done | — |
 | 2 · Plan              | ✅ done | — |
-| 3 · Plan review       | 🔄 wip (cycle 2) | cycle 1: ready-check NOT-READY (3 blockers) · design-soundness UNSOUND 0.72 (3 flaws) → všetkých 6 opravených |
+| 3 · Plan review       | 🔄 wip (cycle 3) | cycle 1: NOT-READY (3 blockers) · UNSOUND 0.72 (3 flaws) → opravené · cycle 2: NOT-READY (1 blocker A1) · UNSOUND 0.68 (3 flaws B1–B3) → všetky 4 + nity opravené |
 | 4 · Impl-plan         | ⬜ pending | — |
 | 5 · Impl-plan review  | ⬜ pending | ready-check … · design-soundness … |
 | 6 · Split             | ⬜ pending | — |
 
-**Last updated:** 2026-09-03 · **Next:** Phase 3 gates (cycle 2) (Plan review — dual gate) · **Gate attempts:** P3 1/3 · P5 0/3
+**Last updated:** 2026-09-03 · **Next:** Phase 3 gates (cycle 3) (Plan review — dual gate) · **Gate attempts:** P3 2/3 · P5 0/3

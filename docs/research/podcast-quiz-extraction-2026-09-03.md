@@ -37,7 +37,7 @@ bez platených služieb (žiadny ElevenLabs), a navrhnúť ich využitie.
 | Prepis CZ/SK — cesta A | **YouTube auto-titulky** (`yt-dlp --write-auto-subs`) | 0, žiadny výpočet | ✅ kvalita porovnateľná s Whisperom, navyše značky zmeny rečníka |
 | Prepis CZ/SK — cesta B | **mlx-whisper large-v3-turbo** lokálne na M4 Pro | 0 | ✅ 22× realtime (zahriaty) → celý archív ~7 h výpočtu |
 | Prepis EN | Apple SpeechAnalyzer on-device (macOS 26) alebo Whisper | 0 | ✅ EN áno; **CZ/SK Apple nepodporuje** (30 locale, bez cs/sk) |
-| Extrakcia Q&A z prepisu | LLM cez session gateway (Claude Code subscription, #169) alebo Ollama lokálne | 0 (subscription) | ✅ pilot nižšie |
+| Extrakcia Q&A z prepisu | LLM cez session gateway (Claude Code subscription, #169 — session gateway) alebo Ollama lokálne | 0 (subscription) | ✅ pilot nižšie |
 
 Poznámky: ffmpeg na tomto Macu je rozbitý (neoficiálny tap), dekódovanie MP3 → WAV zvládne vstavaný `afconvert`.
 
@@ -45,21 +45,21 @@ Poznámky: ffmpeg na tomto Macu je rozbitý (neoficiálny tap), dekódovanie MP3
 - 10 min audia → 26 otázok (Whisper 248 s studený štart, potom 22× realtime).
 - Odpoveď potvrdená v prepise: 21/26 · doplnená LLM z vlastných znalostí: 4 · neznáma: 1.
 - ASR poznámka pri 18/26 (väčšinou drobné preklepy; **vlastné mená sú riziko**: „Adéla“ z filmu *Adéla ještě nevečeřela* prepis zachytil ako „Odela“ a LLM ju nesprávne „opravil“ na Audrey II; „Křupky“ → „Šupky“).
-- Záver: extrakcia funguje, ale každá doplnená/opravená odpoveď musí prejsť fact-checkom (#166) — nie priamo do korpusu.
+- Záver: extrakcia funguje, ale **žiadna** odpoveď nejde nikam bez overenia — fact-checkom (#166 — fact-check) musí prejsť každá, nielen doplnená. Aj zdroj sa mýli: pilot obsahuje moderátorom potvrdenú odpoveď „Vsetín“ na otázku o druhom najväčšom meste Zlínskeho kraja, správne je Kroměříž (Vsetín je druhý ako okres). Provenience v JSON ostáva verná nahrávke, chyba je v zdroji.
 - Výstup: `podcast-quiz-extraction-2026-09-03-pilot.json` (26 položiek s časovými značkami a provenienciou odpovede).
 
 ## 3. Využitie v projekte — kde sa to zapojí
 
 1. **Štýlové exempláre pre generovanie** — `apps/quiz-pack-api/data/examples/gold_standard.json` (53 položiek, few-shot do promptov). Ľudsky písané otázky s rating ≥ 8 rozšíria vzorku; slabé idú do `anti_patterns.json`.
-2. **Kalibračná sada pre hodnotenie** — rating web (#154–156) prijme extrahované otázky ako blind batch; founder ich ohodnotí rovnako ako generované → prvé porovnanie „človek vs. model“ na rovnakej rubrike, regresný cieľ pre judge panel.
-3. **Banka tém a formátov** — `app/sourcing/topic_pool.py`: 160 epizód × 3–4 okruhy = ~500 konkrétnych tém, ktoré reálni tvorcovia považovali za zábavné (Japonská kuchyňa, tramvaje, atentáty…). Priamo dopĺňa top-up okruhy z #167.
+2. **Kalibračná sada pre hodnotenie** — rating web (#154–156 — ratings store + multi-rater web) prijme extrahované otázky ako blind batch; founder ich ohodnotí rovnako ako generované → prvé porovnanie „človek vs. model“ na rovnakej rubrike, regresný cieľ pre judge panel.
+3. **Banka tém a formátov** — `app/sourcing/topic_pool.py`: 160 epizód × 3–4 okruhy = ~500 konkrétnych tém, ktoré reálni tvorcovia považovali za zábavné (Japonská kuchyňa, tramvaje, atentáty…). Priamo dopĺňa top-up okruhy z #167 — entertainment otázky z nedávneho diania.
 4. **Testovacia sada pre vyhodnocovač odpovedí** — reálne hovorené odpovede súťažiacich (nesprávne, čiastočné, „eee Piškorky“) = chýbajúci korpus pre `apps/quiz-agent` evaluator testy.
 5. **Priamy import do korpusu** — `Question.source="imported"` + `source_url` existuje. **Neodporúčam bez súhlasu autorov** (viď §4).
 
 ## 4. Riziká a rozhodnutie pre foundera
 
 - **Licencia:** otázky sú platený produkt autorov (PDF za predplatné). Hromadná extrakcia na priame použitie v appke = kopírovanie ich produktu. Inšpirácia (štýl, témy, obtiažnosť, kalibrácia) je bezpečná; verbatim import nie. Odporúčam napísať autorom (kvizplease.cz) — malý CZ/SK ekosystém, partnerstvo je reálne.
-- **Jazyk:** korpus je CZ, appka generuje EN (founder pravidlo) so SK/CS vetvou (#168). Pre exempláre treba preklad alebo použiť EN podcasty na štýl a CZ len na témy/kalibráciu.
+- **Jazyk:** korpus je CZ, appka generuje EN (founder pravidlo) so SK/CS vetvou (#168 — batch prekladová pipeline SK/CS). Pre exempláre treba preklad alebo použiť EN podcasty na štýl a CZ len na témy/kalibráciu.
 - **Rýchle kolá strácajú odpovede** v prepise (súťažiaci hovorí cez moderátora) — LLM ich doplní z vlastných znalostí, treba označiť provenience.
 
 **Founder rozhodnutia (2026-09-03):** nie celý korpus, najprv pár epizód → ohodnotiť → potom rozhodnúť · **len inšpirácia, priamy import určite nie** (možno nové témy/kategórie) · NPR skúsiť.

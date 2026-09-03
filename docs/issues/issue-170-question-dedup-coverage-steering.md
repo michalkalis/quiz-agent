@@ -291,9 +291,9 @@ Publikácia: obe dávky idú na **produkčný rating web** neoznačené a premie
 |-------|-------|---------------------|
 | 1 · Research          | ✅ done | — |
 | 2 · Plan              | ✅ done | — |
-| 3 · Plan review       | 🔄 wip (cycle 4, founder-approved extra) | cycle 1: NOT-READY (3 blockers) · UNSOUND 0.72 (3 flaws) → opravené · cycle 2: NOT-READY (1 blocker A1) · UNSOUND 0.68 (3 flaws B1–B3) → všetky 4 + nity opravené · cycle 3: NOT-READY (1 blocker A-C5) · SOUND 0.87 → opravené |
-| 4 · Impl-plan         | ⬜ pending | — |
+| 3 · Plan review       | ✅ done (4 cycles, last founder-approved) | ready-check READY · design-soundness SOUND 0.89 |
+| 4 · Impl-plan         | 🔄 wip | — |
 | 5 · Impl-plan review  | ⬜ pending | ready-check … · design-soundness … |
 | 6 · Split             | ⬜ pending | — |
 
-**Last updated:** 2026-09-03 · **Next:** Phase 3 gates (cycle 4) (Plan review — dual gate) · **Gate attempts:** P3 3/3 (+1 founder-approved) · P5 0/3
+**Last updated:** 2026-09-03 · **Next:** Phase 4 · **Gate attempts:** P3 3/3 (+1 founder-approved) · P5 0/3

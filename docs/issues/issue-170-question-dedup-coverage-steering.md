@@ -323,7 +323,7 @@ Každé kritérium je falzifikovateľné a menuje spôsob overenia. Príkazy sa 
 | 2 · Plan              | ✅ done | — |
 | 3 · Plan review       | ✅ done (4 cycles, last founder-approved) | ready-check READY · design-soundness SOUND 0.89 |
 | 4 · Impl-plan         | ✅ done | — |
-| 5 · Impl-plan review  | 🔄 wip (cycle 4, founder-approved extra) | cyklus 3: ready-check READY · design-soundness UNSOUND 0.82 (S1/S5: pásmo 0.85–0.92 ako filter skrylo viažuce páky) → opravené v 170.15b/A26 |
-| 6 · Split             | ⬜ pending | — |
+| 5 · Impl-plan review  | ✅ done (4 cycles, last founder-approved) | ready-check READY · design-soundness SOUND 0.88 |
+| 6 · Split             | 🔄 wip | — |
 
-**Last updated:** 2026-09-03 · **Next:** Phase 5 cyklus 4 (impl-plan review) · **Gate attempts:** P3 3/3 (+1 founder-approved) · P5 3/3 (+1 founder-approved)
+**Last updated:** 2026-09-03 · **Next:** Phase 6 · **Gate attempts:** P3 3/3 (+1 founder-approved) · P5 3/3 (+1 founder-approved)

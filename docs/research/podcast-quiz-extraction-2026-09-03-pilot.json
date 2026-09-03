@@ -1,0 +1,210 @@
+[
+  {
+    "t": 185.3,
+    "question_cs": "Ze které země pocházejí sauny?",
+    "answer_cs": "Finsko",
+    "answer_source": "host-confirmed",
+    "topic": "geografie",
+    "asr_issue": null
+  },
+  {
+    "t": 188.3,
+    "question_cs": "Jak se jmenovala masožravá rostlina v názvu filmu Audrey II? (přesný název filmu ve zdroji nejasný, ASR zachytilo 'Odela')",
+    "answer_cs": "Audrey II (z muzikálu/filmu Prodejna hrůzy)",
+    "answer_source": "inferred-from-knowledge",
+    "topic": "film",
+    "asr_issue": "název filmu přepsán jako 'Odela', pravděpodobně ASR chyba (možná 'Audrey'); soutěžícího odpověď nebyla přepsána, jen 'Správně'"
+  },
+  {
+    "t": 192.1,
+    "question_cs": "Jakým třípísmenným slovem označujeme herce, který hraje výhradně beze slov a za pomoci pantomimy?",
+    "answer_cs": "mim",
+    "answer_source": "inferred-from-knowledge",
+    "topic": "divadlo",
+    "asr_issue": "soutěžícího odpověď nebyla přepsána, jen 'Správně'; 'fantomimi' oprava na 'pantomimy'"
+  },
+  {
+    "t": 198.0,
+    "question_cs": "Jaký klasický slaný snack s arašídovou příchutí vyrábí ostravská firma?",
+    "answer_cs": "Šupky",
+    "answer_source": "host-confirmed",
+    "topic": "jídlo/značky",
+    "asr_issue": "název firmy v otázce chybí/uťatý; odpověď 'Šupky' možná ASR zkomolenina názvu produktu"
+  },
+  {
+    "t": 204.0,
+    "question_cs": "Ve kterém českém městě byste našli čtvrť Vršovice?",
+    "answer_cs": "Praha",
+    "answer_source": "host-confirmed",
+    "topic": "geografie ČR",
+    "asr_issue": "soutěžící odpověděl chybně 'Plzeň', host opravil na Praha"
+  },
+  {
+    "t": 208.8,
+    "question_cs": "Uveďte český název populární hry, v angličtině označované jako tic-tac-toe.",
+    "answer_cs": "piškvorky",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "hry",
+    "asr_issue": "přepsáno jako 'piškurky', opraveno na 'piškvorky'"
+  },
+  {
+    "t": 215.1,
+    "question_cs": "Jaké je hlavní město Norska?",
+    "answer_cs": "Oslo",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "geografie",
+    "asr_issue": null
+  },
+  {
+    "t": 218.3,
+    "question_cs": "Jakým druhem rostliny je ginkgo biloba?",
+    "answer_cs": "listnatý strom",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "biologie",
+    "asr_issue": "přepsáno 'ginko biloba' a 'druhém rostliny'"
+  },
+  {
+    "t": 223.0,
+    "question_cs": "Kdo hrál manžela Terezy Ramby ve filmu Vlastníci?",
+    "answer_cs": "Vojta Kotek",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "film",
+    "asr_issue": null
+  },
+  {
+    "t": 226.5,
+    "question_cs": "Kolik je 6 na 2 minus 7?",
+    "answer_cs": "29",
+    "answer_source": "inferred-from-knowledge",
+    "topic": "matematika",
+    "asr_issue": "soutěžící hádal postupně 36 a 31, transkript neoznačuje jasně, kdo řekl finální '29'; matematicky 6^2-7=29"
+  },
+  {
+    "t": 232.0,
+    "question_cs": "Která země má vlajku tvořenou třemi svislými pruhy? Zleva jsou to modrý, bílý a červený.",
+    "answer_cs": "Francie",
+    "answer_source": "inferred-from-knowledge",
+    "topic": "vlajky",
+    "asr_issue": "soutěžící nejdřív řekl 'Belgie', pak se opravil na 'Francie'; host odpověď explicitně nepotvrdil, ale svisle modrá-bílá-červená odpovídá francouzské vlajce"
+  },
+  {
+    "t": 239.9,
+    "question_cs": "Který politik měl na pražské Letné na přelomu 50. a 60. let svůj monumentální pomník?",
+    "answer_cs": "Stalin",
+    "answer_source": "host-confirmed",
+    "topic": "historie",
+    "asr_issue": "soutěžící odpověděl chybně 'Gottwald', host opravil na Stalina"
+  },
+  {
+    "t": 316.9,
+    "question_cs": "Jak se jmenuje česká folková hudební skupina...? (otázka v přepisu neúplná/uťatá)",
+    "answer_cs": "Jananas",
+    "answer_source": "host-confirmed",
+    "topic": "hudba",
+    "asr_issue": "otázka vypadá neúplná; soutěžící odpověděl chybně 'Čechomor', host opravil na 'Jananas'"
+  },
+  {
+    "t": 320.2,
+    "question_cs": "Kolik lovců aktuálně působí v soutěži Na lovu?",
+    "answer_cs": "sedm",
+    "answer_source": "host-confirmed",
+    "topic": "TV pořady",
+    "asr_issue": "soutěžící odpověděl chybně 'šest', host opravil na 'sedm'"
+  },
+  {
+    "t": 326.9,
+    "question_cs": "Která květina se označuje jako smetánka?",
+    "answer_cs": "pampeliška",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "botanika",
+    "asr_issue": null
+  },
+  {
+    "t": 330.7,
+    "question_cs": "Jak se na Ž nazývá činnost, při které se vyhazují například míčky nebo kužely?",
+    "answer_cs": "žonglování",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "obecné znalosti",
+    "asr_issue": "konec otázky (co se vyhazuje) uťatý"
+  },
+  {
+    "t": 336.0,
+    "question_cs": "Dominantou kterého města je Braniborská brána?",
+    "answer_cs": "Berlín",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "geografie",
+    "asr_issue": null
+  },
+  {
+    "t": 340.8,
+    "question_cs": "Jak se jmenuje zakladatel a výrazná postava českého herního studia Warhorse Studios?",
+    "answer_cs": "Dan Vávra",
+    "answer_source": "host-confirmed",
+    "topic": "videohry",
+    "asr_issue": "soutěžící nejdřív řekl 'Dál' (pass/přeskočit), pak byla řečena správná odpověď"
+  },
+  {
+    "t": 350.0,
+    "question_cs": "Jakým výrazem se obvykle označuje první díl seriálu?",
+    "answer_cs": "pilot",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "TV/seriály",
+    "asr_issue": null
+  },
+  {
+    "t": 353.7,
+    "question_cs": "Jakou zkratku nese Hudební a taneční fakulta Akademie múzických umění v Praze?",
+    "answer_cs": "HAMU",
+    "answer_source": "host-confirmed",
+    "topic": "školství",
+    "asr_issue": "soutěžící odpověděl chybně 'Damu' (Divadelní fakulta AMU), host opravil na 'Hamu'"
+  },
+  {
+    "t": 359.4,
+    "question_cs": "Jak se latinsky řekne hořčík?",
+    "answer_cs": "magnezium",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "chemie",
+    "asr_issue": null
+  },
+  {
+    "t": 363.3,
+    "question_cs": "Kolik bratrů tvoří kapelu bratří Ebenové?",
+    "answer_cs": "tři",
+    "answer_source": "contestant-confirmed-correct",
+    "topic": "hudba",
+    "asr_issue": null
+  },
+  {
+    "t": 367.0,
+    "question_cs": "Jaké křestní jméno nese česká novinářka a podcasterka Fridrichová?",
+    "answer_cs": "Nora",
+    "answer_source": "host-confirmed",
+    "topic": "média",
+    "asr_issue": "soutěžící odpověděl chybně/nejistě 'Nikola?', host opravil na 'Nora'"
+  },
+  {
+    "t": 374.2,
+    "question_cs": "Jaké je co do počtu obyvatel druhé největší město ve Zlínském kraji?",
+    "answer_cs": "Vsetín",
+    "answer_source": "host-confirmed",
+    "topic": "geografie ČR",
+    "asr_issue": "'z línského kraje' opraveno na 've Zlínském kraji'; soutěžící nejdřív řekl chybně 'Přerov' (ten je v Olomouckém kraji), pak diskusí dospěli ke správné odpovědi 'Vsetín'"
+  },
+  {
+    "t": 577.1,
+    "question_cs": "Ze které země připluli misionáři, kteří do Japonska v 16. století přivezli techniku smažení v těstíčku (tempura)?",
+    "answer_cs": "Portugalsko",
+    "answer_source": "host-confirmed",
+    "topic": "jídlo/historie",
+    "asr_issue": "soutěžící odpovídali chybně (Velká Británie, Francie), po delší diskusi zazněla i 'Portugalci', ale host oběma bod nepřiznal a explicitně dovysvětlil, že šlo o Portugalce (přistáli v Nagasaki 1543)"
+  },
+  {
+    "t": 702.3,
+    "question_cs": "Téma sushi: U ryb se v sushi barech jednotlivé druhy často označují... (otázka i odpověď chybí, přepis končí uprostřed věty)",
+    "answer_cs": null,
+    "answer_source": "unknown",
+    "topic": "jídlo",
+    "asr_issue": "přepis klipu končí uprostřed otázky, text i odpověď nejsou k dispozici"
+  }
+]

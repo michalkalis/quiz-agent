@@ -280,7 +280,7 @@ Done = A16: `SELECT count(*) FROM questions WHERE category='entertainment' AND r
 - ✅ OpenAI sourcing provider (D5) — delivered 2026-08-31 — see "OpenAI sourcing provider delivered — exact CLI" below.
 - ✅ **Session E — pilot runbook Segment 1 (167.9–167.12) · DELIVERED 2026-09-02** na founder GO, celé cez #169 session gateway. Batch `1eb9a19d-f64a-4de7-9005-100b235a6003`, 21 riadkov, rating URL vráti 200. Detaily nižšie v „Session E delivered 2026-09-02".
 - ✅ 167.13 `[F]` — founder rating **DONE 2026-09-03**: 13/21 riadkov, priemer **9.69/10**, 0 flagov, verdikt „mega paradné", celá dávka 21 schválená do produkcie. Export `docs/testing/runs/167-entertainment-pilot/ratings-167-1eb9a19d.jsonl`.
-- 🟡 Session F — Segment 3 (167.14) · **latka triedy uzavretá (A17), import BLOKOVANÝ**: `--dry-run` proti prod čistý (21 unique / 0 v PG / would insert 21 / 0 zadržaných #158), `--execute` padol na `429 credit_balance_exhausted` pri embeddingoch. Zapísaných 0 riadkov, prod `entertainment` = 0. **Odblokovanie = dobiť OpenAI účet**, potom zopakovať dry-run + execute.
+- 🟡 Session F — Segment 3 (167.14) · **latka triedy uzavretá (A17), import BLOKOVANÝ**: `--dry-run` proti prod čistý (21 unique / 0 v PG / would insert 21 / 0 zadržaných #158 fail-closed bránou), `--execute` padol na `429 credit_balance_exhausted` pri embeddingoch. Zapísaných 0 riadkov, prod `entertainment` = 0. **Odblokovanie = dobiť OpenAI účet**, potom zopakovať dry-run + execute.
 
 > When a session lands, add a short **"Session X delivered — exact symbols for Y"** note here (issue-61 convention) so the next session does not have to re-read the diff. Session B owes E the exact `source_facts.py` CLI signature; Session C owes E the exact output filenames and `reason` vocabulary.
 

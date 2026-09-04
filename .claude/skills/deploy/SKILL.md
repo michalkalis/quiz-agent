@@ -49,10 +49,19 @@ fly version 2>/dev/null
 
 ## Deploy
 
-### Default or "backend"
+Fly tokens in the repo-root `.env` are **app-scoped** (2026-09-04): `FLY_API_TOKEN` deploys only `quiz-agent-api`; `FLY_API_TOKEN_QUIZ_PACK_API` deploys only `quiz-pack-api`. Using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main` (use a worktree if the shared checkout is on another branch).
+
+### Default or "backend" (quiz-agent → `quiz-agent-api`)
 ```bash
 cd "$CLAUDE_PROJECT_DIR" && fly deploy -c apps/quiz-agent/fly.toml
 ```
+
+### "pack-api" (quiz-pack-api → `quiz-pack-api`, web + worker)
+```bash
+cd "$CLAUDE_PROJECT_DIR" && set -a && source .env && set +a && \
+  FLY_API_TOKEN="$FLY_API_TOKEN_QUIZ_PACK_API" fly deploy -c apps/quiz-pack-api/fly.toml
+```
+Health: `curl -s -o /dev/null -w '%{http_code}' https://quiz-pack-api.fly.dev/health` (expect 200); `fly status -a quiz-pack-api` should show `web` + `worker` started. "both" = run backend, then pack-api.
 
 ### "--dry-run"
 Show what would be deployed without actually deploying:

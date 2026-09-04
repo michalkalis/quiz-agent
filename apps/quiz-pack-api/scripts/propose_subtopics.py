@@ -74,7 +74,7 @@ MAX_SUBTOPIC_CHARS = 64
 # Session B's loader test (A1) requires >= 10 per category; the prompt asks
 # for 15–20. The upper bound only catches a runaway list.
 MIN_SUBTOPICS = 10
-MAX_SUBTOPICS = 30
+MAX_SUBTOPICS = 40  # room for a top-up round on top of an approved 20
 DEFAULT_TARGET = "15-20"
 
 # One-line brief per category id so the model knows what the id means.
@@ -480,8 +480,26 @@ fit this category, ignore the rest, do not copy the list): {inspiration}.
 
 Return the category id exactly as given and the list of subtopics."""
 
+# Top-up round (gate F1 follow-up): the founder approved a list and asked for
+# more of a certain flavour. The model sees the approved list so it adds to
+# it instead of restating it; the output file carries approved + new.
+_TOPUP_TEMPLATE = """
 
-def build_messages(category: str, target: str = DEFAULT_TARGET) -> list:
+This is a TOP-UP round. The following subtopics are ALREADY APPROVED for this \
+category — do not repeat or rephrase any of them; propose {target} ADDITIONAL \
+subtopics that sit beside them without overlapping:
+{existing}
+
+Steer for this round (from the product owner): {guidance}"""
+
+
+def build_messages(
+    category: str,
+    target: str = DEFAULT_TARGET,
+    *,
+    existing: Sequence[str] | None = None,
+    guidance: str | None = None,
+) -> list:
     brief = CATEGORY_BRIEFS.get(category) or category.replace("-", " ")
     human = _HUMAN_TEMPLATE.format(
         category=category,
@@ -489,6 +507,12 @@ def build_messages(category: str, target: str = DEFAULT_TARGET) -> list:
         target=target,
         inspiration=", ".join(INSPIRATION_THEMES),
     )
+    if existing is not None:
+        human += _TOPUP_TEMPLATE.format(
+            target=target,
+            existing="\n".join(f"- {name}" for name in existing) or "- (none yet)",
+            guidance=guidance or "no extra steer — fill the gaps you see",
+        )
     return [SystemMessage(content=_SYSTEM_PROMPT), HumanMessage(content=human)]
 
 
@@ -500,13 +524,20 @@ def _build_llm(model: str):
 
 
 async def propose_category(
-    llm, category: str, target: str = DEFAULT_TARGET
+    llm,
+    category: str,
+    target: str = DEFAULT_TARGET,
+    *,
+    existing: Sequence[str] | None = None,
+    guidance: str | None = None,
 ) -> SubtopicProposal:
-    """One structured call for one category."""
+    """One structured call for one category (top-up when ``existing`` is given)."""
     structured = llm.with_structured_output(
         SubtopicProposal, method="function_calling", include_raw=True
     )
-    result = await structured.ainvoke(build_messages(category, target))
+    result = await structured.ainvoke(
+        build_messages(category, target, existing=existing, guidance=guidance)
+    )
     parsed = result.get("parsed") if isinstance(result, dict) else result
     if not isinstance(parsed, SubtopicProposal):
         error = result.get("parsing_error") if isinstance(result, dict) else None
@@ -572,9 +603,19 @@ def validate_proposal(
 
 
 def assemble(
-    proposals: dict[str, SubtopicProposal], *, language: str, categories: Sequence[str]
+    proposals: dict[str, SubtopicProposal],
+    *,
+    language: str,
+    categories: Sequence[str],
+    existing: dict[str, list[str]] | None = None,
 ) -> dict:
-    """Build the ``--out`` payload; a proposal filed under the wrong id fails."""
+    """Build the ``--out`` payload; a proposal filed under the wrong id fails.
+
+    In a top-up round (``existing`` given) the approved list comes first and
+    the model's additions follow; an addition that merely echoes an approved
+    name is dropped with a warning (the founder already has it), never a
+    reason to fail the run.
+    """
     by_category: dict[str, list[str]] = {}
     for category in categories:
         proposal = proposals[category]
@@ -582,9 +623,22 @@ def assemble(
             raise ProposalError(
                 f"asked for {category!r}, model answered for {proposal.category!r}"
             )
-        by_category[category] = [
-            " ".join(s.split()).strip() for s in proposal.subtopics
-        ]
+        proposed = [" ".join(s.split()).strip() for s in proposal.subtopics]
+        if existing is None:
+            by_category[category] = proposed
+            continue
+        approved = list(existing[category])
+        seen = {_normalize(name) for name in approved}
+        added: list[str] = []
+        for name in proposed:
+            if _normalize(name) in seen:
+                logger.warning(
+                    "%s: top-up echoed approved subtopic %r — dropped", category, name
+                )
+                continue
+            added.append(name)
+        logger.info("%s: +%d new subtopics", category, len(added))
+        by_category[category] = approved + added
     payload = {language: by_category}
     validate_proposal(payload, language=language, categories=categories)
     return payload
@@ -594,20 +648,59 @@ async def run(args: argparse.Namespace) -> dict:
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
     if not categories:
         raise ProposalError("no categories requested")
+    existing = (
+        load_existing(args.existing, args.language, categories)
+        if args.existing
+        else None
+    )
     llm = _build_llm(args.model)
     logger.info(
-        "gateway=%s model=%s categories=%s",
+        "gateway=%s model=%s categories=%s mode=%s",
         llm_factory.gateway(),
         args.model,
         categories,
+        "top-up" if existing is not None else "fresh",
     )
     results = await asyncio.gather(
-        *(propose_category(llm, category, args.target) for category in categories)
+        *(
+            propose_category(
+                llm,
+                category,
+                args.target,
+                existing=existing[category] if existing is not None else None,
+                guidance=args.guidance,
+            )
+            for category in categories
+        )
     )
     proposals = dict(zip(categories, results))
     for category in categories:
         logger.info("%s: %d subtopics", category, len(proposals[category].subtopics))
-    return assemble(proposals, language=args.language, categories=categories)
+    return assemble(
+        proposals, language=args.language, categories=categories, existing=existing
+    )
+
+
+def load_existing(
+    path: str, language: str, categories: Sequence[str]
+) -> dict[str, list[str]]:
+    """Approved ``{language: {category: [...]}}`` file for a top-up round.
+
+    Every requested category must already be in it — a top-up never
+    silently starts a category from scratch (that is a fresh run's job).
+    """
+    with open(path, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    by_category = payload.get(language) if isinstance(payload, dict) else None
+    if not isinstance(by_category, dict):
+        raise ProposalError(f"--existing {path}: no {language!r} block")
+    missing = [c for c in categories if not by_category.get(c)]
+    if missing:
+        raise ProposalError(
+            f"--existing {path}: no approved subtopics for {missing} — run a fresh "
+            "proposal for those categories instead of a top-up"
+        )
+    return {c: [str(s) for s in by_category[c]] for c in categories}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -633,7 +726,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--target",
         default=DEFAULT_TARGET,
-        help="How many subtopics to ask for (default: 15-20).",
+        help="How many subtopics to ask for (default: 15-20; in a top-up: how many ADDITIONAL).",
+    )
+    parser.add_argument(
+        "--existing",
+        default=None,
+        help="Top-up round: approved proposal JSON; output = approved + new additions.",
+    )
+    parser.add_argument(
+        "--guidance",
+        default=None,
+        help="Top-up round: product-owner steer for the additions (free text).",
     )
     return parser
 

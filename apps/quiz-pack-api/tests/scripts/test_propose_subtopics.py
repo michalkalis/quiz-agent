@@ -30,7 +30,7 @@ def _fake_proposer(answers: dict[str, ps.SubtopicProposal]):
     """Return a `propose_category` double that records which ids were asked for."""
     asked: list[str] = []
 
-    async def fake(llm, category, target=ps.DEFAULT_TARGET):
+    async def fake(llm, category, target=ps.DEFAULT_TARGET, **kwargs):
         asked.append(category)
         return answers[category]
 
@@ -134,7 +134,7 @@ class TestFailLoud:
         assert self._run(tmp_path, monkeypatch, answers) == (1, False)
 
     def test_failed_category_call_writes_no_partial_file(self, tmp_path, monkeypatch):
-        async def fake(llm, category, target=ps.DEFAULT_TARGET):
+        async def fake(llm, category, target=ps.DEFAULT_TARGET, **kwargs):
             if category == "kids":
                 raise RuntimeError("claude -p exited 1")
             return ps.SubtopicProposal(category=category, subtopics=_names(category))
@@ -209,6 +209,92 @@ class TestValidateProposal:
     def test_clean_payload_passes(self):
         payload = {"en": {"general": _names("general"), "kids": _names("kids", 20)}}
         ps.validate_proposal(payload, language="en", categories=["general", "kids"])
+
+    def test_topup_appends_additions_after_approved_list(self, tmp_path, monkeypatch):
+        """Gate F1 follow-up: the founder approved a list and asked for more of a
+        flavour. Approved names must survive untouched and first; additions
+        follow; an echo of an approved name is dropped, not a failure."""
+        approved = {"en": {"general": _names("approved", 12)}}
+        existing = tmp_path / "approved.json"
+        existing.write_text(json.dumps(approved))
+        seen_prompts: list[str] = []
+
+        async def fake(
+            llm, category, target=ps.DEFAULT_TARGET, *, existing=None, guidance=None
+        ):
+            seen_prompts.append(
+                ps.build_messages(
+                    category, target, existing=existing, guidance=guidance
+                )[-1].content
+            )
+            assert existing == approved["en"]["general"]
+            return ps.SubtopicProposal(
+                category=category,
+                subtopics=[
+                    "Everyday brands and slogans",
+                    "APPROVED subtopic 3",
+                    "Phobias and superstitions",
+                ],
+            )
+
+        monkeypatch.setattr(ps, "propose_category", fake)
+        monkeypatch.setattr(ps, "_build_llm", lambda model: object())
+        out = tmp_path / "topup.json"
+
+        code = ps.main(
+            [
+                "--out",
+                str(out),
+                "--categories",
+                "general",
+                "--existing",
+                str(existing),
+                "--guidance",
+                "more everyday themes",
+                "--target",
+                "3",
+            ]
+        )
+        assert code == 0
+        result = json.loads(out.read_text())["en"]["general"]
+        assert result[:12] == approved["en"]["general"]
+        assert result[12:] == [
+            "Everyday brands and slogans",
+            "Phobias and superstitions",
+        ]
+        assert "more everyday themes" in seen_prompts[0]
+        assert "approved subtopic 0" in seen_prompts[0]
+
+    def test_topup_refuses_category_missing_from_approved_file(
+        self, tmp_path, monkeypatch
+    ):
+        """A top-up never silently starts a category from scratch."""
+        existing = tmp_path / "approved.json"
+        existing.write_text(json.dumps({"en": {"general": _names("approved", 12)}}))
+        called = []
+
+        async def fake(
+            llm, category, target=ps.DEFAULT_TARGET, *, existing=None, guidance=None
+        ):
+            called.append(category)
+            return ps.SubtopicProposal(category=category, subtopics=_names(category))
+
+        monkeypatch.setattr(ps, "propose_category", fake)
+        monkeypatch.setattr(ps, "_build_llm", lambda model: object())
+        out = tmp_path / "topup.json"
+        code = ps.main(
+            [
+                "--out",
+                str(out),
+                "--categories",
+                "general,kids",
+                "--existing",
+                str(existing),
+            ]
+        )
+        assert code == 1
+        assert not out.exists()
+        assert called == []
 
     def test_every_brief_fits_in_prompt_for_known_ids(self):
         """Both taxonomies (generation CATEGORIES + the app's interest ids) have a brief,

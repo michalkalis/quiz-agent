@@ -93,7 +93,7 @@ Binding order: `A → [F1] → B → C → D → [founder prod run] → E → F 
 ## Human prerequisites
 
 1. **Gate F1 (170.2) — before Session B.** Founder reviews the proposed subtopics JSON from Session A, edits it, and runs the experiment-category query (`SELECT category FROM questions WHERE pack_id IS NULL GROUP BY category ORDER BY count(*) DESC, category ASC LIMIT 1`, prod via `fly proxy 15432:5432 -a quiz-pack-db`). Both outputs go to Session B.
-2. **After Sessions C + D merge — founder runs the class-`b` steps against prod:** `alembic upgrade head`, then `scripts/backfill_embedding_qa.py --answer-key-only`, then (only if `DEDUP_QA_EMBEDDING` is to be tested) the paid QA pass, then `scripts/backfill_subtopics.py --apply` over the experiment category. Verify A17 (`count = 0` for missing `answer_key`/`language`) and A18. **Sessions J and K do not start before this.**
+2. **After Sessions C + D merge — founder runs the class-`b` steps against prod:** `alembic upgrade head`, then `scripts/backfill_embedding_qa.py --answer-key-only`, then the paid QA pass (`scripts/backfill_embedding_qa.py`, 170.6 — required before Sessions J and K, both test `DEDUP_QA_EMBEDDING`), then `scripts/backfill_subtopics.py --apply` over the experiment category. Verify A17 (`count = 0` for missing `answer_key`/`language`) and A18. **Sessions J and K do not start before this.**
 3. **Before Session L — `QUIZ_PACK_ADMIN_API_KEY`** must resolve from the repo-root `.env` (not `ADMIN_API_KEY`, which 401s). The publish itself is founder-executed.
 4. **Gate F2 (170.17).** Founder rates the blind batch, reviews `strictness-keeps.md`, and writes `verdict.md` with a go/no-go **per switch**. Enabling anything in prod happens here and nowhere else.
 
@@ -268,7 +268,7 @@ Done = A10 + A11 + A12 + A13 + A16 hold: `uv run --no-sync pytest tests/orchestr
 ## Ready prompt — Session J (quality-guard A/B run + report)
 
 ```
-Work on issue #170, Session J only: task 170.15. PRECONDITIONS, all mandatory: Session I merged; 170.3 committed; the founder has run backfill_subtopics.py --apply over the experiment category (A18) and the answer_key/language backfill (A17). If any is missing, STOP and ask in-session — do not run a partial guard and do not lower the bar. This session writes NOTHING to prod (both arms are --dry-run) and enables NOTHING in prod.
+Work on issue #170, Session J only: task 170.15. PRECONDITIONS, all mandatory: Session I merged; 170.3 committed; the founder has run backfill_subtopics.py --apply over the experiment category (A18), the answer_key/language backfill (A17), and the PAID embedding_qa backfill (170.6) — step 3 runs with DEDUP_QA_EMBEDDING ON and DedupStage fail-louds unless `count(*) WHERE pack_id IS NULL AND embedding IS NOT NULL AND embedding_qa IS NULL == 0`. If any is missing, STOP and ask in-session — do not run a partial guard and do not lower the bar. This session writes NOTHING to prod (both arms are --dry-run) and enables NOTHING in prod.
 
 Goal: locked 4 is a hard gate — prove that COVERAGE_STEERING does not change quality, and get a directional read on waste. Only COVERAGE_STEERING changes question CONTENT; the other three only drop candidates, so they are validated by counting, not by rating.
 
@@ -287,7 +287,7 @@ Then report the numbers to the founder in-session. Do NOT publish anything to th
 ## Ready prompt — Session K (strictness pass — the A26 "what did relaxing keep" diff)
 
 ```
-Work on issue #170, Session K only: task 170.15b. PRECONDITIONS: Session G merged (the replay harness) and the founder's answer_key backfill has run. Parallel-safe with Sessions H/I/J. Prod DB is READ-ONLY here: `fly proxy 15432:5432 -a quiz-pack-db`, stop the proxy when done. Nothing is written to `questions`; nothing is enabled in prod.
+Work on issue #170, Session K only: task 170.15b. PRECONDITIONS: Session G merged (the replay harness), the founder's answer_key backfill has run, and the PAID embedding_qa backfill (170.6) has run — the diff must be annotatable with the `cosine-qa` drop branch. Parallel-safe with Sessions H/I/J. Prod DB is READ-ONLY here: `fly proxy 15432:5432 -a quiz-pack-db`, stop the proxy when done. Nothing is written to `questions`; nothing is enabled in prod.
 
 Goal: DEDUP_STRICTNESS_PER_CATEGORY is the only change that RELAXES dedup, so "no false drop" cannot validate it — the founder needs the inverse: everything the relaxed profile KEPT that the global thresholds would have dropped. The guard run (170.15) cannot produce this: its dedup flags are OFF and it runs on the experiment category, where no override exists.
 

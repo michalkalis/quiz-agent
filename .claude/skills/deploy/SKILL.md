@@ -3,14 +3,32 @@ name: deploy
 description: Deploy backend to Fly.io with pre-flight checks and post-deploy verification
 model: haiku
 allowed-tools: Bash, Read
-argument-hint: "[backend|--skip-tests|--dry-run]"
+argument-hint: "[backend|pack-api|both] [--skip-tests] [--dry-run]"
 ---
 
 # Deploy to Fly.io
 
-Guided deployment with safety checks for the quiz-agent backend.
+Guided deployment with safety checks. Two deployable apps; every step below is keyed on the **target**.
 
-## Pre-flight Checks (always run)
+## Targets
+
+| Target (arg) | App dir | Fly app | Token env var (repo-root `.env`) | Health URL | Processes |
+|---|---|---|---|---|---|
+| `backend` (default) | `apps/quiz-agent` | `quiz-agent-api` | `FLY_API_TOKEN` | `https://quiz-agent-api.fly.dev/api/v1/health` | `app` |
+| `pack-api` | `apps/quiz-pack-api` | `quiz-pack-api` | `FLY_API_TOKEN_QUIZ_PACK_API` | `https://quiz-pack-api.fly.dev/health` | `web` + `worker` |
+| `both` | run `backend`, then `pack-api` — each with its own pre-flight tests, deploy, and verification | | | | |
+
+Fly tokens are **app-scoped** (2026-09-04): using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main`. If the shared checkout (`$CLAUDE_PROJECT_DIR`) is on another branch or dirty, create a throwaway worktree and deploy from it:
+
+```bash
+git -C "$CLAUDE_PROJECT_DIR" fetch origin main
+git -C "$CLAUDE_PROJECT_DIR" worktree add --detach "$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main" origin/main
+DEPLOY_DIR="$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main"   # otherwise DEPLOY_DIR="$CLAUDE_PROJECT_DIR"
+```
+
+Remove it afterwards (`git worktree remove --force <path>`). `.env` is gitignored and lives only in the shared checkout, so it is always sourced by absolute path from `$CLAUDE_PROJECT_DIR`.
+
+## Pre-flight Checks (always run, per target)
 
 Run all checks before deploying. Stop and report if any fail.
 
@@ -34,12 +52,13 @@ git log origin/$(git branch --show-current)..HEAD --oneline 2>/dev/null
 ```
 - If there are unpushed commits, **warn** that local changes haven't been pushed to remote.
 
-### 4. Run backend tests (unless `--skip-tests`)
+### 4. Test gate (unless `--skip-tests`)
+The deployed commit must have a green **Backend CI** run (it runs both app suites, path-filtered):
 ```bash
-cd apps/quiz-agent && python -m pytest tests/ -x -q --tb=short 2>&1
+gh run list --commit "$(git -C "$DEPLOY_DIR" rev-parse HEAD)" --json name,conclusion,status --jq '.[] | "\(.name): \(.status) \(.conclusion)"'
 ```
-- If tests fail, **stop deployment** and report failures.
-- If no tests exist, note this and continue.
+- Require `Backend CI: completed success` for that exact commit. Still running → wait for it; failed or absent → **stop deployment of that target** and report.
+- Do not run pytest inside a fresh worktree (no `.venv` there, and the repo-root build is flaky under `uv sync`). A local run is only meaningful from the shared checkout on `main`: `cd "$CLAUDE_PROJECT_DIR/<App dir>" && uv run --no-sync pytest tests/ -x -q --tb=short -m "not integration"`.
 
 ### 5. Check fly CLI is available
 ```bash
@@ -49,49 +68,52 @@ fly version 2>/dev/null
 
 ## Deploy
 
-### Default or "backend"
+Load the token for the target, then deploy its `fly.toml`:
+
 ```bash
-cd "$CLAUDE_PROJECT_DIR" && fly deploy -c apps/quiz-agent/fly.toml
+cd "$DEPLOY_DIR" && set -a && source "$CLAUDE_PROJECT_DIR/.env" && set +a && \
+  FLY_API_TOKEN="$<Token env var>" fly deploy -c <App dir>/fly.toml --yes
 ```
 
-### "--dry-run"
-Show what would be deployed without actually deploying:
-```bash
-cd "$CLAUDE_PROJECT_DIR" && fly deploy -c apps/quiz-agent/fly.toml --build-only
-```
-Skip post-deploy verification.
+- `backend`: `FLY_API_TOKEN="$FLY_API_TOKEN" fly deploy -c apps/quiz-agent/fly.toml --yes`
+- `pack-api`: `FLY_API_TOKEN="$FLY_API_TOKEN_QUIZ_PACK_API" fly deploy -c apps/quiz-pack-api/fly.toml --yes`
 
-## Post-deploy Verification
+### `--dry-run`
+Same command with `--build-only` (builds the image for the chosen target, deploys nothing). Skip post-deploy verification.
 
-After a successful deploy:
+## Post-deploy Verification (per target)
+
+After each successful deploy:
 
 ### 1. Health check
 ```bash
-curl -s -o /dev/null -w '%{http_code}' https://quiz-agent-api.fly.dev/api/v1/health
+curl -s -o /dev/null -w '%{http_code}' <Health URL>
 ```
 - Expect HTTP 200. Retry up to 3 times with 10s between attempts (app needs ~8s to start).
 
 ### 2. Smoke test
 ```bash
-curl -s https://quiz-agent-api.fly.dev/docs | head -c 100
+curl -s https://<Fly app>.fly.dev/docs | head -c 100
 ```
 - Verify the docs page loads.
 
 ### 3. Check deployment status
 ```bash
-fly status -a quiz-agent-api
+fly status -a <Fly app>
 ```
+- Every process in the target's **Processes** column must exist on the new version. `app` / `web` scale to zero (`min_machines_running = 0`), so `stopped` right after a deploy is normal idle — the health check above auto-starts them and is the real signal. `worker` (`pack-api`) has no HTTP service and must be `started`; a missing or stopped `worker` is a failed deploy — report it, never a green.
 
 ## Report
 
-Provide a summary:
+One block per deployed target:
 ```
-DEPLOYMENT SUMMARY
+DEPLOYMENT SUMMARY — <Fly app>
 ─────────────────
 Branch:     <branch>
 Commit:     <short hash> <message>
 Tests:      <passed/skipped/failed>
 Deploy:     <success/failed>
 Health:     <HTTP status>
-URL:        https://quiz-agent-api.fly.dev
+Processes:  <started list>
+URL:        https://<Fly app>.fly.dev
 ```

@@ -21,6 +21,7 @@ Guided deployment with safety checks. Two deployable apps; every step below is k
 Fly tokens are **app-scoped** (2026-09-04): using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main`. If the shared checkout (`$CLAUDE_PROJECT_DIR`) is on another branch or dirty, create a throwaway worktree and deploy from it:
 
 ```bash
+git -C "$CLAUDE_PROJECT_DIR" fetch origin main
 git -C "$CLAUDE_PROJECT_DIR" worktree add --detach "$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main" origin/main
 DEPLOY_DIR="$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main"   # otherwise DEPLOY_DIR="$CLAUDE_PROJECT_DIR"
 ```
@@ -51,13 +52,13 @@ git log origin/$(git branch --show-current)..HEAD --oneline 2>/dev/null
 ```
 - If there are unpushed commits, **warn** that local changes haven't been pushed to remote.
 
-### 4. Run the target's tests (unless `--skip-tests`)
+### 4. Test gate (unless `--skip-tests`)
+The deployed commit must have a green **Backend CI** run (it runs both app suites, path-filtered):
 ```bash
-cd <App dir> && uv run --no-sync pytest tests/ -x -q --tb=short -m "not integration" 2>&1
+gh run list --commit "$(git -C "$DEPLOY_DIR" rev-parse HEAD)" --json name,conclusion,status --jq '.[] | "\(.name): \(.status) \(.conclusion)"'
 ```
-- `backend` → `apps/quiz-agent`; `pack-api` → `apps/quiz-pack-api`; `both` → run each suite before its own deploy.
-- If tests fail, **stop deployment of that target** and report failures.
-- If no tests exist, note this and continue.
+- Require `Backend CI: completed success` for that exact commit. Still running → wait for it; failed or absent → **stop deployment of that target** and report.
+- Do not run pytest inside a fresh worktree (no `.venv` there, and the repo-root build is flaky under `uv sync`). A local run is only meaningful from the shared checkout on `main`: `cd "$CLAUDE_PROJECT_DIR/<App dir>" && uv run --no-sync pytest tests/ -x -q --tb=short -m "not integration"`.
 
 ### 5. Check fly CLI is available
 ```bash
@@ -100,7 +101,7 @@ curl -s https://<Fly app>.fly.dev/docs | head -c 100
 ```bash
 fly status -a <Fly app>
 ```
-- Every process in the target's **Processes** column must be `started` (for `pack-api` that is both `web` and `worker`); a missing or stopped process is a failed deploy — report it, never a green.
+- Every process in the target's **Processes** column must exist on the new version. `app` / `web` scale to zero (`min_machines_running = 0`), so `stopped` right after a deploy is normal idle — the health check above auto-starts them and is the real signal. `worker` (`pack-api`) has no HTTP service and must be `started`; a missing or stopped `worker` is a failed deploy — report it, never a green.
 
 ## Report
 

@@ -18,7 +18,14 @@ Guided deployment with safety checks. Two deployable apps; every step below is k
 | `pack-api` | `apps/quiz-pack-api` | `quiz-pack-api` | `FLY_API_TOKEN_QUIZ_PACK_API` | `https://quiz-pack-api.fly.dev/health` | `web` + `worker` |
 | `both` | run `backend`, then `pack-api` — each with its own pre-flight tests, deploy, and verification | | | | |
 
-Fly tokens are **app-scoped** (2026-09-04): using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main` (use a worktree if the shared checkout is on another branch).
+Fly tokens are **app-scoped** (2026-09-04): using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main`. If the shared checkout (`$CLAUDE_PROJECT_DIR`) is on another branch or dirty, create a throwaway worktree and deploy from it:
+
+```bash
+git -C "$CLAUDE_PROJECT_DIR" worktree add --detach "$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main" origin/main
+DEPLOY_DIR="$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main"   # otherwise DEPLOY_DIR="$CLAUDE_PROJECT_DIR"
+```
+
+Remove it afterwards (`git worktree remove --force <path>`). `.env` is gitignored and lives only in the shared checkout, so it is always sourced by absolute path from `$CLAUDE_PROJECT_DIR`.
 
 ## Pre-flight Checks (always run, per target)
 
@@ -63,7 +70,7 @@ fly version 2>/dev/null
 Load the token for the target, then deploy its `fly.toml`:
 
 ```bash
-cd "$CLAUDE_PROJECT_DIR" && set -a && source .env && set +a && \
+cd "$DEPLOY_DIR" && set -a && source "$CLAUDE_PROJECT_DIR/.env" && set +a && \
   FLY_API_TOKEN="$<Token env var>" fly deploy -c <App dir>/fly.toml --yes
 ```
 

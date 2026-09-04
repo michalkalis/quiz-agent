@@ -73,6 +73,15 @@ class QuestionImport(BaseModel):
     image_subtype: Optional[str] = None
     language_dependent: bool = False
     generation_metadata: Optional[Dict[str, Any]] = None
+    review_status: Literal["pending_review", "approved"] = Field(
+        "pending_review",
+        description=(
+            "Review status stamped on the imported row. Defaults to "
+            "'pending_review' (machine gates only, TestFlight-only serving); "
+            "pass 'approved' only when a human has actually reviewed the "
+            "question (founder rule, see CONTEXT.md)."
+        ),
+    )
 
 
 class ImportQuestionsRequest(BaseModel):
@@ -248,7 +257,7 @@ async def import_questions(
                 generation_metadata=q_data.generation_metadata,
                 usage_count=0,
                 user_ratings={},
-                review_status="approved",  # Auto-approve imports
+                review_status=q_data.review_status,
             )
 
             # Check for semantic duplicates unless forced

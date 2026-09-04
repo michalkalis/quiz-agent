@@ -8,6 +8,11 @@ vector (OpenAI ``text-embedding-3-small``, batched), and inserts idempotently
 on the primary key. Same seam and runbook shape as
 ``migrate_pending_to_postgres.py``.
 
+Rows land as ``pending_review`` by default: machine gates alone never make a
+question ``approved``, which means "a human vouched for it" and serves to every
+client (founder rule, see CONTEXT.md). ``--review-status approved`` is the
+promotion path after a founder rating / review pass.
+
 Usage
 -----
 ::
@@ -181,8 +186,9 @@ def main() -> int:
                         help="Path to a JSON list of Question dicts. Repeatable.")
     parser.add_argument("--database-url",
                         help="Postgres URL. Defaults to app.config.Settings.")
-    parser.add_argument("--review-status", default="approved", choices=REVIEW_STATUSES,
-                        help="review_status stamped on every imported row (default: approved).")
+    parser.add_argument("--review-status", default="pending_review", choices=REVIEW_STATUSES,
+                        help="review_status stamped on every imported row (default: pending_review; "
+                             "pass 'approved' only after a human verdict).")
     parser.add_argument("--batch-size", type=int, default=100,
                         help="OpenAI embedding batch size (default 100).")
     mode = parser.add_mutually_exclusive_group()

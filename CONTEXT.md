@@ -78,11 +78,14 @@ A tranche of questions generated together with a shared topic / difficulty profi
 The scoring axes used by `/score-qs`. (Domain-internal; see the skill for definitions.)
 
 **Review status × build channel (founder rule, 2026-08-28; reaffirmed 2026-09-04)**
-`review_status` on a corpus question encodes *who* vouched for it, not just whether it passed:
+`review_status` on a **shared-corpus** question (`pack_id IS NULL`) encodes *who* vouched for it, not just whether it passed:
 - `approved` — a **human** (founder) reviewed or rated it (`reviewed_by` / `reviewed_at` / `review_notes` set). Served to every client, App Store included.
 - `pending_review` — passed the machine gates (fact-check, answerability, craft guards) but **no human has seen it**. Served only to TestFlight / dev installs (`session.build_channel == "testflight"`, see `apps/quiz-agent/app/retrieval/question_retriever.py`); an App Store client never gets it.
 - `rejected` / `archived` — never served.
-Corollary: an agent or importer must never stamp `approved` without a human verdict; agent-generated batches land as `pending_review` and are promoted by the founder's rating or the review UI.
+
+A custom-pack session is the exception: it scopes by `pack_id` and drops `review_status` entirely (first branch in `question_retriever.py`), so pack questions serve on every build channel whatever their status — the pack was ordered and paid for.
+
+Corollary: an agent or importer must never stamp `approved` without a human verdict. Both import paths now default to `pending_review` — `POST /api/v1/admin/questions/import` (`apps/quiz-agent/app/api/admin.py`) and `apps/quiz-pack-api/scripts/import_questions_json.py` — and promotion to `approved` is an explicit, human-gated call (founder rating or the review UI).
 
 **ChromaDB**
 Vector store for question semantic search. Production volume mount: `/app/data/chroma`. The `CHROMA_PATH` Fly secret must match the mount.

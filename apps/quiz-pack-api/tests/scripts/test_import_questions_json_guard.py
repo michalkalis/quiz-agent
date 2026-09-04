@@ -2,7 +2,7 @@
 
 The gen-review 2026-08-09 part-4 verdict: an unverified/held question never
 enters the corpus. The importer used to stamp EVERY row with the requested
-`--review-status` (default `approved`) without ever reading
+`--review-status` (then defaulting to `approved`) without ever reading
 `generation_metadata.extra` — so a question the verifier held (or explicitly
 failed) could be batch-imported straight into the served corpus. These tests
 pin the guard: held/failed rows are rejected loudly, clean and hand-curated
@@ -12,8 +12,10 @@ rows still import.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
+import scripts.import_questions_json as importer
 from scripts.import_questions_json import _load_questions
 
 
@@ -67,3 +69,23 @@ def test_hand_curated_row_without_pipeline_provenance_imports(tmp_path: Path) ->
     path = _write(tmp_path, [_row("q_manual")])
     loaded = _load_questions([path], "approved")
     assert [q.id for q in loaded] == ["q_manual"]
+
+
+def test_cli_default_review_status_is_pending_review(monkeypatch, tmp_path: Path) -> None:
+    """Machine gates alone never make a question `approved` (founder rule,
+    CONTEXT.md "Review status × build channel"): a batch imported without an
+    explicit verdict must land as `pending_review`, which is served to
+    TestFlight/dev only and never to an App Store client.
+    """
+    path = _write(tmp_path, [_row("q_clean", {"verified": True})])
+    captured: dict[str, str] = {}
+
+    async def _fake_run(args) -> int:
+        captured["review_status"] = args.review_status
+        return 0
+
+    monkeypatch.setattr(importer, "_run", _fake_run)
+    monkeypatch.setattr(sys, "argv", ["import_questions_json.py", "--json-path", str(path)])
+
+    assert importer.main() == 0
+    assert captured["review_status"] == "pending_review"

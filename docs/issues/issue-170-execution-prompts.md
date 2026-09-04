@@ -67,6 +67,10 @@ All paths relative to `apps/quiz-pack-api/` unless prefixed `packages/shared/`. 
 
 ---
 
+## Branch policy (founder 2026-09-04 — overrides every "squash-merge to main" below)
+
+**Nothing from #170 goes to `main` or prod until the founder says duplicates have become a real problem.** Every session B–L branches from and opens its PR **against `feat/170-coverage-dedup`** (the integration branch; `gh pr create --base feat/170-coverage-dedup`). Claude Code Review runs on every PR regardless of base; backend CI lists the integration branch. Deploy reads `origin/main` only, so the branch cannot reach prod. Class-`b` steps (migration 170.4, backfills 170.5–170.7, publish 170.16) and gate F2 (170.17) are **deferred indefinitely**; sessions C/D may build and test the scripts locally but never run them against prod. Rebase the integration branch on `main` whenever main moves. Gate F1 decisions: R1 = 6 interest ids + `entertainment` (align `CATEGORIES` in Session B), R2 = live rows are `approved` + `pending_review`, R3 = all 140 subtopics approved + a top-up round for "everyday" subtopics and more entertainment.
+
 ## Session breakdown
 
 Binding order: `A → [F1] → B → C → D → [founder prod run] → E → F → G → {H → I} ∥ K → J → L → [F2]`.

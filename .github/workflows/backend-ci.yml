@@ -11,7 +11,9 @@ on:
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
-    branches: [main]
+    # feat/170-coverage-dedup: #170 integration branch (founder 2026-09-04 — work
+    # stays off main until duplicates are a real problem); PRs into it get CI too.
+    branches: [main, 'feat/170-coverage-dedup']
     paths:
       - 'apps/quiz-agent/**'
       - 'apps/quiz-pack-api/**'

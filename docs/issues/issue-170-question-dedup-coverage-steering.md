@@ -1,7 +1,7 @@
 # #170 — Coverage-driven dedup: pozitívne riadenie tém pre priame generovanie otázok
 
 **Triage:** backend/content · ready-for-human
-**Status:** Session A HOTOVÁ 2026-09-04 (170.1 skript + návrh podtém v `docs/testing/runs/170-coverage-steering/`) — čaká na **bránu F1** (170.2): founder schváli podtémy **a rozhodne taxonómiu** (viď § Taxonómia, Session A)
+**Status:** BRÁNA F1 UZAVRETÁ 2026-09-04 (founder cez artefakt) — **práca pokračuje výhradne na integračnej vetve `feat/170-coverage-dedup`, nič do main/produkcie** (founder: duplikáty zatiaľ nie sú problém, kvalita otázok je priorita). Ďalší krok = Session B na integračnej vetve (zosúladenie `CATEGORIES` s appkou + `subtopics.json`), po doplnení podtém podľa founder poznámky (každodenné témy, viac entertainment).
 **Created:** 2026-09-03
 **Reversibility:** `b` — potvrdené v Phase 1 a spresnené v Phase 2 (D8/D9): alembic migrácia nutná (4 nullable stĺpce na `questions`; **žiadna zmena vector indexu** — D9). Všetko ostatné aditívne za feature flagmi default OFF. → `ready-for-human`, nie Ralph.
 
@@ -10,6 +10,15 @@
 Founder (2026-09-03): s rastúcim korpusom bude drahšie a ťažšie odhaľovať duplikáty a nové generovania budú produkovať čoraz viac duplikátov. Otázka: nedáva zmysel posielať kľúčové slová / hinty už do generačného promptu, aby bola prevencia lacnejšia než post-hoc zahadzovanie?
 
 Research `docs/research/question-dedup-strategy.md` (2026-09-03): detekcia (pgvector + `text-embedding-3-small`) s rastom DB nedrahne; rastie **odpad** (zaplatená generácia za zahodený duplikát) kvôli mode collapse generátora. Na kanonickej priamej ceste (od #166 `DIRECT_GENERATION` default) dostane generátor iba kategóriu + počet: `{topic_section}` aj `{avoid_section}` v `prompts/question_generation_direct.md` sú prázdne, `TopicPool` sa nevolá. Best practice = pozitívne pridelenie buniek (kategória × podtéma × typ otázky) z mapy pokrytia; celokorpusové negatívne zoznamy sa neškálujú (pink elephant, lineárny kontext).
+
+## Brána F1 — výsledok (founder 2026-09-04, artefakt „Brána F1 pre #170“)
+
+| # | Rozhodnutie | Voľba |
+|---|---|---|
+| R4 | Kde sa práca odohráva | **Oddelená integračná vetva `feat/170-coverage-dedup`, nič do produkcie.** Sedenia B–L idú PR-mi do tejto vetvy (base ≠ main); deploy ide výhradne z `origin/main`; migrácia (170.4), backfilly (170.5–170.7), publikácia (170.16) a zapnutie prepínačov (170.17) sú **odložené na neurčito**, kým founder nepovie, že duplikáty bolia. Merge do main sa nikdy nenavrhuje „s flagmi OFF“. Vetva sa priebežne rebase-uje na main. |
+| R1 | Taxonómia podtém | **6 záujmových kategórií appky + `entertainment`** (`science-nature, history, geography-world, movies-music, sports, food-everyday, entertainment`). Predpoklad Session B: `CATEGORIES` v `app/generation/classification.py` zosúladiť s `CATEGORY_TAXONOMY` (+ `entertainment`); `kids`/`adults` = vekový filter, fandom = pack materiál. A1 sa mení na „všetky id schválenej taxonómie (7)“. |
+| R2 | „Živý“ riadok | **`review_status IN ('approved','pending_review')`** vo všetkých korpusových dotazoch #170 (170.2, D1 mapa, D6 strop, D2 počty). Kategória experimentu podľa 170.2 = **`general`** (81, remíza so `science-nature` → abecedne). |
+| R3 | Podtémy | Všetkých 140 navrhnutých ponechaných bez úprav. Poznámka: **„každodenné“ podtémy (čo ľudia bežne poznajú, nie čisto faktografické) sú najzábavnejšie → tých viac; entertainment viac, ak to dáva zmysel.** → doplňujúce kolo návrhu pred Session B (top-up cez `propose_subtopics.py --existing … --guidance …`), opäť na founder schválenie. |
 
 ## Locked decisions (founder 2026-09-03)
 

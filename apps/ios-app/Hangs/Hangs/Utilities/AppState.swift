@@ -363,6 +363,20 @@ final class AppState: ObservableObject {
                 viewModel.autoAdvanceCountdown = 5
                 viewModel.settings.autoAdvanceDelay = 8
             }
+            // `--ui-test-confirmation` (#171 Track D): land directly on the
+            // answer confirmation sheet with a pinned countdown, so the pause
+            // pill / PAUSED badge can be driven without recording anything. The
+            // countdown is a static value (no timer runs) — tapping Pause zeroes
+            // it, tapping Continue arms the REAL 5 s window.
+            if CommandLine.arguments.contains("--ui-test-confirmation") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.currentSession = QuizSession.preview(score: 2.0, answered: 2, correct: 2)
+                viewModel.quizState = .processing
+                viewModel.transcribedAnswer = "Bratislava"
+                viewModel.settings.autoConfirmEnabled = true
+                viewModel.autoConfirmCountdown = 5
+                viewModel.showAnswerConfirmation = true
+            }
             // `--ui-test-result-nil-evaluation` (#127 req. 6/7): a genuinely nil
             // evaluation cannot route to ResultView (ContentView shows it only for
             // .showingResult, whose payload always carries an evaluation), so this

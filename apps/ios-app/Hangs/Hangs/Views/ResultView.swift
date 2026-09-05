@@ -72,7 +72,7 @@ struct ResultView: View {
                     feedbackPhase: viewModel.voiceFeedbackPhase,
                     commandHint: viewModel.commandListenerHint,
                     autoAdvanceActive: autoAdvanceActive,
-                    isPaused: viewModel.currentQuestionPaused,
+                    isPaused: viewModel.isPaused,
                     countdownRemaining: viewModel.autoAdvanceCountdown,
                     countdownTotal: viewModel.settings.autoAdvanceDelay,
                     onNext: { viewModel.continueToNext() },
@@ -196,11 +196,11 @@ struct ResultView: View {
 
     /// #113 S6a: "active" = not paused && still ticking (no Settings toggle).
     private var autoAdvanceActive: Bool {
-        !viewModel.currentQuestionPaused && viewModel.autoAdvanceCountdown > 0
+        !viewModel.isPaused && viewModel.autoAdvanceCountdown > 0
     }
 
     private func pauseAutoAdvanceIfActive() {
-        guard !viewModel.currentQuestionPaused,
+        guard !viewModel.isPaused,
               viewModel.autoAdvanceCountdown > 0 else { return }
         viewModel.pauseQuiz()
     }

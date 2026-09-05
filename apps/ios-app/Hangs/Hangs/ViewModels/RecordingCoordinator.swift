@@ -155,6 +155,11 @@ final class RecordingCoordinator: ObservableObject {
     let abortSkipUndoWindow: @MainActor () -> Void
     let startAutoConfirmIfEnabled: @MainActor () -> Void
     let cancelAutoConfirm: @MainActor () -> Void
+    /// #171 Track D: drop the quiz-level pause. Leaving the sheet by ANY
+    /// route resumes — confirming, re-recording and cancelling all move the
+    /// quiz on, and a stale flag would then mute the result screen's
+    /// auto-advance and the NEXT question's auto-confirm.
+    let clearPause: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
     let startAutoStopRecordingTimer: @MainActor () -> Void
@@ -189,6 +194,7 @@ final class RecordingCoordinator: ObservableObject {
         abortSkipUndoWindow: @escaping @MainActor () -> Void,
         startAutoConfirmIfEnabled: @escaping @MainActor () -> Void,
         cancelAutoConfirm: @escaping @MainActor () -> Void,
+        clearPause: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor () -> Void,
@@ -222,6 +228,7 @@ final class RecordingCoordinator: ObservableObject {
         self.abortSkipUndoWindow = abortSkipUndoWindow
         self.startAutoConfirmIfEnabled = startAutoConfirmIfEnabled
         self.cancelAutoConfirm = cancelAutoConfirm
+        self.clearPause = clearPause
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer

@@ -320,7 +320,7 @@ struct QuizViewModelAutoAdvanceTests {
     @MainActor
     func autoAdvanceHappyPathRegistersTask() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.currentQuestionPaused = false
+        viewModel.isPaused = false
 
         await viewModel.quizTimersController.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
 
@@ -330,17 +330,17 @@ struct QuizViewModelAutoAdvanceTests {
         // Cleanup — pauseQuiz cancels the .autoAdvance task and is the user-facing affordance.
         viewModel.pauseQuiz()
         #expect(!viewModel.taskBag.contains(.autoAdvance))
-        #expect(viewModel.currentQuestionPaused == true)
+        #expect(viewModel.isPaused == true)
     }
 
-    /// Regression: pause-on-current-question flips `currentQuestionPaused = true`.
+    /// Regression: pause-on-current-question flips `isPaused = true`.
     /// Auto-advance must respect that for the rest of the result screen even if
     /// some other code path tries to (re)start it.
-    @Test("startAutoAdvanceCountdown is a no-op when currentQuestionPaused is true")
+    @Test("startAutoAdvanceCountdown is a no-op when isPaused is true")
     @MainActor
     func autoAdvanceSkippedWhenPaused() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.currentQuestionPaused = true
+        viewModel.isPaused = true
 
         await viewModel.quizTimersController.startAutoAdvanceCountdown(duration: 7, audioDuration: 2.0)
 

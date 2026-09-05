@@ -15,6 +15,7 @@ extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
         cancelAutoConfirm()
+        clearPause()
         // #100.2 / #79: the sheet flag is this call's single-flight token. A
         // stray or concurrent second confirm finds it already down, and must not
         // reach the empty-answer branch below — an emptied transcript is how a
@@ -113,6 +114,7 @@ extension RecordingCoordinator {
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
         cancelAutoConfirm()
+        clearPause()
         // The sheet can also be reached from `.processing` while the voice upload is
         // still in flight (the command screen maps `.processing` → `.confirmation`, so
         // a spoken "again" lands here mid-submit). That submission is answering the
@@ -138,6 +140,7 @@ extension RecordingCoordinator {
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
         cancelAutoConfirm()
+        clearPause()
         taskBag.cancel(.voiceSubmission)
         taskBag.cancel(.sttCommitWatchdog)
         cancelAnswerTimer()

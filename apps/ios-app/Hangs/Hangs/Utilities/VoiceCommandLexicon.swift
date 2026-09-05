@@ -31,6 +31,7 @@ enum VoiceCommand: String, Sendable, CaseIterable, Equatable {
     case repeatQuestion // "repeat" — replay the question audio
     case skip // destructive: strict whole-utterance match only
     case stop // cancel / undo word — resolves an open UndoWindow
+    case pause // #171 Track D: freeze the confirmation sheet (hands-free pause)
 }
 
 /// The screen a command is heard on. Command routing is screen-scoped so an
@@ -53,7 +54,10 @@ enum VoiceCommandLexicon {
         switch screen {
         case .home: return [.start]
         case .question: return [.start, .repeatQuestion, .skip]
-        case .confirmation: return [.ok, .again, .stop]
+        // #171 Track D: `.pause` is confirmation-only by founder decision —
+        // the sheet is the universal "after answer" point, so it is the one
+        // place a pause cannot lose an in-flight question or recording.
+        case .confirmation: return [.ok, .again, .stop, .pause]
         case .result: return [.next, .ok]
         }
     }
@@ -87,6 +91,7 @@ enum VoiceCommandLexicon {
         // answer with no undo. The fail-safe undo-abort path keeps accepting it
         // via `undoCancelVariants`.
         case (.english, .stop): return ["stop", "cancel"]
+        case (.english, .pause): return ["pause"]
         // "štart" folds to "start" — the command is IDENTICAL across languages,
         // which also keeps founder muscle memory intact.
         case (.slovak, .start): return ["start"]
@@ -109,6 +114,10 @@ enum VoiceCommandLexicon {
         // floor. Rare in cabin conversation; `.stop` is final-only and
         // confirmation-screen-scoped, so the exposure is bounded.
         case (.slovak, .stop): return ["stop", "zrus"]
+        // "pauza" is the same word in Slovak and Czech, and it is not a
+        // discourse particle in either — a rare, multi-syllable noun, which
+        // is exactly the disjointness the Slovak set is chosen for.
+        case (.slovak, .pause): return ["pauza"]
         }
     }
 
@@ -157,6 +166,7 @@ enum VoiceCommandLexicon {
         case (.english, .repeatQuestion): return "repeat"
         case (.english, .skip): return "skip"
         case (.english, .stop): return "stop"
+        case (.english, .pause): return "pause"
         case (.slovak, .start): return "štart"
         case (.slovak, .ok): return "potvrď"
         case (.slovak, .next): return "ďalej"
@@ -164,6 +174,7 @@ enum VoiceCommandLexicon {
         case (.slovak, .repeatQuestion): return "zopakuj"
         case (.slovak, .skip): return "preskoč"
         case (.slovak, .stop): return "stop"
+        case (.slovak, .pause): return "pauza"
         }
     }
 
@@ -245,11 +256,11 @@ enum VoiceCommandLexicon {
     static func contextualVocabulary(for language: CommandLanguage) -> [String] {
         switch language {
         case .english:
-            return ["start", "ok", "okay", "next", "again", "retry", "repeat", "skip", "stop", "cancel"]
+            return ["start", "ok", "okay", "next", "again", "retry", "repeat", "skip", "stop", "cancel", "pause"]
         case .slovak:
             return [
                 "štart", "ok", "okej", "potvrď", "ďalej", "pokračuj",
-                "znova", "znovu", "zopakuj", "opakuj", "preskoč", "vynechaj", "stop", "zruš",
+                "znova", "znovu", "zopakuj", "opakuj", "preskoč", "vynechaj", "stop", "zruš", "pauza",
             ]
         }
     }

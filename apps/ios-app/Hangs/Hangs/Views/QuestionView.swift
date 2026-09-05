@@ -145,7 +145,9 @@ struct QuestionView: View {
                 onCancel: { viewModel.cancelProcessing() },
                 commandHint: viewModel.commandListenerHint,
                 commandFeedback: viewModel.voiceFeedbackPhase,
-                matchedOption: matchedVoiceOptionLabel
+                matchedOption: matchedVoiceOptionLabel,
+                isPaused: viewModel.isPaused,
+                onTogglePause: { viewModel.toggleConfirmationPause() }
             )
         }
         .sheet(isPresented: $showQuizSettings) {

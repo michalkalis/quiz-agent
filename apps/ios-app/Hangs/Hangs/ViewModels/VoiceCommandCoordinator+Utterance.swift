@@ -68,6 +68,11 @@ extension VoiceCommandCoordinator {
             return true
         case .stop: // cancelProcessing() DISCARDS the in-flight answer
             return true
+        // #171 Track D: pausing STOPS the command listener, so a false
+        // pause is the one command the driver cannot undo by voice — it
+        // forces a hand to the phone. Final results only.
+        case .pause:
+            return true
         }
     }
 

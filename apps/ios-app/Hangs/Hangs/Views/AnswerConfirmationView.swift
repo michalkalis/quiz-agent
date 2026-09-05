@@ -32,6 +32,12 @@ struct AnswerConfirmationView: View {
     /// match — the field itself holds the option VALUE, which is what gets
     /// graded — and nil on every non-MCQ confirmation.
     var matchedOption: String? = nil
+    /// #171 Track D: the quiz is paused ON THIS SHEET — the countdown is gone
+    /// (the presenter zeroes it), the listener is down, and the header says so.
+    var isPaused: Bool = false
+    /// Toggles pause/resume. Nil hides the control entirely (previews, MCQ tap
+    /// paths that never present a pausable sheet).
+    var onTogglePause: (() -> Void)? = nil
 
     @State private var isEditing = false
     @FocusState private var editFocused: Bool
@@ -64,6 +70,15 @@ struct AnswerConfirmationView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 10) {
                 HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.pink)
+                if isPaused {
+                    // Named, not merely implied by a missing countdown: a
+                    // vanished chip reads as "auto-confirm off", not "paused".
+                    HangsSectionLabel(text: "PAUSED", color: Theme.Hangs.Colors.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Theme.Hangs.Colors.neutralSoft))
+                        .accessibilityIdentifier("confirmation.paused")
+                }
                 Spacer()
                 if isEditing {
                     Button {
@@ -150,8 +165,8 @@ struct AnswerConfirmationView: View {
                     onReRecord()
                 }
                 .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing)
-                .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing ? 0.45 : 1)
+                .disabled(isReRecordLocked)
+                .opacity(isReRecordLocked ? 0.45 : 1)
 
                 // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                 // chip, pen `R5JfD`) — replaces the old separate countdown bar.
@@ -177,7 +192,34 @@ struct AnswerConfirmationView: View {
                 .accessibilityIdentifier("confirmation.confirm")
             }
             .padding(.top, 14)
+
+            // #171 Track D: secondary to Confirm on purpose — pausing is the
+            // rarer intent, and the CTA row must not lose its two-thumb layout.
+            // Hidden while editing: the keyboard already suspended the
+            // countdown, and a Pause pill under an open keyboard is noise.
+            if let onTogglePause, !isEditing {
+                HangsSecondaryButton(
+                    title: isPaused ? "Continue" : "Pause",
+                    icon: isPaused ? "play.fill" : "pause.fill",
+                    height: 48
+                ) {
+                    editFocused = false
+                    onTogglePause()
+                }
+                .accessibilityIdentifier("confirmation.pause")
+                .padding(.top, 10)
+            }
         }
+    }
+
+    /// Re-record is locked only while the auto-confirm window has actually
+    /// RUN OUT — the submit is firing, and a second recording would race it.
+    /// A countdown of 0 also means "paused" (#171 Track D cancels it), and
+    /// there nothing is in flight: pause exists so the driver can take their
+    /// time, and re-recording is one of the things they take it for. Locking
+    /// it there would leave a paused sheet with Confirm as its only exit.
+    private var isReRecordLocked: Bool {
+        autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing && !isPaused
     }
 
     /// The field holds nothing to submit — either the recording captured no
@@ -313,6 +355,20 @@ struct AnswerConfirmationView: View {
             autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Paused") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Z mumíí."),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: true,
+            onTogglePause: {}
         )
     }
 

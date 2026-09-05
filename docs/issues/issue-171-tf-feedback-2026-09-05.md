@@ -1,4 +1,4 @@
-# #171 — TF feedback 2026-09-05: prvá otázka bez zvuku, hlasitosť, prázdna nahrávka, pauza, vyhodnocujem, päta, timer potvrdenia
+# #171 — TF feedback 2026-09-05: prvá otázka bez zvuku, hlasitosť, prázdna nahrávka, pauza, vyhodnocujem, päta, timer potvrdenia, MCQ potvrdenie
 
 **Triage:** bug · needs-info (founder picks A/B/C + 3 decisions) → then ready-for-agent
 **Status:** diagnóza DONE 2026-09-05 (3 read-only prieskumy iOS + backend), HTML varianty pripravené, čaká na founder výber
@@ -21,6 +21,7 @@
 | 8 | Hlasitosť skáče (koreluje s počúvaním povelov) | A | audio, štrukturálny fix |
 | 9 | Zvuk aj pri stlmenom bočnom prepínači | A | overené: funguje (kategória `.playback` / `.playAndRecord`) |
 | 10 | Timer potvrdenia pridlhý | F | hodnota + nastavenie |
+| 11 | MCQ hlasom: odpoveď sa vezme hneď, bez potvrdenia; nejasné, či sa dá odpovedať textom možnosti | I | flow + copy (founder: potvrdenie povinné, text možnosti povoliť) |
 
 ## Track A — Audio: prvá otázka ticho + skákanie hlasitosti (P0)
 
@@ -83,6 +84,19 @@ Slovenčina ide **serve-time** cez `TranslationService` (`translator.py:51`, mod
 Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background audio mode), mikrofón + poslucháč sa vypnú, **odpočty bežia ďalej**; po návrate s vypršaným odpočtom zostane používateľ „zaparkovaný“ na otázke, lebo štart nahrávania je v pozadí potlačený (`RecordingCoordinator+Capture.swift:35-43`).
 - Návrh (R3): nechať bežať (founder sklon: súperí sám so sebou) + pri návrate do popredia s vypršaným premýšľaním prejsť rovno na potvrdzovaciu obrazovku (Track B cesta „bez odpovede“), nie zaparkovať. Test: scene `.active` po vypršaní → `showAnswerConfirmation`.
 
+## Track I — MCQ hlasom: potvrdenie + odpoveď textom možnosti
+
+**Potvrdenie preskočené zámerne, ale rozhodnutie je sporné.** `RecordingCoordinator+Streaming.swift:126-143`: pri zhode s možnosťou sa volá `submitMCQAnswer` priamo („skipping the confirmation modal“), sheet ide len pri nezhode (`:145-153`). Pôvod = #45 task 45.3; founderom vyriešené D4 v tom istom issue (`issue-45…md:28`, task `45.7-wire`, nikdy nedodané) hovorí opak: MCQ → potvrdenie → výsledok. Konflikt je evidovaný ako „dve pravdy v kóde“ (`docs/artifacts/ui-review-2026-07.md:86`, audit 07-30 → #133). **Founder 2026-09-05 rozhodol: potvrdenie povinné aj pre MCQ.**
+
+**Odpoveď textom možnosti už funguje**, ale iba presná zhoda po normalizácii (`MCQTranscriptMatcher.swift:47-71`, tier 1 = text možnosti pred písmenom/poradím; SK „áčko/béčko“, radové číslovky `:104-117`). Chýba tolerancia: skloňovanie („kocku“), STT varianty → nezhoda → sheet so surovým prepisom → backend MCQ evaluátor bez LLM záchrany vyhodnotí ako nesprávne (`evaluator.py:105-145`). Lišta hovorí len „Povedz A–D“ (`ListenBar.swift:199`); lepší string „Počúvam — povedz A–D alebo odpoveď“ už existuje nepoužitý (`Localizable.xcstrings:3421`).
+
+**Fix:**
+- I1 Zhoda hlasom → **nesubmitovať**, ale `transcribedAnswer = text možnosti` (nie surový prepis, inak backend nezhodnotí), `showAnswerConfirmation = true`, auto-potvrdenie beží; sheet dostane voliteľné `matchedOption` (písmeno + text) na zobrazenie „A · Kocka“. Potvrdenie ide existujúcou cestou `resubmitAnswer` → backend value-match (`evaluator.py:126-129`).
+- I2 Tier 1.5 tolerantná zhoda na text možnosti (normalizovaný Levenshtein ≥ ~0.85 / spoločný kmeň), musí padnúť na práve jednu možnosť; inak sheet so surovým prepisom ako dnes.
+- I3 Caption MCQ lišty → existujúci string „Povedz A–D alebo odpoveď“ (SK/CS/EN už preložené).
+- Testy: prepísať 3 z `QuizViewModelMCQVoiceTests` (pinujú priamy submit), pridať tolerančné prípady do `MCQTranscriptMatcherTests` (skloňovanie SK), overiť `MCQOptionPickerRaceTests` (tap vs. hlas počas sheetu). RS-09 očakávaný text pilulky sa zhoduje s I3.
+- Uzavrieť `45.7-wire` v #45 odkazom sem.
+
 ## Rozhodnutia pre foundera
 
 - **R0 výbery:** A (A1/A2) · B (B1/B2) · C (C1/C2/C3) — odporúčané A1 · B1 · C1.
@@ -95,6 +109,7 @@ Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background a
 1. Track A (P0 audio) — vlastný PR, Sentry overenie.
 2. Track B + H (flow „bez odpovede“, jeden PR, spoločná vetva „bez opakovania“).
 3. Track C + E + F (UI päta, overlay, timer) — jeden PR, Pencil sync po výbere.
+3b. Track I (MCQ potvrdenie + tolerantná zhoda + caption) — vlastný PR, nezávislý od výberov.
 4. Track D pauza — vlastný PR.
 5. Track G — backend PR, deploy, purge cache.
 

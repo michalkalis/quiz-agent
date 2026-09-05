@@ -40,8 +40,13 @@ final class QuizTimersController: ObservableObject {
     @Published var recordingCountdown: Int = 0
     /// The window `recordingCountdown` drains from — the button's fill fraction.
     private(set) var recordingCountdownTotal: Int = 0
-    // Per-question pause state (resets on next question)
-    @Published var currentQuestionPaused: Bool = false
+    /// #171 Track D: quiz-level pause. Two screens set it and both mean the
+    /// same thing — nothing advances on its own until the driver says so: the
+    /// result screen's STAY pill (#131 D, auto-advance only) and the answer
+    /// confirmation sheet's Pause pill (auto-confirm + TTS + the command
+    /// listener). Cleared on the next question, and by confirming/re-recording
+    /// off the sheet — confirming IS a resume.
+    @Published var isPaused: Bool = false
 
     /// The façade's shared task owner (decision 4 register/cancel handle).
     let taskBag: TaskBag
@@ -94,7 +99,7 @@ final class QuizTimersController: ObservableObject {
         thinkingTimeCountdown = 0
         recordingCountdown = 0
         recordingCountdownTotal = 0
-        currentQuestionPaused = false
+        isPaused = false
     }
 
     // MARK: - Thinking Time Countdown
@@ -247,7 +252,7 @@ final class QuizTimersController: ObservableObject {
     /// Starts the auto-advance countdown loop with real-time UI updates
     func startAutoAdvanceCountdown(duration: Int, audioDuration: TimeInterval) async {
         // Skip auto-advance if the current question is paused
-        guard !currentQuestionPaused else {
+        guard !isPaused else {
             Logger.quiz.debug("⏱️ Auto-advance skipped (paused for current question)")
             autoAdvanceCountdown = 0
             return
@@ -298,6 +303,13 @@ final class QuizTimersController: ObservableObject {
     /// The countdown field itself is façade-resident (confirmation-semantic,
     /// T7 moves it into `ConfirmationState`) — written via the injected closure.
     func startAutoConfirmIfEnabled(duration: Int = Config.autoConfirmDelaySecs) {
+        // #171 Track D: paused means paused. This is the re-arm guard, not just
+        // a cosmetic one — every path that would restart the window while the
+        // sheet is frozen (a foreground return, a late TTS tail) lands here.
+        guard !isPaused else {
+            setAutoConfirmCountdown(0)
+            return
+        }
         guard settings().autoConfirmEnabled else {
             setAutoConfirmCountdown(0)
             return
@@ -307,6 +319,12 @@ final class QuizTimersController: ObservableObject {
             for remaining in (0 ..< duration).reversed() {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard let self, !Task.isCancelled else { return }
+                // A pause that races this tick: stop counting rather than let
+                // the loop reach zero and auto-confirm behind the frozen sheet.
+                guard !self.isPaused else {
+                    self.setAutoConfirmCountdown(0)
+                    return
+                }
                 self.setAutoConfirmCountdown(remaining)
             }
             guard let self, !Task.isCancelled else { return }

@@ -68,6 +68,56 @@ struct AnswerConfirmationCountdownTests {
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm").isDisabled() == false)
     }
 
+    /// WHY (#171 Track D): "paused" has to be READABLE. A vanished countdown
+    /// chip alone reads as "auto-confirm is off", not "the quiz is waiting for
+    /// me" — the badge is what tells the driver nothing will happen until they
+    /// act, and the pill must offer the way back out.
+    @Test("A paused sheet names the state and offers Continue instead of Pause")
+    func pausedSheetShowsBadgeAndContinue() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Paris"),
+            // The presenter zeroes the countdown when it cancels auto-confirm,
+            // so a paused sheet can never render a chip that is not ticking.
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: true,
+            onTogglePause: {}
+        )
+        let tree = try view.inspect()
+        #expect(throws: Never.self) { try tree.find(text: "PAUSED") }
+        #expect(throws: Never.self) { try tree.find(text: "Continue") }
+        #expect(throws: (any Error).self) { try tree.find(text: "Pause") }
+        // Confirm stays plain and tappable — confirming IS resuming.
+        #expect(throws: Never.self) { try tree.find(text: "Confirm") }
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm").isDisabled() == false)
+    }
+
+    /// WHY: the running sheet must ADVERTISE the pause — the pill's label is
+    /// also the word the driver speaks ("Pauza"), so hiding it hides the
+    /// hands-free command with it.
+    @Test("A running sheet offers Pause and no PAUSED badge")
+    func runningSheetOffersPause() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Paris"),
+            autoConfirmCountdown: 4,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: false,
+            onTogglePause: {}
+        )
+        let tree = try view.inspect()
+        #expect(throws: Never.self) { try tree.find(text: "Pause") }
+        #expect(throws: Never.self) { try tree.find(text: "4s") }
+        #expect(throws: (any Error).self) { try tree.find(text: "PAUSED") }
+    }
+
     /// WHY (#171 Track I): an MCQ voice match grades the option VALUE, so the
     /// sheet must show which option that is — "A · Kocka" — or the driver
     /// cannot tell a mishearing from a correct match in the 5 s they have.

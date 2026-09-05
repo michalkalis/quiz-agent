@@ -45,6 +45,14 @@ extension VoiceCommandCoordinator {
         // stream — time-disjoint from command listening).
         if isPlayingTTS() || isRecordingActive { return false }
 
+        // #171 Track D: a paused confirmation sheet is frozen — the auto-confirm
+        // countdown is cancelled and the mic must come down with it, or "paused"
+        // would still be listening for "potvrď". Gating HERE (not in
+        // `currentCommandScreen`) is what makes a foreground return honour the
+        // pause: `.active` re-runs `refreshCommandWindow()`, which finds capture
+        // disallowed and tears the listener down again instead of re-arming.
+        if isPausedOnConfirmation() { return false }
+
         return isCaptureSafeQuizState
     }
 

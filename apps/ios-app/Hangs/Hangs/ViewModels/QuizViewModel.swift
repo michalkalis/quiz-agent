@@ -262,11 +262,11 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
-    /// Per-question pause state (resets on next question) — see
-    /// `QuizTimersController.currentQuestionPaused`.
-    var currentQuestionPaused: Bool {
-        get { quizTimersController.currentQuestionPaused }
-        set { quizTimersController.currentQuestionPaused = newValue }
+    /// Quiz-level pause (#171 Track D; resets on the next question) — see
+    /// `QuizTimersController.isPaused`.
+    var isPaused: Bool {
+        get { quizTimersController.isPaused }
+        set { quizTimersController.isPaused = newValue }
     }
 
     // Minimize state
@@ -721,6 +721,9 @@ final class QuizViewModel: ObservableObject {
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },
+            isPausedOnConfirmation: { [weak self] in
+                self?.isPaused == true && self?.showAnswerConfirmation == true
+            },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
             configureQuietListeningSession: { [weak self] in
@@ -737,6 +740,7 @@ final class QuizViewModel: ObservableObject {
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
+            pauseOnConfirmation: { [weak self] in self?.pauseOnConfirmation() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
         )
@@ -801,6 +805,7 @@ final class QuizViewModel: ObservableObject {
             abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
+            clearPause: { [weak self] in self?.isPaused = false },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
@@ -1551,7 +1556,7 @@ final class QuizViewModel: ObservableObject {
     /// Pause auto-advance for current question only (not permanent)
     func pauseQuiz() {
         taskBag.cancel(.autoAdvance)
-        currentQuestionPaused = true
+        isPaused = true
 
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
@@ -1562,7 +1567,7 @@ final class QuizViewModel: ObservableObject {
     /// result screen and the next question is reached via the timer, not instantly (#59.8).
     /// Clears the pause flag first — `startAutoAdvanceCountdown` bails while paused.
     func resumeAutoAdvance() {
-        currentQuestionPaused = false
+        isPaused = false
 
         Task {
             await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
@@ -1574,7 +1579,7 @@ final class QuizViewModel: ObservableObject {
     /// Continue to next question after user paused current one
     func continueToNext() {
         // Reset per-question pause state
-        currentQuestionPaused = false
+        isPaused = false
 
         Task {
             await proceedToNextQuestion()
@@ -1811,7 +1816,7 @@ final class QuizViewModel: ObservableObject {
         taskBag.cancel(.autoAdvance)
 
         // Reset per-question pause and re-record state when moving to next question
-        currentQuestionPaused = false
+        isPaused = false
         isRerecording = false
 
         // CRITICAL: Stop any playing feedback audio before transitioning

@@ -62,21 +62,35 @@ struct QuizViewModelTTSSpyTests {
         viewModel.quizTimersController.cancelAnswerTimer()
     }
 
-    @Test("a failed TTS playback is swallowed and re-attempted on the next question")
+    @Test("a failed TTS playback is retried once, swallowed, and re-attempted on the next question")
     func failedTTSIsSwallowedAndRetried() async {
         let (viewModel, mockAudio) = makeAskingViewModel(failPlayback: true)
 
         // First question: playback throws internally — must NOT propagate, and the
-        // quiz must stay in askingQuestion (not stranded), with TTS attempted once.
+        // quiz must stay in askingQuestion (not stranded). #171: a failed read is
+        // now retried ONCE after a settle instead of leaving the user in silence
+        // with the countdown running (the founder's TF report), so the attempt
+        // count is 2, not 1.
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q1.mp3")
-        #expect(mockAudio.playOpusCallCount == 1)
+        #expect(mockAudio.playOpusCallCount == 2, "a silent question must be retried once before we give up")
         #expect(viewModel.quizState == .askingQuestion)
         viewModel.quizTimersController.cancelAnswerTimer()
 
         // Next question: TTS is attempted again (it is not disabled by a prior fail).
         viewModel.quizState = .askingQuestion
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q2.mp3")
-        #expect(mockAudio.playOpusCallCount == 2)
+        #expect(mockAudio.playOpusCallCount == 4)
+        viewModel.quizTimersController.cancelAnswerTimer()
+    }
+
+    @Test("a successful read is played exactly once — the retry is failure-only")
+    func successfulReadIsNotRetried() async {
+        let (viewModel, mockAudio) = makeAskingViewModel()
+
+        await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q.mp3")
+
+        // The #171 retry must never double-speak a question that was heard.
+        #expect(mockAudio.playOpusCallCount == 1)
         viewModel.quizTimersController.cancelAnswerTimer()
     }
 }

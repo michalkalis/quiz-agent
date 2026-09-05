@@ -92,8 +92,14 @@ import os
         /// session is applied by the quiz-start path, never by Home arming.
         var setupAudioSessionCallCount = 0
 
+        /// Fires as the quiz session is configured. Lets a test observe WHAT ELSE
+        /// was true at that exact moment — #171 needs "the command listener was
+        /// already down", which no call count can express after the fact.
+        var onSetupAudioSession: (@MainActor () -> Void)?
+
         func setupAudioSession(mode _: AudioMode) throws {
             setupAudioSessionCallCount += 1
+            onSetupAudioSession?()
         }
 
         /// Counts quiet Home-listening configurations (#136): pins that arming

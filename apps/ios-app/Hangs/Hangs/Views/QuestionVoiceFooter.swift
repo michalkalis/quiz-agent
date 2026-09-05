@@ -33,6 +33,10 @@ struct QuestionVoiceFooter: View {
 
     @Binding var showTextInput: Bool
     @Binding var textAnswer: String
+    /// #171 Track E: what the driver just submitted, echoed by the evaluating
+    /// overlay ("You said: …"). Written here for the typed path; the voice and MCQ
+    /// paths write it in `QuestionView`.
+    @Binding var submittedAnswer: String
     var isTextFieldFocused: FocusState<Bool>.Binding
     var compact: Bool = false
 
@@ -158,28 +162,23 @@ struct QuestionVoiceFooter: View {
         .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
     }
 
-    /// Typed-answer fallback (#54 task 54.18). #131 Track C: icon + "Type", in the
-    /// footer row — it used to float in the audio strip's middle slot.
+    /// Typed-answer fallback (#54 task 54.18). #171 Track C1: icon-only. The words
+    /// "Type" / "Skip" sized these two buttons off the localized string, and in
+    /// Slovak ("Písať" / "Preskočiť" beside "Nahrávať") nothing was left for the
+    /// Record button — its seconds pill was what got clipped. A square glyph is the
+    /// same width in every language; the word survives as the accessibility label,
+    /// so VoiceOver still says "Type".
     private var typeButton: some View {
         Button {
             showTextInput = true
             isTextFieldFocused.wrappedValue = true
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "keyboard")
-                    .font(.system(size: 13, weight: .semibold))
-                Text("Type")
-                    .font(.hangsBody(15, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(height: 48)
-            .padding(.horizontal, 14)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            iconChip("keyboard", size: 17)
         }
         .buttonStyle(.plain)
         .disabled(!canInteract || showTextInput)
         .opacity((canInteract && !showTextInput) ? 1 : 0.45)
+        .accessibilityLabel("Type")
         .accessibilityIdentifier("question.textInputToggle")
     }
 
@@ -187,22 +186,26 @@ struct QuestionVoiceFooter: View {
         Button {
             Task { await viewModel.skipQuestion() }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "play.forward.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                Text("Skip")
-                    .font(.hangsBody(15, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(height: 48)
-            .padding(.horizontal, 14)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            // "play.forward.fill" is not an SF Symbol — it rendered nothing, which
+            // only became visible once the word "Skip" stopped covering for it.
+            iconChip("forward.end.fill", size: 16)
         }
         .buttonStyle(.plain)
         .disabled(isRecording || isProcessing)
         .opacity((isRecording || isProcessing) ? 0.45 : 1)
+        .accessibilityLabel("Skip")
         .accessibilityIdentifier("question.skip")
+    }
+
+    /// The shared surface of the two icon-only controls: a circle as tall as the
+    /// Record button beside it, so the row still reads as one strip.
+    private func iconChip(_ systemName: String, size: CGFloat) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: size, weight: .semibold))
+            .foregroundColor(Theme.Hangs.Colors.ink)
+            .frame(width: 48, height: 48)
+            .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
     }
 
     // MARK: - Typed answer
@@ -239,6 +242,7 @@ struct QuestionVoiceFooter: View {
     private func submitTypedAnswer() {
         guard !textAnswer.isEmpty else { return }
         let answer = textAnswer
+        submittedAnswer = answer
         textAnswer = ""
         showTextInput = false
         Task { await viewModel.resubmitAnswer(answer) }

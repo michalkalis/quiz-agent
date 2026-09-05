@@ -268,6 +268,23 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = Question.previewSlovak
                 viewModel.quizState = .askingQuestion
             }
+            // `--ui-test-countdown` (#171 Track C): the footer with a countdown
+            // pinned at 23 s — the founder's TestFlight screenshot, where the
+            // Slovak "Nahrávať" + the seconds pill did not fit. Run it with
+            // `-AppleLanguages (sk)` to reproduce that exact row.
+            if CommandLine.arguments.contains("--ui-test-countdown") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+                viewModel.settings.thinkingTime = 30
+                viewModel.thinkingTimeCountdown = 23
+            }
+            // `--ui-test-processing` (#171 Track E): the evaluating overlay over a
+            // dimmed question, with the submitted answer echoed back.
+            if CommandLine.arguments.contains("--ui-test-processing") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.transcribedAnswer = "Jupiter"
+                viewModel.quizState = .processing
+            }
             // `--ui-test-recording`: voice QuestionView mid-recording with a live
             // transcript, to verify the transcript card pins above the action row.
             if CommandLine.arguments.contains("--ui-test-recording") {

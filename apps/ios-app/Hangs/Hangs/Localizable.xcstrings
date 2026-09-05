@@ -8055,6 +8055,23 @@
         }
       }
     },
+    "You said: “%@”" : {
+      "comment" : "Secondary line on the evaluating overlay, echoing the answer the user just submitted",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Řekl jsi: „%@“"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Povedal si: „%@“"
+          }
+        }
+      }
+    },
     "You've used all %lld free questions this month." : {
       "comment" : "Paywall subtitle when the monthly free-question limit is known",
       "localizations" : {

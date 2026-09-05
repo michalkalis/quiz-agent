@@ -186,7 +186,9 @@ struct QuestionVoiceFooter: View {
         Button {
             Task { await viewModel.skipQuestion() }
         } label: {
-            iconChip("play.forward.fill", size: 16)
+            // "play.forward.fill" is not an SF Symbol — it rendered nothing, which
+            // only became visible once the word "Skip" stopped covering for it.
+            iconChip("forward.end.fill", size: 16)
         }
         .buttonStyle(.plain)
         .disabled(isRecording || isProcessing)

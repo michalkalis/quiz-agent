@@ -24,11 +24,12 @@ struct HangsProcessingOverlay: View {
     var body: some View {
         ZStack {
             // The question stays legible-but-receded underneath: the material
-            // blurs it, the tint dims it. Deliberately lighter than the mock's
-            // flat 86% wash — a backdrop blur in SwiftUI already darkens what it
-            // blurs, and stacking both hides the question B1 exists to keep.
+            // blurs it, the tint dims it. Deliberately much lighter than the mock's
+            // flat 86% wash — SwiftUI's material already washes out what it blurs,
+            // and stacking both erased the question B1 exists to keep (measured on
+            // the simulator: at 0.60 the stem was imperceptible).
             Rectangle()
-                .fill(Theme.Hangs.Colors.bg.opacity(0.60))
+                .fill(Theme.Hangs.Colors.bg.opacity(0.18))
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 

@@ -77,7 +77,7 @@ struct ListenBarInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "LISTENING — SAY A–D")
+                try tree.find(text: "Listening — say A–D or the answer")
             }
             #expect(throws: (any Error).self) {
                 _ = try tree.find(text: "THINK — LISTENING IN 10 S")
@@ -105,13 +105,16 @@ struct ListenBarInspectorTests {
 
     // MARK: - Answer mode captions (app-locale, per kind)
 
-    @Test("Answer/MCQ mode prompts for A–D")
+    /// #171 Track I: the caption must offer BOTH ways in — a driver who does not
+    /// know the option text is accepted falls back to letters and loses the
+    /// hands-free win the tolerant matcher just bought.
+    @Test("Answer/MCQ mode prompts for A–D or the answer text")
     func answerMCQCaption() async throws {
         let view = ListenBar(mode: .answer(.mcq))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "LISTENING — SAY A–D")
+                try tree.find(text: "Listening — say A–D or the answer")
             }
         }
     }
@@ -152,7 +155,7 @@ struct ListenBarInspectorTests {
                     try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
                 }
                 #expect(throws: Never.self, "caption missing in \(phase)") {
-                    try tree.find(text: "LISTENING — SAY A–D")
+                    try tree.find(text: "Listening — say A–D or the answer")
                 }
             }
         }

@@ -54,23 +54,16 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.speechDetectedDuringAutoRecord = newValue }
     }
 
-    /// See `RecordingState.wasUnattendedRecording` — snapshot of "auto-started
-    /// and heard no speech", taken at stop time, read by the failure handlers.
-    var wasUnattendedRecording: Bool {
-        get { recordingState.wasUnattendedRecording }
-        set { recordingState.wasUnattendedRecording = newValue }
-    }
-
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool {
         get { recordingState.isStoppingRecording }
         set { recordingState.isStoppingRecording = newValue }
     }
 
-    /// Consecutive transcription failures for 3-tier error escalation
-    var consecutiveTranscriptionFailures: Int {
-        get { recordingState.consecutiveTranscriptionFailures }
-        set { recordingState.consecutiveTranscriptionFailures = newValue }
+    /// See `RecordingState.backgroundSuppressedRecordingAt` (#171 Track H).
+    var backgroundSuppressedRecordingAt: Date? {
+        get { recordingState.backgroundSuppressedRecordingAt }
+        set { recordingState.backgroundSuppressedRecordingAt = newValue }
     }
 
     /// Current question audio URL for the "repeat" command — written by
@@ -113,6 +106,12 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.preEditTranscript = newValue }
     }
 
+    /// See `ConfirmationState.noAnswerCaptured` (#171 Track B).
+    var noAnswerCaptured: Bool {
+        get { confirmationState.noAnswerCaptured }
+        set { confirmationState.noAnswerCaptured = newValue }
+    }
+
     /// Auto-confirm countdown (T7 — resides in `ConfirmationState`, its semantic
     /// owner); QuizTimersController ticks it via the façade's injected write closure.
     var autoConfirmCountdown: Int {
@@ -149,7 +148,6 @@ final class RecordingCoordinator: ObservableObject {
     private let facadeSetError: @MainActor (String, ErrorContext, Error?) -> Void
     private let facadeHandleError: @MainActor (Error, ErrorContext, String) async -> Void
     let handleQuizResponse: @MainActor (QuizResponse) async -> Void
-    let submitMCQAnswer: @MainActor (_ key: String, _ value: String) async -> Void
     let resubmitAnswer: @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void
     let skipQuestion: @MainActor () async -> Void
     let emitEarcon: @MainActor (Earcon) -> Void
@@ -162,11 +160,6 @@ final class RecordingCoordinator: ObservableObject {
     let startAutoStopRecordingTimer: @MainActor () -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
-    /// Re-arms the think/answer window (`startRecordingOrTimer`) after a
-    /// recoverable transcription failure — without it the countdown pill
-    /// vanishes the moment the "didn't catch that" banner appears and the
-    /// user has no retry window (founder 2026-08-03).
-    let restartAnswerWindow: @MainActor () -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -189,7 +182,6 @@ final class RecordingCoordinator: ObservableObject {
         setError: @escaping @MainActor (String, ErrorContext, Error?) -> Void,
         handleError: @escaping @MainActor (Error, ErrorContext, String) async -> Void,
         handleQuizResponse: @escaping @MainActor (QuizResponse) async -> Void,
-        submitMCQAnswer: @escaping @MainActor (_ key: String, _ value: String) async -> Void,
         resubmitAnswer: @escaping @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void,
         skipQuestion: @escaping @MainActor () async -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
@@ -201,8 +193,7 @@ final class RecordingCoordinator: ObservableObject {
         cancelThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
-        stopSilenceDetectionListening: @escaping @MainActor () -> Void,
-        restartAnswerWindow: @escaping @MainActor () -> Void
+        stopSilenceDetectionListening: @escaping @MainActor () -> Void
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -224,7 +215,6 @@ final class RecordingCoordinator: ObservableObject {
         facadeSetError = setError
         facadeHandleError = handleError
         self.handleQuizResponse = handleQuizResponse
-        self.submitMCQAnswer = submitMCQAnswer
         self.resubmitAnswer = resubmitAnswer
         self.skipQuestion = skipQuestion
         self.emitEarcon = emitEarcon
@@ -237,7 +227,6 @@ final class RecordingCoordinator: ObservableObject {
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
-        self.restartAnswerWindow = restartAnswerWindow
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)
@@ -275,11 +264,9 @@ final class RecordingCoordinator: ObservableObject {
 
     /// Decision-8 phase-exit reset: invoked by the façade's `transition(to:)`
     /// when the quiz leaves the recording/processing pair. Drops the
-    /// confirmation subset + capture-scoped recording state; question-scoped
-    /// fields survive — `consecutiveTranscriptionFailures` accumulates across
-    /// its own tier-1/2 bail-out transitions out of the pair (else the 3-tier
-    /// escalation could never fire) and `currentQuestionAudioUrl` is replayed
-    /// from `.showingResult` ("read aloud" / voice "repeat").
+    /// confirmation subset + capture-scoped recording state; the question-scoped
+    /// `currentQuestionAudioUrl` survives — it is replayed from
+    /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
         cleanupStreamingSTT()
         recordingState.resetCaptureState()

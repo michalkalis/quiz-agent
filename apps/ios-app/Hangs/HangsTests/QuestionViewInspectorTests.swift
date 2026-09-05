@@ -108,7 +108,8 @@ struct QuestionViewMCQInspectorTests {
 /// included. Hiding them cost the whole point of MCQ — you cannot pick between
 /// alternatives you have not been shown.
 ///
-/// What did NOT reverse: the answer `ListenBar` says "LISTENING — SAY A–D", so
+/// What did NOT reverse: the answer `ListenBar` says "Listening — say A–D or
+/// the answer" (#171 Track I — answering with the option text works), so
 /// it must still appear only once the mic is actually live. The long-stem
 /// scroll affordance has to keep working with the grid on screen throughout.
 @MainActor
@@ -171,7 +172,7 @@ struct QuestionViewMCQOptionVisibilityTests {
             }
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "LISTENING — SAY A–D")
+                _ = try tree.find(text: "Listening — say A–D or the answer")
             }
         }
 
@@ -181,7 +182,7 @@ struct QuestionViewMCQOptionVisibilityTests {
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "LISTENING — SAY A–D")
+                try tree.find(text: "Listening — say A–D or the answer")
             }
             #expect(throws: (any Error).self) {
                 _ = try tree.find(text: "THINK — LISTENING IN 0 S")

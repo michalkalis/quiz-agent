@@ -40,6 +40,16 @@ struct QuestionView: View {
     /// question arrives, so a skip can never inherit the previous answer's echo.
     @State private var submittedAnswer = ""
 
+    /// #171 Track I: "A · Kocka" for the confirmation sheet when a spoken answer
+    /// resolved to an MCQ option. Derived from the same `mcqVoiceMatchedKey` the
+    /// option grid highlights, so the sheet can never disagree with the grid.
+    private var matchedVoiceOptionLabel: String? {
+        guard let key = viewModel.mcqVoiceMatchedKey,
+              let value = viewModel.currentQuestion?.possibleAnswers?[key]
+        else { return nil }
+        return "\(key.uppercased()) · \(value)"
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
@@ -118,8 +128,12 @@ struct QuestionView: View {
                 // `!isEditingTranscript`: deleting the whole prefill while editing
                 // must not flip the sheet into the Transcribing spinner — the
                 // "dialog vanished" bug from TF build 53 feedback.
+                // `!noAnswerCaptured` (#171 Track B): the no-answer sheet is also
+                // `.processing` with an empty field, but nothing is in flight —
+                // showing the spinner there would hide the Confirm CTA that ends
+                // the question.
                 isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty
-                    && !viewModel.isEditingTranscript,
+                    && !viewModel.isEditingTranscript && !viewModel.noAnswerCaptured,
                 transcribedAnswer: $viewModel.transcribedAnswer,
                 autoConfirmCountdown: viewModel.autoConfirmCountdown,
                 autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
@@ -130,7 +144,8 @@ struct QuestionView: View {
                 onCancelEditing: { viewModel.cancelEditingTranscript() },
                 onCancel: { viewModel.cancelProcessing() },
                 commandHint: viewModel.commandListenerHint,
-                commandFeedback: viewModel.voiceFeedbackPhase
+                commandFeedback: viewModel.voiceFeedbackPhase,
+                matchedOption: matchedVoiceOptionLabel
             )
         }
         .sheet(isPresented: $showQuizSettings) {
@@ -750,8 +765,15 @@ struct QuestionView: View {
         viewModel.quizState == .skipping ? "" : submittedAnswer
     }
 
+    /// #171 Tracks B + E meeting point: the confirmation sheet also lives in
+    /// `.processing`, and since Track B/I every voice answer (including a failed
+    /// capture and an MCQ match) passes through it. The evaluating overlay must
+    /// not sit behind the sheet claiming the answer is already being graded
+    /// while the driver is still being asked to confirm it — the sheet owns that
+    /// screen, and has its own spinner for when a transcript is in flight.
     private var isProcessing: Bool {
-        viewModel.quizState == .processing || viewModel.quizState == .skipping
+        guard !viewModel.showAnswerConfirmation else { return false }
+        return viewModel.quizState == .processing || viewModel.quizState == .skipping
     }
 
     private var currentQuestionNumber: Int {

@@ -189,6 +189,14 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.transcribedAnswer = newValue }
     }
 
+    /// #171 Track B: the sheet is up with a deliberately empty field (nothing
+    /// was captured), not waiting on a transcript — QuestionView needs the
+    /// distinction to choose between the no-answer body and the spinner.
+    var noAnswerCaptured: Bool {
+        get { recordingCoordinator.noAnswerCaptured }
+        set { recordingCoordinator.noAnswerCaptured = newValue }
+    }
+
     /// Auto-confirm countdown — owned by `ConfirmationState` inside
     /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
     /// ticks it via the injected write closure pointed at the child.
@@ -786,7 +794,6 @@ final class QuizViewModel: ObservableObject {
                 await self?.handleError(error, context: context, fallbackMessage: fallback)
             },
             handleQuizResponse: { [weak self] in await self?.handleQuizResponse($0) },
-            submitMCQAnswer: { [weak self] key, value in await self?.submitMCQAnswer(key: key, value: value) },
             resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
@@ -798,8 +805,7 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
-            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
-            restartAnswerWindow: { [weak self] in self?.startRecordingOrTimer() }
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
         )
     }
 
@@ -862,7 +868,6 @@ final class QuizViewModel: ObservableObject {
             lastErrorDebugInfo = nil
         #endif
         isRerecording = false
-        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
@@ -1640,9 +1645,6 @@ final class QuizViewModel: ObservableObject {
         }
         isProcessingResponse = true
         defer { isProcessingResponse = false }
-
-        // Reset transcription failure counter on successful response
-        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
         taskBag.cancel(.autoAdvance)

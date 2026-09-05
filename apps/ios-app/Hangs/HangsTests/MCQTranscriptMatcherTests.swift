@@ -199,6 +199,61 @@ struct MCQTranscriptMatcherTests {
         #expect(MCQTranscriptMatcher.match("Mars, céčko", options: duplicated) == "c")
     }
 
+    // MARK: - Tolerant value match (#171 Track I)
+
+    /// WHY: Slovak declines its nouns, so the answer a driver actually says is
+    /// almost never the nominative printed on the option ("Kocku dám", "s
+    /// kockou"). Exact matching dropped every one of those to the raw-transcript
+    /// sheet, where the backend's value-matching MCQ evaluator — no LLM
+    /// fallback — graded a correct answer as wrong.
+    @Test("Slovak declensions of the answer text resolve to that option")
+    func slovakDeclensionResolves() {
+        let shapes: [(key: String, value: String)] = [
+            ("a", "Kocka"),
+            ("b", "Guľa"),
+            ("c", "Valec"),
+            ("d", "Ihlan"),
+        ]
+        #expect(MCQTranscriptMatcher.match("kocku", options: shapes) == "a")
+        #expect(MCQTranscriptMatcher.match("kockou", options: shapes) == "a")
+        #expect(MCQTranscriptMatcher.match("myslím že kocka", options: shapes) == "a")
+        #expect(MCQTranscriptMatcher.match("valcom", options: shapes) == "c")
+    }
+
+    /// WHY: STT near-misses are the other half of the same problem — one
+    /// wrong character must not cost the point.
+    @Test("A near-miss transcription of the answer text still resolves")
+    func nearMissResolves() {
+        #expect(MCQTranscriptMatcher.match("Jupitter", options: options) == "b")
+        #expect(MCQTranscriptMatcher.match("Neptun", options: options) == "d")
+    }
+
+    /// WHY: tolerance must never turn ambiguity into a guess. If a loose form
+    /// fits two options, the driver gets the sheet with the raw transcript —
+    /// the same contract the exact tier already had.
+    @Test("A tolerant match that fits two options stays ambiguous → nil")
+    func tolerantAmbiguityStaysNil() {
+        let similar: [(key: String, value: String)] = [
+            ("a", "Karol"),
+            ("b", "Karel"),
+            ("c", "Ihlan"),
+            ("d", "Valec"),
+        ]
+        #expect(MCQTranscriptMatcher.match("karola", options: similar) == nil)
+    }
+
+    /// WHY: the tolerant tier sits BELOW the exact value tier and ABOVE the
+    /// directive tier, and must not steal either. Short option texts are
+    /// excluded outright — at three characters a "near miss" is a different word.
+    @Test("Tolerance does not steal short answer texts from the directive tier")
+    func toleranceDoesNotStealDirectives() {
+        // "dva" must still index position 2 on Two/Three/Four/Five, not fuzz
+        // into "Two" or "Three".
+        #expect(MCQTranscriptMatcher.match("dva", options: countingOptions) == "b")
+        // A letter-name directive on the same set is likewise untouched.
+        #expect(MCQTranscriptMatcher.match("céčko", options: countingOptions) == "c")
+    }
+
     @Test("Unrecognized utterance is no match → nil")
     func noMatch() {
         #expect(MCQTranscriptMatcher.match("neviem", options: options) == nil)

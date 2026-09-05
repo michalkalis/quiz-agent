@@ -1571,6 +1571,23 @@
         }
       }
     },
+    "Confirm without an answer" : {
+      "comment" : "Accessibility label for the confirm button when the answer field is empty, which submits no answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdit bez odpovědi"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdiť bez odpovede"
+          }
+        }
+      }
+    },
     "Confirm answer, auto-confirming in %lld seconds" : {
       "comment" : "Accessibility label for the confirm button while auto-confirm counts down",
       "localizations" : {
@@ -3420,7 +3437,6 @@
     },
     "Listening — say A–D or the answer" : {
       "comment" : "Recording prompt for multiple-choice questions",
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -4164,6 +4180,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nenašla sa uložená relácia"
+          }
+        }
+      }
+    },
+    "Nothing heard" : {
+      "comment" : "Answer confirmation sheet: shown in place of the transcript when the recording produced no text",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nic jsem nezachytil"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nič som nezachytil"
           }
         }
       }

@@ -26,22 +26,18 @@ struct RecordingState {
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
-    /// Snapshot taken by `stopRecordingAndSubmit()` BEFORE it clears the
-    /// auto-record flags: the recording was auto-started by the answer-window
-    /// expiry and heard no speech. The empty-transcript / watchdog handlers
-    /// read it after the reset — dead air then means "time's up", not a
-    /// transcription failure to retry (TF build 53 feedback).
-    var wasUnattendedRecording: Bool = false
-
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
-    // Question-scoped — must SURVIVE pair exits (only full `reset()` clears
-    // them): the escalation counter accumulates across its own tier-1/2
-    // bail-out transitions, and the audio URL is replayed from .showingResult.
+    /// #171 Track H: when `startRecording()` was suppressed because the app was
+    /// backgrounded (the think/answer countdown kept running and expired out of
+    /// sight). Foregrounding reads it to do what should have happened — open the
+    /// mic if the answer window still has time, otherwise hand over to the
+    /// no-answer confirmation sheet.
+    var backgroundSuppressedRecordingAt: Date?
 
-    /// Consecutive transcription failures for 3-tier error escalation
-    var consecutiveTranscriptionFailures: Int = 0
+    // Question-scoped — must SURVIVE pair exits (only full `reset()` clears
+    // it): the audio URL is replayed from .showingResult.
 
     /// Current question audio URL for "read aloud" / the "repeat" command —
     /// written by AudioDeviceState through the façade's injected closures
@@ -53,8 +49,8 @@ struct RecordingState {
         liveTranscript = ""
         isStreamingSTT = false
         speechDetectedDuringAutoRecord = false
-        wasUnattendedRecording = false
         isStoppingRecording = false
+        backgroundSuppressedRecordingAt = nil
     }
 
     /// Drop the whole subset atomically (full teardown, T7 unified reset model).
@@ -78,6 +74,12 @@ struct ConfirmationState {
 
     /// Snapshot for cancelEditingTranscript()
     var preEditTranscript: String?
+
+    /// #171 Track B: the sheet is showing an EMPTY field on purpose — nothing
+    /// was captured — rather than waiting for a transcript to arrive. Without
+    /// this the presenter cannot tell the two empty-transcript cases apart and
+    /// renders the "Transcribing…" spinner over the no-answer sheet.
+    var noAnswerCaptured: Bool = false
 
     /// Auto-confirm countdown — confirmation-semantic, so it lives here (its
     /// semantic owner, T7); QuizTimersController only ticks it through the

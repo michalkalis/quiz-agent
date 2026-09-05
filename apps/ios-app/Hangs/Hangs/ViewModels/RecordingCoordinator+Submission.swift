@@ -22,10 +22,6 @@ extension RecordingCoordinator {
         emitEarcon(.gotIt) // 77.10 got-it tone — recording stopped / auto-submitted
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        // Snapshot BEFORE the resets below — the empty-transcript and watchdog
-        // handlers run after this prefix and need to know the recording was
-        // auto-started with no speech (answer window expired, dead air).
-        wasUnattendedRecording = isAutoRecording() && !speechDetectedDuringAutoRecord
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
 
@@ -115,11 +111,6 @@ extension RecordingCoordinator {
                     return
                 }
 
-                // Reset failure counter on success
-                await MainActor.run {
-                    self.consecutiveTranscriptionFailures = 0
-                }
-
                 // Store response and show confirmation modal — but only if this
                 // coordinator still owns the submission. The submit path transitions to
                 // `.processing` before its first await, so anything that has since left
@@ -137,6 +128,7 @@ extension RecordingCoordinator {
                     }
                     self.pendingResponse = response
                     self.transcribedAnswer = evaluation.userAnswer
+                    self.noAnswerCaptured = false
                     self.showAnswerConfirmation = true
                     self.startAutoConfirmIfEnabled()
                 }
@@ -174,13 +166,15 @@ extension RecordingCoordinator {
                     return
                 }
 
-                // Handle "speech not understood" errors gracefully - let user re-record
+                // "Speech not understood" (#171 Track B): no banner, no retry
+                // loop — the empty confirmation sheet, where the driver can type
+                // or re-record before it counts as no answer.
                 if case let .serverError(statusCode, _) = error, statusCode == 400 {
                     await MainActor.run {
-                        self.handleTranscriptionFailure(unattendedSilence: self.wasUnattendedRecording)
+                        self.handleTranscriptionFailure()
                     }
 
-                    Logger.network.warning("⚠️ Speech not understood, tier \(self.consecutiveTranscriptionFailures, privacy: .public) escalation")
+                    Logger.network.warning("⚠️ Speech not understood — no-answer confirmation sheet")
                     return
                 }
 

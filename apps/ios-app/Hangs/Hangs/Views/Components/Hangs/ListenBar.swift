@@ -196,7 +196,10 @@ struct ListenBar: View {
             ))
         case let .answer(kind):
             switch kind {
-            case .mcq: return Text("LISTENING — SAY A–D")
+            // #171 Track I: answering with the option TEXT works (and now goes
+            // through the confirmation sheet like every other answer), so the
+            // caption must say so — "say A–D" read as letters-only.
+            case .mcq: return Text("Listening — say A–D or the answer")
             case .trueFalse: return Text("LISTENING — SAY TRUE OR FALSE")
             case .open: return Text("LISTENING — SAY YOUR ANSWER")
             }

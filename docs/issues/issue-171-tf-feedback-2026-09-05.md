@@ -78,6 +78,7 @@ Dnes 10 s pevne (`Config.swift:144`), iba on/off v nastaveniach (`QuizSettings.a
 
 Slovenčina ide **serve-time** cez `TranslationService` (`translator.py:51`, model `TRANSLATION_MODEL` default `claude-opus-5`), #168 (batch predpreklad) **nie je live**. Validácia kontroluje len prázdno/dĺžku (`:121-159, 276-322`) → duplikované slovo prejde a **uloží sa navždy** do cache (SQLite `TranslationStore`, verzia promptu 2) → tá istá chyba sa opakuje.
 - Stopgap: detekcia zdvojeného slova/substringu vo `_validate_translation` + `_validate_payload` (fail → retry raz → fallback EN), test s „palácapalác“; purge cache riadku tejto otázky (alebo bump `TRANSLATION_PROMPT_VERSION`). Definitívne rieši #168.
+- **DONE** (PR #88): deterministický guard na zdvojené/zlepené slovo v oboch validátoroch → retry → existujúci EN fallback; `TRANSLATION_PROMPT_VERSION` 2→3 (cache bust namiesto purge); 25 nových testov, 663 backend zelených. Nenasadené.
 
 ## Track H — Pozadie
 

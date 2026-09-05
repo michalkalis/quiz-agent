@@ -1,7 +1,7 @@
 # #171 — TF feedback 2026-09-05: prvá otázka bez zvuku, hlasitosť, prázdna nahrávka, pauza, vyhodnocujem, päta, timer potvrdenia, MCQ potvrdenie
 
 **Triage:** bug · ready-for-agent (founder rozhodnutia 2026-09-05 nižšie)
-**Status:** diagnóza DONE 2026-09-05, founder rozhodol všetky výbery, implementácia beží v paralelných PR (viď Poradie)
+**Status:** IMPLEMENTOVANÉ 2026-09-05 — PR #88 backend (prod v105) · #89 audio · #90 päta + overlay · #91 potvrdzovací flow · #92 pauza; open = founder TF kontrola (ucho: hlasitosť/prvá otázka; oko: sheet, overlay, päta) + follow-upy nižšie. TF build na požiadanie.
 **Created:** 2026-09-05
 **Founder round:** TestFlight, slovenský kvíz, iOS 26
 **Varianty:** [`docs/design/variants/issue-171-tf-feedback-2026-09-05.html`](../design/variants/issue-171-tf-feedback-2026-09-05.html)
@@ -40,6 +40,7 @@
 - Krok 3: voice-processing držať zapnuté počas celého kvízu (arm/disarm len pri štarte/konci), nie per okno. Home si necháva svoju tichú session z #136, aplikovanú raz pri vstupe na Home.
 - Kompatibilné s #104 (žiadne HFP renegotiation) a #136. Testy: rozšíriť `QuietListeningSessionOptionsTests` o „počas kvízu sa kategória nemení“ + test „prvé prehrávanie až po stopnutí poslucháča“.
 - Overenie: Sentry TTS-failed počítadlo = 0 v ďalšom TF kole; founder ucho na hlasitosť.
+- **DONE čiastočne** (PR #89): Krok 1 + Krok 2 hotové (poslucháč stopnutý pred konfiguráciou, jedna session na celý kvíz, prvé čítanie s usadením + 1 retry po 300 ms, oba pokusy do Sentry; `QuizAudioSessionStabilityTests`). **Krok 3 NEUROBENÝ:** voice-processing žije na engine poslucháča, ktorý sa zámerne ruší okolo každého čítania/nahrávania (#64, #119) — držať ho počas prehrávania = väčšia zmena. Stratených ~6 dB **nekompenzovaných** (AVPlayer gain max 1.0, boost by orezával) → ak sú čítania potichu, správny knob je hlasitosť TTS assetu na backende. Oboje = founder ear check → follow-up.
 
 ## Track B — Prázdna nahrávka nesmie reštartovať odpočet
 
@@ -49,6 +50,7 @@ Dnes 3-stupňová retry slučka (`RecordingCoordinator+Capture.swift:253-286`): 
 - otvoriť potvrdzovaciu obrazovku s prázdnym poľom (`transcribedAnswer = ""`, `showAnswerConfirmation = true`), klávesnica k dispozícii, auto-potvrdenie beží; vypršanie alebo potvrdenie prázdneho = „bez odpovede“ → výsledok (**odporúčané**, viď rozhodnutie R2);
 - `AnswerConfirmationView.swift:145-147` dnes zakazuje Potvrdiť pri prázdnom prepise → zmeniť na „Potvrdiť = bez odpovede“ alebo ponúknuť Preskočiť.
 - Prepísať testy `ResetModelTests.swift:115-181` (4 testy pinujú retry slučku) na nové pravidlo; zdôvodnenie slučky v `RecordingCoordinator.swift:167` nahradiť odkazom sem.
+- **DONE** (PR #91): 4 cesty → jeden `handleTranscriptionFailure` → sheet s prázdnym poľom (`ConfirmationState.noAnswerCaptured`), prázdne potvrdenie = bez odpovede cez existujúci skip kontrakt; retry počítadlo a `unattendedSilence` vetva zmazané.
 
 ## Track C — Päta: Nahrávať + 23s (výber C1/C2/C3)
 
@@ -56,6 +58,7 @@ Príčina: Písať/Preskočiť majú pevnú šírku podľa textu bez zmenšovani
 - **C1 ikony bez textu** (odporúčané): Písať a Preskočiť 56×56 ikonové tlačidlá s accessibility label; Nahrávať dostane ~2/3 šírky. Jazykovo nezávislé.
 - C2 dva riadky; C3 „Nahrať“ + `minimumScaleFactor` na sekundárnych + `fixedSize` na pille (nutné aj pri C1/C2 ako poistka).
 - Odpočet ostáva v tlačidle Nahrávať (#131 B). Testy: snapshot päty SK + CS.
+- **DONE** (PR #90): C1 + poistka C3 (ikony 48×48 zarovnané s Record; a11y labely Type/Skip). Vedľajší nález: ikona Preskočiť (`play.forward.fill`) nebola SF Symbol → mesiace sa nekreslila, opravené na `forward.end.fill` (aj MCQ skip chip). Overené na sim v SK.
 
 ## Track D — Pauza (výber A1/A2)
 
@@ -63,16 +66,21 @@ Mechanika dnes: stavový stroj bez `paused` (`QuizViewModel.swift:22-32`), X = a
 - **A1 pauza medzi otázkami** (odporúčané): pill ZOSTAŤ → „⏸ Pauza“ + povel „pauza“; pauzovaný stav = overlay na výsledku, stop čítania + poslucháča + auto-posunu; Pokračovať = ďalšia otázka; Ukončiť = existujúci `endQuizWithResults()`. Zovšeobecniť `currentQuestionPaused` na `isPaused` v `QuizTimersController`, teardown zdieľať so scene-phase `.background` cestou (`QuizViewModel+ScenePhase.swift:25-54`).
 - A2 pauza kedykoľvek: + ikona ⏸ v navigácii, zmrazenie odpočtov (časovače sú `Task.sleep` slučky bez zostatku → každá potrebuje seed zostávajúcich sekúnd, `QuizTimersController.swift:104-291`), po Pokračovať otázku prečítať znova. Výnimka z #131 B. Väčšia práca, TTL 30 min stále platí.
 
+- **DONE** (PR #92, stacked na PR #91): pauza je na **potvrdzovacej obrazovke** — sekundárny pill „Pauza“/„Pokračovať“ pod Potvrdiť + hlasový povel `pause` (en) / `pauza` (sk+cs) v okne povelov sheetu (len z finálneho výsledku — pauza vypína mikrofón, takže falošná pauza sa hlasom nedá vrátiť). Pauznuté = sheet **zmrazený**: auto-potvrdenie zrušené (nie reštartované — Pokračovať dá celých 5 s), TTS stop, poslucháč povelov dole, badge „PAUZA“ v hlavičke, Potvrdiť bez odpočtu; Potvrdiť/upraviť/znova fungujú aj počas pauzy a samy pauzu rušia. `currentQuestionPaused` zovšeobecnené na kvízové `isPaused` — STAY pill na výsledku (#131 D) ho zdieľa, ale správanie sa nemení (bránu mikrofónu drží „pauza **a** otvorený sheet“, takže „ďalej“ na výsledku ďalej funguje). Návrat z pozadia počas pauzy pauzu drží. Žiadny nový stav v prechodovej tabuľke. 11 nových testov, plný `HangsTests` 1036/1036 zelený.
+- **Známy limit:** pauza **neprežije relaunch appky** — backend session TTL je 30 min a `resumeSession()` je stub (follow-up nižšie).
+
 ## Track E — „Vyhodnocujem…“ cez celú obrazovku (výber B1/B2)
 
 Dnes `processingRow` (`QuestionView.swift:715-726`) nahrádza pätu (voice) alebo sa vkladá nad lištu (MCQ, `:415-419`), stav `isProcessing` (`:732-734`). Žiadny generický overlay v appke neexistuje; najbližší vzor je `processingBody` potvrdzovacieho sheetu (`AnswerConfirmationView.swift:200-215`).
 - Nový `HangsProcessingOverlay` (ZStack nad koreňom `QuestionView`, id `question.processingIndicator` zachovať — pinujú ho inspector testy a snapshoty), voice aj MCQ.
 - **B1 karta nad rozmazanou otázkou** (odporúčané, kontext ostáva) / B2 plná obrazovka. Text: „Vyhodnocujem…“ + „Povedal si: „…““.
+- **DONE** (PR #90): `HangsProcessingOverlay` (B1, tint 18 %, otázka presvitá), spodok prázdny pri voice aj MCQ; overlay ustúpi, kým je hore potvrdzovací sheet (PR #91).
 
 ## Track F — Timer potvrdenia
 
 Dnes 10 s pevne (`Config.swift:144`), iba on/off v nastaveniach (`QuizSettings.autoConfirmEnabled`). Ostatné časy pre koherenciu: premýšľanie 10 s (0–120), odpoveď 30 s (0–60), auto-posun výsledku 8 s (5/8/10/15), nahrávka max 15 s.
 - Návrh: default **5 s** + `QuizSettings.autoConfirmDelay` s možnosťami 5/8/10 vedľa auto-posunu (rovnaký `sessionMenuRow`). Hodnota = rozhodnutie R1.
+- **DONE** (PR #91): 5 s pevne, bez nastavenia (founder).
 
 ## Track G — Preklad „palácapalác“
 
@@ -84,6 +92,7 @@ Slovenčina ide **serve-time** cez `TranslationService` (`translator.py:51`, mod
 
 Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background audio mode), mikrofón + poslucháč sa vypnú, **odpočty bežia ďalej**; po návrate s vypršaným odpočtom zostane používateľ „zaparkovaný“ na otázke, lebo štart nahrávania je v pozadí potlačený (`RecordingCoordinator+Capture.swift:35-43`).
 - Návrh (R3): nechať bežať (founder sklon: súperí sám so sebou) + pri návrate do popredia s vypršaným premýšľaním prejsť rovno na potvrdzovaciu obrazovku (Track B cesta „bez odpovede“), nie zaparkovať. Test: scene `.active` po vypršaní → `showAnswerConfirmation`.
+- **DONE** (PR #91): návrat = ak okno odpovede ešte beží → hneď nahrávanie (`backgroundSuppressedRecordingAt`), ak vypršalo → sheet s prázdnym poľom.
 
 ## Track I — MCQ hlasom: potvrdenie + odpoveď textom možnosti
 
@@ -97,6 +106,7 @@ Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background a
 - I3 Caption MCQ lišty → existujúci string „Povedz A–D alebo odpoveď“ (SK/CS/EN už preložené).
 - Testy: prepísať 3 z `QuizViewModelMCQVoiceTests` (pinujú priamy submit), pridať tolerančné prípady do `MCQTranscriptMatcherTests` (skloňovanie SK), overiť `MCQOptionPickerRaceTests` (tap vs. hlas počas sheetu). RS-09 (hlasová zhoda MCQ) dnes končí priamym submitom → po I1 scenár aktualizovať na „zhoda → potvrdzovací sheet → potvrdiť → výsledok“ v `docs/testing/regression-scenarios.md`.
 - Uzavrieť `45.7-wire` v #45 odkazom sem.
+- **DONE** (PR #91): zhoda → sheet s textom možnosti + riadok „A · Kocka“; tolerantná vrstva (edit distance ≥ 0.85 alebo kmeň pre skloňovanie); caption „Povedz A–D alebo odpoveď“; RS-09/RS-10 prepísané. `45.7-wire` ešte neuzavreté v #45 (drobný doc follow-up).
 
 ## Rozhodnutia (founder 2026-09-05, LOCKED)
 
@@ -115,6 +125,11 @@ Paralelne (worktree per PR): PR-A Track A audio · PR-B Tracks B + I + F + H (�
 TF build až na požiadanie foundera po krokoch 1–3.
 
 ## Follow-ups (mimo #171)
+
+- **Audio Krok 3:** voice-processing držať počas celého kvízu (engine poslucháča prežije prehrávanie) — až keď founder po TF kole potvrdí, že hlasitosť ešte skáče. Sentry `"TTS audio failed"` kind=question/question-retry = signál pre prvú otázku.
+- **~6 dB po zrušení swapu:** ak čítania potichu → zvýšiť loudness TTS assetu na backende (statický knob), nie per čítanie v appke.
+- `HangsTests` v paralelnom režime padá na štarte hosta aj na čistom `main` (pre-existing) — beh serially (`-parallel-testing-enabled NO`); pridať do CI hygieny.
+- #45 `45.7-wire` označiť ako superseded týmto issue.
 
 - Session persistence / resume po relaunchi (odložené už v #132) — pauza dlhšia ako 30 min dnes stratí session.
 - Earcony cez system sound = stlmené bočným prepínačom; ak má byť cue počuť vždy, presunúť na AVAudioPlayer.

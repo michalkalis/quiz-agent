@@ -275,7 +275,9 @@ reaches the result. A mishearing is therefore always correctable before it is gr
 - `Question.previewMCQ` is loaded: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
 - `answerTimeLimit = 1` (seeded by UITestSupport for `--ui-test-mcq`): recording auto-starts ~1-2s
   after question audio (no mic button in the redesigned UI)
-- `Config.autoConfirmDelaySecs = 5` (#171 Track F) — the sheet self-confirms after 5 s
+- `UITestSupport` seeds `autoConfirmEnabled = false` under `--ui-test`, so the sheet waits for an
+  explicit Confirm here. In a real build the 5 s auto-confirm (#171 Track F) would fire instead —
+  same end state, which is why this scenario asserts the sheet and then confirms it by hand.
 
 **Steps**
 1. Tap `home.startQuiz`
@@ -286,7 +288,7 @@ reaches the result. A mishearing is therefore always correctable before it is gr
 5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
 6. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
 7. Wait up to 3s for `confirmation.answer` to appear
-8. Tap `confirmation.confirm` (or wait ~5s for auto-confirm instead — both are valid runs)
+8. Tap `confirmation.confirm`
 9. Wait up to 5s
 
 **Asserts**

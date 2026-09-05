@@ -892,6 +892,19 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
 
+            // #171 (P0 — the first question was silent): tear the HOME command
+            // listener down BEFORE the session is reconfigured and before the
+            // first read. Its mic engine holds the input hardware, and
+            // `transition(to: .startingQuiz)` only *schedules* the teardown
+            // (`refreshCommandWindow` is fire-and-forget), so the session used to
+            // be re-configured and re-activated underneath a live engine — the
+            // first AVPlayer then stalled in `.waitingToPlayAtSpecifiedRate`, the
+            // 5 s stall timer threw `playbackFailed` into Sentry only, and the
+            // user got silence with the countdown already running. Questions 2+
+            // never had this because `advanceToNextQuestionOrFinish` stops audio
+            // and settles before it plays.
+            audioDeviceState.stopSilenceDetectionListening()
+
             // Configure audio session with user's preferred mode
             do {
                 try audioService.setupAudioSession(mode: selectedAudioMode)
@@ -962,6 +975,10 @@ final class QuizViewModel: ObservableObject {
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl
             {
+                // #171: the same settle the Q2+ path gets before it plays — the
+                // audio hardware must come up under the freshly configured
+                // session before the first AVPlayer starts.
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer

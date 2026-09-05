@@ -218,14 +218,38 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         [.mixWithOthers, .allowBluetoothA2DP, .defaultToSpeaker]
     }
 
+    /// The ONE audio-session configuration a quiz runs under (#171).
+    ///
+    /// Question read, command listening, answer recording and feedback read all
+    /// share it: `setupAudioSession` applies it once at quiz start and nothing
+    /// re-configures the session until the quiz ends. The previous
+    /// per-utterance `.playAndRecord` ↔ `.playback` swap bought ~6 dB on the TTS
+    /// read but made loudness audibly jump twice per question (founder, TF
+    /// 2026-09-05) — the swap is gone; a louder read belongs on the TTS asset,
+    /// not on a session mutation. Pure for the same simulator-testability
+    /// reason as `categoryOptions(for:)`.
+    nonisolated static func quizSessionConfiguration(for mode: AudioMode) -> SessionConfiguration {
+        SessionConfiguration(
+            category: .playAndRecord,
+            mode: .spokenAudio,
+            options: categoryOptions(for: mode)
+        )
+    }
+
+    struct SessionConfiguration: Equatable, Sendable {
+        let category: AVAudioSession.Category
+        let mode: AVAudioSession.Mode
+        let options: AVAudioSession.CategoryOptions
+    }
+
     func setupAudioSession(mode: AudioMode) throws {
         let session = AVAudioSession.sharedInstance()
 
         // Store current mode
         currentAudioMode = mode
 
-        // Configure audio session options based on selected mode (pure helper above).
-        let options = Self.categoryOptions(for: mode)
+        // The whole-quiz configuration (pure helper above).
+        let configuration = Self.quizSessionConfiguration(for: mode)
 
         switch mode.id {
         case "media":
@@ -243,9 +267,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // Ducking options are applied above — replaces previous .mixWithOthers
         // because mixing at equal volume made TTS inaudible over music.
         try session.setCategory(
-            .playAndRecord,
-            mode: .spokenAudio,
-            options: options
+            configuration.category,
+            mode: configuration.mode,
+            options: configuration.options
         )
 
         try session.setActive(true)
@@ -276,9 +300,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// Observe route changes (Bluetooth connect/disconnect) and session
     /// interruptions. Called from every session-configuration path
-    /// (`setupAudioSession`, `setupQuietListeningSession`, the
-    /// `withPlaybackCategory` recovery path) — remove the previous observer
-    /// first or duplicate registrations pile up and every handler fires N times.
+    /// (`setupAudioSession`, `setupQuietListeningSession`) — remove the previous
+    /// observer first or duplicate registrations pile up and every handler fires
+    /// N times.
     private func registerSessionObservers() {
         if let existingRouteObserver = routeChangeObserver.withLock({ $0 }) {
             NotificationCenter.default.removeObserver(existingRouteObserver)
@@ -324,117 +348,24 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         }
     }
 
-    /// Whether `withPlaybackCategory` should swap to `.playback` for a TTS utterance.
+    /// Re-activate the audio session before a TTS utterance — the ONLY session
+    /// work a read performs (#171).
     ///
-    /// When `.allowBluetoothHFP` is in the option set (Call Mode), the session must
-    /// HOLD `.playAndRecord` for the whole quiz so the SCO link stays up stably — the
-    /// car shows one steady call with no flapping, and TTS plays over that call link.
-    /// Swapping categories per-utterance would open/close the Bluetooth SCO link on
-    /// every question and make the car call UI flap on/off.
+    /// It does NOT touch category, mode or options: the quiz holds the single
+    /// configuration `setupAudioSession` applied at quiz start (see
+    /// `quizSessionConfiguration`). The previous code swapped
+    /// `.playAndRecord` → `.playback` per utterance in Media Mode for ~6 dB of
+    /// output gain, which the founder heard as the volume jumping twice per
+    /// question (TF 2026-09-05); in Call Mode it was already skipped so the
+    /// Bluetooth SCO link could not flap (#104). Holding one configuration is
+    /// now the rule for both modes.
     ///
-    /// When HFP is absent (Media Mode), the swap cannot touch the Bluetooth profile —
-    /// A2DP stays the output in both `.playAndRecord` and `.playback` — so swapping
-    /// is safe and buys back the ~6dB `.playAndRecord` output attenuation (commit
-    /// 331c47c).
-    nonisolated static func shouldSwapCategoryForTTS(options: AVAudioSession.CategoryOptions) -> Bool {
-        !options.contains(.allowBluetoothHFP)
-    }
-
-    /// Run a block with the session temporarily switched to `.playback + .spokenAudio`
-    /// (with ducking) and restore the previous category on exit — Media Mode only
-    /// (see `shouldSwapCategoryForTTS`).
-    ///
-    /// `.playAndRecord` attenuates output by ~6dB even when no recording is active,
-    /// which made TTS inaudible over music. Switching to `.playback` for the
-    /// duration of TTS gives full output volume. The restore in `defer` runs on
-    /// every exit path (return, throw, cancellation), so the recording phase is
-    /// unaffected.
-    ///
-    /// In Call Mode (HFP present) the swap is skipped entirely — swapping category
-    /// per-utterance would open/close the Bluetooth SCO link on every question and
-    /// make the car call UI flap; the session instead holds `.playAndRecord` for the
-    /// whole quiz and TTS plays over the stable call link.
-    ///
-    /// Early-returns when the session is already in `.playback` (e.g. nested calls
-    /// or a unit-test environment that pre-set the category).
-    private func withPlaybackCategory<T>(_ body: () async throws -> T) async throws -> T {
-        let session = AVAudioSession.sharedInstance()
-        if session.category == .playback {
-            return try await body()
-        }
-
-        if !Self.shouldSwapCategoryForTTS(options: session.categoryOptions) {
-            // Call Mode: no category change, so no SCO renegotiation. Still guards
-            // the same post-mic-engine AVPlayer stall the swap path guards below —
-            // without reactivating, AVPlayer can stall in .waitingToPlayAtSpecifiedRate
-            // and the 5s stall timer fires AudioError.playbackFailed.
-            try session.setActive(true)
-            return try await body()
-        }
-
-        let previousCategory = session.category
-        let previousMode = session.mode
-        let previousOptions = session.categoryOptions
-
-        let ttsOptions: AVAudioSession.CategoryOptions = [
-            .duckOthers,
-            .interruptSpokenAudioAndMixWithOthers,
-        ]
-
-        try session.setCategory(.playback, mode: .spokenAudio, options: ttsOptions)
-        // A category change does not reactivate the session. After the mic engine
-        // has run, AVPlayer otherwise stalls in .waitingToPlayAtSpecifiedRate and the
-        // 5s stall timer fires AudioError.playbackFailed → TTS never speaks. Mirror
-        // the setActive(true) that setupAudioSession does after its setCategory.
-        try session.setActive(true)
-
-        let switchCrumb = Breadcrumb(level: .info, category: "audio.category_switch")
-        switchCrumb.message = "Switched to .playback for TTS"
-        switchCrumb.data = [
-            "from": previousCategory.rawValue,
-            "to": AVAudioSession.Category.playback.rawValue,
-        ]
-        SentryBreadcrumb.add(switchCrumb)
-
-        defer {
-            // Restore must surface errors loudly — if it fails, the next recording
-            // session breaks silently. No `try?` swallow.
-            do {
-                try session.setCategory(previousCategory, mode: previousMode, options: previousOptions)
-                // Reactivate after restoring — a name-only restore leaves the session
-                // wired for .playback (no input), which silently breaks the next recording.
-                try session.setActive(true)
-                Logger.audio.debug("🔊 Restored audio category: \(previousCategory.rawValue, privacy: .public)")
-
-                // #131 Track E: exit side of the .playAndRecord↔.playback swap —
-                // pairs with the "Switched to .playback for TTS" entry crumb
-                // above so a volume change can be correlated against exactly
-                // which side of the swap the app was on.
-                let restoreCrumb = Breadcrumb(level: .info, category: "audio.category_switch")
-                restoreCrumb.message = "Restored audio category from .playback"
-                restoreCrumb.data = ["restored_to": previousCategory.rawValue]
-                SentryBreadcrumb.add(restoreCrumb)
-            } catch {
-                Logger.audio.error("❌ Failed to restore audio category \(previousCategory.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
-                let crumb = Breadcrumb(level: .error, category: "audio.category_restore")
-                crumb.message = "setCategory restore failed"
-                crumb.data = [
-                    "target": previousCategory.rawValue,
-                    "error": error.localizedDescription,
-                ]
-                SentryBreadcrumb.add(crumb)
-                // Recovery: a failed restore can strand the session in .playback (no mic).
-                // Re-establish a known-good record-capable session for the current mode.
-                do {
-                    try setupAudioSession(mode: currentAudioMode)
-                    Logger.audio.info("🔊 Recovered audio session via setupAudioSession after failed restore")
-                } catch {
-                    Logger.audio.error("❌ Audio session recovery failed: \(error.localizedDescription, privacy: .public)")
-                }
-            }
-        }
-
-        return try await body()
+    /// The re-activation itself stays: after the command-listener mic engine
+    /// has run, AVPlayer otherwise stalls in `.waitingToPlayAtSpecifiedRate`
+    /// and the 5 s stall timer fires `AudioError.playbackFailed` — TTS never
+    /// speaks.
+    private func activateSessionForPlayback() throws {
+        try AVAudioSession.sharedInstance().setActive(true)
     }
 
     /// Switch audio mode dynamically (e.g., during quiz)
@@ -1115,12 +1046,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         operationId: UUID,
         stream: AsyncThrowingStream<TimeInterval, Error>
     ) async throws -> TimeInterval {
-        // Switch to .playback for the duration of TTS so we don't pay the ~6dB
-        // attenuation .playAndRecord applies. The defer in withPlaybackCategory
-        // restores the previous category on every exit path.
-        return try await withPlaybackCategory {
-            try await self.performPlaybackBody(data: data, operationId: operationId, stream: stream)
-        }
+        // #171: no category swap — the quiz session configured at quiz start is
+        // held for every phase. Only re-activate, so AVPlayer cannot stall after
+        // the mic engine has run.
+        try activateSessionForPlayback()
+        return try await performPlaybackBody(data: data, operationId: operationId, stream: stream)
     }
 
     private func performPlaybackBody(

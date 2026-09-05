@@ -34,6 +34,11 @@ struct QuestionView: View {
     @State private var stemScroll = ScrollPosition()
     @State private var stemOverflow: CGFloat = 0
     @FocusState private var isTextFieldFocused: Bool
+    /// #171 Track E: the answer just submitted for THIS question, echoed by the
+    /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
+    /// option, confirmed voice transcript, typed answer) and cleared when the next
+    /// question arrives, so a skip can never inherit the previous answer's echo.
+    @State private var submittedAnswer = ""
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -67,6 +72,27 @@ struct QuestionView: View {
                         Spacer()
                     }
                 }
+            }
+
+            // #171 Track E (B1): one evaluating state for both modes, above the
+            // whole screen instead of in place of the footer.
+            if isProcessing {
+                HangsProcessingOverlay(submittedAnswer: processingEcho)
+                    .transition(.opacity)
+            }
+        }
+        // The echo belongs to one question only.
+        .onChange(of: viewModel.currentQuestion?.id) { _, _ in
+            submittedAnswer = ""
+        }
+        // The voice paths (confirm sheet, auto-confirm, an edited transcript) all
+        // land the final text in `transcribedAnswer` before submitting, and it is
+        // cleared on submit — so the last non-empty value IS what was sent.
+        // `.task(id:)` rather than `.onChange`: it also runs on the first frame,
+        // which is what a screen entered with a transcript already set needs.
+        .task(id: viewModel.transcribedAnswer) {
+            if !viewModel.transcribedAnswer.isEmpty {
+                submittedAnswer = viewModel.transcribedAnswer
             }
         }
         // #155 (TestFlight/Debug only): rate the question on screen. Rating-only
@@ -398,6 +424,7 @@ struct QuestionView: View {
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
+                    submittedAnswer = value // #171 Track E: echoed by the overlay
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 },
                 externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
@@ -411,13 +438,6 @@ struct QuestionView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-            // Founder 2026-08-03: MCQ needs the same visible evaluating state
-            // the voice screen has (59.6) — after tapping an option the screen
-            // otherwise looks frozen until the result arrives.
-            if isProcessing {
-                processingRow
-            }
-
             // #132 Track B (variant A "odpočet v lište"): ONE bar slot from the
             // first countdown tick to submit. While the driver decides, the bar
             // shows the think state — teal drain + seconds + the same command
@@ -427,7 +447,11 @@ struct QuestionView: View {
             // that does not exist (#132 A), because the think state doesn't
             // claim one. Silent while the question is still being read, exactly
             // like the THINK/ANSWER chips it replaces.
-            if isRecording {
+            // #171 Track E: while evaluating, the bottom of the screen is empty —
+            // the overlay is the only thing talking.
+            if isProcessing {
+                EmptyView()
+            } else if isRecording {
                 ListenBar(
                     mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
                     feedback: viewModel.voiceFeedbackPhase,
@@ -455,9 +479,13 @@ struct QuestionView: View {
             // Founder 2026-08-03: skip is a secondary escape hatch, not the
             // screen's CTA — a compact centered chip (voice footer's skip
             // styling), no longer a full-width bar competing with the options.
-            mcqSkipChip
-                .padding(.top, compact ? 8 : 12)
-                .padding(.bottom, compact ? 10 : 16)
+            // #171 Track E: gone while evaluating — there is nothing left to skip
+            // and the overlay owns the screen.
+            if !isProcessing {
+                mcqSkipChip
+                    .padding(.top, compact ? 8 : 12)
+                    .padding(.bottom, compact ? 10 : 16)
+            }
 
             #if DEBUG
                 Text(quizStateName)
@@ -677,13 +705,12 @@ struct QuestionView: View {
             // Pinned controls below the scroll region — mute strip (G1: audio
             // controls at the bottom), then the #131 footer.
             VStack(spacing: 12) {
-                if isProcessing {
-                    // 59.6: the typed-answer path (resubmitAnswer → .processing) stays on
-                    // QuestionView — it does NOT open the voice AnswerConfirmationView sheet
-                    // that owns the only other spinner. Without this branch the screen looked
-                    // frozen between "send" and the result. Mirrors the sheet's processingBody.
-                    processingRow
-                } else {
+                // #171 Track E: while evaluating this whole stack is empty —
+                // no footer, no mute strip. The overlay above the screen is the
+                // evaluating state now (it replaces the old inline spinner row,
+                // which turned the busiest corner of the screen into the emptiest
+                // and read as a freeze).
+                if !isProcessing {
                     // #131 Track B: the voice countdown lives in the Record/Stop
                     // button. The strip stays for the mute (Track C).
                     audioStrip()
@@ -692,6 +719,7 @@ struct QuestionView: View {
                         viewModel: viewModel,
                         showTextInput: $showTextInput,
                         textAnswer: $textAnswer,
+                        submittedAnswer: $submittedAnswer,
                         isTextFieldFocused: $isTextFieldFocused,
                         compact: compact
                     )
@@ -710,24 +738,15 @@ struct QuestionView: View {
         .frame(maxHeight: .infinity)
     }
 
-    // MARK: - Processing indicator (typed-answer path, 59.6)
-
-    private var processingRow: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-                .tint(Theme.Hangs.Colors.pink)
-            Text("Evaluating…")
-                .font(.hangsBody(15, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .accessibilityIdentifier("question.processingIndicator")
-    }
-
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
+
+    /// The answer the overlay echoes. A skip has no answer to echo — showing the
+    /// last thing the driver said under "You said" there would be a lie.
+    private var processingEcho: String {
+        viewModel.quizState == .skipping ? "" : submittedAnswer
+    }
 
     private var isProcessing: Bool {
         viewModel.quizState == .processing || viewModel.quizState == .skipping

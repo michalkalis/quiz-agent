@@ -1,7 +1,7 @@
 # #171 — TF feedback 2026-09-05: prvá otázka bez zvuku, hlasitosť, prázdna nahrávka, pauza, vyhodnocujem, päta, timer potvrdenia, MCQ potvrdenie
 
-**Triage:** bug · needs-info (founder picks A/B/C + 3 decisions) → then ready-for-agent
-**Status:** diagnóza DONE 2026-09-05 (3 read-only prieskumy iOS + backend), HTML varianty pripravené, čaká na founder výber
+**Triage:** bug · ready-for-agent (founder rozhodnutia 2026-09-05 nižšie)
+**Status:** diagnóza DONE 2026-09-05, founder rozhodol všetky výbery, implementácia beží v paralelných PR (viď Poradie)
 **Created:** 2026-09-05
 **Founder round:** TestFlight, slovenský kvíz, iOS 26
 **Varianty:** [`docs/design/variants/issue-171-tf-feedback-2026-09-05.html`](../design/variants/issue-171-tf-feedback-2026-09-05.html)
@@ -97,21 +97,19 @@ Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background a
 - Testy: prepísať 3 z `QuizViewModelMCQVoiceTests` (pinujú priamy submit), pridať tolerančné prípady do `MCQTranscriptMatcherTests` (skloňovanie SK), overiť `MCQOptionPickerRaceTests` (tap vs. hlas počas sheetu). RS-09 očakávaný text pilulky sa zhoduje s I3.
 - Uzavrieť `45.7-wire` v #45 odkazom sem.
 
-## Rozhodnutia pre foundera
+## Rozhodnutia (founder 2026-09-05, LOCKED)
 
-- **R0 výbery:** A (A1/A2) · B (B1/B2) · C (C1/C2/C3) — odporúčané A1 · B1 · C1.
-- **R1 timer potvrdenia:** 5 s default + nastavenie 5/8/10?
-- **R2 prázdna nahrávka:** potvrdzovacia obrazovka s prázdnym poľom (odporúčané) vs. rovno ďalšia otázka?
-- **R3 pozadie:** odpočet beží ďalej + návrat rovno na potvrdenie?
+- **Pauza = na potvrdzovacej obrazovke** (nie výsledok, nie navigácia). Potvrdzovací sheet je po Track B + I univerzálny bod „po odpovedi“, pauza tam zastaví auto-potvrdenie, čítanie aj počúvanie; Potvrdiť funguje ručne kedykoľvek, „Pokračovať“ znovu spustí 5 s odpočet. Interpretácia agenta: pauza = zmrazený sheet, nie samostatný overlay.
+- **Timer potvrdenia = 5 s pevne**, bez nastavenia.
+- **Prázdna nahrávka → potvrdzovacia obrazovka s prázdnym poľom**, auto-potvrdenie beží, vypršanie/potvrdenie prázdneho = bez odpovede.
+- **Pozadie:** odpočty bežia ďalej. Návrat do popredia = urobiť to, čo malo nastať: ak vypršalo premýšľanie a okno odpovede ešte beží → **hneď spustiť nahrávanie**; ak vypršalo celé okno → potvrdzovacia obrazovka s prázdnym poľom.
+- **MCQ hlasom → potvrdzovacia obrazovka** (Track I) + odpoveď textom možnosti s toleranciou + caption „Povedz A–D alebo odpoveď“.
+- **Vyhodnocujem = B1** (polopriesvitná karta nad rozmazanou otázkou, nie plná obrazovka).
+- **Päta = C1** (Písať/Preskočiť ikonou) — founder nevybral explicitne, ide odporúčaný variant; poistka z C3 (`fixedSize` na pille) tiež.
 
 ## Poradie implementácie (po výbere)
 
-1. Track A (P0 audio) — vlastný PR, Sentry overenie.
-2. Track B + H (flow „bez odpovede“, jeden PR, spoločná vetva „bez opakovania“).
-3. Track C + E + F (UI päta, overlay, timer) — jeden PR, Pencil sync po výbere.
-3b. Track I (MCQ potvrdenie + tolerantná zhoda + caption) — vlastný PR, nezávislý od výberov.
-4. Track D pauza — vlastný PR.
-5. Track G — backend PR, deploy, purge cache.
+Paralelne (worktree per PR): PR-A Track A audio · PR-B Tracks B + I + F + H („každá odpoveď ide cez potvrdenie“, 5 s, návrat z pozadia) · PR-C Tracks C1 + E (päta ikony, overlay B1) · PR-G Track G backend + deploy + purge cache. Potom PR-D Track D pauza na sheete (po merge PR-B).
 
 TF build až na požiadanie foundera po krokoch 1–3.
 

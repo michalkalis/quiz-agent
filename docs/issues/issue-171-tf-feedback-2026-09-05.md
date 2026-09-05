@@ -1,0 +1,106 @@
+# #171 — TF feedback 2026-09-05: prvá otázka bez zvuku, hlasitosť, prázdna nahrávka, pauza, vyhodnocujem, päta, timer potvrdenia
+
+**Triage:** bug · needs-info (founder picks A/B/C + 3 decisions) → then ready-for-agent
+**Status:** diagnóza DONE 2026-09-05 (3 read-only prieskumy iOS + backend), HTML varianty pripravené, čaká na founder výber
+**Created:** 2026-09-05
+**Founder round:** TestFlight, slovenský kvíz, iOS 26
+**Varianty:** [`docs/design/variants/issue-171-tf-feedback-2026-09-05.html`](../design/variants/issue-171-tf-feedback-2026-09-05.html)
+**Reversibility:** `a` — všetko iOS-side okrem G (backend validácia prekladu, additívna)
+
+## Founder nálezy → tracky
+
+| # | Nález | Track | Typ |
+|---|---|---|---|
+| 1 | „Nahrávať“ + ikona + 23s sa nezmestia (SK) | C | layout bug + výber C1/C2/C3 |
+| 2 | Slovenský text otázky „palácapalác“ | G | prekladový artefakt (serve-time preklad, #168 ešte nie je live) |
+| 3 | Prvá otázka sa neprehrá, až po klepnutí na opakovanie | A | P0 audio bug |
+| 4 | Kvíz sa nedá pauznúť | D | feature + výber A1/A2 |
+| 5 | Prázdna nahrávka → banner + celý odpočet odznova | B | flow bug (founder: nikdy neopakovať, ísť ďalej / na potvrdenie) |
+| 6 | Čo robí appka v pozadí? | H | dnes: odpočet beží, mikrofón stop; rozhodnutie o návrate |
+| 7 | „Vyhodnocujem“ špiní spodok obrazovky | E | UI + výber B1/B2 |
+| 8 | Hlasitosť skáče (koreluje s počúvaním povelov) | A | audio, štrukturálny fix |
+| 9 | Zvuk aj pri stlmenom bočnom prepínači | A | overené: funguje (kategória `.playback` / `.playAndRecord`) |
+| 10 | Timer potvrdenia pridlhý | F | hodnota + nastavenie |
+
+## Track A — Audio: prvá otázka ticho + skákanie hlasitosti (P0)
+
+**Prvá otázka (med-high istota).** Domáci poslucháč povelov (mikrofónový engine s voice-processing) sa pri štarte kvízu **nevypína**; kvíz pod ním prekonfiguruje a znova aktivuje audio session (`QuizViewModel.swift:892` → `AudioService.swift:245-251`) a hneď spustí prehrávanie bez usadenia (`AudioDeviceState+Playback.swift:38-42`). AVPlayer sa nerozbehne, po 5 s stall timer vyhodí `playbackFailed`, chyba ide len do Sentry bez UI (`AudioDeviceState.swift:303-309`) → ticho, odpočet beží. Otázky 2+ majú `stopAnyPlayingAudio()` + 0,1 s pauzu (`QuizViewModel.swift:1799-1803`) → preto fungujú. Repo túto poruchu už pozná: `AudioService.swift:385-389`. Overiť pred fixom v Sentry: `"TTS audio failed"` kind=question.
+
+**Hlasitosť (high).** Nikto nepíše hardvérovú hlasitosť (#131 E platí). Počuteľné zmeny zisku:
+1. `.playAndRecord ↔ .playback` swap pri každom čítaní (otázka + spätná väzba = 2× na otázku), repo sám pinuje ~6 dB (`AudioService.swift:346-348, 362-407`);
+2. **voice-processing I/O ON/OFF** pri každom zapnutí/vypnutí poslucháča povelov (`SilenceDetectionService+InputTap.swift:36-45`), 2–4× na otázku, vlastný AGC → presne korelácia, ktorú founder cíti;
+3. settle loop až 12× `setActive(true)` pri arme (`SilenceDetectionService+Engine.swift:126-133`).
+
+**Bočný prepínač:** TTS hrá vždy (kategórie ignorujú prepínač); iba earcony cez system sound sú stlmené, už mitigované haptikou (`EarconPlayer.swift:61-71`). Nič netreba.
+
+**Fix (štrukturálny, jeden PR):**
+- A1 Pri `startNewQuiz` najprv zastaviť poslucháča povelov, potom **raz** nakonfigurovať session (`.playAndRecord` + `.spokenAudio` + fixné options) a prvé prehrávanie podmieniť usadením (rovnaký vzor ako Q2+).
+- A2 Zrušiť per-utterance `.playback` swap; stratených ~6 dB dorovnať staticky (gain TTS assetu / override output port), nie per čítanie.
+- A3 Voice-processing držať zapnuté počas celého kvízu (arm/disarm len pri štarte/konci), nie per okno. Home si necháva svoju tichú session z #136, aplikovanú raz pri vstupe na Home.
+- Kompatibilné s #104 (žiadne HFP renegotiation) a #136. Testy: rozšíriť `QuietListeningSessionOptionsTests` o „počas kvízu sa kategória nemení“ + test „prvé prehrávanie až po stopnutí poslucháča“.
+- Overenie: Sentry TTS-failed počítadlo = 0 v ďalšom TF kole; founder ucho na hlasitosť.
+
+## Track B — Prázdna nahrávka nesmie reštartovať odpočet
+
+Dnes 3-stupňová retry slučka (`RecordingCoordinator+Capture.swift:253-286`): stupeň 1 a 2 = banner „Prepáč, nezachytil som to…“ + návrat do `.askingQuestion` + `restartAnswerWindow()` → **nový celý odpočet** (`QuizViewModel.swift:1592-1601`); stupeň 3 = skip. Do tej istej funkcie tečú 4 cesty: prázdny prepis, watchdog STT (5 s), Whisper bez výsledku, backend 400 „speech not understood“. Iba `unattendedSilence` slučku obchádza a končí skipom.
+
+**Fix (founder pravidlo: žiadne opakovanie):** všetky 4 cesty → jedna vetva bez `restartAnswerWindow()`:
+- otvoriť potvrdzovaciu obrazovku s prázdnym poľom (`transcribedAnswer = ""`, `showAnswerConfirmation = true`), klávesnica k dispozícii, auto-potvrdenie beží; vypršanie alebo potvrdenie prázdneho = „bez odpovede“ → výsledok (**odporúčané**, viď rozhodnutie R2);
+- `AnswerConfirmationView.swift:145-147` dnes zakazuje Potvrdiť pri prázdnom prepise → zmeniť na „Potvrdiť = bez odpovede“ alebo ponúknuť Preskočiť.
+- Prepísať testy `ResetModelTests.swift:115-181` (4 testy pinujú retry slučku) na nové pravidlo; zdôvodnenie slučky v `RecordingCoordinator.swift:167` nahradiť odkazom sem.
+
+## Track C — Päta: Nahrávať + 23s (výber C1/C2/C3)
+
+Príčina: Písať/Preskočiť majú pevnú šírku podľa textu bez zmenšovania (`QuestionVoiceFooter.swift:168-200`), Nahrávať dostane zvyšok; pill so sekundami nemá `fixedSize`/priority (`HangsButton.swift:68-77`), tak sa oreže práve on. SK stringy sú najdlhšie zo všetkých jazykov (Nahrávať / Písať / Preskočiť).
+- **C1 ikony bez textu** (odporúčané): Písať a Preskočiť 56×56 ikonové tlačidlá s accessibility label; Nahrávať dostane ~2/3 šírky. Jazykovo nezávislé.
+- C2 dva riadky; C3 „Nahrať“ + `minimumScaleFactor` na sekundárnych + `fixedSize` na pille (nutné aj pri C1/C2 ako poistka).
+- Odpočet ostáva v tlačidle Nahrávať (#131 B). Testy: snapshot päty SK + CS.
+
+## Track D — Pauza (výber A1/A2)
+
+Mechanika dnes: stavový stroj bez `paused` (`QuizViewModel.swift:22-32`), X = alert (Pokračovať / Nastavenia / Ukončiť s výsledkami / Ukončiť), odpočty bežia aj za alertom (founder rozhodnutie, `QuestionView.swift:135-138`). Na výsledku existuje `currentQuestionPaused` + pill ZOSTAŤ/POKRAČOVAŤ (`ResultFooter.swift:64-93`), ale pozastavuje **iba auto-posun**, nie čítanie ani počúvanie, a nečíta sa ako pauza. Session sa po relaunchu neobnoví (backend TTL 30 min, `resumeSession()` = stub).
+- **A1 pauza medzi otázkami** (odporúčané): pill ZOSTAŤ → „⏸ Pauza“ + povel „pauza“; pauzovaný stav = overlay na výsledku, stop čítania + poslucháča + auto-posunu; Pokračovať = ďalšia otázka; Ukončiť = existujúci `endQuizWithResults()`. Zovšeobecniť `currentQuestionPaused` na `isPaused` v `QuizTimersController`, teardown zdieľať so scene-phase `.background` cestou (`QuizViewModel+ScenePhase.swift:25-54`).
+- A2 pauza kedykoľvek: + ikona ⏸ v navigácii, zmrazenie odpočtov (časovače sú `Task.sleep` slučky bez zostatku → každá potrebuje seed zostávajúcich sekúnd, `QuizTimersController.swift:104-291`), po Pokračovať otázku prečítať znova. Výnimka z #131 B. Väčšia práca, TTL 30 min stále platí.
+
+## Track E — „Vyhodnocujem…“ cez celú obrazovku (výber B1/B2)
+
+Dnes `processingRow` (`QuestionView.swift:715-726`) nahrádza pätu (voice) alebo sa vkladá nad lištu (MCQ, `:415-419`), stav `isProcessing` (`:732-734`). Žiadny generický overlay v appke neexistuje; najbližší vzor je `processingBody` potvrdzovacieho sheetu (`AnswerConfirmationView.swift:200-215`).
+- Nový `HangsProcessingOverlay` (ZStack nad koreňom `QuestionView`, id `question.processingIndicator` zachovať — pinujú ho inspector testy a snapshoty), voice aj MCQ.
+- **B1 karta nad rozmazanou otázkou** (odporúčané, kontext ostáva) / B2 plná obrazovka. Text: „Vyhodnocujem…“ + „Povedal si: „…““.
+
+## Track F — Timer potvrdenia
+
+Dnes 10 s pevne (`Config.swift:144`), iba on/off v nastaveniach (`QuizSettings.autoConfirmEnabled`). Ostatné časy pre koherenciu: premýšľanie 10 s (0–120), odpoveď 30 s (0–60), auto-posun výsledku 8 s (5/8/10/15), nahrávka max 15 s.
+- Návrh: default **5 s** + `QuizSettings.autoConfirmDelay` s možnosťami 5/8/10 vedľa auto-posunu (rovnaký `sessionMenuRow`). Hodnota = rozhodnutie R1.
+
+## Track G — Preklad „palácapalác“
+
+Slovenčina ide **serve-time** cez `TranslationService` (`translator.py:51`, model `TRANSLATION_MODEL` default `claude-opus-5`), #168 (batch predpreklad) **nie je live**. Validácia kontroluje len prázdno/dĺžku (`:121-159, 276-322`) → duplikované slovo prejde a **uloží sa navždy** do cache (SQLite `TranslationStore`, verzia promptu 2) → tá istá chyba sa opakuje.
+- Stopgap: detekcia zdvojeného slova/substringu vo `_validate_translation` + `_validate_payload` (fail → retry raz → fallback EN), test s „palácapalác“; purge cache riadku tejto otázky (alebo bump `TRANSLATION_PROMPT_VERSION`). Definitívne rieši #168.
+
+## Track H — Pozadie
+
+Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background audio mode), mikrofón + poslucháč sa vypnú, **odpočty bežia ďalej**; po návrate s vypršaným odpočtom zostane používateľ „zaparkovaný“ na otázke, lebo štart nahrávania je v pozadí potlačený (`RecordingCoordinator+Capture.swift:35-43`).
+- Návrh (R3): nechať bežať (founder sklon: súperí sám so sebou) + pri návrate do popredia s vypršaným premýšľaním prejsť rovno na potvrdzovaciu obrazovku (Track B cesta „bez odpovede“), nie zaparkovať. Test: scene `.active` po vypršaní → `showAnswerConfirmation`.
+
+## Rozhodnutia pre foundera
+
+- **R0 výbery:** A (A1/A2) · B (B1/B2) · C (C1/C2/C3) — odporúčané A1 · B1 · C1.
+- **R1 timer potvrdenia:** 5 s default + nastavenie 5/8/10?
+- **R2 prázdna nahrávka:** potvrdzovacia obrazovka s prázdnym poľom (odporúčané) vs. rovno ďalšia otázka?
+- **R3 pozadie:** odpočet beží ďalej + návrat rovno na potvrdenie?
+
+## Poradie implementácie (po výbere)
+
+1. Track A (P0 audio) — vlastný PR, Sentry overenie.
+2. Track B + H (flow „bez odpovede“, jeden PR, spoločná vetva „bez opakovania“).
+3. Track C + E + F (UI päta, overlay, timer) — jeden PR, Pencil sync po výbere.
+4. Track D pauza — vlastný PR.
+5. Track G — backend PR, deploy, purge cache.
+
+TF build až na požiadanie foundera po krokoch 1–3.
+
+## Follow-ups (mimo #171)
+
+- Session persistence / resume po relaunchi (odložené už v #132) — pauza dlhšia ako 30 min dnes stratí session.
+- Earcony cez system sound = stlmené bočným prepínačom; ak má byť cue počuť vždy, presunúť na AVAudioPlayer.

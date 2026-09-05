@@ -165,8 +165,8 @@ struct AnswerConfirmationView: View {
                     onReRecord()
                 }
                 .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing)
-                .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing ? 0.45 : 1)
+                .disabled(isReRecordLocked)
+                .opacity(isReRecordLocked ? 0.45 : 1)
 
                 // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                 // chip, pen `R5JfD`) — replaces the old separate countdown bar.
@@ -210,6 +210,16 @@ struct AnswerConfirmationView: View {
                 .padding(.top, 10)
             }
         }
+    }
+
+    /// Re-record is locked only while the auto-confirm window has actually
+    /// RUN OUT — the submit is firing, and a second recording would race it.
+    /// A countdown of 0 also means "paused" (#171 Track D cancels it), and
+    /// there nothing is in flight: pause exists so the driver can take their
+    /// time, and re-recording is one of the things they take it for. Locking
+    /// it there would leave a paused sheet with Confirm as its only exit.
+    private var isReRecordLocked: Bool {
+        autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing && !isPaused
     }
 
     /// The field holds nothing to submit — either the recording captured no

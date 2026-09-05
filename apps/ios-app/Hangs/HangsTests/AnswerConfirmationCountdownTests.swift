@@ -96,6 +96,49 @@ struct AnswerConfirmationCountdownTests {
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm").isDisabled() == false)
     }
 
+    /// WHY (#171 Track D review): the re-record lock exists for the instant the
+    /// auto-confirm window RUNS OUT and the submit fires — not for a pause,
+    /// which zeroes the same countdown with nothing in flight. Locking it there
+    /// left a paused sheet with Confirm as its only exit, contradicting the
+    /// rule that confirm / edit / re-record keep working while paused.
+    @Test("A paused sheet keeps Re-record and Edit usable")
+    func pausedSheetKeepsReRecordAndEditUsable() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Paris"),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: true,
+            onTogglePause: {}
+        )
+        let tree = try view.inspect()
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == false)
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.edit").isDisabled() == false)
+    }
+
+    /// WHY: the lock itself must survive — a countdown that reached 0 while
+    /// RUNNING means the answer is being submitted, and a second recording
+    /// would race it (#108B).
+    @Test("An expired countdown still locks Re-record when not paused")
+    func expiredCountdownStillLocksReRecord() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Paris"),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: false,
+            onTogglePause: {}
+        )
+        let tree = try view.inspect()
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == true)
+    }
+
     /// WHY: the running sheet must ADVERTISE the pause — the pill's label is
     /// also the word the driver speaks ("Pauza"), so hiding it hides the
     /// hands-free command with it.

@@ -352,6 +352,30 @@ struct ConfirmationPauseTests {
         }
     }
 
+
+    /// WHY (#171 Track D review): pause exists so the driver can take their
+    /// time — and re-recording a mis-heard answer is one of the things they
+    /// take it for. Re-record must stay live while paused AND act as a resume,
+    /// or a paused sheet has Confirm as its only exit and the next question
+    /// would inherit a stale pause that mutes its auto-confirm.
+    @Test("re-recording while paused resumes the quiz and opens the mic")
+    func reRecordWhilePausedResumesAndRecords() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            vm.pauseOnConfirmation()
+            #expect(vm.isPaused)
+
+            vm.recordingCoordinator.rerecordAnswer()
+
+            for _ in 0 ..< 40 {
+                await Task.yield()
+            }
+            #expect(vm.isPaused == false, "re-record must not leave the quiz paused")
+            #expect(vm.showAnswerConfirmation == false)
+            #expect(vm.quizState == .recording, "re-record opens the mic immediately, pause or not")
+        }
+    }
+
     /// WHY: every exit from the sheet moves the quiz on, so a stale pause flag
     /// would mute the result screen's auto-advance and the next question's
     /// auto-confirm. Confirming IS resuming.

@@ -13,7 +13,11 @@
 //      playing — in-flight background TTS must never be killed;
 //    • .active re-arms via the existing syncCommandListenerWindow();
 //    • isAppForeground == false closes the command window so a racing
-//      refreshCommandWindow() / post-TTS re-arm cannot re-open the mic.
+//      refreshCommandWindow() / post-TTS re-arm cannot re-open the mic;
+//    • #171 Track H: .active also finishes what the background suppressed —
+//      the countdowns keep running there, so a think window that expired out
+//      of sight must open the mic on return, and an answer window that fully
+//      elapsed must land on the no-answer confirmation sheet.
 //
 
 import ConcurrencyExtras
@@ -195,5 +199,75 @@ struct ScenePhaseTeardownTests {
 
         #expect(vm.quizState == .askingQuestion, "must not enter .recording while backgrounded")
         #expect(audio.isRecording == false, "mic must not open in the background")
+    }
+
+    // MARK: - #171 Track H: foregrounding finishes what the background suppressed
+
+    /// WHY: the countdowns keep running in the background (founder decision), but
+    /// the mic cannot open there — so the think window expired, `startRecording`
+    /// bailed, and NOTHING re-triggered it. The driver came back to a question
+    /// with every countdown at zero and no way to answer but a manual tap. On
+    /// return we must do what should have happened: open the mic.
+    @Test(".active opens the answer window the background suppressed")
+    func activeResumesSuppressedRecording() async {
+        await withMainSerialExecutor {
+            let (vm, _, audio) = makeScenePhaseVM()
+
+            vm.quizState = .askingQuestion
+            vm.handleScenePhase(.background)
+            await vm.recordingCoordinator.startRecording() // suppressed, marker armed
+            #expect(vm.quizState == .askingQuestion)
+
+            vm.handleScenePhase(.active)
+
+            await waitUntil({ vm.quizState == .recording }, "the suppressed answer window never opened on return")
+            #expect(audio.isRecording == true, "the mic must open on return, not wait for a tap")
+        }
+    }
+
+    /// WHY: if the user stayed away longer than the whole recording window would
+    /// have lasted, re-opening the mic would be answering a question whose time
+    /// ran out minutes ago. That case takes the #171 Track B exit instead — the
+    /// confirmation sheet with an empty field — so the quiz always moves on.
+    @Test(".active hands over to the no-answer sheet when the whole window elapsed")
+    func activeOpensNoAnswerSheetWhenWindowElapsed() async {
+        let (vm, _, audio) = makeScenePhaseVM()
+
+        vm.quizState = .askingQuestion
+        vm.handleScenePhase(.background)
+        await vm.recordingCoordinator.startRecording()
+        // Backdate the suppression past the full recording window.
+        vm.recordingCoordinator.backgroundSuppressedRecordingAt =
+            Date().addingTimeInterval(-(Config.autoRecordingDuration + 1))
+
+        vm.handleScenePhase(.active)
+
+        #expect(vm.showAnswerConfirmation == true)
+        #expect(vm.transcribedAnswer.isEmpty)
+        #expect(vm.noAnswerCaptured == true)
+        #expect(audio.isRecording == false, "a window that already expired must not re-open the mic")
+    }
+
+    /// WHY: the marker is one-shot. A second foreground event (app switcher,
+    /// notification banner) must not re-open a window that was already resolved,
+    /// or a driver flicking between apps would restart recording each time.
+    @Test(".active resumes the suppressed window exactly once")
+    func activeResumesOnlyOnce() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeScenePhaseVM()
+
+            vm.quizState = .askingQuestion
+            vm.handleScenePhase(.background)
+            await vm.recordingCoordinator.startRecording()
+
+            vm.handleScenePhase(.active)
+            await waitUntil({ vm.quizState == .recording }, "first resume never opened the window")
+            #expect(vm.recordingCoordinator.backgroundSuppressedRecordingAt == nil, "marker must be consumed")
+
+            // Second foreground with no fresh suppression: nothing to redo.
+            vm.handleScenePhase(.active)
+            #expect(vm.quizState == .recording)
+            #expect(vm.showAnswerConfirmation == false)
+        }
     }
 }

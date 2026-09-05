@@ -27,6 +27,11 @@ struct AnswerConfirmationView: View {
     var commandHint: String? = nil
     /// #122 Variant C: transient match/miss tint for the listening bar.
     var commandFeedback: VoiceFeedbackPhase = .idle
+    /// #171 Track I: the MCQ option a spoken answer resolved to, pre-formatted
+    /// as "A · Kocka". Shown above the transcript so the driver can check the
+    /// match — the field itself holds the option VALUE, which is what gets
+    /// graded — and nil on every non-MCQ confirmation.
+    var matchedOption: String? = nil
 
     @State private var isEditing = false
     @FocusState private var editFocused: Bool
@@ -92,9 +97,31 @@ struct AnswerConfirmationView: View {
             }
             .padding(.bottom, 14)
 
+            if let matchedOption, !isEditing {
+                Text(verbatim: matchedOption)
+                    .font(.hangsMono(12, weight: .medium))
+                    .tracking(1.5)
+                    .foregroundColor(Theme.Hangs.Colors.blue)
+                    .accessibilityIdentifier("confirmation.matchedOption")
+                    .padding(.bottom, 10)
+            }
+
             ScrollView(.vertical, showsIndicators: false) {
                 if isEditing {
                     editableTranscript
+                } else if isEmptyAnswer {
+                    // #171 Track B: nothing was captured. An empty pink rule with
+                    // no words reads as a rendering bug, so name the state; the
+                    // muted tone marks it as the app's report, not the driver's
+                    // words. Confirm here submits "no answer".
+                    HangsQuestionPrompt(
+                        text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
+                        barColor: Theme.Hangs.Colors.pink,
+                        textFont: .hangsDisplay(32, weight: .black),
+                        textColor: Theme.Hangs.Colors.muted,
+                        minimumScaleFactor: 0.6
+                    )
+                    .accessibilityIdentifier("confirmation.noAnswer")
                 } else {
                     HangsQuestionPrompt(
                         text: transcribedAnswer,
@@ -139,17 +166,24 @@ struct AnswerConfirmationView: View {
                     editFocused = false
                     onConfirm()
                 }
-                // An emptied edit field must not be confirmable: confirmAnswer()
-                // drops empty answers after closing the sheet, which would eat
-                // the answer and strand the quiz in .processing.
-                .disabled(transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
+                // #171 Track B: an empty field stays confirmable — it now MEANS
+                // "no answer" and submits as such. Disabling it was what left an
+                // empty recording with no way off the sheet but a re-record.
+                .accessibilityLabel(isEmptyAnswer
+                    ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
+                    : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
                     ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
                     : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
                 .accessibilityIdentifier("confirmation.confirm")
             }
             .padding(.top, 14)
         }
+    }
+
+    /// The field holds nothing to submit — either the recording captured no
+    /// text (#171 Track B) or the driver cleared it while editing.
+    private var isEmptyAnswer: Bool {
+        transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var editableTranscript: some View {
@@ -237,11 +271,36 @@ struct AnswerConfirmationView: View {
         AnswerConfirmationView(
             isProcessing: false,
             transcribedAnswer: .constant("Z mumíí."),
-            autoConfirmCountdown: 7,
+            autoConfirmCountdown: 4,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Nothing heard") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 3,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
+
+    #Preview("MCQ voice match") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Kocka"),
+            autoConfirmCountdown: 4,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            matchedOption: "A · Kocka"
         )
     }
 
@@ -251,7 +310,7 @@ struct AnswerConfirmationView: View {
             transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
             autoConfirmCountdown: 3,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
         )
@@ -263,7 +322,7 @@ struct AnswerConfirmationView: View {
             transcribedAnswer: .constant(""),
             autoConfirmCountdown: 0,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {},
             onCancel: {}

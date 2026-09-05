@@ -259,32 +259,48 @@ edit", not a global "abandon this answer".
 
 ---
 
-## RS-09: MCQ voice answer highlights option and submits
+## RS-09: MCQ voice answer highlights the option and goes through confirmation
 
 **Hypothesis:** When the app receives a committed transcript that matches an MCQ option,
 `MCQTranscriptMatcher` maps it to the correct key, `mcqVoiceMatchedKey` is set so the matching
-`AnswerOption` highlights as `selected`, and `submitTextInput` is called transitioning to
-`processing`. The voice path is now functional for multiple-choice questions (issue #45, 45.3/45.9).
+`AnswerOption` highlights as `selected` — and the answer then goes through the **confirmation
+sheet**, not straight to the backend (issue #171 Track I, founder 2026-09-05, restoring #45
+decision D4). The sheet is prefilled with the option's **value** (the backend MCQ evaluator
+matches by value with no LLM fallback) and shows the matched option as `A · <text>`. Confirm —
+by tap, by the spoken "ok", or by letting the 5 s auto-confirm expire — submits it and the quiz
+reaches the result. A mishearing is therefore always correctable before it is graded.
 
 **Preconditions**
 - Launch with `--ui-test --ui-test-mcq`
 - `Question.previewMCQ` is loaded: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
 - `answerTimeLimit = 1` (seeded by UITestSupport for `--ui-test-mcq`): recording auto-starts ~1-2s
   after question audio (no mic button in the redesigned UI)
+- `Config.autoConfirmDelaySecs = 5` (#171 Track F) — the sheet self-confirms after 5 s
 
 **Steps**
 1. Tap `home.startQuiz`
 2. Wait for `question.state` label `askingQuestion` (up to 5s)
 3. Confirm `mcq.option.a` is present in the accessibility tree (MCQ screen rendered)
-4. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
-5. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
-6. Wait up to 3s
+4. Confirm the answer `listen-bar` caption reads "Listening — say A–D or the answer" (#171 Track I3
+   — answering with the option TEXT is supported, and the caption must say so)
+5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
+6. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
+7. Wait up to 3s for `confirmation.answer` to appear
+8. Tap `confirmation.confirm` (or wait ~5s for auto-confirm instead — both are valid runs)
+9. Wait up to 5s
 
 **Asserts**
-- `question.state` label is `processing`
-- `mcq.option.b` is present in the accessibility tree (MCQ options still rendered)
+- After step 7: `confirmation.answer` reads `Jupiter` — the option VALUE, never the raw transcript
+- After step 7: `confirmation.matchedOption` reads `B · Jupiter`
+- After step 7: `question.state` label is `processing` and **no** `submitTextInput` has fired yet
+- After step 9: `question.state` label is `showingResult`
+- `mcq.option.b` is present in the accessibility tree while the question is up (options still rendered)
 - App process is alive; no `EXC_*` in log
 - `question.errorBanner` is **not** present
+
+**Variant (#171 Track I2, tolerant matching):** replay step 6 with an inflected form
+(`?text=Jupitera`) — the sheet must still prefill `Jupiter`. An unmatched transcript
+(`?text=something%20unrelated`) instead prefills the RAW transcript, unchanged from before.
 
 ---
 
@@ -292,7 +308,8 @@ edit", not a global "abandon this answer".
 
 **Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` after the 500ms confirm delay
 and the ViewModel transitions to `processing`. This covers the tap-to-answer path that complements
-the voice path tested in RS-09.
+the voice path tested in RS-09 — a tap is an explicit choice, so it submits directly and does NOT
+go through the confirmation sheet the voice path uses (#171 Track I).
 
 **Preconditions**
 - Launch with `--ui-test --ui-test-mcq`

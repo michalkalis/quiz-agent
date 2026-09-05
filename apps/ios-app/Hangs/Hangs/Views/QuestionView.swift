@@ -765,8 +765,15 @@ struct QuestionView: View {
         viewModel.quizState == .skipping ? "" : submittedAnswer
     }
 
+    /// #171 Tracks B + E meeting point: the confirmation sheet also lives in
+    /// `.processing`, and since Track B/I every voice answer (including a failed
+    /// capture and an MCQ match) passes through it. The evaluating overlay must
+    /// not sit behind the sheet claiming the answer is already being graded
+    /// while the driver is still being asked to confirm it — the sheet owns that
+    /// screen, and has its own spinner for when a transcript is in flight.
     private var isProcessing: Bool {
-        viewModel.quizState == .processing || viewModel.quizState == .skipping
+        guard !viewModel.showAnswerConfirmation else { return false }
+        return viewModel.quizState == .processing || viewModel.quizState == .skipping
     }
 
     private var currentQuestionNumber: Int {

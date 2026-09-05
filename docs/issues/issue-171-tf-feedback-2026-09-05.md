@@ -35,9 +35,9 @@
 **Bočný prepínač:** TTS hrá vždy (kategórie ignorujú prepínač); iba earcony cez system sound sú stlmené, už mitigované haptikou (`EarconPlayer.swift:61-71`). Nič netreba.
 
 **Fix (štrukturálny, jeden PR):**
-- A1 Pri `startNewQuiz` najprv zastaviť poslucháča povelov, potom **raz** nakonfigurovať session (`.playAndRecord` + `.spokenAudio` + fixné options) a prvé prehrávanie podmieniť usadením (rovnaký vzor ako Q2+).
-- A2 Zrušiť per-utterance `.playback` swap; stratených ~6 dB dorovnať staticky (gain TTS assetu / override output port), nie per čítanie.
-- A3 Voice-processing držať zapnuté počas celého kvízu (arm/disarm len pri štarte/konci), nie per okno. Home si necháva svoju tichú session z #136, aplikovanú raz pri vstupe na Home.
+- Krok 1: pri `startNewQuiz` najprv zastaviť poslucháča povelov, potom **raz** nakonfigurovať session (`.playAndRecord` + `.spokenAudio` + fixné options) a prvé prehrávanie podmieniť usadením (rovnaký vzor ako Q2+).
+- Krok 2: zrušiť per-utterance `.playback` swap; stratených ~6 dB dorovnať staticky (gain TTS assetu / override output port), nie per čítanie.
+- Krok 3: voice-processing držať zapnuté počas celého kvízu (arm/disarm len pri štarte/konci), nie per okno. Home si necháva svoju tichú session z #136, aplikovanú raz pri vstupe na Home.
 - Kompatibilné s #104 (žiadne HFP renegotiation) a #136. Testy: rozšíriť `QuietListeningSessionOptionsTests` o „počas kvízu sa kategória nemení“ + test „prvé prehrávanie až po stopnutí poslucháča“.
 - Overenie: Sentry TTS-failed počítadlo = 0 v ďalšom TF kole; founder ucho na hlasitosť.
 
@@ -94,7 +94,7 @@ Dnes (zámerne, otestované `ScenePhaseTeardownTests`): TTS dohrá (background a
 - I1 Zhoda hlasom → **nesubmitovať**, ale `transcribedAnswer = text možnosti` (nie surový prepis, inak backend nezhodnotí), `showAnswerConfirmation = true`, auto-potvrdenie beží; sheet dostane voliteľné `matchedOption` (písmeno + text) na zobrazenie „A · Kocka“. Potvrdenie ide existujúcou cestou `resubmitAnswer` → backend value-match (`evaluator.py:126-129`).
 - I2 Tier 1.5 tolerantná zhoda na text možnosti (normalizovaný Levenshtein ≥ ~0.85 / spoločný kmeň), musí padnúť na práve jednu možnosť; inak sheet so surovým prepisom ako dnes.
 - I3 Caption MCQ lišty → existujúci string „Povedz A–D alebo odpoveď“ (SK/CS/EN už preložené).
-- Testy: prepísať 3 z `QuizViewModelMCQVoiceTests` (pinujú priamy submit), pridať tolerančné prípady do `MCQTranscriptMatcherTests` (skloňovanie SK), overiť `MCQOptionPickerRaceTests` (tap vs. hlas počas sheetu). RS-09 očakávaný text pilulky sa zhoduje s I3.
+- Testy: prepísať 3 z `QuizViewModelMCQVoiceTests` (pinujú priamy submit), pridať tolerančné prípady do `MCQTranscriptMatcherTests` (skloňovanie SK), overiť `MCQOptionPickerRaceTests` (tap vs. hlas počas sheetu). RS-09 (hlasová zhoda MCQ) dnes končí priamym submitom → po I1 scenár aktualizovať na „zhoda → potvrdzovací sheet → potvrdiť → výsledok“ v `docs/testing/regression-scenarios.md`.
 - Uzavrieť `45.7-wire` v #45 odkazom sem.
 
 ## Rozhodnutia (founder 2026-09-05, LOCKED)

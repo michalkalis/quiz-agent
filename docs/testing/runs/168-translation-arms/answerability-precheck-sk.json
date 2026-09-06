@@ -17,6 +17,14 @@
     "answer": "B. Antarktída",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "B. Antarktída",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -34,6 +42,14 @@
     "answer": "Nintendo",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Nintendo",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -51,6 +67,14 @@
     "answer": "Gustáv Eiffel",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Gustáv Eiffel",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -68,6 +92,14 @@
     "answer": "The Beatles",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "The Beatles",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -85,6 +117,14 @@
     "answer": "a",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -102,6 +142,14 @@
     "answer": "vesmírneho odpadu a starých satelitov",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "vesmírneho odpadu a starých satelitov",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -119,6 +167,14 @@
     "answer": "vápenec",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "vápenec",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -136,6 +192,14 @@
     "answer": "Rusku a Spojeným štátom",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "Rusku a Spojeným štátom",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -153,6 +217,14 @@
     "answer": "ABBA",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "ABBA",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -170,6 +242,14 @@
     "answer": "a",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "control_fail"
    }
   },
   {
@@ -187,6 +267,14 @@
     "answer": "draslík",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "draslík",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -204,6 +292,14 @@
     "answer": "International Orange",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "International Orange",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -221,6 +317,14 @@
     "answer": "Česká republika",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Česká republika",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -238,6 +342,14 @@
     "answer": "a",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -255,6 +367,14 @@
     "answer": "Hatsune Miku",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Hatsune Miku",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -272,6 +392,14 @@
     "answer": "B. kroket",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "B. kroket",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -289,6 +417,14 @@
     "answer": "Motorola DynaTAC",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "Motorola DynaTAC",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "translation_flip"
    }
   },
   {
@@ -306,6 +442,14 @@
     "answer": "cestovný pas",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "cestovný pas",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -323,6 +467,14 @@
     "answer": "B",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "B",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "translation_flip"
    }
   },
   {
@@ -340,6 +492,14 @@
     "answer": "Beyoncé",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Beyoncé",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -357,6 +517,14 @@
     "answer": "a",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -374,6 +542,14 @@
     "answer": "vombat",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "vombat",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -391,6 +567,14 @@
     "answer": "pivo",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "pivo",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -408,6 +592,14 @@
     "answer": "a) Fínsko",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "a) Fínsko",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -425,6 +617,14 @@
     "answer": "c) Ice Ice Baby",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "c) Ice Ice Baby",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -442,6 +642,14 @@
     "answer": "hrad Windsor",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "hrad Windsor",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -459,6 +667,14 @@
     "answer": "kakaová hmota",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "kakaová hmota",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -476,6 +692,14 @@
     "answer": "soľ",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "soľ",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -493,6 +717,14 @@
     "answer": "c",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "c",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -510,6 +742,14 @@
     "answer": "hliník",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "hliník",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -527,6 +767,14 @@
     "answer": "Phil Lord a Christopher Miller",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Phil Lord a Christopher Miller",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -544,6 +792,14 @@
     "answer": "b) Venuša",
     "passed": false,
     "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "b) Venuša",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -561,6 +817,14 @@
     "answer": "tulipán",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "tulipán",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -578,6 +842,14 @@
     "answer": "Big Ben je prísne vzaté názov veľkého zvona v hodinovej veži Westminsterského paláca.",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Big Ben je prísne vzaté názov veľkého zvona v hodinovej veži Westminsterského paláca.",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   },
   {
@@ -595,6 +867,14 @@
     "answer": "Harrison Ford",
     "passed": true,
     "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Harrison Ford",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
    }
   }
  ]

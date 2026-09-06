@@ -292,7 +292,14 @@ async def test_create_order_language_de_accepted(
     test_session: AsyncSession,
     arq_mock: MagicMock,
 ) -> None:
-    """#138: de is one of the app's 10 supported quiz languages → 202, not 422."""
+    """#138: de is one of the app's 10 supported quiz languages → 202, not 422.
+
+    Still 202 after #168 — batch translation pipeline SK/CS restricted pack
+    ordering to English (DD15): the restriction lands *soft*, because installed
+    builds still show all ten languages in the order form and Apple has already
+    charged for this purchase by the time the guard runs. T26 flips it to 422
+    once the gated client build is on the device.
+    """
     tx_id = "tx-lang-de"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
     body = {**_valid_body(tx_id=tx_id), "language": "de"}

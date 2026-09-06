@@ -40,3 +40,50 @@ struct Language: Identifiable, Hashable, Sendable {
         supportedLanguages.first(where: { $0.id == code })
     }
 }
+
+// MARK: - Servable subset (#168 DD14/DD15)
+
+/// `supportedLanguages` above is the DISPLAY catalogue — how a code is named.
+/// What the pickers may OFFER is a server-owned subset (`LanguageAvailability`),
+/// because a language only becomes offerable once its translated corpus is
+/// approved. Keeping the two apart means re-enabling a language is an env flip
+/// on a running deploy, not a new build.
+extension Language {
+    /// Quiz languages the user may pick (Home + Settings pickers).
+    static var selectableLanguages: [Language] {
+        selectableLanguages(in: LanguageAvailability.shared.quizCodes)
+    }
+
+    /// Languages a custom pack may be ordered in — a narrower list, since packs
+    /// are still generated in English and merely stamped with the code (DD15).
+    static var packOrderLanguages: [Language] {
+        selectableLanguages(in: LanguageAvailability.shared.packOrderCodes)
+    }
+
+    /// The display catalogue filtered to `codes`, in catalogue order so the
+    /// menu ordering never depends on how the server happened to sort its list.
+    static func selectableLanguages(in codes: [String]) -> [Language] {
+        let allowed = Set(codes)
+        let filtered = supportedLanguages.filter { allowed.contains($0.id) }
+        // A server list that names nothing we can display would empty the menu;
+        // showing the default beats showing an unusable picker.
+        return filtered.isEmpty ? [Language.default] : filtered
+    }
+
+    /// Resolve a *stored* quiz-language preference for use. A code that is no
+    /// longer offered (hidden between launches, or hidden by a refresh
+    /// mid-session) degrades to `Language.default` — sending it would 422 once
+    /// the backend validators harden (T26).
+    static func selectable(_ code: String) -> Language {
+        selectable(code, in: selectableLanguages)
+    }
+
+    /// The same degradation for a pack order, against the pack-order list.
+    static func packOrderLanguage(_ code: String) -> Language {
+        selectable(code, in: packOrderLanguages)
+    }
+
+    static func selectable(_ code: String, in languages: [Language]) -> Language {
+        languages.first(where: { $0.id == code }) ?? Language.default
+    }
+}

@@ -278,10 +278,13 @@ final class OrderPackViewModel: ObservableObject {
         state = .editing
     }
 
-    /// Maps a quiz-language code onto the order languages we support, falling
-    /// back to English rather than sending the server an unknown code.
+    /// Maps a quiz-language code onto the order languages we currently offer,
+    /// falling back to English rather than sending the server a code it will
+    /// reject. #168 DD15: packs are generated in English and only stamped with
+    /// the code, so this list is narrower than the quiz one — a Slovak quiz
+    /// language must not silently become a Slovak pack order.
     private static func supportedLanguage(_ code: String) -> String {
-        Language.forCode(code)?.id ?? Language.default.id
+        Language.packOrderLanguage(code).id
     }
 
     private func runOrder() async {

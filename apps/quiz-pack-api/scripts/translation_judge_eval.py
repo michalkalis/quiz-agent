@@ -2,9 +2,9 @@
 
 Sibling of ``scripts/factcheck_eval_166.py``: same JSONL-resume (``:90``) and
 ``cmd_report`` scorer shape, but its OWN items. DD6 is explicit about why the
-qids are not shared — the #166 seven are *factual* errors in English questions
-and exercise nothing in a source-vs-target judge, so passing on them would
-certify nothing.
+qids are not shared — the seven from #166 — experimentálne kolo D21b (gen-review
+blok 3b) are *factual* errors in English questions and exercise nothing in a
+source-vs-target judge, so passing on them would certify nothing.
 
 Reference sets (task T5, Session C, extended in T8 with the defect classes the
 founder named while rating the SK arm batch on 2026-09-03/06):

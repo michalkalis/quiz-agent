@@ -77,10 +77,24 @@ async def test_prompt_carries_both_sides_and_the_glossary() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("raw", [None, "", "no json here", '{"overall": "ok"}'])
+@pytest.mark.parametrize(
+    "raw",
+    [
+        None,
+        "",
+        "no json here",
+        '{"overall": "ok"}',
+        # Present but malformed `findings`: dropping the bad entries would
+        # leave an empty list, and an empty list reads as "clean" — so a reply
+        # nobody could parse would APPROVE the row. Held instead.
+        '{"findings": ["the answer was flipped"], "overall": "defects"}',
+        '{"findings": "answer flipped"}',
+        '{"findings": null}',
+    ],
+)
 async def test_unavailable_or_unparseable_judge_holds_the_row(raw) -> None:
-    """Fail-closed: silence is not approval. Note the last case — a reply with
-    a verdict but no ``findings`` key is unparseable, not "no defects"."""
+    """Fail-closed: silence is not approval, and neither is noise. A reply with
+    a verdict but no readable ``findings`` is unparseable, not "no defects"."""
     result = await _judge_returning(raw).judge(SOURCE, TARGET, "sk")
     assert result.verdict == "unverified"
     assert result.held_for_review is True

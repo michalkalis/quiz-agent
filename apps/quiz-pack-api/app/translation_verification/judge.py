@@ -268,10 +268,17 @@ def _parse(raw: str | None) -> JudgeResult | None:
         return None
     if not isinstance(data, dict) or "findings" not in data:
         return None
+    raw_findings = data["findings"]
+    # Shape, not just presence. Dropping malformed entries would turn a reply
+    # the judge could not express ("findings": ["answer flipped"]) into an
+    # empty list, and an empty list means "clean" — the row would be approved
+    # on a reply nobody could read. Unreadable is held, same as no reply.
+    if not isinstance(raw_findings, list) or any(
+        not isinstance(item, dict) for item in raw_findings
+    ):
+        return None
     findings = []
-    for item in data.get("findings") or []:
-        if not isinstance(item, dict):
-            continue
+    for item in raw_findings:
         severity = str(item.get("severity", "")).strip().lower()
         if severity not in ("critical", "major", "minor"):
             # An unknown severity is not a licence to drop the finding; the

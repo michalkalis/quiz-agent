@@ -393,7 +393,12 @@ async def create_order(
     # a silently stuck order. The periodic sweep (app.worker.sweep) is the
     # remaining safety net for orders that slip past this point.
     try:
-        await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
+        await arq_pool.enqueue_job(
+            "process_order",
+            str(order.id),
+            _job_id=enqueue_id,
+            _queue_name=settings.order_queue_name,
+        )
     except Exception as exc:
         job.status = "failed"
         job.error = f"enqueue failed: {exc!r}"
@@ -708,7 +713,15 @@ async def retry_order(
     enqueue_id = attempt_job_id(order.id, job)
     await session.commit()
 
-    await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
+    # #172: the retry re-enters the SAME queue orders are created on, so a
+    # deploy pointing orders at the session queue never splits one order's
+    # attempts across two workers.
+    await arq_pool.enqueue_job(
+        "process_order",
+        str(order.id),
+        _job_id=enqueue_id,
+        _queue_name=settings.order_queue_name,
+    )
 
     order.status = "in_progress"
     await session.commit()

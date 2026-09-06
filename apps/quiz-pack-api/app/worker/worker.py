@@ -47,6 +47,30 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     setup_logging()
     init_sentry(get_settings().sentry_dsn)
 
+    # #172 — session worker (mba, Claude Code subscription). Two fail-loud
+    # gates BEFORE this process starts pulling paid orders off the queue:
+    #  * the `claude` CLI must be present and logged in via claude.ai; without
+    #    that check every job would die deep in the pipeline (or, worse, fall
+    #    back to an API key and bill the account the session mode exists to
+    #    avoid).
+    #  * judges must be OFF. #169 (founder 2026-09-02): the panel adds no
+    #    signal and ate ~80 % of the subscription quota — the same rule
+    #    `scripts/generate_pack.py._judges_enabled` enforces for CLI runs, so a
+    #    session worker booted with JUDGE_GATE/JUDGE_MODELS set is a config
+    #    mistake, not a mode we support.
+    from quiz_shared.llm import factory as llm_factory
+
+    if llm_factory.gateway() == llm_factory.SESSION:
+        from quiz_shared.llm import session_cli
+
+        session_cli.ensure_subscription_login()
+        if feature_flags.judge_gate() or feature_flags.judge_models():
+            raise RuntimeError(
+                "LLM_GATEWAY=session with judges enabled (JUDGE_GATE/JUDGE_MODELS): "
+                "session runs never pay for the judge panel (#169). Unset them or "
+                "run this worker on the paid gateway."
+            )
+
     # Same migrate-before-deploy boot gate as app/main.py, separate process:
     # a worker that boots against a behind-head schema would otherwise start
     # pulling paid orders off the queue and crash mid-pipeline.
@@ -63,7 +87,6 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.verification.fact_verifier import FactVerifier
     from app.verification.logical_verifier import LogicalConsistencyVerifier
     from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-    from quiz_shared.llm import factory as llm_factory
 
     ctx["session_factory"] = AsyncSessionLocal
     ctx["fact_sourcer"] = FactSourcer()
@@ -127,7 +150,16 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
             "no-op gold-standard dedup check."
         )
     ctx["gold_standard_path"] = _GOLD_STANDARD_PATH
-    logger.info("worker on_startup: collaborators initialised")
+
+    settings = get_settings()
+    logger.info(
+        "worker on_startup: collaborators initialised gateway=%s queue_name=%s "
+        "max_jobs=%s job_timeout=%s",
+        llm_factory.gateway(),
+        settings.worker_queue_name,
+        settings.worker_max_jobs,
+        settings.worker_job_timeout_s,
+    )
 
 
 class WorkerSettings:
@@ -154,7 +186,12 @@ class WorkerSettings:
         cron(sweep_stuck_orders, minute=set(range(0, 60, 5)), run_at_startup=True)
     ]
     on_startup = on_startup
-    max_jobs: int = 2
+    # #172: queue + concurrency + budget come from settings so one image serves
+    # both workers — the Fly worker on the defaults, the mba session worker on
+    # its own queue with a single slot and a much longer per-job budget (a
+    # `claude -p` pack run is minutes-to-hours slower than the paid API path).
+    queue_name: str = get_settings().worker_queue_name
+    max_jobs: int = get_settings().worker_max_jobs
     max_tries: int = 3
-    job_timeout: int = 3600
+    job_timeout: int = get_settings().worker_job_timeout_s
     keep_result: int = 86400

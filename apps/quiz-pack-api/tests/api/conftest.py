@@ -28,6 +28,7 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 import pytest_asyncio
+from arq.constants import default_queue_name as arq_default_queue_name
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
@@ -125,6 +126,14 @@ async def _clean_orders(test_session: AsyncSession) -> AsyncIterator[None]:
 
 
 @pytest.fixture
+def order_queue_name() -> str:
+    """Queue the test app routes orders to (#172). A test overrides it with
+    `@pytest.mark.parametrize("order_queue_name", [...])` to prove the deploy
+    setting, not a hardcoded constant, decides where a paid job lands."""
+    return arq_default_queue_name
+
+
+@pytest.fixture
 def arq_mock() -> MagicMock:
     pool = MagicMock()
     pool.enqueue_job = AsyncMock(return_value=None)
@@ -136,6 +145,7 @@ async def client(
     test_session: AsyncSession,
     test_chain: TestChain,
     arq_mock: MagicMock,
+    order_queue_name: str,
     _clean_orders: None,
 ) -> AsyncIterator[httpx.AsyncClient]:
     """Async HTTP client wired against a minimal test app."""
@@ -151,6 +161,7 @@ async def client(
     test_settings = Settings(
         admin_api_key=TEST_ADMIN_KEY,
         auth_jwt_secret=TEST_JWT_SECRET,
+        order_queue_name=order_queue_name,
     )
 
     test_app = FastAPI()

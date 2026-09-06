@@ -26,8 +26,8 @@
     ],
     "not_mined": "The retiring prod SQLite cache (/data/translations.db on quiz-agent-api) was NOT mined: the execution environment has no Fly authentication token, so the read-only pull was impossible and prod was deliberately not touched. Every 'real' item below is instead evidenced by a repo document or a git commit, which is why this set carries 7 real items rather than a synthetic-only fallback. Mining the cache stays available later and can only enrich this set — it is not a prerequisite for the DD6 bar.",
     "authored_questions": "The English source questions are authored in the style of the corpus (6-category taxonomy) rather than copied from prod rows. The defect being measured lives in the source/target relation, not in the source question, so a corpus-identical stem buys nothing. The real items reproduce the exact defective Slovak strings recorded in the sources above.",
-    "qid_namespace": "sk-r* real, sk-s* synthetic, sk-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge.",
-    "founder_arm_ratings": "Items carrying \"provenance\": \"founder-arm-ratings-2026-09\" were added (task T8/T9) after the founder rated the SK arm batch on 2026-09-03/06. They cover the defect classes he named that the original Session C set did not exercise: an answer leaked by localising a place name, an indeclinable band name declined, an English spelling kept where the target language has its own form, a song title translated where the original title is the answer, MCQ option texts translated that must stay as-is, and a foreign word (thaler) left untouched where the target language has a word for it. Their controls were added in the same pass so the control share stays about a third, and every existing item was left untouched. The Slovak items are labelled origin \"real\" because the founder observed them in real arm output; the Czech counterparts are \"synthetic\" because no Czech batch has been rated (CS ratings 0/140), which keeps this file's synthetic-only declaration honest."
+    "founder_arm_ratings": "Items carrying \"provenance\": \"founder-arm-ratings-2026-09\" were added (task T8/T9) after the founder rated the SK arm batch on 2026-09-03/06. They cover the defect classes he named that the original Session C set did not exercise: an answer leaked by localising a place name, an indeclinable band name declined, an English spelling kept where the target language has its own form, a song title translated where the original title is the answer, MCQ option texts translated that must stay as-is, and a foreign word (thaler) left untouched where the target language has a word for it. Their controls were added in the same pass so the control share stays about a third, and every existing item was left untouched. The Slovak items are labelled origin \"real\" because the founder observed them in real arm output; the Czech counterparts are \"synthetic\" because no Czech batch has been rated (CS ratings 0/140), which keeps this file's synthetic-only declaration honest.",
+    "qid_namespace": "sk-r* real, sk-s* synthetic, sk-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge."
   },
   "items": [
     {
@@ -66,10 +66,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "A murder",
-        "alternative_answers": [
-          "murder",
-          "a murder of crows"
-        ],
+        "alternative_answers": ["murder", "a murder of crows"],
         "explanation": "English collective nouns give a group of crows the name 'a murder'."
       },
       "target": {
@@ -77,10 +74,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Vražda",
-        "alternative_answers": [
-          "vražda",
-          "vražda vrán"
-        ],
+        "alternative_answers": ["vražda", "vražda vrán"],
         "explanation": "Skupina vrán sa nazýva vražda."
       },
       "note": "The fact holds only as an English lexical convention. Translated literally the Slovak answer 'vražda' means homicide and is simply false, while the genuinely correct Slovak word 'kŕdeľ' sits in the same list as a distractor, so a player who knows Slovak is scored wrong. The pipeline excludes language_dependent rows, so this item measures the judge's backstop when a row is mistagged, which is exactly how it reached a live session. Source and target are the strings as served.",
@@ -97,10 +91,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "About 80 percent",
-        "alternative_answers": [
-          "80 percent",
-          "four out of five"
-        ],
+        "alternative_answers": ["80 percent", "four out of five"],
         "explanation": "The gene for the orange coat sits on the X chromosome, so roughly four in five orange cats are male."
       },
       "target": {
@@ -108,10 +99,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Približne 80 percent",
-        "alternative_answers": [
-          "80 percent",
-          "štyri z piatich"
-        ],
+        "alternative_answers": ["80 percent", "štyri z piatich"],
         "explanation": "Gén pre oranžovú srsť je na chromozóme X, takže približne štyri z piatich zázvorových mačiek sú samce."
       },
       "note": "'Ginger' as a coat colour became the spice: 'zázvorové mačky' reads as cats made of ginger. Slovak uses 'ryšavé' for that coat. The stem names a category that does not exist, so the question cannot be understood as intended.",
@@ -128,9 +116,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Its wavelength",
-        "alternative_answers": [
-          "wavelength"
-        ],
+        "alternative_answers": ["wavelength"],
         "explanation": "The wavelength of visible light determines the colour the eye perceives."
       },
       "target": {
@@ -138,9 +124,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Jeho vlnová dĺžka",
-        "alternative_answers": [
-          "vlnová dĺžka"
-        ],
+        "alternative_answers": ["vlnová dĺžka"],
         "explanation": "Vlnová dĺžka viditeľného svetla určuje farbu, ktorú oko vníma."
       },
       "note": "'farba zrakovej vnímania' is broken on two counts: the case of the object is wrong and the adjective does not agree with the noun. A native host would not say the sentence aloud, but a player can still recover the meaning and answer correctly.",
@@ -157,9 +141,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Mercury and Venus",
-        "alternative_answers": [
-          "Mercury, Venus"
-        ],
+        "alternative_answers": ["Mercury, Venus"],
         "explanation": "Mercury and Venus are the only planets in the solar system without natural satellites."
       },
       "target": {
@@ -167,9 +149,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Merkúr a Venuša",
-        "alternative_answers": [
-          "Merkúr, Venuša"
-        ],
+        "alternative_answers": ["Merkúr, Venuša"],
         "explanation": "Merkúr a Venuša sú jediné planéty slnečnej soustavy bez prirodzených satelitov."
       },
       "note": "'soustavy' is the Czech form; Slovak is 'sústavy'. A word borrowed from the closely related language inside otherwise correct Slovak. Meaning survives, register does not.",
@@ -184,10 +164,7 @@
       "source": {
         "question": "True or false: Mount Everest is the highest mountain above sea level.",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "True",
-          "b": "False"
-        },
+        "possible_answers": {"a": "True", "b": "False"},
         "correct_answer": "True",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -196,10 +173,7 @@
       "target": {
         "question": "Pravda alebo nepravda: Mount Everest je najvyšší vrch nad morskou hladinou.",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "True",
-          "b": "False"
-        },
+        "possible_answers": {"a": "True", "b": "False"},
         "correct_answer": "True",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -244,9 +218,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Tumbleweed",
-        "alternative_answers": [
-          "a tumbleweed"
-        ],
+        "alternative_answers": ["a tumbleweed"],
         "explanation": "A tumbleweed detaches from its root and is blown along the ground, scattering seeds as it goes."
       },
       "target": {
@@ -254,9 +226,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Tumbleweed",
-        "alternative_answers": [
-          "stepný bežec"
-        ],
+        "alternative_answers": ["stepný bežec"],
         "explanation": "Rastlina sa odlomí od koreňa a vietor ju ženie po zemi, pričom rozsieva semená."
       },
       "note": "The model returned a two-word fragment instead of a translated question sentence, and the output was served with no validation at all. The Slovak string is the artefact recorded in the issue; the English stem is reconstructed to give it a plausible pair, because the source row was never quoted. Critical: there is no question left to answer.",
@@ -271,12 +241,7 @@
       "source": {
         "question": "Which river flows through Bratislava?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "The Danube",
-          "b": "The Vltava",
-          "c": "The Rhine",
-          "d": "The Elbe"
-        },
+        "possible_answers": {"a": "The Danube", "b": "The Vltava", "c": "The Rhine", "d": "The Elbe"},
         "correct_answer": "The Danube",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -285,12 +250,7 @@
       "target": {
         "question": "Ktorá rieka preteká Bratislavou?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Dunaj",
-          "b": "Vltava",
-          "c": "Rýn",
-          "d": "Labe"
-        },
+        "possible_answers": {"a": "Dunaj", "b": "Vltava", "c": "Rýn", "d": "Labe"},
         "correct_answer": "Vltava",
         "correct_answer_key": "b",
         "alternative_answers": [],
@@ -310,9 +270,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Gold",
-        "alternative_answers": [
-          "Au"
-        ],
+        "alternative_answers": ["Au"],
         "explanation": "Au comes from the Latin aurum, meaning gold."
       },
       "target": {
@@ -320,9 +278,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Striebro",
-        "alternative_answers": [
-          "Au"
-        ],
+        "alternative_answers": ["Au"],
         "explanation": "Značka Au pochádza z latinského argentum."
       },
       "note": "Free-text answer flip: gold became silver, and the explanation was rewritten to be consistent with the wrong answer, so nothing inside the Slovak text betrays the error. Only a source comparison catches it.",
@@ -339,10 +295,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "About 11 kilometres",
-        "alternative_answers": [
-          "11 km",
-          "roughly 11 kilometres"
-        ],
+        "alternative_answers": ["11 km", "roughly 11 kilometres"],
         "explanation": "The Challenger Deep reaches roughly 10.9 kilometres below sea level."
       },
       "target": {
@@ -350,9 +303,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Približne 11 míľ",
-        "alternative_answers": [
-          "11 míľ"
-        ],
+        "alternative_answers": ["11 míľ"],
         "explanation": "Challenger Deep siaha približne 10,9 míle pod hladinu mora."
       },
       "note": "The number was preserved and the unit was swapped from kilometres to miles, which multiplies the stated depth by 1.6. Any player answering with the true figure is graded wrong.",
@@ -369,9 +320,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Michelangelo",
-        "alternative_answers": [
-          "Michelangelo Buonarroti"
-        ],
+        "alternative_answers": ["Michelangelo Buonarroti"],
         "explanation": "Michelangelo painted the ceiling between 1508 and 1512."
       },
       "target": {
@@ -379,9 +328,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Michelangelo",
-        "alternative_answers": [
-          "Michelangelo Buonarroti"
-        ],
+        "alternative_answers": ["Michelangelo Buonarroti"],
         "explanation": "Michelangelo maľoval strop v rokoch 1508 až 1512."
       },
       "note": "The stem was passed through untranslated while the explanation was translated. The player hears English mid-session, but the answer is a proper noun, so grading still works. Major rather than critical, in deliberate contrast with sk-r06 where the untranslated part breaks grading. Synthetic because no strings were recorded, but the mechanism is real: the serve-time translator falls back to the original English after failed attempts, so English questions surfaced mid-Slovak session (docs/issues/issue-107-slovak-english-question-leak.md:8-13).",
@@ -398,9 +345,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "The Godfather",
-        "alternative_answers": [
-          "Godfather"
-        ],
+        "alternative_answers": ["Godfather"],
         "explanation": "The line is spoken by Vito Corleone in The Godfather."
       },
       "target": {
@@ -408,9 +353,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Krstný syn",
-        "alternative_answers": [
-          "Krstný syn"
-        ],
+        "alternative_answers": ["Krstný syn"],
         "explanation": "Repliku vyslovuje Vito Corleone vo filme Krstný syn."
       },
       "note": "The title names a different family role: 'krstný syn' is a godson, not a godfather. The Slovak reads fluently, so only a source comparison exposes it.",
@@ -427,9 +370,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "About every 10,000 kilometres",
-        "alternative_answers": [
-          "every 10,000 km"
-        ],
+        "alternative_answers": ["every 10,000 km"],
         "explanation": "Swapping tyre positions periodically evens out tread wear."
       },
       "target": {
@@ -437,9 +378,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Približne každých 10 000 kilometrov",
-        "alternative_answers": [
-          "každých 10 000 km"
-        ],
+        "alternative_answers": ["každých 10 000 km"],
         "explanation": "Pravidelné rotovanie pneumatík rovnomerne rozloží opotrebenie dezénu."
       },
       "note": "'rotovať pneumatiky' is a straight loan of the English phrase; Slovak drivers say 'prehodiť' or 'striedať pneumatiky'. Purely a register slip, fully understood.",
@@ -456,9 +395,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "They release a sulphur compound that irritates the eyes",
-        "alternative_answers": [
-          "a sulphur compound irritates the eyes"
-        ],
+        "alternative_answers": ["a sulphur compound irritates the eyes"],
         "explanation": "Cutting an onion releases a volatile sulphur compound that reacts with moisture in the eye."
       },
       "target": {
@@ -466,9 +403,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Oni uvoľňujú sírnu zlúčeninu, ktorá robí podráždenie očí",
-        "alternative_answers": [
-          "sírna zlúčenina robí podráždenie očí"
-        ],
+        "alternative_answers": ["sírna zlúčenina robí podráždenie očí"],
         "explanation": "Krájanie cibule uvoľňuje prchavú sírnu zlúčeninu, ktorá robí reakciu s vlhkosťou v oku."
       },
       "note": "English syntax carried over word for word: the causative 'make you cry', the wrong pronoun case, a redundant subject pronoun, and 'robí podráždenie' where Slovak uses a single verb. A host reading this aloud sounds like machine output, though the fact is still conveyed.",
@@ -535,9 +470,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "About 2,850 kilometres",
-        "alternative_answers": [
-          "2,850 km"
-        ],
+        "alternative_answers": ["2,850 km"],
         "explanation": "The Danube runs about 2,850 kilometres from the Black Forest to the Black Sea."
       },
       "target": {
@@ -545,9 +478,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Približne 2 850 kilometrov",
-        "alternative_answers": [
-          "2 850 km"
-        ],
+        "alternative_answers": ["2 850 km"],
         "explanation": "Dunaj meria približne 2 850 kilometrov od Čierneho lesa po Čierne more."
       },
       "note": "Control, adversarial to the number and unit checks: the value and unit are identical, only the thousands separator follows Slovak convention. A judge that reads a formatting difference as a number change fails here.",
@@ -562,12 +493,7 @@
       "source": {
         "question": "What is the capital of Australia?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Canberra",
-          "b": "Sydney",
-          "c": "Melbourne",
-          "d": "Perth"
-        },
+        "possible_answers": {"a": "Canberra", "b": "Sydney", "c": "Melbourne", "d": "Perth"},
         "correct_answer": "Canberra",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -576,12 +502,7 @@
       "target": {
         "question": "Ktoré mesto je hlavným mestom Austrálie?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Canberra",
-          "b": "Sydney",
-          "c": "Melbourne",
-          "d": "Perth"
-        },
+        "possible_answers": {"a": "Canberra", "b": "Sydney", "c": "Melbourne", "d": "Perth"},
         "correct_answer": "Canberra",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -601,9 +522,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "William Shakespeare",
-        "alternative_answers": [
-          "Shakespeare"
-        ],
+        "alternative_answers": ["Shakespeare"],
         "explanation": "Shakespeare wrote Hamlet around 1600."
       },
       "target": {
@@ -611,9 +530,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "William Shakespeare",
-        "alternative_answers": [
-          "Shakespeare"
-        ],
+        "alternative_answers": ["Shakespeare"],
         "explanation": "Shakespeare napísal Hamleta okolo roku 1600."
       },
       "note": "Control: a personal name correctly kept in its original form, with the Slovak declension applied only in the explanation. Must not be read as an untranslated answer.",
@@ -630,10 +547,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "It rises above normal",
-        "alternative_answers": [
-          "it goes up",
-          "it increases"
-        ],
+        "alternative_answers": ["it goes up", "it increases"],
         "explanation": "A fever pushes the body's set point above the usual 37 degrees Celsius."
       },
       "target": {
@@ -641,10 +555,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Stúpne nad normálnu hodnotu",
-        "alternative_answers": [
-          "stúpne",
-          "zvýši sa"
-        ],
+        "alternative_answers": ["stúpne", "zvýši sa"],
         "explanation": "Horúčka posunie nastavenú teplotu tela nad bežných 37 stupňov Celzia."
       },
       "note": "Control, adversarial to an over-eager calque check: the Slovak is deliberately not word for word, and a judge that treats every restructured sentence as a mistranslation fails here.",
@@ -659,10 +570,7 @@
       "source": {
         "question": "True or false: the Pacific is the largest ocean on Earth.",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "True",
-          "b": "False"
-        },
+        "possible_answers": {"a": "True", "b": "False"},
         "correct_answer": "True",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -671,10 +579,7 @@
       "target": {
         "question": "Pravda alebo nepravda: Tichý oceán je najväčší oceán na Zemi.",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Pravda",
-          "b": "Nepravda"
-        },
+        "possible_answers": {"a": "Pravda", "b": "Nepravda"},
         "correct_answer": "Pravda",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -797,12 +702,7 @@
       "source": {
         "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Bohemian Rhapsody",
-          "b": "We Will Rock You",
-          "c": "Somebody to Love",
-          "d": "Radio Ga Ga"
-        },
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
         "correct_answer": "Bohemian Rhapsody",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -811,12 +711,7 @@
       "target": {
         "question": "Ktorá pieseň skupiny Queen bola vianočnou jednotkou britského rebríčka v roku 1975 aj 1991?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Bohémska rapsódia",
-          "b": "Rozhýbeme ťa",
-          "c": "Niekoho na milovanie",
-          "d": "Radio Ga Ga"
-        },
+        "possible_answers": {"a": "Bohémska rapsódia", "b": "Rozhýbeme ťa", "c": "Niekoho na milovanie", "d": "Radio Ga Ga"},
         "correct_answer": "Bohémska rapsódia",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -887,12 +782,7 @@
       "source": {
         "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Bohemian Rhapsody",
-          "b": "We Will Rock You",
-          "c": "Somebody to Love",
-          "d": "Radio Ga Ga"
-        },
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
         "correct_answer": "Bohemian Rhapsody",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -901,12 +791,7 @@
       "target": {
         "question": "Ktorá pieseň skupiny Queen bola vianočnou jednotkou britského rebríčka v roku 1975 aj 1991?",
         "type": "multiple_choice",
-        "possible_answers": {
-          "a": "Bohemian Rhapsody",
-          "b": "We Will Rock You",
-          "c": "Somebody to Love",
-          "d": "Radio Ga Ga"
-        },
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
         "correct_answer": "Bohemian Rhapsody",
         "correct_answer_key": "a",
         "alternative_answers": [],
@@ -935,10 +820,7 @@
         "type": "text",
         "possible_answers": null,
         "correct_answer": "Viedeň",
-        "alternative_answers": [
-          "Viedni",
-          "vo Viedni"
-        ],
+        "alternative_answers": ["Viedni", "vo Viedni"],
         "explanation": "Mozart napísal operu vo Viedni v roku 1786."
       },
       "note": "A place name correctly localised (Vienna -> Viedeň) and an opera given its established Slovak title. Neither leaks anything, because the question does not name the answer. The counterpart of sk-f01 in the other direction: not every localised proper noun is a defect.",

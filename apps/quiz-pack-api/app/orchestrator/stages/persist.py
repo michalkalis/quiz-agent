@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.models import (
     EMBEDDING_DIM,
+    PIPELINE_OWNED_COLUMNS,
     GenerationOrder,
     QuestionPack,
     QuestionRow,
@@ -101,16 +102,6 @@ class PersistStage:
         )
 
 
-# Columns this stage must never send. `approved_languages` (#168 DD1) is owned
-# by the translation pipeline, which writes it in the same transaction that
-# approves a translation — a freshly generated question is approved in no
-# language. It also *cannot* be sent from here: this is a Core-level INSERT off
-# a transient ORM object, so SQLAlchemy's Python-side `default=list` has not
-# run yet and the value would go over the wire as an explicit NULL, violating
-# the column's NOT NULL. Omitting it lets the server default apply.
-_PIPELINE_OWNED_COLUMNS = frozenset({"approved_languages"})
-
-
 def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
     """Build a `{column_name: value}` dict for a dialect-level INSERT.
 
@@ -130,5 +121,5 @@ def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
     return {
         c.name: getattr(row, c.name)
         for c in QuestionRow.__table__.columns
-        if c.name not in _PIPELINE_OWNED_COLUMNS
+        if c.name not in PIPELINE_OWNED_COLUMNS
     }

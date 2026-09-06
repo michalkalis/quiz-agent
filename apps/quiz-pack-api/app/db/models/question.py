@@ -34,6 +34,16 @@ from ..base import Base, UUIDPrimaryKeyMixin
 EMBEDDING_DIM = 1536
 REVIEW_STATUSES = ("pending_review", "approved", "rejected", "needs_revision", "archived")
 
+# Columns a question *writer* must never send. `approved_languages` (#168 DD1)
+# is owned by the translation pipeline, which writes it in the same transaction
+# that approves a translation — a newly written question is approved in no
+# language. It also cannot be sent by the Core-level INSERT paths (PersistStage,
+# the import/migrate scripts), which build a `{column: value}` dict off a
+# *transient* ORM object: the Python-side `default=list` has not run yet, so the
+# value would go over the wire as an explicit NULL against a NOT NULL column.
+# Omitting it lets the server default apply.
+PIPELINE_OWNED_COLUMNS = frozenset({"approved_languages"})
+
 
 class QuestionRow(Base, UUIDPrimaryKeyMixin):
     """Persistence shape for `quiz_shared.models.question.Question`.

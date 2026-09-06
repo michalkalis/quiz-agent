@@ -12,6 +12,7 @@ from .order import ORDER_STATUSES, GenerationOrder
 from .pack import QuestionPack
 from .question import (
     EMBEDDING_DIM,
+    PIPELINE_OWNED_COLUMNS,
     REVIEW_STATUSES,
     QuestionRow,
     question_to_row,
@@ -31,6 +32,7 @@ __all__ = [
     "GenerationOrder",
     "JOB_STATUSES",
     "ORDER_STATUSES",
+    "PIPELINE_OWNED_COLUMNS",
     "QuestionPack",
     "QuestionRow",
     "QuestionTranslation",

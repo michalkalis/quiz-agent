@@ -201,4 +201,49 @@ def test_text_match_folds_diacritics_instead_of_deleting_the_letter() -> None:
 
 
 def test_text_match_accepts_a_translated_alternate_answer() -> None:
-    assert _text_answer_matches("muškátový orech", ["Muškátový oriešok", "muškátový orech"])
+    assert _text_answer_matches(
+        "muškátový orech", ["Muškátový oriešok", "muškátový orech"]
+    )
+
+
+# --- comparator fix (#168 — batch translation pipeline SK/CS, T10 re-score) -----
+#
+# The DD13 pre-check read 5/27 sk items as translation flips; 3 were the
+# comparator refusing a correct answer, not the model failing. These pin both
+# directions of each rule — the shape that must now pass, and the shape that
+# must still fail, because a gate that accepts a wrong answer is worse than one
+# that rejects a right one.
+
+
+def test_option_key_resolves_from_a_key_prefixed_option_text() -> None:
+    """The shape that produced 3 of the 5 sk "flips": "a) Fínsko"."""
+    options = {"a": "Fínsko", "b": "Švédsko"}
+    assert _resolve_option_key("a) Fínsko", options) == "a"
+    assert _resolve_option_key("B. Švédsko", options) == "b"
+    assert _resolve_option_key("a: Finsko", options) == "a"
+
+
+def test_option_key_rejects_an_answer_naming_two_different_options() -> None:
+    """Undecided is a wrong answer, not a coin flip in the model's favour."""
+    options = {"a": "Fínsko", "b": "Švédsko"}
+    assert _resolve_option_key("a) Fínsko alebo b) Švédsko", options) is None
+    assert _resolve_option_key("b) Fínsko", options) is None
+
+
+def test_text_match_tolerates_a_slovak_case_ending() -> None:
+    """ "satelitov" is "satelity" in the genitive — a right answer, inflected."""
+    assert _text_answer_matches("starých satelitov", ["Staré satelity"])
+    assert _text_answer_matches("veľa kozmického odpadu", ["kozmický odpad"])
+
+
+def test_text_match_needs_every_reference_token_not_just_a_shared_stem() -> None:
+    """The adjectives share a stem; the nouns are different objects."""
+    assert not _text_answer_matches("kozmické lode", ["kozmický odpad"])
+    # Same-stem, different word: "Fínska strana" is not the country "Fínsko".
+    assert not _text_answer_matches("Fínska strana", ["Fínsko"])
+
+
+def test_bare_option_letter_stays_a_fail_on_a_free_text_item() -> None:
+    """The one GENUINE sk flip: no options to legitimise a letter (id a3d3592c)."""
+    references = ["Teplo rozťahuje železo", "tepelná rozťažnosť", "teplo"]
+    assert not _text_answer_matches("B", references)

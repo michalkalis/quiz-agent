@@ -1,9 +1,15 @@
 """Shared dependencies, models, and helpers for REST API routes."""
 
+import logging
+
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date
 from fastapi import Depends, Request
+
+import sentry_sdk
+
+from quiz_shared.languages import QUIZ_LANGUAGES, servable_quiz_languages
 
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
@@ -30,6 +36,8 @@ from ..serializers import (
     question_to_dict as question_to_dict,
     question_to_dict_translated as question_to_dict_translated,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ── Request/Response Models ──────────────────────────────────────────────────
@@ -58,7 +66,13 @@ class CreateSessionRequest(BaseModel):
         description="Category filter, multi-select (#82); empty/absent = all",
     )
     language: str = Field(
-        default="en", pattern="^[a-z]{2}$", description="Language code (ISO 639-1)"
+        default="en",
+        description=(
+            "Language code (ISO 639-1). Must be one of the app's known quiz "
+            "languages; a code that is known but not currently servable is "
+            "still accepted (and logged) so already-installed builds keep "
+            "working — see #168 — batch translation pipeline SK/CS."
+        ),
     )
     include_images: bool = Field(
         default=False,
@@ -75,6 +89,43 @@ class CreateSessionRequest(BaseModel):
     ttl_minutes: int = Field(
         default=30, ge=10, le=120, description="Session expiry time"
     )
+
+    @field_validator("language")
+    @classmethod
+    def _known_and_servable_language(cls, value: str) -> str:
+        """Reject unknown codes; accept a known-but-hidden one with a warning.
+
+        #168 — batch translation pipeline SK/CS (DD14) replaces the old
+        ``^[a-z]{2}$`` pattern, which accepted any two letters: a garbage code
+        opened a session that the translation gate would then starve of
+        questions. Two tiers, on purpose:
+
+        * outside ``QUIZ_LANGUAGES`` → 422. No shipped build can send such a
+          code, so it is a bug or a probe either way.
+        * known but not in ``SERVABLE_QUIZ_LANGUAGES`` (de/fr/es/it/pl/hu/ro
+          today) → **accepted**, with a WARNING and a Sentry breadcrumb naming
+          the code. Every installed build still offers all ten languages, so
+          422-ing here would break sessions mid-flight on devices that cannot
+          be updated. Hardening to 422 waits for the gated client build (T26).
+        """
+        code = value.strip().lower()
+        if code not in QUIZ_LANGUAGES:
+            raise ValueError(f"language must be one of {', '.join(QUIZ_LANGUAGES)}")
+        servable = servable_quiz_languages()
+        if code not in servable:
+            logger.warning(
+                "Session requested non-servable quiz language %r (servable: %s); "
+                "accepted for legacy clients (#168)",
+                code,
+                ",".join(servable),
+            )
+            sentry_sdk.add_breadcrumb(
+                category="language",
+                level="warning",
+                message=f"non-servable quiz language accepted: {code}",
+                data={"language": code},
+            )
+        return code
 
 
 class SessionResponse(BaseModel):

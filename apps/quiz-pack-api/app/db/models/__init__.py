@@ -19,6 +19,11 @@ from .question import (
 )
 from .rating import RATING_SOURCES, Rating, RatingBatch
 from .revoked_transaction import RevokedTransaction
+from .translation import (
+    TRANSLATION_STATUSES,
+    QuestionTranslation,
+    QuestionTranslationCorrection,
+)
 
 __all__ = [
     "EMBEDDING_DIM",
@@ -28,11 +33,14 @@ __all__ = [
     "ORDER_STATUSES",
     "QuestionPack",
     "QuestionRow",
+    "QuestionTranslation",
+    "QuestionTranslationCorrection",
     "RATING_SOURCES",
     "REVIEW_STATUSES",
     "Rating",
     "RatingBatch",
     "RevokedTransaction",
+    "TRANSLATION_STATUSES",
     "append_step",
     "question_to_row",
     "row_to_question",

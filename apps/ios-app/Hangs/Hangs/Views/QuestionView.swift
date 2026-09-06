@@ -520,9 +520,9 @@ struct QuestionView: View {
             Task { await viewModel.skipQuestion() }
         } label: {
             HStack(spacing: 6) {
-                // Same invalid symbol name as the voice footer's skip had: it drew
-                // nothing at all. "forward.end.fill" is the skip glyph.
-                Image(systemName: "forward.end.fill")
+                // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
+                // the play+bar glyph read as media transport.
+                Image(systemName: "chevron.right.2")
                     .font(.system(size: 12, weight: .semibold))
                 Text("Skip question")
                     .font(.hangsBody(15, weight: .medium))

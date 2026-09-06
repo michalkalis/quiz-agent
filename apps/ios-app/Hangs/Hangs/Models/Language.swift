@@ -78,11 +78,6 @@ extension Language {
         selectable(code, in: selectableLanguages)
     }
 
-    /// The same degradation for a pack order, against the pack-order list.
-    static func packOrderLanguage(_ code: String) -> Language {
-        selectable(code, in: packOrderLanguages)
-    }
-
     static func selectable(_ code: String, in languages: [Language]) -> Language {
         languages.first(where: { $0.id == code }) ?? Language.default
     }

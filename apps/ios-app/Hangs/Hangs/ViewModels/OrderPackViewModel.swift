@@ -112,14 +112,21 @@ final class OrderPackViewModel: ObservableObject {
     /// a later submit with the same content is then a genuinely new order.
     private var pendingIntent: PackOrderIntent?
 
+    /// The languages a pack may be ordered in (#168 DD15). A closure, not a
+    /// snapshot, because the servable lists arrive from the backend after
+    /// launch — and so a test can pin a list without touching global defaults.
+    private let orderLanguages: () -> [Language]
+
     init(
         service: PackOrderServiceProtocol,
         purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
-        adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil }
+        adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil },
+        orderLanguages: @escaping () -> [Language] = { Language.packOrderLanguages }
     ) {
         self.service = service
         self.purchaseService = purchaseService
         self.adminKeyAvailable = adminKeyAvailable
+        self.orderLanguages = orderLanguages
     }
 
     deinit {
@@ -178,7 +185,7 @@ final class OrderPackViewModel: ObservableObject {
         case .editing:
             // Only preselect what the user hasn't already overridden.
             if !hasChosenLanguage {
-                language = Self.supportedLanguage(defaultLanguage)
+                language = supportedLanguage(defaultLanguage)
             }
         case .confirming, .submitting, .polling:
             break
@@ -187,7 +194,7 @@ final class OrderPackViewModel: ObservableObject {
 
     /// Explicit user language pick (form menu).
     func selectLanguage(_ code: String) {
-        language = Self.supportedLanguage(code)
+        language = supportedLanguage(code)
         hasChosenLanguage = true
     }
 
@@ -272,7 +279,7 @@ final class OrderPackViewModel: ObservableObject {
         orderPaymentProof = nil
         pendingIntent = nil
         hasChosenLanguage = false
-        language = Self.supportedLanguage(defaultLanguage)
+        language = supportedLanguage(defaultLanguage)
         // The prompt text is deliberately kept — reordering a variation of the
         // last topic is the common case, and retyping it is pure friction.
         state = .editing
@@ -283,8 +290,8 @@ final class OrderPackViewModel: ObservableObject {
     /// reject. #168 DD15: packs are generated in English and only stamped with
     /// the code, so this list is narrower than the quiz one — a Slovak quiz
     /// language must not silently become a Slovak pack order.
-    private static func supportedLanguage(_ code: String) -> String {
-        Language.packOrderLanguage(code).id
+    private func supportedLanguage(_ code: String) -> String {
+        Language.selectable(code, in: orderLanguages()).id
     }
 
     private func runOrder() async {

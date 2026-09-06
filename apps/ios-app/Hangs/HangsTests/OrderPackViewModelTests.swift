@@ -38,12 +38,14 @@ import Testing
 private func makeOrderPackViewModel(
     service: MockPackOrderService = MockPackOrderService(),
     purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
-    adminKeyAvailable: Bool = true
+    adminKeyAvailable: Bool = true,
+    orderLanguageCodes: [String] = LanguageAvailability.fallbackPackOrderCodes
 ) -> OrderPackViewModel {
     OrderPackViewModel(
         service: service,
         purchaseService: purchaseService,
-        adminKeyAvailable: { adminKeyAvailable }
+        adminKeyAvailable: { adminKeyAvailable },
+        orderLanguages: { Language.selectableLanguages(in: orderLanguageCodes) }
     )
 }
 
@@ -239,20 +241,29 @@ struct OrderPackViewModelTests {
     // MARK: - Language preselection
 
     @Test("a quiz language packs cannot be ordered in degrades instead of reaching the server")
-    func languagePreselection() {
-        let vm = makeOrderPackViewModel()
-
+    func languageDegradesToAnOrderableCode() {
         // #168 DD15: the order picker offers `pack_order` (English-only today),
         // not the quiz list — preselecting Slovak here would send the server a
         // language it cannot generate a pack in.
+        let vm = makeOrderPackViewModel()
         vm.prepareForPresentation(defaultLanguage: "sk")
         #expect(vm.language == "en")
+    }
 
-        // The pick the user can actually make survives a reopen with a
-        // different quiz language (the `hasChosenLanguage` guard).
-        vm.selectLanguage("en")
+    @Test("the form preselects the quiz language, and an explicit pick survives reopen")
+    func languagePreselection() {
+        // Two orderable codes — the state pack ordering reaches once generation
+        // is natively multi-language. With the English-only list of today both
+        // branches of the `hasChosenLanguage` guard collapse onto "en", so the
+        // guard could be deleted without a test noticing.
+        let vm = makeOrderPackViewModel(orderLanguageCodes: ["en", "sk"])
+
         vm.prepareForPresentation(defaultLanguage: "sk")
-        #expect(vm.language == "en", "an explicit choice must not be stomped on reopen")
+        #expect(vm.language == "sk")
+
+        vm.selectLanguage("sk")
+        vm.prepareForPresentation(defaultLanguage: "en")
+        #expect(vm.language == "sk", "an explicit choice must not be stomped on reopen")
     }
 
     @Test("an unsupported quiz language falls back to English rather than reaching the server")

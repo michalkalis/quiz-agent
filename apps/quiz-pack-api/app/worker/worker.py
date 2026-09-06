@@ -53,9 +53,9 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     #    that check every job would die deep in the pipeline (or, worse, fall
     #    back to an API key and bill the account the session mode exists to
     #    avoid).
-    #  * judges must be OFF. #169 (founder 2026-09-02): the panel adds no
-    #    signal and ate ~80 % of the subscription quota — the same rule
-    #    `scripts/generate_pack.py._judges_enabled` enforces for CLI runs, so a
+    #  * judges must be OFF. #169 (founder 2026-09-02): D21 showed the panel
+    #    adds no signal and it would only burn subscription quota — the same
+    #    rule `scripts/generate_pack.py._judges_enabled` enforces for CLI runs, so a
     #    session worker booted with JUDGE_GATE/JUDGE_MODELS set is a config
     #    mistake, not a mode we support.
     from quiz_shared.llm import factory as llm_factory

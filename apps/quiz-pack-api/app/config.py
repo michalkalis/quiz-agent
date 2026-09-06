@@ -12,6 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+from arq.constants import default_queue_name as arq_default_queue_name
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
@@ -49,6 +50,19 @@ class Settings(BaseSettings):
     app_bundle_id: str = "com.missinghue.hangs"
     storekit_environment: Optional[str] = None
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
+
+    # Queue routing (#172 — session worker: custom packy v bete cez subscription).
+    # `order_queue_name` is where the API and the sweep PUT jobs; `worker_queue_name`
+    # is what this worker process TAKES them from. Both default to ARQ's own default
+    # queue, so an unset deploy behaves exactly as before. Prod flips only
+    # ORDER_QUEUE_NAME (jobs land on the session queue the mba worker consumes); the
+    # mba worker sets both, plus a single slot and a long budget, because a
+    # `claude -p` pack run is far slower than the paid-API one and the subscription
+    # quota is shared with interactive work.
+    order_queue_name: str = arq_default_queue_name
+    worker_queue_name: str = arq_default_queue_name
+    worker_max_jobs: int = 2
+    worker_job_timeout_s: int = 3600
 
     # Sentry (backend arch review 2026-07-18). Per-deploy Fly secret; unset →
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate

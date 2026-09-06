@@ -1,4 +1,4 @@
-"""Unicode-safe text folding for SK/CS comparisons (#168 DD13).
+"""Unicode-safe text folding for SK/CS comparisons (#168 — batch translation pipeline SK/CS, DD13).
 
 ``app.verification.answerability._normalize`` folds with ``[^a-z0-9 ]`` — on
 Slovak/Czech that does not strip an accent, it DELETES the letter ("žirafa" →

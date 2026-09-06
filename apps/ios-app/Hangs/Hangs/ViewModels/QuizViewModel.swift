@@ -336,7 +336,7 @@ final class QuizViewModel: ObservableObject {
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
-        Language.forCode(settings.language) ?? Language.default
+        Language.selectable(settings.language)
     }
 
     // MARK: - Audio Device State — forwarded to AudioDeviceState (#113 T2)
@@ -877,7 +877,9 @@ final class QuizViewModel: ObservableObject {
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
         let quizDifficulty = difficulty ?? settings.difficulty
-        let quizLanguage = language ?? settings.language
+        // #168 DD14: a stored preference for a language that is no longer
+        // servable degrades to the default rather than 422-ing the start call.
+        let quizLanguage = Language.selectable(language ?? settings.language).id
 
         // Check if question history is at capacity
         if persistenceStore.isAtCapacity {

@@ -62,7 +62,7 @@ struct OrderPackFormStep: View {
         VStack(alignment: .leading, spacing: 10) {
             HangsCard {
                 Menu {
-                    ForEach(Language.supportedLanguages) { language in
+                    ForEach(Language.packOrderLanguages) { language in
                         Button(language.nativeName) { viewModel.selectLanguage(language.id) }
                     }
                 } label: {

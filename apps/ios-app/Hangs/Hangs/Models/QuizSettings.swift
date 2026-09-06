@@ -176,7 +176,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        language = try container.decode(String.self, forKey: .language)
+        // A persisted language that is no longer offered (#168 DD14 hid it, or
+        // its corpus was pulled) degrades to the default — mirrors the category
+        // filter below: a stale value would otherwise be sent to the backend.
+        language = Language.selectable(try container.decode(String.self, forKey: .language)).id
         audioMode = try container.decode(String.self, forKey: .audioMode)
         numberOfQuestions = try container.decode(Int.self, forKey: .numberOfQuestions)
         if let list = try container.decodeIfPresent([String].self, forKey: .categories) {

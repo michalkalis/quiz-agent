@@ -42,6 +42,7 @@ from sqlalchemy import (
     delete,
     func,
     select,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -320,6 +321,35 @@ class PgvectorQuestionStore:
             if similarity >= threshold:
                 duplicates.append((_row_to_question(row), similarity))
         return duplicates
+
+    async def count_answer_key(
+        self, language: str, category: str, answer_key: str
+    ) -> int:
+        """#170 D6 — live corpus rows sharing one normalized answer in a category.
+
+        Scope: ``pack_id IS NULL`` (customer packs never count, locked 3),
+        live review states only (gate F1 R2: approved + pending_review), and
+        ``COALESCE(language, 'en')`` so legacy NULL-language rows are not lost
+        (D2). Raw SQL on purpose: ``answer_key`` comes from migration
+        a170c0e5d1b2 and is deliberately NOT part of ``questions_table`` —
+        the hot-path ``search()`` selects that table wholesale and must keep
+        working on a database that has not run the #170 migration. This
+        method is only ever called with ANSWER_CAP on (corpus CLI runs).
+        """
+        stmt = text(
+            "SELECT count(*) FROM questions "
+            "WHERE pack_id IS NULL "
+            "AND review_status IN ('approved', 'pending_review') "
+            "AND COALESCE(language, 'en') = :language "
+            "AND category = :category "
+            "AND answer_key = :answer_key"
+        )
+        async with self._session_factory() as session:
+            result = await session.execute(
+                stmt,
+                {"language": language, "category": category, "answer_key": answer_key},
+            )
+            return int(result.scalar_one())
 
     # ── Internal helpers ───────────────────────────────────────────────
 

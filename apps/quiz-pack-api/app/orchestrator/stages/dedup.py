@@ -43,12 +43,15 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Protocol
+from typing import Any, Protocol
+
+from quiz_shared.models.question import Question
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
-from quiz_shared.models.question import Question
+from app.orchestrator.stages.strictness import NO_STRICTNESS, Strictness
 
 DEFAULT_COSINE_THRESHOLD = 0.85
 DEFAULT_JACCARD_THRESHOLD = 0.80
@@ -71,10 +74,7 @@ logger = logging.getLogger(__name__)
 # Function words only — topical content words must survive so the fact check
 # compares substance, not phrasing.
 _STOPWORDS = frozenset(
-    "a an the of in on at to for is are was were be been do does did doing "
-    "what which who whom whose how when where why your you it its not no "
-    "but and or as by with from this that these those there here have has "
-    "had can could will would may might most more".split()
+    ["a", "an", "the", "of", "in", "on", "at", "to", "for", "is", "are", "was", "were", "be", "been", "do", "does", "did", "doing", "what", "which", "who", "whom", "whose", "how", "when", "where", "why", "your", "you", "it", "its", "not", "no", "but", "and", "or", "as", "by", "with", "from", "this", "that", "these", "those", "there", "here", "have", "has", "had", "can", "could", "will", "would", "may", "might", "most", "more"]
 )
 
 
@@ -92,8 +92,27 @@ class AsyncDuplicateFinder(Protocol):
     ) -> list[tuple[Question, float]]: ...
 
 
+class AsyncAnswerCounter(Protocol):
+    """#170 D6 — how many *live corpus* rows already carry this normalized answer.
+
+    Scope is the store's: ``pack_id IS NULL`` (customer packs never count,
+    locked 3) and live review states only (gate F1 R2). The stage adds the
+    answers it kept in the current batch on top.
+    """
+
+    async def count_answer_key(
+        self, language: str, category: str, answer_key: str
+    ) -> int: ...
+
+
 class DedupStage:
-    """Drops near-duplicate questions via cosine + Jaccard checks."""
+    """Drops near-duplicate questions via cosine + Jaccard checks.
+
+    #170 D5/D6: ``strictness`` and ``answer_counter`` are constructor
+    parameters with defaults that reproduce today's behaviour exactly. Only
+    ``scripts/generate_pack.py`` (corpus runs) ever fills them; the customer
+    pack worker never does, so a mis-set prod secret cannot change a pack.
+    """
 
     name = "dedup"
 
@@ -105,6 +124,8 @@ class DedupStage:
         jaccard_threshold: float = DEFAULT_JACCARD_THRESHOLD,
         in_batch_threshold: float = DEFAULT_IN_BATCH_JACCARD_THRESHOLD,
         fact_jaccard_threshold: float = DEFAULT_FACT_JACCARD_THRESHOLD,
+        strictness: Strictness | None = None,
+        answer_counter: AsyncAnswerCounter | None = None,
     ) -> None:
         self._store = question_store
         self._gold_standard_path = (
@@ -114,7 +135,25 @@ class DedupStage:
         self._jaccard_threshold = jaccard_threshold
         self._in_batch_threshold = in_batch_threshold
         self._fact_jaccard_threshold = fact_jaccard_threshold
+        self._strictness = strictness if strictness is not None else NO_STRICTNESS
+        self._answer_counter = answer_counter
+        if self._strictness.answer_cap and answer_counter is None:
+            raise ValueError(
+                "DedupStage: answer_cap is ON but no answer_counter was injected — "
+                "the cap would silently count only the current batch"
+            )
         self._gold_tokens: list[frozenset[str]] | None = None
+
+    # Per-candidate thresholds (D6): resolved by the candidate's category at
+    # check time; a category without a profile gets the constructor scalar.
+    def _cosine_for(self, q: Question) -> float:
+        return self._strictness.cosine_for(q.category, self._cosine_threshold)
+
+    def _in_batch_for(self, q: Question) -> float:
+        return self._strictness.in_batch_for(q.category, self._in_batch_threshold)
+
+    def _fact_for(self, q: Question) -> float:
+        return self._strictness.fact_for(q.category, self._fact_jaccard_threshold)
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         if not ctx.questions:
@@ -124,56 +163,107 @@ class DedupStage:
 
         kept: list[Question] = []
         kept_tokens: list[frozenset[str]] = []
+        kept_in_batch: list[float] = []  # each kept row's own in-batch threshold
         kept_fact_keys: set[tuple[str, str]] = set()
         kept_fact_tokens: list[frozenset[str]] = []
+        kept_answer_counts: dict[tuple[str, str, str], int] = {}
         dropped = 0
         fact_dropped = 0
+        cap_dropped = 0
+        reasons = {
+            "cosine": 0,
+            "jaccard": 0,
+            "in_batch": 0,
+            "fact_key": 0,
+            "fact_content": 0,
+        }
         for q in ctx.questions:
-            if await self._is_cosine_duplicate(q):
+            if await self._is_cosine_duplicate(q, self._cosine_for(q)):
                 dropped += 1
+                reasons["cosine"] += 1
                 continue
             if self._is_jaccard_duplicate(q, gold_tokens):
                 dropped += 1
+                reasons["jaccard"] += 1
                 continue
             # In-batch check (#72, 2026-07-10): the corpus lookup cannot see
             # questions from the same not-yet-persisted batch, so without this
             # a batch can carry near-verbatim repeats of itself (the June-18
             # audit batch had the same bridge question 3×). First occurrence
-            # wins; later near-copies drop.
+            # wins; later near-copies drop. #170 D6: a pairwise check between
+            # two categories uses the STRICTER (lower) of the two thresholds,
+            # so relaxing one category never loosens the other.
             q_tokens = _tokenize(q.question)
+            q_in_batch = self._in_batch_for(q)
             if q_tokens and any(
-                _jaccard(q_tokens, k) >= self._in_batch_threshold
-                for k in kept_tokens
+                _jaccard(q_tokens, k) >= min(q_in_batch, k_thr)
+                for k, k_thr in zip(kept_tokens, kept_in_batch)
             ):
                 dropped += 1
+                reasons["in_batch"] += 1
                 continue
             # Same-fact reuse (#153 Phase 0.1): one fact backs one question
             # per pack, across formats and top-up rounds (top-up merges
             # survivors before this stage re-runs, so earlier rounds are in
-            # `kept_*` here). First occurrence wins.
+            # `kept_*` here). First occurrence wins. The exact fact-key match
+            # stays global (D6); only the content threshold is per category.
             fact_key = _fact_key(q)
             fact_tokens = _fact_tokens(q)
             if fact_key is not None and fact_key in kept_fact_keys:
                 fact_dropped += 1
+                reasons["fact_key"] += 1
                 logger.warning(
                     "DedupStage same-fact dropped id=%s (fact key reuse "
                     "url=%s answer=%s)",
-                    q.id, fact_key[0], fact_key[1],
+                    q.id,
+                    fact_key[0],
+                    fact_key[1],
                 )
                 continue
+            fact_threshold = self._fact_for(q)
             if fact_tokens and any(
-                _jaccard(fact_tokens, k) >= self._fact_jaccard_threshold
-                for k in kept_fact_tokens
+                _jaccard(fact_tokens, k) >= fact_threshold for k in kept_fact_tokens
             ):
                 fact_dropped += 1
+                reasons["fact_content"] += 1
                 logger.warning(
                     "DedupStage same-fact dropped id=%s (content overlap "
                     ">= %.2f with an earlier batchmate)",
-                    q.id, self._fact_jaccard_threshold,
+                    q.id,
+                    fact_threshold,
                 )
                 continue
+            # #170 D6 — per-category repeated-answer cap (ANSWER_CAP). Not a
+            # quality gate but a waste brake (locked 2): the candidate simply
+            # drops, nothing is regenerated. Counted over live corpus rows
+            # (store scope) plus what this batch already kept.
+            if self._strictness.answer_cap and self._answer_counter is not None:
+                cell = (
+                    (q.language or "en"),
+                    (q.category or ""),
+                    _normalize_answer(q.correct_answer),
+                )
+                if cell[2]:
+                    if cell not in kept_answer_counts:
+                        kept_answer_counts[
+                            cell
+                        ] = await self._answer_counter.count_answer_key(*cell)
+                    if kept_answer_counts[cell] >= self._strictness.cap_for(q.category):
+                        cap_dropped += 1
+                        logger.warning(
+                            "DedupStage answer-cap dropped id=%s (%s/%s answer=%r "
+                            "already at %d)",
+                            q.id,
+                            cell[0],
+                            cell[1],
+                            cell[2],
+                            kept_answer_counts[cell],
+                        )
+                        continue
+                    kept_answer_counts[cell] += 1
             kept.append(q)
             kept_tokens.append(q_tokens)
+            kept_in_batch.append(q_in_batch)
             kept_fact_tokens.append(fact_tokens)
             if fact_key is not None:
                 kept_fact_keys.add(fact_key)
@@ -182,16 +272,24 @@ class DedupStage:
         return StageResult(
             info={
                 "kept": len(kept),
-                "dropped": dropped + fact_dropped,
+                "dropped": dropped + fact_dropped + cap_dropped,
                 "fact_dropped": fact_dropped,
+                # #170: own counter so cap drops never blend into cosine drops
+                # in the quality-guard metrics; `drop_reasons` is the full split.
+                "answer_cap": cap_dropped,
+                "drop_reasons": {**reasons, "answer_cap": cap_dropped},
             },
             cost_cents=0,
         )
 
-    async def _is_cosine_duplicate(self, question: Question) -> bool:
+    async def _is_cosine_duplicate(
+        self, question: Question, threshold: float | None = None
+    ) -> bool:
+        if threshold is None:
+            threshold = self._cosine_threshold
         try:
             duplicates = await self._store.find_duplicates(
-                question.question, threshold=self._cosine_threshold
+                question.question, threshold=threshold
             )
         except Exception:
             # A failing store must not silently approve dups; surface via

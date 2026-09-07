@@ -41,7 +41,9 @@ import logging
 from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.stages.dedup import DEFAULT_FACT_JACCARD_THRESHOLD
 from app.orchestrator.stages.spent_facts import filter_spent_facts
+from app.orchestrator.stages.strictness import NO_STRICTNESS, Strictness
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,13 @@ class TopUpStage:
         max_rounds: int = MAX_TOPUP_ROUNDS,
         answerability_stage=None,
         composition_stage=None,
+        strictness: Strictness | None = None,
     ) -> None:
+        # #170 D6 — the same per-category profile DedupStage consults, so the
+        # spent-fact filter and the dedup content check read ONE value (the
+        # `spent_facts` ↔ `dedup` mirror stays identical). Only the corpus
+        # CLI injects it; the customer-pack worker leaves the default.
+        self._strictness = strictness if strictness is not None else NO_STRICTNESS
         self._generation_stage = generation_stage
         self._verification_stage = verification_stage
         self._scoring_stage = scoring_stage
@@ -122,18 +130,26 @@ class TopUpStage:
             round_facts = original_facts
             if original_facts:
                 round_facts, spent = filter_spent_facts(
-                    original_facts, survivors_so_far
+                    original_facts,
+                    survivors_so_far,
+                    fact_jaccard_threshold=self._strictness.fact_for(
+                        ctx.category, DEFAULT_FACT_JACCARD_THRESHOLD
+                    ),
                 )
                 logger.info(
                     "TopUpStage round=%d fact pool: %d spent, %d remain",
-                    rounds + 1, spent, len(round_facts),
+                    rounds + 1,
+                    spent,
+                    len(round_facts),
                 )
                 if not round_facts:
                     logger.warning(
                         "TopUpStage round=%d skipped: fact pool exhausted — "
                         "top-up round would only produce dedup-doomed "
                         "questions (%d/%d facts already spent)",
-                        rounds + 1, spent, len(original_facts),
+                        rounds + 1,
+                        spent,
+                        len(original_facts),
                     )
                     exhausted = True
                     break
@@ -177,7 +193,10 @@ class TopUpStage:
             rounds += 1
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",
-                rounds, shortfall, len(ctx.questions), target,
+                rounds,
+                shortfall,
+                len(ctx.questions),
+                target,
             )
 
         final_count = len(ctx.questions)

@@ -79,6 +79,12 @@ struct HangsApp: App {
                 .task {
                     await Self.warmUpBackend()
                 }
+                // #168 DD14: fetch the servable language lists once per launch
+                // so the pickers offer exactly what the backend will accept.
+                // Best-effort — failure leaves the cached/compiled lists.
+                .task {
+                    await LanguageAvailability.shared.refresh()
+                }
                 // Mic-in-background fix: UIBackgroundModes audio keeps TTS
                 // playing while driving, but the mic INPUT must never survive
                 // backgrounding. Route phase changes to the quiz view model,

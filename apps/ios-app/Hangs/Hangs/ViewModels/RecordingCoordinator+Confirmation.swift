@@ -15,6 +15,13 @@ extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
         cancelAutoConfirm()
+        clearPause()
+        // #100.2 / #79: the sheet flag is this call's single-flight token. A
+        // stray or concurrent second confirm finds it already down, and must not
+        // reach the empty-answer branch below — an emptied transcript is how a
+        // *consumed* confirmation looks too, and skipping there would submit a
+        // second answer for the question the first call just graded.
+        let wasShowingSheet = showAnswerConfirmation
         showAnswerConfirmation = false
 
         let silent = transcriptWasEdited
@@ -28,8 +35,9 @@ extension RecordingCoordinator {
         // pendingResponse and suspends in handleQuizResponse; the second falls
         // through to the streaming tail, still sees the stale transcript, and
         // resubmits it against whatever question is current by then.
-        let answer = transcribedAnswer
+        let answer = transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         transcribedAnswer = ""
+        noAnswerCaptured = false
 
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
@@ -38,8 +46,19 @@ extension RecordingCoordinator {
             return
         }
 
+        // #171 Track B: an empty field IS an answer — "no answer". It arrives
+        // two ways: the sheet was opened empty because nothing was captured, or
+        // the driver cleared the transcript and confirmed. Either way the quiz
+        // must reach a RESULT, not sit in .processing with the sheet gone. The
+        // backend already has that contract — a skip returns an evaluated
+        // response — so route through it instead of inventing a payload.
+        guard !answer.isEmpty else {
+            guard wasShowingSheet, transition(to: .askingQuestion) else { return }
+            await skipQuestion()
+            return
+        }
+
         // Streaming STT path: submit the transcribed text via /sessions/{id}/input
-        guard !answer.isEmpty else { return }
         await resubmitAnswer(answer, silent)
     }
 
@@ -95,6 +114,7 @@ extension RecordingCoordinator {
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
         cancelAutoConfirm()
+        clearPause()
         // The sheet can also be reached from `.processing` while the voice upload is
         // still in flight (the command screen maps `.processing` → `.confirmation`, so
         // a spoken "again" lands here mid-submit). That submission is answering the
@@ -104,6 +124,7 @@ extension RecordingCoordinator {
         taskBag.cancel(.voiceSubmission)
         showAnswerConfirmation = false
         pendingResponse = nil
+        noAnswerCaptured = false
         transcriptWasEdited = false
         preEditTranscript = nil
         setIsRerecording(true)
@@ -119,6 +140,7 @@ extension RecordingCoordinator {
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
         cancelAutoConfirm()
+        clearPause()
         taskBag.cancel(.voiceSubmission)
         taskBag.cancel(.sttCommitWatchdog)
         cancelAnswerTimer()
@@ -129,6 +151,7 @@ extension RecordingCoordinator {
         speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false
         pendingResponse = nil
+        noAnswerCaptured = false
         transcriptWasEdited = false
         preEditTranscript = nil
         transcribedAnswer = ""

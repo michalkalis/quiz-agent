@@ -3,17 +3,17 @@
     "purpose": "Reference set that validates the MQM-Quiz translation judge for Slovak (issue #168 — batch translation pipeline SK/CS, DD6). Built by Session C (task T5). Consumed by scripts/translation_judge_eval.py (task T9).",
     "language": "sk",
     "bar": "Every item with severity 'critical' must be caught. Zero critical findings on items with origin 'control'. Major/minor recall is reported and explicitly non-gating.",
-    "item_count": 22,
+    "item_count": 31,
     "composition": {
-      "real": 8,
+      "real": 14,
       "synthetic": 7,
-      "control": 7
+      "control": 10
     },
     "severity_counts": {
-      "critical": 9,
-      "major": 4,
+      "critical": 12,
+      "major": 7,
       "minor": 2,
-      "none": 7
+      "none": 10
     },
     "real_defect_sources": [
       "commit 783e1285 (TestFlight build 53 feedback) — the 'Sinners' -> 'Grešníci' invented film title, fixed by a title rule in apps/quiz-agent/app/translation/translator.py:202,367-375",
@@ -26,6 +26,7 @@
     ],
     "not_mined": "The retiring prod SQLite cache (/data/translations.db on quiz-agent-api) was NOT mined: the execution environment has no Fly authentication token, so the read-only pull was impossible and prod was deliberately not touched. Every 'real' item below is instead evidenced by a repo document or a git commit, which is why this set carries 7 real items rather than a synthetic-only fallback. Mining the cache stays available later and can only enrich this set — it is not a prerequisite for the DD6 bar.",
     "authored_questions": "The English source questions are authored in the style of the corpus (6-category taxonomy) rather than copied from prod rows. The defect being measured lives in the source/target relation, not in the source question, so a corpus-identical stem buys nothing. The real items reproduce the exact defective Slovak strings recorded in the sources above.",
+    "founder_arm_ratings": "Items carrying \"provenance\": \"founder-arm-ratings-2026-09\" were added (task T8/T9) after the founder rated the SK arm batch on 2026-09-03/06. They cover the defect classes he named that the original Session C set did not exercise: an answer leaked by localising a place name, an indeclinable band name declined, an English spelling kept where the target language has its own form, a song title translated where the original title is the answer, MCQ option texts translated that must stay as-is, and a foreign word (thaler) left untouched where the target language has a word for it. Their controls were added in the same pass so the control share stays about a third, and every existing item was left untouched. The Slovak items are labelled origin \"real\" because the founder observed them in real arm output; the Czech counterparts are \"synthetic\" because no Czech batch has been rated (CS ratings 0/140), which keeps this file's synthetic-only declaration honest.",
     "qid_namespace": "sk-r* real, sk-s* synthetic, sk-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge."
   },
   "items": [
@@ -585,6 +586,244 @@
         "explanation": "Tichý oceán pokrýva približne tretinu zemského povrchu."
       },
       "note": "Control and the direct counterpart of sk-r06: the same question translated the way it should be, keys unchanged and values localized. A judge that flags this has learned the wrong lesson from the real defect.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-f01",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "answer_leak",
+      "severity": "critical",
+      "source": {
+        "question": "Which Bohemian mining town, known in German as Joachimsthal, gave the world the word \"dollar\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Silver coins minted at Joachimsthal were called Joachimsthaler, shortened to thaler and later borrowed into English as dollar."
+      },
+      "target": {
+        "question": "Ktoré české banské mesto, po nemecky Jáchymov, dalo svetu slovo \"dolár\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Strieborné mince razené v Jáchymove sa volali jáchymovské toliare, z čoho neskôr vzniklo slovo dolár."
+      },
+      "note": "The German exonym inside the question was localised into the Slovak form, which is the correct answer. The question now contains its own answer, so every player scores by reading it back.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as GPT-4.1 localising Joachimsthal to Jáchymov."
+    },
+    {
+      "qid": "sk-f02",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "fluency_grammar",
+      "severity": "major",
+      "source": {
+        "question": "Which British band released the 1975 album \"A Night at the Opera\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Queen",
+        "alternative_answers": [],
+        "explanation": "It was the band's fourth studio album and contained Bohemian Rhapsody."
+      },
+      "target": {
+        "question": "Ktorá britská skupina vydala v roku 1975 album \"A Night at the Opera\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Queen",
+        "alternative_answers": [],
+        "explanation": "Bola to Queenina štvrtá štúdiová nahrávka a obsahovala Bohemian Rhapsody."
+      },
+      "note": "An indeclinable band name was inflected into a Slovak possessive adjective (\"Queenina\"); a native writes \"štvrtý štúdiový album skupiny Queen\". The item is still gradable, hence major, not critical.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as the \"Queenina\" declension of an indeclinable band name."
+    },
+    {
+      "qid": "sk-f03",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "untranslated_string",
+      "severity": "major",
+      "source": {
+        "question": "Which Australian marsupial produces cube-shaped droppings?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The wombat",
+        "alternative_answers": [],
+        "explanation": "The wombat's intestine shapes its faeces into cubes so they do not roll away from its scent markers."
+      },
+      "target": {
+        "question": "Ktorý austrálsky vačkovec produkuje trus v tvare kocky?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Wombat",
+        "alternative_answers": [],
+        "explanation": "Črevo wombata tvaruje trus do kociek, aby sa neskotúľal z pachovej značky."
+      },
+      "note": "Slovak has the established form \"vombat\"; the English spelling was kept instead. A spoken \"vombat\" can still match loosely, so the harm is language quality rather than grading - major.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as DeepL keeping \"wombat\" where Slovak has \"vombat\"."
+    },
+    {
+      "qid": "sk-f04",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "title_mistranslation",
+      "severity": "critical",
+      "source": {
+        "question": "Which 1971 John Lennon song opens with the line \"Imagine there's no heaven\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Imagine",
+        "alternative_answers": [],
+        "explanation": "The title track of Lennon's 1971 album is his best known solo song."
+      },
+      "target": {
+        "question": "Ktorá pieseň Johna Lennona z roku 1971 sa začína veršom \"Predstav si, že niet neba\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Predstav si",
+        "alternative_answers": [],
+        "explanation": "Titulná skladba Lennonovho albumu z roku 1971 je jeho najznámejšia sólová pieseň."
+      },
+      "note": "The song title is the answer, and it was translated. A player who says \"Imagine\" - the only name the song has - is graded against \"Predstav si\" and marked wrong.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as song titles translated where the original title is the answer."
+    },
+    {
+      "qid": "sk-f05",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "mcq_options_translated",
+      "severity": "critical",
+      "source": {
+        "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody topped the UK chart at Christmas 1975 and again after Freddie Mercury's death in 1991."
+      },
+      "target": {
+        "question": "Ktorá pieseň skupiny Queen bola vianočnou jednotkou britského rebríčka v roku 1975 aj 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohémska rapsódia", "b": "Rozhýbeme ťa", "c": "Niekoho na milovanie", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohémska rapsódia",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohémska rapsódia bola na vrchole britského rebríčka na Vianoce 1975 a znovu po smrti Freddieho Mercuryho v roku 1991."
+      },
+      "note": "Song titles are proper names the player must say as they are. Translating the option values means the spoken original never matches an option, and the displayed options name songs that do not exist.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as DeepL translating MCQ option texts that must stay as-is."
+    },
+    {
+      "qid": "sk-f06",
+      "language": "sk",
+      "origin": "real",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "untranslated_string",
+      "severity": "major",
+      "source": {
+        "question": "Which large silver coin, minted from 1520 in Bohemia, is the ancestor of the dollar?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "The thaler",
+        "alternative_answers": [],
+        "explanation": "The Joachimsthaler was shortened to thaler, which English borrowed as dollar."
+      },
+      "target": {
+        "question": "Ktorá veľká strieborná minca razená od roku 1520 v Čechách je predchodcom dolára?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Thaler",
+        "alternative_answers": [],
+        "explanation": "Názov joachimsthaler sa skrátil na thaler, z ktorého angličtina prevzala slovo dolár."
+      },
+      "note": "Slovak has \"toliar\" for this coin; the foreign form was left untouched. The founder's thaler rule: a foreign word stays only when the target language has none of its own.",
+      "evidence": "Founder arm ratings 2026-09-03/06 on the SK translation batch b3ba2700 (issue-168-batch-translation-pipeline-sk-cs.md, model-per-language verdict): the defect classes the founder named while rating all 35 questions x 4 arms. Observed as the founder's thaler rule while rating the arms."
+    },
+    {
+      "qid": "sk-c08",
+      "language": "sk",
+      "origin": "control",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which Bohemian mining town, known in German as Joachimsthal, gave the world the word \"dollar\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Silver coins minted at Joachimsthal were called Joachimsthaler, shortened to thaler and later borrowed into English as dollar."
+      },
+      "target": {
+        "question": "Ktoré české banské mesto, po nemecky Joachimsthal, dalo svetu slovo \"dolár\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Strieborné mince razené v tomto meste sa volali joachimsthalery; skrátením vzniklo slovo toliar a neskôr dolár."
+      },
+      "note": "Direct counterpart of sk-f01: the German exonym is correctly kept, so nothing is leaked. A judge that flags every foreign place name has learned the wrong lesson from the leak.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c09",
+      "language": "sk",
+      "origin": "control",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody topped the UK chart at Christmas 1975 and again after Freddie Mercury's death in 1991."
+      },
+      "target": {
+        "question": "Ktorá pieseň skupiny Queen bola vianočnou jednotkou britského rebríčka v roku 1975 aj 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody bola na vrchole britského rebríčka na Vianoce 1975 a znovu po smrti Freddieho Mercuryho v roku 1991."
+      },
+      "note": "Direct counterpart of sk-f05: the stem is translated and the song titles are correctly left as they are. Flagging this as untranslated options would invert the rule the founder actually stated.",
+      "evidence": null
+    },
+    {
+      "qid": "sk-c10",
+      "language": "sk",
+      "origin": "control",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "In which European capital did Mozart compose The Marriage of Figaro?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Vienna",
+        "alternative_answers": [],
+        "explanation": "Mozart wrote the opera in Vienna in 1786."
+      },
+      "target": {
+        "question": "V ktorom európskom hlavnom meste zložil Mozart operu Figarova svadba?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Viedeň",
+        "alternative_answers": ["Viedni", "vo Viedni"],
+        "explanation": "Mozart napísal operu vo Viedni v roku 1786."
+      },
+      "note": "A place name correctly localised (Vienna -> Viedeň) and an opera given its established Slovak title. Neither leaks anything, because the question does not name the answer. The counterpart of sk-f01 in the other direction: not every localised proper noun is a defect.",
       "evidence": null
     }
   ]

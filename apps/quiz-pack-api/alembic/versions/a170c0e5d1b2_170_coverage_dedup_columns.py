@@ -16,7 +16,7 @@ correct; revisit at > ~5 000 rows or on the ivfflat-scan warning).
 - ix_questions_lang_category_answer_key (language, category, answer_key) — answer cap
 
 Revision ID: a170c0e5d1b2
-Revises: f2a91c4b8e57
+Revises: c7e2b45a90d3 (#168 translation store)
 Create Date: 2026-09-07
 """
 
@@ -25,7 +25,7 @@ from alembic import op
 from pgvector.sqlalchemy import Vector
 
 revision = "a170c0e5d1b2"
-down_revision = "f2a91c4b8e57"
+down_revision = "c7e2b45a90d3"
 branch_labels = None
 depends_on = None
 

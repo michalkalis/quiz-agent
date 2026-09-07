@@ -268,6 +268,23 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = Question.previewSlovak
                 viewModel.quizState = .askingQuestion
             }
+            // `--ui-test-countdown` (#171 Track C): the footer with a countdown
+            // pinned at 23 s — the founder's TestFlight screenshot, where the
+            // Slovak "Nahrávať" + the seconds pill did not fit. Run it with
+            // `-AppleLanguages (sk)` to reproduce that exact row.
+            if CommandLine.arguments.contains("--ui-test-countdown") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.quizState = .askingQuestion
+                viewModel.settings.thinkingTime = 30
+                viewModel.thinkingTimeCountdown = 23
+            }
+            // `--ui-test-processing` (#171 Track E): the evaluating overlay over a
+            // dimmed question, with the submitted answer echoed back.
+            if CommandLine.arguments.contains("--ui-test-processing") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.transcribedAnswer = "Jupiter"
+                viewModel.quizState = .processing
+            }
             // `--ui-test-recording`: voice QuestionView mid-recording with a live
             // transcript, to verify the transcript card pins above the action row.
             if CommandLine.arguments.contains("--ui-test-recording") {
@@ -345,6 +362,20 @@ final class AppState: ObservableObject {
                 )
                 viewModel.autoAdvanceCountdown = 5
                 viewModel.settings.autoAdvanceDelay = 8
+            }
+            // `--ui-test-confirmation` (#171 Track D): land directly on the
+            // answer confirmation sheet with a pinned countdown, so the pause
+            // pill / PAUSED badge can be driven without recording anything. The
+            // countdown is a static value (no timer runs) — tapping Pause zeroes
+            // it, tapping Continue arms the REAL 5 s window.
+            if CommandLine.arguments.contains("--ui-test-confirmation") {
+                viewModel.currentQuestion = Question.preview
+                viewModel.currentSession = QuizSession.preview(score: 2.0, answered: 2, correct: 2)
+                viewModel.quizState = .processing
+                viewModel.transcribedAnswer = "Bratislava"
+                viewModel.settings.autoConfirmEnabled = true
+                viewModel.autoConfirmCountdown = 5
+                viewModel.showAnswerConfirmation = true
             }
             // `--ui-test-result-nil-evaluation` (#127 req. 6/7): a genuinely nil
             // evaluation cannot route to ResultView (ContentView shows it only for

@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "purpose": "Reviewed Czech glossary fed into the MQM-Quiz judge prompt (issue #168 — batch translation pipeline SK/CS, DD3/DD12). Curated by hand from the question_translation_corrections category histogram; NEVER auto-derived, or unreviewed corrections re-enter the pipeline unverified.",
+    "language": "cs",
+    "shape": "entries[] = {source, target, note}. `target` null means \"keep the source form unchanged\".",
+    "status": "Empty by design until the correction histogram exists (task T16, Session K)."
+  },
+  "entries": []
+}

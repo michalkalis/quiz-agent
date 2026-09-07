@@ -56,6 +56,7 @@ extension QuizViewModel {
         case .active:
             isAppForeground = true
             refreshCommandWindow() // re-arm via the existing window sync
+            resumeSuppressedAnswerWindow()
 
             // Foreground reconciliation (#102 findings 1+2): a webhook that
             // landed while backgrounded (or a purchase sync that failed
@@ -68,6 +69,29 @@ extension QuizViewModel {
 
         default:
             break
+        }
+    }
+
+    /// #171 Track H (founder 2026-09-05): countdowns keep running while
+    /// backgrounded, but `startRecording()` refuses to open the mic there — so a
+    /// think window that expired out of sight used to leave the driver parked on
+    /// a question with every countdown at zero and nothing to press. On return
+    /// we do what should have happened: open the mic if the answer window it was
+    /// about to start still has time left, otherwise close the question out on
+    /// the no-answer confirmation sheet (the Track B path) so the quiz keeps
+    /// moving. Anything that already left `.askingQuestion` resolved itself.
+    private func resumeSuppressedAnswerWindow() {
+        guard quizState == .askingQuestion,
+              let suppressedAt = recordingCoordinator.backgroundSuppressedRecordingAt
+        else { return }
+        recordingCoordinator.backgroundSuppressedRecordingAt = nil
+
+        if Date().timeIntervalSince(suppressedAt) < Config.autoRecordingDuration {
+            Logger.audio.info("🌅 Scene → active: opening the answer window suppressed in the background")
+            Task { [weak self] in await self?.recordingCoordinator.startRecording() }
+        } else {
+            Logger.audio.info("🌅 Scene → active: the whole answer window elapsed in the background — no answer")
+            recordingCoordinator.handleTranscriptionFailure()
         }
     }
 }

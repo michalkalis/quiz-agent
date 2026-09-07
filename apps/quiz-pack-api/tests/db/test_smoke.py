@@ -55,7 +55,8 @@ def test_alembic_upgrade_head_is_idempotent() -> None:
     assert "Running upgrade" not in second.stderr
     assert "Running upgrade" not in second.stdout
     # And current revision should match head.
-    # Head pin — bump this when a migration is added (#170 coverage columns).
+    # Head pin — bump this when a migration is added (#170 coverage columns,
+    # on top of the #168 translation store c7e2b45a90d3).
     # It is what makes "at head" mean the head THIS build expects, not merely
     # "some revision".
     assert "a170c0e5d1b2" in (current.stdout + current.stderr)

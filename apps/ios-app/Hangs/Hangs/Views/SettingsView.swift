@@ -288,7 +288,7 @@ struct SettingsView: View {
     private var languageGroup: some View {
         groupSection(label: "language", color: Theme.Hangs.Colors.blue) {
             Menu {
-                ForEach(Language.supportedLanguages) { language in
+                ForEach(Language.selectableLanguages) { language in
                     Button(language.nativeName) { viewModel.settings.language = language.id }
                 }
             } label: {
@@ -296,7 +296,7 @@ struct SettingsView: View {
                     // "Current language" read as the APP language — this is the
                     // quiz content/voice language (founder batch 2026-07-12).
                     label: "Quiz language",
-                    value: Language.forCode(viewModel.settings.language)?.nativeName ?? "English",
+                    value: Language.selectable(viewModel.settings.language).nativeName,
                     subtitle: "Questions, answers and voice",
                     valueColor: Theme.Hangs.Colors.pink,
                     action: {}

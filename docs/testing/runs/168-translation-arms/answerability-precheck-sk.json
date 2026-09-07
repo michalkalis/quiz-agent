@@ -1,0 +1,881 @@
+{
+ "model": "deepseek-v4-flash",
+ "language": "sk",
+ "results": [
+  {
+   "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Antarctica",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "B. Antarktída",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "B. Antarktída",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Nintendo",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Nintendo",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Nintendo",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "61765172-71c1-5487-97c2-827d5b89bd9f",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Gustave Eiffel",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Gustáv Eiffel",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Gustáv Eiffel",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+   "approved": false,
+   "score": 8.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "The Beatles",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "The Beatles",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "The Beatles",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "84a82a8f-b5f4-44da-80d0-58f7da931d58",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "pass",
+   "en": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "deorbited spacecraft and satellites",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "vesmírneho odpadu a starých satelitov",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "vesmírneho odpadu a starých satelitov",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "a9f2146c-6ca9-50ac-90ce-48951240c579",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "limestone",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "vápenec",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "vápenec",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+   "approved": false,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "Russia and the United States",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Rusku a Spojeným štátom",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "Rusku a Spojeným štátom",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+   "approved": false,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "ABBA",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "ABBA",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "ABBA",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "cdfdb9aa-c960-42b5-b6e3-614604013673",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "control_fail",
+   "en": {
+    "answer": "a",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "target": {
+    "answer": "a",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "control_fail"
+   }
+  },
+  {
+   "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "potassium",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "draslík",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "draslík",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "dd858794-8374-5c0f-809f-2a3a6df2b927",
+   "approved": false,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "International Orange",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "International Orange",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "International Orange",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Czech Republic",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Česká republika",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Česká republika",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "944c79db-14c3-41e4-8fa1-b13d54ed78fb",
+   "approved": true,
+   "score": 9.0,
+   "mcq": true,
+   "verdict": "pass",
+   "en": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Hatsune Miku",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Hatsune Miku",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Hatsune Miku",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "croquet",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "B. kroket",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "B. kroket",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+   "approved": false,
+   "score": 7.0,
+   "mcq": false,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "handheld cellular phone",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Motorola DynaTAC",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "Motorola DynaTAC",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "translation_flip"
+   }
+  },
+  {
+   "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "passport",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "cestovný pas",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "cestovný pas",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "thermal expansion of the iron",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "B",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "B",
+     "passed": false,
+     "reason": "wrong_answer"
+    },
+    "verdict": "translation_flip"
+   }
+  },
+  {
+   "id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Beyoncé",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Beyoncé",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Beyoncé",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "8bd2aa09-dcd5-4f16-9894-4eee0772c7ff",
+   "approved": false,
+   "score": 6.0,
+   "mcq": true,
+   "verdict": "pass",
+   "en": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "a",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "wombat",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "vombat",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "vombat",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "beer",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "pivo",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "pivo",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "90acd238-7a28-4ad3-8163-485485a361dc",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "a",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "a) Fínsko",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "a) Fínsko",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "87be1cdf-0382-5a7c-bb70-4634f65cd625",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "c",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "c) Ice Ice Baby",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "c) Ice Ice Baby",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Windsor Castle",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "hrad Windsor",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "hrad Windsor",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "cocoa solids",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "kakaová hmota",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "kakaová hmota",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "salt",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "soľ",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "soľ",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "pass",
+   "en": {
+    "answer": "c",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "c",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "c",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "0b27e5c2-4f06-51bb-bc66-55fe7d86e514",
+   "approved": true,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "aluminum",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "hliník",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "hliník",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Phil Lord and Christopher Miller",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Phil Lord a Christopher Miller",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Phil Lord a Christopher Miller",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "cb16489b-0ef0-4534-8a12-07c0a7617e5c",
+   "approved": true,
+   "score": 10.0,
+   "mcq": true,
+   "verdict": "translation_flip",
+   "en": {
+    "answer": "b",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "b) Venuša",
+    "passed": false,
+    "reason": "wrong_answer"
+   },
+   "rescored": {
+    "target": {
+     "answer": "b) Venuša",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+   "approved": true,
+   "score": 9.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "tulip",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "tulipán",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "tulipán",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+   "approved": false,
+   "score": 7.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "the bell",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Big Ben je prísne vzaté názov veľkého zvona v hodinovej veži Westminsterského paláca.",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Big Ben je prísne vzaté názov veľkého zvona v hodinovej veži Westminsterského paláca.",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  },
+  {
+   "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+   "approved": false,
+   "score": 10.0,
+   "mcq": false,
+   "verdict": "pass",
+   "en": {
+    "answer": "Harrison Ford",
+    "passed": true,
+    "reason": null
+   },
+   "target": {
+    "answer": "Harrison Ford",
+    "passed": true,
+    "reason": null
+   },
+   "rescored": {
+    "target": {
+     "answer": "Harrison Ford",
+     "passed": true,
+     "reason": null
+    },
+    "verdict": "pass"
+   }
+  }
+ ]
+}

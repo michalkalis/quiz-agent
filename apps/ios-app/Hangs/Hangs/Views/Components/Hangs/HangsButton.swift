@@ -74,6 +74,12 @@ struct HangsPrimaryButton: View {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .fill(Color.black.opacity(0.22))
                         )
+                        // #171 Track C3 safety: in a narrow row the title must
+                        // shrink (it already has minimumScaleFactor) and the
+                        // seconds must not — a clipped "23s" is the one part of
+                        // this button the driver cannot infer from context.
+                        .fixedSize()
+                        .layoutPriority(1)
                         .accessibilityHidden(true)
                 }
             }

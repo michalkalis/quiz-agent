@@ -3,22 +3,23 @@
     "purpose": "Reference set that validates the MQM-Quiz translation judge for Czech (issue #168 — batch translation pipeline SK/CS, DD6). Built by Session C (task T5). Consumed by scripts/translation_judge_eval.py (task T9).",
     "language": "cs",
     "bar": "Every item with severity 'critical' must be caught. Zero critical findings on items with origin 'control'. Major/minor recall is reported and explicitly non-gating.",
-    "item_count": 12,
+    "item_count": 15,
     "composition": {
       "real": 0,
-      "synthetic": 8,
-      "control": 4
+      "synthetic": 10,
+      "control": 5
     },
     "severity_counts": {
-      "critical": 5,
+      "critical": 7,
       "major": 2,
       "minor": 1,
-      "none": 4
+      "none": 5
     },
     "no_real_defects": "This set contains ZERO mined real defects, and the count was not padded to hide it. Two reasons, both stated plainly. First, DD6 anticipates it: every recorded translation incident in this repo is Slovak, because Slovak is the only non-English language the founder has field-tested. Second, the retiring prod SQLite cache (/data/translations.db on quiz-agent-api), the one place that might hold real Czech rows, could NOT be pulled: the execution environment has no Fly authentication token, and prod was deliberately not touched. Mining that file later can only enrich this set.",
     "consequence": "Because this set is synthetic-only, DD6 gives Czech one gate Slovak does not: before the CS cutover the founder spot-checks 20 randomly sampled CS approvals on the rating web, and any critical defect found there fails the bar and re-opens the judge. A green run against this file is therefore necessary but not sufficient for Czech.",
     "defect_classes": "The five synthetic classes named in DD6 reproduce mechanically in Czech: answer flip, unit change, untranslated string, title mistranslation, register calque. Several are deliberate Czech counterparts of a Slovak item in translation-defect-reference-sk.json, so a judge that passes only on Slovak is visible as a Czech miss.",
     "authored_questions": "English source questions are authored in the style of the corpus (6-category taxonomy) rather than copied from prod rows: the defect being measured lives in the source/target relation, not in the source question.",
+    "founder_arm_ratings": "Items carrying \"provenance\": \"founder-arm-ratings-2026-09\" were added (task T8/T9) after the founder rated the SK arm batch on 2026-09-03/06. They cover the defect classes he named that the original Session C set did not exercise: an answer leaked by localising a place name, an indeclinable band name declined, an English spelling kept where the target language has its own form, a song title translated where the original title is the answer, MCQ option texts translated that must stay as-is, and a foreign word (thaler) left untouched where the target language has a word for it. Their controls were added in the same pass so the control share stays about a third, and every existing item was left untouched. The Slovak items are labelled origin \"real\" because the founder observed them in real arm output; the Czech counterparts are \"synthetic\" because no Czech batch has been rated (CS ratings 0/140), which keeps this file's synthetic-only declaration honest.",
     "qid_namespace": "cs-s* synthetic, cs-c* control. The #166 fact-check qids (q03, q32, q48, q63, q81, q89, q95) are deliberately NOT reused: those are factual errors in English questions and exercise nothing in a source-vs-target judge."
   },
   "items": [
@@ -326,6 +327,88 @@
         "explanation": "Tichý oceán pokrývá přibližně třetinu zemského povrchu."
       },
       "note": "Control and the direct counterpart of cs-s05: the same shape translated the way it should be, keys unchanged and values localized. A judge that flags this has learned the wrong lesson from the defect.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s09",
+      "language": "cs",
+      "origin": "synthetic",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "answer_leak",
+      "severity": "critical",
+      "source": {
+        "question": "Which Bohemian mining town, known in German as Joachimsthal, gave the world the word \"dollar\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Silver coins minted at Joachimsthal were called Joachimsthaler, shortened to thaler and later borrowed into English as dollar."
+      },
+      "target": {
+        "question": "Které české hornické město, německy Jáchymov, dalo světu slovo \"dolar\"?",
+        "type": "text",
+        "possible_answers": null,
+        "correct_answer": "Jáchymov",
+        "alternative_answers": [],
+        "explanation": "Stříbrné mince ražené v Jáchymově se nazývaly jáchymovské tolary, z čehož později vzniklo slovo dolar."
+      },
+      "note": "Czech counterpart of sk-f01. The German exonym was localised into the Czech name, which is the answer, so the question hands it to the player.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-s10",
+      "language": "cs",
+      "origin": "synthetic",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "mcq_options_translated",
+      "severity": "critical",
+      "source": {
+        "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody topped the UK chart at Christmas 1975 and again after Freddie Mercury's death in 1991."
+      },
+      "target": {
+        "question": "Která píseň skupiny Queen byla vánoční jedničkou britského žebříčku v roce 1975 i 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohémská rapsodie", "b": "Rozhýbeme tě", "c": "Někoho k milování", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohémská rapsodie",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohémská rapsodie byla na vrcholu britského žebříčku o Vánocích 1975 a znovu po smrti Freddieho Mercuryho v roce 1991."
+      },
+      "note": "Czech counterpart of sk-f05: song titles are proper names the player must say as they are, and translating the option values makes the spoken original unmatchable.",
+      "evidence": null
+    },
+    {
+      "qid": "cs-c05",
+      "language": "cs",
+      "origin": "control",
+      "provenance": "founder-arm-ratings-2026-09",
+      "defect_category": "none",
+      "severity": "none",
+      "source": {
+        "question": "Which Queen song was the UK Christmas number one in both 1975 and 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody topped the UK chart at Christmas 1975 and again after Freddie Mercury's death in 1991."
+      },
+      "target": {
+        "question": "Která píseň skupiny Queen byla vánoční jedničkou britského žebříčku v roce 1975 i 1991?",
+        "type": "multiple_choice",
+        "possible_answers": {"a": "Bohemian Rhapsody", "b": "We Will Rock You", "c": "Somebody to Love", "d": "Radio Ga Ga"},
+        "correct_answer": "Bohemian Rhapsody",
+        "correct_answer_key": "a",
+        "alternative_answers": [],
+        "explanation": "Bohemian Rhapsody byla na vrcholu britského žebříčku o Vánocích 1975 a znovu po smrti Freddieho Mercuryho v roce 1991."
+      },
+      "note": "Direct counterpart of cs-s10: stem translated, song titles correctly kept. A judge that flags this has inverted the rule.",
       "evidence": null
     }
   ]

@@ -108,7 +108,8 @@ struct QuestionViewMCQInspectorTests {
 /// included. Hiding them cost the whole point of MCQ — you cannot pick between
 /// alternatives you have not been shown.
 ///
-/// What did NOT reverse: the answer `ListenBar` says "LISTENING — SAY A–D", so
+/// What did NOT reverse: the answer `ListenBar` says "Listening — say A–D or
+/// the answer" (#171 Track I — answering with the option text works), so
 /// it must still appear only once the mic is actually live. The long-stem
 /// scroll affordance has to keep working with the grid on screen throughout.
 @MainActor
@@ -171,7 +172,7 @@ struct QuestionViewMCQOptionVisibilityTests {
             }
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "LISTENING — SAY A–D")
+                _ = try tree.find(text: "Listening — say A–D or the answer")
             }
         }
 
@@ -181,7 +182,7 @@ struct QuestionViewMCQOptionVisibilityTests {
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "LISTENING — SAY A–D")
+                try tree.find(text: "Listening — say A–D or the answer")
             }
             #expect(throws: (any Error).self) {
                 _ = try tree.find(text: "THINK — LISTENING IN 0 S")
@@ -635,6 +636,48 @@ struct QuestionViewReplayProcessingInspectorTests {
             let tree = try view.inspect()
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+        }
+    }
+
+    /// #171 Track E (founder, 2026-09-05 TestFlight: "Vyhodnocujem špiní spodok
+    /// obrazovky"): the evaluating state used to sit *in* the control stack, so the
+    /// bottom of the screen turned into a stray spinner where the buttons had been.
+    /// It is an overlay above the whole screen now and the control stack is empty —
+    /// nothing is offered that cannot be acted on while the answer is in flight.
+    @Test("evaluating empties the bottom controls in the voice body")
+    func evaluatingEmptiesVoiceControls() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .processing
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            for id in ["question.record", "question.textInputToggle", "question.skip", "question.mute"] {
+                #expect(throws: (any Error).self, "\(id) must be gone while evaluating") {
+                    _ = try tree.find(viewWithAccessibilityIdentifier: id)
+                }
+            }
+        }
+    }
+
+    /// Same contract on the MCQ side — one evaluating state, not two.
+    @Test("evaluating empties the bottom controls in the MCQ body")
+    func evaluatingEmptiesMCQControls() async throws {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentQuestion = Question.previewMCQ
+        vm.quizState = .processing
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(throws: (any Error).self, "the skip chip must be gone while evaluating") {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
             }
         }
     }

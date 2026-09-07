@@ -30,6 +30,11 @@ Two independent checks, either of which is enough to drop a question:
   higher than on question-only vectors. Default OFF; when ON the stage first
   refuses to run over a corpus whose QA backfill is incomplete, because a
   half-covered column would silently lose recall.
+- **Gray-zone judge (#170 D7, ``grayzone_judge`` injected only)** — a
+  candidate whose nearest corpus match sits in ``[0.70, cosine threshold)``
+  gets one pairwise "same fact?" model verdict (``GrayZoneJudge``); "yes"
+  drops under its own reason, everything else falls back to today's
+  below-threshold pass. Bounded per run, warns when the budget is gone.
 
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
@@ -58,6 +63,7 @@ from quiz_shared.models.question import Question
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.stages.grayzone_judge import GRAYZONE_LOW, GrayZoneJudge
 from app.orchestrator.stages.strictness import NO_STRICTNESS, Strictness
 
 DEFAULT_COSINE_THRESHOLD = 0.85
@@ -161,6 +167,7 @@ class DedupStage:
         answer_counter: AsyncAnswerCounter | None = None,
         qa_embedding: bool = False,
         qa_cosine_threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
+        grayzone_judge: GrayZoneJudge | None = None,
     ) -> None:
         self._store = question_store
         self._gold_standard_path = (
@@ -184,7 +191,13 @@ class DedupStage:
                 "DedupStage: qa_embedding is ON but the question store has no "
                 "find_duplicates_qa — the QA branch would silently never run"
             )
+        self._grayzone_judge = grayzone_judge
         self._gold_tokens: list[frozenset[str]] | None = None
+        # Per-candidate trace of the last `run` (id, kept, reason, nearest
+        # corpus pair + score). An attribute, not `StageResult.info`, so the
+        # SSE payload of the customer path is untouched; the replay harness
+        # (170.14b) and Session K's diff read it after the run.
+        self.last_decisions: list[dict[str, Any]] = []
 
     # Per-candidate thresholds (D6): resolved by the candidate's category at
     # check time; a category without a profile gets the constructor scalar.
@@ -214,26 +227,34 @@ class DedupStage:
         dropped = 0
         fact_dropped = 0
         cap_dropped = 0
+        decisions: list[dict[str, Any]] = []
         reasons = {
             "cosine": 0,
             "cosine_qa": 0,
+            "grayzone_judge": 0,
             "jaccard": 0,
             "in_batch": 0,
             "fact_key": 0,
             "fact_content": 0,
         }
         for q in ctx.questions:
-            if await self._is_cosine_duplicate(q, self._cosine_for(q)):
+            verdict, pair = await self._cosine_verdict(q, self._cosine_for(q))
+            if verdict is not None:
                 dropped += 1
-                reasons["cosine"] += 1
+                reasons[verdict] += 1
+                decisions.append(_decision(q, verdict, pair))
                 continue
-            if self._qa_embedding and await self._is_qa_duplicate(q):
-                dropped += 1
-                reasons["cosine_qa"] += 1
-                continue
+            if self._qa_embedding:
+                qa_pair = await self._qa_match(q)
+                if qa_pair is not None:
+                    dropped += 1
+                    reasons["cosine_qa"] += 1
+                    decisions.append(_decision(q, "cosine_qa", qa_pair))
+                    continue
             if self._is_jaccard_duplicate(q, gold_tokens):
                 dropped += 1
                 reasons["jaccard"] += 1
+                decisions.append(_decision(q, "jaccard", None))
                 continue
             # In-batch check (#72, 2026-07-10): the corpus lookup cannot see
             # questions from the same not-yet-persisted batch, so without this
@@ -250,6 +271,7 @@ class DedupStage:
             ):
                 dropped += 1
                 reasons["in_batch"] += 1
+                decisions.append(_decision(q, "in_batch", None))
                 continue
             # Same-fact reuse (#153 Phase 0.1): one fact backs one question
             # per pack, across formats and top-up rounds (top-up merges
@@ -268,6 +290,7 @@ class DedupStage:
                     fact_key[0],
                     fact_key[1],
                 )
+                decisions.append(_decision(q, "fact_key", None))
                 continue
             fact_threshold = self._fact_for(q)
             if fact_tokens and any(
@@ -281,6 +304,7 @@ class DedupStage:
                     q.id,
                     fact_threshold,
                 )
+                decisions.append(_decision(q, "fact_content", None))
                 continue
             # #170 D6 — per-category repeated-answer cap (ANSWER_CAP). Not a
             # quality gate but a waste brake (locked 2): the candidate simply
@@ -308,8 +332,10 @@ class DedupStage:
                             cell[2],
                             kept_answer_counts[cell],
                         )
+                        decisions.append(_decision(q, "answer_cap", None))
                         continue
                     kept_answer_counts[cell] += 1
+            decisions.append(_decision(q, None, pair))
             kept.append(q)
             kept_tokens.append(q_tokens)
             kept_in_batch.append(q_in_batch)
@@ -318,6 +344,8 @@ class DedupStage:
                 kept_fact_keys.add(fact_key)
 
         ctx.questions = kept
+        self.last_decisions = decisions
+        judge = self._grayzone_judge
         return StageResult(
             info={
                 "kept": len(kept),
@@ -327,9 +355,56 @@ class DedupStage:
                 # in the quality-guard metrics; `drop_reasons` is the full split.
                 "answer_cap": cap_dropped,
                 "drop_reasons": {**reasons, "answer_cap": cap_dropped},
+                # #170 D7 — budget accounting; zeros when no judge is injected.
+                "grayzone_judge_calls": judge.calls if judge else 0,
+                "grayzone_judge_skipped": judge.skipped if judge else 0,
             },
             cost_cents=0,
         )
+
+    async def _cosine_verdict(
+        self, question: Question, threshold: float
+    ) -> tuple[str | None, tuple[Question, float] | None]:
+        """Question-only corpus check → (drop reason or None, nearest pair).
+
+        Without a gray-zone judge this is exactly the legacy
+        ``_is_cosine_duplicate`` call. With one, the store is asked down to
+        ``GRAYZONE_LOW`` so the nearest below-threshold match is visible; only
+        the single nearest gray-zone pair is judged (one call per candidate).
+        """
+        if self._grayzone_judge is None:
+            is_dup = await self._is_cosine_duplicate(question, threshold)
+            return ("cosine" if is_dup else None), None
+        try:
+            matches = await self._store.find_duplicates(
+                question.question, threshold=GRAYZONE_LOW
+            )
+        except Exception:  # noqa: BLE001 — mirrors the legacy store fail-safe
+            # Same fail-safe as the legacy branch: a store outage never drops.
+            return None, None
+        others = sorted(
+            ((m, s) for m, s in matches if m.id != question.id),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )
+        if not others:
+            return None, None
+        nearest = others[0]
+        if nearest[1] >= threshold:
+            return "cosine", nearest
+        if nearest[1] >= GRAYZONE_LOW:
+            same = await self._grayzone_judge.same_fact(
+                question, nearest[0], nearest[1]
+            )
+            if same:
+                logger.info(
+                    "DedupStage gray-zone judge dropped id=%s (%.3f vs corpus id=%s)",
+                    question.id,
+                    nearest[1],
+                    nearest[0].id,
+                )
+                return "grayzone_judge", nearest
+        return None, nearest
 
     async def _is_cosine_duplicate(
         self, question: Question, threshold: float | None = None
@@ -352,8 +427,9 @@ class DedupStage:
                 return True
         return False
 
-    async def _is_qa_duplicate(self, question: Question) -> bool:
-        """#170 D2 — same fact, disjoint wording. Unlike the question-only
+    async def _qa_match(self, question: Question) -> tuple[Question, float] | None:
+        """#170 D2 — same fact, disjoint wording: the nearest non-self QA match
+        at or above the QA threshold, or ``None``. Unlike the question-only
         branch this does NOT swallow store errors: the flag is only ever on in
         corpus CLI runs, where a failing query must stop the run rather than
         quietly pass every candidate."""
@@ -371,8 +447,8 @@ class DedupStage:
                     score,
                     match.id,
                 )
-                return True
-        return False
+                return match, score
+        return None
 
     async def _assert_qa_corpus_ready(self) -> None:
         """Fail loud on an incomplete QA backfill; warn on NULL languages."""
@@ -417,6 +493,21 @@ class DedupStage:
             if isinstance(entry, dict) and entry.get("question")
         ]
         return self._gold_tokens
+
+
+def _decision(
+    question: Question, reason: str | None, pair: tuple[Question, float] | None
+) -> dict[str, Any]:
+    """One row of ``DedupStage.last_decisions`` — JSON-serialisable."""
+    return {
+        "id": question.id,
+        "question": question.question,
+        "kept": reason is None,
+        "reason": reason,
+        "match_id": pair[0].id if pair else None,
+        "match_question": pair[0].question if pair else None,
+        "score": round(pair[1], 4) if pair else None,
+    }
 
 
 def _gold_entries(data: Any) -> Iterable[dict[str, Any]]:

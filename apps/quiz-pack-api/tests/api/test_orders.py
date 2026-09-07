@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
+from arq.constants import default_queue_name as arq_default_queue_name
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -95,8 +96,36 @@ async def test_create_order_happy_path_202(
     # purchase. `attempt_seq` is 0 at creation, hence the ':0' suffix (#145
     # replaced the old retry_count/manual_retry_count pair with that counter).
     arq_mock.enqueue_job.assert_awaited_once_with(
-        "process_order", str(order_id), _job_id=f"process_order:{order_id}:0"
+        "process_order",
+        str(order_id),
+        _job_id=f"process_order:{order_id}:0",
+        _queue_name=arq_default_queue_name,
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("order_queue_name", ["quiz-pack:session"])
+async def test_create_order_enqueues_on_configured_queue(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """The order goes to the queue ORDER_QUEUE_NAME names, not ARQ's default.
+
+    #172: prod hands beta pack orders to the mba worker by pointing this
+    setting at a session queue. If the enqueue ignored it, the job would sit on
+    the default queue with the Fly worker scaled to zero and the paid purchase
+    would never be generated.
+    """
+    jws = make_jws(payload_overrides={"transactionId": "session-queue-tx-1"})
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id="session-queue-tx-1"),
+        headers={"X-StoreKit-JWS": jws, **BEARER},
+    )
+    assert resp.status_code == 202, resp.text
+
+    assert arq_mock.enqueue_job.await_args.kwargs["_queue_name"] == "quiz-pack:session"
 
 
 @pytest.mark.asyncio
@@ -263,7 +292,14 @@ async def test_create_order_language_de_accepted(
     test_session: AsyncSession,
     arq_mock: MagicMock,
 ) -> None:
-    """#138: de is one of the app's 10 supported quiz languages → 202, not 422."""
+    """#138: de is one of the app's 10 supported quiz languages → 202, not 422.
+
+    Still 202 after #168 — batch translation pipeline SK/CS restricted pack
+    ordering to English (DD15): the restriction lands *soft*, because installed
+    builds still show all ten languages in the order form and Apple has already
+    charged for this purchase by the time the guard runs. T26 flips it to 422
+    once the gated client build is on the device.
+    """
     tx_id = "tx-lang-de"
     jws = make_jws(payload_overrides={"transactionId": tx_id})
     body = {**_valid_body(tx_id=tx_id), "language": "de"}

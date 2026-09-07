@@ -22,6 +22,7 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 import pytest_asyncio
+from arq.constants import default_queue_name as arq_default_queue_name
 from fastapi import FastAPI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -264,8 +265,13 @@ async def test_retry_failed_order_returns_202(
     # `attempt_seq` (0 → 1 here), a counter that exists only for this — keyed on
     # `retry_count` the endpoint had to zero it, which is what handed every
     # manual retry a fresh 3-attempt paid budget.
+    # #172: the retry lands on the queue the deploy routes orders to (here the
+    # default), so one order's attempts never split across two workers.
     arq_mock.enqueue_job.assert_awaited_once_with(
-        "process_order", order_id, _job_id=f"process_order:{order_id}:1"
+        "process_order",
+        order_id,
+        _job_id=f"process_order:{order_id}:1",
+        _queue_name=arq_default_queue_name,
     )
 
     # Verify DB state: order back to in_progress, job reset to queued,
@@ -599,7 +605,10 @@ async def test_retry_with_owner_bearer_and_no_proof_returns_202(
     assert resp.status_code == 202, resp.text
     assert resp.json()["status"] == "in_progress"
     arq_mock.enqueue_job.assert_awaited_once_with(
-        "process_order", order_id, _job_id=f"process_order:{order_id}:1"
+        "process_order",
+        order_id,
+        _job_id=f"process_order:{order_id}:1",
+        _queue_name=arq_default_queue_name,
     )
 
     db_session.expire_all()

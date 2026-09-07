@@ -702,7 +702,7 @@ struct ResultViewCTACountdownTests {
                 correctAnswer: "Paris", questionId: "q_test", explanation: nil
             )
         )
-        vm.currentQuestionPaused = false
+        vm.isPaused = false
         vm.autoAdvanceCountdown = countdown
         vm.settings.autoAdvanceDelay = 10
         return vm
@@ -724,7 +724,7 @@ struct ResultViewCTACountdownTests {
     @Test("Paused countdown hides the chip and swaps STAY → RESUME in the same slot")
     func pausedCountdownSwapsPill() async throws {
         let vm = makeCountdownViewModel(countdown: 7)
-        vm.currentQuestionPaused = true
+        vm.isPaused = true
         let view = ResultView(viewModel: vm)
 
         try await ViewHosting.host(view) {

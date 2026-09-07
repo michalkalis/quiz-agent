@@ -9,6 +9,7 @@ the test fixtures see all tables without an explicit walk.
 from .base import Base, UUIDPrimaryKeyMixin
 from .engine import engine, normalize_async_url
 from .models import (  # noqa: F401  -- side-effect: register tables on Base.metadata
+    PIPELINE_OWNED_COLUMNS,
     GenerationJob,
     GenerationOrder,
     QuestionPack,
@@ -25,6 +26,7 @@ __all__ = [
     "GenerationJob",
     "GenerationOrder",
     "QuestionPack",
+    "PIPELINE_OWNED_COLUMNS",
     "QuestionRow",
     "UUIDPrimaryKeyMixin",
     "append_step",

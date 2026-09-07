@@ -176,12 +176,14 @@ struct QuizViewModelStreamingTests {
         }
     }
 
-    // MARK: - Test 5: Empty committed transcript escalates, not confirms (54.4)
+    // MARK: - Test 5: Empty committed transcript ends on the no-answer sheet (54.4 / #171 B)
 
     /// 54.4 (founder #5): dead air → 15 s cap → forced commit returns "" — must
-    /// escalate as a transcription failure (retry prompt → auto-skip), never
-    /// show an empty confirmation sheet or stay stuck in .recording.
-    @Test("empty committedTranscript escalates transcription failure instead of confirming")
+    /// never stay stuck in .recording. #171 Track B moved where it goes: the
+    /// confirmation sheet with an EMPTY field, so the driver can still type or
+    /// re-record, instead of a "didn't catch that" banner plus a fresh full
+    /// countdown (which read as a timer that would not end).
+    @Test("empty committedTranscript opens the no-answer confirmation sheet instead of retrying")
     func emptyCommittedTranscriptEscalates() async throws {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
@@ -190,10 +192,12 @@ struct QuizViewModelStreamingTests {
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript(""))
-            await waitUntil({ viewModel.quizState == .askingQuestion }, "never escaped .recording")
+            await waitUntil({ viewModel.showAnswerConfirmation }, "never escaped .recording onto the sheet")
 
-            #expect(viewModel.showAnswerConfirmation == false)
-            #expect(viewModel.errorMessage != nil)
+            #expect(viewModel.quizState == .processing)
+            #expect(viewModel.transcribedAnswer.isEmpty)
+            #expect(viewModel.noAnswerCaptured == true)
+            #expect(viewModel.errorMessage == nil, "no retry banner — the empty sheet is the message")
             #expect(viewModel.isStreamingSTT == false)
         }
     }
@@ -203,7 +207,9 @@ struct QuizViewModelStreamingTests {
     /// 54.4: stopRecordingAndSubmit's streaming branch fires commitAndClose and
     /// waits for an event that may never come (dead air, dropped socket). The
     /// watchdog is the only thing stopping the UI from showing RECORDING forever.
-    @Test("commit watchdog escapes .recording when no committed transcript ever arrives")
+    /// #171 Track B: its rescue is now the empty confirmation sheet — not a
+    /// "didn't catch that" banner and a fresh countdown.
+    @Test("commit watchdog escapes .recording onto the empty confirmation sheet")
     func commitWatchdogRescuesSilentCommit() async throws {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
@@ -217,9 +223,11 @@ struct QuizViewModelStreamingTests {
 
             // Re-arm with a near-zero timeout instead of waiting the production 5 s.
             viewModel.recordingCoordinator.startCommitWatchdog(seconds: 0.01)
-            await waitUntil({ viewModel.quizState == .askingQuestion }, "watchdog never rescued the stuck state")
+            await waitUntil({ viewModel.showAnswerConfirmation }, "watchdog never rescued the stuck state")
 
-            #expect(viewModel.errorMessage != nil)
+            #expect(viewModel.quizState == .processing)
+            #expect(viewModel.transcribedAnswer.isEmpty)
+            #expect(viewModel.errorMessage == nil, "no retry banner — the empty sheet is the message")
             #expect(viewModel.isStreamingSTT == false)
         }
     }
@@ -246,14 +254,14 @@ struct QuizViewModelStreamingTests {
     // MARK: - Test 8: MCQ voice match survives the listener's self-cancel (54.5 class)
 
     /// Regression: handleCommittedTranscript runs inside the .sttEvent listener
-    /// task and cancels that very task before routing. The MCQ branch then
-    /// submits inline — without the unstructured-task hop the submit inherits
+    /// task and cancels that very task before routing. The confirmation it opens
+    /// must survive that self-cancel — without care the routing inherits
     /// the cancellation and throws URLError(.cancelled): the driver says the
     /// right answer and gets the OOPS screen. The direct-call tests in
     /// QuizViewModelMCQVoiceTests can't catch this (no enclosing cancelled
     /// task), so this drives the committed transcript through the real event
     /// stream. Found live in the 54.16 in-sim verify, 2026-06-13.
-    @Test("MCQ voice match through the event stream submits despite the listener self-cancel")
+    @Test("MCQ voice match through the event stream reaches the confirmation sheet, then submits")
     func mcqVoiceMatchSubmitsThroughEventStream() async throws {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
@@ -277,7 +285,13 @@ struct QuizViewModelStreamingTests {
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Jupiter"))
-            await waitUntil({ viewModel.quizState.isShowingResult }, "voice-match submit never completed")
+            // #171 Track I: the match opens the sheet instead of submitting.
+            await waitUntil({ viewModel.showAnswerConfirmation }, "voice match never reached the confirmation sheet")
+            #expect(mockNetwork.capturedTextInputInput == nil)
+            #expect(viewModel.transcribedAnswer == "Jupiter")
+
+            await viewModel.confirmAnswer()
+            await waitUntil({ viewModel.quizState.isShowingResult }, "confirmed voice-match submit never completed")
 
             #expect(mockNetwork.capturedTextInputInput == "Jupiter")
             #expect(viewModel.mcqVoiceMatchedKey == "b")

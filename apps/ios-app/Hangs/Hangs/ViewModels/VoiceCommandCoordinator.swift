@@ -206,6 +206,13 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// you"). Every TTS closes the window.
     let isPlayingTTS: @MainActor () -> Bool
     let quizState: @MainActor () -> QuizState
+    /// #171 Track D: the quiz is paused ON THE ANSWER CONFIRMATION SHEET.
+    /// Deliberately narrower than the shared quiz-level `isPaused`: the
+    /// result screen's STAY pill sets the same flag but must keep listening
+    /// (its pause holds only auto-advance, and "ďalej" has to keep working
+    /// there — #131 D). A paused sheet is the one state where the driver
+    /// asked for silence, so the mic comes down with it.
+    let isPausedOnConfirmation: @MainActor () -> Bool
     /// The shared silence-detection choke points (AudioDeviceState, #113 T2).
     let startSilenceDetectionListening: @MainActor () async -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
@@ -226,6 +233,8 @@ final class VoiceCommandCoordinator: ObservableObject {
     let rerecordAnswer: @MainActor () -> Void
     let cancelProcessing: @MainActor () -> Void
     let continueToNext: @MainActor () -> Void
+    /// #171 Track D: spoken "pause"/"pauza" on the confirmation sheet.
+    let pauseOnConfirmation: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
 
@@ -243,6 +252,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         isAppForeground: @escaping @MainActor () -> Bool,
         isPlayingTTS: @escaping @MainActor () -> Bool,
         quizState: @escaping @MainActor () -> QuizState,
+        isPausedOnConfirmation: @escaping @MainActor () -> Bool,
         startSilenceDetectionListening: @escaping @MainActor () async -> Void,
         stopSilenceDetectionListening: @escaping @MainActor () -> Void,
         configureQuietListeningSession: @escaping @MainActor () -> Void,
@@ -255,6 +265,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         rerecordAnswer: @escaping @MainActor () -> Void,
         cancelProcessing: @escaping @MainActor () -> Void,
         continueToNext: @escaping @MainActor () -> Void,
+        pauseOnConfirmation: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         now: @escaping @MainActor () -> Date = { Date() }
@@ -265,6 +276,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.isAppForeground = isAppForeground
         self.isPlayingTTS = isPlayingTTS
         self.quizState = quizState
+        self.isPausedOnConfirmation = isPausedOnConfirmation
         self.startSilenceDetectionListening = startSilenceDetectionListening
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
         self.configureQuietListeningSession = configureQuietListeningSession
@@ -277,6 +289,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.rerecordAnswer = rerecordAnswer
         self.cancelProcessing = cancelProcessing
         self.continueToNext = continueToNext
+        self.pauseOnConfirmation = pauseOnConfirmation
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
         self.now = now

@@ -74,7 +74,13 @@ from sqlalchemy import select  # noqa: E402
 from sqlalchemy.dialects.postgresql import insert as pg_insert  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
-from app.db import QuestionRow, engine, normalize_async_url, question_to_row  # noqa: E402
+from app.db import (  # noqa: E402
+    PIPELINE_OWNED_COLUMNS,
+    QuestionRow,
+    engine,
+    normalize_async_url,
+    question_to_row,
+)
 from quiz_shared.models.question import Question  # noqa: E402
 
 logger = logging.getLogger("migrate_pending")
@@ -153,8 +159,17 @@ async def _existing_ids(session: AsyncSession, ids: Sequence[str]) -> set[str]:
 
 
 def _row_to_insert_dict(row: QuestionRow) -> dict:
-    """Plain ``{column_name: value}`` dict for a dialect-level INSERT."""
-    return {c.name: getattr(row, c.name) for c in QuestionRow.__table__.columns}
+    """Plain ``{column_name: value}`` dict for a dialect-level INSERT.
+
+    ``PIPELINE_OWNED_COLUMNS`` is excluded: those columns are not this writer's
+    to set, and a transient ORM object has not yet had its Python-side defaults
+    applied, so sending them would insert an explicit NULL.
+    """
+    return {
+        c.name: getattr(row, c.name)
+        for c in QuestionRow.__table__.columns
+        if c.name not in PIPELINE_OWNED_COLUMNS
+    }
 
 
 async def _run(args: argparse.Namespace) -> int:

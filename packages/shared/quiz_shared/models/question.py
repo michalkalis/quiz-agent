@@ -239,6 +239,23 @@ class Question(BaseModel):
         None,
         description="Dimensionality of ``embedding`` (e.g. 1536). Useful when swapping embedding models.",
     )
+    # #170 coverage-driven dedup (D8) — all optional, unread until the matching
+    # feature flag is ON. `question_to_row` mirrors them 1:1.
+    subtopic: Optional[str] = Field(
+        None,
+        description="Coverage-map cell within `category` (approved taxonomy, app/generation/subtopics.json); assigned at generation, never classified afterwards.",
+    )
+    answer_key: Optional[str] = Field(
+        None,
+        description="Normalized correct answer (dedup `_normalize_answer`) for the per-category repeated-answer cap.",
+    )
+    embedding_qa: Optional[List[float]] = Field(
+        None,
+        description="Question+answer embedding (second column; `embedding` stays the retrieval vector).",
+    )
+    embedding_qa_model: Optional[str] = Field(
+        None, description="Model that produced ``embedding_qa``."
+    )
 
     # Time-sensitive question support
     expires_at: Optional[datetime] = None

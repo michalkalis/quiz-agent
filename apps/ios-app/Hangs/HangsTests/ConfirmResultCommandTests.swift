@@ -16,6 +16,7 @@
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
+import SwiftUI
 import Testing
 
 @MainActor
@@ -258,6 +259,160 @@ struct ConfirmResultCommandTests {
                             "skip did not commit on undo-window expiry")
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
             #expect(vm.quizState != .askingQuestion, "expiry must commit the skip")
+        }
+    }
+}
+
+// MARK: - #171 Track D — pause on the answer confirmation sheet
+
+/// The founder rule (2026-09-05, LOCKED): the quiz can be paused AFTER
+/// answering, and the confirmation sheet is where that happens. These pin what
+/// "paused" has to mean for a driver — nothing advances, nothing speaks,
+/// nothing listens — and that the shared quiz-level flag did not quietly take
+/// the result screen's STAY pill (#131 D) with it.
+@Suite("Pause on the answer confirmation sheet (#171 Track D)")
+@MainActor
+struct ConfirmationPauseTests {
+    /// Puts a VM on a live confirmation sheet with a ticking auto-confirm.
+    @MainActor
+    private func makeSheetVM() -> QuizViewModel {
+        let (vm, _, _) = makeVM()
+        vm.quizState = .processing
+        vm.transcribedAnswer = "Paris"
+        vm.showAnswerConfirmation = true
+        vm.settings.autoConfirmEnabled = true
+        vm.quizTimersController.startAutoConfirmIfEnabled(duration: 5)
+        return vm
+    }
+
+    /// WHY: a pause that leaves the 5 s timer running is not a pause — it just
+    /// hides the number and submits the answer anyway.
+    @Test("spoken 'pauza' cancels auto-confirm and closes the command window")
+    func voicePauseFreezesTheSheet() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            #expect(vm.autoConfirmCountdown == 5)
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .confirmation)
+
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.pause)
+
+            #expect(vm.isPaused, "the spoken command must pause the quiz")
+            #expect(vm.autoConfirmCountdown == 0, "auto-confirm must be cancelled, not restarted")
+            #expect(vm.showAnswerConfirmation, "the sheet stays up — pause freezes it, it does not dismiss it")
+            #expect(
+                vm.voiceCommandCoordinator.currentCommandScreen == nil,
+                "a paused sheet must not keep listening for 'potvrď'"
+            )
+            #expect(vm.voiceCommandCoordinator.mayCaptureAudio == false, "the mic comes down with the pause")
+        }
+    }
+
+    /// WHY: resuming must hand back the FULL window. Restarting from whatever
+    /// was left when the driver paused would silently shorten the only chance
+    /// they have to correct a mis-transcription.
+    @Test("Continue re-arms a full 5 s window and re-opens the command window")
+    func resumeReArmsTheFullWindow() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            vm.pauseOnConfirmation()
+            #expect(vm.autoConfirmCountdown == 0)
+
+            vm.resumeFromConfirmation()
+
+            #expect(vm.isPaused == false)
+            #expect(
+                vm.autoConfirmCountdown == Config.autoConfirmDelaySecs,
+                "resume must re-arm the whole window, not the remainder"
+            )
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .confirmation)
+            vm.quizTimersController.cancelAutoConfirm()
+        }
+    }
+
+    /// WHY (#171 Track H): backgrounding is how a driver pauses in practice —
+    /// a call, maps, the passenger's phone. The `.active` handler re-arms the
+    /// listener and reopens suppressed answer windows, and it must not undo a
+    /// pause the driver explicitly asked for.
+    @Test("returning to the foreground while paused stays paused and re-arms nothing")
+    func foregroundReturnKeepsThePause() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            vm.pauseOnConfirmation()
+
+            vm.handleScenePhase(.background)
+            vm.handleScenePhase(.active)
+
+            #expect(vm.isPaused, "a foreground return must not resume the quiz")
+            #expect(vm.autoConfirmCountdown == 0, "the countdown must not restart on return")
+            #expect(vm.showAnswerConfirmation, "the frozen sheet survives the round trip")
+            #expect(
+                vm.voiceCommandCoordinator.currentCommandScreen == nil,
+                "the .active handler must not re-arm the listener while paused"
+            )
+        }
+    }
+
+
+    /// WHY (#171 Track D review): pause exists so the driver can take their
+    /// time — and re-recording a mis-heard answer is one of the things they
+    /// take it for. Re-record must stay live while paused AND act as a resume,
+    /// or a paused sheet has Confirm as its only exit and the next question
+    /// would inherit a stale pause that mutes its auto-confirm.
+    @Test("re-recording while paused resumes the quiz and opens the mic")
+    func reRecordWhilePausedResumesAndRecords() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            vm.pauseOnConfirmation()
+            #expect(vm.isPaused)
+
+            vm.recordingCoordinator.rerecordAnswer()
+
+            for _ in 0 ..< 40 {
+                await Task.yield()
+            }
+            #expect(vm.isPaused == false, "re-record must not leave the quiz paused")
+            #expect(vm.showAnswerConfirmation == false)
+            #expect(vm.quizState == .recording, "re-record opens the mic immediately, pause or not")
+        }
+    }
+
+    /// WHY: every exit from the sheet moves the quiz on, so a stale pause flag
+    /// would mute the result screen's auto-advance and the next question's
+    /// auto-confirm. Confirming IS resuming.
+    @Test("confirming while paused clears the pause")
+    func confirmWhilePausedResumes() async {
+        await withMainSerialExecutor {
+            let vm = makeSheetVM()
+            vm.recordingCoordinator.pendingResponse = makePendingResponse()
+            vm.pauseOnConfirmation()
+            #expect(vm.isPaused)
+
+            await vm.recordingCoordinator.confirmAnswer()
+
+            #expect(vm.isPaused == false, "a confirmed answer must not leave the quiz paused")
+            #expect(vm.showAnswerConfirmation == false)
+        }
+    }
+
+    /// WHY (#131 Track D regression): the sheet pause and the result screen's
+    /// STAY pill now share one flag. STAY must keep meaning only "don't
+    /// auto-advance" — the driver still says "ďalej" to move on, so the command
+    /// window has to stay open there.
+    @Test("the result-screen STAY pill still only holds auto-advance")
+    func resultStayKeepsListening() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeVM()
+            vm.quizState = makeResultState()
+
+            vm.pauseQuiz()
+
+            #expect(vm.isPaused, "STAY sets the shared pause flag")
+            #expect(
+                vm.voiceCommandCoordinator.currentCommandScreen == .result,
+                "STAY must not take the microphone — 'ďalej' has to keep working"
+            )
+            await vm.quizTimersController.startAutoAdvanceCountdown(duration: 8, audioDuration: 0)
+            #expect(vm.autoAdvanceCountdown == 0, "auto-advance stays held while paused")
         }
     }
 }

@@ -140,8 +140,11 @@ nonisolated enum Config {
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 
-    /// Countdown duration for auto-confirm (also controls re-record window) in seconds
-    static let autoConfirmDelaySecs: Int = 10
+    /// Countdown duration for auto-confirm (also controls re-record window) in
+    /// seconds. #171 Track F (founder 2026-09-05): 10 s read as "the app froze"
+    /// on the TF round — the driver has already spoken and is waiting to hear
+    /// the result. 5 s is still long enough to say "again" or tap Re-record.
+    static let autoConfirmDelaySecs: Int = 5
 
     // MARK: - ElevenLabs Streaming STT
 

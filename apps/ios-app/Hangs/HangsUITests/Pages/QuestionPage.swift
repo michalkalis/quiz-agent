@@ -43,18 +43,24 @@ struct QuestionPage {
         app.buttons["mcq.option.\(key)"]
     }
 
-    /// The docked ANSWER ListenBar ("LISTENING — SAY A–D", #125 — replaced the
-    /// old listening pill). Queried across element types: the caption is a
-    /// combined a11y element, not a button.
+    /// The docked ANSWER ListenBar (#125 — replaced the old listening pill).
+    /// Queried across element types: the caption is a combined a11y element,
+    /// not a button.
     ///
     /// #132 Track B docked the think-phase countdown in the SAME `listen-bar`
     /// element ("THINK — LISTENING IN N S"), so the identifier alone no longer
     /// tells "the mic is live" from "the mic is about to go live". Match the
     /// answer-mode caption instead — it is the only one that opens with
-    /// "LISTENING —" (command mode reads "LISTENING FOR COMMANDS").
+    /// "Listening —" (command mode reads "LISTENING FOR COMMANDS" / "LISTENING").
+    ///
+    /// Case-INSENSITIVE since #171 Track I: the bar uppercases its caption with
+    /// `.textCase(.uppercase)`, a display modifier that never reaches the a11y
+    /// label, and the MCQ caption's source key is now mixed case ("Listening —
+    /// say A–D or the answer"). Matching the rendered casing made this page
+    /// object silently blind to the MCQ bar.
     var answerListenBarExists: Bool {
         let predicate = NSPredicate(
-            format: "identifier == %@ AND label BEGINSWITH %@", "listen-bar", "LISTENING —"
+            format: "identifier == %@ AND label BEGINSWITH[c] %@", "listen-bar", "listening —"
         )
         return app.descendants(matching: .any).matching(predicate).count > 0
     }

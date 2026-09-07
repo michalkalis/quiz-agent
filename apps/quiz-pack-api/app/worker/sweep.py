@@ -34,6 +34,7 @@ from typing import Any, Dict
 from sqlalchemy import select
 
 from app import order_budget
+from app.config import get_settings
 from app.db.models.job import GenerationJob, attempt_job_id
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal
@@ -172,7 +173,16 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         await session.commit()
 
     try:
-        await arq_pool.enqueue_job("process_order", str(order_id), _job_id=enqueue_id)
+        await arq_pool.enqueue_job(
+            "process_order",
+            str(order_id),
+            _job_id=enqueue_id,
+            # #172: recovery must re-enqueue onto the queue the deploy routes
+            # orders to (ORDER_QUEUE_NAME), not ARQ's default — otherwise a
+            # sweep on the session worker would park the retry on a queue
+            # nothing is consuming.
+            _queue_name=get_settings().order_queue_name,
+        )
     except Exception:
         logger.exception(
             "sweep_stuck_orders re-enqueue failed order_id=%s; left 'pending' "

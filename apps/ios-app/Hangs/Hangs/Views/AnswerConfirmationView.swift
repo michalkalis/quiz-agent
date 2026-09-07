@@ -27,6 +27,17 @@ struct AnswerConfirmationView: View {
     var commandHint: String? = nil
     /// #122 Variant C: transient match/miss tint for the listening bar.
     var commandFeedback: VoiceFeedbackPhase = .idle
+    /// #171 Track I: the MCQ option a spoken answer resolved to, pre-formatted
+    /// as "A · Kocka". Shown above the transcript so the driver can check the
+    /// match — the field itself holds the option VALUE, which is what gets
+    /// graded — and nil on every non-MCQ confirmation.
+    var matchedOption: String? = nil
+    /// #171 Track D: the quiz is paused ON THIS SHEET — the countdown is gone
+    /// (the presenter zeroes it), the listener is down, and the header says so.
+    var isPaused: Bool = false
+    /// Toggles pause/resume. Nil hides the control entirely (previews, MCQ tap
+    /// paths that never present a pausable sheet).
+    var onTogglePause: (() -> Void)? = nil
 
     @State private var isEditing = false
     @FocusState private var editFocused: Bool
@@ -59,6 +70,15 @@ struct AnswerConfirmationView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 10) {
                 HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.pink)
+                if isPaused {
+                    // Named, not merely implied by a missing countdown: a
+                    // vanished chip reads as "auto-confirm off", not "paused".
+                    HangsSectionLabel(text: "PAUSED", color: Theme.Hangs.Colors.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Theme.Hangs.Colors.neutralSoft))
+                        .accessibilityIdentifier("confirmation.paused")
+                }
                 Spacer()
                 if isEditing {
                     Button {
@@ -92,9 +112,31 @@ struct AnswerConfirmationView: View {
             }
             .padding(.bottom, 14)
 
+            if let matchedOption, !isEditing {
+                Text(verbatim: matchedOption)
+                    .font(.hangsMono(12, weight: .medium))
+                    .tracking(1.5)
+                    .foregroundColor(Theme.Hangs.Colors.blue)
+                    .accessibilityIdentifier("confirmation.matchedOption")
+                    .padding(.bottom, 10)
+            }
+
             ScrollView(.vertical, showsIndicators: false) {
                 if isEditing {
                     editableTranscript
+                } else if isEmptyAnswer {
+                    // #171 Track B: nothing was captured. An empty pink rule with
+                    // no words reads as a rendering bug, so name the state; the
+                    // muted tone marks it as the app's report, not the driver's
+                    // words. Confirm here submits "no answer".
+                    HangsQuestionPrompt(
+                        text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
+                        barColor: Theme.Hangs.Colors.pink,
+                        textFont: .hangsDisplay(32, weight: .black),
+                        textColor: Theme.Hangs.Colors.muted,
+                        minimumScaleFactor: 0.6
+                    )
+                    .accessibilityIdentifier("confirmation.noAnswer")
                 } else {
                     HangsQuestionPrompt(
                         text: transcribedAnswer,
@@ -123,8 +165,8 @@ struct AnswerConfirmationView: View {
                     onReRecord()
                 }
                 .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing)
-                .opacity(autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing ? 0.45 : 1)
+                .disabled(isReRecordLocked)
+                .opacity(isReRecordLocked ? 0.45 : 1)
 
                 // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                 // chip, pen `R5JfD`) — replaces the old separate countdown bar.
@@ -139,17 +181,51 @@ struct AnswerConfirmationView: View {
                     editFocused = false
                     onConfirm()
                 }
-                // An emptied edit field must not be confirmable: confirmAnswer()
-                // drops empty answers after closing the sheet, which would eat
-                // the answer and strand the quiz in .processing.
-                .disabled(transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .accessibilityLabel(autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
+                // #171 Track B: an empty field stays confirmable — it now MEANS
+                // "no answer" and submits as such. Disabling it was what left an
+                // empty recording with no way off the sheet but a re-record.
+                .accessibilityLabel(isEmptyAnswer
+                    ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
+                    : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
                     ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
                     : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
                 .accessibilityIdentifier("confirmation.confirm")
             }
             .padding(.top, 14)
+
+            // #171 Track D: secondary to Confirm on purpose — pausing is the
+            // rarer intent, and the CTA row must not lose its two-thumb layout.
+            // Hidden while editing: the keyboard already suspended the
+            // countdown, and a Pause pill under an open keyboard is noise.
+            if let onTogglePause, !isEditing {
+                HangsSecondaryButton(
+                    title: isPaused ? "Continue" : "Pause",
+                    icon: isPaused ? "play.fill" : "pause.fill",
+                    height: 48
+                ) {
+                    editFocused = false
+                    onTogglePause()
+                }
+                .accessibilityIdentifier("confirmation.pause")
+                .padding(.top, 10)
+            }
         }
+    }
+
+    /// Re-record is locked only while the auto-confirm window has actually
+    /// RUN OUT — the submit is firing, and a second recording would race it.
+    /// A countdown of 0 also means "paused" (#171 Track D cancels it), and
+    /// there nothing is in flight: pause exists so the driver can take their
+    /// time, and re-recording is one of the things they take it for. Locking
+    /// it there would leave a paused sheet with Confirm as its only exit.
+    private var isReRecordLocked: Bool {
+        autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing && !isPaused
+    }
+
+    /// The field holds nothing to submit — either the recording captured no
+    /// text (#171 Track B) or the driver cleared it while editing.
+    private var isEmptyAnswer: Bool {
+        transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var editableTranscript: some View {
@@ -237,11 +313,36 @@ struct AnswerConfirmationView: View {
         AnswerConfirmationView(
             isProcessing: false,
             transcribedAnswer: .constant("Z mumíí."),
-            autoConfirmCountdown: 7,
+            autoConfirmCountdown: 4,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Nothing heard") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 3,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {}
+        )
+    }
+
+    #Preview("MCQ voice match") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Kocka"),
+            autoConfirmCountdown: 4,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            matchedOption: "A · Kocka"
         )
     }
 
@@ -251,9 +352,23 @@ struct AnswerConfirmationView: View {
             transcribedAnswer: .constant("The capital of France is Paris and it has been so since the 10th century."),
             autoConfirmCountdown: 3,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Paused") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Z mumíí."),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            isPaused: true,
+            onTogglePause: {}
         )
     }
 
@@ -263,7 +378,7 @@ struct AnswerConfirmationView: View {
             transcribedAnswer: .constant(""),
             autoConfirmCountdown: 0,
             autoConfirmEnabled: true,
-            autoConfirmTotal: 10,
+            autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {},
             onCancel: {}

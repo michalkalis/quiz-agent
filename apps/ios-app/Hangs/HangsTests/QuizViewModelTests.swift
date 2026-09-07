@@ -1461,7 +1461,7 @@ struct QuizViewModelResumeAutoAdvanceTests {
 
         // Pause first (mirrors "Stay here"): countdown cancelled, pause flag set.
         viewModel.pauseQuiz()
-        #expect(viewModel.currentQuestionPaused)
+        #expect(viewModel.isPaused)
 
         viewModel.resumeAutoAdvance()
 
@@ -1474,7 +1474,7 @@ struct QuizViewModelResumeAutoAdvanceTests {
 
         #expect(viewModel.quizState.isShowingResult) // did NOT jump to the next question
         #expect(viewModel.autoAdvanceCountdown > 0) // countdown re-armed
-        #expect(!viewModel.currentQuestionPaused) // pause cleared
+        #expect(!viewModel.isPaused) // pause cleared
 
         // Cleanup: cancel the long-lived countdown task so it can't fire mid-suite.
         viewModel.pauseQuiz()

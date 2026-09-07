@@ -291,7 +291,7 @@ struct HomeView: View {
 
     private var languageRow: some View {
         Menu {
-            ForEach(Language.supportedLanguages) { language in
+            ForEach(Language.selectableLanguages) { language in
                 Button {
                     viewModel.settings.language = language.id
                 } label: {
@@ -307,7 +307,7 @@ struct HomeView: View {
                 // #130: same scope wording as Settings — this picks the quiz
                 // content language, not the interface language.
                 label: "Quiz language",
-                value: Language.forCode(viewModel.settings.language)?.nativeName ?? "Unknown",
+                value: Language.selectable(viewModel.settings.language).nativeName,
                 valueColor: Theme.Hangs.Colors.blue
             )
         }

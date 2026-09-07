@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.models import (
     EMBEDDING_DIM,
+    PIPELINE_OWNED_COLUMNS,
     GenerationOrder,
     QuestionPack,
     QuestionRow,
@@ -117,4 +118,8 @@ def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
             row.embedding_model = DEFAULT_EMBEDDING_MODEL
         if row.embedding_dim is None:
             row.embedding_dim = EMBEDDING_DIM
-    return {c.name: getattr(row, c.name) for c in QuestionRow.__table__.columns}
+    return {
+        c.name: getattr(row, c.name)
+        for c in QuestionRow.__table__.columns
+        if c.name not in PIPELINE_OWNED_COLUMNS
+    }

@@ -32,8 +32,8 @@ extension RecordingCoordinator {
                 case let .partialTranscript(text):
                     self.liveTranscript = text
                     // Streaming has no local VAD, so a content-bearing partial
-                    // is the speech signal: it keeps a spoken-but-lost answer
-                    // on the tier-1 retry path instead of the unattended skip.
+                    // is the speech signal — the only record that the driver
+                    // spoke at all if the commit then comes back empty.
                     if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         self.speechDetectedDuringAutoRecord = true
                     }
@@ -83,14 +83,6 @@ extension RecordingCoordinator {
         // resurrect the confirmation sheet with stale voice text.
         let epoch = submissionEpoch()
 
-        // Dead air on an auto-started recording is "time's up", not a
-        // transcription failure to retry (TF build 53). Two arrival paths:
-        // ElevenLabs can commit spontaneously (its own VAD cap — the flags are
-        // still live here), or the commit was forced by stopRecordingAndSubmit(),
-        // whose prefix already cleared the flags and left us its snapshot.
-        let wasUnattended = wasUnattendedRecording
-            || (isAutoRecording() && !speechDetectedDuringAutoRecord)
-
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
         taskBag.cancel(.sttCommitWatchdog)
@@ -116,40 +108,42 @@ extension RecordingCoordinator {
         Logger.stt.info("🎙️ Committed transcript: \(text, privacy: .public)")
 
         // Dead air: a forced commit (15 s cap) returns an empty transcript.
-        // Escalate as a transcription failure (retry prompt → auto-skip), never
-        // an empty confirmation sheet (#54 task 54.4, founder #5).
+        // #171 Track B: that is not a retry, it is "no answer" — the shared
+        // funnel opens the confirmation sheet with an empty field.
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            handleTranscriptionFailure(unattendedSilence: wasUnattended)
+            handleTranscriptionFailure()
             return
         }
 
-        // MCQ voice path (45.3): resolve a spoken letter / ordinal / answer text
-        // to an option and submit its value directly, skipping the confirmation
-        // modal. An ambiguous / unrecognized transcript falls through to the
-        // normal modal so the driver can re-record rather than submit a guess.
+        // MCQ voice path (45.3 + #171 Track I): resolve a spoken letter /
+        // ordinal / answer text to an option. The prefill is the option's VALUE,
+        // never the raw transcript — the backend's MCQ evaluator matches the
+        // option value with no LLM fallback, so "kocku" would grade as wrong.
+        // An ambiguous / unrecognized transcript falls through to the sheet with
+        // the raw transcript, exactly as before.
+        var matchedValue: String?
         if let question = currentQuestion(), question.isMultipleChoice,
            let key = MCQTranscriptMatcher.match(text, options: question.sortedAnswerOptions),
            let value = question.possibleAnswers?[key]
         {
             setMcqVoiceMatchedKey(key)
-            // This code runs inside the .sttEvent listener task cancelled above,
-            // and the submit's network call is cancellation-aware — awaiting it
-            // directly throws URLError(.cancelled) mid-submit and surfaces the
-            // OOPS screen (same self-cancellation class as 54.5). Hop to an
-            // unstructured task, which does not inherit cancellation, and await
-            // its value so direct callers keep synchronous semantics.
-            await Task { await self.submitMCQAnswer(key, value) }.value
-            return
+            matchedValue = value
         }
 
-        // Show confirmation modal with the transcribed text
-        transcribedAnswer = text
+        // #171 Track I (founder 2026-09-05, restoring #45 decision D4): a voice
+        // MCQ match no longer submits straight through. Every answer path —
+        // typed, spoken, MCQ — now ends on the same confirmation sheet, so the
+        // driver always gets the same window to correct a mishearing before it
+        // is graded. Confirm routes through `resubmitAnswer`, whose text input
+        // the backend value-matches to the option.
+        transcribedAnswer = matchedValue ?? text
+        noAnswerCaptured = false
         showAnswerConfirmation = true
         startAutoConfirmIfEnabled()
         // Stay in .recording → switch to a neutral state for the modal
         transition(to: .processing)
         // #77 (77.5): confirmation window — re-arm the command listener for
-        // "ok"/"again" (Session 4 routes them) on top of the 10 s auto-confirm.
+        // "ok"/"again" (Session 4 routes them) on top of the auto-confirm.
         refreshCommandWindow()
     }
 }

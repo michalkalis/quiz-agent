@@ -189,6 +189,14 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.transcribedAnswer = newValue }
     }
 
+    /// #171 Track B: the sheet is up with a deliberately empty field (nothing
+    /// was captured), not waiting on a transcript — QuestionView needs the
+    /// distinction to choose between the no-answer body and the spinner.
+    var noAnswerCaptured: Bool {
+        get { recordingCoordinator.noAnswerCaptured }
+        set { recordingCoordinator.noAnswerCaptured = newValue }
+    }
+
     /// Auto-confirm countdown — owned by `ConfirmationState` inside
     /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
     /// ticks it via the injected write closure pointed at the child.
@@ -254,11 +262,11 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
-    /// Per-question pause state (resets on next question) — see
-    /// `QuizTimersController.currentQuestionPaused`.
-    var currentQuestionPaused: Bool {
-        get { quizTimersController.currentQuestionPaused }
-        set { quizTimersController.currentQuestionPaused = newValue }
+    /// Quiz-level pause (#171 Track D; resets on the next question) — see
+    /// `QuizTimersController.isPaused`.
+    var isPaused: Bool {
+        get { quizTimersController.isPaused }
+        set { quizTimersController.isPaused = newValue }
     }
 
     // Minimize state
@@ -328,7 +336,7 @@ final class QuizViewModel: ObservableObject {
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
-        Language.forCode(settings.language) ?? Language.default
+        Language.selectable(settings.language)
     }
 
     // MARK: - Audio Device State — forwarded to AudioDeviceState (#113 T2)
@@ -713,6 +721,9 @@ final class QuizViewModel: ObservableObject {
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },
+            isPausedOnConfirmation: { [weak self] in
+                self?.isPaused == true && self?.showAnswerConfirmation == true
+            },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
             configureQuietListeningSession: { [weak self] in
@@ -729,6 +740,7 @@ final class QuizViewModel: ObservableObject {
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
+            pauseOnConfirmation: { [weak self] in self?.pauseOnConfirmation() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
         )
@@ -786,7 +798,6 @@ final class QuizViewModel: ObservableObject {
                 await self?.handleError(error, context: context, fallbackMessage: fallback)
             },
             handleQuizResponse: { [weak self] in await self?.handleQuizResponse($0) },
-            submitMCQAnswer: { [weak self] key, value in await self?.submitMCQAnswer(key: key, value: value) },
             resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
@@ -794,12 +805,12 @@ final class QuizViewModel: ObservableObject {
             abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
+            clearPause: { [weak self] in self?.isPaused = false },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
-            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
-            restartAnswerWindow: { [weak self] in self?.startRecordingOrTimer() }
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
         )
     }
 
@@ -862,12 +873,13 @@ final class QuizViewModel: ObservableObject {
             lastErrorDebugInfo = nil
         #endif
         isRerecording = false
-        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Use provided parameters or fall back to settings
         let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
         let quizDifficulty = difficulty ?? settings.difficulty
-        let quizLanguage = language ?? settings.language
+        // #168 DD14: a stored preference for a language that is no longer
+        // servable degrades to the default rather than 422-ing the start call.
+        let quizLanguage = Language.selectable(language ?? settings.language).id
 
         // Check if question history is at capacity
         if persistenceStore.isAtCapacity {
@@ -886,6 +898,19 @@ final class QuizViewModel: ObservableObject {
             let excludedIds = persistenceStore.getExclusionList()
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
+
+            // #171 (P0 — the first question was silent): tear the HOME command
+            // listener down BEFORE the session is reconfigured and before the
+            // first read. Its mic engine holds the input hardware, and
+            // `transition(to: .startingQuiz)` only *schedules* the teardown
+            // (`refreshCommandWindow` is fire-and-forget), so the session used to
+            // be re-configured and re-activated underneath a live engine — the
+            // first AVPlayer then stalled in `.waitingToPlayAtSpecifiedRate`, the
+            // 5 s stall timer threw `playbackFailed` into Sentry only, and the
+            // user got silence with the countdown already running. Questions 2+
+            // never had this because `advanceToNextQuestionOrFinish` stops audio
+            // and settles before it plays.
+            audioDeviceState.stopSilenceDetectionListening()
 
             // Configure audio session with user's preferred mode
             do {
@@ -957,6 +982,10 @@ final class QuizViewModel: ObservableObject {
             if let audioInfo = response.audio,
                let questionUrl = audioInfo.questionUrl
             {
+                // #171: the same settle the Q2+ path gets before it plays — the
+                // audio hardware must come up under the freshly configured
+                // session before the first AVPlayer starts.
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
@@ -1529,7 +1558,7 @@ final class QuizViewModel: ObservableObject {
     /// Pause auto-advance for current question only (not permanent)
     func pauseQuiz() {
         taskBag.cancel(.autoAdvance)
-        currentQuestionPaused = true
+        isPaused = true
 
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
@@ -1540,7 +1569,7 @@ final class QuizViewModel: ObservableObject {
     /// result screen and the next question is reached via the timer, not instantly (#59.8).
     /// Clears the pause flag first — `startAutoAdvanceCountdown` bails while paused.
     func resumeAutoAdvance() {
-        currentQuestionPaused = false
+        isPaused = false
 
         Task {
             await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
@@ -1552,7 +1581,7 @@ final class QuizViewModel: ObservableObject {
     /// Continue to next question after user paused current one
     func continueToNext() {
         // Reset per-question pause state
-        currentQuestionPaused = false
+        isPaused = false
 
         Task {
             await proceedToNextQuestion()
@@ -1623,9 +1652,6 @@ final class QuizViewModel: ObservableObject {
         }
         isProcessingResponse = true
         defer { isProcessingResponse = false }
-
-        // Reset transcription failure counter on successful response
-        recordingCoordinator.consecutiveTranscriptionFailures = 0
 
         // Cancel any previous auto-advance task
         taskBag.cancel(.autoAdvance)
@@ -1792,7 +1818,7 @@ final class QuizViewModel: ObservableObject {
         taskBag.cancel(.autoAdvance)
 
         // Reset per-question pause and re-record state when moving to next question
-        currentQuestionPaused = false
+        isPaused = false
         isRerecording = false
 
         // CRITICAL: Stop any playing feedback audio before transitioning

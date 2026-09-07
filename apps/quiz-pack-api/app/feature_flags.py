@@ -308,3 +308,50 @@ def judge_models() -> list[str] | None:
         return None
     models = [m.strip() for m in raw.split(",") if m.strip()]
     return models or None
+
+
+# ── #170 coverage-driven dedup (D5) ──────────────────────────────────────────
+# Read ONLY by the corpus CLI (`scripts/generate_pack.py`) and the replay
+# harness (`scripts/replay_dedup_json.py`). `app/worker/tasks.py` never reads
+# them, so a mis-set prod secret cannot change a customer pack (locked 3).
+# Every default is OFF; nothing here is enabled in prod.
+
+
+def dedup_qa_embedding() -> bool:
+    """#170 D2: question+answer embedding branch of `DedupStage`."""
+    return _truthy(os.getenv("DEDUP_QA_EMBEDDING"))
+
+
+def answer_cap() -> bool:
+    """#170 D6: per-category repeated-answer cap (the cap value lives in the
+    strictness profile; this flag only toggles its enforcement)."""
+    return _truthy(os.getenv("ANSWER_CAP"))
+
+
+def dedup_strictness_per_category() -> str | None:
+    """#170 D6: raw `DEDUP_STRICTNESS_PER_CATEGORY` profile string
+    (parsed by `app.orchestrator.stages.strictness.parse_strictness`)."""
+    raw = (os.getenv("DEDUP_STRICTNESS_PER_CATEGORY") or "").strip()
+    return raw or None
+
+
+def dedup_grayzone_judge() -> bool:
+    """#170 D7: pairwise same-fact judge for cosine 0.70–0.85. Independent of
+    `JUDGE_GATE` / the session-mode judge cut — it is a dedup verdict, not a
+    quality judge."""
+    return _truthy(os.getenv("DEDUP_GRAYZONE_JUDGE"))
+
+
+def grayzone_judge_max_calls() -> int | None:
+    """#170 D7: per-run call budget for the gray-zone judge; `None` → module
+    default (20). A non-integer value is a configuration error, not a silent
+    default — fail loud."""
+    raw = (os.getenv("GRAYZONE_JUDGE_MAX_CALLS") or "").strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"GRAYZONE_JUDGE_MAX_CALLS must be an integer, got {raw!r}"
+        ) from exc

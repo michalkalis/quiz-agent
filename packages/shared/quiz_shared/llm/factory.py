@@ -165,6 +165,11 @@ SCORE_THIRD = "deepseek-v4-pro"
 # by founder approval (2026-08-03). Flash-class is deliberate: if a capable
 # cheap model can't reach the answer blind, a player won't either.
 ANSWERABILITY = "deepseek-v4-flash"
+# #170 D7: pairwise "same fact yes/no" for the dedup gray zone (cosine
+# 0.70–0.85). A one-word comprehension verdict, not a quality judge — the
+# cheap FACTCHECK-class model is enough and stays family-disjoint from the
+# generator. Session tier: sonnet (via the gpt-5-mini alias below).
+DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
 EMBED = "text-embedding-3-small"
 
 # Direct model id -> OpenRouter slug. Confirmed served via OpenRouter in the
@@ -199,6 +204,10 @@ _REMAP_OPENROUTER = {
     "deepseek-v4-pro": "deepseek/deepseek-v4-pro",
     "deepseek-v4-flash": "deepseek/deepseek-v4-flash",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
+    # #170 D7 DEDUP_JUDGE role. FACTCHECK uses the same id but on the direct
+    # Responses API (server-side web_search); the plain chat verdict here can
+    # ride the gateway.
+    "gpt-5-mini": "openai/gpt-5-mini",
     "text-embedding-3-small": "text-embedding-3-small",
 }
 

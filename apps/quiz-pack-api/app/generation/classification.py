@@ -14,40 +14,69 @@ off-taxonomy value would make a question invisible to that filter.
 
 from __future__ import annotations
 
+# #170 gate F1 (founder 2026-09-04, R1): the generation taxonomy now equals
+# the app's interest taxonomy (`CATEGORY_TAXONOMY` in quiz-agent admin.py,
+# PR #39) plus `entertainment` (#167). The old audience/fandom ids (general,
+# adults, kids, wizarding-world, superheroes, disney, football, sports-mix)
+# are gone: age is the separate `age_appropriate` axis, fandom is pack
+# material (played by pack_id, never by this filter), and the prod corpus has
+# zero live rows under them. Until then a model-emitted "history" collapsed
+# to "general" and every direct run wrote rows the player filter never shows.
 CATEGORIES: tuple[str, ...] = (
-    "general",
-    "adults",
-    "kids",
-    "wizarding-world",
-    "superheroes",
-    "disney",
-    "football",
-    "sports-mix",
-    # #167 (D7): entertainment had its own generation prompt since #76 but no
-    # taxonomy id, so every entertainment question was normalized to "general"
-    # and became unreachable through the player's category filter. Both iOS
-    # mirrors (Config.categoryOptions, QuizSettings.categoryOptions) change with
-    # it. No `_CATEGORY_ALIASES` entry — the id is the word itself.
+    "science-nature",
+    "history",
+    "geography-world",
+    "movies-music",
+    "sports",
+    "food-everyday",
     "entertainment",
 )
 
+# Fail-safe for an off-taxonomy classification. Deliberately NOT in
+# `CATEGORIES`: it is not a filter the player can pick (rows land there only
+# when the model could not classify), so it must never get subtopics or a
+# coverage cell. The player still reaches such rows with no category filter.
+FALLBACK_CATEGORY = "general"
+
 DIFFICULTIES: tuple[str, ...] = ("easy", "medium", "hard")
 
-# Common near-misses the model may emit → canonical taxonomy id.
+# Common near-misses the model may emit → canonical taxonomy id. Old taxonomy
+# ids map to their nearest interest category so a prompt or fixture still
+# carrying them cannot silently produce filter-invisible rows.
 _CATEGORY_ALIASES: dict[str, str] = {
-    "children": "kids",
-    "kid": "kids",
-    "adult": "adults",
-    "harry-potter": "wizarding-world",
-    "harry potter": "wizarding-world",
-    "wizarding world": "wizarding-world",
-    "sport": "sports-mix",
-    "sports": "sports-mix",
-    "sports mix": "sports-mix",
-    "soccer": "football",
-    "marvel": "superheroes",
-    "dc": "superheroes",
-    "superhero": "superheroes",
+    "science": "science-nature",
+    "nature": "science-nature",
+    "science & nature": "science-nature",
+    "science and nature": "science-nature",
+    "technology": "science-nature",
+    "geography": "geography-world",
+    "world": "geography-world",
+    "geography & world": "geography-world",
+    "geography and world": "geography-world",
+    "movies": "movies-music",
+    "music": "movies-music",
+    "film": "movies-music",
+    "movies & music": "movies-music",
+    "movies and music": "movies-music",
+    "food": "food-everyday",
+    "everyday": "food-everyday",
+    "food & everyday": "food-everyday",
+    "food and everyday": "food-everyday",
+    "sport": "sports",
+    "sports mix": "sports",
+    "sports-mix": "sports",
+    "soccer": "sports",
+    "football": "sports",
+    # fandom ids from the pre-#39 taxonomy → the interest category they sit in
+    "wizarding-world": "movies-music",
+    "harry-potter": "movies-music",
+    "harry potter": "movies-music",
+    "wizarding world": "movies-music",
+    "superheroes": "movies-music",
+    "superhero": "movies-music",
+    "marvel": "movies-music",
+    "dc": "movies-music",
+    "disney": "movies-music",
 }
 
 
@@ -64,11 +93,12 @@ def normalize_category(value: object, order_category: str | None = None) -> str:
     "entertainment") always wins, even off-taxonomy — those packs are played
     by ``pack_id``, not by the category filter, and the customer named the
     category. Without an order category the model classifies freely; unknown
-    values fall back to "general" so the player filter never loses the
-    question.
+    values fall back to ``FALLBACK_CATEGORY`` so the row still exists (served
+    with no category filter) instead of carrying junk the retriever would
+    match exactly.
     """
     if order_category:
         return order_category.strip().lower()
     text = str(value or "").strip().lower()
     text = _CATEGORY_ALIASES.get(text, text)
-    return text if text in CATEGORIES else "general"
+    return text if text in CATEGORIES else FALLBACK_CATEGORY

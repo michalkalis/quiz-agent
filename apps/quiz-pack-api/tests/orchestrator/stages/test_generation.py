@@ -945,8 +945,8 @@ async def test_normalizes_per_question_difficulty_and_category() -> None:
     questions = [
         _stub_question(0, difficulty="Hard "),           # normalizes to hard
         _stub_question(1, difficulty="expert"),          # junk -> default
-        _stub_question(2, category="children"),          # alias -> kids
-        _stub_question(3, category="History"),           # topic-as-category -> general
+        _stub_question(2, category="children"),          # age axis, not a category -> fallback
+        _stub_question(3, category="History"),           # #170 R1: history IS a taxonomy id
     ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
@@ -959,7 +959,7 @@ async def test_normalizes_per_question_difficulty_and_category() -> None:
         "hard", "medium", "medium", "medium",
     ]
     assert [q.category for q in ctx.questions] == [
-        "general", "general", "kids", "general",
+        "general", "general", "general", "history",
     ]
 
 

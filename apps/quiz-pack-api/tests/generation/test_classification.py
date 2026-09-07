@@ -19,11 +19,11 @@ from __future__ import annotations
 
 from app.generation.classification import (
     CATEGORIES,
+    FALLBACK_CATEGORY,
     normalize_category,
     normalize_difficulty,
 )
 from app.generation.prompt_builder import PromptBuilder
-
 
 # --- normalize_difficulty ---------------------------------------------------
 
@@ -52,17 +52,27 @@ def test_taxonomy_categories_pass_through() -> None:
 
 
 def test_category_aliases_map_to_taxonomy() -> None:
-    assert normalize_category("children") == "kids"
-    assert normalize_category("Harry Potter") == "wizarding-world"
-    assert normalize_category("sports") == "sports-mix"
-    assert normalize_category("soccer") == "football"
+    """#170 gate F1 (R1): the taxonomy is the app's six interest ids +
+    entertainment. Near-misses and the retired audience/fandom ids must
+    land in the nearest interest category, never in the fallback bucket."""
+    assert normalize_category("Science") == "science-nature"
+    assert normalize_category("geography") == "geography-world"
+    assert normalize_category("Movies & Music") == "movies-music"
+    assert normalize_category("food") == "food-everyday"
+    assert normalize_category("soccer") == "sports"
+    assert normalize_category("sports-mix") == "sports"
+    assert normalize_category("Harry Potter") == "movies-music"
+    assert normalize_category("disney") == "movies-music"
 
 
 def test_junk_category_falls_back_to_general() -> None:
-    # A subject ("History") is a topic, not a category — the player filter
-    # would never match it, so it must land in the safe default.
-    assert normalize_category("History") == "general"
+    # An off-taxonomy value ("Trivia", None) must land in the safe fallback
+    # bucket — never reach Postgres as junk the retriever matches exactly.
+    # (Since #170 gate F1 "History" IS a taxonomy id, so it passes through.)
+    assert normalize_category("History") == "history"
+    assert normalize_category("Trivia") == FALLBACK_CATEGORY == "general"
     assert normalize_category(None) == "general"
+    assert normalize_category("kids") == "general"  # age is a filter, not a category
 
 
 def test_explicit_order_category_always_wins() -> None:

@@ -102,6 +102,7 @@ curl -s https://<Fly app>.fly.dev/docs | head -c 100
 fly status -a <Fly app>
 ```
 - Every process in the target's **Processes** column must exist on the new version. `app` / `web` scale to zero (`min_machines_running = 0`), so `stopped` right after a deploy is normal idle — the health check above auto-starts them and is the real signal. `worker` (`pack-api`) has no HTTP service and must be `started`; a missing or stopped `worker` is a failed deploy — report it, never a green.
+- **#172 — session worker beta exception:** while custom packs run on the session worker (Fly secret `ORDER_QUEUE_NAME=quiz-pack:session` set, see `docs/setup/session-worker-mba.md`), the Fly `worker` must be **stopped** again after every deploy (`fly machine stop <id> -a quiz-pack-api`) — a deploy restarts it. Check with `fly secrets list -a quiz-pack-api`; if the secret is present, stop the worker and report that instead of a failed deploy.
 
 ## Report
 

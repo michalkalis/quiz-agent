@@ -169,6 +169,13 @@ async def _run(args: argparse.Namespace, store: AsyncDuplicateFinder | None = No
         logger.error("JSON file(s) not found: %s", ", ".join(str(p) for p in missing))
         return 1
     candidates = _load_candidates(paths)
+    if not candidates:
+        # A replay of nothing is a wrong input file, not a successful run
+        # (DedupStage's empty-input short-circuit carries no reasons/judge
+        # keys either) — refuse before opening a store or writing anything.
+        raise SystemExit(
+            f"no candidates in {', '.join(str(p) for p in paths)} — nothing to replay"
+        )
     if store is None:
         store = _build_store(args.dedup_store)
 

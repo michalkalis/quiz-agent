@@ -143,6 +143,21 @@ async def test_noop_store_is_refused_fail_loud(tmp_path: Path) -> None:
     assert not (tmp_path / "r.json").exists()
 
 
+@pytest.mark.asyncio
+async def test_empty_candidate_file_is_refused_before_any_work(tmp_path: Path) -> None:
+    """A `[]` input is a wrong file, not a successful replay of nothing: refuse
+    fail-loud before the store is touched and before an output file exists
+    (review finding on PR #110 — the empty-input path used to write the file
+    and then die on a missing `drop_reasons` key)."""
+    path = tmp_path / "empty.json"
+    path.write_text("[]")
+    store = _FakeStore({})
+    with pytest.raises(SystemExit, match="nothing to replay"):
+        await harness._run(_args(path, tmp_path / "r.json"), store=store)
+    assert store.calls == 0
+    assert not (tmp_path / "r.json").exists()
+
+
 def test_cli_defaults_to_pgvector_and_accepts_dry_run() -> None:
     args = harness.build_parser().parse_args(["--json-path", "x.json", "--dry-run"])
     assert args.dedup_store == "pgvector"

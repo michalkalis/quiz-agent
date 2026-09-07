@@ -199,7 +199,21 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         # run so their delta is the measured all-in LLM spend for this order
         # (see app.cost_tracking for the shared-account caveat).
         tracker, tracker_token = cost_tracking.activate()
-        usage_before = await cost_tracking.fetch_openrouter_usage()
+        # #172: on the session gateway (mba worker, Claude Code subscription)
+        # there is no OpenRouter account to bracket — the pack costs
+        # subscription quota, not dollars. Skip the snapshots and say so, so a
+        # NULL `llm_cost_usd` on these orders reads as "not billed per call",
+        # not as a lost measurement.
+        session_gateway = llm_factory.gateway() == llm_factory.SESSION
+        if session_gateway:
+            logger.info(
+                "process_order order_id=%s on session gateway: OpenRouter usage "
+                "snapshots skipped, llm_cost_usd is not tracked for session runs",
+                order_id,
+            )
+        usage_before = (
+            None if session_gateway else await cost_tracking.fetch_openrouter_usage()
+        )
         # #153 Phase 0.5 — per-stage/model token usage for this run. See
         # app.llm_usage module docstring for the max_jobs=2 concurrency
         # caveat (same shared-account tradeoff as the OpenRouter delta above).
@@ -217,7 +231,9 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         if pack is None:
             raise RuntimeError("PackGenerator returned no pack — PersistStage missing")
 
-        usage_after = await cost_tracking.fetch_openrouter_usage()
+        usage_after = (
+            None if session_gateway else await cost_tracking.fetch_openrouter_usage()
+        )
         llm_cost_usd: Decimal | None = None
         if usage_before is not None and usage_after is not None:
             llm_cost_usd = round(Decimal(str(max(usage_after - usage_before, 0.0))), 6)

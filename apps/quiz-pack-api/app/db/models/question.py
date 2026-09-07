@@ -23,7 +23,7 @@ from sqlalchemy import (
     Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -33,6 +33,16 @@ from ..base import Base, UUIDPrimaryKeyMixin
 
 EMBEDDING_DIM = 1536
 REVIEW_STATUSES = ("pending_review", "approved", "rejected", "needs_revision", "archived")
+
+# Columns a question *writer* must never send. `approved_languages` (#168 DD1)
+# is owned by the translation pipeline, which writes it in the same transaction
+# that approves a translation — a newly written question is approved in no
+# language. It also cannot be sent by the Core-level INSERT paths (PersistStage,
+# the import/migrate scripts), which build a `{column: value}` dict off a
+# *transient* ORM object: the Python-side `default=list` has not run yet, so the
+# value would go over the wire as an explicit NULL against a NOT NULL column.
+# Omitting it lets the server default apply.
+PIPELINE_OWNED_COLUMNS = frozenset({"approved_languages"})
 
 
 class QuestionRow(Base, UUIDPrimaryKeyMixin):
@@ -112,6 +122,15 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
     media_duration_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+    # #168 DD1 — derived retrieval index, NOT part of the Pydantic `Question`
+    # domain model and deliberately absent from the seam below: it is written
+    # only by the translation pipeline, in the same transaction that flips a
+    # `question_translations` row to `approved`. Round-tripping it through
+    # `Question` would let any ordinary question write clobber the serving gate.
+    approved_languages: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), nullable=False, default=list, server_default=text("'{}'::text[]")
+    )
+
     __table_args__ = (
         CheckConstraint(
             "review_status IN ('pending_review','approved','rejected','needs_revision','archived')",
@@ -127,6 +146,14 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
             "language",
             "category",
             "review_status",
+        ),
+        # GIN, not btree: the serving gate filters with `@>` (#168 DD1), which
+        # a btree index cannot answer — without this the language filter turns
+        # every retrieval into a sequential scan of the corpus.
+        Index(
+            "ix_questions_approved_languages",
+            "approved_languages",
+            postgresql_using="gin",
         ),
     )
 

@@ -37,14 +37,7 @@ extension AudioDeviceState {
         setPlayingQuestionTTS(true)
         stopSilenceDetectionListening()
 
-        do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            _ = try await audioService.playOpusAudio(audioData)
-        } catch {
-            Logger.audio.warning("⚠️ Failed to play question audio: \(error, privacy: .public)")
-            // Don't fail the quiz if audio doesn't play — but fail loud to Sentry.
-            Self.reportAudioFailure(error, kind: "question")
-        }
+        await playQuestionTTSWithRetry(from: urlString)
 
         // Restart silence detection (+ command listener) after TTS finishes.
         setPlayingQuestionTTS(false)
@@ -59,6 +52,49 @@ extension AudioDeviceState {
         } else {
             // Legacy path: countdown timer → fixed duration recording
             startAnswerTimer()
+        }
+    }
+
+    /// Read the question aloud, retrying ONCE after a short settle (#171).
+    ///
+    /// A failed read is the worst possible failure of this app: the countdown
+    /// runs, the screen looks normal and the user hears nothing (founder, TF
+    /// 2026-09-05 — the FIRST question of a quiz). The stall the retry rescues
+    /// is a hardware-settle race (AVPlayer never leaves
+    /// `.waitingToPlayAtSpecifiedRate`, the 5 s stall timer throws
+    /// `playbackFailed`), so a second attempt after a settle actually speaks.
+    /// Both attempts still report to Sentry — the retry hides no failure, it
+    /// only stops the silence.
+    ///
+    /// A supersede (barge-in, mute mid-read, a newer read) surfaces as
+    /// `CancellationError` and must NOT be retried: the app would talk over
+    /// whatever took over.
+    private func playQuestionTTSWithRetry(from urlString: String) async {
+        do {
+            let audioData = try await networkService.downloadAudio(from: urlString)
+            _ = try await audioService.playOpusAudio(audioData)
+            return
+        } catch is CancellationError {
+            return
+        } catch {
+            Logger.audio.warning("⚠️ Failed to play question audio: \(error, privacy: .public)")
+            // Don't fail the quiz if audio doesn't play — but fail loud to Sentry.
+            Self.reportAudioFailure(error, kind: "question")
+        }
+
+        // Nothing to rescue if the question is gone or the user muted meanwhile.
+        guard isAskingQuestion(), !settings().isMuted else { return }
+
+        try? await Task.sleep(for: .milliseconds(300))
+
+        do {
+            let audioData = try await networkService.downloadAudio(from: urlString)
+            _ = try await audioService.playOpusAudio(audioData)
+        } catch is CancellationError {
+            // superseded — the newer owner speaks
+        } catch {
+            Logger.audio.warning("⚠️ Question audio retry failed: \(error, privacy: .public)")
+            Self.reportAudioFailure(error, kind: "question-retry")
         }
     }
 

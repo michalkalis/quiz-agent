@@ -41,6 +41,7 @@ init_sentry(get_settings().sentry_dsn)
 from .api.routes import router
 from .api.v1.appstore import router as appstore_v1_router
 from .api.v1.orders import router as orders_v1_router
+from .api.v1.languages import router as languages_v1_router
 from .api.v1.ratings import router as ratings_v1_router
 from .web.rate import router as web_rate_router
 from .web.routes import router as web_router
@@ -130,6 +131,10 @@ app.include_router(appstore_v1_router)
 # pasted into messages and typed by hand, and an /api alias would be a second
 # entry point to the admin export for no caller.
 app.include_router(ratings_v1_router)
+# Language visibility (#168 — batch translation pipeline SK/CS, DD14). Mounted
+# under /api only: it is a new endpoint, so no deployed client depends on a
+# bare /v1 alias the way orders.py does.
+app.include_router(languages_v1_router, prefix="/api")
 app.include_router(web_router)
 # The rating page is a SEPARATE /web router with no admin gate — the batch
 # UUID is the capability (#154 D25). `web_router` above stays admin-gated.

@@ -247,17 +247,40 @@ struct AudioSessionCategoryOptionsTests {
         }
     }
 
-    @Test("shouldSwapCategoryForTTS swaps in media (no HFP) and holds in call (HFP present)")
-    func shouldSwapCategoryForTTSFollowsHFP() throws {
+    // #171: the per-utterance `.playAndRecord` <-> `.playback` swap is GONE (it was
+    // ~6 dB of audible loudness jump twice per question). Both modes now hold one
+    // configuration for the whole quiz, which is what these two pin: every quiz
+    // phase — question read, listening, recording, feedback read — runs under the
+    // same `quizSessionConfiguration`, so a re-introduced TTS-only category would
+    // have to change it here and fail.
+
+    @Test("the quiz session is .playAndRecord/.spokenAudio in BOTH modes — no TTS-only category")
+    func quizSessionConfigurationIsModeIndependent() throws {
         let media = try #require(AudioMode.forId("media"))
         let call = try #require(AudioMode.forId("call"))
 
-        // Media: no HFP to protect, so swapping to .playback per-utterance is safe
-        // and buys back the ~6dB .playAndRecord attenuation.
-        #expect(AudioService.shouldSwapCategoryForTTS(options: AudioService.categoryOptions(for: media)) == true)
-        // Call: HFP must stay up for the whole quiz — swapping would flap the car's
-        // Bluetooth SCO link on/off around every question.
-        #expect(AudioService.shouldSwapCategoryForTTS(options: AudioService.categoryOptions(for: call)) == false)
+        for mode in [media, call] {
+            let configuration = AudioService.quizSessionConfiguration(for: mode)
+            // .playAndRecord for the whole quiz: the mic must stay reachable and,
+            // in Call Mode, the Bluetooth SCO link must not flap (#104).
+            #expect(configuration.category == .playAndRecord, "\(mode.id) must hold .playAndRecord for every phase")
+            #expect(configuration.mode == .spokenAudio, "\(mode.id) must hold .spokenAudio for every phase")
+            #expect(configuration.options == AudioService.categoryOptions(for: mode))
+        }
+    }
+
+    @Test("the quiz configuration differs between modes only in its Bluetooth options")
+    func quizSessionConfigurationDiffersOnlyInOptions() throws {
+        let media = try #require(AudioMode.forId("media"))
+        let call = try #require(AudioMode.forId("call"))
+
+        let mediaConfiguration = AudioService.quizSessionConfiguration(for: media)
+        let callConfiguration = AudioService.quizSessionConfiguration(for: call)
+
+        // #104 must not regress: HFP is what separates the two, nothing else.
+        #expect(mediaConfiguration.category == callConfiguration.category)
+        #expect(mediaConfiguration.mode == callConfiguration.mode)
+        #expect(mediaConfiguration.options != callConfiguration.options)
     }
 }
 

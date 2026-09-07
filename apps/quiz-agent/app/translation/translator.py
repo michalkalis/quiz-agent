@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
 
+from app.translation.duplication import find_duplicated_word
 from app.translation.store import TranslationStore
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,12 @@ CACHE_MAX_ENTRIES = 2000
 # global stamp covers both prompts (#69 Decision #2). Read at call-time so tests can patch.
 # "2": translation moved to claude-opus-5 + idiomatic-target-language prompt
 # (2026-07-30 review) — old gpt-4o-mini translations must not be reused.
-TRANSLATION_PROMPT_VERSION = "2"
+# "3": duplicated-word guard added (#171 Track G) — every row cached under "2" was
+# validated without it, so a glued artifact like "palácapalác" would keep being
+# served from cache. Cost of the bump: one LLM call per (text, language) on its
+# first serve after deploy, then cached again — the same one-off cents as the 1→2
+# bump, and cheaper than a targeted purge that only fixes the rows we know about.
+TRANSLATION_PROMPT_VERSION = "3"
 
 # Attempts before falling back to the original English (#107). Was 2 — bumped to 3 after
 # a founder-reported live session still leaked an untranslated question through the old
@@ -153,6 +159,20 @@ class TranslationService:
                 original[:50],
                 target_language,
                 translated,
+            )
+            return None
+
+        # Glued / repeated word ("palácapalác", "paláca paláca"). Rejecting here
+        # puts the artifact through the existing retry-then-fallback path instead
+        # of caching it forever (#171 Track G).
+        duplicate = find_duplicated_word(translated)
+        if duplicate is not None:
+            logger.warning(
+                "Translation contains a duplicated word (%r) for '%s' → %s: '%s'",
+                duplicate,
+                original[:50],
+                target_language,
+                translated[:120],
             )
             return None
 
@@ -273,6 +293,26 @@ class TranslationService:
     # they are only checked for non-emptiness.
     _LONG_PAYLOAD_FIELDS = ("question", "explanation")
 
+    def _has_duplicated_word(
+        self, value: str, where: str, target_language: str
+    ) -> bool:
+        """Log-and-report the glued/repeated-word artifact for one payload value.
+
+        The short payload fields (options, answers) skip the length heuristics, so
+        without this they had no quality gate at all (#171 Track G).
+        """
+        duplicate = find_duplicated_word(value)
+        if duplicate is None:
+            return False
+        logger.warning(
+            "Payload translation contains a duplicated word (%r) in %s → %s: '%s'",
+            duplicate,
+            where,
+            target_language,
+            value[:120],
+        )
+        return True
+
     def _validate_payload(
         self,
         payload: Dict[str, Any],
@@ -303,7 +343,12 @@ class TranslationService:
                             target_language,
                         )
                         return None
-                    options[opt_key] = opt_value.strip()
+                    opt_value = opt_value.strip()
+                    if self._has_duplicated_word(
+                        opt_value, f"option {opt_key!r}", target_language
+                    ):
+                        return None
+                    options[opt_key] = opt_value
                 result[key] = options
                 continue
 
@@ -313,6 +358,8 @@ class TranslationService:
                 )
                 return None
             value = value.strip()
+            if self._has_duplicated_word(value, f"field {key!r}", target_language):
+                return None
             if key in self._LONG_PAYLOAD_FIELDS:
                 validated = self._validate_translation(original, value, target_language)
                 if validated is None:

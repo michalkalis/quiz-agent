@@ -38,6 +38,14 @@ extension RecordingCoordinator {
         // (UIBackgroundModes audio keeps us running); stay on the question
         // instead — the user taps the mic or says "start" once foregrounded.
         guard isAppForeground() else {
+            // #171 Track H: remember WHEN the window was due to open. The
+            // countdowns keep running in the background (founder decision), so
+            // foregrounding must either open the mic (window still has time) or
+            // close the question out on the no-answer sheet — never leave the
+            // driver parked on a question whose countdown ran out unseen.
+            if backgroundSuppressedRecordingAt == nil {
+                backgroundSuppressedRecordingAt = Date()
+            }
             Logger.audio.info("🎙️ startRecording suppressed — app is backgrounded")
             return
         }
@@ -56,8 +64,7 @@ extension RecordingCoordinator {
         abortSkipUndoWindow()
 
         cancelAnswerTimer()
-        // A fresh recording invalidates the previous stop's unattended snapshot.
-        wasUnattendedRecording = false
+        backgroundSuppressedRecordingAt = nil
         setErrorMessage(nil)
         transition(to: .recording)
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
@@ -198,8 +205,8 @@ extension RecordingCoordinator {
 
     /// Rescue net for the streaming path's fire-and-forget commit: if no
     /// committed transcript resolves the state within `seconds`, clean up and
-    /// escalate as a transcription failure instead of leaving the UI stuck on
-    /// RECORDING. Cancelled by handleCommittedTranscript / cancelProcessing.
+    /// hand over to `handleTranscriptionFailure()` instead of leaving the UI
+    /// stuck on RECORDING. Cancelled by handleCommittedTranscript / cancelProcessing.
     /// `seconds` is injectable for tests; production callers use the default.
     func startCommitWatchdog(seconds: TimeInterval = Config.sttCommitWatchdogSecs) {
         let task = Task { [weak self] in
@@ -209,14 +216,8 @@ extension RecordingCoordinator {
 
             Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
 
-            // Snapshotted by stopRecordingAndSubmit() before its flag resets —
-            // the watchdog always fires after that prefix armed it.
-            let wasUnattended = self.wasUnattendedRecording
             self.cleanupStreamingSTT()
-            self.cancelAutoStopRecordingTimer()
-            self.setIsAutoRecording(false)
-            self.speechDetectedDuringAutoRecord = false
-            self.handleTranscriptionFailure(unattendedSilence: wasUnattended)
+            self.handleTranscriptionFailure()
         }
         taskBag.add(task, key: .sttCommitWatchdog)
     }
@@ -239,49 +240,52 @@ extension RecordingCoordinator {
         Logger.audio.warning("⚠️ Recording interrupted by audio session — reset to ready state")
     }
 
-    // MARK: - Transcription Failure Escalation
+    // MARK: - No Answer Captured
 
-    /// 3-tier error escalation for transcription failures. Messages are shown
-    /// visually via `errorMessage`; we intentionally don't announce them via TTS.
-    /// Tier 1–2: Show retry prompt
-    /// Tier 3: Auto-skip after 2+ failures
-    /// `unattendedSilence`: the recording was auto-started by the answer-window
-    /// expiry and came back empty — the user never opted in, so looping "didn't
-    /// catch that" banners with fresh answer windows reads as a broken timer
-    /// (TF build 53 feedback). Skip straight to tier-3 behavior: no answer, move on.
+    /// The single funnel for "the recording produced nothing usable". Four paths
+    /// reach it: an empty committed transcript, the STT commit watchdog, a
+    /// Whisper response with no evaluation, and the backend's 400 "speech not
+    /// understood". Track H adds a fifth — the answer window elapsed entirely
+    /// while the app was backgrounded.
+    ///
+    /// #171 Track B (founder 2026-09-05): none of them may restart the answer
+    /// window. The old 3-tier escalation showed "Sorry, I didn't catch that",
+    /// re-armed a FULL think+answer countdown, did it a second time, and only
+    /// then skipped — which reads as a broken timer from the driver's seat, and
+    /// on the TF round it was the single most confusing behaviour. Every path
+    /// now ends where every other answer ends: the confirmation sheet, with an
+    /// EMPTY field. The driver can type the answer, say "again" to re-record,
+    /// or let the 5 s auto-confirm expire — confirming an empty field submits
+    /// "no answer" and moves on to the result (see `confirmAnswer()`).
     /// (Internal, not private — also called from +Streaming and +Submission.)
-    func handleTranscriptionFailure(unattendedSilence: Bool = false) {
-        if unattendedSilence {
-            consecutiveTranscriptionFailures = 0
-            transition(to: .askingQuestion)
-            Task { await self.skipQuestion() }
-            return
+    func handleTranscriptionFailure() {
+        // Kept for diagnostics only (it no longer changes the outcome): dead air
+        // and a spoken-but-lost answer now end identically, and the TF loop's
+        // first question about a "no answer" result is which of the two it was.
+        let heardSpeech = speechDetectedDuringAutoRecord
+        cancelAutoStopRecordingTimer()
+        setIsAutoRecording(false)
+        speechDetectedDuringAutoRecord = false
+        // No banner: the empty sheet IS the message, and an error banner under
+        // it would re-introduce the "something went wrong, try again" reading.
+        setErrorMessage(nil)
+
+        // The sheet is a `.processing` screen. The Whisper / 400 paths are
+        // already there and `.processing → .processing` is not a legal edge, so
+        // only move when we are arriving from somewhere else.
+        if quizState() != .processing {
+            guard transition(to: .processing) else { return }
         }
 
-        consecutiveTranscriptionFailures += 1
+        pendingResponse = nil
+        transcribedAnswer = ""
+        noAnswerCaptured = true
+        showAnswerConfirmation = true
+        startAutoConfirmIfEnabled()
+        // #77 (77.5): same command window as any other confirmation — "ok" /
+        // "again" must work here too.
+        refreshCommandWindow()
 
-        switch consecutiveTranscriptionFailures {
-        case 1:
-            setErrorMessage(String(localized: "Sorry, I didn't catch that. Please try again.", comment: "Transcription failure tier 1: ask the user to retry"))
-            transition(to: .askingQuestion)
-            // Re-arm the think/answer window: recording start zeroed both
-            // countdowns, so without this the timer pill disappears exactly when
-            // the retry banner appears and no retry window ever opens (founder
-            // 2026-08-03).
-            restartAnswerWindow()
-
-        case 2:
-            setErrorMessage(String(localized: "Having trouble hearing you. Try speaking closer to the mic.", comment: "Transcription failure tier 2: suggest speaking closer to the mic"))
-            transition(to: .askingQuestion)
-            restartAnswerWindow()
-
-        default:
-            consecutiveTranscriptionFailures = 0
-            // Leave the answer phase first, like tiers 1-2: the auto-skip is only
-            // accepted from .askingQuestion/.recording (a skip must never race an
-            // in-flight submit), and the Whisper path escalates from .processing.
-            transition(to: .askingQuestion)
-            Task { await self.skipQuestion() }
-        }
+        Logger.stt.info("🎙️ Nothing captured (speech heard: \(heardSpeech, privacy: .public)) — confirmation sheet opened with an empty answer")
     }
 }

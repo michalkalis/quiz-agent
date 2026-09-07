@@ -27,9 +27,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app import order_budget
+from app.config import Settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
+from app.worker import sweep as sweep_module
 from app.worker.sweep import (
     IN_PROGRESS_STUCK_TIMEOUT,
     PENDING_STUCK_TIMEOUT,
@@ -190,16 +192,22 @@ class FakeArqPool:
     def __init__(self, *, fail: bool = False) -> None:
         self.calls: list[tuple[str, str]] = []
         self.job_ids: list[str | None] = []
+        self.queue_names: list[str | None] = []
         self._fail = fail
         self.enqueue_job = AsyncMock(side_effect=self._enqueue)
 
     async def _enqueue(
-        self, task_name: str, arg: str, _job_id: str | None = None
+        self,
+        task_name: str,
+        arg: str,
+        _job_id: str | None = None,
+        _queue_name: str | None = None,
     ) -> None:
         if self._fail:
             raise ConnectionError("redis unreachable (simulated)")
         self.calls.append((task_name, arg))
         self.job_ids.append(_job_id)
+        self.queue_names.append(_queue_name)
 
 
 def _enqueued_for(pool: FakeArqPool, order_id: uuid.UUID) -> list[tuple[str, str]]:
@@ -245,6 +253,37 @@ async def test_sweep_recovers_stuck_pending_order(
     assert job.status == "queued"
     assert job.retry_count == 1
     assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_reenqueues_on_configured_queue(
+    engine: AsyncEngine, session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Recovery re-enqueues onto ORDER_QUEUE_NAME, not ARQ's default (#172).
+
+    The sweep is the only path that puts a job back on the queue from inside
+    the worker. On the session deploy (mba worker, Fly worker scaled to zero)
+    a recovery that fell back to the default queue would park a paid order
+    where nothing is listening — the exact silent hang this sweep exists to
+    prevent.
+    """
+    monkeypatch.setattr(
+        sweep_module,
+        "get_settings",
+        lambda: Settings(order_queue_name="quiz-pack:session"),
+    )
+    order_id, _job_id = await _make_stuck_pending(
+        session, age=PENDING_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {"redis": pool, "session_factory": _session_factory(engine)}
+
+    await sweep_stuck_orders(ctx)
+
+    assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
+    assert pool.queue_names and set(pool.queue_names) == {"quiz-pack:session"}
 
     await _cleanup(session, order_id)
 

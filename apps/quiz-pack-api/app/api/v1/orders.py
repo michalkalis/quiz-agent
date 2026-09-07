@@ -48,6 +48,8 @@ from sse_starlette.sse import EventSourceResponse
 
 from arq.connections import ArqRedis
 
+from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
+
 from ... import order_budget
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
@@ -85,8 +87,10 @@ _PRODUCT_TIERS: dict[str, int] = {
     "pack_50": 50,
 }
 
-# The app's 10 supported quiz languages (#138).
-_ALLOWED_LANGUAGES = {"en", "sk", "cs", "de", "fr", "es", "it", "pl", "hu", "ro"}
+# The app's supported quiz languages now live in quiz_shared.languages
+# (#168 — batch translation pipeline SK/CS, DD14): quiz-agent's session
+# validator reads the same lists, so the two services cannot drift into
+# accepting different sets.
 
 # Admin-created orders (#95) synthesize their own transaction ids. The prefix
 # keeps them disjoint from Apple's numeric transaction ids so a founder order
@@ -173,10 +177,31 @@ def _validate_guards(body: CreateOrderRequest) -> None:
             status_code=422,
             detail="prompt must be between 1 and 1000 characters (after stripping whitespace)",
         )
-    if body.language not in _ALLOWED_LANGUAGES:
+    # #168 DD14/DD15, soft phase: an unknown code is a bug or a probe and 422s,
+    # but a *known* code that is merely not orderable today (everything but
+    # English, DD15) is still accepted with a WARNING + Sentry breadcrumb —
+    # every installed build still offers all ten languages in the order form,
+    # and this order is a real purchase Apple has already charged for. It would
+    # be the worst possible place to start rejecting. Hardening to 422 waits
+    # for the gated client build (T26).
+    if body.language not in QUIZ_LANGUAGES:
         raise HTTPException(
             status_code=422,
-            detail=f"language must be one of {sorted(_ALLOWED_LANGUAGES)}",
+            detail=f"language must be one of {sorted(QUIZ_LANGUAGES)}",
+        )
+    orderable = pack_order_languages()
+    if body.language not in orderable:
+        logger.warning(
+            "Pack ordered in non-orderable language %r (orderable: %s); "
+            "accepted for legacy clients (#168)",
+            body.language,
+            ",".join(orderable),
+        )
+        sentry_sdk.add_breadcrumb(
+            category="language",
+            level="warning",
+            message=f"non-orderable pack language accepted: {body.language}",
+            data={"language": body.language},
         )
 
 
@@ -393,7 +418,12 @@ async def create_order(
     # a silently stuck order. The periodic sweep (app.worker.sweep) is the
     # remaining safety net for orders that slip past this point.
     try:
-        await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
+        await arq_pool.enqueue_job(
+            "process_order",
+            str(order.id),
+            _job_id=enqueue_id,
+            _queue_name=settings.order_queue_name,
+        )
     except Exception as exc:
         job.status = "failed"
         job.error = f"enqueue failed: {exc!r}"
@@ -708,7 +738,15 @@ async def retry_order(
     enqueue_id = attempt_job_id(order.id, job)
     await session.commit()
 
-    await arq_pool.enqueue_job("process_order", str(order.id), _job_id=enqueue_id)
+    # #172: the retry re-enters the SAME queue orders are created on, so a
+    # deploy pointing orders at the session queue never splits one order's
+    # attempts across two workers.
+    await arq_pool.enqueue_job(
+        "process_order",
+        str(order.id),
+        _job_id=enqueue_id,
+        _queue_name=settings.order_queue_name,
+    )
 
     order.status = "in_progress"
     await session.commit()

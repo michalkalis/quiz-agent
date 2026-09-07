@@ -38,12 +38,14 @@ import Testing
 private func makeOrderPackViewModel(
     service: MockPackOrderService = MockPackOrderService(),
     purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
-    adminKeyAvailable: Bool = true
+    adminKeyAvailable: Bool = true,
+    orderLanguageCodes: [String] = LanguageAvailability.fallbackPackOrderCodes
 ) -> OrderPackViewModel {
     OrderPackViewModel(
         service: service,
         purchaseService: purchaseService,
-        adminKeyAvailable: { adminKeyAvailable }
+        adminKeyAvailable: { adminKeyAvailable },
+        orderLanguages: { Language.selectableLanguages(in: orderLanguageCodes) }
     )
 }
 
@@ -230,21 +232,38 @@ struct OrderPackViewModelTests {
         #expect(vm.state == .editing)
         #expect(vm.orderId == nil, "a fresh form must not still point at the finished order")
         #expect(!vm.prompt.isEmpty, "the typed topic is kept — retyping it is pure friction")
-        #expect(vm.language == "sk", "a fresh order follows the current quiz language again")
+        // #168 DD15: packs are generated in English and only stamped with the
+        // code, so the order language degrades to the one orderable language
+        // rather than inheriting a quiz language the server would reject.
+        #expect(vm.language == "en", "a fresh order follows the current orderable language")
     }
 
     // MARK: - Language preselection
 
-    @Test("the form preselects the global quiz language, and an explicit pick survives reopen")
-    func languagePreselection() {
+    @Test("a quiz language packs cannot be ordered in degrades instead of reaching the server")
+    func languageDegradesToAnOrderableCode() {
+        // #168 DD15: the order picker offers `pack_order` (English-only today),
+        // not the quiz list — preselecting Slovak here would send the server a
+        // language it cannot generate a pack in.
         let vm = makeOrderPackViewModel()
+        vm.prepareForPresentation(defaultLanguage: "sk")
+        #expect(vm.language == "en")
+    }
+
+    @Test("the form preselects the quiz language, and an explicit pick survives reopen")
+    func languagePreselection() {
+        // Two orderable codes — the state pack ordering reaches once generation
+        // is natively multi-language. With the English-only list of today both
+        // branches of the `hasChosenLanguage` guard collapse onto "en", so the
+        // guard could be deleted without a test noticing.
+        let vm = makeOrderPackViewModel(orderLanguageCodes: ["en", "sk"])
 
         vm.prepareForPresentation(defaultLanguage: "sk")
         #expect(vm.language == "sk")
 
-        vm.selectLanguage("de")
-        vm.prepareForPresentation(defaultLanguage: "sk")
-        #expect(vm.language == "de", "an explicit choice must not be stomped on reopen")
+        vm.selectLanguage("sk")
+        vm.prepareForPresentation(defaultLanguage: "en")
+        #expect(vm.language == "sk", "an explicit choice must not be stomped on reopen")
     }
 
     @Test("an unsupported quiz language falls back to English rather than reaching the server")

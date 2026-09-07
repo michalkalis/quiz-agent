@@ -91,24 +91,53 @@ struct QuestionFooterInspectorTests {
     // MARK: - Track C: footer row order
 
     /// Founder-specified order. Asserted by relative index inside the row so a
-    /// re-shuffle is caught, not just presence.
+    /// re-shuffle is caught, not just presence. #171 Track C1: the order is read
+    /// off the accessibility identifiers now — Type and Skip no longer render a
+    /// visible word to sort by.
     @Test("footer row reads Record · Type · Skip")
     func footerRowOrder() async throws {
         let vm = makeVoiceViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            let expected = ["question.record", "question.textInputToggle", "question.skip"]
             // All three present…
-            for id in ["question.record", "question.textInputToggle", "question.skip"] {
+            for id in expected {
                 #expect(throws: Never.self, "\(id) missing from the footer") {
                     try tree.find(viewWithAccessibilityIdentifier: id)
                 }
             }
             // …and in the founder's order. `findAll` walks the tree in render
-            // order, so the labels' relative positions are the row's order.
-            let labels = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
-            let order = labels.filter { ["Record", "Type", "Skip"].contains($0) }
-            #expect(order == ["Record", "Type", "Skip"], "footer order drifted: \(order)")
+            // order, so the identifiers' relative positions are the row's order.
+            let order = tree.findAll(where: { view in
+                guard let id = try? view.accessibilityIdentifier() else { return false }
+                return expected.contains(id)
+            }).compactMap { try? $0.accessibilityIdentifier() }
+            #expect(order == expected, "footer order drifted: \(order)")
+        }
+    }
+
+    /// #171 Track C1 (founder, 2026-09-05 TestFlight): in Slovak the row's three
+    /// words ("Nahrávať · Písať · Preskočiť") left the Record button too little
+    /// width and its seconds pill — the one number a driver needs — was clipped.
+    /// Type and Skip are icon-only now, so the row costs the same in every
+    /// language. The words must be gone from the screen but NOT from VoiceOver.
+    @Test("Type and Skip are icon-only, keeping their words as accessibility labels")
+    func typeAndSkipAreIconOnly() async throws {
+        let vm = makeVoiceViewModel()
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
+            #expect(!visible.contains("Type"), "the word 'Type' is what stole the Record button's width")
+            #expect(!visible.contains("Skip"), "the word 'Skip' is what stole the Record button's width")
+            #expect(visible.contains("Record"), "the primary button keeps its label")
+
+            for (id, label) in [("question.textInputToggle", "Type"), ("question.skip", "Skip")] {
+                let button = try tree.find(viewWithAccessibilityIdentifier: id)
+                #expect(try button.accessibilityLabel().string() == label,
+                        "\(id) must still announce '\(label)' to VoiceOver")
+            }
         }
     }
 

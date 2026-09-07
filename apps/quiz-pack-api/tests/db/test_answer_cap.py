@@ -20,9 +20,6 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models import GenerationOrder, QuestionPack, QuestionRow
 from app.orchestrator import OrderContext
@@ -30,6 +27,8 @@ from app.orchestrator.stages.dedup import DedupStage, _normalize_answer
 from app.orchestrator.stages.strictness import Strictness, parse_strictness
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.models.question import Question
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 TAG = "170-answer-cap-test"
@@ -61,10 +60,14 @@ async def engine() -> AsyncEngine:
     eng = build_engine(normalize_async_url(_raw_url()))
     try:
         async with eng.begin() as conn:
-            await conn.execute(text("DELETE FROM questions WHERE topic = :t"), {"t": TAG})
+            await conn.execute(
+                text("DELETE FROM questions WHERE topic = :t"), {"t": TAG}
+            )
         yield eng
         async with eng.begin() as conn:
-            await conn.execute(text("DELETE FROM questions WHERE topic = :t"), {"t": TAG})
+            await conn.execute(
+                text("DELETE FROM questions WHERE topic = :t"), {"t": TAG}
+            )
     finally:
         await eng.dispose()
 
@@ -110,7 +113,9 @@ async def _seed(engine: AsyncEngine) -> None:
         )
         session.add(order)
         await session.flush()
-        pack = QuestionPack(order_id=order.id, prompt=TAG, language="en", target_count=1)
+        pack = QuestionPack(
+            order_id=order.id, prompt=TAG, language="en", target_count=1
+        )
         session.add(pack)
         await session.flush()
         session.add_all(
@@ -125,10 +130,19 @@ async def _seed(engine: AsyncEngine) -> None:
         await session.commit()
 
 
+_DISTINCT_STEMS = (
+    "Which capital sits on the Seine?",
+    "Where would you find the Eiffel Tower?",
+    "Which city hosts the Louvre museum?",
+)
+
+
 def _candidate(idx: int, answer: str = "Paris") -> Question:
+    # Distinct stems on purpose: the in-batch and same-fact branches must not
+    # fire, so the ONLY thing separating kept from dropped is the answer cap.
     return Question(
         id=str(uuid.uuid4()),
-        question=f"{TAG} candidate {idx}",
+        question=_DISTINCT_STEMS[idx],
         type="text",
         correct_answer=answer,
         topic=TAG,

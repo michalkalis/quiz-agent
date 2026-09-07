@@ -17,16 +17,15 @@ questions or empty the pack on every re-run.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-
 from app.orchestrator import OrderContext
 from app.orchestrator.stages.dedup import DedupStage
 from quiz_shared.database.pgvector_client import EMBEDDING_DIM, PgvectorQuestionStore
 from quiz_shared.models.question import Question
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 
 class _NullSink:
@@ -63,7 +62,7 @@ def _make_question(qid: uuid.UUID, text_: str, embedding) -> Question:
         embedding=embedding,
         embedding_model="test-fixture",
         embedding_dim=EMBEDDING_DIM,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -120,7 +119,12 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         result = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx, _NullSink()
         )
-        assert result.info == {"kept": 0, "dropped": 1, "fact_dropped": 0}
+        # #170 added `answer_cap` + `drop_reasons`; the legacy triple must hold.
+        assert {k: result.info[k] for k in ("kept", "dropped", "fact_dropped")} == {
+            "kept": 0,
+            "dropped": 1,
+            "fact_dropped": 0,
+        }
         assert ctx.questions == []
 
         # Re-running on the stored question itself keeps it — the only match is
@@ -129,7 +133,9 @@ async def test_dedupstage_drops_pgvector_paraphrase_keeps_self(
         result_self = await DedupStage(dedup_store, gold_standard_path=None).run(
             ctx_self, _NullSink()
         )
-        assert result_self.info == {"kept": 1, "dropped": 0, "fact_dropped": 0}
+        assert {
+            k: result_self.info[k] for k in ("kept", "dropped", "fact_dropped")
+        } == {"kept": 1, "dropped": 0, "fact_dropped": 0}
         assert ctx_self.questions == [seeded]
     finally:
         async with factory() as session:

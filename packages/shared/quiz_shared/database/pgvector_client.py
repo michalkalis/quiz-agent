@@ -39,6 +39,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    column,
     delete,
     func,
     select,
@@ -51,10 +52,26 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from ..models.question import GenerationProvenance, Question
 from ..utils.embeddings import generate_embedding_async
+from ..utils.qa_text import qa_text
 
 logger = logging.getLogger(__name__)
 
 EMBEDDING_DIM = 1536
+
+# #170 D2 — the question+answer branch of dedup has its OWN threshold: the QA
+# text carries the answer, so same-fact pairs sit higher than on question-only
+# vectors and a shared 0.85 would over-drop. Calibration is Session J/K's job.
+DEFAULT_QA_COSINE_THRESHOLD = 0.90
+# Upper bound on rows the QA query returns ABOVE the threshold filter — every
+# returned row is a real match; the bound only keeps a pathological corpus
+# (dozens of near-identical rows) from flooding the caller.
+QA_DUPLICATES_LIMIT = 50
+
+# #170 gate F1 R2 — "live corpus" for every #170 query: customer packs never
+# count (locked 3) and archived rows (the 07-26 cull) are not part of the
+# playable corpus. The legacy question-only `find_duplicates` predates this
+# and is deliberately left untouched (hot path, locked 4).
+_LIVE_CORPUS_SQL = "pack_id IS NULL AND review_status IN ('approved', 'pending_review')"
 
 # Every embedder use in this class happens inside an ``async def``, so an
 # embedder may be a coroutine function (the default since #151) or a plain
@@ -349,6 +366,64 @@ class PgvectorQuestionStore:
                 stmt,
                 {"language": language, "category": category, "answer_key": answer_key},
             )
+            return int(result.scalar_one())
+
+    async def find_duplicates_qa(
+        self,
+        question_text: str,
+        correct_answer: Any,
+        possible_answers: Optional[Dict[str, str]] = None,
+        threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
+    ) -> List[Tuple[Question, float]]:
+        """#170 D2 — live corpus rows whose question+answer embedding is ``>=
+        threshold`` cosine-similar to this candidate's ``qa_text``.
+
+        Differs from ``find_duplicates`` on purpose: the threshold is applied
+        **in SQL** and ``LIMIT`` sits above that filter, so the result is the
+        complete set of matches (bounded by ``QA_DUPLICATES_LIMIT``), not "the
+        10 nearest, then filtered". The replay harness and Session K's diff
+        need every pair, not just a yes/no. ``embedding_qa`` is deliberately
+        not part of ``questions_table`` (see ``count_answer_key``), hence the
+        free-standing typed column. Self-matches are not filtered here — the
+        stage excludes them by id, like the question-only branch.
+        """
+        query_embedding = await self._embed(
+            qa_text(question_text, correct_answer, possible_answers)
+        )
+        qa_column = column("embedding_qa", Vector(EMBEDDING_DIM))
+        distance = qa_column.cosine_distance(query_embedding)
+        async with self._session_factory() as session:
+            stmt = (
+                select(questions_table, distance.label("distance"))
+                .where(qa_column.is_not(None))
+                .where(text(_LIVE_CORPUS_SQL))
+                .where(distance <= 1.0 - threshold)
+                .order_by(distance)
+                .limit(QA_DUPLICATES_LIMIT)
+            )
+            result = await session.execute(stmt)
+            rows = result.mappings().all()
+        return [(_row_to_question(row), 1.0 - float(row["distance"])) for row in rows]
+
+    async def count_qa_backfill_gap(self) -> int:
+        """#170 D2 — live corpus rows that have a question embedding but no
+        ``embedding_qa`` yet. Non-zero means the QA branch would silently skip
+        part of the corpus; ``DedupStage`` refuses to run in that state."""
+        return await self._count_live_where(
+            "embedding IS NOT NULL AND embedding_qa IS NULL"
+        )
+
+    async def count_missing_language(self) -> int:
+        """#170 D2 — live corpus rows with ``language IS NULL`` (legacy rows
+        the free ``--answer-key-only`` backfill pass sets to ``'en'``)."""
+        return await self._count_live_where("language IS NULL")
+
+    async def _count_live_where(self, predicate: str) -> int:
+        stmt = text(
+            f"SELECT count(*) FROM questions WHERE {_LIVE_CORPUS_SQL} AND {predicate}"
+        )
+        async with self._session_factory() as session:
+            result = await session.execute(stmt)
             return int(result.scalar_one())
 
     # ── Internal helpers ───────────────────────────────────────────────

@@ -35,7 +35,6 @@ import logging
 import os
 import sys
 from collections.abc import Callable, Sequence
-from typing import Any
 
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _APP_DIR = os.path.dirname(_SCRIPT_DIR)
@@ -46,6 +45,7 @@ sys.path.insert(0, _APP_DIR)
 from app.db.engine import normalize_async_url
 from app.db.models import QuestionRow
 from app.orchestrator.stages.dedup import _normalize_answer
+from quiz_shared.utils.qa_text import qa_text
 from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
@@ -56,19 +56,6 @@ DEFAULT_LANGUAGE = "en"
 DEFAULT_BATCH_SIZE = 64
 
 EmbedFn = Callable[[Sequence[str]], Sequence[Sequence[float]]]
-
-
-def qa_text(question: str, correct_answer: Any, possible_answers: dict | None) -> str:
-    """The text that gets embedded: question + the answer as the player hears it.
-
-    MCQ rows store the option TEXT in ``correct_answer`` since the 2026-07-11
-    pilot fix; a bare option letter (legacy rows) is resolved through
-    ``possible_answers`` so two rows with the same fact embed the same way.
-    """
-    answer = correct_answer
-    if isinstance(possible_answers, dict) and isinstance(answer, str):
-        answer = possible_answers.get(answer, answer)
-    return f"Question: {question}\nAnswer: {answer}"
 
 
 async def backfill_answer_keys(

@@ -24,6 +24,12 @@ Two independent checks, either of which is enough to drop a question:
   with disjoint wording (pair 15/17 of that batch, 0.12 here and 0.735 on
   embedding cosine vs a 0.738 non-dup pair) is NOT separable by any
   threshold — accepted gap, documented in issue #153.
+- **QA cosine similarity ≥ 0.90 (#170 D2, ``qa_embedding=True`` only)** —
+  closes exactly that gap: the candidate's question+answer text is compared
+  against the corpus's ``embedding_qa`` column, where same-fact pairs sit
+  higher than on question-only vectors. Default OFF; when ON the stage first
+  refuses to run over a corpus whose QA backfill is incomplete, because a
+  half-covered column would silently lose recall.
 
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
@@ -47,6 +53,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, Protocol
 
+from quiz_shared.database.pgvector_client import DEFAULT_QA_COSINE_THRESHOLD
 from quiz_shared.models.question import Question
 
 from app.orchestrator.context import OrderContext, StageResult
@@ -92,6 +99,32 @@ class AsyncDuplicateFinder(Protocol):
     ) -> list[tuple[Question, float]]: ...
 
 
+class AsyncQaDuplicateFinder(Protocol):
+    """#170 D2 — the question+answer branch of the corpus lookup.
+
+    Only required when ``qa_embedding=True``; the customer-pack worker never
+    turns it on, so the plain ``AsyncDuplicateFinder`` stays sufficient there.
+    """
+
+    async def find_duplicates_qa(
+        self,
+        question_text: str,
+        correct_answer: Any,
+        possible_answers: dict[str, str] | None = None,
+        threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
+    ) -> list[tuple[Question, float]]: ...
+
+    async def count_qa_backfill_gap(self) -> int: ...
+
+    async def count_missing_language(self) -> int: ...
+
+
+QA_BACKFILL_INSTRUCTION = (
+    "run `python scripts/backfill_embedding_qa.py --execute` (apps/quiz-pack-api) "
+    "over this database before enabling DEDUP_QA_EMBEDDING"
+)
+
+
 class AsyncAnswerCounter(Protocol):
     """#170 D6 — how many *live corpus* rows already carry this normalized answer.
 
@@ -126,6 +159,8 @@ class DedupStage:
         fact_jaccard_threshold: float = DEFAULT_FACT_JACCARD_THRESHOLD,
         strictness: Strictness | None = None,
         answer_counter: AsyncAnswerCounter | None = None,
+        qa_embedding: bool = False,
+        qa_cosine_threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
     ) -> None:
         self._store = question_store
         self._gold_standard_path = (
@@ -141,6 +176,13 @@ class DedupStage:
             raise ValueError(
                 "DedupStage: answer_cap is ON but no answer_counter was injected — "
                 "the cap would silently count only the current batch"
+            )
+        self._qa_embedding = qa_embedding
+        self._qa_cosine_threshold = qa_cosine_threshold
+        if qa_embedding and not hasattr(question_store, "find_duplicates_qa"):
+            raise ValueError(
+                "DedupStage: qa_embedding is ON but the question store has no "
+                "find_duplicates_qa — the QA branch would silently never run"
             )
         self._gold_tokens: list[frozenset[str]] | None = None
 
@@ -160,6 +202,8 @@ class DedupStage:
             return StageResult(info={"kept": 0, "dropped": 0}, cost_cents=0)
 
         gold_tokens = self._load_gold_tokens()
+        if self._qa_embedding:
+            await self._assert_qa_corpus_ready()
 
         kept: list[Question] = []
         kept_tokens: list[frozenset[str]] = []
@@ -172,6 +216,7 @@ class DedupStage:
         cap_dropped = 0
         reasons = {
             "cosine": 0,
+            "cosine_qa": 0,
             "jaccard": 0,
             "in_batch": 0,
             "fact_key": 0,
@@ -181,6 +226,10 @@ class DedupStage:
             if await self._is_cosine_duplicate(q, self._cosine_for(q)):
                 dropped += 1
                 reasons["cosine"] += 1
+                continue
+            if self._qa_embedding and await self._is_qa_duplicate(q):
+                dropped += 1
+                reasons["cosine_qa"] += 1
                 continue
             if self._is_jaccard_duplicate(q, gold_tokens):
                 dropped += 1
@@ -302,6 +351,44 @@ class DedupStage:
             if match.id != question.id:
                 return True
         return False
+
+    async def _is_qa_duplicate(self, question: Question) -> bool:
+        """#170 D2 — same fact, disjoint wording. Unlike the question-only
+        branch this does NOT swallow store errors: the flag is only ever on in
+        corpus CLI runs, where a failing query must stop the run rather than
+        quietly pass every candidate."""
+        duplicates = await self._store.find_duplicates_qa(  # type: ignore[attr-defined]
+            question.question,
+            question.correct_answer,
+            question.possible_answers,
+            threshold=self._qa_cosine_threshold,
+        )
+        for match, score in duplicates:
+            if match.id != question.id:
+                logger.info(
+                    "DedupStage cosine-qa dropped id=%s (%.3f vs corpus id=%s)",
+                    question.id,
+                    score,
+                    match.id,
+                )
+                return True
+        return False
+
+    async def _assert_qa_corpus_ready(self) -> None:
+        """Fail loud on an incomplete QA backfill; warn on NULL languages."""
+        gap = await self._store.count_qa_backfill_gap()  # type: ignore[attr-defined]
+        if gap:
+            raise RuntimeError(
+                f"DedupStage: qa_embedding is ON but {gap} live corpus row(s) "
+                f"have an embedding and no embedding_qa — {QA_BACKFILL_INSTRUCTION}"
+            )
+        missing_language = await self._store.count_missing_language()  # type: ignore[attr-defined]
+        if missing_language:
+            logger.warning(
+                "DedupStage: %d live corpus row(s) have language IS NULL — "
+                "the free `backfill_embedding_qa.py --answer-key-only` pass sets them to 'en'",
+                missing_language,
+            )
 
     def _is_jaccard_duplicate(
         self, question: Question, gold_tokens: list[frozenset[str]]

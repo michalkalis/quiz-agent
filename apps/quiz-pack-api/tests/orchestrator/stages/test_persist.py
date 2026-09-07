@@ -301,3 +301,35 @@ async def test_embedding_model_defaults_filled_when_embedding_present(
     assert row.embedding_dim == EMBEDDING_DIM
 
     await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_embedding_qa_lands_with_model_default_and_stays_null_otherwise(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """#170 D2/D10: a question carrying `embedding_qa` must land with the
+    vector AND the model label (a vector without its model is unusable for a
+    later re-embed), while a question without one must leave the column NULL —
+    the QA branch's fail-loud guard counts exactly those NULLs, so persist
+    must never fake a value."""
+    order = await _make_order(session, target_count=2)
+    with_qa = _stub_question(0, embedding_qa=[0.2] * EMBEDDING_DIM)
+    without_qa = _stub_question(1)
+    assert with_qa.embedding_qa_model is None  # sanity: caller set only the vector
+
+    ctx = _make_ctx(order, [with_qa, without_qa])
+    await PersistStage(session_factory).run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    row = await session.get(QuestionRow, uuid.UUID(with_qa.id))
+    assert row is not None
+    assert row.embedding_qa is not None and len(row.embedding_qa) == EMBEDDING_DIM
+    assert row.embedding_qa_model == DEFAULT_EMBEDDING_MODEL
+    assert row.embedding is None  # the QA vector never masquerades as the question vector
+
+    row_without = await session.get(QuestionRow, uuid.UUID(without_qa.id))
+    assert row_without is not None
+    assert row_without.embedding_qa is None
+    assert row_without.embedding_qa_model is None
+
+    await _cleanup_order(session, order.id)

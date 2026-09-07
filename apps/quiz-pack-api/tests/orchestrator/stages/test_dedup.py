@@ -263,3 +263,167 @@ def test_thresholds_default_match_module_constants() -> None:
     in production without any test failing."""
     assert DEFAULT_COSINE_THRESHOLD == 0.85
     assert DEFAULT_JACCARD_THRESHOLD == 0.80
+
+
+# ── #170 D2 — QA embedding branch (`qa_embedding`, default OFF) ──────────────
+#
+# Why: the question-only cosine branch cannot separate "same fact, disjoint
+# wording" (0.735 dup vs 0.738 non-dup). The QA branch embeds question+answer
+# into its own column with its own threshold. Two failure modes are worse than
+# the gap itself and both are pinned here: the branch silently running over a
+# half-backfilled corpus (lost recall), and the branch running when nobody
+# turned it on (the customer-pack worker must be untouched by construction).
+
+
+class _FakeQaStore(_FakeQuestionStore):
+    """`AsyncQaDuplicateFinder` double on top of the question-only fake."""
+
+    def __init__(
+        self,
+        canned: dict[str, list[tuple[Question, float]]] | None = None,
+        qa_canned: dict[str, list[tuple[Question, float]]] | None = None,
+        backfill_gap: int = 0,
+        missing_language: int = 0,
+    ) -> None:
+        super().__init__(canned)
+        self._qa_canned = qa_canned or {}
+        self._backfill_gap = backfill_gap
+        self._missing_language = missing_language
+        self.qa_calls: list[tuple[str, Any, float]] = []
+        self.guard_calls = 0
+
+    async def find_duplicates_qa(
+        self,
+        question_text: str,
+        correct_answer: Any,
+        possible_answers: dict[str, str] | None = None,
+        threshold: float = 0.90,
+    ) -> list[tuple[Question, float]]:
+        self.qa_calls.append((question_text, correct_answer, threshold))
+        return [(q, s) for q, s in self._qa_canned.get(question_text, []) if s >= threshold]
+
+    async def count_qa_backfill_gap(self) -> int:
+        self.guard_calls += 1
+        return self._backfill_gap
+
+    async def count_missing_language(self) -> int:
+        return self._missing_language
+
+
+_SAME_FACT_CORPUS = _stub_question(
+    99,
+    text="Which element makes up most of the air we breathe?",
+    correct_answer="Nitrogen",
+)
+_SAME_FACT_CANDIDATE = _stub_question(
+    0,
+    text="What gas accounts for roughly 78% of Earth's atmosphere?",
+    correct_answer="Nitrogen",
+)
+
+
+@pytest.mark.asyncio
+async def test_qa_branch_off_never_touches_the_qa_surface(
+    empty_gold_standard: Path,
+) -> None:
+    """Default OFF = zero behaviour change: no guard query, no QA query, even
+    when the store would have reported an incomplete backfill AND a QA match."""
+    store = _FakeQaStore(
+        qa_canned={_SAME_FACT_CANDIDATE.question: [(_SAME_FACT_CORPUS, 0.95)]},
+        backfill_gap=5,
+    )
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard)
+    ctx = _make_ctx([_SAME_FACT_CANDIDATE])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert store.qa_calls == []
+    assert store.guard_calls == 0
+    assert result.info["drop_reasons"]["cosine_qa"] == 0
+
+
+@pytest.mark.asyncio
+async def test_qa_branch_on_fails_loud_when_backfill_is_incomplete(
+    empty_gold_standard: Path,
+) -> None:
+    """A corpus row with a question embedding but no QA embedding is invisible
+    to the QA branch — running anyway would silently lose recall. The error
+    must carry the count and the exact backfill instruction."""
+    store = _FakeQaStore(backfill_gap=3)
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard, qa_embedding=True)
+    ctx = _make_ctx([_SAME_FACT_CANDIDATE])
+
+    with pytest.raises(RuntimeError, match=r"3 live corpus row.*backfill_embedding_qa\.py"):
+        await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert store.qa_calls == []
+    assert ctx.questions == [_SAME_FACT_CANDIDATE]  # nothing was dropped on the way out
+
+
+@pytest.mark.asyncio
+async def test_qa_branch_on_drops_same_fact_with_disjoint_wording(
+    empty_gold_standard: Path,
+) -> None:
+    """The headline contract of D2: the question-only branch sees nothing
+    (disjoint wording), the QA branch matches on question+answer and the
+    candidate drops under its OWN reason — never blended into `cosine`."""
+    store = _FakeQaStore(
+        canned={},  # question-only branch is blind to this pair
+        qa_canned={_SAME_FACT_CANDIDATE.question: [(_SAME_FACT_CORPUS, 0.93)]},
+    )
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard, qa_embedding=True)
+    unrelated = _stub_question(1, text="Which river flows through Vienna?", correct_answer="Danube")
+    ctx = _make_ctx([_SAME_FACT_CANDIDATE, unrelated])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["dropped"] == 1
+    assert result.info["drop_reasons"]["cosine_qa"] == 1
+    assert result.info["drop_reasons"]["cosine"] == 0
+    assert store.guard_calls == 1
+    # The store is asked with the candidate's answer — the branch is QA, not Q.
+    assert store.qa_calls[0][:2] == (_SAME_FACT_CANDIDATE.question, "Nitrogen")
+    assert store.qa_calls[0][2] == 0.90
+
+
+@pytest.mark.asyncio
+async def test_qa_branch_on_keeps_self_match(empty_gold_standard: Path) -> None:
+    """Idempotent re-run: a persisted question matching its own QA row must
+    survive, exactly like the question-only branch."""
+    store = _FakeQaStore(
+        qa_canned={_SAME_FACT_CORPUS.question: [(_SAME_FACT_CORPUS, 1.0)]},
+    )
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard, qa_embedding=True)
+    ctx = _make_ctx([_SAME_FACT_CORPUS])
+
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.id for q in ctx.questions] == ["q_99"]
+    assert result.info["dropped"] == 0
+
+
+@pytest.mark.asyncio
+async def test_qa_branch_on_warns_on_null_language_rows(
+    empty_gold_standard: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """NULL `language` is a soft gap (the free backfill pass fixes it) — warn
+    with the count, keep running."""
+    store = _FakeQaStore(missing_language=240)
+    stage = DedupStage(store, gold_standard_path=empty_gold_standard, qa_embedding=True)
+    ctx = _make_ctx([_SAME_FACT_CANDIDATE])
+
+    with caplog.at_level("WARNING", logger="app.orchestrator.stages.dedup"):
+        result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert result.info["kept"] == 1
+    assert any("240" in rec.getMessage() and "language IS NULL" in rec.getMessage()
+               for rec in caplog.records)
+
+
+def test_qa_branch_on_requires_a_qa_capable_store(empty_gold_standard: Path) -> None:
+    """Turning the flag on against a store without the QA surface must fail at
+    construction, not silently never run the branch."""
+    with pytest.raises(ValueError, match="find_duplicates_qa"):
+        DedupStage(_FakeQuestionStore(), gold_standard_path=empty_gold_standard, qa_embedding=True)

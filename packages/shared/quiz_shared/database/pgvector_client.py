@@ -35,7 +35,6 @@ from sqlalchemy import (
     Column,
     DateTime,
     Integer,
-    MetaData,
     String,
     Table,
     Text,
@@ -46,7 +45,8 @@ from sqlalchemy import (
     select,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import text as sa_text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -54,6 +54,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from ..models.question import GenerationProvenance, Question
 from ..utils.embeddings import generate_embedding_async
 from ..utils.qa_text import qa_text
+from ..utils.source_hash import source_hash_for
+from ._schema import metadata as _metadata
+from .translation_queries import demote_stale_translations, fetch_approved_translations
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +92,6 @@ DEFAULT_STATEMENT_TIMEOUT_MS = 5_000
 # Minimal mirror of the `questions` table managed by quiz-pack-api alembic.
 # Only the columns the voice-quiz read path needs are declared; INSERTs
 # rely on Postgres defaults / nullable columns for everything else.
-_metadata = MetaData()
 questions_table = Table(
     "questions",
     _metadata,
@@ -123,6 +125,18 @@ questions_table = Table(
     Column("media_url", Text, nullable=True),
     Column("image_subtype", String(32), nullable=True),
     Column("provenance", JSONB, nullable=True),
+    # #168 DD1: derived retrieval index over `question_translations` — the
+    # languages this question may be served in. Written ONLY by the translation
+    # pipeline (`PIPELINE_OWNED_COLUMNS`) and by the DD3 demotion below; ordinary
+    # question writers never send it, so it keeps its `'{}'` server default.
+    # `server_default` mirrors the migration, not decoration: ordinary writers
+    # omit the column entirely, so without it every INSERT would violate NOT NULL.
+    Column(
+        "approved_languages",
+        ARRAY(Text),
+        nullable=False,
+        server_default=sa_text("'{}'::text[]"),
+    ),
 )
 
 
@@ -135,11 +149,25 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
     for key, value in filters.items():
         col = questions_table.c.get(key)
         if col is None:
-            # Unknown filter key — skip silently so callers can pass
-            # over-specified dicts. The store contract is "best-effort
-            # constraint", not strict validation.
-            continue
-        if isinstance(value, dict) and "$in" in value:
+            # Fail loud (#168 DD2). This used to skip silently as a
+            # "best-effort constraint", but the filter dict now carries the
+            # serving *gate* (`approved_languages`), and a silently dropped
+            # gate key means serving every untranslated question — exactly the
+            # failure the gate exists to prevent. Verified there is no live
+            # caller relying on the old contract: every key the retriever emits
+            # is a real column, and quiz-pack-api's `filters` dicts are applied
+            # in Python (`generation/storage.py`) and never reach this store.
+            raise ValueError(
+                f"Unknown filter key {key!r} — not a column of `questions`. "
+                f"Known columns: {sorted(questions_table.c.keys())}"
+            )
+        if isinstance(value, dict) and "$contains" in value:
+            # Postgres array containment (`@>`) — the DD1 serving gate.
+            wanted = value["$contains"]
+            clauses.append(
+                col.contains(wanted if isinstance(wanted, list) else [wanted])
+            )
+        elif isinstance(value, dict) and "$in" in value:
             clauses.append(col.in_(value["$in"]))
         elif isinstance(value, dict) and "$ne" in value:
             clauses.append(col != value["$ne"])
@@ -207,6 +235,16 @@ class PgvectorQuestionStore:
         Canonical write for the admin/feedback surface (#41 D3) — matches
         `ChromaDBQuestionStore.upsert`: never silently no-ops on an existing
         id, every field is overwritten from the given `Question`.
+
+        Also the place an English edit is *noticed* (#168 DD3). This is the
+        shared write path behind `POST /questions/backfill-sources`,
+        `/questions/review-status`, `/questions/set-category` and quiz-pack-api's
+        persist stage; if the new text hashes differently from what an approved
+        translation was approved against, that translation is demoted to `stale`
+        and loses its language in the SAME transaction. Doing it here instead of
+        in a scheduled job means it cannot be forgotten and adds no founder
+        process. (`add()` needs no such leg: `ON CONFLICT DO NOTHING` can never
+        edit an existing row.)
         """
         embedding = await self._embedding_for(question)
         row = _question_to_row_dict(question, embedding)
@@ -215,10 +253,22 @@ class PgvectorQuestionStore:
                 stmt = pg_insert(questions_table).values(row)
                 stmt = stmt.on_conflict_do_update(
                     index_elements=["id"],
+                    # `approved_languages` is absent from `row` and therefore
+                    # from `set_`: it is pipeline-owned, so an ordinary question
+                    # write must never clobber it (`PIPELINE_OWNED_COLUMNS`).
                     set_={k: stmt.excluded[k] for k in row if k != "id"},
                 )
                 await session.execute(stmt)
+                demoted = await demote_stale_translations(
+                    session, questions_table, row["id"], source_hash_for(question)
+                )
                 await session.commit()
+            if demoted:
+                logger.warning(
+                    "Question %s edited — demoted approved translations to stale: %s",
+                    row["id"],
+                    ",".join(sorted(demoted)),
+                )
             return True
         except Exception as e:  # pragma: no cover - surface only on DB outage
             logger.error("PgvectorQuestionStore.upsert failed: %s", e, exc_info=True)
@@ -253,6 +303,23 @@ class PgvectorQuestionStore:
             )
             row = result.mappings().first()
             return _row_to_question(row) if row else None
+
+    async def get_translations(
+        self, question_ids: List[str], language: str
+    ) -> Dict[str, Dict[str, Any]]:
+        """Approved translations for `question_ids` into `language`, keyed by
+        question id (#168 DD5) — one indexed lookup, batched over the ids.
+
+        The single source for both display and grading in a non-EN session, so
+        an id missing from the result is a *drop*, never an English fallback
+        (locked decision 2). `language="en"` is a caller bug, not a query: the
+        English text lives on the question row itself.
+        """
+        qids = [q for q in (_coerce_uuid(x) for x in question_ids) if q is not None]
+        if not qids:
+            return {}
+        async with self._session_factory() as session:
+            return await fetch_approved_translations(session, qids, language)
 
     async def count(
         self,

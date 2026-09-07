@@ -13,11 +13,13 @@ from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from quiz_shared.database.pgvector_client import (
     EMBEDDING_DIM,
     PgvectorQuestionStore,
+    _build_where,
 )
 from quiz_shared.models.question import Question
 
@@ -125,6 +127,40 @@ async def test_find_duplicates_threshold_and_self(engine: AsyncEngine) -> None:
                 {"a": target_id, "b": other_id},
             )
             await session.commit()
+
+
+# ── `_build_where` contract (#168 — batch translation pipeline SK/CS, T12) ──
+#
+# These two need no database: they are about the SQL a filter dict compiles to,
+# and about what happens when it names something that is not a column.
+
+
+def test_build_where_unknown_key_raises() -> None:
+    """A misspelled filter key must fail loud, not be dropped.
+
+    WHY this is not pedantry: the filter dict now carries the *serving gate*
+    (`approved_languages @> {lang}`, DD1). Under the old best-effort contract a
+    typo'd gate key was skipped silently, which does not narrow the result set
+    — it widens it to every untranslated question, serving unverified text to a
+    player. That is precisely the failure #168 exists to prevent, so an unknown
+    key is a programming error the store refuses rather than absorbs.
+    """
+    with pytest.raises(ValueError, match="approved_langauges"):
+        _build_where({"approved_langauges": {"$contains": "sk"}})
+
+
+def test_build_where_contains_emits_array_contains() -> None:
+    """`$contains` must compile to Postgres array containment (`@>`).
+
+    WHY assert on the operator rather than just "no exception": the column is a
+    TEXT[], so a plain `=` would compare the whole array against a scalar and
+    match nothing. A gate that silently serves zero questions is as broken as
+    one that serves everything, and both compile without error.
+    """
+    (clause,) = _build_where({"approved_languages": {"$contains": "sk"}})
+    compiled = clause.compile(dialect=postgresql.dialect())
+    assert "@>" in str(compiled)
+    assert list(compiled.params.values()) == [["sk"]]
 
 
 @pytest.mark.asyncio

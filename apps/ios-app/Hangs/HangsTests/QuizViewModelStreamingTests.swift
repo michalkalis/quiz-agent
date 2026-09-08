@@ -74,16 +74,19 @@ private func waitUntil(
     Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
-/// Park the recording window far out of reach.
+/// Take the recording window out of these tests entirely.
 ///
 /// #173 made the VISIBLE window 5 s ("time to start speaking"), and its expiry
 /// really stops the mic and submits. That is wall-clock time, so on a loaded CI
 /// runner it fired in the middle of tests whose subject is the STT event
 /// pipeline, not the window — the mic closed and the assertions went red for
-/// the wrong reason. Tests that are ABOUT the window arm it explicitly instead.
+/// the wrong reason. CANCELLING is the right park: arming a very long window
+/// instead leaves a task ticking once a second (and publishing) for minutes
+/// after the test ends, which is main-actor noise every other suite in the
+/// parallel run then has to share. Tests that are ABOUT the window arm one.
 @MainActor
 private func parkRecordingWindow(_ viewModel: QuizViewModel) {
-    viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 600, hardCap: 600)
+    viewModel.quizTimersController.cancelAutoStopRecordingTimer()
 }
 
 // MARK: - Suite
@@ -283,11 +286,13 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
-            // What this test is about is the partial RETIRING the window, not a
-            // wall-clock race with the real 5 s (which the length tests in
-            // QuizViewModelAutoStopRecordingTests pin without any real timer).
-            parkRecordingWindow(viewModel)
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+
+            // A window this test owns: what is under test is the partial
+            // RETIRING it, not a wall-clock race with the real 5 s (the lengths
+            // are pinned without any real timer in
+            // QuizViewModelAutoStopRecordingTests).
+            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 30, hardCap: 30)
 
             await mockSTT.injectEvent(.partialTranscript("bratislava"))
             await waitUntil({ viewModel.answerWindowTotal == 0 }, "the countdown never retired on first speech")
@@ -296,6 +301,7 @@ struct QuizViewModelStreamingTests {
             #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord)
             #expect(viewModel.taskBag.contains(.recordingHardCap), "the dead-air cap must outlive the countdown")
             #expect(viewModel.quizState == .recording, "hiding the number must not end the answer")
+            viewModel.quizTimersController.cancelAutoStopRecordingTimer()
         }
     }
 
@@ -311,11 +317,15 @@ struct QuizViewModelStreamingTests {
             parkRecordingWindow(viewModel)
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
+            // A window this test owns: long enough that only the partial could
+            // retire it, short enough not to keep ticking past the test.
+            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 30, hardCap: 30)
             await mockSTT.injectEvent(.partialTranscript("   "))
             await Task.yield()
 
-            #expect(viewModel.answerWindowTotal == 600, "an empty partial must not retire the window")
+            #expect(viewModel.answerWindowTotal == 30, "an empty partial must not retire the window")
             #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord == false)
+            viewModel.quizTimersController.cancelAutoStopRecordingTimer()
         }
     }
 

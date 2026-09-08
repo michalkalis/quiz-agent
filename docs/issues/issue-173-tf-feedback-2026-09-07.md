@@ -1,7 +1,7 @@
 # #173 — TF feedback 2026-09-07: mute pretrváva, hlavička MCQ, hlasitosť pri nahrávaní, dĺžka nahrávania, pauza+mute do toolbaru, vyhodnocujem v tlačidle, replay v MCQ, banner nad možnosťami
 
-**Triage:** bug · ready-for-agent (founder rozhodnutia 2026-09-07 nižšie)
-**Status:** Diagnóza + founder rozhodnutia 2026-09-07; implementácia beží v 2 PR (Track A+C audio/timery, Track B+D UI).
+**Triage:** bug · ready-for-human (founder TF kontrola)
+**Status:** IMPLEMENTOVANÉ 2026-09-08 — PR #112 docs · #114 UI (natívny toolbar, segmentový progress 1-based, pauza z toolbaru, vyhodnocujem v tlačidle, banner nad možnosťami s ✕, replay `arrow.counterclockwise`) · #113 audio/timery (mute per kvíz + jednorazové zmazanie starého uloženého mute, VPIO preč, 5 s odpočet od otvorenia mikrofónu, skrytá 15 s poistka). CI: 1099 iOS testov zelených. Open = founder TF kontrola (prvá otázka počuť, hlasitosť bez skoku, citlivosť povelov v aute, MCQ hlavička, pauza spod sheetu) · SK/CS znenie novej hlášky „Skryť lištu“ · Pencil sync hlavičky (odložené po TF potvrdení) · `swiftformat` nie je na tomto Macu (hook bol no-op, štýl ručne).
 **Created:** 2026-09-07
 **Founder round:** TestFlight, slovenský kvíz, iOS 26 (nadväzuje na #171 — TF feedback 2026-09-05)
 **Varianty:** [`docs/design/variants/issue-173-tf-feedback-2026-09-07.html`](../design/variants/issue-173-tf-feedback-2026-09-07.html)

@@ -16,6 +16,7 @@ Run iOS tests, capture output, and report only the essential information.
    ```bash
    cd apps/ios-app/Hangs && xcodebuild test \
      -scheme Hangs-Local \
+     -parallel-testing-enabled NO \
      -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
      -only-testing HangsTests \
      2>&1

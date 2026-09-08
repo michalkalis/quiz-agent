@@ -215,6 +215,7 @@ scoped_gate() {
         set +e
         (cd "$REPO_ROOT/apps/ios-app/Hangs" && $gt xcodebuild test \
             -scheme Hangs-Local \
+            -parallel-testing-enabled NO \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             -only-testing:HangsTests \
             -quiet) > "$glog" 2>&1
@@ -750,6 +751,7 @@ if git -C "$REPO_ROOT" diff --name-only "$START_SHA..$END_SHA" | grep -q '^apps/
     set +e
     (cd "$REPO_ROOT/apps/ios-app/Hangs" && $GATE_TIMEOUT_CMD xcodebuild test \
         -scheme Hangs-Local \
+        -parallel-testing-enabled NO \
         -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
         -only-testing:HangsTests \
         -quiet) > "$GATE_LOG" 2>&1

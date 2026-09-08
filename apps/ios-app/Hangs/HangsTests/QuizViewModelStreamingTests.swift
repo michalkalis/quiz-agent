@@ -283,17 +283,11 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
+            // What this test is about is the partial RETIRING the window, not a
+            // wall-clock race with the real 5 s (which the length tests in
+            // QuizViewModelAutoStopRecordingTests pin without any real timer).
+            parkRecordingWindow(viewModel)
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
-
-            #expect(
-                viewModel.quizTimersController.recordingCountdownTotal == Int(Config.speechStartWindow),
-                "the streaming mic opens on the 5 s speech-start window, not the 15 s cap"
-            )
-
-            // Park the window far out of reach: what this test is about is the
-            // partial RETIRING it, not a wall-clock race with the real 5 s on a
-            // loaded CI runner (which stopped the recording mid-test).
-            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 600, hardCap: 600)
 
             await mockSTT.injectEvent(.partialTranscript("bratislava"))
             await waitUntil({ viewModel.answerWindowTotal == 0 }, "the countdown never retired on first speech")
@@ -314,9 +308,9 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
+            parkRecordingWindow(viewModel)
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
-            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 600, hardCap: 600)
             await mockSTT.injectEvent(.partialTranscript("   "))
             await Task.yield()
 
@@ -336,7 +330,9 @@ struct QuizViewModelStreamingTests {
             await mockSTT.setMockCommittedText("") // dead air: a forced commit returns nothing
 
             await viewModel.recordingCoordinator.startRecording()
+            parkRecordingWindow(viewModel) // the real 5 s must not fire first
             await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            #expect(viewModel.quizState == .recording, "premise: the mic is open and the window is ours")
 
             // Re-arm the same window with a near-zero duration instead of waiting 5 s.
             viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 0.01)
@@ -362,10 +358,20 @@ struct QuizViewModelStreamingTests {
             viewModel.showAnswerConfirmation = true
             viewModel.transcribedAnswer = "misheard answer"
 
+            // Read the window at the FIRST moment the mic is open: it is a real
+            // wall-clock countdown, so a starved CI runner could otherwise read it
+            // after it had already drained and blame the arming.
+            var armedWindow: Int?
             viewModel.recordingCoordinator.rerecordAnswer()
-            await waitUntil({ viewModel.quizState == .recording }, "re-record never reopened the mic")
+            await waitUntil({
+                guard viewModel.quizState == .recording else { return false }
+                if armedWindow == nil {
+                    armedWindow = viewModel.quizTimersController.recordingCountdownTotal
+                }
+                return true
+            }, "re-record never reopened the mic")
 
-            #expect(viewModel.quizTimersController.recordingCountdownTotal == Int(Config.speechStartWindow))
+            #expect(armedWindow == Int(Config.speechStartWindow))
         }
     }
 

@@ -69,21 +69,27 @@ extension RecordingCoordinator {
         transition(to: .recording)
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
 
+        // Streaming STT or batch M4A — decided BEFORE the window is armed, because
+        // the window's length depends on which speech signal this path will have.
+        let usesStreamingSTT = Config.useElevenLabsSTT && sttService != nil
+
         // #131 Track B: arm the recording window HERE, not after the engine is up.
         // The founder rule is that the countdown never disappears; the WebSocket
         // handshake + audio-session settle take a few hundred ms, and arming it
         // downstream left the button blank for exactly that gap. Both start paths
         // cancel it again if the mic fails to open.
         //
-        // #173: the short "time to start speaking" window is only honest where a
-        // speech signal can retire it. It is armed optimistically here because
-        // the streaming path (partial transcripts) is the normal case;
-        // `startBatchRecording` widens it back to the full cap on the one path
-        // that has neither partials nor VAD.
-        startAutoStopRecordingTimer(Config.speechStartWindow)
+        // #173: with the duration the chosen path can actually honour. The short
+        // "time to start speaking" needs a signal to retire it — streaming
+        // partial transcripts, or auto-record's VAD — and a path with neither
+        // keeps the full dead-air cap as its visible window. Deciding this AFTER
+        // arming (as the first cut did) leaves a 5 s window ticking over the
+        // signal-less path for however long the engine takes to come up, and on
+        // a slow start it closes the mic under the driver.
+        let hasSpeechSignal = usesStreamingSTT || isAutoRecording()
+        startAutoStopRecordingTimer(hasSpeechSignal ? Config.speechStartWindow : Config.autoRecordingDuration)
 
-        // Choose streaming STT or batch M4A based on feature flag
-        if Config.useElevenLabsSTT, sttService != nil {
+        if usesStreamingSTT {
             await startStreamingRecording()
         } else {
             await startBatchRecording()
@@ -101,15 +107,18 @@ extension RecordingCoordinator {
                 startSilenceDetection(service: silenceDetectionService)
             } else {
                 // #173: the rule is the SIGNAL, not how recording was started.
-                // This branch is the only one with neither signal — batch has no
-                // partial transcripts, and silence detection (VAD) is subscribed
-                // for auto-record only — so nothing could tell the 5 s window
-                // that the driver started speaking and it would stop the mic
-                // mid-sentence. Only here does the visible window fall back to
-                // being the dead-air cap, as before #173. Every path that DOES
-                // have a signal keeps the founder's 5 s: the whole streaming
-                // path (mic button, spoken "start" and re-record included, since
-                // partials arrive however recording began) and auto-record's VAD.
+                // This branch is the only one with neither — batch has no partial
+                // transcripts, and silence detection (VAD) is subscribed for
+                // auto-record only — so nothing could tell the 5 s window that
+                // the driver started speaking and it would stop the mic
+                // mid-sentence. `startRecording` already armed the cap for the
+                // direct batch path; this re-arm is for the one case it could not
+                // foresee — streaming setup FAILING and falling back to batch,
+                // where the partials it counted on never materialise. Every path
+                // that does have a signal keeps the founder's 5 s: the whole
+                // streaming path (mic button, spoken "start" and re-record
+                // included, since partials arrive however recording began) and
+                // auto-record's VAD.
                 startAutoStopRecordingTimer(Config.autoRecordingDuration)
             }
         } catch {

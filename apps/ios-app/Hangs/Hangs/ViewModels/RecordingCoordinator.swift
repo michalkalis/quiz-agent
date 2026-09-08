@@ -168,6 +168,14 @@ final class RecordingCoordinator: ObservableObject {
     let clearPause: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
+    /// Test seam (#173): the two window lengths `armRecordingWindow` chooses
+    /// between. Production never assigns them — they exist so unit tests can
+    /// exercise arming and expiry without spending real wall-clock seconds,
+    /// which on a loaded CI runner elapsed mid-test and reopened the
+    /// empty-answer sheet under assertions about the mic being open.
+    var speechStartWindow: TimeInterval = Config.speechStartWindow
+    var deadAirCap: TimeInterval = Config.autoRecordingDuration
+
     let startAutoStopRecordingTimer: @MainActor (TimeInterval) -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     /// #173: first proof the driver is speaking — hides the visible "time to

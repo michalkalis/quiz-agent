@@ -93,7 +93,7 @@ extension RecordingCoordinator {
     /// visible window, or the mic would close mid-sentence with nothing able to
     /// say the driver was speaking.
     private func armRecordingWindow(hasSpeechSignal: Bool) {
-        startAutoStopRecordingTimer(hasSpeechSignal ? Config.speechStartWindow : Config.autoRecordingDuration)
+        startAutoStopRecordingTimer(hasSpeechSignal ? speechStartWindow : deadAirCap)
     }
 
     /// Start batch M4A recording (original Whisper path)

@@ -338,14 +338,12 @@ struct QuizViewModelStreamingTests {
         await withMainSerialExecutor {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
             await mockSTT.setMockCommittedText("") // dead air: a forced commit returns nothing
+            // The production 5 s, shrunk through the seam: the recording path
+            // arms it itself, so the expiry under test is the REAL one and no
+            // wall-clock second is spent waiting for it.
+            viewModel.recordingCoordinator.speechStartWindow = 0.01
 
             await viewModel.recordingCoordinator.startRecording()
-            parkRecordingWindow(viewModel) // the real 5 s must not fire first
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
-            #expect(viewModel.quizState == .recording, "premise: the mic is open and the window is ours")
-
-            // Re-arm the same window with a near-zero duration instead of waiting 5 s.
-            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 0.01)
             await waitUntil({ viewModel.showAnswerConfirmation }, "expiry never reached the confirmation sheet")
 
             #expect(viewModel.quizState == .processing)

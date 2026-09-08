@@ -176,6 +176,14 @@ final class PersistenceStore: PersistenceStoreProtocol {
     }
 
     func loadSettings() -> QuizSettings {
+        // #173: the one-time legacy-mute cleanup is spent on the FIRST load of
+        // this build, whatever that load finds. A device with no (or an
+        // unreadable) settings blob has nothing legacy to clean — but it must
+        // still burn the marker here, or the user's first deliberate Settings
+        // mute would be wiped as "legacy" on the next launch.
+        let legacyMutePending = !userDefaults.bool(forKey: legacyMuteClearedKey)
+        userDefaults.set(true, forKey: legacyMuteClearedKey)
+
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
@@ -188,7 +196,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
             Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
-            return clearingLegacyMute(settings)
+            return legacyMutePending ? clearingLegacyMute(settings) : settings
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
@@ -204,8 +212,6 @@ final class PersistenceStore: PersistenceStoreProtocol {
     /// choice — so it is dropped exactly once, and everything written from here
     /// on really is a preference.
     private func clearingLegacyMute(_ settings: QuizSettings) -> QuizSettings {
-        guard !userDefaults.bool(forKey: legacyMuteClearedKey) else { return settings }
-        userDefaults.set(true, forKey: legacyMuteClearedKey)
         guard settings.isMuted else { return settings }
 
         var cleaned = settings

@@ -338,6 +338,52 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()
     }
 
+    /// #173 review finding: the short window is only honest where something can
+    /// say "the driver started speaking". The batch path without auto-record has
+    /// neither partial transcripts nor a VAD subscription (silence detection is
+    /// auto-record only), so a 5 s window there would close the mic mid-sentence
+    /// and submit the truncated clip — reached by the mic button, spoken "start",
+    /// re-record, and by a streaming setup failure falling back to batch.
+    @Test("a capture path with no speech signal keeps the full dead-air window")
+    @MainActor
+    func pathWithoutSpeechSignalKeepsFullWindow() async throws {
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+        viewModel.isAutoRecording = false // manual mic tap / "start" / re-record
+
+        await viewModel.recordingCoordinator.startRecording()
+
+        #expect(viewModel.quizState == .recording, "the mic must actually be open")
+        #expect(
+            viewModel.quizTimersController.recordingCountdownTotal == Int(Config.autoRecordingDuration),
+            "no speech signal → the visible window IS the cap, as before #173"
+        )
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
+    /// The contrast that keeps the fallback from swallowing the feature: the same
+    /// batch path WITH auto-record does subscribe to VAD, so `.speechStarted` can
+    /// retire the countdown and the 5 s window applies.
+    @Test("auto-record's VAD path keeps the 5 s speech-start window")
+    @MainActor
+    func autoRecordPathKeepsSpeechStartWindow() async throws {
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+        viewModel.isAutoRecording = true
+
+        await viewModel.recordingCoordinator.startRecording()
+
+        #expect(viewModel.quizState == .recording)
+        #expect(viewModel.quizTimersController.recordingCountdownTotal == Int(Config.speechStartWindow))
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
     /// The cap is the only thing left once speech hid the countdown: if hiding
     /// the number also disarmed the stop, a dropped VAD commit would leave the
     /// mic open for the rest of the drive.

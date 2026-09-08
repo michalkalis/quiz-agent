@@ -168,7 +168,7 @@ final class RecordingCoordinator: ObservableObject {
     let clearPause: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
-    let startAutoStopRecordingTimer: @MainActor () -> Void
+    let startAutoStopRecordingTimer: @MainActor (TimeInterval) -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     /// #173: first proof the driver is speaking — hides the visible "time to
     /// start speaking" countdown (the hidden dead-air cap keeps running).
@@ -206,7 +206,7 @@ final class RecordingCoordinator: ObservableObject {
         clearPause: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
-        startAutoStopRecordingTimer: @escaping @MainActor () -> Void,
+        startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         onSpeechStarted: @escaping @MainActor () -> Void,
         stopSilenceDetectionListening: @escaping @MainActor () -> Void

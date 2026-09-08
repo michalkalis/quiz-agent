@@ -234,6 +234,10 @@ final class QuizTimersController: ObservableObject {
     /// #173 (founder 2026-09-07): what it counts is the time to START speaking,
     /// not the whole answer — `speechDetectedDuringRecording()` hides it the
     /// moment the driver is heard and leaves the answer to VAD under the cap.
+    /// That is why `duration` is the CALLER's choice: only a capture path with a
+    /// speech signal (streaming partials, or auto-record's VAD) may pass the
+    /// short window; a path with neither passes the cap itself, or the mic would
+    /// close mid-sentence with nothing able to say the driver was speaking.
     /// Either expiry has the same consequence, the one that was already here:
     /// auto-stop + submit whatever was transcribed (nothing, on dead air, which
     /// #171 Track B funnels to the confirmation sheet with an empty field).

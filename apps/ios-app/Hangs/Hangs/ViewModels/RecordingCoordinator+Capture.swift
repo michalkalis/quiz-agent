@@ -74,7 +74,13 @@ extension RecordingCoordinator {
         // handshake + audio-session settle take a few hundred ms, and arming it
         // downstream left the button blank for exactly that gap. Both start paths
         // cancel it again if the mic fails to open.
-        startAutoStopRecordingTimer()
+        //
+        // #173: the short "time to start speaking" window is only honest where a
+        // speech signal can retire it. It is armed optimistically here because
+        // the streaming path (partial transcripts) is the normal case;
+        // `startBatchRecording` widens it back to the full cap on the one path
+        // that has neither partials nor VAD.
+        startAutoStopRecordingTimer(Config.speechStartWindow)
 
         // Choose streaming STT or batch M4A based on feature flag
         if Config.useElevenLabsSTT, sttService != nil {
@@ -93,6 +99,16 @@ extension RecordingCoordinator {
             if isAutoRecording() {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: silenceDetectionService)
+            } else {
+                // #173: no partial transcripts (batch) and no VAD subscription
+                // (silence detection is auto-record only) — NOTHING would tell
+                // the 5 s window that the driver started speaking, so it would
+                // stop the mic mid-sentence and submit the truncated clip.
+                // Reached by the mic button, spoken "start", re-record, and by a
+                // streaming setup failure falling back to batch. Fall back to
+                // the behaviour that existed before the split: the visible
+                // window IS the dead-air cap.
+                startAutoStopRecordingTimer(Config.autoRecordingDuration)
             }
         } catch {
             cancelAutoStopRecordingTimer() // mic never opened — drop the window

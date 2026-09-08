@@ -339,14 +339,14 @@ struct QuizViewModelAutoStopRecordingTests {
     }
 
     /// #173 review finding: the short window is only honest where something can
-    /// say "the driver started speaking". The batch path without auto-record has
-    /// neither partial transcripts nor a VAD subscription (silence detection is
-    /// auto-record only), so a 5 s window there would close the mic mid-sentence
-    /// and submit the truncated clip — reached by the mic button, spoken "start",
-    /// re-record, and by a streaming setup failure falling back to batch.
-    @Test("a capture path with no speech signal keeps the full dead-air window")
+    /// say "the driver started speaking", and that is a property of the SIGNAL,
+    /// not of how recording was started. The batch path without auto-record is
+    /// the one case with neither — no partial transcripts, and silence detection
+    /// is subscribed for auto-record only — so a 5 s window there would close the
+    /// mic mid-sentence and submit the truncated clip.
+    @Test("the batch path with no VAD subscription keeps the full dead-air window")
     @MainActor
-    func pathWithoutSpeechSignalKeepsFullWindow() async throws {
+    func batchWithoutVADKeepsFullWindow() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithAudio()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
@@ -366,7 +366,8 @@ struct QuizViewModelAutoStopRecordingTests {
 
     /// The contrast that keeps the fallback from swallowing the feature: the same
     /// batch path WITH auto-record does subscribe to VAD, so `.speechStarted` can
-    /// retire the countdown and the 5 s window applies.
+    /// retire the countdown and the founder's 5 s applies. (The streaming path
+    /// keeps 5 s on every entry point — covered in QuizViewModelStreamingTests.)
     @Test("auto-record's VAD path keeps the 5 s speech-start window")
     @MainActor
     func autoRecordPathKeepsSpeechStartWindow() async throws {

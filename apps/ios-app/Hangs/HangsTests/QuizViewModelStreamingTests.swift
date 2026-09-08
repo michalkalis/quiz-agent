@@ -349,9 +349,11 @@ struct QuizViewModelStreamingTests {
         }
     }
 
-    /// Founder finding 3: "Nahrať znova has 14 s". Re-record goes through the
-    /// same `startRecording`, so it must get the same 5 s to start speaking —
-    /// a second, longer window would be the original complaint, unfixed.
+    /// Founder finding 3: "Nahrať znova has 14 s". The decision is 5 s for the
+    /// first recording AND for re-record, and production STT is this streaming
+    /// path — partial transcripts arrive however recording began, so re-record
+    /// must NOT be widened to the cap along with the signal-less batch branch.
+    /// A second, longer window here would be the original complaint, unfixed.
     @Test("re-record arms the same speech-start window as the first attempt")
     func rerecordUsesTheSameSpeechStartWindow() async throws {
         await withMainSerialExecutor {

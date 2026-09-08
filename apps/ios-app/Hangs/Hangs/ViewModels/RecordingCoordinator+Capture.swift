@@ -100,14 +100,16 @@ extension RecordingCoordinator {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: silenceDetectionService)
             } else {
-                // #173: no partial transcripts (batch) and no VAD subscription
-                // (silence detection is auto-record only) — NOTHING would tell
-                // the 5 s window that the driver started speaking, so it would
-                // stop the mic mid-sentence and submit the truncated clip.
-                // Reached by the mic button, spoken "start", re-record, and by a
-                // streaming setup failure falling back to batch. Fall back to
-                // the behaviour that existed before the split: the visible
-                // window IS the dead-air cap.
+                // #173: the rule is the SIGNAL, not how recording was started.
+                // This branch is the only one with neither signal — batch has no
+                // partial transcripts, and silence detection (VAD) is subscribed
+                // for auto-record only — so nothing could tell the 5 s window
+                // that the driver started speaking and it would stop the mic
+                // mid-sentence. Only here does the visible window fall back to
+                // being the dead-air cap, as before #173. Every path that DOES
+                // have a signal keeps the founder's 5 s: the whole streaming
+                // path (mic button, spoken "start" and re-record included, since
+                // partials arrive however recording began) and auto-record's VAD.
                 startAutoStopRecordingTimer(Config.autoRecordingDuration)
             }
         } catch {

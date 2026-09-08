@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#174 — TF feedback 2026-09-08 · sheet, tlačidlo, MCQ možnosti, koniec korpusu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page-bg:#0F1116; --page-line:#262B36; --page-text:#E7EAF0; --page-dim:#98A0B0;
+  --pink:#FF3D8F; --teal:#14B8A6;
+  --display:Anton,"Arial Narrow",Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --pbg:#111214; --pcard:#1B1C1F; --phair:rgba(255,255,255,.10); --ptext:#F2F2F2; --pdim:#8E8E93;
+  --ppink:#FF3D8F; --ppinkDeep:#D91E72; --pteal:#14B8A6; --ppurple:#8B7CF6; --ppurplebg:#2A2550; --pblue:#0A84FF; --pstem:#F2F2F2; --pgreen:#34C759;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:48px 28px 96px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:44px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+.block{margin-top:64px;padding-top:30px;border-top:2px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+.vtag.teal{background:var(--teal)}
+h2{font-family:var(--display);font-weight:400;font-size:36px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+h3{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin:34px 0 6px}
+.concept{color:var(--page-dim);max-width:88ch;margin:8px 0 0;font-size:15px}
+.concept b{color:var(--page-text);font-weight:600}
+.pros{margin:10px 0 0;padding:0;list-style:none;max-width:88ch;font-size:14px;color:var(--page-dim)}
+.pros li{padding-left:18px;position:relative;margin:3px 0}
+.pros li.p::before{content:"+";position:absolute;left:0;color:var(--teal);font-weight:700}
+.pros li.m::before{content:"−";position:absolute;left:0;color:var(--pink);font-weight:700}
+.rec{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--teal);border:1px solid var(--teal);border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.devices{display:flex;gap:30px;flex-wrap:nowrap;overflow-x:auto;margin:24px 0 0;align-items:flex-start;padding-bottom:10px}
+figure.device{margin:0;flex:0 0 auto}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--page-dim);margin-top:12px;text-align:center;max-width:390px}
+.qbox{margin:18px 0 0;padding:16px 18px;border:1px solid var(--page-line);border-left:3px solid var(--pink);border-radius:8px;max-width:88ch;font-size:14.5px}
+.qbox b{color:var(--page-text)}
+table.opts{border-collapse:collapse;margin:14px 0 0;font-size:14px;max-width:88ch}
+table.opts td,table.opts th{border:1px solid var(--page-line);padding:8px 12px;text-align:left;vertical-align:top}
+table.opts th{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--page-dim)}
+
+/* ===== phone ===== */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--pbg);color:var(--ptext);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 26px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 20px 0}
+.tr{display:flex;align-items:center;gap:8px}
+.tchip{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:grid;place-items:center;flex:0 0 auto}
+.tchip svg{width:15px;height:15px;color:var(--ptext)}
+.tpill{height:36px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:flex;align-items:center;gap:22px;padding:0 16px;flex:0 0 auto}
+.tpill svg{width:15px;height:15px;color:var(--ptext)}
+.pseg{display:flex;gap:4px;margin:14px 24px 0}
+.pseg i{flex:1;height:4px;border-radius:2px;background:var(--phair)}
+.pseg i.on{background:var(--pteal)}
+.psegrow{display:flex;justify-content:space-between;margin:6px 24px 0;font-family:var(--mono);font-size:10px;color:var(--pdim);letter-spacing:1.4px}
+.pquestion{margin:14px 24px 0;padding-left:14px;border-left:3px solid var(--pblue);font-family:var(--display);font-size:26px;line-height:1.14;color:var(--pstem)}
+.pquestion.noline{border-left:0;padding-left:0}
+.pmodel{margin:10px 24px 0;font-family:var(--mono);font-size:11px;color:var(--pdim)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 20px 0}
+.plist{display:flex;flex-direction:column;gap:8px;margin:14px 20px 0}
+.ptile{background:var(--pcard);border:1px solid var(--phair);border-radius:16px;padding:12px 12px;display:flex;flex-direction:column;gap:10px;min-height:60px;position:relative}
+.ptile.row{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;min-height:54px}
+.ptile.sel{border-color:var(--ppurple);background:#221F3A}
+.ptile.dim{opacity:.45}
+.pbadge{width:28px;height:28px;border-radius:50%;background:var(--ppurplebg);color:var(--ppurple);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;flex:0 0 auto}
+.ptile .txt{font-size:15px;font-weight:600;color:var(--ptext);line-height:1.25}
+.ptile.row .txt{font-size:15.5px}
+.ptile .txt.cut{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptile .txt.small{font-size:12.5px}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite;flex:0 0 auto}
+.spin.pk{border-color:rgba(255,61,143,.25);border-top-color:var(--ppink)}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pskiprow{display:flex;justify-content:center;margin:auto 0 28px}
+.pskip{height:44px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--ptext);font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:10px;padding:0 20px}
+.pskip svg{width:14px;height:14px}
+.pbanner{position:relative;overflow:hidden;margin:12px 20px 0;border-radius:14px;background:rgba(20,184,166,.10);border:1px solid rgba(20,184,166,.35);padding:9px 14px;display:flex;align-items:center;gap:10px}
+.pbanner .btxt{flex:1 1 auto;min-width:0}
+.pbanner .l1{font-family:var(--mono);font-size:10.5px;letter-spacing:1.2px;color:var(--pteal);font-weight:700}
+.pbanner .l2{font-size:12px;color:var(--ptext);margin-top:2px}
+.pbanner .x{width:18px;height:18px;color:var(--pdim);flex:0 0 auto}
+.dimmed{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.dimmed.blur{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);background:rgba(0,0,0,.35)}
+.sheet{position:absolute;left:0;right:0;bottom:0;height:440px;background:#1C1D22;border-radius:26px 26px 0 0;border-top:1px solid rgba(255,255,255,.14);padding:12px 20px 30px;display:flex;flex-direction:column;box-shadow:0 -18px 40px rgba(0,0,0,.6)}
+.sheet.flat{background:var(--pbg);border-top:0;box-shadow:none}
+.sheet.mat{background:rgba(44,45,52,.72);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%)}
+.grab{width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);margin:0 auto 14px}
+.slabel{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--ppink);margin-top:6px}
+.slabel .ed{width:34px;height:34px;border-radius:50%;background:rgba(255,61,143,.12);display:grid;place-items:center}
+.slabel .ed svg{width:14px;height:14px;color:var(--ppink)}
+.stext{margin:22px 0 0;padding-left:14px;border-left:3px solid var(--ppink);font-family:var(--display);font-size:40px;line-height:1;color:var(--ptext)}
+.scard{border:1px solid var(--phair);border-radius:20px;padding:18px 18px 20px;background:var(--pcard)}
+.sfoot{margin-top:auto;display:flex;gap:10px}
+.sfoot.col{flex-direction:column;gap:10px}
+.sfoot.col .sbtn{flex:0 0 auto}
+.sbtn{height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700;flex:1 1 0;min-width:0}
+.sbtn svg{width:16px;height:16px;flex:0 0 auto}
+.sbtn .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbtn.prim{background:var(--ppink);color:#fff}
+.sbtn.prim.busy{background:#B0295F}
+.sbtn.sec{background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--ptext)}
+.sbtn.sec.off{opacity:.45}
+.sbtn.ghost{background:transparent;border:0;color:var(--pdim);height:40px;font-size:14px;font-weight:600}
+.sstatus{display:flex;align-items:center;gap:10px;justify-content:center;font-family:var(--mono);font-size:11.5px;letter-spacing:1.5px;color:var(--ppink);margin-bottom:10px;height:20px}
+.mic{color:var(--pdim)}
+/* result */
+.rkick{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--pdim);text-align:center;margin-top:18px}
+.rscore{font-family:var(--display);font-size:120px;line-height:1;text-align:center;margin-top:10px}
+.rchips{display:flex;gap:8px;justify-content:center;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:1px}
+.rchips span{padding:6px 12px;border-radius:14px}
+.rchips .ok{background:rgba(52,199,89,.15);color:var(--pgreen)}
+.rchips .bad{background:rgba(255,61,143,.15);color:var(--ppink)}
+.rchips .sk{background:rgba(255,255,255,.08);color:var(--pdim)}
+.rnote{margin:18px 20px 0;padding:14px 16px;border-radius:16px;background:rgba(255,159,10,.10);border:1px solid rgba(255,159,10,.35);display:flex;gap:12px;align-items:flex-start}
+.rnote svg{width:18px;height:18px;color:#FF9F0A;flex:0 0 auto;margin-top:2px}
+.rnote .t1{font-size:14.5px;font-weight:700;color:var(--ptext)}
+.rnote .t2{font-size:12.5px;color:var(--pdim);margin-top:3px}
+.rnote .act{margin-top:8px;font-size:13px;color:#FF9F0A;font-weight:700}
+.rrow{margin:10px 20px 0;padding:14px 16px;border-radius:16px;background:var(--pcard);border:1px solid var(--phair);display:flex;align-items:center;gap:12px;font-size:14px}
+.rrow .ic{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;flex:0 0 auto}
+.rrow .ic.ok{background:rgba(52,199,89,.15);color:var(--pgreen)}
+.rrow .ic.bad{background:rgba(255,61,143,.15);color:var(--ppink)}
+.rrow .ans{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--pdim);white-space:nowrap}
+.rfoot{margin:auto 20px 26px;display:flex;flex-direction:column;gap:10px}
+.rfoot .big{height:60px;border-radius:30px;background:var(--ppink);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.rfoot .two{display:flex;gap:10px}
+.rfoot .two div{flex:1;height:54px;border-radius:27px;border:1px solid var(--phair);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
+.wm{position:absolute;top:120px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.22)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Trubbo · TestFlight kolo 2026-09-08 · návrhy na výber</p>
+  <h1>#174 — Sheet, tlačidlo, MCQ možnosti, koniec korpusu</h1>
+  <p class="lede"><strong>Čo sa už rieši bez rozhodnutia:</strong> celoobrazovkový overlay „Vyhodnocujem…“ je zrušený (stav ide do ťuknutej dlaždice / tlačidla Preskočiť, viď blok E). Dnešný TestFlight build 57 išiel omylom na <strong>staging</strong> backend (z 31. 7.) – preto sa nečítali MCQ možnosti a po troch otázkach došli otázky. Nový produkčný build je spustený.</p>
+  <p class="lede"><strong>Na výber sú štyri veci:</strong> A odlíšenie potvrdzovacieho sheetu · B tlačidlo „Vyhodnocujem…“ bez skoku layoutu · C rozloženie dlhých MCQ možností · D čo robiť, keď dôjdu otázky. Pri každom bloku je odporúčanie.</p>
+  <p class="meta">MOCKUPY 390×844 · SLOVENSKÉ TEXTY AKO V APPKE · WEB RESEARCH: APPLE HIG (SHEETS, MATERIALS, TYPOGRAPHY), KAHOOT (LIMIT 75 ZNAKOV NA MOŽNOSŤ), HQ TRIVIA (ZOZNAM, NIE MRIEŽKA), ALEXA/GOOGLE TRIVIA GUIDES</p>
+
+  <!-- ============ A ============ -->
+  <section class="block" id="a">
+    <div class="vhead"><span class="vtag">A</span><h2>Potvrdzovací sheet — odlíšenie od obrazovky</h2></div>
+    <p class="concept">Dnes má sheet <b>rovnakú farbu ako obrazovka</b> a bez úchytky, takže nevidno, že je to vrstva nad kvízom. Apple HIG: obsah pod sheetom sa stmaví a sheet je vizuálne zdvihnutý (v dark mode svetlejšia plocha ako pozadie). Všetky tri varianty držia obsah sheetu (POVEDAL SI, text, dve tlačidlá) — mení sa len povrch a pozadie.</p>
+    <div class="devices">
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>2/10</span></div>
+        <div class="pquestion noline">O očiach Davida Bowieho sa hovorilo, že majú dve rôzne farby. Čo v skutočnosti spôsobilo túto ilúziu?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="dimmed"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="slabel"><span>POVEDAL SI</span><span class="ed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+          <div class="stext">Genetika.</div>
+          <div class="sfoot">
+            <div class="sbtn sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span class="lbl">Nahrať znova</span></div>
+            <div class="sbtn prim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg><span class="lbl">Potvrdiť</span></div>
+          </div>
+        </div>
+      </div><figcaption>A1 · zdvihnutý povrch: svetlejšia plocha, úchytka, stmavené pozadie</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>2/10</span></div>
+        <div class="pquestion noline">O očiach Davida Bowieho sa hovorilo, že majú dve rôzne farby. Čo v skutočnosti spôsobilo túto ilúziu?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="dimmed blur"></div>
+        <div class="sheet mat">
+          <div class="grab"></div>
+          <div class="slabel"><span>POVEDAL SI</span><span class="ed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+          <div class="stext">Genetika.</div>
+          <div class="sfoot">
+            <div class="sbtn sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span class="lbl">Nahrať znova</span></div>
+            <div class="sbtn prim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg><span class="lbl">Potvrdiť</span></div>
+          </div>
+        </div>
+      </div><figcaption>A2 · materiál (blur): otázka presvitá cez sheet, pozadie rozmazané</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>2/10</span></div>
+        <div class="pquestion noline">O očiach Davida Bowieho sa hovorilo, že majú dve rôzne farby. Čo v skutočnosti spôsobilo túto ilúziu?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="dimmed"></div>
+        <div class="sheet flat">
+          <div class="grab"></div>
+          <div class="scard">
+            <div class="slabel" style="margin-top:0"><span>POVEDAL SI</span><span class="ed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+            <div class="stext" style="margin-top:16px">Genetika.</div>
+          </div>
+          <div class="sfoot">
+            <div class="sbtn sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span class="lbl">Nahrať znova</span></div>
+            <div class="sbtn prim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg><span class="lbl">Potvrdiť</span></div>
+          </div>
+        </div>
+      </div><figcaption>A3 · tmavý sheet ostáva, odpoveď v ohraničenej karte, pozadie stmavené</figcaption></figure>
+    </div>
+    <h3>Porovnanie</h3>
+    <ul class="pros">
+      <li class="p"><b>A1</b> <span class="rec">ODPORÚČAM</span> — štandard iOS (HIG: sheet = zdvihnutá plocha + stmavené pozadie). Najlacnejšie na implementáciu: len farba povrchu, úchytka a stmavenie. Funguje aj na slnku v aute (vysoký kontrast).</li>
+      <li class="m"><b>A2</b> — vizuálne najpríťažlivejšie, ale rozmazaný text otázky pod sheetom pri jazde ruší a blur stojí GPU pri animácii spinnera.</li>
+      <li class="m"><b>A3</b> — odlíši obsah, nie sheet; pridáva ďalší rám okolo už orámovanej odpovede (dvojité ohraničenie).</li>
+    </ul>
+  </section>
+
+  <!-- ============ B ============ -->
+  <section class="block" id="b">
+    <div class="vhead"><span class="vtag">B</span><h2>Tlačidlo „Vyhodnocujem…“ bez skoku</h2></div>
+    <p class="concept">Dnes sú obe tlačidlá v jednom riadku 50/50. Slovenské „Vyhodnocujem…“ je 2× dlhšie ako „Potvrdiť“, tak sa text zmenší a oreže („Vyhodnocujem…“ → „Vyhodnocujem…“ s výpustkou). Pravidlo: <b>tlačidlo nemení šírku ani výšku; mení sa len jeho obsah</b>.</p>
+    <div class="devices">
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="wm">(pozadie ako v A1)</div>
+        <div class="dimmed"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="slabel"><span>POVEDAL SI</span><span class="ed" style="opacity:.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+          <div class="stext">Genetika.</div>
+          <div class="sfoot col">
+            <div class="sbtn prim busy"><div class="spin"></div><span class="lbl">Vyhodnocujem…</span></div>
+            <div class="sbtn ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span class="lbl">Nahrať znova</span></div>
+          </div>
+        </div>
+      </div><figcaption>B1 · vertikálne: primárne na celú šírku, „Nahrať znova“ pod ním ako textové</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="wm">(pozadie ako v A1)</div>
+        <div class="dimmed"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="slabel"><span>POVEDAL SI</span><span class="ed" style="opacity:.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+          <div class="stext">Genetika.</div>
+          <div style="margin-top:auto">
+            <div class="sstatus"><div class="spin pk"></div><span>VYHODNOCUJEM…</span></div>
+            <div class="sfoot" style="margin-top:0">
+              <div class="sbtn sec off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span class="lbl">Nahrať znova</span></div>
+              <div class="sbtn prim busy"><div class="spin"></div><span class="lbl">Potvrdiť</span></div>
+            </div>
+          </div>
+        </div>
+      </div><figcaption>B2 · riadok ostáva 50/50, ikona → spinner, label „Potvrdiť“ sa nemení, stav ako riadok nad tlačidlami</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="wm">(pozadie ako v A1)</div>
+        <div class="dimmed"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="slabel"><span>POVEDAL SI</span><span class="ed" style="opacity:.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16z"/></svg></span></div>
+          <div class="stext">Genetika.</div>
+          <div class="sfoot">
+            <div class="sbtn prim busy" style="flex:1 1 100%"><div class="spin"></div><span class="lbl">Vyhodnocujem…</span></div>
+          </div>
+        </div>
+      </div><figcaption>B3 · počas vyhodnocovania sa „Nahrať znova“ zbalí a primárne sa roztiahne (animované)</figcaption></figure>
+    </div>
+    <h3>Porovnanie</h3>
+    <ul class="pros">
+      <li class="p"><b>B1</b> <span class="rec">ODPORÚČAM</span> — primárne tlačidlo má vždy celú šírku, takže „Vyhodnocujem…“ sa zmestí bez zmenšenia. „Nahrať znova“ je sekundárna akcia, textové tlačidlo pod ním je bežný iOS vzor. Nič sa nehýbe, nič sa neoreže.</li>
+      <li class="p"><b>B2</b> — najmenší zásah do dnešného layoutu (len ikona → spinner + stavový riadok). Ale stav „vyhodnocujem“ je mimo tlačidla, čo je hraničné s pravidlom „loading v tlačidle“.</li>
+      <li class="m"><b>B3</b> — text sa zmestí, ale layout sa animovane mení presne v momente, keď naň používateľ pozerá; v aute pôsobí ako „niečo sa pokazilo“.</li>
+    </ul>
+  </section>
+
+  <!-- ============ C ============ -->
+  <section class="block" id="c">
+    <div class="vhead"><span class="vtag">C</span><h2>MCQ možnosti — dlhé texty</h2></div>
+    <p class="concept">Slovenské možnosti sú bežne 6–10 slov („Nechty na rukách rastú štyrikrát rýchlejšie ako na nohách“). V mriežke 2×2 má text ~150 pt šírky → zmenšovanie a orezanie. Prior art: Kahoot mriežku drží len limitom 75 znakov na možnosť; HQ Trivia a väčšina trivia appiek používa <b>zvislý zoznam na celú šírku</b>. Ellipsis je podľa HIG chybový stav, nie dizajn.</p>
+    <div class="devices">
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion" style="font-size:22px">Jeden z týchto faktov o rastie ľudského tela je NEPRAVDIVÝ. Ktorý do skupiny nepatrí?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="pbanner"><div class="btxt"><div class="l1">PREMÝŠĽAJ — POČÚVAM O 38 S</div><div class="l2">Povedz „štart“ alebo „preskoč“</div></div><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+        <div class="plist">
+          <div class="ptile row"><div class="pbadge">A</div><div class="txt">Vlasy narastú asi o 1,25 cm za mesiac</div></div>
+          <div class="ptile row"><div class="pbadge">B</div><div class="txt">Nechty na rukách rastú štyrikrát rýchlejšie ako na nohách</div></div>
+          <div class="ptile row"><div class="pbadge">C</div><div class="txt">Deti rastú rýchlejšie na jar</div></div>
+          <div class="ptile row"><div class="pbadge">D</div><div class="txt">Nechty na nohách rastú štyrikrát rýchlejšie ako na rukách</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť otázku</div></div>
+      </div><figcaption>C1 · zvislý zoznam vždy: plná šírka, max 3 riadky, žiadne orezanie</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>1/10</span></div>
+        <div class="pquestion" style="font-size:22px">V komiksoch DC stráži smaragdový lukostrelec Green Arrow ktoré mesto?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="pbanner"><div class="btxt"><div class="l1">PREMÝŠĽAJ — POČÚVAM O 38 S</div><div class="l2">Povedz „štart“ alebo „preskoč“</div></div><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+        <div class="pgrid">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Star City</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Gotham</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Metropolis</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Central City</div></div>
+        </div>
+        <div class="plist" style="margin-top:22px;opacity:.55">
+          <div class="ptile row"><div class="pbadge">A</div><div class="txt">Vlasy narastú asi o 1,25 cm za mesiac</div></div>
+          <div class="ptile row"><div class="pbadge">B</div><div class="txt">Nechty na rukách rastú štyrikrát rýchlejšie ako na nohách</div></div>
+        </div>
+        <div class="pskiprow" style="margin-top:14px"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť otázku</div></div>
+      </div><figcaption>C2 · adaptívne: mriežka 2×2 ak sú všetky možnosti krátke (≤ ~24 znakov), inak zoznam (dole ukážka)</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion" style="font-size:22px">Jeden z týchto faktov o rastie ľudského tela je NEPRAVDIVÝ. Ktorý do skupiny nepatrí?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="pbanner"><div class="btxt"><div class="l1">PREMÝŠĽAJ — POČÚVAM O 38 S</div><div class="l2">Povedz „štart“ alebo „preskoč“</div></div><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+        <div class="pgrid">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt small">Vlasy narastú asi o 1,25 cm za mesiac</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt small">Nechty na rukách rastú štyrikrát rýchlejšie ako na nohách</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt small">Deti rastú rýchlejšie na jar</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt small">Nechty na nohách rastú štyrikrát rýchlejšie ako na rukách</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť otázku</div></div>
+      </div><figcaption>C3 · mriežka ostáva, dlaždice rastú do výšky podľa najdlhšej možnosti, menšie písmo (13 pt), bez orezania</figcaption></figure>
+    </div>
+    <h3>Porovnanie</h3>
+    <ul class="pros">
+      <li class="p"><b>C1</b> <span class="rec">ODPORÚČAM</span> — jediný variant bez orezania a bez zmenšovania písma pri akejkoľvek dĺžke. Písmo 16 pt čitateľné z držiaka v aute. Poradie A→D zhora nadol sedí s tým, ako sa možnosti čítajú nahlas. Jeden layout = jednoduchší kód a testy.</li>
+      <li class="p"><b>C2</b> — krátke možnosti (mestá, roky, mená) vyzerajú v mriežke „hravejšie“, dlhé dostanú zoznam. Cena: dva layouty, prah na dĺžku je ľubovoľný a otázka s 3 krátkymi + 1 dlhou preskočí do zoznamu.</li>
+      <li class="m"><b>C3</b> — zachová dnešný vzhľad, ale 13 pt písmo je v aute na hrane a 4 dlhé možnosti spravia dlaždice vysoké ~110 pt (mriežka vyššia ako zoznam).</li>
+    </ul>
+  </section>
+
+  <!-- ============ D ============ -->
+  <section class="block" id="d">
+    <div class="vhead"><span class="vtag">D</span><h2>Keď dôjdu otázky — nie tiché „1/3“</h2></div>
+    <p class="concept">Dnešný koniec po 3 otázkach: backend nenašiel ďalšiu <b>nevidenú</b> otázku (kategória general, slovenčina, schválené, mínus 100+ už videných) a ticho ukončil sadu ako normálny výsledok. Prod má 994 otázok, ale história videných otázok sa nesie v telefóne cez oba backendy, takže sa to zopakuje aj na prode, keď sa kategória vyčerpá. Dve vrstvy: <b>povedať to</b> (D1) a <b>rozhodnúť, čo namiesto konca</b> (D2, produktové rozhodnutie).</p>
+    <div class="devices">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:29</span><span>5G ▮</span></div>
+        <div class="toolbar"><div style="font-family:var(--mono);font-size:22px;color:var(--pblue)">trubbo. <span style="color:var(--ppink)">•</span></div><div class="tchip" style="border-radius:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+        <div class="rkick">VÝSLEDOK SADY · GENERAL</div>
+        <div class="rscore">1/3</div>
+        <div class="rchips"><span class="ok">✓ 1 SPRÁVNE</span><span class="bad">✗ 2 VEDĽA</span><span class="sk">– 0 PRESKOČENÝCH</span></div>
+        <div class="rnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><div class="t1">Došli otázky v kategórii General</div><div class="t2">Sada skončila po 3 z 10 otázok, lebo si už videl všetky ostatné. Vyber inú kategóriu alebo povoľ opakovanie starších otázok.</div><div class="act">Povoliť opakovanie ›</div></div></div>
+        <div class="rrow"><div class="ic ok">✓</div><span>V komiksoch DC stráži smaragdo…</span><span class="ans">A — STAR CITY ›</span></div>
+        <div class="rrow"><div class="ic bad">✗</div><span>O očiach Davida Bowieho sa hovo…</span><span class="ans">NATRVALO ROZŠ… ›</span></div>
+        <div class="rrow"><div class="ic bad">✗</div><span>Jeden z týchto faktov o rastie ľu…</span><span class="ans">D — NECHTY… ›</span></div>
+        <div class="rfoot"><div class="big">■ &nbsp;Zastaviť súhrn</div><div class="two"><div>↻ Hrať znova</div><div>⌂ Úvod</div></div></div>
+      </div><figcaption>D1 · výsledková obrazovka povie prečo skončila skôr + ponúkne akciu</figcaption></figure>
+    </div>
+    <h3>D2 · Čo má backend urobiť namiesto ukončenia (rozhodnutie foundera)</h3>
+    <table class="opts">
+      <tr><th>Možnosť</th><th>Správanie</th><th>Za / proti</th></tr>
+      <tr><td><b>D2a</b> Najprv iná kategória</td><td>Keď kategória dôjde, doplní sadu otázkami z ostatných kategórií (označené v hlavičke), história videných sa rešpektuje.</td><td>+ žiadne opakovanie · − používateľ si vybral kategóriu a dostane inú</td></tr>
+      <tr><td><b>D2b</b> Opakovať najstaršie videné <span class="rec">ODPORÚČAM</span></td><td>Keď kategória dôjde, uvoľní najstaršie položky z histórie (najskôr videné pred najdlhším časom) a sada dobehne do plného počtu.</td><td>+ kategória sedí, sada má vždy 10 · − občas otázka spred týždňov (pri 100+ otázkach v histórii to je prijateľné)</td></tr>
+      <tr><td><b>D2c</b> Skončiť skôr, ale nahlas</td><td>Len D1: sada skončí, obrazovka vysvetlí a ponúkne reset histórie / inú kategóriu.</td><td>+ najmenší zásah · − sada „na 10 otázok“ môže mať 3</td></tr>
+    </table>
+    <div class="qbox"><b>Otázka na foundera:</b> D1 implementujem v každom prípade (tiché skrátenie je chyba). Pri D2 odporúčam <b>D2b</b> (opakovať najstaršie), lebo drží sľub „10 otázok z kategórie, ktorú si vybral“. Súhlasíš, alebo radšej D2a / D2c?</div>
+  </section>
+
+  <!-- ============ E ============ -->
+  <section class="block" id="e">
+    <div class="vhead"><span class="vtag teal">E</span><h2>Info: MCQ ťuknutie — vyhodnocujem v dlaždici</h2></div>
+    <p class="concept">Bez rozhodnutia, vyplýva z pravidla „loading v tlačidle, ktoré ho vyvolalo“. Overlay je zrušený vo všetkých cestách: hlas + otvorená odpoveď → sheet (tlačidlo), ťuknutie na možnosť → spinner v dlaždici, preskočenie → spinner v tlačidle Preskočiť.</p>
+    <div class="devices">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>20:28</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion" style="font-size:22px">Jeden z týchto faktov o rastie ľudského tela je NEPRAVDIVÝ. Ktorý do skupiny nepatrí?</div>
+        <div class="pmodel">claude-opus-4-8</div>
+        <div class="plist" style="margin-top:26px">
+          <div class="ptile row dim"><div class="pbadge">A</div><div class="txt">Vlasy narastú asi o 1,25 cm za mesiac</div></div>
+          <div class="ptile row dim"><div class="pbadge">B</div><div class="txt">Nechty na rukách rastú štyrikrát rýchlejšie ako na nohách</div></div>
+          <div class="ptile row sel"><div class="pbadge" style="background:transparent"><div class="spin" style="border-color:rgba(139,124,246,.3);border-top-color:var(--ppurple)"></div></div><div class="txt">Deti rastú rýchlejšie na jar</div></div>
+          <div class="ptile row dim"><div class="pbadge">D</div><div class="txt">Nechty na nohách rastú štyrikrát rýchlejšie ako na rukách</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip" style="opacity:.45"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť otázku</div></div>
+      </div><figcaption>E · ťuknutá možnosť C: písmeno → spinner, ostatné stlmené, nič sa nehýbe (zobrazené s C1)</figcaption></figure>
+    </div>
+  </section>
+
+  <p class="meta" style="margin-top:56px">ODPOVEĎ STAČÍ AKO „A1 B1 C1 D2b“ · PO VÝBERE: PENCIL SYNC → IMPLEMENTÁCIA → TF BUILD NA POŽIADANIE</p>
+</div>
+</body>
+</html>

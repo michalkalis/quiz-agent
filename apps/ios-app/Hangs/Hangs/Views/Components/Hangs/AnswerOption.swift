@@ -22,6 +22,9 @@ struct AnswerOption: View {
     let key: String
     let value: String
     var state: State = .default
+    /// #174: this option's answer is being evaluated — the letter badge becomes a
+    /// spinner in place, so the loading state lives in the control that was tapped.
+    var isLoading: Bool = false
     /// Minimum row height. Defaults to 64pt (4-option MCQ); pass 80pt for the 2-option T/F variant.
     var minHeight: CGFloat = 64
     var action: (() -> Void)? = nil
@@ -61,9 +64,16 @@ struct AnswerOption: View {
         HStack(spacing: Theme.Hangs.Spacing.md) {
             ZStack {
                 Circle().fill(badgeFill)
-                Text(key.uppercased())
-                    .font(.hangsBody(17, weight: .bold))
-                    .foregroundColor(letterColor)
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(letterColor)
+                        .accessibilityIdentifier("question.processingIndicator")
+                } else {
+                    Text(key.uppercased())
+                        .font(.hangsBody(17, weight: .bold))
+                        .foregroundColor(letterColor)
+                }
             }
             .frame(width: 40, height: 40)
 
@@ -154,6 +164,10 @@ struct AnswerTile: View {
     let key: String
     let value: String
     var state: AnswerOption.State = .default
+    /// #174: this tile's answer is being evaluated — the letter badge becomes a
+    /// spinner in place, so the loading state lives in the tile that was tapped
+    /// (same tile size, same text, same selected styling).
+    var isLoading: Bool = false
     /// SE-class shrinks the tile 88 → 76 and tightens the internal gap.
     var compact: Bool = false
     var action: (() -> Void)? = nil
@@ -179,9 +193,16 @@ struct AnswerTile: View {
         HStack(spacing: compact ? 8 : 10) {
             ZStack {
                 Circle().fill(state.badgeFill)
-                Text(key.uppercased())
-                    .font(.hangsBody(14, weight: .bold))
-                    .foregroundColor(state.letterColor)
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(state.letterColor)
+                        .accessibilityIdentifier("question.processingIndicator")
+                } else {
+                    Text(key.uppercased())
+                        .font(.hangsBody(14, weight: .bold))
+                        .foregroundColor(state.letterColor)
+                }
             }
             .frame(width: 28, height: 28)
 

@@ -24,6 +24,14 @@ extension RecordingCoordinator {
         let wasShowingSheet = showAnswerConfirmation
         showAnswerConfirmation = false
 
+        // #173 C2: the sheet does NOT go away here any more — it stays up in its
+        // evaluating state until the result lands, so the driver watches the
+        // button they pressed do the work instead of a full-screen overlay
+        // replacing the screen. The single-flight token above is untouched:
+        // this flag only keeps the presentation alive.
+        isEvaluatingAnswer = wasShowingSheet
+        defer { isEvaluatingAnswer = false }
+
         let silent = transcriptWasEdited
         transcriptWasEdited = false
         preEditTranscript = nil
@@ -123,6 +131,7 @@ extension RecordingCoordinator {
         // exactly as `cancelProcessing()` does (#133 V14).
         taskBag.cancel(.voiceSubmission)
         showAnswerConfirmation = false
+        isEvaluatingAnswer = false
         pendingResponse = nil
         noAnswerCaptured = false
         transcriptWasEdited = false
@@ -150,6 +159,7 @@ extension RecordingCoordinator {
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false
+        isEvaluatingAnswer = false
         pendingResponse = nil
         noAnswerCaptured = false
         transcriptWasEdited = false

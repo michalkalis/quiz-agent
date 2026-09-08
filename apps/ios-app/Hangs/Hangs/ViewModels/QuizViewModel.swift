@@ -197,6 +197,13 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.noAnswerCaptured = newValue }
     }
 
+    /// #173 C2: the confirmation sheet stays up, in its evaluating state, from
+    /// Confirm until the result lands.
+    var isEvaluatingAnswer: Bool {
+        get { recordingCoordinator.isEvaluatingAnswer }
+        set { recordingCoordinator.isEvaluatingAnswer = newValue }
+    }
+
     /// Auto-confirm countdown — owned by `ConfirmationState` inside
     /// RecordingCoordinator (#113 T7, its semantic owner); QuizTimersController
     /// ticks it via the injected write closure pointed at the child.
@@ -721,8 +728,11 @@ final class QuizViewModel: ObservableObject {
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },
-            isPausedOnConfirmation: { [weak self] in
-                self?.isPaused == true && self?.showAnswerConfirmation == true
+            isQuizPaused: { [weak self] in
+                // #173: a toolbar pause can now be entered from the question
+                // screen too, so the mic gate widened past the sheet. The result
+                // screen is the one paused state that keeps listening.
+                self?.isPaused == true && self?.quizState.isShowingResult == false
             },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
@@ -740,7 +750,7 @@ final class QuizViewModel: ObservableObject {
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
-            pauseOnConfirmation: { [weak self] in self?.pauseOnConfirmation() },
+            pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
         )

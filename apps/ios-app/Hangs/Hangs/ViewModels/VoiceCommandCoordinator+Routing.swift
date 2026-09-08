@@ -242,11 +242,12 @@ extension VoiceCommandCoordinator {
         case (.confirmation, .stop):
             cancelProcessing()
 
-        // Confirmation sheet — freeze it (#171 Track D). Not offered as a
-        // spoken RESUME: pausing stops the listener, so "pokračuj" would never
-        // be heard; the sheet's Continue pill is the way back.
-        case (.confirmation, .pause):
-            pauseOnConfirmation()
+        // Freeze the quiz (#171 Track D, widened to the question screen by #173
+        // now that pause lives in the toolbar). Not offered as a spoken RESUME:
+        // pausing stops the listener, so "pokračuj" would never be heard; the
+        // toolbar's play button is the way back.
+        case (.question, .pause), (.confirmation, .pause):
+            pauseQuiz()
 
         // Result — advance (on top of auto-advance + button).
         case (.result, .next), (.result, .ok):

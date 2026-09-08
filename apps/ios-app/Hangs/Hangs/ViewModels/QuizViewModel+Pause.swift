@@ -2,66 +2,102 @@
 //  QuizViewModel+Pause.swift
 //  Hangs
 //
-//  #171 Track D — a real pause, and it lives on the answer confirmation sheet
-//  (founder decision 2026-09-05). After Tracks B + I the sheet is the universal
-//  "after answer" point: every recording, empty or not, and every MCQ voice
-//  match lands there. That makes it the only screen where stopping the clock
-//  cannot lose an in-flight question, a live recording or an unsubmitted
-//  answer — so it is the one place a pause is offered, by pill or by voice.
+//  #171 Track D introduced a real pause, but only on the answer confirmation
+//  sheet. #173 (founder locked 2026-09-07, decision 4) moves it into the quiz
+//  TOOLBAR, so it has to work from every state the driver can be in — the
+//  question is being read, the think window is draining, the mic is open, or
+//  the confirmation sheet is up.
 //
-//  Paused = the sheet FROZEN, not a new screen and not a new state-machine
-//  case: auto-confirm cancelled, TTS silenced, the command listener down.
-//  Confirm / edit / re-record keep working throughout — using them IS resuming.
+//  Paused = every running countdown FROZEN and the app silent. It is not a new
+//  screen and not a new state-machine case: whatever the driver was looking at
+//  stays on screen, it just stops moving.
+//
+//  Two rules the shape follows:
+//   - Resuming re-arms a FULL window, never the remainder. A pause that quietly
+//     shortens the time left to intervene is not a pause.
+//   - A live recording cannot simply be frozen — the ElevenLabs stream is not
+//     resumable, and dropping it would lose what was already said. So pausing
+//     mid-recording routes through the EXISTING stop/submit funnel and lands on
+//     the confirmation sheet, already paused: nothing spoken is lost, and the
+//     driver decides what to do with it whenever they come back.
 //
 
 import Foundation
 import os
 
 extension QuizViewModel {
-    /// Freeze the answer confirmation sheet. Idempotent, and a no-op once the
-    /// sheet is gone — a spoken "pauza" that lands just after an auto-confirm
-    /// must not pause the result screen it fired into.
-    func pauseOnConfirmation() {
-        guard showAnswerConfirmation, !isPaused else { return }
-        isPaused = true
-
-        // The countdown is CANCELLED, never restarted — resuming re-arms a full
-        // window (`resumeFromConfirmation`), which is the only reading of "pause"
-        // that does not quietly shorten the time left to intervene.
-        quizTimersController.cancelAutoConfirm()
-
-        // Silence anything still speaking: a paused quiz that keeps reading the
-        // feedback out loud is not paused to the passenger who asked for it.
-        Task { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
-
-        // Takes the mic down via `mayCaptureAudio` (which now reports false while
-        // a paused sheet is up), so it also survives a background/foreground
-        // round trip — `.active` re-runs this same sync and re-arms nothing.
-        voiceCommandCoordinator.refreshCommandWindow()
-
-        Logger.quiz.info("⏸️ Paused on the answer confirmation sheet")
+    /// States where a pause has something to freeze. The result screen is
+    /// deliberately absent — it has its own STAY pill (`pauseQuiz()`, #131 D),
+    /// which holds auto-advance while keeping the command listener up.
+    var canPauseQuiz: Bool {
+        switch quizState {
+        case .askingQuestion, .recording: return true
+        case .processing: return showAnswerConfirmation
+        default: return false
+        }
     }
 
-    /// Un-freeze the sheet: a FULL auto-confirm window again, and the command
-    /// window back up. The pill is the only way back — pausing stopped the
-    /// listener, so no spoken word can reach us while paused (by design: a
-    /// resume word would need a hot mic, which is what pause just turned off).
-    func resumeFromConfirmation() {
+    /// Freeze the quiz. Idempotent, and a no-op in a state with nothing to
+    /// freeze — a spoken "pauza" that lands just after an auto-confirm must not
+    /// pause the result screen it fired into.
+    func enterPause() {
+        guard !isPaused, canPauseQuiz else { return }
+        let state = quizState
+        isPaused = true
+
+        // Countdowns are CANCELLED, never suspended — `exitPause()` re-arms a
+        // full window, the only reading of "pause" that does not quietly
+        // shorten the time left to intervene.
+        quizTimersController.cancelAutoConfirm()
+        quizTimersController.cancelThinkingTime()
+        quizTimersController.cancelAnswerTimer()
+
+        // Silence anything still speaking: a paused quiz that keeps reading the
+        // question out loud is not paused to the passenger who asked for it.
+        Task { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
+
+        // Takes the mic down via `mayCaptureAudio` (which reports false while
+        // the quiz is paused), so it also survives a background/foreground round
+        // trip — `.active` re-runs this same sync and re-arms nothing.
+        voiceCommandCoordinator.refreshCommandWindow()
+
+        // An open mic has speech in it that the driver has not heard back yet.
+        // Reuse the one funnel that turns a recording into a reviewable answer
+        // instead of inventing a second way to end one.
+        if state == .recording {
+            Task { [weak self] in await self?.recordingCoordinator.stopRecordingAndSubmit() }
+        }
+
+        Logger.quiz.info("⏸️ Quiz paused from \(String(describing: state), privacy: .public)")
+    }
+
+    /// Un-freeze: a FULL window again, and the command listener back up.
+    /// The toolbar is the only way back — pausing stopped the listener, so no
+    /// spoken word can reach us while paused (by design: a resume word would
+    /// need a hot mic, which is what pause just turned off).
+    func exitPause() {
         guard isPaused else { return }
         isPaused = false
 
-        quizTimersController.startAutoConfirmIfEnabled()
+        if showAnswerConfirmation {
+            quizTimersController.startAutoConfirmIfEnabled()
+        } else if quizState == .askingQuestion {
+            // Re-arms the thinking-time countdown or the answer timer, whichever
+            // this session's settings use — the same entry point the question
+            // flow itself calls, so resume can never diverge from a fresh ask.
+            startRecordingOrTimer()
+        }
         voiceCommandCoordinator.refreshCommandWindow()
 
-        Logger.quiz.info("▶️ Resumed from the answer confirmation sheet")
+        Logger.quiz.info("▶️ Quiz resumed")
     }
 
-    /// The sheet's single Pause/Continue control.
-    func toggleConfirmationPause() {
+    /// The toolbar's single pause/resume control (and the spoken "pauza").
+    func togglePause() {
         if isPaused {
-            resumeFromConfirmation()
+            exitPause()
         } else {
-            pauseOnConfirmation()
+            enterPause()
         }
     }
 }

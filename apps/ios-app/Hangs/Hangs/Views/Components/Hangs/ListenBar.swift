@@ -45,6 +45,23 @@
 
 import SwiftUI
 
+/// #173 B1: which question's listening bar the driver has hidden with the ✕.
+/// A value rather than a bare flag, so "only for the current question" is a
+/// property of the type instead of a convention at the call site — and so the
+/// rule is assertable without driving SwiftUI `@State` through a hosted view.
+struct ListenBarDismissal: Equatable {
+    private var dismissedQuestionId: String?
+
+    init() {}
+
+    mutating func dismiss(questionId: String) { dismissedQuestionId = questionId }
+
+    /// Nothing carries across questions: a dismissal that outlived its question
+    /// would quietly remove the only surface naming the voice commands for the
+    /// rest of the quiz.
+    func isHidden(questionId: String) -> Bool { dismissedQuestionId == questionId }
+}
+
 struct ListenBar: View {
     /// The answer form the driver should speak — drives the answer-mode caption.
     enum AnswerKind {
@@ -93,6 +110,14 @@ struct ListenBar: View {
     /// #132 Track B: MCQ think-phase countdown. Command mode only — answer mode
     /// ignores it (the mic is already live, there is nothing left to count down).
     var thinkCountdown: ThinkCountdown? = nil
+
+    /// #173 B1 (founder locked 2026-09-07): a trailing ✕ that hides the bar for
+    /// the CURRENT question only. Nil = no dismiss affordance (Home, result,
+    /// confirmation — screens where the bar is the only thing talking). The
+    /// dismissal is deliberately not remembered: the next question needs its own
+    /// decision, and a permanently hidden command bar is how a driver loses the
+    /// hands-free commands without noticing.
+    var onDismiss: (() -> Void)? = nil
 
     /// The countdown, iff the mode can host one.
     private var activeThinkCountdown: ThinkCountdown? {
@@ -157,12 +182,17 @@ struct ListenBar: View {
 
     private var barHeight: CGFloat { Self.height(size: size, hasSubLine: subLine != nil) }
 
-    /// Pure so the founder-picked sizes (full ~56 with the words, slim ~40) are
-    /// assertable without rendering. Internal for tests.
+    /// Pure so the founder-picked sizes are assertable without rendering.
+    /// Internal for tests.
+    ///
+    /// #173 B1: the quiz bar lost 8pt (56 → 48 with the words, 44 → 38 without).
+    /// It moved ABOVE the MCQ option grid, where every point it takes is a point
+    /// the options do not get, and the founder's note was "menšia výška". Home's
+    /// slim bar is unchanged — it was never in anything's way.
     static func height(size: Size, hasSubLine: Bool) -> CGFloat {
         switch size {
         case .slim: return 40
-        case .full: return hasSubLine ? 56 : 44
+        case .full: return hasSubLine ? 48 : 38
         }
     }
 
@@ -239,8 +269,11 @@ struct ListenBar: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(subLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
         .accessibilityIdentifier("listen-bar")
-        .padding(.leading, size == .slim ? 16 : 18)
-        .padding(.trailing, 16)
+        // The ✕ is a sibling of the combined element, never inside it: VoiceOver
+        // must reach the control, not read "hide" as part of the instruction.
+        .overlay(alignment: .trailing) { dismissButton }
+        .padding(.leading, size == .slim ? 16 : 14)
+        .padding(.trailing, onDismiss == nil ? 14 : 40)
         .frame(maxWidth: .infinity)
         .frame(height: barHeight)
         .background(
@@ -265,9 +298,29 @@ struct ListenBar: View {
 
     // MARK: - Parts
 
+    /// The B1 dismiss ✕ — dim, outside the combined a11y element so VoiceOver
+    /// reads the bar and its control separately.
+    @ViewBuilder
+    private var dismissButton: some View {
+        if let onDismiss {
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.muted.opacity(0.75))
+                    .frame(width: 34, height: 34)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            // Sits in the trailing padding this bar reserves for it (40pt).
+            .offset(x: 20)
+            .accessibilityLabel(String(localized: "Hide the listening bar", comment: "Accessibility label for the button that hides the in-quiz listening bar for the current question"))
+            .accessibilityIdentifier("listen-bar.dismiss")
+        }
+    }
+
     private var caption: some View {
         captionText
-            .font(.hangsMono(12, weight: .medium))
+            .font(.hangsMono(11, weight: .medium))
             .tracking(0.6)
             .textCase(.uppercase)
             .foregroundColor(accent)
@@ -281,7 +334,7 @@ struct ListenBar: View {
     private var words: some View {
         if let subLine {
             subLine
-                .font(.hangsBody(12, weight: .medium))
+                .font(.hangsBody(11, weight: .medium))
                 .foregroundColor(accent.opacity(0.9))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -315,6 +368,7 @@ struct ListenBar: View {
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
+            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#, onDismiss: {})
             ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
             ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)
             ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „štart""#,

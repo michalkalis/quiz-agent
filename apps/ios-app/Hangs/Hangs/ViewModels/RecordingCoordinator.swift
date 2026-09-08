@@ -112,6 +112,12 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.noAnswerCaptured = newValue }
     }
 
+    /// See `ConfirmationState.isEvaluatingAnswer` (#173 C2).
+    var isEvaluatingAnswer: Bool {
+        get { confirmationState.isEvaluatingAnswer }
+        set { confirmationState.isEvaluatingAnswer = newValue }
+    }
+
     /// Auto-confirm countdown (T7 — resides in `ConfirmationState`, its semantic
     /// owner); QuizTimersController ticks it via the façade's injected write closure.
     var autoConfirmCountdown: Int {

@@ -43,11 +43,52 @@ struct AnswerConfirmationView: View {
     /// `transcribedAnswer` the moment it is called.
     var evaluatingAnswer: String? = nil
 
-    @State private var isEditing = false
+    /// The driver TAPPED the pencil. Read `branch` / `isEditing` instead —
+    /// evaluating outranks this, and this flag alone does not know that.
+    @State private var editingRequested = false
     @FocusState private var editFocused: Bool
 
     /// The answer is out of the driver's hands — nothing on the sheet may move it.
     private var isEvaluating: Bool { evaluatingAnswer != nil }
+
+    /// The three mutually exclusive bodies this sheet can show, and their
+    /// precedence. Pure and static so the rule is assertable without driving the
+    /// `@State` that feeds it.
+    enum Branch: Equatable {
+        /// A transcript is genuinely still in flight — spinner + Cancel.
+        case transcribing
+        /// The driver is fixing the transcript by hand.
+        case editing
+        /// The answer, read-only.
+        case transcript
+    }
+
+    /// EVALUATING OUTRANKS BOTH, and this is the single place that says so.
+    ///
+    /// The sheet now outlives the Confirm tap (#173 C2), and `confirmAnswer()`
+    /// consumes `transcribedAnswer` synchronously — which breaks the other two
+    /// branches in the same way:
+    ///  - the presenter's "a transcript is still in flight" test (`.processing`
+    ///    + empty field) is true for the whole evaluating window, and its
+    ///    spinner would hide the very button the state now lives in while
+    ///    offering a Cancel that drops the answer mid-grade;
+    ///  - `editingRequested` is `@State` that nothing resets, so a driver who
+    ///    fixed their transcript and confirmed kept a LIVE, EMPTY `TextField`
+    ///    bound to the string that was just cleared — and typing in it mutated
+    ///    the answer being graded.
+    static func branch(isProcessing: Bool, isEditing: Bool, isEvaluating: Bool) -> Branch {
+        if isEvaluating { return .transcript }
+        if isProcessing { return .transcribing }
+        return isEditing ? .editing : .transcript
+    }
+
+    private var branch: Branch {
+        Self.branch(isProcessing: isProcessing, isEditing: editingRequested, isEvaluating: isEvaluating)
+    }
+
+    /// The edit affordances follow the branch, never the raw flag — so the
+    /// pencil's Cancel twin cannot outlive the confirm either.
+    private var isEditing: Bool { branch == .editing }
 
     /// What the transcript block shows: the submitted text while evaluating,
     /// the live field otherwise.
@@ -58,15 +99,10 @@ struct AnswerConfirmationView: View {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                // #173 C2: EVALUATING WINS. `confirmAnswer()` consumes the
-                // transcript synchronously, so the presenter's "a transcript is
-                // still in flight" test (`.processing` + empty field) is also
-                // true for the whole evaluating window — and the transcribing
-                // spinner would hide the very button the state now lives in,
-                // while offering a Cancel that drops the answer mid-grade.
-                // Deciding it HERE, not at the call site, is what stops the two
-                // states from ever disagreeing again.
-                if isProcessing, !isEvaluating {
+                // Precedence lives in `Self.branch(…)` — see it for why
+                // evaluating outranks both the transcribing spinner and the
+                // edit field.
+                if branch == .transcribing {
                     processingBody
                 } else {
                     transcriptBody
@@ -279,7 +315,7 @@ struct AnswerConfirmationView: View {
 
     private func beginEditing() {
         onEditingBegan?()
-        isEditing = true
+        editingRequested = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             editFocused = true
         }
@@ -287,7 +323,7 @@ struct AnswerConfirmationView: View {
 
     private func cancelEditing() {
         editFocused = false
-        isEditing = false
+        editingRequested = false
         onCancelEditing?()
     }
 

@@ -421,6 +421,60 @@ struct AnswerConfirmationEvaluatingTests {
         }
     }
 
+    /// The same bug's second half: `editingRequested` is `@State` that nothing
+    /// resets, and the sheet now outlives Confirm — so "fix my transcript, then
+    /// Confirm" kept a LIVE, EMPTY `TextField` bound to the `transcribedAnswer`
+    /// that `confirmAnswer()` had just cleared, with its Cancel still hot.
+    /// Typing there mutated the answer being graded. Evaluating outranks
+    /// editing for exactly the reason it outranks the spinner, and the rule
+    /// lives in one pure function so all three branches are pinned at once.
+    @Test("evaluating outranks editing and the transcribing spinner alike")
+    func evaluatingOutranksEveryOtherBranch() {
+        typealias Sheet = AnswerConfirmationView
+
+        // Evaluating wins from either of the states that used to win.
+        #expect(Sheet.branch(isProcessing: true, isEditing: false, isEvaluating: true) == .transcript)
+        #expect(Sheet.branch(isProcessing: false, isEditing: true, isEvaluating: true) == .transcript,
+                "an edited answer must be frozen read-only while it is graded")
+        #expect(Sheet.branch(isProcessing: true, isEditing: true, isEvaluating: true) == .transcript)
+
+        // …and neither branch is removed, only outranked.
+        #expect(Sheet.branch(isProcessing: true, isEditing: false, isEvaluating: false) == .transcribing)
+        #expect(Sheet.branch(isProcessing: false, isEditing: true, isEvaluating: false) == .editing)
+        #expect(Sheet.branch(isProcessing: false, isEditing: false, isEvaluating: false) == .transcript)
+    }
+
+    /// What the driver sees on that path: their edited words, read-only, under
+    /// the spinning button — no live field, no edit-cancel, nothing to type in.
+    @Test("an edited answer renders frozen and read-only while it is graded")
+    func editedAnswerIsFrozenWhileEvaluating() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: true,
+            // Cleared by confirmAnswer() before the first suspension, exactly
+            // as the live sheet sees it.
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            onCancel: {},
+            evaluatingAnswer: "The Eiffel Tower"
+        )
+        let tree = try view.inspect()
+
+        #expect(throws: Never.self, "the edited words stay on screen") {
+            try tree.find(text: "The Eiffel Tower")
+        }
+        #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: (any Error).self, "a live field here mutates the answer being graded") {
+            _ = try tree.find(ViewType.TextField.self)
+        }
+        #expect(throws: (any Error).self, "its Cancel must go with it") {
+            _ = try tree.find(viewWithAccessibilityIdentifier: "confirmation.editCancel")
+        }
+    }
+
     /// And the genuine no-transcript-yet case still gets its spinner: this is
     /// only a precedence rule, not a removal.
     @Test("a sheet waiting on a transcript still shows the transcribing state")

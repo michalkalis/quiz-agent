@@ -42,7 +42,12 @@ struct HangsQuizProgressHeader: View {
             if total > 0, total <= Self.maxSegments {
                 HangsSegmentedProgress(current: current, total: total, tint: tint)
             } else {
-                HangsProgressBar(progress: Self.linearProgress(current: current, total: total), tint: tint)
+                // Same teal as the segments — the fallback is the same header,
+                // drawn differently, not a different progress indicator.
+                HangsProgressBar(
+                    progress: Self.linearProgress(current: current, total: total),
+                    tint: tint ?? Theme.Hangs.Colors.accentTeal
+                )
             }
 
             HStack(spacing: 12) {

@@ -81,6 +81,12 @@ extension QuizViewModel {
     /// the no-answer confirmation sheet (the Track B path) so the quiz keeps
     /// moving. Anything that already left `.askingQuestion` resolved itself.
     private func resumeSuppressedAnswerWindow() {
+        // #173: a paused quiz must not open the mic on a foreground return —
+        // that is the one re-arm the timers' own pause guards cannot catch,
+        // because this path starts a RECORDING rather than a countdown. The
+        // suppression marker is deliberately kept: resuming takes the question
+        // from the top instead of from a window nobody was there for.
+        guard !isPaused else { return }
         guard quizState == .askingQuestion,
               let suppressedAt = recordingCoordinator.backgroundSuppressedRecordingAt
         else { return }

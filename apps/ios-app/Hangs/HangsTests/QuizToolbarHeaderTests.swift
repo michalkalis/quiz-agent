@@ -259,6 +259,28 @@ struct QuizToolbarPauseTests {
                         "pause must take the mic down, not leave it open behind a paused UI")
     }
 
+    /// The hole a pause this broad opens: `enterPause()` silences in-flight TTS,
+    /// and the question-audio tail that resolves as a result calls straight back
+    /// into `startRecordingOrTimer()` — which re-armed the window behind a paused
+    /// UI. The guard belongs on the timers themselves (where auto-confirm and
+    /// auto-advance already had one), not on each caller that might race.
+    @Test("a late re-arm cannot restart the window while the quiz is paused")
+    func pausedQuizRefusesToReArm() {
+        let vm = makeQuestionViewModel(question: Question.preview)
+        vm.settings.autoRecordEnabled = false
+        vm.settings.answerTimeLimit = 30
+        vm.togglePause()
+
+        // Exactly what the TTS-completion tail calls on the question screen.
+        vm.startRecordingOrTimer()
+        #expect(vm.answerTimerCountdown == 0, "a paused quiz must not re-arm the answer window")
+
+        vm.settings.autoRecordEnabled = true
+        vm.settings.thinkingTime = 5
+        vm.startRecordingOrTimer()
+        #expect(vm.thinkingTimeCountdown == 0, "…nor the thinking window")
+    }
+
     /// The result screen keeps its own STAY pill (#131 D) and must keep
     /// listening for "ďalej" — the toolbar pause must not claim that state.
     @Test("the result screen is not a toolbar-pausable state")

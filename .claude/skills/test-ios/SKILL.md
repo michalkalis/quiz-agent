@@ -18,6 +18,7 @@ Run unit tests only:
 ```bash
 cd apps/ios-app/Hangs && xcodebuild test \
   -scheme Hangs-Local \
+  -parallel-testing-enabled NO \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing HangsTests \
   2>&1 | xcpretty --color || cat
@@ -28,6 +29,7 @@ Run UI tests:
 ```bash
 cd apps/ios-app/Hangs && xcodebuild test \
   -scheme Hangs-Local \
+  -parallel-testing-enabled NO \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing HangsUITests \
   2>&1 | xcpretty --color || cat
@@ -38,6 +40,7 @@ Run all tests (unit + UI):
 ```bash
 cd apps/ios-app/Hangs && xcodebuild test \
   -scheme Hangs-Local \
+  -parallel-testing-enabled NO \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   2>&1 | xcpretty --color || cat
 ```
@@ -47,6 +50,7 @@ Run only that test:
 ```bash
 cd apps/ios-app/Hangs && xcodebuild test \
   -scheme Hangs-Local \
+  -parallel-testing-enabled NO \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing "HangsTests/$ARGUMENTS" \
   2>&1 | xcpretty --color || cat

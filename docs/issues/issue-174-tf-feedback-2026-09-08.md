@@ -20,6 +20,8 @@
 ## Vedľajšie zistenia
 
 - **ElevenLabs kvóta vyčerpaná** (18:28:54Z: `401 quota_exceeded`, 9 kreditov, treba 88) → TTS padá na OpenAI fallback aj na prode. Founder: dobiť / počkať na reset.
+- **CI flake (nesúvisí s #174):** Swift Testing beží suity paralelne, 15 súborov HangsTests používa procesovo-globálny `withMainSerialExecutor` → časovacie testy hladujú; na `main` padali 3 zo 4 plných behov. Fix v tejto vetve: `-parallel-testing-enabled NO` v ios-ci.yml + lokálny príkaz v `ios.md`.
+- **Skutočná chyba poradia (follow-up do #173):** `startRecording` nastaví dead-air poistku pred nábehom enginu (`RecordingCoordinator+Capture.swift`); pri pomalom handshaku vystrelí v medzere, stav spadne na `askingQuestion` a znovu nastavená poistka sa vetuje vlastným guardom → mikrofón ostane otvorený bez limitu. V produkcii zriedkavé (15 s), v testoch so sub-sekundovou poistkou bežné.
 - Sentry prostredie `staging` + `browser: Hangs 57` = spoľahlivý spôsob, ako zistiť, proti čomu build beží.
 
 ## Úlohy
@@ -34,6 +36,7 @@
 - [ ] D1 — backend `finish_reason: corpus_exhausted` v odpovedi + výsledková obrazovka s vysvetlením a akciou
 - [ ] D2 — fallback v `_fallback_retrieval` podľa výberu (iná kategória / uvoľniť najstaršie videné / nič)
 - [ ] Founder: ElevenLabs kredity
+- [ ] Dead-air poistka: nastaviť až po nábehu enginu (viď Vedľajšie zistenia)
 - [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky)
 
 ## Neprebrať znova

@@ -155,6 +155,10 @@ struct QuestionVoiceFooter: View {
         ) {
             Task { await viewModel.toggleRecording() }
         }
+        // #174 review: during an in-flight skip the footer stays mounted, so
+        // gate the CTA on `.skipping` too — a tap there is a silent no-op.
+        .disabled(isSkipping)
+        .opacity(isSkipping ? 0.45 : 1)
         // #122: teal ring while a matched-command glow is live.
         .overlay {
             if viewModel.voiceFeedbackPhase == .matched {

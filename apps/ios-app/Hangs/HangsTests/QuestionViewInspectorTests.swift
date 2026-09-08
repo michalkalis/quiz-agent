@@ -624,6 +624,19 @@ struct QuestionViewReplayProcessingInspectorTests {
         }
     }
 
+    /// Review on #174: with the footer mounted during a skip, the Record CTA must
+    /// not read as tappable — a tap there is a silent no-op while `.skipping`.
+    @Test("skipping disables the record CTA next to the spinning skip control")
+    func skippingDisablesRecordButton() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .skipping
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let record = try view.inspect().find(viewWithAccessibilityIdentifier: "question.record")
+            #expect(try record.isDisabled(), "record CTA must be disabled while a skip is in flight")
+        }
+    }
+
     /// Same contract on the MCQ side — one evaluating state, not two. The chip
     /// stays put instead of vanishing, and it keeps its label while spinning so
     /// the capsule cannot change width under the driver's thumb.

@@ -21,10 +21,10 @@ Triggers the `ios-release.yml` GitHub Actions workflow which:
 
 | `environment` input | Lane | Scheme/config | APIs | Home-screen name |
 |---|---|---|---|---|
-| `staging` (default) | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | **Trubbo Beta** |
-| `production` | `release` | `Hangs-Prod` / `Release-Prod` | prod `*.fly.dev` | **Trubbo** |
+| `staging` | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | **Trubbo Beta** |
+| `production` (default) | `release` | `Hangs-Prod` / `Release-Prod` | prod `*.fly.dev` | **Trubbo** |
 
-Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **staging** unless the user explicitly asks for a production build.
+Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Build staging ONLY when the founder explicitly asks for it (e.g. to test the sandbox money path).
 
 ⚠️ **Purchases:** TestFlight ALWAYS uses the StoreKit sandbox. Sandbox purchases route to the staging backend and are dropped by the prod gate — so the **money path is only testable on the staging build**. A production TF build validates the prod app surface (questions, voice, auth), not payments; attempting a purchase there will look odd by design (RC sandbox entitlement, no backend grant).
 
@@ -68,11 +68,11 @@ Common fix for empty DB: `CHROMA_PATH` Fly secret out of sync with `fly.toml` mo
 ### 3. Trigger the workflow
 
 ```bash
-# Staging build (default — sandbox purchases land in staging):
-gh workflow run ios-release.yml --ref main -f environment=staging -f notes="<short release notes>"
-
-# Production build (prod APIs; money path NOT testable here — see warning above):
+# Production build (DEFAULT — prod APIs; money path NOT testable here — see warning above):
 gh workflow run ios-release.yml --ref main -f environment=production -f notes="<short release notes>"
+
+# Staging build (ONLY on explicit founder request — sandbox purchases land in staging):
+gh workflow run ios-release.yml --ref main -f environment=staging -f notes="<short release notes>"
 ```
 
 For staging builds, run the §2 health checks against the staging hosts instead (`https://quiz-agent-api-staging.fly.dev/...`); note staging machines auto-stop, so the first request may take a few seconds to wake them.

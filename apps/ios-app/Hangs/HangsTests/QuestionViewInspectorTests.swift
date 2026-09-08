@@ -558,75 +558,138 @@ struct QuestionViewReplayProcessingInspectorTests {
         }
     }
 
-    /// 59.6 (RS-15): the typed-answer path stays on QuestionView while the answer is
-    /// evaluated (it bypasses the voice confirmation sheet that owns the only other
-    /// spinner). The `question.processingIndicator` must appear in the `.processing` state
-    /// so the screen isn't blank between submit and result.
-    @Test("processing indicator is present while in the processing state (RS-15)")
-    func processingIndicatorPresentWhenProcessing() async throws {
+    /// 59.6 (RS-15): the typed-answer path stays on QuestionView while the answer
+    /// is evaluated (it bypasses the voice confirmation sheet that owns the other
+    /// evaluating state). #174 moved that state into the Record button itself, so
+    /// this is what keeps the screen from looking idle between submit and result.
+    @Test("the record button carries the evaluating state while processing (RS-15)")
+    func recordButtonShowsEvaluatingWhileProcessing() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .processing
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
-            }
+            #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
         }
     }
 
-    @Test("processing indicator is absent while asking a question (RS-15)")
-    func processingIndicatorAbsentWhenAsking() async throws {
+    /// The other half of that contract: nothing claims to be evaluating while the
+    /// driver is still being asked the question.
+    @Test("no evaluating state while asking a question (RS-15)")
+    func noEvaluatingStateWhileAsking() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .askingQuestion
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "Evaluating…") }
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
             }
         }
     }
 
-    /// #171 Track E (founder, 2026-09-05 TestFlight: "Vyhodnocujem špiní spodok
-    /// obrazovky"): the evaluating state used to sit *in* the control stack, so the
-    /// bottom of the screen turned into a stray spinner where the buttons had been.
-    /// It is an overlay above the whole screen now and the control stack is empty —
-    /// nothing is offered that cannot be acted on while the answer is in flight.
-    @Test("evaluating empties the bottom controls in the voice body")
-    func evaluatingEmptiesVoiceControls() async throws {
+    /// #174 (founder rule, locked 2026-09-07): a loading state lives IN the control
+    /// that triggered it, never in an overlay. The full-screen "Vyhodnocujem…"
+    /// overlay is gone, so the footer must STAY on screen while the answer is
+    /// graded — an empty bottom is exactly what read as "the app fell over".
+    @Test("evaluating keeps the voice controls on screen")
+    func evaluatingKeepsVoiceControls() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .processing
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            for id in ["question.record", "question.textInputToggle", "question.skip", "question.mute"] {
-                #expect(throws: (any Error).self, "\(id) must be gone while evaluating") {
-                    _ = try tree.find(viewWithAccessibilityIdentifier: id)
+            for id in ["question.record", "question.textInputToggle", "question.skip"] {
+                #expect(throws: Never.self, "\(id) must stay on screen while evaluating") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
                 }
             }
         }
     }
 
-    /// Same contract on the MCQ side — one evaluating state, not two.
-    @Test("evaluating empties the bottom controls in the MCQ body")
-    func evaluatingEmptiesMCQControls() async throws {
+    /// A skip in flight has to be visible somewhere now that the overlay is gone:
+    /// in the control that started it.
+    @Test("skipping spins in the skip control on the voice body")
+    func skippingSpinsInVoiceSkipControl() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .skipping
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) {
+                try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+        }
+    }
+
+    /// Review on #174: with the footer mounted during a skip, the Record CTA must
+    /// not read as tappable — a tap there is a silent no-op while `.skipping`.
+    @Test("skipping disables the record CTA next to the spinning skip control")
+    func skippingDisablesRecordButton() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .skipping
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let record = try view.inspect().find(viewWithAccessibilityIdentifier: "question.record")
+            #expect(try record.isDisabled(), "record CTA must be disabled while a skip is in flight")
+        }
+    }
+
+    /// Same contract on the MCQ side — one evaluating state, not two. The chip
+    /// stays put instead of vanishing, and it keeps its label while spinning so
+    /// the capsule cannot change width under the driver's thumb.
+    @Test("skipping spins in the MCQ skip chip and keeps its label")
+    func skippingSpinsInMCQSkipChip() async throws {
+        let vm = makeMCQEvaluatingViewModel(state: .skipping)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) {
+                try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(throws: Never.self, "the label must survive so the chip keeps its width") {
+                try skip.find(text: "Skip question")
+            }
+        }
+    }
+
+    /// #174: a tapped option is graded IN its own tile — the letter badge becomes
+    /// a spinner while the tile keeps its text and selected styling — and the other
+    /// options stop taking taps so a second answer can't be queued behind the first.
+    @Test("a tapped MCQ option spins in its own tile and locks the others")
+    func tappedMCQOptionSpinsInItsTile() async throws {
+        let vm = makeMCQEvaluatingViewModel(state: .processing)
+        // The tap path writes the chosen key through this VM-owned binding (#110 T4).
+        vm.mcqVoiceMatchedKey = "b"
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let chosen = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.b")
+            #expect(throws: Never.self) {
+                try chosen.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(throws: Never.self, "the tile keeps its text — only the badge changes") {
+                try chosen.find(text: "Jupiter")
+            }
+            let other = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            #expect(throws: (any Error).self, "only the chosen tile spins") {
+                _ = try other.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(try other.isDisabled(), "the other options must stop taking taps")
+        }
+    }
+
+    private func makeMCQEvaluatingViewModel(state: QuizState) -> QuizViewModel {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore()
         )
         vm.currentQuestion = Question.previewMCQ
-        vm.quizState = .processing
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
-            }
-            #expect(throws: (any Error).self, "the skip chip must be gone while evaluating") {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
-            }
-        }
+        vm.quizState = state
+        return vm
     }
 }

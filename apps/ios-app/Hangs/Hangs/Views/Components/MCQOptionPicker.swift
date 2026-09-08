@@ -54,16 +54,23 @@ struct MCQOptionPicker: View {
     /// #125: SE-class shrinks the grid tiles + gaps (driven by container height).
     var compact: Bool = false
 
+    /// #174: an answer (or a skip) is in flight with nothing covering the screen.
+    /// The chosen option spins in place; the rest dim and stop taking taps — the
+    /// full-screen evaluating overlay that used to do both is gone.
+    var isSubmitting: Bool = false
+
     init(
         options: [(key: String, value: String)],
         onSelect: @escaping (String, String) -> Void,
         externalSelectedKey: Binding<String?> = .constant(nil),
-        compact: Bool = false
+        compact: Bool = false,
+        isSubmitting: Bool = false
     ) {
         self.options = options
         self.onSelect = onSelect
         _externalSelectedKey = externalSelectedKey
         self.compact = compact
+        self.isSubmitting = isSubmitting
     }
 
     /// 80pt for the 2-option T/F variant; 64pt for all other MCQ rows. (The 4-up
@@ -90,10 +97,12 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     state: externalSelectedKey == option.key ? .selected : .default,
+                    isLoading: isLoading(option.key),
                     minHeight: optionMinHeight,
                     action: { tapOption(option) }
                 )
-                .disabled(externalSelectedKey != nil)
+                .disabled(externalSelectedKey != nil || isSubmitting)
+                .opacity(isDimmed(option.key) ? 0.45 : 1)
                 .animation(
                     reduceMotion ? nil : .easeInOut(duration: 0.15),
                     value: externalSelectedKey
@@ -121,10 +130,12 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     state: externalSelectedKey == option.key ? .selected : .default,
+                    isLoading: isLoading(option.key),
                     compact: compact,
                     action: { tapOption(option) }
                 )
-                .disabled(externalSelectedKey != nil)
+                .disabled(externalSelectedKey != nil || isSubmitting)
+                .opacity(isDimmed(option.key) ? 0.45 : 1)
                 .animation(
                     reduceMotion ? nil : .easeInOut(duration: 0.15),
                     value: externalSelectedKey
@@ -136,6 +147,13 @@ struct MCQOptionPicker: View {
             handleSelectionChange(newValue)
         }
     }
+
+    /// The chosen option is the only one that spins; a skip has no chosen option
+    /// and so spins nothing here (its own chip carries that state).
+    private func isLoading(_ key: String) -> Bool { isSubmitting && externalSelectedKey == key }
+
+    /// Everything the driver can no longer act on recedes while a submit is in flight.
+    private func isDimmed(_ key: String) -> Bool { isSubmitting && externalSelectedKey != key }
 
     /// Shared tap handler (both the rows and the grid). Schedules BEFORE writing
     /// the key so the in-flight `pendingKey` is set before the write can be

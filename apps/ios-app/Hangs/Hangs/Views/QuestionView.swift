@@ -90,13 +90,6 @@ struct QuestionView: View {
                     }
                 }
             }
-
-            // #171 Track E (B1): one evaluating state for both modes, above the
-            // whole screen instead of in place of the footer.
-            if isProcessing {
-                HangsProcessingOverlay(submittedAnswer: processingEcho)
-                    .transition(.opacity)
-            }
         }
         // The echo belongs to one question only.
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
@@ -371,11 +364,13 @@ struct QuestionView: View {
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
                 onSelect: { key, value in
-                    submittedAnswer = value // #171 Track E: echoed by the overlay
+                    submittedAnswer = value
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
                 },
                 externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
-                compact: compact
+                compact: compact,
+                // #174: a tapped option evaluates IN the tile it was tapped on.
+                isSubmitting: isProcessing
             )
             .padding(.top, compact ? 10 : 14)
 
@@ -388,13 +383,11 @@ struct QuestionView: View {
             // Founder 2026-08-03: skip is a secondary escape hatch, not the
             // screen's CTA — a compact centered chip (voice footer's skip
             // styling), no longer a full-width bar competing with the options.
-            // #171 Track E: gone while evaluating — there is nothing left to skip
-            // and the overlay owns the screen.
-            if !isProcessing {
-                mcqSkipChip
-                    .padding(.top, compact ? 8 : 12)
-                    .padding(.bottom, compact ? 10 : 16)
-            }
+            // #174: it STAYS on screen while evaluating (disabled) — the chip is
+            // where a skip in flight shows its own spinner now.
+            mcqSkipChip
+                .padding(.top, compact ? 8 : 12)
+                .padding(.bottom, compact ? 10 : 16)
 
             #if DEBUG
                 Text(quizStateName)
@@ -454,10 +447,19 @@ struct QuestionView: View {
             Task { await viewModel.skipQuestion() }
         } label: {
             HStack(spacing: 6) {
-                // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
-                // the play+bar glyph read as media transport.
-                Image(systemName: "chevron.right.2")
-                    .font(.system(size: 12, weight: .semibold))
+                // #174: a skip in flight spins IN this chip. The label is
+                // unchanged so the capsule keeps its width.
+                if isSkipping {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(Theme.Hangs.Colors.ink)
+                        .accessibilityIdentifier("question.processingIndicator")
+                } else {
+                    // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
+                    // the play+bar glyph read as media transport.
+                    Image(systemName: "chevron.right.2")
+                        .font(.system(size: 12, weight: .semibold))
+                }
                 Text("Skip question")
                     .font(.hangsBody(15, weight: .medium))
             }
@@ -469,7 +471,9 @@ struct QuestionView: View {
         }
         .buttonStyle(.plain)
         .disabled(isProcessing)
-        .opacity(isProcessing ? 0.45 : 1)
+        // Busy is not unavailable: the skipping chip keeps full contrast so its
+        // spinner reads, while a chip disabled by an answer in flight dims.
+        .opacity(isProcessing && !isSkipping ? 0.45 : 1)
         .accessibilityIdentifier("question.skip")
     }
 
@@ -658,24 +662,20 @@ struct QuestionView: View {
             // Pinned controls below the scroll region — mute strip (G1: audio
             // controls at the bottom), then the #131 footer.
             VStack(spacing: 12) {
-                // #171 Track E: while evaluating this whole stack is empty —
-                // no footer, no mute strip. The overlay above the screen is the
-                // evaluating state now (it replaces the old inline spinner row,
-                // which turned the busiest corner of the screen into the emptiest
-                // and read as a freeze).
-                if !isProcessing {
-                    // #131 Track B: the voice countdown lives in the Record/Stop
-                    // button. #173: the mute strip is gone — mute is a toolbar
-                    // control now, on one fixed spot in every state.
-                    QuestionVoiceFooter(
-                        viewModel: viewModel,
-                        showTextInput: $showTextInput,
-                        textAnswer: $textAnswer,
-                        submittedAnswer: $submittedAnswer,
-                        isTextFieldFocused: $isTextFieldFocused,
-                        compact: compact
-                    )
-                }
+                // #131 Track B: the voice countdown lives in the Record/Stop
+                // button. #173: the mute strip is gone — mute is a toolbar
+                // control now, on one fixed spot in every state.
+                // #174: the footer stays up while evaluating or skipping — its
+                // own controls carry the loading state (founder: loading lives IN
+                // the control that triggered it, never in an overlay).
+                QuestionVoiceFooter(
+                    viewModel: viewModel,
+                    showTextInput: $showTextInput,
+                    textAnswer: $textAnswer,
+                    submittedAnswer: $submittedAnswer,
+                    isTextFieldFocused: $isTextFieldFocused,
+                    compact: compact
+                )
             }
             // #96 P3 (founder): tighter side padding + lower footprint so the
             // action row doesn't sit needlessly high (was h24 / bottom 28).
@@ -694,22 +694,13 @@ struct QuestionView: View {
 
     private var isRecording: Bool { viewModel.quizState == .recording }
 
-    /// The answer the overlay echoes. A skip has no answer to echo — showing the
-    /// last thing the driver said under "You said" there would be a lie.
-    private var processingEcho: String {
-        viewModel.quizState == .skipping ? "" : submittedAnswer
-    }
+    private var isSkipping: Bool { viewModel.quizState == .skipping }
 
-    /// #171 Tracks B + E meeting point: the confirmation sheet also lives in
-    /// `.processing`, and since Track B/I every voice answer (including a failed
-    /// capture and an MCQ match) passes through it. The evaluating overlay must
-    /// not sit behind the sheet claiming the answer is already being graded
-    /// while the driver is still being asked to confirm it — the sheet owns that
-    /// screen, and has its own spinner for when a transcript is in flight.
-    /// #173 C2 widened the exclusion: the sheet also stays up while the
-    /// confirmed answer is being graded, and its own primary button is the
-    /// evaluating state there. The overlay survives only for the paths with no
-    /// sheet behind them — a tapped MCQ option and a skip.
+    /// "Something is in flight and no sheet is covering this screen." The
+    /// confirmation sheet also lives in `.processing` (every voice answer passes
+    /// through it, and since #173 C2 it stays up — showing its own evaluating
+    /// state — until the result lands), so the controls underneath must not read
+    /// as busy while the driver is still being asked to confirm.
     private var isProcessing: Bool {
         guard !viewModel.showAnswerConfirmation, !viewModel.isEvaluatingAnswer else { return false }
         return viewModel.quizState == .processing || viewModel.quizState == .skipping

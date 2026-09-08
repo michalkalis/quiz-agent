@@ -122,6 +122,30 @@ struct PersistenceStoreSessionTests {
         #expect(loaded == QuizSettings.default)
     }
 
+    // MARK: - #173: legacy persisted mute
+
+    /// The in-quiz mute button used to write the SAME persisted flag as the
+    /// Settings "Sound" toggle, so a mute tapped mid-drive silenced the first
+    /// question of the NEXT launch (founder TF screenshot 2026-09-06). Nothing
+    /// on disk can tell that value apart from a deliberate Settings choice, so
+    /// the upgrade drops it exactly once — otherwise the very device that
+    /// reported the bug still starts its next quiz in silence.
+    @Test("loadSettings drops a mute persisted by the pre-#173 in-quiz button, once")
+    func loadSettingsDropsLegacyMuteOnce() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        var muted = QuizSettings.default
+        muted.isMuted = true
+        store.saveSettings(muted)
+
+        #expect(store.loadSettings().isMuted == false, "the legacy mute must not survive the upgrade")
+
+        // A mute chosen AFTER the cleanup is a real preference and must stick.
+        store.saveSettings(muted)
+        #expect(store.loadSettings().isMuted == true, "the cleanup is one-time, not a mute ban")
+    }
+
     // MARK: - Legacy Keys Ignored
 
     @Test("loadSettings ignores stale legacy individual keys")

@@ -222,17 +222,25 @@ final class QuizTimersController: ObservableObject {
 
     // MARK: - Auto-Stop Recording Timer
 
-    /// Start a timer that auto-stops recording after `duration`.
-    /// Always armed — including re-record attempts (#54 task 54.4): silence
-    /// detection is disabled for re-records and never runs on the streaming
-    /// path, so this hard cap is the only guarantee recording stops on dead air.
-    /// `duration` is injectable for tests; production callers use the default.
-    /// #131 Track B: it also PUBLISHES the window (`recordingCountdown`) once per
-    /// second, so the Record→Stop button keeps a live number and draining fill
-    /// while the answer is being spoken. Expiry mid-recording therefore reads as
-    /// "the countdown ran out", and its consequence — auto-stop + submit whatever
-    /// was transcribed — is the one that was already here.
-    func startAutoStopRecordingTimer(duration: TimeInterval = Config.autoRecordingDuration) {
+    /// Arm the recording window: a VISIBLE "time to start speaking" countdown
+    /// (`duration`, 5 s) plus a HIDDEN dead-air cap (`hardCap`, 15 s). Always
+    /// armed — including re-record attempts (#54 task 54.4): silence detection
+    /// is disabled for re-records and never runs on the streaming path, so
+    /// these are the only guarantee recording stops on dead air. Both are
+    /// injectable for tests; production callers use the defaults.
+    ///
+    /// #131 Track B: the visible window PUBLISHES `recordingCountdown` once per
+    /// second, so the Record→Stop button keeps a live number and draining fill.
+    /// #173 (founder 2026-09-07): what it counts is the time to START speaking,
+    /// not the whole answer — `speechDetectedDuringRecording()` hides it the
+    /// moment the driver is heard and leaves the answer to VAD under the cap.
+    /// Either expiry has the same consequence, the one that was already here:
+    /// auto-stop + submit whatever was transcribed (nothing, on dead air, which
+    /// #171 Track B funnels to the confirmation sheet with an empty field).
+    func startAutoStopRecordingTimer(
+        duration: TimeInterval = Config.speechStartWindow,
+        hardCap: TimeInterval = Config.autoRecordingDuration
+    ) {
         cancelAutoStopRecordingTimer()
 
         // Sub-second durations (tests) collapse to a single tick; production's 15s
@@ -255,11 +263,34 @@ final class QuizTimersController: ObservableObject {
             await self.stopRecordingAndSubmit()
         }
         taskBag.add(task, key: .autoStopRecording)
+
+        // The cap runs on its own task: hiding the visible countdown once the
+        // driver speaks must NOT disarm the dead-air guarantee.
+        let cap = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(hardCap * 1_000_000_000))
+            guard let self, !Task.isCancelled else { return }
+            guard self.quizState() == .recording else { return }
+            await self.stopRecordingAndSubmit()
+        }
+        taskBag.add(cap, key: .recordingHardCap)
     }
 
-    /// Cancel the auto-stop recording timer
+    /// The driver started speaking (#173): the "time to start speaking" question
+    /// is answered, so the visible countdown stops and disappears
+    /// (`recordingCountdownTotal == 0` is the button's "no countdown" contract).
+    /// The hidden cap keeps running — a spoken answer still needs a backstop if
+    /// no VAD commit ever arrives. Idempotent: every partial transcript calls it.
+    func speechDetectedDuringRecording() {
+        guard recordingCountdownTotal > 0 else { return }
+        taskBag.cancel(.autoStopRecording)
+        recordingCountdown = 0
+        recordingCountdownTotal = 0
+    }
+
+    /// Cancel the recording window — both the visible countdown and the cap.
     func cancelAutoStopRecordingTimer() {
         taskBag.cancel(.autoStopRecording)
+        taskBag.cancel(.recordingHardCap)
         recordingCountdown = 0
         recordingCountdownTotal = 0
     }

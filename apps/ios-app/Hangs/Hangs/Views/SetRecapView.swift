@@ -110,7 +110,7 @@ struct SetRecapView: View {
                 SetRecapRow(
                     entry: entry,
                     isExpanded: expandedEntryId == entry.id,
-                    hearItDisabled: viewModel.settings.isMuted,
+                    hearItDisabled: viewModel.isAudioMuted,
                     onToggle: {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             expandedEntryId = expandedEntryId == entry.id ? nil : entry.id
@@ -133,8 +133,8 @@ struct SetRecapView: View {
             ) {
                 viewModel.toggleRecapNarration()
             }
-            .disabled(viewModel.settings.isMuted)
-            .opacity(viewModel.settings.isMuted ? 0.5 : 1)
+            .disabled(viewModel.isAudioMuted)
+            .opacity(viewModel.isAudioMuted ? 0.5 : 1)
             .accessibilityIdentifier("recap.playSummary")
 
             HStack(spacing: 8) {

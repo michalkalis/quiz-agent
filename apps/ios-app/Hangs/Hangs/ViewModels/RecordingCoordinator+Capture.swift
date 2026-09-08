@@ -190,7 +190,7 @@ extension RecordingCoordinator {
 
                 switch event {
                 case .speechStarted:
-                    self.speechDetectedDuringAutoRecord = true
+                    self.noteSpeechStarted()
                 case let .silenceAfterSpeech(duration):
                     Logger.audio.debug("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration), privacy: .public)s), auto-stopping")
                     await self.stopRecordingAndSubmit()
@@ -199,6 +199,19 @@ extension RecordingCoordinator {
             }
         }
         taskBag.add(task, key: .silenceDetection)
+    }
+
+    /// The driver is audibly answering — recorded once per recording by BOTH
+    /// speech paths (on-device VAD above, and a content-bearing ElevenLabs
+    /// partial on the streaming path, which has no local VAD).
+    ///
+    /// #173: this is also what retires the visible "time to start speaking"
+    /// countdown. The two signals are the same fact, so they share one funnel —
+    /// a path that set the flag without hiding the countdown would leave the
+    /// driver watching a 5 s clock run out under an answer already in progress.
+    func noteSpeechStarted() {
+        speechDetectedDuringAutoRecord = true
+        onSpeechStarted()
     }
 
     // MARK: - STT Commit Watchdog

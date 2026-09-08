@@ -273,12 +273,13 @@ struct QuizViewModelNoModalFreezeTests {
 
 @Suite("QuizViewModel Auto-Stop Recording Timer Tests")
 struct QuizViewModelAutoStopRecordingTests {
-    /// Regression: `Config.autoRecordingDuration = 15` is the safety net that
-    /// guarantees a recording session can't run indefinitely if silence
-    /// detection misses the trailing silence event. Removing the
-    /// `taskBag.add(_, key: .autoStopRecording)` call would silently break this
-    /// guarantee — the task would never be tracked or cancelled.
-    @Test("startAutoStopRecordingTimer registers a tracked task in the bag")
+    /// Regression: the recording window is the safety net that guarantees a
+    /// recording can't run indefinitely if silence detection misses the trailing
+    /// silence event. Removing either `taskBag.add` call would silently break
+    /// that — the task would never be tracked or cancelled. #173 split it in two
+    /// (visible speech-start countdown + hidden dead-air cap), so BOTH must be
+    /// registered and both must go down on cancel.
+    @Test("startAutoStopRecordingTimer registers both tracked tasks in the bag")
     @MainActor
     func autoStopRegistersTrackedTask() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
@@ -287,17 +288,84 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.quizTimersController.startAutoStopRecordingTimer()
 
         #expect(viewModel.taskBag.contains(.autoStopRecording))
+        #expect(viewModel.taskBag.contains(.recordingHardCap))
 
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()
         #expect(!viewModel.taskBag.contains(.autoStopRecording))
+        #expect(!viewModel.taskBag.contains(.recordingHardCap))
+    }
+
+    /// #173 (founder 2026-09-07): what the driver SEES is the 5 s window to
+    /// start speaking, not the 15 s dead-air cap. Showing the cap made the
+    /// screen read as frozen — the answer is long finished by then — and
+    /// re-record inherited the same number ("Nahrať znova has 14 s").
+    @Test("the visible recording window is the 5 s speech-start window, not the 15 s cap")
+    @MainActor
+    func visibleWindowIsSpeechStartWindow() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.quizState = .recording
+
+        viewModel.quizTimersController.startAutoStopRecordingTimer()
+
+        #expect(viewModel.answerWindowRemaining == Int(Config.speechStartWindow))
+        #expect(viewModel.answerWindowTotal == Int(Config.speechStartWindow))
+        #expect(Config.speechStartWindow < Config.autoRecordingDuration, "the cap must stay hidden behind it")
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
+    /// The countdown asks ONE question — "have you started speaking?" — so the
+    /// answer retires it. Leaving it on screen would count down under an answer
+    /// already in progress, which is the "it cut me off" reading the founder
+    /// reported. `answerWindowTotal == 0` is the button's "no countdown" contract.
+    @Test("speech hides the visible countdown but leaves the dead-air cap armed")
+    @MainActor
+    func speechHidesCountdownButKeepsCap() async throws {
+        let viewModel = Fixtures.makeViewModelForTimerTests()
+        viewModel.quizState = .recording
+        viewModel.quizTimersController.startAutoStopRecordingTimer()
+
+        viewModel.quizTimersController.speechDetectedDuringRecording()
+
+        #expect(viewModel.answerWindowRemaining == 0, "the number must disappear once the driver is heard")
+        #expect(viewModel.answerWindowTotal == 0, "…and so must the button's fill")
+        #expect(!viewModel.taskBag.contains(.autoStopRecording))
+        #expect(
+            viewModel.taskBag.contains(.recordingHardCap),
+            "a spoken answer still needs a backstop — VAD may never commit"
+        )
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
+    /// The cap is the only thing left once speech hid the countdown: if hiding
+    /// the number also disarmed the stop, a dropped VAD commit would leave the
+    /// mic open for the rest of the drive.
+    @Test("the hidden dead-air cap still stops a recording whose countdown was hidden")
+    @MainActor
+    func hiddenCapStillStopsRecording() async throws {
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .recording
+
+        // A visible window long enough that only the cap can end this.
+        viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 30, hardCap: 0.05)
+        viewModel.quizTimersController.speechDetectedDuringRecording()
+
+        for _ in 0 ..< 200 where viewModel.quizState == .recording {
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        #expect(viewModel.quizState != .recording, "the cap must fire even with the countdown hidden")
     }
 
     /// INTENT FLIPPED 2026-06-12 (#54 task 54.4, founder #5): this test used to
     /// assert re-record opts OUT of the cap ("longer pauses while reformulating").
     /// But silence detection is also disabled for re-records and never runs on
     /// the streaming path — so opting out meant a silent re-record could record
-    /// FOREVER. The hard cap must always be armed; 15 s is the same allowance a
-    /// first attempt gets.
+    /// FOREVER. The window must always be armed; a re-record gets exactly the
+    /// same allowance as a first attempt (#173: the same 5 s to start speaking
+    /// under the same hidden cap).
     @Test("startAutoStopRecordingTimer is armed even while isRerecording")
     @MainActor
     func autoStopArmedDuringRerecord() async throws {

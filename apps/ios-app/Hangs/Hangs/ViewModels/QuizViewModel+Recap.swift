@@ -33,12 +33,12 @@ extension QuizViewModel {
     /// číta nahlas". Hands-free proxy: `autoRecordEnabled` (judgment call,
     /// logged in the issue). Muted or hands-on drivers read the list instead.
     func autoPlayRecapIfHandsFree() {
-        guard settings.autoRecordEnabled, !settings.isMuted else { return }
+        guard settings.autoRecordEnabled, !isAudioMuted else { return }
         playRecapSummary()
     }
 
     func playRecapSummary() {
-        guard !recapEntries.isEmpty, !isNarratingRecap, !settings.isMuted else { return }
+        guard !recapEntries.isEmpty, !isNarratingRecap, !isAudioMuted else { return }
         let chunks = recapNarrationChunks()
         isNarratingRecap = true
         taskBag.add(Task { [weak self] in
@@ -56,7 +56,7 @@ extension QuizViewModel {
     /// Row-level "hear it": speak one entry's explanation. Replaces any
     /// running summary narration (shared task key → previous task cancels).
     func playRecapEntryExplanation(_ entry: RecapEntry) {
-        guard let explanation = entry.explanation, !settings.isMuted else { return }
+        guard let explanation = entry.explanation, !isAudioMuted else { return }
         isNarratingRecap = false
         taskBag.add(Task { [weak self] in
             await self?.narrate(chunks: Self.splitForTTS(explanation))

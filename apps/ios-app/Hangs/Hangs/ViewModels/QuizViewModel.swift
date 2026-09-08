@@ -341,6 +341,20 @@ final class QuizViewModel: ObservableObject {
     @Published var settings: QuizSettings = .default
     @Published var showingLanguagePicker = false
 
+    /// #173 (founder 2026-09-07): the in-quiz mute button silences ONLY the quiz
+    /// that is running. It writes THIS non-persisted override; `settings.isMuted`
+    /// stays what the Settings "Sound" toggle wrote and is the only thing that
+    /// survives the app. `startQuiz` clears the override, so a mute tapped in one
+    /// quiz can never silence the first question of the next one — the TF
+    /// screenshot 2026-09-06, where a mute from an earlier run made the opening
+    /// question play silently while the countdown ran.
+    /// `nil` = no in-quiz decision yet → fall back to the persisted preference.
+    @Published var quizMuteOverride: Bool?
+
+    /// The mute every playback path must honour: the in-quiz override while one
+    /// is set, otherwise the persisted Settings preference.
+    var isAudioMuted: Bool { quizMuteOverride ?? settings.isMuted }
+
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
         Language.selectable(settings.language)
@@ -693,7 +707,10 @@ final class QuizViewModel: ObservableObject {
             settings: { [weak self] in self?.settings ?? .default },
             setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
             setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
-            setMuted: { [weak self] in self?.settings.isMuted = $0 },
+            // #173: the quiz mute is session-scoped — it must NOT write the
+            // persisted Settings preference (see `quizMuteOverride`).
+            isMuted: { [weak self] in self?.isAudioMuted ?? false },
+            setMuted: { [weak self] in self?.quizMuteOverride = $0 },
             isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
@@ -820,6 +837,7 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
+            onSpeechStarted: { [weak self] in self?.quizTimersController.speechDetectedDuringRecording() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
         )
     }
@@ -921,6 +939,10 @@ final class QuizViewModel: ObservableObject {
             // never had this because `advanceToNextQuestionOrFinish` stops audio
             // and settles before it plays.
             audioDeviceState.stopSilenceDetectionListening()
+
+            // #173: a new quiz starts audible unless Settings says otherwise —
+            // drop any mute the in-quiz button set during a previous run.
+            quizMuteOverride = nil
 
             // Configure audio session with user's preferred mode
             do {

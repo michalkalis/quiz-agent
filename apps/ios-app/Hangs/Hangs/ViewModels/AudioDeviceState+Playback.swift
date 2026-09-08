@@ -19,7 +19,7 @@ extension AudioDeviceState {
         setCurrentQuestionAudioUrl(urlString)
 
         // Mute guard: skip TTS but still start silence detection + timer/recording
-        guard !settings().isMuted else {
+        guard !isMuted() else {
             await startSilenceDetectionListening()
             guard isAskingQuestion() else { return }
 
@@ -83,7 +83,7 @@ extension AudioDeviceState {
         }
 
         // Nothing to rescue if the question is gone or the user muted meanwhile.
-        guard isAskingQuestion(), !settings().isMuted else { return }
+        guard isAskingQuestion(), !isMuted() else { return }
 
         try? await Task.sleep(for: .milliseconds(300))
 
@@ -103,7 +103,7 @@ extension AudioDeviceState {
     /// track this capability (`.disabled(!canReplayAudio)`) rather than look interactive
     /// while silently no-opping when the backend supplied no question audio (#59.5).
     var canReplayAudio: Bool {
-        !settings().isMuted && currentQuestionAudioUrl() != nil
+        !isMuted() && currentQuestionAudioUrl() != nil
     }
 
     /// Replay/restart the current question's TTS on demand WITHOUT re-arming the
@@ -121,7 +121,7 @@ extension AudioDeviceState {
     /// flag and re-arm the SpeechAnalyzer engine while the new AVPlayer playback
     /// is still going (the engine + player conflict documented above).
     func replayQuestionAudio() async {
-        guard !settings().isMuted, let urlString = currentQuestionAudioUrl() else { return }
+        guard !isMuted(), let urlString = currentQuestionAudioUrl() else { return }
 
         // Re-entrancy: neutralise any previous replay run FIRST so its tail
         // can't interleave with this one, then stop the in-flight TTS so this
@@ -221,9 +221,12 @@ extension AudioDeviceState {
     /// the play paths only gate *starting* playback, so muting mid-read must also
     /// stop the in-flight TTS (founder bug 2026-07-11). The interrupted play run's
     /// tail (silence-detection restart + timer arming) proceeds as after barge-in.
+    ///
+    /// #173: `setMuted` writes the QUIZ-scoped override, not the persisted
+    /// Settings preference — this mute dies with the current quiz.
     func toggleMute() async {
-        setMuted(!settings().isMuted)
-        if settings().isMuted, isPlayingQuestionTTS() {
+        setMuted(!isMuted())
+        if isMuted(), isPlayingQuestionTTS() {
             await stopAnyPlayingAudio()
         }
     }

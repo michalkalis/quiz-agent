@@ -112,6 +112,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let onboardingKey = "has_completed_onboarding"
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
+    private let legacyMuteClearedKey = "mute_preference_cleared_173"
     private let historyKey = "asked_question_history"
     private let maxCapacity = 500
     private let statsKey = "quiz_stats"
@@ -187,11 +188,31 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
             Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
-            return settings
+            return clearingLegacyMute(settings)
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
+    }
+
+    /// One-time cleanup of a persisted mute that was never a preference (#173).
+    /// Until this build the in-quiz mute button and the Settings "Sound" toggle
+    /// wrote the SAME persisted flag, so a mute tapped mid-drive survived the
+    /// app and silenced the first question of the next quiz (the founder's TF
+    /// screenshot). The button is quiz-scoped now, but the polluted value is
+    /// already on disk and nothing can tell it apart from a deliberate Settings
+    /// choice — so it is dropped exactly once, and everything written from here
+    /// on really is a preference.
+    private func clearingLegacyMute(_ settings: QuizSettings) -> QuizSettings {
+        guard !userDefaults.bool(forKey: legacyMuteClearedKey) else { return settings }
+        userDefaults.set(true, forKey: legacyMuteClearedKey)
+        guard settings.isMuted else { return settings }
+
+        var cleaned = settings
+        cleaned.isMuted = false
+        saveSettings(cleaned)
+        Logger.persistence.info("📦 PersistenceStore: dropped a legacy persisted mute (#173)")
+        return cleaned
     }
 
     // MARK: - Question History

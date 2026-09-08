@@ -406,6 +406,34 @@ struct QuizViewModelAutoStopRecordingTests {
         #expect(viewModel.quizState != .recording, "the cap must fire even with the countdown hidden")
     }
 
+    /// CI regression (#173): the `deadAirCap` seam has to reach the HIDDEN cap,
+    /// not just the visible countdown. While it did not, every "park the
+    /// recording window" in the suite was a half-truth — the production 15 s cap
+    /// stayed armed underneath, closed the mic mid-test and reopened the
+    /// empty-answer sheet under assertions about the mic being open. That is how
+    /// this branch was green locally (fast tests, 15 s never reached) and red on
+    /// every CI push.
+    @Test("the recording path arms the INJECTED dead-air cap, not the production one")
+    @MainActor
+    func injectedDeadAirCapEndsTheRecording() async throws {
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+        viewModel.isAutoRecording = true // VAD subscribed → visible window ≠ cap
+        // Only the cap can end this recording: the visible window outlives the test.
+        viewModel.recordingCoordinator.speechStartWindow = 60
+        viewModel.recordingCoordinator.deadAirCap = 0.05
+
+        await viewModel.recordingCoordinator.startRecording()
+        #expect(mockAudio.isRecording == true, "the mic must open before the cap can end it")
+
+        await waitUntil({ !mockAudio.isRecording }, "the injected dead-air cap never ended the recording")
+        #expect(mockAudio.isRecording == false)
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
     /// INTENT FLIPPED 2026-06-12 (#54 task 54.4, founder #5): this test used to
     /// assert re-record opts OUT of the cap ("longer pauses while reformulating").
     /// But silence detection is also disabled for re-records and never runs on

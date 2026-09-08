@@ -67,6 +67,11 @@ extension RecordingCoordinator {
         backgroundSuppressedRecordingAt = nil
         setErrorMessage(nil)
         transition(to: .recording)
+        // Nothing has been heard in THIS recording yet — the flag is what
+        // `armRecordingWindow` reads to catch a speech signal that arrived while
+        // the engine was still coming up, so it must not carry over from the
+        // previous one.
+        speechDetectedDuringAutoRecord = false
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
 
         // #131 Track B armed the recording window HERE, before the engine was up,
@@ -78,6 +83,14 @@ extension RecordingCoordinator {
         // ran out before the mic ever opened and submitted an empty answer. The
         // button is numberless for the setup gap, which is honest: there is
         // nothing to count down yet.
+        //
+        // The HIDDEN cap is armed here all the same. It is not a countdown, it
+        // is the promise that this recording ends: a handshake that never
+        // returns (dead socket, an engine that refuses to start) would
+        // otherwise leave the mic open in `.recording` with no deadline at all,
+        // which is the guarantee #131 Track B's arming used to carry.
+        armRecordingDeadAirCap(deadAirCap)
+
         if Config.useElevenLabsSTT, sttService != nil {
             await startStreamingRecording()
         } else {
@@ -93,7 +106,14 @@ extension RecordingCoordinator {
     /// visible window, or the mic would close mid-sentence with nothing able to
     /// say the driver was speaking.
     private func armRecordingWindow(hasSpeechSignal: Bool) {
-        startAutoStopRecordingTimer(hasSpeechSignal ? speechStartWindow : deadAirCap)
+        startAutoStopRecordingTimer(hasSpeechSignal ? speechStartWindow : deadAirCap, deadAirCap)
+
+        // The driver may already have been heard while the engine was coming up
+        // (auto-record's VAD fires `.speechStarted` exactly ONCE per recording).
+        // Retiring the countdown is guarded on there being one, so a signal that
+        // landed in the setup gap would be swallowed and the 5 s would then run
+        // out under an answer already in progress.
+        if speechDetectedDuringAutoRecord { onSpeechStarted() }
     }
 
     /// Start batch M4A recording (original Whisper path)

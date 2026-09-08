@@ -361,18 +361,21 @@ struct QuizViewModelStreamingTests {
     @Test("re-record arms the same speech-start window as the first attempt")
     func rerecordUsesTheSameSpeechStartWindow() async throws {
         await withMainSerialExecutor {
-            let (viewModel, _, _, _) = makeViewModelWithSTT()
+            let (viewModel, _, mockAudio, _) = makeViewModelWithSTT()
             viewModel.quizState = .processing
             viewModel.showAnswerConfirmation = true
             viewModel.transcribedAnswer = "misheard answer"
 
-            // Read the window at the FIRST moment the mic is open: it is a real
-            // wall-clock countdown, so a starved CI runner could otherwise read it
-            // after it had already drained and blame the arming.
+            // Read the window at the FIRST moment the mic is OPEN — which is
+            // `mockAudio.isRecording`, not `.recording`. #173 arms the window
+            // when the engine comes up rather than when we start asking for it,
+            // and the state flips first: waiting on the state reads the window
+            // mid-handshake, before there is one, and blames the arming (CI:
+            // `armedWindow → 0`).
             var armedWindow: Int?
             viewModel.recordingCoordinator.rerecordAnswer()
             await waitUntil({
-                guard viewModel.quizState == .recording else { return false }
+                guard mockAudio.isRecording else { return false }
                 if armedWindow == nil {
                     armedWindow = viewModel.quizTimersController.recordingCountdownTotal
                 }

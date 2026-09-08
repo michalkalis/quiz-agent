@@ -268,12 +268,35 @@ final class QuizTimersController: ObservableObject {
         }
         taskBag.add(task, key: .autoStopRecording)
 
-        // The cap runs on its own task: hiding the visible countdown once the
-        // driver speaks must NOT disarm the dead-air guarantee.
+        armRecordingDeadAirCap(hardCap)
+    }
+
+    /// Arm ONLY the hidden dead-air cap — the guarantee that a recording ends
+    /// even when nothing is ever said and no VAD commit arrives.
+    ///
+    /// It is a task of its own because hiding the visible countdown once the
+    /// driver speaks must NOT disarm the guarantee, and it is armed the moment
+    /// the mic is asked for (`startRecording`), not when the engine finally
+    /// comes up: between those two lines a hung handshake would otherwise leave
+    /// a recording with no deadline at all.
+    ///
+    /// It TICKS once a second like the visible window instead of sleeping the
+    /// whole cap in one go. That is the whole point of "hidden CAP": one long
+    /// sleep resumes after a SINGLE main-actor round trip, a 15-tick loop after
+    /// fifteen — so on a loaded main actor a one-shot cap overtakes the window
+    /// it is supposed to sit behind and ends the recording while the button
+    /// still shows time left. Ticking both the same way keeps
+    /// `cap ≥ visible window` true under any scheduling latency (#173).
+    func armRecordingDeadAirCap(_ hardCap: TimeInterval = Config.autoRecordingDuration) {
+        let ticks = max(1, Int(hardCap.rounded()))
+        let tickInterval = hardCap / Double(ticks)
+
         let cap = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(hardCap * 1_000_000_000))
-            guard let self, !Task.isCancelled else { return }
-            guard self.quizState() == .recording else { return }
+            for _ in 0 ..< ticks {
+                try? await Task.sleep(nanoseconds: UInt64(tickInterval * 1_000_000_000))
+                if Task.isCancelled { return }
+            }
+            guard let self, self.quizState() == .recording else { return }
             await self.stopRecordingAndSubmit()
         }
         taskBag.add(cap, key: .recordingHardCap)

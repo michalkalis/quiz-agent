@@ -168,15 +168,23 @@ final class RecordingCoordinator: ObservableObject {
     let clearPause: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
-    /// Test seam (#173): the two window lengths `armRecordingWindow` chooses
-    /// between. Production never assigns them — they exist so unit tests can
-    /// exercise arming and expiry without spending real wall-clock seconds,
-    /// which on a loaded CI runner elapsed mid-test and reopened the
-    /// empty-answer sheet under assertions about the mic being open.
+    /// Test seam (#173): the two window lengths this coordinator arms —
+    /// `speechStartWindow` is the visible "time to start speaking",
+    /// `deadAirCap` is the hidden cap under it. Production never assigns them;
+    /// they exist so unit tests can exercise arming and expiry without spending
+    /// real wall-clock seconds, which on a loaded CI runner elapsed mid-test and
+    /// reopened the empty-answer sheet under assertions about the mic being
+    /// open. BOTH deadlines go through the seam — a cap that quietly kept the
+    /// production 15 s made "park the window" a lie and was exactly that CI
+    /// failure.
     var speechStartWindow: TimeInterval = Config.speechStartWindow
     var deadAirCap: TimeInterval = Config.autoRecordingDuration
 
-    let startAutoStopRecordingTimer: @MainActor (TimeInterval) -> Void
+    let startAutoStopRecordingTimer: @MainActor (_ duration: TimeInterval, _ hardCap: TimeInterval) -> Void
+    /// Arm the hidden dead-air cap alone, for the stretch between asking for the
+    /// mic and the engine actually coming up — there is no honest countdown to
+    /// show yet, but a recording still may not be left without a deadline.
+    let armRecordingDeadAirCap: @MainActor (TimeInterval) -> Void
     let cancelAutoStopRecordingTimer: @MainActor () -> Void
     /// #173: first proof the driver is speaking — hides the visible "time to
     /// start speaking" countdown (the hidden dead-air cap keeps running).
@@ -214,7 +222,8 @@ final class RecordingCoordinator: ObservableObject {
         clearPause: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
-        startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval) -> Void,
+        startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval, TimeInterval) -> Void,
+        armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         onSpeechStarted: @escaping @MainActor () -> Void,
         stopSilenceDetectionListening: @escaping @MainActor () -> Void
@@ -250,6 +259,7 @@ final class RecordingCoordinator: ObservableObject {
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
+        self.armRecordingDeadAirCap = armRecordingDeadAirCap
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
         self.onSpeechStarted = onSpeechStarted
         self.stopSilenceDetectionListening = stopSilenceDetectionListening

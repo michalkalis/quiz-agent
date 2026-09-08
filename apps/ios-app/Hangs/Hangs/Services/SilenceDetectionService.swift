@@ -170,13 +170,6 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// windows.
     var pendingFirstHypothesisSince: Date?
 
-    /// Latched when an engine that had voice processing armed refused to start.
-    /// Enabling VPIO on the input node also enables it on this engine's
-    /// unconnected output node; if that combination is rejected on some route we
-    /// must degrade to an unprocessed mic rather than lose voice commands
-    /// entirely, so the next listening window skips voice processing.
-    var voiceProcessingUnsupported = false
-
     private var isTTSPlaybackActive = false
 
     /// Fail-loud command availability (#77). Written by `prepareAssets()` and by

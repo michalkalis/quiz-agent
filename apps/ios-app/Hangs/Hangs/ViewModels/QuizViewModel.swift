@@ -1314,6 +1314,12 @@ final class QuizViewModel: ObservableObject {
         }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #173: answering IS resuming — the same rule `confirmAnswer()` follows.
+        // Without this a pause taken on the question screen rides through to
+        // `.showingResult`, where `startAutoAdvanceCountdown`'s own `guard
+        // !isPaused` silently kills auto-advance: the result arrives pre-paused
+        // and the quiz stops moving hands-free.
+        isPaused = false
         quizTimersController.cancelAnswerTimer()
         // #132: the option grid is on screen during the think phase now, so a tap
         // can land while the THINK countdown is still ticking. Without this the
@@ -1437,6 +1443,9 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #173: skipping IS resuming — see `submitMCQAnswer`. A pause carried
+        // onto the result screen would kill its auto-advance.
+        isPaused = false
         quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
 

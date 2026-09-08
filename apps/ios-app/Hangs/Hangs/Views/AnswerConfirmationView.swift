@@ -58,7 +58,15 @@ struct AnswerConfirmationView: View {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                if isProcessing {
+                // #173 C2: EVALUATING WINS. `confirmAnswer()` consumes the
+                // transcript synchronously, so the presenter's "a transcript is
+                // still in flight" test (`.processing` + empty field) is also
+                // true for the whole evaluating window — and the transcribing
+                // spinner would hide the very button the state now lives in,
+                // while offering a Cancel that drops the answer mid-grade.
+                // Deciding it HERE, not at the call site, is what stops the two
+                // states from ever disagreeing again.
+                if isProcessing, !isEvaluating {
                     processingBody
                 } else {
                     transcriptBody
@@ -72,6 +80,14 @@ struct AnswerConfirmationView: View {
         .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
         .presentationBackground(Theme.Hangs.Colors.bg)
+        // #173 decision 4: pause moved to the quiz toolbar, and this sheet is
+        // reachable IN a paused state (pausing mid-recording lands here) — so the
+        // toolbar behind it must stay tappable or pause would be one-way. Only
+        // the half-screen the sheet does not cover becomes interactive; the quiz
+        // controls down there refuse to act in `.processing` anyway.
+        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        // Still no swipe-to-dismiss: the sheet is left by an answer decision,
+        // never by a stray drag.
         .interactiveDismissDisabled(true)
     }
 

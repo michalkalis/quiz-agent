@@ -281,6 +281,59 @@ struct QuizToolbarPauseTests {
         #expect(vm.thinkingTimeCountdown == 0, "…nor the thinking window")
     }
 
+    /// Finding 2 of the #173 review: pausing mid-recording LANDS on the
+    /// confirmation sheet, the sheet's own Pause/Continue pill was removed, and
+    /// the listener is down while paused — so if the sheet swallowed the
+    /// presenter's toolbar, pause would be one-way. The toolbar's control must
+    /// stay live there (it is enabled while paused, in any state), and toggling
+    /// it must actually resume. Whether the tap LANDS through the sheet is
+    /// `presentationBackgroundInteraction`'s job and is checked on the simulator.
+    @Test("a pause taken onto the confirmation sheet can be resumed from the toolbar")
+    func pausedSheetIsResumable() {
+        let vm = makeQuestionViewModel(question: Question.preview, state: .processing)
+        vm.settings.autoConfirmEnabled = true
+        vm.transcribedAnswer = "Paris"
+        vm.showAnswerConfirmation = true
+        vm.quizTimersController.startAutoConfirmIfEnabled(duration: 5)
+
+        vm.togglePause()
+        #expect(vm.isPaused)
+        #expect(vm.autoConfirmCountdown == 0)
+        // The toolbar button is only ever disabled in an unpausable state that
+        // is also not paused — never on a paused sheet.
+        #expect(vm.canPauseQuiz || vm.isPaused, "the resume control must stay live")
+
+        vm.togglePause()
+
+        #expect(vm.isPaused == false)
+        #expect(vm.autoConfirmCountdown == Config.autoConfirmDelaySecs,
+                "resuming the sheet re-arms its full window")
+        vm.quizTimersController.cancelAutoConfirm()
+    }
+
+    /// Finding 3 of the #173 review: a pause taken on the question screen used
+    /// to ride through to `.showingResult`, where `startAutoAdvanceCountdown`'s
+    /// own `guard !isPaused` silently killed auto-advance — the result arrived
+    /// pre-paused and the quiz stopped moving hands-free. Acting on the question
+    /// is resuming, exactly as confirming already was.
+    @Test("answering or skipping a paused question clears the pause")
+    func answeringAPausedQuestionResumes() async {
+        for answer in ["tap", "skip"] {
+            let vm = makeQuestionViewModel(question: Question.previewMCQ)
+            vm.togglePause()
+            #expect(vm.isPaused)
+
+            if answer == "tap" {
+                await vm.submitMCQAnswer(key: "b", value: "Jupiter")
+            } else {
+                await vm.skipQuestion()
+            }
+
+            #expect(vm.isPaused == false,
+                    "a \(answer) must not carry the pause onto the result screen")
+        }
+    }
+
     /// The result screen keeps its own STAY pill (#131 D) and must keep
     /// listening for "ďalej" — the toolbar pause must not claim that state.
     @Test("the result screen is not a toolbar-pausable state")
@@ -329,6 +382,62 @@ struct AnswerConfirmationEvaluatingTests {
         }
         // The countdown chip must be gone: nothing is counting down any more.
         #expect(throws: (any Error).self) { try tree.find(text: "4s") }
+    }
+
+    /// THE bug the first #173 round shipped: `confirmAnswer()` consumes the
+    /// transcript synchronously, so the presenter's "a transcript is still in
+    /// flight" test (`.processing` + empty field) is ALSO true for the whole
+    /// evaluating window — and it won, so every voice confirm showed
+    /// "PROCESSING / Transcribing…" with a Cancel that drops the answer
+    /// mid-grade, and the C2 button was never reachable. Evaluating wins now,
+    /// and it wins inside the view so no call site can desync the two again.
+    @Test("evaluating beats the transcribing spinner even when the presenter says both")
+    func evaluatingWinsOverProcessing() throws {
+        let view = AnswerConfirmationView(
+            // Exactly what QuestionView computes during a voice confirm: the
+            // field has been consumed, so its transcribing test is true too.
+            isProcessing: true,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            onCancel: {},
+            evaluatingAnswer: "Paris"
+        )
+        let tree = try view.inspect()
+
+        #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: Never.self, "the submitted answer stays on screen") {
+            try tree.find(text: "Paris")
+        }
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled())
+        #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.edit").isDisabled())
+        // The transcribing branch and its answer-dropping Cancel must be gone.
+        #expect(throws: (any Error).self) { try tree.find(text: "Transcribing…") }
+        #expect(throws: (any Error).self, "Cancel here would drop the answer mid-grade") {
+            _ = try tree.find(viewWithAccessibilityIdentifier: "confirmation.cancel")
+        }
+    }
+
+    /// And the genuine no-transcript-yet case still gets its spinner: this is
+    /// only a precedence rule, not a removal.
+    @Test("a sheet waiting on a transcript still shows the transcribing state")
+    func processingStillWinsWhenNotEvaluating() throws {
+        let view = AnswerConfirmationView(
+            isProcessing: true,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            onCancel: {}
+        )
+        let tree = try view.inspect()
+        #expect(throws: Never.self) { try tree.find(text: "Transcribing…") }
+        #expect(throws: (any Error).self) { try tree.find(text: "Evaluating…") }
     }
 
     /// Everything else on the sheet is dead while the answer is in flight. A

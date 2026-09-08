@@ -72,9 +72,12 @@ extension QuizViewModel {
     }
 
     /// Un-freeze: a FULL window again, and the command listener back up.
-    /// The toolbar is the only way back — pausing stopped the listener, so no
-    /// spoken word can reach us while paused (by design: a resume word would
-    /// need a hot mic, which is what pause just turned off).
+    /// The toolbar is the only DELIBERATE way back — pausing stopped the
+    /// listener, so no spoken word can reach us while paused (by design: a
+    /// resume word would need a hot mic, which is what pause just turned off).
+    /// Answering, skipping, confirming and re-recording clear the flag on their
+    /// own: acting on the question is resuming, and a pause that survived onto
+    /// the result screen would silently kill its auto-advance.
     func exitPause() {
         guard isPaused else { return }
         isPaused = false

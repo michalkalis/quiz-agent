@@ -35,7 +35,7 @@ extension RecordingCoordinator {
                     // is the speech signal — the only record that the driver
                     // spoke at all if the commit then comes back empty.
                     if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        self.speechDetectedDuringAutoRecord = true
+                        self.noteSpeechStarted()
                     }
 
                 case let .committedTranscript(text):

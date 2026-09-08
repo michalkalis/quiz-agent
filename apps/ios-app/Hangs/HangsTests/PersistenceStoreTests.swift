@@ -122,6 +122,65 @@ struct PersistenceStoreSessionTests {
         #expect(loaded == QuizSettings.default)
     }
 
+    // MARK: - #173: legacy persisted mute
+
+    /// The in-quiz mute button used to write the SAME persisted flag as the
+    /// Settings "Sound" toggle, so a mute tapped mid-drive silenced the first
+    /// question of the NEXT launch (founder TF screenshot 2026-09-06). Nothing
+    /// on disk can tell that value apart from a deliberate Settings choice, so
+    /// the upgrade drops it exactly once — otherwise the very device that
+    /// reported the bug still starts its next quiz in silence.
+    @Test("loadSettings drops a mute persisted by the pre-#173 in-quiz button, once")
+    func loadSettingsDropsLegacyMuteOnce() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        var muted = QuizSettings.default
+        muted.isMuted = true
+        store.saveSettings(muted)
+
+        #expect(store.loadSettings().isMuted == false, "the legacy mute must not survive the upgrade")
+
+        // A mute chosen AFTER the cleanup is a real preference and must stick.
+        store.saveSettings(muted)
+        #expect(store.loadSettings().isMuted == true, "the cleanup is one-time, not a mute ban")
+    }
+
+    /// A fresh install has no legacy mute to clean, and the real launch order is
+    /// load-then-save (QuizViewModel loads in `init`, the auto-persist sink only
+    /// fires on a later change). If the first load doesn't spend the one-time
+    /// marker, the user's FIRST deliberate Settings mute is wiped as "legacy" on
+    /// the next launch — destroying a choice on a device that never had the bug.
+    @Test("a mute chosen on a fresh install survives the next launch")
+    func freshInstallMuteSurvivesRelaunch() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        _ = store.loadSettings() // launch 1: nothing persisted yet
+
+        var muted = QuizSettings.default
+        muted.isMuted = true
+        store.saveSettings(muted) // the user turns Sound off in Settings
+
+        #expect(store.loadSettings().isMuted == true, "a real preference must survive launch 2")
+    }
+
+    /// Same hole via the corrupt-blob path: it also returns before any cleanup,
+    /// so the marker has to be spent on that exit too.
+    @Test("a mute chosen after an unreadable settings blob survives the next launch")
+    func muteAfterCorruptBlobSurvivesRelaunch() {
+        let (store, isolated) = makeStore()
+
+        isolated.defaults.set(Data("not valid json".utf8), forKey: "quiz_settings")
+        _ = store.loadSettings()
+
+        var muted = QuizSettings.default
+        muted.isMuted = true
+        store.saveSettings(muted)
+
+        #expect(store.loadSettings().isMuted == true)
+    }
+
     // MARK: - Legacy Keys Ignored
 
     @Test("loadSettings ignores stale legacy individual keys")

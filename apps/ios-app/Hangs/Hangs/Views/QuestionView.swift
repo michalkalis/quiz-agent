@@ -208,7 +208,9 @@ struct QuestionView: View {
         }
 
         ToolbarItemGroup(placement: .topBarTrailing) {
-            QuizMuteToolbarButton(isMuted: viewModel.settings.isMuted) {
+            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
+            // EFFECTIVE mute, not the persisted Settings preference.
+            QuizMuteToolbarButton(isMuted: viewModel.isAudioMuted) {
                 Task { await viewModel.toggleMute() }
             }
             QuizPauseToolbarButton(isPaused: viewModel.isPaused) {

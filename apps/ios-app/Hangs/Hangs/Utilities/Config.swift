@@ -129,9 +129,24 @@ nonisolated enum Config {
     /// stay intact; only the toggle UI is hidden. Flip to `true` to re-expose.
     static let imageQuestionsToggleVisible = false
 
-    /// Duration for auto-stop recording — hard safety limit (seconds)
-    /// Increased from 4s to 15s for Phase 2 silence detection (users may speak longer answers)
+    /// HIDDEN dead-air cap for one recording (seconds). The driver never sees
+    /// it: it only guarantees the mic closes when nothing is ever said and no
+    /// VAD commit arrives. Once speech starts, the answer ends on ElevenLabs
+    /// VAD (1.5 s of silence), not here — which is why it can stay this long
+    /// (raised from 4 s to 15 s for Phase 2 silence detection so a long spoken
+    /// answer is never cut off mid-sentence).
     static let autoRecordingDuration: TimeInterval = 15.0
+
+    /// VISIBLE "time to start speaking" countdown (seconds) — founder
+    /// 2026-09-07 (#173). Showing the 15 s cap made the screen look frozen: the
+    /// driver has finished speaking long before it, and re-record inherited the
+    /// same number ("Nahrať znova has 14 s"). 5 s bounds only the START of
+    /// speech (the pre-silence-detection value was 4 s); the first partial
+    /// transcript / VAD speech event hides the countdown and the answer then
+    /// runs on VAD under the hidden `autoRecordingDuration` cap. Expiring with
+    /// no speech ends the recording exactly as the cap does — forced commit →
+    /// empty transcript → confirmation sheet with an empty field (#171 B).
+    static let speechStartWindow: TimeInterval = 5.0
 
     /// How long the streaming path waits after a forced STT commit before
     /// treating the silence as a transcription failure (#54 task 54.4)

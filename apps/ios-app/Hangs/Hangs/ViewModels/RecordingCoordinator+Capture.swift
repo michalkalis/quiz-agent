@@ -67,21 +67,53 @@ extension RecordingCoordinator {
         backgroundSuppressedRecordingAt = nil
         setErrorMessage(nil)
         transition(to: .recording)
+        // Nothing has been heard in THIS recording yet — the flag is what
+        // `armRecordingWindow` reads to catch a speech signal that arrived while
+        // the engine was still coming up, so it must not carry over from the
+        // previous one.
+        speechDetectedDuringAutoRecord = false
         emitEarcon(.micLive) // 77.10 mic-live tone — the mic just opened
 
-        // #131 Track B: arm the recording window HERE, not after the engine is up.
-        // The founder rule is that the countdown never disappears; the WebSocket
-        // handshake + audio-session settle take a few hundred ms, and arming it
-        // downstream left the button blank for exactly that gap. Both start paths
-        // cancel it again if the mic fails to open.
-        startAutoStopRecordingTimer()
+        // #131 Track B armed the recording window HERE, before the engine was up,
+        // so the button never showed a blank countdown during the handshake.
+        // #173 moves it to each path's "the mic is now actually open" line
+        // (`armRecordingWindow`): the window it arms is 5 s of "time to start
+        // speaking", and starting that clock while the WebSocket is still
+        // connecting spends the driver's time on our setup — on a slow start it
+        // ran out before the mic ever opened and submitted an empty answer. The
+        // button is numberless for the setup gap, which is honest: there is
+        // nothing to count down yet.
+        //
+        // The HIDDEN cap is armed here all the same. It is not a countdown, it
+        // is the promise that this recording ends: a handshake that never
+        // returns (dead socket, an engine that refuses to start) would
+        // otherwise leave the mic open in `.recording` with no deadline at all,
+        // which is the guarantee #131 Track B's arming used to carry.
+        armRecordingDeadAirCap(deadAirCap)
 
-        // Choose streaming STT or batch M4A based on feature flag
         if Config.useElevenLabsSTT, sttService != nil {
             await startStreamingRecording()
         } else {
             await startBatchRecording()
         }
+    }
+
+    /// Arm the recording window at the one moment it is honest: the mic is open.
+    ///
+    /// `hasSpeechSignal` is what decides its length (#173). The short "time to
+    /// start speaking" can only be retired by a streaming partial transcript or
+    /// auto-record's VAD; a path with neither keeps the dead-air cap as its
+    /// visible window, or the mic would close mid-sentence with nothing able to
+    /// say the driver was speaking.
+    private func armRecordingWindow(hasSpeechSignal: Bool) {
+        startAutoStopRecordingTimer(hasSpeechSignal ? speechStartWindow : deadAirCap, deadAirCap)
+
+        // The driver may already have been heard while the engine was coming up
+        // (auto-record's VAD fires `.speechStarted` exactly ONCE per recording).
+        // Retiring the countdown is guarded on there being one, so a signal that
+        // landed in the setup gap would be swallowed and the 5 s would then run
+        // out under an answer already in progress.
+        if speechDetectedDuringAutoRecord { onSpeechStarted() }
     }
 
     /// Start batch M4A recording (original Whisper path)
@@ -94,6 +126,12 @@ extension RecordingCoordinator {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: silenceDetectionService)
             }
+
+            // The mic is open — only now does a countdown mean anything. Auto-record
+            // subscribed VAD just above, so `.speechStarted` can retire the short
+            // window; without it this path has NO speech signal (batch has no partial
+            // transcripts either) and keeps the dead-air cap as its visible window.
+            armRecordingWindow(hasSpeechSignal: isAutoRecording())
         } catch {
             cancelAutoStopRecordingTimer() // mic never opened — drop the window
             setIsAutoRecording(false)
@@ -146,6 +184,10 @@ extension RecordingCoordinator {
                 }
             }
 
+            // The mic is open and the event stream is live: partial transcripts
+            // are the speech signal, so this path gets the founder's 5 s.
+            armRecordingWindow(hasSpeechSignal: true)
+
             Logger.stt.info("🎙️ Streaming STT recording started")
 
         } catch is CancellationError {
@@ -190,7 +232,7 @@ extension RecordingCoordinator {
 
                 switch event {
                 case .speechStarted:
-                    self.speechDetectedDuringAutoRecord = true
+                    self.noteSpeechStarted()
                 case let .silenceAfterSpeech(duration):
                     Logger.audio.debug("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration), privacy: .public)s), auto-stopping")
                     await self.stopRecordingAndSubmit()
@@ -199,6 +241,19 @@ extension RecordingCoordinator {
             }
         }
         taskBag.add(task, key: .silenceDetection)
+    }
+
+    /// The driver is audibly answering — recorded once per recording by BOTH
+    /// speech paths (on-device VAD above, and a content-bearing ElevenLabs
+    /// partial on the streaming path, which has no local VAD).
+    ///
+    /// #173: this is also what retires the visible "time to start speaking"
+    /// countdown. The two signals are the same fact, so they share one funnel —
+    /// a path that set the flag without hiding the countdown would leave the
+    /// driver watching a 5 s clock run out under an answer already in progress.
+    func noteSpeechStarted() {
+        speechDetectedDuringAutoRecord = true
+        onSpeechStarted()
     }
 
     // MARK: - STT Commit Watchdog

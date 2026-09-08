@@ -314,10 +314,10 @@ struct ConfirmationPauseTests {
     func resumeReArmsTheFullWindow() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
             #expect(vm.autoConfirmCountdown == 0)
 
-            vm.resumeFromConfirmation()
+            vm.exitPause()
 
             #expect(vm.isPaused == false)
             #expect(
@@ -337,7 +337,7 @@ struct ConfirmationPauseTests {
     func foregroundReturnKeepsThePause() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
 
             vm.handleScenePhase(.background)
             vm.handleScenePhase(.active)
@@ -362,7 +362,7 @@ struct ConfirmationPauseTests {
     func reRecordWhilePausedResumesAndRecords() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
             #expect(vm.isPaused)
 
             vm.recordingCoordinator.rerecordAnswer()
@@ -384,7 +384,7 @@ struct ConfirmationPauseTests {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
             vm.recordingCoordinator.pendingResponse = makePendingResponse()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
             #expect(vm.isPaused)
 
             await vm.recordingCoordinator.confirmAnswer()

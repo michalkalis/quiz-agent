@@ -100,7 +100,7 @@ struct ListenBarInspectorTests {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
-        #expect(ListenBar.height(size: .full, hasSubLine: true) == 56)
+        #expect(ListenBar.height(size: .full, hasSubLine: true) == 48)
     }
 
     // MARK: - Answer mode captions (app-locale, per kind)
@@ -256,12 +256,12 @@ struct ListenBarInspectorTests {
     /// the bar stops dominating a screen that has content, quiz screens keep the
     /// ~56pt bar where voice is the driver's only hand. Asserted on the pure
     /// mapping so a layout tweak can't silently re-inflate Home's bar.
-    @Test("Slim is ~40pt, full stays ~56pt with the words / 44pt without")
+    @Test("Slim is ~40pt, full is ~48pt with the words / 38pt without (#173 B1)")
     func sizeVariantHeights() {
         #expect(ListenBar.height(size: .slim, hasSubLine: true) == 40)
         #expect(ListenBar.height(size: .slim, hasSubLine: false) == 40)
-        #expect(ListenBar.height(size: .full, hasSubLine: true) == 56)
-        #expect(ListenBar.height(size: .full, hasSubLine: false) == 44)
+        #expect(ListenBar.height(size: .full, hasSubLine: true) == 48)
+        #expect(ListenBar.height(size: .full, hasSubLine: false) == 38)
     }
 
     /// A 40pt single row cannot carry "LISTENING FOR COMMANDS" AND the words to

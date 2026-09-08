@@ -107,6 +107,16 @@ final class QuizTimersController: ObservableObject {
     /// Countdown before auto-recording starts, giving user time to think.
     /// Creates a fire-and-forget Task stored in `taskBag` under `.thinkingTime` for cancellation.
     func startThinkingTimeCountdown() {
+        // #173: paused means paused. The re-arm guard `startAutoConfirmIfEnabled`
+        // has always had, applied to the window the QUESTION screen runs on —
+        // without it a question-TTS tail resolved by the pause's own
+        // `stopAnyPlayingAudio()` re-armed the countdown behind a paused UI
+        // (AudioDeviceState+Playback's post-playback tail only checks the state).
+        guard !isPaused else {
+            thinkingTimeCountdown = 0
+            return
+        }
+
         let thinkingSeconds = settings().thinkingTime
 
         cancelThinkingTime()
@@ -169,6 +179,13 @@ final class QuizTimersController: ObservableObject {
     /// Skipped while `isRerecording` is true — re-record starts its own
     /// recording immediately (#108A) instead of going through this countdown.
     func startAnswerTimer() {
+        // #173: same pause guard as `startThinkingTimeCountdown` — these two are
+        // the one answer window, only ever one of them armed at a time.
+        guard !isPaused else {
+            answerTimerCountdown = 0
+            return
+        }
+
         let limit = settings().answerTimeLimit
         guard limit > 0, !isRerecording() else { return }
 

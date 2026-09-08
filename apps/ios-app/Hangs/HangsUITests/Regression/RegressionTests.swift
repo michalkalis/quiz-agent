@@ -375,9 +375,27 @@ final nonisolated class RegressionTests: XCTestCase {
         // This is what proves the #138 sheet actually dismissed (not just that
         // `path` emptied), pinning the founder default (post-pack-quiz lands on
         // Home, not back in MyPacks).
-        XCTAssertEqual(
-            app.navigationBars.buttons.count, 0,
-            "RS-pack-nav-start (\(trigger)): a navigation back button still exists — back-stack not empty"
+        //
+        // #173 moved the quiz chrome INTO the navigation bar (close, mute,
+        // pause, ⋯), so "the bar has no buttons" stopped meaning "there is no
+        // back button" — it now fails on a perfectly empty back-stack. Assert
+        // what this check is actually for instead: nothing in the bar is a BACK
+        // affordance. A back button always carries a user-visible label (the
+        // previous screen's title, or "Back"); the quiz's own controls are
+        // matched by identifier, and iOS 26 renders one unlabeled container
+        // around the grouped toolbar items, which is scaffolding a driver can
+        // neither see nor press.
+        let quizChrome: Set<String> = [
+            "question.closeButton", "question.mute", "question.pause", "question.moreMenu",
+        ]
+        let navButtons = app.navigationBars.buttons
+        let foreign = (0 ..< navButtons.count)
+            .map { navButtons.element(boundBy: $0) }
+            .filter { !quizChrome.contains($0.identifier) && !$0.label.isEmpty }
+            .map(\.label)
+        XCTAssertTrue(
+            foreign.isEmpty,
+            "RS-pack-nav-start (\(trigger)): navigation bar carries \(foreign) on top of the quiz chrome — back-stack not empty"
         )
         for identifier in ["settings.voiceCommands", "packs.createPack", "orderPack.prompt", "orderPack.submit", "orderPack.pay", "orderProgress.startQuiz"] {
             XCTAssertFalse(

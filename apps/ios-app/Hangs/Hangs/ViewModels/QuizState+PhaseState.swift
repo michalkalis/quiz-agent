@@ -81,6 +81,14 @@ struct ConfirmationState {
     /// renders the "Transcribing…" spinner over the no-answer sheet.
     var noAnswerCaptured: Bool = false
 
+    /// #173 (founder decision C2): the answer has been confirmed and is being
+    /// evaluated, and the sheet STAYS UP while it is — its primary button
+    /// becomes the spinner ("Vyhodnocujem…") and every other control on it goes
+    /// dead. Separate from `showAnswerConfirmation`, which `confirmAnswer()`
+    /// clears synchronously as its single-flight token: that guarantee must not
+    /// change just so the sheet can linger.
+    var isEvaluatingAnswer: Bool = false
+
     /// Auto-confirm countdown — confirmation-semantic, so it lives here (its
     /// semantic owner, T7); QuizTimersController only ticks it through the
     /// façade's injected write closure (decision 4), never owning it.

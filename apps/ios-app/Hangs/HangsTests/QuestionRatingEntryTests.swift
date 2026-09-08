@@ -72,25 +72,20 @@ private func makeResultViewModel() -> QuizViewModel {
 @Suite("Rating entry chip gating (#155)")
 @MainActor
 struct QuestionRatingEntryTests {
-    @Test("question screen shows the rating chip when the gate is open")
-    func questionScreenShowsChipWhenEnabled() async throws {
-        let view = QuestionView(viewModel: makeAskingViewModel(), ratingEntry: makeEntry(enabled: true))
+    /// #173 moved the question screen's chip into the ⋯ toolbar menu: the
+    /// floating overlay is what collided with the MCQ category label at a fixed
+    /// 96pt inset (the founder's 2026-09-07 report). No floating chip in either
+    /// gate state — the ROW's gating is pinned on the menu component itself
+    /// (`QuizToolbarTests.overflowMenuGating`), which is where it now lives.
+    @Test("the question screen no longer overlays a floating rating chip",
+          arguments: [true, false])
+    func questionScreenHasNoFloatingChip(gateOpen: Bool) async throws {
+        let view = QuestionView(viewModel: makeAskingViewModel(), ratingEntry: makeEntry(enabled: gateOpen))
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "rating.entry")
+            #expect(throws: (any Error).self, "the overlay chip is what collided with the category") {
+                _ = try view.inspect().find(viewWithAccessibilityIdentifier: "rating.entry")
             }
-        }
-    }
-
-    @Test("question screen hides the rating chip when the gate is closed")
-    func questionScreenHidesChipWhenDisabled() async throws {
-        let view = QuestionView(viewModel: makeAskingViewModel(), ratingEntry: makeEntry(enabled: false))
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: (any Error).self, "an App Store build must render no rating affordance") {
-                try tree.find(viewWithAccessibilityIdentifier: "rating.entry")
-            }
+            #expect(QuizToolbarInspection.hasToolbar(view), "it lives under the ⋯ menu now")
         }
     }
 

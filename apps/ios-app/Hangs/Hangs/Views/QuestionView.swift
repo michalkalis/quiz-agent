@@ -22,6 +22,13 @@ struct QuestionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showEndQuizConfirmation = false
     @State private var showQuizSettings = false
+    /// #173: the ⋯ menu's "Rate question" row presents the #155 panel from here
+    /// now that the floating chip is gone (it collided with the MCQ category —
+    /// the founder's 2026-09-07 report).
+    @State private var ratingPresentation: QuestionRatingPresentation?
+    /// #173 B1: the ListenBar the driver hid with the ✕. Per question on
+    /// purpose — the next question arms its own bar (see `ListenBarDismissal`).
+    @State private var listenBarDismissal = ListenBarDismissal()
     @State private var showTextInput = false
     @State private var textAnswer = ""
     /// #125: true while more of the stem sits below the fold — drives the
@@ -105,23 +112,26 @@ struct QuestionView: View {
                 submittedAnswer = viewModel.transcribedAnswer
             }
         }
-        // #155 (TestFlight/Debug only): rate the question on screen. Rating-only
-        // — it never reads an answer or moves the quiz state machine.
-        // The chip sits in the top row, left of what already occupies its
-        // trailing edge: the settings gear in voice mode, the NN/NN counter in
-        // the merged MCQ row (which it clipped at a single shared inset).
-        .questionRatingEntry(
-            ratingEntry,
-            questionId: viewModel.currentQuestion?.id,
-            questionText: viewModel.currentQuestion?.question,
-            trailingInset: (viewModel.currentQuestion?.isMultipleChoice ?? false) ? 96 : 64
-        )
+        // #173 decision 1: ONE header for every question type, and it is the
+        // native toolbar — the two hand-rolled top rows had drifted apart and
+        // the TestFlight chips were an absolutely positioned overlay that
+        // collided with the MCQ category label at a fixed inset.
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar { quizToolbar }
+        // #155 (TestFlight/Debug only): rate the question. Rating-only — it
+        // never reads an answer or moves the quiz state machine.
+        .sheet(item: $ratingPresentation) { presentation in
+            QuestionRatingSheet(viewModel: presentation.viewModel)
+        }
         .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize
         )
-        .sheet(isPresented: $viewModel.showAnswerConfirmation, onDismiss: {
+        // #173 C2: the sheet OUTLIVES the confirm tap — it stays up, showing the
+        // evaluating state in its own primary button, until the result lands.
+        .sheet(isPresented: confirmationSheetBinding, onDismiss: {
             viewModel.handleAnswerConfirmationDismissed()
         }) {
             AnswerConfirmationView(
@@ -147,7 +157,7 @@ struct QuestionView: View {
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 matchedOption: matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
-                onTogglePause: { viewModel.toggleConfirmationPause() }
+                evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil
             )
         }
         .sheet(isPresented: $showQuizSettings) {
@@ -180,129 +190,97 @@ struct QuestionView: View {
         // the no-pause-while-typing decision 2a).
     }
 
-    // MARK: - Top chrome
+    // MARK: - Toolbar (#173 decision 1, variant A3)
 
-    /// The top row differs by mode (#125): voice keeps the shared close + settings
-    /// bar; MCQ merges close + "CATEGORY · Qn" + counter into one row and drops the
-    /// settings gear. The progress bar + error banner are shared by both.
+    /// One toolbar for MCQ, voice and image questions, in every quiz state.
+    /// ✕ leading; the two mid-question controls (mute, pause) grouped trailing;
+    /// everything else under ⋯ — the HIG "More" rule, and the reason nothing can
+    /// overlap the category label any more.
+    @ToolbarContentBuilder
+    private var quizToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { showEndQuizConfirmation = true } label: {
+                Image(systemName: "xmark")
+            }
+            .tint(Theme.Hangs.Colors.ink)
+            .accessibilityLabel(Text("Close quiz"))
+            .accessibilityIdentifier("question.closeButton")
+        }
+
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            QuizMuteToolbarButton(isMuted: viewModel.settings.isMuted) {
+                Task { await viewModel.toggleMute() }
+            }
+            QuizPauseToolbarButton(isPaused: viewModel.isPaused) {
+                viewModel.togglePause()
+            }
+            .disabled(!viewModel.canPauseQuiz && !viewModel.isPaused)
+        }
+
+        // Separates the live controls from the menu, so the ⋯ never reads as a
+        // third mid-question button.
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+        ToolbarItem(placement: .topBarTrailing) {
+            QuizOverflowMenu(
+                onSettings: { showQuizSettings = true },
+                onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
+                onRateQuestion: rateQuestionAction
+            )
+        }
+    }
+
+    /// The #155 gate, unchanged: TestFlight/Debug only, and only with a question
+    /// to rate. nil = the row is absent, which is what an App Store build gets.
+    private var rateQuestionAction: (() -> Void)? {
+        guard let ratingEntry, ratingEntry.isEnabled,
+              let questionId = viewModel.currentQuestion?.id
+        else { return nil }
+        let questionText = viewModel.currentQuestion?.question
+        return {
+            ratingPresentation = QuestionRatingPresentation(
+                viewModel: ratingEntry.makeViewModel(questionId, questionText)
+            )
+        }
+    }
+
+    /// #173 C2: `confirmAnswer()` clears `showAnswerConfirmation` synchronously —
+    /// that flag is its single-flight token and must keep doing that. The sheet's
+    /// PRESENTATION outlives it by one extra flag, so the driver keeps looking at
+    /// the button they pressed while the answer is graded.
+    private var confirmationSheetBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.showAnswerConfirmation || viewModel.isEvaluatingAnswer },
+            set: { if !$0 { viewModel.showAnswerConfirmation = false } }
+        )
+    }
+
+    // MARK: - Top chrome (#173 variant A3)
+
+    /// Under the toolbar: segmented 1-based progress over one small mono meta
+    /// row. Replaces BOTH the merged MCQ row and the voice `metaRow` — one
+    /// header, every question type.
     private func topChrome(question: Question?) -> some View {
         VStack(spacing: 8) {
-            if let question, question.isMultipleChoice {
-                mcqTopRow(question: question)
-            } else {
-                HangsQuizTopBar(
-                    onClose: { showEndQuizConfirmation = true },
-                    onSettings: { showQuizSettings = true }
-                )
-            }
-            // #122: the bar flips teal for the duration of a matched glow.
-            HangsProgressBar(
-                progress: progressValue,
+            HangsQuizProgressHeader(
+                category: question.map { Config.categoryDisplayName(for: $0.category) } ?? "",
+                current: currentQuestionNumber,
+                total: totalQuestions,
+                // #122: the fill flips teal for the duration of a matched glow.
                 tint: viewModel.voiceFeedbackPhase == .matched
-                    ? Theme.Hangs.Colors.accentTeal : nil
+                    ? Theme.Hangs.Colors.accentTeal : nil,
+                isRecording: isRecording
             )
+            .padding(.top, 8)
+
             if let error = viewModel.errorMessage {
                 errorBanner(error)
             }
         }
     }
 
-    // MARK: - MCQ merged top row (#125 Variant A)
-
-    /// #125: MCQ chrome collapses to ONE row — close chip + "CATEGORY · Qn" +
-    /// the NN/NN counter (keeping its pink-while-recording accent). The settings
-    /// gear leaves the MCQ screen (reachable via the End Quiz sheet); the separate
-    /// meta row is dropped. voiceBody keeps its own chrome + `metaRow`.
-    private func mcqTopRow(question: Question) -> some View {
-        HStack(spacing: 12) {
-            closeChip
-            // #56: interpolated literal so the compiler extracts "%@ · Q%lld";
-            // uppercased as a display modifier (ViewInspector matches the source).
-            Text("\(Config.categoryDisplayName(for: question.category)) · Q\(currentQuestionNumber)")
-                .textCase(.uppercase)
-                .font(.hangsMono(11, weight: .medium))
-                .tracking(2)
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .accessibilityIdentifier("question.category")
-
-            Spacer(minLength: 12)
-
-            Text(verbatim: counterString)
-                .font(.hangsMono(11, weight: .semibold))
-                .tracking(2)
-                .foregroundColor(isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
-                .accessibilityIdentifier("question.counter")
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 14)
-        .padding(.bottom, 4)
-    }
-
-    /// Close chip matching `HangsQuizTopBar`'s (36pt circle, xmark) — kept its
-    /// `question.closeButton` id so page objects still bail out of the quiz here.
-    private var closeChip: some View {
-        Button { showEndQuizConfirmation = true } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .frame(width: 36, height: 36)
-                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "Close quiz", comment: "Accessibility label for the in-quiz close button"))
-        .accessibilityIdentifier("question.closeButton")
-    }
-
-    // MARK: - Question meta row (muted category + counter)
-
-    /// Unified muted meta row above the question in BOTH modes (#83 / G1, frames
-    /// b8zObz/f9csl `metaRow`): category on the left (MCQ keeps its "· QUESTION N"
-    /// suffix, voice stays lowercase — per frames), `NN / NN` counter on the right
-    /// (moved here from the old nav bar). The counter turns pink while recording so
-    /// the active-mic state stays glanceable now that the nav has no accent slot.
-    private func metaRow(question: Question) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Group {
-                if question.isMultipleChoice {
-                    // #56: interpolated literal so the compiler extracts
-                    // "%@ · QUESTION %lld"; uppercased as a display modifier.
-                    Text("\(Config.categoryDisplayName(for: question.category)) · QUESTION \(currentQuestionNumber)")
-                        .textCase(.uppercase)
-                } else {
-                    Text(verbatim: Config.categoryDisplayName(for: question.category).lowercased())
-                }
-            }
-            .font(.hangsMono(11, weight: .medium))
-            .tracking(2)
-            .foregroundColor(Theme.Hangs.Colors.muted)
-            .accessibilityIdentifier("question.category")
-
-            Spacer(minLength: 12)
-
-            Text(verbatim: counterString)
-                .font(.hangsMono(11, weight: .semibold))
-                .tracking(2)
-                .foregroundColor(isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
-                .accessibilityIdentifier("question.counter")
-        }
-    }
-
-    private var counterString: String {
-        // #79: 1-based index of the question on screen. `+1` because this renders
-        // BEFORE handleQuizResponse increments questionsAnswered — so it matches
-        // ResultView.counterString, which renders post-increment with no +1. Keep
-        // the two in lockstep.
-        let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
-        let current = min(viewModel.questionsAnswered + 1, max(total, 1))
-        return String(format: "%02d / %02d", current, total)
-    }
-
-    private var progressValue: Double {
-        let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
-        guard total > 0 else { return 0 }
-        return min(1, Double(viewModel.questionsAnswered) / Double(total))
+    private var totalQuestions: Int {
+        viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
     }
 
     // MARK: - Error banner
@@ -329,42 +307,6 @@ struct QuestionView: View {
         .accessibilityIdentifier("question.errorBanner")
     }
 
-    // MARK: - Audio strip (mute — bottom, next to the action row)
-
-    /// Fixed height reserved for the audio strip so the pinned action buttons never
-    /// shift (#59.2 rationale, now at the bottom per G1/#83).
-    private let audioStripHeight: CGFloat = 32
-
-    /// G1 binding layout (#83 + #85, frames b8zObz/f9csl `audioStrip`): the mute
-    /// toggle on the right. Rendered identically by both the MCQ
-    /// and the voice body, through `recording` too, so the driver finds the audio
-    /// controls on one fixed spot in every mode. The replay link that used to sit in
-    /// the middle (#85 Variant B) became the tap-anywhere-on-question target
-    /// (`questionReplayTapTarget`) — founder decision, 2026-07-11. The typed-answer
-    /// link that shared the strip's middle slot moved into the footer row (#131 C).
-    ///
-    /// #131 Track B/C: the strip is now the MUTE's permanent home in both modes —
-    /// the #125 experiment of moving mute into the docked `ListenBar` made it a
-    /// duplicate of this one and cost the driver a fixed spot, so the bar dropped
-    /// it and the strip renders wherever the bar can appear.
-    ///
-    /// #132 Track B killed the THINK/ANSWER chips: MCQ's countdown now lives in
-    /// the unified `ListenBar` (variant A), just like the voice screen's lives in
-    /// the Record/Stop button (#131 B). The strip keeps its id — it is still the
-    /// fixed row a driver reaches for, it just only carries the mute now.
-    @ViewBuilder
-    private func audioStrip() -> some View {
-        if viewModel.quizState == .askingQuestion || viewModel.quizState == .recording {
-            HStack(spacing: 8) {
-                Spacer(minLength: 0)
-                muteButton
-            }
-            .padding(.horizontal, 24)
-            .frame(minHeight: audioStripHeight)
-            .accessibilityIdentifier("question.timerStrip")
-        }
-    }
-
     // MARK: - Tap-to-replay question block
 
     /// Tap-anywhere-on-question replay (founder, 2026-07-11 — replaces the audio
@@ -388,34 +330,20 @@ struct QuestionView: View {
     }
 
     /// Discoverability affordance for the tappable question block: a small muted
-    /// speaker glyph under the question, fading when replay is unavailable.
-    private var replaySpeakerGlyph: some View {
-        Image(systemName: "speaker.wave.2.fill")
+    /// glyph under the question, fading when replay is unavailable.
+    ///
+    /// #173 finding 6: `arrow.counterclockwise` — Apple's restart/reload symbol,
+    /// which is what a replay IS. The old `speaker.wave.2.fill` collided with the
+    /// mute toggle (same speaker family, opposite meaning), and `repeat` reads as
+    /// loop mode. The MCQ stem gets the SAME glyph now: it was dropped there "for
+    /// space", which left the driver with no sign the stem was tappable at all.
+    private var replayGlyph: some View {
+        Image(systemName: "arrow.counterclockwise")
             .font(.system(size: 12, weight: .semibold))
             .foregroundColor(Theme.Hangs.Colors.muted)
             .opacity(viewModel.canReplayAudio ? 1 : 0.4)
             .accessibilityHidden(true)
-    }
-
-    /// On-screen mute affordance (#85 — regressed in the #52 redesign, originally #13).
-    /// Routes through `toggleMute()` so muting mid-read also stops the in-flight TTS —
-    /// the guards in QuizViewModel+Audio only gate *starting* playback.
-    private var muteButton: some View {
-        Button {
-            Task { await viewModel.toggleMute() }
-        } label: {
-            Image(systemName: viewModel.settings.isMuted ? "speaker.slash.fill" : "speaker.wave.2")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(viewModel.settings.isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(Theme.Hangs.Colors.bgCard))
-                .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(viewModel.settings.isMuted
-            ? String(localized: "Unmute", comment: "Accessibility label for the quiz mute toggle while muted")
-            : String(localized: "Mute", comment: "Accessibility label for the quiz mute toggle while audible"))
-        .accessibilityIdentifier("question.mute")
+            .accessibilityIdentifier("question.replayGlyph")
     }
 
     // MARK: - MCQ body (#125 Variant A "Answer Grid")
@@ -431,12 +359,12 @@ struct QuestionView: View {
             // now; the MCQ body starts at the stem.
             mcqStem(question: question, compact: compact)
 
-            // #131 Track C: the strip renders in BOTH phases now. #125 dropped it
-            // post-reveal because the answer bar had absorbed the mute; the bar no
-            // longer carries one, so removing the strip here would leave the MCQ
-            // answering phase with no mute at all.
-            audioStrip()
-                .padding(.top, 8)
+            // #173 B1 (founder pick): the listening banner sits ABOVE the option
+            // grid, directly under the stem — where the eye already is when the
+            // countdown starts. Below the grid it was reliably missed (the
+            // 2026-09-07 report), and it is the one element that tells the driver
+            // the mic is about to open.
+            mcqListenBar(question: question, compact: compact)
 
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
@@ -454,44 +382,6 @@ struct QuestionView: View {
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
-
-            // #132 Track B (variant A "odpočet v lište"): ONE bar slot from the
-            // first countdown tick to submit. While the driver decides, the bar
-            // shows the think state — teal drain + seconds + the same command
-            // words every other command bar shows (founder's correction to the
-            // mock). The moment the mic goes live it flips to the pink answer
-            // state (#125 addendum) — it still never claims a listening state
-            // that does not exist (#132 A), because the think state doesn't
-            // claim one. Silent while the question is still being read, exactly
-            // like the THINK/ANSWER chips it replaces.
-            // #171 Track E: while evaluating, the bottom of the screen is empty —
-            // the overlay is the only thing talking.
-            if isProcessing {
-                EmptyView()
-            } else if isRecording {
-                ListenBar(
-                    mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
-                    feedback: viewModel.voiceFeedbackPhase,
-                    // #131 Track F folded the old SE-class `compact` flag into the
-                    // one size axis: a short container gets the slim bar.
-                    size: compact ? .slim : .full
-                )
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .transition(.opacity)
-            } else if viewModel.answerWindowRemaining > 0 {
-                ListenBar(
-                    mode: .command,
-                    feedback: viewModel.voiceFeedbackPhase,
-                    commandHint: viewModel.commandListenerHint,
-                    size: compact ? .slim : .full,
-                    thinkCountdown: .init(remaining: viewModel.answerWindowRemaining,
-                                          total: viewModel.answerWindowTotal)
-                )
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .transition(.opacity)
-            }
 
             // Founder 2026-08-03: skip is a secondary escape hatch, not the
             // screen's CTA — a compact centered chip (voice footer's skip
@@ -511,6 +401,48 @@ struct QuestionView: View {
             #endif
         }
         .frame(maxHeight: .infinity)
+    }
+
+    /// #132 Track B (variant A "odpočet v lište"): ONE bar slot from the first
+    /// countdown tick to submit. While the driver decides it shows the think
+    /// state — teal drain + seconds + the command words; the moment the mic goes
+    /// live it flips to the pink answer state. Silent while the question is
+    /// still being read, and while an answer is being evaluated.
+    ///
+    /// #173 B1: it now carries a ✕. Dismissal is scoped to the question on
+    /// screen (`ListenBarDismissal`) — nothing is persisted, so the
+    /// next question arms its own bar and a driver cannot permanently lose the
+    /// only surface that names the voice commands.
+    @ViewBuilder
+    private func mcqListenBar(question: Question, compact: Bool) -> some View {
+        if isProcessing || listenBarDismissal.isHidden(questionId: question.id) {
+            EmptyView()
+        } else if isRecording {
+            ListenBar(
+                mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
+                feedback: viewModel.voiceFeedbackPhase,
+                // #131 Track F folded the old SE-class `compact` flag into the
+                // one size axis: a short container gets the slim bar.
+                size: compact ? .slim : .full,
+                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
+            )
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .transition(.opacity)
+        } else if viewModel.answerWindowRemaining > 0 {
+            ListenBar(
+                mode: .command,
+                feedback: viewModel.voiceFeedbackPhase,
+                commandHint: viewModel.commandListenerHint,
+                size: compact ? .slim : .full,
+                thinkCountdown: .init(remaining: viewModel.answerWindowRemaining,
+                                      total: viewModel.answerWindowTotal),
+                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
+            )
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .transition(.opacity)
+        }
     }
 
     /// Compact MCQ skip chip — mirrors the voice footer's skip styling so the
@@ -573,22 +505,24 @@ struct QuestionView: View {
             ScrollView(.vertical) {
                 VStack(spacing: 0) {
                     questionReplayTapTarget {
-                        // No replay glyph on MCQ: the grid now shares the screen
-                        // for the whole question and vertical space is tight — the
-                        // whole stem block stays the tap target (#132).
-                        HangsQuestionPrompt(
-                            text: question.question,
-                            barColor: Theme.Hangs.Colors.blue,
-                            textFont: stemFont,
-                            textIdentifier: "question.text"
-                        )
-                        // Keep the stem its OWN a11y element inside the replay
-                        // button. A button label that resolves to a single
-                        // element gets folded into the button, taking the stem's
-                        // identifier with it — which is what happened when #132
-                        // dropped the speaker glyph that used to be the label's
-                        // second element.
-                        .accessibilityElement(children: .contain)
+                        // #173 finding 6: the replay glyph is BACK on MCQ. #132
+                        // dropped it for vertical space, and the founder read the
+                        // stem as untappable — a 12pt glyph is a cheaper price
+                        // than an undiscoverable replay.
+                        VStack(alignment: .leading, spacing: 8) {
+                            HangsQuestionPrompt(
+                                text: question.question,
+                                barColor: Theme.Hangs.Colors.blue,
+                                textFont: stemFont,
+                                textIdentifier: "question.text"
+                            )
+                            // Keep the stem its OWN a11y element inside the
+                            // replay button. A button label that resolves to a
+                            // single element gets folded into the button, taking
+                            // the stem's identifier with it.
+                            .accessibilityElement(children: .contain)
+                            replayGlyph
+                        }
                         .padding(.horizontal, 28)
                         .padding(.vertical, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -671,10 +605,8 @@ struct QuestionView: View {
 
     private func voiceBody(question: Question, compact: Bool) -> some View {
         VStack(spacing: 0) {
-            metaRow(question: question)
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
+            // #173: the category/counter row moved into the shared header under
+            // the toolbar — one meta row for every question type.
 
             // Scroll region holds only the question, so a long Slovak question
             // can scroll without pushing the pinned controls off-screen (54.2).
@@ -700,7 +632,7 @@ struct QuestionView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .accessibilityIdentifier("question.text")
-                                replaySpeakerGlyph
+                                replayGlyph
                             }
                             .padding(.horizontal, 24)
                         }
@@ -731,9 +663,8 @@ struct QuestionView: View {
                 // and read as a freeze).
                 if !isProcessing {
                     // #131 Track B: the voice countdown lives in the Record/Stop
-                    // button. The strip stays for the mute (Track C).
-                    audioStrip()
-
+                    // button. #173: the mute strip is gone — mute is a toolbar
+                    // control now, on one fixed spot in every state.
                     QuestionVoiceFooter(
                         viewModel: viewModel,
                         showTextInput: $showTextInput,
@@ -773,8 +704,12 @@ struct QuestionView: View {
     /// not sit behind the sheet claiming the answer is already being graded
     /// while the driver is still being asked to confirm it — the sheet owns that
     /// screen, and has its own spinner for when a transcript is in flight.
+    /// #173 C2 widened the exclusion: the sheet also stays up while the
+    /// confirmed answer is being graded, and its own primary button is the
+    /// evaluating state there. The overlay survives only for the paths with no
+    /// sheet behind them — a tapped MCQ option and a skip.
     private var isProcessing: Bool {
-        guard !viewModel.showAnswerConfirmation else { return false }
+        guard !viewModel.showAnswerConfirmation, !viewModel.isEvaluatingAnswer else { return false }
         return viewModel.quizState == .processing || viewModel.quizState == .skipping
     }
 

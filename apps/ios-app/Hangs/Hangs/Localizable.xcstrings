@@ -3012,6 +3012,23 @@
         }
       }
     },
+    "Hide the listening bar" : {
+      "comment" : "Accessibility label for the button that hides the in-quiz listening bar for the current question",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrýt lištu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skryť lištu"
+          }
+        }
+      }
+    },
     "Hint image for question" : {
       "comment" : "Accessibility label for a hint image question",
       "localizations" : {
@@ -4812,7 +4829,6 @@
     },
     "Question %lld of %lld" : {
       "comment" : "Accessibility label for the progress badge: current question number out of total",
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {

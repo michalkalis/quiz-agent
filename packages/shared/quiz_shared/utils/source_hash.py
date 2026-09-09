@@ -24,15 +24,18 @@ from typing import Any, Dict, List, Optional, Union
 
 __all__ = ["TRANSLATED_SOURCE_FIELDS", "compute_source_hash", "source_hash_for"]
 
-# The five translated fields, in the order DD3 names them. Order is irrelevant
-# to the digest (`sort_keys=True`) but this is the canonical list the runner and
-# the store must agree on.
+# The translated fields: DD3's five plus `headline_answer`, which the serve
+# record carries and the runner translates too (PR #106 review) — an edit to it
+# must demote like any other. Order is irrelevant to the digest
+# (`sort_keys=True`) but this is the canonical list the runner and the store
+# must agree on.
 TRANSLATED_SOURCE_FIELDS = (
     "question",
     "possible_answers",
     "correct_answer",
     "alternative_answers",
     "explanation",
+    "headline_answer",
 )
 
 
@@ -62,6 +65,7 @@ def compute_source_hash(
     correct_answer: Union[str, List[str], None],
     alternative_answers: Optional[List[str]],
     explanation: Optional[str],
+    headline_answer: Optional[str] = None,
 ) -> str:
     """sha256 over a canonical JSON dump of the translated source fields."""
     payload = _canonical(
@@ -71,6 +75,7 @@ def compute_source_hash(
             "correct_answer": correct_answer,
             "alternative_answers": alternative_answers,
             "explanation": explanation,
+            "headline_answer": headline_answer,
         }
     )
     dumped = json.dumps(
@@ -87,7 +92,7 @@ def _field(source: Any, name: str) -> Any:
 
 
 def source_hash_for(source: Any) -> str:
-    """`compute_source_hash` for anything carrying the five fields as
+    """`compute_source_hash` for anything carrying the translated fields as
     attributes (a `Question`, an ORM row) or as mapping keys (a DB row, a dict).
 
     Both shapes occur: the store hashes a `Question`, while the offline runner

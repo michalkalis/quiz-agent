@@ -410,6 +410,10 @@ _FACTCHECK_PAYLOAD = {
     "confidence": "high",
     "note": "No problem found; canned integration verdict.",
     "correct_answer": None,
+    # F8 in direct-generation mode: an "ok" without an evidence page is
+    # withheld, so the canned verdict carries one like the real verifier.
+    "source_url": "https://en.wikipedia.org/wiki/Canned_integration_source",
+    "source_excerpt": "canned excerpt",
 }
 _ANTHROPIC_MESSAGES_RESPONSE = {
     "id": "msg_test_123",

@@ -220,6 +220,11 @@ struct ListenBar: View {
         }
         switch mode {
         case .command:
+            // #174: without the words sub-line (hints outgrown) the miss must
+            // still be readable, not just amber — so it takes the caption slot.
+            if feedback == .unmatched, commandHint == nil {
+                return Text("Didn't catch that")
+            }
             return Text(verbatim: VoiceCommandLexicon.listeningCaption(
                 language: language,
                 short: size == .slim

@@ -22,9 +22,14 @@ struct AnswerConfirmationView: View {
     var onEditingBegan: (() -> Void)? = nil
     var onCancelEditing: (() -> Void)? = nil
     var onCancel: (() -> Void)? = nil
-    /// #77/#96 P2: the "LISTENING FOR COMMANDS" hint (pen `s49sd`), or nil when
-    /// the confirmation command window isn't armed. Supplied by the presenter.
+    /// #77/#96 P2: the "LISTENING FOR COMMANDS" bar (pen `s49sd`) is shown iff
+    /// the confirmation command window is armed. Supplied by the presenter.
+    var isListeningForCommands: Bool = false
+    /// #174: the words to say under that bar, nil once the driver has outgrown
+    /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
     var commandHint: String? = nil
+    /// #174: Confirm / Again / Cancel titles are voice commands — mic glyph.
+    var showsVoiceGlyph: Bool = false
     /// #122 Variant C: transient match/miss tint for the listening bar.
     var commandFeedback: VoiceFeedbackPhase = .idle
     /// #171 Track I: the MCQ option a spoken answer resolved to, pre-formatted
@@ -233,7 +238,7 @@ struct AnswerConfirmationView: View {
 
             // #131 Track F: full ListenBar — confirmation is a quiz screen, and
             // its three commands need the words on their own line.
-            if let commandHint, !isEditing, !isEvaluating {
+            if isListeningForCommands, !isEditing, !isEvaluating {
                 ListenBar(mode: .command, feedback: commandFeedback, commandHint: commandHint)
                     .padding(.top, 12)
                     .transition(.opacity)
@@ -254,6 +259,7 @@ struct AnswerConfirmationView: View {
                     icon: isEvaluating ? nil : "checkmark",
                     isLoading: isEvaluating,
                     height: 54,
+                    voiceGlyph: showsVoiceGlyph,
                     countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
                         ? autoConfirmCountdown : nil,
                     countdownTotal: autoConfirmTotal
@@ -273,11 +279,15 @@ struct AnswerConfirmationView: View {
 
                 // Secondary in weight as well as in position: a text-style
                 // control under the CTA, the standard iOS pairing.
+                // #174: "Again" — the title IS the voice command (founder
+                // 2026-09-09). The mic that used to be its icon now means
+                // "say this", so the action icon is a retry arrow.
                 HangsGhostButton(
                     title: "Again",
-                    icon: "mic.fill",
+                    icon: "arrow.counterclockwise",
                     color: Theme.Hangs.Colors.muted,
-                    font: .hangsBody(15, weight: .semibold)
+                    font: .hangsBody(15, weight: .semibold),
+                    voiceGlyph: showsVoiceGlyph
                 ) {
                     editFocused = false
                     onReRecord()
@@ -381,7 +391,7 @@ struct AnswerConfirmationView: View {
             Spacer(minLength: 0)
 
             if let onCancel {
-                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54) {
+                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54, voiceGlyph: showsVoiceGlyph) {
                     onCancel()
                 }
                 .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))

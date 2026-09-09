@@ -209,6 +209,19 @@ struct ListenBarInspectorTests {
         }
     }
 
+    /// #174: once the words are outgrown the bar is status-only — but a miss must
+    /// still be READABLE, not just amber, so it takes the caption slot and the
+    /// bar keeps its single-line height (no sub-line appears for the miss).
+    @Test("No-match without the words puts the miss in the caption, no sub-line")
+    func unmatchedWithoutWordsReadsInCaption() async throws {
+        let view = ListenBar(mode: .command, feedback: .unmatched, commandHint: nil, language: .english)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "Didn't catch that") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands") }
+        }
+    }
+
     /// Answer mode's caption IS the instruction ("SAY A–D") — a sub-line there would
     /// be noise on the one screen where the driver is mid-answer.
     @Test("Answer mode renders no sub-line")

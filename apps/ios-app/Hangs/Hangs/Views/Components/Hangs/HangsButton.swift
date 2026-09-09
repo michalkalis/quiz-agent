@@ -9,6 +9,21 @@
 
 import SwiftUI
 
+/// #174 (founder 2026-09-09): a button whose title is also its voice command
+/// wears this small mic glyph — the buttons ARE the hint now, so the glyph is
+/// what tells a driver "you can say this word". Decorative: the title is the
+/// accessible name, and a VoiceOver user gets nothing from "microphone".
+struct VoiceGlyph: View {
+    var size: CGFloat = 11
+
+    var body: some View {
+        Image(systemName: "mic.fill")
+            .font(.system(size: size, weight: .semibold))
+            .opacity(0.7)
+            .accessibilityHidden(true)
+    }
+}
+
 /// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
 /// #108B: optional Waze-like countdown — bright pink = remaining time draining
 /// right→left over a darker base, plus a mono "Ns" chip (pen annotation `sYSN7`).
@@ -24,6 +39,8 @@ struct HangsPrimaryButton: View {
     var showsSpinner: Bool = false
     var height: CGFloat = 64
     var isDestructive: Bool = false
+    /// #174: the title doubles as a voice command — show the mic glyph.
+    var voiceGlyph: Bool = false
     /// Seconds left on an active countdown; nil = plain button.
     var countdownSecondsRemaining: Int? = nil
     /// Full countdown duration the fill fraction is computed against.
@@ -61,6 +78,9 @@ struct HangsPrimaryButton: View {
                     // scale down, never wrap inside the fixed-height capsule.
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                if voiceGlyph, !isLoading {
+                    VoiceGlyph()
+                }
                 if let trailingIcon {
                     Image(systemName: trailingIcon)
                         .font(.system(size: 15, weight: .semibold))
@@ -113,6 +133,8 @@ struct HangsSecondaryButton: View {
     let title: LocalizedStringKey
     var icon: String? = nil
     var height: CGFloat = 52
+    /// #174: the title doubles as a voice command — show the mic glyph.
+    var voiceGlyph: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -126,6 +148,9 @@ struct HangsSecondaryButton: View {
                     .font(.hangsBody(16, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                if voiceGlyph {
+                    VoiceGlyph()
+                }
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(maxWidth: .infinity)
@@ -148,6 +173,8 @@ struct HangsGhostButton: View {
     var icon: String? = nil
     var color: Color = Theme.Hangs.Colors.blue
     var font: Font = .hangsBody(14, weight: .medium)
+    /// #174: the title doubles as a voice command — show the mic glyph.
+    var voiceGlyph: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -158,6 +185,9 @@ struct HangsGhostButton: View {
                         .font(.system(size: 13, weight: .semibold))
                 }
                 Text(title).font(font)
+                if voiceGlyph {
+                    VoiceGlyph(size: 10)
+                }
             }
             .foregroundColor(color)
             .frame(maxWidth: .infinity)
@@ -171,8 +201,8 @@ struct HangsGhostButton: View {
 #if DEBUG
 #Preview {
     VStack(spacing: 12) {
-        HangsPrimaryButton(title: "Start", icon: "play.fill") {}
-        HangsPrimaryButton(title: "Next", trailingIcon: "arrow.right") {}
+        HangsPrimaryButton(title: "Start", icon: "play.fill", voiceGlyph: true) {}
+        HangsPrimaryButton(title: "Next", trailingIcon: "arrow.right", voiceGlyph: true) {}
         HangsPrimaryButton(title: "Confirm", icon: "checkmark", countdownSecondsRemaining: 3, countdownTotal: 10) {}
         HangsSecondaryButton(title: "Home", icon: "house.fill") {}
         HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}

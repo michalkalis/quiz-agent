@@ -128,8 +128,15 @@ import os
             return micPermissionResult
         }
 
+        /// #174: a slow engine start, so tests can land a timer inside the gap
+        /// between "recording asked for" and "mic actually open".
+        var prepareForRecordingDelay: TimeInterval = 0
+
         func prepareForRecording() async {
             isPlaying = false
+            if prepareForRecordingDelay > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(prepareForRecordingDelay * 1_000_000_000))
+            }
         }
 
         func startRecording() throws {

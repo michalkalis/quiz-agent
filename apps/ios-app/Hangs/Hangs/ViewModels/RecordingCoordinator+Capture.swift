@@ -122,6 +122,17 @@ extension RecordingCoordinator {
             await audioService.prepareForRecording()
             try audioService.startRecording()
 
+            // #174: the dead-air cap armed in `startRecording` (or a teardown)
+            // may have ended this recording while the engine was still coming
+            // up — the state is no longer `.recording`. Close the mic that just
+            // opened instead of arming a window: every timer guards on
+            // `.recording`, so nothing else would ever close it again.
+            guard quizState() == .recording else {
+                _ = try? await audioService.stopRecording()
+                Logger.audio.info("🎙️ Recording ended during engine start — mic closed, no window armed")
+                return
+            }
+
             if isAutoRecording() {
                 speechDetectedDuringAutoRecord = false
                 startSilenceDetection(service: silenceDetectionService)
@@ -182,6 +193,15 @@ extension RecordingCoordinator {
                 Task {
                     try? await sttRef.sendAudioChunk(pcmData)
                 }
+            }
+
+            // #174: same race as the batch path — the cap fired (or a teardown
+            // ran) during the token/WebSocket/engine handshake. Tear the stream
+            // down rather than arm a window nothing can close.
+            guard quizState() == .recording else {
+                cleanupStreamingSTT()
+                Logger.stt.info("🎙️ Streaming recording ended during handshake — stream closed, no window armed")
+                return
             }
 
             // The mic is open and the event stream is live: partial transcripts

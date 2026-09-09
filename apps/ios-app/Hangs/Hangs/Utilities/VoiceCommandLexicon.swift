@@ -85,7 +85,9 @@ enum VoiceCommandLexicon {
     ) -> [String] {
         switch (language, command) {
         case (.english, .start): return ["start"]
-        case (.english, .ok): return ["ok", "okay", "okey", "oukej"]
+        // #174: the button reads "Confirm" (buttons ARE the voice hints now), so
+        // the word on the button must be a word the matcher accepts.
+        case (.english, .ok): return ["ok", "okay", "okey", "oukej", "confirm"]
         case (.english, .next): return ["next"]
         case (.english, .again): return ["again", "retry"]
         case (.english, .repeatQuestion): return ["repeat"]
@@ -220,7 +222,7 @@ enum VoiceCommandLexicon {
     static func contextualVocabulary(for language: CommandLanguage) -> [String] {
         switch language {
         case .english:
-            return ["start", "ok", "okay", "next", "again", "retry", "repeat", "skip", "stop", "cancel", "pause"]
+            return ["start", "ok", "okay", "confirm", "next", "again", "retry", "repeat", "skip", "stop", "cancel", "pause"]
         case .slovak:
             return [
                 "štart", "ok", "okej", "potvrď", "ďalej", "pokračuj",

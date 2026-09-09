@@ -62,11 +62,11 @@ struct HomeView: View {
             // only while the Home command window is armed. #131 Track F: the one
             // shared `ListenBar`, slim here — Home's command never changes and
             // the screen has content to show.
-            if let hint = viewModel.commandListenerHint {
+            if viewModel.commandListenerHint != nil {
                 ListenBar(
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
-                    commandHint: hint,
+                    commandHint: viewModel.voiceHintWords,
                     size: .slim
                 )
                     .padding(.horizontal, 20)
@@ -112,9 +112,11 @@ struct HomeView: View {
             }
             .accessibilityIdentifier("home.cancelStart")
         } else {
+            // #174 (founder 2026-09-09): "Start" — the title IS the voice command.
             HangsPrimaryButton(
                 title: "Start",
-                icon: "play.fill"
+                icon: "play.fill",
+                voiceGlyph: viewModel.showsVoiceGlyph
             ) {
                 viewModel.beginQuizStart()
             }

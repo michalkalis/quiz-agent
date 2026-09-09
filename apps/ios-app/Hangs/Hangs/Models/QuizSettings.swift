@@ -98,6 +98,22 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// per-question result entirely and reveals everything in the recap.
     var answerRevealMode: AnswerRevealMode
 
+    /// #174 (founder 2026-09-09): the "say …" words under the listening bar are
+    /// training wheels. nil = automatic — shown for the first
+    /// `voiceHintsFreeQuizzes` completed quizzes, then hidden. A value is the
+    /// driver's explicit Settings choice and is permanent either way.
+    var voiceHintsEnabled: Bool?
+
+    /// How many completed quizzes the automatic hints last (#174).
+    static let voiceHintsFreeQuizzes = 5
+
+    /// The one rule for whether the command words are shown: an explicit
+    /// Settings choice wins; otherwise the first `voiceHintsFreeQuizzes`
+    /// quizzes get them and later ones do not.
+    static func voiceHintsVisible(override: Bool?, completedQuizzes: Int) -> Bool {
+        override ?? (completedQuizzes < voiceHintsFreeQuizzes)
+    }
+
     // MARK: - Memberwise Init
 
     init(
@@ -118,7 +134,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         recordingSoundsEnabled: Bool = true,
         includeImageQuestions: Bool = false,
         voiceCommandsEnabled: Bool = true,
-        answerRevealMode reveal: AnswerRevealMode = .perQuestion
+        answerRevealMode reveal: AnswerRevealMode = .perQuestion,
+        voiceHintsEnabled: Bool? = nil
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -138,6 +155,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.includeImageQuestions = includeImageQuestions
         self.voiceCommandsEnabled = voiceCommandsEnabled
         answerRevealMode = reveal
+        self.voiceHintsEnabled = voiceHintsEnabled
     }
 
     // MARK: - Default Configuration
@@ -209,6 +227,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // #132 E: pre-existing blobs (and unknown future raw values) fall back
         // to today's per-question flow — the founder-picked default.
         answerRevealMode = (try? container.decodeIfPresent(AnswerRevealMode.self, forKey: .answerRevealMode)).flatMap { $0 } ?? .perQuestion
+        // #174: absent = automatic (first quizzes only) — never a persisted "on".
+        voiceHintsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceHintsEnabled)
     }
 
     // MARK: - Validation Helpers

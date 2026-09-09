@@ -144,6 +144,28 @@ struct QuizSettingsBackwardCompatTests {
         #expect(settings.autoConfirmEnabled == true)
     }
 
+    // MARK: - Missing voiceHintsEnabled (#174)
+
+    /// A legacy blob must decode to nil = AUTOMATIC (first quizzes only), never
+    /// to a persisted "on": a persisted true would pin the training-wheel words
+    /// on every upgraded install forever.
+    @Test("missing voiceHintsEnabled decodes to nil (automatic)")
+    func missingVoiceHintsDecodesNil() throws {
+        let settings = try decodeSettings(legacyMinimalJSON)
+        #expect(settings.voiceHintsEnabled == nil)
+    }
+
+    /// The one rule (founder 2026-09-09): the words show for the first five
+    /// completed quizzes, then hide; a Settings choice overrides both ways.
+    @Test("voice hints: automatic for the first 5 quizzes, Settings wins either way")
+    func voiceHintsRule() {
+        #expect(QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 0))
+        #expect(QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 4))
+        #expect(!QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 5))
+        #expect(QuizSettings.voiceHintsVisible(override: true, completedQuizzes: 50), "opted in = permanent")
+        #expect(!QuizSettings.voiceHintsVisible(override: false, completedQuizzes: 0), "opted out beats the free quizzes")
+    }
+
     // MARK: - Missing showConfirmSheet
 
     /// Regression: must remain `decodeIfPresent ?? true` so users who upgrade

@@ -117,27 +117,27 @@ struct QuestionFooterInspectorTests {
         }
     }
 
-    /// #171 Track C1 (founder, 2026-09-05 TestFlight): in Slovak the row's three
-    /// words ("Nahrávať · Písať · Preskočiť") left the Record button too little
-    /// width and its seconds pill — the one number a driver needs — was clipped.
-    /// Type and Skip are icon-only now, so the row costs the same in every
-    /// language. The words must be gone from the screen but NOT from VoiceOver.
-    @Test("Type and Skip are icon-only, keeping their words as accessibility labels")
-    func typeAndSkipAreIconOnly() async throws {
+    /// #174 (founder 2026-09-09): the buttons ARE the voice hints — a driver
+    /// learns "start" and "skip" by reading them, so both words must be on
+    /// screen (imperative titles: "Štart" · "Preskoč" are short enough to share
+    /// the row, which is why #171's icon-only Skip could come back as a word).
+    /// Type is not a voice command and stays icon-only, with its word kept for
+    /// VoiceOver.
+    @Test("Start and Skip show their command words; Type stays icon-only")
+    func commandButtonsShowTheirWords() async throws {
         let vm = makeVoiceViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
-            #expect(!visible.contains("Type"), "the word 'Type' is what stole the Record button's width")
-            #expect(!visible.contains("Skip"), "the word 'Skip' is what stole the Record button's width")
-            #expect(visible.contains("Start"), "the primary button keeps its label")
+            #expect(visible.contains("Start"), "the primary button's title is the voice command")
+            #expect(visible.contains("Skip"), "Skip is a voice command — the word is the hint")
+            #expect(!visible.contains("Record"), "'Record' is not a word the driver can say")
+            #expect(!visible.contains("Type"), "Type is a tap, not a command — icon-only")
 
-            for (id, label) in [("question.textInputToggle", "Type"), ("question.skip", "Skip")] {
-                let button = try tree.find(viewWithAccessibilityIdentifier: id)
-                #expect(try button.accessibilityLabel().string() == label,
-                        "\(id) must still announce '\(label)' to VoiceOver")
-            }
+            let type = try tree.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
+            #expect(try type.accessibilityLabel().string() == "Type",
+                    "Type must still announce its word to VoiceOver")
         }
     }
 

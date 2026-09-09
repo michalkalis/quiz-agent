@@ -307,6 +307,28 @@ final class QuizViewModel: ObservableObject {
     /// `VoiceCommandCoordinator.commandListenerHint` (ListenBar call sites).
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
+    /// #174: the command words under the listening bar, or nil once the driver
+    /// has outgrown them (`QuizSettings.voiceHintsVisible`). The bar itself is
+    /// still gated on `commandListenerHint` — only the words go, the state stays.
+    var voiceHintWords: String? {
+        showsVoiceHints ? commandListenerHint : nil
+    }
+
+    /// Whether the "say …" words are currently shown (Settings mirrors this).
+    var showsVoiceHints: Bool {
+        QuizSettings.voiceHintsVisible(
+            override: settings.voiceHintsEnabled,
+            completedQuizzes: quizStats.totalQuizzes
+        )
+    }
+
+    /// #174: a voice-controllable button wears a small mic glyph — but only when
+    /// saying its title can actually do something. Off, or a recognizer that
+    /// never became ready, would make the glyph a lie.
+    var showsVoiceGlyph: Bool {
+        settings.voiceCommandsEnabled && commandAvailability == .ready
+    }
+
     /// #122 Variant C ambient-glow feedback phase — see
     /// `VoiceCommandCoordinator.voiceFeedbackPhase` (glow/bar call sites).
     var voiceFeedbackPhase: VoiceFeedbackPhase { voiceCommandCoordinator.voiceFeedbackPhase }

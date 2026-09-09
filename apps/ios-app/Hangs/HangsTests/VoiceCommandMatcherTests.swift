@@ -32,6 +32,14 @@ struct VoiceCommandMatcherTests {
         #expect(VoiceCommandMatcher.match(transcript: "repeat", on: .question) == .repeatQuestion)
     }
 
+    /// #174: the confirmation button reads "Confirm" and the buttons are the
+    /// hints now — so the word printed on the button must be a word that works.
+    @Test("'confirm' — the button's own title — confirms on the sheet only")
+    func confirmWordMatchesTheButton() {
+        #expect(VoiceCommandMatcher.match(transcript: "confirm", on: .confirmation) == .ok)
+        #expect(VoiceCommandMatcher.match(transcript: "confirm", on: .question) == nil)
+    }
+
     @Test("A command inert on a screen resolves to nil (scoping)")
     func inertOffScreen() {
         // "next" belongs to the result, not the question screen.

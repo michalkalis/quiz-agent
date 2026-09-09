@@ -29,7 +29,6 @@ import uuid
 from typing import Any
 
 import pytest
-
 from app.db.models import GenerationOrder
 from app.orchestrator import OrderContext, PackGenerator
 from app.orchestrator import pack_generator as pack_generator_module
@@ -131,7 +130,12 @@ async def test_heartbeat_keeps_ticking_during_slow_dedup_store_call() -> None:
     # would have delivered zero ticks).
     assert ticks >= 5, f"worker loop starved during dedup: only {ticks} tick(s)"
     # ...and the awaited verdict still landed: the near-duplicate was dropped.
-    assert result.info == {"kept": 0, "dropped": 1, "fact_dropped": 0}
+    # #170 added `answer_cap` + `drop_reasons`; the legacy triple must hold.
+    assert {k: result.info[k] for k in ("kept", "dropped", "fact_dropped")} == {
+        "kept": 0,
+        "dropped": 1,
+        "fact_dropped": 0,
+    }
     assert ctx.questions == []
 
 

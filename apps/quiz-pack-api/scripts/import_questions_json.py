@@ -51,6 +51,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E4
 from app.db import QuestionRow, engine, normalize_async_url, question_to_row  # noqa: E402
 from app.db.models.question import REVIEW_STATUSES  # noqa: E402
 from quiz_shared.models.question import Question  # noqa: E402
+from quiz_shared.utils.qa_text import qa_text  # noqa: E402
 from scripts.migrate_pending_to_postgres import (  # noqa: E402
     EMBEDDING_DIM,
     EMBEDDING_MODEL,
@@ -130,7 +131,13 @@ async def _run(args: argparse.Namespace) -> int:
             existing = await _existing_ids(session, [q.id for q in questions])
 
         to_insert = [q for q in questions if q.id not in existing]
-        needs_embedding = [q for q in to_insert if q.embedding is None]
+        # #170 D2/D10: every imported row carries BOTH vectors — the question
+        # embedding (retrieval + question-only dedup) and the question+answer
+        # embedding (`embedding_qa`, the QA dedup branch) — so the corpus never
+        # needs a paid backfill for rows that went through this importer.
+        needs_embedding = [
+            q for q in to_insert if q.embedding is None or q.embedding_qa is None
+        ]
         batches = (len(needs_embedding) + args.batch_size - 1) // args.batch_size
 
         print(f"Unique across files:       {len(questions)}")
@@ -138,7 +145,8 @@ async def _run(args: argparse.Namespace) -> int:
         print(f"Would insert:              {len(to_insert)} "
               f"(review_status={args.review_status!r})")
         print(f"Need embedding:            {len(needs_embedding)} "
-              f"({batches} OpenAI batch call(s) of {args.batch_size})")
+              f"({batches} OpenAI batch call(s) of {args.batch_size}, "
+              f"question + question/answer text per row)")
 
         if args.dry_run or not args.execute:
             return 0
@@ -150,11 +158,22 @@ async def _run(args: argparse.Namespace) -> int:
                 return 2
             client = OpenAI()
             for i, batch in enumerate(_batched(needs_embedding, args.batch_size), 1):
-                vectors = _embed_batch(client, [q.question for q in batch])
-                for q, vec in zip(batch, vectors):
-                    q.embedding = list(vec)
-                    q.embedding_model = EMBEDDING_MODEL
-                    q.embedding_dim = EMBEDDING_DIM
+                # One OpenAI call per batch: question texts first, then the
+                # matching question+answer texts (same order, same model).
+                vectors = _embed_batch(
+                    client,
+                    [q.question for q in batch]
+                    + [qa_text(q.question, q.correct_answer, q.possible_answers) for q in batch],
+                )
+                q_vectors, qa_vectors = vectors[: len(batch)], vectors[len(batch):]
+                for q, vec, qa_vec in zip(batch, q_vectors, qa_vectors):
+                    if q.embedding is None:
+                        q.embedding = list(vec)
+                        q.embedding_model = EMBEDDING_MODEL
+                        q.embedding_dim = EMBEDDING_DIM
+                    if q.embedding_qa is None:
+                        q.embedding_qa = list(qa_vec)
+                        q.embedding_qa_model = EMBEDDING_MODEL
                 logger.info("Embedded batch %d/%d (%d row(s))", i, batches, len(batch))
 
         rows = [_row_to_insert_dict(question_to_row(q)) for q in to_insert]

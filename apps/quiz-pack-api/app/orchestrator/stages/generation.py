@@ -15,6 +15,7 @@ import hashlib
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any
 
 from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -38,6 +39,9 @@ from app.orchestrator.progress_sink import ProgressSink
 from app.verification.shape_classifier import ShapeClassifier
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
 from quiz_shared.models.question import GenerationProvenance, Question
+
+if TYPE_CHECKING:  # #170 170.13 — type-only: the worker never imports coverage.
+    from app.generation.coverage import CoverageAllocation, CoverageAllocator
 
 logger = logging.getLogger(__name__)
 
@@ -164,6 +168,8 @@ class GenerationStage:
         expiry_classifier: ExpiryClassifier | None = None,
         open_fraction: float = OPEN_SHAPE_FRACTION,
         shape_classifier: ShapeClassifier | None = None,
+        coverage_allocator: CoverageAllocator | None = None,
+        coverage_seed: int | None = None,
     ) -> None:
         self._generator = generator
         # Issue #46 task 46.A2b — optional LLM normalizer for the ambiguous
@@ -182,10 +188,35 @@ class GenerationStage:
         # marker (P4: no model-controlled routing). `None` skips the audit —
         # unit tests and callers that never produce open-branch puzzles.
         self._shape_classifier = shape_classifier
+        # #170 170.13 (D4/D5) — the coverage map's positive half, injected ONLY
+        # by `scripts/generate_pack.py` behind `COVERAGE_STEERING`. `None`
+        # (the worker's value, always) is byte-identical to pre-#170: no
+        # allocation, no subtopic, no avoid list.
+        self._coverage_allocator = coverage_allocator
+        self._coverage_seed = coverage_seed
+        self._coverage_round = 0
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
-        topics = [t for t in (ctx.category, ctx.theme) if t] or None
+        allocation = await self._allocate_coverage(ctx)
+        # #170 170.13: the allocated subtopic is ADDED to today's list, never
+        # replaces the category — so a steered arm differs from an unsteered
+        # one by exactly the added steering (and nothing else).
+        topics = [
+            t
+            for t in (
+                ctx.category,
+                ctx.theme,
+                allocation.subtopic if allocation else None,
+            )
+            if t
+        ] or None
         categories = [ctx.category] if ctx.category else None
+        # Passed as **kwargs so an unsteered run's `generate_questions(...)`
+        # call is byte-identical to pre-#170 — the avoid slot is absent, not
+        # present-and-empty. `excluded_topics` stays unset either way.
+        coverage_kwargs: dict[str, Any] = {}
+        if allocation is not None:
+            coverage_kwargs["avoid_questions"] = list(allocation.avoid_questions)
 
         # Issue #46 task 46.B4c — route the open-shape slice (~4% per audit) of
         # the order through `question_generation_open.md`; the generator emits
@@ -252,6 +283,7 @@ class GenerationStage:
                 # flag the generator itself gates its MCQ path on
                 # (`advanced_generator.py:482`).
                 question_type="text_multichoice" if ctx.mcq_emphasis else "text",
+                **coverage_kwargs,
             )
 
         prompt_seed = _compute_prompt_seed(
@@ -283,6 +315,11 @@ class GenerationStage:
 
             q.prompt_seed = prompt_seed
             q.language = ctx.language
+            # #170 D4 — the subtopic is DERIVED from the allocated cell, never
+            # classified: zero extra LLM calls. `question_to_row` carries it
+            # into the row PersistStage writes; unsteered runs leave it NULL.
+            if allocation is not None:
+                q.subtopic = allocation.subtopic
 
             # 2026-07-27 live-run F-e: the model now emits per-question
             # difficulty/category; normalize fail-safe so an off-vocabulary
@@ -620,3 +657,53 @@ class GenerationStage:
             },
             cost_cents=0,
         )
+
+    async def _allocate_coverage(
+        self, ctx: OrderContext
+    ) -> CoverageAllocation | None:
+        """Pick this call's coverage cell, or `None` when steering is off.
+
+        Direct branch only (D5): a grounded #167 run already carries its
+        topics from `SourcingStage`, so steering it would fight the facts —
+        the allocator is never called there even when it is injected.
+        `CoverageUnavailableError` is deliberately NOT caught: steering with a
+        map that cannot see the corpus is exactly the silent failure #170 is
+        about.
+        """
+        if self._coverage_allocator is None or not ctx.direct_generation:
+            return None
+        from app.generation.coverage import CoverageUnavailableError
+
+        if not ctx.category:
+            raise CoverageUnavailableError(
+                "COVERAGE_STEERING is on but the order carries no category — "
+                "a coverage cell is (language, category, subtopic) (D1)"
+            )
+        return await self._coverage_allocator.allocate(
+            # COALESCE(language, 'en'): the same key the coverage map groups
+            # by, so a NULL-language order lands in the 'en' cells it will be
+            # persisted into rather than in a cell that does not exist.
+            language=ctx.language or "en",
+            category=ctx.category,
+            seed=self._next_coverage_seed(ctx),
+        )
+
+    def _next_coverage_seed(self, ctx: OrderContext) -> int:
+        """Deterministic per run, different per generation round.
+
+        With no `--coverage-seed` the base is the order's own `prompt_seed`
+        hash, so two arms of the same experiment prompt draw the same cells
+        and the only difference between them is the steering itself. The
+        round counter exists because `TopUpStage` reuses THIS stage instance
+        for every backfill round (#103 F5) — one fixed seed would re-drill the
+        same cell after the batch already spent it.
+        """
+        base = self._coverage_seed
+        if base is None:
+            base = int(
+                _compute_prompt_seed(ctx.prompt, ctx.language, ctx.category, ctx.theme),
+                16,
+            )
+        seed = base + self._coverage_round
+        self._coverage_round += 1
+        return seed

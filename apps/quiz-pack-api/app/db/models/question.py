@@ -32,7 +32,13 @@ from quiz_shared.models.question import GenerationProvenance, Question
 from ..base import Base, UUIDPrimaryKeyMixin
 
 EMBEDDING_DIM = 1536
-REVIEW_STATUSES = ("pending_review", "approved", "rejected", "needs_revision", "archived")
+REVIEW_STATUSES = (
+    "pending_review",
+    "approved",
+    "rejected",
+    "needs_revision",
+    "archived",
+)
 
 # Columns a question *writer* must never send. `approved_languages` (#168 DD1)
 # is owned by the translation pipeline, which writes it in the same transaction
@@ -55,7 +61,9 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
 
     question: Mapped[str] = mapped_column(Text, nullable=False)
     type: Mapped[str] = mapped_column(String(32), nullable=False, default="text")
-    possible_answers: Mapped[Optional[Dict[str, str]]] = mapped_column(JSONB, nullable=True)
+    possible_answers: Mapped[Optional[Dict[str, str]]] = mapped_column(
+        JSONB, nullable=True
+    )
     correct_answer: Mapped[Any] = mapped_column(JSONB, nullable=False)
     # Short gettable gist for open-shape questions (#46 D7) — the answer the
     # evaluator actually scores against. NULL for closed questions, and for rows
@@ -113,14 +121,29 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
         DateTime(timezone=True), nullable=True
     )
     review_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    quality_ratings: Mapped[Optional[Dict[str, int]]] = mapped_column(JSONB, nullable=True)
+    quality_ratings: Mapped[Optional[Dict[str, int]]] = mapped_column(
+        JSONB, nullable=True
+    )
     user_ratings: Mapped[Dict[str, int]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
     media_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     image_subtype: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    media_duration_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    media_duration_seconds: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
     explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # #170 coverage-driven dedup (D8, migration a170c0e5d1b2). All nullable and
+    # unread until the matching feature flag is ON: `subtopic` = coverage cell
+    # assigned at persist (D4), `answer_key` = normalized answer for the
+    # per-category cap (D6), `embedding_qa` = question+answer embedding as a
+    # SECOND column so `embedding` stays the retrieval vector (D2).
+    subtopic: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    answer_key: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    embedding_qa: Mapped[Optional[List[float]]] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    embedding_qa_model: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     # #168 DD1 — derived retrieval index, NOT part of the Pydantic `Question`
     # domain model and deliberately absent from the seam below: it is written
@@ -146,6 +169,17 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
             "language",
             "category",
             "review_status",
+        ),
+        # #170 D8 — coverage map GROUP BY and answer-cap COUNT. Btree only; the
+        # `embedding_qa` vector deliberately has NO index (D9).
+        Index(
+            "ix_questions_lang_category_subtopic", "language", "category", "subtopic"
+        ),
+        Index(
+            "ix_questions_lang_category_answer_key",
+            "language",
+            "category",
+            "answer_key",
         ),
         # GIN, not btree: the serving gate filters with `@>` (#168 DD1), which
         # a btree index cannot answer — without this the language filter turns
@@ -226,6 +260,10 @@ def question_to_row(q: Question) -> QuestionRow:
         image_subtype=q.image_subtype,
         media_duration_seconds=q.media_duration_seconds,
         explanation=q.explanation,
+        subtopic=q.subtopic,
+        answer_key=q.answer_key,
+        embedding_qa=list(q.embedding_qa) if q.embedding_qa is not None else None,
+        embedding_qa_model=q.embedding_qa_model,
     )
     parsed = _coerce_uuid(q.id)
     if parsed is not None:
@@ -268,6 +306,14 @@ def row_to_question(row: QuestionRow) -> Question:
         embedding=embedding,
         embedding_model=row.embedding_model,
         embedding_dim=row.embedding_dim,
+        subtopic=row.subtopic,
+        answer_key=row.answer_key,
+        embedding_qa=(
+            [float(x) for x in row.embedding_qa]
+            if row.embedding_qa is not None
+            else None
+        ),
+        embedding_qa_model=row.embedding_qa_model,
         cost_cents=row.cost_cents,
         usage_count=row.usage_count,
         created_at=row.created_at,

@@ -945,8 +945,8 @@ async def test_normalizes_per_question_difficulty_and_category() -> None:
     questions = [
         _stub_question(0, difficulty="Hard "),           # normalizes to hard
         _stub_question(1, difficulty="expert"),          # junk -> default
-        _stub_question(2, category="children"),          # alias -> kids
-        _stub_question(3, category="History"),           # topic-as-category -> general
+        _stub_question(2, category="children"),          # age axis, not a category -> fallback
+        _stub_question(3, category="History"),           # #170 R1: history IS a taxonomy id
     ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
@@ -959,7 +959,7 @@ async def test_normalizes_per_question_difficulty_and_category() -> None:
         "hard", "medium", "medium", "medium",
     ]
     assert [q.category for q in ctx.questions] == [
-        "general", "general", "kids", "general",
+        "general", "general", "general", "history",
     ]
 
 
@@ -1366,3 +1366,188 @@ async def test_self_tagged_mcq_without_options_is_still_repaired() -> None:
     assert question.possible_answers == {"a": "One", "b": "Two", "c": "Three"}
     assert question.correct_answer == "Three"
     assert result.info["inline_options_to_mcq"] == 1
+
+
+# ── #170 170.13 — COVERAGE_STEERING wiring ───────────────────────────────────
+#
+# Why these scenarios: the coverage map is the POSITIVE half of #170 (dedup only
+# ever says no). It may only ever reach the prompt through the two slots
+# `question_generation_direct.md` leaves empty today — `{topic_section}` and
+# `{avoid_section}` — and only on the direct branch. Everything else must stay
+# exactly as it was, because the blind A/B run (170.15) can only attribute a
+# quality change to the steering if the steering is the ONLY difference.
+
+
+class _FakeAllocator:
+    """Stands in for `CoverageAllocator`; records how it was called."""
+
+    def __init__(
+        self,
+        subtopic: str = "volcanology",
+        avoid: Sequence[str] = (),
+        error: Exception | None = None,
+    ) -> None:
+        self._subtopic = subtopic
+        self._avoid = tuple(avoid)
+        self._error = error
+        self.calls: list[tuple[str, str, int]] = []
+
+    async def allocate(self, language: str, category: str, seed: int):
+        self.calls.append((language, category, seed))
+        if self._error is not None:
+            raise self._error
+        from app.generation.coverage import CoverageAllocation
+
+        return CoverageAllocation(
+            language=language,
+            category=category,
+            subtopic=self._subtopic,
+            avoid_questions=self._avoid,
+        )
+
+
+def _direct_ctx(**kwargs: Any) -> OrderContext:
+    ctx = _make_ctx(target_count=2, **kwargs)
+    ctx.direct_generation = True
+    return ctx
+
+
+@pytest.mark.asyncio
+async def test_no_allocator_leaves_generate_questions_kwargs_untouched() -> None:
+    """The default (and the ONLY thing the customer-pack worker builds) must be
+    byte-identical to pre-#170: no avoid slot, no subtopic in `topics`."""
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _direct_ctx()
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    kwargs = gen.calls[0]
+    assert "avoid_questions" not in kwargs
+    assert "excluded_topics" not in kwargs
+    assert kwargs["topics"] == ["geography"]
+    assert ctx.questions[0].subtopic is None
+
+
+@pytest.mark.asyncio
+async def test_allocated_subtopic_is_added_next_to_the_category() -> None:
+    """ADDED, never substituted: arm B of the A/B run must differ from arm A by
+    the steering alone, so the category (and any theme) still travels."""
+    gen = _FakeGenerator([_stub_question(0), _stub_question(1)])
+    allocator = _FakeAllocator(subtopic="volcanology")
+    stage = GenerationStage(gen, coverage_allocator=allocator, coverage_seed=7)  # type: ignore[arg-type]
+    ctx = _direct_ctx(theme="mountains")
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["topics"] == ["geography", "mountains", "volcanology"]
+    assert allocator.calls == [("sk", "geography", 7)]
+
+
+@pytest.mark.asyncio
+async def test_avoid_slot_carries_question_texts_capped_at_ten() -> None:
+    """`prompt_builder._build_avoid_section` heads this list with "Do NOT repeat
+    or rephrase these QUESTIONS" and hard-cuts at 10 — so what we send must be
+    question texts (never answers), already within the cut."""
+    gen = _FakeGenerator([_stub_question(0)])
+    avoid = [f"already asked {i}?" for i in range(10)]
+    stage = GenerationStage(  # type: ignore[arg-type]
+        gen, coverage_allocator=_FakeAllocator(avoid=avoid)
+    )
+
+    await stage.run(_direct_ctx(), sink=_RecordingSink())  # type: ignore[arg-type]
+
+    sent = gen.calls[0]["avoid_questions"]
+    assert sent == avoid
+    assert len(sent) <= 10
+    # The other slot stays empty: excluding whole topics would shrink the
+    # corpus' reachable space, which is the opposite of coverage steering.
+    assert "excluded_topics" not in gen.calls[0]
+
+
+@pytest.mark.asyncio
+async def test_allocated_subtopic_is_stamped_on_every_question() -> None:
+    """D4 — the subtopic is derived from the allocated cell, never classified
+    afterwards; PersistStage writes whatever is stamped here."""
+    gen = _FakeGenerator([_stub_question(0), _stub_question(1)])
+    stage = GenerationStage(  # type: ignore[arg-type]
+        gen, coverage_allocator=_FakeAllocator(subtopic="volcanology")
+    )
+    ctx = _direct_ctx()
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.subtopic for q in ctx.questions] == ["volcanology", "volcanology"]
+
+
+@pytest.mark.asyncio
+async def test_grounded_run_never_calls_the_allocator() -> None:
+    """A grounded #167 run already carries its topics from the sourced facts;
+    steering it would fight them, so the allocator stays untouched even when
+    it is injected (D5: direct branch only)."""
+    gen = _FakeGenerator([_stub_question(0, source_url="https://ex/0")])
+    allocator = _FakeAllocator()
+    stage = GenerationStage(gen, coverage_allocator=allocator)  # type: ignore[arg-type]
+    ctx = _make_ctx(
+        target_count=1, facts=[Fact(text="lava is hot", source_url="https://ex/0")]
+    )
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert allocator.calls == []
+    assert "avoid_questions" not in gen.calls[0]
+    assert ctx.questions[0].subtopic is None
+
+
+@pytest.mark.asyncio
+async def test_coverage_unavailable_propagates_instead_of_steering_blind() -> None:
+    """A category whose live rows carry no subtopic means the 170.7 backfill has
+    not run. Swallowing that would report "steering" while steering nothing —
+    the exact silent failure #170 exists to remove."""
+    from app.generation.coverage import CoverageUnavailableError
+
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(  # type: ignore[arg-type]
+        gen, coverage_allocator=_FakeAllocator(error=CoverageUnavailableError("boom"))
+    )
+
+    with pytest.raises(CoverageUnavailableError):
+        await stage.run(_direct_ctx(), sink=_RecordingSink())  # type: ignore[arg-type]
+    assert gen.calls == []
+
+
+@pytest.mark.asyncio
+async def test_order_without_a_category_fails_loud() -> None:
+    """A coverage cell is (language, category, subtopic) — with no category
+    there is no cell, and a silent no-op would be indistinguishable from a
+    successful steered run in the A/B report."""
+    from app.generation.coverage import CoverageUnavailableError
+
+    gen = _FakeGenerator([_stub_question(0)])
+    stage = GenerationStage(gen, coverage_allocator=_FakeAllocator())  # type: ignore[arg-type]
+
+    with pytest.raises(CoverageUnavailableError):
+        await stage.run(_direct_ctx(category=None), sink=_RecordingSink())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_seed_is_deterministic_per_order_and_steps_per_round() -> None:
+    """No `--coverage-seed`: the base is the order's own prompt seed, so both
+    arms of one experiment draw the same cells. The step exists because
+    TopUpStage reuses this stage instance for every backfill round (#103 F5) —
+    a fixed seed would re-drill the cell the batch just spent."""
+    allocator = _FakeAllocator()
+    stage = GenerationStage(  # type: ignore[arg-type]
+        _FakeGenerator([_stub_question(0)]), coverage_allocator=allocator
+    )
+    other = _FakeAllocator()
+    twin = GenerationStage(  # type: ignore[arg-type]
+        _FakeGenerator([_stub_question(0)]), coverage_allocator=other
+    )
+
+    await stage.run(_direct_ctx(), sink=_RecordingSink())  # type: ignore[arg-type]
+    await stage.run(_direct_ctx(), sink=_RecordingSink())  # type: ignore[arg-type]
+    await twin.run(_direct_ctx(), sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert allocator.calls[0][2] == other.calls[0][2]
+    assert allocator.calls[1][2] == allocator.calls[0][2] + 1

@@ -11,7 +11,8 @@ the question list, so this stage's job is purely a write:
   set to the new pack. Embedding fields are normalised so `embedding_model`
   + `embedding_dim` reflect what `embedding` actually holds (the
   text-embedding-3-small / 1536-dim default this codebase has used since
-  #33 task 1.5).
+  #33 task 1.5); `embedding_qa_model` gets the same default whenever a
+  question carries an `embedding_qa` vector (#170 D2/D10).
 - Use `ON CONFLICT (id) DO NOTHING` on the question insert so a re-run of
   the orchestrator with the same question ids is a no-op. The pack itself
   is always created fresh — re-runs allocate a new pack row, which is the
@@ -118,6 +119,8 @@ def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
             row.embedding_model = DEFAULT_EMBEDDING_MODEL
         if row.embedding_dim is None:
             row.embedding_dim = EMBEDDING_DIM
+    if row.embedding_qa is not None and row.embedding_qa_model is None:
+        row.embedding_qa_model = DEFAULT_EMBEDDING_MODEL
     return {
         c.name: getattr(row, c.name)
         for c in QuestionRow.__table__.columns

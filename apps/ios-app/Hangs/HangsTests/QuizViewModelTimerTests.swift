@@ -434,6 +434,33 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()
     }
 
+    /// #174 (from the #173 field notes): the hidden cap is armed BEFORE the
+    /// engine comes up — deliberately, so a hung handshake still has a deadline.
+    /// But when the handshake is merely SLOW, the cap fires into the gap: the
+    /// state leaves `.recording`, the engine then finishes starting, and the
+    /// window armed on top is vetoed by its own `.recording` guard — a mic left
+    /// open with nothing that will ever close it. The capture path must notice
+    /// the recording is already over and close the mic it just opened.
+    @Test("a dead-air cap that fires during engine start closes the mic instead of leaving it open")
+    @MainActor
+    func capFiringDuringEngineStartClosesTheMic() async throws {
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.quizState = .askingQuestion
+        viewModel.recordingCoordinator.speechStartWindow = 60
+        viewModel.recordingCoordinator.deadAirCap = 0.05
+        mockAudio.prepareForRecordingDelay = 0.3 // the cap lands inside this gap
+
+        await viewModel.recordingCoordinator.startRecording()
+
+        #expect(viewModel.quizState != .recording, "the cap must have ended the recording during the handshake")
+        #expect(mockAudio.isRecording == false, "the engine that came up late must be closed, not left recording")
+        #expect(viewModel.quizTimersController.recordingCountdownTotal == 0, "no window may be armed on a recording that is over")
+
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
     /// INTENT FLIPPED 2026-06-12 (#54 task 54.4, founder #5): this test used to
     /// assert re-record opts OUT of the cap ("longer pauses while reformulating").
     /// But silence detection is also disabled for re-records and never runs on

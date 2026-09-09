@@ -60,11 +60,11 @@ struct QuestionVoiceFooter: View {
             // #125 addendum + #131: the docked command bar, shown iff a command
             // window is armed (hidden during TTS and while recording — the
             // transcript card owns that state now).
-            if !isRecording, let hint = viewModel.commandListenerHint {
+            if !isRecording, viewModel.commandListenerHint != nil {
                 ListenBar(
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
-                    commandHint: hint,
+                    commandHint: viewModel.voiceHintWords,
                     // #131 Track F: the SE-class `compact` flag is now the slim size.
                     size: compact ? .slim : .full
                 )
@@ -144,12 +144,17 @@ struct QuestionVoiceFooter: View {
             // #174: the typed-answer path never opens the confirmation sheet, so
             // this button IS its evaluating state (the full-screen overlay that
             // used to cover the footer is gone). `isLoading` also disables it.
+            // #174 (founder 2026-09-09): "Start" — the title IS the voice command
+            // that opens the mic, on Home and here alike. The mic moved from the
+            // action icon to the small voice glyph, which now means "say this".
             title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Start"),
-            icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "mic.fill"),
+            icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "play.fill"),
             isLoading: isEvaluating,
             // G1 (#83): action buttons deliberately modest so long question text
             // keeps as much room as possible.
             height: 48,
+            // "Stop" is a tap, not a command — the listener is down while recording.
+            voiceGlyph: !isRecording && !isEvaluating && viewModel.showsVoiceGlyph,
             countdownSecondsRemaining: viewModel.answerWindowRemaining,
             countdownTotal: viewModel.answerWindowTotal
         ) {
@@ -190,6 +195,10 @@ struct QuestionVoiceFooter: View {
         .accessibilityIdentifier("question.textInputToggle")
     }
 
+    /// #174 (founder 2026-09-09): the word is back — "Skip" IS the voice command,
+    /// and a driver learns it by reading the button. #171 had made this icon-only
+    /// because "Preskočiť" beside "Nahrávať" left the Record button no room; the
+    /// imperative pair ("Preskoč" beside "Štart") is short enough to share the row.
     private var skipButton: some View {
         Button {
             Task { await viewModel.skipQuestion() }
@@ -202,9 +211,18 @@ struct QuestionVoiceFooter: View {
                         .accessibilityIdentifier("question.processingIndicator")
                 }
             } else {
-                // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
-                // the play+bar glyph read as media transport.
-                iconChip("chevron.right.2", size: 16)
+                chipSurface(fixedWidth: false) {
+                    HStack(spacing: 5) {
+                        Text("Skip")
+                            .font(.hangsBody(15, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        if viewModel.showsVoiceGlyph {
+                            VoiceGlyph(size: 10)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
             }
         }
         .buttonStyle(.plain)
@@ -225,14 +243,15 @@ struct QuestionVoiceFooter: View {
     }
 
     /// The chip chrome on its own, so the skip spinner sits in exactly the same
-    /// circle as the glyph it replaces (no size jump mid-row).
-    private func chipSurface(@ViewBuilder _ content: () -> some View) -> some View {
+    /// circle as the glyph it replaces (no size jump mid-row). `fixedWidth: false`
+    /// is the #174 word chip: a capsule that hugs its text at the same height.
+    private func chipSurface(fixedWidth: Bool = true, @ViewBuilder _ content: () -> some View) -> some View {
         content()
             .foregroundColor(Theme.Hangs.Colors.ink)
             .tint(Theme.Hangs.Colors.ink)
-            .frame(width: 48, height: 48)
-            .background(Circle().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            .frame(width: fixedWidth ? 48 : nil, height: 48)
+            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
     }
 
     // MARK: - Typed answer

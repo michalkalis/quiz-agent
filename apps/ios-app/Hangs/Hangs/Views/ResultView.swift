@@ -70,7 +70,9 @@ struct ResultView: View {
 
                 ResultFooter(
                     feedbackPhase: viewModel.voiceFeedbackPhase,
-                    commandHint: viewModel.commandListenerHint,
+                    isListeningForCommands: viewModel.commandListenerHint != nil,
+                    commandHint: viewModel.voiceHintWords,
+                    showsVoiceGlyph: viewModel.showsVoiceGlyph,
                     autoAdvanceActive: autoAdvanceActive,
                     isPaused: viewModel.isPaused,
                     countdownRemaining: viewModel.autoAdvanceCountdown,

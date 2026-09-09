@@ -45,10 +45,10 @@
 - [x] D — `POST /api/v1/questions/availability` + alert Začať s N / Resetovať videné / Zrušiť — PR #119 merged 2026-09-09, backend prod v107
 - [ ] Pencil sync (sheet, footer, zoznam možností) po TF potvrdení
 - [x] ElevenLabs: nie je problém (staging kľúč)
-- [~] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf — **texty sk/en/cs + slovník + nápovedy hotové v #175 (2026-09-09)**; ostáva mikrofónový glyf + Preskoč ako textové tlačidlo namiesto ikony
-- [ ] Nápovedy: banner len stav, auto-skrytie po 5 kvízoch, prepínač v Nastaveniach (ďalšia session)
-- [~] #175 — České hlasové povely (samostatné issue) — implementované 2026-09-09, PR čaká
-- [ ] Dead-air poistka: nastaviť až po nábehu enginu (viď Vedľajšie zistenia)
+- [x] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf — texty sk/en/cs + slovník + nápovedy prišli v PR #127 (#175, 2026-09-09); vetva `feat/174-imperative-buttons` dopĺňa: Preskoč ako textový čip · Štart s play ikonou (mic = glyf) · en „confirm“ v slovníku + en nápoveda confirm/again/cancel; glyf `VoiceGlyph` len keď sú povely zapnuté a rozpoznávač pripravený; Pauza v toolbare = malý mic badge
+- [x] Nápovedy — tá istá vetva: slová pod lištou (`voiceHintWords`) sa zobrazia prvých 5 dokončených kvízov (`QuizStats.totalQuizzes`), potom len stav; miss bez slov = caption „Nerozumel som“; Nastavenia → Hlas → „Hlasové nápovedy“ (`voiceHintsEnabled: Bool?`, nil = automaticky, hodnota = natrvalo)
+- [x] #175 — České hlasové povely — PR #127 merged 2026-09-09
+- [x] Dead-air poistka — tá istá vetva: poistka OSTÁVA pred nábehom enginu (záruka pri visiacom handshaku, #173), ale obe cesty (batch aj streaming) po nábehu skontrolujú, či nahrávanie ešte trvá; ak ho poistka medzitým ukončila, mikrofón zavrú namiesto nastavenia okna, ktoré by vlastný guard vetoval. Test `capFiringDuringEngineStartClosesTheMic` (bez opravy padá)
 - [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky) → po nej TF build s #174 zmenami na požiadanie
 
 ## Neprebrať znova

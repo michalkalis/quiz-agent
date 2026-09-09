@@ -67,11 +67,13 @@ private func waitUntil(
 struct VoiceCommandObservabilityTests {
     // MARK: - Indicator hint copy
 
+    /// #174: the hint names exactly the words printed on the screen's buttons
+    /// (Confirm / Again / Cancel) — one vocabulary, seen and heard.
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "ok", "again" or "stop""#)
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or "cancel""#)
         #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
     }
 

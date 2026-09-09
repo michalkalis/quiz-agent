@@ -1,9 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
+    "" : {},
     "%@ / month" : {
       "localizations" : {
         "cs" : {
@@ -738,16 +736,16 @@
     "Again" : {
       "comment" : "Button title on the confirmation sheet — re-record the answer; equals the voice command word (#174)",
       "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Znova"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Znovu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znova"
           }
         }
       }
@@ -2023,6 +2021,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diktovať"
+          }
+        }
+      }
+    },
+    "Didn't catch that" : {
+      "comment" : "Listening-bar caption after an unrecognized voice command when the command words are hidden (#174).",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nerozuměl jsem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nerozumel som"
           }
         }
       }
@@ -4002,16 +4017,16 @@
     "Next" : {
       "comment" : "Button title on the result screen — next question; equals the voice command word (#174)",
       "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ďalej"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dál"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ďalej"
           }
         }
       }
@@ -6211,6 +6226,23 @@
         }
       }
     },
+    "Show the words to say under the listening bar" : {
+      "comment" : "Subtitle of the Voice hints settings toggle.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobrazovat pod lištou poslechu slova, která můžeš říct"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobrazovať pod lištou počúvania slová, ktoré môžeš povedať"
+          }
+        }
+      }
+    },
     "Sign in to keep your premium and history when you reinstall." : {
       "comment" : "Settings account section: benefit line shown above Sign in with Apple",
       "localizations" : {
@@ -6624,16 +6656,16 @@
     "Start" : {
       "comment" : "Button title on Home and on the question screen — starts the quiz / answer recording; equals the voice command word (#174)",
       "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Štart"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Štart"
           }
         }
       }
@@ -8049,6 +8081,23 @@
         }
       }
     },
+    "Voice hints" : {
+      "comment" : "Settings toggle: show the words to say under the listening bar.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové nápovědy"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové nápovedy"
+          }
+        }
+      }
+    },
     "We couldn't load the upgrade right now. Check your connection and try again." : {
       "localizations" : {
         "cs" : {
@@ -9230,12 +9279,6 @@
     "voice.cancel" : {
       "comment" : "Cancel button on the answer-confirmation sheet — imperative form because it equals the voice command word (#174); system alerts keep the generic \"Cancel\"",
       "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zruš"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9246,6 +9289,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zruš"
           }
         }
       }

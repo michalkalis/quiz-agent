@@ -205,6 +205,21 @@ struct SettingsView: View {
 
             hairline
 
+            // #174: the "say …" words are shown for the first quizzes only, then
+            // hidden — the buttons carry the same words. The row reads the
+            // effective state; touching it makes the choice explicit and permanent.
+            HangsToggleRow(
+                label: "Voice hints",
+                subtitle: "Show the words to say under the listening bar",
+                isOn: Binding(
+                    get: { viewModel.showsVoiceHints },
+                    set: { viewModel.settings.voiceHintsEnabled = $0 }
+                )
+            )
+            .accessibilityIdentifier("settings.voiceHints")
+
+            hairline
+
             // Release-visible recognizer diagnostics (#96 P2): asset state + the
             // last command heard, so the founder can confirm on-device that
             // recognition is armed and firing. Full failure reason → Sentry.

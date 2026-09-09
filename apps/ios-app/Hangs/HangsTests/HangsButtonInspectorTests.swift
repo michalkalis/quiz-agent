@@ -47,6 +47,29 @@ struct HangsPrimaryButtonInspectorTests {
         }
     }
 
+    /// #174: the mic glyph is what tells a driver "you can say this word". It
+    /// must appear only when asked for — a glyph on a button that is not a
+    /// command (Type, Stop) would teach the wrong vocabulary.
+    @Test("Voice glyph renders only when the title is a voice command")
+    func voiceGlyphIsOptIn() async throws {
+        let withGlyph = HangsPrimaryButton(title: "Start", voiceGlyph: true) {}
+        try await ViewHosting.host(withGlyph) {
+            #expect(throws: Never.self) {
+                try withGlyph.inspect().find(ViewType.Image.self, where: {
+                    try $0.actualImage().name() == "mic.fill"
+                })
+            }
+        }
+        let without = HangsPrimaryButton(title: "Stop") {}
+        try await ViewHosting.host(without) {
+            #expect(throws: (any Error).self) {
+                try without.inspect().find(ViewType.Image.self, where: {
+                    try $0.actualImage().name() == "mic.fill"
+                })
+            }
+        }
+    }
+
     @Test("Trailing icon SF Symbol appears when trailingIcon is provided")
     func trailingIconAppearsWhenProvided() async throws {
         let view = HangsPrimaryButton(title: "Next", trailingIcon: "arrow.right") {}

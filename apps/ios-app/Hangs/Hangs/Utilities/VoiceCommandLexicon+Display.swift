@@ -61,7 +61,8 @@ extension VoiceCommandLexicon {
         switch (language, screen) {
         case (.english, .home): return #"Say "start""#
         case (.english, .question): return #"Say "start" or "skip""#
-        case (.english, .confirmation): return #"Say "ok", "again" or "stop""#
+        // #174: names the words printed on the sheet's buttons (Confirm / Again / Cancel).
+        case (.english, .confirmation): return #"Say "confirm", "again" or "cancel""#
         case (.english, .result): return #"Say "next""#
         case (.slovak, .home): return "Povedz „štart“"
         case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"

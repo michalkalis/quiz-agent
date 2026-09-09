@@ -13,9 +13,14 @@ import SwiftUI
 
 struct ResultFooter: View {
     let feedbackPhase: VoiceFeedbackPhase
-    /// nil = the command window is not armed (or the recognizer is not ready) —
-    /// the bar must not claim to be listening, so it is not rendered at all.
+    /// False = the command window is not armed (or the recognizer is not ready)
+    /// — the bar must not claim to be listening, so it is not rendered at all.
+    var isListeningForCommands: Bool = false
+    /// #174: the words to say under the bar, nil once the driver has outgrown
+    /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
     let commandHint: String?
+    /// #174: the Next button's title is its voice command — mic glyph.
+    var showsVoiceGlyph: Bool = false
     /// True while auto-advance is counting down (drives the CTA countdown + STAY).
     let autoAdvanceActive: Bool
     let isPaused: Bool
@@ -33,7 +38,7 @@ struct ResultFooter: View {
             GlowSweepLine(phase: feedbackPhase)
                 .padding(.horizontal, 4)
 
-            if let commandHint {
+            if isListeningForCommands {
                 ListenBar(mode: .command, feedback: feedbackPhase, commandHint: commandHint)
                     .transition(.opacity)
             }
@@ -41,11 +46,15 @@ struct ResultFooter: View {
             HStack(spacing: 10) {
                 // #131 Track D: primary CTA sits LEFT, STAY/RESUME to its right
                 // (founder spec, swapped from the #127 layout).
+                // #174: "Next" — the title IS the voice command (founder
+                // 2026-09-09: imperative button names, one word seen = one word
+                // said). The a11y label keeps the fuller "Next question".
                 HangsPrimaryButton(
                     title: "Next",
                     icon: nil,
                     trailingIcon: "arrow.right",
                     height: 64,
+                    voiceGlyph: showsVoiceGlyph,
                     countdownSecondsRemaining: autoAdvanceActive ? countdownRemaining : nil,
                     countdownTotal: countdownTotal,
                     action: onNext

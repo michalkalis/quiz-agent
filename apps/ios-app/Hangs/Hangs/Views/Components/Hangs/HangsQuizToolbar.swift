@@ -41,11 +41,19 @@ struct QuizMuteToolbarButton: View {
 /// not just on the answer confirmation sheet it used to be trapped on.
 struct QuizPauseToolbarButton: View {
     let isPaused: Bool
+    /// #174: "pause" is a voice command (confirmation sheet) — badge the glyph.
+    var showsVoiceGlyph: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                .overlay(alignment: .bottomTrailing) {
+                    if showsVoiceGlyph, !isPaused {
+                        VoiceGlyph(size: 7)
+                            .offset(x: 5, y: 3)
+                    }
+                }
         }
         .tint(isPaused ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.ink)
         .accessibilityLabel(isPaused ? Text("Continue") : Text("Pause"))

@@ -282,6 +282,45 @@ class UsageResponse(BaseModel):
     )
 
 
+class QuestionAvailabilityRequest(BaseModel):
+    """Pre-flight corpus probe for ``POST /questions/availability`` (#174 finding 1).
+
+    Deliberately mirrors the retrieval-relevant subset of ``CreateSessionRequest``
+    rather than taking a session id: the client asks BEFORE creating the session,
+    so a short set can be started with the honest count instead of being cut off
+    mid-quiz when the retriever runs out of unseen questions.
+    """
+
+    requested_count: int = Field(
+        default=10, ge=1, le=50, description="Questions the user asked for"
+    )
+    difficulty: str = Field(default="medium", pattern="^(easy|medium|hard|random)$")
+    category: Optional[str] = Field(
+        default=None, description="Legacy single-category filter (pre-#82 clients)"
+    )
+    categories: Optional[List[str]] = Field(
+        default=None, description="Category filter, multi-select (#82); absent = all"
+    )
+    language: str = Field(default="en", description="Language code (ISO 639-1)")
+    include_images: bool = Field(default=False)
+    excluded_question_ids: Optional[List[str]] = Field(
+        default=None, description="Client-side seen history, same list /start sends"
+    )
+
+
+class QuestionAvailabilityResponse(BaseModel):
+    """How many unseen questions the retriever could actually serve."""
+
+    available: int = Field(
+        description="Unseen questions matching this configuration; 0 = nothing left"
+    )
+    requested: int = Field(
+        description="Echo of requested_count, so the client can "
+        "label the alert without re-deriving it"
+    )
+    sufficient: bool = Field(description="available >= requested")
+
+
 class RefreshRequest(BaseModel):
     """Request to rotate a refresh token (issue #60, task 60.4)."""
 

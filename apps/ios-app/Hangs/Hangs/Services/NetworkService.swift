@@ -13,6 +13,10 @@ import Sentry
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
     func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession
+    /// #174: how many unseen questions this configuration still has, asked
+    /// BEFORE the session is created. Read-only and cheap (one COUNT server
+    /// side) so it can sit on the tap-to-start path.
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     /// `questionId` (#133 1a) is the id of the question the submission answers —
     /// pass it on EVERY submit. The backend then replays an already-graded
@@ -263,6 +267,41 @@ actor NetworkService: NetworkServiceProtocol {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(QuizSession.self, from: data)
+        }
+    }
+
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/questions/availability")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Same header contract as createSession: a TestFlight install is served
+        // pending_review questions, so its count must include them or the alert
+        // would under-report the corpus this build actually plays from.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+
+        var body: [String: Any] = [
+            "requested_count": requestedCount,
+            "difficulty": difficulty,
+            "language": language,
+            "include_images": includeImages,
+            "excluded_question_ids": excludedQuestionIds,
+        ]
+        if !categories.isEmpty {
+            body["categories"] = categories
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let endpointPath = "/api/v1/questions/availability"
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) for \(requestedCount, privacy: .public) questions")
+
+        let data = try await performRequestData(request, endpointPath: endpointPath)
+        return try await MainActor.run {
+            try JSONDecoder().decode(QuestionAvailability.self, from: data)
         }
     }
 

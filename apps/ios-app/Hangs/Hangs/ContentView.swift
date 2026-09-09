@@ -263,6 +263,31 @@ struct ContentView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
+        // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
+        // Mounted here, on the root, because `startNewQuiz` has 9 call sites
+        // (Home, voice "start", Play Again, error-retry…) and all of them must
+        // surface the shortfall — the same structural argument as the `.onReceive`
+        // nav teardown above.
+        .alert(
+            "Not enough questions",
+            isPresented: Binding(
+                get: { viewModel.questionShortfall != nil },
+                set: { if !$0 { viewModel.dismissQuestionShortfall() } }
+            ),
+            presenting: viewModel.questionShortfall
+        ) { shortfall in
+            if shortfall.canStartShorter {
+                Button("Start with \(shortfall.available) questions") {
+                    viewModel.startWithAvailableQuestions(shortfall)
+                }
+            }
+            Button("Reset seen questions") {
+                viewModel.resetSeenQuestionsAndStart(shortfall)
+            }
+            Button("Cancel", role: .cancel) { viewModel.dismissQuestionShortfall() }
+        } message: { shortfall in
+            Text("Only \(shortfall.available) new questions left for you in \(shortfall.categoryName) (you asked for \(shortfall.requested)).")
+        }
         .environmentObject(navModel)
     }
 

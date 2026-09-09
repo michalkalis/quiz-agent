@@ -114,6 +114,9 @@ import os
         /// Last `categories` value passed to `createSession` — asserts the Home
         /// multi-select actually reaches the session request (#82 item 4).
         var capturedCategories: [String]?
+        /// #174: the length the session was actually created with. "Start with N
+        /// questions" is only honest if this is N — the progress label reads it.
+        var capturedMaxQuestions: Int?
 
         /// Number of times `syncEntitlements` was invoked — asserts the post-purchase
         /// bridge (issue #93) actually fires before the usage refresh.
@@ -132,8 +135,9 @@ import os
         /// concurrent syncs).
         var syncEntitlementsGate: (@Sendable () async -> Void)?
 
-        func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId _: String?) async throws -> QuizSession {
+        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId _: String?) async throws -> QuizSession {
             createSessionCallCount += 1
+            capturedMaxQuestions = maxQuestions
             onCreateSession?()
             // Mirrors the real NetworkService's cancellation-cooperative behaviour
             // (Task cancellation propagates through `URLSession.data(for:)` as
@@ -154,6 +158,26 @@ import os
                 throw NetworkError.invalidResponse
             }
             return session
+        }
+
+        /// #174: when set, the pre-flight probe reports this instead of "plenty".
+        /// `nil` means the corpus can serve whatever was requested, so the
+        /// existing tests keep starting quizzes without touching the alert path.
+        var stubbedAvailability: QuestionAvailability?
+        /// When set, `questionAvailability` throws this — the probe must FAIL
+        /// OPEN (a probe outage may never block a playable quiz).
+        var questionAvailabilityError: Error?
+        var questionAvailabilityCallCount = 0
+        var capturedAvailabilityExcludedIds: [String]?
+        var capturedAvailabilityRequestedCount: Int?
+
+        func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+            questionAvailabilityCallCount += 1
+            capturedAvailabilityRequestedCount = requestedCount
+            capturedAvailabilityExcludedIds = excludedQuestionIds
+            if let error = questionAvailabilityError { throw error }
+            if let stubbed = stubbedAvailability { return stubbed }
+            return QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
         }
 
         func startQuiz(sessionId _: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {

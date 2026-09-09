@@ -337,7 +337,7 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 | F — QA embedding branch | 170.10 | ⬜ |
 | G — gray-zone judge + replay harness | 170.11 · 170.14b | ⬜ |
 | H — coverage map module | 170.12 | ⬜ |
-| I — steering wiring + isolation gate | 170.13-170.14 | ⬜ |
+| I — steering wiring + isolation gate | 170.13-170.14 | ✅ |
 | J — quality-guard A/B run | 170.15 | ⬜ |
 | K — strictness pass (A26) | 170.15b | ⬜ |
 | L — publish rating batch (`b`) | 170.16 | ⬜ |
@@ -358,3 +358,21 @@ When a session lands, add a short *"Session X delivered — exact symbols for Y"
 **Session D delivered — `scripts/backfill_subtopics.py` (170.7).** Symbols: `run_cli(argv)` / `run(args)` / `main(argv)` (exit 1 on `BackfillError`), `classify_batch(llm, category, language, approved, rows)` (the seam every test monkeypatches — mock this, not the LLM), `resolve_assignments(batch, rows, approved, category)`, `fetch_rows(...)`, `classify_category(...)`, `apply_assignments(...)`, `build_preview(...)`, `write_preview(path, preview)`; models `SubtopicBatch(assignments=[SubtopicAssignment(index, subtopic)])`; constants `LIVE_REVIEW_STATUSES = ("approved", "pending_review")`, `DEFAULT_BATCH_SIZE = 40`. Rows are addressed by their **position in the batch**, not by id. Exact CLI (from `apps/quiz-pack-api/`):
 `DATABASE_URL=… LLM_GATEWAY=session python scripts/backfill_subtopics.py --category <id> --out ../../docs/testing/runs/170-coverage-steering/subtopic-backfill-preview.json` — flags: `--database-url`, `--out` (required, always written), `--category` (comma-separated; default = every category in `subtopics.json`), `--language` (default `en`, matches `COALESCE(language,'en')`), `--limit` (per category), `--batch-size`, `--force` (re-classify rows that already carry a subtopic), `--apply`, `--model`.
 ⚠️ **Blocker for the founder's deferred prod run:** the experiment category recorded in `experiment-category.md` is `general`, and `general` is **not** in the approved taxonomy (R1 = 6 interest ids + `entertainment`), so the script refuses it fail-loud before any LLM call. Either re-categorise the live `general` rows first (`scripts/recategorize_corpus.py`) or switch the experiment category to the runner-up `science-nature` — the same open decision already noted in `experiment-category.md`.
+
+
+### Session I delivered — exact flags + symbols
+
+**170.13 (`COVERAGE_STEERING`, default OFF).**
+
+- `app/feature_flags.py`: `coverage_steering()` (`COVERAGE_STEERING`, `_truthy`).
+- `GenerationStage(..., coverage_allocator=None, coverage_seed=None)` — the allocator is typed `TYPE_CHECKING`-only, so the worker's import graph is unchanged. `run()` allocates via `_allocate_coverage(ctx)` (direct branch only: `ctx.direct_generation`), ADDS `allocation.subtopic` to `[category, theme]`, and passes `avoid_questions=list(allocation.avoid_questions)` through `**coverage_kwargs` — with the allocator unset the `generate_questions(...)` kwargs are byte-identical to pre-#170 (no `avoid_questions`, no `excluded_topics`). Each surviving question is stamped `q.subtopic` (D4), which `question_to_row` carries into the row `PersistStage` writes — `persist.py` itself is unchanged.
+- Fail-loud: `CoverageUnavailableError` propagates (never swallowed); steering an order with no category raises the same error.
+- Seed: `--coverage-seed N`, else `int(_compute_prompt_seed(prompt, language, category, theme), 16)` — deterministic per order, so both arms of one experiment draw the same cells; `+1` per generation round because `TopUpStage` reuses the stage instance (#103 F5).
+- `scripts/generate_pack.py` is the only composer (D5): `_build_coverage_allocator(dedup_store_name)` (SystemExit unless `--dedup-store pgvector` **and** `DATABASE_URL`), `_build_stages(..., coverage_allocator=, coverage_seed=)`, `dedup = build_dedup_stage(store, None, strictness)` and `TopUpStage(..., strictness=strictness)` — both imported from `scripts/replay_dedup_json.py` (`build_dedup_stage`, new `build_strictness()`), not forked.
+
+**170.14 (isolation gate, no behaviour change).** `tests/worker/test_process_order.py::test_worker_stages_use_default_170_parameters` — with `COVERAGE_STEERING=DEDUP_QA_EMBEDDING=ANSWER_CAP=DEDUP_GRAYZONE_JUDGE=1` and `DEDUP_STRICTNESS_PER_CATEGORY=entertainment=cosine:0.92,cap:6`, the stages `app/worker/tasks.py::_build_stages` composes still carry every #170 parameter at its default. Third leg is the diff: `app/worker/tasks.py`, `app/generation/prompt_builder.py`, `prompts/question_generation_direct.md` are byte-identical to `origin/main`.
+
+**Session J env lines (both arms `--dry-run --dedup-store pgvector`, `DATABASE_URL` set, same model/prompt/category/N):**
+
+- arm A (unsteered): `COVERAGE_STEERING=0 DEDUP_QA_EMBEDDING=0 ANSWER_CAP=0 DEDUP_GRAYZONE_JUDGE=0 uv run --no-sync python scripts/generate_pack.py --direct --category <cat> --target-count 30 --dry-run --dedup-store pgvector --out <armA>.json`
+- arm B (steered): the same line with `COVERAGE_STEERING=1` and `--coverage-seed <N>` added. Nothing else differs.

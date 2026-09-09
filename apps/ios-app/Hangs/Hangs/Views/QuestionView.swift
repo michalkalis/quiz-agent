@@ -163,6 +163,7 @@ struct QuestionView: View {
                 isListeningForCommands: viewModel.commandListenerHint != nil,
                 commandHint: viewModel.voiceHintWords,
                 showsVoiceGlyph: viewModel.showsVoiceGlyph,
+                commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 matchedOption: matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
@@ -452,6 +453,7 @@ struct QuestionView: View {
                 feedback: viewModel.voiceFeedbackPhase,
                 commandHint: viewModel.voiceHintWords,
                 size: compact ? .slim : .full,
+                language: viewModel.commandLanguage,
                 thinkCountdown: .init(remaining: viewModel.answerWindowRemaining,
                                       total: viewModel.answerWindowTotal),
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }

@@ -96,7 +96,7 @@ extension VoiceCommandCoordinator {
         guard commandCapturePhase == .listening,
               let screen = currentCommandScreen,
               commandAvailability == .ready else { return nil }
-        return VoiceCommandLexicon.hint(on: screen)
+        return VoiceCommandLexicon.hint(on: screen, language: commandLanguage)
     }
 
     /// Arm or tear down the command/VAD listener to match the current window.

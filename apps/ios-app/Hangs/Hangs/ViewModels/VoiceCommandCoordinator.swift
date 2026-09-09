@@ -199,6 +199,10 @@ final class VoiceCommandCoordinator: ObservableObject {
 
     let settings: @MainActor () -> QuizSettings
     let isAppForeground: @MainActor () -> Bool
+
+    /// #175: the command grammar is the quiz language — the single value every
+    /// lexicon/matcher call above the engine seam passes explicitly.
+    var commandLanguage: CommandLanguage { .forQuizLanguage(settings().language) }
     /// ANY TTS playback — question OR feedback. Widened in #119: the flag used
     /// to be question-only, so the result screen armed the window and then
     /// played feedback TTS underneath a live input tap, and the app transcribed

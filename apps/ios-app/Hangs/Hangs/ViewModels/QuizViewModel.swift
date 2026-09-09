@@ -295,6 +295,9 @@ final class QuizViewModel: ObservableObject {
     /// (SettingsView status row).
     var commandAvailability: VoiceCommandAvailability { voiceCommandCoordinator.commandAvailability }
 
+    /// #175: the command language (= quiz language) for the listening bar caption.
+    var commandLanguage: CommandLanguage { voiceCommandCoordinator.commandLanguage }
+
     /// Release diagnostics (#96 P2) — see `VoiceCommandCoordinator.lastRecognizedCommand`
     /// (SettingsView diagnostics row).
     var lastRecognizedCommand: VoiceCommand? { voiceCommandCoordinator.lastRecognizedCommand }

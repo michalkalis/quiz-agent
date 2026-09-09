@@ -1502,22 +1502,6 @@
         }
       }
     },
-    "Command engine" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozpoznávání příkazů"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozpoznávanie príkazov"
-          }
-        }
-      }
-    },
     "Commands are spoken in English by default — Slovak command words can be enabled in Settings." : {
       "localizations" : {
         "cs" : {

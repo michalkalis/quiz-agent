@@ -30,6 +30,8 @@ struct AnswerConfirmationView: View {
     var commandHint: String? = nil
     /// #174: Confirm / Again / Cancel titles are voice commands — mic glyph.
     var showsVoiceGlyph: Bool = false
+    /// #175: the command language (= quiz language) for the bar's caption.
+    var commandLanguage: CommandLanguage = .english
     /// #122 Variant C: transient match/miss tint for the listening bar.
     var commandFeedback: VoiceFeedbackPhase = .idle
     /// #171 Track I: the MCQ option a spoken answer resolved to, pre-formatted
@@ -239,7 +241,7 @@ struct AnswerConfirmationView: View {
             // #131 Track F: full ListenBar — confirmation is a quiz screen, and
             // its three commands need the words on their own line.
             if isListeningForCommands, !isEditing, !isEvaluating {
-                ListenBar(mode: .command, feedback: commandFeedback, commandHint: commandHint)
+                ListenBar(mode: .command, feedback: commandFeedback, commandHint: commandHint, language: commandLanguage)
                     .padding(.top, 12)
                     .transition(.opacity)
             }

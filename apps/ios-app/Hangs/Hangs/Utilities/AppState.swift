@@ -99,7 +99,8 @@ final class AppState: ObservableObject {
         self.authService = authService
         self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         audioService = AudioService()
-        persistenceStore = PersistenceStore()
+        let persistence = PersistenceStore()
+        persistenceStore = persistence
         self.storeManager = StoreManager()
         packOrderService = PackOrderService(authService: authService)
         packPurchaseService = StoreKitPackPurchaseService()
@@ -115,7 +116,11 @@ final class AppState: ObservableObject {
             if CommandLine.arguments.contains("--ui-test-voice-ready") {
                 resolved = MockSilenceDetectionService()
             } else {
-                let silenceService = SilenceDetectionService()
+                // #175: the command recognizer starts in the persisted quiz
+                // language; `AudioDeviceState` re-resolves it per window.
+                let silenceService = SilenceDetectionService(
+                    selection: .forQuizLanguage(persistence.loadSettings().language)
+                )
                 // One-time launch authorization + prepare (#77 device fix, #105 auth
                 // gap): request speech-recognition permission, then — if granted —
                 // check/download the on-device en-US SpeechTranscriber model assets.
@@ -126,7 +131,9 @@ final class AppState: ObservableObject {
                 resolved = silenceService
             }
         #else
-            let silenceService = SilenceDetectionService()
+            let silenceService = SilenceDetectionService(
+                selection: .forQuizLanguage(persistence.loadSettings().language)
+            )
             // One-time launch authorization + prepare (#77 / #105) — see DEBUG branch.
             Task { await silenceService.requestAuthorizationAndPrepareAssets() }
             resolved = silenceService

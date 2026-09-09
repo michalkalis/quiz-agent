@@ -59,21 +59,17 @@ struct CommandEngineSelectionTests {
         #expect(CommandEngineSelection.dictationSlovak.engineTag == "dictation")
     }
 
-    @Test("stored: round-trips, and garbage/missing falls back to today's engine")
-    func storedFallsBackSafely() {
-        let original = UserDefaults.standard.string(forKey: CommandEngineSelection.storageKey)
-        defer { UserDefaults.standard.set(original, forKey: CommandEngineSelection.storageKey) }
-
-        CommandEngineSelection.stored = .dictationSlovak
-        #expect(CommandEngineSelection.stored == .dictationSlovak)
-
-        // A removed case / corrupted value must degrade to the DEFAULT engine —
-        // a bad build can never strand the founder without commands (#120).
-        UserDefaults.standard.set("no-such-engine", forKey: CommandEngineSelection.storageKey)
-        #expect(CommandEngineSelection.stored == .speechEnglish)
-
-        UserDefaults.standard.removeObject(forKey: CommandEngineSelection.storageKey)
-        #expect(CommandEngineSelection.stored == .speechEnglish)
+    @Test("#175: the engine follows the quiz language; anything else speaks English")
+    func followsQuizLanguage() {
+        #expect(CommandEngineSelection.forQuizLanguage("sk") == .dictationSlovak)
+        #expect(CommandEngineSelection.forQuizLanguage("cs") == .dictationCzech)
+        #expect(CommandEngineSelection.forQuizLanguage("en") == .speechEnglish)
+        // Region-qualified codes and unknown languages must never strand the
+        // founder without commands — English is the field-proven default.
+        #expect(CommandEngineSelection.forQuizLanguage("sk-SK") == .dictationSlovak)
+        #expect(CommandEngineSelection.forQuizLanguage("de") == .speechEnglish)
+        #expect(CommandEngineSelection.forQuizLanguage("") == .speechEnglish)
+        #expect(CommandLanguage.forQuizLanguage("cs") == .czech)
     }
 }
 

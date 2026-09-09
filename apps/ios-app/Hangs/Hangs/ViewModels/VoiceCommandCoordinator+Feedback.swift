@@ -46,7 +46,7 @@ extension VoiceCommandCoordinator {
     func noteUnmatchedForFeedback(_ normalized: String, isFinal: Bool) {
         guard isFinal else { return }
         guard voiceFeedbackPhase != .matched else { return } // ack outranks a miss
-        guard VoiceCommandMatcher.hasContentTokens(normalized) else { return }
+        guard VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage) else { return }
         guard normalized != lastUnmatchedGlowText else { return }
         if let last = lastUnmatchedGlowAt,
            now().timeIntervalSince(last) < unmatchedGlowCooldown { return }

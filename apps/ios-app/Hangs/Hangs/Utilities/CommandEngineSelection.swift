@@ -2,46 +2,52 @@
 //  CommandEngineSelection.swift
 //  Hangs
 //
-//  Issue #120 — the launch-time choice of which on-device recognizer feeds the
-//  voice-command path, and in which language. Two Apple engines are selectable
-//  behind the CommandTranscriberAdapter seam:
+//  Issue #120 introduced the choice of which on-device recognizer feeds the
+//  voice-command path, and in which language. Two Apple engines sit behind the
+//  CommandTranscriberAdapter seam:
 //
-//    • SpeechTranscriber    — today's engine; English-only for us (its 30
-//      supported locales include no Slavic language) but the one with field
-//      telemetry and the `.fastResults` latency fix (#119).
-//    • DictationTranscriber — supports sk_SK on-device, honors
+//    • SpeechTranscriber    — the English engine; its 30 supported locales
+//      include no Slavic language, but it has the field telemetry and the
+//      `.fastResults` latency fix (#119).
+//    • DictationTranscriber — supports sk_SK and cs_CZ on-device, honors
 //      `AnalysisContext.contextualStrings`, and exposes car-shaped content
-//      hints (`.farField`, `.shortForm`). No `.fastResults` — its first-
-//      hypothesis latency is the open question this switch exists to measure.
+//      hints (`.farField`, `.shortForm`).
 //
-//  This is a COMPARISON switch, not a migration: the default is today's exact
-//  behaviour, so a bad build cannot regress prod, and no engine is removed
-//  until a founder car leg says which wins. Launch-time by design — the
-//  recognizer, its assets and the audio pipeline are built once at AppState
-//  init; `stored` (the Settings picker) takes effect on the next launch.
+//  #175 (founder 2026-09-09): the command grammar FOLLOWS THE QUIZ LANGUAGE.
+//  There is no Settings picker any more — `forQuizLanguage` is the one
+//  mapping, resolved at launch from the persisted quiz settings and again
+//  before every listening window (`SilenceDetectionService.setCommandEngine`),
+//  so changing the quiz language in Settings takes effect at the next quiz
+//  without a restart.
 //
 
 import Foundation
 
 /// The language of the spoken COMMAND grammar (start/skip/… vs štart/preskoč/…).
-/// Distinct from `QuizSettings.language` (quiz content) — the founder plays
-/// Slovak quizzes with English commands today. Everything above the engine seam
-/// that needs locale awareness (lexicon, matcher, hints) keys off this, never
-/// off the engine — the engine choice itself stays invisible above the seam.
+/// Since #175 this is the quiz language (`QuizSettings.language`) — the one
+/// thing code above the engine seam (lexicon, matcher, hints) keys off.
 enum CommandLanguage: String, Sendable, Equatable {
     case english = "en"
     case slovak = "sk"
     /// #175 — Czech shares the Slovak precision-over-recall design (same
     /// hazards: the mic is open to the language being spoken).
     case czech = "cs"
+
+    /// The command grammar for a quiz language code (ISO 639-1, as stored in
+    /// `QuizSettings.language`). Anything that is not Slovak or Czech speaks
+    /// English commands — the pre-#120 default.
+    static func forQuizLanguage(_ code: String) -> CommandLanguage {
+        CommandEngineSelection.forQuizLanguage(code).commandLanguage
+    }
 }
 
-/// One valid (engine, command language) pair. A single 3-case selection rather
-/// than two independent axes because the fourth combination — Slovak on
-/// SpeechTranscriber — does not exist (no `sk_SK` in its `supportedLocales`,
-/// measured against the iOS 26.5 SDK, #119/#120) and must not be constructible.
-enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
-    /// Default — today's behaviour, exactly (#119 configuration untouched).
+/// One valid (engine, command language) pair. A single enum rather than two
+/// independent axes because the other combinations — Slovak or Czech on
+/// SpeechTranscriber — do not exist (no `sk_SK` / `cs_CZ` in its
+/// `supportedLocales`, measured against the iOS 26.5 SDK, #119/#120) and must
+/// not be constructible.
+enum CommandEngineSelection: String, CaseIterable, Sendable {
+    /// English — today's engine, exactly (#119 configuration untouched).
     case speechEnglish = "speech-en"
     case dictationEnglish = "dictation-en"
     case dictationSlovak = "dictation-sk"
@@ -50,29 +56,16 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
     /// Slovak — the pair is only constructible on the dictation engine.
     case dictationCzech = "dictation-cs"
 
-    var id: String { rawValue }
-
-    // MARK: - Persistence
-
-    nonisolated static let storageKey = "commandEngineSelection"
-
-    /// The persisted choice (the Settings picker reads/writes this). An
-    /// unrecognized or missing value falls back to the default engine — a bad
-    /// build or a removed case can never strand the founder without commands.
-    nonisolated static var stored: CommandEngineSelection {
-        get {
-            UserDefaults.standard.string(forKey: storageKey)
-                .flatMap(CommandEngineSelection.init(rawValue:)) ?? .speechEnglish
+    /// The engine + grammar for a quiz language code (#175). English stays on
+    /// SpeechTranscriber (field-proven, `.fastResults`); `dictationEnglish`
+    /// remains only as a measurement configuration for tests.
+    nonisolated static func forQuizLanguage(_ code: String) -> CommandEngineSelection {
+        switch code.lowercased().prefix(2) {
+        case "sk": return .dictationSlovak
+        case "cs": return .dictationCzech
+        default: return .speechEnglish
         }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: storageKey) }
     }
-
-    /// The selection ACTIVE for this process — a launch snapshot of `stored`.
-    /// Deliberately a `static let`: the engine, its assets, the lexicon default
-    /// and the telemetry tags must all agree for the whole session, so a
-    /// mid-session Settings change only lands on the next launch (the picker
-    /// says so). First access happens at AppState init, before Settings exists.
-    static let current: CommandEngineSelection = stored
 
     // MARK: - Mappings
 
@@ -101,17 +94,6 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
         switch self {
         case .speechEnglish: return "speech"
         case .dictationEnglish, .dictationSlovak, .dictationCzech: return "dictation"
-        }
-    }
-
-    /// Founder-facing picker label (Settings). Raw display strings — the row is
-    /// a diagnostics-grade control like the Status row, not localized copy.
-    nonisolated var displayName: String {
-        switch self {
-        case .speechEnglish: return "Standard · English"
-        case .dictationEnglish: return "Dictation · English"
-        case .dictationSlovak: return "Dictation · Slovak"
-        case .dictationCzech: return "Dictation · Czech"
         }
     }
 }

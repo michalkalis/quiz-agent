@@ -109,6 +109,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     func startListening() async
     func stopListening()
 
+    /// #175: make the command recognizer match the quiz language. No-op when
+    /// it already does; deferred (retried at the next window) while a
+    /// listening window is open. Called before every window start.
+    func setCommandEngine(_ selection: CommandEngineSelection) async
+
     /// Signal whether TTS is currently playing (enables barge-in detection).
     func setTTSPlaybackActive(_ active: Bool)
 }
@@ -152,9 +157,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var startInFlight = false
 
     /// The engine seam (#120): constructs, configures and normalizes the
-    /// concrete transcriber. Chosen once at launch (CommandEngineSelection);
-    /// everything below reads capabilities off it instead of naming an engine.
-    let transcriberEngine: CommandTranscriberAdapter
+    /// concrete transcriber. Follows the quiz language (#175) — swapped only
+    /// between listening windows by `setCommandEngine`; everything below reads
+    /// capabilities off it instead of naming an engine. Internal (not
+    /// `private(set)`) only because the writer lives in the +Assets extension.
+    var transcriberEngine: CommandTranscriberAdapter
 
     /// Segment-scoped sampling flag for the "voice transcriber result" log —
     /// first volatile of each segment plus every final (see
@@ -212,11 +219,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     init(
         now: @escaping @MainActor () -> Date = { Date() },
         authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil,
-        engine: CommandTranscriberAdapter? = nil
+        engine: CommandTranscriberAdapter? = nil,
+        selection: CommandEngineSelection = .speechEnglish
     ) {
         self.now = now
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
-        let resolvedEngine = engine ?? CommandEngineSelection.current.makeAdapter()
+        let resolvedEngine = engine ?? selection.makeAdapter()
         transcriberEngine = resolvedEngine
         // Stamp the process-wide engine/locale telemetry tags (#120): every
         // `.voice`-category SentryLog event — including the ones emitted ABOVE

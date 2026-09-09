@@ -274,7 +274,7 @@ struct AnswerConfirmationView: View {
                 // Secondary in weight as well as in position: a text-style
                 // control under the CTA, the standard iOS pairing.
                 HangsGhostButton(
-                    title: "Re-record",
+                    title: "Again",
                     icon: "mic.fill",
                     color: Theme.Hangs.Colors.muted,
                     font: .hangsBody(15, weight: .semibold)
@@ -381,7 +381,7 @@ struct AnswerConfirmationView: View {
             Spacer(minLength: 0)
 
             if let onCancel {
-                HangsSecondaryButton(title: "Cancel", icon: "xmark", height: 54) {
+                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54) {
                     onCancel()
                 }
                 .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))

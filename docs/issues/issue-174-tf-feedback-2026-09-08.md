@@ -45,9 +45,9 @@
 - [x] D — `POST /api/v1/questions/availability` + alert Začať s N / Resetovať videné / Zrušiť — PR #119 merged 2026-09-09, backend prod v107
 - [ ] Pencil sync (sheet, footer, zoznam možností) po TF potvrdení
 - [x] ElevenLabs: nie je problém (staging kľúč)
-- [ ] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf (ďalšia session; sk + en, cs spolu s #175)
+- [~] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf — **texty sk/en/cs + slovník + nápovedy hotové v #175 (2026-09-09)**; ostáva mikrofónový glyf + Preskoč ako textové tlačidlo namiesto ikony
 - [ ] Nápovedy: banner len stav, auto-skrytie po 5 kvízoch, prepínač v Nastaveniach (ďalšia session)
-- [ ] #175 — České hlasové povely (samostatné issue)
+- [~] #175 — České hlasové povely (samostatné issue) — implementované 2026-09-09, PR čaká
 - [ ] Dead-air poistka: nastaviť až po nábehu enginu (viď Vedľajšie zistenia)
 - [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky) → po nej TF build s #174 zmenami na požiadanie
 

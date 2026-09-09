@@ -31,6 +31,9 @@ import Foundation
 enum CommandLanguage: String, Sendable, Equatable {
     case english = "en"
     case slovak = "sk"
+    /// #175 — Czech shares the Slovak precision-over-recall design (same
+    /// hazards: the mic is open to the language being spoken).
+    case czech = "cs"
 }
 
 /// One valid (engine, command language) pair. A single 3-case selection rather
@@ -42,6 +45,10 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
     case speechEnglish = "speech-en"
     case dictationEnglish = "dictation-en"
     case dictationSlovak = "dictation-sk"
+    /// #175 — cs_CZ is supported by DictationTranscriber on-device (verified
+    /// locally 2026-08-31); SpeechTranscriber has no Czech, so — as with
+    /// Slovak — the pair is only constructible on the dictation engine.
+    case dictationCzech = "dictation-cs"
 
     var id: String { rawValue }
 
@@ -74,6 +81,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
         switch self {
         case .speechEnglish, .dictationEnglish: return "en_US"
         case .dictationSlovak: return "sk_SK"
+        case .dictationCzech: return "cs_CZ"
         }
     }
 
@@ -83,6 +91,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
         switch self {
         case .speechEnglish, .dictationEnglish: return .english
         case .dictationSlovak: return .slovak
+        case .dictationCzech: return .czech
         }
     }
 
@@ -91,7 +100,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
     nonisolated var engineTag: String {
         switch self {
         case .speechEnglish: return "speech"
-        case .dictationEnglish, .dictationSlovak: return "dictation"
+        case .dictationEnglish, .dictationSlovak, .dictationCzech: return "dictation"
         }
     }
 
@@ -102,6 +111,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable, Identifiable {
         case .speechEnglish: return "Standard · English"
         case .dictationEnglish: return "Dictation · English"
         case .dictationSlovak: return "Dictation · Slovak"
+        case .dictationCzech: return "Dictation · Czech"
         }
     }
 }

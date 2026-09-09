@@ -131,7 +131,7 @@ struct QuestionFooterInspectorTests {
             let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
             #expect(!visible.contains("Type"), "the word 'Type' is what stole the Record button's width")
             #expect(!visible.contains("Skip"), "the word 'Skip' is what stole the Record button's width")
-            #expect(visible.contains("Record"), "the primary button keeps its label")
+            #expect(visible.contains("Start"), "the primary button keeps its label")
 
             for (id, label) in [("question.textInputToggle", "Type"), ("question.skip", "Skip")] {
                 let button = try tree.find(viewWithAccessibilityIdentifier: id)

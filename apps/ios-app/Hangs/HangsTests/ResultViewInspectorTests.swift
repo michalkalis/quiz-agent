@@ -359,7 +359,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(button: "Next question") }
+            #expect(throws: Never.self) { try tree.find(button: "Next") }
             #expect(throws: Never.self) { try tree.find(text: "STAY") }
             #expect(throws: (any Error).self) { try tree.find(button: "Why is this correct?") }
         }
@@ -382,7 +382,7 @@ struct ResultViewInspectorTests {
             // Document order of Text nodes mirrors left-to-right HStack layout
             // order; "Next question" is the CTA's label, "STAY" the pill's.
             let texts = try tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
-            let nextIndex = try #require(texts.firstIndex(of: "Next question"))
+            let nextIndex = try #require(texts.firstIndex(of: "Next"))
             let stayIndex = try #require(texts.firstIndex(of: "STAY"))
             #expect(nextIndex < stayIndex)
         }
@@ -404,7 +404,7 @@ struct ResultViewInspectorTests {
             #expect(throws: Never.self) { try tree.find(text: "the question") }
             #expect(throws: Never.self) { try tree.find(text: "What is 2+2?") }
             // Footer still works.
-            #expect(throws: Never.self) { try tree.find(button: "Next question") }
+            #expect(throws: Never.self) { try tree.find(button: "Next") }
             // Neutral: neither verdict word appears.
             #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
             #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
@@ -732,7 +732,7 @@ struct ResultViewCTACountdownTests {
             #expect(throws: (any Error).self) { try tree.find(text: "7s") }
             #expect(throws: (any Error).self) { try tree.find(text: "STAY") }
             #expect(throws: Never.self) { try tree.find(text: "RESUME") }
-            #expect(throws: Never.self) { try tree.find(text: "Next question") }
+            #expect(throws: Never.self) { try tree.find(text: "Next") }
         }
     }
 }

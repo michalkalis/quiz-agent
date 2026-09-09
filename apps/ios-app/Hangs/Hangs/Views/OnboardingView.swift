@@ -291,7 +291,7 @@ private struct OnboardingFeature {
     // onboarding-2 content that teaches the English-only, screen-scoped command
     // grammar — the founder's discoverability gap. Buttons remain the fallback.
     static let all: [OnboardingFeature] = [
-        .init(icon: "mic.fill", title: #"Say "start""#, description: #"Say "start" after a question, or tap Record, to begin answering."#),
+        .init(icon: "mic.fill", title: #"Say "start""#, description: #"Say "start" after a question, or tap Start, to begin answering."#),
         .init(icon: "checklist", title: "Five simple words", description: "start · ok · next · repeat · skip. That's the whole command set."),
         .init(icon: "globe", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
         .init(icon: "hand.tap.fill", title: "Buttons always work", description: "Every command also has an on-screen button. Voice is optional."),

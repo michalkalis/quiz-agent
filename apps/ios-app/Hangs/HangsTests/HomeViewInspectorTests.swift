@@ -64,7 +64,7 @@ struct HomeViewInspectorTests {
                 try tree.find(text: "session")
             }
             #expect(throws: Never.self) {
-                try tree.find(button: "Start Quiz")
+                try tree.find(button: "Start")
             }
         }
     }

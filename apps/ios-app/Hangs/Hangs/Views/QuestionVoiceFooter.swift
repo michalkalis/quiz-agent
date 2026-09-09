@@ -144,7 +144,7 @@ struct QuestionVoiceFooter: View {
             // #174: the typed-answer path never opens the confirmation sheet, so
             // this button IS its evaluating state (the full-screen overlay that
             // used to cover the footer is gone). `isLoading` also disables it.
-            title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Record"),
+            title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Start"),
             icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "mic.fill"),
             isLoading: isEvaluating,
             // G1 (#83): action buttons deliberately modest so long question text

@@ -110,7 +110,7 @@ Give exactly one verdict:
 - "ok" — you found no problem
 
 End your reply with ONLY a single JSON object on its own line:
-{{"verdict": "ok|fact_error|logic_flaw|stale", "confidence": "high|medium|low", "note": "one-sentence justification with a source URL for any problem found", "correct_answer": "the actual answer if the claimed one is wrong, else null"}}"""
+{{"verdict": "ok|fact_error|logic_flaw|stale", "confidence": "high|medium|low", "note": "one-sentence justification with a source URL for any problem found", "correct_answer": "the actual answer if the claimed one is wrong, else null", "source_url": "URL of the single most authoritative page your verdict rests on — always required, never null", "source_excerpt": "short verbatim quote (max 30 words) from that page that supports the verdict"}}"""
 
 
 class FactVerifier:
@@ -362,11 +362,13 @@ class FactVerifier:
         note = str(data.get("note") or "")
         correct = data.get("correct_answer")
         alternatives = [str(correct)] if correct and correct != claimed_answer else []
+        sources = _sources_from(data, agrees=verdict == "ok")
 
         if verdict in _PROBLEM_VERDICTS:
             return VerificationResult(
                 verdict=verdict,
                 confidence=0.0,  # below the stage gate → dropped
+                sources=sources,
                 alternative_answers=alternatives,
                 notes=note,
                 cost_cents=cost_cents,
@@ -376,7 +378,11 @@ class FactVerifier:
                 str(data.get("confidence", "")).strip().lower(), 0.5
             )
             return VerificationResult(
-                verdict="ok", confidence=score, notes=note, cost_cents=cost_cents
+                verdict="ok",
+                confidence=score,
+                sources=sources,
+                notes=note,
+                cost_cents=cost_cents,
             )
 
         # Unknown verdict string — a checker bug, not evidence either way.
@@ -423,6 +429,22 @@ class FactVerifier:
             }
 
         return list(await asyncio.gather(*(_verify_one(q) for q in questions)))
+
+
+def _sources_from(data: dict, agrees: bool) -> list[dict]:
+    """Evidence page the verdict rests on, as ``VerificationResult.sources``.
+
+    Direct-generation questions have no sourced fact to inherit a
+    ``source_url`` from (F8 is relaxed in GenerationStage for that mode), so
+    the verifier's evidence page is the only attribution they can carry —
+    VerificationStage copies it onto the question. A missing or non-http
+    value yields no source; the stage treats that as unverifiable.
+    """
+    url = str(data.get("source_url") or "").strip()
+    if not url.startswith(("http://", "https://")):
+        return []
+    excerpt = str(data.get("source_excerpt") or "").strip() or None
+    return [{"url": url, "excerpt": excerpt, "agrees": agrees}]
 
 
 def _parse_verdict_json(text: str) -> Optional[dict]:

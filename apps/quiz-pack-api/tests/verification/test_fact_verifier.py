@@ -506,3 +506,43 @@ async def test_session_failures_hold_instead_of_dropping(monkeypatch, replies) -
     assert result.verdict == "unverified"
     assert result.confidence == 0.0
     assert result.cost_cents == 0.0
+
+
+# --- source attribution (founder 2026-09-09: every question carries a source) --
+
+
+@pytest.mark.asyncio
+async def test_ok_verdict_carries_the_evidence_page_as_source() -> None:
+    # Direct-generation questions inherit no source_url from facts, so the
+    # verifier's evidence page is the only attribution they can get.
+    verifier, _ = _verifier(
+        [
+            _response(
+                _verdict_json(
+                    "ok",
+                    source_url="https://en.wikipedia.org/wiki/Emu_War",
+                    source_excerpt="the emus won",
+                )
+            )
+        ]
+    )
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.sources == [
+        {
+            "url": "https://en.wikipedia.org/wiki/Emu_War",
+            "excerpt": "the emus won",
+            "agrees": True,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad_url", [None, "", "Wikipedia", "ftp://x"])
+async def test_non_http_source_yields_no_attribution(bad_url) -> None:
+    verifier, _ = _verifier([_response(_verdict_json("ok", source_url=bad_url))])
+
+    result = await verifier.verify("Q?", "A")
+
+    assert result.sources == []

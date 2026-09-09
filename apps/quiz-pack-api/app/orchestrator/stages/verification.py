@@ -205,6 +205,22 @@ class VerificationStage:
             if confidence < self._min_confidence:
                 dropped += 1
                 continue
+            if not q.source_url:
+                _attach_source(q, verification)
+            if ctx.direct_generation and not q.source_url and not _is_logical(q):
+                # F8 for direct-generation mode (founder 2026-09-09: every
+                # question carries a source). GenerationStage relaxes F8 there
+                # because no sourced fact exists; the verifier's evidence page
+                # is the attribution, and a verdict without one is not
+                # deliverable — withhold, fail-closed like #158.
+                withheld += 1
+                logger.warning(
+                    "VerificationStage withheld id=%s: verifier returned no "
+                    "source URL (F8, direct-generation); notes=%s",
+                    q.id,
+                    notes,
+                )
+                continue
             kept.append(q)
 
         ctx.questions = kept
@@ -230,6 +246,16 @@ class VerificationStage:
             },
             cost_cents=int(round(cost_cents)),
         )
+
+
+def _attach_source(q: Question, verification: object) -> None:
+    """Copy the verifier's evidence page onto an unsourced question."""
+    for src in getattr(verification, "sources", None) or []:
+        url = str(src.get("url") or "").strip() if isinstance(src, dict) else ""
+        if url:
+            q.source_url = url
+            q.source_excerpt = src.get("excerpt") or None
+            return
 
 
 def _is_logical(q: Question) -> bool:

@@ -464,3 +464,87 @@ async def test_mcq_options_travel_with_the_stem_to_the_verifier() -> None:
         "The Great Pyramid was the tallest structure for how long?"
     )
     assert sent["q_1"] == "What is the capital of France?"
+
+
+# --- F8 in direct-generation mode (founder 2026-09-09) ----------------------
+
+
+def _direct_ctx(questions: list[Question]) -> OrderContext:
+    ctx = _make_ctx(questions)
+    ctx.direct_generation = True
+    return ctx
+
+
+@pytest.mark.asyncio
+async def test_direct_mode_copies_verifier_evidence_onto_unsourced_question() -> None:
+    # GenerationStage relaxes F8 for direct generation (no sourced facts), so
+    # the verifier's evidence page must become the question's attribution.
+    verifier = _FakeFactVerifier(
+        {
+            "q_0": VerificationResult(
+                verdict="ok",
+                confidence=0.9,
+                sources=[{"url": "https://x.org/p", "excerpt": "quote", "agrees": True}],
+            )
+        }
+    )
+    stage = VerificationStage(fact_verifier=verifier)  # type: ignore[arg-type]
+    ctx = _direct_ctx([_stub_question(0)])
+
+    await stage.run(ctx, _RecordingSink())
+
+    assert [q.id for q in ctx.questions] == ["q_0"]
+    assert ctx.questions[0].source_url == "https://x.org/p"
+    assert ctx.questions[0].source_excerpt == "quote"
+
+
+@pytest.mark.asyncio
+async def test_direct_mode_withholds_ok_verdict_without_a_source() -> None:
+    # "ok" without an evidence page is not deliverable: an unsourced question
+    # would land in the corpus with source_url = null (F8 violation).
+    verifier = _FakeFactVerifier(
+        {
+            "q_0": VerificationResult(verdict="ok", confidence=0.9),
+            "q_1": VerificationResult(
+                verdict="ok",
+                confidence=0.9,
+                sources=[{"url": "https://x.org/p", "excerpt": None, "agrees": True}],
+            ),
+        }
+    )
+    stage = VerificationStage(fact_verifier=verifier)  # type: ignore[arg-type]
+    ctx = _direct_ctx([_stub_question(0), _stub_question(1)])
+
+    result = await stage.run(ctx, _RecordingSink())
+
+    assert [q.id for q in ctx.questions] == ["q_1"]
+    assert result.info["withheld"] == 1
+
+
+@pytest.mark.asyncio
+async def test_direct_mode_keeps_existing_source_and_exempts_logical_puzzles() -> None:
+    verifier = _FakeFactVerifier(
+        {
+            "q_0": VerificationResult(
+                verdict="ok",
+                confidence=0.9,
+                sources=[{"url": "https://other.org", "excerpt": "x", "agrees": True}],
+            ),
+            "q_1": VerificationResult(verdict="ok", confidence=0.9),
+        }
+    )
+    stage = VerificationStage(fact_verifier=verifier)  # type: ignore[arg-type]
+    ctx = _direct_ctx(
+        [
+            _stub_question(0, source_url="https://kept.org"),
+            _stub_question(
+                1, generation_metadata=GenerationProvenance(pipeline="logical_puzzle")
+            ),
+        ]
+    )
+
+    await stage.run(ctx, _RecordingSink())
+
+    assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
+    assert ctx.questions[0].source_url == "https://kept.org"  # not overwritten
+    assert ctx.questions[1].source_url is None  # invented puzzle, F8-exempt

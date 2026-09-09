@@ -1,0 +1,1532 @@
+{
+  "language": "en",
+  "generated_at": "2026-09-09T13:38:04.103640+00:00",
+  "applied": false,
+  "total": 302,
+  "categories": {
+    "entertainment": [
+      {
+        "id": "04a17a4a-1ff9-40ae-b781-76a2df8555d0",
+        "question": "Which Californian desert festival sold out for 2026 less than a week after announcing its lineup?",
+        "subtopic": "Music festivals, tours and song contests"
+      },
+      {
+        "id": "207ba422-848b-486f-8b5b-801e8190705b",
+        "question": "Which famous British music festival skipped 2026 entirely to give its farmland a rest, a so-called fallow year?",
+        "subtopic": "Music festivals, tours and song contests"
+      },
+      {
+        "id": "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+        "question": "At the 2026 Oscars, which craft category crowned its first-ever female winner, nearly a century after the first ceremony?",
+        "subtopic": "Awards ceremonies and their winners"
+      },
+      {
+        "id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+        "question": "Glastonbury Festival went ahead as usual in the summer of 2026. True or false?",
+        "subtopic": "Music festivals, tours and song contests"
+      },
+      {
+        "id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+        "question": "The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic villain?",
+        "subtopic": "Streaming platforms and binge-worthy originals"
+      },
+      {
+        "id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
+        "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?",
+        "subtopic": "Awards ceremonies and their winners"
+      },
+      {
+        "id": "4634fc00-9e53-485e-8234-e5e2d570a886",
+        "question": "The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?",
+        "subtopic": "Box office records, flops and firsts"
+      },
+      {
+        "id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+        "question": "The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?",
+        "subtopic": "Box office records, flops and firsts"
+      },
+      {
+        "id": "6ac73d97-28fe-4841-b20a-1a2114860aef",
+        "question": "Which rapper, also famous as Rihanna's partner, ended an eight-year album drought in 2026 with 'Don't Be Dumb'?",
+        "subtopic": "Hip-hop, R&B and electronic music"
+      },
+      {
+        "id": "7d8f5670-87e8-4b6f-b088-736148b704c6",
+        "question": "The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor from Iron Man 3, who once posed as a supervillain?",
+        "subtopic": "Superheroes and comic book adaptations"
+      },
+      {
+        "id": "8a79020d-adbd-4051-a97d-eb44f78e441a",
+        "question": "Tomorrowland, the giant electronic music festival that runs over two weekends every July, takes place in which country?",
+        "subtopic": "Music festivals, tours and song contests"
+      },
+      {
+        "id": "932f7686-ee1e-4bfa-aecf-86a1212e5aac",
+        "question": "Which former One Direction member scored two global number-one singles in 2026 with 'Aperture' and 'American Girls'?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "967f25c3-e0dd-4fd0-81a3-a067d49a1e31",
+        "question": "Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever to top Billboard's global chart, paired her with which Afrobeats superstar?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "a8290869-57c6-4d6e-bb1d-914828225559",
+        "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?",
+        "subtopic": "Hip-hop, R&B and electronic music"
+      },
+      {
+        "id": "c05166c7-1bfb-42d7-bdeb-052e277ab2c9",
+        "question": "The most-nominated Black woman in Oscar history, with five nominations by 2026, works behind the camera in which craft category?",
+        "subtopic": "Awards ceremonies and their winners"
+      },
+      {
+        "id": "c61342e2-106a-4fcc-8664-5e972859829e",
+        "question": "Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?",
+        "subtopic": "Box office records, flops and firsts"
+      },
+      {
+        "id": "c640e4c6-c6d9-4daf-b12a-67b7116a64ed",
+        "question": "Netflix's biggest title of the first half of 2026, War Machine, drew roughly how many views in those six months?",
+        "subtopic": "Streaming platforms and binge-worthy originals"
+      },
+      {
+        "id": "d5ee198f-5fa2-4b18-985d-73e74458756f",
+        "question": "Which thrash metal band, founded by a guitarist fired from Metallica, released a self-titled farewell album in January 2026?",
+        "subtopic": "Rock, metal and legendary bands"
+      },
+      {
+        "id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+        "question": "The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?",
+        "subtopic": "Box office records, flops and firsts"
+      },
+      {
+        "id": "e5e1cfa6-3708-41e7-a615-f1d4a8f95af7",
+        "question": "True or false: at the 2026 Academy Awards, a woman won the Oscar for Best Cinematography for the first time in history.",
+        "subtopic": "Awards ceremonies and their winners"
+      },
+      {
+        "id": "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1",
+        "question": "Which city hosted the seventieth Eurovision Song Contest in May 2026?",
+        "subtopic": "Music festivals, tours and song contests"
+      }
+    ],
+    "food-everyday": [
+      {
+        "id": "01ec843f-3b11-47fd-9bde-fb7d2215699d",
+        "question": "Earl Grey tea owes its distinctive perfume to oil pressed from the rind of which bitter Mediterranean citrus fruit?",
+        "subtopic": "Coffee, tea and soft drinks"
+      },
+      {
+        "id": "086a3325-8ce5-4246-9e0b-ef2928e6fefe",
+        "question": "Vanilla is the world's second most expensive spice by weight. It is the hand-pollinated, cured seed pod of which family of flowering plants?",
+        "subtopic": "Spices, herbs and condiments"
+      },
+      {
+        "id": "12263c24-48dd-4b6f-8f6c-b09ae1f498b7",
+        "question": "Carrots as we know them are famously orange, but this was the result of Dutch cultivation. What colour were carrots originally?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "1e38b127-fcb0-4f0a-96e4-2a31aaa577fc",
+        "question": "Which sweet baking spice is actually the dried inner bark of a tropical tree?",
+        "subtopic": "Spices, herbs and condiments"
+      },
+      {
+        "id": "30f56d0b-fa23-4380-bd85-1b429c6d54ca",
+        "question": "Which coffee-soaked Italian dessert of mascarpone and cocoa has a name that translates roughly as 'pick me up'?",
+        "subtopic": "Desserts, sweets and chocolate"
+      },
+      {
+        "id": "37825bd1-b9cd-44fc-a2aa-dbc002e2c5d7",
+        "question": "The word for one stone fruit literally means 'sweet like nectar', which is thought to be the origin of its name. Which fruit is it?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "3be05aa5-6342-49c4-b60c-130de791a8a6",
+        "question": "In the 1950s and 60s, Vienna's Hotel Sacher and the Demel pastry shop fought a seven-year court battle over which of them could call their version of a famous dessert the 'original'. Which dessert?",
+        "subtopic": "Desserts, sweets and chocolate"
+      },
+      {
+        "id": "6e378542-1f8f-49dc-a9d9-d6496e85ce17",
+        "question": "Saffron is the world's priciest spice because each crocus flower yields only three tiny threads. Roughly how many flowers must be picked by hand for one kilogram of saffron?",
+        "subtopic": "Spices, herbs and condiments"
+      },
+      {
+        "id": "7ba298b8-48d3-4fdb-a487-e1f57f86cd4a",
+        "question": "Louis Pasteur invented pasteurisation in the 1860s to rescue a struggling French industry — and it had nothing to do with milk. Which drink was he trying to save?",
+        "subtopic": "Beer, wine and spirits"
+      },
+      {
+        "id": "8193b5c7-5f80-52cd-b885-1868c1835724",
+        "question": "Chili plants make capsaicin to punish mammals, whose chewing teeth destroy the seeds. But one whole group of animals literally cannot feel the burn — and conveniently swallows the seeds whole and spreads them far away. Which group?",
+        "subtopic": "Diets, nutrition and food science"
+      },
+      {
+        "id": "84a82a8f-b5f4-44da-80d0-58f7da931d58",
+        "question": "Gouda, Edam, and Leyden are all famous cheeses that share the same country of origin. Which nation gave the world this trio?",
+        "subtopic": "Cheese, eggs and dairy"
+      },
+      {
+        "id": "8bd2aa09-dcd5-4f16-9894-4eee0772c7ff",
+        "question": "In Japan, farmers coax a familiar fruit into an unusual shape by raising it inside rigid containers, making it far easier to stack on a shelf. What shape do these prized, pricey novelties take?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+        "question": "Bananas are very slightly radioactive, thanks to the naturally radioactive isotope of which chemical element they are famously rich in?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "9b20d737-74d1-4016-9d53-b6afd103b8b6",
+        "question": "Bubble wrap was invented in 1957 by two engineers who were not thinking about packaging at all — they were trying and failing to create which household product?",
+        "subtopic": "Household objects and their inventors"
+      },
+      {
+        "id": "a3ca2456-97a7-4e0a-b55e-e478280b48e8",
+        "question": "Thai, Indian and Sichuan cooking are unimaginable without chillies, yet no cook in Asia had seen one before the 16th century. Where do chilli peppers originally come from?",
+        "subtopic": "Spices, herbs and condiments"
+      },
+      {
+        "id": "a59d17d5-618b-4282-935e-fbf3b132302f",
+        "question": "The golden-brown crust on toast, a seared steak and roasted coffee beans all come from the same chemical reaction between sugars and amino acids. What is this reaction called, after the French chemist who described it?",
+        "subtopic": "Diets, nutrition and food science"
+      },
+      {
+        "id": "ba718eba-b802-437e-b114-f97716b31076",
+        "question": "Botanically speaking, bananas, kiwis and even watermelons all belong to one class of fruit — a class that, surprisingly, excludes strawberries and raspberries. Which class?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "bcb432e0-40ed-468e-a37d-d85372174593",
+        "question": "Despite its tropical name, Hawaiian pizza was invented in 1962 by a Greek-born restaurant owner. In which country did he first put pineapple on a pizza?",
+        "subtopic": "Foods named after people and places"
+      },
+      {
+        "id": "be59ae96-161b-4ce1-8389-483bd62e568f",
+        "question": "After water, what is the most widely consumed drink in the world?",
+        "subtopic": "Coffee, tea and soft drinks"
+      },
+      {
+        "id": "c27ac7d7-cee9-443b-89d6-643f942bcc4f",
+        "question": "Plenty of people picture pineapples hanging from trees. Where does the fruit actually grow?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "de1704b9-6d44-5803-88ff-ea9fd819236f",
+        "question": "Popcorn kernels explode because a small amount of something sealed inside each kernel suddenly turns to high-pressure steam when heated. What is that something?",
+        "subtopic": "Diets, nutrition and food science"
+      },
+      {
+        "id": "e0ed8486-78f5-431b-b1ee-d7da89554ad2",
+        "question": "In 1940, a wartime embargo cut the German Coca-Cola plant off from its American syrup, so its chemists built a new fruit soda from local leftovers like apple pomace and whey. Which brand, still sold worldwide, was born?",
+        "subtopic": "Coffee, tea and soft drinks"
+      },
+      {
+        "id": "e28f0808-72c9-47db-9be8-e5d11c8cad0b",
+        "question": "Most people assume the Caesar salad hails from Italy, thanks to its name. But in which country was it actually invented, in the border city of Tijuana back in 1927?",
+        "subtopic": "Foods named after people and places"
+      },
+      {
+        "id": "e5c76e10-bba6-40d4-a3a5-0e4755af08e9",
+        "question": "The bright green paste served as wasabi in most sushi restaurants outside Japan is usually a cheaper relative, dyed green. Which plant is it really?",
+        "subtopic": "Spices, herbs and condiments"
+      },
+      {
+        "id": "eb92a5b7-44e1-424f-a318-42abc48eb7f8",
+        "question": "The croissant, the very symbol of a French breakfast, is descended from a crescent-shaped pastry first baked in which European capital?",
+        "subtopic": "Bread, pasta, rice and grains"
+      },
+      {
+        "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+        "question": "White chocolate contains cocoa butter, sugar and milk — but it is completely missing the dark component that gives milk and dark chocolate both their colour and their classic chocolatey taste. What is that missing component called?",
+        "subtopic": "Desserts, sweets and chocolate"
+      },
+      {
+        "id": "f79e7859-c4e1-4f7f-9277-b4be29e2f527",
+        "question": "Botanically speaking, one favourite of the snack bowl is not a nut at all but a legume that ripens underground. Which one?",
+        "subtopic": "Fruits, vegetables and nuts"
+      },
+      {
+        "id": "fb9e060b-6578-4541-b610-a305b6524b84",
+        "question": "Shine an ultraviolet party light on a gin and tonic and the drink glows an eerie blue. Which ingredient in the tonic water makes it fluoresce?",
+        "subtopic": "Cocktails and drinking customs"
+      }
+    ],
+    "geography-world": [
+      {
+        "id": "0b27e5c2-4f06-51bb-bc66-55fe7d86e514",
+        "question": "When the Washington Monument was completed in 1884, its very tip was crowned with a small pyramid of a metal that was then more precious than silver — but is dirt cheap today. Which metal?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "0d4b442d-2bb6-48cc-988e-9b619e714958",
+        "question": "With roughly two people per square kilometre, which Asian country is the least densely populated sovereign nation on Earth?",
+        "subtopic": "Geographical records and extremes"
+      },
+      {
+        "id": "1608e440-e86e-4819-b3b4-82fad5fa0c92",
+        "question": "Uluru, the giant red sandstone monolith sacred to the local Anangu people, rises out of the desert at the heart of which country?",
+        "subtopic": "Deserts, forests and natural wonders"
+      },
+      {
+        "id": "182d2442-67c4-4b84-8abc-f9908495fb8b",
+        "question": "Bir Tawil, a patch of desert lying between Egypt and Sudan, has a legal status almost unique among habitable land on Earth. What is so unusual about it?",
+        "subtopic": "Enclaves, exclaves and disputed territories"
+      },
+      {
+        "id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+        "question": "Thanks to far-flung overseas territories stretching from the Pacific to the Caribbean, which country spans twelve time zones — more than any other nation on Earth?",
+        "subtopic": "Climate, time zones and hemispheres"
+      },
+      {
+        "id": "33781d75-ea3a-498e-a7f2-d3de6e9186f7",
+        "question": "In the town of Baarle, an international border zigzags through streets, shops and even living rooms — houses there are assigned to a country by where their front door sits. Which two countries share the town?",
+        "subtopic": "Enclaves, exclaves and disputed territories"
+      },
+      {
+        "id": "392c1a9e-724e-4ff8-994b-4a7e487206a7",
+        "question": "Sydney and Melbourne argued so fiercely over which should be Australia's capital that a brand-new city was built between them. Which city has been the capital ever since?",
+        "subtopic": "Capital cities of the world"
+      },
+      {
+        "id": "46ab66c1-65b6-4844-8923-77e272e212fa",
+        "question": "Only two countries in the world have perfectly square national flags. Vatican City is one — which Alpine country is the other?",
+        "subtopic": "Flags, anthems and national symbols"
+      },
+      {
+        "id": "4ba3e579-c9cb-44e8-9dfb-97d0a3c3b7a3",
+        "question": "Only two countries on Earth are doubly landlocked — surrounded entirely by neighbours that are themselves landlocked. Uzbekistan is one; which European microstate is the other?",
+        "subtopic": "Countries and their neighbours"
+      },
+      {
+        "id": "5053fc85-0181-4836-8f85-104a78cee067",
+        "question": "Spoken in the western Pyrenees, straddling the border of Spain and France, which European language is a true isolate — unrelated to any other known living language?",
+        "subtopic": "Languages and writing systems of the world"
+      },
+      {
+        "id": "525346a6-22b5-4ce6-a3f0-a9bce5e02c08",
+        "question": "All but one of the world's national flags are rectangles or squares. Which Himalayan country flies the exception — a flag shaped like two stacked triangles?",
+        "subtopic": "Flags, anthems and national symbols"
+      },
+      {
+        "id": "61765172-71c1-5487-97c2-827d5b89bd9f",
+        "question": "Nearly 300 metres up the Eiffel Tower hides a small private apartment with wallpaper, wooden furniture and a grand piano — a retreat where its owner once hosted Thomas Edison. Who had this secret flat built for himself?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "64d96f0a-f299-43e1-8c91-1c71035f9b56",
+        "question": "Over millions of years, which river carved the Grand Canyon?",
+        "subtopic": "Rivers, lakes and waterfalls"
+      },
+      {
+        "id": "6a6cf9f8-1a24-49bd-8b85-4b39029273e5",
+        "question": "On La Gomera in the Canary Islands, locals traditionally send messages across the island's deep ravines using Silbo, a UNESCO-listed form of communication now taught in local schools. What does someone using Silbo actually do?",
+        "subtopic": "Languages and writing systems of the world"
+      },
+      {
+        "id": "74b0fa56-ef2d-4522-882a-8a131c3ba1f2",
+        "question": "In AD 79, the eruption of which volcano buried the Roman cities of Pompeii and Herculaneum under metres of ash?",
+        "subtopic": "Mountains, volcanoes and peaks"
+      },
+      {
+        "id": "77886e62-a469-402c-84cd-48efd7922361",
+        "question": "Despite being several kilometres wide in places, the main course of which mighty river is crossed by not a single bridge along its entire length?",
+        "subtopic": "Rivers, lakes and waterfalls"
+      },
+      {
+        "id": "7e0c66f0-a532-46f4-a761-c1fc4afce7cd",
+        "question": "By its own official survey, which country has more islands than any other on Earth — roughly 267,000, the vast majority of them uninhabited?",
+        "subtopic": "Islands, archipelagos and peninsulas"
+      },
+      {
+        "id": "80ec52c8-e041-5353-9929-26faed681b8c",
+        "question": "For nearly fifty years, Canada and Denmark fought the world's politest territorial dispute — the so-called Whisky War — by taking turns planting flags and leaving bottles of liquor on which tiny uninhabited Arctic island?",
+        "subtopic": "Enclaves, exclaves and disputed territories"
+      },
+      {
+        "id": "81df305d-7728-4b3a-b187-a18c195c19cc",
+        "question": "With average temperatures around freezing for the whole year, which Asian capital is generally considered the coldest capital city in the world?",
+        "subtopic": "Capital cities of the world"
+      },
+      {
+        "id": "90acd238-7a28-4ad3-8163-485485a361dc",
+        "question": "Which country has more saunas per capita: Finland or Sweden?",
+        "subtopic": "Festivals, holidays and customs around the world"
+      },
+      {
+        "id": "944c79db-14c3-41e4-8fa1-b13d54ed78fb",
+        "question": "You're travelling through the Horn of Africa and need to change money. In Ethiopia, what would you be spending, named after an old word for silver?",
+        "subtopic": "Currencies and international organisations"
+      },
+      {
+        "id": "9c04ba0c-cf1c-4d19-804b-4ce539843b6b",
+        "question": "Which country's national flag is the only one in the world to feature a modern assault rifle — an AK-47 crossed with a hoe over an open book?",
+        "subtopic": "Flags, anthems and national symbols"
+      },
+      {
+        "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+        "question": "In the Bering Strait, Big Diomede and Little Diomede sit less than 4 kilometres apart, yet the International Date Line runs between them — earning them the nicknames Tomorrow Island and Yesterday Isle. Which two countries do they belong to?",
+        "subtopic": "Islands, archipelagos and peninsulas"
+      },
+      {
+        "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+        "question": "Every summer, the Eiffel Tower measurably grows — by as much as 15 centimetres. What causes this seasonal growth spurt?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "b1615b68-3ba6-47fa-953c-89d16879d31d",
+        "question": "Greenland, the largest island on Earth, is an autonomous territory of which European kingdom?",
+        "subtopic": "Microstates, territories and dependencies"
+      },
+      {
+        "id": "b48c7daa-3b74-4905-b114-40671024a829",
+        "question": "In 2005, which country abruptly moved its capital from its largest city to Naypyidaw — a purpose-built metropolis with 20-lane highways that often sit almost completely empty?",
+        "subtopic": "Capital cities of the world"
+      },
+      {
+        "id": "b66a7646-5e0f-4501-b457-887008a2fcd4",
+        "question": "Cambodia's national flag carries the silhouette of a building — the largest religious monument on Earth, built as a Hindu temple in the 12th century. Which monument is it?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "ba736acb-b40d-4b6c-8bdb-0a450c666285",
+        "question": "Which country has been ranked as the happiest in the world for six consecutive years?",
+        "subtopic": "Geographical records and extremes"
+      },
+      {
+        "id": "bdfb912c-5c81-46f4-999a-664c95937f75",
+        "question": "Some weather stations in which South American desert have never recorded a single drop of rain — a place so barren that NASA uses it to test its Mars rovers?",
+        "subtopic": "Deserts, forests and natural wonders"
+      },
+      {
+        "id": "bf84eaa2-b504-43f0-b330-e3797e929c29",
+        "question": "Venezuela's Angel Falls, at 979 metres the world's tallest waterfall, owes its name to what?",
+        "subtopic": "Rivers, lakes and waterfalls"
+      },
+      {
+        "id": "c887523d-d219-434e-b1a0-3f52647ac0f6",
+        "question": "The Maldives is the lowest-lying country on Earth, with its highest natural point barely reaching head height. In which ocean does this island nation lie?",
+        "subtopic": "Oceans, seas and straits"
+      },
+      {
+        "id": "c9ed935a-7644-4be2-861a-69b72155a585",
+        "question": "Which of these does NOT have a specific word for 'yes' or 'no' in its vocabulary?",
+        "subtopic": "Languages and writing systems of the world"
+      },
+      {
+        "id": "cc9db6e6-b3b6-4631-b2f8-30ef07d10892",
+        "question": "The glass pyramid at the entrance of the Louvre in Paris was designed by an architect who lived to 102. Roughly how many individual glass panes does that pyramid contain?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "d06760ad-40b4-4913-b091-0f893e0f3e59",
+        "question": "The 1883 eruption of which volcano, in the strait between Java and Sumatra, produced what is widely regarded as the loudest sound in recorded history — heard nearly 5,000 kilometres away?",
+        "subtopic": "Mountains, volcanoes and peaks"
+      },
+      {
+        "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+        "question": "Tourists in London point at the clock tower of the Palace of Westminster and call it Big Ben — but strictly speaking, Big Ben is the name of what?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "e5bf1d20-bf0e-478f-90e1-24afb936a28b",
+        "question": "Timbuktu, the legendary desert city whose medieval universities and libraries held hundreds of thousands of manuscripts, stands on the edge of the Sahara in which modern country?",
+        "subtopic": "Famous landmarks and monuments"
+      },
+      {
+        "id": "edc76de1-d844-4755-b9ca-f500942ee5f1",
+        "question": "Only one continent is crossed by the equator, the Tropic of Cancer, and the Tropic of Capricorn. Which one?",
+        "subtopic": "Climate, time zones and hemispheres"
+      },
+      {
+        "id": "f1aa47ba-4c20-4c28-95f8-4c131eb68629",
+        "question": "At their closest point, Europe and Africa are separated by just 14 kilometres of water. Which strait lies between them?",
+        "subtopic": "Oceans, seas and straits"
+      },
+      {
+        "id": "f7017ba7-a1af-4526-8d1f-76bde8d792e0",
+        "question": "Everest is the highest peak above sea level, but because the Earth bulges at the equator, the summit farthest from the planet's centre belongs to which Ecuadorian volcano?",
+        "subtopic": "Mountains, volcanoes and peaks"
+      },
+      {
+        "id": "f983b11e-8241-5fe6-a131-78a56d9d0061",
+        "question": "Only one country on Earth has its main territory spread across all four hemispheres — northern, southern, eastern and western. Which Pacific island nation is it?",
+        "subtopic": "Climate, time zones and hemispheres"
+      }
+    ],
+    "history": [
+      {
+        "id": "1ae3dd75-f197-4db5-9ead-e6830e7ff008",
+        "question": "Cuneiform, the world's earliest known writing system, was not invented to record prayers, poems or the deeds of kings. The oldest clay tablets from the Sumerian city of Uruk show it was created for a far more mundane purpose — what were people actually writing down?",
+        "subtopic": "Ancient Egypt and Mesopotamia"
+      },
+      {
+        "id": "1c5745d9-ab9e-485b-8887-ffeeb9daadf9",
+        "question": "In 1859, the United States and the British Empire came to the brink of war on an island off North America's Pacific coast over the shooting of a single farm animal — the standoff's only casualty. Which animal gave this almost-war its name?",
+        "subtopic": "Famous battles and military leaders"
+      },
+      {
+        "id": "22156a55-156c-4081-93b5-6f6473e8990c",
+        "question": "When a Paris hairdresser invented the bob haircut in 1909, he claimed his inspiration was a medieval French heroine burned at the stake. Who?",
+        "subtopic": "Medieval Europe and the Vikings"
+      },
+      {
+        "id": "24c00998-b024-4082-b40b-3f7a29b2d267",
+        "question": "Medieval European courts sometimes held full formal trials, complete with defence lawyers, for a category of defendant that would be laughed out of any courtroom today. Who were these defendants?",
+        "subtopic": "Medieval Europe and the Vikings"
+      },
+      {
+        "id": "37108bde-0306-48bf-b9c5-db4663b3c37b",
+        "question": "Nearly 2,000 years before snack machines, the Greek engineer Hero of Alexandria described the world's first known vending machine, built for Egyptian temples. Drop in a coin, and what did it dispense?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+        "question": "Ancient Roman laundry workers whitened togas by soaking them in a liquid collected from pots on street corners — a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid was it?",
+        "subtopic": "Everyday life in past centuries"
+      },
+      {
+        "id": "48de98bb-1a16-4468-9bb9-99bf13f4eb84",
+        "question": "The 1815 eruption of Mount Tambora in Indonesia chilled the globe and made 1816 a 'year without a summer' — trapping a group of friends indoors on Lake Geneva, where 18-year-old Mary Shelley began writing which famous novel?",
+        "subtopic": "Plagues, famines and disasters"
+      },
+      {
+        "id": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+        "question": "The name of the American dollar goes back to the 'thaler' — silver coins first struck in the 1520s in the mining town of Joachimsthal. In which present-day European country does that town lie?",
+        "subtopic": "Money, coins and banknotes through history"
+      },
+      {
+        "id": "5965f766-4c3e-48dd-bcf9-86dd9a70eab9",
+        "question": "In 1915 the ship Endurance was crushed by Antarctic pack ice, stranding its crew on the frozen sea. Yet after an epic two-year ordeal, all 28 men came home alive. Which explorer led them?",
+        "subtopic": "Explorers and voyages of discovery"
+      },
+      {
+        "id": "6169fc69-6068-4c78-9195-479a292370f7",
+        "question": "In 1901, sponge divers exploring a shipwreck off a Greek island hauled up a corroded bronze lump that turned out to hide more than 30 precision gears, built around 2,000 years ago. What was this famous Antikythera mechanism designed to do?",
+        "subtopic": "Ancient Greece and Rome"
+      },
+      {
+        "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+        "question": "In the 1630s, the Dutch Republic experienced history's most famous speculative bubble, when a single rare bulb could briefly cost as much as a grand Amsterdam canal house. Which flower drove the frenzy?",
+        "subtopic": "Money, coins and banknotes through history"
+      },
+      {
+        "id": "6843823d-e75d-45f4-9bb5-a605c902f6e7",
+        "question": "Of the Seven Wonders of the Ancient World, only one is still standing today. Which one?",
+        "subtopic": "Ancient Egypt and Mesopotamia"
+      },
+      {
+        "id": "7336ab85-ed14-56f3-ae9e-08a36d8b0d90",
+        "question": "Bone analysis of gladiators buried at Ephesus shows they ate a mostly plant-based diet — so dominated by one grain that Romans nicknamed them 'hordearii', meaning eaters of what?",
+        "subtopic": "Food and drink through the ages"
+      },
+      {
+        "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+        "question": "Contrary to legend, the pyramid builders of Giza were not slaves but paid workers. Alongside bread, what drink made up a core part of their daily rations?",
+        "subtopic": "Food and drink through the ages"
+      },
+      {
+        "id": "7a483f8b-341a-49bb-9317-ac80c3251e52",
+        "question": "Which country has more pyramids: Egypt or Sudan?",
+        "subtopic": "Ancient Egypt and Mesopotamia"
+      },
+      {
+        "id": "84d0f9b1-bcbc-4de9-8c65-bf3db327a272",
+        "question": "The Byzantine navy defended Constantinople with a secret incendiary weapon that kept burning even on the surface of the sea — a recipe guarded so closely that it has been lost to history. What was this weapon called?",
+        "subtopic": "Medieval Europe and the Vikings"
+      },
+      {
+        "id": "8c0a465f-6c6a-42d8-a4cf-7ff3ac57aa7a",
+        "question": "In 1903, which Polish-born scientist became the first woman ever to win a Nobel Prize?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+        "question": "To ensure no American officer could ever outrank the country's first president, he was posthumously promoted to the top military rank. In which year did this happen?",
+        "subtopic": "Famous battles and military leaders"
+      },
+      {
+        "id": "90fbeebb-55a5-4a23-80b1-5a4e64fc32f4",
+        "question": "In August 1888, the first long-distance automobile journey — about 100 kilometres, refuelling at a pharmacy along the way — was made without the inventor's knowledge. Who was driving?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "a4eb7b91-ed8e-4ec9-ba0a-2b2dd9425535",
+        "question": "A dagger buried with Tutankhamun has an iron blade so pure it has barely rusted in 3,300 years — made centuries before Egyptians knew how to smelt iron from ore. Where did the metal come from?",
+        "subtopic": "Ancient Egypt and Mesopotamia"
+      },
+      {
+        "id": "a9f2146c-6ca9-50ac-90ce-48951240c579",
+        "question": "On the Pacific island of Yap, the traditional currency called rai takes the form of enormous carved discs — some wider than a car and far too heavy to move. What are these coins made of?",
+        "subtopic": "Money, coins and banknotes through history"
+      },
+      {
+        "id": "ae368719-7318-526b-8690-015ceb92e54e",
+        "question": "Europe's very first paper banknotes were issued back in 1661 by a private bank in which country — one that, rather ironically, is today racing to become one of the world's first completely cashless societies?",
+        "subtopic": "Money, coins and banknotes through history"
+      },
+      {
+        "id": "b1f8689e-b0da-400a-8d94-95bb3c18e865",
+        "question": "In ancient Greece, drinking wine straight was considered the mark of a barbarian. What did every civilised host mix into the wine before serving it?",
+        "subtopic": "Food and drink through the ages"
+      },
+      {
+        "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+        "question": "Founded in Kyoto in 1889 to make handmade playing cards, which Japanese company went on to become one of the biggest names in video games?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "b3b469fd-2cb2-4c00-8a47-5825deb38f40",
+        "question": "Modern concrete can crumble in seawater within decades, yet 2,000-year-old Roman harbour walls are still standing — and some have actually grown stronger over time. What natural ingredient from the region around the Bay of Naples gave Roman concrete this remarkable durability?",
+        "subtopic": "Ancient Greece and Rome"
+      },
+      {
+        "id": "b3d6ea9b-463a-495a-b146-7fecb39e6328",
+        "question": "In 1943, British intelligence floated a corpse dressed as a Royal Marines officer off the Spanish coast, carrying fake invasion plans in his briefcase. The ruse pulled German defences away from the Allies' real target — which Mediterranean island?",
+        "subtopic": "World War II"
+      },
+      {
+        "id": "b4de4587-d85c-5087-80ed-d0c71b769753",
+        "question": "Before it hit toy shelves in the 1950s, the squishy modelling compound Play-Doh was sold for a completely different job around the house. What was it originally used for?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "b5d7bdf8-fa29-4857-8025-3b065ed6ae05",
+        "question": "On a June morning in 1974, a cashier in an Ohio supermarket scanned the world's first barcoded product at a checkout. What was it?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "b722dcda-f528-468b-b99b-5bb3dd0adae7",
+        "question": "The ancient Egyptian picture-based script carved on temple walls baffled scholars for centuries, until the Rosetta Stone finally unlocked it in 1822. What is this script called?",
+        "subtopic": "Ancient Egypt and Mesopotamia"
+      },
+      {
+        "id": "bef675a8-3c78-58c2-8b32-dbd69887df72",
+        "question": "Long before children squeezed it into shapes, Play-Doh was sold as a household cleaning product. In the era of coal heating, homeowners rolled the soft putty across one surface in particular to lift off the soot. What was it made to clean?",
+        "subtopic": "Origins of everyday objects and inventions"
+      },
+      {
+        "id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+        "question": "When Soviet Russia finally switched from the old Julian calendar in 1918, the change swallowed nearly two weeks overnight. Citizens went to bed on 31 January — and woke up on which date?",
+        "subtopic": "Revolutions and uprisings"
+      },
+      {
+        "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+        "question": "Queen Elizabeth II visited more than a hundred countries during her reign, yet she never once carried a document that every other British traveller must have. Which document?",
+        "subtopic": "Kings, queens and royal dynasties"
+      },
+      {
+        "id": "c6aacf35-2456-47bf-8ea7-e304525802e5",
+        "question": "Before cheap alarm clocks, workers in industrial Britain and Ireland paid a so-called knocker-upper to make sure they got to work on time. What exactly did a knocker-upper do?",
+        "subtopic": "Everyday life in past centuries"
+      },
+      {
+        "id": "c7d6ee1f-1315-4acf-8919-4865b3ce30cd",
+        "question": "In December 1911, Norwegian explorer Roald Amundsen won one of history's great races, planting his country's flag about five weeks before Britain's Captain Scott could reach the same spot. Where on Earth was it?",
+        "subtopic": "Explorers and voyages of discovery"
+      },
+      {
+        "id": "c9156e1b-1b05-42e4-a126-75e905cae985",
+        "question": "Which U.S. president had a side job as a licensed bartender before entering politics?",
+        "subtopic": "Food and drink through the ages"
+      },
+      {
+        "id": "d929caee-f8f2-5e02-90ea-56af3de5253b",
+        "question": "In 1698, one ruler was so determined to drag his nobles into Western European fashion that he taxed their beards — even handing out tokens as proof of payment. Which famously reform-minded Russian tsar was it?",
+        "subtopic": "Kings, queens and royal dynasties"
+      },
+      {
+        "id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+        "question": "By 1409, the Western Schism had spun so far out of control that Christendom was stuck with rival men simultaneously claiming to be the one true pope. How many?",
+        "subtopic": "Medieval Europe and the Vikings"
+      },
+      {
+        "id": "dfb0de63-3470-4b1a-9c5e-1d030ba2ae71",
+        "question": "Despite what every costume shop and cartoon insists, archaeologists have never found a genuine Viking battle helmet fitted with what?",
+        "subtopic": "Medieval Europe and the Vikings"
+      },
+      {
+        "id": "e3d32ac5-fe91-4f06-899f-d6987f9ed025",
+        "question": "Romans of every social class doused their meals in garum, a prized sauce produced in coastal factories so pungent that towns pushed them outside the walls. What was garum made from?",
+        "subtopic": "Food and drink through the ages"
+      },
+      {
+        "id": "eb93fa33-3bd6-4bd4-867d-32c9ed4444bf",
+        "question": "Roman sundials always divided daylight into exactly twelve hours, from sunrise to sunset, every day of the year. What strange consequence did this have for the Roman hour itself?",
+        "subtopic": "Ancient Greece and Rome"
+      }
+    ],
+    "movies-music": [
+      {
+        "id": "044bf206-2137-5061-b83b-765bb3b74805",
+        "question": "For Live Aid in 1985, David Bowie recorded a UK chart-topping duet cover of 'Dancing in the Street' with which fellow rock legend?",
+        "subtopic": "Stage names, duos and famous rivalries"
+      },
+      {
+        "id": "0a8b5da4-fcb4-4908-86ef-3928bf579e05",
+        "question": "A recording of a man's agonised scream, first used in a 1951 Western, has been sneaked into hundreds of films — including Star Wars and Indiana Jones — as a running inside joke among sound designers. What is this famous stock sound effect called?",
+        "subtopic": "Film soundtracks and TV theme songs"
+      },
+      {
+        "id": "0fa4dbec-502f-41fe-9696-decb852245a1",
+        "question": "The 'Wilhelm scream', a stock scream recycled in hundreds of films from Star Wars to Toy Story, was first recorded for a Western in which decade?",
+        "subtopic": "Film soundtracks and TV theme songs"
+      },
+      {
+        "id": "1afd7152-e671-4930-bd4c-5012df32aaff",
+        "question": "In the sitcom Friends, the six friends spend much of their lives on a battered orange sofa in their favourite Manhattan coffee house. What is it called?",
+        "subtopic": "Fictional places and brands from film and TV"
+      },
+      {
+        "id": "2676d9c8-7656-5dd0-a6cb-59efb5d42b51",
+        "question": "Which 2026 BTS album sold over four million copies in its first week and held number one on the Billboard 200 for three straight weeks?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "2b1f9c75-d047-4cc8-94b9-e828ec5d2669",
+        "question": "Which rock and roll legend had a stillborn identical twin, born 35 minutes before him, whom he later called his original bodyguard?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "2c9dabd8-308c-4c00-b36e-d4a94bb6a13e",
+        "question": "Across five acclaimed seasons, the series The Wire dissected the drug trade, the docks, the schools and the press of a single American city. Which one?",
+        "subtopic": "TV series, sitcoms and crime dramas"
+      },
+      {
+        "id": "36d7d047-e74c-438f-a9a3-8f214938f2a3",
+        "question": "In 2012, the director of Titanic and Avatar piloted a submersible alone to the deepest known point of the world's oceans, becoming the first person ever to do it solo. Who is he?",
+        "subtopic": "Famous directors and their signature films"
+      },
+      {
+        "id": "40519abd-5e42-5cf1-972f-a8b81cf9545d",
+        "question": "In 2026, Deep Purple fans witnessed rock history when the guitarist who wrote the legendary 'Smoke on the Water' riff joined the band on stage for the first time since 1993 — who is he?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "40d5dbc2-f7f5-4490-8c52-34a5b6317a29",
+        "question": "Which film composer wrote the iconic themes for Star Wars, Jurassic Park, and the first three Harry Potter films?",
+        "subtopic": "Film soundtracks and TV theme songs"
+      },
+      {
+        "id": "4716079c-6547-4467-82ec-362237cdab34",
+        "question": "Beachgoers in 1975 suddenly grew wary of the water thanks to which Steven Spielberg thriller, widely credited as the first modern summer blockbuster?",
+        "subtopic": "Famous directors and their signature films"
+      },
+      {
+        "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+        "question": "After its original nine-week reign at UK number one in the mid-1970s, Queen's Bohemian Rhapsody was finally dethroned by a song that shares one of Freddie Mercury's most famous sung exclamations — which band knocked it off the top?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "500fa8da-ccef-503b-b78f-bee61d06a9af",
+        "question": "Who is the only artist in history to score five number-one albums on the US Billboard 200 before turning nineteen?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "581fe118-7952-400c-a15d-2f667229e1b1",
+        "question": "Sweden's ABBA shot to world fame by winning the 1974 Eurovision Song Contest with which song, named after a famous Napoleonic battle?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "6b6a9f9c-3842-487e-a418-7b019cf1e645",
+        "question": "When actors film scenes whose backgrounds will be added digitally, they usually perform in front of a giant blank screen. What colour is it, chosen largely because it is the colour least present in human skin?",
+        "subtopic": "Colours, numbers and animals in titles"
+      },
+      {
+        "id": "719fb379-5776-4f30-8249-801682f1f8bd",
+        "question": "Fifties science-fiction films got their signature eerie wail from an electronic instrument that is played by waving your hands in the air near two antennas, without ever touching it. What is it called?",
+        "subtopic": "Classical music, opera and instruments"
+      },
+      {
+        "id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+        "question": "David Bowie's eyes famously looked like two different colours. What actually caused this illusion?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "722c4059-ffd7-493a-ac1d-39ceee3ce5f2",
+        "question": "Which Swedish pop group shot to international fame by winning the 1974 Eurovision Song Contest with the song 'Waterloo'?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+        "question": "Alfred Hitchcock's 1960 thriller Psycho is famous for its shower scene — but it broke a second Hollywood bathroom taboo, reportedly becoming the first major American film to show which everyday fixture actually being used on screen?",
+        "subtopic": "Famous directors and their signature films"
+      },
+      {
+        "id": "7f7a4c8a-0fee-5f10-8f60-53ee7e359efe",
+        "question": "In 1911 the Mona Lisa vanished from the Louvre, stolen by a former museum worker who kept it hidden in his small Paris flat for over two years. He was finally caught when he tried to sell the painting in the country where he insisted it truly belonged. Which country?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "812e30e1-439e-4b68-a972-153b13c8b893",
+        "question": "In DC Comics, the emerald archer Oliver Queen guards a fictional metropolis whose name shares its first word with a fellow hero's Metropolis and Gotham. What city does the Green Arrow call home?",
+        "subtopic": "Fictional places and brands from film and TV"
+      },
+      {
+        "id": "87be1cdf-0382-5a7c-bb70-4634f65cd625",
+        "question": "Which song became the first rap single ever to reach number one on the US Billboard Hot 100, back in 1990?",
+        "subtopic": "Hip-hop, R&B, electronic and dance music"
+      },
+      {
+        "id": "8f5e7287-556b-4e77-8627-3254ab11765e",
+        "question": "In 2012, a tongue-in-cheek dance hit by a South Korean rapper became the first video in YouTube history to pass one billion views. Who was the artist?",
+        "subtopic": "Dance crazes, music videos and viral hits"
+      },
+      {
+        "id": "92bf6bb3-6bf5-4426-a1ce-300a9b67eb53",
+        "question": "With an estimated 70 million copies sold, which Michael Jackson record remains the best-selling album of all time?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "93b8897b-892d-5934-bc8e-1e479141a950",
+        "question": "In December 1965, two Gemini 6 astronauts smuggled a harmonica and sleigh bells aboard and played the first musical instruments in space. Which song did they perform?",
+        "subtopic": "Christmas, holiday and seasonal favourites"
+      },
+      {
+        "id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+        "question": "The first draft script for which blockbuster vampire saga featured its heroine as a star athlete being chased by the FBI on jet skis?",
+        "subtopic": "Film franchises, sequels and remakes"
+      },
+      {
+        "id": "97c3253f-6a01-50da-83e3-2a9c3aa4bfb2",
+        "question": "Titanic's famous sweep of eleven Oscars in 1998 only tied, rather than broke, the record set by which 1959 epic?",
+        "subtopic": "Film awards and festivals"
+      },
+      {
+        "id": "98bd5740-ef3f-42b0-ad88-18e315fc132e",
+        "question": "In Pixar's Finding Nemo, Nemo and his overprotective father Marlin belong to which brightly striped species of fish?",
+        "subtopic": "Animated films and their characters"
+      },
+      {
+        "id": "99d505ea-717c-4bd8-a561-8704af656157",
+        "question": "The author who wrote Tom Sawyer was born in 1835 and died in 1910, bookending his life with two appearances of which celestial visitor?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "9ca67f01-2475-5e36-903e-1ae331eef32d",
+        "question": "In 1911, an Italian handyman walked out of the Louvre with a painting hidden under his coat, claiming he wanted to return it to Italy — a theft that made the artwork world-famous. Which painting was it?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "a276ab70-8b09-461d-b2ca-47b7f0fe589a",
+        "question": "Which 1969 film about a Texan hustler adrift in New York remains the only X-rated movie ever to win the Academy Award for Best Picture?",
+        "subtopic": "Film awards and festivals"
+      },
+      {
+        "id": "a292e21a-3a74-40d5-9db5-c04eef986563",
+        "question": "The cover of a 1969 Beatles album shows the four band members striding single file over a zebra crossing outside their London recording studio. Which album?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "a54bd41c-2ee2-4007-b261-b4778fd6e298",
+        "question": "Which 1965 Oscar-winning musical film follows governess Maria and the von Trapp family through the hills and convents of Austria?",
+        "subtopic": "Musicals on stage and screen"
+      },
+      {
+        "id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+        "question": "By 2024, the Marvel Cinematic Universe had racked up a record fourteen Oscar nominations in one single category without ever winning it — which category?",
+        "subtopic": "Film awards and festivals"
+      },
+      {
+        "id": "ab505aa0-9998-5e27-b911-3d2b35524d3b",
+        "question": "At the 2026 Oscars, Michael B. Jordan won Best Actor for the vampire hit Sinners — and the film's screenplay Oscar went to which director, his longtime collaborator from Creed and Black Panther?",
+        "subtopic": "Film awards and festivals"
+      },
+      {
+        "id": "b0a5551a-c98a-57de-badd-d50a13c0f9af",
+        "question": "Frank Sinatra and Stevie Wonder each won the Grammy for Album of the Year three times — but who in 2024 became the first artist in history to win it four times?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+        "question": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?",
+        "subtopic": "Famous directors and their signature films"
+      },
+      {
+        "id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+        "question": "In January 1969, which band gave their very last public performance — an unannounced lunchtime concert on the rooftop of their London office building, broken up by the police?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "b861af0a-056d-50a6-852f-4f32eb24823b",
+        "question": "Ryan Gosling's 2026 space blockbuster Project Hail Mary was directed by the same duo behind which beloved animated comedy hit?",
+        "subtopic": "Famous directors and their signature films"
+      },
+      {
+        "id": "bd5fbdb2-d6bf-4d1f-a2a5-6ee0d157c7a0",
+        "question": "In 1988, a 20-year-old Celine Dion won the Eurovision Song Contest — but not for her native Canada, which cannot enter. Which country was she representing?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "be851ecb-2860-4abb-8017-9c8064aa2431",
+        "question": "Which Italian Baroque composer wrote 'The Four Seasons', a set of four violin concertos painting spring, summer, autumn and winter in music?",
+        "subtopic": "Classical music, opera and instruments"
+      },
+      {
+        "id": "bfb1adf4-63b5-4e81-b67a-f87187c6c0cd",
+        "question": "Tchaikovsky's 1812 Overture, celebrating Russia's victory over Napoleon, famously calls for a piece of actual military hardware in its score. What is it?",
+        "subtopic": "Classical music, opera and instruments"
+      },
+      {
+        "id": "c22b5dc1-439b-5c6b-beaa-dc20e11a7f0b",
+        "question": "In the legendary shower scene of Alfred Hitchcock's 1960 thriller Psycho, the blood swirling down the drain looked terrifyingly real on black-and-white film — yet it was actually which sweet kitchen product?",
+        "subtopic": "Golden-age Hollywood and film classics"
+      },
+      {
+        "id": "c65a16ad-8def-5e03-bb77-edcff209d1f8",
+        "question": "Which actor won the Best Actor Oscar in 2023 for 'The Whale' but also starred in the 1997 live-action comedy 'George of the Jungle' swinging on vines in a loincloth?",
+        "subtopic": "Actors and their iconic roles"
+      },
+      {
+        "id": "c6beb6fe-cc7d-51fb-910e-1b4adda9d511",
+        "question": "Which producer released albums with Paul McCartney, The Rolling Stones, and Madonna all within three months in 2026?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "c819cb9f-df6c-4589-b110-86ceb77b9495",
+        "question": "Hans Zimmer has scored blockbusters for four decades, but he won his first Academy Award for an animated film. Which one?",
+        "subtopic": "Film soundtracks and TV theme songs"
+      },
+      {
+        "id": "cd124130-c9dd-5c66-9a8f-1863cef6be1d",
+        "question": "Which film took home more Academy Awards: James Cameron's Titanic or the 1959 epic Ben-Hur?",
+        "subtopic": "Film awards and festivals"
+      },
+      {
+        "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+        "question": "When MTV went on air for the very first time in August 1981, it deliberately opened with a Buggles song whose title predicted exactly what the channel would do to an older medium. What was the song?",
+        "subtopic": "Dance crazes, music videos and viral hits"
+      },
+      {
+        "id": "d14c2a15-1297-449e-94e9-e08e736e8dad",
+        "question": "Its 1983 finale drew over 100 million American viewers, a record for a scripted episode that stood for decades. Which series about an army field hospital in the Korean War was it?",
+        "subtopic": "TV series, sitcoms and crime dramas"
+      },
+      {
+        "id": "d25873f2-0d6d-590b-b3ba-6898327e78da",
+        "question": "When the Mona Lisa vanished from the Louvre in 1911, French police hauled in a young Spanish-born painter living in Paris for questioning as a suspect. Who was he?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "d7037adf-0d58-5ddd-aa99-ee46d686b52f",
+        "question": "As of 2026, which K-pop group became the first where every member has completed the spicy wing challenge on Hot Ones?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "da8efc8b-4521-5128-91dc-77f393653515",
+        "question": "Which Scottish band grew so sick of their own 1994 mega-hit 'Love Is All Around', the theme from Four Weddings and a Funeral, that after 15 weeks at UK Number One they deliberately stopped producing the single?",
+        "subtopic": "Pop stars and chart-topping hits"
+      },
+      {
+        "id": "db6b3698-7f20-4fd5-8ad4-5270827c9e8d",
+        "question": "Andrew Lloyd Webber's long-running musical Cats is based on a playful 1939 poetry collection by which Nobel Prize-winning poet, better known for The Waste Land?",
+        "subtopic": "Musicals on stage and screen"
+      },
+      {
+        "id": "dc9dd98f-d75e-48ca-902e-e9e5fd5f1a18",
+        "question": "In 1996, the Spanish duo Los del Rio scored a worldwide number one that had wedding guests everywhere crossing and flipping their arms in the same dance. Which song?",
+        "subtopic": "Dance crazes, music videos and viral hits"
+      },
+      {
+        "id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+        "question": "The all-time Grammy record was held for decades not by a pop star but by a classical conductor — which superstar finally took the title of most decorated artist in Grammy history with her thirty-second trophy?",
+        "subtopic": "Records, firsts and extremes in film and music"
+      },
+      {
+        "id": "e73fdb39-96db-57a7-927d-8943185e9cea",
+        "question": "Which rapper made Grammy history in 2026 by becoming the most-awarded rapper of all time?",
+        "subtopic": "Hip-hop, R&B, electronic and dance music"
+      },
+      {
+        "id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+        "question": "In 2026, Grimes released a full collaboration with which famous Japanese virtual pop star — a synthetic singing voice with no human performer, whose songs are written by tens of thousands of bedroom producers?",
+        "subtopic": "Hip-hop, R&B, electronic and dance music"
+      },
+      {
+        "id": "e8ea634e-60b8-4f8e-af72-b69bf4018521",
+        "question": "In 1984, the drummer of which British rock band lost his left arm in a car crash — then returned with a custom electronic drum kit to record 'Hysteria', the band's biggest-selling album?",
+        "subtopic": "Rock and metal bands"
+      },
+      {
+        "id": "ef9e871b-a4eb-48ac-99ad-c63d2fad5b7a",
+        "question": "Whitney Houston's biggest hit, 'I Will Always Love You', was originally written and recorded by Dolly Parton. Houston's version powered the soundtrack of which 1992 film she starred in?",
+        "subtopic": "Film soundtracks and TV theme songs"
+      },
+      {
+        "id": "effdf0ed-ca05-4f03-93ab-7cdda5d2832a",
+        "question": "In the finale of Haydn's 'Farewell' Symphony, the musicians stop playing one by one, snuff out their candles and walk off stage until only two violinists remain. What message was Haydn gently sending to his employer, Prince Esterhazy?",
+        "subtopic": "Classical music, opera and instruments"
+      },
+      {
+        "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+        "question": "Which actor was working as a carpenter before being cast as Han Solo in the original Star Wars?",
+        "subtopic": "Actors and their iconic roles"
+      },
+      {
+        "id": "fae71dd9-c64f-556f-a97a-f5457e4c4ed1",
+        "question": "During its original nine-week run at UK number one in the 1970s, Queen's Bohemian Rhapsody was finally dethroned by an ABBA song whose title Freddie Mercury actually sings inside Bohemian Rhapsody itself — which song?",
+        "subtopic": "Pop stars and chart-topping hits"
+      }
+    ],
+    "science-nature": [
+      {
+        "id": "0021cfb9-05e1-4ad6-b4c5-95f4370b3ea3",
+        "question": "Australia's Shark Bay still grows living examples of Earth's oldest known fossils: layered mounds built by microbes as far back as 3.5 billion years ago. What are these structures called?",
+        "subtopic": "Dinosaurs and prehistoric life"
+      },
+      {
+        "id": "0123e93e-26cc-4931-b34d-4ebbccbfcb33",
+        "question": "The Sun and Moon appear almost exactly the same size in our sky thanks to a striking coincidence involving the same number. Roughly what factor links their sizes and their distances?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "052fcb0d-8aa0-445b-9bc0-c45185bd7fc5",
+        "question": "One of these growth facts about the human body is FALSE. Which is the odd one out?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+        "question": "On the floor of the Gulf of Mexico, explorers have filmed actual underwater lakes — with distinct shorelines and rippling surfaces — resting on the seabed. What ingredient makes their water dense enough to pool beneath the ocean?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "081a5b53-ed51-4d07-a408-1bf288b19359",
+        "question": "One plant of Africa's Namib Desert grows just two leaves in its entire life — and keeps those same two leaves growing, shredding in the wind, for a thousand years or more. What is this plant called?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "0a0ba41c-788c-531c-a635-bf4c8569acf5",
+        "question": "The mouth of one river at Lake Maracaibo sees so much lightning — on well over a hundred nights a year — that it's often called the lightning capital of the world. In which South American country is it?",
+        "subtopic": "Weather, climate and natural disasters"
+      },
+      {
+        "id": "0a446ae2-9e02-489d-804e-ce0460b3ecde",
+        "question": "The water around a nuclear reactor core glows an eerie blue because charged particles racing through it are travelling faster than something. Faster than what?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "0d64947b-9ebd-4559-b8f3-94e9eccb2650",
+        "question": "In 1868, astronomers spotted an unknown element in the Sun's light during an eclipse — 27 years before anyone found it on Earth. Fittingly named after the Greek sun god, which element is it?",
+        "subtopic": "Chemical elements and the periodic table"
+      },
+      {
+        "id": "157a82db-98fc-4f17-9d3e-e801f4aac8b8",
+        "question": "Marine photographers have captured entire pods of which giant animal sleeping bolt upright just below the surface, hanging motionless like enormous drifting pillars?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+        "question": "In 2021, NASA's little helicopter Ingenuity made the first powered flight on another planet, on Mars. Tucked aboard as a tribute was a postage-stamp-sized piece of wing fabric taken from which pioneering aircraft?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "17b070d2-e6a3-51cf-a671-b1e793af4ce2",
+        "question": "Scientists warn that the wreck of the Titanic, resting almost four kilometres deep, may largely disintegrate within a few decades. What is slowly eating away its iron hull?",
+        "subtopic": "Fungi, microbes and the microscopic world"
+      },
+      {
+        "id": "19a9a05e-2279-4fde-9476-3e8a6bf7b88f",
+        "question": "Some species of one giant grass can grow almost a metre in a single day, making it the fastest-growing plant on Earth. Which plant is it?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "2716e527-fe55-5e34-88f8-db6a4b67a185",
+        "question": "That famously puffy pocket of gas in a bag of potato crisps isn't ordinary air — manufacturers use a specific gas because oxygen would turn the frying oil rancid. Which gas?",
+        "subtopic": "Food, nutrition and kitchen science"
+      },
+      {
+        "id": "2896283e-ab84-50e8-97db-f2f40f478531",
+        "question": "A well-known kitchen trick says a rock-hard avocado ripens much faster if you seal it in a paper bag with a banana. That works because ripening bananas give off which gas, which acts as a plant hormone?",
+        "subtopic": "Food, nutrition and kitchen science"
+      },
+      {
+        "id": "29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6",
+        "question": "Roughly how much would a single teaspoon of material from a neutron star weigh?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "2aa4ac32-60e7-476a-8ab4-3d0eafcf97f1",
+        "question": "Stegosaurus and Tyrannosaurus rex share every toy box, yet they never met. Roughly how much time separated the two dinosaurs?",
+        "subtopic": "Dinosaurs and prehistoric life"
+      },
+      {
+        "id": "2c5b24ce-bab2-4959-b471-9d00bceb175d",
+        "question": "A thin layer of clay found worldwide in rocks dating to the moment the dinosaurs vanished is packed with a metal that is rare in Earth's crust but common in asteroids. Which metal?",
+        "subtopic": "Dinosaurs and prehistoric life"
+      },
+      {
+        "id": "2fb4ebee-d091-5eac-afa1-0df32ed6e54d",
+        "question": "One living tissue in the human body contains no blood vessels at all and takes its oxygen straight from the surrounding air — which is exactly why it stays perfectly transparent. Which tissue is it?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "300dab0f-0a4f-4099-a293-7195db9f5257",
+        "question": "Periodical cicadas in North America spend 13 or 17 years underground before emerging all at once. What is mathematically special about those two numbers — a quirk thought to help the insects dodge predators?",
+        "subtopic": "Birds, reptiles, amphibians and insects"
+      },
+      {
+        "id": "32bf681d-5e24-4701-8510-2e8631b90270",
+        "question": "In the rainforests of Sumatra and Borneo grows the world's largest single flower — up to a metre across, with no stem or leaves of its own, luring flies with the stench of rotting meat. What is it called?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "3650abf5-1d07-5514-bd3f-fafd47d1b216",
+        "question": "Hemoglobin gets its punch from a single iron atom at the heart of the molecule. Chlorophyll, the green pigment in plants, has a remarkably similar structure — but which metal sits at its center instead?",
+        "subtopic": "Chemical elements and the periodic table"
+      },
+      {
+        "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+        "question": "In 1973, Motorola engineer Martin Cooper stood on a Manhattan sidewalk and made history's very first call of its kind — cheekily dialling his direct rival at Bell Labs to gloat. What kind of device was he holding?",
+        "subtopic": "Inventions and inventors"
+      },
+      {
+        "id": "39770ac0-2666-4fae-98a2-560de977e177",
+        "question": "One small North American amphibian survives winter by letting most of the water in its body freeze solid — its heart stops beating, then restarts when it thaws in spring. Which animal?",
+        "subtopic": "Birds, reptiles, amphibians and insects"
+      },
+      {
+        "id": "4083ff70-16f8-415e-9ac9-4622b2ead01e",
+        "question": "Which metal sits solid on a laboratory shelf, yet melts into a silvery puddle from nothing more than the warmth of your bare hand?",
+        "subtopic": "Chemical elements and the periodic table"
+      },
+      {
+        "id": "4605a059-7194-5286-a978-fd47fb09f7db",
+        "question": "Eight years before Lindbergh's famous solo crossing, aviators John Alcock and Arthur Brown completed the first nonstop transatlantic flight in 1919 — taking off from Newfoundland and ending nose-down in a soft bog in which country?",
+        "subtopic": "Inventions and inventors"
+      },
+      {
+        "id": "49275265-daf6-4d8e-8895-6916d5137113",
+        "question": "Psychologists argue that what we call laziness is often a mask for something else entirely. According to this view, procrastination is usually driven by what?",
+        "subtopic": "Sleep, dreams, memory and everyday psychology"
+      },
+      {
+        "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+        "question": "Point Nemo in the South Pacific is the spot in the ocean farthest from any land — more than 2,600 kilometres in every direction. Because nobody is ever nearby, space agencies use it as a deliberate crash zone for what?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "53254cae-6201-450a-afcf-ef6bddea7fb5",
+        "question": "Astronauts returning from spacewalks report a surprising smell clinging to their suits, often likened to which seared food?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "595a26ea-cdba-49ec-8291-f00069aa71fc",
+        "question": "A honeybee returning from a good flower patch performs a figure-eight 'waggle dance' on the honeycomb. What does the dance tell the other bees?",
+        "subtopic": "Birds, reptiles, amphibians and insects"
+      },
+      {
+        "id": "5cb7c0ed-2e73-59e5-9c3c-21caae80b2c5",
+        "question": "A newborn baby has roughly 300 bones, yet an adult has only about 206 — and not a single one is ever lost. What happens to explain the difference?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "5e86ee19-2438-4feb-bee5-8f59a17aab27",
+        "question": "Humans share roughly 96% of their DNA with chimpanzees. But surprisingly, we also share a big chunk with a common yellow fruit. Roughly what percentage of our DNA do we share with bananas?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "62d8453d-f5d6-4932-a61c-4f5017db9597",
+        "question": "Which system in the human body stretches over 60,000 miles if laid out flat?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+        "question": "A giraffe's neck can be over two metres long, yet it contains exactly the same number of neck vertebrae as yours. How many is that?",
+        "subtopic": "Mammals and their behaviour"
+      },
+      {
+        "id": "663b3707-aff1-4eb7-87a2-415cb7035675",
+        "question": "The sharp crack of a whip isn't leather slapping against itself. The tip of the whip briefly does something no other handheld object does — what?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "6a096d25-f759-5a86-aefe-d5d31d3e3096",
+        "question": "High above powerful thunderstorms, ghostly red flashes called 'sprites' sometimes shoot upward toward the edge of space, lasting just a fraction of a second. What happening in the storm below triggers them?",
+        "subtopic": "Weather, climate and natural disasters"
+      },
+      {
+        "id": "6afeb849-779b-5ad5-97b1-c51fca1b132b",
+        "question": "When the Hoover Dam was built in the 1930s, workers embedded hundreds of kilometres of steel pipes inside the structure and pumped ice-cold water through them. Without this trick, engineers calculated the dam would have needed over a century to finish doing what?",
+        "subtopic": "Everyday chemistry and materials"
+      },
+      {
+        "id": "6ffb1eae-978c-46c8-baba-e9811e0ad9bd",
+        "question": "A Venus flytrap doesn't snap shut the first time an insect brushes its trigger hairs — it waits for confirmation. How many separate touches, within about twenty seconds, does it take to spring the trap?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "70cda270-b5ce-4f76-aa2c-482b9bfa8808",
+        "question": "Beneath its thick white fur, what colour is a polar bear's skin?",
+        "subtopic": "Mammals and their behaviour"
+      },
+      {
+        "id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+        "question": "Dip a straw into a glass of water and it appears to bend or break right at the surface. What bending-of-light phenomenon is playing the trick?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+        "question": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?",
+        "subtopic": "Mammals and their behaviour"
+      },
+      {
+        "id": "75634579-1404-5367-8350-9dbb14a22830",
+        "question": "The cheetah gets all the glory, but the true speed record for any animal on Earth — over 300 kilometres per hour — belongs to a bird of prey in its hunting dive. Which bird?",
+        "subtopic": "Records and extremes in nature"
+      },
+      {
+        "id": "77d068d5-a7a6-557e-9990-d2ff2908e7fc",
+        "question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun — its day is literally longer than its year. Which planet?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "8022e07b-ecc0-5a01-bdca-579271097aec",
+        "question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set — an accident that led him to invent which kitchen appliance?",
+        "subtopic": "Inventions and inventors"
+      },
+      {
+        "id": "812c6840-cf64-4bf8-90b6-9bb1fed6b0ab",
+        "question": "From the ground a rainbow is always an arc, but passengers in an aircraft can sometimes see one in its complete, uncut form. What shape does a full rainbow actually have?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "8730a6ed-b8a2-5813-814b-bab0e2c36c17",
+        "question": "One place on Earth sees lightning storms on up to 160 nights every year — so reliably that sailors once used the flashes as a natural lighthouse. Over which large Venezuelan lake does this famous 'everlasting storm' rage?",
+        "subtopic": "Weather, climate and natural disasters"
+      },
+      {
+        "id": "881997cf-7bf5-4faa-a8a3-5378991a93a1",
+        "question": "Earth's longest mountain range winds for roughly 65,000 kilometres — many times the length of the Andes — yet it stayed almost entirely unmapped until the 20th century. Where is it?",
+        "subtopic": "Volcanoes, rocks and the Earth's structure"
+      },
+      {
+        "id": "8a8e8480-3916-478c-ad4b-a75cbeb0fa0a",
+        "question": "Which part of the planet produces the largest share of the oxygen in Earth's atmosphere?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "8c30ce12-cc10-4195-bec6-a2acab2e04ee",
+        "question": "The smallest bone in the human body is lighter than a grain of rice. Deep inside which sense organ does it sit?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "8d074279-e389-5fd4-b66f-4c9c5fbbd6a9",
+        "question": "The largest known living organism on Earth sprawls under about nine square kilometres of forest in Oregon, USA — and it's neither a plant nor an animal. What kind of organism is it?",
+        "subtopic": "Fungi, microbes and the microscopic world"
+      },
+      {
+        "id": "8d1342f7-9efc-5d2b-b50f-629e352581ec",
+        "question": "When you mix baking soda with vinegar and it fizzes up dramatically, which gas is being released in all those bubbles?",
+        "subtopic": "Everyday chemistry and materials"
+      },
+      {
+        "id": "98a40508-0cb9-4b9c-af78-c82fdafe1267",
+        "question": "Which of these is not associated with a form of communication?",
+        "subtopic": "Computers, gadgets and everyday technology"
+      },
+      {
+        "id": "9dc0a654-cd38-48f0-95cc-2f7e1fe776cb",
+        "question": "In hot, dry regions you can sometimes watch rain fall from a cloud in ghostly grey streaks that never touch the ground, evaporating in mid-air. What do meteorologists call this phenomenon?",
+        "subtopic": "Weather, climate and natural disasters"
+      },
+      {
+        "id": "9e8c2ebd-7131-4bdc-a3db-7181b5b8d0be",
+        "question": "Packed with gas bubbles from the eruption that created it, which volcanic rock is famous for being able to float on water?",
+        "subtopic": "Volcanoes, rocks and the Earth's structure"
+      },
+      {
+        "id": "a02569a9-b250-525e-8598-a72a1817965e",
+        "question": "An octopus's blood carries oxygen using copper instead of iron. What colour does that make its blood?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "a062c8fa-58f4-4f18-a220-282106ff7a6e",
+        "question": "The sunlight hitting your face right now is not fresh from the press. Roughly how long ago did it leave the Sun's surface?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "a2418b29-3e02-4acf-b4ea-1c927372bcab",
+        "question": "Which planet has the fastest winds ever measured in the solar system, with jet streams topping 2,000 kilometres per hour?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "a2dc2ec4-8f8d-44c7-8c8f-ca34a4e6fc18",
+        "question": "A human newborn's colour vision is famously limited, but there's one intense colour they can detect best from the start. Which is it?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+        "question": "In the pitch-black deep sea, the tiny male of which fish bites into the much larger female and permanently fuses with her body — living out his days as little more than an attached sperm supply?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "a928cf39-5172-4ee3-b982-3a857a6737a7",
+        "question": "Odd one out: three of these fruits are true berries by botanical definition, and one is not. Which is the impostor?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "b08c37fd-cc18-49ff-b6ae-83021b021c15",
+        "question": "The Moon is slowly drifting away from Earth by a few centimetres a year. In the distant future, this will make which dramatic sky event impossible?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+        "question": "After six months floating on the International Space Station, astronauts return to Earth with up to five extra centimetres of something they quickly lose again. Five centimetres of what?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+        "question": "In 1971, Apollo 14 commander Alan Shepard smuggled a modified club head to the Moon and became the first person to play which sport there?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "be020d70-c242-4d45-8c0b-83ae5be0de37",
+        "question": "In 1971, Apollo 15 commander David Scott stood on the Moon and dropped a hammer and a falcon feather at the same moment. What happened?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+        "question": "True or false: Albert Einstein famously failed mathematics as a schoolboy.",
+        "subtopic": "Science myths, idioms and misconceptions"
+      },
+      {
+        "id": "cb16489b-0ef0-4534-8a12-07c0a7617e5c",
+        "question": "Which planet is hotter at the surface: Mercury, closest to the Sun, or Venus?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "cc7082a3-d9e9-49b7-8d5c-8e65785c7d4e",
+        "question": "This single planet is so vast it could swallow all seven other planets of the solar system and still have space left over. Which planet is it?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "d3e90bd4-1eb3-4283-8e6d-45746e83dedb",
+        "question": "Astronauts appear weightless aboard the International Space Station, yet gravity there is only slightly weaker than on Earth. So why do they float?",
+        "subtopic": "Forces, energy, light and sound"
+      },
+      {
+        "id": "d8c7a633-02f1-418e-99da-d4d909519581",
+        "question": "The persistent myth that Einstein failed maths is thought to have started in a 1935 column belonging to which famous believe-it-or-not brand?",
+        "subtopic": "Science myths, idioms and misconceptions"
+      },
+      {
+        "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+        "question": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?",
+        "subtopic": "Marine life and the oceans"
+      },
+      {
+        "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+        "question": "A desert is defined by how little precipitation falls, not by heat — which is why the largest desert on Earth is not the Sahara. Which continent holds the title?",
+        "subtopic": "Records and extremes in nature"
+      },
+      {
+        "id": "db385a95-4ab8-5c59-bde6-eb22d4ec03c6",
+        "question": "In the early 1990s, computer scientists at the University of Cambridge invented the world's first webcam for a very practical reason: to spare themselves pointless trips down the corridor. What everyday object was the camera pointed at?",
+        "subtopic": "Computers, gadgets and everyday technology"
+      },
+      {
+        "id": "dc475b60-4ec8-5206-b834-6ba52a5b897f",
+        "question": "Eight years before Charles Lindbergh's celebrated solo crossing, two British airmen completed the first-ever nonstop transatlantic flight in 1919, ending it nose-down in an Irish bog. Name either of the two men.",
+        "subtopic": "Inventions and inventors"
+      },
+      {
+        "id": "dd858794-8374-5c0f-809f-2a3a6df2b927",
+        "question": "Despite its name, San Francisco's Golden Gate Bridge has never been painted gold. Its distinctive reddish colour — kept partly so ships can spot it in thick fog — has an official name. What is it?",
+        "subtopic": "Colours, patterns and shapes in nature"
+      },
+      {
+        "id": "e6ab36db-58fd-41cd-ae87-c355ec8860d0",
+        "question": "Botanists classify a fruit as a berry if it develops from a single flower's ovary with seeds inside its flesh. By that strict rule, which everyday fruit that most people would never call a berry actually qualifies as one?",
+        "subtopic": "Trees, flowers and plant life"
+      },
+      {
+        "id": "ed1f8524-17d0-4e9f-b08f-5b1c800593e8",
+        "question": "The bootprints left by the Apollo astronauts are expected to stay on the Moon for millions of years. What does the Moon lack that would otherwise wear them away?",
+        "subtopic": "Planets, moons and the solar system"
+      },
+      {
+        "id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+        "question": "Scientists have proposed that the planet 55 Cancri e may be built largely from which precious gemstone?",
+        "subtopic": "Stars, galaxies and space exploration"
+      },
+      {
+        "id": "f5cadc97-ced9-43a6-9021-6335f29508b8",
+        "question": "Blue eyes contain no blue pigment at all. What actually makes them look blue?",
+        "subtopic": "Human anatomy and the senses"
+      },
+      {
+        "id": "f815945b-94e3-4805-b45f-beefc35a1fe4",
+        "question": "Palaeontologists get genuinely excited about coprolites, which reveal what dinosaurs actually ate. What is a coprolite?",
+        "subtopic": "Dinosaurs and prehistoric life"
+      },
+      {
+        "id": "f8c9e5c6-6cde-4ae5-90e6-ce78a0c40c41",
+        "question": "Most ginger cats are male, because the gene is carried on the X chromosome. Roughly what's the ratio of ginger males to ginger females?",
+        "subtopic": "Pets, farm animals and breeds"
+      },
+      {
+        "id": "fd16911e-1aa8-4505-9726-fc85ab5ed995",
+        "question": "You see a lightning flash and start counting until the thunder arrives. Roughly how many seconds of counting equal one kilometre of distance to the storm?",
+        "subtopic": "Weather, climate and natural disasters"
+      },
+      {
+        "id": "fd623190-5f5d-5a43-9bcc-b5f38e159360",
+        "question": "Every so often, parts of Europe wake up to eerie 'blood rain' that leaves cars and snow coated in a reddish film. This colour comes from dust swept thousands of kilometres north from which desert?",
+        "subtopic": "Weather, climate and natural disasters"
+      }
+    ],
+    "sports": [
+      {
+        "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+        "question": "The All England Club, home of the Wimbledon Championships since 1877, was actually founded in 1868 for a completely different lawn game — which one?",
+        "subtopic": "Tennis stars and Grand Slam tournaments"
+      },
+      {
+        "id": "0abe16a4-4df3-4985-8977-6bdbd34487d5",
+        "question": "Straight out of a school PE lesson: until the 1932 Games, Olympic gymnasts could win a medal in a straight-up race to the top of what?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "0f520288-5d3e-47ee-a09f-641b39152161",
+        "question": "Under cricket's laws, an incoming batter who takes more than three minutes to be ready at the crease can be dismissed without ever facing a ball. What is this rarest of dismissals called?",
+        "subtopic": "Sports rules, scoring and equipment"
+      },
+      {
+        "id": "1c400f07-8581-42df-9a67-c9574e88f654",
+        "question": "Which group of athletes received better prizes in ancient Greek competitions: male winners of the Olympics or female winners of the Heraea Games?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "240ec77d-e0c3-441f-957f-464c3e97c471",
+        "question": "Between 1912 and 1948, the Olympic Games awarded official medals not only to athletes but also to competitors in an entirely different kind of contest. What kind?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "24351f4f-fc4b-431d-abee-16c1f31edc94",
+        "question": "The fastest goal in men's World Cup history came just 11 seconds after kick-off, in the 2002 third-place match against South Korea. Which Turkish striker scored it?",
+        "subtopic": "World Cup and international football"
+      },
+      {
+        "id": "2fac4c7c-92b9-415d-9b79-f701647339c3",
+        "question": "In their first 200 years, the ancient Olympic Games were primarily what kind of event?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "45e5038b-9b33-4a80-86bd-25d5120f9711",
+        "question": "Basketball made its Olympic debut at Berlin 1936, where the USA beat Canada in a final that finished just 19 points to 8. What kept the score so low?",
+        "subtopic": "Basketball, baseball and American football"
+      },
+      {
+        "id": "484a45af-95f7-451d-9d97-dd34816a59c5",
+        "question": "The men's high jump world record — 2.45 metres, set in 1993 — has now stood for more than three decades. Which country is the record holder from?",
+        "subtopic": "Athletics and track-and-field records"
+      },
+      {
+        "id": "4945b6eb-fdc6-4259-bf54-2c251a67d4aa",
+        "question": "The America's Cup, the oldest trophy in international sport, is not actually named after the United States. What is it named after?",
+        "subtopic": "Swimming, sailing and water sports"
+      },
+      {
+        "id": "57ceaede-c264-5627-9049-0dc65b66d3da",
+        "question": "The last Olympic gold medals made of solid gold were handed out in 1912. Ever since, they've been made almost entirely of a different metal, with just a few grams of gold plating on top. Which metal?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "596b8d29-f8cd-4041-b9e0-4ffe84053bfe",
+        "question": "With five titles, which country has won the men's football World Cup more often than any other?",
+        "subtopic": "World Cup and international football"
+      },
+      {
+        "id": "5bdd40c8-0a02-493a-8a8e-519e90c5d6a1",
+        "question": "When James Naismith invented basketball in 1891, players did not shoot at hoops with nets. What did they aim at instead?",
+        "subtopic": "Sports origins, firsts and inventors"
+      },
+      {
+        "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+        "question": "The marathon's oddly precise distance of 42.195 kilometres dates from the 1908 London Olympics, when the course was stretched so the race could start on the lawn of which royal residence?",
+        "subtopic": "Cycling, marathons and endurance events"
+      },
+      {
+        "id": "5df4b246-70fd-4ead-b1d0-c58650b7d1ab",
+        "question": "What distinctive flag is waved at the finish line of a Formula 1 grand prix to signal that the race is over?",
+        "subtopic": "Motorsport and racing drivers"
+      },
+      {
+        "id": "6aa6b188-24c8-4356-b84e-773a39167138",
+        "question": "In his final Test innings in 1948, Australian batsman Don Bradman needed just four runs to retire with a career average of exactly 100 — and was bowled for zero. Which famous two-decimal average was he left with, still far ahead of anyone else in history?",
+        "subtopic": "Rugby, cricket, handball and volleyball"
+      },
+      {
+        "id": "7197355f-41c6-4d60-b7aa-da6f150498fa",
+        "question": "The longest professional tennis match ever played stretched over three days at Wimbledon in 2010, with a final set that finished 70 games to 68. Name either of the two players involved.",
+        "subtopic": "Tennis stars and Grand Slam tournaments"
+      },
+      {
+        "id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+        "question": "Fifteen-a-side rugby union was dropped from the Olympics after 1924 and never reinstated in that form. Which country, winner of both the 1920 and 1924 tournaments, is therefore still the reigning Olympic champion?",
+        "subtopic": "Rugby, cricket, handball and volleyball"
+      },
+      {
+        "id": "7f4a5602-80c2-4ec7-9e03-c987241947c0",
+        "question": "Rugby's World Cup trophy is named after William Webb Ellis, a schoolboy who, according to the sport's founding legend, invented the game in 1823 by doing what in the middle of a football match?",
+        "subtopic": "Sports origins, firsts and inventors"
+      },
+      {
+        "id": "99bc37f7-ea9d-4d0f-804e-eb56798e37c1",
+        "question": "Matches in which sport can be scheduled to last five full days — and still end with no winner at all?",
+        "subtopic": "Rugby, cricket, handball and volleyball"
+      },
+      {
+        "id": "9d148f41-7dec-4c65-a634-04b84c45087f",
+        "question": "In which Olympic winter sport do teammates furiously sweep the ice ahead of a heavy sliding granite stone?",
+        "subtopic": "Winter sports and ice hockey"
+      },
+      {
+        "id": "b310fa88-bba0-41da-9abb-e06b68aa9a85",
+        "question": "From 1967 to 1976, American college basketball outlawed one of the game's most crowd-pleasing moves — a ban widely believed to be aimed at a single unstoppable 2.18-metre student named Lew Alcindor. Which move?",
+        "subtopic": "Basketball, baseball and American football"
+      },
+      {
+        "id": "b8898faf-885f-4c78-8186-14e9bf6f6344",
+        "question": "For decades, the Le Mans 24 Hours endurance race opened with a famous ritual the moment the start signal dropped. What did the drivers have to do?",
+        "subtopic": "Motorsport and racing drivers"
+      },
+      {
+        "id": "be07eab6-f1ad-445e-910b-12f3094a6c34",
+        "question": "Speed-skating world records tumbled in the late 1990s after the Dutch introduced a skate with a hinge under the toe, letting the heel lift away while the blade stays flat on the ice a moment longer. What is this skate called?",
+        "subtopic": "Winter sports and ice hockey"
+      },
+      {
+        "id": "c3c795b7-77da-4561-b9b9-3fb69f6a7533",
+        "question": "In competitive swimming, three strokes begin with a dive from the starting block. Which stroke is the only one that starts in the water?",
+        "subtopic": "Swimming, sailing and water sports"
+      },
+      {
+        "id": "cdfdb9aa-c960-42b5-b6e3-614604013673",
+        "question": "True or false? The ancient Olympic Games were explicitly banned by Emperor Theodosius I.",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "cf843b50-5fe9-4a35-bb42-69407496026c",
+        "question": "Which apparatus is used only in women's artistic gymnastics, never in the men's events?",
+        "subtopic": "Sports rules, scoring and equipment"
+      },
+      {
+        "id": "e8fe9ce2-1117-4659-90bb-c4b3b905a833",
+        "question": "At the 1992 Barcelona Olympics, the USA sent NBA superstars like Michael Jordan and Magic Johnson to the Games for the first time. By what nickname was that squad instantly known?",
+        "subtopic": "Athlete nicknames and famous rivalries"
+      },
+      {
+        "id": "edab36a4-ec76-47fe-ab47-c5456eb41b3e",
+        "question": "Between 1900 and 1920, the Olympic Games awarded medals in a team event you would now expect at a school picnic: two teams, one rope. Which event?",
+        "subtopic": "Olympic Games history and host cities"
+      },
+      {
+        "id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+        "question": "When Nadia Comaneci scored the first perfect 10 in Olympic gymnastics in 1976, the arena scoreboard famously showed a different number. Which one?",
+        "subtopic": "Olympic Games history and host cities"
+      }
+    ]
+  }
+}

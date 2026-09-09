@@ -458,3 +458,126 @@ class TestProdParityWiring:
             s for s in self._stages(monkeypatch) if isinstance(s, VerificationStage)
         )
         assert isinstance(verification._logical_verifier, LogicalConsistencyVerifier)
+
+
+class _QaCapableStore(generate_pack._NoopQuestionStore):
+    """Noop store that also advertises the QA branch, so `DedupStage`'s
+    fail-loud guard (`qa_embedding` ON without `find_duplicates_qa`) does not
+    fire in a wiring test that is about the switch, not the query."""
+
+    async def find_duplicates_qa(self, question_text, answer_text, threshold=0.9):
+        return []
+
+
+class Test170SwitchInjection:
+    """#170 D5 — `scripts/generate_pack.py` is the ONLY composer that fills the
+    four #170 constructor parameters. If the CLI failed to inject them, the
+    blind A/B run (170.15) would measure an unsteered arm against an unsteered
+    arm and report "no quality change" for switches that never ran; if the
+    worker ever started reading them, a mis-set prod secret would change a
+    paid customer pack (that leg is `tests/worker/test_process_order.py`).
+    """
+
+    @staticmethod
+    def _stages(monkeypatch, **levers):
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        return generate_pack._build_stages(
+            persist=False, dedup_store=_QaCapableStore(), **levers
+        )
+
+    def test_flags_off_leave_every_switch_at_its_default(self, monkeypatch):
+        for name in (
+            "COVERAGE_STEERING",
+            "DEDUP_QA_EMBEDDING",
+            "ANSWER_CAP",
+            "DEDUP_GRAYZONE_JUDGE",
+            "DEDUP_STRICTNESS_PER_CATEGORY",
+        ):
+            monkeypatch.delenv(name, raising=False)
+        from app.orchestrator.stages import DedupStage, GenerationStage, TopUpStage
+
+        stages = self._stages(monkeypatch)
+        generation = next(s for s in stages if isinstance(s, GenerationStage))
+        dedup = next(s for s in stages if isinstance(s, DedupStage))
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+
+        assert generation._coverage_allocator is None
+        assert dedup._qa_embedding is False
+        assert dedup._grayzone_judge is None
+        assert dedup._strictness.answer_cap is False
+        assert dedup._strictness.profiles == {}
+        assert topup._strictness.profiles == {}
+
+    def test_every_flag_on_reaches_the_dedup_and_topup_stages(self, monkeypatch):
+        """One profile object for both stages: `TopUpStage`'s spent-fact filter
+        and `DedupStage`'s content check must read the SAME number, or a
+        relaxed category would be deduped by one threshold and topped up by
+        another (D6)."""
+        monkeypatch.setenv("DEDUP_QA_EMBEDDING", "1")
+        monkeypatch.setenv("ANSWER_CAP", "1")
+        monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "1")
+        monkeypatch.setenv(
+            "DEDUP_STRICTNESS_PER_CATEGORY", "entertainment=cosine:0.92,cap:6"
+        )
+        from app.orchestrator.stages import DedupStage, TopUpStage
+
+        stages = self._stages(monkeypatch)
+        dedup = next(s for s in stages if isinstance(s, DedupStage))
+        topup = next(s for s in stages if isinstance(s, TopUpStage))
+
+        assert dedup._qa_embedding is True
+        assert dedup._grayzone_judge is not None
+        assert dedup._strictness.answer_cap is True
+        assert dedup._answer_counter is not None
+        assert "entertainment" in dedup._strictness.profiles
+        assert topup._strictness is dedup._strictness
+
+    def test_coverage_allocator_reaches_the_generation_stage(self, monkeypatch):
+        from app.orchestrator.stages import GenerationStage
+
+        sentinel = object()
+        stages = self._stages(monkeypatch, coverage_allocator=sentinel, coverage_seed=42)
+        generation = next(s for s in stages if isinstance(s, GenerationStage))
+
+        assert generation._coverage_allocator is sentinel
+        assert generation._coverage_seed == 42
+
+
+class TestCoverageSteeringFlag:
+    """#170 170.13 — the coverage map reads the LIVE corpus. Turning it on
+    against the noop store would draw uniformly over a map that has seen
+    nothing and still report a steered run, so the CLI refuses to start."""
+
+    def test_seed_flag_parses_and_defaults_to_none(self):
+        assert generate_pack._parse_args(["--prompt", "x", "--dry-run"]).coverage_seed is None
+        args = generate_pack._parse_args(
+            ["--prompt", "x", "--coverage-seed", "99", "--dry-run"]
+        )
+        assert args.coverage_seed == 99
+
+    def test_flag_off_builds_no_allocator(self, monkeypatch):
+        monkeypatch.delenv("COVERAGE_STEERING", raising=False)
+        assert generate_pack._build_coverage_allocator("noop") is None
+        assert generate_pack._build_coverage_allocator("pgvector") is None
+
+    def test_flag_on_with_noop_store_fails_loud(self, monkeypatch):
+        monkeypatch.setenv("COVERAGE_STEERING", "1")
+        monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://u:p@localhost:5432/x")
+        with pytest.raises(SystemExit):
+            generate_pack._build_coverage_allocator("noop")
+
+    def test_flag_on_without_database_url_fails_loud(self, monkeypatch):
+        monkeypatch.setenv("COVERAGE_STEERING", "1")
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        with pytest.raises(SystemExit):
+            generate_pack._build_coverage_allocator("pgvector")
+
+    def test_flag_on_with_live_corpus_builds_the_allocator(self, monkeypatch):
+        monkeypatch.setenv("COVERAGE_STEERING", "1")
+        monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://u:p@localhost:5432/x")
+        from app.generation.coverage import CoverageAllocator
+
+        assert isinstance(
+            generate_pack._build_coverage_allocator("pgvector"), CoverageAllocator
+        )

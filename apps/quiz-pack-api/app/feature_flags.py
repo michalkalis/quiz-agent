@@ -317,6 +317,18 @@ def judge_models() -> list[str] | None:
 # Every default is OFF; nothing here is enabled in prod.
 
 
+def coverage_steering() -> bool:
+    """#170 D3/D4: coverage-map steering of the DIRECT generation branch.
+
+    ON, `scripts/generate_pack.py` injects a `CoverageAllocator` into
+    `GenerationStage`, which adds the allocated subtopic to the prompt's
+    topic list and fills the (today empty) avoid slot with that cell's recent
+    question texts. Requires the live corpus (`--dedup-store pgvector` +
+    `DATABASE_URL`) — with the noop store the CLI refuses to start rather
+    than steer against an empty map."""
+    return _truthy(os.getenv("COVERAGE_STEERING"))
+
+
 def dedup_qa_embedding() -> bool:
     """#170 D2: question+answer embedding branch of `DedupStage`."""
     return _truthy(os.getenv("DEDUP_QA_EMBEDDING"))

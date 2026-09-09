@@ -333,3 +333,33 @@ async def test_embedding_qa_lands_with_model_default_and_stays_null_otherwise(
     assert row_without.embedding_qa_model is None
 
     await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_allocated_subtopic_lands_and_stays_null_when_unsteered(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """#170 D4/170.13: the coverage cell `GenerationStage` allocated is stamped
+    on the Question and must reach the row — that column is what the next run's
+    coverage map counts, so a lost subtopic means the map never learns what was
+    already generated. With steering OFF (the worker's only mode) the column
+    must stay NULL rather than pick up a guess: `count(*) WHERE subtopic IS
+    NULL` is exactly how the backfill (170.7) finds its work."""
+    order = await _make_order(session, target_count=2)
+    steered = _stub_question(0, subtopic="volcanology")
+    unsteered = _stub_question(1)
+    assert unsteered.subtopic is None
+
+    ctx = _make_ctx(order, [steered, unsteered])
+    await PersistStage(session_factory).run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    row = await session.get(QuestionRow, uuid.UUID(steered.id))
+    assert row is not None
+    assert row.subtopic == "volcanology"
+
+    row_unsteered = await session.get(QuestionRow, uuid.UUID(unsteered.id))
+    assert row_unsteered is not None
+    assert row_unsteered.subtopic is None
+
+    await _cleanup_order(session, order.id)

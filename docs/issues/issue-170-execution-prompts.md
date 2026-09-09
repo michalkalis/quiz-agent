@@ -332,7 +332,7 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 | gate F1 | 170.2 | ⬜ |
 | B — subtopics.json + loader | 170.3 | ⬜ |
 | C — migration + backfill (`b`) | 170.4-170.6 | ⬜ |
-| D — subtopic backfill (`b`) | 170.7 | ⬜ |
+| D — subtopic backfill (`b`) | 170.7 | ✅ |
 | E — strictness + answer cap | 170.8-170.9 | ⬜ |
 | F — QA embedding branch | 170.10 | ⬜ |
 | G — gray-zone judge + replay harness | 170.11 · 170.14b | ⬜ |
@@ -344,3 +344,7 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 | gate F2 | 170.17 | ⬜ |
 
 When a session lands, add a short *"Session X delivered — exact symbols for Y"* note here so the next session imports the real names instead of guessing.
+
+**Session D delivered — `scripts/backfill_subtopics.py` (170.7).** Symbols: `run_cli(argv)` / `run(args)` / `main(argv)` (exit 1 on `BackfillError`), `classify_batch(llm, category, language, approved, rows)` (the seam every test monkeypatches — mock this, not the LLM), `resolve_assignments(batch, rows, approved, category)`, `fetch_rows(...)`, `classify_category(...)`, `apply_assignments(...)`, `build_preview(...)`, `write_preview(path, preview)`; models `SubtopicBatch(assignments=[SubtopicAssignment(index, subtopic)])`; constants `LIVE_REVIEW_STATUSES = ("approved", "pending_review")`, `DEFAULT_BATCH_SIZE = 40`. Rows are addressed by their **position in the batch**, not by id. Exact CLI (from `apps/quiz-pack-api/`):
+`DATABASE_URL=… LLM_GATEWAY=session python scripts/backfill_subtopics.py --category <id> --out ../../docs/testing/runs/170-coverage-steering/subtopic-backfill-preview.json` — flags: `--database-url`, `--out` (required, always written), `--category` (comma-separated; default = every category in `subtopics.json`), `--language` (default `en`, matches `COALESCE(language,'en')`), `--limit` (per category), `--batch-size`, `--force` (re-classify rows that already carry a subtopic), `--apply`, `--model`.
+⚠️ **Blocker for the founder's deferred prod run:** the experiment category recorded in `experiment-category.md` is `general`, and `general` is **not** in the approved taxonomy (R1 = 6 interest ids + `entertainment`), so the script refuses it fail-loud before any LLM call. Either re-categorise the live `general` rows first (`scripts/recategorize_corpus.py`) or switch the experiment category to the runner-up `science-nature` — the same open decision already noted in `experiment-category.md`.

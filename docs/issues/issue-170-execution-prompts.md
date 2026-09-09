@@ -345,6 +345,16 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 
 When a session lands, add a short *"Session X delivered — exact symbols for Y"* note here so the next session imports the real names instead of guessing.
 
+### Session H delivered — exact symbols for Session I
+
+`apps/quiz-pack-api/app/generation/coverage.py` (module only, nothing wired):
+
+- `CoverageAllocator(source: CoverageSource, *, avoid_limit: int = AVOID_LIMIT)` with `async def allocate(language: str, category: str, seed: int) -> CoverageAllocation` — this is what `GenerationStage(coverage_allocator=...)` gets.
+- `CoverageAllocation` (frozen dataclass): `language`, `category`, `subtopic`, `avoid_questions: tuple[str, ...]` — **question texts, already trimmed to ≤ 10** (`AVOID_LIMIT`), so `prompt_builder.py`'s hard `[:10]` cut is a no-op. `subtopic` is what `PersistStage` writes (D4).
+- `PgvectorCoverageSource(database_url: str)` — the live-corpus source `scripts/generate_pack.py` builds (same `DATABASE_URL` idiom as `_build_dedup_store`); reuses `_LIVE_CORPUS_SQL` from the shared pgvector client and runs the D9 `EXPLAIN`/`warn_if_ivfflat` tripwire once per process.
+- `CoverageSource` protocol (`cell_counts`, `recent_questions`) — the seam tests fake.
+- `CoverageUnavailableError` — raised when a category has live rows but none carries a subtopic (B2, missing 170.7 backfill); `KeyError` for a category outside `subtopics.json`. An empty category is *not* an error: it degrades to uniform by construction.
+
 **Session D delivered — `scripts/backfill_subtopics.py` (170.7).** Symbols: `run_cli(argv)` / `run(args)` / `main(argv)` (exit 1 on `BackfillError`), `classify_batch(llm, category, language, approved, rows)` (the seam every test monkeypatches — mock this, not the LLM), `resolve_assignments(batch, rows, approved, category)`, `fetch_rows(...)`, `classify_category(...)`, `apply_assignments(...)`, `build_preview(...)`, `write_preview(path, preview)`; models `SubtopicBatch(assignments=[SubtopicAssignment(index, subtopic)])`; constants `LIVE_REVIEW_STATUSES = ("approved", "pending_review")`, `DEFAULT_BATCH_SIZE = 40`. Rows are addressed by their **position in the batch**, not by id. Exact CLI (from `apps/quiz-pack-api/`):
 `DATABASE_URL=… LLM_GATEWAY=session python scripts/backfill_subtopics.py --category <id> --out ../../docs/testing/runs/170-coverage-steering/subtopic-backfill-preview.json` — flags: `--database-url`, `--out` (required, always written), `--category` (comma-separated; default = every category in `subtopics.json`), `--language` (default `en`, matches `COALESCE(language,'en')`), `--limit` (per category), `--batch-size`, `--force` (re-classify rows that already carry a subtopic), `--apply`, `--model`.
 ⚠️ **Blocker for the founder's deferred prod run:** the experiment category recorded in `experiment-category.md` is `general`, and `general` is **not** in the approved taxonomy (R1 = 6 interest ids + `entertainment`), so the script refuses it fail-loud before any LLM call. Either re-categorise the live `general` rows first (`scripts/recategorize_corpus.py`) or switch the experiment category to the runner-up `science-nature` — the same open decision already noted in `experiment-category.md`.

@@ -132,6 +132,11 @@ final class QuizViewModel: ObservableObject {
     /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
     /// does not set this (it replaces the summary via the shared task key).
     @Published var isNarratingRecap: Bool = false
+    /// #174: set instead of starting when the pre-flight probe finds fewer
+    /// unseen questions than the user asked for. Non-nil drives the
+    /// "Not enough questions" alert; the quiz has NOT started while it is set.
+    @Published private(set) var questionShortfall: QuestionShortfall?
+
     @Published var errorMessage: String? // Inline errors shown in QuestionView (e.g., recording failures)
     /// Display model for the full-screen Error state, built by `setError` via
     /// `AppErrorModel.from` so ErrorView shows localised copy + the right CTA (54.15).
@@ -885,11 +890,15 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Start a new quiz session
+    /// `skipAvailabilityCheck` is set only by the "Start with N questions"
+    /// button, which already knows the honest count — re-probing there would
+    /// re-open the alert it just answered.
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil
+        packId: String? = nil,
+        skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
         // start, Try Again, Play Again). Check single-flight BEFORE the transition
@@ -921,6 +930,25 @@ final class QuizViewModel: ObservableObject {
                 context: .initialization,
                 model: .historyAtCapacity
             )
+            return
+        }
+
+        // #174: ask BEFORE promising a length. A set of 10 that ends after 3
+        // (the corpus ran out of unseen questions and the backend quietly
+        // finished the session) is the bug this prevents; the user gets the
+        // honest count and decides. Packs are exempt — a pack is a closed,
+        // paid, exactly-sized set, so there is nothing to under-deliver.
+        if packId == nil, !skipAvailabilityCheck,
+           let shortfall = await probeQuestionShortfall(
+               requestedCount: quizMaxQuestions,
+               difficulty: quizDifficulty,
+               language: quizLanguage,
+               requestedDifficulty: difficulty,
+               requestedLanguage: language
+           )
+        {
+            questionShortfall = shortfall
+            transition(to: .idle)
             return
         }
 
@@ -1044,6 +1072,81 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
+    }
+
+    // MARK: - Pre-flight corpus check (#174)
+
+    /// Probes the backend for unseen questions and returns a shortfall when the
+    /// corpus cannot cover `requestedCount`, or `nil` when the quiz may start.
+    ///
+    /// **Fails open.** A probe that errors returns `nil`: a network hiccup on an
+    /// advisory check must never block a quiz that would have played fine. The
+    /// worst case is the pre-#174 behaviour, which is exactly what this is
+    /// degrading back to.
+    private func probeQuestionShortfall(
+        requestedCount: Int,
+        difficulty: String,
+        language: String,
+        requestedDifficulty: String?,
+        requestedLanguage: String?
+    ) async -> QuestionShortfall? {
+        do {
+            let availability = try await networkService.questionAvailability(
+                requestedCount: requestedCount,
+                difficulty: difficulty,
+                language: language,
+                categories: settings.categories,
+                includeImages: settings.includeImageQuestions,
+                excludedQuestionIds: persistenceStore.getExclusionList()
+            )
+            guard !availability.sufficient else { return nil }
+            Logger.quiz.info("🎯 Corpus short: \(availability.available, privacy: .public) unseen questions for \(requestedCount, privacy: .public) requested")
+            return QuestionShortfall(
+                available: availability.available,
+                requested: requestedCount,
+                categoryName: settings.categoryDisplayName(),
+                difficulty: requestedDifficulty,
+                language: requestedLanguage
+            )
+        } catch {
+            Logger.quiz.warning("⚠️ Availability probe failed, starting anyway: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// "Start with N questions" — plays the honest count so the progress label
+    /// matches what the corpus can actually deliver. Takes the shortfall by
+    /// value: SwiftUI clears `questionShortfall` as it dismisses the alert, so
+    /// an action that re-read it could find nothing and silently do nothing.
+    func startWithAvailableQuestions(_ shortfall: QuestionShortfall) async {
+        guard shortfall.canStartShorter else { return }
+        dismissQuestionShortfall()
+        await startNewQuiz(
+            maxQuestions: shortfall.available,
+            difficulty: shortfall.difficulty,
+            language: shortfall.language,
+            skipAvailabilityCheck: true
+        )
+    }
+
+    /// "Reset seen questions" — clears the client-side history the exclusion
+    /// list is built from, then restarts the SAME quiz. Deliberately re-probes
+    /// (no `skipAvailabilityCheck`): a fresh history usually unlocks the full
+    /// corpus, but if the category is still too small the user must see that
+    /// rather than be dropped into another short set.
+    func resetSeenQuestionsAndStart(_ shortfall: QuestionShortfall) async {
+        dismissQuestionShortfall()
+        resetQuestionHistory()
+        await startNewQuiz(
+            maxQuestions: shortfall.requested,
+            difficulty: shortfall.difficulty,
+            language: shortfall.language
+        )
+    }
+
+    /// "Cancel" — and the setter behind the alert's `isPresented` binding.
+    func dismissQuestionShortfall() {
+        questionShortfall = nil
     }
 
     /// Runs a start-quiz network step with a bounded retry (up to 2 extra

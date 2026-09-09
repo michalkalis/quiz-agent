@@ -711,3 +711,62 @@ async def test_heartbeat_keeps_job_fresh_during_long_stage(
             await task
 
     await _cleanup(session, order_id)
+
+
+def test_worker_stages_use_default_170_parameters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#170 170.14 — the pack-isolation gate (locked 3 / D5).
+
+    Custom packs are independent of the global corpus: the four #170
+    mechanisms exist to shape the CORPUS, and none of them may ever touch a
+    paid customer order. The guarantee is structural — `app/worker/tasks.py`
+    simply does not read the flags — and this test is what keeps it
+    structural. Every switch is set to its most aggressive value here, and
+    the stages the worker composes must still come out at their defaults; the
+    day someone "helpfully" wires `feature_flags.dedup_qa_embedding()` into
+    the worker, a mis-set prod secret would silently change what a customer
+    paid for, and this test is the thing that fails first.
+
+    (The corpus CLI's opposite leg — the flags DO reach its stages — lives in
+    tests/scripts/test_generate_pack_flags.py::Test170SwitchInjection.)
+    """
+    from app.orchestrator.stages import DedupStage, GenerationStage, TopUpStage
+    from app.worker.tasks import _build_stages as build_worker_stages
+
+    monkeypatch.setenv("COVERAGE_STEERING", "1")
+    monkeypatch.setenv("DEDUP_QA_EMBEDDING", "1")
+    monkeypatch.setenv("ANSWER_CAP", "1")
+    monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "1")
+    monkeypatch.setenv(
+        "DEDUP_STRICTNESS_PER_CATEGORY", "entertainment=cosine:0.92,cap:6"
+    )
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://u:p@localhost:5432/x")
+
+    stages = build_worker_stages(
+        {
+            "generator": object(),
+            "fact_verifier": object(),
+            "scorer": object(),
+            "question_store": object(),
+            "fact_sourcer": object(),
+            "session_factory": object(),
+        }
+    )
+    generation = next(s for s in stages if isinstance(s, GenerationStage))
+    dedup = next(s for s in stages if isinstance(s, DedupStage))
+    topup = next(s for s in stages if isinstance(s, TopUpStage))
+
+    # 170.13 — no coverage steering: a customer pack is never generated into a
+    # corpus cell, and its rows never carry a coverage subtopic.
+    assert generation._coverage_allocator is None
+    assert generation._coverage_seed is None
+    # 170.10 / 170.11 / 170.8 / 170.9 — no QA branch, no gray-zone judge, no
+    # per-category thresholds, no repeated-answer cap.
+    assert dedup._qa_embedding is False
+    assert dedup._grayzone_judge is None
+    assert dedup._answer_counter is None
+    assert dedup._strictness.answer_cap is False
+    assert dedup._strictness.profiles == {}
+    assert topup._strictness.profiles == {}
+    assert topup._strictness.answer_cap is False

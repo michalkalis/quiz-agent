@@ -1,6 +1,6 @@
 # #174 — TF feedback 2026-09-08 (slovenský kvíz, MCQ, build 57)
 
-**Triage:** in-progress · **Owner:** agent · **Nadväzuje na:** #173 — TF feedback 2026-09-07 · **Varianty:** [HTML](../design/variants/issue-174-tf-feedback-2026-09-08.html)
+**Triage:** ready-for-human · **Owner:** agent · **Nadväzuje na:** #173 — TF feedback 2026-09-07 · **Varianty:** [HTML](../design/variants/issue-174-tf-feedback-2026-09-08.html)
 
 ## Nálezy foundera (4 screenshoty, 20:28–20:29)
 
@@ -41,15 +41,15 @@
 - [x] `/testflight` default → production
 - [x] HTML varianty A/B/C/D + otázka D2
 - [x] Founder: výber A1 / B1 / C2 / D-alert (2026-09-09)
-- [x] A1 + B1 + C2 — vetva `feat/174-sheet-button-options`
-- [ ] D — availability check pri štarte + alert — vetva `feat/174-corpus-precheck`
+- [x] A1 + B1 + C2 — PR #118 merged 2026-09-09 (screenshoty zo simulátora overené)
+- [x] D — `POST /api/v1/questions/availability` + alert Začať s N / Resetovať videné / Zrušiť — PR #119 merged 2026-09-09, backend prod v107
 - [ ] Pencil sync (sheet, footer, zoznam možností) po TF potvrdení
 - [x] ElevenLabs: nie je problém (staging kľúč)
 - [ ] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf (ďalšia session; sk + en, cs spolu s #175)
 - [ ] Nápovedy: banner len stav, auto-skrytie po 5 kvízoch, prepínač v Nastaveniach (ďalšia session)
 - [ ] #175 — České hlasové povely (samostatné issue)
 - [ ] Dead-air poistka: nastaviť až po nábehu enginu (viď Vedľajšie zistenia)
-- [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky)
+- [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky) → po nej TF build s #174 zmenami na požiadanie
 
 ## Neprebrať znova
 

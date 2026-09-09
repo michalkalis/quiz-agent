@@ -26,6 +26,7 @@ from app.translation_verification.guards import (
     number_preservation_reason,
     placeholder_integrity_reason,
     run_guards,
+    script_integrity_reason,
     unit_preservation_reason,
     untranslated_string_reason,
 )
@@ -225,3 +226,23 @@ def test_guards_enforce_regardless_of_craft_guards_enforce(
 
 def test_run_guards_returns_empty_for_a_clean_draft() -> None:
     assert run_guards(_question(), _draft(), "sk") == []
+
+
+# --- 7. script integrity -------------------------------------------------------
+
+
+def test_script_guard_rejects_a_cyrillic_homoglyph_the_source_did_not_carry() -> None:
+    # First prod smoke (2026-09-10): "hore" with a Cyrillic "е" — invisible on
+    # screen, mispronounced by TTS, and never equal to the Latin word.
+    source = _question(explanation="The material is hot at the top.")
+    draft = _draft(explanation="Materiál je hor\u0435 horúci.")
+    reason = script_integrity_reason(source, draft, "sk")
+    assert reason is not None and "CYRILLIC SMALL LETTER IE" in reason
+    assert "script_integrity" in "".join(run_guards(source, draft, "sk"))
+
+
+def test_script_guard_allows_letters_the_source_carries() -> None:
+    # A Greek letter in the English source is content, not a homoglyph.
+    source = _question(question="Which constant is written as π?")
+    draft = _draft(question="Ktorá konštanta sa zapisuje ako π?")
+    assert script_integrity_reason(source, draft, "sk") is None

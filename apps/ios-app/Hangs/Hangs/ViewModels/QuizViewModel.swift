@@ -873,10 +873,11 @@ final class QuizViewModel: ObservableObject {
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil
+        packId: String? = nil,
+        skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1118,10 +1119,14 @@ final class QuizViewModel: ObservableObject {
     /// matches what the corpus can actually deliver. Takes the shortfall by
     /// value: SwiftUI clears `questionShortfall` as it dismisses the alert, so
     /// an action that re-read it could find nothing and silently do nothing.
-    func startWithAvailableQuestions(_ shortfall: QuestionShortfall) async {
-        guard shortfall.canStartShorter else { return }
+    /// Goes through `beginQuizStart`, not `startNewQuiz`: a start the taskBag
+    /// does not hold under `.quizStart` is invisible to Home's "Cancel" and to
+    /// `resetState`'s `cancelAll`, so it would keep running past a teardown.
+    @discardableResult
+    func startWithAvailableQuestions(_ shortfall: QuestionShortfall) -> Task<Void, Never>? {
+        guard shortfall.canStartShorter else { return nil }
         dismissQuestionShortfall()
-        await startNewQuiz(
+        return beginQuizStart(
             maxQuestions: shortfall.available,
             difficulty: shortfall.difficulty,
             language: shortfall.language,
@@ -1134,10 +1139,13 @@ final class QuizViewModel: ObservableObject {
     /// (no `skipAvailabilityCheck`): a fresh history usually unlocks the full
     /// corpus, but if the category is still too small the user must see that
     /// rather than be dropped into another short set.
-    func resetSeenQuestionsAndStart(_ shortfall: QuestionShortfall) async {
+    /// Registered under `.quizStart` for the same reason as
+    /// `startWithAvailableQuestions`.
+    @discardableResult
+    func resetSeenQuestionsAndStart(_ shortfall: QuestionShortfall) -> Task<Void, Never> {
         dismissQuestionShortfall()
         resetQuestionHistory()
-        await startNewQuiz(
+        return beginQuizStart(
             maxQuestions: shortfall.requested,
             difficulty: shortfall.difficulty,
             language: shortfall.language

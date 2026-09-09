@@ -99,7 +99,7 @@ struct QuizViewModelAvailabilityTests {
         await viewModel.startNewQuiz(maxQuestions: 10)
 
         let shortfall = try #require(viewModel.questionShortfall)
-        await viewModel.startWithAvailableQuestions(shortfall)
+        await viewModel.startWithAvailableQuestions(shortfall)?.value
 
         // The progress label reads the session length, so an honest "3" here is
         // the whole point: the user is told 3 and gets 3.
@@ -116,7 +116,7 @@ struct QuizViewModelAvailabilityTests {
         await viewModel.startNewQuiz(maxQuestions: 10)
 
         let shortfall = try #require(viewModel.questionShortfall)
-        await viewModel.startWithAvailableQuestions(shortfall)
+        await viewModel.startWithAvailableQuestions(shortfall)?.value
 
         // Guards the button the UI hides at N == 0 — a voice/accessibility path
         // reaching the action anyway must not create a zero-question session.
@@ -135,7 +135,7 @@ struct QuizViewModelAvailabilityTests {
         network.stubbedAvailability = QuestionAvailability(available: 40, requested: 10, sufficient: true)
 
         let shortfall = try #require(viewModel.questionShortfall)
-        await viewModel.resetSeenQuestionsAndStart(shortfall)
+        await viewModel.resetSeenQuestionsAndStart(shortfall).value
 
         // The old history is gone (the new quiz's own first question is back in
         // it already, which is why this asserts absence rather than emptiness).
@@ -157,12 +157,28 @@ struct QuizViewModelAvailabilityTests {
         network.stubbedAvailability = QuestionAvailability(available: 5, requested: 10, sufficient: false)
 
         let shortfall = try #require(viewModel.questionShortfall)
-        await viewModel.resetSeenQuestionsAndStart(shortfall)
+        await viewModel.resetSeenQuestionsAndStart(shortfall).value
 
         // Honesty over convenience: a fresh history that still cannot cover 10
         // must ask again with the new number, not start a silent short set.
         #expect(viewModel.questionShortfall?.available == 5)
         #expect(network.createSessionCallCount == 0)
+    }
+
+    @Test("An alert-initiated start is cancellable like any other")
+    func alertStartIsRegisteredForCancellation() async throws {
+        let (viewModel, network, _) = makeViewModel(available: 3, requested: 10)
+        await viewModel.startNewQuiz(maxQuestions: 10)
+        let shortfall = try #require(viewModel.questionShortfall)
+        network.onCreateSession = { [weak viewModel] in viewModel?.cancelQuizStart() }
+
+        await viewModel.startWithAvailableQuestions(shortfall)?.value
+
+        // A start the taskBag does not hold under `.quizStart` is invisible to
+        // Home's "Cancel" and to `resetState`'s `cancelAll`, so it would run on
+        // past a teardown; landing on .idle proves this one is held.
+        #expect(viewModel.quizState == .idle)
+        #expect(!viewModel.quizState.isError)
     }
 
     @Test("Cancel dismisses without starting anything")

@@ -278,11 +278,11 @@ struct ContentView: View {
         ) { shortfall in
             if shortfall.canStartShorter {
                 Button("Start with \(shortfall.available) questions") {
-                    Task { await viewModel.startWithAvailableQuestions(shortfall) }
+                    viewModel.startWithAvailableQuestions(shortfall)
                 }
             }
             Button("Reset seen questions") {
-                Task { await viewModel.resetSeenQuestionsAndStart(shortfall) }
+                viewModel.resetSeenQuestionsAndStart(shortfall)
             }
             Button("Cancel", role: .cancel) { viewModel.dismissQuestionShortfall() }
         } message: { shortfall in

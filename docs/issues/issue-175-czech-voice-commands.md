@@ -22,7 +22,7 @@
 
 ## Stav (2026-09-09)
 
-Implementované: PR #127 (gramatika + tlačidlá, merged 2026-09-09) a PR #128 (jazyk povelov = jazyk kvízu):
+Implementované: PR #127 (gramatika + tlačidlá, merged 2026-09-09) a PR #130 (jazyk povelov = jazyk kvízu):
 
 - [x] `CommandLanguage.czech` + `CommandEngineSelection.dictationCzech` (`cs_CZ`). **Founder 2026-09-09: jazyk povelov = jazyk kvízu, bez prepínača** — picker „Command engine“ v Nastaveniach odstránený; engine sa rieši pri štarte z uložených nastavení a znova pred každým oknom počúvania (`SilenceDetectionService.setCommandEngine`, nikdy uprostred okna), takže zmena jazyka kvízu platí od ďalšieho kvízu bez reštartu.
 - [x] Gramatika cs vo `VoiceCommandLexicon`: start · ok/okej/potvrď · dál/dále/pokračuj · znovu/znova · zopakuj/opakuj · přeskoč/vynech · stop/zruš · pauza; výplňové slová (jo, ano, dobře, jasně, no, tak, tedy…) neutralizované ako pri sk; undo-slovo „ne“; kontextový slovník pre DictationTranscriber.

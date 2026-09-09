@@ -161,8 +161,8 @@ class PgvectorCoverageSource:
             "GROUP BY COALESCE(language, 'en'), category, subtopic"
         )
         params = {"language": language, "category": category}
+        await self._explain_dedup_query_once()
         async with self._engine.connect() as conn:
-            await self._explain_once(conn, stmt, params)
             rows = (await conn.execute(stmt, params)).all()
         return {(row[0] or None): int(row[1]) for row in rows}
 
@@ -192,14 +192,18 @@ class PgvectorCoverageSource:
             ).all()
         return [str(row[0]) for row in rows]
 
-    async def _explain_once(self, conn, stmt, params) -> None:
-        """D9 tripwire, inherited not duplicated: one EXPLAIN per process, run
-        through the same `warn_if_ivfflat` the QA backfill uses. Imported
-        lazily because that script rewrites ``sys.path`` at import time."""
+    async def _explain_dedup_query_once(self) -> None:
+        """D9 tripwire, inherited not duplicated: EXPLAIN **the dedup query**
+        (the only one that can pick a vector index) once per process, through
+        the same pair of helpers the QA backfill uses. Explaining the coverage
+        `GROUP BY` instead would be a false assurance — no vector column, so
+        it can never plan an ivfflat scan. A steering run is the natural place
+        to re-check, because the one-shot backfill script stops running long
+        before corpus growth makes that scan likely. Imported lazily: that
+        script rewrites ``sys.path`` at import time."""
         if self._explained:
             return
         self._explained = True
-        from scripts.backfill_embedding_qa import warn_if_ivfflat
+        from scripts.backfill_embedding_qa import explain_dedup_query, warn_if_ivfflat
 
-        plan_rows = (await conn.execute(text(f"EXPLAIN {stmt.text}"), params)).all()
-        warn_if_ivfflat("\n".join(str(row[0]) for row in plan_rows))
+        warn_if_ivfflat(await explain_dedup_query(self._engine))

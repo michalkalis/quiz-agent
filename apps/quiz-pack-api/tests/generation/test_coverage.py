@@ -23,6 +23,7 @@ need TEST_DATABASE_URL and are skipped otherwise.
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import sys
@@ -303,14 +304,13 @@ async def test_avoid_list_is_newest_first_and_excludes_pack_rows(
 
 
 @pytest.mark.asyncio
-async def test_allocator_over_live_source_runs_the_d9_explain(
+async def test_allocator_over_live_source_explains_the_dedup_query(
     engine: AsyncEngine, caplog
 ) -> None:
-    """D9: the coverage query gets the same planner tripwire as the dedup
-    query, so nobody has to remember to look. Today's plan must not be an
-    ivfflat index scan; the day it is, the warning is the signal."""
-    import logging
-
+    """D9: a steering run re-checks the planner on the **dedup** query — the
+    only one that can pick a vector index — because the one-shot backfill
+    script stops running long before the corpus grows enough for that to
+    matter. Today's plan must not be an ivfflat index scan."""
     await _seed(engine)
     source = PgvectorCoverageSource(engine.url.render_as_string(hide_password=False))
     with caplog.at_level(logging.INFO):
@@ -318,3 +318,28 @@ async def test_allocator_over_live_source_runs_the_d9_explain(
     assert allocation.subtopic in CELLS
     assert len(allocation.avoid_questions) <= AVOID_LIMIT
     assert any("D9 check" in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_d9_warning_fires_when_the_dedup_query_plans_an_ivfflat_scan(
+    caplog, monkeypatch
+) -> None:
+    """The tripwire is only worth wiring in if it can actually fire: on an
+    ivfflat plan the steering run must warn (revisit HNSW), not log the
+    all-clear. Without this leg the live test above passes for every plan."""
+    import scripts.backfill_embedding_qa as bf
+
+    async def fake_plan(engine, dim: int = 1536) -> str:
+        return (
+            "Limit  (cost=0.00..1.00 rows=10 width=16)\n"
+            "  ->  Index Scan using ix_questions_embedding_ivfflat on questions"
+        )
+
+    monkeypatch.setattr(bf, "explain_dedup_query", fake_plan)
+    source = PgvectorCoverageSource("postgresql+asyncpg://u:p@localhost:5432/nodb")
+    with caplog.at_level(logging.INFO):
+        await source._explain_dedup_query_once()
+        await source._explain_dedup_query_once()  # once per process, not per call
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert len(warnings) == 1
+    assert "ivfflat" in warnings[0].getMessage()

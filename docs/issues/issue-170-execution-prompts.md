@@ -328,15 +328,15 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 
 | Session | Tasks | State |
 |---|---|---|
-| A — subtopic proposal | 170.1 | ⬜ |
-| gate F1 | 170.2 | ⬜ |
-| B — subtopics.json + loader | 170.3 | ⬜ |
-| C — migration + backfill (`b`) | 170.4-170.6 | ⬜ |
+| A — subtopic proposal | 170.1 | ✅ |
+| gate F1 | 170.2 | ✅ |
+| B — subtopics.json + loader | 170.3 | ✅ |
+| C — migration + backfill (`b`) | 170.4-170.6 | ✅ |
 | D — subtopic backfill (`b`) | 170.7 | ✅ |
-| E — strictness + answer cap | 170.8-170.9 | ⬜ |
-| F — QA embedding branch | 170.10 | ⬜ |
-| G — gray-zone judge + replay harness | 170.11 · 170.14b | ⬜ |
-| H — coverage map module | 170.12 | ⬜ |
+| E — strictness + answer cap | 170.8-170.9 | ✅ |
+| F — QA embedding branch | 170.10 | ✅ |
+| G — gray-zone judge + replay harness | 170.11 · 170.14b | ✅ |
+| H — coverage map module | 170.12 | ✅ |
 | I — steering wiring + isolation gate | 170.13-170.14 | ✅ |
 | J — quality-guard A/B run | 170.15 | ⬜ |
 | K — strictness pass (A26) | 170.15b | ⬜ |

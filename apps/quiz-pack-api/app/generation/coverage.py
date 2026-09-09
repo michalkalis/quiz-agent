@@ -37,7 +37,6 @@ nothing here is wired into a stage yet.
 
 from __future__ import annotations
 
-import logging
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -49,8 +48,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.db.engine import build_engine, normalize_async_url
 from app.generation.subtopics import subtopics_for
-
-logger = logging.getLogger(__name__)
 
 # `prompt_builder.py:239-243` hard-cuts the avoid slot at 10 — the module
 # trims to the same number so the cut lands on a deterministic order.

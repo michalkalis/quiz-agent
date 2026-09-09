@@ -90,6 +90,20 @@ struct QuestionView: View {
                     }
                 }
             }
+
+            // #174 A1: the confirmation sheet keeps `presentationBackgroundInteraction`
+            // so the toolbar's pause stays reachable (#173 decision 4) — and that
+            // is exactly what switches the system's dimming OFF, which is why the
+            // sheet read as more screen rather than a layer over one. Dim the quiz
+            // ourselves and pass every touch straight through, so the toolbar
+            // underneath keeps working.
+            if isConfirmationPresented {
+                Color.black.opacity(0.45)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("question.sheetDim")
+            }
         }
         // The echo belongs to one question only.
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
@@ -245,9 +259,15 @@ struct QuestionView: View {
     /// the button they pressed while the answer is graded.
     private var confirmationSheetBinding: Binding<Bool> {
         Binding(
-            get: { viewModel.showAnswerConfirmation || viewModel.isEvaluatingAnswer },
+            get: { isConfirmationPresented },
             set: { if !$0 { viewModel.showAnswerConfirmation = false } }
         )
+    }
+
+    /// The sheet is on screen — one predicate for both its presentation and the
+    /// #174 A1 dim, so the quiz can never be dimmed without the sheet or vice versa.
+    private var isConfirmationPresented: Bool {
+        viewModel.showAnswerConfirmation || viewModel.isEvaluatingAnswer
     }
 
     // MARK: - Top chrome (#173 variant A3)

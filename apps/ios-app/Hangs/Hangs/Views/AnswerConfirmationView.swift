@@ -94,9 +94,14 @@ struct AnswerConfirmationView: View {
     /// the live field otherwise.
     private var displayedAnswer: String { evaluatingAnswer ?? transcribedAnswer }
 
+    /// #174 A1: the sheet is a LAYER, not more screen. One constant feeds both
+    /// the presentation background and the content ground so they can never
+    /// drift apart — and so the "distinct from `bg`" rule is assertable.
+    static let surface = Theme.Hangs.Colors.bgSheet
+
     var body: some View {
         ZStack {
-            Theme.Hangs.Colors.bg.ignoresSafeArea()
+            Self.surface.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
                 // Precedence lives in `Self.branch(…)` — see it for why
@@ -113,9 +118,19 @@ struct AnswerConfirmationView: View {
             .padding(.bottom, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        // A hairline where the layer starts — the top edge is the only part of
+        // an undraggable sheet that can say "something is on top of the quiz".
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Theme.Hangs.Colors.hairline)
+                .frame(height: 1)
+                .allowsHitTesting(false)
+        }
         .presentationDetents([.medium])
+        // Founder 2026-09-09: still NO grabber. The sheet cannot be dragged
+        // closed, and a handle that does nothing is a lie about the affordance.
         .presentationDragIndicator(.hidden)
-        .presentationBackground(Theme.Hangs.Colors.bg)
+        .presentationBackground(Self.surface)
         // #173 decision 4: pause moved to the quiz toolbar, and this sheet is
         // reachable IN a paused state (pausing mid-recording lands here) — so the
         // toolbar behind it must stay tappable or pause would be one-way. Only
@@ -224,16 +239,12 @@ struct AnswerConfirmationView: View {
                     .transition(.opacity)
             }
 
-            HStack(spacing: 10) {
-                HangsSecondaryButton(title: "Re-record", icon: "mic.fill", height: 54) {
-                    editFocused = false
-                    onReRecord()
-                }
-                .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(isReRecordLocked || isEvaluating)
-                // C2: 45 % is the mock's "this is not yours right now" tone.
-                .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
-
+            // #174 B1: VERTICAL, and in this order. The half-width Confirm could
+            // not hold "Vyhodnocujem…" (2× the length of "Potvrdiť"), so the label
+            // shrank and truncated the moment the driver pressed it. Full width
+            // fits every localization at full size, and nothing moves between the
+            // two states because the row never re-splits.
+            VStack(spacing: 8) {
                 // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                 // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                 HangsPrimaryButton(
@@ -259,6 +270,23 @@ struct AnswerConfirmationView: View {
                     ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
                     : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
                 .accessibilityIdentifier("confirmation.confirm")
+
+                // Secondary in weight as well as in position: a text-style
+                // control under the CTA, the standard iOS pairing.
+                HangsGhostButton(
+                    title: "Re-record",
+                    icon: "mic.fill",
+                    color: Theme.Hangs.Colors.muted,
+                    font: .hangsBody(15, weight: .semibold)
+                ) {
+                    editFocused = false
+                    onReRecord()
+                }
+                .frame(height: 40)
+                .accessibilityIdentifier("confirmation.reRecord")
+                .disabled(isReRecordLocked || isEvaluating)
+                // C2: 45 % is the mock's "this is not yours right now" tone.
+                .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
             }
             .padding(.top, 14)
 

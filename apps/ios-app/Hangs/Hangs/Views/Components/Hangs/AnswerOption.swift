@@ -80,6 +80,12 @@ struct AnswerOption: View {
             Text(value)
                 .font(.hangsBody(16, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.ink)
+                // #174 C2: this row is the layout long options fall back to, so
+                // it must never be the thing that truncates them. Three lines at
+                // (almost) full size — the row grows instead, and 0.9 is a floor
+                // the driver can still read from a windscreen mount.
+                .lineLimit(3)
+                .minimumScaleFactor(0.9)
                 .multilineTextAlignment(.leading)
 
             Spacer(minLength: Theme.Hangs.Spacing.sm)

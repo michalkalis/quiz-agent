@@ -1,6 +1,6 @@
 """Deterministic translation guards (#168 — batch translation pipeline SK/CS, T6).
 
-Six no-LLM checks over ``(source_question, translated_draft, language)``. Each
+Seven no-LLM checks over ``(source_question, translated_draft, language)``. Each
 returns a reason string in the ``craft_guards`` style, or ``None`` when clean.
 
 Unlike the craft guards these are **always enforcing**: ``CRAFT_GUARDS_ENFORCE``
@@ -15,6 +15,7 @@ alarm blocks a correct translation, which is the expensive direction.
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from typing import Callable, Optional
 
@@ -248,6 +249,38 @@ def length_ratio_reason(
     return None
 
 
+def _foreign_letters(text: str) -> set[str]:
+    """Alphabetic characters outside the Latin script."""
+    return {
+        ch
+        for ch in text
+        if ch.isalpha() and not unicodedata.name(ch, "").startswith("LATIN")
+    }
+
+
+def script_integrity_reason(
+    source: Question, draft: TranslatedDraft, language: str
+) -> Optional[str]:
+    """A non-Latin letter the English source did not carry.
+
+    Seen on the first prod smoke (2026-09-10): a Cyrillic "е" homoglyph inside
+    a Slovak word, invisible on screen, mispronounced by TTS and a mismatch
+    for every string comparison downstream. Letters the source itself carries
+    (a Greek "π", a Cyrillic band name) stay allowed.
+    """
+    allowed: set[str] = set()
+    for text in _source_texts(source):
+        allowed |= _foreign_letters(text)
+    for text in _draft_texts(draft):
+        foreign = _foreign_letters(text) - allowed
+        if foreign:
+            sample = ", ".join(
+                f"{ch!r} {unicodedata.name(ch, '?')}" for ch in sorted(foreign)[:3]
+            )
+            return f"script_integrity({sample})"
+    return None
+
+
 GUARDS: tuple[Callable[[Question, TranslatedDraft, str], Optional[str]], ...] = (
     number_preservation_reason,
     unit_preservation_reason,
@@ -255,6 +288,7 @@ GUARDS: tuple[Callable[[Question, TranslatedDraft, str], Optional[str]], ...] = 
     mcq_shape_reason,
     placeholder_integrity_reason,
     length_ratio_reason,
+    script_integrity_reason,
 )
 
 

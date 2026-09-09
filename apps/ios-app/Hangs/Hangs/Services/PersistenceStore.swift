@@ -112,6 +112,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let onboardingKey = "has_completed_onboarding"
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
+    private let legacyMuteClearedKey = "mute_preference_cleared_173"
     private let historyKey = "asked_question_history"
     private let maxCapacity = 500
     private let statsKey = "quiz_stats"
@@ -175,6 +176,14 @@ final class PersistenceStore: PersistenceStoreProtocol {
     }
 
     func loadSettings() -> QuizSettings {
+        // #173: the one-time legacy-mute cleanup is spent on the FIRST load of
+        // this build, whatever that load finds. A device with no (or an
+        // unreadable) settings blob has nothing legacy to clean — but it must
+        // still burn the marker here, or the user's first deliberate Settings
+        // mute would be wiped as "legacy" on the next launch.
+        let legacyMutePending = !userDefaults.bool(forKey: legacyMuteClearedKey)
+        userDefaults.set(true, forKey: legacyMuteClearedKey)
+
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
@@ -187,11 +196,29 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
             Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
-            return settings
+            return legacyMutePending ? clearingLegacyMute(settings) : settings
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
+    }
+
+    /// One-time cleanup of a persisted mute that was never a preference (#173).
+    /// Until this build the in-quiz mute button and the Settings "Sound" toggle
+    /// wrote the SAME persisted flag, so a mute tapped mid-drive survived the
+    /// app and silenced the first question of the next quiz (the founder's TF
+    /// screenshot). The button is quiz-scoped now, but the polluted value is
+    /// already on disk and nothing can tell it apart from a deliberate Settings
+    /// choice — so it is dropped exactly once, and everything written from here
+    /// on really is a preference.
+    private func clearingLegacyMute(_ settings: QuizSettings) -> QuizSettings {
+        guard settings.isMuted else { return settings }
+
+        var cleaned = settings
+        cleaned.isMuted = false
+        saveSettings(cleaned)
+        Logger.persistence.info("📦 PersistenceStore: dropped a legacy persisted mute (#173)")
+        return cleaned
     }
 
     // MARK: - Question History

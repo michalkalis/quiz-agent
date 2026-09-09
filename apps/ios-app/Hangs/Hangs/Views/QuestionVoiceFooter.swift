@@ -33,9 +33,9 @@ struct QuestionVoiceFooter: View {
 
     @Binding var showTextInput: Bool
     @Binding var textAnswer: String
-    /// #171 Track E: what the driver just submitted, echoed by the evaluating
-    /// overlay ("You said: …"). Written here for the typed path; the voice and MCQ
-    /// paths write it in `QuestionView`.
+    /// What the driver just submitted, echoed by the confirmation sheet while the
+    /// answer is graded ("You said: …"). Written here for the typed path; the
+    /// voice and MCQ paths write it in `QuestionView`.
     @Binding var submittedAnswer: String
     var isTextFieldFocused: FocusState<Bool>.Binding
     var compact: Bool = false
@@ -141,8 +141,12 @@ struct QuestionVoiceFooter: View {
     /// countdown" contract — the fill and the seconds chip simply don't render.
     private var recordButton: some View {
         HangsPrimaryButton(
-            title: isRecording ? "Stop" : "Record",
-            icon: isRecording ? "stop.fill" : "mic.fill",
+            // #174: the typed-answer path never opens the confirmation sheet, so
+            // this button IS its evaluating state (the full-screen overlay that
+            // used to cover the footer is gone). `isLoading` also disables it.
+            title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Record"),
+            icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "mic.fill"),
+            isLoading: isEvaluating,
             // G1 (#83): action buttons deliberately modest so long question text
             // keeps as much room as possible.
             height: 48,
@@ -151,6 +155,10 @@ struct QuestionVoiceFooter: View {
         ) {
             Task { await viewModel.toggleRecording() }
         }
+        // #174 review: during an in-flight skip the footer stays mounted, so
+        // gate the CTA on `.skipping` too — a tap there is a silent no-op.
+        .disabled(isSkipping)
+        .opacity(isSkipping ? 0.45 : 1)
         // #122: teal ring while a matched-command glow is live.
         .overlay {
             if viewModel.voiceFeedbackPhase == .matched {
@@ -186,13 +194,23 @@ struct QuestionVoiceFooter: View {
         Button {
             Task { await viewModel.skipQuestion() }
         } label: {
-            // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
-            // the play+bar glyph read as media transport.
-            iconChip("chevron.right.2", size: 16)
+            if isSkipping {
+                // #174: a skip in flight spins in the chip that started it.
+                chipSurface {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityIdentifier("question.processingIndicator")
+                }
+            } else {
+                // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
+                // the play+bar glyph read as media transport.
+                iconChip("chevron.right.2", size: 16)
+            }
         }
         .buttonStyle(.plain)
         .disabled(isRecording || isProcessing)
-        .opacity((isRecording || isProcessing) ? 0.45 : 1)
+        // Busy is not unavailable: the skipping chip keeps full contrast.
+        .opacity((isRecording || isProcessing) && !isSkipping ? 0.45 : 1)
         .accessibilityLabel("Skip")
         .accessibilityIdentifier("question.skip")
     }
@@ -200,9 +218,18 @@ struct QuestionVoiceFooter: View {
     /// The shared surface of the two icon-only controls: a circle as tall as the
     /// Record button beside it, so the row still reads as one strip.
     private func iconChip(_ systemName: String, size: CGFloat) -> some View {
-        Image(systemName: systemName)
-            .font(.system(size: size, weight: .semibold))
+        chipSurface {
+            Image(systemName: systemName)
+                .font(.system(size: size, weight: .semibold))
+        }
+    }
+
+    /// The chip chrome on its own, so the skip spinner sits in exactly the same
+    /// circle as the glyph it replaces (no size jump mid-row).
+    private func chipSurface(@ViewBuilder _ content: () -> some View) -> some View {
+        content()
             .foregroundColor(Theme.Hangs.Colors.ink)
+            .tint(Theme.Hangs.Colors.ink)
             .frame(width: 48, height: 48)
             .background(Circle().fill(Theme.Hangs.Colors.bgCard))
             .overlay(Circle().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
@@ -257,4 +284,10 @@ struct QuestionVoiceFooter: View {
     private var isProcessing: Bool {
         viewModel.quizState == .processing || viewModel.quizState == .skipping
     }
+
+    private var isSkipping: Bool { viewModel.quizState == .skipping }
+
+    /// An answer is being graded with no confirmation sheet in front of this
+    /// footer — the typed path, and (invisibly, behind the sheet) the voice one.
+    private var isEvaluating: Bool { viewModel.quizState == .processing }
 }

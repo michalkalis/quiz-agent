@@ -54,46 +54,69 @@ struct MCQOptionPicker: View {
     /// #125: SE-class shrinks the grid tiles + gaps (driven by container height).
     var compact: Bool = false
 
+    /// #174: an answer (or a skip) is in flight with nothing covering the screen.
+    /// The chosen option spins in place; the rest dim and stop taking taps — the
+    /// full-screen evaluating overlay that used to do both is gone.
+    var isSubmitting: Bool = false
+
     init(
         options: [(key: String, value: String)],
         onSelect: @escaping (String, String) -> Void,
         externalSelectedKey: Binding<String?> = .constant(nil),
-        compact: Bool = false
+        compact: Bool = false,
+        isSubmitting: Bool = false
     ) {
         self.options = options
         self.onSelect = onSelect
         _externalSelectedKey = externalSelectedKey
         self.compact = compact
+        self.isSubmitting = isSubmitting
     }
 
     /// 80pt for the 2-option T/F variant; 64pt for all other MCQ rows. (The 4-up
     /// grid uses `AnswerTile`'s own 88/76pt floor, not this.)
     var optionMinHeight: CGFloat { options.count == 2 ? 80 : 64 }
 
-    /// #125 Variant A: 2×2 letter tiles for 4 options, full-width rows for the
-    /// 2-option T/F variant (locked decision — the grid is for 4 options only).
+    /// #174 C2: the longest option a half-width tile can hold at full size.
+    /// Above it the grid shrinks and ellipsises the text (HIG calls a truncated
+    /// label an error state) — Slovak options run 6–10 words routinely.
+    static let gridMaxOptionLength = 24
+
+    /// #125 Variant A gave 4 options a 2×2 grid unconditionally. #174 C2 makes
+    /// that conditional on the text fitting: EVERY option short → grid, otherwise
+    /// the full-width rows. The 2-option T/F variant stays on rows either way
+    /// (locked #125 decision — the grid is for 4 options only).
+    var usesGrid: Bool {
+        options.count != 2 && options.allSatisfy { $0.value.count <= Self.gridMaxOptionLength }
+    }
+
     @ViewBuilder
     var body: some View {
-        if options.count == 2 {
-            twoOptionRows
-        } else {
+        if usesGrid {
             optionGrid
+        } else {
+            optionRows
         }
     }
 
-    /// Full-width AnswerOption rows — the untouched T/F path. The `.onChange`
-    /// stays on THIS VStack (the tap/voice race wiring the 54.16 tests drive).
-    private var twoOptionRows: some View {
-        VStack(spacing: Theme.Hangs.Spacing.sm) {
+    /// Full-width AnswerOption rows — the T/F path, and now the long-option path
+    /// too. The `.onChange` stays on THIS VStack (the tap/voice race wiring the
+    /// 54.16 tests drive).
+    private var optionRows: some View {
+        // #174 C2: this path now carries four rows, not just the T/F pair — a
+        // short container tightens the gaps so they still fit above the fold.
+        VStack(spacing: compact ? Theme.Hangs.Spacing.xs : Theme.Hangs.Spacing.sm) {
             ForEach(options, id: \.key) { option in
                 AnswerOption(
                     key: option.key,
                     value: option.value,
                     state: externalSelectedKey == option.key ? .selected : .default,
+                    isLoading: isLoading(option.key),
                     minHeight: optionMinHeight,
                     action: { tapOption(option) }
                 )
-                .disabled(externalSelectedKey != nil)
+                .disabled(externalSelectedKey != nil || isSubmitting)
+                .opacity(isDimmed(option.key) ? 0.45 : 1)
                 .animation(
                     reduceMotion ? nil : .easeInOut(duration: 0.15),
                     value: externalSelectedKey
@@ -121,10 +144,12 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     state: externalSelectedKey == option.key ? .selected : .default,
+                    isLoading: isLoading(option.key),
                     compact: compact,
                     action: { tapOption(option) }
                 )
-                .disabled(externalSelectedKey != nil)
+                .disabled(externalSelectedKey != nil || isSubmitting)
+                .opacity(isDimmed(option.key) ? 0.45 : 1)
                 .animation(
                     reduceMotion ? nil : .easeInOut(duration: 0.15),
                     value: externalSelectedKey
@@ -136,6 +161,13 @@ struct MCQOptionPicker: View {
             handleSelectionChange(newValue)
         }
     }
+
+    /// The chosen option is the only one that spins; a skip has no chosen option
+    /// and so spins nothing here (its own chip carries that state).
+    private func isLoading(_ key: String) -> Bool { isSubmitting && externalSelectedKey == key }
+
+    /// Everything the driver can no longer act on recedes while a submit is in flight.
+    private func isDimmed(_ key: String) -> Bool { isSubmitting && externalSelectedKey != key }
 
     /// Shared tap handler (both the rows and the grid). Schedules BEFORE writing
     /// the key so the in-flight `pendingKey` is set before the write can be

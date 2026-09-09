@@ -60,9 +60,19 @@ jobs:
           # no entitlements, so every Keychain call fails with -34018 and the
           # UI-test admin-key seed (RS-pack-nav-start, #111) breaks. Simulator
           # builds need no cert; the default ad-hoc signing keeps Keychain alive.
+          # Swift Testing runs suites CONCURRENTLY in one process by default, and
+          # 15 HangsTests files enter `withMainSerialExecutor` — a PROCESS-GLOBAL
+          # executor override. Under it every concurrently-running suite shares one
+          # thread, so the wall-clock tests (recording window, dead-air cap, the 30 s
+          # submit timeout) get starved and fail for reasons that have nothing to do
+          # with the change under test. Measured on `main` unchanged: 3 of 4 full-suite
+          # runs failed, each on a DIFFERENT test; serialized, 5 of 5 passed. The cost
+          # is ~60% more test wall-clock (30 s → 48 s locally), which is cheaper than
+          # a gate that is green by luck.
           xcodebuild test \
             -scheme Hangs-Local \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -parallel-testing-enabled NO \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             | xcpretty

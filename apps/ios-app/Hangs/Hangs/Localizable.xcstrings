@@ -1571,23 +1571,6 @@
         }
       }
     },
-    "Confirm without an answer" : {
-      "comment" : "Accessibility label for the confirm button when the answer field is empty, which submits no answer",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Potvrdit bez odpovědi"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Potvrdiť bez odpovede"
-          }
-        }
-      }
-    },
     "Confirm answer, auto-confirming in %lld seconds" : {
       "comment" : "Accessibility label for the confirm button while auto-confirm counts down",
       "localizations" : {
@@ -1601,6 +1584,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Potvrdiť odpoveď, automatické potvrdenie o %lld sekúnd"
+          }
+        }
+      }
+    },
+    "Confirm without an answer" : {
+      "comment" : "Accessibility label for the confirm button when the answer field is empty, which submits no answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdit bez odpovědi"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdiť bez odpovede"
           }
         }
       }
@@ -3012,6 +3012,23 @@
         }
       }
     },
+    "Hide the listening bar" : {
+      "comment" : "Accessibility label for the button that hides the in-quiz listening bar for the current question",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrýt lištu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skryť lištu"
+          }
+        }
+      }
+    },
     "Hint image for question" : {
       "comment" : "Accessibility label for a hint image question",
       "localizations" : {
@@ -4184,23 +4201,6 @@
         }
       }
     },
-    "Nothing heard" : {
-      "comment" : "Answer confirmation sheet: shown in place of the transcript when the recording produced no text",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nic jsem nezachytil"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nič som nezachytil"
-          }
-        }
-      }
-    },
     "Not connected to speech recognition" : {
       "comment" : "Speech-to-text error: no active streaming connection",
       "localizations" : {
@@ -4218,6 +4218,23 @@
         }
       }
     },
+    "Not enough questions" : {
+      "comment" : "Alert title shown before a quiz starts when the corpus has fewer unseen questions than requested",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nedostatek otázek"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nedostatok otázok"
+          }
+        }
+      }
+    },
     "Not signed in" : {
       "comment" : "Auth error: no active session",
       "localizations" : {
@@ -4231,6 +4248,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neprihlásený"
+          }
+        }
+      }
+    },
+    "Nothing heard" : {
+      "comment" : "Answer confirmation sheet: shown in place of the transcript when the recording produced no text",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nic jsem nezachytil"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nič som nezachytil"
           }
         }
       }
@@ -4354,6 +4388,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jednorazové odomknutie — nie predplatné"
+          }
+        }
+      }
+    },
+    "Only %lld new questions left for you in %@ (you asked for %lld)." : {
+      "comment" : "Alert message: how many unseen questions remain in the chosen category vs how many were requested",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nové otázky v kategorii %2$@: %1$lld. Požadovaný počet: %3$lld."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nové otázky v kategórii %2$@: %1$lld. Požadovaný počet: %3$lld."
           }
         }
       }
@@ -4812,7 +4863,6 @@
     },
     "Question %lld of %lld" : {
       "comment" : "Accessibility label for the progress badge: current question number out of total",
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -5504,6 +5554,23 @@
         }
       }
     },
+    "Reset seen questions" : {
+      "comment" : "Alert button: clear the seen-question history so the whole corpus is available again",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vynulovat viděné otázky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vynulovať videné otázky"
+          }
+        }
+      }
+    },
     "Restore purchase" : {
       "comment" : "Button title for restoring a previous purchase.",
       "extractionState" : "stale",
@@ -6097,7 +6164,7 @@
       }
     },
     "Settings" : {
-      "comment" : "Accessibility label for the in-quiz settings button\nAccessibility label for the settings navigation button",
+      "comment" : "Accessibility label for the settings navigation button",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -6640,6 +6707,71 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Začni hovoriť a odpovieš okamžite"
+          }
+        }
+      }
+    },
+    "Start with %lld questions" : {
+      "comment" : "Alert button: start the quiz with the number of questions that are actually available",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustit s %lld otázkami"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustit s %lld otázkami"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustit s %lld otázkou"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustit s %lld otázkami"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustiť s %lld otázkami"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustiť s %lld otázkami"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustiť s %lld otázkou"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spustiť s %lld otázkami"
+                }
+              }
+            }
           }
         }
       }

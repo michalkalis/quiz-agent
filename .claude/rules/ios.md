@@ -24,7 +24,7 @@ swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 |------|---------|
 | Open project | `open apps/ios-app/Hangs/Hangs.xcodeproj` |
 | Build (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
-| Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
+| Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO` (serialized — parallel suites starve the wall-clock tests under `withMainSerialExecutor`, see ios-ci.yml) |
 
 ## Simulator driving & XcodeBuildMCP token cost
 

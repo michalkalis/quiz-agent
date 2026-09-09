@@ -107,6 +107,11 @@ struct ConfirmResultCommandTests {
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
             vm.recordingCoordinator.pendingResponse = makePendingResponse()
+            // #173 seam: this test is about the mic opening, not about the
+            // recording window — give it one that cannot expire mid-test and
+            // reopen the empty-answer sheet under the assertions below.
+            vm.recordingCoordinator.speechStartWindow = 60
+            vm.recordingCoordinator.deadAirCap = 60
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.again)
 
@@ -119,6 +124,7 @@ struct ConfirmResultCommandTests {
             // must open the mic right away, not park on askingQuestion.
             #expect(vm.quizState == .recording, "re-record must start recording immediately")
             #expect(audio.isRecording == true)
+            vm.quizTimersController.cancelAutoStopRecordingTimer()
         }
     }
 
@@ -314,10 +320,10 @@ struct ConfirmationPauseTests {
     func resumeReArmsTheFullWindow() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
             #expect(vm.autoConfirmCountdown == 0)
 
-            vm.resumeFromConfirmation()
+            vm.exitPause()
 
             #expect(vm.isPaused == false)
             #expect(
@@ -337,7 +343,7 @@ struct ConfirmationPauseTests {
     func foregroundReturnKeepsThePause() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
 
             vm.handleScenePhase(.background)
             vm.handleScenePhase(.active)
@@ -362,7 +368,9 @@ struct ConfirmationPauseTests {
     func reRecordWhilePausedResumesAndRecords() async {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
-            vm.pauseOnConfirmation()
+            vm.recordingCoordinator.speechStartWindow = 60 // see the #173 seam note above
+            vm.recordingCoordinator.deadAirCap = 60
+            vm.enterPause()
             #expect(vm.isPaused)
 
             vm.recordingCoordinator.rerecordAnswer()
@@ -373,6 +381,7 @@ struct ConfirmationPauseTests {
             #expect(vm.isPaused == false, "re-record must not leave the quiz paused")
             #expect(vm.showAnswerConfirmation == false)
             #expect(vm.quizState == .recording, "re-record opens the mic immediately, pause or not")
+            vm.quizTimersController.cancelAutoStopRecordingTimer()
         }
     }
 
@@ -384,7 +393,7 @@ struct ConfirmationPauseTests {
         await withMainSerialExecutor {
             let vm = makeSheetVM()
             vm.recordingCoordinator.pendingResponse = makePendingResponse()
-            vm.pauseOnConfirmation()
+            vm.enterPause()
             #expect(vm.isPaused)
 
             await vm.recordingCoordinator.confirmAnswer()

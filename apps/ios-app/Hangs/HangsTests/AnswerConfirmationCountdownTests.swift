@@ -68,12 +68,14 @@ struct AnswerConfirmationCountdownTests {
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm").isDisabled() == false)
     }
 
-    /// WHY (#171 Track D): "paused" has to be READABLE. A vanished countdown
-    /// chip alone reads as "auto-confirm is off", not "the quiz is waiting for
-    /// me" — the badge is what tells the driver nothing will happen until they
-    /// act, and the pill must offer the way back out.
-    @Test("A paused sheet names the state and offers Continue instead of Pause")
-    func pausedSheetShowsBadgeAndContinue() throws {
+    /// WHY (#171 Track D, kept through #173): "paused" has to be READABLE. A
+    /// vanished countdown chip alone reads as "auto-confirm is off", not "the
+    /// quiz is waiting for me" — the badge is what tells the driver nothing will
+    /// happen until they act. The way back OUT is no longer on this sheet: #173
+    /// decision 4 moved pause/resume to the quiz toolbar, so the sheet must
+    /// report the state and offer no pause control of its own.
+    @Test("A paused sheet names the state and hosts no pause control of its own")
+    func pausedSheetShowsBadgeAndNoPauseControl() throws {
         let view = AnswerConfirmationView(
             isProcessing: false,
             transcribedAnswer: .constant("Paris"),
@@ -84,13 +86,16 @@ struct AnswerConfirmationCountdownTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            isPaused: true,
-            onTogglePause: {}
+            isPaused: true
         )
         let tree = try view.inspect()
         #expect(throws: Never.self) { try tree.find(text: "PAUSED") }
-        #expect(throws: Never.self) { try tree.find(text: "Continue") }
+        // #173: neither label may appear here — the toolbar owns both.
+        #expect(throws: (any Error).self) { try tree.find(text: "Continue") }
         #expect(throws: (any Error).self) { try tree.find(text: "Pause") }
+        #expect(throws: (any Error).self) {
+            try tree.find(viewWithAccessibilityIdentifier: "confirmation.pause")
+        }
         // Confirm stays plain and tappable — confirming IS resuming.
         #expect(throws: Never.self) { try tree.find(text: "Confirm") }
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm").isDisabled() == false)
@@ -111,8 +116,7 @@ struct AnswerConfirmationCountdownTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            isPaused: true,
-            onTogglePause: {}
+            isPaused: true
         )
         let tree = try view.inspect()
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == false)
@@ -132,18 +136,18 @@ struct AnswerConfirmationCountdownTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            isPaused: false,
-            onTogglePause: {}
+            isPaused: false
         )
         let tree = try view.inspect()
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == true)
     }
 
-    /// WHY: the running sheet must ADVERTISE the pause — the pill's label is
-    /// also the word the driver speaks ("Pauza"), so hiding it hides the
-    /// hands-free command with it.
-    @Test("A running sheet offers Pause and no PAUSED badge")
-    func runningSheetOffersPause() throws {
+    /// WHY (#173 decision 4): a running sheet shows the live countdown and NO
+    /// paused badge. The Pause pill it used to carry is gone — pause became a
+    /// toolbar control so it works from every quiz state, not just this one
+    /// screen; the spoken "pauza" still routes there.
+    @Test("A running sheet counts down, shows no PAUSED badge and no pause pill")
+    func runningSheetHasNoPausePill() throws {
         let view = AnswerConfirmationView(
             isProcessing: false,
             transcribedAnswer: .constant("Paris"),
@@ -152,11 +156,10 @@ struct AnswerConfirmationCountdownTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            isPaused: false,
-            onTogglePause: {}
+            isPaused: false
         )
         let tree = try view.inspect()
-        #expect(throws: Never.self) { try tree.find(text: "Pause") }
+        #expect(throws: (any Error).self) { try tree.find(text: "Pause") }
         #expect(throws: Never.self) { try tree.find(text: "4s") }
         #expect(throws: (any Error).self) { try tree.find(text: "PAUSED") }
     }

@@ -40,17 +40,20 @@ struct QuestionViewMCQInspectorTests {
         return vm
     }
 
-    @Test("MCQ merged top row contains the abbreviated Qn label (#125)")
-    func mcqHeaderContainsQuestionNumber() async throws {
+    /// #173 A3 replaced the merged "CATEGORY · Qn" row with the shared header:
+    /// lowercase category on the left, a compact 1-based "1/10" on the right,
+    /// identical in MCQ and voice. The merged row is what collided with the
+    /// TestFlight chips, so its absence is part of the contract.
+    @Test("MCQ renders the shared A3 meta row, not the old merged Qn label")
+    func mcqHeaderRendersSharedMetaRow() async throws {
         let vm = makeMCQViewModel()
         // questionsAnswered = 0 → question 1
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // #125 Variant A: the MCQ chrome merges into one row using the
-            // "CATEGORY · Qn" style. #56: uppercased via a `.textCase` *display*
-            // modifier, so ViewInspector matches the source ("adults · Q1").
-            #expect(throws: Never.self) {
+            #expect(throws: Never.self) { try tree.find(text: "adults") }
+            #expect(throws: Never.self) { try tree.find(text: "1/10") }
+            #expect(throws: (any Error).self, "the merged #125 row is gone") {
                 try tree.find(text: "adults · Q1")
             }
         }
@@ -144,10 +147,10 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
-            // The audio strip is the mute's fixed home in both phases (#131 C);
-            // the countdown moved into the ListenBar (#132 B).
+            // #173: mute left the screen for the toolbar, so the strip is gone.
+            // The countdown surface is the ListenBar, now ABOVE the grid.
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
     }
@@ -187,10 +190,10 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(throws: (any Error).self) {
                 _ = try tree.find(text: "THINK — LISTENING IN 0 S")
             }
-            // #131 Track C: the strip is the only mute on the screen now that the
-            // bar dropped its duplicate — it must survive into the answer phase.
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            // #173: the mute is a toolbar control now — the on-screen strip that
+            // used to carry it is gone from both phases.
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
             }
         }
     }
@@ -375,28 +378,19 @@ struct QuestionViewUnifiedChromeTests {
         return vm
     }
 
-    /// #125: the MCQ screen drops its settings gear (settings reachable via the
-    /// End Quiz sheet) to reclaim chrome for the stem; the voice body keeps the
-    /// close + settings top bar. The close chip must survive in BOTH so a driver
-    /// can always bail / reach settings.
-    @Test("settings gear stays in voice mode and is dropped on MCQ (#125)", arguments: [Question.previewMCQ, Question.preview])
-    func settingsGearPresence(question: Question) async throws {
+    /// #125 had dropped the settings gear from MCQ only — exactly the per-mode
+    /// divergence #173 removed. Both modes now draw the SAME toolbar (its
+    /// contents are pinned in `QuizToolbarTests`), and neither may keep a
+    /// hand-rolled top row of its own: a stray `question.closeButton` in the
+    /// body means one mode grew its own chrome back.
+    @Test("neither mode keeps a hand-rolled top row (#173)", arguments: [Question.previewMCQ, Question.preview])
+    func noModeSpecificTopRow(question: Question) async throws {
         let vm = makeViewModel(question: question)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            if question.isMultipleChoice {
-                #expect(throws: (any Error).self) {
-                    _ = try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
-                }
-            } else {
-                #expect(throws: Never.self) {
-                    try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
-                }
-            }
-            // Close chip present in both modes.
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.closeButton")
+            #expect(QuizToolbarInspection.hasToolbar(view))
+            #expect(throws: (any Error).self, "the close chip belongs to the toolbar, not the body") {
+                _ = try view.inspect().find(viewWithAccessibilityIdentifier: "question.closeButton")
             }
         }
     }
@@ -415,38 +409,21 @@ struct QuestionViewUnifiedChromeTests {
         }
     }
 
-    /// G1: the think/answer timer lives at the bottom near the action row and must
-    /// render identically in both modes — the pre-#83 report was "MCQ has no timer".
-    @Test("timer strip is present in both MCQ and voice mode while asking", arguments: [Question.previewMCQ, Question.preview])
-    func timerStripPresent(question: Question) async throws {
+    /// #173 removed the on-screen audio strip: its only remaining occupant was
+    /// the mute, and mute is a toolbar control now. A strip that comes back is a
+    /// second mute in a second place — the #125 mistake #131 already undid once.
+    @Test("the on-screen audio strip is gone from both modes", arguments: [Question.previewMCQ, Question.preview])
+    func audioStripRemoved(question: Question) async throws {
         let vm = makeViewModel(question: question)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+            for id in ["question.timerStrip", "question.mute"] {
+                #expect(throws: (any Error).self, "\(id) must not be drawn in the body any more") {
+                    _ = try tree.find(viewWithAccessibilityIdentifier: id)
+                }
             }
-        }
-    }
-
-    /// Founder batch 2026-07-12: the quiz chrome must render the moment the quiz
-    /// starts — before the first question payload arrives — so the top bar is never
-    /// perceived as "appearing after a delay". QuestionView with a nil question in
-    /// `.startingQuiz` must still show the top bar (close + settings).
-    @Test("top bar renders in .startingQuiz before the first question loads")
-    func topBarRendersWhileStarting() async throws {
-        let vm = QuizViewModel(
-            networkService: MockNetworkService(),
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
-        )
-        vm.quizState = .startingQuiz
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.settingsButton")
-            }
+            #expect(QuizToolbarInspection.hasToolbar(view), "the mute still exists — in the toolbar")
         }
     }
 
@@ -460,10 +437,6 @@ struct QuestionViewUnifiedChromeTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let strip = try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
-            #expect(throws: (any Error).self) {
-                _ = try strip.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
-            }
             // All three footer controls are on screen together.
             for id in ["question.record", "question.textInputToggle", "question.skip"] {
                 #expect(throws: Never.self, "\(id) missing from the footer row") {
@@ -522,46 +495,21 @@ struct QuestionViewAudioStripTests {
         }
     }
 
-    /// #85 acceptance, restored by #131 Track C: the mute lives in the audio strip
-    /// in BOTH modes and BOTH answering states. #125 had moved it into the docked
-    /// ListenBar, which made it a duplicate and tied the only mute to whether a bar
-    /// happened to be on screen. Driving-first: one predictable spot, always there.
-    @Test("mute toggle is present in both modes, asking and recording",
+    /// #85 acceptance, carried to the toolbar by #173: the mute lives on ONE
+    /// fixed spot in BOTH modes and BOTH answering states — the driving-first
+    /// rule #125 broke by tying it to whether a bar happened to be on screen.
+    /// The toolbar it now lives on must therefore exist in every one of them;
+    /// the control itself is pinned in `QuizToolbarTests`.
+    @Test("the toolbar that carries the mute exists in both modes, asking and recording",
           arguments: [Question.previewMCQ, Question.preview])
-    func mutePresentInBothModes(question: Question) async throws {
+    func muteHostPresentInBothModes(question: Question) async throws {
         for state in [QuizState.askingQuestion, .recording] {
             let vm = makeViewModel(question: question)
             vm.quizState = state
             let view = QuestionView(viewModel: vm)
             try await ViewHosting.host(view) {
-                let tree = try view.inspect()
-                #expect(throws: Never.self, "no mute in \(state)") {
-                    try tree.find(viewWithAccessibilityIdentifier: "question.mute")
-                }
+                #expect(QuizToolbarInspection.hasToolbar(view), "no toolbar in \(state)")
             }
-        }
-    }
-
-    /// The on-screen mute is a pure toggle over the persisted `settings.isMuted` —
-    /// the same source of truth the Settings "Speak scores aloud" toggle and the
-    /// TTS guards use, so flipping it here silences TTS and stays in sync everywhere.
-    @Test("tapping mute flips settings.isMuted")
-    func muteTogglesSetting() async throws {
-        let vm = makeViewModel(question: Question.preview)
-        vm.settings.isMuted = false
-        vm.quizState = .recording // #125: mute lives in the docked ListenBar
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            let mute = try tree.find(viewWithAccessibilityIdentifier: "question.mute")
-            try mute.button().tap()
-            // toggleMute() became async when mute learned to stop in-flight TTS
-            // (8a01675) — the flip happens inside a Task, so drain the main actor
-            // instead of asserting synchronously (this test was red on main).
-            for _ in 0 ..< 50 where !vm.settings.isMuted {
-                await Task.yield()
-            }
-            #expect(vm.settings.isMuted == true)
         }
     }
 }
@@ -610,75 +558,138 @@ struct QuestionViewReplayProcessingInspectorTests {
         }
     }
 
-    /// 59.6 (RS-15): the typed-answer path stays on QuestionView while the answer is
-    /// evaluated (it bypasses the voice confirmation sheet that owns the only other
-    /// spinner). The `question.processingIndicator` must appear in the `.processing` state
-    /// so the screen isn't blank between submit and result.
-    @Test("processing indicator is present while in the processing state (RS-15)")
-    func processingIndicatorPresentWhenProcessing() async throws {
+    /// 59.6 (RS-15): the typed-answer path stays on QuestionView while the answer
+    /// is evaluated (it bypasses the voice confirmation sheet that owns the other
+    /// evaluating state). #174 moved that state into the Record button itself, so
+    /// this is what keeps the screen from looking idle between submit and result.
+    @Test("the record button carries the evaluating state while processing (RS-15)")
+    func recordButtonShowsEvaluatingWhileProcessing() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .processing
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
-            }
+            #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
         }
     }
 
-    @Test("processing indicator is absent while asking a question (RS-15)")
-    func processingIndicatorAbsentWhenAsking() async throws {
+    /// The other half of that contract: nothing claims to be evaluating while the
+    /// driver is still being asked the question.
+    @Test("no evaluating state while asking a question (RS-15)")
+    func noEvaluatingStateWhileAsking() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .askingQuestion
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "Evaluating…") }
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
             }
         }
     }
 
-    /// #171 Track E (founder, 2026-09-05 TestFlight: "Vyhodnocujem špiní spodok
-    /// obrazovky"): the evaluating state used to sit *in* the control stack, so the
-    /// bottom of the screen turned into a stray spinner where the buttons had been.
-    /// It is an overlay above the whole screen now and the control stack is empty —
-    /// nothing is offered that cannot be acted on while the answer is in flight.
-    @Test("evaluating empties the bottom controls in the voice body")
-    func evaluatingEmptiesVoiceControls() async throws {
+    /// #174 (founder rule, locked 2026-09-07): a loading state lives IN the control
+    /// that triggered it, never in an overlay. The full-screen "Vyhodnocujem…"
+    /// overlay is gone, so the footer must STAY on screen while the answer is
+    /// graded — an empty bottom is exactly what read as "the app fell over".
+    @Test("evaluating keeps the voice controls on screen")
+    func evaluatingKeepsVoiceControls() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .processing
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            for id in ["question.record", "question.textInputToggle", "question.skip", "question.mute"] {
-                #expect(throws: (any Error).self, "\(id) must be gone while evaluating") {
-                    _ = try tree.find(viewWithAccessibilityIdentifier: id)
+            for id in ["question.record", "question.textInputToggle", "question.skip"] {
+                #expect(throws: Never.self, "\(id) must stay on screen while evaluating") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
                 }
             }
         }
     }
 
-    /// Same contract on the MCQ side — one evaluating state, not two.
-    @Test("evaluating empties the bottom controls in the MCQ body")
-    func evaluatingEmptiesMCQControls() async throws {
+    /// A skip in flight has to be visible somewhere now that the overlay is gone:
+    /// in the control that started it.
+    @Test("skipping spins in the skip control on the voice body")
+    func skippingSpinsInVoiceSkipControl() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .skipping
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) {
+                try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+        }
+    }
+
+    /// Review on #174: with the footer mounted during a skip, the Record CTA must
+    /// not read as tappable — a tap there is a silent no-op while `.skipping`.
+    @Test("skipping disables the record CTA next to the spinning skip control")
+    func skippingDisablesRecordButton() async throws {
+        let vm = makeVoiceViewModel()
+        vm.quizState = .skipping
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let record = try view.inspect().find(viewWithAccessibilityIdentifier: "question.record")
+            #expect(try record.isDisabled(), "record CTA must be disabled while a skip is in flight")
+        }
+    }
+
+    /// Same contract on the MCQ side — one evaluating state, not two. The chip
+    /// stays put instead of vanishing, and it keeps its label while spinning so
+    /// the capsule cannot change width under the driver's thumb.
+    @Test("skipping spins in the MCQ skip chip and keeps its label")
+    func skippingSpinsInMCQSkipChip() async throws {
+        let vm = makeMCQEvaluatingViewModel(state: .skipping)
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) {
+                try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(throws: Never.self, "the label must survive so the chip keeps its width") {
+                try skip.find(text: "Skip question")
+            }
+        }
+    }
+
+    /// #174: a tapped option is graded IN its own tile — the letter badge becomes
+    /// a spinner while the tile keeps its text and selected styling — and the other
+    /// options stop taking taps so a second answer can't be queued behind the first.
+    @Test("a tapped MCQ option spins in its own tile and locks the others")
+    func tappedMCQOptionSpinsInItsTile() async throws {
+        let vm = makeMCQEvaluatingViewModel(state: .processing)
+        // The tap path writes the chosen key through this VM-owned binding (#110 T4).
+        vm.mcqVoiceMatchedKey = "b"
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let chosen = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.b")
+            #expect(throws: Never.self) {
+                try chosen.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(throws: Never.self, "the tile keeps its text — only the badge changes") {
+                try chosen.find(text: "Jupiter")
+            }
+            let other = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            #expect(throws: (any Error).self, "only the chosen tile spins") {
+                _ = try other.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
+            }
+            #expect(try other.isDisabled(), "the other options must stop taking taps")
+        }
+    }
+
+    private func makeMCQEvaluatingViewModel(state: QuizState) -> QuizViewModel {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore()
         )
         vm.currentQuestion = Question.previewMCQ
-        vm.quizState = .processing
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
-            }
-            #expect(throws: (any Error).self, "the skip chip must be gone while evaluating") {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
-            }
-        }
+        vm.quizState = state
+        return vm
     }
 }

@@ -113,8 +113,10 @@ struct QuestionViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
 
+            // #173: `question.timerStrip` is gone — the mute it carried moved into
+            // the native toolbar, asserted separately in QuizToolbarTests.
             for id in ["question.text", "question.category", "question.counter",
-                       "question.timerStrip", "question.record", "question.skip"]
+                       "question.progress", "question.record", "question.skip"]
             {
                 #expect(throws: Never.self, "\(id) must render while asking") {
                     try tree.find(viewWithAccessibilityIdentifier: id)
@@ -159,7 +161,7 @@ struct QuestionViewStateContractTests {
                 try tree.find(viewWithAccessibilityIdentifier: "question.text")
             }
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.timerStrip")
+                try tree.find(viewWithAccessibilityIdentifier: "question.progress")
             }
 
             #expect(throws: (any Error).self, "Record must not coexist with Stop") {

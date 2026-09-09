@@ -70,6 +70,10 @@ final class AudioDeviceState: ObservableObject {
     let settings: @MainActor () -> QuizSettings
     let setAudioMode: @MainActor (String) -> Void
     let setPreferredInputDeviceId: @MainActor (String?) -> Void
+    /// #173: the EFFECTIVE mute (in-quiz override over the persisted Settings
+    /// preference) — every playback guard in this child reads it, never
+    /// `settings().isMuted`, which is only what Settings persisted.
+    let isMuted: @MainActor () -> Bool
     let setMuted: @MainActor (Bool) -> Void
     let isAskingQuestion: @MainActor () -> Bool
     let isRerecording: @MainActor () -> Bool
@@ -108,6 +112,7 @@ final class AudioDeviceState: ObservableObject {
         settings: @escaping @MainActor () -> QuizSettings,
         setAudioMode: @escaping @MainActor (String) -> Void,
         setPreferredInputDeviceId: @escaping @MainActor (String?) -> Void,
+        isMuted: @escaping @MainActor () -> Bool,
         setMuted: @escaping @MainActor (Bool) -> Void,
         isAskingQuestion: @escaping @MainActor () -> Bool,
         isRerecording: @escaping @MainActor () -> Bool,
@@ -132,6 +137,7 @@ final class AudioDeviceState: ObservableObject {
         self.settings = settings
         self.setAudioMode = setAudioMode
         self.setPreferredInputDeviceId = setPreferredInputDeviceId
+        self.isMuted = isMuted
         self.setMuted = setMuted
         self.isAskingQuestion = isAskingQuestion
         self.isRerecording = isRerecording

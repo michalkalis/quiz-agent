@@ -32,22 +32,82 @@ struct AnswerConfirmationView: View {
     /// match — the field itself holds the option VALUE, which is what gets
     /// graded — and nil on every non-MCQ confirmation.
     var matchedOption: String? = nil
-    /// #171 Track D: the quiz is paused ON THIS SHEET — the countdown is gone
-    /// (the presenter zeroes it), the listener is down, and the header says so.
+    /// #171 Track D: the quiz is paused — the countdown is gone (the presenter
+    /// zeroes it), the listener is down, and the header says so. Pausing itself
+    /// moved to the quiz toolbar in #173, so this sheet only REPORTS the state.
     var isPaused: Bool = false
-    /// Toggles pause/resume. Nil hides the control entirely (previews, MCQ tap
-    /// paths that never present a pausable sheet).
-    var onTogglePause: (() -> Void)? = nil
+    /// #173 C2: non-nil while the confirmed answer is being graded. The sheet
+    /// stays up instead of handing the screen to a full-screen overlay: the
+    /// primary button becomes the spinner and every other control goes dead.
+    /// It carries the submitted text because `confirmAnswer()` consumes
+    /// `transcribedAnswer` the moment it is called.
+    var evaluatingAnswer: String? = nil
 
-    @State private var isEditing = false
+    /// The driver TAPPED the pencil. Read `branch` / `isEditing` instead —
+    /// evaluating outranks this, and this flag alone does not know that.
+    @State private var editingRequested = false
     @FocusState private var editFocused: Bool
+
+    /// The answer is out of the driver's hands — nothing on the sheet may move it.
+    private var isEvaluating: Bool { evaluatingAnswer != nil }
+
+    /// The three mutually exclusive bodies this sheet can show, and their
+    /// precedence. Pure and static so the rule is assertable without driving the
+    /// `@State` that feeds it.
+    enum Branch: Equatable {
+        /// A transcript is genuinely still in flight — spinner + Cancel.
+        case transcribing
+        /// The driver is fixing the transcript by hand.
+        case editing
+        /// The answer, read-only.
+        case transcript
+    }
+
+    /// EVALUATING OUTRANKS BOTH, and this is the single place that says so.
+    ///
+    /// The sheet now outlives the Confirm tap (#173 C2), and `confirmAnswer()`
+    /// consumes `transcribedAnswer` synchronously — which breaks the other two
+    /// branches in the same way:
+    ///  - the presenter's "a transcript is still in flight" test (`.processing`
+    ///    + empty field) is true for the whole evaluating window, and its
+    ///    spinner would hide the very button the state now lives in while
+    ///    offering a Cancel that drops the answer mid-grade;
+    ///  - `editingRequested` is `@State` that nothing resets, so a driver who
+    ///    fixed their transcript and confirmed kept a LIVE, EMPTY `TextField`
+    ///    bound to the string that was just cleared — and typing in it mutated
+    ///    the answer being graded.
+    static func branch(isProcessing: Bool, isEditing: Bool, isEvaluating: Bool) -> Branch {
+        if isEvaluating { return .transcript }
+        if isProcessing { return .transcribing }
+        return isEditing ? .editing : .transcript
+    }
+
+    private var branch: Branch {
+        Self.branch(isProcessing: isProcessing, isEditing: editingRequested, isEvaluating: isEvaluating)
+    }
+
+    /// The edit affordances follow the branch, never the raw flag — so the
+    /// pencil's Cancel twin cannot outlive the confirm either.
+    private var isEditing: Bool { branch == .editing }
+
+    /// What the transcript block shows: the submitted text while evaluating,
+    /// the live field otherwise.
+    private var displayedAnswer: String { evaluatingAnswer ?? transcribedAnswer }
+
+    /// #174 A1: the sheet is a LAYER, not more screen. One constant feeds both
+    /// the presentation background and the content ground so they can never
+    /// drift apart — and so the "distinct from `bg`" rule is assertable.
+    static let surface = Theme.Hangs.Colors.bgSheet
 
     var body: some View {
         ZStack {
-            Theme.Hangs.Colors.bg.ignoresSafeArea()
+            Self.surface.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                if isProcessing {
+                // Precedence lives in `Self.branch(…)` — see it for why
+                // evaluating outranks both the transcribing spinner and the
+                // edit field.
+                if branch == .transcribing {
                     processingBody
                 } else {
                     transcriptBody
@@ -58,9 +118,27 @@ struct AnswerConfirmationView: View {
             .padding(.bottom, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        // A hairline where the layer starts — the top edge is the only part of
+        // an undraggable sheet that can say "something is on top of the quiz".
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Theme.Hangs.Colors.hairline)
+                .frame(height: 1)
+                .allowsHitTesting(false)
+        }
         .presentationDetents([.medium])
+        // Founder 2026-09-09: still NO grabber. The sheet cannot be dragged
+        // closed, and a handle that does nothing is a lie about the affordance.
         .presentationDragIndicator(.hidden)
-        .presentationBackground(Theme.Hangs.Colors.bg)
+        .presentationBackground(Self.surface)
+        // #173 decision 4: pause moved to the quiz toolbar, and this sheet is
+        // reachable IN a paused state (pausing mid-recording lands here) — so the
+        // toolbar behind it must stay tappable or pause would be one-way. Only
+        // the half-screen the sheet does not cover becomes interactive; the quiz
+        // controls down there refuse to act in `.processing` anyway.
+        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        // Still no swipe-to-dismiss: the sheet is left by an answer decision,
+        // never by a stray drag.
         .interactiveDismissDisabled(true)
     }
 
@@ -108,6 +186,8 @@ struct AnswerConfirmationView: View {
                     }
                     .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.edit")
+                    .disabled(isEvaluating)
+                    .opacity(isEvaluating ? 0.45 : 1)
                 }
             }
             .padding(.bottom, 14)
@@ -139,13 +219,13 @@ struct AnswerConfirmationView: View {
                     .accessibilityIdentifier("confirmation.noAnswer")
                 } else {
                     HangsQuestionPrompt(
-                        text: transcribedAnswer,
+                        text: displayedAnswer,
                         barColor: Theme.Hangs.Colors.pink,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
                     )
-                    .accessibilityLabel(String(localized: "Your transcribed answer: \(transcribedAnswer)", comment: "Accessibility label reading back the user's transcribed answer"))
+                    .accessibilityLabel(String(localized: "Your transcribed answer: \(displayedAnswer)", comment: "Accessibility label reading back the user's transcribed answer"))
                     .accessibilityIdentifier("confirmation.answer")
                 }
             }
@@ -153,28 +233,28 @@ struct AnswerConfirmationView: View {
 
             // #131 Track F: full ListenBar — confirmation is a quiz screen, and
             // its three commands need the words on their own line.
-            if let commandHint, !isEditing {
+            if let commandHint, !isEditing, !isEvaluating {
                 ListenBar(mode: .command, feedback: commandFeedback, commandHint: commandHint)
                     .padding(.top, 12)
                     .transition(.opacity)
             }
 
-            HStack(spacing: 10) {
-                HangsSecondaryButton(title: "Re-record", icon: "mic.fill", height: 54) {
-                    editFocused = false
-                    onReRecord()
-                }
-                .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(isReRecordLocked)
-                .opacity(isReRecordLocked ? 0.45 : 1)
-
+            // #174 B1: VERTICAL, and in this order. The half-width Confirm could
+            // not hold "Vyhodnocujem…" (2× the length of "Potvrdiť"), so the label
+            // shrank and truncated the moment the driver pressed it. Full width
+            // fits every localization at full size, and nothing moves between the
+            // two states because the row never re-splits.
+            VStack(spacing: 8) {
                 // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                 // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                 HangsPrimaryButton(
-                    title: "Confirm",
-                    icon: "checkmark",
+                    // #173 C2: the evaluating state IS the button. Same key the
+                    // retired full-screen overlay used, so SK/CS need nothing new.
+                    title: isEvaluating ? "Evaluating…" : "Confirm",
+                    icon: isEvaluating ? nil : "checkmark",
+                    isLoading: isEvaluating,
                     height: 54,
-                    countdownSecondsRemaining: autoConfirmEnabled && !isEditing && autoConfirmCountdown > 0
+                    countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
                         ? autoConfirmCountdown : nil,
                     countdownTotal: autoConfirmTotal
                 ) {
@@ -190,25 +270,29 @@ struct AnswerConfirmationView: View {
                     ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
                     : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
                 .accessibilityIdentifier("confirmation.confirm")
+
+                // Secondary in weight as well as in position: a text-style
+                // control under the CTA, the standard iOS pairing.
+                HangsGhostButton(
+                    title: "Re-record",
+                    icon: "mic.fill",
+                    color: Theme.Hangs.Colors.muted,
+                    font: .hangsBody(15, weight: .semibold)
+                ) {
+                    editFocused = false
+                    onReRecord()
+                }
+                .frame(height: 40)
+                .accessibilityIdentifier("confirmation.reRecord")
+                .disabled(isReRecordLocked || isEvaluating)
+                // C2: 45 % is the mock's "this is not yours right now" tone.
+                .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
             }
             .padding(.top, 14)
 
-            // #171 Track D: secondary to Confirm on purpose — pausing is the
-            // rarer intent, and the CTA row must not lose its two-thumb layout.
-            // Hidden while editing: the keyboard already suspended the
-            // countdown, and a Pause pill under an open keyboard is noise.
-            if let onTogglePause, !isEditing {
-                HangsSecondaryButton(
-                    title: isPaused ? "Continue" : "Pause",
-                    icon: isPaused ? "play.fill" : "pause.fill",
-                    height: 48
-                ) {
-                    editFocused = false
-                    onTogglePause()
-                }
-                .accessibilityIdentifier("confirmation.pause")
-                .padding(.top, 10)
-            }
+            // #173 decision 4: the Pause/Continue pill is GONE from this sheet —
+            // pause is a toolbar control now, reachable in every quiz state
+            // instead of only the one screen that happened to host it.
         }
     }
 
@@ -225,7 +309,7 @@ struct AnswerConfirmationView: View {
     /// The field holds nothing to submit — either the recording captured no
     /// text (#171 Track B) or the driver cleared it while editing.
     private var isEmptyAnswer: Bool {
-        transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        displayedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var editableTranscript: some View {
@@ -259,7 +343,7 @@ struct AnswerConfirmationView: View {
 
     private func beginEditing() {
         onEditingBegan?()
-        isEditing = true
+        editingRequested = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             editFocused = true
         }
@@ -267,7 +351,7 @@ struct AnswerConfirmationView: View {
 
     private func cancelEditing() {
         editFocused = false
-        isEditing = false
+        editingRequested = false
         onCancelEditing?()
     }
 
@@ -367,8 +451,20 @@ struct AnswerConfirmationView: View {
             autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {},
-            isPaused: true,
-            onTogglePause: {}
+            isPaused: true
+        )
+    }
+
+    #Preview("Evaluating") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            evaluatingAnswer: "A · Textured wallpaper"
         )
     }
 

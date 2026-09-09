@@ -132,6 +132,11 @@ final class QuizViewModel: ObservableObject {
     /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
     /// does not set this (it replaces the summary via the shared task key).
     @Published var isNarratingRecap: Bool = false
+    /// #174: set instead of starting when the pre-flight probe finds fewer
+    /// unseen questions than the user asked for. Non-nil drives the
+    /// "Not enough questions" alert; the quiz has NOT started while it is set.
+    @Published private(set) var questionShortfall: QuestionShortfall?
+
     @Published var errorMessage: String? // Inline errors shown in QuestionView (e.g., recording failures)
     /// Display model for the full-screen Error state, built by `setError` via
     /// `AppErrorModel.from` so ErrorView shows localised copy + the right CTA (54.15).
@@ -195,6 +200,13 @@ final class QuizViewModel: ObservableObject {
     var noAnswerCaptured: Bool {
         get { recordingCoordinator.noAnswerCaptured }
         set { recordingCoordinator.noAnswerCaptured = newValue }
+    }
+
+    /// #173 C2: the confirmation sheet stays up, in its evaluating state, from
+    /// Confirm until the result lands.
+    var isEvaluatingAnswer: Bool {
+        get { recordingCoordinator.isEvaluatingAnswer }
+        set { recordingCoordinator.isEvaluatingAnswer = newValue }
     }
 
     /// Auto-confirm countdown — owned by `ConfirmationState` inside
@@ -333,6 +345,20 @@ final class QuizViewModel: ObservableObject {
 
     @Published var settings: QuizSettings = .default
     @Published var showingLanguagePicker = false
+
+    /// #173 (founder 2026-09-07): the in-quiz mute button silences ONLY the quiz
+    /// that is running. It writes THIS non-persisted override; `settings.isMuted`
+    /// stays what the Settings "Sound" toggle wrote and is the only thing that
+    /// survives the app. `startQuiz` clears the override, so a mute tapped in one
+    /// quiz can never silence the first question of the next one — the TF
+    /// screenshot 2026-09-06, where a mute from an earlier run made the opening
+    /// question play silently while the countdown ran.
+    /// `nil` = no in-quiz decision yet → fall back to the persisted preference.
+    @Published var quizMuteOverride: Bool?
+
+    /// The mute every playback path must honour: the in-quiz override while one
+    /// is set, otherwise the persisted Settings preference.
+    var isAudioMuted: Bool { quizMuteOverride ?? settings.isMuted }
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
@@ -686,7 +712,10 @@ final class QuizViewModel: ObservableObject {
             settings: { [weak self] in self?.settings ?? .default },
             setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
             setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
-            setMuted: { [weak self] in self?.settings.isMuted = $0 },
+            // #173: the quiz mute is session-scoped — it must NOT write the
+            // persisted Settings preference (see `quizMuteOverride`).
+            isMuted: { [weak self] in self?.isAudioMuted ?? false },
+            setMuted: { [weak self] in self?.quizMuteOverride = $0 },
             isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
@@ -721,8 +750,11 @@ final class QuizViewModel: ObservableObject {
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },
-            isPausedOnConfirmation: { [weak self] in
-                self?.isPaused == true && self?.showAnswerConfirmation == true
+            isQuizPaused: { [weak self] in
+                // #173: a toolbar pause can now be entered from the question
+                // screen too, so the mic gate widened past the sheet. The result
+                // screen is the one paused state that keeps listening.
+                self?.isPaused == true && self?.quizState.isShowingResult == false
             },
             startSilenceDetectionListening: { [weak self] in await self?.audioDeviceState.startSilenceDetectionListening() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
@@ -740,7 +772,7 @@ final class QuizViewModel: ObservableObject {
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
             continueToNext: { [weak self] in self?.continueToNext() },
-            pauseOnConfirmation: { [weak self] in self?.pauseOnConfirmation() },
+            pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
         )
@@ -808,8 +840,14 @@ final class QuizViewModel: ObservableObject {
             clearPause: { [weak self] in self?.isPaused = false },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
-            startAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.startAutoStopRecordingTimer() },
+            startAutoStopRecordingTimer: { [weak self] duration, hardCap in
+                self?.quizTimersController.startAutoStopRecordingTimer(duration: duration, hardCap: hardCap)
+            },
+            armRecordingDeadAirCap: { [weak self] hardCap in
+                self?.quizTimersController.armRecordingDeadAirCap(hardCap)
+            },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
+            onSpeechStarted: { [weak self] in self?.quizTimersController.speechDetectedDuringRecording() },
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
         )
     }
@@ -835,10 +873,11 @@ final class QuizViewModel: ObservableObject {
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil
+        packId: String? = nil,
+        skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -852,11 +891,15 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// Start a new quiz session
+    /// `skipAvailabilityCheck` is set only by the "Start with N questions"
+    /// button, which already knows the honest count — re-probing there would
+    /// re-open the alert it just answered.
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil
+        packId: String? = nil,
+        skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
         // start, Try Again, Play Again). Check single-flight BEFORE the transition
@@ -891,6 +934,25 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
+        // #174: ask BEFORE promising a length. A set of 10 that ends after 3
+        // (the corpus ran out of unseen questions and the backend quietly
+        // finished the session) is the bug this prevents; the user gets the
+        // honest count and decides. Packs are exempt — a pack is a closed,
+        // paid, exactly-sized set, so there is nothing to under-deliver.
+        if packId == nil, !skipAvailabilityCheck,
+           let shortfall = await probeQuestionShortfall(
+               requestedCount: quizMaxQuestions,
+               difficulty: quizDifficulty,
+               language: quizLanguage,
+               requestedDifficulty: difficulty,
+               requestedLanguage: language
+           )
+        {
+            questionShortfall = shortfall
+            transition(to: .idle)
+            return
+        }
+
         do {
             Logger.quiz.info("🎮 Starting new quiz: \(quizMaxQuestions, privacy: .public) questions, difficulty: \(quizDifficulty, privacy: .public), language: \(quizLanguage, privacy: .public)")
 
@@ -911,6 +973,10 @@ final class QuizViewModel: ObservableObject {
             // never had this because `advanceToNextQuestionOrFinish` stops audio
             // and settles before it plays.
             audioDeviceState.stopSilenceDetectionListening()
+
+            // #173: a new quiz starts audible unless Settings says otherwise —
+            // drop any mute the in-quiz button set during a previous run.
+            quizMuteOverride = nil
 
             // Configure audio session with user's preferred mode
             do {
@@ -1007,6 +1073,88 @@ final class QuizViewModel: ObservableObject {
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
+    }
+
+    // MARK: - Pre-flight corpus check (#174)
+
+    /// Probes the backend for unseen questions and returns a shortfall when the
+    /// corpus cannot cover `requestedCount`, or `nil` when the quiz may start.
+    ///
+    /// **Fails open.** A probe that errors returns `nil`: a network hiccup on an
+    /// advisory check must never block a quiz that would have played fine. The
+    /// worst case is the pre-#174 behaviour, which is exactly what this is
+    /// degrading back to.
+    private func probeQuestionShortfall(
+        requestedCount: Int,
+        difficulty: String,
+        language: String,
+        requestedDifficulty: String?,
+        requestedLanguage: String?
+    ) async -> QuestionShortfall? {
+        do {
+            let availability = try await networkService.questionAvailability(
+                requestedCount: requestedCount,
+                difficulty: difficulty,
+                language: language,
+                categories: settings.categories,
+                includeImages: settings.includeImageQuestions,
+                excludedQuestionIds: persistenceStore.getExclusionList()
+            )
+            guard !availability.sufficient else { return nil }
+            Logger.quiz.info("🎯 Corpus short: \(availability.available, privacy: .public) unseen questions for \(requestedCount, privacy: .public) requested")
+            return QuestionShortfall(
+                available: availability.available,
+                requested: requestedCount,
+                categoryName: settings.categoryDisplayName(),
+                difficulty: requestedDifficulty,
+                language: requestedLanguage
+            )
+        } catch {
+            Logger.quiz.warning("⚠️ Availability probe failed, starting anyway: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// "Start with N questions" — plays the honest count so the progress label
+    /// matches what the corpus can actually deliver. Takes the shortfall by
+    /// value: SwiftUI clears `questionShortfall` as it dismisses the alert, so
+    /// an action that re-read it could find nothing and silently do nothing.
+    /// Goes through `beginQuizStart`, not `startNewQuiz`: a start the taskBag
+    /// does not hold under `.quizStart` is invisible to Home's "Cancel" and to
+    /// `resetState`'s `cancelAll`, so it would keep running past a teardown.
+    @discardableResult
+    func startWithAvailableQuestions(_ shortfall: QuestionShortfall) -> Task<Void, Never>? {
+        guard shortfall.canStartShorter else { return nil }
+        dismissQuestionShortfall()
+        return beginQuizStart(
+            maxQuestions: shortfall.available,
+            difficulty: shortfall.difficulty,
+            language: shortfall.language,
+            skipAvailabilityCheck: true
+        )
+    }
+
+    /// "Reset seen questions" — clears the client-side history the exclusion
+    /// list is built from, then restarts the SAME quiz. Deliberately re-probes
+    /// (no `skipAvailabilityCheck`): a fresh history usually unlocks the full
+    /// corpus, but if the category is still too small the user must see that
+    /// rather than be dropped into another short set.
+    /// Registered under `.quizStart` for the same reason as
+    /// `startWithAvailableQuestions`.
+    @discardableResult
+    func resetSeenQuestionsAndStart(_ shortfall: QuestionShortfall) -> Task<Void, Never> {
+        dismissQuestionShortfall()
+        resetQuestionHistory()
+        return beginQuizStart(
+            maxQuestions: shortfall.requested,
+            difficulty: shortfall.difficulty,
+            language: shortfall.language
+        )
+    }
+
+    /// "Cancel" — and the setter behind the alert's `isPresented` binding.
+    func dismissQuestionShortfall() {
+        questionShortfall = nil
     }
 
     /// Runs a start-quiz network step with a bounded retry (up to 2 extra
@@ -1304,6 +1452,12 @@ final class QuizViewModel: ObservableObject {
         }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #173: answering IS resuming — the same rule `confirmAnswer()` follows.
+        // Without this a pause taken on the question screen rides through to
+        // `.showingResult`, where `startAutoAdvanceCountdown`'s own `guard
+        // !isPaused` silently kills auto-advance: the result arrives pre-paused
+        // and the quiz stops moving hands-free.
+        isPaused = false
         quizTimersController.cancelAnswerTimer()
         // #132: the option grid is on screen during the think phase now, so a tap
         // can land while the THINK countdown is still ticking. Without this the
@@ -1427,6 +1581,9 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
 
         submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #173: skipping IS resuming — see `submitMCQAnswer`. A pause carried
+        // onto the result screen would kill its auto-advance.
+        isPaused = false
         quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
 

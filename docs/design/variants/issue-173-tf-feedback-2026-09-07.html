@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#173 — TF feedback 2026-09-07 · MCQ obrazovka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page-bg:#0F1116; --page-line:#262B36; --page-text:#E7EAF0; --page-dim:#98A0B0;
+  --pink:#FF3D8F; --teal:#14B8A6;
+  --display:Anton,"Arial Narrow",Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --pbg:#111214; --pcard:#1B1C1F; --phair:rgba(255,255,255,.10); --ptext:#F2F2F2; --pdim:#8E8E93;
+  --ppink:#FF3D8F; --ppinkDeep:#D91E72; --pteal:#14B8A6; --ppurple:#5B4FE6; --ppurplebg:#2A2550; --pblue:#0A84FF; --pstem:#B4B4B8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:48px 28px 96px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:44px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+.block{margin-top:64px;padding-top:30px;border-top:2px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+h2{font-family:var(--display);font-weight:400;font-size:36px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+.concept{color:var(--page-dim);max-width:88ch;margin:8px 0 0;font-size:15px}
+.concept b{color:var(--page-text);font-weight:600}
+.devices{display:flex;gap:30px;flex-wrap:nowrap;overflow-x:auto;margin:24px 0 0;align-items:flex-start;padding-bottom:10px}
+figure.device{margin:0;flex:0 0 auto}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--page-dim);margin-top:12px;text-align:center;max-width:390px}
+
+/* ===== phone (dark, TF tokens) ===== */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--pbg);color:var(--ptext);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 26px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0}
+.tr{display:flex;align-items:center;gap:8px}
+.tchip{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:grid;place-items:center;flex:0 0 auto}
+.tchip svg{width:15px;height:15px;color:var(--ptext)}
+.tpill{height:36px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:flex;align-items:center;gap:12px;padding:0 12px;flex:0 0 auto}
+.tpill svg{width:15px;height:15px;color:var(--ptext)}
+.ptitle{flex:1 1 auto;text-align:center}
+.ptitle .l1{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ptext)}
+.ptitle .l2{font-family:var(--mono);font-size:11px;color:var(--pdim);letter-spacing:1px;margin-top:2px}
+.pprog{height:3px;margin:10px 24px 0;border-radius:2px;background:var(--phair);overflow:hidden}
+.pprog i{display:block;height:100%;width:10%;background:var(--pteal);border-radius:2px}
+.pmeta{display:flex;justify-content:space-between;margin:10px 24px 0;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--pdim)}
+.pmeta .n{color:var(--ptext)}
+.pseg{display:flex;gap:4px;margin:12px 24px 0}
+.pseg i{flex:1;height:4px;border-radius:2px;background:var(--phair)}
+.pseg i.on{background:var(--pteal)}
+.psegrow{display:flex;justify-content:space-between;margin:6px 24px 0;font-family:var(--mono);font-size:10px;color:var(--pdim);letter-spacing:1.4px}
+.pquestion{margin:20px 24px 0;padding-left:14px;border-left:3px solid var(--pblue);font-family:var(--display);font-size:24px;line-height:1.18;color:var(--pstem)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 22px 0}
+.pgrid.tight{margin-top:8px}
+.ptile{background:var(--pcard);border:1px solid var(--phair);border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:12px;min-height:100px}
+.pbadge{width:26px;height:26px;border-radius:50%;background:var(--ppurplebg);color:var(--ppurple);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;flex:0 0 auto}
+.ptile .txt{font-size:13.5px;color:var(--ptext);line-height:1.3}
+.pskiprow{display:flex;justify-content:center;margin:22px 0 0}
+.pskip{height:38px;border-radius:19px;background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--pdim);font-family:var(--mono);font-size:11.5px;letter-spacing:1px;display:inline-flex;align-items:center;padding:0 16px}
+.pmenu{position:absolute;top:100px;right:20px;width:196px;background:#1E1F23;border:1px solid var(--phair);border-radius:16px;padding:6px;box-shadow:0 16px 34px rgba(0,0,0,.55);z-index:5}
+.pmenu .mi{display:flex;align-items:center;gap:10px;padding:11px 10px;font-size:12.5px;color:var(--ptext)}
+.pmenu .mi svg{width:15px;height:15px;color:var(--pdim);flex:0 0 auto}
+.pmenu .mi+.mi{border-top:1px solid var(--phair)}
+.pbanner{position:relative;overflow:hidden;margin:16px 20px 0;border-radius:16px;background:rgba(20,184,166,.10);border:1px solid rgba(20,184,166,.35);padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.pbanner.slim{align-items:center;padding:9px 14px;border-radius:16px 16px 6px 6px}
+.pbanner .fill{position:absolute;inset:0;width:60%;background:rgba(20,184,166,.2);z-index:0}
+.pbanner>*:not(.fill){position:relative;z-index:1}
+.pbanner svg.clock{width:16px;height:16px;color:var(--pteal);flex:0 0 auto;margin-top:2px}
+.pbanner.slim svg.clock{margin-top:0}
+.pbanner .btxt{flex:1 1 auto;min-width:0}
+.pbanner .l1{font-family:var(--mono);font-size:10.5px;letter-spacing:1.2px;color:var(--pteal);font-weight:700}
+.pbanner .l2{font-size:12.5px;color:var(--ptext);margin-top:3px}
+.pbanner .x{width:18px;height:18px;color:var(--pdim);flex:0 0 auto}
+.sheetbase{filter:blur(2.5px) brightness(.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#17181B;border-radius:28px 28px 0 0;border:1px solid var(--phair);padding:22px 20px 28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -14px 34px rgba(0,0,0,.55)}
+.sheet .stitle{font-family:var(--display);font-size:22px;color:var(--ptext);text-transform:uppercase}
+.transcript{border:1.5px solid var(--ppink);border-radius:16px;padding:16px;background:rgba(255,61,143,.07);color:var(--ptext);font-size:16px;font-weight:600}
+.sbtn{height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:700}
+.sbtn svg{width:16px;height:16px}
+.sbtn.prim{position:relative;overflow:hidden;background:var(--ppink);color:#fff}
+.sbtn.prim .fill{position:absolute;inset:0;width:58%;background:var(--ppinkDeep);opacity:.6}
+.sbtn.prim>*:not(.fill){position:relative;z-index:1}
+.sbtn.sec{background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--ptext)}
+.sbtn.ter{background:transparent;color:var(--pdim);height:auto;padding:2px;font-weight:600}
+.disabled45{opacity:.45}
+.spin{width:16px;height:16px;border-radius:50%;border:3px solid rgba(255,255,255,.28);border-top-color:#fff;animation:sp 1s linear infinite;flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* block D — plain icon chips, no phone frame */
+.dicons{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px}
+.dicon{display:flex;flex-direction:column;align-items:center;gap:10px;width:150px}
+.dicon .ci{width:60px;height:60px;border-radius:18px;background:#1B1C1F;border:1px solid rgba(255,255,255,.10);display:grid;place-items:center}
+.dicon .ci svg{width:26px;height:26px;color:#F2F2F2}
+.dicon .cap{font-family:var(--mono);font-size:11px;color:var(--page-dim);text-align:center;letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">#173 · TF feedback 2026-09-07 · MCQ obrazovka — návrhy na výber</p>
+  <h1>Hlavička, banner, vyhodnotenie</h1>
+  <p class="lede">Vizuálny prieskum obrazovky MCQ otázky v <strong>tmavej téme</strong> podľa TestFlight screenshotov: hlavička/toolbar (blok A), banner na premýšľanie (blok B), sheet vyhodnotenia odpovede (blok C) a ikona opakovania otázky (blok D).</p>
+  <p class="meta">TÉMA: TF DARK — BG #111214 · KARTA #1B1C1F · HAIRLINE RGBA(255,255,255,.10) · TEXT #F2F2F2 · DIM #8E8E93 · PINK #FF3D8F · TEAL #14B8A6 · PURPLE #5B4FE6/#2A2550 · 390×844 = 1:1 IOS BODY</p>
+
+  <!-- ============================ BLOK A ============================ -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK A</span><h2>Hlavička: toolbar + kategória + poradie</h2></div>
+    <p class="concept">Tri varianty tej istej info-lišty nad otázkou. Mute a pauza sa presúvajú z pätičky do natívneho toolbaru; rozdiel je len v tom, kde býva kategória a poradie otázky.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>11:18</span><span>•••</span></div>
+          <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+          <div class="pprog"><i></i></div>
+          <div class="pmeta"><span>jedlo a bežný život</span><span class="n">01 / 10</span></div>
+          <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+          <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          <div class="pskiprow"><div class="pskip">» Preskočiť otázku</div></div>
+          <div class="pmenu">
+            <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Nastavenia</div>
+            <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5z"/><path d="M12 8v3.2" stroke-linecap="round"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/></svg>Spätná väzba</div>
+            <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5z"/><path d="M12 7.6l.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>Hodnotiť otázku</div>
+          </div>
+        </div>
+        <figcaption>A1 · natívny toolbar + meta riadok · menu ⋯ otvorené</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>11:18</span><span>•••</span></div>
+          <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="ptitle"><div class="l1">01 / 10</div><div class="l2">Jedlo a bežný život</div></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+          <div class="pprog"><i></i></div>
+          <div class="pquestion" style="margin-top:26px">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+          <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          <div class="pskiprow"><div class="pskip">» Preskočiť otázku</div></div>
+        </div>
+        <figcaption>A2 · titulok v strede (iOS 26 nav title + subtitle)</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>11:18</span><span>•••</span></div>
+          <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+          <div class="pseg"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="psegrow"><span>jedlo a bežný život</span><span>1/10</span></div>
+          <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+          <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          <div class="pskiprow"><div class="pskip">» Preskočiť otázku</div></div>
+        </div>
+        <figcaption>A3 · segmentový progress (10 dielikov) namiesto linky</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============================ BLOK B ============================ -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK B</span><h2>Banner „Premýšľaj" nad možnosťami</h2></div>
+    <p class="concept">Odpočet na vyslovenie povelu sa presúva z pätičky do tealového bannera nad mriežkou možností; hlavička = A1.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>11:18</span><span>•••</span></div>
+          <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+          <div class="pprog"><i></i></div>
+          <div class="pmeta"><span>jedlo a bežný život</span><span class="n">01 / 10</span></div>
+          <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+          <div class="pbanner"><div class="fill"></div><svg class="clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg><div class="btxt"><div class="l1">PREMÝŠĽAJ — POČÚVAM O 35 S •••</div><div class="l2">Povedz „štart“ alebo „preskoč“</div></div><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" opacity=".5"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></svg></div>
+          <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          <div class="pskiprow"><div class="pskip">» Preskočiť otázku</div></div>
+        </div>
+        <figcaption>B1 · dvojriadkový banner, výplň uteká, ✕ na zrušenie počúvania</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sb"><span>11:18</span><span>•••</span></div>
+          <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+          <div class="pprog"><i></i></div>
+          <div class="pmeta"><span>jedlo a bežný život</span><span class="n">01 / 10</span></div>
+          <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+          <div class="pbanner slim"><div class="fill"></div><svg class="clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg><div class="btxt l1">PREMÝŠĽAJ · 35 S — povedz „štart“ alebo „preskoč“</div><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" opacity=".5"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></svg></div>
+          <div class="pgrid tight"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          <div class="pskiprow"><div class="pskip">» Preskočiť otázku</div></div>
+        </div>
+        <figcaption>B2 · jednoriadkový prúžok prisadnutý na mriežku možností</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============================ BLOK C ============================ -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK C</span><h2>Vyhodnocujem v tlačidle</h2></div>
+    <p class="concept">Sheet potvrdenia odpovede nad stlmenou otázkou; primárne tlačidlo najprv nesie odpočet, potom stav vyhodnocovania — žiadny overlay cez celú obrazovku.</p>
+    <div class="devices">
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sheetbase">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+            <div class="pprog"><i></i></div>
+            <div class="pmeta"><span>jedlo a bežný život</span><span class="n">01 / 10</span></div>
+            <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+            <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          </div>
+          <div class="sheet">
+            <div class="stitle">Tvoja odpoveď</div>
+            <div class="transcript">A · Štruktúrovanú tapetu</div>
+            <div class="sbtn prim"><div class="fill"></div><span>Potvrdiť · 5 s</span></div>
+            <div class="sbtn sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M6 11a6 6 0 0012 0M12 17v3"/></svg>Nahrať znova</div>
+            <div class="sbtn ter">Upraviť</div>
+          </div>
+        </div>
+        <figcaption>C1 · idle, výplň v primárnom tlačidle uteká</figcaption>
+      </figure>
+
+      <figure class="device">
+        <div class="phone">
+          <div class="sheetbase">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="toolbar"><div class="tchip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="tr"><div class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="20" cy="12" r="2.3"/></svg></div></div></div>
+            <div class="pprog"><i></i></div>
+            <div class="pmeta"><span>jedlo a bežný život</span><span class="n">01 / 10</span></div>
+            <div class="pquestion">Bublinkovú fóliu vynašli v roku 1957 dvaja inžinieri, ktorí vôbec nemysleli na balenie – neúspešne sa pokúšali vytvoriť ktorý výrobok do domácnosti?</div>
+            <div class="pgrid"><div class="ptile"><div class="pbadge">A</div><span class="txt">Štruktúrovanú tapetu</span></div><div class="ptile"><div class="pbadge">B</div><span class="txt">Sprchové závesy</span></div><div class="ptile"><div class="pbadge">C</div><span class="txt">Podložku pod koberec</span></div><div class="ptile"><div class="pbadge">D</div><span class="txt">Izoláciu okien</span></div></div>
+          </div>
+          <div class="sheet">
+            <div class="stitle">Tvoja odpoveď</div>
+            <div class="transcript">A · Štruktúrovanú tapetu</div>
+            <div class="sbtn prim disabled45"><span class="spin"></span><span>Vyhodnocujem…</span></div>
+            <div class="sbtn sec disabled45"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M6 11a6 6 0 0012 0M12 17v3"/></svg>Nahrať znova</div>
+            <div class="sbtn ter disabled45">Upraviť</div>
+          </div>
+        </div>
+        <figcaption>C2 · vyhodnocujem, tlačidlá stlmené na 45 %</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============================ BLOK D ============================ -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK D</span><h2>Ikona „prehrať otázku znova"</h2></div>
+    <p class="concept">Tri kandidáti na tlačidlo opakovania prečítania otázky (dnes chýba).</p>
+    <div class="dicons">
+      <div class="dicon"><div class="ci"><svg viewBox="0 0 24 24" fill="none"><path d="M20 12a8 8 0 1 1-2.3-5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18.6 3.4l-1 3.6 3.7-.7z" fill="currentColor"/></svg></div><span class="cap">arrow.counterclockwise — odporúčané</span></div>
+      <div class="dicon"><div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13a3 3 0 013 3v1"/><path d="M14 5l3 3-3 3"/><path d="M20 16H7a3 3 0 01-3-3v-1"/><path d="M10 19l-3-3 3-3"/></svg></div><span class="cap">repeat — loop režim, nie</span></div>
+      <div class="dicon"><div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l5 4V6L6 10H3z" fill="currentColor" stroke="none"/><path d="M14.5 9a4 4 0 010 6"/><path d="M17 6.5a8 8 0 010 11"/></svg></div><span class="cap">speaker.wave.2 — kolízia s mute</span></div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

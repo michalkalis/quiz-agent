@@ -106,12 +106,6 @@ extension SilenceDetectionService {
         audioEngine = engine
 
         let inputNode = engine.inputNode
-        if !voiceProcessingUnsupported {
-            configureVoiceProcessing(on: inputNode)
-        }
-
-        // Read the format AFTER voice processing: enabling VPIO changes the input
-        // node's output format, so this must not be hoisted above the call.
         var inputFormat = inputNode.outputFormat(forBus: 0)
 
         // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
@@ -228,36 +222,16 @@ extension SilenceDetectionService {
         do {
             try engine.start()
         } catch {
-            // Enabling voice processing on the input node also enables it on this
-            // engine's unconnected OUTPUT node, which the engine can reject. If that
-            // is what happened, losing voice commands outright would be strictly
-            // worse than the dirty mic we set out to fix — so retry ONCE with voice
-            // processing disarmed rather than inferring the cause from
-            // `isVoiceProcessingEnabled`, which is true on essentially every attempt
-            // and would latch echo cancellation off process-wide on any unrelated
-            // failure (see retryStartWithoutVoiceProcessing).
-            guard retryStartWithoutVoiceProcessing(
-                engine, inputNode: inputNode, analyzerFormat: analyzerFormat, continuation: continuation
-            ) else {
-                // #105: was console-only (Logger.voice.error), invisible to
-                // Sentry and the Settings Status row — fail loud like the other
-                // command-listener failure branches.
-                markCommandsUnavailable(
-                    reason: "Command listener: engine start failed (voiceProcessing: \(inputNode.isVoiceProcessingEnabled), vpRetry: failed)"
-                )
-                cleanupAfterStartFailure()
-                return
-            }
-            // The retry succeeding is the PROOF that VPIO was the blocker: latch
-            // the capability off so the next window (re-armed on the very next
-            // TTS/recording transition) comes back with an unprocessed mic instead
-            // of paying for this retry every time.
-            voiceProcessingUnsupported = true
-            SentryLog.warn(
-                "voice processing rejected by engine — recovered without it",
-                category: .voice,
-                attributes: ["error": error.localizedDescription]
+            // #105: was console-only (Logger.voice.error), invisible to Sentry
+            // and the Settings Status row — fail loud like the other
+            // command-listener failure branches. #173 removed the one-shot
+            // retry that used to sit here: it only ever rescued starts that
+            // arming VPIO had broken, and VPIO is no longer armed at all.
+            markCommandsUnavailable(
+                reason: "Command listener: engine start failed (\(error.localizedDescription))"
             )
+            cleanupAfterStartFailure()
+            return
         }
 
         Logger.voice.info("🔇 SilenceDetection: listening started")
@@ -268,16 +242,14 @@ extension SilenceDetectionService {
         // build-33 field data could not close: the compatible analyzer formats are
         // [8000, 16000] Hz, so a Bluetooth HFP route at 8 kHz is silently ACCEPTED
         // and degrades recognition quietly, and we have never confirmed which mic
-        // the founder's car actually uses — nor whether voice processing survived
-        // on it. Engine + locale tags ride on every voice event via
-        // VoiceTelemetryContext (#120).
+        // the founder's car actually uses. Engine + locale tags ride on every
+        // voice event via VoiceTelemetryContext (#120).
         SentryLog.info(
             "voice command listener started",
             category: .voice,
             attributes: [
                 "inputPort": AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none",
                 "inputHz": inputFormat.sampleRate,
-                "voiceProcessing": inputNode.isVoiceProcessingEnabled,
             ]
         )
     }

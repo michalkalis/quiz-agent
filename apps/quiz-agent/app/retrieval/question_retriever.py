@@ -63,6 +63,39 @@ class QuestionRetriever:
         """Count questions, optionally filtered by metadata."""
         return await self._store.count(filters=filters)
 
+    async def count_available(
+        self,
+        session: QuizSession,
+        client_excluded_ids: Optional[List[str]] = None,
+    ) -> int:
+        """How many unseen questions this session could still be served.
+
+        The number is only useful if it is the number `get_next_question` can
+        actually deliver, so it is built from the SAME `_build_metadata_filters`
+        the serve path uses — never a hand-rolled copy that can drift from the
+        category / language / review-status / pack_id constraints.
+
+        Difficulty is dropped on purpose: `_fallback_retrieval` step 3 relaxes
+        exactly that key before giving up, so a question of another difficulty
+        IS served rather than ending the quiz. Counting with difficulty pinned
+        would under-report and stop a quiz that could have continued.
+        """
+        filters = self._build_metadata_filters(session.current_difficulty, session)
+        filters.pop("difficulty", None)
+
+        excluded_ids = list(
+            set(
+                list(client_excluded_ids or [])
+                + session.asked_question_ids
+                + session.client_excluded_ids
+            )
+        )
+        return await self._store.count(
+            filters=filters,
+            excluded_ids=excluded_ids,
+            servable_only=True,
+        )
+
     async def get_next_question(
         self,
         session: QuizSession,

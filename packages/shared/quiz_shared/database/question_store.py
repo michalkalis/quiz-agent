@@ -35,7 +35,12 @@ class QuestionStore(Protocol):
         n_results: int = 10,
         excluded_ids: Optional[List[str]] = None,
     ) -> List[Question]: ...
-    def count(self, filters: Optional[Dict[str, Any]] = None) -> int: ...
+    def count(
+        self,
+        filters: Optional[Dict[str, Any]] = None,
+        excluded_ids: Optional[List[str]] = None,
+        servable_only: bool = False,
+    ) -> int: ...
     def get_all(self, limit: int = 1000) -> List[Question]: ...
     def find_duplicates(
         self, question_text: str, threshold: float = 0.85

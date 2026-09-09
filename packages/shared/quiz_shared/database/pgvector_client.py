@@ -41,6 +41,7 @@ from sqlalchemy import (
     Text,
     delete,
     func,
+    or_,
     select,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -235,10 +236,43 @@ class PgvectorQuestionStore:
             row = result.mappings().first()
             return _row_to_question(row) if row else None
 
-    async def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
+    async def count(
+        self,
+        filters: Optional[Dict[str, Any]] = None,
+        excluded_ids: Optional[List[str]] = None,
+        servable_only: bool = False,
+    ) -> int:
+        """Count questions matching ``filters``.
+
+        ``excluded_ids`` mirrors ``search``'s parameter of the same name, so a
+        caller can ask "how many rows would a search with this history still
+        return" in one COUNT instead of paging rows out.
+
+        ``servable_only`` adds the two constraints ``search`` and its callers
+        impose but that no filter key can express: a non-NULL ``embedding`` (a
+        semantic search orders by cosine distance and skips embedding-less
+        rows) and an unexpired ``expires_at`` (``QuestionRetriever`` drops
+        ``is_expired()`` candidates in Python). Without them an availability
+        count over-reports what can actually be served (#174 finding 1).
+        """
         stmt = select(func.count()).select_from(questions_table)
         for clause in _build_where(filters or {}):
             stmt = stmt.where(clause)
+
+        if excluded_ids:
+            excluded_uuids = [_coerce_uuid(x) for x in excluded_ids]
+            excluded_uuids = [u for u in excluded_uuids if u is not None]
+            if excluded_uuids:
+                stmt = stmt.where(~questions_table.c.id.in_(excluded_uuids))
+
+        if servable_only:
+            stmt = stmt.where(questions_table.c.embedding.is_not(None)).where(
+                or_(
+                    questions_table.c.expires_at.is_(None),
+                    questions_table.c.expires_at > func.now(),
+                )
+            )
+
         async with self._session_factory() as session:
             result = await session.execute(stmt)
             return int(result.scalar_one())

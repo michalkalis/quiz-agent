@@ -1,4 +1,4 @@
-"""Miscellaneous endpoints: ElevenLabs tokens, usage/freemium, health."""
+"""Miscellaneous endpoints: ElevenLabs tokens, usage/freemium, availability, health."""
 
 import asyncio
 import os
@@ -10,13 +10,18 @@ from sqlalchemy import text
 from ...auth.identity import AuthSubject
 from ..deps import (
     ElevenLabsTokenResponse,
+    QuestionAvailabilityRequest,
+    QuestionAvailabilityResponse,
     UsageResponse,
     get_auth_sessionmaker,
+    get_question_retriever,
     get_usage_tracker,
     require_auth_or_grace,
 )
+from ...retrieval.question_retriever import QuestionRetriever
 from ...usage.tracker import UsageTracker
 from ...rate_limit import limiter
+from quiz_shared.models.session import QuizSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -95,6 +100,56 @@ async def get_usage(
     if not subject.subject_id:
         raise HTTPException(status_code=401, detail="Authentication required")
     return await usage_tracker.get_usage(subject.subject_id)
+
+
+# Corpus availability (pre-flight)
+
+
+@router.post("/questions/availability", response_model=QuestionAvailabilityResponse)
+@limiter.limit("20/minute")
+async def get_question_availability(
+    request: Request,
+    body: QuestionAvailabilityRequest,
+    question_retriever: QuestionRetriever = Depends(get_question_retriever),
+    _subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """How many unseen questions this configuration still has (#174 finding 1).
+
+    A 10-question quiz that ended after 3 is the bug this exists to prevent: the
+    retriever ran out of unseen questions and `flow.process_answer` silently
+    finished the session. The client now asks first and can offer a shorter set
+    or a history reset instead of promising a length it cannot deliver.
+
+    Read-only and cheap on purpose — one COUNT, no embedding call, no LLM — so
+    it can sit on the tap-to-start path of the quiz hot path.
+    """
+    # A throwaway session is the input `_build_metadata_filters` takes, and
+    # routing through it is what keeps this count honest: the eligibility can
+    # never drift from what the retriever actually serves with. Not persisted.
+    probe = QuizSession(
+        session_id="availability-probe",
+        max_questions=body.requested_count,
+        current_difficulty=body.difficulty,
+        language=body.language,
+        include_images=body.include_images,
+        category=body.category,
+        preferred_categories=body.categories
+        or ([body.category] if body.category else []),
+    )
+    # Same header contract as session creation: TestFlight installs may also see
+    # pending_review questions, so their count must include them or the alert
+    # would under-report against the corpus they will be served from.
+    if request.headers.get("X-Build-Channel") == "testflight":
+        probe.build_channel = "testflight"
+
+    available = await question_retriever.count_available(
+        probe, client_excluded_ids=body.excluded_question_ids
+    )
+    return QuestionAvailabilityResponse(
+        available=available,
+        requested=body.requested_count,
+        sufficient=available >= body.requested_count,
+    )
 
 
 # Health

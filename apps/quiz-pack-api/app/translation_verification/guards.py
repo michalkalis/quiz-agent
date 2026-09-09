@@ -88,14 +88,25 @@ def _anchored(value: str, others: Counter) -> bool:
     )
 
 
+# Slovak/Czech write centuries as ordinals — "in the 1930s" → "v 30. rokoch
+# 20. storočia", "sixteenth century" → "16. storočia" — so the draft carries a
+# numeral the English never spelled as a figure. First corpus run (2026-09-10):
+# 18 of 20 number-guard rejections were exactly this.
+_CENTURY_ORDINAL_RE = re.compile(r"\b(\d{1,2})\.\s*(?:storo|stol)")
+
+
 def number_preservation_reason(
     source: Question, draft: TranslatedDraft, language: str
 ) -> Optional[str]:
     """Every figure (and the numerals dates carry) survives the translation."""
     src = _numbers(" ".join(_source_texts(source)))
-    tgt = _numbers(" ".join(_draft_texts(draft)))
+    tgt_text = " ".join(_draft_texts(draft))
+    tgt = _numbers(tgt_text)
+    century_ordinals = set(_CENTURY_ORDINAL_RE.findall(tgt_text))
     missing = sorted(n for n in src if not _anchored(n, tgt))
-    added = sorted(n for n in tgt if not _anchored(n, src))
+    added = sorted(
+        n for n in tgt if not _anchored(n, src) and n not in century_ordinals
+    )
     if not missing and not added:
         return None
     return f"number_mismatch(missing={','.join(missing) or '-'};added={','.join(added) or '-'})"

@@ -75,6 +75,18 @@ def test_number_guard_flags_a_year_that_changed_in_translation() -> None:
     assert reason is not None and "1969" in reason
 
 
+def test_number_guard_allows_a_century_ordinal_the_idiom_requires() -> None:
+    # "the 1930s" is "v 30. rokoch 20. storočia": the 20 is the idiom, not an
+    # invented figure. A genuinely new figure still blocks.
+    source = _question(question="When the dam was built in the 1930s, how long did it take?")
+    draft = _draft(question="Keď sa priehrada stavala v 30. rokoch 20. storočia, ako dlho to trvalo?")
+    assert number_preservation_reason(source, draft, "sk") is None
+    czech = _draft(question="Když se přehrada stavěla ve 30. letech 20. století, jak dlouho to trvalo?")
+    assert number_preservation_reason(source, czech, "cs") is None
+    invented = _draft(question="Keď sa priehrada stavala v 30. rokoch, trvalo to 5 rokov?")
+    assert "added=5" in (number_preservation_reason(source, invented, "sk") or "")
+
+
 # --- 2. unit preservation ------------------------------------------------------
 
 

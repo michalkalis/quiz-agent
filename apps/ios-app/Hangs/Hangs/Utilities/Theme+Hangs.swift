@@ -17,6 +17,11 @@ extension Theme {
             static let bg = Color(light: "#F6F7F9", dark: "#161616") // page bg
             static let bgCard = Color(light: "#FFFFFF", dark: "#1F1F22") // white card
             static let bgElevated = Color(light: "#FFFFFF", dark: "#2A2A2A") // bg-elevated
+            // #174 A1: modal sheet surface. MUST stay distinct from `bg` — a sheet
+            // painted in the page colour reads as part of the screen, which is the
+            // founder's 2026-09-08 report. Lighter than `bg` in dark mode (HIG:
+            // a sheet is an elevated plane), lighter than the page in light mode.
+            static let bgSheet = Color(light: "#FFFFFF", dark: "#1C1D22") // sheet surface
 
             static let ink = Color(light: "#0E1A2B", dark: "#F4F4F4") // primary text
             static let pink = Color(hex: "#FF3D8F") // brand accent / primary CTA (both modes)

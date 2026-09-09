@@ -24,18 +24,30 @@
 - **Skutočná chyba poradia (follow-up do #173):** `startRecording` nastaví dead-air poistku pred nábehom enginu (`RecordingCoordinator+Capture.swift`); pri pomalom handshaku vystrelí v medzere, stav spadne na `askingQuestion` a znovu nastavená poistka sa vetuje vlastným guardom → mikrofón ostane otvorený bez limitu. V produkcii zriedkavé (15 s), v testoch so sub-sekundovou poistkou bežné.
 - Sentry prostredie `staging` + `browser: Hangs 57` = spoľahlivý spôsob, ako zistiť, proti čomu build beží.
 
+## Founder rozhodnutia (2026-09-09)
+
+- **A1** zdvihnutý povrch sheetu, **bez úchytky** (sheet sa nedá zavrieť ťahom), stmavenie pozadia; pauza v toolbare pod sheetom ostáva klikateľná.
+- **B1** vertikálny footer: primárne na celú šírku, „Nahrať znova“ pod ním ako textové.
+- **C2** adaptívne možnosti: mriežka 2×2 len keď sú všetky ≤ 24 znakov, inak zoznam.
+- **D** namiesto D1/D2: pri štarte kvízu kontrola dostupných otázok; ak je ich menej než požadované → alert „Nie je dosť otázok“ s voľbami *Začať s N* / *Resetovať videné* / *Zrušiť*. Uprostred kvízu sa nič nemení.
+- ElevenLabs: chyba `quota_exceeded` bola zo **staging** kľúča; founderov účet má kredity (API: 5 207/10 000, free tier). Prod kľúč nebolo možné porovnať digestom.
+- **Hlasové povely = názvy tlačidiel (founder 2026-09-09):** rozkazovací tvar, nie neurčitok: **Štart** (doma aj na otázke namiesto Nahrávať), **Preskoč** (textové namiesto ikony), **Potvrď**, **Znova** (namiesto Nahrať znova), **Zruš**, **Ďalej** (namiesto Ďalšia otázka), **Pauza**. Slovník prijme aj tieto tvary. Hlasovo ovládateľné tlačidlá dostanú malý mikrofónový glyf.
+- **Nápovedy (founder 2026-09-09):** bannery s frázami zmiznú (tlačidlá sú nápoveda), v banneri ostane len stav/odpočet. Nápovedy sa zobrazujú prvých 5 dokončených kvízov, potom sa automaticky skryjú; v Nastaveniach prepínač „Hlasové nápovedy“ (vypnúť/zapnúť), zapnutie v Nastaveniach = natrvalo.
+- **České hlasové povely:** treba, samostatné issue #175 — České hlasové povely (mimo tejto session).
+
 ## Úlohy
 
 - [x] E — overlay preč; ťuknutá dlaždica = spinner namiesto písmena, ostatné stlmené; Preskočiť = spinner namiesto ikony (label sa nemení)
 - [x] `/testflight` default → production
 - [x] HTML varianty A/B/C/D + otázka D2
-- [ ] Founder: výber A / B / C / D2
-- [ ] A — sheet: povrch, úchytka, stmavenie podľa výberu
-- [ ] B — tlačidlo bez skoku podľa výberu
-- [ ] C — layout možností podľa výberu (+ Pencil sync)
-- [ ] D1 — backend `finish_reason: corpus_exhausted` v odpovedi + výsledková obrazovka s vysvetlením a akciou
-- [ ] D2 — fallback v `_fallback_retrieval` podľa výberu (iná kategória / uvoľniť najstaršie videné / nič)
-- [ ] Founder: ElevenLabs kredity
+- [x] Founder: výber A1 / B1 / C2 / D-alert (2026-09-09)
+- [x] A1 + B1 + C2 — vetva `feat/174-sheet-button-options`
+- [ ] D — availability check pri štarte + alert — vetva `feat/174-corpus-precheck`
+- [ ] Pencil sync (sheet, footer, zoznam možností) po TF potvrdení
+- [x] ElevenLabs: nie je problém (staging kľúč)
+- [ ] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf (ďalšia session; sk + en, cs spolu s #175)
+- [ ] Nápovedy: banner len stav, auto-skrytie po 5 kvízoch, prepínač v Nastaveniach (ďalšia session)
+- [ ] #175 — České hlasové povely (samostatné issue)
 - [ ] Dead-air poistka: nastaviť až po nábehu enginu (viď Vedľajšie zistenia)
 - [ ] Founder: TF kontrola prod buildu (možnosti sa čítajú, 10 otázok, #173 položky)
 

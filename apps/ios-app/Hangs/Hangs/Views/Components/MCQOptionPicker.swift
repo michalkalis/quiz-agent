@@ -77,21 +77,35 @@ struct MCQOptionPicker: View {
     /// grid uses `AnswerTile`'s own 88/76pt floor, not this.)
     var optionMinHeight: CGFloat { options.count == 2 ? 80 : 64 }
 
-    /// #125 Variant A: 2×2 letter tiles for 4 options, full-width rows for the
-    /// 2-option T/F variant (locked decision — the grid is for 4 options only).
+    /// #174 C2: the longest option a half-width tile can hold at full size.
+    /// Above it the grid shrinks and ellipsises the text (HIG calls a truncated
+    /// label an error state) — Slovak options run 6–10 words routinely.
+    static let gridMaxOptionLength = 24
+
+    /// #125 Variant A gave 4 options a 2×2 grid unconditionally. #174 C2 makes
+    /// that conditional on the text fitting: EVERY option short → grid, otherwise
+    /// the full-width rows. The 2-option T/F variant stays on rows either way
+    /// (locked #125 decision — the grid is for 4 options only).
+    var usesGrid: Bool {
+        options.count != 2 && options.allSatisfy { $0.value.count <= Self.gridMaxOptionLength }
+    }
+
     @ViewBuilder
     var body: some View {
-        if options.count == 2 {
-            twoOptionRows
-        } else {
+        if usesGrid {
             optionGrid
+        } else {
+            optionRows
         }
     }
 
-    /// Full-width AnswerOption rows — the untouched T/F path. The `.onChange`
-    /// stays on THIS VStack (the tap/voice race wiring the 54.16 tests drive).
-    private var twoOptionRows: some View {
-        VStack(spacing: Theme.Hangs.Spacing.sm) {
+    /// Full-width AnswerOption rows — the T/F path, and now the long-option path
+    /// too. The `.onChange` stays on THIS VStack (the tap/voice race wiring the
+    /// 54.16 tests drive).
+    private var optionRows: some View {
+        // #174 C2: this path now carries four rows, not just the T/F pair — a
+        // short container tightens the gaps so they still fit above the fold.
+        VStack(spacing: compact ? Theme.Hangs.Spacing.xs : Theme.Hangs.Spacing.sm) {
             ForEach(options, id: \.key) { option in
                 AnswerOption(
                     key: option.key,

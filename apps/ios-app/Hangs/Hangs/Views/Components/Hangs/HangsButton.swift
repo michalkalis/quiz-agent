@@ -171,8 +171,8 @@ struct HangsGhostButton: View {
 #if DEBUG
 #Preview {
     VStack(spacing: 12) {
-        HangsPrimaryButton(title: "Start Quiz", icon: "play.fill") {}
-        HangsPrimaryButton(title: "Next question", trailingIcon: "arrow.right") {}
+        HangsPrimaryButton(title: "Start", icon: "play.fill") {}
+        HangsPrimaryButton(title: "Next", trailingIcon: "arrow.right") {}
         HangsPrimaryButton(title: "Confirm", icon: "checkmark", countdownSecondsRemaining: 3, countdownTotal: 10) {}
         HangsSecondaryButton(title: "Home", icon: "house.fill") {}
         HangsGhostButton(title: "Why is this correct?", icon: "book.closed") {}

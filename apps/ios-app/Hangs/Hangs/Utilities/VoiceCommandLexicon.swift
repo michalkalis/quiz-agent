@@ -19,6 +19,12 @@
 //  deliberately FILLER — neutralized, never commands. Known residual hazards
 //  are flagged inline; the founder owns the final wording (#120).
 //
+//  #175 added Czech on the same design (mic open to the spoken language →
+//  precision over recall, backchannels are filler). #174 made the on-screen
+//  buttons carry the command words in the imperative (Štart / Preskoč /
+//  Potvrď / Znova / Zruš / Ďalej / Pauza), so the hints below and the button
+//  labels in Localizable.xcstrings must stay word-for-word aligned.
+//
 
 import Foundation
 
@@ -118,6 +124,22 @@ enum VoiceCommandLexicon {
         // discourse particle in either — a rare, multi-syllable noun, which
         // is exactly the disjointness the Slovak set is chosen for.
         case (.slovak, .pause): return ["pauza"]
+        // Czech (#175): "přeskoč" folds to "preskoc", "potvrď" to "potvrd",
+        // "dál"/"dále" to "dal"/"dale" — the same folding the Slovak set relies
+        // on, so the edit-distance floors behave identically.
+        case (.czech, .start): return ["start"]
+        // Same hazard as Slovak "ok" (conversational) — same bounded exposure.
+        case (.czech, .ok): return ["ok", "okej", "oukej", "potvrd"]
+        // ⚠️ FLAGGED HAZARD (#175): "dal" is also the Czech past tense of "dát"
+        // ("he gave"), a frequent conversational word. Accepted for the same
+        // reason as Slovak "ďalej": result-screen-only and benign (advance was
+        // coming anyway). "dále" is the formal form, "dál" the spoken one.
+        case (.czech, .next): return ["dal", "dale", "pokracuj"]
+        case (.czech, .again): return ["znovu", "znova"]
+        case (.czech, .repeatQuestion): return ["zopakuj", "opakuj"]
+        case (.czech, .skip): return ["preskoc", "vynech"]
+        case (.czech, .stop): return ["stop", "zrus"]
+        case (.czech, .pause): return ["pauza"]
         }
     }
 
@@ -148,73 +170,14 @@ enum VoiceCommandLexicon {
                 "no", "tak", "takze", "teda", "proste", "prosim", "len", "este",
                 "aha", "hej", "ano", "jasne", "dobre",
             ]
-        }
-    }
-
-    /// Canonical spoken spelling of a command, for display (diagnostics + the
-    /// listening indicator). NOT the matcher input — matching uses `variants`.
-    /// Slovak forms carry their real diacritics (display, not matching).
-    static func spokenWord(
-        _ command: VoiceCommand,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
-    ) -> String {
-        switch (language, command) {
-        case (.english, .start): return "start"
-        case (.english, .ok): return "ok"
-        case (.english, .next): return "next"
-        case (.english, .again): return "again"
-        case (.english, .repeatQuestion): return "repeat"
-        case (.english, .skip): return "skip"
-        case (.english, .stop): return "stop"
-        case (.english, .pause): return "pause"
-        case (.slovak, .start): return "štart"
-        case (.slovak, .ok): return "potvrď"
-        case (.slovak, .next): return "ďalej"
-        case (.slovak, .again): return "znova"
-        case (.slovak, .repeatQuestion): return "zopakuj"
-        case (.slovak, .skip): return "preskoč"
-        case (.slovak, .stop): return "stop"
-        case (.slovak, .pause): return "pauza"
-        }
-    }
-
-    /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
-    /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
-    /// commands. #105: the question screen must advertise "start" — it is what
-    /// begins answer recording. Rendered in the COMMAND language (#120), which
-    /// is independent of the app/quiz language.
-    static func hint(
-        on screen: VoiceCommandScreen,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
-    ) -> String {
-        switch (language, screen) {
-        case (.english, .home): return #"Say "start""#
-        case (.english, .question): return #"Say "start" or "skip""#
-        case (.english, .confirmation): return #"Say "ok", "again" or "stop""#
-        case (.english, .result): return #"Say "next""#
-        case (.slovak, .home): return #"Povedz „štart""#
-        case (.slovak, .question): return #"Povedz „štart" alebo „preskoč""#
-        case (.slovak, .confirmation): return #"Povedz „potvrď", „znova" alebo „stop""#
-        case (.slovak, .result): return #"Povedz „ďalej""#
-        }
-    }
-
-    /// Caption for the on-screen listening indicator, in the COMMAND language
-    /// (#120 rule — same as `hint(on:language:)`; #122 closes the gap for the
-    /// caption itself, which was hardcoded English). Deliberately NOT in
-    /// Localizable.xcstrings: it must track the command-engine language, not
-    /// the app locale.
-    /// `short` is the slim-bar form (#131 Track F): a 40pt one-row bar cannot
-    /// carry the full sentence AND the words to say, and the words matter more.
-    static func listeningCaption(
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage,
-        short: Bool = false
-    ) -> String {
-        switch (language, short) {
-        case (.english, false): return "LISTENING FOR COMMANDS"
-        case (.english, true): return "LISTENING"
-        case (.slovak, false): return "POČÚVAM PRÍKAZY"
-        case (.slovak, true): return "POČÚVAM"
+        case .czech:
+            // "jo" is THE Czech backchannel ("yeah"); "ano"/"dobře"/"jasně" as
+            // in Slovak. Neutralized so "jo" can never confirm an answer.
+            return [
+                "um", "uh", "ehm", "eh", "hmm", "hm",
+                "no", "tak", "takze", "tedy", "teda", "proste", "prosim", "jen", "jeste",
+                "aha", "jo", "ano", "jasne", "dobre",
+            ]
         }
     }
 
@@ -233,6 +196,7 @@ enum VoiceCommandLexicon {
         switch language {
         case .english: looseNoWords = ["no", "know"]
         case .slovak: looseNoWords = ["nie", "no"]
+        case .czech: looseNoWords = ["ne", "no"]
         }
         return Set(
             cancelWords.flatMap { variants(for: $0, language: language) } + looseNoWords
@@ -261,6 +225,11 @@ enum VoiceCommandLexicon {
             return [
                 "štart", "ok", "okej", "potvrď", "ďalej", "pokračuj",
                 "znova", "znovu", "zopakuj", "opakuj", "preskoč", "vynechaj", "stop", "zruš", "pauza",
+            ]
+        case .czech:
+            return [
+                "start", "ok", "okej", "potvrď", "dál", "dále", "pokračuj",
+                "znovu", "znova", "zopakuj", "opakuj", "přeskoč", "vynech", "stop", "zruš", "pauza",
             ]
         }
     }

@@ -61,7 +61,7 @@ extension RecordingCoordinator {
                             self.audioService.stopStreamingRecording()
                             self.setIsAutoRecording(false)
                             self.speechDetectedDuringAutoRecord = false
-                            self.setErrorMessage(String(localized: "Connection lost. Tap Record to try again.", comment: "Inline error when the streaming connection drops mid-recording"))
+                            self.setErrorMessage(String(localized: "Connection lost. Tap Start to try again.", comment: "Inline error when the streaming connection drops mid-recording"))
                             self.transition(to: .askingQuestion)
                         }
                     }

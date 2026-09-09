@@ -42,7 +42,7 @@ struct ResultFooter: View {
                 // #131 Track D: primary CTA sits LEFT, STAY/RESUME to its right
                 // (founder spec, swapped from the #127 layout).
                 HangsPrimaryButton(
-                    title: "Next question",
+                    title: "Next",
                     icon: nil,
                     trailingIcon: "arrow.right",
                     height: 64,
@@ -52,7 +52,7 @@ struct ResultFooter: View {
                 )
                 .accessibilityLabel(autoAdvanceActive
                     ? Text("Next question, auto-advancing in \(countdownRemaining) seconds", comment: "Accessibility label for the next-question button while auto-advance counts down")
-                    : Text("Next question", comment: "Accessibility label for the next-question button"))
+                    : Text("Next", comment: "Accessibility label for the next-question button"))
                 .accessibilityIdentifier("result.continue")
                 stayPill
             }

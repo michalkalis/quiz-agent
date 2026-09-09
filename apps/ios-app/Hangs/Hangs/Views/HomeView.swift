@@ -113,7 +113,7 @@ struct HomeView: View {
             .accessibilityIdentifier("home.cancelStart")
         } else {
             HangsPrimaryButton(
-                title: "Start Quiz",
+                title: "Start",
                 icon: "play.fill"
             ) {
                 viewModel.beginQuizStart()

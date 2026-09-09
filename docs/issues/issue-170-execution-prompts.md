@@ -344,3 +344,13 @@ THIS IS WHERE THE AGENT RUN ENDS — the founder rates next (170.17) and is the 
 | gate F2 | 170.17 | ⬜ |
 
 When a session lands, add a short *"Session X delivered — exact symbols for Y"* note here so the next session imports the real names instead of guessing.
+
+### Session H delivered — exact symbols for Session I
+
+`apps/quiz-pack-api/app/generation/coverage.py` (module only, nothing wired):
+
+- `CoverageAllocator(source: CoverageSource, *, avoid_limit: int = AVOID_LIMIT)` with `async def allocate(language: str, category: str, seed: int) -> CoverageAllocation` — this is what `GenerationStage(coverage_allocator=...)` gets.
+- `CoverageAllocation` (frozen dataclass): `language`, `category`, `subtopic`, `avoid_questions: tuple[str, ...]` — **question texts, already trimmed to ≤ 10** (`AVOID_LIMIT`), so `prompt_builder.py`'s hard `[:10]` cut is a no-op. `subtopic` is what `PersistStage` writes (D4).
+- `PgvectorCoverageSource(database_url: str)` — the live-corpus source `scripts/generate_pack.py` builds (same `DATABASE_URL` idiom as `_build_dedup_store`); reuses `_LIVE_CORPUS_SQL` from the shared pgvector client and runs the D9 `EXPLAIN`/`warn_if_ivfflat` tripwire once per process.
+- `CoverageSource` protocol (`cell_counts`, `recent_questions`) — the seam tests fake.
+- `CoverageUnavailableError` — raised when a category has live rows but none carries a subtopic (B2, missing 170.7 backfill); `KeyError` for a category outside `subtopics.json`. An empty category is *not* an error: it degrades to uniform by construction.

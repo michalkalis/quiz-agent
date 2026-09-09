@@ -22,6 +22,14 @@ Modes
                ``DATABASE_URL`` + the provider keys the worker reads at
                startup. Not exercised in CI.
 
+#170 switches (all default OFF, read from env; ``app/worker/tasks.py`` reads
+none of them, so a customer pack is unaffected by construction):
+``COVERAGE_STEERING`` · ``DEDUP_QA_EMBEDDING`` · ``ANSWER_CAP`` ·
+``DEDUP_GRAYZONE_JUDGE`` · ``DEDUP_STRICTNESS_PER_CATEGORY``. Coverage
+steering additionally needs ``--dedup-store pgvector`` + ``DATABASE_URL`` and
+only fires on the direct branch (``--direct``); ``--coverage-seed`` pins the
+cell draw.
+
 Per memory ``feedback_qgen_import_cwd``: run from ``apps/quiz-pack-api/``
 so ``app.*`` and ``quiz_shared`` resolve from this repo's workspace setup.
 
@@ -65,7 +73,6 @@ from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
     AnswerabilityStage,
     CompositionStage,
-    DedupStage,
     GenerationStage,
     PersistStage,
     ScoringStage,
@@ -74,6 +81,10 @@ from app.orchestrator.stages import (
     VerificationStage,
 )
 from app.orchestrator.stages.dedup import AsyncDuplicateFinder
+
+# #170 D5/D6 — the #170 switch composition has ONE definition (170.14b); the
+# replay harness owns it so a corpus run and its replay cannot drift apart.
+from scripts.replay_dedup_json import build_dedup_stage, build_strictness
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 
@@ -213,6 +224,29 @@ def _build_dedup_store(name: str) -> AsyncDuplicateFinder:
     return _NoopQuestionStore()
 
 
+def _build_coverage_allocator(dedup_store_name: str):
+    """#170 170.13 — the coverage allocator, or `None` when the flag is OFF.
+
+    Fail-loud on the noop store: `COVERAGE_STEERING=1` without the live corpus
+    would produce a uniform draw over a map that has seen nothing, i.e. it
+    would report "steering" while steering nothing.
+    """
+    from app import feature_flags
+
+    if not feature_flags.coverage_steering():
+        return None
+    from app.generation.coverage import CoverageAllocator, PgvectorCoverageSource
+
+    url = os.environ.get("DATABASE_URL")
+    if dedup_store_name != "pgvector" or not url:
+        raise SystemExit(
+            "COVERAGE_STEERING=1 requires --dedup-store pgvector and DATABASE_URL: "
+            "the coverage map reads the live corpus, and against the noop store "
+            "it would silently steer nothing."
+        )
+    return CoverageAllocator(PgvectorCoverageSource(url))
+
+
 class _FactsFileSourcingStage:
     """Stands in for SourcingStage when ``--facts-file`` is given (#153).
 
@@ -261,6 +295,8 @@ def _build_stages(
     forced_topics: list[str] | None = None,
     facts_file: str | None = None,
     per_topic_cap: int | None = None,
+    coverage_allocator=None,
+    coverage_seed: int | None = None,
 ) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode.
 
@@ -278,6 +314,13 @@ def _build_stages(
     ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
     (#167); ``None`` keeps today's scaled default, so the worker/API path —
     which never sets it — stays byte-identical.
+
+    #170 D5 — this is the ONLY place the four #170 constructor parameters get
+    filled: ``coverage_allocator`` (170.13) plus the ``strictness`` /
+    ``qa_embedding`` / ``grayzone_judge`` trio composed from env by
+    ``replay_dedup_json.build_dedup_stage`` (imported, never forked, so a CLI
+    run and its replay read the same switches). ``app/worker/tasks.py`` reads
+    none of them, so a mis-set prod secret cannot reach a customer pack.
     """
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -317,6 +360,9 @@ def _build_stages(
         ),
         # #160 — answer-blind auditor of the logical_puzzle routing marker.
         shape_classifier=ShapeClassifier(),
+        # #170 170.13 — `None` unless COVERAGE_STEERING is on (worker default).
+        coverage_allocator=coverage_allocator,
+        coverage_seed=coverage_seed,
     )
     # 46.B6 / #169 parity: the logical-consistency judge for lateral puzzles
     # is wired in the worker; without it here a CLI run silently verified
@@ -325,7 +371,10 @@ def _build_stages(
     # #166 D21b parity with `tasks._build_stages`: judges off means
     # `ScoringStage(None)` — deterministic craft + distractor gates still run.
     scoring = ScoringStage(MultiModelScorer() if judges else None)
-    dedup = DedupStage(dedup_store, gold_standard_path=None)
+    # #170 D6 — one strictness object for both stages (the spent-fact filter
+    # and the dedup content check must read the same profile).
+    strictness = build_strictness()
+    dedup = build_dedup_stage(dedup_store, None, strictness)
     composition = CompositionStage(per_topic_cap=per_topic_cap)
     # #135 D10 — early round-trip answerability check between dedup and
     # verification, behind the same flag the worker honours.
@@ -372,6 +421,7 @@ def _build_stages(
             dedup,
             answerability_stage=answerability,
             composition_stage=composition,
+            strictness=strictness,
         ),
     ]
     if persist:
@@ -448,6 +498,8 @@ async def _run(args: argparse.Namespace) -> int:
         ),
         facts_file=args.facts_file,
         per_topic_cap=args.per_topic_cap,
+        coverage_allocator=_build_coverage_allocator(args.dedup_store),
+        coverage_seed=args.coverage_seed,
     )
 
     def _sink_factory(_order_id: str) -> ProgressSink:
@@ -667,6 +719,18 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "target under it, and the top-up loop pays for the full "
             "judge/verify/score pipeline chasing the impossible remainder. "
             "Omit to keep the scaled default."
+        ),
+    )
+    parser.add_argument(
+        "--coverage-seed",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "#170: seed for the COVERAGE_STEERING cell draw. Omit to derive it "
+            "from the order's own prompt seed — deterministic per (prompt, "
+            "language, category, theme), so two arms of one experiment draw "
+            "the same cells. Ignored unless COVERAGE_STEERING=1."
         ),
     )
     parser.add_argument(

@@ -92,15 +92,24 @@ def build_grayzone_judge() -> GrayZoneJudge | None:
     )
 
 
-def build_dedup_stage(
-    store: AsyncDuplicateFinder, gold_standard_path: str | Path | None = None
-) -> DedupStage:
-    """Compose `DedupStage` from the #170 env flags — the one place the corpus
-    CLI and this harness share, so a replay reproduces a run's switches."""
-    strictness = Strictness(
+def build_strictness() -> Strictness:
+    """#170 D6 — the per-category profile from env. `DedupStage` and
+    `TopUpStage` must read the SAME object (the spent-fact filter mirrors the
+    dedup content check), so both callers compose it here."""
+    return Strictness(
         profiles=parse_strictness(feature_flags.dedup_strictness_per_category()),
         answer_cap=feature_flags.answer_cap(),
     )
+
+
+def build_dedup_stage(
+    store: AsyncDuplicateFinder,
+    gold_standard_path: str | Path | None = None,
+    strictness: Strictness | None = None,
+) -> DedupStage:
+    """Compose `DedupStage` from the #170 env flags — the one place the corpus
+    CLI and this harness share, so a replay reproduces a run's switches."""
+    strictness = strictness if strictness is not None else build_strictness()
     return DedupStage(
         store,
         gold_standard_path=gold_standard_path,

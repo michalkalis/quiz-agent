@@ -136,7 +136,11 @@ enum Fixtures {
         id: String = "q_001",
         text: String = "What is 2+2?",
         source: String = "Test Source",
-        correctAnswer _: String = "4"
+        correctAnswer _: String = "4",
+        generatedBy: String? = nil,
+        reviewBadge: String? = nil,
+        translationLanguage: String? = nil,
+        reviewNote: String? = nil
     ) -> Question {
         Question(
             id: id,
@@ -151,7 +155,10 @@ enum Fixtures {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: nil,
-            generatedBy: nil
+            generatedBy: generatedBy,
+            reviewBadge: reviewBadge,
+            translationLanguage: translationLanguage,
+            reviewNote: reviewNote
         )
     }
 

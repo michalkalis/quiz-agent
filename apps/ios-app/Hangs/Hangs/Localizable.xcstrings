@@ -2114,6 +2114,23 @@
         }
       }
     },
+    "EN fallback" : {
+      "comment" : "Review badge (#176, TestFlight only): no translation exists, the English text is being served",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EN fallback"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EN fallback"
+          }
+        }
+      }
+    },
     "Easy" : {
       "comment" : "Quiz difficulty option",
       "localizations" : {
@@ -3959,6 +3976,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meno"
+          }
+        }
+      }
+    },
+    "Needs review" : {
+      "comment" : "Review badge (#176, TestFlight only): the English question is not in the approved state yet",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ke kontrole"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na review"
           }
         }
       }
@@ -7488,6 +7522,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prepis zlyhal: %@"
+          }
+        }
+      }
+    },
+    "Translation · check" : {
+      "comment" : "Review badge (#176, TestFlight only): the translation passed but the judge left a non-critical finding",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Překlad · zkontroluj"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preklad · skontroluj"
+          }
+        }
+      }
+    },
+    "Translation · critical" : {
+      "comment" : "Review badge (#176, TestFlight only): the machine gate refused this translation",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Překlad · kritické"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preklad · kritické"
+          }
+        }
+      }
+    },
+    "Translation · live" : {
+      "comment" : "Review badge (#176, TestFlight only): text translated at serve time, no gate ever saw it",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Překlad · live"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preklad · live"
+          }
+        }
+      }
+    },
+    "Translation · machine" : {
+      "comment" : "Review badge (#176, TestFlight only): the translation passed the machine judge with no finding",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Překlad · stroj"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preklad · stroj"
           }
         }
       }

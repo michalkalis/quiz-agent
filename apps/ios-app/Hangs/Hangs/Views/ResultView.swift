@@ -23,6 +23,10 @@ struct ResultView: View {
     @ObservedObject var viewModel: QuizViewModel
     /// #155 TestFlight-only rating affordance; nil (the default) = no chip.
     var ratingEntry: QuestionRatingEntry?
+    /// #176: whether TestFlight/Debug-only surfaces may render — here the review
+    /// badge (and its note) in the meta row. Plain injected Bool so a test can
+    /// force either build channel.
+    var debugSurfaces: Bool = BuildChannel.debugSurfacesEnabled()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     // Flipped in .onAppear purely to fire the result haptic once — no longer
@@ -63,6 +67,8 @@ struct ResultView: View {
                 ResultMetaRow(
                     userAnswer: metaUserAnswer,
                     sourceDomain: sourceDomain,
+                    reviewBadge: reviewBadge,
+                    reviewNote: reviewNote,
                     onOpenSource: { showSourceWebView = true }
                 )
                 .padding(.horizontal, 24)
@@ -193,6 +199,23 @@ struct ResultView: View {
         let urlString = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
         guard let urlString, let host = URL(string: urlString)?.host else { return nil }
         return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    }
+
+    /// #176: the review badge of the question just answered — TF/Debug only,
+    /// and `resultQuestion` first so a prefetched next question can never label
+    /// the answer on screen.
+    private var reviewBadge: String? {
+        guard debugSurfaces else { return nil }
+        return (viewModel.resultQuestion ?? viewModel.currentQuestion)?.reviewBadge
+    }
+
+    /// The gate's objection, one line. Only ever sent by the backend for the
+    /// flagged/critical states, so no client-side state filter is needed.
+    private var reviewNote: String? {
+        guard debugSurfaces else { return nil }
+        let note = (viewModel.resultQuestion ?? viewModel.currentQuestion)?.reviewNote
+        guard let note, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return note
     }
 
     // MARK: - Footer state

@@ -1,0 +1,12 @@
+09:20:31 finalize: publishing accumulated batches
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+ValueError: invalid literal for int() with base 10: 'ma'
+registered batch 483f2675-d8b4-4f24-b1c7-83f1a6e7dcc3 — 82 questions, 1 arms
+mapping copy: /Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/docs/testing/runs/corpus-session-2026-09-02/night-mapping.json — never send it to a rater
+
+rating URLs:
+  https://quiz-pack-api.fly.dev/web/rate/483f2675-d8b4-4f24-b1c7-83f1a6e7dcc3?rater=michal
+
+Export when the round is done: python export_ratings.py --base-url https://quiz-pack-api.fly.dev
+09:20:50 DONE batches_ok=0 batches_failed=0 questions=82 stop_reason=cutoff

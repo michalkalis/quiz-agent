@@ -1,0 +1,8 @@
+[
+ {
+  "id": "0ecea2ae-ee15-4c54-ae5e-dfe945c8b742",
+  "answer": "Cat",
+  "verdict": "logic_flaw",
+  "note": "\"Dog\" satisfies every clause as well as \"cat\" \u2014 the Anubis catacomb at Saqqara held an estimated 8 million mummified dogs bred at nearby farms for the cult, and dogs were also Egyptian household pets "
+ }
+]

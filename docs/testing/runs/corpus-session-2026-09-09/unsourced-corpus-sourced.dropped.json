@@ -1,0 +1,26 @@
+[
+ {
+  "id": "8d074279-e389-5fd4-b66f-4c9c5fbbd6a9",
+  "answer": "A fungus",
+  "verdict": "stale",
+  "note": "Since the 2022 Shark Bay discovery, Guinness World Records lists the ~200 km2 Posidonia australis seagrass \u2014 a plant \u2014 as the 'Largest living organism', with the Oregon Armillaria demoted to 'Heaviest"
+ },
+ {
+  "id": "c4d308ee-9644-42b5-a271-00cecf0bea9a",
+  "answer": "Sharp corners concentrate stress and crack",
+  "verdict": "fact_error",
+  "note": "The question's premise is a debunked myth: Comet 1 passenger windows were rectangular with rounded corners (like the DC-6/DC-7), the fatigue failure originated at a rivet hole in the corner of an ADF "
+ },
+ {
+  "id": "acfd6f47-21ed-4d08-9ebf-a93ef15c8fd2",
+  "answer": "Thermal expansion",
+  "verdict": "fact_error",
+  "note": "The question's premise is a documented misattribution: the official operator says thermal expansion makes the tower only 'a few millimetres' taller, while the ~15 cm figure describes the horizontal ci"
+ },
+ {
+  "id": "35ac7bae-78b3-431e-a1f8-d11d8d9ad036",
+  "answer": "Venus",
+  "verdict": "logic_flaw",
+  "note": "Ambiguous definition of \"day\": Venus fits only for the sidereal day (243 vs 225 d) since its solar day is just 117 d, while Mercury fits for the solar day (176 d = two 88-day Mercury years) per NASA, "
+ }
+]

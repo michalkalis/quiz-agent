@@ -1,0 +1,822 @@
+{
+  "573f4062-a490-4af0-8358-737eebdba343": {
+    "arm": "night-fixed",
+    "question": "Passenger jets are pressurised, and their cabin windows are always oval or have rounded corners, never square like a house window. Why?",
+    "answer": "Sharp corners concentrate stress and crack",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Rounded corners and oval shapes distribute stress evenly around the window perimeter, preventing dangerous stress concentration at sharp corners that would occur under internal cabin pressure. Square corners would create weak points where cracks could initiate and propagate, risking catastrophic cabin failure."
+    }
+  },
+  "7c9141d0-b7f1-4ba4-b4dc-d7f61636d450": {
+    "arm": "night-fixed",
+    "question": "What comes next in this sequence: 1, 4, 9, 16, 25, ...?",
+    "answer": "36",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "36"
+    }
+  },
+  "1d005c8a-efd7-4f01-9907-64a31572f0d1": {
+    "arm": "night-fixed",
+    "question": "Velcro was invented after a Swiss engineer came home from a walk in the woods and examined what was stuck to his dog's fur. What was it?",
+    "answer": "Burrs",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "burrs"
+    }
+  },
+  "7e9cf519-3881-4411-9a08-e208b698d1ca": {
+    "arm": "night-fixed",
+    "question": "How long would it take to count to one billion, saying one number per second without ever stopping?",
+    "answer": "32 years",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b) 32 years"
+    }
+  },
+  "c4e85ec8-9a21-4586-8ed3-3c38e6d2276c": {
+    "arm": "night-fixed",
+    "question": "Romeo and Juliet lie dead on the floor. Around them is water and broken glass, but there are no wounds and no crime. What happened?",
+    "answer": "They were goldfish",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Romeo and Juliet are goldfish (or pet fish) in a fishbowl. The fishbowl broke, spilling the water, and the fish died from dehydration/being out of water."
+    }
+  },
+  "c2f3ddab-3442-4477-985e-5b17b46d239d": {
+    "arm": "night-fixed",
+    "question": "Name the European country that shares a land border with Brazil.",
+    "answer": "France",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "France"
+    }
+  },
+  "b489971a-124d-4f48-8d7f-f23b1f490eab": {
+    "arm": "night-fixed",
+    "question": "Is a Tyrannosaurus rex closer in time to a Stegosaurus, or to you sitting here today?",
+    "answer": "You today",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "0a539a89-4048-472f-8e7c-e536439a4258": {
+    "arm": "night-fixed",
+    "question": "The world's oldest continuously operating university was founded in the year 859 by a woman named Fatima al-Fihri. In which country is it?",
+    "answer": "Morocco",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Morocco"
+    }
+  },
+  "2b3ba69e-02fc-4768-a4a2-f1eee16cce97": {
+    "arm": "night-fixed",
+    "question": "True or false: millions of years ago, the Amazon River flowed westward, in the opposite direction to today.",
+    "answer": "True",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a) True"
+    }
+  },
+  "f5896162-f589-4127-aee4-15afe65a4926": {
+    "arm": "night-fixed",
+    "question": "Which came first: the last woolly mammoths dying out, or the Great Pyramid of Giza being built?",
+    "answer": "The Great Pyramid being built",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "fa6d75c2-0d33-4033-a4b6-81a52f355cbd": {
+    "arm": "night-fixed",
+    "question": "A metal spoon and a wooden spoon have been lying side by side in the same room all day, so they are at exactly the same temperature. Why does the metal one feel noticeably colder when you pick it up?",
+    "answer": "Metal conducts heat away from your hand faster",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "The metal spoon has much higher thermal conductivity than the wooden spoon, so it conducts heat away from your hand (which is warmer than room temperature) much more rapidly. This rapid heat flow away from your skin makes your temperature sensors perceive it as colder, even though both spoons are actually at identical temperatures."
+    }
+  },
+  "1d760f3c-6191-4c8c-a073-5eef3da16948": {
+    "arm": "night-fixed",
+    "question": "The microwave oven was born in 1945 when an engineer testing radar equipment noticed something had melted in his pocket. What was it?",
+    "answer": "A chocolate bar",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "A chocolate bar"
+    }
+  },
+  "bd144ab4-e968-4816-9e3f-79b5a02d3c9a": {
+    "arm": "night-fixed",
+    "question": "One of these animals is not a rodent at all. Which is it?",
+    "answer": "Rabbit",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "d"
+    }
+  },
+  "27bca867-319e-4961-825d-451ffaf836f5": {
+    "arm": "night-fixed",
+    "question": "Name the planet in our solar system where a single day, one full rotation, lasts longer than its entire year.",
+    "answer": "Venus",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Venus"
+    }
+  },
+  "c2e78b06-eddf-4b46-8eb0-b86cf6ecb5c0": {
+    "arm": "night-fixed",
+    "question": "A man lies dead in the middle of an empty field. Next to him is an unopened package. There are no footprints anywhere. How did he die?",
+    "answer": "His parachute failed to open",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "He jumped from an airplane with an unopened parachute (skydiving accident)"
+    }
+  },
+  "d42ef820-45f3-4594-8ee8-fb4e127dc027": {
+    "arm": "night-fixed",
+    "question": "In 1932, the Australian military launched an armed operation with machine guns against a wild animal population and was widely considered to have lost. What animal?",
+    "answer": "Emu",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Emu"
+    }
+  },
+  "d5665844-99ab-4e5d-b4f1-fbabc065191b": {
+    "arm": "night-fixed",
+    "question": "One of these two has been on Earth far longer than the other. Which came first?",
+    "answer": "Sharks",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a"
+    }
+  },
+  "0db4ce83-49f3-41c4-a245-c20db39c8e95": {
+    "arm": "night-fixed",
+    "question": "Passenger windows on airliners are made of several layers, and the middle layer has one tiny hole drilled near the bottom. Why is that hole there?",
+    "answer": "It equalizes pressure so the outer pane bears the load",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "The hole allows pressure equalization between the space behind the outer pane and the cabin, preventing dangerous pressure buildup if the outer pane is damaged or develops a small leak. It also allows any condensation or moisture that accumulates between the panes to drain, reducing fogging and corrosion."
+    }
+  },
+  "83866287-1c7a-40d4-a9f1-dacb1dbc40a9": {
+    "arm": "night-fixed",
+    "question": "A truck driver goes the wrong way down a one-way street and passes three police officers. None of them stops him. Why not?",
+    "answer": "He is walking",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "The truck driver was walking, not driving a truck."
+    }
+  },
+  "9eeb7aff-5b5c-487f-b59f-0023a3f475d7": {
+    "arm": "night-fixed",
+    "question": "True or false: at their closest point, Russia and the United States are less than 5 kilometres apart.",
+    "answer": "True",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a"
+    }
+  },
+  "c2e3d05c-6e26-4630-95bf-c6f06915f313": {
+    "arm": "night-fixed",
+    "question": "In the 1850s, Emperor Napoleon III reportedly served his most honoured guests with cutlery made of a rare metal, while lesser guests had to settle for gold. What metal was it?",
+    "answer": "Aluminium",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "aluminum"
+    }
+  },
+  "8fc9b176-c3b3-4b03-bf6e-c56ad2d86ff2": {
+    "arm": "night-fixed",
+    "question": "Name the only country whose national flag has a different design on its front and its back.",
+    "answer": "Paraguay",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Paraguay"
+    }
+  },
+  "19ca17f1-ec7c-45d4-be0e-53f122677079": {
+    "arm": "night-fixed",
+    "question": "If you could drive a car straight up at normal highway speed, roughly how long would it take to reach the edge of space?",
+    "answer": "About an hour",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a"
+    }
+  },
+  "91ad26c0-d9b8-4e0b-829d-76532f188370": {
+    "arm": "night-fixed",
+    "question": "Fax machine or telephone: which of these two was invented first?",
+    "answer": "Fax machine",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a) Fax machine"
+    }
+  },
+  "f66ef57e-1d49-4f7a-93c6-3615c1bf9dc7": {
+    "arm": "night-fixed",
+    "question": "In 1816, after the eruption of Mount Tambora ruined harvests across Europe, oats became so expensive that many horses were sold or slaughtered. What did a German inventor unveil the very next year as a horseless way to get around?",
+    "answer": "The bicycle",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Hobby Horse (or Draisine)"
+    }
+  },
+  "5384aed3-a712-4d73-99be-2e585afc7619": {
+    "arm": "night-fixed",
+    "question": "Ancient Egyptian embalmers went to enormous effort to preserve a body for the afterlife, yet they pulled the brain out through the nose and discarded it, while taking great care to leave the heart in place. Why the opposite treatment for these two organs?",
+    "answer": "Heart held thought and soul, brain didn't",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "The ancient Egyptians believed the heart was the seat of the soul, intelligence, and memory—essential for judgment in the afterlife (the weighing of the heart ceremony). They did not understand the brain's function and considered it useless tissue with no role in the afterlife, so it was discarded. This reflects their theological beliefs about which organs mattered for the eternal soul, not biological reality."
+    }
+  },
+  "4a84509b-6243-4ce2-83ba-8f4f5dd46dd9": {
+    "arm": "night-fixed",
+    "question": "What happened first: the building of the Great Pyramid of Giza, or the death of the last woolly mammoths?",
+    "answer": "The Great Pyramid was built",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a) The Great Pyramid was built"
+    }
+  },
+  "57ca5b6e-a915-4e70-acba-aa7deec04131": {
+    "arm": "night-fixed",
+    "question": "Roman harbour concrete has survived 2,000 years of pounding waves and actually grows stronger with age. What volcanic ingredient did the Romans mix into it?",
+    "answer": "Volcanic ash",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "pozzolana"
+    }
+  },
+  "06b74a86-c42d-4ef9-bd7c-1e390a9f3b3d": {
+    "arm": "night-fixed",
+    "question": "The Great Pyramid of Giza was the tallest man-made structure on Earth for how long?",
+    "answer": "3,800 years",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "9d9bfdea-ca20-4d96-9ff9-03c405e4c3eb": {
+    "arm": "night-fixed",
+    "question": "Ancient Romans collected a certain liquid in public jars and used it to whiten togas and even to clean their teeth. What was it?",
+    "answer": "Urine",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "urine"
+    }
+  },
+  "734a7f0b-c4fb-4d6d-a8e1-5ad5967750a3": {
+    "arm": "night-fixed",
+    "question": "One of these ancient civilisations never used the wheel for transport. Which one?",
+    "answer": "Inca",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "9782e8e8-9112-4e1c-aecd-d16475c5339f": {
+    "arm": "night-fixed",
+    "question": "In the original ancient Greek Olympics, what did the athletes wear while competing?",
+    "answer": "Nothing",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Nothing - they competed nude/naked"
+    }
+  },
+  "0ecea2ae-ee15-4c54-ae5e-dfe945c8b742": {
+    "arm": "night-fixed",
+    "question": "Ancient Egyptians mummified one household pet by the millions, even breeding them on temple farms just for that purpose. Name the animal.",
+    "answer": "Cat",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "cats"
+    }
+  },
+  "81936e04-183f-4a4a-810c-e2227842ac54": {
+    "arm": "night-fixed",
+    "question": "In 1901, divers off a Greek island recovered a corroded bronze device packed with interlocking gears, now believed to have predicted eclipses. It is often called the world's first what?",
+    "answer": "Computer",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "computer"
+    }
+  },
+  "e85a05da-240f-40e3-90b6-5b147893e2a8": {
+    "arm": "night-fixed",
+    "question": "Which was patented first: a machine that could send images over a wire, the fax machine, or the telephone?",
+    "answer": "The fax machine",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a) The fax machine"
+    }
+  },
+  "ba3936a6-cdb5-446d-b87b-2ab2c76bdf69": {
+    "arm": "night-fixed",
+    "question": "If you drew one continuous line with a standard ballpoint pen until the ink ran out, how long would it be?",
+    "answer": "2 kilometres",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55": {
+    "arm": "night-fixed",
+    "question": "In 1908, a German housewife named Melitta Bentz tore a sheet of blotting paper out of her son's school exercise book, punched holes in a brass pot, and invented what kitchen item that still carries her name?",
+    "answer": "The coffee filter",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "coffee filter"
+    }
+  },
+  "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc": {
+    "arm": "night-fixed",
+    "question": "For thousands of years in ancient Egypt, Greece and Persia, the umbrella was carried over kings and nobles, but almost never in the rain. What was it protecting them from?",
+    "answer": "The sun",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "the sun"
+    }
+  },
+  "9d26416e-9ac4-4723-9d3c-b98aeedc389e": {
+    "arm": "night-fixed",
+    "question": "Long before it ever touched a tree, the chainsaw was invented in the 1780s by two Scottish doctors to speed up what medical procedure?",
+    "answer": "Childbirth",
+    "answerability": {
+      "passed": false,
+      "reason": "wrong_answer",
+      "model_answer": "Amputation"
+    }
+  },
+  "cafc353a-6f79-4148-a7d0-2531e976af31": {
+    "arm": "night-fixed",
+    "question": "Name the everyday object a New York mechanic created in 1849 by twisting a single piece of wire for a few hours, then sold the patent for 400 dollars to clear a small debt. Its clever spring design hides a sharp point.",
+    "answer": "The safety pin",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "safety pin"
+    }
+  },
+  "e276fad1-4afd-4acf-b5d0-ac1f0df4025f": {
+    "arm": "night-fixed",
+    "question": "How heavy was the first handheld mobile phone sold to the public in 1984?",
+    "answer": "A bag of sugar",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b) A bag of sugar"
+    }
+  },
+  "35ddda4b-d4c2-4e64-b030-c1a2e1a1e340": {
+    "arm": "night-fixed",
+    "question": "After a hike in the Alps in 1941, a Swiss engineer got fed up picking prickly burrs off his dog's fur, so he put one under a microscope and saw hundreds of tiny hooks. What everyday fastener did that inspire?",
+    "answer": "Velcro",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Velcro"
+    }
+  },
+  "64e45936-baac-4e48-866e-9b09398f9791": {
+    "arm": "night-fixed",
+    "question": "Champagne is one of the coldest wine regions in France, and its winemakers originally considered the bubbles a defect. How did the cold climate accidentally create those bubbles in the first place?",
+    "answer": "Cold paused fermentation, spring restarted it in bottle",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Cold winter temperatures halted fermentation in the bottles; when spring arrived and temperatures warmed, fermentation resumed in sealed bottles, producing CO2 gas that became trapped and created the bubbles"
+    }
+  },
+  "72e2d072-14b6-4569-966f-6814063b35c4": {
+    "arm": "night-fixed",
+    "question": "A goatherd in Ethiopia noticed his goats leaping about with energy after chewing red berries from a bush. What drink does this legend claim to explain?",
+    "answer": "Coffee",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Coffee"
+    }
+  },
+  "43520f30-d790-4d3e-be5b-2df27afa9e90": {
+    "arm": "night-fixed",
+    "question": "The croissant is a symbol of France, yet its ancestor was a crescent-shaped pastry called the kipferl, brought to Paris by a baker from a different country. Which country?",
+    "answer": "Austria",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Austria"
+    }
+  },
+  "f1a6ebdf-d4c2-4ef6-971e-be965d5532fa": {
+    "arm": "night-fixed",
+    "question": "Pineapple on pizza divides the world. The so-called Hawaiian pizza was invented neither in Hawaii nor in Italy, but by a Greek immigrant running a restaurant in which country?",
+    "answer": "Canada",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Canada"
+    }
+  },
+  "41381afb-6d58-4f7e-a479-1a808e6cddf5": {
+    "arm": "night-fixed",
+    "question": "True or false: Chili peppers have been grown and eaten in India and Thailand for thousands of years.",
+    "answer": "False",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "d5fe5faf-f768-4623-98af-c88966aaec34": {
+    "arm": "night-fixed",
+    "question": "Chocolate, coffee and tea all reached Europe within roughly a century of each other. Which of the three arrived first?",
+    "answer": "Chocolate",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Chocolate"
+    }
+  },
+  "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471": {
+    "arm": "night-fixed",
+    "question": "Ketchup came to Europe in the 1600s from Asia, but the original sauce contained no tomatoes at all. What was it made from?",
+    "answer": "Fermented fish",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "fermented fish sauce"
+    }
+  },
+  "84c82f2c-4f8b-4cf6-b156-185c67cc143c": {
+    "arm": "night-fixed",
+    "question": "Vanilla orchids grew happily in European colonies but never produced a single pod outside Mexico, until in 1841 a 12-year-old enslaved boy on the island of Réunion worked out how to do what by hand?",
+    "answer": "Pollinate the flowers",
+    "answerability": {
+      "passed": false,
+      "reason": "wrong_answer",
+      "model_answer": "hand-pollinate (the vanilla orchid flowers)"
+    }
+  },
+  "19a01d7c-1d5b-45fb-9872-89d18cecbf52": {
+    "arm": "night-fixed",
+    "question": "How old is the oldest known bread, found as charred crumbs in a fireplace in Jordan?",
+    "answer": "Tens of thousands of years",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "2b85eece-f972-4e3e-bdc2-b8fc82d91333": {
+    "arm": "night-fixed",
+    "question": "Before tomatoes had anything to do with it, the original 17th-century 'ketchup' that European sailors brought home from Southeast Asia was a fermented sauce made mainly from what?",
+    "answer": "Fish",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "fish"
+    }
+  },
+  "720f7057-b39a-4de1-8bb2-de45f59cf103": {
+    "arm": "night-fixed",
+    "question": "A gecko can run upside down across a smooth glass ceiling, yet its toes are not sticky, have no suction cups, leave no residue, and claws cannot dig into glass. How does it hold on?",
+    "answer": "Millions of microscopic toe hairs, molecular attraction",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Van der Waals forces created by millions of microscopic hair-like structures (setae) on its toe pads that achieve extremely close contact with the glass surface"
+    }
+  },
+  "a3e88337-c04d-4525-82cc-f9d05d5ee57e": {
+    "arm": "night-fixed",
+    "question": "How many bones are inside an elephant's trunk?",
+    "answer": "Zero",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "a"
+    }
+  },
+  "e2faa65c-f805-475e-9154-66f96fbfc916": {
+    "arm": "night-fixed",
+    "question": "How fast does a peregrine falcon travel in its hunting dive?",
+    "answer": "A Formula 1 car at over 300 km/h",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "2312b30b-cdf6-424c-b141-adcaddcb2ac8": {
+    "arm": "night-fixed",
+    "question": "One colourful crustacean strikes so fast that its punch creates bubbles of boiling water and has been known to crack aquarium glass. Name it.",
+    "answer": "Mantis shrimp",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "mantis shrimp"
+    }
+  },
+  "ef1d8e7a-7c33-41b2-905b-90e371552013": {
+    "arm": "night-fixed",
+    "question": "If a bat 'sees' in total darkness using sound, what does a pit viper use to 'see' its prey at night?",
+    "answer": "Heat",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "infrared (or thermal radiation/heat)"
+    }
+  },
+  "6fa83da7-962f-4b09-bd22-0f271a8efa7f": {
+    "arm": "night-fixed",
+    "question": "The Arctic tern flies from the Arctic to the Antarctic and back every year. Over its roughly 30-year life, is its total distance closer to once around the Earth, once to the Moon, or three times to the Moon and back?",
+    "answer": "Three times to the Moon and back",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "b5ba099b-da60-4111-8330-47e91b92a693": {
+    "arm": "night-fixed",
+    "question": "Which has the larger eye: the blue whale, the biggest animal that has ever lived, or the giant squid?",
+    "answer": "Giant squid",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "24a23cc4-9456-4836-b68e-8b8de461b9a7": {
+    "arm": "night-fixed",
+    "question": "Which of these mammals is the only one that cannot inject venom?",
+    "answer": "Hedgehog",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "d"
+    }
+  },
+  "ca6ec16c-ef0f-4176-a857-36a266daa13a": {
+    "arm": "night-fixed",
+    "question": "Name the North American amphibian that survives winter frozen solid, with no heartbeat and no breathing, then thaws in spring and hops away.",
+    "answer": "Wood frog",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Wood Frog"
+    }
+  },
+  "1c868920-3ff3-4b21-bb37-7c77044f59b9": {
+    "arm": "night-fixed",
+    "question": "A sperm whale hunts squid more than a kilometre below the surface. How long can it hold its breath on a single dive?",
+    "answer": "90 minutes",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "67fb9fec-12df-4fe2-83df-960145d07773": {
+    "arm": "night-fixed",
+    "question": "The sun is highest in the sky around midday, yet on a typical day the warmest temperature arrives only in the middle of the afternoon. Why the delay?",
+    "answer": "Surface still gains more heat than it loses",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "The atmosphere is heated primarily by infrared radiation from Earth's surface, not directly by sunlight. The ground absorbs maximum solar radiation at solar noon, but the atmosphere takes time to warm from the ground's re-radiated heat. Peak temperature occurs in mid-afternoon when accumulated heat reaches its maximum before evening cooling begins."
+    }
+  },
+  "fac9520e-e5c6-4712-be4a-593ae393db26": {
+    "arm": "night-fixed",
+    "question": "How much does a single fluffy cumulus cloud weigh?",
+    "answer": "500 tonnes",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b) 500 tonnes"
+    }
+  },
+  "6d3e5a61-f775-4667-a04c-042824d46fde": {
+    "arm": "night-fixed",
+    "question": "Which is hotter: the surface of the Sun or a bolt of lightning?",
+    "answer": "A bolt of lightning",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b) A bolt of lightning"
+    }
+  },
+  "82a083b8-1f40-4d29-9542-5cc5b3572559": {
+    "arm": "night-fixed",
+    "question": "A desert is defined by how little precipitation falls, not by heat. By that rule, what is the largest desert on Earth?",
+    "answer": "Antarctica",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Antarctica (or Antarctic Desert)"
+    }
+  },
+  "193eb192-0310-4d77-a837-365b65c05f8c": {
+    "arm": "night-fixed",
+    "question": "True or false: if the air gets cold enough, it becomes physically impossible for snow to fall.",
+    "answer": "False",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "80f48da1-4340-4563-a9ea-389c434ba634": {
+    "arm": "night-fixed",
+    "question": "In 1816, Europe and North America suffered the 'Year Without a Summer', with snow falling in June and crops failing. The eruption of which Indonesian volcano the year before was to blame?",
+    "answer": "Mount Tambora",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Mount Tambora"
+    }
+  },
+  "fba6833d-9ac2-4727-a169-24ee06493f80": {
+    "arm": "night-fixed",
+    "question": "How fast does a large raindrop hit the ground?",
+    "answer": "Sprinting speed",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "2a2ff0aa-17ca-4a5f-a952-f9ebf560908a": {
+    "arm": "night-fixed",
+    "question": "Name the Pacific climate pattern that Peruvian fishermen named after the baby Jesus, because its warm waters tended to arrive around Christmas.",
+    "answer": "El Niño",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "El Niño"
+    }
+  },
+  "3c8b1686-cada-45b5-af8c-1c38d174f43d": {
+    "arm": "night-fixed",
+    "question": "Count the seconds between a lightning flash and its thunder, then divide by three. What does the result tell you?",
+    "answer": "Distance to the lightning in kilometres",
+    "answerability": {
+      "passed": false,
+      "reason": "wrong_answer",
+      "model_answer": "The approximate distance to the lightning strike in kilometers"
+    }
+  },
+  "2f977694-a9d5-4ccf-ad56-13bccc1d1653": {
+    "arm": "night-fixed",
+    "question": "One lake in Venezuela sees lightning storms on about 260 nights a year, more than anywhere else on Earth. Name it.",
+    "answer": "Lake Maracaibo",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Lake Maracaibo"
+    }
+  },
+  "4c85408e-1f93-4433-8b92-fea18014eee7": {
+    "arm": "night-fixed",
+    "question": "Almost every language calls tea either something like 'te' (as in English, French or German) or something like 'cha' or 'chai' (as in Russian, Arabic, Slovak or Hindi). Both forms originate in China, so why did the world end up with exactly two versions of the word?",
+    "answer": "Sea trade spread 'te', land trade spread 'cha'",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Tea reached different regions of the world through two distinct trade routes: the overland Silk Road (which carried the Mandarin/northern Chinese 'cha' pronunciation westward through Central Asia, the Middle East, and Russia) and maritime European trade (which encountered the Min/Fujian Chinese 'te' pronunciation at southern coastal ports and spread it through European languages like English, Dutch, and Portuguese). The two versions reflect these two historical trade pathways and the regional Chinese pronunciations they encountered."
+    }
+  },
+  "ba6f8853-64f4-436f-87ba-f008839b9fa3": {
+    "arm": "night-fixed",
+    "question": "Carved with the same decree in three different scripts, the Rosetta Stone finally let scholars read what long-silent writing system?",
+    "answer": "Egyptian hieroglyphs",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Egyptian hieroglyphics"
+    }
+  },
+  "97778415-6767-4ca6-bde9-c743fc410bbb": {
+    "arm": "night-fixed",
+    "question": "Invented in 1887 by a Polish eye doctor who hoped it would bring peace between quarrelling nations, what is the world's most widely spoken constructed language?",
+    "answer": "Esperanto",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Esperanto"
+    }
+  },
+  "748948f7-69d1-40cf-aed7-ee34a1f10ccf": {
+    "arm": "night-fixed",
+    "question": "Counting only people who learned it as their mother tongue, is English or Spanish spoken by more people worldwide?",
+    "answer": "Spanish",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "664ca7cb-2b35-4770-aa81-ad846372bcf8": {
+    "arm": "night-fixed",
+    "question": "One of these Central European languages is not related to the other three. Which is it?",
+    "answer": "Hungarian",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "c"
+    }
+  },
+  "f2d04b18-7db0-4f6f-a9bb-45cce0cc6cdb": {
+    "arm": "night-fixed",
+    "question": "Papua New Guinea has more living languages than any other country on Earth. How many?",
+    "answer": "800",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "923d2bb1-100b-4590-af34-083e7f6f2d01": {
+    "arm": "night-fixed",
+    "question": "On the Canary Island of La Gomera, shepherds developed a way to hold full conversations across deep ravines, with no phone and no shouting. How do they do it?",
+    "answer": "By whistling",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "They use a whistled language (Silbo Gomeño) to communicate — different tones and patterns of whistling represent phonemes of Spanish, allowing full conversations across ravines at distances up to about 1 km."
+    }
+  },
+  "7a294780-d23a-4a8f-8069-fe98d897a06d": {
+    "arm": "night-fixed",
+    "question": "American Sign Language is closely related to one of these two, and almost unrelated to the other. Which is it?",
+    "answer": "French Sign Language",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "e0fd4c81-e3d6-444b-ba83-1e1a2fcd32c9": {
+    "arm": "night-fixed",
+    "question": "Which language has more native speakers?",
+    "answer": "Spanish",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "b"
+    }
+  },
+  "ee76e3be-ace2-4457-a9a2-50c92811c027": {
+    "arm": "night-fixed",
+    "question": "The closest living relative of English is not German or Dutch. Name the language, spoken along the North Sea coast of the Netherlands and Germany, that holds that title.",
+    "answer": "Frisian",
+    "answerability": {
+      "passed": true,
+      "reason": null,
+      "model_answer": "Frisian"
+    }
+  }
+}

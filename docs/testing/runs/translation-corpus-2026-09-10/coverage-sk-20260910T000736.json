@@ -1,0 +1,340 @@
+{
+  "generated_at": "2026-09-10T00:07:36.489288+00:00",
+  "ok": false,
+  "language": "sk",
+  "cells": [
+    {
+      "category": "science-nature",
+      "difficulty": "easy",
+      "en": 9,
+      "translated": 8,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "science-nature",
+      "difficulty": "medium",
+      "en": 29,
+      "translated": 26,
+      "en_starved": false,
+      "failing": [
+        "ratio"
+      ],
+      "waived": null
+    },
+    {
+      "category": "science-nature",
+      "difficulty": "hard",
+      "en": 13,
+      "translated": 10,
+      "en_starved": false,
+      "failing": [
+        "ratio"
+      ],
+      "waived": null
+    },
+    {
+      "category": "history",
+      "difficulty": "easy",
+      "en": 3,
+      "translated": 3,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "history",
+      "difficulty": "medium",
+      "en": 9,
+      "translated": 8,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "history",
+      "difficulty": "hard",
+      "en": 4,
+      "translated": 4,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "geography-world",
+      "difficulty": "easy",
+      "en": 3,
+      "translated": 3,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "geography-world",
+      "difficulty": "medium",
+      "en": 4,
+      "translated": 4,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "geography-world",
+      "difficulty": "hard",
+      "en": 6,
+      "translated": 5,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "movies-music",
+      "difficulty": "easy",
+      "en": 11,
+      "translated": 10,
+      "en_starved": false,
+      "failing": [
+        "ratio"
+      ],
+      "waived": null
+    },
+    {
+      "category": "movies-music",
+      "difficulty": "medium",
+      "en": 18,
+      "translated": 17,
+      "en_starved": false,
+      "failing": [
+        "ratio"
+      ],
+      "waived": null
+    },
+    {
+      "category": "movies-music",
+      "difficulty": "hard",
+      "en": 6,
+      "translated": 5,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "sports",
+      "difficulty": "easy",
+      "en": 0,
+      "translated": 0,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "sports",
+      "difficulty": "medium",
+      "en": 5,
+      "translated": 5,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "sports",
+      "difficulty": "hard",
+      "en": 1,
+      "translated": 1,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "food-everyday",
+      "difficulty": "easy",
+      "en": 5,
+      "translated": 5,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "food-everyday",
+      "difficulty": "medium",
+      "en": 4,
+      "translated": 4,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "food-everyday",
+      "difficulty": "hard",
+      "en": 0,
+      "translated": 0,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "entertainment",
+      "difficulty": "easy",
+      "en": 9,
+      "translated": 7,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "entertainment",
+      "difficulty": "medium",
+      "en": 11,
+      "translated": 9,
+      "en_starved": false,
+      "failing": [
+        "ratio",
+        "cell_floor"
+      ],
+      "waived": null
+    },
+    {
+      "category": "entertainment",
+      "difficulty": "hard",
+      "en": 1,
+      "translated": 1,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "general",
+      "difficulty": "easy",
+      "en": 6,
+      "translated": 5,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "general",
+      "difficulty": "medium",
+      "en": 9,
+      "translated": 8,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    },
+    {
+      "category": "general",
+      "difficulty": "hard",
+      "en": 3,
+      "translated": 1,
+      "en_starved": true,
+      "failing": [],
+      "waived": null
+    }
+  ],
+  "categories": [
+    {
+      "category": "science-nature",
+      "en": 51,
+      "translated": 44,
+      "floor": 30,
+      "en_starved_category": false,
+      "failing": false,
+      "waived": null
+    },
+    {
+      "category": "history",
+      "en": 16,
+      "translated": 15,
+      "floor": 16,
+      "en_starved_category": true,
+      "failing": true,
+      "waived": null
+    },
+    {
+      "category": "geography-world",
+      "en": 13,
+      "translated": 12,
+      "floor": 13,
+      "en_starved_category": true,
+      "failing": true,
+      "waived": null
+    },
+    {
+      "category": "movies-music",
+      "en": 35,
+      "translated": 32,
+      "floor": 30,
+      "en_starved_category": false,
+      "failing": false,
+      "waived": null
+    },
+    {
+      "category": "sports",
+      "en": 6,
+      "translated": 6,
+      "floor": 6,
+      "en_starved_category": true,
+      "failing": false,
+      "waived": null
+    },
+    {
+      "category": "food-everyday",
+      "en": 9,
+      "translated": 9,
+      "floor": 9,
+      "en_starved_category": true,
+      "failing": false,
+      "waived": null
+    },
+    {
+      "category": "entertainment",
+      "en": 21,
+      "translated": 17,
+      "floor": 20,
+      "en_starved_category": true,
+      "failing": true,
+      "waived": null
+    },
+    {
+      "category": "general",
+      "en": 18,
+      "translated": 14,
+      "floor": 18,
+      "en_starved_category": true,
+      "failing": true,
+      "waived": null
+    }
+  ],
+  "missing_qids": [
+    "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+    "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+    "6ac73d97-28fe-4841-b20a-1a2114860aef",
+    "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+    "72e2d072-14b6-4569-966f-6814063b35c4",
+    "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+    "c2e3d05c-6e26-4630-95bf-c6f06915f313",
+    "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+    "80ec52c8-e041-5353-9929-26faed681b8c",
+    "22156a55-156c-4081-93b5-6f6473e8990c",
+    "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+    "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+    "53254cae-6201-450a-afcf-ef6bddea7fb5",
+    "29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6",
+    "37b1867e-93d4-5ad6-9065-4393156deb5e",
+    "db385a95-4ab8-5c59-bde6-eb22d4ec03c6",
+    "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+    "4605a059-7194-5286-a978-fd47fb09f7db",
+    "a822f59d-63e6-51ac-b878-7d26e683941a"
+  ],
+  "testflight": {
+    "en": 394,
+    "translated": 344
+  },
+  "constants": {
+    "cell_floor": 10,
+    "cell_ratio": 0.95,
+    "category_floor": 30
+  },
+  "waivers": []
+}

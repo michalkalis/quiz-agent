@@ -1,0 +1,1 @@
+reconcile --language sk: 0 stale, 0 mismatch → clean

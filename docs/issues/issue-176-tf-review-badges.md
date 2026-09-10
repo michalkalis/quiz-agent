@@ -19,21 +19,29 @@ Founder testuje SK/CS preklady v TestFlighte, ale v hre nevidí, či je otázka 
 | Zdroj | Štítok |
 |---|---|
 | EN `review_status = pending_review` | `pending_review` (bez ohľadu na jazyk kvízu) |
-| EN `approved`, kvíz EN alebo preklad so sudcom bez nálezu | `approved` (TF: tichý zelený bod, App Store: nič) |
-| preklad `approved`, `verification.judge.verdict = ok`, bez regional flagu | `translation_machine` |
+| EN `approved`, kvíz **EN** | `approved` (TF: tichý zelený bod, App Store: nič) |
+| preklad `approved`, `verification.judge.verdict = ok`, bez findings a bez regional flagu | `translation_machine` |
 | preklad `approved`, sudca má findings alebo regional flag | `translation_flagged` |
 | preklad `rejected` (guard / translation_flip / critical) | `translation_critical` |
-| kvíz sk/cs, preklad chýba, servíruje sa EN | `en_fallback` |
+| kvíz sk/cs, preklad **nie je** v `question_translations`, text dal serve-time LLM preklad | `translation_live` |
+| kvíz sk/cs, preklad chýba aj live preklad nedobehol, servíruje sa EN | `en_fallback` |
 
-Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pending_review` > `translation_machine` > `approved`.
+Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pending_review` > `translation_machine` > `translation_live` > `en_fallback` > `approved`.
+
+**Dve úpravy tabuľky pri implementácii backendu (PR #176-backend):**
+1. **`translation_live` = nový šiesty stav.** #168 cutover (T23/T24) ešte nebeží, takže serve-time LLM preklad zostáva ako *fallback*, keď pre (otázka, jazyk) neexistuje riadok. Taký text neprešiel žiadnou bránou a nesmie si pôjčať kredibilitu `translation_machine` riadku, preto má vlastný štítok. `en_fallback` ostáva pre prípad, keď nedobehne ani live preklad.
+2. **Rozpor v pôvodnej tabuľke vyriešený v prospech `translation_machine`.** Druhý riadok („EN approved, kvíz EN **alebo preklad so sudcom bez nálezu**" → `approved`) si protirečil s tretím („preklad approved, verdict ok, bez regional flagu" → `translation_machine`). Vybraný je `translation_machine`: `question_translations` nemá `reviewed_by`, takže o schválenom preklade sa nedá tvrdiť, že ho čítal človek — a presne túto distinkciu má štítok ukázať. `approved` teda platí len pre EN kvíz.
 
 ## Rozsah
 
-### Backend (`apps/quiz-agent`, hot path, bez LLM)
-- `PublicQuestion` (`packages/shared/quiz_shared/models/question.py:444`) + wire shape: nové voliteľné polia `review_badge: str | None`, `translation_language: str | None`, `review_note: str | None` (1 riadok z `verification.judge.findings[0].note`, len pre `flagged`/`critical`). **Vyplnené len keď `session.build_channel == "testflight"`**; inak `None` a App Store klient ich nikdy nevidí. Test: App Store session → polia chýbajú/None.
-- Serializer (`apps/quiz-agent/app/serializers.py`, okolo `:128` podľa #168 T24) pri výbere prekladového riadku: TF session berie `approved` aj `rejected` riadok (rejected len TF!), App Store iba `approved`. Store surface `get_translations` (#168 T12/T13) — overiť, či vracia status + verification, inak rozšíriť.
-- Retriever gate (#168 T23, `question_retriever.py:251-267`): pre TF session `approved_languages` filter **nepoužiť** (servíruje aj odmietnuté + EN fallback), pre App Store použiť. Toto je zároveň vehicle pre HG-5 cutover: TF prvý, App Store až po HG-4 waiveroch.
-- OpenAPI → iOS Codable sync (`/verify-api`).
+### Backend (`apps/quiz-agent`, hot path, bez LLM) — **HOTOVÉ (PR, nedeployované)**
+- [x] `PublicQuestion` + wire shape (`packages/shared/quiz_shared/models/question.py`): voliteľné `review_badge`, `translation_language`, `review_note` (1 riadok z `verification.judge.findings[0].note`, len pre `flagged`/`critical`). **Vyplnené len keď `session.build_channel == "testflight"`**; inak kľúče na drôte vôbec nie sú (nie `null` — iOS rozlišuje podľa absencie kľúča), takže App Store payload je byte-identický so stavom pred #176.
+  - *Odchýlka:* `review_note` má poradie zdrojov judge findings → `guards.reasons[0]` → `answerability.verdict` → `regional.reason`. Dôvod: v #168 korpusovom behu je väčšina rejectov answerability flip (36/50 sk) alebo guard, kde judge findings vôbec nie sú — note by bol prázdny práve pri najhlasnejšom štítku.
+- [x] Servírovanie prekladov (`app/stored_translation.py` + `app/serializers.py`): primárny zdroj je riadok v `question_translations` cez `get_translations` (bez LLM callu); serve-time LLM preklad ostáva ako fallback, keď riadok nie je. TF berie `approved` aj `rejected`, App Store iba `approved`. Štítok sa počíta raz pri stavbe recordu a jazdí na `session.current_question_translation`, takže `/question`, `/question/audio` a re-grade ho reprodukujú bez ďalšieho dotazu.
+- [x] Store surface rozšírený (`packages/shared/quiz_shared/database/translation_queries.py`): `fetch_approved_translations` → `fetch_servable_translations(..., statuses=("approved",))`, mirror tabuľka dostala `verification`, `_SERVE_COLUMNS` dostali `status` + `verification`. `PgvectorQuestionStore.get_translations` má tretí parameter `statuses`.
+- [x] `translated_question_view` kopíruje `alternative_answers` zo *stored* riadku (#168 C1/DD5) — bez toho by sa slovenská odpoveď hodnotila proti anglickým alternatívam. Live record tento kľúč nemá, takže EN/live cesta je nezmenená.
+- [x] **Retriever: žiadna zmena.** Gate `approved_languages` v `apps/quiz-agent` dnes **neexistuje** (je to otvorený #168 T23) — takže „pre TF ho nepoužiť" je splnené tým, že sa nepridáva. `review_status` brána podľa build channelu (`question_retriever.py:278-282`) a pack branch ostávajú presne ako na `main`. App Store gate je ďalší founder-gated krok.
+- [x] OpenAPI: `scripts/export_openapi.py` generuje spec, `PublicQuestionWire` má 17 properties (14 + 3 nové), `required` set nezmenený. `/verify-api` + iOS Codable ide s iOS PR-om.
 
 ### iOS (`apps/ios-app`)
 - `Question.swift` Codable: `reviewBadge`, `translationLanguage`, `reviewNote`.
@@ -57,7 +65,7 @@ Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pend
 - Backend testy + iOS cielené testy zelené; `/verify-api` čistý.
 
 ## Poradie
-1. Backend (polia + TF serving rejected + TF-bez-gate) → PR → deploy prod (prepínač len podľa build channel, EN/App Store nedotknuté).
+1. ~~Backend (polia + TF serving rejected + TF-bez-gate) → PR~~ **hotové** → deploy prod ostáva (prepínač len podľa build channel, EN/App Store nedotknuté).
 2. iOS (Codable + riadok + result meta + lokalizácia) → PR.
 3. Pencil sync → founder ⌘S.
 4. TF build **len na požiadanie foundera**.

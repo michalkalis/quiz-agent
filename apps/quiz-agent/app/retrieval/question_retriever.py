@@ -8,7 +8,7 @@ Proper RAG Implementation:
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Sequence
 import random
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,22 @@ class QuestionRetriever:
     async def count(self, filters: Optional[dict] = None) -> int:
         """Count questions, optionally filtered by metadata."""
         return await self._store.count(filters=filters)
+
+    async def get_translations(
+        self,
+        question_ids: List[str],
+        language: str,
+        statuses: Sequence[str] = ("approved",),
+    ) -> dict:
+        """Stored translations for these questions, keyed by question id (#176).
+
+        Here rather than on a new DI seam for two reasons: this class is already
+        the single application-layer door to the store (see ``get``), and it is
+        the only one holding the **async** store — `app.state.question_store` is
+        the bridged sync facade, and awaiting one blocking lookup per served
+        question on the hot path is exactly the regression #151 removed.
+        """
+        return await self._store.get_translations(question_ids, language, statuses)
 
     async def count_available(
         self,

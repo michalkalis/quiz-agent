@@ -100,6 +100,8 @@ async def get_question_audio(
                     session.language,
                     translation_service,
                     session_id=session_id,
+                    question_store=question_retriever,
+                    build_channel=session.build_channel,
                 )
                 question_text = translated_dict["question"]
                 possible_answers = translated_dict.get("possible_answers")

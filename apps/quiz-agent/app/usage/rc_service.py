@@ -555,8 +555,8 @@ async def handle_webhook_event(
 ) -> None:
     """Route one RC webhook event to the right subscription/pack write.
 
-    Environment gate first (#101 §3.3): the event's store environment must
-    equal this deployment's ``RC_ALLOWED_ENVIRONMENT``. A mismatch, a missing
+    Environment gate first (#101 §3.3): the event's store environment must be
+    in this deployment's ``RC_ALLOWED_ENVIRONMENT``. A mismatch, a missing
     environment field (never assumed PRODUCTION), or an unset setting (fail
     closed) drops the event with **no DB write of any kind**; the route still
     answers 200 so RC does not retry-storm.
@@ -574,7 +574,7 @@ async def handle_webhook_event(
     if etype == TRANSFER_EVENT_TYPE and allowed is not None:
         await _handle_transfer(sessionmaker, event)
         return
-    if allowed is None or environment != allowed:
+    if allowed is None or environment not in allowed:
         message = (
             "RevenueCat webhook dropped by environment gate (#101): "
             f"event type={etype!r} environment={environment!r} "
@@ -750,10 +750,10 @@ async def apply_sync_snapshot(
     subscriptions = {
         pid: sub
         for pid, sub in (subscriber.get("subscriptions") or {}).items()
-        if normalize_rc_environment(sub) == allowed
+        if normalize_rc_environment(sub) in allowed
     }
     non_subscriptions = {
-        pid: [p for p in purchases if normalize_rc_environment(p) == allowed]
+        pid: [p for p in purchases if normalize_rc_environment(p) in allowed]
         for pid, purchases in (subscriber.get("non_subscriptions") or {}).items()
     }
 
@@ -772,6 +772,9 @@ async def apply_sync_snapshot(
             reconciled = _reconcile_subscription_state(subscriptions, request_date_ms)
             if reconciled is not None:
                 pid, status, expires_at, orig = reconciled
+                # Stamp the row with the WINNING entry's own store environment
+                # (RC's per-entry ``is_sandbox``) — with a multi-environment
+                # allowlist the setting no longer identifies which store paid.
                 await _upsert_subscription(
                     session,
                     account_id,
@@ -782,7 +785,7 @@ async def apply_sync_snapshot(
                         rc_original_txn_id=orig,
                         last_event_ts_ms=request_date_ms,
                     ),
-                    allowed,
+                    normalize_rc_environment(subscriptions[pid]),
                 )
             elif row is not None:
                 # RC reports no subscription -> expire the existing local row
@@ -797,7 +800,7 @@ async def apply_sync_snapshot(
                         rc_original_txn_id=row.rc_original_txn_id,
                         last_event_ts_ms=request_date_ms,
                     ),
-                    allowed,
+                    row.environment,
                 )
 
         # --- packs: grants keyed on store_transaction_id (not gated) ---------
@@ -818,7 +821,7 @@ async def apply_sync_snapshot(
                     reason="pack",
                     store_txn_id=store_txn_id,
                     rc_event_id=None,
-                    environment=allowed,
+                    environment=normalize_rc_environment(purchase),
                 )
                 stmt = stmt.on_conflict_do_nothing(
                     index_elements=["store_txn_id"],

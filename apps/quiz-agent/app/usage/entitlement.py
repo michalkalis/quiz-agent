@@ -42,7 +42,7 @@ async def account_is_entitled(
 
     NON-MUTATING. DEFAULT-DENY: a falsy ``account_id`` is never entitled.
 
-    Environment read gate (#101 §3.3): only rows whose ``environment`` equals
+    Environment read gate (#101 §3.3): only rows whose ``environment`` is in
     this deployment's ``RC_ALLOWED_ENVIRONMENT`` count — a NULL row (pre-#101 /
     unaudited) or an unset setting (fail closed) is never entitled.
     """
@@ -64,7 +64,7 @@ async def account_is_entitled(
     if row is None:
         return False
     status, expires_at, environment = row
-    return environment == allowed and status in _ENTITLED_STATUSES and expires_at > now
+    return environment in allowed and status in _ENTITLED_STATUSES and expires_at > now
 
 
 async def account_credit_balance(session: AsyncSession, account_id: str | None) -> int:

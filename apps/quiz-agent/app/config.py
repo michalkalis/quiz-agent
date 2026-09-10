@@ -37,17 +37,22 @@ def _attest_environment(raw: str) -> str:
     return "development"
 
 
-def _rc_environment(raw: Optional[str]) -> Optional[str]:
-    """Normalize ``RC_ALLOWED_ENVIRONMENT`` to ``PRODUCTION``/``SANDBOX``.
+def _rc_environment(raw: Optional[str]) -> Optional[frozenset[str]]:
+    """Normalize ``RC_ALLOWED_ENVIRONMENT`` to a set of ``PRODUCTION``/``SANDBOX``.
 
-    Unset or unrecognized → ``None``, and the RC ingest **fails closed** (#101):
-    no webhook/sync processing and no entitlement is honored until the deploy
-    declares which store environment it serves.
+    Comma-separated so one deployment can serve both stores at once
+    (``PRODUCTION,SANDBOX`` — prod must honor TestFlight / App Review purchases,
+    which Apple always runs in the sandbox). Unset, empty, or *any* unrecognized
+    token → ``None``, and the RC ingest **fails closed** (#101): no webhook/sync
+    processing and no entitlement is honored until the deploy declares which
+    store environment(s) it serves.
     """
     if raw is None:
         return None
-    value = raw.strip().upper()
-    return value if value in {"PRODUCTION", "SANDBOX"} else None
+    tokens = {t.strip().upper() for t in raw.split(",") if t.strip()}
+    if not tokens or not tokens <= {"PRODUCTION", "SANDBOX"}:
+        return None
+    return frozenset(tokens)
 
 
 class Settings(BaseSettings):
@@ -93,10 +98,11 @@ class Settings(BaseSettings):
     # `…_team_id` form the client_secret header.kid / issuer. `apple_token_enc_key`
     # is a Fernet key (one `Fernet.generate_key()`) for encrypting Apple's refresh
     # token at rest (F1/F2).
-    # #101 prod/sandbox separation: which RevenueCat purchase environment this
-    # deployment ingests + honors ("PRODUCTION" on prod, "SANDBOX" on staging).
+    # #101 prod/sandbox separation: which RevenueCat purchase environment(s)
+    # this deployment ingests + honors — comma-separated, e.g.
+    # "PRODUCTION,SANDBOX" on prod (TestFlight + App Review buy in sandbox).
     # None (unset/invalid) = fail closed — RC ingest refuses to process.
-    rc_allowed_environment: Optional[str] = None
+    rc_allowed_environment: Optional[frozenset[str]] = None
     # TTS backend selection (founder call 2026-07-26: ElevenLabs/George becomes
     # the quiz voice, OpenAI TTS stays wired up as the backup rather than being
     # deleted). `tts_fallback_provider` set to "none"/empty disables failover.
@@ -123,7 +129,7 @@ class Settings(BaseSettings):
 
     @field_validator("rc_allowed_environment", mode="before")
     @classmethod
-    def _normalize_rc_environment(cls, value: object) -> Optional[str]:
+    def _normalize_rc_environment(cls, value: object) -> Optional[frozenset[str]]:
         return _rc_environment(None if value is None else str(value))
 
 

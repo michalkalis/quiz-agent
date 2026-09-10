@@ -10,6 +10,7 @@ this test is about the wiring, the judge/answerability bars have their own.
 from __future__ import annotations
 
 import uuid
+from collections import Counter
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -186,3 +187,126 @@ async def test_verify_flips_approved_languages_only_for_approved(
         assert (status, langs) == ("pending", [])
     finally:
         await delete_questions(translation_engine, list(qids.values()))
+
+
+async def test_verify_status_rejected_regates_answerability_flip(
+    translation_engine, question_store, tmp_path, monkeypatch
+) -> None:
+    """#168: 36 sk + 32 cs rows were rejected solely because a weak
+    answerability model called ``translation_flip``. ``--status rejected
+    --only-answerability-flips`` must re-run the same gate over those rows
+    without a re-translation, so a stronger model can flip them to approved."""
+    monkeypatch.setattr(ver, "DeltaAnswerabilityChecker", _Checker)
+    monkeypatch.setattr(ver, "TranslationJudge", _Judge)
+    monkeypatch.setattr(ver, "RegionalClassifier", _Regional)
+
+    qid = uuid.uuid4()
+    question = make_question(qid)
+    assert await question_store.add(question) is True
+    try:
+        rows = await ws.fetch_source_rows(translation_engine, ["approved"])
+        h = ws.row_source_hash(next(r for r in rows if r["id"] == str(qid)))
+        entries = [(qid, "Ktorá krajina pretekala vo farbe rosso corsa? [flip]", h)]
+        assert (
+            await ingest_job(
+                translation_engine, _job(tmp_path, entries), log=lambda _m: None
+            )
+            == 1
+        )
+
+        # Pass 1: weak model flags it — rejected, same as the real corpus rows.
+        _Checker.verdicts = {str(qid): "translation_flip"}
+        _Judge.results = {}
+        first = await ver.verify_rows(
+            translation_engine, "sk", limit=50, concurrency=1, log=lambda _m: None
+        )
+        assert first == {"rejected": 1}
+
+        # Pass 2: re-gate the rejected row only, stronger model now passes it.
+        _Checker.verdicts = {}
+        second = await ver.verify_rows(
+            translation_engine,
+            "sk",
+            limit=50,
+            concurrency=1,
+            status="rejected",
+            only_answerability_flips=True,
+            log=lambda _m: None,
+        )
+        assert second == {"approved": 1}
+
+        async with translation_engine.connect() as conn:
+            status, langs = (
+                await conn.execute(
+                    text(
+                        "SELECT t.status, q.approved_languages FROM question_translations t "
+                        "JOIN questions q ON q.id = t.question_id WHERE t.question_id = :qid"
+                    ),
+                    {"qid": qid},
+                )
+            ).one()
+        assert (status, langs) == ("approved", ["sk"])
+    finally:
+        await delete_questions(translation_engine, [qid])
+
+
+async def test_verify_only_answerability_flips_excludes_guard_failures(
+    translation_engine, question_store, tmp_path, monkeypatch
+) -> None:
+    """A row rejected by a deterministic guard (no ``translation_flip``
+    verdict in its stored verification) is not a candidate for the #168
+    re-gate — re-running the LLM legs on it would spend without ever being
+    able to approve it, since the guard failure is unrelated to answerability."""
+    monkeypatch.setattr(ver, "DeltaAnswerabilityChecker", _Checker)
+    monkeypatch.setattr(ver, "TranslationJudge", _Judge)
+    monkeypatch.setattr(ver, "RegionalClassifier", _Regional)
+
+    qid = uuid.uuid4()
+    question = make_question(qid)
+    assert await question_store.add(question) is True
+    try:
+        rows = await ws.fetch_source_rows(translation_engine, ["approved"])
+        h = ws.row_source_hash(next(r for r in rows if r["id"] == str(qid)))
+        # A number with no counterpart in the English source trips the
+        # number-preservation guard before any LLM leg runs.
+        entries = [
+            (qid, "Ktorá krajina pretekala vo farbe rosso corsa? [guard] 1999", h)
+        ]
+        assert (
+            await ingest_job(
+                translation_engine, _job(tmp_path, entries), log=lambda _m: None
+            )
+            == 1
+        )
+
+        _Checker.verdicts = {}
+        _Judge.results = {}
+        first = await ver.verify_rows(
+            translation_engine, "sk", limit=50, concurrency=1, log=lambda _m: None
+        )
+        assert first == {"rejected": 1}
+
+        second = await ver.verify_rows(
+            translation_engine,
+            "sk",
+            limit=50,
+            concurrency=1,
+            status="rejected",
+            only_answerability_flips=True,
+            log=lambda _m: None,
+        )
+        assert second == Counter()
+
+        async with translation_engine.connect() as conn:
+            status, langs = (
+                await conn.execute(
+                    text(
+                        "SELECT t.status, q.approved_languages FROM question_translations t "
+                        "JOIN questions q ON q.id = t.question_id WHERE t.question_id = :qid"
+                    ),
+                    {"qid": qid},
+                )
+            ).one()
+        assert (status, langs) == ("rejected", [])
+    finally:
+        await delete_questions(translation_engine, [qid])

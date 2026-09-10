@@ -89,6 +89,18 @@ def _parse_args(argv=None) -> argparse.Namespace:
     s.add_argument("--concurrency", type=int, default=4)
     s.add_argument("--judge-model", default=None)
     s.add_argument("--answerability-model", default=None)
+    s.add_argument(
+        "--status",
+        choices=["pending", "rejected"],
+        default="pending",
+        help="re-gate already-rejected rows instead of pending ones (#168)",
+    )
+    s.add_argument(
+        "--only-answerability-flips",
+        action="store_true",
+        help="with --status rejected: only rows rejected by a translation_flip "
+        "answerability verdict",
+    )
 
     s = sub.add_parser("review-export", help="critical + flagged + sample → arm file")
     lang(s)
@@ -248,6 +260,8 @@ async def cmd_verify(args, engine) -> int:
         concurrency=args.concurrency,
         judge_model=args.judge_model,
         answerability_model=args.answerability_model,
+        status=args.status,
+        only_answerability_flips=args.only_answerability_flips,
     )
     print(f"verify --language {args.language}: {dict(outcomes)}")
     return 0

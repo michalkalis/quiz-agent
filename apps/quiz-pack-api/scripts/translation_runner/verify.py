@@ -29,7 +29,7 @@ from app.translation_verification.judge import TranslationJudge, approval_status
 from app.translation_verification.regional import RegionalClassifier
 from quiz_shared.database.pgvector_client import questions_table
 from quiz_shared.database.translation_queries import question_translations_table
-from sqlalchemy import func, select, text, update
+from sqlalchemy import func, literal_column, select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .workset import SOURCE_COLUMNS, row_source_hash, source_fields, source_question
@@ -51,9 +51,19 @@ _ROW_COLUMNS = (
 
 
 async def _pending_rows(
-    engine: AsyncEngine, language: str, limit: int, status: str = "pending"
+    engine: AsyncEngine,
+    language: str,
+    limit: int,
+    status: str = "pending",
+    only_answerability_flips: bool = False,
 ) -> list[dict[str, Any]]:
-    """Translation rows joined with their English source (``src_*`` keys)."""
+    """Translation rows joined with their English source (``src_*`` keys).
+
+    ``only_answerability_flips`` restricts to rows whose stored verdict was a
+    ``translation_flip`` (#168 re-gate of rows rejected by a weak answerability
+    model); the JSONB column is outside the shared table surface, same as the
+    raw-SQL write in ``_write_verdict``.
+    """
     tt, qt = question_translations_table, questions_table
     stmt = (
         select(
@@ -62,9 +72,15 @@ async def _pending_rows(
         )
         .select_from(tt.join(qt, qt.c.id == tt.c.question_id))
         .where(tt.c.language == language, tt.c.status == status)
-        .order_by(tt.c.updated_at)
-        .limit(limit)
     )
+    if only_answerability_flips:
+        stmt = stmt.where(
+            literal_column(
+                "question_translations.verification->'answerability'->>'verdict'"
+            )
+            == "translation_flip"
+        )
+    stmt = stmt.order_by(tt.c.updated_at).limit(limit)
     async with engine.connect() as conn:
         return [dict(r) for r in (await conn.execute(stmt)).mappings().all()]
 
@@ -140,13 +156,40 @@ async def verify_rows(
     concurrency: int = 4,
     judge_model: str | None = None,
     answerability_model: str | None = None,
+    status: str = "pending",
+    only_answerability_flips: bool = False,
     log: Callable[[str], None] = print,
 ) -> Counter:
-    """Run the gate over up to ``limit`` pending rows; returns status counts."""
-    rows = await _pending_rows(engine, language, limit)
+    """Run the gate over up to ``limit`` rows in ``status``; returns status counts.
+
+    ``status="rejected"`` + ``only_answerability_flips`` re-gates rows that were
+    rejected solely by a weak answerability model, without re-translating
+    (#168) — same outcome/persistence path as a pending row, just a different
+    starting ``status`` filter.
+    """
+    rows = await _pending_rows(
+        engine,
+        language,
+        limit,
+        status=status,
+        only_answerability_flips=only_answerability_flips,
+    )
+    default_selection = status == "pending" and not only_answerability_flips
     if not rows:
-        log("no pending rows")
+        log(
+            "no pending rows"
+            if default_selection
+            else f"no {status} row(s)"
+            + (" (answerability flips)" if only_answerability_flips else "")
+            + " found"
+        )
         return Counter()
+    if not default_selection:
+        log(
+            f"{len(rows)} {status} row(s)"
+            + (" (answerability flips)" if only_answerability_flips else "")
+            + " selected"
+        )
     judge = TranslationJudge(judge_model)
     checker = DeltaAnswerabilityChecker(answerability_model)
     regional = RegionalClassifier()

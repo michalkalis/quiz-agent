@@ -201,7 +201,11 @@ async def _run(args: argparse.Namespace) -> int:
         print(f"Already present in PG:     {len(existing)}")
         print(f"Would insert:              {len(to_insert)} "
               f"(review_status={args.review_status!r})")
-        _print_review_status_split(to_insert, stats)
+        if args.review_status == AUTO_REVIEW_STATUS:
+            # Only auto mode produces a split (and machine markers) — printing
+            # it for a forced status would claim `reviewed_by=machine:…` on
+            # rows that will be inserted with NULL.
+            _print_review_status_split(to_insert, stats)
         print(f"Need embedding:            {len(needs_embedding)} "
               f"({batches} OpenAI batch call(s) of {args.batch_size}, "
               f"question + question/answer text per row)")

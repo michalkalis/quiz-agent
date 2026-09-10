@@ -185,6 +185,13 @@ final class AudioDeviceState: ObservableObject {
         // master switch.
         guard mayCaptureAudio() else { return }
 
+        // #175: the recognizer follows the quiz language. Resolved here — the
+        // one window-start choke point — so a language change in Settings
+        // lands on the next window, never mid-window. Suspends (asset
+        // download on a first switch), so the capture gate is re-checked.
+        await service.setCommandEngine(.forQuizLanguage(settings().language))
+        guard mayCaptureAudio() else { return }
+
         await service.startListening()
 
         // RE-VALIDATE AFTER THE SUSPENSION — a synchronous stop cannot cancel

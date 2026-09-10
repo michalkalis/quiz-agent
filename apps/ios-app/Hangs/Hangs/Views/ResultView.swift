@@ -73,6 +73,7 @@ struct ResultView: View {
                     isListeningForCommands: viewModel.commandListenerHint != nil,
                     commandHint: viewModel.voiceHintWords,
                     showsVoiceGlyph: viewModel.showsVoiceGlyph,
+                    commandLanguage: viewModel.commandLanguage,
                     autoAdvanceActive: autoAdvanceActive,
                     isPaused: viewModel.isPaused,
                     countdownRemaining: viewModel.autoAdvanceCountdown,

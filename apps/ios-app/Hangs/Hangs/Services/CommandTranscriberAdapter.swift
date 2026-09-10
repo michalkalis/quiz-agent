@@ -219,6 +219,14 @@ final class DictationTranscriberCommandAdapter: CommandTranscriberAdapter {
     }
 }
 
+extension CommandTranscriberAdapter {
+    /// Whether this adapter already IS the given selection (engine + locale) —
+    /// the no-op check for `SilenceDetectionService.setCommandEngine` (#175).
+    nonisolated func matches(_ selection: CommandEngineSelection) -> Bool {
+        engineTag == selection.engineTag && locale.identifier == selection.localeIdentifier
+    }
+}
+
 // MARK: - Selection → adapter
 
 extension CommandEngineSelection {

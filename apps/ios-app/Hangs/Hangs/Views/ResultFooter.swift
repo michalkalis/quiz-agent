@@ -21,6 +21,8 @@ struct ResultFooter: View {
     let commandHint: String?
     /// #174: the Next button's title is its voice command — mic glyph.
     var showsVoiceGlyph: Bool = false
+    /// #175: the command language (= quiz language) for the bar's caption.
+    var commandLanguage: CommandLanguage = .english
     /// True while auto-advance is counting down (drives the CTA countdown + STAY).
     let autoAdvanceActive: Bool
     let isPaused: Bool
@@ -39,7 +41,7 @@ struct ResultFooter: View {
                 .padding(.horizontal, 4)
 
             if isListeningForCommands {
-                ListenBar(mode: .command, feedback: feedbackPhase, commandHint: commandHint)
+                ListenBar(mode: .command, feedback: feedbackPhase, commandHint: commandHint, language: commandLanguage)
                     .transition(.opacity)
             }
 

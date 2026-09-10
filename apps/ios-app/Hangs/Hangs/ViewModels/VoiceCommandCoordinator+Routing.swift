@@ -88,7 +88,7 @@ extension VoiceCommandCoordinator {
         // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
             let cancelTokens = VoiceCommandMatcher.normalize(transcript.text).split(separator: " ").map(String.init)
-            if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0) }) {
+            if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 noteMatchedForFeedback() // #122: visual twin of the ack earcon
                 abortSkipUndoWindow()
@@ -97,7 +97,8 @@ extension VoiceCommandCoordinator {
         }
 
         guard let command = VoiceCommandMatcher.match(
-            transcript: transcript.text, on: screen, isFinal: transcript.isFinal
+            transcript: transcript.text, on: screen, isFinal: transcript.isFinal,
+            language: commandLanguage
         ) else {
             // #122: the "heard you, didn't understand" glow — throttled inside.
             noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)

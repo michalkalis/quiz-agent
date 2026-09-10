@@ -56,12 +56,11 @@ enum VoiceCommandMatcher {
     ///   - screen: the current screen — bounds which commands are considered.
     ///   - isFinal: whether this is a finalized transcript. A volatile hypothesis
     ///     is scored against the stricter `volatileConfidenceFloor`.
-    ///   - language: the command grammar language (#120). Defaults to the
-    ///     launch-time selection so call sites above the engine seam are
-    ///     unchanged; tests pin it explicitly.
+    ///   - language: the command grammar language (#120). The app passes the
+    ///     quiz language (#175); the `.english` default is the tests' pin.
     static func match(
         transcript: String, on screen: VoiceCommandScreen, isFinal: Bool = true,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> VoiceCommand? {
         let normalized = normalize(transcript)
         guard !normalized.isEmpty else { return nil }
@@ -129,7 +128,7 @@ enum VoiceCommandMatcher {
     /// filler definition.
     static func hasContentTokens(
         _ normalized: String,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> Bool {
         let tokens = normalized.split(separator: " ").map(String.init)
         return !contentTokens(tokens, language: language).isEmpty

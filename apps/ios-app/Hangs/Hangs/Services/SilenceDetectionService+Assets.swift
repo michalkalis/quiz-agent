@@ -15,6 +15,7 @@ import Foundation
 // fires on a TCC background queue; without this the inferred @MainActor
 // isolation check traps at launch (see SilenceDetectionService.swift).
 @preconcurrency import Speech
+import os
 
 extension SilenceDetectionService {
     // MARK: - Authorization (#105)
@@ -35,6 +36,31 @@ extension SilenceDetectionService {
         case let .unavailable(reason):
             markCommandsUnavailable(reason: reason)
         }
+    }
+
+    /// #175 (founder 2026-09-09): the command grammar follows the QUIZ
+    /// language, so the recognizer may have to change between quizzes. Swaps
+    /// the adapter, resets availability and re-runs the authorization + asset
+    /// flow for the new locale. Refused while a listening window is open or
+    /// starting — the analyzer is built from `transcriberEngine` per window
+    /// (+Engine), so a swap mid-window would orphan modules; the per-window
+    /// start path calls this again, so the switch lands on the next window.
+    func setCommandEngine(_ selection: CommandEngineSelection) async {
+        guard !transcriberEngine.matches(selection) else { return }
+        guard audioEngine == nil, !startInFlight else {
+            Logger.voice.warning("🔇 SilenceDetection: engine switch to \(selection.rawValue) deferred — a listening window is open (#175)")
+            return
+        }
+        let engine = selection.makeAdapter()
+        transcriberEngine = engine
+        assetsPrepared = false
+        commandAvailability = .unknown
+        VoiceTelemetryContext.set(engine: engine.engineTag, locale: engine.locale.identifier)
+        SentryLog.info(
+            "Voice command engine switched", category: .voice,
+            attributes: ["engine": engine.engineTag, "locale": engine.locale.identifier]
+        )
+        await requestAuthorizationAndPrepareAssets()
     }
 
     /// Pure status → decision mapping (#105), kept separate from the async

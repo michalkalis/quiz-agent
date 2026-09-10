@@ -67,7 +67,8 @@ struct HomeView: View {
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
                     commandHint: viewModel.voiceHintWords,
-                    size: .slim
+                    size: .slim,
+                    language: viewModel.commandLanguage
                 )
                     .padding(.horizontal, 20)
                     .padding(.bottom, 10)

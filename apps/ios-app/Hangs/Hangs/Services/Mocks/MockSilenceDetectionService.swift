@@ -76,6 +76,14 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         stopListeningCallCount += 1
     }
 
+    /// #175: every requested engine, in order — lets a test prove the window
+    /// start path asks for the quiz language's engine before listening.
+    var commandEngineRequests: [CommandEngineSelection] = []
+
+    func setCommandEngine(_ selection: CommandEngineSelection) async {
+        commandEngineRequests.append(selection)
+    }
+
     func setTTSPlaybackActive(_ active: Bool) {
         ttsPlaybackActive = active
     }

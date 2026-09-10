@@ -7,8 +7,9 @@
 //  the command grammar now exists in English (default, #77 P2) and Slovak
 //  (founder-approved 2026-07-26, only reachable on the DictationTranscriber
 //  engine — SpeechTranscriber has no sk_SK). Every lookup takes a
-//  `CommandLanguage` defaulting to the launch-time selection, so callers above
-//  the engine seam stay unchanged and tests can pin a language explicitly.
+//  `CommandLanguage`; the app passes the quiz language explicitly (#175 —
+//  `VoiceCommandCoordinator.commandLanguage`), the `.english` default is the
+//  pre-#120 pin that tests rely on.
 //
 //  THE SLOVAK SET RANKS PRECISION ABOVE RECALL. In English mode the command
 //  vocabulary is disjoint from what the car actually hears (the founder speaks
@@ -81,7 +82,7 @@ enum VoiceCommandLexicon {
     /// Slovak set inherits that lesson: dictionary forms only, no phonetics.
     static func variants(
         for command: VoiceCommand,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> [String] {
         switch (language, command) {
         case (.english, .start): return ["start"]
@@ -158,7 +159,7 @@ enum VoiceCommandLexicon {
     /// "dobre, preskoč" as padding. This is the precision-over-recall trade the
     /// Slovak set is built on: saying "áno" will NOT confirm an answer.
     static func fillerWords(
-        for language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        for language: CommandLanguage = .english
     ) -> Set<String> {
         switch language {
         case .english:
@@ -208,7 +209,7 @@ enum VoiceCommandLexicon {
     /// Whether `token` (already normalized) is a spoken cancel/undo word.
     static func isCancelWord(
         _ token: String,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> Bool {
         undoCancelVariants(for: language).contains(token)
     }

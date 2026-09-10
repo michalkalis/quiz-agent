@@ -22,20 +22,16 @@
 
 ## Stav (2026-09-09)
 
-Implementované na vetve `feat/175-czech-voice-commands` (PR čaká na review):
+Implementované: PR #127 (gramatika + tlačidlá, merged 2026-09-09) a PR #130 (jazyk povelov = jazyk kvízu):
 
-- [x] `CommandLanguage.czech` + `CommandEngineSelection.dictationCzech` (`cs_CZ`, picker „Dictation · Czech“ v Nastaveniach, platí od ďalšieho spustenia — rovnaký mechanizmus ako sk).
+- [x] `CommandLanguage.czech` + `CommandEngineSelection.dictationCzech` (`cs_CZ`). **Founder 2026-09-09: jazyk povelov = jazyk kvízu, bez prepínača** — picker „Command engine“ v Nastaveniach odstránený; engine sa rieši pri štarte z uložených nastavení a znova pred každým oknom počúvania (`SilenceDetectionService.setCommandEngine`, nikdy uprostred okna), takže zmena jazyka kvízu platí od ďalšieho kvízu bez reštartu.
 - [x] Gramatika cs vo `VoiceCommandLexicon`: start · ok/okej/potvrď · dál/dále/pokračuj · znovu/znova · zopakuj/opakuj · přeskoč/vynech · stop/zruš · pauza; výplňové slová (jo, ano, dobře, jasně, no, tak, tedy…) neutralizované ako pri sk; undo-slovo „ne“; kontextový slovník pre DictationTranscriber.
 - [x] Nápovedy + caption v češtine (`VoiceCommandLexicon+Display.swift` — vyčlenené z lexikónu kvôli limitu veľkosti súboru).
 - [x] Závislosť z #174 — názvy hlasovo ovládateľných tlačidiel v rozkazovacom tvare v sk/en/cs: Štart/Start (doma aj na otázke), Preskoč/Přeskoč, Potvrď, Znova/Znovu/Again, Zruš (nový kľúč `voice.cancel`, systémové alerty nechávajú „Zrušiť“), Ďalej/Dál/Next; nápovedy citujú presne tieto slová (sk potvrdzovací sheet: „zruš“ namiesto „stop“). Mikrofónový glyf + Preskoč ako text namiesto ikony + auto-skrytie nápovied ostávajú v #174.
 - [x] Testy `CzechCommandGrammarTests` (13 testov, zrkadlo sk sady: routing s ř/ě/ů, inertné backchannely a vety, strict skip, disjunktnosť per obrazovka, volatile floor, undo-slová, display stringy).
 - [ ] Founder: overiť na zariadení (český kvíz, Nastavenia → Command engine → Dictation · Czech → reštart) — všetky povely z tabuľky.
 
-**Odchýlka od zadania:** gramatika sa nevyberá automaticky podľa jazyka kvízu — ani sk sa tak nevyberá; jazyk povelov je launch-time voľba v Nastaveniach (#120, engine sa stavia raz pri štarte). Automatické previazanie na jazyk kvízu je samostatné rozhodnutie (viď Follow-up).
-
-## Follow-up
-
-- Previazať jazyk povelov na jazyk kvízu (dnes 2 nezávislé voľby: kvíz sk/cs vs. povely en/sk/cs) — vyžaduje prestavbu enginu za behu (#120 ho stavia raz pri štarte). Founder rozhodnutie, či to chce pred friend-testingom.
+- [x] Testy `CommandEngineSwitchTests` (5): prepnutie len v nečinnosti, no-op pri zhode, odklad počas štartu okna, štart okna si vyžiada engine jazyka kvízu, zmena jazyka platí od ďalšieho okna.
 
 ## Definícia hotového
 

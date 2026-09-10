@@ -17,7 +17,7 @@ extension VoiceCommandLexicon {
     /// Slovak forms carry their real diacritics (display, not matching).
     static func spokenWord(
         _ command: VoiceCommand,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> String {
         switch (language, command) {
         case (.english, .start): return "start"
@@ -56,7 +56,7 @@ extension VoiceCommandLexicon {
     /// is independent of the app/quiz language.
     static func hint(
         on screen: VoiceCommandScreen,
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+        language: CommandLanguage = .english
     ) -> String {
         switch (language, screen) {
         case (.english, .home): return #"Say "start""#
@@ -83,7 +83,7 @@ extension VoiceCommandLexicon {
     /// `short` is the slim-bar form (#131 Track F): a 40pt one-row bar cannot
     /// carry the full sentence AND the words to say, and the words matter more.
     static func listeningCaption(
-        language: CommandLanguage = CommandEngineSelection.current.commandLanguage,
+        language: CommandLanguage = .english,
         short: Bool = false
     ) -> String {
         switch (language, short) {

@@ -105,7 +105,7 @@ struct ListenBar: View {
     var size: Size = .full
 
     /// Command-mode caption language (#120) — independent of the app/quiz locale.
-    var language: CommandLanguage = CommandEngineSelection.current.commandLanguage
+    var language: CommandLanguage = .english
 
     /// #132 Track B: MCQ think-phase countdown. Command mode only — answer mode
     /// ignores it (the mic is already live, there is nothing left to count down).

@@ -1,0 +1,5039 @@
+[
+  {
+    "question_id": "812e30e1-439e-4b68-a972-153b13c8b893",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The source clue says the city shares its *first* word with Metropolis and Gotham; the Czech changes it to the *second* word and adds \"City\" to Gotham, altering the stated clue (and the claim is still false of Metropolis, which has no second word) — the item stays playable and gradable since every option ends in \"City\", but the question no longer says what the source says.",
+            "span": "jehož název má stejné druhé slovo jako Metropolis a Gotham City jeho hrdinských kolegů",
+            "category": "other",
+            "severity": "major"
+          },
+          {
+            "note": "Word-for-word rendering of the English \"call home\"; a native would more naturally ask \"Které město je domovem Green Arrow?\" — no effect on grading.",
+            "span": "Které město nazývá Green Arrow domovem?",
+            "category": "idiom_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "DC Comics is globally distributed superhero culture, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T10:18:06.677918+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:18:12.838076+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b861af0a-056d-50a6-852f-4f32eb24823b",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English syntax copied word for word produces a broken double-relative clause (\"které ... kterým\"); a native would ask \"Za kterým oblíbeným animovaným hitem stojí stejné duo?\" — the item is still gradable but reads as non-Czech.",
+            "span": "stejné duo, které stojí za kterým oblíbeným animovaným komediálním hitem?",
+            "category": "register_calque",
+            "severity": "major"
+          },
+          {
+            "note": "Before the consonant cluster \"sv-\" Czech vocalizes the preposition (\"ve svižnou\"); purely stylistic, no effect on play.",
+            "span": "v svižnou a překvapivě zábavnou podívanou",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The question tests knowledge of major international cinema (Hollywood blockbuster and animated films), which are globally distributed culture and general world knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T10:19:17.727936+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Spider-Man: Into the Spider-Verse (directed by Phil Lord and Christopher Miller)",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Spider-Man: Paralelní světy (režiséři Phil Lord a Christopher Miller, tvůrci mj. Lega příběhu / animovaného hitu)",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T10:19:23.863813+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of the English clause: the Czech says the eyes looked like two colours rather than as if they had two different colours, and the adverb 'proslule' is awkwardly placed; a native would say something like 'proslule vypadaly, jako by měly každé jinou barvu', but the question remains fully understandable and gradable.",
+            "span": "vypadaly proslule jako dvě různé barvy",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "David Bowie is a globally renowned musician and his distinctive appearance is part of international cultural knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T00:26:57.906317+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Anisocoria - one pupil was permanently dilated from nerve damage (caused by an eye injury when he was young), making that eye appear darker and creating the illusion of different colored eyes",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Anisokorie — měl rozšířenou pupilu (zornici) na jednom oku kvůli paralýze svěrače duhovky, což bylo následkem zranění od úderu v mládí. Rozdílné velikosti zorniček vytvářely iluzi různobarevných očí",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T00:27:20.759353+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "6afeb849-779b-5ad5-97b1-c51fca1b132b",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The trailing \"...co?\" mirrors English \"to finish doing what?\" and sounds unidiomatic when heard aloud; natural Czech would front the question word (e.g. \"co by přehrada potřebovala přes sto let dokončit?\"), though the item stays fully playable and gradable.",
+            "span": "aby dokončila co?",
+            "category": "register_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "\"Odlitek\" renders English \"pour\" but normally denotes a metal casting; for concrete a native would say \"takto masivní betonový blok\" or \"taková masa betonu\" — the explanation still supports the same answer.",
+            "span": "takto masivní odlitek",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Hoover Dam is a globally recognized engineering landmark and the concrete curing/cooling challenge is part of international engineering history taught worldwide, not region-specific knowledge."
+      },
+      "verified_at": "2026-09-10T00:44:11.011734+00:00",
+      "answerability": {
+        "en": {
+          "answer": "cool",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "vychladnutí",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:44:41.597371+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "d8c7a633-02f1-418e-99da-d4d909519581",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The Czech version adds the bare phrase \"Věřte, nevěřte\" to the accepted answers, but that exact phrase is quoted in the question itself (\"ve stylu \\\"věřte, nevěřte\\\"\"), so a player who simply echoes the question is graded correct without knowing the brand — the English answer set (\"Ripley's Believe It or Not\", \"Ripley's\") always required the name Ripley.",
+            "span": "Věřte, nevěřte",
+            "category": "answer_leak",
+            "severity": "critical"
+          },
+          {
+            "note": "The subject is \"Sloupky\" (inanimate neuter plural), so the participle must be \"zasely\", not the masculine-animate \"zaseli\"; a native would correct it, though grading is unaffected.",
+            "span": "čímž zaseli tuto přetrvávající nepravdu",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Ripley's Believe It or Not is globally distributed pop culture/media, and the Einstein mathematics myth is world knowledge, neither specific to Czech regions."
+      },
+      "verified_at": "2026-09-10T00:27:24.456625+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Ripley's Believe It or Not!",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Ripley's Believe It or Not!",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:27:42.649205+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "dfb0de63-3470-4b1a-9c5e-1d030ba2ae71",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of \"Despite what\"; a native would say \"Navzdory tomu, co...\" or \"Ať už tvrdí kdokoli co chce\" — stiff but fully understandable and gradable.",
+            "span": "Přes to, co tvrdí",
+            "category": "register_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "\"Domes\" carried over as \"kopule\", which in Czech normally denotes a building's cupola; \"prosté praktické polokulovité přilby\" would be idiomatic, but the explanation still supports the same answer.",
+            "span": "jednoduché praktické kopule",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history and archaeology knowledge about Vikings, not region-specific; the horned-helmet misconception is globally known and taught internationally."
+      },
+      "verified_at": "2026-09-10T00:46:04.875849+00:00",
+      "answerability": {
+        "en": {
+          "answer": "horns",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "rohy",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:46:22.304931+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "48de98bb-1a16-4468-9bb9-99bf13f4eb84",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "'Rained in by the volcanic gloom' is rendered with 'zatmění' (an eclipse) rather than 'šero/temno'; the explanation still supports the same answer, so no gameplay harm.",
+            "span": "vulkanické zatmění",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history, climate science, and globally distributed literary culture; Frankenstein is part of the international literary canon taught worldwide."
+      },
+      "verified_at": "2026-09-10T00:46:22.102335+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Frankenstein",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Frankenstein",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:46:39.237819+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "923d2bb1-100b-4590-af34-083e7f6f2d01",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Píšťalka\" is a whistle as an instrument, so this alternative suggests blowing a whistle rather than whistling with the mouth; harmless since the correct variants \"Pískaná řeč\"/\"Pískaným jazykem\" are also listed, but a native would not phrase it this way.",
+            "span": "Píšťalkovou řečí",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Silbo Gomero (whistled language) is internationally documented world knowledge, not region-specific to understanding Spain or the Canaries."
+      },
+      "verified_at": "2026-09-10T01:22:53.583002+00:00",
+      "answerability": {
+        "en": {
+          "answer": "They use a whistled language called Silbo Gomero to communicate across ravines",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Pískáním — konkrétně pomocí pískavého jazyka Silbo Gomero, kde se hlášky reprezentují různými tóny pískání, jež se přes terén šíří lépe než lidský hlas",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:23:08.763705+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Case/agreement error — the prepositional phrase requires locative \"na prvním hudebním videokanálu\"; a native speaker would correct it, though the item remains playable and gradable.",
+            "span": "vůbec první klip na první hudební videokanálu",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "MTV's 1981 launch and The Buggles' song are part of global pop culture and music history, not specific knowledge tied to another region"
+      },
+      "verified_at": "2026-09-10T00:34:52.507768+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Video Killed the Radio Star",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Video Killed the Radio Star",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:35:24.263758+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "40d5dbc2-f7f5-4490-8c52-34a5b6317a29",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "An extra alternative answer not in the source, written in a phonetic transliteration that is not Czech orthographic practice; it only widens matching so it causes no gameplay harm, but it is invented content.",
+            "span": "Džon Viliams",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Star Wars, Jurassic Park, and Harry Potter are globally distributed films, and John Williams is an internationally renowned composer—this is general world cinema knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:47:51.527694+00:00",
+      "answerability": {
+        "en": {
+          "answer": "John Williams",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "John Williams",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:48:01.996098+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "0fa4dbec-502f-41fe-9696-decb852245a1",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The interrogative phrase is left at the end mirroring English syntax; natural Czech would front it (\"Ve kterém desetiletí byl poprvé nahrán pro western?\"), which also reads better when spoken aloud — the item remains fully playable and gradable.",
+            "span": "byl poprvé nahrán pro western v kterém desetiletí?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world cinema history and globally distributed pop culture trivia, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:48:04.530442+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b) 1950s",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) 50. léta 20. století",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:48:19.915722+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "da8efc8b-4521-5128-91dc-77f393653515",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "ok",
+        "findings": [],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": true,
+        "reason": "The question requires knowledge of the British music charts and specific trivia about a UK band's commercial decisions, which is regional knowledge specific to Britain/UK music industry, not general international culture."
+      },
+      "verified_at": "2026-09-10T00:39:08.185821+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Wet Wet Wet",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Wet Wet Wet",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:40:01.369353+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Standard Czech vocalises the preposition before the cluster (\"se kterou\"); as written it reads slightly awkwardly when spoken aloud, but the item remains fully playable and gradable.",
+            "span": "s kterou slavnou japonskou virtuální popovou hvězdou",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Miku Hatsune and Vocaloid culture are globally distributed internet phenomena, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:40:40.929501+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Miku Hatsune",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Hatsune Miku",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:41:02.874783+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "c65a16ad-8def-5e03-bb77-edcff209d1f8",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal calque of \"Academy gold\"; in Czech \"akademické zlato\" reads as academic/scholarly gold and does not denote an Oscar — a native would say \"Oscara\" or \"sošku Akademie\", though the item stays playable and gradable.",
+            "span": "akademické zlato",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "International actor, globally distributed films, and Academy Awards are world knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T00:42:12.808967+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Brendan Fraser",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Brendan Fraser",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:42:39.154783+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "8730a6ed-b8a2-5813-814b-bab0e2c36c17",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The noun is missing — it literally says the place is made into \"the most frequently struck lightning\" instead of \"nejčastěji blesky zasahované místo na planetě\"; the sentence is ungrammatical, though the answer stays gradable.",
+            "span": "dělá nejčastěji zasahované blesky na planetě",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Catatumbo lightning phenomenon is world geography and natural science knowledge taught globally, not region-specific knowledge like a domestic sports league or local holiday"
+      },
+      "verified_at": "2026-09-10T00:42:57.125484+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Lake Maracaibo",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Jezero Maracaibo",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:43:11.558309+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2676d9c8-7656-5dd0-a6cb-59efb5d42b51",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"otevírací týden\" is a word-for-word calque of English \"opening week\" (in Czech \"otevírací\" refers to shop opening hours); a native would say \"první týden prodeje\" or \"vstupní týden\", so the explanation reads as non-Czech though the answer stays gradable.",
+            "span": "jeho otevírací týden",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "BTS is globally known popular culture, and Billboard 200 chart performance is world knowledge tracked internationally"
+      },
+      "verified_at": "2026-09-10T00:44:51.199684+00:00",
+      "answerability": {
+        "en": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T00:45:26.009146+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "db6b3698-7f20-4fd5-8ad4-5270827c9e8d",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English \"estate\" in the sense of the heirs/rights-holders is carried over into Czech \"pozůstalost\", which denotes the inherited property itself and cannot act as an agent sharing an award (Czech would use \"jeho dědicové\" or \"správci jeho pozůstalosti\"); the explanation still supports the same answer, so the item remains playable.",
+            "span": "jeho pozůstalost se podílela na ceně Tony",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "T.S. Eliot, 'The Waste Land', and the musical Cats are globally distributed works of world literature and culture, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T01:03:27.203451+00:00",
+      "answerability": {
+        "en": {
+          "answer": "T.S. Eliot",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "T.S. Eliot",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:03:44.372743+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "46ab66c1-65b6-4844-8923-77e272e212fa",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Austria\" (Rakousko) was rendered as \"Austrálie\" (Australia), so the option set no longer matches the source and offers a non-Alpine, nonsensical distractor that breaks the question's internal logic.",
+            "span": "a) Austrálie",
+            "category": "mcq_options_translated",
+            "severity": "critical"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Flag designs and geography are general world knowledge taught globally, not region-specific."
+      },
+      "verified_at": "2026-09-10T01:04:06.705497+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) Švýcarsko",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:04:22.704860+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=15;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:04:45.022079+00:00"
+    }
+  },
+  {
+    "question_id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The English adverb \"famously\" is calqued into \"proslulé\", which in Czech can only read as an adjective modifying \"číslo\" (\"a famous different number\"); a native would say something like \"podle slavné historky ukázala tabule jiné číslo\".",
+            "span": "ukázala světelná tabule v hale proslulé jiné číslo",
+            "category": "lexical_calque",
+            "severity": "major"
+          },
+          {
+            "note": "\"postavena na tři číslice\" is a literal rendering of \"built with only three digits\"; Czech would normally say \"zkonstruována jen pro tři číslice\", though the meaning still comes through.",
+            "span": "tabule byla postavena jen na tři číslice",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Nadia Comăneci's 1976 Olympic perfect 10 is globally known sports history, not tied to any single country's curriculum or local knowledge"
+      },
+      "verified_at": "2026-09-10T00:48:47.330212+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a) 1.00",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) 1,00",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:49:05.523975+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "eb92a5b7-44e1-424f-a318-42abc48eb7f8",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The source alternative \"vienna austria\" was rendered with a comma, so in a comma-separated list it splits into two entries and \"Rakousko\" alone becomes an accepted answer, wrongly grading a player who names the country instead of the capital as correct.",
+            "span": "Vídeň, Rakousko",
+            "category": "other",
+            "severity": "major"
+          },
+          {
+            "note": "Czech uses \"listový\" for flaky/puff pastry; \"listovitý\" (leaf-shaped) is not the established form, though the explanation still supports the same answer.",
+            "span": "listovitý",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The origin and history of the croissant is general European culinary and historical knowledge, not specific to Czech region or curriculum."
+      },
+      "verified_at": "2026-09-10T00:49:08.839991+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Vienna",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Vídeň",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:49:25.573271+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "9d148f41-7dec-4c65-a634-04b84c45087f",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=20;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T00:52:46.583374+00:00"
+    }
+  },
+  {
+    "question_id": "6aa6b188-24c8-4356-b84e-773a39167138",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"vybowlován\" is an invented Czech-English hybrid verb with no established form; Czech cricket coverage would say \"byl vyautován nadhozem\" or keep the English term, though the numeric answer stays gradable.",
+            "span": "byl vybowlován",
+            "category": "lexical_calque",
+            "severity": "major"
+          },
+          {
+            "note": "Wrong case after the preposition — Czech requires \"za nulu\" (or \"bez jediného runu\"); it only sounds off, the item is still answerable.",
+            "span": "za nula",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          },
+          {
+            "note": "The source says \"in the low 60s\" (roughly 60–63) but the Czech says \"around the 60 mark\", a mild numeric drift confined to the explanation, so the answer is unaffected.",
+            "span": "se pohybuje kolem hranice 60",
+            "category": "unit_change",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world sports history about one of cricket's most famous players and his career statistics; not specific to Australian domestic affairs or curriculum."
+      },
+      "verified_at": "2026-09-10T01:04:45.553056+00:00",
+      "answerability": {
+        "en": {
+          "answer": "99.94",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "99,94",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:05:15.173514+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "8f5e7287-556b-4e77-8627-3254ab11765e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"horse-riding dance\" is rendered literally as \"tanec na koni\", which in Czech means dancing while sitting on a horse rather than the dance imitating riding one (natural: \"koňský tanec\" / \"tanec napodobující jízdu na koni\"); the explanation reads absurdly but the answer stays gradable.",
+            "span": "jeho tanec na koni",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Gangnam Style was a worldwide viral phenomenon, not domestic South Korean knowledge"
+      },
+      "verified_at": "2026-09-10T00:53:32.396731+00:00",
+      "answerability": {
+        "en": {
+          "answer": "PSY",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "PSY",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:53:46.763170+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "5965f766-4c3e-48dd-bcf9-86dd9a70eab9",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "An invented Czech localisation of the explorer's first name was added to the alternative answers; no Czech source calls him \"Arnošt\", so the item now accepts a name that does not exist and misrepresents the proper noun.",
+            "span": "Arnošt Shackleton",
+            "category": "other",
+            "severity": "major"
+          },
+          {
+            "note": "Literal rendering of English \"pack ice\"; Czech more naturally says \"ledová pole\" or \"mořský led\", though the meaning and the answer are unaffected.",
+            "span": "pakový led",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history about a famous Antarctic expedition; it's part of general international knowledge about polar exploration, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:54:11.368545+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Ernest Shackleton",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Ernest Shackleton",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:54:24.376114+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7197355f-41c6-4d60-b7aa-da6f150498fa",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "An extra, truncated variant of the name was added to the alternative answers that is not in the source; it does not affect grading of the real answers but is a stray artifact.",
+            "span": "Nicolas Mahu",
+            "category": "truncated_output",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is a globally documented tennis history milestone (Isner-Mahut, 2010), not tied to Czech-specific knowledge or domestic culture."
+      },
+      "verified_at": "2026-09-10T00:54:49.455632+00:00",
+      "answerability": {
+        "en": {
+          "answer": "John Isner",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "John Isner",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:55:07.639945+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b8898faf-885f-4c78-8186-14e9bf6f6344",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The homonym clash of \"kolo\" (lap) and \"kole\" (bicycle) is momentarily confusing when heard aloud; a native would say \"Ujet jedno kolo na jízdním kole\" or \"na kolech\", though the meaning is still recoverable and this is only a distractor.",
+            "span": "Objet jedno kolo na kole",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Le Mans is world-famous international motorsport history, not specific to France or any one region's domestic knowledge"
+      },
+      "verified_at": "2026-09-10T00:55:15.778838+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Přeběhnout přes trať ke svým zaparkovaným vozům",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:55:32.857609+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "182d2442-67c4-4b84-8abc-f9908495fb8b",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"habitable land\" rendered as \"obyvatelná půda\"; Czech would more naturally say \"mezi obyvatelným územím/souší na Zemi\", but the meaning and answer are unaffected.",
+            "span": "mezi obyvatelnou půdou na Zemi",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Bir Tawil is general world geography knowledge about territorial disputes and unclaimed land, not specific regional knowledge of Egypt or Sudan"
+      },
+      "verified_at": "2026-09-10T00:55:30.232761+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Bir Tawil is unclaimed territory—it is claimed by neither Egypt nor Sudan, making it one of the few habitable pieces of land on Earth that belongs to no recognized sovereign state. This arose from conflicting colonial-era boundary agreements; Egypt and Sudan each refuse to claim it because doing so would require accepting a border line that disadvantages them relative to other disputed territories.",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Je to de facto nikoho země - území, které si nenárokují ani Egypte ani Súdán. Kvůli sporu o hranice (Gibb's Line vs. linie z roku 1899) si oba státy konkurenčně nárokují Halayib Triangle. Aby se vyhnuly vzájemným nárokům, obu jsem si Bir Tawil nezačaly nárokovat, čímž se stala jedním z mála míst na obývaní Zemi mimo státní kontrolu.",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T00:55:52.796192+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=-;added=3)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T00:56:50.092011+00:00"
+    }
+  },
+  {
+    "question_id": "74b0fa56-ef2d-4522-882a-8a131c3ba1f2",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Wrong case and scrambled word order make the volcano the accusative object of \"zasypal\" (as if the volcano was buried), so the sentence literally asks something nonsensical; it should read \"Výbuch které sopky roku 79 n. l. zasypal římská města Pompeje a Herculaneum metry popela?\" — heard aloud it is confusing, though a knowing player would still say Vesuv and be graded right.",
+            "span": "Kterou sopku roku 79 n. l. zasypal výbuch římská města Pompeje a Herculaneum metry popela?",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The eruption of Vesuvius and destruction of Pompeii are world history and archaeology taught globally, not region-specific knowledge."
+      },
+      "verified_at": "2026-09-10T00:56:58.667289+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Mount Vesuvius",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Vesuv",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:57:09.251280+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2aa4ac32-60e7-476a-8ab4-3d0eafcf97f1",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "A native would more naturally say \"Stegosaurus už dávno vyhynul\"; the copula + adjective mirrors English \"was long extinct\" but causes no comprehension or grading harm.",
+            "span": "Stegosaurus byl dávno vyhynulý",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general scientific knowledge about paleontology and prehistoric life, taught globally in schools regardless of region."
+      },
+      "verified_at": "2026-09-10T01:05:34.930927+00:00",
+      "answerability": {
+        "en": {
+          "answer": "c",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "c) Asi 80 milionů let",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:05:50.807640+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2c9dabd8-308c-4c00-b36e-d4a94bb6a13e",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The Czech release title contains the answer word \"Baltimor\", so the question hands the player the city it asks for — the item stops being a quiz question.",
+            "span": "Špína Baltimoru (The Wire)",
+            "category": "answer_leak",
+            "severity": "critical"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Wire is globally distributed television culture known internationally, not region-specific knowledge despite being set in an American city"
+      },
+      "verified_at": "2026-09-10T00:58:32.496008+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Baltimore",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Baltimore",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:58:43.788294+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b310fa88-bba0-41da-9abb-e06b68aa9a85",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "ok",
+        "findings": [],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": true,
+        "reason": "Requires knowledge of NCAA college basketball rules and history, a domestic American sports league that is not general knowledge in Czech-speaking countries."
+      },
+      "verified_at": "2026-09-10T00:58:59.208865+00:00",
+      "answerability": {
+        "en": {
+          "answer": "the dunk",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "slam dunk / dunking",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:59:14.385210+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7ba298b8-48d3-4fdb-a487-e1f57f86cd4a",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The extra alternative answer \"vino\" is the Slovak/diacritic-less form rather than Czech \"víno\"; as an alternative it only widens grading acceptance, so no player is harmed, but it is not correct Czech.",
+            "span": "vino",
+            "category": "related_language_interference",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Louis Pasteur and the history of pasteurization are world history and science knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T01:05:53.685959+00:00",
+      "answerability": {
+        "en": {
+          "answer": "wine",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "víno",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:06:10.232575+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "300dab0f-0a4f-4099-a293-7195db9f5257",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"vylíhnout se\" means to hatch from an egg, whereas the source describes nymphs emerging from the ground (\"vynoří se\"/\"vylezou\"); the item remains fully answerable and gradable.",
+            "span": "než se všechny naráz vylíhnou",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world knowledge about a natural phenomenon and universal mathematics, found in global science media and teaching materials; the North American location is contextual, not curriculum-specific to another country."
+      },
+      "verified_at": "2026-09-10T00:59:42.938310+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Jsou to prvočísla",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:00:05.528163+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "c3c795b7-77da-4561-b9b9-3fb69f6a7533",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Czech euphony requires the vocalized preposition \"ve znaku\"; \"v znaku\" sounds awkward when read aloud by TTS, though the meaning and gradability are unaffected.",
+            "span": "závody v znaku",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Competitive swimming rules are standardized globally by FINA and apply equally in all countries."
+      },
+      "verified_at": "2026-09-10T01:01:46.016519+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Backstroke",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Znak",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:02:04.859761+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "bd5fbdb2-d6bf-4d1f-a2a5-6ee0d157c7a0",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=20;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:03:20.079463+00:00"
+    }
+  },
+  {
+    "question_id": "2c5b24ce-bab2-4959-b471-9d00bceb175d",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of \"iridium spike\"; Czech geology normally says \"iridiová anomálie\" (or \"iridiový pík\"), though the meaning still comes across and the answer is unaffected.",
+            "span": "Iridiový vrchol",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is established geological science about the K-T boundary layer and iridium, taught internationally as part of general paleontology and Earth science knowledge."
+      },
+      "verified_at": "2026-09-10T01:05:35.094481+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Iridium",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "iridium",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:05:50.186705+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "a3ca2456-97a7-4e0a-b55e-e478280b48e8",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The construction \"nelze si představit\" requires the accusative (\"Thajskou, indickou ani sečuánskou kuchyni si ... nelze představit\"); the nominative subject here is ungrammatical and a native speaker would correct it, though the item stays playable and gradable.",
+            "span": "Thajská, indická ani sečuánská kuchyně si bez chilli papriček nelze představit",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world history and geography about the origin and global dispersal of a crop, taught in schools worldwide."
+      },
+      "verified_at": "2026-09-10T01:06:22.000275+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a) Central and South America",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Ze Střední a Jižní Ameriky",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:06:38.044972+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "f7edbcc8-062d-4038-a3bb-80a9a2219fa2",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The English \"has ever won\" is carried over as a bare \"kdy\" in a main clause, which is unidiomatic in Czech (natural: \"Jen jediný člověk v historii získal...\"); the item is still fully understandable and gradable.",
+            "span": "Jen jediný člověk kdy získal dvě Nobelovy ceny zcela sám",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          },
+          {
+            "note": "An invented phonetic respelling was added to the alternative answers that has no counterpart in the source; it only widens acceptance so it does not harm grading, but it is not a real form of the name.",
+            "span": "Lajnus Pauling",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Nobel Prize history and famous international scientists are general world knowledge taught globally, not region-specific"
+      },
+      "verified_at": "2026-09-10T01:24:13.109373+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Linus Pauling",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Linus Pauling",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:24:29.908840+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "967f25c3-e0dd-4fd0-81a3-a067d49a1e31",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Wh-in-situ word order copies the English \"paired her with which superstar?\"; Czech requires the interrogative phrase up front (\"S kterou afrobeatovou superhvězdou ji spojila...?\"), so the spoken question sounds non-native, though it remains answerable.",
+            "span": "ji spojila s kterou afrobeatovou superhvězdou?",
+            "category": "register_calque",
+            "severity": "major"
+          },
+          {
+            "note": "Singular \"hvězda\" is paired with the plural verb \"dostaly\" (and later \"odehrály\"); it must be \"hvězdy\", otherwise the explanation contains a number-agreement error a native would correct.",
+            "span": "Kolumbijská a nigerijská hvězda se v červenci 2026 dostaly",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The 2026 World Cup, global Billboard charts, and Afrobeat are all worldwide knowledge not specific to Czech-speaking regions"
+      },
+      "verified_at": "2026-09-10T01:09:28.186640+00:00",
+      "answerability": {
+        "en": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Wizkid",
+          "passed": false,
+          "reason": "flagged_unclear"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:09:58.547323+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "932f7686-ee1e-4bfa-aecf-86a1212e5aac",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "A phonetic misspelling of the artist's name was invented and added to the alternative answers; it is not in the source and is not a valid Czech form of the name, so any display or read-back of the answer set shows a garbled name.",
+            "span": "Hary Stajls",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "'number-one singles' (singly, které se dostaly na první místo) is rendered as a superlative 'the globally most successful singles', a slightly different claim, though the answer Harry Styles is unaffected.",
+            "span": "dva celosvětově nejúspěšnější singly",
+            "category": "other",
+            "severity": "minor"
+          },
+          {
+            "note": "'extending a solo run' is carried over literally; Czech would more naturally say the artist, not his career, collected the awards.",
+            "span": "rozšiřují jeho sólovou kariéru, která už získala",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "One Direction and its members' solo careers are part of globally distributed international pop culture, not specific to any one region"
+      },
+      "verified_at": "2026-09-10T01:10:20.957313+00:00",
+      "answerability": {
+        "en": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:10:54.060283+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7d8f5670-87e8-4b6f-b088-736148b704c6",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The mid-sentence interrogative mirrors English \"pairs its hero with which actor\"; a native question read aloud would front it (\"Se kterým vyhořelým hercem ... spojuje seriál svého hrdinu?\") and would vocalise the preposition as \"se kterým\", though the item remains fully answerable.",
+            "span": "spojuje svého hrdinu s kterým vyhořelým hercem",
+            "category": "register_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "\"Vyhořelý\" denotes burnout rather than \"washed-up\" (a has-been); \"herec na sestupu\" / \"zapadlý herec\" fits better, but Trevor Slattery is still unambiguously identified by Iron Man 3 and the supervillain clue.",
+            "span": "vyhořelým hercem",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Iron Man 3 and Wonder Man on Disney+ are internationally distributed Marvel content consumed globally, including in Czech-speaking countries."
+      },
+      "verified_at": "2026-09-10T01:11:21.753707+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Ben Kingsley",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Ben Kingsley",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:11:52.144124+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English interrogative word order carried into Czech; a natural spoken Czech question would be \"Z jakého kovu je téměř celá vyrobena olympijská zlatá medaile?\" — understandable, but clunky when read aloud.",
+            "span": "je téměř celá vyrobena z jakého kovu?",
+            "category": "register_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "Redundant/awkward phrasing (\"gold gilded on top\"); \"asi šest gramů zlata napařeného/naneseného navrch\" would be idiomatic, though the meaning and the figure are still clear.",
+            "span": "šest gramů zlata pozlaceného navrch",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Olympic medal composition is international sporting knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T01:24:51.350816+00:00",
+      "answerability": {
+        "en": {
+          "answer": "silver",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "stříbro",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:25:04.364745+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "e276fad1-4afd-4acf-b5d0-ac1f0df4025f",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Handheld\" is rendered as \"kapesní\" (pocket-sized), which contradicts the point of the item — the DynaTAC was a brick, not pocket-sized; \"ruční\"/\"přenosný\" would be accurate, though the answer remains gradable.",
+            "span": "kapesní mobilní telefon",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The question tests general world knowledge about mobile phone history (the Motorola DynaTAC from 1984), not Czech-specific knowledge; the comparison objects are universal."
+      },
+      "verified_at": "2026-09-10T01:17:35.092802+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) Jako kilo cukru",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:17:51.276213+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1600;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:19:06.660030+00:00"
+    }
+  },
+  {
+    "question_id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=12;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:19:06.913450+00:00"
+    }
+  },
+  {
+    "question_id": "43520f30-d790-4d3e-be5b-2df27afa9e90",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Wrong preposition/case — Czech requires \"ve tvaru půlměsíce\"; \"do tvaru\" is ungrammatical and a native speaker would correct it, though the item remains playable.",
+            "span": "pečivo do tvaru půlměsíce",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "\"tažené těsto\" (stretched/strudel dough) is not a synonym for laminated dough (\"listové těsto\"), so the parenthetical gloss is inaccurate, but it does not affect the answer or grading.",
+            "span": "listového (taženého) těsta",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general European culinary and food history, not knowledge specific to one country's curriculum or domestic culture."
+      },
+      "verified_at": "2026-09-10T01:18:25.510948+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Austria",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Rakousko",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:18:44.173348+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "19a01d7c-1d5b-45fb-9872-89d18cecbf52",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The preposition must be vocalised before a word starting with z-: \"se zemědělstvím\"; as written it is a grammatical error a native speaker would immediately correct (explanation only, so the item stays playable).",
+            "span": "než lidé začali s zemědělstvím",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world archaeology and prehistory—global scientific knowledge, not specific to any region."
+      },
+      "verified_at": "2026-09-10T01:19:07.163647+00:00",
+      "answerability": {
+        "en": {
+          "answer": "c",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "c) Desítky tisíc let",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:19:31.164151+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "6fa83da7-962f-4b09-bd22-0f271a8efa7f",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=30;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:20:17.393116+00:00"
+    }
+  },
+  {
+    "question_id": "b5ba099b-da60-4111-8330-47e91b92a693",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Misspelling — Czech is \"oliheň\" with a háček; in an alternative-answer list it is harmless for grading but is not correct Czech.",
+            "span": "Olihen obrovská",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Zoological knowledge about animal anatomy (whale vs. squid eye size) is general science taught worldwide, not region-specific"
+      },
+      "verified_at": "2026-09-10T01:19:52.497849+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b) Giant squid",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) Krakatice obrovská",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:20:23.505130+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1800;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:24:55.506577+00:00"
+    }
+  },
+  {
+    "question_id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"navrhnout, že\" carries the English sense of \"propose that\" (put forward a hypothesis), where Czech would normally say \"Vědci předpokládají\" or \"přišli s hypotézou\"; the item remains fully playable and gradable.",
+            "span": "Vědci navrhli, že",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world knowledge about astronomy and an internationally known scientific hypothesis about an exoplanet's composition"
+      },
+      "verified_at": "2026-09-10T00:24:06.441013+00:00",
+      "answerability": {
+        "en": {
+          "answer": "diamond",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "diamant",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:24:22.057962+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b08c37fd-cc18-49ff-b6ae-83021b021c15",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The interrogative kept in English post-verbal position; a native would front it (\"jaký dramatický nebeský úkaz to znemožní?\"), though the question is fully understandable and gradable.",
+            "span": "to znemožní jaký dramatický nebeský úkaz?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is universal astronomy and physics knowledge about orbital mechanics, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:24:39.427202+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Total solar eclipses",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Úplné zatmění Slunce",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:25:04.288174+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "a928cf39-5172-4ee3-b982-3a857a6737a7",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Gender/number mismatch — the referent is masculine singular (\"plod\", picked up two words later by \"Který je ten podvodník\"), so the neuter \"Které\" is ungrammatical, and the phrase is a stiff calque of \"Odd one out\" where Czech would say \"Co sem nepatří\".",
+            "span": "Které se nehodí",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "\"sedí\" carries the English sense of seeds \"sitting\" on the outside; Czech would simply say \"jsou na povrchu\", though the meaning still comes through.",
+            "span": "její semínka sedí na povrchu",
+            "category": "lexical_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "English word order retained; natural Czech places the intensifier before the predicate (\"vůbec není pravá bobule\").",
+            "span": "není pravá bobule vůbec",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Botanical classification of fruits is universal scientific knowledge taught in biology curricula worldwide, not region-specific"
+      },
+      "verified_at": "2026-09-10T00:27:43.055140+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) Jahoda",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:28:00.197226+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "99d505ea-717c-4bd8-a561-8704af656157",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Malformed noun form (should be \"Halleyova kometa\" or \"kometa Halley\"); it sits in the alternative-answer list so it only fails to match rather than harming grading.",
+            "span": "Halleyova komet",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Mark Twain, Tom Sawyer, and Halley's Comet are globally distributed world knowledge taught internationally, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:26:29.056206+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Halley's Comet",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Halleyova kometa",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:26:43.240192+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1799190119762001;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T00:26:57.649373+00:00"
+    }
+  },
+  {
+    "question_id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=11;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T00:27:28.325253+00:00"
+    }
+  },
+  {
+    "question_id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The English deliberately says only \"a modified club head\"; adding \"golfové\" states the answer (golf) inside the question, so the item no longer tests anything.",
+            "span": "upravenou hlavu golfové hole",
+            "category": "answer_leak",
+            "severity": "critical"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history and space exploration knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T00:30:13.531574+00:00",
+      "answerability": {
+        "en": {
+          "answer": "golf",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "golf",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:30:27.054739+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "f79e7859-c4e1-4f7f-9277-b4be29e2f527",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"pochutina\" is feminine, so the agreement must be \"jedna z oblíbených pochutin\"; a native speaker would correct this, though the item stays answerable and gradable.",
+            "span": "není jeden z oblíbených pochutin",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "The anglicism \"snacky\" right after \"pochutin\" is redundant and stiff; natural Czech would be \"z misky s pochutinami\" or \"ze mísy s občerstvením\".",
+            "span": "z misky na snacky",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This tests general botanical knowledge about peanuts being legumes that mature underground, which is part of science education globally, not Czech-specific."
+      },
+      "verified_at": "2026-09-10T00:49:02.340374+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Arašíd",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:49:17.468977+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "80ec52c8-e041-5353-9929-26faed681b8c",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English-style noun-noun compound; Czech requires an adjective or genitive construction (\"whiskyovou válku\" / \"válku o whisky\"), so a native speaker would correct it, though the item stays playable.",
+            "span": "whisky válku",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Whisky War is world history and Arctic geography, covered in international media and sources, not domestic-specific knowledge."
+      },
+      "verified_at": "2026-09-10T00:30:40.660131+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Hans Island",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Hans Island",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:30:57.730260+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "0021cfb9-05e1-4ad6-b4c5-95f4370b3ea3",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The relative pronoun is in the nominative but functions as the object of \"dýcháme\"; it should be \"jejž dýcháme\" or \"který dýcháme\", so the explanation reads as ungrammatical Czech.",
+            "span": "kyslíkem, jenž dýcháme",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This tests general paleontological knowledge (stromatolites) studied globally in science education, not region-specific culture or local facts."
+      },
+      "verified_at": "2026-09-10T01:06:09.281314+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Stromatolity",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:06:25.830766+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "8022e07b-ecc0-5a01-bdca-579271097aec",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English \"accident\" here means a chance occurrence, so Czech would naturally say \"náhoda\"; \"nehoda\" suggests a mishap, but the question is still fully answerable and gradable.",
+            "span": "nehoda",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Percy Spencer microwave invention story is part of global technological history and world knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:30:59.416737+00:00",
+      "answerability": {
+        "en": {
+          "answer": "microwave oven",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "mikrovlná trouba",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:31:14.735052+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"pradleni\" is not a valid Czech form — the plural of \"pradlena\" is \"pradleny\" (or \"pradláci\"/\"valcháři\" for the Roman fullers), so a native speaker hears a malformed noun with mismatched masculine adjective agreement.",
+            "span": "Antičtí římští pradleni",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "\"močovina\" (urea) is a different substance from urine and is not in the source alternatives, so the grader would accept a factually wrong spoken answer.",
+            "span": "močovina",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Ancient Roman history and practices are general world knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T00:31:58.221457+00:00",
+      "answerability": {
+        "en": {
+          "answer": "urine",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "moč (urina)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:32:16.151469+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "0a0ba41c-788c-531c-a635-bf4c8569acf5",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The source says \"dozens of times a minute\" (desítky) but the Czech says \"ten times a minute\", altering a figure from the source; the answer is unaffected, so the item stays playable.",
+            "span": "mohou během bouře šlehnout desetkrát za minutu",
+            "category": "unit_change",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world geography and natural phenomena knowledge, not specific to any country's domestic curriculum or culture."
+      },
+      "verified_at": "2026-09-10T00:31:35.816103+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Venezuela",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Venezuela",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:31:52.616520+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The interrogative pronoun stranded at the end of the embedded clause reads awkwardly in Czech; a native would phrase it e.g. \"které běžné zařízení ukázal skutečně v používání?\" — the question is still understandable and gradable.",
+            "span": "ukázal, jak se skutečně používá které běžné zařízení?",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Film history about Psycho is part of globally distributed cinema culture, not region-specific domestic knowledge"
+      },
+      "verified_at": "2026-09-10T00:32:04.289439+00:00",
+      "answerability": {
+        "en": {
+          "answer": "toilet",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "toaleta (záchod)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:32:21.810650+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Word-for-word calque of \"Cellular phone\"; \"celulární telefon\" is not an established Czech term (Czech uses \"mobilní telefon\"/\"mobil\"), so this alternative is a dead entry no speaker would ever produce, though gameplay still works via the other variants.",
+            "span": "Celulární telefon",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history of technology—the first mobile phone call is globally taught general knowledge, not region-specific curriculum or domestic institutions"
+      },
+      "verified_at": "2026-09-10T00:32:42.120472+00:00",
+      "answerability": {
+        "en": {
+          "answer": "mobile phone",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "mobilní telefon",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:32:57.806908+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2896283e-ab84-50e8-97db-f2f40f478531",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The embedded interrogative mirrors English \"give off which gas, which acts as...\"; Czech would more naturally split it (\"uvolňují plyn, který působí jako rostlinný hormon. Jaký?\"), though the item remains fully playable and gradable.",
+            "span": "uvolňují jaký plyn, který působí jako rostlinný hormon?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Plant biology (ethylene as a plant hormone) and the avocado-banana ripening trick are general science and global culinary knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:33:14.885272+00:00",
+      "answerability": {
+        "en": {
+          "answer": "ethylene",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "etylén",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:33:30.200758+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "9dc0a654-cd38-48f0-95cc-2f7e1fe776cb",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The Czech meteorological term for graupel is \"krupky\" (or \"sněhové krupky\"); \"kroupky\" is not the established form and a native speaker would correct it, though as a distractor it does not affect grading.",
+            "span": "Kroupky (graupel)",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Virga is a standard meteorological term used internationally by weather scientists; the phenomenon occurs in appropriate climates worldwide and is part of general atmospheric science knowledge, not region-specific."
+      },
+      "verified_at": "2026-09-10T00:49:52.167926+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Virga",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:50:09.444987+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The dative possessive plus trailing \"každý\" reads awkwardly; a native would more likely say \"u žirafy jsou jen protažené na zhruba 25 centimetrů\" — no harm to playability or grading.",
+            "span": "žirafě jsou jen protažené na zhruba 25 centimetrů každý",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is basic comparative anatomy taught in biology curricula worldwide, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:36:03.598789+00:00",
+      "answerability": {
+        "en": {
+          "answer": "7",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "7 (sedm)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:36:14.970433+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "fd623190-5f5d-5a43-9bcc-b5f38e159360",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The participle disagrees with its head noun — \"prachu\" (masc. gen.) requires \"navátého\", not the feminine \"naváté\" — which a native would correct, though the item stays gradable.",
+            "span": "z prachu naváté tisíce kilometrů na sever",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "The stacked \"z prachu ... z které pouště\" plus the colloquial \"z které\" instead of \"ze které\" makes the spoken question stumble; no effect on the answer.",
+            "span": "na sever z které pouště?",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          },
+          {
+            "note": "\"Film\" for a thin coating is a technical borrowing that reads oddly aloud where \"povlakem\"/\"vrstvou\" is the normal Czech word; meaning is still recoverable.",
+            "span": "načervenalým filmem",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "General world geography and meteorology knowledge about Sahara dust transport, not region-specific domestic or curriculum knowledge"
+      },
+      "verified_at": "2026-09-10T00:36:20.815940+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Sahara",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Sahara",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:36:36.588268+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "length_ratio(explanation=0.30)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T00:37:07.668032+00:00"
+    }
+  },
+  {
+    "question_id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Ohyb světla\" is the established Czech term for diffraction (difrakce), not for the generic English \"bending of light\", so the Czech question asks about a different phenomenon than the stated answer \"lom světla\" — a player who knows physics may answer \"ohyb/difrakce\" and be graded wrong.",
+            "span": "Jaký jev související s ohybem světla za to může?",
+            "category": "lexical_calque",
+            "severity": "critical"
+          },
+          {
+            "note": "The English pair \"bend or break\" becomes two near-synonymous forms of the same Czech verb; \"ohýbá nebo láme\" would render the contrast naturally, though the item stays playable.",
+            "span": "láme nebo zlomí",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Refraction of light is universal physics taught in science education worldwide, including Czech schools"
+      },
+      "verified_at": "2026-09-10T01:06:12.572498+00:00",
+      "answerability": {
+        "en": {
+          "answer": "refraction",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "lom světla (refrakce)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:06:27.956916+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"kvalifikovat se jako\" carries the English sense of \"qualify as\" into a Czech verb that only means to qualify in a competition; Czech would say \"splňuje definici pouště\" / \"je považován za poušť\", so the explanation reads as an English phrase in Czech clothing (item still playable and gradable).",
+            "span": "se celý zmrzlý kontinent kvalifikuje jako poušť",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Desert definitions and Antarctica as Earth's largest desert by precipitation are general geographical and scientific knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T00:37:33.087356+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Antarctica",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Antarktida",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:37:51.465860+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The relative clause attaches to the nearest feminine noun \"kategorii\", so it reads as if the category never won rather than the franchise; a form like \"franšízou, která v jediné kategorii nikdy nezvítězila\" would be clearer, though the answer remains gradable.",
+            "span": "je nejnominovanější franšízou v jediné kategorii, která nikdy nezvítězila",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Oscars and Marvel are globally distributed culture; understanding major Oscar categories and their nominations is general world knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T00:39:12.756865+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Best Visual Effects",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Nejlepší vizuální efekty",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:39:38.962579+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "93b8897b-892d-5934-bc8e-1e479141a950",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The question itself says the astronauts smuggled aboard \"rolničky\", and the Czech item then accepts \"Rolničky\"/\"Rolničky, rolničky\" as correct answers, so a player who knows nothing can simply echo a word from the question and be graded right — a reveal the English (\"sleigh bells\" vs. \"Jingle Bells\") does not create.",
+            "span": "Rolničky, rolničky",
+            "category": "answer_leak",
+            "severity": "critical"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world history about an iconic moment in international space exploration; the song 'Jingle Bells' is a globally known Christmas carol."
+      },
+      "verified_at": "2026-09-10T00:38:15.547840+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Jingle Bells",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Jingle Bells",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:38:35.480508+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of \"classical conductor\"; Czech would normally say \"dirigent klasické hudby\", though the contrast with \"popová hvězda\" keeps the meaning clear and the item fully playable.",
+            "span": "klasický dirigent",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Grammy Awards are international music industry awards; both Georg Solti and Beyoncé are globally known figures, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:39:10.310674+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Beyoncé",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Beyoncé",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:39:29.077177+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "40519abd-5e42-5cf1-972f-a8b81cf9545d",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "An invented phonetic transliteration of the name was added to the alternative answers; Czech does not transcribe English names this way (that spelling convention is Serbian/Croatian), so it is a non-Czech string added to the answer set that the source does not contain.",
+            "span": "Ričí Blekmor",
+            "category": "other",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Deep Purple and 'Smoke on the Water' are part of global rock history and international music culture, not specific to any one region."
+      },
+      "verified_at": "2026-09-10T00:41:26.760399+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Ritchie Blackmore",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Ritchie Blackmore",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:41:49.830302+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "a4eb7b91-ed8e-4ec9-ba0a-2b2dd9425535",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"padlý\" in Czech means fallen in battle; the correct form for an object that fell is \"spadlý\" (already present as a separate alternative), so this extra variant is merely redundant and causes no grading harm.",
+            "span": "z padlého meteoritu",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Ancient Egyptian history and archaeology are global general knowledge, not specific to any region"
+      },
+      "verified_at": "2026-09-10T00:51:12.686580+00:00",
+      "answerability": {
+        "en": {
+          "answer": "The iron came from a meteorite",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Kov pochází z meteoritu. Tutanchamonova dýka byla vyrobena z meteoritového železa, které obsahuje vysoký obsah niklu, což ji činí výjimečně odolnou vůči rezivění. To vysvětluje, proč zůstala po 3 300 letech téměř nepoškozená, a to bez technologie potřebné k tavení železné rudy.",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:51:32.561653+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "e73fdb39-96db-57a7-927d-8943185e9cea",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English \"decorated career\" (= award-laden) is rendered literally as \"vyzdobená kariéra\", but Czech \"vyzdobený\" only means physically adorned; a native would say \"bohaté/úspěšné kariéře\" or \"kariéře plné ocenění\".",
+            "span": "k už tak vyzdobené kariéře",
+            "category": "lexical_calque",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Grammy Awards are internationally recognized, and major achievements in global music culture are general world knowledge, not specific to another country"
+      },
+      "verified_at": "2026-09-10T00:41:32.151369+00:00",
+      "answerability": {
+        "en": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Kendrick Lamar",
+          "passed": false,
+          "reason": "flagged_unclear"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T00:41:59.033174+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "0a8b5da4-fcb4-4908-86ef-3928bf579e05",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Missing diacritic: should be \"ječení\"; a misspelled distractor may also be mispronounced by text-to-speech, though it does not affect grading.",
+            "span": "Stanleyho ječeni",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Wilhelm Scream is internationally recognized film trivia, part of global cinema culture not specific to any one region"
+      },
+      "verified_at": "2026-09-10T00:52:16.426666+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Wilhelmův výkřik",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:52:31.562799+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "98bd5740-ef3f-42b0-ad88-18e315fc132e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The derived adjective should be lowercase (\"pixarovském\") and a native would more naturally say \"Ve filmu studia Pixar\"; no effect on playability or grading.",
+            "span": "V Pixarovském filmu",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Finding Nemo is a globally distributed Pixar film with worldwide release, part of international culture familiar to Czech audiences"
+      },
+      "verified_at": "2026-09-10T00:53:33.831357+00:00",
+      "answerability": {
+        "en": {
+          "answer": "clownfish",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "ryba klaun (okounovec)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:53:46.654006+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "6a6cf9f8-1a24-49bd-8b85-4b39029273e5",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "ok",
+        "findings": [],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": true,
+        "reason": "Silbo is a very localized linguistic practice specific to La Gomera in the Canary Islands, not globally distributed general knowledge or part of typical Czech school curricula."
+      },
+      "verified_at": "2026-09-10T00:56:01.931787+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Píská",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:56:16.870579+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The trailing interrogative phrase mirrors English syntax; natural spoken Czech would put the question word first (\"a kterého data se probudili?\"), though the item remains fully playable and gradable.",
+            "span": "a probudili se kterého data?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "World history knowledge; the 1918 Soviet calendar reform is part of general historical knowledge taught internationally, not Czech-specific or requiring knowledge of Russian/Soviet local culture"
+      },
+      "verified_at": "2026-09-10T00:54:25.717079+00:00",
+      "answerability": {
+        "en": {
+          "answer": "c) 14 February",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "c) 14. února",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:55:00.685371+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "5053fc85-0181-4836-8f85-104a78cee067",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"baština\" is not a Czech word for the Basque language (it looks like a garbled form of \"baskičtina\"); as an accepted alternative it only adds a meaningless string to the grader and does not stop a knowledgeable player from being graded correctly.",
+            "span": "baština",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Basque language's status as a linguistic isolate is established world knowledge about European languages, not region-specific facts about the Basque Country."
+      },
+      "verified_at": "2026-09-10T00:55:28.395484+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Baskičtina",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:55:44.111844+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "1afd7152-e671-4930-bd4c-5012df32aaff",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Missing reflexive \"se\" (\"se otevřely repliky\" / \"byly otevřeny repliky\"); as written the replicas are the ones doing the opening, which a native speaker would correct.",
+            "span": "že ve městech po celém světě otevřely repliky této kavárny",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "Misspelled variant of the answer added to the alternative list; harmless for grading but it is a corrupted string that does not correspond to anything in the source.",
+            "span": "Centrl Perk",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Friends is globally distributed culture, a world-famous international TV show known worldwide including in Czech-speaking countries"
+      },
+      "verified_at": "2026-09-10T00:57:31.738455+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Central Perk",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Central Perk",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:57:45.258937+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "24c00998-b024-4082-b40b-3f7a29b2d267",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Execution\" is rendered as \"exekuce\", which in current Czech means debt enforcement/distraint, not putting to death (\"poprava\"), so the explanation reads as nonsense to a native speaker.",
+            "span": "na svou exekuci obléknuto do kabátku",
+            "category": "lexical_calque",
+            "severity": "major"
+          },
+          {
+            "note": "\"Solemnly\" here means \"in full seriousness/with all due formality\"; \"slavnostně\" leans towards \"festively\", so a phrase like \"se vší vážností\" would carry the source sense.",
+            "span": "slavnostně soudně stíhány",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Animal trials in medieval Europe are documented historical fact across multiple countries, part of general European history, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:56:45.900855+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Animals",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Zvířata",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:57:10.130043+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "d06760ad-40b4-4913-b091-0f893e0f3e59",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Word-for-word rendering of English \"widely regarded\"; Czech would normally say \"obecně považován\", though the meaning is fully clear and the item remains playable and gradable.",
+            "span": "široce považován",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is world history and geological science — the 1883 Krakatoa eruption is part of global general knowledge, not region-specific curriculum or local knowledge"
+      },
+      "verified_at": "2026-09-10T00:57:26.129949+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Krakatoa",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Krakatoa",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:57:41.237195+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "d14c2a15-1297-449e-94e9-e08e736e8dad",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The possessive pronoun is feminine but the referent revealed later is masculine ('seriál'), and it has no antecedent at all — a native would write 'Jeho finále' or restructure; the item is still playable and gradable.",
+            "span": "Její finále z roku 1983",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "An accepted-answer variant not in the source was added; 'máš' is an ordinary Czech verb form, so it risks false accepts, though it plausibly covers ASR transcription of the spoken title.",
+            "span": "Máš",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "M*A*S*H is globally distributed popular culture, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T00:58:10.314709+00:00",
+      "answerability": {
+        "en": {
+          "answer": "MASH",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "MASH",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:58:25.187026+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "484a45af-95f7-451d-9d97-dd34816a59c5",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The source figure \"2.45 metres\" has been converted to centimetres, altering the unit stated in the question (Czech athletics normally states \"2,45 metru\"), so the heard question no longer matches the source item.",
+            "span": "245 centimetrů z roku 1993",
+            "category": "unit_change",
+            "severity": "critical"
+          },
+          {
+            "note": "Both figures in the explanation are likewise converted from metres (2.45, 2.43) to centimetres, so the supporting text no longer reports the source's units.",
+            "span": "překonal 245 centimetrů ... neskočil výš než 243 centimetrů",
+            "category": "unit_change",
+            "severity": "critical"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "World record in the international Olympic sport of athletics is general sports knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T00:58:43.435060+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Cuba",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Kuba",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:58:57.211355+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "c27ac7d7-cee9-443b-89d6-643f942bcc4f",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"dozrávat\" is intransitive in Czech, so the plant cannot \"ripen a fruit\"; it should read e.g. \"na každé rostlině dozrává vždy jen jeden plod\" — the sentence is understandable but grammatically wrong.",
+            "span": "každá rostlina dozrává vždy jen jeden plod",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Pineapple cultivation and plant morphology is general agricultural and botanical knowledge, not region-specific; pineapples are grown globally and their growing method is common world knowledge."
+      },
+      "verified_at": "2026-09-10T00:59:03.175420+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "b) Ve středu pichlavé rostliny těsně nad zemí",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T00:59:15.495526+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b5d7bdf8-fa29-4857-8025-3b065ed6ae05",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of English \"chewing gum\"; natural Czech is \"žvýkací guma\" — harmless since it only widens the alternative-answer list, but a native would phrase it differently.",
+            "span": "guma na žvýkání",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is global technology history (first commercial barcode scan, 1974), not knowledge specific to Czech countries or any particular region."
+      },
+      "verified_at": "2026-09-10T01:00:54.200053+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "a) Balíček žvýkaček",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:01:12.851153+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Stacking the relative pronoun \"který\" with the interrogative \"které\" mirrors the English syntax and sounds stilted when read aloud; a native would say e.g. \"vznikl s rozpočtem nejblíže které částce?\" — playability and grading are unaffected.",
+            "span": "vznikl s rozpočtem, který se nejvíce blíží které částce?",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "International film and global box office records are world knowledge, not specific to Czech-speaking regions"
+      },
+      "verified_at": "2026-09-10T01:08:50.367364+00:00",
+      "answerability": {
+        "en": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "c) Přibližně sto milionů dolarů",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:09:10.545802+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The English country name was left in the Czech alternative answers instead of being localised to \"Rakousko\", so a player who answers with the Czech country name has no matching alternative (the primary answer \"Vídeň\" still works, so the item remains playable).",
+            "span": "Austria",
+            "category": "untranslated_string",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Eurovision Song Contest is an international event with global media coverage; the host city is general world knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T01:09:39.408745+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Milan",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": null,
+          "passed": false,
+          "reason": "unanswerable"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:11:02.695137+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7e9cf519-3881-4411-9a08-e208b698d1ca",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=10;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:12:14.359871+00:00"
+    }
+  },
+  {
+    "question_id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1800;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:19:08.995854+00:00"
+    }
+  },
+  {
+    "question_id": "573f4062-a490-4af0-8358-737eebdba343",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Two alternative answers were added that have no counterpart in the source (6 in English, 8 in Czech); they only loosen grading, so no player is harmed, but the answer set no longer matches the source.",
+            "span": "V ostrých rozích se koncentruje napětí, Koncentrace napětí v rozích",
+            "category": "other",
+            "severity": "minor"
+          },
+          {
+            "note": "\"thousands of times\" is rendered as \"tisíckrát\" (a thousand times); it is only in the explanation and does not affect the answer, but \"tisícekrát/tisíce­krát\" would keep the source figure.",
+            "span": "tisíckrát napíná a povoluje",
+            "category": "unit_change",
+            "severity": "minor"
+          },
+          {
+            "note": "Literal calque of English \"traced the failures to\"; Czech normally says \"než vyšetřovatelé zjistili, že příčinou byly trhliny\", but the meaning and the supported answer are unchanged.",
+            "span": "vystopovali příčinu selhání k trhlinám",
+            "category": "idiom_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is about universal physics and aircraft engineering principles (pressure distribution and structural stress), not region-specific knowledge."
+      },
+      "verified_at": "2026-09-10T01:12:29.291649+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Rounded corners and oval shapes distribute stress evenly around the window perimeter. Sharp corners create stress concentration points that become weak under the cyclic pressurization loads of repeated flights, making them prone to fatigue cracks and catastrophic failure. The smooth curves allow the window to withstand the pressure differential safely over thousands of flight cycles.",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Oválná a zaoblená okénka rovnoměrně rozdělují síly od přetlaku v kabině. Hranatá okna by měla stresové vrcholy v rozích, kde by se síly soustřeďovaly a mohlo by dojít k prasklinu. Zaoblený tvar optimálně distribuuje napětí po obvodu okénka a zabraňuje jeho selhání.",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:12:51.932321+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "9782e8e8-9112-4e1c-aecd-d16475c5339f",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The Czech masculine animate plural of \"nahý\" is \"nazí\" (used correctly elsewhere in the item); \"nahí\" is the Slovak form, so these alternative answers are non-Czech word forms in the output.",
+            "span": "Nahí, Byli nahí",
+            "category": "related_language_interference",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Ancient Greek Olympic history is world history taught in general education curricula worldwide, not region-specific knowledge"
+      },
+      "verified_at": "2026-09-10T01:16:28.506990+00:00",
+      "answerability": {
+        "en": {
+          "answer": "nothing/they were nude",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Nic — sportovci soutěžili nazí",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:16:46.722184+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "734a7f0b-c4fb-4d6d-a8e1-5ad5967750a3",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The standard Czech adjective is \"incký\" (incká říše); the nonstandard form sits in the alternative answers only, so grading is unaffected because \"Inkové\" and \"říše Inků\" already cover the likely spoken answers.",
+            "span": "Inkská říše",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is standard world history and archaeology knowledge taught internationally, including in Czech schools"
+      },
+      "verified_at": "2026-09-10T01:16:37.346617+00:00",
+      "answerability": {
+        "en": {
+          "answer": "c",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "c) Inkové",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:16:53.634515+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1700;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:17:34.561109+00:00"
+    }
+  },
+  {
+    "question_id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "An interrogative word inside a purpose clause mirrors English syntax; natural spoken Czech would be \"k urychlení jakého lékařského zákroku?\" — the item remains fully understandable and gradable.",
+            "span": "aby urychlila jaký lékařský zákrok?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Medical history and the development of surgical instruments is global knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T01:17:34.820602+00:00",
+      "answerability": {
+        "en": {
+          "answer": "amputation",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "amputace",
+          "passed": false,
+          "reason": "wrong_answer"
+        },
+        "verdict": "control_fail",
+        "checked_at": "2026-09-10T01:18:00.671835+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "35ddda4b-d4c2-4e64-b030-c1a2e1a1e340",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"burrs\" (burdock seed heads, Czech \"plody lopuchu\" / \"bodliny\") is rendered as \"bodláky\" (thistles), a botanically loose word choice; the answer \"suchý zip\" is still fully derivable and gradable, so no player is harmed.",
+            "span": "pichlavé bodláky",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is a famous international invention story and scientific history taught globally, not specific to Czech or any single country's curriculum"
+      },
+      "verified_at": "2026-09-10T01:17:43.271623+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Velcro",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "suchý zip (Velcro)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:17:59.460175+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "720f7057-b39a-4de1-8bb2-de45f59cf103",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Czech negative concord requires the negated verb (\"nepřispěje téměř ničím\"); the positive form is a literal echo of English \"contributes almost nothing\" and reads as a grammar slip, though the meaning survives.",
+            "span": "Jediný chloupek přispěje téměř ničím",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          },
+          {
+            "note": "An extra alternative answer not present in the source was added; it only loosens grading rather than harming the player, but the answer set no longer matches the English item.",
+            "span": "Chloupky na prstech a van der Waalsovy síly",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is a question about gecko biology and van der Waals forces—general scientific knowledge taught globally, not region-specific."
+      },
+      "verified_at": "2026-09-10T01:19:42.833673+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Van der Waals forces between microscopic setae (hair-like structures) on the gecko's feet and the glass surface",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Van der Waalsovy síly. Gekon má na svých prstech miliony ultrajemných chlupovitých struktur (setae), které vytváří obrovskou povrchovou plochu. Tyto struktury generují slabé intermolekulární Van der Waalsovy síly mezi atomy gekona a atomy skla. Každá jednotlivá síla je nepatrná, ale jejich součet je dostatečný k přidržení.",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:20:01.956137+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "24a23cc4-9456-4836-b68e-8b8de461b9a7",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "English \"venomous spurs\" is \"jedové ostruhy\" in Czech; \"ostny\" means spines and echoes the hedgehog's \"bodliny\" later in the same sentence, slightly blurring the contrast that justifies the answer, though the item stays playable and gradable.",
+            "span": "jedové ostny",
+            "category": "other",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general zoological knowledge about mammalian venom systems, applicable worldwide regardless of where these animals are found."
+      },
+      "verified_at": "2026-09-10T01:20:17.648572+00:00",
+      "answerability": {
+        "en": {
+          "answer": "d",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "d) Ježek",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:20:50.540593+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2f977694-a9d5-4ccf-ad56-13bccc1d1653",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Adjective does not agree with the noun — should be \"bleskové bouřky\" (plural) — a native speaker would immediately hear the wrong form, though the question remains playable and gradable.",
+            "span": "zažívá blesková bouřky",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world geography and natural phenomena knowledge about a notable Earth record, not region-specific to Czech culture or education"
+      },
+      "verified_at": "2026-09-10T01:22:18.884258+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Lake Maracaibo",
+          "passed": true,
+          "reason": null
+        },
+        "model": "deepseek-v4-flash",
+        "target": {
+          "answer": "Jezero Maracaibo",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T01:22:33.753116+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+    "bucket": "critical",
+    "status": "rejected",
+    "verification": {
+      "guards": {
+        "ok": false,
+        "reasons": [
+          "number_mismatch(missing=1600;added=-)"
+        ]
+      },
+      "skipped": "guards failed",
+      "verified_at": "2026-09-10T01:22:35.245530+00:00"
+    }
+  },
+  {
+    "question_id": "d3e90bd4-1eb3-4283-8e6d-45746e83dedb",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"Plují\" renders English \"float\" literally; Czech normally says \"vznášejí se\" for weightless floating, though the meaning remains clear and the item stays gradable.",
+            "span": "Proč tedy plují?",
+            "category": "lexical_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is a general physics question about gravity, orbital mechanics, and microgravity—taught worldwide as part of science education."
+      },
+      "verified_at": "2026-09-10T10:18:06.499037+00:00",
+      "answerability": {
+        "en": {
+          "answer": "The ISS is in continuous free fall around Earth: its high orbital (tangential) velocity means it's falling toward Earth at the same rate the Earth's surface curves away, so it and everything inside it fall together, producing apparent weightlessness rather than an absence of gravity.",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "ISS i astronauti jsou ve stavu volného pádu – stanice neustále \"padá\" k Zemi, ale zároveň se díky vysoké obvodové rychlosti pohybuje dostatečně rychle vpřed, takže její dráha pádu odpovídá zakřivení Země (obíhá po orbitě). Astronauti padají stejnou rychlostí jako stanice kolem nich, takže vůči ní necítí žádnou reakční sílu (tíhu) a jeví se jako beztížní – nejde tedy o absenci gravitace, ale o stav neustálého volného pádu (mikrogravitace).",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:18:17.578254+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"morský\" is the Slovak form; Czech requires \"mořský\" (ďas mořský), so a Slovak word sits inside the Czech answer list.",
+            "span": "ďas morský",
+            "category": "related_language_interference",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general scientific knowledge about marine biology and deep-sea anglerfish reproduction, available globally and not tied to Czech-specific curriculum or culture."
+      },
+      "verified_at": "2026-09-10T10:18:53.495916+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Anglerfish",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Ďasovec (hlubinná ryba čeledi Ceratiidae, např. druh rodu Ceratias/Ďasovcovití) – jde o sexuální parazitismus u ďasovců",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:18:59.995720+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The clitic \"se\" is placed before the interrogative phrase instead of after it (\"která země se rozprostírá\"), producing an ungrammatical word order that no native speaker would say when the question is read aloud.",
+            "span": "se která země rozprostírá přes dvanáct časových pásem",
+            "category": "fluency_grammar",
+            "severity": "major"
+          },
+          {
+            "note": "\"Franzie\" is not a Czech word or any real name for France; it is an invented alternative answer with no counterpart in the source, polluting the accepted-answer set.",
+            "span": "Franzie",
+            "category": "other",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is general world geography knowledge about France's overseas territories, taught in standard curricula globally, not region-specific knowledge."
+      },
+      "verified_at": "2026-09-10T10:18:46.639820+00:00",
+      "answerability": {
+        "en": {
+          "answer": "France",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Francie",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:18:52.441730+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "\"pro co?\" is a literal rendering of English \"for what?\"; a native would phrase the trailing interrogative differently (e.g. \"k čemu ho ... záměrně využívají?\"), though the question is still fully understandable and gradable.",
+            "span": "jako záměrnou dopadovou zónu pro co?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "International space operations and geographic facts are general world knowledge, not specific to any country's curriculum or culture"
+      },
+      "verified_at": "2026-09-10T10:18:59.949917+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Decommissioned spacecraft and space station debris (e.g., the retired ISS and other satellites/space stations)",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "vyřazené vesmírné stanice a kosmické lodě (např. dřívější stanice Mir), tedy tzv. hřbitov kosmických lodí, kam se cíleně vrací a potápí vysloužilá kosmická technika",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:19:10.398934+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "6ffb1eae-978c-46c8-baba-e9811e0ad9bd",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Subject-verb agreement error: the subject \"jeden dotyk\" is masculine, so it must read \"by mohl být\"; a native speaker would correct this, though the explanation is still understandable and the item remains gradable.",
+            "span": "jeden dotyk by mohla být dešťová kapka",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Venus flytrap biology is general scientific knowledge taught globally, not regional or country-specific"
+      },
+      "verified_at": "2026-09-10T10:19:35.888424+00:00",
+      "answerability": {
+        "en": {
+          "answer": "2",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "2",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:19:41.315952+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "b3d6ea9b-463a-495a-b146-7fecb39e6328",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The briefcase belonged to the corpse, but the relative pronoun \"který\" (masculine) attaches to \"důstojník\" rather than to \"mrtvolu\" (feminine); a native would write \"oblečenou jako důstojník ... a měla v aktovce\" or \"v uniformě důstojníka\" — the meaning still comes through and the item stays playable.",
+            "span": "mrtvolu oblečenou jako důstojník královské námořní pěchoty, který měl v aktovce falešné invazní plány",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Operation Mincemeat and the invasion of Sicily are standard WWII history taught internationally, including in Czech education; not region-specific knowledge."
+      },
+      "verified_at": "2026-09-10T10:19:48.319582+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Sicily",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Sicílie",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:19:54.671672+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "45e5038b-9b33-4a80-86bd-25d5120f9711",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The score is attached to \"skončilo\" in a bare genitive numeral phrase calqued from \"finished 19 points to 8\"; a native would say \"skončilo poměrem 19:8\" or \"skončilo 19:8\", though the figures are correct and the item stays fully playable.",
+            "span": "které skončilo pouhých 19 bodů na 8",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Question concerns international Olympic sports history and historical basketball rules, which is general world knowledge, not country-specific"
+      },
+      "verified_at": "2026-09-10T10:20:19.511573+00:00",
+      "answerability": {
+        "en": {
+          "answer": "a",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "a) Hrálo se venku na hliněném hřišti promáčeném deštěm",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:20:25.087490+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "The apposition \"Film ... ve filmu\" repeats the word \"film\" redundantly; a native would drop the leading \"Film\" — no effect on playability or grading.",
+            "span": "Film Super Mario Galaxy ve filmu předběhl",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Film box office records and video game franchises are global knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T10:20:41.229860+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Super Mario Bros. (A Minecraft Movie)",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Super Mario (film Super Mario Galaxy Movie z dubna 2026)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:20:58.364748+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "7f4a5602-80c2-4ec7-9e03-c987241947c0",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Mirrors the English \"by doing what\" with a trailing interrogative; a native would more naturally ask \"...co udělal uprostřed fotbalového zápasu?\", and a sentence-final \"co?\" after a long clause is easy to miss when heard aloud.",
+            "span": "tím, že uprostřed fotbalového zápasu udělal co?",
+            "category": "register_calque",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The founding legend of rugby and the Webb Ellis Trophy are general world sports knowledge, not region-specific"
+      },
+      "verified_at": "2026-09-10T10:20:35.570898+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Picked up the ball and ran with it",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Zvedl míč rukama a rozběhl se s ním",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:20:41.101307+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Literal rendering of the English industry term \"craft category\"; Czech would normally say \"technickou kategorii\", though the question remains understandable and answerable.",
+            "span": "řemeslnou kategorii",
+            "category": "lexical_calque",
+            "severity": "minor"
+          },
+          {
+            "note": "Masculine forms are used about a woman right after \"první ženou\"; a native would write \"první černošskou a první filipínskou vítězkou\", but the explanation still supports the same answer.",
+            "span": "prvním černošským vítězem a prvním filipínským vítězem",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "The Oscars are a globally known international film awards ceremony, not a Czech or region-specific institution."
+      },
+      "verified_at": "2026-09-10T10:20:50.279158+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Best Cinematography",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Nejlepší kamera (kameramanka Autumn Durald Arkapaw za film Sinners se stala první ženou, která tuto cenu vyhrála)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:21:05.748540+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "fac9520e-e5c6-4712-be4a-593ae393db26",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Redundant doubling of the word for cloud (\"oblak\" + \"mrak\") reads as \"a cloud of a cumulus cloud\"; a native would say \"jeden nadýchaný kupovitý mrak (kumulus)\", though the question is still clearly understood and gradable.",
+            "span": "jeden nadýchaný oblak kupovitého mraku (kumulu)",
+            "category": "fluency_grammar",
+            "severity": "minor"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "This is a question about atmospheric science and cloud physics, which is general world knowledge taught internationally, not specific to Czech regions or culture."
+      },
+      "verified_at": "2026-09-10T10:21:31.722774+00:00",
+      "answerability": {
+        "en": {
+          "answer": "b",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "b) 500 tun",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:21:38.419854+00:00"
+      }
+    }
+  },
+  {
+    "question_id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+    "bucket": "flagged",
+    "status": "approved",
+    "verification": {
+      "judge": {
+        "notes": "",
+        "verdict": "defects",
+        "findings": [
+          {
+            "note": "Czech \"prasknout\" is intransitive (sklo praskne), so the transitive use is a calque of English \"crack the glass\"; a native would say \"rozbít sklo akvária\" or \"způsobit prasknutí skla\".",
+            "span": "dokáže prasknout sklo akvária",
+            "category": "fluency_grammar",
+            "severity": "major"
+          }
+        ],
+        "cost_cents": 0.0,
+        "held_for_review": false
+      },
+      "guards": {
+        "ok": true,
+        "reasons": []
+      },
+      "regional": {
+        "flag": false,
+        "reason": "Mantis shrimp are a real animal with globally documented characteristics; this is general zoological knowledge found in nature documentaries and educational content worldwide."
+      },
+      "verified_at": "2026-09-10T10:21:28.101689+00:00",
+      "answerability": {
+        "en": {
+          "answer": "Peacock mantis shrimp (Odontodactylus scyllarus)",
+          "passed": true,
+          "reason": null
+        },
+        "model": "claude-sonnet-5",
+        "target": {
+          "answer": "Kreveta kudlankovitá (rak kudlankový, Odontodactylus scyllarus)",
+          "passed": true,
+          "reason": null
+        },
+        "verdict": "pass",
+        "checked_at": "2026-09-10T10:21:34.911611+00:00"
+      }
+    }
+  }
+]

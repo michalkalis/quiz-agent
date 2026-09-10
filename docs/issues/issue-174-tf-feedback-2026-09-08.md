@@ -43,7 +43,7 @@
 - [x] Founder: výber A1 / B1 / C2 / D-alert (2026-09-09)
 - [x] A1 + B1 + C2 — PR #118 merged 2026-09-09 (screenshoty zo simulátora overené)
 - [x] D — `POST /api/v1/questions/availability` + alert Začať s N / Resetovať videné / Zrušiť — PR #119 merged 2026-09-09, backend prod v107
-- [ ] Pencil sync (sheet, footer, zoznam možností) po TF potvrdení
+- [~] Pencil sync — urobené na plátne 2026-09-10 (Answer-Confirm → `174 A1/B1`: zdvihnutý sheet, stmavenie, Potvrď/Znova s mic glyfom · Question-Listen 131BC Idle/NoMatch footer: Štart (play) · ⌨ · Preskoč, glyfy · nový frame `Question-MCQ — 174 C2 List (long options)` · Result 131D „Next“ + glyf · Home „Start“ + glyf · Settings „Voice hints“ riadok); **čaká na founder ⌘S v Pencile + commit `.pen`**
 - [x] ElevenLabs: nie je problém (staging kľúč)
 - [x] Názvy tlačidiel = hlasové povely v rozkazovacom tvare + slovník + mikrofónový glyf — texty sk/en/cs + slovník + nápovedy prišli v PR #127 (#175, 2026-09-09); vetva `feat/174-imperative-buttons` dopĺňa: Preskoč ako textový čip · Štart s play ikonou (mic = glyf) · en „confirm“ v slovníku + en nápoveda confirm/again/cancel; glyf `VoiceGlyph` len keď sú povely zapnuté a rozpoznávač pripravený; Pauza v toolbare = malý mic badge
 - [x] Nápovedy — tá istá vetva: slová pod lištou (`voiceHintWords`) sa zobrazia prvých 5 dokončených kvízov (`QuizStats.totalQuizzes`), potom len stav; miss bez slov = caption „Nerozumel som“; Nastavenia → Hlas → „Hlasové nápovedy“ (`voiceHintsEnabled: Bool?`, nil = automaticky, hodnota = natrvalo)

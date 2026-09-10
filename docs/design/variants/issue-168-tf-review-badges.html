@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#168 — Označenie review stavu otázky v TF buildoch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page-bg:#0F1116; --page-line:#262B36; --page-text:#E7EAF0; --page-dim:#98A0B0;
+  --bg:#F6F7F9; --card:#FFFFFF; --ink:#0E1A2B;
+  --pink:#FF3D8F; --pinkDeep:#D91E72; --blue:#0A84FF; --muted:#6B7280; --mutedFaint:#9CA3AF;
+  --green:#16A34A; --teal:#14B8A6; --slate:#64748B; --amber:#D97706; --red:#DC2626;
+  --border:rgba(14,26,43,.122); --neutralSoft:rgba(14,26,43,.055);
+  --cardShadow:0 4px 20px rgba(14,26,43,.08); --navShadow:0 2px 8px rgba(14,26,43,.06);
+  --display:Anton,"Arial Narrow",Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:48px 28px 96px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:46px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+.block{margin-top:64px;padding-top:32px;border-top:2px solid var(--page-line)}
+.variant{margin-top:48px;padding-top:24px;border-top:1px dashed var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+.vtag.b{background:var(--teal)}
+h2{font-family:var(--display);font-weight:400;font-size:38px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+h3{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:-.3px;margin:0;text-transform:uppercase}
+.concept{color:var(--page-dim);max-width:88ch;margin:10px 0 0;font-size:16px}
+.concept b{color:var(--page-text);font-weight:600}
+.pros{margin:12px 0 0;padding:0;list-style:none;display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;letter-spacing:.4px}
+.pros li{padding:6px 10px;border-radius:6px;background:#181C25;color:var(--page-dim)}
+.pros li.ok{color:#22C55E} .pros li.no{color:#FF7FB4}
+.devices{display:flex;gap:36px;flex-wrap:wrap;margin:28px 0 0;align-items:flex-start}
+figure.device{margin:0}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--page-dim);margin-top:13px;text-align:center;max-width:390px}
+figure.device figcaption b{color:#22C55E;font-weight:600}
+
+/* phone */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--bg);color:var(--ink);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 26px 64px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07)}
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px}
+.nav-r{display:flex;gap:8px;align-items:center}
+.chip{width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--navShadow)}
+.chip svg{width:15px;height:15px;color:var(--muted)}
+.prog{flex:0 0 auto;height:3px;margin:8px 24px 0;border-radius:2px;background:rgba(14,26,43,.10);overflow:hidden}
+.prog i{display:block;height:100%;width:30%;background:var(--pink);border-radius:2px}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.lbl.n{color:var(--slate)}.lbl.f{color:var(--mutedFaint)}
+.qhead{display:flex;justify-content:space-between;margin:14px 24px 0}
+.stem{flex:0 0 auto;margin:10px 24px 6px;font-family:var(--display);font-size:30px;line-height:1.08}
+.spk{margin:0 24px;color:var(--ink);display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--mutedFaint);letter-spacing:1.5px}
+.spk svg{width:16px;height:16px;color:var(--ink)}
+.model{margin:10px 24px 0;font-family:var(--mono);font-size:11px;color:rgba(14,26,43,.45);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.model .sep{color:rgba(14,26,43,.25)}
+.foot{margin-top:auto;flex:0 0 auto;padding:14px 20px 28px;display:flex;flex-direction:column;gap:12px}
+.listen{border-radius:28px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.35);padding:12px 18px;text-align:center}
+.listen .t{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--teal);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase}
+.listen .h{margin-top:4px;font-size:14px;font-weight:600;color:var(--teal)}
+.row{display:flex;gap:10px;align-items:center}
+.btn{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700;padding:0 16px;flex:0 0 auto}
+.btn.sec{background:var(--card);border:1px solid var(--border);color:var(--ink)}
+.btn.prim{background:var(--pink);color:#fff;flex:1 1 auto}
+.pill{font-family:var(--mono);font-size:14px;font-weight:600;background:rgba(255,255,255,.22);border-radius:12px;padding:3px 9px}
+
+/* result */
+.band{margin:14px 20px 0;padding:24px 20px 20px;border-radius:22px;background:var(--green);color:#fff}
+.band .v{font-family:var(--display);font-size:56px;line-height:.95;text-transform:uppercase}
+.band .s{margin-top:8px;font-size:15px;font-weight:600;opacity:.9}
+.acard{margin:12px 20px 0;padding:18px 20px;border-radius:18px;background:var(--card);box-shadow:var(--cardShadow)}
+.acard .k{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mutedFaint)}
+.acard .a{font-size:24px;font-weight:700;margin-top:4px}
+.acard .e{font-size:15px;color:var(--muted);margin-top:8px;line-height:1.45}
+.metarow{margin:10px 24px 0;font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--mutedFaint);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* badges — the component under decision */
+.bdg{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;border-radius:6px;padding:3px 8px;white-space:nowrap;line-height:1.3}
+.bdg i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.bdg.ok{color:var(--green);background:rgba(22,163,74,.10)}
+.bdg.pending{color:var(--amber);background:rgba(217,119,6,.12)}
+.bdg.machine{color:var(--teal);background:rgba(20,184,166,.12)}
+.bdg.flag{color:var(--amber);background:rgba(217,119,6,.12)}
+.bdg.crit{color:var(--red);background:rgba(220,38,38,.12)}
+.bdg.lang{color:var(--slate);background:var(--neutralSoft)}
+/* text-only flavour (variant A) */
+.bdg.txt{background:none;padding:0;border-radius:0}
+/* chip-in-nav flavour (variant B) */
+.chip.bdgchip{width:auto;padding:0 12px;border-radius:18px;gap:6px;display:inline-flex;align-items:center}
+.chip.bdgchip.crit{background:rgba(220,38,38,.12);color:var(--red)}
+.chip.bdgchip.flag{background:rgba(217,119,6,.12);color:var(--amber)}
+.chip.bdgchip.machine{background:rgba(20,184,166,.12);color:var(--teal)}
+.chip.bdgchip span{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase}
+/* strip flavour (variant C) */
+.strip{margin:10px 20px 0;padding:10px 14px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.8px}
+.strip.crit{background:rgba(220,38,38,.10);color:var(--red);border:1px solid rgba(220,38,38,.25)}
+.strip.flag{background:rgba(217,119,6,.10);color:var(--amber);border:1px solid rgba(217,119,6,.25)}
+.strip .why{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:13px}
+.strip .act{flex:0 0 auto;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;font-size:10px}
+
+/* legend */
+.legend{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.lg{background:#151922;border:1px solid var(--page-line);border-radius:14px;padding:16px 18px}
+.lg .row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lg .who{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--page-dim)}
+.lg p{margin:10px 0 0;color:var(--page-dim);font-size:14px}
+.lg p b{color:var(--page-text);font-weight:600}
+.lg .cnt{margin-top:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;color:#6E7688}
+table{border-collapse:collapse;margin-top:18px;font-size:14px}
+th,td{border:1px solid var(--page-line);padding:8px 12px;text-align:left;vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--page-dim)}
+td b{color:var(--page-text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">#168 · SK/CS preklady · TestFlight review označenie</p>
+  <h1>Ktorá otázka ešte nie je schválená</h1>
+  <p class="lede">Len v TestFlight a debug buildoch (rovnaká brána ako hviezdičkový rating). App Store build <strong>nič z tohto nevidí</strong> a servíruje len ľudsky schválené otázky a preklady. Vyber <strong>stavy</strong> (blok 1) a <strong>umiestnenie</strong> (blok 2).</p>
+  <p class="meta">TOKENY: THEME+HANGS.SWIFT · 390×844 · MODEL KAPTION DNES: 11PT MONO, INK 45 % POD OTÁZKOU · HVIEZDIČKA A SPÄTNÁ VÄZBA = EXISTUJÚCE TF CHIPY V NAVIGÁCII</p>
+
+  <!-- ===================== BLOK 1 — STAVY ===================== -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK 1</span><h2>Päť stavov, jedno slovo</h2></div>
+    <p class="concept">Každá servírovaná otázka dostane v TF presne jeden štítok. Kombinuje dve veci, ktoré dnes žijú oddelene: <b>review anglického originálu</b> (človek schválil / len stroj) a <b>stav prekladu</b> (sudca čistý / sudca našiel chyby / kritické). Farba = naliehavosť: zelená nič, tyrkysová informácia, oranžová pozri sa, červená chyba v hre.</p>
+    <div class="legend">
+      <div class="lg"><div class="row1"><span class="bdg ok"><i></i>Schválené</span><span class="who">bez štítku v hre</span></div><p>Originál je v stave <b>approved</b> (človekom alebo strojom, founder 2026-09-10: rozhoduje stav, nie kto ho nastavil) a preklad (ak je) prešiel sudcom bez nálezu. <b>Toto ide do App Store.</b> V TF len tichý zelený bod.</p><div class="cnt">EN APPROVED 169 (ĽUDSKY SCHVÁLENÝCH)</div></div>
+      <div class="lg"><div class="row1"><span class="bdg pending"><i></i>Na review</span><span class="who">originál v pending_review</span></div><p>Anglická otázka prešla strojovými bránami, ale nie je v stave approved (dnešný stav <b>pending_review</b>). Nezávisí od jazyka. Servíruje sa len v TF.</p><div class="cnt">EN PENDING 225</div></div>
+      <div class="lg"><div class="row1"><span class="bdg machine"><i></i>Preklad · stroj</span><span class="who">sudca čistý, bez človeka</span></div><p>Preklad schválil strojový sudca bez jedinej poznámky, ty si ho nevidel. Informatívne, nie alarm. Stav approved, takže po cutovere ide aj do App Store.</p><div class="cnt">SK ~230 · CS ~240 (SCHVÁLENÉ MÍNUS FLAGGED)</div></div>
+      <div class="lg"><div class="row1"><span class="bdg flag"><i></i>Preklad · skontroluj</span><span class="who">sudca má poznámku</span></div><p>Preklad prešiel, ale sudca našiel nekritickú chybu (bohemizmus, doslovný idióm, regionálny výraz). Toto je „flagged“ z review exportu.</p><div class="cnt">SK 111 · CS 82</div></div>
+      <div class="lg"><div class="row1"><span class="bdg crit"><i></i>Preklad · kritické</span><span class="who">odmietnuté strojom</span></div><p>Preklad neprešiel: prezradená odpoveď, zlá zodpovedateľnosť, homoglyf. Dnes sa <b>neservíruje vôbec</b>. Otázka pre teba: servírovať ho v TF so štítkom, aby si chybu videl v hre?</p><div class="cnt">SK 50 · CS 54 (PRED PREHODNOTENÍM SONNETOM)</div></div>
+      <div class="lg"><div class="row1"><span class="bdg lang"><i></i>EN fallback</span><span class="who">preklad chýba</span></div><p>Kvíz beží v sk/cs, ale táto otázka preklad nemá, hráč dostal angličtinu. Až po T23 cutovere, keď sa bude filtrovať podľa jazyka.</p><div class="cnt">SK 50 · CS 54 NEPRELOŽENÝCH</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== BLOK 2 — UMIESTNENIE ===================== -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">BLOK 2</span><h2>Kde štítok sedí</h2></div>
+    <p class="concept">Tri miesta. Všetky používajú rovnaké štítky z bloku 1, líšia sa tým, <b>ako nahlas</b> a <b>kedy</b> ich vidíš. Na výsledkovej obrazovke sa štítok opakuje vždy (tam máš čas čítať).</p>
+
+    <!-- VARIANT A -->
+    <div class="variant">
+      <div class="vhead"><span class="vtag b">VARIANT A</span><h3>Vedľa modelu, v jednom riadku</h3></div>
+      <p class="concept">Dnešný sivý riadok s modelom pod otázkou sa rozšíri: <b>model · jazyk prekladu · štítok</b>. Rovnaké písmo, rovnaká výška, štítok len dostane farbu. Nič nové na obrazovke, nulový vplyv na layout.</p>
+      <ul class="pros"><li class="ok">✓ najmenší zásah, presne tam, kde už pozeráš</li><li class="ok">✓ nerozbije žiaden existujúci layout</li><li class="no">✗ 10pt text v aute = prečítaš až na výsledku</li></ul>
+      <div class="devices">
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="nav-r"><span class="lbl n">03 / 10</span><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 1.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 9.7l-3.2 1.7.6-3.6L1.8 5.3l3.6-.5z"/></svg></div><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3h10v7H6l-3 2.5V10H2z"/></svg></div></div></div>
+            <div class="prog"><i></i></div>
+            <div class="qhead"><span class="lbl n">VEDA A PRÍRODA</span><span class="lbl f">STREDNÁ</span></div>
+            <div class="stem">Ktorý dravec dokáže pri strmhlavom lete prekonať rýchlosť 300 km/h?</div>
+            <div class="spk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6v4h3l4 3V3L5 6z"/><path d="M11.5 5.5a3.5 3.5 0 010 5"/></svg>KLEPNI PRE ZOPAKOVANIE</div>
+            <div class="model"><span>session:opus</span><span class="sep">·</span><span>SK</span><span class="sep">·</span><span class="bdg flag txt"><i></i>Preklad · skontroluj</span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM ●○○</div><div class="h">Povedz odpoveď</div></div>
+              <div class="row"><div class="btn sec">Preskočiť</div><div class="btn prim">Nahrávať <span class="pill">24s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Otázka · riadok model · jazyk · štítok</figcaption>
+        </figure>
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><span class="lbl n">03 / 10</span></div>
+            <div class="band"><div class="v">Správne.</div><div class="s">+1 · séria 3</div></div>
+            <div class="acard"><div class="k">Odpoveď</div><div class="a">Sokol sťahovavý</div><div class="e">Pri strmhlavom útoku na korisť dosahuje vyše 320 km/h, je to najrýchlejší živočích na Zemi.</div></div>
+            <div class="metarow"><span>ZDROJ WIKIPEDIA</span><span>·</span><span>SESSION:OPUS · SK</span><span>·</span><span class="bdg flag"><i></i>Preklad · skontroluj</span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM PRÍKAZY ●○○</div><div class="h">Povedz „ďalej“</div></div>
+              <div class="row"><div class="btn prim" style="background:var(--ink)">Ďalšia otázka <span class="pill">6s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Výsledok · ten istý štítok v meta riadku</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- VARIANT B -->
+    <div class="variant">
+      <div class="vhead"><span class="vtag b">VARIANT B</span><h3>Chip v navigácii, vedľa hviezdičky</h3></div>
+      <p class="concept">Štítok je <b>tretí chip</b> v hornej lište, pri ratingu a spätnej väzbe: rovnaký tvar, farba podľa stavu. Vidíš ho <b>celý čas</b>, aj počas odpočtu, a klepnutie otvorí existujúci rating sheet s predvyplnenou poznámkou „preklad“. Zelený stav chip nemá vôbec (lišta ostáva ako dnes).</p>
+      <ul class="pros"><li class="ok">✓ viditeľné aj periférne, aj v aute</li><li class="ok">✓ klepnutie = rovno zahlásiť chybu (znovu využije rating)</li><li class="no">✗ ďalší prvok v lište, ktorá už má dva chipy</li></ul>
+      <div class="devices">
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="nav-r"><div class="chip bdgchip crit"><span>Kritické</span></div><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 1.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 9.7l-3.2 1.7.6-3.6L1.8 5.3l3.6-.5z"/></svg></div><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3h10v7H6l-3 2.5V10H2z"/></svg></div></div></div>
+            <div class="prog"><i></i></div>
+            <div class="qhead"><span class="lbl n">HISTÓRIA</span><span class="lbl f">ŤAŽKÁ</span></div>
+            <div class="stem">V ktorom českom meste sa ťažilo striebro na jáchymovské toliare?</div>
+            <div class="spk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6v4h3l4 3V3L5 6z"/><path d="M11.5 5.5a3.5 3.5 0 010 5"/></svg>KLEPNI PRE ZOPAKOVANIE</div>
+            <div class="model"><span>session:opus</span><span class="sep">·</span><span>SK</span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM ●○○</div><div class="h">Povedz odpoveď</div></div>
+              <div class="row"><div class="btn sec">Preskočiť</div><div class="btn prim">Nahrávať <span class="pill">24s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Otázka · červený chip = preklad prezradil odpoveď</figcaption>
+        </figure>
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="nav-r"><div class="chip bdgchip machine"><span>Stroj</span></div><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 1.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 9.7l-3.2 1.7.6-3.6L1.8 5.3l3.6-.5z"/></svg></div><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3h10v7H6l-3 2.5V10H2z"/></svg></div></div></div>
+            <div class="prog"><i></i></div>
+            <div class="qhead"><span class="lbl n">FILMY A HUDBA</span><span class="lbl f">ĹAHKÁ</span></div>
+            <div class="stem">Ktorá kapela vydala album Abbey Road?</div>
+            <div class="spk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6v4h3l4 3V3L5 6z"/><path d="M11.5 5.5a3.5 3.5 0 010 5"/></svg>KLEPNI PRE ZOPAKOVANIE</div>
+            <div class="model"><span>session:opus</span><span class="sep">·</span><span>SK</span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM ●○○</div><div class="h">Povedz odpoveď</div></div>
+              <div class="row"><div class="btn sec">Preskočiť</div><div class="btn prim">Nahrávať <span class="pill">24s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Otázka · tyrkysový chip = preklad prešiel strojom, človek nevidel</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- VARIANT C -->
+    <div class="variant">
+      <div class="vhead"><span class="vtag b">VARIANT C</span><h3>Otázka ticho, výsledok nahlas</h3></div>
+      <p class="concept">Počas otázky len farebný bod vedľa modelu (nerozptyľuje pri odpovedaní). Na <b>výsledkovej obrazovke</b> sa objaví pruh pod odpoveďou s <b>dôvodom od sudcu</b> („Raroh je iný druh než sokol sťahovavý“) a tlačidlom <b>Zahlásiť</b>, ktoré otvorí rating sheet. Ideálne pre stav „skontroluj“, kde chceš vedieť čo.</p>
+      <ul class="pros"><li class="ok">✓ vidíš dôvod, nie len farbu</li><li class="ok">✓ otázka ostáva čistá</li><li class="no">✗ pruh treba skrátiť na 1 riadok, dôvod je často dlhší</li><li class="no">✗ počas otázky takmer neviditeľné</li></ul>
+      <div class="devices">
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><div class="nav-r"><span class="lbl n">03 / 10</span><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 1.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 9.7l-3.2 1.7.6-3.6L1.8 5.3l3.6-.5z"/></svg></div></div></div>
+            <div class="prog"><i></i></div>
+            <div class="qhead"><span class="lbl n">VEDA A PRÍRODA</span><span class="lbl f">STREDNÁ</span></div>
+            <div class="stem">Ktorý dravec dokáže pri strmhlavom lete prekonať rýchlosť 300 km/h?</div>
+            <div class="spk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6v4h3l4 3V3L5 6z"/><path d="M11.5 5.5a3.5 3.5 0 010 5"/></svg>KLEPNI PRE ZOPAKOVANIE</div>
+            <div class="model"><span>session:opus</span><span class="sep">·</span><span>SK</span><span class="sep">·</span><span class="bdg flag txt" style="font-size:0;gap:0"><i style="width:8px;height:8px"></i></span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM ●○○</div><div class="h">Povedz odpoveď</div></div>
+              <div class="row"><div class="btn sec">Preskočiť</div><div class="btn prim">Nahrávať <span class="pill">24s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Otázka · len oranžový bod pri modeli</figcaption>
+        </figure>
+        <figure class="device">
+          <div class="phone">
+            <div class="sb"><span>11:18</span><span>•••</span></div>
+            <div class="nav"><div class="chip"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></div><span class="lbl n">03 / 10</span></div>
+            <div class="band"><div class="v">Správne.</div><div class="s">+1 · séria 3</div></div>
+            <div class="acard"><div class="k">Odpoveď</div><div class="a">Sokol sťahovavý</div><div class="e">Pri strmhlavom útoku na korisť dosahuje vyše 320 km/h, je to najrýchlejší živočích na Zemi.</div></div>
+            <div class="strip flag"><span class="bdg flag" style="background:none;padding:0"><i></i>Skontroluj</span><span class="why">„Raroh“ je iný druh, hráč s nesprávnym vtákom by dostal bod.</span><span class="act">Zahlásiť ›</span></div>
+            <div class="metarow"><span>ZDROJ WIKIPEDIA</span><span>·</span><span>SESSION:OPUS · SK</span></div>
+            <div class="foot">
+              <div class="listen"><div class="t">POČÚVAM PRÍKAZY ●○○</div><div class="h">Povedz „ďalej“</div></div>
+              <div class="row"><div class="btn prim" style="background:var(--ink)">Ďalšia otázka <span class="pill">6s</span></div></div>
+            </div>
+          </div>
+          <figcaption>Výsledok · pruh s dôvodom sudcu · <b>Zahlásiť</b> = rating sheet</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ROZHODNUTIA ===================== -->
+  <section class="block">
+    <div class="vhead"><span class="vtag">ROZHODNUTÉ 2026-09-10</span><h2>Founder rozhodol</h2></div>
+    <table>
+      <tr><th>#</th><th>Otázka</th><th>Rozhodnutie</th></tr>
+      <tr><td>1</td><td>Stavy z bloku 1: všetkých päť, alebo zlúčiť „stroj“ so „schválené“?</td><td><b>Všetkých päť.</b></td></tr>
+      <tr><td>2</td><td>Servírovať v TF aj <b>kritické</b> (strojom odmietnuté) preklady?</td><td><b>Áno, skúsime.</b> App Store ich nikdy nedostane.</td></tr>
+      <tr><td>3</td><td>Umiestnenie A / B / C</td><td><b>Variant A</b> (riadok vedľa modelu, rovnaký štítok v meta riadku výsledku). Poznámka: App Store smie zobrazovať aj otázky neschválené človekom, ale len v stave approved.</td></tr>
+    </table>
+  </section>
+</div>
+</body>
+</html>

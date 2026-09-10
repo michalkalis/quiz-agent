@@ -1,0 +1,7 @@
+registered batch bfa5cc6d-2d09-49f3-9105-c1f5a67de405 — 30 questions, 1 arms
+mapping copy: /Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent/docs/testing/runs/corpus-session-2026-09-02/night-mapping.json — never send it to a rater
+
+rating URLs:
+  https://quiz-pack-api.fly.dev/web/rate/bfa5cc6d-2d09-49f3-9105-c1f5a67de405?rater=michal
+
+Export when the round is done: python export_ratings.py --base-url https://quiz-pack-api.fly.dev

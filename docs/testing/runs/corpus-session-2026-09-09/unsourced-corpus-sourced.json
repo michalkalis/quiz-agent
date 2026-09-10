@@ -1,0 +1,1580 @@
+[
+ {
+  "id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+  "question": "In 1971, Apollo 14 commander Alan Shepard smuggled a modified club head to the Moon and became the first person to play which sport there?",
+  "correct_answer": "Golf",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Space exploration",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Apollo_14",
+  "source_excerpt": "a Wilson six iron golf club head, which he had modified to attach to the handle of the contingency sample tool, and two golf balls",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's Apollo 14 article confirms Shepard hit golf balls on the Moon in Feb 1971 with a modified Wilson six-iron head; the only quibble is that 'smuggled' overstates it (he had quiet permission from MSC director Bob Gilruth), which does not change the answer."
+   }
+  }
+ },
+ {
+  "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+  "question": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?",
+  "correct_answer": "Wombat",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Animal biology oddities",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Wombat_feces",
+  "source_excerpt": "Their droppings are the only known animal droppings to be cube-shaped.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's dedicated article and peer-reviewed/Ig Nobel-recognized research confirm wombats are the only known animal producing cube-shaped droppings, with no contradicting discovery found through September 2026."
+   }
+  }
+ },
+ {
+  "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+  "question": "Bananas are very slightly radioactive, thanks to the naturally radioactive isotope of which chemical element they are famously rich in?",
+  "correct_answer": "Potassium",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Everyday food science",
+  "category": "food-everyday",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Banana_equivalent_dose",
+  "source_excerpt": "Bananas contain naturally occurring radioactive isotopes, particularly potassium-40 (40K), one of several naturally occurring isotopes of potassium.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and the US Department of Energy both attribute banana radioactivity to naturally occurring potassium-40, and the 'famously rich in' qualifier excludes any competing answer such as carbon-14."
+   }
+  }
+ },
+ {
+  "id": "80ec52c8-e041-5353-9929-26faed681b8c",
+  "question": "For nearly fifty years, Canada and Denmark fought the world's politest territorial dispute \u2014 the so-called Whisky War \u2014 by taking turns planting flags and leaving bottles of liquor on which tiny uninhabited Arctic island?",
+  "correct_answer": "Hans Island",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "World geography surprises",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Whisky_War",
+  "source_excerpt": "The Whisky War was an amicable border dispute between Denmark and Canada over Hans Island that lasted between 1973 and 2022",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Hans Island is correct; the 1973-2022 Whisky War with flag-planting and whisky/schnapps bottles is confirmed, and the 2022 split of the island does not invalidate the past-tense question."
+   }
+  }
+ },
+ {
+  "id": "8022e07b-ecc0-5a01-bdca-579271097aec",
+  "question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set \u2014 an accident that led him to invent which kitchen appliance?",
+  "correct_answer": "The microwave oven",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "History of inventions",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Microwave_oven",
+  "source_excerpt": "In 1945, the heating effect of a high-power microwave beam was independently and accidentally discovered by Percy Spencer... started to melt a candy bar he had in his pocket.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms Spencer's 1945 accidental discovery via a melting candy bar near an active radar set, leading to the microwave oven (patent filed Oct 8, 1945); only quibble is that the 'chocolate bar' detail is unverified lore, which does not change the answer."
+   }
+  }
+ },
+ {
+  "id": "a9f2146c-6ca9-50ac-90ce-48951240c579",
+  "question": "On the Pacific island of Yap, the traditional currency called rai takes the form of enormous carved discs \u2014 some wider than a car and far too heavy to move. What are these coins made of?",
+  "correct_answer": "Stone",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Money and trade",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Rai_stones",
+  "source_excerpt": "light-colored crystalline rock consisting of calcium carbonate",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Rai stones are documented as large carved discs of calcium-carbonate stone (limestone/calcite) quarried in Palau, with the largest 3.6 m across and ~4,000 kg, matching every element of the question."
+   }
+  }
+ },
+ {
+  "id": "5cb7c0ed-2e73-59e5-9c3c-21caae80b2c5",
+  "question": "A newborn baby has roughly 300 bones, yet an adult has only about 206 \u2014 and not a single one is ever lost. What happens to explain the difference?",
+  "correct_answer": "The bones fuse together",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "The human body",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+  "source_excerpt": "this total decreases to around 206 bones by adulthood after some bones fuse together",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Cleveland Clinic both confirm the drop from ~270-300 neonatal bones to 206 is due to bones fusing, with none lost; the 'roughly 300' figure is within the commonly cited 275-300 range."
+   }
+  }
+ },
+ {
+  "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+  "question": "The All England Club, home of the Wimbledon Championships since 1877, was actually founded in 1868 for a completely different lawn game \u2014 which one?",
+  "correct_answer": "Croquet",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Sports history",
+  "category": "sports",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/All_England_Lawn_Tennis_and_Croquet_Club",
+  "source_excerpt": "established on 23 July 1868 as the All England Croquet Club",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and corroborating sources confirm the club was founded 23 July 1868 as the All England Croquet Club and held the first Championships in 1877."
+   }
+  }
+ },
+ {
+  "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+  "question": "Every summer, the Eiffel Tower measurably grows \u2014 by as much as 15 centimetres. What causes this seasonal growth spurt?",
+  "correct_answer": "Heat expands the iron",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous landmarks and their secrets",
+  "category": "geography-world",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://theconversation.com/the-eiffel-tower-gets-bigger-every-summer-heres-why-261904",
+  "source_excerpt": "the Eiffel Tower actually grows between 12 and 15 centimetres when comparing its size on cold winter days with the hottest days of summer",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Thermal expansion of the tower's puddled iron is the agreed cause; specialists put summer vertical growth at 12-15 cm, though the official operator attributes ~15 cm to the summit's sun-driven circular lean and only 'a few millimetres' to height \u2014 but both framings share the same cause, so the answer is unaffected."
+   }
+  }
+ },
+ {
+  "id": "0a0ba41c-788c-531c-a635-bf4c8569acf5",
+  "question": "The mouth of one river at Lake Maracaibo sees so much lightning \u2014 on well over a hundred nights a year \u2014 that it's often called the lightning capital of the world. In which South American country is it?",
+  "correct_answer": "Venezuela",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Weather and natural phenomena",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.guinnessworldrecords.com/world-records/highest-concentration-of-lightning-",
+  "source_excerpt": "over the mouth of the Catatumbo River as it enters Lake Maracaibo... almost 250 lightning flashes per square kilometre each year",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Guinness World Records and NASA's 2016 LIS study both place the world's highest lightning concentration at the Catatumbo River mouth on Lake Maracaibo, Venezuela, and no later ranking has displaced it."
+   }
+  }
+ },
+ {
+  "id": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+  "question": "Ancient Roman laundry workers whitened togas by soaking them in a liquid collected from pots on street corners \u2014 a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid was it?",
+  "correct_answer": "Urine",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Ancient civilizations daily life",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Pecunia_non_olet",
+  "source_excerpt": "It was used in tanning, wool production, and also by launderers as a source of ammonia to clean and whiten woollen togas.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Urine is correct and undisputed; the only soft spot is the popular 'pots on street corners' detail, which specialist Miko Flohr calls a scholarly fiction, but that framing does not create a competing answer."
+   }
+  }
+ },
+ {
+  "id": "059438e6-e0cb-50ea-8eca-c1e8f0f0c54e",
+  "question": "On the floor of the Gulf of Mexico, explorers have filmed actual underwater lakes \u2014 with distinct shorelines and rippling surfaces \u2014 resting on the seabed. What ingredient makes their water dense enough to pool beneath the ocean?",
+  "correct_answer": "Salt",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Ocean and deep sea mysteries",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Brine_pool",
+  "source_excerpt": "The high salinity raises the density of the brine, which creates a surface and shoreline for the pool.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms Gulf of Mexico brine pools are dense because dissolved Jurassic salt deposits raise salinity 3-8x above seawater, creating a surface and shoreline."
+   }
+  }
+ },
+ {
+  "id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+  "question": "In January 1969, which band gave their very last public performance \u2014 an unannounced lunchtime concert on the rooftop of their London office building, broken up by the police?",
+  "correct_answer": "The Beatles",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Music history milestones",
+  "category": "movies-music",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/The_Beatles%27_rooftop_concert",
+  "source_excerpt": "It was the final public performance of their career.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "All elements verified: 30 January 1969 unannounced lunchtime set atop the Beatles' Apple Corps office at 3 Savile Row, ended after police intervention, and Wikipedia confirms it was the band's final public performance with no later event superseding it."
+   }
+  }
+ },
+ {
+  "id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+  "question": "Alfred Hitchcock's 1960 thriller Psycho is famous for its shower scene \u2014 but it broke a second Hollywood bathroom taboo, reportedly becoming the first major American film to show which everyday fixture actually being used on screen?",
+  "correct_answer": "A flushing toilet",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Classic films and pop culture history",
+  "category": "movies-music",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Psycho_(1960_film)",
+  "source_excerpt": "No flushing toilet had appeared in mainstream film and television in the United States at that time.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's Psycho article confirms the flushing-toilet first, and the question's hedges ('reportedly', 'major American film', 'actually being used') pre-empt the two known counterexamples (The Crowd's unused toilet; the obscure pre-Code Going Wild)."
+   }
+  }
+ },
+ {
+  "id": "dc475b60-4ec8-5206-b834-6ba52a5b897f",
+  "question": "Eight years before Charles Lindbergh's celebrated solo crossing, two British airmen completed the first-ever nonstop transatlantic flight in 1919, ending it nose-down in an Irish bog. Name either of the two men.",
+  "correct_answer": "Alcock and Brown",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Transport and aviation firsts",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Transatlantic_flight_of_Alcock_and_Brown",
+  "source_excerpt": "landed on what appeared from the air to be a suitable green field, but which turned out to be Derrigimlagh Bog",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Alcock and Brown made the first nonstop transatlantic flight 14-15 June 1919, nosing over in Derrigimlagh Bog near Clifden, eight years before Lindbergh's 1927 solo crossing; the only quibble, Brown's American parentage, is outweighed by his British citizenship taken in 1914."
+   }
+  }
+ },
+ {
+  "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+  "question": "In 1973, Motorola engineer Martin Cooper stood on a Manhattan sidewalk and made history's very first call of its kind \u2014 cheekily dialling his direct rival at Bell Labs to gloat. What kind of device was he holding?",
+  "correct_answer": "A mobile phone",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Technology origins and firsts",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.guinnessworldrecords.com/news/2015/8/60/1973-first-mobile-phone-call-392969",
+  "source_excerpt": "\"Joel, this is Marty. I'm calling you from a cellphone, a real, handheld, portable cellphone.\"",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "All elements check out: April 3, 1973, Motorola's Martin Cooper on a Manhattan sidewalk called rival Joel Engel of AT&T's Bell Labs on a handheld DynaTAC prototype mobile phone."
+   }
+  }
+ },
+ {
+  "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+  "question": "In the Bering Strait, Big Diomede and Little Diomede sit less than 4 kilometres apart, yet the International Date Line runs between them \u2014 earning them the nicknames Tomorrow Island and Yesterday Isle. Which two countries do they belong to?",
+  "correct_answer": "Russia and the USA",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Maps and borders quirks",
+  "category": "geography-world",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Diomede_Islands",
+  "source_excerpt": "At their closest points, the two islands are approximately 2.4 miles (3.8 km) away from each other.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Big Diomede is Russian and Little Diomede American, 3.8 km apart with the International Date Line between them and the stated nicknames confirmed; no sovereignty or time-zone change has superseded this."
+   }
+  }
+ },
+ {
+  "id": "2896283e-ab84-50e8-97db-f2f40f478531",
+  "question": "A well-known kitchen trick says a rock-hard avocado ripens much faster if you seal it in a paper bag with a banana. That works because ripening bananas give off which gas, which acts as a plant hormone?",
+  "correct_answer": "Ethylene",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Chemistry in everyday life",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Ethylene_(plant_hormone)",
+  "source_excerpt": "Ethylene (CH2=CH2) is an unsaturated hydrocarbon gas (alkene) acting as a naturally occurring plant hormone.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Ethylene is correctly identified as the gaseous plant hormone emitted by ripening bananas that accelerates ripening of climacteric fruit such as avocados; no ambiguity or staleness."
+   }
+  }
+ },
+ {
+  "id": "9ca67f01-2475-5e36-903e-1ae331eef32d",
+  "question": "In 1911, an Italian handyman walked out of the Louvre with a painting hidden under his coat, claiming he wanted to return it to Italy \u2014 a theft that made the artwork world-famous. Which painting was it?",
+  "correct_answer": "The Mona Lisa",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Art and artists surprises",
+  "category": "movies-music",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Vincenzo_Peruggia",
+  "source_excerpt": "I am an Italian and I do not want the picture given back to the Louvre",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Vincenzo Peruggia, an Italian glazier/decorator who had worked at the Louvre, stole the Mona Lisa on 21 August 1911 and claimed he wanted to return it to Italy; only the 'under his coat' flourish is historically disputed (Wikipedia notes the panel was too large to hide under a smock), which does not affect the answer."
+   }
+  }
+ },
+ {
+  "id": "b4de4587-d85c-5087-80ed-d0c71b769753",
+  "question": "Before it hit toy shelves in the 1950s, the squishy modelling compound Play-Doh was sold for a completely different job around the house. What was it originally used for?",
+  "correct_answer": "Cleaning wallpaper",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Games and toys history",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Play-Doh",
+  "source_excerpt": "a wallpaper cleaner in the 1930s ... devised at the request of Kroger Grocery, which wanted a product that could clean coal residue from wallpaper",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Smithsonian Magazine both confirm Play-Doh began as Kutol's wallpaper cleaner for coal soot before its mid-1950s reintroduction as a toy; no disputing account found."
+   }
+  }
+ },
+ {
+  "id": "d929caee-f8f2-5e02-90ea-56af3de5253b",
+  "question": "In 1698, one ruler was so determined to drag his nobles into Western European fashion that he taxed their beards \u2014 even handing out tokens as proof of payment. Which famously reform-minded Russian tsar was it?",
+  "correct_answer": "Peter the Great",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous rulers and royal quirks",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Beard_tax",
+  "source_excerpt": "In 1698, Tsar Peter I of Russia instituted a beard tax as part of an effort to bring Russian society in line with Western European models.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms Peter I instituted the beard tax in 1698 with 'beard tokens' as proof of payment; the only quibble is that tokens/collection date from 1699-1705, which does not affect the answer."
+   }
+  }
+ },
+ {
+  "id": "dd858794-8374-5c0f-809f-2a3a6df2b927",
+  "question": "Despite its name, San Francisco's Golden Gate Bridge has never been painted gold. Its distinctive reddish colour \u2014 kept partly so ships can spot it in thick fog \u2014 has an official name. What is it?",
+  "correct_answer": "International Orange",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Engineering marvels",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Golden_Gate_Bridge",
+  "source_excerpt": "an orange vermilion called international orange ... complements the natural surroundings and enhances the bridge's visibility in fog",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and the Golden Gate Bridge District both confirm the official color is International Orange (officially 'Golden Gate Bridge International Orange'), never gold, with no color change since."
+   }
+  }
+ },
+ {
+  "id": "de1704b9-6d44-5803-88ff-ea9fd819236f",
+  "question": "Popcorn kernels explode because a small amount of something sealed inside each kernel suddenly turns to high-pressure steam when heated. What is that something?",
+  "correct_answer": "Water",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Everyday food science",
+  "category": "food-everyday",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Popcorn",
+  "source_excerpt": "the hull ruptures, causing a sudden drop in pressure inside the kernel and a corresponding rapid expansion of the steam",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Scientific American both confirm trapped water inside the sealed hull flashes to high-pressure steam (~930 kPa, 180 \u00b0C) and bursts the kernel; the fact is timeless."
+   }
+  }
+ },
+ {
+  "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+  "question": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?",
+  "correct_answer": "Three",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Animal biology oddities",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Octopus",
+  "source_excerpt": "Octopuses have three hearts: one systemic (main) heart and two branchial (gill) hearts.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and all consulted sources agree octopuses have three hearts (one systemic, two branchial) and copper-based haemocyanin giving blue blood; the fact is stable anatomy with no staleness or ambiguity risk."
+   }
+  }
+ },
+ {
+  "id": "77d068d5-a7a6-557e-9990-d2ff2908e7fc",
+  "question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun \u2014 its day is literally longer than its year. Which planet?",
+  "correct_answer": "Venus",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Space exploration",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Venus",
+  "source_excerpt": "Sidereal rotation period: \u2212243.0226 d (retrograde); Orbital period: 224.701 d",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Venus's sidereal rotation (243.02 d) exceeds its orbital period (224.70 d), uniquely among planets; the only quibble is that Venus's solar day is 116.75 d, but the question explicitly defines 'day' as one rotation on its axis, which selects Venus unambiguously."
+   }
+  }
+ },
+ {
+  "id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+  "question": "Thanks to far-flung overseas territories stretching from the Pacific to the Caribbean, which country spans twelve time zones \u2014 more than any other nation on Earth?",
+  "correct_answer": "France",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "World geography surprises",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/List_of_time_zones_by_country",
+  "source_excerpt": "France, including its overseas territories, has the most time zones with 12 (13 including its claim in Antarctica).",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Guinness World Records both confirm France has 12 time zones across its overseas territories, more than Russia or the US (11 each), with no 2025-2026 changes affecting this."
+   }
+  }
+ },
+ {
+  "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+  "question": "In the 1630s, the Dutch Republic experienced history's most famous speculative bubble, when a single rare bulb could briefly cost as much as a grand Amsterdam canal house. Which flower drove the frenzy?",
+  "correct_answer": "The tulip",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Money and trade",
+  "category": "history",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Tulip_mania",
+  "source_excerpt": "It is generally considered to have been the first recorded speculative bubble or asset bubble in history.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Tulip mania peaked in the Dutch Republic in winter 1636-37 and is the canonical first/most famous speculative bubble; even revisionist historian Anne Goldgar confirms top bulb receipts matched the price of a fine house, and the question's hedged wording avoids the debunked parts of the myth."
+   }
+  }
+ },
+ {
+  "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+  "question": "The marathon's oddly precise distance of 42.195 kilometres dates from the 1908 London Olympics, when the course was stretched so the race could start on the lawn of which royal residence?",
+  "correct_answer": "Windsor Castle",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Sports history",
+  "category": "sports",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+  "source_excerpt": "the start would be on the East Lawn near the private East Terrace of Windsor Castle",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Olympic historians confirm the 1908 marathon began on the East Lawn of Windsor Castle, producing the 26 mi 385 yd / 42.195 km distance later standardised in 1921."
+   }
+  }
+ },
+ {
+  "id": "2fb4ebee-d091-5eac-afa1-0df32ed6e54d",
+  "question": "One living tissue in the human body contains no blood vessels at all and takes its oxygen straight from the surrounding air \u2014 which is exactly why it stays perfectly transparent. Which tissue is it?",
+  "correct_answer": "The cornea",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "The human body",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Cornea",
+  "source_excerpt": "Because transparency is of prime importance, the healthy cornea does not have or need blood vessels within it.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Cornea is correct \u2014 avascular, oxygenated by atmospheric O2 dissolved in the tear film, and transparency depends on that avascularity; the 'one tissue' framing is loose (cartilage, lens, epidermis are also avascular) but the full clue set uniquely identifies the cornea."
+   }
+  }
+ },
+ {
+  "id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+  "question": "In the pitch-black deep sea, the tiny male of which fish bites into the much larger female and permanently fuses with her body \u2014 living out his days as little more than an attached sperm supply?",
+  "correct_answer": "Anglerfish",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "ocean and deep sea mysteries",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Ceratioidei",
+  "source_excerpt": "sexual parasitism is a mode of sexual reproduction unique to the Ceratioidei",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's Ceratioidei article confirms permanent sexual parasitism with tissue and circulatory fusion is unique to deep-sea anglerfishes, and the newest (Aug 2026) research supports rather than overturns it."
+   }
+  }
+ },
+ {
+  "id": "6a096d25-f759-5a86-aefe-d5d31d3e3096",
+  "question": "High above powerful thunderstorms, ghostly red flashes called 'sprites' sometimes shoot upward toward the edge of space, lasting just a fraction of a second. What happening in the storm below triggers them?",
+  "correct_answer": "Lightning strikes",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "weather and natural phenomena",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Sprite_(lightning)",
+  "source_excerpt": "usually triggered by the discharges of positive lightning between an underlying thundercloud and the ground",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and 2025-2026 research confirm sprites are triggered by lightning discharges (typically positive cloud-to-ground) beneath the storm; altitude, red color, and sub-second duration in the question are all accurate."
+   }
+  }
+ },
+ {
+  "id": "7336ab85-ed14-56f3-ae9e-08a36d8b0d90",
+  "question": "Bone analysis of gladiators buried at Ephesus shows they ate a mostly plant-based diet \u2014 so dominated by one grain that Romans nicknamed them 'hordearii', meaning eaters of what?",
+  "correct_answer": "Barley",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "ancient civilizations daily life",
+  "category": "history",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0110489",
+  "source_excerpt": "Their consumption of barley led to the derogatory nickname 'hordearii' (barley eaters)",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "The PLOS ONE study of the Ephesus gladiator cemetery confirms a predominantly plant-based diet and explicitly glosses 'hordearii' as 'barley eaters', matching Latin hordeum = barley; no newer research overturns it."
+   }
+  }
+ },
+ {
+  "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+  "question": "When MTV went on air for the very first time in August 1981, it deliberately opened with a Buggles song whose title predicted exactly what the channel would do to an older medium. What was the song?",
+  "correct_answer": "Video Killed the Radio Star",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Music history milestones",
+  "category": "movies-music",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Video_Killed_the_Radio_Star",
+  "source_excerpt": "It was the first music video shown on MTV in the US, airing at 12:01 a.m. on 1 August 1981.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and its cited sources confirm the Buggles' 'Video Killed the Radio Star' was MTV's first music video at 12:01 a.m. on 1 August 1981, chosen deliberately for its symbolism, and no later event can affect this fixed historical fact."
+   }
+  }
+ },
+ {
+  "id": "c22b5dc1-439b-5c6b-beaa-dc20e11a7f0b",
+  "question": "In the legendary shower scene of Alfred Hitchcock's 1960 thriller Psycho, the blood swirling down the drain looked terrifyingly real on black-and-white film \u2014 yet it was actually which sweet kitchen product?",
+  "correct_answer": "Chocolate syrup",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Classic films and pop culture history",
+  "category": "movies-music",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Psycho_shower_scene",
+  "source_excerpt": "The blood in the scene was Hershey's chocolate syrup, which photographed better in black and white",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Authoritative sources confirm chocolate syrup was used as blood in Psycho's shower scene; only the brand (Hershey's vs. Bosco) is disputed, which does not affect the claimed answer."
+   }
+  }
+ },
+ {
+  "id": "4605a059-7194-5286-a978-fd47fb09f7db",
+  "question": "Eight years before Lindbergh's famous solo crossing, aviators John Alcock and Arthur Brown completed the first nonstop transatlantic flight in 1919 \u2014 taking off from Newfoundland and ending nose-down in a soft bog in which country?",
+  "correct_answer": "Ireland",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Transport and aviation firsts",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Transatlantic_flight_of_Alcock_and_Brown",
+  "source_excerpt": "the plane had landed on a peat bog and not grass as Alcock had thought, and it eventually sank axle-deep, pivoting over its wheels",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Alcock and Brown flew St. John's, Newfoundland to Derrigimlagh Bog near Clifden, County Galway, Ireland on 14-15 June 1919, nosing over in the soft peat, eight years before Lindbergh's 1927 solo crossing."
+   }
+  }
+ },
+ {
+  "id": "db385a95-4ab8-5c59-bde6-eb22d4ec03c6",
+  "question": "In the early 1990s, computer scientists at the University of Cambridge invented the world's first webcam for a very practical reason: to spare themselves pointless trips down the corridor. What everyday object was the camera pointed at?",
+  "correct_answer": "A coffee pot",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Technology origins and firsts",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.cl.cam.ac.uk/coffee/qsf/coffee.html",
+  "source_excerpt": "a trip which often proved fruitless if the all-night hackers of the Trojan Room had got there first",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Primary and authoritative sources confirm the 1991 Cambridge Computer Laboratory camera was aimed at the coffee pot in the corridor outside the Trojan Room, widely credited as the world's first webcam."
+   }
+  }
+ },
+ {
+  "id": "3650abf5-1d07-5514-bd3f-fafd47d1b216",
+  "question": "Hemoglobin gets its punch from a single iron atom at the heart of the molecule. Chlorophyll, the green pigment in plants, has a remarkably similar structure \u2014 but which metal sits at its center instead?",
+  "correct_answer": "Magnesium",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Chemistry in everyday life",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Chlorophyll",
+  "source_excerpt": "Unlike hemes, which contain iron bound to the N4 center, most chlorophylls bind magnesium.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms chlorophyll binds magnesium at its N4 center in contrast to iron-containing hemes; the only natural non-Mg case (Zn-bacteriochlorophyll in Acidiphilium rubrum) is bacterial and excluded by the question's 'in plants' wording."
+   }
+  }
+ },
+ {
+  "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+  "question": "A giraffe's neck can be over two metres long, yet it contains exactly the same number of neck vertebrae as yours. How many is that?",
+  "correct_answer": "Seven",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Animal biology oddities",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Cervical_vertebrae",
+  "source_excerpt": "Most mammals have seven cervical vertebrae, with the only three known exceptions being the manatee with six, the two-toed sloth with five or six",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Giraffes and humans both have seven cervical vertebrae; the lone dissenting 'eight vertebrae' proposal (Solounias 1999) has been refuted and is noted as not widely accepted on https://en.wikipedia.org/wiki/Giraffe"
+   }
+  }
+ },
+ {
+  "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+  "question": "Tourists in London point at the clock tower of the Palace of Westminster and call it Big Ben \u2014 but strictly speaking, Big Ben is the name of what?",
+  "correct_answer": "The bell",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous landmarks and their secrets",
+  "category": "geography-world",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Big_Ben",
+  "source_excerpt": "Big Ben is the nickname for the Great Bell of the Great Clock of Westminster, and, by extension, for the clock tower",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Authoritative sources confirm Big Ben is strictly the nickname of the Great Bell, while the tower is officially the Elizabeth Tower; no newer development alters this."
+   }
+  }
+ },
+ {
+  "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+  "question": "Point Nemo in the South Pacific is the spot in the ocean farthest from any land \u2014 more than 2,600 kilometres in every direction. Because nobody is ever nearby, space agencies use it as a deliberate crash zone for what?",
+  "correct_answer": "Retired spacecraft",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Ocean and deep sea mysteries",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Spacecraft_cemetery",
+  "source_excerpt": "at least 264 spacecraft were disposed in this area",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Distance (~2,688 km to the three equidistant nearest lands) and the use of the Point Nemo region as the South Pacific spacecraft disposal area are both confirmed by Wikipedia; the 2031 ISS deorbit plan reinforces rather than invalidates the pair."
+   }
+  }
+ },
+ {
+  "id": "fd623190-5f5d-5a43-9bcc-b5f38e159360",
+  "question": "Every so often, parts of Europe wake up to eerie 'blood rain' that leaves cars and snow coated in a reddish film. This colour comes from dust swept thousands of kilometres north from which desert?",
+  "correct_answer": "The Sahara",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Weather and natural phenomena",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.metoffice.gov.uk/blog/2026/what-is-blood-rain-and-will-we-see-it-this-week",
+  "source_excerpt": "rain that takes on a reddish tint once it reaches the ground",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "The Met Office and Copernicus both attribute European blood rain and orange-tinted Alpine snow to iron-oxide-rich dust transported north from the Sahara; recurring 2026 events reinforce rather than date the pair."
+   }
+  }
+ },
+ {
+  "id": "8d1342f7-9efc-5d2b-b50f-629e352581ec",
+  "question": "When you mix baking soda with vinegar and it fizzes up dramatically, which gas is being released in all those bubbles?",
+  "correct_answer": "Carbon dioxide",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Chemistry in everyday life",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Sodium_bicarbonate",
+  "source_excerpt": "NaHCO3 + CH3COOH -> CH3COONa + H2O + CO2(g)",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's sodium bicarbonate article gives the reaction as NaHCO3 + CH3COOH -> CH3COONa + H2O + CO2(g), confirming carbon dioxide as the gas released; the fact is timeless with no superlative or currency claim to become stale."
+   }
+  }
+ },
+ {
+  "id": "75634579-1404-5367-8350-9dbb14a22830",
+  "question": "The cheetah gets all the glory, but the true speed record for any animal on Earth \u2014 over 300 kilometres per hour \u2014 belongs to a bird of prey in its hunting dive. Which bird?",
+  "correct_answer": "Peregrine falcon",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Records and extremes in nature",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Fastest_animals",
+  "source_excerpt": "The peregrine falcon is the fastest member of the animal kingdom... 389 km/h (242 mph)",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Peregrine falcon is confirmed by Wikipedia and Guinness World Records as the fastest animal, with a stoop clocked at 389 km/h, well above the question's 300 km/h threshold and far above the cheetah; no newer record supersedes it."
+   }
+  }
+ },
+ {
+  "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+  "question": "Founded in Kyoto in 1889 to make handmade playing cards, which Japanese company went on to become one of the biggest names in video games?",
+  "correct_answer": "Nintendo",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Games and toys history",
+  "category": "history",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Nintendo",
+  "source_excerpt": "Nintendo was founded as Nintendo Koppai on 23 September 1889 by craftsman Fusajiro Yamauchi in Shimogy\u014d-ku, Kyoto, Japan",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Nintendo was founded 23 September 1889 in Kyoto by Fusajiro Yamauchi making handmade hanafuda playing cards, and remains a leading video game company; no alternative answer fits."
+   }
+  }
+ },
+ {
+  "id": "d25873f2-0d6d-590b-b3ba-6898327e78da",
+  "question": "When the Mona Lisa vanished from the Louvre in 1911, French police hauled in a young Spanish-born painter living in Paris for questioning as a suspect. Who was he?",
+  "correct_answer": "Pablo Picasso",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Art and artists surprises",
+  "category": "movies-music",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+  "source_excerpt": "Apollinaire came under suspicion and was arrested... He implicated his friend Picasso, who was brought in for questioning. Both were later exonerated.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Picasso, Spanish-born and 29 at the time, was indeed questioned by Paris police over the 1911 Mona Lisa theft after Apollinaire implicated him; the only other suspect, Apollinaire, was an Italian-born poet and cannot fit the clue."
+   }
+  }
+ },
+ {
+  "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+  "question": "White chocolate contains cocoa butter, sugar and milk \u2014 but it is completely missing the dark component that gives milk and dark chocolate both their colour and their classic chocolatey taste. What is that missing component called?",
+  "correct_answer": "Cocoa solids",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Everyday food science",
+  "category": "food-everyday",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/White_chocolate",
+  "source_excerpt": "lacks the dark appearance of most other types of chocolate because it does not contain the non-fat solid components of cocoa (cocoa powder)",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "White chocolate is defined by the absence of non-fat cocoa solids, which supply chocolate's dark colour and characteristic flavour; no regulatory or factual development has superseded this."
+   }
+  }
+ },
+ {
+  "id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+  "question": "In 2021, NASA's little helicopter Ingenuity made the first powered flight on another planet, on Mars. Tucked aboard as a tribute was a postage-stamp-sized piece of wing fabric taken from which pioneering aircraft?",
+  "correct_answer": "The Wright Flyer",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Space exploration",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.jpl.nasa.gov/images/pia24291-swatch-of-wright-brothers-flyer-1-attached-to-mars-helicopter/",
+  "source_excerpt": "a small swatch of muslin material from the lower-left wing of the Wright Brothers Flyer 1",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "JPL confirms Ingenuity carried a swatch of muslin from the lower-left wing of the 1903 Wright Flyer, and the 'powered' qualifier correctly excludes the unpowered 1985 Soviet Vega Venus balloons."
+   }
+  }
+ },
+ {
+  "id": "ae368719-7318-526b-8690-015ceb92e54e",
+  "question": "Europe's very first paper banknotes were issued back in 1661 by a private bank in which country \u2014 one that, rather ironically, is today racing to become one of the world's first completely cashless societies?",
+  "correct_answer": "Sweden",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Money and trade",
+  "category": "history",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Stockholms_Banco",
+  "source_excerpt": "was the first European bank to print banknotes",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Stockholms Banco (privately founded by Johan Palmstruch, royally chartered) issued Europe's first banknotes in 1661 in Sweden; only caveat is that Sweden's 'racing to be cashless' framing is dated, as it now legislates to preserve cash, though it remains the world's least cash-using economy."
+   }
+  }
+ },
+ {
+  "id": "17b070d2-e6a3-51cf-a671-b1e793af4ce2",
+  "question": "Scientists warn that the wreck of the Titanic, resting almost four kilometres deep, may largely disintegrate within a few decades. What is slowly eating away its iron hull?",
+  "correct_answer": "Bacteria",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Ocean and deep sea mysteries",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Halomonas_titanicae",
+  "source_excerpt": "the action of microbes like H. titanicae may bring about the total deterioration of the Titanic by 2030",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Halomonas titanicae and related rust-eating bacteria are the well-documented agent consuming the hull at ~180 kg/day, with NOAA and researcher estimates of collapse within decades."
+   }
+  }
+ },
+ {
+  "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+  "question": "A desert is defined by how little precipitation falls, not by heat \u2014 which is why the largest desert on Earth is not the Sahara. Which continent holds the title?",
+  "correct_answer": "Antarctica",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Weather and natural phenomena",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/List_of_deserts_by_area",
+  "source_excerpt": "Antarctic Desert: 14,200,000 km\u00b2 \u2014 Polar ice and tundra; Arctic Desert 13,900,000 km\u00b2; Sahara 9,200,000 km\u00b2",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's list of deserts by area ranks the Antarctic Desert first at 14.2 million km\u00b2, ahead of the Arctic Desert and the Sahara, and the 'continent' framing rules out the non-continental Arctic."
+   }
+  }
+ },
+ {
+  "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+  "question": "Contrary to legend, the pyramid builders of Giza were not slaves but paid workers. Alongside bread, what drink made up a core part of their daily rations?",
+  "correct_answer": "Beer",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Ancient civilizations daily life",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://aeraweb.org/feeding-pyramid-workers/",
+  "source_excerpt": "a staple diet of bread and beer were disbursed as rations in royal labor projects",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Ancient Egypt Research Associates (Lehner's Giza excavation team) confirms bread and beer were the disbursed rations of royal labor projects, and the non-slave paid-workforce premise matches the Hawass/Lehner consensus."
+   }
+  }
+ },
+ {
+  "id": "0b27e5c2-4f06-51bb-bc66-55fe7d86e514",
+  "question": "When the Washington Monument was completed in 1884, its very tip was crowned with a small pyramid of a metal that was then more precious than silver \u2014 but is dirt cheap today. Which metal?",
+  "correct_answer": "Aluminum",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous landmarks and their secrets",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.nps.gov/articles/000/wamocap.htm",
+  "source_excerpt": "a pyramid of solid aluminum ... the 1884 price of aluminum was $1.10 per ounce, the same as the then prevailing market price of silver",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "The 8.9-inch, 100-ounce solid aluminum pyramid was set atop the monument on December 6, 1884, is still original, and aluminum then sold at or above silver's price; only quibble is sources split between 'comparable to' and 'twice' silver, which does not affect the answer."
+   }
+  }
+ },
+ {
+  "id": "93b8897b-892d-5934-bc8e-1e479141a950",
+  "question": "In December 1965, two Gemini 6 astronauts smuggled a harmonica and sleigh bells aboard and played the first musical instruments in space. Which song did they perform?",
+  "correct_answer": "Jingle Bells",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Music history milestones",
+  "category": "movies-music",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Gemini_6A",
+  "source_excerpt": "an eight-note Hohner 'Little Lady' harmonica and a handful of small bells ... the first musical instruments played in space",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and the Smithsonian NASM object records confirm Schirra and Stafford played 'Jingle Bells' on a Hohner harmonica and sleigh bells aboard Gemini VI-A on Dec 16, 1965, the first instruments played in space."
+   }
+  }
+ },
+ {
+  "id": "a02569a9-b250-525e-8598-a72a1817965e",
+  "question": "An octopus's blood carries oxygen using copper instead of iron. What colour does that make its blood?",
+  "correct_answer": "Blue",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Animal biology oddities",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Octopus",
+  "source_excerpt": "The haemocyanin is dissolved in the blood plasma instead of carried within blood cells and gives the blood a bluish colour.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms octopus blood uses copper-rich haemocyanin dissolved in plasma giving a bluish colour; the only nuance (colourless when deoxygenated) is excluded by the question's explicit framing of oxygen-carrying blood."
+   }
+  }
+ },
+ {
+  "id": "f983b11e-8241-5fe6-a131-78a56d9d0061",
+  "question": "Only one country on Earth has its main territory spread across all four hemispheres \u2014 northern, southern, eastern and western. Which Pacific island nation is it?",
+  "correct_answer": "Kiribati",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "World geography surprises",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Western_Hemisphere",
+  "source_excerpt": "It is the only country located in four hemispheres.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Kiribati's own territory straddles both the equator and the 180th meridian, making it the only country whose main (non-overseas-dependency) territory lies in all four hemispheres; the 'main territory' wording correctly excludes France/UK/US, which qualify only via overseas holdings."
+   }
+  }
+ },
+ {
+  "id": "57ceaede-c264-5627-9049-0dc65b66d3da",
+  "question": "The last Olympic gold medals made of solid gold were handed out in 1912. Ever since, they've been made almost entirely of a different metal, with just a few grams of gold plating on top. Which metal?",
+  "correct_answer": "Silver",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Sports history",
+  "category": "sports",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Olympic_medal",
+  "source_excerpt": "It is composed at least 92.5% of silver, plated with 6 grams of gold.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Verified: gold medals have been gilded silver since 1912, and the most recent Games (Milano Cortina, Feb 2026) used 500g of 999 silver plus 6g gold plating, so the pair is not stale."
+   }
+  }
+ },
+ {
+  "id": "8730a6ed-b8a2-5813-814b-bab0e2c36c17",
+  "question": "One place on Earth sees lightning storms on up to 160 nights every year \u2014 so reliably that sailors once used the flashes as a natural lighthouse. Over which large Venezuelan lake does this famous 'everlasting storm' rage?",
+  "correct_answer": "Lake Maracaibo",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Weather and natural phenomena",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Catatumbo_lightning",
+  "source_excerpt": "for 140 to 160 nights a year, nine hours per day, and with lightning flashes from 16 to 40 times per minute",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and NASA confirm Catatumbo lightning occurs over Lake Maracaibo for 140-160 nights a year and was historically used as the 'Lighthouse of Maracaibo' by navigators; the phenomenon remains active as of 2026."
+   }
+  }
+ },
+ {
+  "id": "61765172-71c1-5487-97c2-827d5b89bd9f",
+  "question": "Nearly 300 metres up the Eiffel Tower hides a small private apartment with wallpaper, wooden furniture and a grand piano \u2014 a retreat where its owner once hosted Thomas Edison. Who had this secret flat built for himself?",
+  "correct_answer": "Gustave Eiffel",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous landmarks and their secrets",
+  "category": "geography-world",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+  "source_excerpt": "On this top, third level, is a private apartment built for Gustave Eiffel... and invited friends such as Thomas Edison.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and secondary sources confirm Gustave Eiffel built the private summit apartment and hosted Thomas Edison there in September 1889; no newer development affects the claim."
+   }
+  }
+ },
+ {
+  "id": "2716e527-fe55-5e34-88f8-db6a4b67a185",
+  "question": "That famously puffy pocket of gas in a bag of potato crisps isn't ordinary air \u2014 manufacturers use a specific gas because oxygen would turn the frying oil rancid. Which gas?",
+  "correct_answer": "Nitrogen",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Chemistry in everyday life",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Modified_atmosphere",
+  "source_excerpt": "used to prevent oxidative rancidity in packaged products such as snack foods by displacing atmospheric air, especially oxygen, therefore extending shelf life",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's Modified Atmosphere Packaging article confirms nitrogen is used to prevent oxidative rancidity in snack foods and as a filler gas, matching both the answer and the question's stated rationale."
+   }
+  }
+ },
+ {
+  "id": "7f7a4c8a-0fee-5f10-8f60-53ee7e359efe",
+  "question": "In 1911 the Mona Lisa vanished from the Louvre, stolen by a former museum worker who kept it hidden in his small Paris flat for over two years. He was finally caught when he tried to sell the painting in the country where he insisted it truly belonged. Which country?",
+  "correct_answer": "Italy",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Art and artists surprises",
+  "category": "movies-music",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+  "source_excerpt": "After having kept the Mona Lisa in his apartment for two years, Peruggia grew impatient and was caught when he attempted to sell it",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Peruggia, who had worked at the Louvre, hid the painting in his Paris apartment and was arrested in Florence, Italy, after trying to sell it to gallery owner Alfredo Geri and Uffizi director Giovanni Poggi."
+   }
+  }
+ },
+ {
+  "id": "bef675a8-3c78-58c2-8b32-dbd69887df72",
+  "question": "Long before children squeezed it into shapes, Play-Doh was sold as a household cleaning product. In the era of coal heating, homeowners rolled the soft putty across one surface in particular to lift off the soot. What was it made to clean?",
+  "correct_answer": "Wallpaper",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Games and toys history",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Play-Doh",
+  "source_excerpt": "a product that could clean coal residue from wallpaper from coal fired homes",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Smithsonian both confirm Play-Doh began as Kutol wallpaper cleaner made for Kroger to remove coal soot from wallpaper; the fact is historical and cannot be overtaken by newer events."
+   }
+  }
+ },
+ {
+  "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+  "question": "Queen Elizabeth II visited more than a hundred countries during her reign, yet she never once carried a document that every other British traveller must have. Which document?",
+  "correct_answer": "A passport",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Famous rulers and royal quirks",
+  "category": "history",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.royal.uk/encyclopedia/passports",
+  "source_excerpt": "When travelling overseas, the Sovereign does not require a British passport.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Royal Family's official site confirms the Sovereign uniquely needs no British passport since passports are issued in the monarch's name, and the travel figure (~110+ countries) checks out."
+   }
+  }
+ },
+ {
+  "id": "6afeb849-779b-5ad5-97b1-c51fca1b132b",
+  "question": "When the Hoover Dam was built in the 1930s, workers embedded hundreds of kilometres of steel pipes inside the structure and pumped ice-cold water through them. Without this trick, engineers calculated the dam would have needed over a century to finish doing what?",
+  "correct_answer": "Cooling its curing concrete",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Engineering marvels",
+  "category": "science-nature",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Hoover_Dam",
+  "source_excerpt": "the concrete would take 125 years to cool... More than 582 miles (937 km) of cooling pipes were placed within the concrete.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and the Bureau of Reclamation both confirm ~937 km (582 miles) of 1-inch steel cooling pipes carrying refrigerated water, and that a single pour would have taken 125 years to cool; the only quibble is that column-casting shared credit with the pipes."
+   }
+  }
+ },
+ {
+  "id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+  "question": "After six months floating on the International Space Station, astronauts return to Earth with up to five extra centimetres of something they quickly lose again. Five centimetres of what?",
+  "correct_answer": "Height",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Space exploration",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.nasa.gov/image-article/spinal-ultrasound-investigation/",
+  "source_excerpt": "crew members grow up to three percent taller during their long duration missions aboard the station and return to their normal height when back on Earth",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "NASA confirms crew members grow up to three percent taller (about 5 cm / 2 inches for a tall astronaut) during long-duration ISS missions and return to normal height after landing."
+   }
+  }
+ },
+ {
+  "id": "8193b5c7-5f80-52cd-b885-1868c1835724",
+  "question": "Chili plants make capsaicin to punish mammals, whose chewing teeth destroy the seeds. But one whole group of animals literally cannot feel the burn \u2014 and conveniently swallows the seeds whole and spreads them far away. Which group?",
+  "correct_answer": "Birds",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Everyday food science",
+  "category": "food-everyday",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Capsaicin",
+  "source_excerpt": "In birds, the TRPV1 channel does not respond to capsaicin or related chemicals, but mammalian TRPV1 is very sensitive to it.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Avian TRPV1 does not respond to capsaicin while mammalian TRPV1 is highly sensitive, and birds pass chili seeds intact whereas mammalian molars destroy them; the tree shrew is only a partial, reduced-sensitivity exception that fails the 'swallows seeds whole' clause."
+   }
+  }
+ },
+ {
+  "id": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+  "question": "The name of the American dollar goes back to the 'thaler' \u2014 silver coins first struck in the 1520s in the mining town of Joachimsthal. In which present-day European country does that town lie?",
+  "correct_answer": "Czech Republic",
+  "review_status": "approved",
+  "language": "en",
+  "topic": "Money and trade",
+  "category": "history",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/J%C3%A1chymov",
+  "source_excerpt": "Since 1520, the Schlicks had silver coins minted, which were called Joachimsthalers... the etymological origin of the currency name 'dollar.'",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Joachimsthal is present-day J\u00e1chymov in the Czech Republic, where the Schlicks began minting Joachimsthalers in 1520, the etymological source of 'dollar'."
+   }
+  }
+ },
+ {
+  "id": "4d45f057-f5a7-4111-8fb2-74918c760396",
+  "question": "In 1957, the Soviet Union sent the first living creature into orbit around Earth \u2014 a small dog picked up from the streets of Moscow. What was her name?",
+  "correct_answer": "Laika",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Space history",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://www.nasa.gov/history/60-years-ago-the-first-animal-in-orbit/",
+  "source_excerpt": "the dog Laika, the first animal to orbit the Earth",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Laika, a stray female mongrel from Moscow's streets, flew on Sputnik 2 on 3 November 1957 and was the first animal to orbit Earth; a 1957 historical first cannot be superseded."
+   }
+  }
+ },
+ {
+  "id": "b171925b-703c-4875-b2fb-53b9a5d3550d",
+  "question": "How many hearts pump blood through an octopus's body?",
+  "correct_answer": "Three",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Marine biology",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Octopus",
+  "source_excerpt": "They have three hearts; a systemic or main heart that circulates blood around the body and two branchial or gill hearts",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Britannica both state octopuses have three hearts (one systemic, two branchial); the fact is stable anatomy with no recent developments affecting it."
+   }
+  }
+ },
+ {
+  "id": "07a42aa1-dde0-47fb-be33-c93dc668165d",
+  "question": "On a hot summer day, the Eiffel Tower quietly gains up to 15 centimetres in height. What causes this seasonal growth spurt?",
+  "correct_answer": "Thermal expansion",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Physics & landmarks",
+  "category": "science-nature",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://theconversation.com/the-eiffel-tower-gets-bigger-every-summer-heres-why-261904",
+  "source_excerpt": "Specialists have estimated that the Eiffel Tower actually grows between 12 and 15 centimetres when comparing its size on cold winter days with the hottest days of summer.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Thermal expansion of the tower's puddled iron is the correct and only defensible mechanism, and the ~15 cm seasonal figure matches the official Eiffel Tower site, an academic source citing 12-15 cm, and a first-principles calculation."
+   }
+  }
+ },
+ {
+  "id": "04c230c5-c6ee-47e3-a442-7051431f6036",
+  "question": "Nintendo, the video game giant behind Mario, actually started out making handmade Japanese playing cards. In which year was the company founded?",
+  "correct_answer": "1889",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Business & gaming history",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text_multichoice",
+  "possible_answers": {
+   "a": "1934",
+   "b": "1889",
+   "c": "1956",
+   "d": "1977"
+  },
+  "source_url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+  "source_excerpt": "Fusajiro Yamauchi began manufacturing and selling Japanese playing cards, Hanafuda, in Shimogyo-ku, Kyoto, Japan.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Nintendo's own corporate history and Wikipedia both give 23 September 1889 as the founding date with hanafuda playing cards as the original product; the other three options are not defensible alternatives."
+   }
+  }
+ },
+ {
+  "id": "d94a6f74-dec8-49b3-8b13-494e17444cd6",
+  "question": "On which planet of our solar system does a single rotation on its axis \u2014 one day \u2014 take longer than a full trip around the Sun?",
+  "correct_answer": "Venus",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Astronomy",
+  "category": "science-nature",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Venus",
+  "source_excerpt": "Sidereal rotation period: \u2212243.0226 d (retrograde); Orbital period: 224.701 d",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Venus's sidereal rotation (243.02 d) exceeds its 224.70 d orbital period, and no other planet qualifies; the question's phrase 'a single rotation on its axis' correctly pins the sidereal sense (its 116.75 d solar day is shorter than its year)."
+   }
+  }
+ },
+ {
+  "id": "7ae1a12d-d280-40a5-93e7-c463f2875cb4",
+  "question": "Every national flag on Earth is a four-sided rectangle or square \u2014 except one, shaped like two stacked triangles. Which country flies it?",
+  "correct_answer": "Nepal",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Geography & flags",
+  "category": "geography-world",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Flag_of_Nepal",
+  "source_excerpt": "It is the only non-rectangular national flag in the world and the only one that is taller than it is wide.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Nepal's double-pennon flag remains the world's only non-rectangular national flag; all 2024-2026 flag changes (Syria, Honduras, North Korea) were quadrilateral."
+   }
+  }
+ },
+ {
+  "id": "455d945c-bdfe-4033-bbaa-4166f80e3335",
+  "question": "Thanks to its far-flung overseas territories, which country spans more time zones than any other \u2014 twelve in total?",
+  "correct_answer": "France",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Geography",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Time_in_France",
+  "source_excerpt": "With its overseas territories, France uses 12 different time zones (13 including its claim in Antarctica), more than any other country in the world.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Guinness World Records both confirm France spans 12 time zones (more than any country), and the one status change that could alter this \u2014 New Caledonia \u2014 keeps it within the French Republic as of 2026."
+   }
+  }
+ },
+ {
+  "id": "4d061604-afed-4808-a55c-8a88c9690394",
+  "question": "The shortest war in recorded history was over in under 40 minutes in 1896, when the Royal Navy shelled a sultan's palace. Which East African island state was Britain's opponent?",
+  "correct_answer": "Zanzibar",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Military history",
+  "category": "history",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Anglo-Zanzibar_War",
+  "source_excerpt": "The conflict lasted between 38 and 45 minutes, marking it as the shortest recorded war in history.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Verified: the Anglo-Zanzibar War of 27 August 1896 (09:02-09:40) between the UK and the Sultanate of Zanzibar is the shortest recorded war, with only a minor imprecision in that some sources cite up to 45 minutes rather than the standard 38."
+   }
+  }
+ },
+ {
+  "id": "0bffb122-877f-4187-950f-6d299bc18ccb",
+  "question": "The guillotine feels like ancient history, but France used it for executions surprisingly recently. In which decade did the last guillotine execution in France take place?",
+  "correct_answer": "1970s",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "History",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text_multichoice",
+  "possible_answers": {
+   "a": "1900s",
+   "b": "1930s",
+   "c": "1950s",
+   "d": "1970s"
+  },
+  "source_url": "https://en.wikipedia.org/wiki/Hamida_Djandoubi",
+  "source_excerpt": "Djandoubi was the last person to be lawfully executed by beheading anywhere in the Western world.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Hamida Djandoubi was guillotined in Marseille on 10 September 1977, the last execution in France before abolition in 1981, confirming the 1970s."
+   }
+  }
+ },
+ {
+  "id": "91e78504-9d2a-4d39-957a-264eabdce03b",
+  "question": "Which mythical creature is the official national animal of Scotland?",
+  "correct_answer": "The unicorn",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "National symbols",
+  "category": "geography-world",
+  "difficulty": "easy",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/National_symbols_of_Scotland",
+  "source_excerpt": "The unicorn is the national animal of Scotland.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and the Scottish Government's own Scotland.org both state the unicorn is Scotland's national animal, and the 'mythical creature' qualifier rules out the lion/golden eagle/red deer alternatives; no change found through September 2026."
+   }
+  }
+ },
+ {
+  "id": "cb910220-2372-4dd8-b92a-9b6692878857",
+  "question": "France's longest land border is not with Spain or Belgium \u2014 it is with which country?",
+  "correct_answer": "Brazil",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Geography",
+  "category": "geography-world",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Brazil%E2%80%93France_border",
+  "source_excerpt": "At 730 kilometres (450 mi) in length, it is the longest border France shares with another country, despite not being located in metropolitan France.",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia's Brazil\u2013France border article explicitly states the 730 km French Guiana\u2013Amap\u00e1 boundary is France's longest border with another country, and every self-consistent source ranks Brazil above Spain."
+   }
+  }
+ },
+ {
+  "id": "f01befd7-e223-4665-9c41-70f39ae7e7a6",
+  "question": "In 1932, Australian soldiers armed with machine guns waged a famously unsuccessful military operation against which large flightless bird?",
+  "correct_answer": "The emu",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "History",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Emu_War",
+  "source_excerpt": "The Emu War... military operation undertaken in Australia over the later part of 1932 to address public concern over the number of emus",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Britannica confirm the 1932 Emu War: Royal Australian Artillery soldiers with two Lewis machine guns failed to cull emus in Western Australia."
+   }
+  }
+ },
+ {
+  "id": "a9cb4823-b635-49f3-b1d3-7a9f68406904",
+  "question": "The 1896 war between Britain and Zanzibar is the shortest recorded war in history \u2014 roughly how long did it last?",
+  "correct_answer": "About 40 minutes",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Military history",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text_multichoice",
+  "possible_answers": {
+   "a": "About 40 minutes",
+   "b": "About 4 hours",
+   "c": "About 4 days",
+   "d": "About 4 weeks"
+  },
+  "source_url": "https://www.guinnessworldrecords.com/world-records/65353-shortest-war",
+  "source_excerpt": "The shortest war on record was that between Britain and Zanzibar... lasted from 9:00 am to 9:45 am on 27 August 1896",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Guinness World Records and Wikipedia both confirm the 27 August 1896 Anglo-Zanzibar War as the shortest recorded war, at 38-45 minutes, which matches 'about 40 minutes' with all distractors off by orders of magnitude."
+   }
+  }
+ },
+ {
+  "id": "787dfd7e-52d0-4b29-945d-b6408790ce0a",
+  "question": "Nintendo, the video game giant, started out in Kyoto making traditional Japanese playing cards \u2014 in which year was it founded?",
+  "correct_answer": "1889",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Business & gaming",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text_multichoice",
+  "possible_answers": {
+   "a": "1889",
+   "b": "1929",
+   "c": "1949",
+   "d": "1969"
+  },
+  "source_url": "https://en.wikipedia.org/wiki/Nintendo",
+  "source_excerpt": "Nintendo was founded on 23 September 1889 ... to produce and distribute Japanese playing cards, or karuta ... most notably hanafuda",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia and Nintendo's own corporate history both state the company was founded 23 September 1889 in Kyoto to make hanafuda playing cards; a fringe historical argument for 1892 exists but is not among the options and does not override the official/authoritative date."
+   }
+  }
+ },
+ {
+  "id": "9c1f7578-9650-437a-9d63-803931268a7a",
+  "question": "Thanks to a chain of islands crossing the 180th meridian, which US state is at once the westernmost and, technically, the easternmost state?",
+  "correct_answer": "Alaska",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "Geography",
+  "category": "geography-world",
+  "difficulty": "hard",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Alaska",
+  "source_excerpt": "Alaska is considered to be the northernmost, westernmost, and, longitudinally, the easternmost state in the United States",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Wikipedia confirms the Aleutians cross the 180th meridian, giving Alaska both the westernmost (Amatignak) and longitudinally easternmost (Semisopochnoi) points, and the question's 'technically' correctly signals the by-longitude convention versus Maine by direction of travel."
+   }
+  }
+ },
+ {
+  "id": "9946d32d-7a65-4a90-a33c-d06bd408336d",
+  "question": "In 1896, Britain fought the shortest war in recorded history \u2014 it was over in well under an hour. Its opponent was which island sultanate off the East African coast, today part of Tanzania?",
+  "correct_answer": "Zanzibar",
+  "review_status": "pending_review",
+  "language": "en",
+  "topic": "History",
+  "category": "history",
+  "difficulty": "medium",
+  "type": "text",
+  "possible_answers": null,
+  "source_url": "https://en.wikipedia.org/wiki/Anglo-Zanzibar_War",
+  "source_excerpt": "an island country in the Indian Ocean, off the coast of Tanganyika; today it forms part of Tanzania",
+  "generation_metadata": {
+   "extra": {
+    "verification_notes": "Anglo-Zanzibar War (27 August 1896) between the UK and the Sultanate of Zanzibar lasted 38-45 minutes and remains the Guinness-recognized shortest war; Zanzibar is today part of Tanzania."
+   }
+  }
+ }
+]

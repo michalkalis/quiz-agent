@@ -137,3 +137,6 @@ node_modules/
 
 # Obsidian vault config (machine-local editor state)
 docs/.obsidian/
+
+# local hook state
+.claude/.last-news-scan

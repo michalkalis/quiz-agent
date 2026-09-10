@@ -904,6 +904,111 @@ async def test_entitlement_read_gate_honors_environment(
         assert await account_is_entitled(s, _ACCOUNT) is entitled
 
 
+# --- multi-environment allowlist (prod = PRODUCTION,SANDBOX) -------------------
+#
+# TestFlight and App Review always purchase in Apple's sandbox store, so prod
+# must honor BOTH environments or no tester can ever unlock. Rows keep their
+# own store stamp so prod money tables stay auditable per environment.
+
+
+async def test_multi_env_webhook_honors_sandbox_and_stamps_row(
+    client, db_sessionmaker, monkeypatch
+):
+    """With PRODUCTION,SANDBOX allowed a SANDBOX subscription purchase writes
+    the row (stamped SANDBOX, not the setting) and the read gate entitles it."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    resp = await _post_webhook(
+        client,
+        _sub_event(
+            "INITIAL_PURCHASE", ts_ms=1000, expires_ms=_ms(30), environment="SANDBOX"
+        ),
+    )
+    assert resp.status_code == 200
+    row = await _sub_row(db_sessionmaker)
+    assert row is not None
+    assert row.environment == "SANDBOX"
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, _ACCOUNT) is True
+
+    resp = await _post_webhook(
+        client,
+        _pack_event(
+            "NON_RENEWING_PURCHASE",
+            ts_ms=2000,
+            txn_id="sbx_pack",
+            event_id="evt_sbx",
+            environment="SANDBOX",
+        ),
+    )
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 100
+    async with db_sessionmaker() as s:
+        env = (
+            await s.execute(
+                select(CreditLedger.environment).where(
+                    CreditLedger.store_txn_id == "sbx_pack"
+                )
+            )
+        ).scalar_one()
+    assert env == "SANDBOX"
+
+
+async def test_multi_env_sync_stamps_each_entry_from_is_sandbox(
+    client, db_sessionmaker, monkeypatch
+):
+    """REST v1 sync under a multi-environment allowlist stamps every folded
+    row from RC's per-entry ``is_sandbox`` — the setting can no longer say
+    which store paid, so trusting it would mislabel a sandbox sub as prod."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    snapshot = _snapshot(
+        request_date_ms=5000,
+        subscriptions={
+            _SUB_PID: {
+                "expires_date": (utcnow() + timedelta(days=30)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "grace_period_expires_date": None,
+                "billing_issues_detected_at": None,
+                "original_transaction_id": "orig_sbx",
+                "is_sandbox": True,
+            }
+        },
+        non_subscriptions={
+            _PACK_PID: [
+                {
+                    "id": "rc_ns_sbx",
+                    "store_transaction_id": "sbx_txn",
+                    "is_sandbox": True,
+                },
+                {
+                    "id": "rc_ns_prod",
+                    "store_transaction_id": "prod_txn",
+                    "is_sandbox": False,
+                },
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+    row = await _sub_row(db_sessionmaker)
+    assert row is not None and row.environment == "SANDBOX"
+    assert await _balance(db_sessionmaker) == 200
+    async with db_sessionmaker() as s:
+        stamps = dict(
+            (
+                await s.execute(
+                    select(CreditLedger.store_txn_id, CreditLedger.environment).where(
+                        CreditLedger.account_id == _ACCOUNT
+                    )
+                )
+            ).all()
+        )
+    assert stamps == {"sbx_txn": "SANDBOX", "prod_txn": "PRODUCTION"}
+
+
 # --- TRANSFER: entitlement follows the store account -------------------------
 #
 # RC fires TRANSFER when a store account's purchases are re-attached to another

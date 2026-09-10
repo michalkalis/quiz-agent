@@ -137,13 +137,32 @@ struct ResultMetaRow: View {
     let userAnswer: String?
     /// Host of the source URL ("nasa.gov"); nil hides the source link.
     let sourceDomain: String?
+    /// #176 review badge, already gated to TestFlight/Debug by the caller; nil
+    /// in an App Store build, so the row is byte-identical to pre-#176 there.
+    var reviewBadge: String? = nil
+    /// What the gate objected to — its own line, because it is a sentence and
+    /// the row above it is a row of labels.
+    var reviewNote: String? = nil
     let onOpenSource: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
-            Spacer(minLength: 8)
-            if sourceDomain != nil { sourceLink }
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
+                if let reviewBadge {
+                    ReviewBadge(badge: reviewBadge, filled: true)
+                        .accessibilityIdentifier("result.reviewBadge")
+                }
+                Spacer(minLength: 8)
+                if sourceDomain != nil { sourceLink }
+            }
+            if let reviewNote {
+                Text(verbatim: reviewNote)
+                    .font(.hangsMono(10, weight: .medium))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .accessibilityIdentifier("result.reviewNote")
+            }
         }
         .foregroundColor(Theme.Hangs.Colors.mutedFaint)
         .frame(maxWidth: .infinity, alignment: .leading)

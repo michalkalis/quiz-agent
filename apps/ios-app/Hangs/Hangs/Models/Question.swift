@@ -34,6 +34,21 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
     let embeddingModel: String?
     let embeddingDim: Int?
     let costCents: Int?
+    // ── TestFlight-only review surface (#176) ──────────────────────────────
+    // How this exact text was vouched for: the English question's review state
+    // combined with the gate verdict on its translation. The backend stamps
+    // these three keys ONLY for a TestFlight session, and omits them (never
+    // null) otherwise, so an App Store build decodes nil here by construction.
+    /// Raw badge state, e.g. `translation_flagged`. Kept a `String`, not an
+    /// enum: an unknown value from a newer backend must render (muted), not
+    /// break the decode of the whole question.
+    let reviewBadge: String?
+    /// Language the served text is actually in ("sk"), which can differ from
+    /// the language the session asked for (EN fallback).
+    let translationLanguage: String?
+    /// One line naming what the gate objected to — only ever sent for the
+    /// flagged/critical states.
+    let reviewNote: String?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
@@ -72,6 +87,9 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         case embeddingModel = "embedding_model"
         case embeddingDim = "embedding_dim"
         case costCents = "cost_cents"
+        case reviewBadge = "review_badge"
+        case translationLanguage = "translation_language"
+        case reviewNote = "review_note"
     }
 
     /// Backward-compatible decoder — `ageAppropriate` is optional so existing
@@ -98,6 +116,9 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         embeddingModel = try container.decodeIfPresent(String.self, forKey: .embeddingModel)
         embeddingDim = try container.decodeIfPresent(Int.self, forKey: .embeddingDim)
         costCents = try container.decodeIfPresent(Int.self, forKey: .costCents)
+        reviewBadge = try container.decodeIfPresent(String.self, forKey: .reviewBadge)
+        translationLanguage = try container.decodeIfPresent(String.self, forKey: .translationLanguage)
+        reviewNote = try container.decodeIfPresent(String.self, forKey: .reviewNote)
     }
 
     init(
@@ -120,7 +141,10 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         promptSeed: String? = nil,
         embeddingModel: String? = nil,
         embeddingDim: Int? = nil,
-        costCents: Int? = nil
+        costCents: Int? = nil,
+        reviewBadge: String? = nil,
+        translationLanguage: String? = nil,
+        reviewNote: String? = nil
     ) {
         self.id = id
         self.question = question
@@ -142,6 +166,9 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         self.embeddingModel = embeddingModel
         self.embeddingDim = embeddingDim
         self.costCents = costCents
+        self.reviewBadge = reviewBadge
+        self.translationLanguage = translationLanguage
+        self.reviewNote = reviewNote
     }
 }
 
@@ -209,7 +236,10 @@ extension Question {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: nil,
-            generatedBy: nil
+            generatedBy: "session:opus",
+            reviewBadge: "translation_flagged",
+            translationLanguage: "sk",
+            reviewNote: "regionálny výraz v odpovedi"
         )
 
         static let previewHard = Question(
@@ -278,7 +308,10 @@ extension Question {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: "Uranus is tipped about 98 degrees, almost certainly knocked over by a giant impact early in the solar system's history, so it rolls around the Sun on its side instead of spinning upright like every other planet. This extreme axial tilt gives Uranus the most bizarre seasons in the solar system: each pole spends roughly 42 Earth years in continuous sunlight, followed by 42 years of darkness. Voyager 2, the only spacecraft to visit, flew past in 1986 and found a strangely featureless blue-green world whose magnetic field is also tilted and offset from the planet's centre.",
-            generatedBy: "claude-opus-4.6"
+            generatedBy: "claude-opus-4.6",
+            reviewBadge: "translation_critical",
+            translationLanguage: "sk",
+            reviewNote: "answerability: flip, odpoveď je prezradená v otázke"
         )
 
         static let previewMCQ = Question(

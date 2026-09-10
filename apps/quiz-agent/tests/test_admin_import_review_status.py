@@ -10,6 +10,12 @@ serving without a human ever seeing them.
 These pins encode the rule, not the mechanics: the default must be the
 non-serving `pending_review`, and `approved` must be reachable only when the
 caller says so explicitly (the human-gated promotion path).
+
+#177 (founder 2026-09-10) lets the *machine gates* produce `approved` — but
+only in the trusted CLI importer, which reads the pipeline's own evidence. This
+endpoint's payload has no `source_url` and no gate flags, and whatever it does
+carry comes from the caller, so auto-approval here would be forgeable by
+anything holding the admin key. These pins therefore stay exactly as they were.
 """
 
 from __future__ import annotations

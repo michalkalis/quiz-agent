@@ -77,15 +77,17 @@ A tranche of questions generated together with a shared topic / difficulty profi
 **5 quality dimensions**
 The scoring axes used by `/score-qs`. (Domain-internal; see the skill for definitions.)
 
-**Review status × build channel (founder rule, 2026-08-28; reaffirmed 2026-09-04)**
-`review_status` on a **shared-corpus** question (`pack_id IS NULL`) encodes *who* vouched for it, not just whether it passed:
-- `approved` — a **human** (founder) reviewed or rated it (`reviewed_by` / `reviewed_at` / `review_notes` set). Served to every client, App Store included.
-- `pending_review` — passed the machine gates (fact-check, answerability, craft guards) but **no human has seen it**. Served only to TestFlight / dev installs (`session.build_channel == "testflight"`, see `apps/quiz-agent/app/retrieval/question_retriever.py`); an App Store client never gets it.
+**Review status × build channel (founder rule, 2026-08-28; reaffirmed 2026-09-04; amended 2026-09-10 by #177 — machine-approved review status)**
+`review_status` on a **shared-corpus** question (`pack_id IS NULL`) encodes *whether it is vouched for*, by a human or by the machine gates — the state decides what serves, not who set it:
+- `approved` — a **human** (founder) reviewed or rated it, **or** the machine gates cleared it with zero findings (#177). Served to every client, App Store included. `reviewed_by` says which: a human is `michal`, the gates are `machine:gates-v1` (`reviewed_by LIKE 'machine:%'`), and the version bumps whenever the gate set changes.
+- `pending_review` — not vouched for: no human has seen it *and* some gate left a finding (or the evidence for one is missing — the #177 predicate `apps/quiz-pack-api/app/scoring/machine_approval.py` is fail-closed: non-EN, pack-scoped, no `source_url`, no pipeline provenance, unverified / low-confidence, `factcheck_tier != web`, or any persisted craft/undated/veto flag). Served only to TestFlight / dev installs (`session.build_channel == "testflight"`, see `apps/quiz-agent/app/retrieval/question_retriever.py`); an App Store client never gets it.
 - `rejected` / `archived` — never served.
 
 A custom-pack session is the exception: it scopes by `pack_id` and drops `review_status` entirely (first branch in `question_retriever.py`), so pack questions serve on every build channel whatever their status — the pack was ordered and paid for.
 
-Corollary: an agent or importer must never stamp `approved` without a human verdict. Both import paths now default to `pending_review` — `POST /api/v1/admin/questions/import` (`apps/quiz-agent/app/api/admin.py`) and `apps/quiz-pack-api/scripts/import_questions_json.py` — and promotion to `approved` is an explicit, human-gated call (founder rating or the review UI).
+Corollary (rewritten 2026-09-10, #177): only the **trusted CLI importer** may stamp `approved` without a human, because it reads the pipeline's own evidence. `apps/quiz-pack-api/scripts/import_questions_json.py` defaults to `--review-status auto` and decides per row; an explicit `--review-status` still forces every row (the human promotion / quarantine lever). `POST /api/v1/admin/questions/import` (`apps/quiz-agent/app/api/admin.py`) stays human-gated and defaults to `pending_review`: its payload carries no `source_url` and no gate flags, so a machine verdict there would only mean "the caller claimed the gates passed".
+
+Re-import never promotes an existing row: the importer inserts `ON CONFLICT DO NOTHING`, so rows already in the corpus keep their status. Backfilling pre-#177 rows is a separate, deliberate call, not a side effect of an import.
 
 **ChromaDB**
 Vector store for question semantic search. Production volume mount: `/app/data/chroma`. The `CHROMA_PATH` Fly secret must match the mount.

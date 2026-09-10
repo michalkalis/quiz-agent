@@ -73,6 +73,15 @@ class QuestionImport(BaseModel):
     image_subtype: Optional[str] = None
     language_dependent: bool = False
     generation_metadata: Optional[Dict[str, Any]] = None
+    # #177 deliberately does NOT reach this endpoint. The CLI importer
+    # (`apps/quiz-pack-api/scripts/import_questions_json.py`) can auto-approve a
+    # clean row because it reads the pipeline's own output: `source_url`,
+    # verification verdict and the shadow-gate flags. This payload carries none
+    # of them (no `source_url`, no `language`) and the evidence it does carry
+    # arrives from the caller, so a machine "approved" here would mean "the
+    # caller said the gates passed" — forgeable by anything holding the admin
+    # key. Auto-approval stays in the trusted importer; this endpoint keeps the
+    # human-gated default.
     review_status: Literal["pending_review", "approved"] = Field(
         "pending_review",
         description=(

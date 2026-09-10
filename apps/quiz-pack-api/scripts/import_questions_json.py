@@ -8,16 +8,21 @@ vector (OpenAI ``text-embedding-3-small``, batched), and inserts idempotently
 on the primary key. Same seam and runbook shape as
 ``migrate_pending_to_postgres.py``.
 
-Rows land as ``pending_review`` by default: machine gates alone never make a
-question ``approved``, which means "a human vouched for it" and serves to every
-client (founder rule, see CONTEXT.md). ``--review-status approved`` is the
-promotion path after a founder rating / review pass.
+Review status is decided **per row** by default (``--review-status auto``,
+#177): an English shared-corpus row that cleared every machine gate with zero
+findings lands as ``approved`` (stamped ``reviewed_by="machine:gates-v1"``) and
+serves to every client; anything with a finding — or any missing evidence, the
+predicate is fail-closed — lands as ``pending_review`` (TestFlight-only
+serving). Founder decision 2026-09-10 replaced the 2026-08-28 rule that only a
+human could produce ``approved``; see ``app.scoring.machine_approval``. An
+explicit ``--review-status`` still forces EVERY row to that status (the human
+promotion / quarantine path).
 
 Usage
 -----
 ::
 
-    # Local dry-run (uses DATABASE_URL from .env)
+    # Local dry-run (uses DATABASE_URL from .env), per-row auto status
     python scripts/import_questions_json.py --json-path data/generation-2026-07-10/batch.json
 
     # Prod execute against the Fly Postgres instance (via `fly proxy`)
@@ -34,6 +39,7 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -50,6 +56,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E4
 
 from app.db import QuestionRow, engine, normalize_async_url, question_to_row  # noqa: E402
 from app.db.models.question import REVIEW_STATUSES  # noqa: E402
+from app.scoring.machine_approval import (  # noqa: E402
+    GATE_VERSION,
+    machine_approval_block_reason,
+    tf_imbalance_excess_ids,
+)
 from quiz_shared.models.question import Question  # noqa: E402
 from quiz_shared.utils.qa_text import qa_text  # noqa: E402
 from scripts.migrate_pending_to_postgres import (  # noqa: E402
@@ -62,6 +73,10 @@ from scripts.migrate_pending_to_postgres import (  # noqa: E402
 )
 
 logger = logging.getLogger("import_questions_json")
+
+# `--review-status auto` (the default, #177): decide per row via the machine
+# approval predicate instead of stamping one status on the whole batch.
+AUTO_REVIEW_STATUS = "auto"
 
 
 def _verification_block_reason(q: Question) -> str | None:
@@ -80,13 +95,49 @@ def _verification_block_reason(q: Question) -> str | None:
     return None
 
 
-def _load_questions(paths: List[Path], review_status: str) -> List[Question]:
+def _apply_auto_review_status(questions: List[Question]) -> dict[str, int]:
+    """Stamp ``approved`` / ``pending_review`` per row (#177); return reasons.
+
+    ``approved`` here means "every machine gate cleared with zero findings",
+    marked ``reviewed_by=machine:gates-v1`` so it stays distinguishable from a
+    human verdict (`reviewed_by LIKE 'machine:%'`). The returned Counter-shaped
+    dict maps block reason → row count, so a dry run shows WHY rows stayed
+    pending instead of only how many.
+    """
+    tf_excess = tf_imbalance_excess_ids(questions)
+    now = datetime.now(timezone.utc)
+    reasons: dict[str, int] = {}
+    for q in questions:
+        reason = machine_approval_block_reason(q, tf_excess)
+        if reason is None:
+            q.review_status = "approved"
+            q.reviewed_by = GATE_VERSION
+            q.reviewed_at = now
+            continue
+        q.review_status = "pending_review"
+        reasons[reason] = reasons.get(reason, 0) + 1
+    return reasons
+
+
+def _load_questions(
+    paths: List[Path], review_status: str, stats: dict | None = None
+) -> List[Question]:
+    """Parse the batches, drop #158-blocked rows, stamp the review status.
+
+    ``review_status="auto"`` defers to `_apply_auto_review_status`; an explicit
+    status is forced onto every surviving row. The #158 verification guard runs
+    FIRST either way — a held/failed row never enters the corpus, so it never
+    reaches the approval predicate at all.
+    """
     by_id: dict[str, Question] = {}
     rejected = 0
     for path in paths:
         raw_list = json.loads(path.read_text())
         for raw in raw_list:
-            payload = {**raw, "review_status": review_status}
+            row_status = (
+                "pending_review" if review_status == AUTO_REVIEW_STATUS else review_status
+            )
+            payload = {**raw, "review_status": row_status}
             payload.setdefault("embedding_model", EMBEDDING_MODEL)
             payload.setdefault("embedding_dim", EMBEDDING_DIM)
             q = Question.model_validate(payload)
@@ -105,7 +156,12 @@ def _load_questions(paths: List[Path], review_status: str) -> List[Question]:
         logger.info("Read %d row(s) from %s", len(raw_list), path)
     if rejected:
         print(f"REJECTED unverified/held rows: {rejected} (see log above)")
-    return list(by_id.values())
+    questions = list(by_id.values())
+    if review_status == AUTO_REVIEW_STATUS:
+        block_reasons = _apply_auto_review_status(questions)
+        if stats is not None:
+            stats["block_reasons"] = block_reasons
+    return questions
 
 
 async def _run(args: argparse.Namespace) -> int:
@@ -115,7 +171,8 @@ async def _run(args: argparse.Namespace) -> int:
         logger.error("JSON file(s) not found: %s", ", ".join(str(p) for p in missing))
         return 1
 
-    questions = _load_questions(paths, args.review_status)
+    stats: dict = {}
+    questions = _load_questions(paths, args.review_status, stats)
 
     if args.database_url:
         async_engine = create_async_engine(
@@ -144,6 +201,11 @@ async def _run(args: argparse.Namespace) -> int:
         print(f"Already present in PG:     {len(existing)}")
         print(f"Would insert:              {len(to_insert)} "
               f"(review_status={args.review_status!r})")
+        if args.review_status == AUTO_REVIEW_STATUS:
+            # Only auto mode produces a split (and machine markers) — printing
+            # it for a forced status would claim `reviewed_by=machine:…` on
+            # rows that will be inserted with NULL.
+            _print_review_status_split(to_insert, stats)
         print(f"Need embedding:            {len(needs_embedding)} "
               f"({batches} OpenAI batch call(s) of {args.batch_size}, "
               f"question + question/answer text per row)")
@@ -195,6 +257,23 @@ async def _run(args: argparse.Namespace) -> int:
             await async_engine.dispose()
 
 
+def _print_review_status_split(questions: List[Question], stats: dict) -> None:
+    """Show the approved/pending split and the top reasons rows stayed pending.
+
+    A silent count would hide a systematic miss (e.g. a whole batch blocked on
+    one missing field) behind "0 approved" — the reasons make it legible
+    before `--execute`.
+    """
+    approved = sum(1 for q in questions if q.review_status == "approved")
+    pending = len(questions) - approved
+    print(f"  machine-approved:        {approved} (reviewed_by={GATE_VERSION!r})")
+    print(f"  pending_review:          {pending}")
+    reasons = stats.get("block_reasons") or {}
+    top = sorted(reasons.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+    for reason, count in top:
+        print(f"    {count:>5}  {reason}")
+
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(
@@ -205,9 +284,12 @@ def main() -> int:
                         help="Path to a JSON list of Question dicts. Repeatable.")
     parser.add_argument("--database-url",
                         help="Postgres URL. Defaults to app.config.Settings.")
-    parser.add_argument("--review-status", default="pending_review", choices=REVIEW_STATUSES,
-                        help="review_status stamped on every imported row (default: pending_review; "
-                             "pass 'approved' only after a human verdict).")
+    parser.add_argument("--review-status", default=AUTO_REVIEW_STATUS,
+                        choices=(AUTO_REVIEW_STATUS, *REVIEW_STATUSES),
+                        help="review_status for imported rows. Default 'auto' (#177): decided per "
+                             "row by the machine-approval predicate — clean EN rows become "
+                             "'approved' (reviewed_by=machine:gates-v1), the rest "
+                             "'pending_review'. An explicit value forces every row.")
     parser.add_argument("--batch-size", type=int, default=100,
                         help="OpenAI embedding batch size (default 100).")
     mode = parser.add_mutually_exclusive_group()

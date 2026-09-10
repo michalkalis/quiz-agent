@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """Prepare verified questions for production import.
 
+DEPRECATED (2026-09-10, #177). This legacy `/verify-questions` helper stamped
+`review_status` itself — `approved` straight from an LLM verdict, and
+`needs_review`, which is not even a valid status (`REVIEW_STATUSES` in
+`apps/quiz-pack-api/app/db/models/question.py`). Review status is now decided at
+import time by `apps/quiz-pack-api/scripts/import_questions_json.py` (per-row
+machine approval, fail-closed), so this script only prepares content: it leaves
+every row `pending_review` and lets the importer decide. Prefer the
+quiz-pack-api generation pipeline for new batches.
+
 Reads enriched + report file pairs from data/verification/,
 filters to 'correct' and 'needs_review' verdicts, generates IDs
 where missing, and outputs a single import-ready JSON file.
@@ -118,8 +127,10 @@ def prepare_import(include_needs_review: bool = True) -> list[dict]:
             if not question.get("id"):
                 question["id"] = generate_id(question)
 
-            # Mark review status based on verdict
-            question["review_status"] = "approved" if verdict == "correct" else "needs_review"
+            # #177: never stamp a verdict here. `needs_review` was not a valid
+            # review_status at all, and `approved` from an LLM verdict bypasses
+            # the import-time gate predicate. The importer decides per row.
+            question["review_status"] = "pending_review"
 
             all_questions.append(question)
             imported += 1

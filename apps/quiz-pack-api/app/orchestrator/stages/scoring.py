@@ -59,6 +59,12 @@ from app import feature_flags
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring import craft_guards
+from app.scoring.machine_approval import (
+    CRAFT_FLAG_KEY,
+    UNDATED_FLAG_KEY,
+    VETO_FLAG_KEY,
+    stamp_review_flag,
+)
 from app.scoring.multi_model_scorer import (
     MultiModelScorer,
     compute_distractor_quality,
@@ -84,6 +90,7 @@ class JudgePanelUnavailable(RuntimeError):
     def __init__(self, message: str, info: dict | None = None) -> None:
         super().__init__(message)
         self.info = dict(info or {})
+
 
 # Drop thresholds (module-level constants, not magic numbers — #42 task 42.29).
 # Deliberately lenient: the gate removes broken questions, it is not a top-K
@@ -249,6 +256,7 @@ class ScoringStage:
             )
             if undated_reason is not None:
                 undated_flagged += 1
+                stamp_review_flag(q, UNDATED_FLAG_KEY, undated_reason)
                 logger.warning(
                     "ScoringStage undated-record flagged id=%s reason=%s "
                     "(shadow-only telemetry: kept)",
@@ -279,6 +287,7 @@ class ScoringStage:
                     )
                     continue
                 craft_flagged += 1
+                stamp_review_flag(q, CRAFT_FLAG_KEY, craft_reason)
                 logger.warning(
                     "ScoringStage craft-guard would-drop id=%s reason=%s "
                     "(shadow mode: kept)",
@@ -302,6 +311,7 @@ class ScoringStage:
                         )
                         continue
                     veto_flagged += 1
+                    stamp_review_flag(q, VETO_FLAG_KEY, veto_reason)
                     logger.warning(
                         "ScoringStage VETO_SHADOW would-drop id=%s reason=%s "
                         "(shadow mode: kept)",

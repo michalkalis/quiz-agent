@@ -1,0 +1,38 @@
+missing qids: 5a8883a8-5402-48dd-8684-5c7c96eb4fef 327750d6-0e22-4a97-b6f1-a58752c14f2b 6ac73d97-28fe-4841-b20a-1a2114860aef d9c655e9-01c4-4651-99bb-bf76eb2c7dee 72e2d072-14b6-4569-966f-6814063b35c4 9d26416e-9ac4-4723-9d3c-b98aeedc389e c2e3d05c-6e26-4630-95bf-c6f06915f313 2312b30b-cdf6-424c-b141-adcaddcb2ac8 80ec52c8-e041-5353-9929-26faed681b8c 22156a55-156c-4081-93b5-6f6473e8990c b23b6cc5-0951-596a-8859-c2afa3029e64 4a4b5149-3a4a-5806-a882-265352fbdbe6 e2fd6bf2-e9eb-512d-8038-f44a7cc7501f 53254cae-6201-450a-afcf-ef6bddea7fb5 29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6 37b1867e-93d4-5ad6-9065-4393156deb5e db385a95-4ab8-5c59-bde6-eb22d4ec03c6 059438e6-e0cb-50ea-8eca-c1e8f0f0c54e 4605a059-7194-5286-a978-fd47fb09f7db a822f59d-63e6-51ac-b878-7d26e683941a
+coverage --language sk  (approved-only, binding; TestFlight channel: 344/394)
+category          difficulty   en   tr  ratio  status
+science-nature    easy          9    8   0.89  en_starved
+science-nature    medium       29   26   0.90  FAIL ratio
+science-nature    hard         13   10   0.77  FAIL ratio
+history           easy          3    3   1.00  en_starved
+history           medium        9    8   0.89  en_starved
+history           hard          4    4   1.00  en_starved
+geography-world   easy          3    3   1.00  en_starved
+geography-world   medium        4    4   1.00  en_starved
+geography-world   hard          6    5   0.83  en_starved
+movies-music      easy         11   10   0.91  FAIL ratio
+movies-music      medium       18   17   0.94  FAIL ratio
+movies-music      hard          6    5   0.83  en_starved
+sports            easy          0    0   1.00  en_starved
+sports            medium        5    5   1.00  en_starved
+sports            hard          1    1   1.00  en_starved
+food-everyday     easy          5    5   1.00  en_starved
+food-everyday     medium        4    4   1.00  en_starved
+food-everyday     hard          0    0   1.00  en_starved
+entertainment     easy          9    7   0.78  en_starved
+entertainment     medium       11    9   0.82  FAIL ratio,cell_floor
+entertainment     hard          1    1   1.00  en_starved
+general           easy          6    5   0.83  en_starved
+general           medium        9    8   0.89  en_starved
+general           hard          3    1   0.33  en_starved
+science-nature    (all)        51   44  floor 30  ok
+history           (all)        16   15  floor 16  FAIL category_floor  en_starved_category
+geography-world   (all)        13   12  floor 13  FAIL category_floor  en_starved_category
+movies-music      (all)        35   32  floor 30  ok
+sports            (all)         6    6  floor 6  ok  en_starved_category
+food-everyday     (all)         9    9  floor 9  ok  en_starved_category
+entertainment     (all)        21   17  floor 20  FAIL category_floor  en_starved_category
+general           (all)        18   14  floor 18  FAIL category_floor  en_starved_category
+untranslated eligible EN rows: 20 (= the next `submit --limit` work set)
+RESULT: FAIL
+run report: data/translation_reports/coverage-sk-20260910T000736.json

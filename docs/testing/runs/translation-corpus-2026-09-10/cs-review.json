@@ -1,0 +1,2742 @@
+[
+  {
+    "id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+    "question": "Oči Davida Bowieho vypadaly proslule jako dvě různé barvy. Co ve skutečnosti tuto iluzi způsobilo?",
+    "possible_answers": null,
+    "correct_answer": "Trvale rozšířená zornice",
+    "alternative_answers": [
+      "rozšířená zornice",
+      "jedna rozšířená zornice",
+      "trvale rozšířená panenka",
+      "rozšířená zornice po zranění",
+      "poškozená zornice, která zůstala rozšířená"
+    ],
+    "explanation": "Při rvačce s kamarádem si poškrábal oční bulvu, což mu způsobilo trvale rozšířenou zornici na jednom oku. Obě oči mají ve skutečnosti stejnou barvu.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+    "id": "6afeb849-779b-5ad5-97b1-c51fca1b132b",
+    "question": "Když se ve 30. letech 20. století stavěla Hooverova přehrada, dělníci zabudovali dovnitř konstrukce stovky kilometrů ocelových trubek a proháněli jimi ledově studenou vodu. Inženýři spočítali, že bez tohoto triku by přehrada potřebovala přes sto let na to, aby dokončila co?",
+    "possible_answers": null,
+    "correct_answer": "Chladnutí tuhnoucího betonu",
+    "alternative_answers": [
+      "Chladnutí",
+      "Vychladnutí",
+      "Vychladnutí betonu",
+      "Chlazení betonu",
+      "Tuhnutí betonu",
+      "Tvrdnutí betonu",
+      "Zrání betonu",
+      "Aby beton vychladl"
+    ],
+    "explanation": "Tuhnoucí beton uvolňuje obrovské množství tepla a takto masivní odlitek by přirozeně chladl zhruba 125 let — a přitom by popraskal — takže stavitelé vlastně uvnitř přehrady vybudovali obří chladicí systém.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "d8c7a633-02f1-418e-99da-d4d909519581",
+    "question": "Vytrvalý mýtus, že Einstein propadl z matematiky, prý vznikl v roce 1935 ve sloupku patřícím které slavné značce ve stylu \"věřte, nevěřte\"?",
+    "possible_answers": null,
+    "correct_answer": "Ripley's Believe It or Not",
+    "alternative_answers": [
+      "Ripley's",
+      "Ripleyho Věřte, nevěřte",
+      "Věřte, nevěřte",
+      "Ripley"
+    ],
+    "explanation": "Sloupky Roberta Ripleyho míchaly dohromady věci, které si napůl pamatoval, doslechl se je nebo si je vymyslel, čímž zaseli tuto přetrvávající nepravdu.",
+    "topic": "science-nature · critical",
+    "difficulty": "hard",
+    "source_url": "https://www.cracked.com/image-pictofact-7288-30-wild-facts-about-famous-historical-figures"
+  },
+  {
+    "id": "6ffb1eae-978c-46c8-baba-e9811e0ad9bd",
+    "question": "Mucholapka podivná se nesklapne hned při prvním dotyku hmyzu na spouštěcí chloupky — čeká na potvrzení. Kolik samostatných dotyků během zhruba dvaceti sekund je potřeba, aby past sklapla?",
+    "possible_answers": null,
+    "correct_answer": "Dva",
+    "alternative_answers": [
+      "2",
+      "dva doteky",
+      "dva dotyky",
+      "dvakrát"
+    ],
+    "explanation": "Rostlina vlastně počítá: jeden dotyk by mohla být dešťová kapka, takže se zavře až při druhém — a než se obtěžuje vytvářet trávicí šťávy, potřebuje asi pět dotyků.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Venus_flytrap"
+  },
+  {
+    "id": "dfb0de63-3470-4b1a-9c5e-1d030ba2ae71",
+    "question": "Přes to, co tvrdí každá půjčovna kostýmů a každý kreslený film, archeologové nikdy nenašli pravou vikinskou bojovou helmu opatřenou čím?",
+    "possible_answers": null,
+    "correct_answer": "Rohy",
+    "alternative_answers": [
+      "rohama",
+      "rohy na helmě",
+      "párem rohů",
+      "roh"
+    ],
+    "explanation": "Představu helmy s rohy si z velké části vymysleli kostýmní výtvarníci 19. století pro Wagnerovy opery; skutečné vikinské helmy byly jednoduché praktické kopule.",
+    "topic": "history · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Horned_helmet"
+  },
+  {
+    "id": "48de98bb-1a16-4468-9bb9-99bf13f4eb84",
+    "question": "Výbuch vulkánu Tambora v Indonésii v roce 1815 ochladil celou planetu a rok 1816 se stal 'rokem bez léta' — skupinu přátel u Ženevského jezera to uvěznilo v domě, kde osmnáctiletá Mary Shelleyová začala psát který slavný román?",
+    "possible_answers": null,
+    "correct_answer": "Frankenstein",
+    "alternative_answers": [
+      "Frankenstein neboli Moderní Prométheus",
+      "Frankenstein čili Moderní Prométheus",
+      "Frankenstein aneb Moderní Prométheus"
+    ],
+    "explanation": "Když je vulkanické zatmění uvěznilo v domě kvůli dešti, vyzval lord Byron své hosty, aby psali strašidelné historky — a vulkán na druhém konci světa se tak stal kmotrem nejslavnější stvůry science fiction.",
+    "topic": "history · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Year_Without_a_Summer"
+  },
+  {
+    "id": "923d2bb1-100b-4590-af34-083e7f6f2d01",
+    "question": "Na kanárském ostrově La Gomera si pastýři vyvinuli způsob, jak vést celé rozhovory přes hluboké rokle – bez telefonu a bez křiku. Jak to dělají?",
+    "possible_answers": null,
+    "correct_answer": "Pískáním",
+    "alternative_answers": [
+      "Hvízdáním",
+      "Píšťalkovou řečí",
+      "Pískají",
+      "Hvízdají",
+      "Pískaný jazyk",
+      "Pískaná řeč",
+      "Pískanou řečí"
+    ],
+    "explanation": "Silbo Gomero mění slabiky španělštiny v pískané tóny, které se nesou několik kilometrů přes strmá údolí ostrova. Dodnes se vyučuje v místních školách a v roce 2009 byl zapsán organizací UNESCO na seznam nehmotného kulturního dědictví.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Silbo_Gomero"
+  },
+  {
+    "id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+    "question": "Díky vzdáleným zámořským územím sahajícím od Tichého oceánu až po Karibik se která země rozprostírá přes dvanáct časových pásem — více než kterýkoli jiný stát na Zemi?",
+    "possible_answers": null,
+    "correct_answer": "Francie",
+    "alternative_answers": [
+      "Francouzská republika",
+      "Franzie"
+    ],
+    "explanation": "Pevninská Francie používá jediné časové pásmo, ale území jako Francouzská Polynésie, Francouzská Guyana a Réunion zvyšují celkový počet na dvanáct — čímž překonává i Rusko, které jich má jedenáct.",
+    "topic": "geography-world · critical",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+    "question": "Když v srpnu 1981 zahájila MTV úplně poprvé vysílání, záměrně začala písní skupiny The Buggles, jejíž název přesně předpověděl, co kanál udělá se starším médiem. O kterou píseň šlo?",
+    "possible_answers": null,
+    "correct_answer": "Video Killed the Radio Star",
+    "alternative_answers": [
+      "Video Killed The Radio Star od The Buggles",
+      "Video Killed the Radiostar",
+      "Video zabilo rozhlasovou hvězdu"
+    ],
+    "explanation": "MTV ji zvolila jako drzé prohlášení o svém poslání — vůbec první klip na první hudební videokanálu oznámil, že video zabilo rozhlasovou hvězdu.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "40d5dbc2-f7f5-4490-8c52-34a5b6317a29",
+    "question": "Který filmový skladatel napsal ikonické hudební motivy ke Star Wars, Jurskému parku a prvním třem filmům o Harrym Potterovi?",
+    "possible_answers": null,
+    "correct_answer": "John Williams",
+    "alternative_answers": [
+      "Williams",
+      "John Towner Williams",
+      "Džon Viliams"
+    ],
+    "explanation": "John Williams získal přes 50 nominací na Oscara, více než kdokoli jiný z žijících lidí — je to soundtrack k půlstoletí kinematografie.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_compositions_by_John_Williams"
+  },
+  {
+    "id": "f013693e-2dff-5900-b16e-f862277d91c3",
+    "question": "Bílá čokoláda obsahuje kakaové máslo, cukr a mléko — úplně jí ale chybí ta tmavá složka, která dává mléčné a hořké čokoládě jejich barvu i klasickou čokoládovou chuť. Jak se tato chybějící složka jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Kakaová sušina",
+    "alternative_answers": [
+      "kakaová sušina",
+      "sušina kakaa",
+      "netučná kakaová sušina",
+      "kakaová hmota",
+      "kakaový prášek",
+      "čokoládová sušina"
+    ],
+    "explanation": "Kakaová sušina je rozemletá netučná část kakaového bobu a bez ní je bílá čokoláda v podstatě jen oslazený kakaový tuk — proto ji někteří puristé odmítají vůbec nazývat čokoládou.",
+    "topic": "food-everyday · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "0fa4dbec-502f-41fe-9696-decb852245a1",
+    "question": "„Wilhelmův výkřik“, konzervovaný výkřik recyklovaný ve stovkách filmů od Star Wars po Toy Story, byl poprvé nahrán pro western v kterém desetiletí?",
+    "possible_answers": {
+      "a": "30. léta 20. století",
+      "b": "50. léta 20. století",
+      "c": "70. léta 20. století",
+      "d": "90. léta 20. století"
+    },
+    "correct_answer": "50. léta 20. století",
+    "alternative_answers": [
+      "padesátá léta",
+      "50. léta",
+      "1950s"
+    ],
+    "explanation": "Nahrán byl v roce 1951 pro western Distant Drums a přezdívku dostal podle postavy jménem Wilhelm, která ho vydá ve filmu z roku 1953 — zvukaři ho od té doby propašovávají do filmů dodnes.",
+    "topic": "movies-music · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream"
+  },
+  {
+    "id": "da8efc8b-4521-5128-91dc-77f393653515",
+    "question": "Která skotská kapela měla svého vlastního megahitu z roku 1994 'Love Is All Around', ústřední písně z filmu Čtyři svatby a jeden pohřeb, tak plné zuby, že po 15 týdnech na prvním místě britské hitparády záměrně zastavila výrobu singlu?",
+    "possible_answers": null,
+    "correct_answer": "Wet Wet Wet",
+    "alternative_answers": [
+      "The Wets",
+      "Wet, Wet, Wet",
+      "Vet Vet Vet"
+    ],
+    "explanation": "Po patnácti týdnech v čele si kapela singl sama stáhla z prodeje, aby jeho jízdu zastavila — v éře CD se skutečně dalo přestat lisovat hit a nasměrovat fanoušky raději k albu.",
+    "topic": "movies-music · flagged",
+    "difficulty": "hard",
+    "source_url": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+    "id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+    "question": "V roce 2026 vydala Grimes plnohodnotnou spolupráci s kterou slavnou japonskou virtuální popovou hvězdou — syntetickým zpěvným hlasem bez lidského interpreta, jehož písně píší desetitisíce domácích producentů?",
+    "possible_answers": null,
+    "correct_answer": "Hatsune Miku",
+    "alternative_answers": [
+      "Miku",
+      "Miku Hatsune",
+      "Hacune Miku"
+    ],
+    "explanation": "Grimes přiznala, že když Miku objevila, bylo to 'jako nůž do srdce', protože si přála, aby ten nápad vymyslela sama. Vokaloidka s tyrkysovými vlasy už roky jako hologram vystupuje jako hlavní hvězda na skutečných koncertech, přestože je to celé jen software.",
+    "topic": "movies-music · flagged",
+    "difficulty": "hard",
+    "source_url": "https://www.nme.com/features/music-interviews/grimes-hatsune-miku-miku-maxxing-beyond-borders-interview-3963206"
+  },
+  {
+    "id": "b861af0a-056d-50a6-852f-4f32eb24823b",
+    "question": "Vesmírný trhák Project Hail Mary z roku 2026 s Ryanem Goslingem režírovalo stejné duo, které stojí za kterým oblíbeným animovaným komediálním hitem?",
+    "possible_answers": null,
+    "correct_answer": "Lego příběh",
+    "alternative_answers": [
+      "LEGO příběh",
+      "The Lego Movie",
+      "Lego Movie"
+    ],
+    "explanation": "Phil Lord a Christopher Miller vnesli energii Lego příběhu do adaptace románu Andyho Weira a proměnili potenciálně ponurý příběh o přežití v svižnou a překvapivě zábavnou podívanou. Weir napsal i Marťana, takže jde už o jeho druhé chytré astronautské vyprávění, které se dostalo na plátna kin.",
+    "topic": "movies-music · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
+  },
+  {
+    "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+    "question": "Poté, co skladba Bohemian Rhapsody od Queen původně vládla britské hitparádě devět týdnů v polovině 70. let, ji z prvního místa sesadila píseň, jejíž název je jedním z nejslavnějších zvolání, které Freddie Mercury zpívá — která kapela ji sesadila z čela?",
+    "possible_answers": null,
+    "correct_answer": "ABBA",
+    "alternative_answers": [
+      "Abba",
+      "abba"
+    ],
+    "explanation": "Šlo o píseň Mamma Mia od ABBY — nahradila skladbu, v jejíž slavné operní části zaznívá nářek 'mamma mia, mamma mia, mamma mia, let me go'. Osud hitparád byl jen zřídkakdy tak poetický.",
+    "topic": "movies-music · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+    "id": "c65a16ad-8def-5e03-bb77-edcff209d1f8",
+    "question": "Který herec získal v roce 2023 Oscara za nejlepší mužský herecký výkon ve filmu 'Velryba', ale hrál také v hrané komedii 'George z džungle' z roku 1997, kde se v bederní roušce houpal na lianách?",
+    "possible_answers": null,
+    "correct_answer": "Brendan Fraser",
+    "alternative_answers": [
+      "Fraser",
+      "Brendan Frejzr",
+      "Brendan Frazer"
+    ],
+    "explanation": "Fraserovo nadání pro fyzickou komiku ve filmu 'George z džungle' a v sérii 'Mumie' z něj v 90. letech udělalo akční hvězdu, než mu o desítky let později vynesla akademické zlato ceněná dramatická role.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://www.britannica.com/biography/Brendan-Fraser"
+  },
+  {
+    "id": "8730a6ed-b8a2-5813-814b-bab0e2c36c17",
+    "question": "Na jednom místě na Zemi se bouřky s blesky objevují až 160 nocí v roce — tak spolehlivě, že námořníci kdysi používali záblesky jako přírodní maják. Nad kterým velkým venezuelským jezerem tato slavná „věčná bouře“ zuří?",
+    "possible_answers": null,
+    "correct_answer": "Jezero Maracaibo",
+    "alternative_answers": [
+      "Maracaibo",
+      "Maracaibské jezero",
+      "Lake Maracaibo"
+    ],
+    "explanation": "Blesky Catatumbo se rozpoutávají tam, kde se řeka Catatumbo vlévá do jezera Maracaibo, což z tohoto místa podle satelitních dat NASA dělá nejčastěji zasahované blesky na planetě.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "2676d9c8-7656-5dd0-a6cb-59efb5d42b51",
+    "question": "Které album skupiny BTS z roku 2026 se v prvním týdnu prodalo ve více než čtyřech milionech kusů a tři týdny po sobě vedlo žebříček Billboard 200?",
+    "possible_answers": null,
+    "correct_answer": "ARIRANG",
+    "alternative_answers": [
+      "Arirang",
+      "Arirang (album)"
+    ],
+    "explanation": "Album ARIRANG vyšlo 20. března 2026 a jeho otevírací týden byl nejúspěšnějším týdnem roku v americkém žebříčku. Bylo součástí rekordního prvního pololetí, během něhož měl K-pop na svědomí více než polovinu celostátního růstu prodeje CD.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.complex.com/music/a/esperanza-rosenbaum/best-kpop-albums-2026"
+  },
+  {
+    "id": "b3d6ea9b-463a-495a-b146-7fecb39e6328",
+    "question": "V roce 1943 nechala britská rozvědka u španělského pobřeží plout mrtvolu oblečenou jako důstojník královské námořní pěchoty, který měl v aktovce falešné invazní plány. Lest odlákala německou obranu od skutečného cíle spojenců — od kterého středomořského ostrova?",
+    "possible_answers": null,
+    "correct_answer": "Sicílie",
+    "alternative_answers": [
+      "ostrov Sicílie",
+      "Sicilie",
+      "na Sicílii"
+    ],
+    "explanation": "Operace Mincemeat přesvědčila Hitlera, že úder dopadne na Řecko a Sardinii, takže když se spojenci v červenci 1943 vylodili na Sicílii, klíčové německé jednotky čekaly jinde.",
+    "topic": "history · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Operation_Mincemeat"
+  },
+  {
+    "id": "1c5745d9-ab9e-485b-8887-ffeeb9daadf9",
+    "question": "V roce 1859 se Spojené státy a Britské impérium ocitly na pokraji války kvůli ostrovu u tichomořského pobřeží Severní Ameriky — spouštěčem bylo zastřelení jediného hospodářského zvířete, které se stalo jedinou obětí celého konfliktu. Podle kterého zvířete se tato takřka-válka jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Prase",
+    "alternative_answers": [
+      "prase",
+      "vepř",
+      "prasete",
+      "čuně",
+      "prasečí"
+    ],
+    "explanation": "„Prasečí válka“ začala, když americký farmář na ostrově San Juan zastřelil prase v britském vlastnictví, které se mu rylo v bramborách; vojáci a válečné lodě proti sobě stály několik týdnů, ale prase zůstalo jedinou obětí.",
+    "topic": "history · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Pig_War_(1859)"
+  },
+  {
+    "id": "db6b3698-7f20-4fd5-8ad4-5270827c9e8d",
+    "question": "Dlouho uváděný muzikál Cats Andrewa Lloyda Webbera vychází z hravé básnické sbírky z roku 1939 od kterého nositele Nobelovy ceny, známějšího díky Pusté zemi?",
+    "possible_answers": null,
+    "correct_answer": "T. S. Eliot",
+    "alternative_answers": [
+      "Eliot",
+      "Thomas Stearns Eliot",
+      "TS Eliot",
+      "T.S. Eliot",
+      "Tý es Eliot"
+    ],
+    "explanation": "Texty písní pocházejí téměř doslova z Eliotovy sbírky 'Old Possum's Book of Practical Cats' (Kniha o praktických kočkách od starého Opossuma) a jeho pozůstalost se podílela na ceně Tony za nejlepší libreto muzikálu, kterou představení získalo.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Cats_(musical)"
+  },
+  {
+    "id": "46ab66c1-65b6-4844-8923-77e272e212fa",
+    "question": "Pouze dvě země na světě mají naprosto čtvercovou státní vlajku. Jednou z nich je Vatikán — která alpská země je tou druhou?",
+    "possible_answers": {
+      "a": "Austrálie",
+      "b": "Švýcarsko",
+      "c": "Lichtenštejnsko",
+      "d": "Slovinsko"
+    },
+    "correct_answer": "Švýcarsko",
+    "alternative_answers": [
+      "Švýcarská konfederace",
+      "Svycarsko"
+    ],
+    "explanation": "Čtvercový tvar pochází ze starých švýcarských vojenských válečných vlajek — jedině znak Červeného kříže, tedy obrácená švýcarská vlajka, udržuje tento design živý v podobě obdélníku.",
+    "topic": "geography-world · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Flag_of_Switzerland"
+  },
+  {
+    "id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+    "question": "Patnáctičlenné ragby (rugby union) bylo po roce 1924 vyřazeno z olympijských her a v této podobě se už nikdy nevrátilo. Která země, vítěz turnajů v roce 1920 i 1924, je tedy stále úřadujícím olympijským šampionem?",
+    "possible_answers": null,
+    "correct_answer": "Spojené státy americké",
+    "alternative_answers": [
+      "usa",
+      "spojené státy",
+      "amerika",
+      "spojené státy americké",
+      "u.s.a."
+    ],
+    "explanation": "Narychlo složený americký tým v pařížském finále roku 1924 porazil domácí Francii, což vyvolalo bouři mezi diváky – a protože se patnáctkové ragby na hry už nikdy nevrátilo, drží USA olympijský titul technicky vzato už celé století.",
+    "topic": "sports · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Rugby_union_at_the_Summer_Olympics"
+  },
+  {
+    "id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+    "question": "Když Nadia Comăneciová v roce 1976 získala jako první v olympijské gymnastice perfektní známku 10, ukázala světelná tabule v hale proslulé jiné číslo. Které?",
+    "possible_answers": {
+      "a": "1,00",
+      "b": "0,00",
+      "c": "9,99",
+      "d": "10,1"
+    },
+    "correct_answer": "1,00",
+    "alternative_answers": [
+      "1.00",
+      "jedna",
+      "1",
+      "jedna celá nula nula"
+    ],
+    "explanation": "Plný počet bodů byl považován za natolik nemožný, že tabule byla postavena jen na tři číslice, a tak se její 10,00 zobrazilo jako 1,00 a na okamžik zmátlo diváky.",
+    "topic": "sports · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Nadia_Com%C4%83neci"
+  },
+  {
+    "id": "eb92a5b7-44e1-424f-a318-42abc48eb7f8",
+    "question": "Croissant, symbol francouzské snídaně, pochází z pečiva ve tvaru půlměsíce, které se poprvé upeklo ve kterém evropském hlavním městě?",
+    "possible_answers": null,
+    "correct_answer": "Vídeň",
+    "alternative_answers": [
+      "viden",
+      "ve Vídni",
+      "Vídeň, Rakousko",
+      "Wien",
+      "Vienna"
+    ],
+    "explanation": "První byl rakouský kipferl a pařížské pekárny, které v 19. století prodávaly vídeňské pečivo, z něj udělaly máslový, listovitý croissant, jaký známe dnes.",
+    "topic": "food-everyday · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Kipferl"
+  },
+  {
+    "id": "c05166c7-1bfb-42d7-bdeb-052e277ab2c9",
+    "question": "Nejčastěji nominovaná černošská žena v historii Oscarů, která má do roku 2026 pět nominací, pracuje za kamerou – v jaké řemeslné kategorii?",
+    "possible_answers": null,
+    "correct_answer": "Nejlepší kostýmy",
+    "alternative_answers": [
+      "Kostýmy",
+      "Kostýmní výtvarnictví",
+      "Návrh kostýmů",
+      "Kostýmní výtvarnice",
+      "Kostýmní návrhářka"
+    ],
+    "explanation": "Ruth E. Carterová, která oblékla svět Black Panther, získala v roce 2026 svou pátou nominaci za kostýmy a předstihla v tomto žebříčku všechny herečky.",
+    "topic": "entertainment · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"
+  },
+  {
+    "id": "9d148f41-7dec-4c65-a634-04b84c45087f",
+    "question": "Ve kterém olympijském zimním sportu spoluhráči zuřivě zametají led před těžkým klouzajícím žulovým kamenem?",
+    "possible_answers": null,
+    "correct_answer": "Curling",
+    "alternative_answers": [
+      "curling",
+      "kerling",
+      "metaná"
+    ],
+    "explanation": "Zametání na okamžik roztaví mikroskopicky tenkou vrstvu ledu, takže téměř dvacetikilogramový kámen klouže dál a na cestě k terči se méně stáčí.",
+    "topic": "sports · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Curling"
+  },
+  {
+    "id": "7f4a5602-80c2-4ec7-9e03-c987241947c0",
+    "question": "Trofej pro vítěze mistrovství světa v ragby je pojmenována po Williamu Webbu Ellisovi, školákovi, který podle zakládající legendy tohoto sportu vynalezl hru v roce 1823 tím, že uprostřed fotbalového zápasu udělal co?",
+    "possible_answers": null,
+    "correct_answer": "Vzal míč do rukou",
+    "alternative_answers": [
+      "sebral míč a běžel s ním",
+      "zvedl míč a rozběhl se",
+      "běžel s míčem v rukou",
+      "chytil míč a běžel s ním",
+      "nesl míč v rukou",
+      "vzal míč do ruky"
+    ],
+    "explanation": "Podle vyprávění Webb Ellis na škole Rugby School popadl míč a rozběhl se s ním, i když historikové se shodují, že jde téměř jistě o mýtus vymyšlený o desítky let později — trofej jeho jméno nese tak jako tak.",
+    "topic": "sports · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/William_Webb_Ellis"
+  },
+  {
+    "id": "6aa6b188-24c8-4356-b84e-773a39167138",
+    "question": "Ve své poslední testovací směně v roce 1948 potřeboval australský pálkař Don Bradman pouhé čtyři runy k tomu, aby ukončil kariéru s průměrem přesně 100 — a byl vybowlován za nula. S jakým slavným průměrem na dvě desetinná místa tedy skončil, stále s obrovským náskokem před kýmkoli jiným v historii?",
+    "possible_answers": null,
+    "correct_answer": "99,94",
+    "alternative_answers": [
+      "99.94",
+      "99,94 runu",
+      "průměr 99,94",
+      "devadesát devět celých devadesát čtyři"
+    ],
+    "explanation": "Bradmanových 99,94 se často označuje za největší statistickou odchylku v jakémkoli sportu — druhý nejlepší kariérní průměr mezi zavedenými testovacími pálkaři se pohybuje kolem hranice 60.",
+    "topic": "sports · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Fifth_Test,_1948_Ashes_series"
+  },
+  {
+    "id": "8f5e7287-556b-4e77-8627-3254ab11765e",
+    "question": "V roce 2012 se odlehčený taneční hit jihokorejského rappera stal prvním videem v historii YouTube, které překonalo miliardu zhlédnutí. Kdo byl tím umělcem?",
+    "possible_answers": null,
+    "correct_answer": "Psy",
+    "alternative_answers": [
+      "PSY",
+      "Psy (Park Jae-sang)",
+      "Park Jae-sang",
+      "Pak Če-sang"
+    ],
+    "explanation": "Gangnam Style a jeho tanec na koni se šířily tak virálně, že YouTube musel vylepšit svoje počítadlo zhlédnutí, které nikdy nebylo stavěné na počítání nad zhruba 2,1 miliardy.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Gangnam_Style"
+  },
+  {
+    "id": "5965f766-4c3e-48dd-bcf9-86dd9a70eab9",
+    "question": "V roce 1915 rozdrtil loď Endurance antarktický pakový led a její posádka uvízla na zamrzlém moři. Přesto se po dva roky trvajícím strastiplném dobrodružství vrátilo všech 28 mužů domů živých. Který polárník je vedl?",
+    "possible_answers": null,
+    "correct_answer": "Ernest Shackleton",
+    "alternative_answers": [
+      "Shackleton",
+      "Sir Ernest Shackleton",
+      "Arnošt Shackleton"
+    ],
+    "explanation": "Shackleton udržel své muže naživu na ledových krách a na Sloním ostrově a poté se v malém otevřeném člunu plavil 1 300 kilometrů na Jižní Georgii pro pomoc — jde o jeden z největších zaznamenaných činů přežití v historii.",
+    "topic": "history · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Imperial_Trans-Antarctic_Expedition"
+  },
+  {
+    "id": "7197355f-41c6-4d60-b7aa-da6f150498fa",
+    "question": "Nejdelší profesionální tenisový zápas všech dob se hrál tři dny ve Wimbledonu v roce 2010 a poslední set skončil 70:68 na gamy. Jmenujte kteréhokoli z obou hráčů.",
+    "possible_answers": null,
+    "correct_answer": "John Isner",
+    "alternative_answers": [
+      "Isner",
+      "Nicolas Mahut",
+      "Mahut",
+      "Nicolas Mahu"
+    ],
+    "explanation": "Američan John Isner porazil Francouze Nicolase Mahuta po 11 hodinách a 5 minutách hry — maraton byl tak extrémní, že Wimbledon později zavedl tie-breaky v rozhodující sadě, aby se opakování zabránilo.",
+    "topic": "sports · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Isner%E2%80%93Mahut_match_at_the_2010_Wimbledon_Championships"
+  },
+  {
+    "id": "b8898faf-885f-4c78-8186-14e9bf6f6344",
+    "question": "Vytrvalostní závod 24 hodin Le Mans se po desetiletí zahajoval slavným rituálem ve chvíli, kdy padl startovní signál. Co museli jezdci udělat?",
+    "possible_answers": {
+      "a": "Přeběhnout přes trať ke svým zaparkovaným vozům",
+      "b": "Objet jedno kolo na kole",
+      "c": "Přetlačit své vozy přes startovní čáru",
+      "d": "Vyměnit si vozy s konkurenční stájí"
+    },
+    "correct_answer": "Přeběhnout přes trať ke svým zaparkovaným vozům",
+    "alternative_answers": [
+      "Přeběhnout trať ke svým vozům",
+      "Běželi přes trať ke svým autům",
+      "Přeběhnout přes dráhu k zaparkovaným autům",
+      "Doběhnout ke svým zaparkovaným vozům"
+    ],
+    "explanation": "Při klasickém „lemanském startu\" stála auta seřazená podél zdi boxů a jezdci k nim běželi, naskočili do nich a vyrazili. Po roce 1969 se od něj upustilo, zčásti proto, že jezdci kvůli úspoře vteřin vynechávali zapnutí bezpečnostních pásů.",
+    "topic": "sports · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/24_Hours_of_Le_Mans"
+  },
+  {
+    "id": "182d2442-67c4-4b84-8abc-f9908495fb8b",
+    "question": "Bir Tawil, kus pouště ležící mezi Egyptem a Súdánem, má právní status téměř jedinečný mezi obyvatelnou půdou na Zemi. Co je na něm tak neobvyklé?",
+    "possible_answers": null,
+    "correct_answer": "Nenárokuje si ho žádná země",
+    "alternative_answers": [
+      "žádný stát si ho nenárokuje",
+      "nikdo si ho nenárokuje",
+      "území nikoho",
+      "terra nullius",
+      "nepatří žádné zemi",
+      "nepatří žádnému státu",
+      "ani jedna země si ho nenárokuje"
+    ],
+    "explanation": "Dvě hraniční linie z koloniální éry, z let 1899 a 1902, si odporují a verze, na které každá ze zemí trvá, přenechává Bir Tawil té druhé — obě ho tedy aktivně odmítají, takže si ho nenárokuje nikdo.",
+    "topic": "geography-world · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Bir_Tawil"
+  },
+  {
+    "id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+    "question": "Do roku 1409 se papežské schizma vymklo kontrole natolik, že křesťanstvo mělo několik soupeřících mužů, kteří se současně prohlašovali za jediného pravého papeže. Kolik jich bylo?",
+    "possible_answers": {
+      "a": "Dva",
+      "b": "Tři",
+      "c": "Čtyři",
+      "d": "Pět"
+    },
+    "correct_answer": "Tři",
+    "alternative_answers": [
+      "3",
+      "tři papežové",
+      "tři"
+    ],
+    "explanation": "Koncil svolaný do Pisy, který měl urovnat spor mezi papeži v Římě a v Avignonu, místo odstranění obou zvolil ještě třetího, a rozmotat celý zmatek se podařilo až kostnickému koncilu v roce 1417.",
+    "topic": "history · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Western_Schism"
+  },
+  {
+    "id": "74b0fa56-ef2d-4522-882a-8a131c3ba1f2",
+    "question": "Kterou sopku roku 79 n. l. zasypal výbuch římská města Pompeje a Herculaneum metry popela?",
+    "possible_answers": null,
+    "correct_answer": "Vesuv",
+    "alternative_answers": [
+      "sopka Vesuv",
+      "Vesuvius",
+      "Monte Vesuvio"
+    ],
+    "explanation": "Vesuv pohřbil obě města tak rychle, že se každodenní římský život dochoval v pozoruhodných detailech, a sopka se nad dnešní Neapolí tyčí dodnes.",
+    "topic": "geography-world · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Mount_Vesuvius"
+  },
+  {
+    "id": "2aa4ac32-60e7-476a-8ab4-3d0eafcf97f1",
+    "question": "Stegosaurus a Tyrannosaurus rex se objevují v každé bedně s hračkami, přesto se nikdy nepotkali. Kolik času zhruba oba dinosaury dělilo?",
+    "possible_answers": {
+      "a": "Asi 5 milionů let",
+      "b": "Asi 20 milionů let",
+      "c": "Asi 80 milionů let",
+      "d": "Asi 200 milionů let"
+    },
+    "correct_answer": "Asi 80 milionů let",
+    "alternative_answers": [
+      "80 milionů let",
+      "osmdesát milionů let",
+      "Asi osmdesát milionů let",
+      "Přibližně 80 milionů let",
+      "C"
+    ],
+    "explanation": "Stegosaurus byl dávno vyhynulý, ještě než se T. rex vůbec objevil — ta propast je tak obrovská, že T. rex žil časově blíže k tobě než ke stegosaurovi.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Stegosaurus"
+  },
+  {
+    "id": "2c9dabd8-308c-4c00-b36e-d4a94bb6a13e",
+    "question": "V pěti oceňovaných sériích rozpitval seriál Špína Baltimoru (The Wire) obchod s drogami, přístav, školy a tisk jednoho amerického města. Kterého?",
+    "possible_answers": null,
+    "correct_answer": "Baltimore",
+    "alternative_answers": [
+      "Baltimor",
+      "Baltimore, Maryland",
+      "Baltimore v Marylandu"
+    ],
+    "explanation": "Tvůrce David Simon strávil léta jako reportér kriminální rubriky deníku Baltimore Sun a samotné město bývá často označováno za skutečnou hlavní postavu seriálu.",
+    "topic": "movies-music · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/The_Wire"
+  },
+  {
+    "id": "b310fa88-bba0-41da-9abb-e06b68aa9a85",
+    "question": "V letech 1967 až 1976 zakázal americký vysokoškolský basketbal jeden z divácky nejatraktivnějších prvků hry — panuje široce rozšířený názor, že zákaz mířil na jediného nezastavitelného studenta s výškou 2,18 metru jménem Lew Alcindor. O který prvek šlo?",
+    "possible_answers": null,
+    "correct_answer": "Smeč",
+    "alternative_answers": [
+      "Smečování",
+      "Smečovat",
+      "Dunk",
+      "Slam dunk",
+      "Smeč (dunk)"
+    ],
+    "explanation": "Alcindor, později proslulý jako Kareem Abdul-Jabbar, na to odpověděl tím, že místo toho dovedl k dokonalosti svůj skyhook — střelu, která ho dovedla k šesti titulům v NBA a k dlouho platnému rekordu ligy v počtu nastřílených bodů v kariéře.",
+    "topic": "sports · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Slam_dunk"
+  },
+  {
+    "id": "7ba298b8-48d3-4fdb-a487-e1f57f86cd4a",
+    "question": "Louis Pasteur vynalezl v 60. letech 19. století pasterizaci, aby zachránil upadající francouzské odvětví — a s mlékem to nemělo nic společného. Který nápoj se snažil zachránit?",
+    "possible_answers": null,
+    "correct_answer": "Víno",
+    "alternative_answers": [
+      "Francouzské víno",
+      "vino"
+    ],
+    "explanation": "Francouzské víno se kazilo v sudech i na lodích při vývozu, a tak Pasteur ukázal, že krátké šetrné zahřátí zahubí problematické mikroby — mléko se takto začalo ošetřovat až o desítky let později.",
+    "topic": "food-everyday · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Pasteurization"
+  },
+  {
+    "id": "300dab0f-0a4f-4099-a293-7195db9f5257",
+    "question": "Periodické cikády v Severní Americe tráví 13 nebo 17 let pod zemí, než se všechny naráz vylíhnou. Čím jsou tato dvě čísla matematicky zvláštní — což je vlastnost, o níž se soudí, že hmyzu pomáhá unikat predátorům?",
+    "possible_answers": {
+      "a": "Jsou to prvočísla",
+      "b": "Jsou to Fibonacciho čísla",
+      "c": "Jsou to druhé mocniny",
+      "d": "Jsou to násobky přestupných let"
+    },
+    "correct_answer": "Jsou to prvočísla",
+    "alternative_answers": [
+      "prvočísla",
+      "jsou prvočísla",
+      "jde o prvočísla"
+    ],
+    "explanation": "Protože 13 a 17 jsou dělitelné jen samy sebou a jedničkou, predátoři s kratšími rozmnožovacími cykly se s hromadným výskytem cikád téměř nikdy nesejdou.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Periodical_cicadas"
+  },
+  {
+    "id": "c3c795b7-77da-4561-b9b9-3fb69f6a7533",
+    "question": "V závodním plavání se tři plavecké styly startují skokem ze startovního bloku. Který styl je jediný, který začíná ve vodě?",
+    "possible_answers": null,
+    "correct_answer": "Znak",
+    "alternative_answers": [
+      "znak",
+      "na znak",
+      "plavecký styl znak",
+      "znakový styl"
+    ],
+    "explanation": "Skákat do vody po zádech by bylo nebezpečné, a tak závody v znaku začínají tak, že plavci jsou už v bazénu, chodidla mají opřená o stěnu a drží se madel na startovním bloku.",
+    "topic": "sports · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Backstroke"
+  },
+  {
+    "id": "bd5fbdb2-d6bf-4d1f-a2a5-6ee0d157c7a0",
+    "question": "V roce 1988 vyhrála dvacetiletá Celine Dion soutěž Eurovision Song Contest — ale ne za svou rodnou Kanadu, která se jí nemůže účastnit. Kterou zemi reprezentovala?",
+    "possible_answers": {
+      "a": "Švýcarsko",
+      "b": "Francie",
+      "c": "Belgie",
+      "d": "Lucembursko"
+    },
+    "correct_answer": "Švýcarsko",
+    "alternative_answers": [
+      "Švýcarská konfederace",
+      "za Švýcarsko"
+    ],
+    "explanation": "Země mohou vyslat i zahraniční zpěváky, a tak Švýcarsko získalo mladou Quebečanku, jejíž píseň 'Ne partez pas sans moi' zvítězila o jediný bod — a nastartovala její mezinárodní kariéru.",
+    "topic": "movies-music · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Eurovision_Song_Contest_1988"
+  },
+  {
+    "id": "7e0c66f0-a532-46f4-a761-c1fc4afce7cd",
+    "question": "Která země má podle vlastního oficiálního průzkumu více ostrovů než kterákoli jiná na Zemi — zhruba 267 000, přičemž naprostá většina z nich je neobydlená?",
+    "possible_answers": {
+      "a": "Indonésie",
+      "b": "Kanada",
+      "c": "Švédsko",
+      "d": "Filipíny"
+    },
+    "correct_answer": "Švédsko",
+    "alternative_answers": [
+      "Švédsko (Sverige)",
+      "švédsko"
+    ],
+    "explanation": "Švédsko počítá každý ostrůvek větší než několik metrů čtverečních, což ho staví daleko před slavná tropická souostroví — obydleno je ve skutečnosti méně než tisíc jeho ostrovů.",
+    "topic": "geography-world · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_countries_by_number_of_islands"
+  },
+  {
+    "id": "2c5b24ce-bab2-4959-b471-9d00bceb175d",
+    "question": "Tenká vrstva jílu, kterou lze najít po celém světě v horninách z doby, kdy vyhynuli dinosauři, je nabitá kovem, který je v zemské kůře vzácný, ale v asteroidech běžný. O který kov jde?",
+    "possible_answers": null,
+    "correct_answer": "Iridium",
+    "alternative_answers": [
+      "iridium",
+      "iridia",
+      "Ir"
+    ],
+    "explanation": "Iridiový vrchol přivedl Luise a Waltera Alvarezovy k tomu, že v roce 1980 navrhli, že dinosaury vyhubil asteroid — teorii později potvrdil obří kráter Chicxulub pohřbený pod pobřežím mexického Yucatánu.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Iridium"
+  },
+  {
+    "id": "a3ca2456-97a7-4e0a-b55e-e478280b48e8",
+    "question": "Thajská, indická ani sečuánská kuchyně si bez chilli papriček nelze představit, přesto žádný kuchař v Asii žádnou před 16. stoletím neviděl. Odkud chilli papričky původně pocházejí?",
+    "possible_answers": {
+      "a": "Ze Střední a Jižní Ameriky",
+      "b": "Z jižní Indie",
+      "c": "Z jižní Číny",
+      "d": "Z východní Afriky"
+    },
+    "correct_answer": "Ze Střední a Jižní Ameriky",
+    "alternative_answers": [
+      "Střední a Jižní Amerika",
+      "ze Střední a Jižní Ameriky",
+      "Střední Amerika a Jižní Amerika",
+      "Amerika"
+    ],
+    "explanation": "Chilli papričky byly domestikovány v Americe už před tisíci lety; španělští a portugalští obchodníci je po roce 1492 rozvezli po celém světě a asijské kuchyně si je osvojily zhruba během jednoho století.",
+    "topic": "food-everyday · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Chili_pepper"
+  },
+  {
+    "id": "f7edbcc8-062d-4038-a3bb-80a9a2219fa2",
+    "question": "Marie Curie získala dvě Nobelovy ceny, ale o jednu se dělila. Jen jediný člověk kdy získal dvě Nobelovy ceny zcela sám, nejprve za chemii a později za mír. Kdo to byl?",
+    "possible_answers": null,
+    "correct_answer": "Linus Pauling",
+    "alternative_answers": [
+      "Pauling",
+      "Linus Carl Pauling",
+      "Lajnus Pauling"
+    ],
+    "explanation": "Pauling získal cenu za chemii v roce 1954 za práci o chemických vazbách a poté cenu za mír v roce 1962 za kampaň proti testování jaderných zbraní. Ani o jednu se s nikým nedělil.",
+    "topic": "general · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Linus_Pauling"
+  },
+  {
+    "id": "967f25c3-e0dd-4fd0-81a3-a067d49a1e31",
+    "question": "Shakiřina hymna mistrovství světa 2026 Dai Dai, vůbec první oficiální píseň mistrovství světa, která se dostala na vrchol globálního žebříčku Billboard, ji spojila s kterou afrobeatovou superhvězdou?",
+    "possible_answers": null,
+    "correct_answer": "Burna Boy",
+    "alternative_answers": [
+      "Burnaboy",
+      "Burna"
+    ],
+    "explanation": "Kolumbijská a nigerijská hvězda se v červenci 2026 dostaly na první místo žebříčku Billboard Global 200, pár dní předtím, než odehrály vůbec první poločasovou show na mistrovství světa.",
+    "topic": "entertainment · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.musictimes.com/articles/112269/20260709/shakira-burna-boys-dai-dai-global-no-1-ten-days-they-play-first-halftime-show-world-cup.htm"
+  },
+  {
+    "id": "932f7686-ee1e-4bfa-aecf-86a1212e5aac",
+    "question": "Který bývalý člen One Direction měl v roce 2026 dva celosvětově nejúspěšnější singly 'Aperture' a 'American Girls'?",
+    "possible_answers": null,
+    "correct_answer": "Harry Styles",
+    "alternative_answers": [
+      "Styles",
+      "Harry Edward Styles",
+      "Hary Stajls"
+    ],
+    "explanation": "Obě skladby pocházejí z jeho albumu Occasionally z roku 2026 a rozšiřují jeho sólovou kariéru, která už získala šest Brit Awards a tři Grammy.",
+    "topic": "entertainment · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Harry_Styles"
+  },
+  {
+    "id": "7d8f5670-87e8-4b6f-b088-736148b704c6",
+    "question": "Seriál Wonder Man z roku 2026 na Disney+ spojuje svého hrdinu s kterým vyhořelým hercem z filmu Iron Man 3, který se kdysi vydával za superpadoucha?",
+    "possible_answers": null,
+    "correct_answer": "Trevor Slattery",
+    "alternative_answers": [
+      "Slattery",
+      "Trevor",
+      "Trevora Slatteryho",
+      "Trevorem Slatterym"
+    ],
+    "explanation": "Falešný Mandarin v podání Bena Kingsleyho se vrací jako hollywoodský herec, kterému se nedaří, a seriál sleduje dvojici umělců shánějících role ve filmovém byznysu plném superhrdinů.",
+    "topic": "entertainment · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Wonder_Man_(TV_series)"
+  },
+  {
+    "id": "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+    "question": "Kterou řemeslnou kategorii na Oscarech 2026 poprvé v historii vyhrála žena, téměř sto let po prvním udílení?",
+    "possible_answers": null,
+    "correct_answer": "Kamera",
+    "alternative_answers": [
+      "Nejlepší kamera",
+      "Kameramanka",
+      "Kameraman",
+      "Práce s kamerou",
+      "Cinematography"
+    ],
+    "explanation": "Cenu získala Autumn Durald Arkapaw, která se v této kategorii stala první ženou, prvním černošským vítězem a prvním filipínským vítězem.",
+    "topic": "entertainment · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"
+  },
+  {
+    "id": "27bca867-319e-4961-825d-451ffaf836f5",
+    "question": "Jmenujte planetu naší sluneční soustavy, kde jeden den, tedy jedna úplná otočka kolem osy, trvá déle než celý její rok.",
+    "possible_answers": null,
+    "correct_answer": "Venuše",
+    "alternative_answers": [
+      "Venus",
+      "planeta Venuše"
+    ],
+    "explanation": "Venuši trvá jedna otočka kolem vlastní osy asi 243 pozemských dní, ale oběh kolem Slunce jen asi 225 pozemských dní. Navíc se otáčí opačným směrem než většina planet, takže tam Slunce vychází na západě.",
+    "topic": "general · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Venus"
+  },
+  {
+    "id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+    "question": "Olympijská zlatá medaile je téměř celá vyrobena z jakého kovu?",
+    "possible_answers": null,
+    "correct_answer": "Stříbro",
+    "alternative_answers": [
+      "Stříbra",
+      "Ze stříbra",
+      "Pravé stříbro",
+      "Sterlingové stříbro"
+    ],
+    "explanation": "Pravidla vyžadují nejméně 92,5 procenta stříbra a jen asi šest gramů zlata pozlaceného navrch. Poslední medaile z ryzího zlata se rozdávaly v roce 1912.",
+    "topic": "sports-mix · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Olympic_medal"
+  },
+  {
+    "id": "f4df4398-a302-4fd4-9f68-6356ce3cbcff",
+    "question": "Pravda, nebo lež: loď, která propluje Panamským průplavem z atlantické strany na tichomořskou, končí svou plavbu východněji, než kde začala.",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Lež"
+    },
+    "correct_answer": "Pravda",
+    "alternative_answers": [
+      "pravda",
+      "ano",
+      "je to pravda",
+      "pravdivé"
+    ],
+    "explanation": "Pravda. Šíje se stáčí tak prudce, že průplav vede zhruba ze severozápadu na jihovýchod a tichomořský výjezd leží východně od atlantického vjezdu.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Balboa,_Panama"
+  },
+  {
+    "id": "e276fad1-4afd-4acf-b5d0-ac1f0df4025f",
+    "question": "Jak těžký byl první kapesní mobilní telefon prodávaný veřejnosti v roce 1984?",
+    "possible_answers": {
+      "a": "Jako tabulka čokolády",
+      "b": "Jako kilo cukru",
+      "c": "Jako bowlingová koule"
+    },
+    "correct_answer": "Jako kilo cukru",
+    "alternative_answers": [
+      "kilo cukru",
+      "balíček cukru",
+      "sáček cukru",
+      "jako balíček cukru",
+      "b"
+    ],
+    "explanation": "Motorola DynaTAC 8000X vážila asi 800 gramů, tedy skoro jako běžné balení cukru. Nabídla třicet minut hovoru, nabíjení trvalo deset hodin a stála téměř čtyři tisíce dolarů, což tehdy zhruba odpovídalo ceně malého auta.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/DynaTAC"
+  },
+  {
+    "id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+    "question": "Kečup se do Evropy dostal v 17. století z Asie, ale původní omáčka neobsahovala žádná rajčata. Z čeho se vyráběla?",
+    "possible_answers": null,
+    "correct_answer": "Z fermentovaných ryb",
+    "alternative_answers": [
+      "Fermentované ryby",
+      "Ryby",
+      "Rybí omáčka",
+      "Kvašené ryby",
+      "Ančovičky",
+      "Sardelky",
+      "Nakládané ryby",
+      "Solené ryby"
+    ],
+    "explanation": "Název pochází z hokkienského slova „ke-tsiap“, což byla fermentovaná rybí omáčka, se kterou se britští obchodníci setkali v Číně a jihovýchodní Asii. Angličtí kuchaři připravovali houbové, ořechové a sardelové verze a rajčatový kečup se rozšířil až v 19. století.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Ketchup"
+  },
+  {
+    "id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+    "question": "Orchideje vanilky se v evropských koloniích dařilo pěstovat, ale mimo Mexiko nikdy nevytvořily jediný lusk, dokud v roce 1841 dvanáctiletý zotročený chlapec na ostrově Réunion nepřišel na to, jak ručně provádět co?",
+    "possible_answers": null,
+    "correct_answer": "Opylovat květy",
+    "alternative_answers": [
+      "Ruční opylování",
+      "Opylování",
+      "Opylení",
+      "Opylovat orchideje",
+      "Opylit květy",
+      "Oplodnit květy"
+    ],
+    "explanation": "Přirozený opylovač vanilky, mexická včela, jinde neexistoval, takže květy nebyly nikdy oplodněny. Edmond Albius vymyslel rychlou metodu ručního opylování pomocí tenké tyčinky a palce. Jeho technika se dodnes používá téměř na každé vanilkové plantáži na světě.",
+    "topic": "general · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Edmond_Albius"
+  },
+  {
+    "id": "43520f30-d790-4d3e-be5b-2df27afa9e90",
+    "question": "Croissant je symbolem Francie, jeho předchůdcem však bylo pečivo do tvaru půlměsíce zvané kipferl, které do Paříže přivezl pekař z jiné země. Ze které země?",
+    "possible_answers": null,
+    "correct_answer": "Rakousko",
+    "alternative_answers": [
+      "Rakouska",
+      "z Rakouska",
+      "Vídeň",
+      "z Vídně",
+      "Rakousko-Uhersko"
+    ],
+    "explanation": "Kipferl se v Rakousku pekl po staletí. Kolem roku 1839 otevřel vídeňský pekař August Zang pekárnu v Paříži a francouzští pekaři jeho pečivo upravili s použitím listového (taženého) těsta do podoby croissantu, jak ho známe dnes. I Francouzi takovému pečivu někdy říkají „viennoiseries“ (vídeňské pečivo).",
+    "topic": "general · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Croissant"
+  },
+  {
+    "id": "19a01d7c-1d5b-45fb-9872-89d18cecbf52",
+    "question": "Jak starý je nejstarší známý chléb, nalezený jako ohořelé drobky v ohništi v Jordánsku?",
+    "possible_answers": {
+      "a": "Stovky let",
+      "b": "Tisíce let",
+      "c": "Desítky tisíc let",
+      "d": "Stovky tisíc let"
+    },
+    "correct_answer": "Desítky tisíc let",
+    "alternative_answers": [
+      "desítky tisíc",
+      "několik desítek tisíc let"
+    ],
+    "explanation": "Drobky z lokality Šubajka v Jordánsku jsou staré přibližně 14 400 let, tedy desítky tisíc let. To je zhruba čtyři tisíce let předtím, než lidé začali s zemědělstvím, což znamená, že lovci a sběrači mleli divoká zrna a pekli placky dávno před vznikem zemědělství.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.pnas.org/doi/10.1073/pnas.1801071115"
+  },
+  {
+    "id": "6fa83da7-962f-4b09-bd22-0f271a8efa7f",
+    "question": "Rybák dlouhoocasý každoročně létá z Arktidy do Antarktidy a zpět. Je za svůj zhruba třicetiletý život jeho celková nalétaná vzdálenost blíž jednomu obletu Země, jedné cestě na Měsíc, nebo třem cestám na Měsíc a zpět?",
+    "possible_answers": null,
+    "correct_answer": "Třikrát na Měsíc a zpět",
+    "alternative_answers": [
+      "třikrát na Měsíc a zpět",
+      "tři cesty na Měsíc a zpět",
+      "tři oblety na Měsíc a zpět",
+      "na Měsíc a zpět třikrát",
+      "nejdelší možnost"
+    ],
+    "explanation": "Rybák dlouhoocasý nalétá každý rok zhruba 70 000 až 90 000 km, což za celý život dává dohromady asi 2,4 milionu km. Měsíc je vzdálený zhruba 385 000 km, takže jde přibližně o tři cesty tam a zpět.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Arctic_tern"
+  },
+  {
+    "id": "b5ba099b-da60-4111-8330-47e91b92a693",
+    "question": "Kdo má větší oko: plejtvák obrovský, největší zvíře, jaké kdy žilo, nebo krakatice obrovská?",
+    "possible_answers": {
+      "a": "Plejtvák obrovský",
+      "b": "Krakatice obrovská"
+    },
+    "correct_answer": "Krakatice obrovská",
+    "alternative_answers": [
+      "Krakatice",
+      "Obrovská krakatice",
+      "Olihen obrovská",
+      "Obří oliheň",
+      "Oliheň"
+    ],
+    "explanation": "Oko krakatice obrovské může mít v průměru asi 27 cm, tedy velikost talíře, zatímco oko plejtváka obrovského měří zhruba 15 cm. Krakatice potřebuje obrovské oči, aby zachytila slabé světlo a včas zahlédla blížící se vorvaně v hlubokém moři.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.guinnessworldrecords.com/world-records/716787-largest-eyes-on-a-living-vertebrate"
+  },
+  {
+    "id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+    "question": "Ve které zemi žije nejvíce velbloudů ve volné přírodě?",
+    "possible_answers": null,
+    "correct_answer": "Austrálie",
+    "alternative_answers": [
+      "Australie",
+      "v Austrálii",
+      "Australský svaz"
+    ],
+    "explanation": "Velbloudi tam byli dovezeni v 19. století, aby přepravovali náklad přes australský vnitrozemský buš, a když je nahradily nákladní automobily, byli vypuštěni na svobodu. Dnes po pouštích putují stovky tisíc velbloudů a někteří se dokonce vyvážejí do Saúdské Arábie.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.guinnessworldrecords.com/world-records/largest-population-of-wild-camels"
+  },
+  {
+    "id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+    "question": "Vědci navrhli, že planeta 55 Cancri e může být z velké části tvořena kterým drahým kamenem?",
+    "possible_answers": null,
+    "correct_answer": "Diamant",
+    "alternative_answers": [
+      "Diamanty",
+      "Diamantu",
+      "Z diamantu",
+      "Brilianty"
+    ],
+    "explanation": "55 Cancri e je na uhlík bohatá super-Země, o níž se předpokládá, že by mohla mít diamantové jádro; některé studie naznačují, že až třetina její hmotnosti by mohla být tvořena diamantem.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  },
+  {
+    "id": "d3e90bd4-1eb3-4283-8e6d-45746e83dedb",
+    "question": "Astronauti na Mezinárodní vesmírné stanici vypadají, jako by byli beztížní, přestože gravitace je tam jen o něco slabší než na Zemi. Proč tedy plují?",
+    "possible_answers": null,
+    "correct_answer": "Jsou v neustálém volném pádu",
+    "alternative_answers": [
+      "Protože nepřetržitě padají",
+      "Volný pád",
+      "Padají kolem Země",
+      "Jsou ve stavu volného pádu"
+    ],
+    "explanation": "Stanice i všechno v ní padají kolem Země společně, jde o stejný efekt, jaký cítí parašutisté; gravitace na ISS je jen asi o 10 až 11 procent slabší než na povrchu.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.skyatnightmagazine.com/space-science/facts-about-astronomy-space"
+  },
+  {
+    "id": "b08c37fd-cc18-49ff-b6ae-83021b021c15",
+    "question": "Měsíc se od Země pomalu vzdaluje o několik centimetrů za rok. Ve vzdálené budoucnosti to znemožní jaký dramatický nebeský úkaz?",
+    "possible_answers": null,
+    "correct_answer": "Úplné zatmění Slunce",
+    "alternative_answers": [
+      "Úplná zatmění Slunce",
+      "Zatmění Slunce",
+      "Úplné zatmění",
+      "Totální zatmění Slunce"
+    ],
+    "explanation": "Měsíc se vzdaluje asi o 3,8 cm ročně; nakonec bude vypadat příliš malý na to, aby zcela zakryl Slunce, čímž úplná zatmění Slunce skončí.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  },
+  {
+    "id": "a928cf39-5172-4ee3-b982-3a857a6737a7",
+    "question": "Které se nehodí: tři z těchto plodů jsou z botanického hlediska pravé bobule a jeden ne. Který je ten podvodník?",
+    "possible_answers": {
+      "a": "Banán",
+      "b": "Jahoda",
+      "c": "Hroznové víno",
+      "d": "Rajče"
+    },
+    "correct_answer": "Jahoda",
+    "alternative_answers": [
+      "jahoda",
+      "jahody",
+      "b"
+    ],
+    "explanation": "Banány jsou ve skutečnosti bobule a botanicky jimi jsou i hroznové víno a rajčata. Jahoda, navzdory svému názvu, není pravá bobule vůbec, její semínka sedí na povrchu.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.boredteachers.com/post/food-facts"
+  },
+  {
+    "id": "edab36a4-ec76-47fe-ab47-c5456eb41b3e",
+    "question": "V letech 1900 až 1920 udělovaly olympijské hry medaile v týmové disciplíně, kterou byste dnes čekali spíš na školním pikniku: dvě družstva, jedno lano. O jakou disciplínu šlo?",
+    "possible_answers": null,
+    "correct_answer": "Přetahování lanem",
+    "alternative_answers": [
+      "přetahovaná lanem",
+      "přetahovaná",
+      "přetahování lanem",
+      "tahání lanem",
+      "tug of war"
+    ],
+    "explanation": "Přetahování lanem bylo plnohodnotnou olympijskou disciplínou po pět her a dominovaly v něm britské policejní kluby, které získaly zlato v letech 1908 a 1920.",
+    "topic": "sports · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Tug_of_war_at_the_Summer_Olympics"
+  },
+  {
+    "id": "99d505ea-717c-4bd8-a561-8704af656157",
+    "question": "Autor, který napsal Toma Sawyera, se narodil v roce 1835 a zemřel v roce 1910, čímž svůj život orámoval dvěma návštěvami kterého nebeského tělesa?",
+    "possible_answers": null,
+    "correct_answer": "Halleyova kometa",
+    "alternative_answers": [
+      "Halleyova komet",
+      "kometa Halley",
+      "Halleyho kometa",
+      "Halley"
+    ],
+    "explanation": "Mark Twain dokonce předpověděl, že odejde spolu s kometou, a tak se i stalo. Objevuje se zhruba každých 75 let.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+    "id": "f8c9e5c6-6cde-4ae5-90e6-ce78a0c40c41",
+    "question": "Většina zrzavých koček jsou kocouři, protože gen je vázaný na chromozom X. Jaký je zhruba poměr zrzavých kocourů ke zrzavým kočkám?",
+    "possible_answers": {
+      "a": "Asi 3 ku 1",
+      "b": "Zhruba stejně, 1 ku 1",
+      "c": "Asi 10 ku 1",
+      "d": "Asi 50 ku 1"
+    },
+    "correct_answer": "Asi 3 ku 1",
+    "alternative_answers": [
+      "3 ku 1",
+      "tři ku jedné",
+      "asi tři ku jedné"
+    ],
+    "explanation": "Na každou zrzavou kočku připadají zhruba tři zrzaví kocouři. Protože gen pro zrzavou barvu leží na chromozomu X, kočka potřebuje ke zrzavé srsti dvě kopie, zatímco kocourovi stačí jedna.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.sciencefocus.com/science/fun-facts"
+  },
+  {
+    "id": "22156a55-156c-4081-93b5-6f6473e8990c",
+    "question": "Když pařížský kadeřník v roce 1909 vynalezl účes mikádo, tvrdil, že jeho inspirací byla středověká francouzská hrdinka upálená na hranici. Kdo to byl?",
+    "possible_answers": null,
+    "correct_answer": "Johanka z Arku",
+    "alternative_answers": [
+      "Jana z Arku",
+      "Jeanne d'Arc",
+      "svatá Johanka z Arku",
+      "Panna orleánská"
+    ],
+    "explanation": "Kadeřník Antoine se odvolával na Johanku z Arku, čímž se z této světice 15. století stala nečekaná módní ikona.",
+    "topic": "history · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+    "id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+    "question": "Aby žádný americký důstojník nikdy nemohl mít vyšší hodnost než první prezident země, byl posmrtně povýšen do nejvyšší vojenské hodnosti. Ve kterém roce se tak stalo?",
+    "possible_answers": {
+      "a": "1799",
+      "b": "1901",
+      "c": "1976",
+      "d": "2001"
+    },
+    "correct_answer": "1976",
+    "alternative_answers": [
+      "1976",
+      "v roce 1976",
+      "devatenáct set sedmdesát šest"
+    ],
+    "explanation": "V roce 1976, u příležitosti dvoustého výročí vzniku USA, byl George Washington jmenován generálem armád (General of the Armies), čímž má navždy zaručeně vyšší hodnost než kdokoli jiný – téměř 180 let po své smrti.",
+    "topic": "history · critical",
+    "difficulty": "hard",
+    "source_url": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+    "id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "question": "Pravda, nebo lež: Albert Einstein prý jako školák propadal z matematiky.",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Lež"
+    },
+    "correct_answer": "Lež",
+    "alternative_answers": [
+      "Lež",
+      "Nepravda",
+      "Ne",
+      "Není to pravda",
+      "Nepravdivé"
+    ],
+    "explanation": "Lež. Z matematiky měl výborné známky a už v jedenácti letech četl vysokoškolské učebnice fyziky. Tento mýtus zřejmě vznikl v roce 1935 ve sloupku Ripley's Believe It or Not.",
+    "topic": "science-nature · critical",
+    "difficulty": "easy",
+    "source_url": "https://www.cracked.com/image-pictofact-7288-30-wild-facts-about-famous-historical-figures"
+  },
+  {
+    "id": "812e30e1-439e-4b68-a972-153b13c8b893",
+    "question": "Ve světě DC Comics střeží smaragdový lučištník Oliver Queen fiktivní velkoměsto, jehož název má stejné druhé slovo jako Metropolis a Gotham City jeho hrdinských kolegů. Které město nazývá Green Arrow domovem?",
+    "possible_answers": {
+      "a": "Star City",
+      "b": "Coast City",
+      "c": "Central City",
+      "d": "National City"
+    },
+    "correct_answer": "Star City",
+    "alternative_answers": [
+      "Star City",
+      "Hvězdné město",
+      "áčko",
+      "možnost a"
+    ],
+    "explanation": "Oliver Queen chrání Star City, fiktivní místo z komiksů DC, které později celosvětově proslavil televizní seriál Arrow.",
+    "topic": "movies-music · critical",
+    "difficulty": "medium",
+    "source_url": "https://opentdb.com"
+  },
+  {
+    "id": "c9156e1b-1b05-42e4-a126-75e905cae985",
+    "question": "Který americký prezident si před vstupem do politiky přivydělával jako licencovaný barman?",
+    "possible_answers": {
+      "a": "George Washington",
+      "b": "Abraham Lincoln",
+      "c": "Thomas Jefferson",
+      "d": "Andrew Jackson"
+    },
+    "correct_answer": "Abraham Lincoln",
+    "alternative_answers": [
+      "Lincoln",
+      "Abraham Lincoln"
+    ],
+    "explanation": "Abraham Lincoln a jeho přítel William F. Berry získali v roce 1833 licenci na prodej alkoholu, aby mohli provozovat hostinec v New Salemu ve státě Illinois.",
+    "topic": "history · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.rd.com/list/interesting-facts"
+  },
+  {
+    "id": "7a483f8b-341a-49bb-9317-ac80c3251e52",
+    "question": "Která země má více pyramid: Egypt, nebo Súdán?",
+    "possible_answers": {
+      "a": "Egypt",
+      "b": "Súdán"
+    },
+    "correct_answer": "Súdán",
+    "alternative_answers": [
+      "Sudan",
+      "Súdán má více pyramid"
+    ],
+    "explanation": "Súdán má více pyramid než Egypt – je zde přes 255 známých pyramid oproti přibližně 120 v Egyptě.",
+    "topic": "history · critical",
+    "difficulty": "medium",
+    "source_url": "https://ifunfact.com/surprising-facts-about-the-roman-empire-that-will-change-how-you-see-history"
+  },
+  {
+    "id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+    "question": "V roce 1971 velitel Apolla 14 Alan Shepard propašoval na Měsíc upravenou hlavu golfové hole a stal se prvním člověkem, který tam hrál jaký sport?",
+    "possible_answers": null,
+    "correct_answer": "Golf",
+    "alternative_answers": [
+      "golf",
+      "hrál golf",
+      "golfu"
+    ],
+    "explanation": "Shepard připevnil hlavu šestky (six-iron) na nástroj pro odběr měsíčních vzorků a jednou rukou odpálil dva míčky — s vtipem, že ten druhý letěl ve slabé gravitaci 'míle a míle'.",
+    "topic": "science-nature · critical",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e5c76e10-bba6-40d4-a3a5-0e4755af08e9",
+    "question": "Jasně zelená pasta podávaná jako wasabi ve většině sushi restaurací mimo Japonsko je obvykle levnější příbuzná rostlina obarvená na zeleno. O kterou rostlinu ve skutečnosti jde?",
+    "possible_answers": null,
+    "correct_answer": "Křen",
+    "alternative_answers": [
+      "křen",
+      "křen selský",
+      "křen s hořčicí",
+      "křenová pasta"
+    ],
+    "explanation": "Pravé wasabi se obtížně pěstuje a během několika minut po nastrouhání ztrácí svou ostrost, takže většina restaurací místo něj podává směs křenu, hořčice a zeleného barviva.",
+    "topic": "food-everyday · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Wasabi"
+  },
+  {
+    "id": "f79e7859-c4e1-4f7f-9277-b4be29e2f527",
+    "question": "Z botanického hlediska není jeden z oblíbených pochutin z misky na snacky vůbec ořech, ale luštěnina, která dozrává pod zemí. Která to je?",
+    "possible_answers": {
+      "a": "Arašíd",
+      "b": "Mandle",
+      "c": "Lískový ořech",
+      "d": "Kešu"
+    },
+    "correct_answer": "Arašíd",
+    "alternative_answers": [
+      "Arašídy",
+      "Burský oříšek",
+      "Burské oříšky",
+      "Podzemnice olejná"
+    ],
+    "explanation": "Arašídy patří do čeledi bobovitých: rostlina kvete nad zemí a své lusky pak zatlačuje do půdy, kde dozrávají – proto se jim také říká podzemnice.",
+    "topic": "food-everyday · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Peanut"
+  },
+  {
+    "id": "80ec52c8-e041-5353-9929-26faed681b8c",
+    "question": "Téměř padesát let vedly Kanada a Dánsko nejzdvořilejší územní spor světa — takzvanou whisky válku — když se střídaly ve vztyčování vlajek a zanechávání lahví alkoholu na kterém malém neobydleném arktickém ostrově?",
+    "possible_answers": null,
+    "correct_answer": "Hansův ostrov",
+    "alternative_answers": [
+      "Hans",
+      "ostrov Hans",
+      "Hans Island",
+      "Tartupaluk"
+    ],
+    "explanation": "V roce 2022 se obě země konečně dohodly, že si holou skálu rozdělí napůl, čímž Kanada a Dánské království získaly společnou pozemní hranici a skončila desetiletí diplomacie vlajek a lahví.",
+    "topic": "geography-world · flagged",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "0021cfb9-05e1-4ad6-b4c5-95f4370b3ea3",
+    "question": "Australská zátoka Shark Bay dodnes hostí živé příklady nejstarších známých fosilií na Zemi: vrstevnaté kupy budované mikroby už před 3,5 miliardami let. Jak se tyto struktury nazývají?",
+    "possible_answers": {
+      "a": "Stromatolity",
+      "b": "Trilobiti",
+      "c": "Amoniti",
+      "d": "Foraminifery"
+    },
+    "correct_answer": "Stromatolity",
+    "alternative_answers": [
+      "Stromatolit",
+      "stromatolity",
+      "Stromatolithy"
+    ],
+    "explanation": "Stromatolity vrstvu po vrstvě budují fotosyntetizující mikroby — organismy, které miliardy let plnily zemskou atmosféru kyslíkem, jenž dýcháme.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Earliest_known_life_forms"
+  },
+  {
+    "id": "8022e07b-ecc0-5a01-bdca-579271097aec",
+    "question": "V roce 1945 si inženýr Percy Spencer všiml, že se mu v kapse rozpustila čokoládová tyčinka, když stál poblíž zapnutého radaru — nehoda, která ho přivedla k vynálezu kterého kuchyňského spotřebiče?",
+    "possible_answers": null,
+    "correct_answer": "Mikrovlnná trouba",
+    "alternative_answers": [
+      "Mikrovlnka",
+      "Mikrovlnná pečicí trouba",
+      "Mikrovlnný ohřívač"
+    ],
+    "explanation": "Spencer pracoval pro radarovou firmu Raytheon a jejich první komerční mikrovlnná trouba, Radarange, byla obluda velikosti ledničky vážící přes 300 kilogramů.",
+    "topic": "science-nature · flagged",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+    "question": "Antičtí římští pradleni bělili tógy tak, že je namáčeli v tekutině sbírané z nádob na nárožích ulic — bylo to tak výnosné řemeslo, že na něj císař Vespasián uvalil daň. O jakou tekutinu šlo?",
+    "possible_answers": null,
+    "correct_answer": "Moč",
+    "alternative_answers": [
+      "moč",
+      "lidská moč",
+      "lidskou moč",
+      "chcanky",
+      "močovina"
+    ],
+    "explanation": "Zvětralá moč se rozkládá na čpavek, což je opravdu účinný čisticí prostředek, a Vespasiánova daň z tohoto řemesla nám dala rčení „peníze nesmrdí“.",
+    "topic": "history · flagged",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a0eac58d-b678-5a13-99dc-44be92f645da",
+    "question": "V Beringově průlivu leží Velký Diomédův ostrov a Malý Diomédův ostrov necelé 4 kilometry od sebe, přesto mezi nimi prochází datová hranice — proto se jim přezdívá Ostrov zítřka a Ostrov včerejška. Kterým dvěma zemím patří?",
+    "possible_answers": null,
+    "correct_answer": "Rusko a USA",
+    "alternative_answers": [
+      "USA a Rusko",
+      "Rusko a Amerika",
+      "Amerika a Rusko",
+      "Rusko a Spojené státy",
+      "Spojené státy a Rusko",
+      "Rusko a Spojené státy americké"
+    ],
+    "explanation": "Velký Diomédův ostrov patří Rusku a Malý Diomédův ostrov Spojeným státům, takže za jasného dne mohou vesničané na americké straně doslova hledět přes vodu do zítřka.",
+    "topic": "geography-world · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "0a0ba41c-788c-531c-a635-bf4c8569acf5",
+    "question": "Ústí jedné řeky do jezera Maracaibo zažívá tolik blesků — výrazně více než sto nocí v roce — že se mu často říká světové hlavní město blesků. Ve které jihoamerické zemi se nachází?",
+    "possible_answers": null,
+    "correct_answer": "Venezuela",
+    "alternative_answers": [
+      "Venezuele",
+      "Venezuelská bolívarovská republika",
+      "ve Venezuele"
+    ],
+    "explanation": "Blesky Catatumbo mohou během bouře šlehnout desetkrát za minutu a po staletí sloužila tato téměř každonoční záře námořníkům jako přirozený maják na karibském pobřeží.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+    "question": "Thriller Psycho z roku 1960 od Alfreda Hitchcocka je proslulý scénou ve sprše — prolomil však i druhé hollywoodské koupelnové tabu: údajně se stal prvním velkým americkým filmem, který na plátně ukázal, jak se skutečně používá které běžné zařízení?",
+    "possible_answers": null,
+    "correct_answer": "Splachovací záchod",
+    "alternative_answers": [
+      "Záchod",
+      "Toaleta",
+      "WC",
+      "Splachování záchodu",
+      "Splachující se záchod",
+      "Splachovací toaleta"
+    ],
+    "explanation": "Hollywoodské konvence slušnosti držely záchody mimo plátno po desetiletí, takže záběr spláchnutí — při němž se v ději likvidují důkazy — diváky v roce 1960 skutečně znepokojil.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "37b1867e-93d4-5ad6-9065-4393156deb5e",
+    "question": "V roce 1973 stál inženýr Motoroly Martin Cooper na chodníku na Manhattanu a uskutečnil vůbec první hovor svého druhu v historii — s trochou drzosti vytočil číslo svého přímého rivala z Bell Labs, aby se pochlubil. Jaké zařízení držel v ruce?",
+    "possible_answers": null,
+    "correct_answer": "Mobilní telefon",
+    "alternative_answers": [
+      "Mobil",
+      "Mobilní telefon",
+      "Přenosný mobilní telefon",
+      "Celulární telefon",
+      "Mobilák"
+    ],
+    "explanation": "Cooperův ruční prototyp velikosti cihly vážil přes kilogram a první, co s ním udělal, bylo, že zavolal Joelu Engelovi z Bell Labs a oznámil mu, že ho Motorola předběhla.",
+    "topic": "science-nature · flagged",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "2896283e-ab84-50e8-97db-f2f40f478531",
+    "question": "Známý kuchyňský trik říká, že tvrdé avokádo dozraje mnohem rychleji, když ho zavřete do papírového sáčku spolu s banánem. Funguje to proto, že dozrávající banány uvolňují jaký plyn, který působí jako rostlinný hormon?",
+    "possible_answers": null,
+    "correct_answer": "Ethylen",
+    "alternative_answers": [
+      "Etylen",
+      "Ethen",
+      "Etén",
+      "Ethylenový plyn"
+    ],
+    "explanation": "Ethylen je v rostlinné říši signálem k dozrávání a ovocnářský průmysl tentýž plyn cíleně používá k dozrávání banánů a rajčat, která byla sklizena zelená.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "9dc0a654-cd38-48f0-95cc-2f7e1fe776cb",
+    "question": "V horkých a suchých oblastech můžete občas pozorovat, jak z mraku padá déšť v přízračných šedých pruzích, které nikdy nedosáhnou země a vypaří se ve vzduchu. Jak meteorologové tento jev nazývají?",
+    "possible_answers": {
+      "a": "Virga",
+      "b": "Kroupky (graupel)",
+      "c": "Habúb",
+      "d": "Derecho"
+    },
+    "correct_answer": "Virga",
+    "alternative_answers": [
+      "virga",
+      "srážkový pruh virga"
+    ],
+    "explanation": "Virga je déšť, který cestou dolů zemře žízní — vzduch pod mrakem je tak suchý, že se kapky vypaří dřív, než dopadnou, a z oblohy tak visí jen jemné závoje.",
+    "topic": "science-nature · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Virga"
+  },
+  {
+    "id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+    "question": "Ve zcela temném hlubokém oceánu se drobný samec které ryby zakousne do mnohem větší samice a natrvalo splyne s jejím tělem — zbytek života pak stráví jako pouhá přirostlá zásobárna spermatu?",
+    "possible_answers": null,
+    "correct_answer": "Ďas",
+    "alternative_answers": [
+      "ďas morský",
+      "hlubinný ďas",
+      "ďasové",
+      "hlubinní ďasové",
+      "ďas hlubinný"
+    ],
+    "explanation": "U některých druhů ďasů srostou samcovy tkáně a dokonce i krevní cévy s tělem samice — této strategii se říká sexuální parazitismus a je řešením téměř nemožného úkolu najít v temné hlubině partnera.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "db385a95-4ab8-5c59-bde6-eb22d4ec03c6",
+    "question": "Na počátku 90. let vynalezli počítačoví vědci na Univerzitě v Cambridgi první webovou kameru na světě, a to z velmi praktického důvodu: aby si ušetřili zbytečné cesty chodbou. Na jaký každodenní předmět byla kamera namířena?",
+    "possible_answers": null,
+    "correct_answer": "Na konvici s kávou",
+    "alternative_answers": [
+      "Konvice s kávou",
+      "Kávovar",
+      "Kávová konvice",
+      "Konvice na kávu",
+      "Kafovar",
+      "Na kávovar",
+      "Džbánek s kávou"
+    ],
+    "explanation": "Slavná konvice s kávou v Trojan Room umožňovala výzkumníkům zkontrolovat přímo od stolu, jestli ještě zbyla káva, než se vydali na cestu — přenos běžel celé roky a nakonec se z něj stala internetová celebrita.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+    "question": "Krk žirafy může být přes dva metry dlouhý, a přesto obsahuje přesně stejný počet krčních obratlů jako ten váš. Kolik jich je?",
+    "possible_answers": null,
+    "correct_answer": "Sedm",
+    "alternative_answers": [
+      "7",
+      "sedm obratlů",
+      "sedmkrát"
+    ],
+    "explanation": "Téměř všichni savci, od myší po žirafy, mají přesně sedm krčních obratlů — žirafě jsou jen protažené na zhruba 25 centimetrů každý.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "fd623190-5f5d-5a43-9bcc-b5f38e159360",
+    "question": "Čas od času se části Evropy probudí do strašidelného „krvavého deště“, který pokryje auta a sníh načervenalým filmem. Tato barva pochází z prachu naváté tisíce kilometrů na sever z které pouště?",
+    "possible_answers": null,
+    "correct_answer": "Sahara",
+    "alternative_answers": [
+      "ze Sahary",
+      "poušť Sahara",
+      "Saharská poušť"
+    ],
+    "explanation": "Silný vítr vynáší jemný saharský minerální prach vysoko do atmosféry a přenáší ho přes Středozemní moře, kde vypadává s deštěm nebo zbarvuje alpský sníh do oranžova.",
+    "topic": "science-nature · flagged",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+    "question": "V roce 2021 uskutečnil malý vrtulník NASA Ingenuity první motorový let na jiné planetě, na Marsu. Jako připomínka byl na palubě ukryt kousek křídelní látky velikosti poštovní známky, který pocházel z jakého průkopnického letadla?",
+    "possible_answers": null,
+    "correct_answer": "Wright Flyer",
+    "alternative_answers": [
+      "Flyer",
+      "letadlo bratří Wrightů",
+      "Flyer bratří Wrightů",
+      "Flyer 1",
+      "Wrightův Flyer"
+    ],
+    "explanation": "NASA připevnila k Ingenuity kousek látky z Floweru... ",
+    "topic": "science-nature · critical",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+    "question": "Bod Nemo v jižním Tichém oceánu je místem v oceánu nejvzdálenějším od jakékoli pevniny — více než 2 600 kilometrů na všechny strany. Protože se v okolí nikdy nikdo nenachází, využívají ho kosmické agentury jako záměrnou dopadovou zónu pro co?",
+    "possible_answers": null,
+    "correct_answer": "Vysloužilé kosmické lodě",
+    "alternative_answers": [
+      "Kosmické lodě",
+      "Vesmírné lodě",
+      "Staré družice",
+      "Staré satelity",
+      "Vyřazené družice",
+      "Vyřazené satelity",
+      "Vesmírné stanice",
+      "Kosmické stanice",
+      "Vesmírný odpad",
+      "Kosmický odpad"
+    ],
+    "explanation": "Stovky vyřazených družic a vesmírných stanic, včetně ruské stanice Mir, byly navedeny vstříc záhubě na tomto 'hřbitově kosmických lodí' — nejblíže se k nim často ocitají astronauti prolétající nad hlavou.",
+    "topic": "science-nature · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+    "question": "Ponořte brčko do sklenice vody a zdá se, že se přesně u hladiny láme nebo zlomí. Jaký jev související s ohybem světla za to může?",
+    "possible_answers": null,
+    "correct_answer": "Lom světla",
+    "alternative_answers": [
+      "lom",
+      "refrakce",
+      "lom paprsků",
+      "refrakce světla",
+      "lom světelných paprsků"
+    ],
+    "explanation": "Světlo mění při přechodu mezi vzduchem a vodou svou rychlost, takže paprsky z ponořené části dopadají do oka pod posunutým úhlem — samotné brčko se nikdy neohne.",
+    "topic": "science-nature · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Refraction"
+  },
+  {
+    "id": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+    "question": "Poušť je definována tím, jak málo na ní spadne srážek, nikoli teplem — proto největší poušť na Zemi není Sahara. Který světadíl drží tento titul?",
+    "possible_answers": null,
+    "correct_answer": "Antarktida",
+    "alternative_answers": [
+      "Antarktida",
+      "Antarktidu",
+      "Antarktický kontinent",
+      "Antarktis"
+    ],
+    "explanation": "Ve vnitrozemí Antarktidy napadne tak málo sněhu, že se celý zmrzlý kontinent kvalifikuje jako poušť — a je mnohem větší než Sahara.",
+    "topic": "science-nature · flagged",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+    "question": "První verze scénáře ke které upírské filmové sáze líčila hlavní hrdinku jako hvězdnou sportovkyni, kterou na vodních skútrech pronásleduje FBI?",
+    "possible_answers": null,
+    "correct_answer": "Twilight",
+    "alternative_answers": [
+      "Stmívání",
+      "Twilight sága",
+      "Twilight sága: Stmívání",
+      "Sága Twilight",
+      "Soumrak"
+    ],
+    "explanation": "Režisérka Catherine Hardwicke tuto akční verzi scénáře zavrhla s tím, že s knihou neměla nic společného, a vrátila film zpět k náladové romanci, která odstartovala miliardovou filmovou sérii.",
+    "topic": "movies-music · critical",
+    "difficulty": "easy",
+    "source_url": "https://www.eonline.com/photos/29542/30-surprising-secrets-about-the-twilight-franchise-revealed"
+  },
+  {
+    "id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+    "question": "Do roku 2024 nasbíral filmový vesmír Marvel rekordních čtrnáct nominací na Oscara v jediné kategorii, aniž by ji kdy vyhrál — o kterou kategorii jde?",
+    "possible_answers": null,
+    "correct_answer": "Nejlepší vizuální efekty",
+    "alternative_answers": [
+      "Vizuální efekty",
+      "VFX",
+      "Speciální efekty",
+      "Nejlepší speciální efekty",
+      "Oscar za vizuální efekty"
+    ],
+    "explanation": "Přestože Marvel vybudoval největší franšízu postavenou na efektech, všech čtrnáct nominací proměnil v prohru, takže je nejnominovanější franšízou v jediné kategorii, která nikdy nezvítězila.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Academy_Awards"
+  },
+  {
+    "id": "93b8897b-892d-5934-bc8e-1e479141a950",
+    "question": "V prosinci 1965 propašovali dva astronauti z lodi Gemini 6 na palubu foukací harmoniku a rolničky a zahráli na první hudební nástroje ve vesmíru. Kterou písničku zahráli?",
+    "possible_answers": null,
+    "correct_answer": "Jingle Bells",
+    "alternative_answers": [
+      "Rolničky",
+      "Rolničky, rolničky",
+      "Džingl bels"
+    ],
+    "explanation": "Wally Schirra a Tom Stafford nejprve ohlásili řídicímu středisku záhadný „objekt“ na polární dráze — podle nich ho pilotoval někdo v červeném obleku — a pak jako vánoční žert spustili „Jingle Bells“.",
+    "topic": "movies-music · critical",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+    "question": "Rekord v počtu cen Grammy držel po desetiletí nikoli popová hvězda, ale klasický dirigent — která superstar nakonec získala titul nejoceňovanějšího umělce v historii Grammy díky své třicáté druhé sošce?",
+    "possible_answers": null,
+    "correct_answer": "Beyoncé",
+    "alternative_answers": [
+      "Beyonce",
+      "Beyoncé Knowles",
+      "Beyonce Knowles",
+      "Bejonsé"
+    ],
+    "explanation": "Rekord, který překonala, patřil dirigentu Georgu Soltimu, jehož sbírka cen Grammy za klasickou hudbu zůstala po desetiletí nepřekonaná — až třicáté druhé vítězství Beyoncé z ní udělalo nejoceňovanější umělkyni všech dob.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://www.newsbreak.com/closer-weekly-561369/4833504478572-15-iconic-celebs-who-hold-unexpected-world-records"
+  },
+  {
+    "id": "40519abd-5e42-5cf1-972f-a8b81cf9545d",
+    "question": "V roce 2026 byli fanoušci Deep Purple svědky rockové historie, když se ke kapele na pódiu poprvé od roku 1993 připojil kytarista, který složil legendární riff ke skladbě 'Smoke on the Water' — kdo to je?",
+    "possible_answers": null,
+    "correct_answer": "Ritchie Blackmore",
+    "alternative_answers": [
+      "Blackmore",
+      "Richie Blackmore",
+      "Ričí Blekmor"
+    ],
+    "explanation": "Blackmoreovo překvapivé vystoupení ukončilo jeho 33 let trvající nepřítomnost v kapele, kterou pomohl proslavit — shledání, které rockoví fanoušci už dávno odepsali jako nemožné.",
+    "topic": "movies-music · flagged",
+    "difficulty": "hard",
+    "source_url": "https://faroutmagazine.co.uk/pub-quiz-jungle-the-strokes-ritchie-blackmore"
+  },
+  {
+    "id": "a4eb7b91-ed8e-4ec9-ba0a-2b2dd9425535",
+    "question": "Dýka pohřbená s Tutanchamonem má železnou čepel tak čistou, že za 3 300 let téměř nezrezivěla — vznikla staletí předtím, než Egypťané uměli tavit železo z rudy. Odkud tento kov pocházel?",
+    "possible_answers": null,
+    "correct_answer": "Z meteoritu",
+    "alternative_answers": [
+      "meteorit",
+      "meteorické železo",
+      "z vesmíru",
+      "vesmír",
+      "ze spadlého meteoritu",
+      "z padlého meteoritu",
+      "kosmické železo",
+      "z kosmu"
+    ],
+    "explanation": "Rozbor obsahu niklu a kobaltu odpovídá železným meteoritům a egyptské texty z té doby dokonce nazývají tento materiál „železem z nebe“.",
+    "topic": "history · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Tutankhamun%27s_meteoric_iron_dagger"
+  },
+  {
+    "id": "e73fdb39-96db-57a7-927d-8943185e9cea",
+    "question": "Který rapper se v roce 2026 zapsal do historie Grammy tím, že se stal nejoceňovanějším rapperem všech dob?",
+    "possible_answers": null,
+    "correct_answer": "Kendrick Lamar",
+    "alternative_answers": [
+      "Kendrick",
+      "Lamar",
+      "Kendrik Lamar"
+    ],
+    "explanation": "Umělec z Comptonu překonal dosavadní držitele rekordu a získal tento titul — přidal si tak další úspěch k už tak vyzdobené kariéře, do níž patří i Pulitzerova cena za hudbu.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://www.hoorayteams.com/blog/pop-culture-trivia"
+  },
+  {
+    "id": "0a8b5da4-fcb4-4908-86ef-3928bf579e05",
+    "question": "Nahrávka mužského bolestného výkřiku, poprvé použitá ve westernu z roku 1951, se propašovala do stovek filmů — včetně Star Wars a Indiana Jonese — jako stálý interní vtípek mezi zvukovými designéry. Jak se tento slavný archivní zvukový efekt jmenuje?",
+    "possible_answers": {
+      "a": "Wilhelmův výkřik",
+      "b": "Wernerův nářek",
+      "c": "Hollywoodský řev",
+      "d": "Stanleyho ječeni"
+    },
+    "correct_answer": "Wilhelmův výkřik",
+    "alternative_answers": [
+      "Wilhelm scream",
+      "Vilémův výkřik",
+      "Wilhelmuv vykrik",
+      "výkřik Wilhelma"
+    ],
+    "explanation": "Jméno má podle vojína Wilhelma, postavy, která tento výkřik vydá poté, co ji zasáhne šíp, ve filmu The Charge at Feather River z roku 1953 — a zvukoví střihači ho od té doby ukrývají do filmů.",
+    "topic": "movies-music · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream"
+  },
+  {
+    "id": "98bd5740-ef3f-42b0-ad88-18e315fc132e",
+    "question": "V Pixarovském filmu Hledá se Nemo patří Nemo a jeho přehnaně starostlivý otec Marlin k jakému výrazně pruhovanému druhu ryb?",
+    "possible_answers": null,
+    "correct_answer": "Klaun očkatý",
+    "alternative_answers": [
+      "klaun",
+      "klauni",
+      "rybka klaun",
+      "ryba klaun",
+      "klaun očkatý",
+      "sasankovka"
+    ],
+    "explanation": "Klauni žijí chráněni mezi chapadly mořských sasanek, což je přesně místo, kam film umisťuje domov Nemovy rodiny.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Finding_Nemo"
+  },
+  {
+    "id": "6a6cf9f8-1a24-49bd-8b85-4b39029273e5",
+    "question": "Na ostrově La Gomera na Kanárských ostrovech si místní tradičně posílají zprávy přes hluboké rokle pomocí Silba, formy komunikace zapsané na seznamu UNESCO, která se dnes vyučuje i v místních školách. Co člověk používající Silbo vlastně dělá?",
+    "possible_answers": {
+      "a": "Píská",
+      "b": "Bubnuje zakódované zprávy",
+      "c": "Jódluje",
+      "d": "Blýská zrcadly"
+    },
+    "correct_answer": "Píská",
+    "alternative_answers": [
+      "pískání",
+      "hvízdá",
+      "hvízdání",
+      "píská si",
+      "pískaná řeč",
+      "pískají"
+    ],
+    "explanation": "Silbo Gomero převádí španělštinu do pískaných tónů, které se nesou na kilometry přes rokle — vycvičení ostrované spolu dokážou vést celé rozhovory jen pískáním.",
+    "topic": "geography-world · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Silbo_Gomero"
+  },
+  {
+    "id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+    "question": "První film roku 2026, který celosvětově překonal hranici jedné miliardy dolarů, byl natočen podle které videoherní série?",
+    "possible_answers": null,
+    "correct_answer": "Super Mario",
+    "alternative_answers": [
+      "Mario",
+      "Super Mario Bros",
+      "Super Mario Bros.",
+      "Super Mario Galaxy",
+      "Super Mario Galaxy ve filmu",
+      "The Super Mario Galaxy Movie"
+    ],
+    "explanation": "Film Super Mario Galaxy ve filmu předběhl k miliardové hranici všechny superhrdinské snímky i pokračování daného roku.",
+    "topic": "entertainment · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/2026_in_film"
+  },
+  {
+    "id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+    "question": "Když sovětské Rusko v roce 1918 konečně opustilo starý juliánský kalendář, spolkla tato změna ze dne na den téměř dva týdny. Občané šli spát 31. ledna — a probudili se kterého data?",
+    "possible_answers": {
+      "a": "1. února",
+      "b": "7. února",
+      "c": "14. února",
+      "d": "1. března"
+    },
+    "correct_answer": "14. února",
+    "alternative_answers": [
+      "14. únor",
+      "čtrnáctého února",
+      "14. února 1918"
+    ],
+    "explanation": "Ruský juliánský kalendář se opozdil o 13 dní za gregoriánským, který se používal jinde, a tak byl den po 31. lednu 1918 vyhlášen za 14. února — což je také důvod, proč se „Říjnová“ revoluce připomíná v listopadu.",
+    "topic": "history · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Adoption_of_the_Gregorian_calendar"
+  },
+  {
+    "id": "5053fc85-0181-4836-8f85-104a78cee067",
+    "question": "Kterým evropským jazykem, jímž se mluví v západních Pyrenejích na pomezí Španělska a Francie, je pravý izolát — jazyk nepříbuzný s žádným jiným známým živým jazykem?",
+    "possible_answers": {
+      "a": "Baskičtina",
+      "b": "Maďarština",
+      "c": "Finština",
+      "d": "Albánština"
+    },
+    "correct_answer": "Baskičtina",
+    "alternative_answers": [
+      "baskičtina",
+      "baskicky",
+      "baskický jazyk",
+      "baština"
+    ],
+    "explanation": "Baskičtina předchází příchod indoevropských jazyků do Evropy; maďarština a finština mají alespoň jedna druhou jako vzdálené uralské příbuzné, ale baskičtina nemá vůbec žádné známé příbuzné.",
+    "topic": "geography-world · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Basque_language"
+  },
+  {
+    "id": "1afd7152-e671-4930-bd4c-5012df32aaff",
+    "question": "V sitcomu Přátelé tráví šestice kamarádů velkou část života na odřené oranžové pohovce ve své oblíbené manhattanské kavárně. Jak se jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Central Perk",
+    "alternative_answers": [
+      "The Central Perk",
+      "kavárna Central Perk",
+      "Centrl Perk"
+    ],
+    "explanation": "Central Perk se stal natolik ikonickým, že ve městech po celém světě otevřely repliky této kavárny včetně oranžové pohovky.",
+    "topic": "movies-music · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Friends"
+  },
+  {
+    "id": "24c00998-b024-4082-b40b-3f7a29b2d267",
+    "question": "Středověké evropské soudy někdy vedly plnohodnotné formální procesy, včetně obhájců, s kategorií obžalovaných, které by se dnes každý soud jen vysmál. Kdo byli tito obžalovaní?",
+    "possible_answers": null,
+    "correct_answer": "Zvířata",
+    "alternative_answers": [
+      "Zvíře",
+      "Zvířata před soudem",
+      "Prasata a jiná zvířata",
+      "Zvěř",
+      "Hospodářská zvířata"
+    ],
+    "explanation": "Prasata, krysy a dokonce i hmyz byly slavnostně soudně stíhány za zločiny od krádeže po vraždu — jedno francouzské prase bylo v roce 1386 na svou exekuci obléknuto do kabátku.",
+    "topic": "history · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Animal_trial"
+  },
+  {
+    "id": "d06760ad-40b4-4913-b091-0f893e0f3e59",
+    "question": "Výbuch kterého vulkánu v roce 1883 v průlivu mezi Jávou a Sumatrou vyvolal zvuk, který je široce považován za nejhlasitější v zaznamenané historii — byl slyšet téměř 5 000 kilometrů daleko?",
+    "possible_answers": null,
+    "correct_answer": "Krakatoa",
+    "alternative_answers": [
+      "Krakatau",
+      "Krakatoe",
+      "sopka Krakatoa",
+      "vulkán Krakatoa"
+    ],
+    "explanation": "Výbuch byl zaznamenán až v Austrálii a na ostrově Rodrigues poblíž Mauricia a jeho tlaková vlna několikrát obletěla zeměkouli, což zachytily barografy.",
+    "topic": "geography-world · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/1883_eruption_of_Krakatoa"
+  },
+  {
+    "id": "d14c2a15-1297-449e-94e9-e08e736e8dad",
+    "question": "Její finále z roku 1983 sledovalo přes 100 milionů amerických diváků, což byl rekord pro hraný seriálový díl, který vydržel desítky let. O který seriál o polní vojenské nemocnici v korejské válce šlo?",
+    "possible_answers": null,
+    "correct_answer": "M*A*S*H",
+    "alternative_answers": [
+      "MASH",
+      "M.A.S.H.",
+      "M A S H",
+      "Máš"
+    ],
+    "explanation": "Dvouapůlhodinové finále „Goodbye, Farewell and Amen“ sledovalo asi 60 procent amerických domácností s televizí — takovému podílu se od té doby žádný hraný seriál ani nepřiblížil.",
+    "topic": "movies-music · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Goodbye,_Farewell_and_Amen"
+  },
+  {
+    "id": "484a45af-95f7-451d-9d97-dd34816a59c5",
+    "question": "Světový rekord ve skoku do výšky mužů — 245 centimetrů z roku 1993 — platí už více než tři desetiletí. Z jaké země pochází jeho držitel?",
+    "possible_answers": null,
+    "correct_answer": "Kuba",
+    "alternative_answers": [
+      "z Kuby",
+      "Kubánec",
+      "Kubánská republika"
+    ],
+    "explanation": "Javier Sotomayor překonal 245 centimetrů ve španělské Salamance v červenci 1993 — žádný jiný atlet v historii neskočil výš než 243 centimetrů.",
+    "topic": "sports · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Men%27s_high_jump_world_record_progression"
+  },
+  {
+    "id": "c27ac7d7-cee9-443b-89d6-643f942bcc4f",
+    "question": "Mnoho lidí si představuje, že ananas visí na stromech. Kde tento plod ve skutečnosti roste?",
+    "possible_answers": {
+      "a": "Na vrcholu vysokého stromu podobného palmě",
+      "b": "Ve středu pichlavé rostliny těsně nad zemí",
+      "c": "Pod zemí, jako brambora",
+      "d": "Na dlouhé popínavé liáně"
+    },
+    "correct_answer": "Ve středu pichlavé rostliny těsně nad zemí",
+    "alternative_answers": [
+      "Ve středu pichlavé rostliny u země",
+      "Na zemi ve středu pichlavé rostliny",
+      "Uprostřed pichlavé rostliny nízko u země"
+    ],
+    "explanation": "Ananas je bromélie vysoká asi jeden metr a každá rostlina dozrává vždy jen jeden plod — na první se čeká až dva roky.",
+    "topic": "food-everyday · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Pineapple"
+  },
+  {
+    "id": "45e5038b-9b33-4a80-86bd-25d5120f9711",
+    "question": "Basketbal měl olympijskou premiéru v Berlíně v roce 1936, kde USA porazily Kanadu ve finále, které skončilo pouhých 19 bodů na 8. Proč bylo skóre tak nízké?",
+    "possible_answers": {
+      "a": "Hrálo se venku na hliněném hřišti promáčeném deštěm",
+      "b": "Každý tým měl povoleno jen deset střel za půli",
+      "c": "Koše měly stále uzavřené dno, takže se po každém bodu přerušila hra",
+      "d": "Finále bylo kvůli tmě zkráceno na dvacet minut"
+    },
+    "correct_answer": "Hrálo se venku na hliněném hřišti promáčeném deštěm",
+    "alternative_answers": [
+      "Hrálo se venku na mokrém hliněném hřišti",
+      "Venku na promáčeném hliněném kurtu",
+      "Kvůli dešti a bahnu na venkovním hřišti"
+    ],
+    "explanation": "Zápas o zlatou medaili se hrál v prudkém dešti na venkovním tenisovém dvorci z hlíny a písku, takže driblování se změnilo v brodění bahnem — a přihlížel tomu i vynálezce basketbalu James Naismith.",
+    "topic": "sports · critical",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Basketball_at_the_1936_Summer_Olympics"
+  },
+  {
+    "id": "b5d7bdf8-fa29-4857-8025-3b065ed6ae05",
+    "question": "Jednoho červnového rána roku 1974 načetla pokladní v jednom supermarketu v Ohiu u pokladny vůbec první zboží s čárovým kódem na světě. Co to bylo?",
+    "possible_answers": {
+      "a": "Balíček žvýkaček",
+      "b": "Krabice mléka",
+      "c": "Plechovka polévky",
+      "d": "Krabice pracího prášku"
+    },
+    "correct_answer": "Balíček žvýkaček",
+    "alternative_answers": [
+      "žvýkačky",
+      "žvýkačka",
+      "balení žvýkaček",
+      "guma na žvýkání"
+    ],
+    "explanation": "V supermarketu Marsh ve městě Troy v Ohiu naúčtovali desetikusové balení žvýkaček Wrigley's Juicy Fruit — toto balení je dodnes připomínáno jako zboží, které odstartovalo éru čárových kódů.",
+    "topic": "history · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Universal_Product_Code"
+  },
+  {
+    "id": "be07eab6-f1ad-445e-910b-12f3094a6c34",
+    "question": "Světové rekordy v rychlobruslení začaly koncem 90. let padat poté, co Nizozemci představili brusli s kloubem pod špičkou, díky němuž se pata může zvednout, zatímco nůž zůstane ještě o chvíli déle naplocho na ledě. Jak se této brusli říká?",
+    "possible_answers": null,
+    "correct_answer": "Klapačka",
+    "alternative_answers": [
+      "klapačky",
+      "klapací brusle",
+      "klapová brusle",
+      "klapbrusle",
+      "klapskate",
+      "clap skate",
+      "clapskate"
+    ],
+    "explanation": "Název pochází od klapavého zvuku, který nůž vydává, když se vrací zpět k botě. Na olympiádě v Naganu v roce 1998 s ní bruslaři přepsali rekordy prakticky na všech tratích.",
+    "topic": "sports · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Clap_skate"
+  },
+  {
+    "id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+    "question": "Filmový trhák z roku 2026 Obsession, jeden z nejvýdělečnějších filmů všech dob, vznikl s rozpočtem, který se nejvíce blíží které částce?",
+    "possible_answers": {
+      "a": "Méně než jeden milion dolarů",
+      "b": "Přibližně deset milionů dolarů",
+      "c": "Přibližně sto milionů dolarů",
+      "d": "Přibližně jedna miliarda dolarů"
+    },
+    "correct_answer": "Méně než jeden milion dolarů",
+    "alternative_answers": [
+      "Pod jeden milion dolarů",
+      "Méně než milion dolarů",
+      "Do jednoho milionu dolarů",
+      "a"
+    ],
+    "explanation": "Vznikl přibližně za sedm set padesát tisíc dolarů a poté se stal nejúspěšnějším domácím uvedením v historii svého studia.",
+    "topic": "entertainment · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/2026_in_film"
+  },
+  {
+    "id": "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1",
+    "question": "Které město hostilo v květnu 2026 sedmdesátý ročník Eurovision Song Contest?",
+    "possible_answers": null,
+    "correct_answer": "Vídeň",
+    "alternative_answers": [
+      "Vídeň, Austria",
+      "Vienna",
+      "Wien",
+      "rakouská Vídeň"
+    ],
+    "explanation": "Vítězství Rakouska v roce 2025 mu vyneslo právo soutěž hostit a Vídeň uspořádala jubilejní ročník, který moderovali Victoria Swarovski a Michael Ostrowski.",
+    "topic": "entertainment · flagged",
+    "difficulty": "easy",
+    "source_url": "https://www.eurovision.com/stories/eurovision-2026-hosts-victoria-swarovski-michael-strowski/"
+  },
+  {
+    "id": "7e9cf519-3881-4411-9a08-e208b698d1ca",
+    "question": "Jak dlouho by trvalo napočítat do miliardy, kdybyste říkali jedno číslo za sekundu a nikdy nepřestali?",
+    "possible_answers": {
+      "a": "12 dní",
+      "b": "32 let",
+      "c": "300 let"
+    },
+    "correct_answer": "32 let",
+    "alternative_answers": [
+      "32",
+      "32 roků",
+      "třicet dva let",
+      "asi 32 let"
+    ],
+    "explanation": "Miliarda sekund je zhruba 31,7 roku. Den má 86 400 sekund, takže za 12 dní se dopočítáte jen asi k milionu a 300 let by odpovídalo zhruba deseti miliardám.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/1,000,000,000"
+  },
+  {
+    "id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+    "question": "Než s tím měla co do činění rajčata, byl původní 'kečup' ze 17. století, který evropští námořníci přivezli domů z jihovýchodní Asie, fermentovaná omáčka vyrobená hlavně z čeho?",
+    "possible_answers": null,
+    "correct_answer": "Z ryb",
+    "alternative_answers": [
+      "ryby",
+      "rybí omáčka",
+      "fermentované ryby",
+      "kvašené ryby",
+      "sardele",
+      "ančovičky",
+      "solené ryby",
+      "rybí lák",
+      "rybí solný nálev"
+    ],
+    "explanation": "Slovo pochází z hokkienského 'kê-tsiap', což byl slaný nálev z fermentovaných ryb podobný dnešní jihovýchodoasijské rybí omáčce. Britští námořníci a obchodníci ho doma napodobovali pomocí ančoviček, hub, vlašských ořechů a dokonce i ústřic. Rajčata se do receptu dostala až na počátku 19. století a sladký rajčatový kečup se stal standardem později v témže století.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Ketchup"
+  },
+  {
+    "id": "1d005c8a-efd7-4f01-9907-64a31572f0d1",
+    "question": "Suchý zip vznikl poté, co se jeden švýcarský inženýr vrátil z procházky po lese a prohlédl si, co se přichytilo na srsti jeho psa. Co to bylo?",
+    "possible_answers": null,
+    "correct_answer": "Bodláky",
+    "alternative_answers": [
+      "bodláky z lopuchu",
+      "lopuch",
+      "plody lopuchu",
+      "úbory lopuchu",
+      "semena rostlin",
+      "semínka rostlin",
+      "bodláčí",
+      "lopuchy"
+    ],
+    "explanation": "V roce 1941 si George de Mestral prohlédl bodláky (plody lopuchu) pod mikroskopem a uviděl drobné háčky, které se zachytávaly ve smyčkách srsti. Tento princip háčků a smyček okopíroval a vytvořil suchý zip.",
+    "topic": "general · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Velcro"
+  },
+  {
+    "id": "573f4062-a490-4af0-8358-737eebdba343",
+    "question": "Kabiny dopravních letadel jsou přetlakové a jejich okénka jsou vždy oválná nebo mají zaoblené rohy, nikdy nejsou hranatá jako okno v domě. Proč?",
+    "possible_answers": null,
+    "correct_answer": "Ostré rohy soustřeďují napětí a praskají",
+    "alternative_answers": [
+      "Hranatá okna praskala v rozích vlivem přetlaku",
+      "Únava materiálu v rozích kvůli opakovanému natlakování",
+      "Zaoblený tvar rozloží napětí rovnoměrně",
+      "Havárie letounů de Havilland Comet ukázaly, že hranatá okna selhávají",
+      "Rohy jsou slabá místa, kde se trup trhá",
+      "Tlakové cykly způsobují praskání ostrých rohů",
+      "V ostrých rozích se koncentruje napětí",
+      "Koncentrace napětí v rozích"
+    ],
+    "explanation": "Při každém letu se kabina natlakuje jako balón a pak se tlak zase sníží, takže se kovový plášť tisíckrát napíná a povoluje. U hranatého otvoru se všechna tato tahová síla hromadí ve čtyřech ostrých rozích a opakované zatěžování tam způsobuje únavu materiálu a trhliny. Na počátku 50. let měl de Havilland Comet, první proudový dopravní letoun, zhruba hranatá okna a několik strojů se rozpadlo za letu, než vyšetřovatelé vystopovali příčinu selhání k trhlinám vznikajícím v rozích oken. Zaoblená okna rozloží zatížení plynule po celém obvodu, takže žádné jednotlivé místo netrpí.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Stress_concentration"
+  },
+  {
+    "id": "9782e8e8-9112-4e1c-aecd-d16475c5339f",
+    "question": "Co měli na sobě sportovci při soutěžení na původních starověkých řeckých olympijských hrách?",
+    "possible_answers": null,
+    "correct_answer": "Nic",
+    "alternative_answers": [
+      "Nic na sobě neměli",
+      "Byli nazí",
+      "Nazí",
+      "Nahí",
+      "Byli nahí",
+      "Žádné oblečení",
+      "Vůbec nic",
+      "Olivový olej"
+    ],
+    "explanation": "Sportovci soutěžili úplně nazí, natření olivovým olejem. Řecké slovo 'gymnasium' pochází doslova ze slova 'gymnos', což znamená nahý. Vdaným ženám bylo zakázáno se na hry byť jen dívat.",
+    "topic": "general · flagged",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Nudity_in_sport"
+  },
+  {
+    "id": "734a7f0b-c4fb-4d6d-a8e1-5ad5967750a3",
+    "question": "Jedna z těchto starověkých civilizací nikdy nepoužívala kolo k dopravě. Která to je?",
+    "possible_answers": {
+      "a": "Římané",
+      "b": "Egypťané",
+      "c": "Inkové",
+      "d": "Sumerové"
+    },
+    "correct_answer": "Inkové",
+    "alternative_answers": [
+      "Inkové",
+      "Inka",
+      "Inkská říše",
+      "říše Inků",
+      "c"
+    ],
+    "explanation": "Inkové vybudovali v Andách asi 40 000 kilometrů cest, přesto všechno přepravovali pěšky nebo pomocí lam. Neměli koně ani voly, kteří by táhli vozy, a strmé horské stezky byly plné schodů, takže jim kolo nepřinášelo žádnou výhodu. V Americe se kolečka objevují jen na několika dětských hračkách.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Inca_road_system"
+  },
+  {
+    "id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+    "question": "Po tisíce let se ve starověkém Egyptě, Řecku a Persii nosil deštník nad králi a šlechtici, ale téměř nikdy v dešti. Před čím je chránil?",
+    "possible_answers": null,
+    "correct_answer": "Před sluncem",
+    "alternative_answers": [
+      "Slunce",
+      "Před sluncem",
+      "Sluneční záření",
+      "Před slunečním žárem",
+      "Před horkem",
+      "Horko",
+      "Slunečními paprsky",
+      "Dělal jim stín před sluncem"
+    ],
+    "explanation": "První deštníky byly slunečníky – symbol postavení, který nad vládci drželi sluhové. Slovo pochází z latinského „umbra“, což znamená stín. Používat je proti dešti se v Evropě rozšířilo až v 18. století a prvnímu Londýňanovi, který to udělal, se lidé otevřeně posmívali.",
+    "topic": "general · critical",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Umbrella"
+  },
+  {
+    "id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+    "question": "Dávno předtím, než se dotkla prvního stromu, byla motorová pila vynalezena v 80. letech 18. století dvěma skotskými lékaři, aby urychlila jaký lékařský zákrok?",
+    "possible_answers": null,
+    "correct_answer": "Porod",
+    "alternative_answers": [
+      "Porody",
+      "Rození dětí",
+      "Pomoc při porodu",
+      "Symfyziotomie",
+      "Rozříznutí pánve při porodu",
+      "Komplikované porody",
+      "Těžké porody"
+    ],
+    "explanation": "První motorová pila byl malý řetěz se zuby poháněný ruční klikou, kterým se prořezávala pánevní kost, když dítě při porodu uvízlo – tento zákrok se nazývá symfyziotomie. Nahradila nůž a pilu a teprve mnohem později byl tento nápad zvětšen pro řezání dřeva.",
+    "topic": "general · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Chainsaw"
+  },
+  {
+    "id": "35ddda4b-d4c2-4e64-b030-c1a2e1a1e340",
+    "question": "Po výšlapu v Alpách v roce 1941 měl švýcarský inženýr dost toho, jak ze srsti svého psa vytrhává pichlavé bodláky, a tak si jeden dal pod mikroskop a spatřil stovky drobných háčků. Jaké běžné zapínání to inspirovalo?",
+    "possible_answers": null,
+    "correct_answer": "suchý zip",
+    "alternative_answers": [
+      "suchý zip (velcro)",
+      "velcro",
+      "suché zapínání",
+      "zip na háčky a smyčky",
+      "háčky a smyčky"
+    ],
+    "explanation": "George de Mestral si prohlédl bodláky lopuchu pod mikroskopem a viděl, že jejich drobné háčky se zachytávají do smyček v srsti a v látce. Nápad zkopíroval pomocí dvou pásků textilie, z nichž jeden byl pokrytý háčky a druhý smyčkami, a v 50. letech si jej nechal patentovat. Název Velcro spojuje francouzská slova 'velours' a 'crochet' a suché zipy se později dostaly i na Měsíc na skafandrech misí Apollo.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Hook-and-loop_fastener"
+  },
+  {
+    "id": "720f7057-b39a-4de1-8bb2-de45f59cf103",
+    "question": "Gekon dokáže běžet hlavou dolů po hladkém skleněném stropě, jeho prsty přitom nejsou lepkavé, nemají žádné přísavky, nezanechávají žádné stopy a drápy se do skla zaseknout nemohou. Jak se tedy udrží?",
+    "possible_answers": null,
+    "correct_answer": "Miliony mikroskopických chloupků na prstech, molekulární přitažlivost",
+    "alternative_answers": [
+      "Van der Waalsovy síly",
+      "Mezimolekulové síly mezi drobnými chloupky a povrchem",
+      "Mikroskopické chloupky na prstech (setae)",
+      "Suchá adheze díky milionům drobných chloupků",
+      "Molekulární přitažlivost mezi chloupky na chodidlech a sklem",
+      "Drobné vláskovité struktury, které vytvářejí přitažlivost podobnou elektrostatické",
+      "Chloupky na prstech a van der Waalsovy síly"
+    ],
+    "explanation": "Každý prst gekona je pokrytý miliony mikroskopických chloupků zvaných setae a každá seta se dělí na stovky ještě jemnějších zakončení. Tato zakončení se dostanou tak blízko k povrchu, že mezi chloupkem a sklem začnou působit slabé mezimolekulové síly, známé jako van der Waalsovy síly. Jediný chloupek přispěje téměř ničím, ale v součtu přes miliony chloupků je přitažlivost dost silná na to, aby udržela celé zvíře. Protože jde o suchou fyzikální přitažlivost, a ne o lepidlo či přisátí, funguje to i ve vakuu, na mokrém i suchém skle a nic po sobě nezanechává. Gekon se uvolní jednoduše tím, že změní úhel prstů a odloupne je od povrchu.",
+    "topic": "general · flagged",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Synthetic_setae"
+  },
+  {
+    "id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+    "question": "Jeden pestrobarevný korýš udeří tak rychle, že jeho úder vytváří bubliny vroucí vody a je známo, že dokáže prasknout sklo akvária. Jak se jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Strašek",
+    "alternative_answers": [
+      "strašek pestrý",
+      "kreveta kudlanka",
+      "ústonožec",
+      "stomatopod",
+      "mantis shrimp"
+    ],
+    "explanation": "Kyjovitý úderník strašků zrychluje jako kulka a během několika tisícin sekundy dosáhne asi 80 km/h. Úder je tak rychlý, že vytváří kavitační bubliny, jejichž kolaps doprovází záblesk tepla a světla.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Mantis_shrimp"
+  },
+  {
+    "id": "24a23cc4-9456-4836-b68e-8b8de461b9a7",
+    "question": "Který z těchto savců je jediný, který nedokáže vstříknout jed?",
+    "possible_answers": {
+      "a": "Ptakopysk",
+      "b": "Outloň",
+      "c": "Rejsek",
+      "d": "Ježek"
+    },
+    "correct_answer": "Ježek",
+    "alternative_answers": [
+      "ježek",
+      "ježek západní"
+    ],
+    "explanation": "Samci ptakopyska mají jedové ostny, outloň má toxické kousnutí a několik druhů rejsků má jedovaté sliny, které paralyzují kořist. Ježek se spoléhá pouze na bodliny a žádný jed neprodukuje.",
+    "topic": "general · flagged",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Venomous_mammal"
+  },
+  {
+    "id": "fac9520e-e5c6-4712-be4a-593ae393db26",
+    "question": "Kolik váží jeden nadýchaný oblak kupovitého mraku (kumulu)?",
+    "possible_answers": {
+      "a": "5 kilogramů",
+      "b": "500 tun",
+      "c": "5 milionů tun"
+    },
+    "correct_answer": "500 tun",
+    "alternative_answers": [
+      "pět set tun",
+      "500 t",
+      "b"
+    ],
+    "explanation": "Typický kumulus má velikost zhruba jednoho krychlového kilometru a obsahuje přibližně půl gramu vody na krychlový metr. Dohromady to dělá asi 500 tun, tedy váhu zhruba 100 slonů. Mrak se vznáší proto, že je tato voda rozptýlena v podobě drobných kapiček v obrovském objemu vzduchu.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://www.usgs.gov/water-science-school/science/how-much-does-a-cloud-weigh"
+  },
+  {
+    "id": "2f977694-a9d5-4ccf-ad56-13bccc1d1653",
+    "question": "Jedno jezero ve Venezuele zažívá blesková bouřky přibližně 260 nocí v roce, více než kterékoli jiné místo na Zemi. Jak se jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Maracaibské jezero",
+    "alternative_answers": [
+      "Maracaibo",
+      "jezero Maracaibo",
+      "Catatumbo",
+      "Catatumbské blesky",
+      "blesky Catatumbo"
+    ],
+    "explanation": "Teplý a vlhký vzduch z Karibiku je v okolí Maracaibského jezera zadržován Andami a téměř každou noc přiživuje bouřky. Catatumbské blesky, pojmenované podle řeky, která jezero zásobuje, vytvářejí více bleskových výbojů na kilometr čtvereční než jakékoli jiné místo na planetě a dříve je bylo možné spatřit z lodí stovky kilometrů daleko.",
+    "topic": "general · flagged",
+    "difficulty": "hard",
+    "source_url": "https://www.nasa.gov/missions/trmm/earths-new-lightning-capital-revealed/"
+  },
+  {
+    "id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+    "question": "Téměř každý jazyk označuje čaj buď slovem podobným 'te' (jako v angličtině, francouzštině nebo němčině), nebo slovem podobným 'cha' či 'chai' (jako v ruštině, arabštině, slovenštině nebo hindštině). Obě podoby pocházejí z Číny, tak proč skončil svět přesně se dvěma verzemi toho slova?",
+    "possible_answers": null,
+    "correct_answer": "Námořní obchod rozšířil 'te', pozemní obchod rozšířil 'cha'",
+    "alternative_answers": [
+      "Dvě obchodní cesty: lodí a po souši",
+      "Různé čínské dialekty se do světa dostaly různými cestami",
+      "Holandské lodě přivezly 'te', Hedvábná stezka přinesla 'cha'",
+      "Pobřežní čínská výslovnost šla po moři, vnitrozemská po souši",
+      "Fu-ťienský dialekt přes Holanďany versus mandarínština přes Hedvábnou stezku",
+      "Slovo putovalo s čajem po dvou různých obchodních trasách",
+      "Po moři 'te', po souši 'cha'"
+    ],
+    "explanation": "Psaný čínský znak pro čaj je všude stejný, ale v různých oblastech se vyslovuje jinak. V pobřežním dialektu Min ve Fu-ťienu, kde holandští obchodníci v 17. století čaj nakupovali, zní jako 'te', a Holanďané tuto podobu dopravili loděmi do západní Evropy. V mandarínštině a kantonštině zní jako 'cha' a tato podoba putovala po souši po Hedvábné stezce s perskými obchodníky, kteří přidali příponu a vzniklo 'chai'. Odtud se rozšířila do Střední Asie, Ruska, arabsky mluvících oblastí a dál. Slovo pro čaj tedy v daném jazyce obvykle prozradí, jestli se jeho předkové poprvé dostali k čaji po moři, nebo po souši. Hlavní výjimkou je Portugalsko, které obchodovalo přes Macao, kde se vyslovovalo 'cha', a proto používá 'chá', přestože jde o námořní zemi.",
+    "topic": "general · critical",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Etymology_of_tea"
+  },
+  {
+    "id": "f66ef57e-1d49-4f7a-93c6-3615c1bf9dc7",
+    "question": "V roce 1816, poté co výbuch sopky Tambora zničil úrodu po celé Evropě, oves natolik podražil, že mnoho koní bylo prodáno nebo poraženo. Co představil německý vynálezce hned následující rok jako způsob dopravy bez koně?",
+    "possible_answers": null,
+    "correct_answer": "Jízdní kolo",
+    "alternative_answers": [
+      "jízdní kolo",
+      "kolo",
+      "bicykl",
+      "drezína",
+      "draisina",
+      "Laufmaschine",
+      "běhací stroj",
+      "velociped",
+      "první jízdní kolo",
+      "předchůdce jízdního kola"
+    ],
+    "explanation": "V roce 1817 představil Karl von Drais svůj Laufmaschine, tedy běhací stroj, dvoukolové dřevěné vozidlo, které jezdec odrážel nohama. Je všeobecně považován za předchůdce moderního jízdního kola a historici často dávají dobu jeho vzniku do souvislosti s nedostatkem koní, který následoval po Roce bez léta způsobeném oblakem popela ze sopky Tambora.",
+    "topic": "general · sample",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Dandy_horse"
+  },
+  {
+    "id": "9c04ba0c-cf1c-4d19-804b-4ce539843b6b",
+    "question": "Národní vlajka kterého státu je jediná na světě, na níž je moderní útočná puška — AK-47 zkřížená s motykou nad otevřenou knihou?",
+    "possible_answers": {
+      "a": "Angola",
+      "b": "Zimbabwe",
+      "c": "Etiopie",
+      "d": "Mosambik"
+    },
+    "correct_answer": "Mosambik",
+    "alternative_answers": [
+      "Mosambická republika",
+      "Mozambik"
+    ],
+    "explanation": "AK-47 připomíná mosambický boj za nezávislost, zatímco motyka a kniha symbolizují zemědělství a vzdělání — do soutěže na nový návrh vlajky v roce 2005 přišlo 169 návrhů a parlament všechny do jednoho zamítl.",
+    "topic": "geography-world · sample",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Flag_of_Mozambique"
+  },
+  {
+    "id": "edc76de1-d844-4755-b9ca-f500942ee5f1",
+    "question": "Jen jedním kontinentem prochází rovník, obratník Raka i obratník Kozoroha. Kterým?",
+    "possible_answers": null,
+    "correct_answer": "Afrika",
+    "alternative_answers": [
+      "afrika",
+      "Afrikou",
+      "africký kontinent"
+    ],
+    "explanation": "Afrika leží po obou stranách rovníku téměř symetricky a zasahuje dostatečně daleko na sever i na jih, aby protnula oba obratníky — žádný jiný kontinent nezvládne všechny tři linie.",
+    "topic": "geography-world · sample",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Tropic_of_Capricorn"
+  },
+  {
+    "id": "75634579-1404-5367-8350-9dbb14a22830",
+    "question": "Gepard sklízí veškerou slávu, ale skutečný rychlostní rekord mezi všemi živočichy na Zemi — přes 300 kilometrů za hodinu — patří dravci při loveckém střemhlavém letu. Kterému ptákovi?",
+    "possible_answers": null,
+    "correct_answer": "Sokol stěhovavý",
+    "alternative_answers": [
+      "Sokol",
+      "Stěhovavý sokol",
+      "Sokola stěhovavého"
+    ],
+    "explanation": "Při loveckém střemhlavém letu byla sokolovi stěhovavému naměřena rychlost výrazně přes 300 km/h, tedy zhruba třikrát vyšší než u geparda v plném trysku.",
+    "topic": "science-nature · sample",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+    "question": "Po šesti měsících ve stavu beztíže na Mezinárodní vesmírné stanici se astronauti vracejí na Zemi s až pěti centimetry něčeho navíc, o co ale rychle zase přijdou. Pět centimetrů čeho?",
+    "possible_answers": null,
+    "correct_answer": "Výška",
+    "alternative_answers": [
+      "Tělesná výška",
+      "Výšky",
+      "Výška těla",
+      "Jejich výška",
+      "Délka páteře",
+      "Narostou (jsou vyšší)"
+    ],
+    "explanation": "Bez gravitace, která stlačuje páteř, se ploténky mezi obratli roztáhnou a astronauti se protáhnou — dokud je zemská přitažlivost během několika týdnů nestlačí zpět do normálu.",
+    "topic": "science-nature · sample",
+    "difficulty": "easy",
+    "source_url": ""
+  },
+  {
+    "id": "e8fe9ce2-1117-4659-90bb-c4b3b905a833",
+    "question": "Na olympiádě v Barceloně v roce 1992 poslaly USA na hry poprvé hvězdy NBA jako Michaela Jordana a Magica Johnsona. Pod jakou přezdívkou byl tento tým okamžitě známý?",
+    "possible_answers": null,
+    "correct_answer": "Dream Team",
+    "alternative_answers": [
+      "The Dream Team",
+      "dream team",
+      "Tým snů",
+      "tým snů",
+      "Dream team"
+    ],
+    "explanation": "Dream Team vyhrál svých osm zápasů v průměru o téměř 44 bodů a dokráčel pro zlato, přičemž trenér Chuck Daly nepotřeboval ani jednou vzít oddechový čas.",
+    "topic": "sports · sample",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/1992_United_States_men%27s_Olympic_basketball_team"
+  },
+  {
+    "id": "a2418b29-3e02-4acf-b4ea-1c927372bcab",
+    "question": "Která planeta má nejrychlejší větry, jaké kdy byly ve sluneční soustavě naměřeny, s tryskovým prouděním přesahujícím 2 000 kilometrů za hodinu?",
+    "possible_answers": {
+      "a": "Jupiter",
+      "b": "Saturn",
+      "c": "Neptun",
+      "d": "Venuše"
+    },
+    "correct_answer": "Neptun",
+    "alternative_answers": [
+      "Planeta Neptun",
+      "Neptunu"
+    ],
+    "explanation": "Kupodivu nejdivočejší větry ve sluneční soustavě vanou na její nejvzdálenější planetě — Neptun dostává jen minimum slunečního světla, a přesto jeho tryskové proudění překonává rychlost zvuku na Zemi.",
+    "topic": "science-nature · sample",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Neptune"
+  },
+  {
+    "id": "2b3ba69e-02fc-4768-a4a2-f1eee16cce97",
+    "question": "Pravda, nebo lež: před miliony let tekla Amazonka směrem na západ, tedy opačně než dnes.",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Lež"
+    },
+    "correct_answer": "Pravda",
+    "alternative_answers": [
+      "pravda",
+      "ano",
+      "je to pravda",
+      "a"
+    ],
+    "explanation": "Studie sedimentů ukazují, že než se vyzdvihly Andy, odtékala Amazonka na západ směrem k Pacifiku. Rostoucí hory jí zablokovaly cestu a řeka nakonec obrátila tok na východ do Atlantiku.",
+    "topic": "general · sample",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Amazon_River"
+  },
+  {
+    "id": "2fb4ebee-d091-5eac-afa1-0df32ed6e54d",
+    "question": "Jediná živá tkáň v lidském těle neobsahuje vůbec žádné cévy a kyslík si bere přímo z okolního vzduchu — právě proto zůstává dokonale průhledná. O kterou tkáň jde?",
+    "possible_answers": null,
+    "correct_answer": "Rohovka",
+    "alternative_answers": [
+      "rohovka",
+      "oční rohovka",
+      "rohovka oka",
+      "cornea"
+    ],
+    "explanation": "Cévy by kalily zrak, a tak rohovka zůstává křišťálově čirá a dýchá skrz slzný film — i proto musí kontaktní čočky určené k dlouhodobému nošení propouštět kyslík.",
+    "topic": "science-nature · sample",
+    "difficulty": "hard",
+    "source_url": ""
+  },
+  {
+    "id": "a59d17d5-618b-4282-935e-fbf3b132302f",
+    "question": "Zlatohnědá kůrčička na toastu, opečený steak i pražená kávová zrna vznikají díky téže chemické reakci mezi cukry a aminokyselinami. Jak se tato reakce jmenuje podle francouzského chemika, který ji popsal?",
+    "possible_answers": null,
+    "correct_answer": "Maillardova reakce",
+    "alternative_answers": [
+      "maillardova reakce",
+      "maillard",
+      "maillardova",
+      "majárova reakce",
+      "Maillardovo hnědnutí"
+    ],
+    "explanation": "Louis-Camille Maillard ji popsal v roce 1912; při reakci vznikají stovky nových chuťových a aromatických látek, a proto zhnědlé jídlo chutná mnohem bohatěji než vařené.",
+    "topic": "food-everyday · sample",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Maillard_reaction"
+  },
+  {
+    "id": "581fe118-7952-400c-a15d-2f667229e1b1",
+    "question": "Švédská skupina ABBA se proslavila po celém světě vítězstvím v Eurovizi 1974 s písní pojmenovanou podle slavné napoleonské bitvy. Jak se jmenuje?",
+    "possible_answers": null,
+    "correct_answer": "Waterloo",
+    "alternative_answers": [
+      "waterloo",
+      "Waterlo",
+      "bitva u Waterloo"
+    ],
+    "explanation": "Waterloo zvítězilo v roce 1974 v Brightonu a později bylo zvoleno nejlepší písní prvních padesáti let Eurovize.",
+    "topic": "movies-music · sample",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Waterloo_(ABBA_song)"
+  },
+  {
+    "id": "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55",
+    "question": "V roce 1908 vytrhla německá žena v domácnosti Melitta Bentzová list savého papíru ze školního sešitu svého syna, propíchala díry do mosazného hrnce a vynalezla tak kuchyňskou pomůcku, která dodnes nese její jméno. O co šlo?",
+    "possible_answers": null,
+    "correct_answer": "Kávový filtr",
+    "alternative_answers": [
+      "Filtr na kávu",
+      "Papírový kávový filtr",
+      "Papírový filtr na kávu",
+      "Filtrační papír na kávu",
+      "Kávový filtr z papíru"
+    ],
+    "explanation": "Melitta Bentzová měla dost hořké kávy plné sedliny, a tak k přecezení nápoje použila savý papír. Ještě téhož roku si papírový kávový filtr nechala patentovat a firma Melitta, kterou založila v Drážďanech, prodává filtry po celém světě dodnes.",
+    "topic": "general · sample",
+    "difficulty": "medium",
+    "source_url": "https://www.dpma.de/english/our_office/publications/ingeniouswomen/110jahrekaffeefilter/index.html"
+  },
+  {
+    "id": "72e2d072-14b6-4569-966f-6814063b35c4",
+    "question": "Pastevec koz v Etiopii si všiml, že jeho kozy poskakují plné energie poté, co sežvýkaly červené plody z jednoho keře. Jaký nápoj má tato legenda podle vyprávění vysvětlovat?",
+    "possible_answers": null,
+    "correct_answer": "Káva",
+    "alternative_answers": [
+      "Kávu",
+      "Kávová zrna",
+      "Espreso",
+      "Espresso"
+    ],
+    "explanation": "Legenda o pastevci koz Kaldim je tradičním příběhem o původu kávy. Etiopie je domovinou této rostliny a „tanec“ koz prý přivedl mnichy k tomu, aby si z plodů připravovali nápoj a zůstali bdělí při modlitbách.",
+    "topic": "general · sample",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Kaldi"
+  },
+  {
+    "id": "5cb7c0ed-2e73-59e5-9c3c-21caae80b2c5",
+    "question": "Novorozenec má zhruba 300 kostí, ale dospělý člověk jen asi 206 — a přitom ani jediná se nikdy neztratí. Čím se ten rozdíl vysvětluje?",
+    "possible_answers": null,
+    "correct_answer": "Kosti srůstají dohromady",
+    "alternative_answers": [
+      "Srůstají",
+      "Sroste to dohromady",
+      "Srostou",
+      "Spojí se dohromady",
+      "Spojují se",
+      "Kosti srostou"
+    ],
+    "explanation": "Mnoho dětských kostí vzniká jako samostatné kousky měkké chrupavky a postupně se spojují v jednu kost — proto má lebka novorozence pružné mezery, díky nimž je průchod porodními cestami vůbec možný.",
+    "topic": "science-nature · sample",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "3be05aa5-6342-49c4-b60c-130de791a8a6",
+    "question": "V 50. a 60. letech 20. století vedly vídeňský hotel Sacher a cukrárna Demel sedmiletý soudní spor o to, kdo z nich smí svou verzi slavného dezertu nazývat 'originálem'. O jaký dezert šlo?",
+    "possible_answers": {
+      "a": "Sachr dort",
+      "b": "Černý les",
+      "c": "Linecký dort",
+      "d": "Jablečný závin"
+    },
+    "correct_answer": "Sachr dort",
+    "alternative_answers": [
+      "Sachrdort",
+      "Sacher dort",
+      "Sachertorte",
+      "Sacher-Torte",
+      "Sachrův dort",
+      "Vídeňský sachr"
+    ],
+    "explanation": "Rakouská 'sladká válka' o čokoládový dort s meruňkovou marmeládou skončila v roce 1963: hotel si podržel označení 'Original Sacher-Torte', zatímco Demel prodává svůj vlastní 'Eduard-Sacher-Torte'.",
+    "topic": "food-everyday · sample",
+    "difficulty": "hard",
+    "source_url": "https://de.wikipedia.org/wiki/Sachertorte"
+  },
+  {
+    "id": "ed1f8524-17d0-4e9f-b08f-5b1c800593e8",
+    "question": "Očekává se, že otisky bot, které na Měsíci zanechali astronauti programu Apollo, tam vydrží miliony let. Co na Měsíci chybí, co by je jinak setřelo?",
+    "possible_answers": null,
+    "correct_answer": "Atmosféra",
+    "alternative_answers": [
+      "Vzduch",
+      "Ovzduší",
+      "Vítr",
+      "Vítr a počasí",
+      "Počasí",
+      "Nemá atmosféru",
+      "Chybí atmosféra"
+    ],
+    "explanation": "Bez vzduchu není vítr, déšť ani žádné počasí, takže otisky nic nesmaže kromě pomalého deště mikrometeoritů.",
+    "topic": "science-nature · sample",
+    "difficulty": "easy",
+    "source_url": "https://spaceplace.nasa.gov/all-about-the-moon/en/"
+  },
+  {
+    "id": "6d3e5a61-f775-4667-a04c-042824d46fde",
+    "question": "Co je teplejší: povrch Slunce, nebo blesk?",
+    "possible_answers": {
+      "a": "Povrch Slunce",
+      "b": "Blesk"
+    },
+    "correct_answer": "Blesk",
+    "alternative_answers": [
+      "blesk",
+      "úder blesku",
+      "bleskový výboj",
+      "b"
+    ],
+    "explanation": "Kanál blesku na okamžik dosáhne asi 30 000 stupňů Celsia, zatímco viditelný povrch Slunce má jen asi 5 500 stupňů. Jádro Slunce je mnohem teplejší, ale jeho povrch prohrává s letní bouřkou.",
+    "topic": "general · sample",
+    "difficulty": "easy",
+    "source_url": "https://www.weather.gov/safety/lightning-science-overview"
+  },
+  {
+    "id": "17b070d2-e6a3-51cf-a671-b1e793af4ce2",
+    "question": "Vědci varují, že vrak Titaniku, ležící v hloubce téměř čtyř kilometrů, se může během několika desetiletí z velké části rozpadnout. Co pomalu užírá jeho železný trup?",
+    "possible_answers": null,
+    "correct_answer": "Bakterie",
+    "alternative_answers": [
+      "Bakterie požírající železo",
+      "Bakterie žeroucí rez",
+      "Mikrobi",
+      "Mikroby",
+      "Halomonas titanicae",
+      "Mikroorganismy"
+    ],
+    "explanation": "Železo požírající mikroby — jeden druh je dokonce po lodi pojmenován Halomonas titanicae — pohlcují trup a zanechávají po sobě rezavé útvary připomínající rampouchy, zvané rusticles.",
+    "topic": "science-nature · sample",
+    "difficulty": "medium",
+    "source_url": ""
+  },
+  {
+    "id": "a3e88337-c04d-4525-82cc-f9d05d5ee57e",
+    "question": "Kolik kostí je uvnitř sloního chobotu?",
+    "possible_answers": {
+      "a": "Žádná",
+      "b": "40",
+      "c": "400"
+    },
+    "correct_answer": "Žádná",
+    "alternative_answers": [
+      "Nula",
+      "Ani jedna",
+      "Žádné",
+      "Nemá tam žádné kosti"
+    ],
+    "explanation": "V chobotu není vůbec žádná kost. Tvoří ho zhruba 40 000 svalových jednotek, a proto dokáže zvednout kmen stromu i sebrat jediný burák.",
+    "topic": "general · sample",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Elephant"
+  },
+  {
+    "id": "39770ac0-2666-4fae-98a2-560de977e177",
+    "question": "Jeden malý severoamerický obojživelník přežívá zimu tak, že nechá většinu vody ve svém těle úplně zmrznout — srdce se mu zastaví a znovu se rozběhne, až na jaře roztaje. O které zvíře jde?",
+    "possible_answers": null,
+    "correct_answer": "Skokan lesní",
+    "alternative_answers": [
+      "skokan lesní",
+      "lesní skokan",
+      "skokan",
+      "žába"
+    ],
+    "explanation": "Skokani lesní zaplaví své buňky glukózou, která funguje jako nemrznoucí směs, takže mohou strávit celé týdny jako kvákající kostky ledu až daleko na severu u polárního kruhu.",
+    "topic": "science-nature · sample",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Wood_frog"
+  }
+]

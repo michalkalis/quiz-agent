@@ -1,6 +1,6 @@
 # #176 — Review štítok otázky v TF buildoch + TF servíruje aj odmietnuté preklady
 
-**Triage:** `ready-for-human` · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
+**Triage:** `in-progress` (kód hotový 2026-09-10: backend PR #142 v prode v110, iOS PR #143 merged; open = Pencil sync + founder TF kontrola) · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
 **Design:** [HTML varianty](../design/variants/issue-168-tf-review-badges.html) → **Variant A**, všetkých 5 stavov · [decisions](../design/ui-variants-2026-09-10-decisions.md)
 
 ## Prečo
@@ -12,7 +12,7 @@ Founder testuje SK/CS preklady v TestFlighte, ale v hre nevidí, či je otázka 
 1. **Päť stavov** štítku: `approved` · `pending_review` · `translation_machine` · `translation_flagged` · `translation_critical` (+ `en_fallback` po cutovere, keď preklad chýba).
 2. **TF servíruje aj strojom odmietnuté preklady** (`question_translations.status = rejected`) so štítkom „kritické“. App Store ich nikdy nedostane.
 3. **Umiestnenie = Variant A:** riadok pod otázkou `model · jazyk · štítok` (rovnaké 11pt mono ako dnešný `generated_by` badge, štítok farebný); ten istý štítok v meta riadku výsledkovej obrazovky.
-4. **Sémantika „approved“ (2026-09-10, mení pravidlo 08-28):** App Store smie zobrazovať aj otázky, ktoré neschválil človek, ale iba v stave `approved`. Rozhoduje stav, nie kto ho nastavil. `pending_review` ostáva TF-only. (Otvorené: či strojové brány smú nastavovať `approved` pre nové EN otázky — dnes importér dáva `pending_review`.)
+4. **Sémantika „approved“ (2026-09-10, mení pravidlo 08-28):** App Store smie zobrazovať aj otázky, ktoré neschválil človek, ale iba v stave `approved`. Rozhoduje stav, nie kto ho nastavil. `pending_review` ostáva TF-only. (Rozhodnuté 2026-09-10 → #177: čisté EN otázky idú pri importe rovno do `approved`, PR #140.)
 
 ## Mapovanie stavu (server-side, jeden enum)
 
@@ -65,7 +65,7 @@ Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pend
 - Backend testy + iOS cielené testy zelené; `/verify-api` čistý.
 
 ## Poradie
-1. ~~Backend (polia + TF serving rejected + TF-bez-gate) → PR~~ **hotové** → deploy prod ostáva (prepínač len podľa build channel, EN/App Store nedotknuté).
-2. iOS (Codable + riadok + result meta + lokalizácia) → PR.
+1. ~~Backend (polia + TF serving rejected + TF-bez-gate) → PR~~ **hotové, v prode** (PR #142, quiz-agent-api v110, 2026-09-10).
+2. ~~iOS (Codable + riadok + result meta + lokalizácia) → PR~~ **hotové** (PR #143 merged 2026-09-10; 59 cielených testov, verify-api čistý). Pozn.: `swiftformat` nie je na tomto stroji nainštalovaný, hook je no-op.
 3. Pencil sync → founder ⌘S.
 4. TF build **len na požiadanie foundera**.

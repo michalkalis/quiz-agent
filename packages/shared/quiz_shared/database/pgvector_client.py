@@ -27,7 +27,17 @@ import inspect
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -56,7 +66,7 @@ from ..utils.embeddings import generate_embedding_async
 from ..utils.qa_text import qa_text
 from ..utils.source_hash import source_hash_for
 from ._schema import metadata as _metadata
-from .translation_queries import demote_stale_translations, fetch_approved_translations
+from .translation_queries import demote_stale_translations, fetch_servable_translations
 
 logger = logging.getLogger(__name__)
 
@@ -305,21 +315,28 @@ class PgvectorQuestionStore:
             return _row_to_question(row) if row else None
 
     async def get_translations(
-        self, question_ids: List[str], language: str
+        self,
+        question_ids: List[str],
+        language: str,
+        statuses: Sequence[str] = ("approved",),
     ) -> Dict[str, Dict[str, Any]]:
-        """Approved translations for `question_ids` into `language`, keyed by
+        """Servable translations for `question_ids` into `language`, keyed by
         question id (#168 DD5) — one indexed lookup, batched over the ids.
 
         The single source for both display and grading in a non-EN session, so
         an id missing from the result is a *drop*, never an English fallback
         (locked decision 2). `language="en"` is a caller bug, not a query: the
         English text lives on the question row itself.
+
+        Each record carries its `status` and the gate's `verification` evidence:
+        a TestFlight caller also asks for `rejected` rows (#176) and must be able
+        to tell them apart, and the review badge is derived from that evidence.
         """
         qids = [q for q in (_coerce_uuid(x) for x in question_ids) if q is not None]
         if not qids:
             return {}
         async with self._session_factory() as session:
-            return await fetch_approved_translations(session, qids, language)
+            return await fetch_servable_translations(session, qids, language, statuses)
 
     async def count(
         self,

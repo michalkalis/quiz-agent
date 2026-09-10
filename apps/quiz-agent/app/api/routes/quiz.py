@@ -20,12 +20,12 @@ from ..deps import (
     require_auth_or_grace,
     session_to_response,
     question_to_dict,
-    question_to_dict_translated,
     flow_to_response,
 )
 from ..session_auth import require_session_ownership
 from ..submit_errors import submit_http_error
 from ...auth.identity import AuthSubject
+from ...review_badge import apply_review_badge
 from ...serializers import (
     apply_question_translation,
     session_translation,
@@ -171,7 +171,12 @@ async def start_quiz(
             translated_question_dict,
             translation_record,
         ) = await translated_question_payload(
-            question, session.language, translation_service, session_id=session_id
+            question,
+            session.language,
+            translation_service,
+            session_id=session_id,
+            question_store=question_retriever,
+            build_channel=session.build_channel,
         )
         session.current_question_text = translated_question_dict["question"]
         session.current_question_translation = translation_record
@@ -286,7 +291,7 @@ async def get_current_question(
 
     record = session_translation(session, question.id)
     if record:
-        # Serve the exact payload the player was already shown — never re-translate.
+        # Serve the exact payload the player was already shown — never re-resolve.
         translated_question = apply_question_translation(
             question_to_dict(question), record
         )
@@ -296,9 +301,24 @@ async def get_current_question(
         question_dict["question"] = session.current_question_text
         translated_question = question_dict
     else:
-        translated_question = await question_to_dict_translated(
-            question, session.language, translation_service, session_id=session_id
+        translated_question, record = await translated_question_payload(
+            question,
+            session.language,
+            translation_service,
+            session_id=session_id,
+            question_store=question_retriever,
+            build_channel=session.build_channel,
         )
+
+    # #176: the same badge the question was served with. Idempotent, so the
+    # branch that already stamped it inside the payload builder is unharmed.
+    translated_question = apply_review_badge(
+        translated_question,
+        question,
+        record,
+        language=session.language,
+        build_channel=session.build_channel,
+    )
 
     return {
         "question": translated_question,

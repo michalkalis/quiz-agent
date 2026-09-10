@@ -270,14 +270,17 @@ class QuizFlowService:
         if self.usage_tracker and session.user_id and not session.pack_id:
             await self.usage_tracker.record_question(session.user_id)
 
-        # Translate the next question ONCE (stem + options + explanation + answer)
-        # and persist the record: /question, /question/audio and the next
-        # evaluation all read it instead of re-translating.
+        # Resolve the next question's text ONCE (stem + options + explanation +
+        # answer) and persist the record: /question, /question/audio and the next
+        # evaluation all read it instead of resolving again. Pre-translated
+        # corpus row first, serve-time translation only if there is none (#176).
         translated_q_dict, translation_record = await translated_question_payload(
             next_question,
             session.language,
             self.translation_service,
             session_id=session.session_id,
+            question_store=self.question_retriever,
+            build_channel=session.build_channel,
         )
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record

@@ -26,12 +26,19 @@ ALWAYS_PRESENT_KEYS = {
     "source_url",
     "source_excerpt",
 }
+# The last three are the #176 TestFlight review surface: omitted from every App
+# Store payload (`build_channel != "testflight"` never stamps them), which is why
+# they are omittable rather than required. They are listed here so widening the
+# public question contract again stays a deliberate edit.
 OMITTABLE_KEYS = {
     "media_url",
     "image_subtype",
     "explanation",
     "age_appropriate",
     "generated_by",
+    "review_badge",
+    "translation_language",
+    "review_note",
 }
 # Answer-bearing fields that must not even exist as properties on the schema.
 # `headline_answer` is the gist the evaluator scores against, so listing it as

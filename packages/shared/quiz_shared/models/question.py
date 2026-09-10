@@ -456,6 +456,9 @@ class PublicQuestionWire(TypedDict):
     explanation: NotRequired[str]
     age_appropriate: NotRequired[str]
     generated_by: NotRequired[str]
+    review_badge: NotRequired[str]
+    translation_language: NotRequired[str]
+    review_note: NotRequired[str]
 
 
 class PublicQuestion(BaseModel):
@@ -489,6 +492,17 @@ class PublicQuestion(BaseModel):
     explanation: Optional[str] = None
     age_appropriate: Optional[str] = None
     generated_by: Optional[str] = None
+    # ── TestFlight-only review surface (#176) ──────────────────────────────
+    # How this exact text was vouched for, so the founder can tell a
+    # human-approved question from a machine-approved translation — or a
+    # machine-*rejected* one — while playing, not only on the rating web.
+    # Stamped by `app.review_badge.apply_review_badge` onto the serialized dict
+    # when `session.build_channel == "testflight"`; for every App Store client
+    # all three stay None and the keys are absent from the wire, so that payload
+    # is byte-identical to pre-#176.
+    review_badge: Optional[str] = None
+    translation_language: Optional[str] = None
+    review_note: Optional[str] = None
 
     @classmethod
     def from_question(cls, question: Question) -> "PublicQuestion":
@@ -539,4 +553,10 @@ class PublicQuestion(BaseModel):
             wire["age_appropriate"] = self.age_appropriate
         if self.generated_by:
             wire["generated_by"] = self.generated_by
+        if self.review_badge:
+            wire["review_badge"] = self.review_badge
+        if self.translation_language:
+            wire["translation_language"] = self.translation_language
+        if self.review_note:
+            wire["review_note"] = self.review_note
         return wire

@@ -11,6 +11,9 @@ from quiz_shared.models.question import PublicQuestion, Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.utils.text_normalization import normalize_text
 
+from .review_badge import apply_review_badge
+from .stored_translation import stored_translation_record
+
 logger = logging.getLogger(__name__)
 
 
@@ -207,6 +210,11 @@ def translated_question_view(
         update["explanation"] = record["explanation"]
     if record.get("headline_answer"):
         update["headline_answer"] = record["headline_answer"]
+    # Only a stored row carries these (#176): the serve-time LLM path never
+    # produced translated alternates, so an English session and a live
+    # translation are both left exactly as before.
+    if record.get("alternative_answers"):
+        update["alternative_answers"] = list(record["alternative_answers"])
     update["correct_answer"] = (
         record.get("correct_answer_key") or record["correct_answer"]
     )
@@ -219,12 +227,21 @@ async def translated_question_payload(
     translation_service=None,
     *,
     session_id: str | None = None,
+    question_store=None,
+    build_channel: str | None = None,
 ) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
     """Serve-time entry point: ``(public payload, translation record)``.
 
-    One LLM call covers stem + options + explanation + answer. Callers that own
-    session state persist the record on the session so evaluation and the result
-    screen read exactly the strings the player was shown.
+    The record comes from the **pre-translated corpus** when `question_store` is
+    wired and a servable `question_translations` row exists for this language
+    (#176) — no LLM call, and the text has been through the #168 gate. Only when
+    there is no such row does the serve-time translation still run: one LLM call
+    covering stem + options + explanation + answer, as before.
+
+    Callers that own session state persist the record on the session so
+    evaluation and the result screen read exactly the strings the player was
+    shown — including the review badge, which is stamped here and never
+    recomputed from the store.
 
     A ``language_dependent`` question in a non-English session is still served
     (see ``_flag_language_dependent``), but it is reported to Sentry first.
@@ -232,10 +249,24 @@ async def translated_question_payload(
     if language != "en" and question.language_dependent:
         _flag_language_dependent(question, language, session_id)
     question_dict = question_to_dict(question)
-    record = await build_question_translation(
-        question, language, translation_service, session_id=session_id
+    record = await stored_translation_record(
+        question, language, question_store, build_channel=build_channel
     )
-    return apply_question_translation(question_dict, record), record
+    if record is None:
+        record = await build_question_translation(
+            question, language, translation_service, session_id=session_id
+        )
+    payload = apply_question_translation(question_dict, record)
+    return (
+        apply_review_badge(
+            payload,
+            question,
+            record,
+            language=language,
+            build_channel=build_channel,
+        ),
+        record,
+    )
 
 
 async def question_to_dict_translated(
@@ -244,11 +275,18 @@ async def question_to_dict_translated(
     translation_service=None,
     *,
     session_id: str | None = None,
+    question_store=None,
+    build_channel: str | None = None,
 ) -> Dict[str, Any]:
     """Convert Question to a fully translated public dict (stem, options,
     explanation). Falls back silently to English on translation failure or when
     translation_service is None / language is "en"."""
     question_dict, _ = await translated_question_payload(
-        question, language, translation_service, session_id=session_id
+        question,
+        language,
+        translation_service,
+        session_id=session_id,
+        question_store=question_store,
+        build_channel=build_channel,
     )
     return question_dict

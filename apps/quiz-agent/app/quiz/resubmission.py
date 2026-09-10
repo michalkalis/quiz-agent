@@ -31,6 +31,7 @@ from quiz_shared.models.session import LastEvaluation, QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 
 from .errors import QuestionMismatch, QuestionUnavailable
+from ..review_badge import apply_review_badge
 from ..serializers import (
     apply_question_translation,
     question_to_dict,
@@ -270,7 +271,13 @@ async def _current_question_payload(
         # Pre-#132 session, or a serve where translation fell back: the stem is
         # the only translated string stored — same fallback GET /question uses.
         payload["question"] = session.current_question_text
-    return payload
+    return apply_review_badge(
+        payload,
+        question,
+        record,
+        language=session.language,
+        build_channel=session.build_channel,
+    )
 
 
 def _resubmitted_audio_info(

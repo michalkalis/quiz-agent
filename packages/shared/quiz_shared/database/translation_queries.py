@@ -47,15 +47,22 @@ question_translations_table = Table(
     Column("correct_answer_key", String(8), nullable=True),
     Column("alternative_answers", JSONB, nullable=False),
     Column("source_hash", String(64), nullable=False),
+    # Gate evidence (guards / answerability / judge findings / regional flag).
+    # Nothing queries inside it; the serve path reads it only to label a row for
+    # a TestFlight client (#176 review badge).
+    Column("verification", JSONB, nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
 )
 
-# The serve payload `serializers.py` reads back. `status` and `source_hash` are
-# not part of it: the caller already asked for approved rows, and the hash is
-# the write path's business.
+# The serve payload `serializers.py` reads back. `source_hash` stays out — it is
+# the write path's business. `status` and `verification` are in since #176: a
+# TestFlight session may ask for `rejected` rows too, so the caller can no longer
+# infer the status from the fact that a row came back, and the badge it shows the
+# founder is derived from the gate evidence.
 _SERVE_COLUMNS = (
     "question_id",
     "language",
+    "status",
     "question",
     "possible_answers",
     "explanation",
@@ -63,6 +70,7 @@ _SERVE_COLUMNS = (
     "correct_answer",
     "correct_answer_key",
     "alternative_answers",
+    "verification",
 )
 
 # One `IN (...)` per chunk. A retrieval asks for at most ~50 candidate ids, so
@@ -71,9 +79,16 @@ _ID_CHUNK = 500
 
 __all__ = [
     "question_translations_table",
-    "fetch_approved_translations",
+    "SERVABLE_TRANSLATION_STATUSES",
+    "fetch_servable_translations",
     "demote_stale_translations",
 ]
+
+# What a client may be served. `approved` is the only status the App Store ever
+# sees; a TestFlight session also asks for `rejected` so the founder can meet the
+# machine-refused translations in the game instead of only on the rating web
+# (#176). `pending` and `stale` are servable to nobody.
+SERVABLE_TRANSLATION_STATUSES = ("approved", "rejected")
 
 
 def _chunks(items: Sequence[Any], size: int) -> Iterable[Sequence[Any]]:
@@ -81,17 +96,24 @@ def _chunks(items: Sequence[Any], size: int) -> Iterable[Sequence[Any]]:
         yield items[start : start + size]
 
 
-async def fetch_approved_translations(
+async def fetch_servable_translations(
     session: AsyncSession,
     question_ids: Sequence[uuid.UUID],
     language: str,
+    statuses: Sequence[str] = ("approved",),
 ) -> Dict[str, Dict[str, Any]]:
-    """Approved translations for these questions, keyed by question id (str).
+    """Servable translations for these questions, keyed by question id (str).
 
-    A missing key means "no approved translation" — the retriever drops that
+    A missing key means "no servable translation" — the retriever drops that
     candidate rather than falling back to English (locked decision 2).
+
+    ``statuses`` defaults to approved-only, which is every client except a
+    TestFlight session: that one passes ``rejected`` as well and labels the row
+    critical (#176). Widening it to `pending`/`stale` would serve text no gate
+    ever cleared, so callers pass a subset of
+    ``SERVABLE_TRANSLATION_STATUSES``.
     """
-    if not question_ids:
+    if not question_ids or not statuses:
         return {}
     out: Dict[str, Dict[str, Any]] = {}
     columns = [question_translations_table.c[name] for name in _SERVE_COLUMNS]
@@ -99,13 +121,14 @@ async def fetch_approved_translations(
         stmt = select(*columns).where(
             question_translations_table.c.question_id.in_(list(chunk)),
             question_translations_table.c.language == language,
-            question_translations_table.c.status == "approved",
+            question_translations_table.c.status.in_(list(statuses)),
         )
         result = await session.execute(stmt)
         for row in result.mappings().all():
             record = dict(row)
             record["question_id"] = str(record["question_id"])
             record["alternative_answers"] = list(record["alternative_answers"] or [])
+            record["verification"] = dict(record["verification"] or {})
             out[record["question_id"]] = record
     return out
 

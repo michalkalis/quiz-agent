@@ -1,0 +1,104 @@
+{
+  "q01": {
+    "arm": "sk",
+    "original_id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+    "topic": "general · critical",
+    "question": "Orchidey vanilky rástli v európskych kolóniách výborne, ale mimo Mexika nevydali ani jeden struk, kým v roku 1841 dvanásťročný zotročený chlapec na ostrove Réunion neprišiel na to, ako ručne urobiť čo?"
+  },
+  "q02": {
+    "arm": "sk",
+    "original_id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+    "topic": "history · critical",
+    "question": "Keď Sovietske Rusko v roku 1918 konečne prešlo zo starého juliánskeho kalendára, táto zmena zo dňa na deň pohltila takmer dva týždne. Obyvatelia išli spať 31. januára — a na aký dátum sa prebudili?"
+  },
+  "q03": {
+    "arm": "sk",
+    "original_id": "29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6",
+    "topic": "science-nature · critical",
+    "question": "Približne koľko by vážila jedna čajová lyžička hmoty z neutrónovej hviezdy?"
+  },
+  "q04": {
+    "arm": "sk",
+    "original_id": "45e5038b-9b33-4a80-86bd-25d5120f9711",
+    "topic": "sports · critical",
+    "question": "Basketbal mal olympijskú premiéru v Berlíne v roku 1936, kde USA porazili Kanadu vo finále, ktoré sa skončilo iba 19 : 8. Prečo bolo skóre také nízke?"
+  },
+  "q05": {
+    "arm": "sk",
+    "original_id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+    "topic": "science-nature · critical",
+    "question": "V úplnej tme hlbokého mora sa maličký samček ktorej ryby zahryzne do oveľa väčšej samičky a natrvalo zrastie s jej telom — takže dožije len ako pripojená zásobáreň spermií?"
+  },
+  "q06": {
+    "arm": "sk",
+    "original_id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+    "topic": "sports · critical",
+    "question": "Pätnástkové rugby union vypadlo z olympijského programu po roku 1924 a v tejto podobe sa už nikdy nevrátilo. Ktorá krajina, víťaz turnajov v rokoch 1920 aj 1924, je teda dodnes úradujúcim olympijským víťazom?"
+  },
+  "q07": {
+    "arm": "sk",
+    "original_id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+    "topic": "general · critical",
+    "question": "Kečup sa dostal do Európy v 17. storočí z Ázie, no pôvodná omáčka neobsahovala žiadne paradajky. Z čoho sa vyrábala?"
+  },
+  "q08": {
+    "arm": "sk",
+    "original_id": "bcb432e0-40ed-468e-a37d-d85372174593",
+    "topic": "food-everyday · critical",
+    "question": "Napriek tropickému názvu vymyslel havajskú pizzu v roku 1962 majiteľ reštaurácie gréckeho pôvodu. V ktorej krajine prvýkrát dal ananás na pizzu?"
+  },
+  "q09": {
+    "arm": "sk",
+    "original_id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+    "topic": "entertainment · critical",
+    "question": "Kasový trhák Obsession z roku 2026, jeden z najziskovejších filmov všetkých čias, sa vyrobil s rozpočtom najbližším ktorej sume?"
+  },
+  "q10": {
+    "arm": "sk",
+    "original_id": "d5fe5faf-f768-4623-98af-c88966aaec34",
+    "topic": "general · critical",
+    "question": "Čokoláda, káva a čaj sa do Európy dostali zhruba v priebehu jedného storočia. Ktorá z týchto troch vecí prišla ako prvá?"
+  },
+  "q11": {
+    "arm": "sk",
+    "original_id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+    "topic": "history · critical",
+    "question": "Do roku 1409 sa Západná schizma vymkla spod kontroly natoľko, že kresťanstvo malo naraz niekoľkých súperiacich mužov, z ktorých každý o sebe tvrdil, že je jediný pravý pápež. Koľkých?"
+  },
+  "q12": {
+    "arm": "sk",
+    "original_id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+    "topic": "general · critical",
+    "question": "Skôr než s tým mali čokoľvek spoločné paradajky, pôvodný \"kečup\" zo 17. storočia, ktorý si európski námorníci priniesli z juhovýchodnej Ázie, bola fermentovaná omáčka vyrobená hlavne z čoho?"
+  },
+  "q13": {
+    "arm": "sk",
+    "original_id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+    "topic": "general · critical",
+    "question": "Jeden farebný kôrovec udrie tak rýchlo, že jeho úder vytvára bubliny vriacej vody a je známe, že dokáže prasknúť sklo akvária. Pomenuj ho."
+  },
+  "q14": {
+    "arm": "sk",
+    "original_id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+    "topic": "science-nature · critical",
+    "question": "Ponorte slamku do pohára s vodou a bude sa zdať, že sa presne na hladine láme alebo zlomí. Ktorý jav ohybu svetla za tým stojí?"
+  },
+  "q15": {
+    "arm": "sk",
+    "original_id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+    "topic": "general · critical",
+    "question": "Ktorá krajina má najväčšiu populáciu voľne žijúcich tiav na svete?"
+  },
+  "q16": {
+    "arm": "sk",
+    "original_id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+    "topic": "general · critical",
+    "question": "Takmer každý jazyk nazýva čaj buď nejako ako „te“ (ako v angličtine, francúzštine či nemčine), alebo nejako ako „ča“ či „čaj“ (ako v ruštine, arabčine, slovenčine alebo hindčine). Obe formy pochádzajú z Číny, tak prečo svet skončil presne s dvoma verziami tohto slova?"
+  },
+  "q17": {
+    "arm": "sk",
+    "original_id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+    "topic": "general · critical",
+    "question": "Po tisícročia v starovekom Egypte, Grécku a Perzii nosili nad kráľmi a šľachticmi dáždnik, no takmer nikdy nie v daždi. Pred čím ich chránil?"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "q01": {
+    "arm": "cs",
+    "original_id": "484a45af-95f7-451d-9d97-dd34816a59c5",
+    "topic": "sports · critical",
+    "question": "Světový rekord ve skoku do výšky mužů — 245 centimetrů z roku 1993 — platí už více než tři desetiletí. Z jaké země pochází jeho držitel?"
+  },
+  "q02": {
+    "arm": "cs",
+    "original_id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+    "topic": "history · critical",
+    "question": "Do roku 1409 se papežské schizma vymklo kontrole natolik, že křesťanstvo mělo několik soupeřících mužů, kteří se současně prohlašovali za jediného pravého papeže. Kolik jich bylo?"
+  },
+  "q03": {
+    "arm": "cs",
+    "original_id": "46ab66c1-65b6-4844-8923-77e272e212fa",
+    "topic": "geography-world · critical",
+    "question": "Pouze dvě země na světě mají naprosto čtvercovou státní vlajku. Jednou z nich je Vatikán — která alpská země je tou druhou?"
+  },
+  "q04": {
+    "arm": "cs",
+    "original_id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+    "topic": "sports · critical",
+    "question": "Patnáctičlenné ragby (rugby union) bylo po roce 1924 vyřazeno z olympijských her a v této podobě se už nikdy nevrátilo. Která země, vítěz turnajů v roce 1920 i 1924, je tedy stále úřadujícím olympijským šampionem?"
+  },
+  "q05": {
+    "arm": "cs",
+    "original_id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+    "topic": "general · critical",
+    "question": "Než s tím měla co do činění rajčata, byl původní 'kečup' ze 17. století, který evropští námořníci přivezli domů z jihovýchodní Asie, fermentovaná omáčka vyrobená hlavně z čeho?"
+  },
+  "q06": {
+    "arm": "cs",
+    "original_id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+    "topic": "general · critical",
+    "question": "Ve které zemi žije nejvíce velbloudů ve volné přírodě?"
+  },
+  "q07": {
+    "arm": "cs",
+    "original_id": "d8c7a633-02f1-418e-99da-d4d909519581",
+    "topic": "science-nature · critical",
+    "question": "Vytrvalý mýtus, že Einstein propadl z matematiky, prý vznikl v roce 1935 ve sloupku patřícím které slavné značce ve stylu \"věřte, nevěřte\"?"
+  },
+  "q08": {
+    "arm": "cs",
+    "original_id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+    "topic": "science-nature · critical",
+    "question": "Ponořte brčko do sklenice vody a zdá se, že se přesně u hladiny láme nebo zlomí. Jaký jev související s ohybem světla za to může?"
+  },
+  "q09": {
+    "arm": "cs",
+    "original_id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+    "topic": "science-nature · critical",
+    "question": "V roce 2021 uskutečnil malý vrtulník NASA Ingenuity první motorový let na jiné planetě, na Marsu. Jako připomínka byl na palubě ukryt kousek křídelní látky velikosti poštovní známky, který pocházel z jakého průkopnického letadla?"
+  },
+  "q10": {
+    "arm": "cs",
+    "original_id": "6fa83da7-962f-4b09-bd22-0f271a8efa7f",
+    "topic": "general · critical",
+    "question": "Rybák dlouhoocasý každoročně létá z Arktidy do Antarktidy a zpět. Je za svůj zhruba třicetiletý život jeho celková nalétaná vzdálenost blíž jednomu obletu Země, jedné cestě na Měsíc, nebo třem cestám na Měsíc a zpět?"
+  },
+  "q11": {
+    "arm": "cs",
+    "original_id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+    "topic": "general · critical",
+    "question": "Po tisíce let se ve starověkém Egyptě, Řecku a Persii nosil deštník nad králi a šlechtici, ale téměř nikdy v dešti. Před čím je chránil?"
+  },
+  "q12": {
+    "arm": "cs",
+    "original_id": "7e9cf519-3881-4411-9a08-e208b698d1ca",
+    "topic": "general · critical",
+    "question": "Jak dlouho by trvalo napočítat do miliardy, kdybyste říkali jedno číslo za sekundu a nikdy nepřestali?"
+  },
+  "q13": {
+    "arm": "cs",
+    "original_id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+    "topic": "general · critical",
+    "question": "Orchideje vanilky se v evropských koloniích dařilo pěstovat, ale mimo Mexiko nikdy nevytvořily jediný lusk, dokud v roce 1841 dvanáctiletý zotročený chlapec na ostrově Réunion nepřišel na to, jak ručně provádět co?"
+  },
+  "q14": {
+    "arm": "cs",
+    "original_id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+    "topic": "science-nature · critical",
+    "question": "V roce 1971 velitel Apolla 14 Alan Shepard propašoval na Měsíc upravenou hlavu golfové hole a stal se prvním člověkem, který tam hrál jaký sport?"
+  },
+  "q15": {
+    "arm": "cs",
+    "original_id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+    "topic": "general · critical",
+    "question": "Téměř každý jazyk označuje čaj buď slovem podobným 'te' (jako v angličtině, francouzštině nebo němčině), nebo slovem podobným 'cha' či 'chai' (jako v ruštině, arabštině, slovenštině nebo hindštině). Obě podoby pocházejí z Číny, tak proč skončil svět přesně se dvěma verzemi toho slova?"
+  },
+  "q16": {
+    "arm": "cs",
+    "original_id": "bd5fbdb2-d6bf-4d1f-a2a5-6ee0d157c7a0",
+    "topic": "movies-music · critical",
+    "question": "V roce 1988 vyhrála dvacetiletá Celine Dion soutěž Eurovision Song Contest — ale ne za svou rodnou Kanadu, která se jí nemůže účastnit. Kterou zemi reprezentovala?"
+  },
+  "q17": {
+    "arm": "cs",
+    "original_id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+    "topic": "general · critical",
+    "question": "Kečup se do Evropy dostal v 17. století z Asie, ale původní omáčka neobsahovala žádná rajčata. Z čeho se vyráběla?"
+  },
+  "q18": {
+    "arm": "cs",
+    "original_id": "2c9dabd8-308c-4c00-b36e-d4a94bb6a13e",
+    "topic": "movies-music · critical",
+    "question": "V pěti oceňovaných sériích rozpitval seriál Špína Baltimoru (The Wire) obchod s drogami, přístav, školy a tisk jednoho amerického města. Kterého?"
+  },
+  "q19": {
+    "arm": "cs",
+    "original_id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "topic": "science-nature · critical",
+    "question": "Pravda, nebo lež: Albert Einstein prý jako školák propadal z matematiky."
+  },
+  "q20": {
+    "arm": "cs",
+    "original_id": "8c89fe5b-18f3-4805-9b94-f6ca9e0f7fc9",
+    "topic": "history · critical",
+    "question": "Aby žádný americký důstojník nikdy nemohl mít vyšší hodnost než první prezident země, byl posmrtně povýšen do nejvyšší vojenské hodnosti. Ve kterém roce se tak stalo?"
+  },
+  "q21": {
+    "arm": "cs",
+    "original_id": "93b8897b-892d-5934-bc8e-1e479141a950",
+    "topic": "movies-music · critical",
+    "question": "V prosinci 1965 propašovali dva astronauti z lodi Gemini 6 na palubu foukací harmoniku a rolničky a zahráli na první hudební nástroje ve vesmíru. Kterou písničku zahráli?"
+  },
+  "q22": {
+    "arm": "cs",
+    "original_id": "9d148f41-7dec-4c65-a634-04b84c45087f",
+    "topic": "sports · critical",
+    "question": "Ve kterém olympijském zimním sportu spoluhráči zuřivě zametají led před těžkým klouzajícím žulovým kamenem?"
+  }
+}

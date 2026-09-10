@@ -1,0 +1,323 @@
+[
+ {
+  "id": "29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6",
+  "question": "Približne koľko by vážila jedna čajová lyžička hmoty z neutrónovej hviezdy?",
+  "possible_answers": {
+   "a": "Niekoľko kilogramov",
+   "b": "Niekoľko ton",
+   "c": "Niekoľko tisíc ton",
+   "d": "Približne miliardu ton"
+  },
+  "correct_answer": "Približne miliardu ton",
+  "alternative_answers": [
+   "miliarda ton",
+   "asi miliarda ton",
+   "d"
+  ],
+  "explanation": "Neutrónová hviezda stláča hmotu tak husto, že čajová lyžička váži približne miliardu ton, čo zodpovedá horе stlačenej do lyžičky.",
+  "topic": "science-nature · critical",
+  "difficulty": "medium",
+  "source_url": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+ },
+ {
+  "id": "7c7a77b8-5fa3-4b00-be3b-288092dfe2f8",
+  "question": "Pätnástkové rugby union vypadlo z olympijského programu po roku 1924 a v tejto podobe sa už nikdy nevrátilo. Ktorá krajina, víťaz turnajov v rokoch 1920 aj 1924, je teda dodnes úradujúcim olympijským víťazom?",
+  "possible_answers": null,
+  "correct_answer": "Spojené štáty americké",
+  "alternative_answers": [
+   "usa",
+   "spojené štáty",
+   "amerika",
+   "spojené štáty americké",
+   "američania"
+  ],
+  "explanation": "Narýchlo poskladaný americký tím prekvapil domácich Francúzov vo finále v Paríži v roku 1924, čo vyvolalo výtržnosti divákov — a keďže pätnástkové rugby sa už na olympiádu nevrátilo, USA drží olympijský titul technicky vzaté celé storočie.",
+  "topic": "sports · critical",
+  "difficulty": "hard",
+  "source_url": "https://en.wikipedia.org/wiki/Rugby_union_at_the_Summer_Olympics"
+ },
+ {
+  "id": "732a7f2f-5fd6-458d-b504-6cd90c6d8a30",
+  "question": "Ponorte slamku do pohára s vodou a bude sa zdať, že sa presne na hladine láme alebo zlomí. Ktorý jav ohybu svetla za tým stojí?",
+  "possible_answers": null,
+  "correct_answer": "Lom svetla",
+  "alternative_answers": [
+   "lom",
+   "refrakcia",
+   "refrakcia svetla",
+   "lom svetelných lúčov"
+  ],
+  "explanation": "Svetlo pri prechode medzi vzduchom a vodou mení rýchlosť, takže lúče z ponorenej časti dopadajú do oka pod posunutým uhlom — samotná slamka sa nikdy neohne.",
+  "topic": "science-nature · critical",
+  "difficulty": "easy",
+  "source_url": "https://en.wikipedia.org/wiki/Refraction"
+ },
+ {
+  "id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+  "question": "Po tisícročia v starovekom Egypte, Grécku a Perzii nosili nad kráľmi a šľachticmi dáždnik, no takmer nikdy nie v daždi. Pred čím ich chránil?",
+  "possible_answers": null,
+  "correct_answer": "Pred slnkom",
+  "alternative_answers": [
+   "Slnko",
+   "Pred slnečným žiarením",
+   "Slnečné žiarenie",
+   "Pred horúčavou",
+   "Horúčava",
+   "Pred slnečnými lúčmi",
+   "Tieň pred slnkom"
+  ],
+  "explanation": "Prvé dáždniky boli slnečníky, symbol postavenia, ktorý nad vládcami držali sluhovia. Slovo pochádza z latinského 'umbra', čo znamená tieň. Používať ho proti dažďu sa v Európe stalo bežným až v 18. storočí a prvému Londýnčanovi, ktorý to urobil, sa ľudia otvorene vysmievali.",
+  "topic": "general · critical",
+  "difficulty": "easy",
+  "source_url": "https://en.wikipedia.org/wiki/Umbrella"
+ },
+ {
+  "id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+  "question": "Kečup sa dostal do Európy v 17. storočí z Ázie, no pôvodná omáčka neobsahovala žiadne paradajky. Z čoho sa vyrábala?",
+  "possible_answers": null,
+  "correct_answer": "Z fermentovaných rýb",
+  "alternative_answers": [
+   "Fermentované ryby",
+   "Ryby",
+   "Z rýb",
+   "Rybia omáčka",
+   "Ančovičky",
+   "Sardely",
+   "Solené ryby",
+   "Kvasené ryby"
+  ],
+  "explanation": "Názov pochádza z hokkienského slova „ke-tsiap“, čo bola fermentovaná rybia omáčka, s ktorou sa britskí obchodníci stretli v Číne a juhovýchodnej Ázii. Anglickí kuchári robili verzie so šampiňónmi, orechmi či ančovičkami a paradajkový kečup sa rozšíril až v 19. storočí.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Ketchup"
+ },
+ {
+  "id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+  "question": "Orchidey vanilky rástli v európskych kolóniách výborne, ale mimo Mexika nevydali ani jeden struk, kým v roku 1841 dvanásťročný zotročený chlapec na ostrove Réunion neprišiel na to, ako ručne urobiť čo?",
+  "possible_answers": null,
+  "correct_answer": "Opeliť kvety",
+  "alternative_answers": [
+   "Ručné opelenie",
+   "Opelenie",
+   "Opelenie kvetov",
+   "Opeliť orchidey",
+   "Oplodniť kvety",
+   "Opeľovanie"
+  ],
+  "explanation": "Prirodzený opeľovač vanilky, mexická včela, sa inde nevyskytoval, takže kvety nikdy neboli oplodnené. Edmond Albius vymyslel rýchlu metódu ručného opeľovania pomocou tenkej paličky a palca. Jeho technika sa dodnes používa takmer na každej vanilkovej plantáži na svete.",
+  "topic": "general · critical",
+  "difficulty": "hard",
+  "source_url": "https://en.wikipedia.org/wiki/Edmond_Albius"
+ },
+ {
+  "id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+  "question": "Ktorá krajina má najväčšiu populáciu voľne žijúcich tiav na svete?",
+  "possible_answers": null,
+  "correct_answer": "Austrália",
+  "alternative_answers": [
+   "Austrália",
+   "Austrálsky zväz"
+  ],
+  "explanation": "Ťavy sem doviezli v 19. storočí, aby prepravovali tovar cez vnútrozemie, a keď ich nahradili nákladné autá, pustili ich na slobodu. Púšťou dnes putujú státisíce tiav a niektoré sa dokonca vyvážajú do Saudskej Arábie.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://www.guinnessworldrecords.com/world-records/largest-population-of-wild-camels"
+ },
+ {
+  "id": "bcb432e0-40ed-468e-a37d-d85372174593",
+  "question": "Napriek tropickému názvu vymyslel havajskú pizzu v roku 1962 majiteľ reštaurácie gréckeho pôvodu. V ktorej krajine prvýkrát dal ananás na pizzu?",
+  "possible_answers": {
+   "a": "Kanada",
+   "b": "Austrália",
+   "c": "Nemecko",
+   "d": "Spojené štáty americké"
+  },
+  "correct_answer": "Kanada",
+  "alternative_answers": [
+   "v Kanade",
+   "Kanadа"
+  ],
+  "explanation": "Sam Panopoulos vyskúšal vo svojej reštaurácii v meste Chatham v Ontáriu ananás z konzervy na pizze a výsledok pomenoval podľa značky ananásovej konzervy, nie podľa ostrovov.",
+  "topic": "food-everyday · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Hawaiian_pizza"
+ },
+ {
+  "id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+  "question": "Skôr než s tým mali čokoľvek spoločné paradajky, pôvodný \"kečup\" zo 17. storočia, ktorý si európski námorníci priniesli z juhovýchodnej Ázie, bola fermentovaná omáčka vyrobená hlavne z čoho?",
+  "possible_answers": null,
+  "correct_answer": "Z rýb",
+  "alternative_answers": [
+   "ryby",
+   "ryba",
+   "rybacia omáčka",
+   "rybia omáčka",
+   "fermentované ryby",
+   "kvasené ryby",
+   "ančovičky",
+   "sardely",
+   "solené ryby",
+   "rybí nálev",
+   "rybacia šťava"
+  ],
+  "explanation": "Slovo pochádza z hokkienského \"kê-tsiap\", čo bol slaný nálev z fermentovaných rýb podobný dnešnej juhovýchodoázijskej rybacej omáčke. Britskí námorníci a obchodníci ho doma napodobňovali pomocou ančovičiek, húb, orechov a dokonca aj ustríc. Paradajky sa do receptu dostali až začiatkom 19. storočia a sladký paradajkový kečup sa stal štandardom neskôr v tom istom storočí.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Ketchup"
+ },
+ {
+  "id": "45e5038b-9b33-4a80-86bd-25d5120f9711",
+  "question": "Basketbal mal olympijskú premiéru v Berlíne v roku 1936, kde USA porazili Kanadu vo finále, ktoré sa skončilo iba 19 : 8. Prečo bolo skóre také nízke?",
+  "possible_answers": {
+   "a": "Hralo sa vonku na hlinenom ihrisku rozmočenom dažďom",
+   "b": "Každý tím mal povolených len desať striel za polčas",
+   "c": "Koše mali stále uzavreté dno, takže sa hra po každom koši prerušila",
+   "d": "Finále skrátili na dvadsať minút pre tmu"
+  },
+  "correct_answer": "Hralo sa vonku na hlinenom ihrisku rozmočenom dažďom",
+  "alternative_answers": [
+   "Hralo sa vonku na hlinenom ihrisku",
+   "Vonku na mokrom hlinenom ihrisku",
+   "Pretože sa hralo vonku v daždi na hline",
+   "a"
+  ],
+  "explanation": "Zápas o zlatú medailu sa odohral vonku na tenisovom kurte z hliny a piesku v lejaku, takže driblovanie sa zmenilo na brodenie sa blatom — a prizeral sa tomu aj vynálezca basketbalu James Naismith.",
+  "topic": "sports · critical",
+  "difficulty": "hard",
+  "source_url": "https://en.wikipedia.org/wiki/Basketball_at_the_1936_Summer_Olympics"
+ },
+ {
+  "id": "d5fe5faf-f768-4623-98af-c88966aaec34",
+  "question": "Čokoláda, káva a čaj sa do Európy dostali zhruba v priebehu jedného storočia. Ktorá z týchto troch vecí prišla ako prvá?",
+  "possible_answers": null,
+  "correct_answer": "Čokoláda",
+  "alternative_answers": [
+   "Kakao",
+   "Horúca čokoláda",
+   "Čokoláda (kakao)"
+  ],
+  "explanation": "Čokoláda sa dostala do Španielska v rokoch 1520 až 1540, priamo po dobytí ríše Aztékov, a na dvore sa pila ako horký nápoj. Čaj priviezli holandskí obchodníci okolo roku 1610 a káva sa cez Benátky a ďalšie prístavy rozšírila až na začiatku 17. storočia.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/History_of_chocolate"
+ },
+ {
+  "id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+  "question": "Takmer každý jazyk nazýva čaj buď nejako ako „te“ (ako v angličtine, francúzštine či nemčine), alebo nejako ako „ča“ či „čaj“ (ako v ruštine, arabčine, slovenčine alebo hindčine). Obe formy pochádzajú z Číny, tak prečo svet skončil presne s dvoma verziami tohto slova?",
+  "possible_answers": null,
+  "correct_answer": "Námorný obchod rozšíril „te“, pozemný obchod rozšíril „ča“",
+  "alternative_answers": [
+   "Dve obchodné cesty: po mori a po súši",
+   "Rôzne čínske dialekty sa do sveta dostali rôznymi cestami",
+   "Holandské lode priniesli „te“, Hodvábna cesta priniesla „ča“",
+   "Pobrežná čínska výslovnosť išla po mori, vnútrozemská po súši",
+   "Fujianský dialekt cez Holanďanov verzus mandarínčina cez Hodvábnu cestu",
+   "Slovo cestovalo spolu s čajom po dvoch rôznych obchodných trasách",
+   "Po mori „te“, po súši „čaj“"
+  ],
+  "explanation": "Písaný čínsky znak pre čaj je všade rovnaký, ale v rôznych oblastiach sa vyslovuje inak. V pobrežnom dialekte Min v provincii Fujian, kde holandskí obchodníci v 17. storočí čaj kupovali, znie ako „te“, a tak Holanďania túto podobu priviezli loďami do západnej Európy. V mandarínčine a kantončine znie ako „ča“ a táto podoba putovala po súši po Hodvábnej ceste s perzskými obchodníkmi, ktorí pridali príponu a vzniklo „čaj“. Odtiaľ sa rozšírila do Strednej Ázie, Ruska, arabsky hovoriacich oblastí a ďalej. Slovo pre čaj teda zvyčajne prezrádza, či sa predkovia daného jazyka dostali k čaju najprv po mori, alebo po súši. Hlavnou výnimkou je Portugalsko, ktoré obchodovalo cez Macao, kde bola výslovnosť „ča“, a preto používa „chá“, hoci ide o námornú krajinu.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Etymology_of_tea"
+ },
+ {
+  "id": "dd2c2c10-46fb-478a-a2f9-4c10537ed387",
+  "question": "Do roku 1409 sa Západná schizma vymkla spod kontroly natoľko, že kresťanstvo malo naraz niekoľkých súperiacich mužov, z ktorých každý o sebe tvrdil, že je jediný pravý pápež. Koľkých?",
+  "possible_answers": {
+   "a": "Dvaja",
+   "b": "Traja",
+   "c": "Štyria",
+   "d": "Piati"
+  },
+  "correct_answer": "Traja",
+  "alternative_answers": [
+   "3",
+   "tri",
+   "traja pápeži",
+   "b"
+  ],
+  "explanation": "Koncil zvolaný do Pisy mal urovnať spor medzi pápežmi v Ríme a Avignone, no namiesto odstránenia oboch zvolil tretieho, a rozmotanie tohto chaosu trvalo Kostnickému koncilu až do roku 1417.",
+  "topic": "history · critical",
+  "difficulty": "hard",
+  "source_url": "https://en.wikipedia.org/wiki/Western_Schism"
+ },
+ {
+  "id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+  "question": "Keď Sovietske Rusko v roku 1918 konečne prešlo zo starého juliánskeho kalendára, táto zmena zo dňa na deň pohltila takmer dva týždne. Obyvatelia išli spať 31. januára — a na aký dátum sa prebudili?",
+  "possible_answers": {
+   "a": "1. februára",
+   "b": "7. februára",
+   "c": "14. februára",
+   "d": "1. marca"
+  },
+  "correct_answer": "14. februára",
+  "alternative_answers": [
+   "14. február",
+   "štrnásteho februára",
+   "14.2.",
+   "14. 2."
+  ],
+  "explanation": "Ruský juliánsky kalendár sa oproti gregoriánskemu, používanému inde, posunul o 13 dní dozadu, takže deň po 31. januári 1918 bol vyhlásený za 14. február — a preto si aj 'Októbrovú' revolúciu pripomíname v novembri.",
+  "topic": "history · critical",
+  "difficulty": "hard",
+  "source_url": "https://en.wikipedia.org/wiki/Adoption_of_the_Gregorian_calendar"
+ },
+ {
+  "id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+  "question": "V úplnej tme hlbokého mora sa maličký samček ktorej ryby zahryzne do oveľa väčšej samičky a natrvalo zrastie s jej telom — takže dožije len ako pripojená zásobáreň spermií?",
+  "possible_answers": null,
+  "correct_answer": "Ďasovec",
+  "alternative_answers": [
+   "ďas",
+   "hlbokomorský ďasovec",
+   "hlbokomorský ďas",
+   "ďasy",
+   "morský čert"
+  ],
+  "explanation": "U niektorých druhov ďasovcov sa samčekove tkanivá, ba aj cievy spoja s telom samičky — táto stratégia sa nazýva sexuálny parazitizmus a je riešením takmer nemožnej úlohy nájsť partnera v temnej hlbine.",
+  "topic": "science-nature · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Ceratioidei"
+ },
+ {
+  "id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+  "question": "Kasový trhák Obsession z roku 2026, jeden z najziskovejších filmov všetkých čias, sa vyrobil s rozpočtom najbližším ktorej sume?",
+  "possible_answers": {
+   "a": "Menej ako jeden milión dolárov",
+   "b": "Približne desať miliónov dolárov",
+   "c": "Približne sto miliónov dolárov",
+   "d": "Približne jedna miliarda dolárov"
+  },
+  "correct_answer": "Menej ako jeden milión dolárov",
+  "alternative_answers": [
+   "Menej ako milión dolárov",
+   "Menej než jeden milión dolárov",
+   "Pod jeden milión dolárov",
+   "Pod milión dolárov",
+   "A"
+  ],
+  "explanation": "Vznikol za približne sedemstopäťdesiattisíc dolárov a potom sa stal najúspešnejším domácim uvedením v histórii svojho štúdia.",
+  "topic": "entertainment · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/2026_in_film"
+ },
+ {
+  "id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+  "question": "Jeden farebný kôrovec udrie tak rýchlo, že jeho úder vytvára bubliny vriacej vody a je známe, že dokáže prasknúť sklo akvária. Pomenuj ho.",
+  "possible_answers": null,
+  "correct_answer": "Ústonožec",
+  "alternative_answers": [
+   "ústonožec pávi",
+   "ústonožce",
+   "stomatopod",
+   "mantis shrimp",
+   "kreveta modlivka",
+   "rak modlivka",
+   "modlivka morská"
+  ],
+  "explanation": "Kyjovitý výbežok ústonožca zrýchľuje ako strela a za pár tisícin sekundy dosiahne približne 80 km/h. Úder je taký rýchly, že vytvára kavitačné bubliny, ktoré kolabujú so zábleskom tepla a svetla.",
+  "topic": "general · critical",
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Mantis_shrimp"
+ }
+]

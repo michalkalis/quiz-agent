@@ -557,6 +557,9 @@ final class QuizViewModel: ObservableObject {
     /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
 
+    /// Bound on a tapped-answer submit (#178); tests shorten it.
+    var submitTimeoutSeconds: Int = 30
+
     /// Whether RESULT feedback TTS is currently playing (#119 root cause #3).
     /// The result screen transitions, arms the command window and only THEN
     /// plays feedback, so the recognizer was transcribing the app's own voice
@@ -1489,13 +1492,26 @@ final class QuizViewModel: ObservableObject {
         guard transition(to: .processing) else { return }
         errorMessage = nil
 
+        // #178: a tap mid-read answers the question — stop reading it. Ordered
+        // AFTER the transition so the interrupted read's retry path sees
+        // `.processing` and stays silent instead of re-reading over the result.
+        if isPlayingQuestionTTS {
+            await audioDeviceState.stopAnyPlayingAudio()
+        }
+
         do {
-            let response = try await networkService.submitTextInput(
-                sessionId: sessionId,
-                input: value,
-                audio: settings.audioMode != "off",
-                questionId: currentQuestion?.id // #133 1a: the tapped option answers THIS question
-            )
+            // #178: same bounded wait as the voice submit — without it a wedged
+            // request left the option spinner up with no way out (TF 2026-09-13).
+            let questionId = currentQuestion?.id // #133 1a: the tapped option answers THIS question
+            let audio = settings.audioMode != "off"
+            let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
+                try await self.networkService.submitTextInput(
+                    sessionId: sessionId,
+                    input: value,
+                    audio: audio,
+                    questionId: questionId
+                )
+            }
             await handleQuizResponse(response)
         } catch {
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))

@@ -61,6 +61,9 @@ import os
         /// failure (e.g. the #133 409 `question_mismatch`) on the text path
         /// without tripping `shouldFail` for every other call.
         var submitTextInputError: Error?
+        /// When set, `submitTextInput` sleeps this long first (cancellation
+        /// propagates like URLSession's) — lets #178 assert the MCQ submit bound.
+        var submitTextInputDelay: Duration?
         /// Number of times `submitTextInput` was invoked — the #79 typed↔voice race
         /// tests assert exactly ONE submission survives an interleaving.
         var submitTextInputCallCount = 0
@@ -239,6 +242,9 @@ import os
             capturedTextInputAudio = audio
             capturedTextInputInput = input
             capturedTextInputQuestionId = questionId
+            if let submitTextInputDelay {
+                try await Task.sleep(for: submitTextInputDelay)
+            }
             // Mirror URLSession semantics: a cancelled enclosing Task throws
             // URLError(.cancelled) — the 54.5 self-cancelling-auto-confirm vector.
             if Task.isCancelled {

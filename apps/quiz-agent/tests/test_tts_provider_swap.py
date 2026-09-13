@@ -167,3 +167,26 @@ class TestStaticFeedbackNamespace:
 
         assert elevenlabs_cache.get_static_feedback("correct", 0) is None
         assert openai_cache.get_static_feedback("correct", 0) == b"nova-nailed-it"
+
+
+class TestGenericSynthesizeRequestVoice:
+    async def test_recap_request_without_voice_uses_the_primary_voice(self):
+        """`POST /tts/synthesize` (recap narration) must not pin a vendor voice.
+
+        The request model used to default to OpenAI's "nova"; ElevenLabs does
+        not know that id, so every recap read failed on the primary and came
+        back in the fallback voice even with credits to spare (prod 2026-09-13).
+        """
+        from app.api.deps import SynthesizeTTSRequest
+
+        body = SynthesizeTTSRequest(text="Recap time.")
+        primary = FakeProvider("elevenlabs", "george-id", audio=b"george-audio")
+        backup = FakeProvider("openai", "nova", audio=b"backup-audio")
+        service = TTSService(provider=primary, fallback_provider=backup)
+
+        audio = await service.synthesize(body.text, voice=body.voice)
+
+        assert body.voice is None
+        assert audio == b"george-audio"
+        assert primary.calls == [("Recap time.", "george-id")]
+        assert backup.calls == []

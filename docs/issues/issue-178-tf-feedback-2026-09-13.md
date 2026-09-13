@@ -1,6 +1,6 @@
 # #178 — TF feedback 2026-09-13 (slovenský kvíz, MCQ)
 
-**Triage:** in-progress · **Owner:** agent · **Nadväzuje na:** #174 — TF feedback 2026-09-08 (rozkazovacie tlačidlá, mic glyf, nápovedy)
+**Triage:** ready-for-human · **Owner:** agent · **Nadväzuje na:** #174 — TF feedback 2026-09-08 (rozkazovacie tlačidlá, mic glyf, nápovedy)
 
 ## Nálezy foundera (2 screenshoty: 2026-09-12 21:13, 2026-09-13 08:52)
 
@@ -26,4 +26,4 @@
 - [x] F — backend: single-flight pre súbežné identické TTS syntézy (prefetch + klient), test — PR #147 merged + v prode 2026-09-13
 - [ ] E — Pencil sync: glyfy preč z Answer-Confirm / Question-Listen / Result / Home / Settings (založené v #174)
 - [ ] `[HUMAN]` ElevenLabs: zdvihnúť limit kľúča `carquiz` (API Keys → carquiz → Character limit) alebo Starter plán 5 $/mes
-- [ ] `[HUMAN]` TF kontrola po builde (na požiadanie)
+- [ ] `[HUMAN]` TF kontrola — build spustený 2026-09-13 (run 34746030931) na žiadosť foundera

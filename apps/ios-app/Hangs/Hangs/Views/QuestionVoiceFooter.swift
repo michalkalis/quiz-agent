@@ -146,16 +146,13 @@ struct QuestionVoiceFooter: View {
             // this button IS its evaluating state (the full-screen overlay that
             // used to cover the footer is gone). `isLoading` also disables it.
             // #174 (founder 2026-09-09): "Start" — the title IS the voice command
-            // that opens the mic, on Home and here alike. The mic moved from the
-            // action icon to the small voice glyph, which now means "say this".
+            // that opens the mic, on Home and here alike.
             title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Start"),
             icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "play.fill"),
             isLoading: isEvaluating,
             // G1 (#83): action buttons deliberately modest so long question text
             // keeps as much room as possible.
             height: 48,
-            // "Stop" is a tap, not a command — the listener is down while recording.
-            voiceGlyph: !isRecording && !isEvaluating && viewModel.showsVoiceGlyph,
             countdownSecondsRemaining: viewModel.answerWindowRemaining,
             countdownTotal: viewModel.answerWindowTotal
         ) {
@@ -213,16 +210,11 @@ struct QuestionVoiceFooter: View {
                 }
             } else {
                 chipSurface(fixedWidth: false) {
-                    HStack(spacing: 5) {
-                        Text("Skip")
-                            .font(.hangsBody(15, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                        if viewModel.showsVoiceGlyph {
-                            VoiceGlyph(size: 10)
-                        }
-                    }
-                    .padding(.horizontal, 16)
+                    Text("Skip")
+                        .font(.hangsBody(15, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .padding(.horizontal, 16)
                 }
             }
         }

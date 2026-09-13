@@ -19,8 +19,6 @@ struct ResultFooter: View {
     /// #174: the words to say under the bar, nil once the driver has outgrown
     /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
     let commandHint: String?
-    /// #174: the Next button's title is its voice command — mic glyph.
-    var showsVoiceGlyph: Bool = false
     /// #175: the command language (= quiz language) for the bar's caption.
     var commandLanguage: CommandLanguage = .english
     /// True while auto-advance is counting down (drives the CTA countdown + STAY).
@@ -56,7 +54,6 @@ struct ResultFooter: View {
                     icon: nil,
                     trailingIcon: "arrow.right",
                     height: 64,
-                    voiceGlyph: showsVoiceGlyph,
                     countdownSecondsRemaining: autoAdvanceActive ? countdownRemaining : nil,
                     countdownTotal: countdownTotal,
                     action: onNext

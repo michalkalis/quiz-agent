@@ -325,13 +325,6 @@ final class QuizViewModel: ObservableObject {
         )
     }
 
-    /// #174: a voice-controllable button wears a small mic glyph — but only when
-    /// saying its title can actually do something. Off, or a recognizer that
-    /// never became ready, would make the glyph a lie.
-    var showsVoiceGlyph: Bool {
-        settings.voiceCommandsEnabled && commandAvailability == .ready
-    }
-
     /// #122 Variant C ambient-glow feedback phase — see
     /// `VoiceCommandCoordinator.voiceFeedbackPhase` (glow/bar call sites).
     var voiceFeedbackPhase: VoiceFeedbackPhase { voiceCommandCoordinator.voiceFeedbackPhase }

@@ -116,8 +116,7 @@ struct HomeView: View {
             // #174 (founder 2026-09-09): "Start" — the title IS the voice command.
             HangsPrimaryButton(
                 title: "Start",
-                icon: "play.fill",
-                voiceGlyph: viewModel.showsVoiceGlyph
+                icon: "play.fill"
             ) {
                 viewModel.beginQuizStart()
             }

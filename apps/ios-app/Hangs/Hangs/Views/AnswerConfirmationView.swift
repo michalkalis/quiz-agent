@@ -28,8 +28,6 @@ struct AnswerConfirmationView: View {
     /// #174: the words to say under that bar, nil once the driver has outgrown
     /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
     var commandHint: String? = nil
-    /// #174: Confirm / Again / Cancel titles are voice commands — mic glyph.
-    var showsVoiceGlyph: Bool = false
     /// #175: the command language (= quiz language) for the bar's caption.
     var commandLanguage: CommandLanguage = .english
     /// #122 Variant C: transient match/miss tint for the listening bar.
@@ -261,7 +259,6 @@ struct AnswerConfirmationView: View {
                     icon: isEvaluating ? nil : "checkmark",
                     isLoading: isEvaluating,
                     height: 54,
-                    voiceGlyph: showsVoiceGlyph,
                     countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
                         ? autoConfirmCountdown : nil,
                     countdownTotal: autoConfirmTotal
@@ -282,14 +279,12 @@ struct AnswerConfirmationView: View {
                 // Secondary in weight as well as in position: a text-style
                 // control under the CTA, the standard iOS pairing.
                 // #174: "Again" — the title IS the voice command (founder
-                // 2026-09-09). The mic that used to be its icon now means
-                // "say this", so the action icon is a retry arrow.
+                // 2026-09-09), so the action icon is a retry arrow.
                 HangsGhostButton(
                     title: "Again",
                     icon: "arrow.counterclockwise",
                     color: Theme.Hangs.Colors.muted,
-                    font: .hangsBody(15, weight: .semibold),
-                    voiceGlyph: showsVoiceGlyph
+                    font: .hangsBody(15, weight: .semibold)
                 ) {
                     editFocused = false
                     onReRecord()
@@ -393,7 +388,7 @@ struct AnswerConfirmationView: View {
             Spacer(minLength: 0)
 
             if let onCancel {
-                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54, voiceGlyph: showsVoiceGlyph) {
+                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54) {
                     onCancel()
                 }
                 .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))

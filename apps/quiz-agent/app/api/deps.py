@@ -237,8 +237,13 @@ class SynthesizeTTSRequest(BaseModel):
     text: str = Field(
         ..., min_length=1, max_length=1000, description="Text to synthesize"
     )
+    # No default on purpose: `None` means "the active provider's default
+    # voice". A hard-coded OpenAI name here ("nova") is unknown to ElevenLabs,
+    # so every recap read failed on the primary and silently degraded to the
+    # OpenAI fallback voice (prod logs 2026-09-13: `voice_not_found 'nova'`).
     voice: Optional[str] = Field(
-        default="nova", description="Voice name (nova, shimmer, onyx)"
+        default=None,
+        description="Voice id/name; omit for the active provider's default",
     )
     format: Optional[str] = Field(
         default="opus", description="Audio format (opus, mp3, aac)"

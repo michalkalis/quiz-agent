@@ -167,7 +167,6 @@ struct QuestionView: View {
                 onCancel: { viewModel.cancelProcessing() },
                 isListeningForCommands: viewModel.commandListenerHint != nil,
                 commandHint: viewModel.voiceHintWords,
-                showsVoiceGlyph: viewModel.showsVoiceGlyph,
                 commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 matchedOption: matchedVoiceOptionLabel,
@@ -228,7 +227,7 @@ struct QuestionView: View {
             QuizMuteToolbarButton(isMuted: viewModel.isAudioMuted) {
                 Task { await viewModel.toggleMute() }
             }
-            QuizPauseToolbarButton(isPaused: viewModel.isPaused, showsVoiceGlyph: viewModel.showsVoiceGlyph) {
+            QuizPauseToolbarButton(isPaused: viewModel.isPaused) {
                 viewModel.togglePause()
             }
             .disabled(!viewModel.canPauseQuiz && !viewModel.isPaused)

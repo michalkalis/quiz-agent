@@ -160,6 +160,11 @@ class TTSService:
             provider=self.provider.name,
         )
         self._semaphore = asyncio.Semaphore(max_concurrent)
+        # Single-flight: identical (text, voice) requests in flight share one
+        # synthesis. The serve-time prefetch and the client's own fetch land
+        # within ~100 ms of each other on every first question (prod logs
+        # 2026-09-13), both missed the cache and both paid the provider.
+        self._in_flight: dict[tuple[str, str], "asyncio.Task[bytes]"] = {}
 
         logger.info(
             "TTS provider: %s (fallback: %s)",
@@ -192,7 +197,32 @@ class TTSService:
             raise ValueError("Text cannot be empty")
 
         primary_voice = voice or self.provider.default_voice
+        if not use_cache:
+            return await self._synthesize_failover(text, primary_voice, use_cache)
 
+        key = (text, primary_voice)
+        task = self._in_flight.get(key)
+        if task is None:
+            task = asyncio.create_task(
+                self._synthesize_failover(text, primary_voice, use_cache)
+            )
+            self._in_flight[key] = task
+            task.add_done_callback(self._forget_in_flight(key))
+        # Shielded: a caller that goes away (client disconnect) must not cancel
+        # the shared synthesis under the other waiters — or the cache warm-up.
+        return await asyncio.shield(task)
+
+    def _forget_in_flight(self, key: tuple[str, str]):
+        def _done(task: "asyncio.Task[bytes]") -> None:
+            if self._in_flight.get(key) is task:
+                del self._in_flight[key]
+
+        return _done
+
+    async def _synthesize_failover(
+        self, text: str, primary_voice: str, use_cache: bool
+    ) -> bytes:
+        """Primary provider, then the fallback — one synthesis, no coalescing."""
         try:
             return await self._synthesize_with(
                 self.provider, text, primary_voice, use_cache

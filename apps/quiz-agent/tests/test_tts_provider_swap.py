@@ -17,6 +17,8 @@ a swapped provider replays the previous vendor's voice out of a warm cache, so
 the swap appears to do nothing.
 """
 
+import asyncio
+
 import pytest
 
 from app.tts.cache import TTSCache
@@ -190,3 +192,51 @@ class TestGenericSynthesizeRequestVoice:
         assert audio == b"george-audio"
         assert primary.calls == [("Recap time.", "george-id")]
         assert backup.calls == []
+
+
+class GatedProvider(FakeProvider):
+    """Blocks inside `synthesize` until released, so two callers can overlap."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.release = asyncio.Event()
+
+    async def synthesize(self, text: str, voice: str) -> bytes:
+        self.calls.append((text, voice))
+        await self.release.wait()
+        return self._audio
+
+
+class TestSingleFlight:
+    async def test_concurrent_identical_requests_share_one_synthesis(self):
+        """The serve-time prefetch and the client's fetch must not both pay.
+
+        Both land within ~100 ms on every first question; the cache is only
+        written after synthesis, so without coalescing each one misses it and
+        the provider is billed twice for the same audio (prod 2026-09-13).
+        """
+        primary = GatedProvider("elevenlabs", "george-id", audio=b"george-audio")
+        service = TTSService(provider=primary, fallback_provider=None)
+
+        first = asyncio.create_task(service.synthesize("Question one."))
+        second = asyncio.create_task(service.synthesize("Question one."))
+        await asyncio.sleep(0)  # let both reach the provider gate
+        primary.release.set()
+
+        assert await asyncio.gather(first, second) == [b"george-audio"] * 2
+        assert primary.calls == [("Question one.", "george-id")]
+        assert service._in_flight == {}
+
+    async def test_a_departing_waiter_does_not_cancel_the_shared_synthesis(self):
+        """A client that hangs up mid-read must not kill the other waiter's audio."""
+        primary = GatedProvider("elevenlabs", "george-id", audio=b"george-audio")
+        service = TTSService(provider=primary, fallback_provider=None)
+
+        leader = asyncio.create_task(service.synthesize("Question one."))
+        follower = asyncio.create_task(service.synthesize("Question one."))
+        await asyncio.sleep(0)
+        leader.cancel()
+        primary.release.set()
+
+        assert await follower == b"george-audio"
+        assert service.cache.get("Question one.", "george-id") == b"george-audio"

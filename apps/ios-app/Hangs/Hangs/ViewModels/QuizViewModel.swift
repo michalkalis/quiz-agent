@@ -486,6 +486,11 @@ final class QuizViewModel: ObservableObject {
         let crumb = Breadcrumb(level: .info, category: "quiz.transition")
         crumb.message = "\(from) → \(to) (caller: \(caller))"
         SentryBreadcrumb.add(crumb)
+        // #178: breadcrumbs only ship with an event; a quiz that silently stalls
+        // raises none, so the last transition before the stall was invisible.
+        SentryLog.info("quiz state", category: .quiz, attributes: [
+            "from": from, "to": to, "caller": caller, "index": answered,
+        ])
 
         return true
     }
@@ -1504,6 +1509,17 @@ final class QuizViewModel: ObservableObject {
             // request left the option spinner up with no way out (TF 2026-09-13).
             let questionId = currentQuestion?.id // #133 1a: the tapped option answers THIS question
             let audio = settings.audioMode != "off"
+            SentryLog.info("answer submit", category: .network, attributes: [
+                "kind": "mcq", "questionId": questionId ?? "none",
+            ])
+            let startedAt = ContinuousClock.now
+            defer {
+                let elapsedMs = Int((ContinuousClock.now - startedAt) / .milliseconds(1))
+                SentryLog.info("answer submit finished", category: .network, attributes: [
+                    "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs,
+                    "state": quizState.label,
+                ])
+            }
             let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
@@ -1514,6 +1530,9 @@ final class QuizViewModel: ObservableObject {
             }
             await handleQuizResponse(response)
         } catch {
+            SentryLog.error("answer submit failed", category: .network, attributes: [
+                "kind": "mcq", "error": String(describing: error),
+            ])
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }
     }

@@ -1330,17 +1330,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 17,
                   "fontWeight": "700"
-                },
-                {
-                  "type": "icon",
-                  "id": "HLVCw",
-                  "name": "voiceGlyph",
-                  "opacity": 0.7,
-                  "width": 12,
-                  "height": 12,
-                  "icon": "mic",
-                  "library": "lucide",
-                  "fill": "$text-on-accent"
                 }
               ]
             }
@@ -15495,17 +15484,6 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "icon",
-                      "id": "f71K1",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 11,
-                      "height": 11,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
-                    },
-                    {
                       "type": "frame",
                       "id": "L9G6cT",
                       "name": "secsChip",
@@ -15562,17 +15540,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 15,
                       "fontWeight": "600"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "K41TVG",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 10,
-                      "height": 10,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
                     }
                   ]
                 }
@@ -24276,17 +24243,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 17,
                   "fontWeight": "700"
-                },
-                {
-                  "type": "icon",
-                  "id": "GMSFA",
-                  "name": "voiceGlyph",
-                  "opacity": 0.7,
-                  "width": 12,
-                  "height": 12,
-                  "icon": "mic",
-                  "library": "lucide",
-                  "fill": "$text-on-accent"
                 }
               ]
             }
@@ -28490,17 +28446,6 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "icon",
-                      "id": "W0yWv",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 11,
-                      "height": 11,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
-                    },
-                    {
                       "type": "frame",
                       "id": "iLELV",
                       "name": "secsChip",
@@ -28581,17 +28526,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 15,
                       "fontWeight": "600"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "w6bUp",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 10,
-                      "height": 10,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
                     }
                   ]
                 }
@@ -28947,17 +28881,6 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "icon",
-                      "id": "M1nms",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 11,
-                      "height": 11,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
-                    },
-                    {
                       "type": "frame",
                       "id": "F4QPJ",
                       "name": "secsChip",
@@ -29038,17 +28961,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 15,
                       "fontWeight": "600"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "cHQXv",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 10,
-                      "height": 10,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
                     }
                   ]
                 }
@@ -30192,17 +30104,6 @@
                     },
                     {
                       "type": "icon",
-                      "id": "klC0U",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 12,
-                      "height": 12,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
-                    },
-                    {
-                      "type": "icon",
                       "id": "Ek5qf",
                       "name": "nxtI",
                       "width": 15,
@@ -30965,17 +30866,6 @@
                     },
                     {
                       "type": "icon",
-                      "id": "g5QeO",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 12,
-                      "height": 12,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
-                    },
-                    {
-                      "type": "icon",
                       "id": "wp0o4",
                       "name": "nxtI",
                       "width": 15,
@@ -31715,17 +31605,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 17,
                       "fontWeight": "700"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "S11adI",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 12,
-                      "height": 12,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
                     },
                     {
                       "type": "icon",
@@ -32561,17 +32440,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 17,
                       "fontWeight": "700"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "HNNX2",
-                      "name": "voiceGlyph",
-                      "opacity": 0.7,
-                      "width": 12,
-                      "height": 12,
-                      "icon": "mic",
-                      "library": "lucide",
-                      "fill": "$text-on-accent"
                     },
                     {
                       "type": "icon",

@@ -1504,22 +1504,16 @@ final class QuizViewModel: ObservableObject {
             await audioDeviceState.stopAnyPlayingAudio()
         }
 
+        let questionId = currentQuestion?.id // #133 1a: the tapped option answers THIS question
+        SentryLog.info("answer submit", category: .network, attributes: [
+            "kind": "mcq", "questionId": questionId ?? "none",
+        ])
+        let startedAt = ContinuousClock.now
+        let elapsedMs = { Int((ContinuousClock.now - startedAt) / .milliseconds(1)) }
         do {
             // #178: same bounded wait as the voice submit — without it a wedged
             // request left the option spinner up with no way out (TF 2026-09-13).
-            let questionId = currentQuestion?.id // #133 1a: the tapped option answers THIS question
             let audio = settings.audioMode != "off"
-            SentryLog.info("answer submit", category: .network, attributes: [
-                "kind": "mcq", "questionId": questionId ?? "none",
-            ])
-            let startedAt = ContinuousClock.now
-            defer {
-                let elapsedMs = Int((ContinuousClock.now - startedAt) / .milliseconds(1))
-                SentryLog.info("answer submit finished", category: .network, attributes: [
-                    "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs,
-                    "state": quizState.label,
-                ])
-            }
             let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
@@ -1529,9 +1523,14 @@ final class QuizViewModel: ObservableObject {
                 )
             }
             await handleQuizResponse(response)
+            SentryLog.info("answer submit finished", category: .network, attributes: [
+                "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs(),
+                "state": quizState.label,
+            ])
         } catch {
             SentryLog.error("answer submit failed", category: .network, attributes: [
-                "kind": "mcq", "error": String(describing: error),
+                "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs(),
+                "error": String(describing: error),
             ])
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }

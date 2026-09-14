@@ -57,6 +57,11 @@ extension QuizViewModel {
             isAppForeground = true
             refreshCommandWindow() // re-arm via the existing window sync
             resumeSuppressedAnswerWindow()
+            // #179: a submission that wedged while backgrounded has no live owner
+            // — this branch did nothing at all for `.processing`/`.skipping`. The
+            // watchdog deadline is absolute, so a window that elapsed out of sight
+            // surfaces the retryable error on return instead of a dead screen.
+            rearmStallWatchdog()
 
             // Foreground reconciliation (#102 findings 1+2): a webhook that
             // landed while backgrounded (or a purchase sync that failed

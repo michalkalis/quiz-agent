@@ -31,6 +31,7 @@ enum TaskKey: Hashable, Sendable {
     case skipUndo
     case voiceFeedbackGlow
     case questionReplay
+    case stallWatchdog // #179: bound on the .processing/.skipping pair
     case quizStart
     case deferredAdvance // #132 E: advance fired straight from handleQuizResponse
     case recapNarration // #132 E: sequential recap TTS chunks

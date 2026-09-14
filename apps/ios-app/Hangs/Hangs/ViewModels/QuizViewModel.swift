@@ -458,6 +458,19 @@ final class QuizViewModel: ObservableObject {
         if recordingPair.contains(from), !recordingPair.contains(to) {
             recordingCoordinator.resetOnPhaseExit()
         }
+        // #179 (founder TF 2026-09-14, findings 3+4): `.processing`/`.skipping`
+        // render as a spinner with every control dead, and a submission whose
+        // owning Task is orphaned has nothing left to fail it — so the pair itself
+        // is bounded. Armed at the single choke point every entry goes through,
+        // dropped on any exit (including the `.error` the watchdog itself causes).
+        let submittingPair = ["processing", "skipping"]
+        if submittingPair.contains(to) {
+            if !submittingPair.contains(from) { stallEnteredAt = Date() }
+            armStallWatchdog()
+        } else {
+            stallEnteredAt = nil
+            taskBag.cancel(.stallWatchdog)
+        }
         if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
         // #122: "action landed" signal — a matched glow clears as soon as the
         // min-display floor allows once the screen visibly changed.
@@ -564,6 +577,19 @@ final class QuizViewModel: ObservableObject {
 
     /// Bound on a tapped-answer submit (#178); tests shorten it.
     var submitTimeoutSeconds: Int = 30
+
+    /// #179: last-resort bound on the whole `.processing`/`.skipping` pair, kept
+    /// wider than `submitTimeoutSeconds` on purpose. The per-request timeouts are
+    /// the first line of defence; this one only catches a submission whose owner
+    /// is GONE — an orphaned Task, a confirmation sheet dismissed mid-flight, a
+    /// return from the background — which no `catch` can reach. Tests shorten it.
+    var stallWatchdogSeconds: TimeInterval = 35
+
+    /// When the quiz entered the `.processing`/`.skipping` pair. The watchdog
+    /// deadline is measured from here rather than from when its Task started, so
+    /// time the app spent in the background counts against it (#179).
+    /// Internal for tests.
+    var stallEnteredAt: Date?
 
     /// Whether RESULT feedback TTS is currently playing (#119 root cause #3).
     /// The result screen transitions, arms the command window and only THEN
@@ -1202,6 +1228,21 @@ final class QuizViewModel: ObservableObject {
         try await TransientRetry.run(label: label, backoff: transientStartBackoffOverride, operation)
     }
 
+    /// #179 (founder TF 2026-09-14, finding 4): the submit paths' transient retry
+    /// under ONE user-facing bound, the shape the voice submit has had since #131
+    /// Track A. The timeout must wrap the WHOLE retry, never a single attempt:
+    /// `URLError.timedOut` is itself classified transient, so a per-attempt bound
+    /// would stack to 3 × `submitTimeoutSeconds` before anything reached the user.
+    func withBoundedTransientRetry<T: Sendable>(
+        label: String,
+        _ operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        let backoff = transientStartBackoffOverride
+        return try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
+            try await TransientRetry.run(label: label, backoff: backoff, operation)
+        }
+    }
+
     /// See `TransientRetry.isTransient` — kept as a forwarding alias so the
     /// existing start-path tests keep their vocabulary.
     nonisolated static func isTransientStartError(_ error: Error) -> Bool {
@@ -1602,11 +1643,14 @@ final class QuizViewModel: ObservableObject {
             // the retry closure: every attempt must carry the same id, or a retry
             // would grade a different question than the first attempt did.
             let answeredQuestionId = currentQuestion?.id
-            let response = try await withTransientRetry(label: "text answer submit") {
-                try await networkService.submitTextInput(
+            let audio = !suppressAudio && settings.audioMode != "off"
+            // #179 finding 3: bounded, like the MCQ tap (#178) — a wedged confirm
+            // used to leave the driver on a dead `.processing` screen forever.
+            let response = try await withBoundedTransientRetry(label: "text answer submit") {
+                try await self.networkService.submitTextInput(
                     sessionId: sessionId,
                     input: newAnswer,
-                    audio: !suppressAudio && settings.audioMode != "off",
+                    audio: audio,
                     questionId: answeredQuestionId
                 )
             }
@@ -1658,11 +1702,14 @@ final class QuizViewModel: ObservableObject {
             // #133 1a: skip THIS question, never the next one. Read once outside the
             // retry closure so every attempt skips the same question.
             let skippedQuestionId = currentQuestion?.id
-            let response = try await withTransientRetry(label: "skip question") {
-                try await networkService.submitTextInput(
+            let audio = settings.audioMode != "off"
+            // #179 finding 4: bounded — an unanswered skip left the Skip spinner
+            // turning and the Start button dead with no exit from `.skipping`.
+            let response = try await withBoundedTransientRetry(label: "skip question") {
+                try await self.networkService.submitTextInput(
                     sessionId: sessionId,
                     input: "skip",
-                    audio: settings.audioMode != "off",
+                    audio: audio,
                     questionId: skippedQuestionId
                 )
             }
@@ -1683,7 +1730,11 @@ final class QuizViewModel: ObservableObject {
         quizTimersController.cancelAutoStopRecordingTimer()
 
         do {
-            try await networkService.endSession(sessionId: sessionId)
+            // #179: the X tap is user-initiated like any submit — bound it, or a
+            // wedged end-session leaves the quiz screen up with nothing happening.
+            try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
+                try await self.networkService.endSession(sessionId: sessionId)
+            }
             persistenceStore.clearSession()
             await audioDeviceState.stopAnyPlayingAudio() // Await properly (we're async here)
             resetState()

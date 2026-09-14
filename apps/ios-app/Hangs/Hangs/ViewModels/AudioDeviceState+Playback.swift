@@ -226,9 +226,16 @@ extension AudioDeviceState {
     /// Settings preference — this mute dies with the current quiz.
     func toggleMute() async {
         setMuted(!isMuted())
-        if isMuted(), isPlayingQuestionTTS() {
-            await stopAnyPlayingAudio()
-        }
+        guard isMuted() else { return }
+
+        // #179 (founder TF 2026-09-14, finding 7): mute means silence NOW, whatever
+        // is talking. The old `isPlayingQuestionTTS()` condition only covered the
+        // question read, so muting during the options/replay/feedback playback left
+        // the app speaking with the button already showing "muted". Cancel the
+        // replay run too: one still between its download and its playback would
+        // otherwise start speaking a moment AFTER the mute.
+        taskBag.cancel(.questionReplay)
+        await stopAnyPlayingAudio()
     }
 
     /// Stop any currently playing audio (cleanup during state transitions)

@@ -24,6 +24,7 @@
 - [x] C — zamrznutie po MCQ ťuknutí: root cause + fix + test
 - [x] D — prvá otázka bez zvuku: diagnóza zo Sentry logov (viď nález 2)
 - [x] F — backend: single-flight pre súbežné identické TTS syntézy (prefetch + klient), test — PR #147 merged + v prode 2026-09-13
-- [ ] E — Pencil sync: glyfy preč z Answer-Confirm / Question-Listen / Result / Home / Settings (založené v #174)
+- [x] E — Pencil sync: 12 `voiceGlyph` uzlov zmazaných, founder ⌘S 2026-09-14, PR #151 merged
+- [x] G — Sentry štruktúrované logy: prechody stavov + MCQ submit (start / finished+elapsedMs / failed), PR #150 merged 2026-09-14
 - [ ] `[HUMAN]` ElevenLabs: zdvihnúť limit kľúča `carquiz` (API Keys → carquiz → Character limit) alebo Starter plán 5 $/mes
 - [ ] `[HUMAN]` TF kontrola — build spustený 2026-09-13 (run 34746030931) na žiadosť foundera

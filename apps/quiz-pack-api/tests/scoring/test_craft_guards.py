@@ -62,13 +62,87 @@ def test_does_not_flag_clean_questions() -> None:
     ) is None
 
 
-def test_mcq_is_skipped() -> None:
-    """MCQ stems legitimately carry option values ('...Snivy, Tepig, Oshawott,
-    Pikachu?'); leak shapes there are distractor_quality's job."""
+def test_mcq_stem_that_lists_the_options_is_not_a_leak() -> None:
+    """A stem that enumerates its own options ('...Snivy, Tepig, Oshawott,
+    Pikachu?') necessarily contains the answer — that is the format, the MCQ
+    twin of the ', or ' exemption, not a giveaway."""
     assert stem_leak_reason(
         "Which of these is not a starter Pokemon: Snivy, Tepig, Oshawott, Pikachu?",
         "d",
         possible_answers={"a": "Snivy", "b": "Tepig", "c": "Oshawott", "d": "Pikachu"},
+    ) is None
+
+
+def test_flags_mcq_leak_sacher_class() -> None:
+    """#179 finding 8 (founder, live TF build): the stem names Hotel Sacher and
+    the correct option is 'Sachertorte' — answerable without knowing anything.
+    MCQ used to be skipped wholesale, so this shipped to prod (question
+    3be05aa5-…, since archived). The key may arrive as a letter or as text."""
+    options = {
+        "a": "Sachertorte",
+        "b": "Black Forest gateau",
+        "c": "Linzer torte",
+        "d": "Apple strudel",
+    }
+    stem = (
+        "In the 1950s and 60s, Vienna's Hotel Sacher and the Demel pastry shop "
+        "fought a seven-year court battle over which of them could call their "
+        "version of a famous dessert the 'original'. Which dessert?"
+    )
+    assert stem_leak_reason(stem, "a", possible_answers=options) is not None
+    assert stem_leak_reason(stem, "Sachertorte", possible_answers=options) is not None
+
+
+def test_does_not_flag_clean_mcq() -> None:
+    """The MCQ counterpart of the clean open-answer cases: the stem shares no
+    content word with the correct option, so the player must actually know it.
+    The load-bearing half of #179 finding 8 — a gate that flagged these would
+    delete good MCQs."""
+    assert stem_leak_reason(
+        "Which dessert is made by deep-frying ridged dough and dusting it "
+        "with cinnamon sugar?",
+        "b",
+        possible_answers={
+            "a": "Tiramisu",
+            "b": "Churros",
+            "c": "Panna cotta",
+            "d": "Baklava",
+        },
+    ) is None
+
+
+def test_mcq_frame_shared_with_distractors_is_not_a_leak() -> None:
+    """Live corpus false positive the MCQ gate must not create: the stem says
+    "Sign Language", and so does every option — the player still has to know
+    *French*. Only the words that distinguish the answer from its distractors
+    can leak."""
+    assert stem_leak_reason(
+        "American Sign Language is closely related to one of these two, and "
+        "almost unrelated to the other. Which is it?",
+        "a",
+        possible_answers={
+            "a": "French Sign Language",
+            "b": "British Sign Language",
+        },
+    ) is None
+
+
+def test_mcq_stopword_and_short_overlap_do_not_leak() -> None:
+    """Innocent overlap must stay quiet: 'the'/'of' are stopwords, and a short
+    answer token leaks only on an exact match (the 4-char-prefix rule needs 6+
+    chars), so 'Paris' survives 'part'. This is the proper-noun shape the MCQ
+    gate must never touch — the answer is a name the stem cannot avoid
+    circling ('the capital of France')."""
+    assert stem_leak_reason(
+        "Which of these is the capital of France, the part of the country "
+        "where the government sits?",
+        "c",
+        possible_answers={
+            "a": "Lyon",
+            "b": "Marseille",
+            "c": "Paris",
+            "d": "Bordeaux",
+        },
     ) is None
 
 

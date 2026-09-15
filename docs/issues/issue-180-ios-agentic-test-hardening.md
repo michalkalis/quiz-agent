@@ -8,7 +8,7 @@
 
 Opakované TF kolá (#171 — TF feedback 09-05, #173 — TF feedback 09-07, #174 — TF feedback 09-08, #178 — TF feedback 09-13, #179 — TF feedback 09-14) hlásia ten istý druh chýb: stavové a regresné problémy v audio čítaní/odpovedaní, nákupoch a free limite. Náš setup (unit + ViewInspector + 18 RS scenárov cez LLM) tieto triedy chytá až v TestFlighte. Profi prax 2026 pre agentický vývoj: stavové bugy chytať v deterministických unit testoch s injektovaným časom, nákupy testovať offline cez StoreKit Testing, a UI scenáre po overení **zmraziť** do CI namiesto LLM-driven behu pri každej kontrole.
 
-Nadväzuje na #31 (iOS test hardening, done; XCUITest scheme wiring ostalo otvorené). Rešpektuje #43 (Maestro MCP wontfix) — ostávame na XcodeBuildMCP + XCUITest.
+Nadväzuje na #31 (iOS test hardening, done; XCUITest scheme wiring ostalo otvorené). Rešpektuje #43 — Maestro MCP UI flows (wontfix) — ostávame na XcodeBuildMCP + XCUITest.
 
 ## Tracky (poradie = páka)
 
@@ -50,4 +50,4 @@ _(doplní `/prepare-issue`; rámec)_
 - [ ] H: `.claude/rules/ios.md` obsahuje definíciu done
 
 ## Mimo rozsah
-Maestro (wontfix #43), RevenueCat migrácia, CarPlay simulátor (vyžaduje reálne zariadenie → #97 — CarPlay support).
+Maestro (#43 — Maestro MCP UI flows, wontfix), RevenueCat migrácia, CarPlay simulátor (vyžaduje reálne zariadenie → #97 — CarPlay support).

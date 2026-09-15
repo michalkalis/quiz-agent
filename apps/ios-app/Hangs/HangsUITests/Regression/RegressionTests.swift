@@ -264,14 +264,34 @@ final nonisolated class RegressionTests: XCTestCase {
         // does not fit — but it must still be REACHABLE by scrolling rather than
         // dead-clipped (that distinction is the whole of #125's stem half; making
         // the remainder *visible* without scrolling is Track B's layout call).
-        let beforeScroll = question.questionText.frame.minY
-        question.questionText.swipeUp()
-        XCTAssertNotEqual(
-            question.questionText.frame.minY,
-            beforeScroll,
-            accuracy: 0.5,
-            "RS-mcq-long: the stem region did not scroll post-reveal — the rest of the question is unreachable"
+        //
+        // #179: direction-agnostic on purpose. The stem auto-drifts to its end a
+        // few seconds in (TF build 53 feedback), and once it is parked there an
+        // up-swipe has nowhere left to go — on a slower machine the measurement
+        // lands after that drift and the old up-only assertion compared a resting
+        // offset with itself (probe on iPhone 17: minY starts at 159, drifts, parks
+        // at 82; swipe up 82 → 82, swipe down 82 → 159). A region WITH overflow
+        // answers a drag in one direction or the other; one without answers
+        // neither, which is still the regression this scenario exists to catch.
+        var moved = stemMoves(question, .up)
+        if !moved { moved = stemMoves(question, .down) }
+        XCTAssertTrue(
+            moved,
+            "RS-mcq-long: the stem region did not scroll in either direction post-reveal — the rest of the question is unreachable"
         )
+    }
+
+    private enum StemSwipe { case up, down }
+
+    /// Swipes the stem once and reports whether it actually moved.
+    @MainActor
+    private func stemMoves(_ question: QuestionPage, _ direction: StemSwipe) -> Bool {
+        let before = question.questionText.frame.minY
+        switch direction {
+        case .up: question.questionText.swipeUp()
+        case .down: question.questionText.swipeDown()
+        }
+        return abs(question.questionText.frame.minY - before) > 0.5
     }
 
     // MARK: - RS-mcq-long-options

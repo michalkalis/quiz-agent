@@ -53,13 +53,19 @@ final class AppState: ObservableObject {
                 sttService = mocks.stt
                 let purchaseMock = MockPurchaseService()
                 // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
-                // the paywall's `.purchasing`/`.restoring` narrating-CTA states
-                // stay on screen long enough to screenshot. Without it the mock
-                // resolves instantly and the in-flight window is never visible.
+                // the paywall's in-flight states stay on screen long enough to
+                // screenshot. Without it the mock resolves instantly and the
+                // in-flight window is never visible.
                 if CommandLine.arguments.contains("--ui-test-purchase-stall") {
                     let stall: () async -> Void = { try? await Task.sleep(for: .seconds(600)) }
                     purchaseMock.purchaseGate = stall
                     purchaseMock.restoreGate = stall
+                }
+                // #179: no offerings → the PouwN offline variant, whose ✕ is now
+                // its ONLY exit ("Maybe tomorrow" is gone). Seedable so that exit
+                // can be screenshot-verified.
+                if CommandLine.arguments.contains("--ui-test-paywall-offline") {
+                    purchaseMock.stubbedOfferings = nil
                 }
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)

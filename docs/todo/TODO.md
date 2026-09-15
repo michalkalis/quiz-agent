@@ -118,7 +118,8 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [ ] #48 — Pre-release review gauntlet (App Store) — [plan](../issues/issue-48-pre-release-review-gauntlet.md) — **founder 2026-06-09: defer** — spustiť, keď budú MCQ + design blockery bližšie k hotovu
 - [ ] #50 — App Store Connect listing + ASC API setup — [plan](../issues/issue-50-app-store-connect-setup.md) — **needs founder** `[HUMAN]` kroky; agent sa odblokuje, keď ASC API key pristane v `.env`
 - [ ] #51 — Product analytics for PRD success metrics — [plan](../issues/issue-51-product-analytics.md) — 51.1 taxonómia DONE; **BLOCKED na founder gate 51.2** (~5-min skim) → 51.3/51.4 → 51.5
-- [ ] (low) Make `SilenceDetectionService` timing tests deterministic — [detail](TODO-details.md) — 10 z 12 známych iOS-CI failov sú flaky wall-clock asserty, nie reálne bugy
+- [ ] #180 — iOS test hardening v2 (injektovaný čas, StoreKit Testing, quota × balík, zmrazené RS scenáre, identifikátory, snapshoty, audio automat) — [plan](../issues/issue-180-ios-agentic-test-hardening.md) — founder 2026-09-15 za všetky odporúčania; next = `/prepare-issue`; pohlcuje SilenceDetectionService timing TODO
+- [ ] (low) Make `SilenceDetectionService` timing tests deterministic — [detail](TODO-details.md) — 10 z 12 známych iOS-CI failov sú flaky wall-clock asserty, nie reálne bugy — **→ pohltené #180 track A**
 - [ ] Hetzner migration plan — [detail](TODO-details.md) — founder 2026-07-05: Hetzner VPS je preferovaný hosting target; next step = `/prepare-issue` pre migráciu
 - [ ] Logical-puzzle reference URLs — doplniť source/reference link pre `pipeline=logical_puzzle` otázky (deferred z #46 D5; F8 dnes pustí puzzle so `source_url=null`)
 - [~] Implement Claude Code setup-review recommendations — see `docs/handoffs/archive/handoff-2026-06-08-1659.md`

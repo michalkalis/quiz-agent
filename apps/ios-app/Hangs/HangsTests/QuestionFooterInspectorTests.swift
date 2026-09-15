@@ -141,36 +141,15 @@ struct QuestionFooterInspectorTests {
         }
     }
 
-    // MARK: - Track C: the recording surface
+    // MARK: - The recording surface
 
-    /// The pink bar and the transcript card said the same sentence twice while
-    /// recording. #131 Track C resolved it by dropping the bar; #179 D1 resolves
-    /// it the other way — the bar is the ONE state surface of the question screen
-    /// and must not disappear mid-answer, so the CARD gave up its caption row and
-    /// keeps the job only it can do: showing what the app heard.
-    @Test("recording shows the transcript card and the answer bar, and the caption only once")
-    func recordingShowsTranscriptCardAndBar() async throws {
-        let vm = makeVoiceViewModel()
-        vm.quizState = .recording
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            let card = try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
-            #expect(throws: Never.self, "the bar must hold its slot while answering") {
-                _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
-            }
-            #expect(throws: (any Error).self, "the card must not repeat the bar's caption") {
-                _ = try card.find(text: "LISTENING — SAY YOUR ANSWER")
-            }
-        }
-    }
-
-    /// It must appear on the FIRST frame of recording. Gating it on the first STT
-    /// partial (the old `isRecording && isStreamingSTT`) left a silent gap where
-    /// the mic was live and the screen showed nothing about it — and on the batch
-    /// recording path it never appeared at all.
-    @Test("the recording surface appears before any transcript text streams in")
-    func transcriptCardAppearsImmediately() async throws {
+    /// #181 finding 2 (TF build 62): the transcript card above the bar was an
+    /// empty pink box on the batch path and for the first seconds of streaming,
+    /// and the confirmation sheet echoes what was heard anyway. The BAR is the
+    /// one recording surface now — it must be there from the first frame, on
+    /// the batch path too, and no card may sit above it.
+    @Test("recording shows only the answer bar — no transcript card, on the batch path either")
+    func recordingShowsOnlyTheAnswerBar() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .recording
         vm.recordingCoordinator.isStreamingSTT = false // batch path, nothing streamed yet
@@ -178,11 +157,11 @@ struct QuestionFooterInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
-            }
-            #expect(throws: Never.self, "and the bar above it says what to do") {
+            #expect(throws: Never.self, "the bar is the recording surface") {
                 try tree.find(text: "LISTENING — SAY YOUR ANSWER")
+            }
+            #expect(throws: (any Error).self, "the empty transcript card is gone") {
+                try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
         }
     }

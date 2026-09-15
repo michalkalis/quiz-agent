@@ -51,10 +51,11 @@ struct QuestionListenPhaseTests {
         #expect(phase(.askingQuestion, remaining: 12, total: 30) == .thinking(remaining: 12, total: 30))
         // 3 — the answer mic is open.
         #expect(phase(.recording) == .listening(kind))
-        // 4 — something is in flight. `.skipping` counts: from the driver's seat
-        // it is the same promise that the screen has not died.
+        // 4 — the answer is in flight.
         #expect(phase(.processing) == .evaluating)
-        #expect(phase(.skipping) == .evaluating)
+        // #181 finding 4: a skip has NO answer to evaluate, so it must not borrow
+        // state 4's caption — the bar says what is really happening.
+        #expect(phase(.skipping) == .skipping)
 
         // Not the driver's turn — no bar at all.
         #expect(phase(.idle) == nil)
@@ -73,7 +74,8 @@ struct QuestionListenPhaseTests {
         for phase in [QuestionListenPhase.readingQuestion,
                       .thinking(remaining: 5, total: 30),
                       .listening(.mcq),
-                      .evaluating]
+                      .evaluating,
+                      .skipping]
         {
             for command in phase.commands {
                 #expect(routed.contains(command), "\(command) is not routed on the question screen")
@@ -91,6 +93,7 @@ struct QuestionListenPhaseTests {
         #expect(QuestionListenPhase.listening(.mcq).commands.isEmpty)
         #expect(QuestionListenPhase.listening(.open).commands.isEmpty)
         #expect(QuestionListenPhase.evaluating.commands.isEmpty)
+        #expect(QuestionListenPhase.skipping.commands.isEmpty)
     }
 
     /// The ✕ (#173 B1) belongs to the states the driver can still act in. While
@@ -101,6 +104,7 @@ struct QuestionListenPhaseTests {
         #expect(QuestionListenPhase.thinking(remaining: 1, total: 30).isDismissable)
         #expect(QuestionListenPhase.listening(.open).isDismissable)
         #expect(!QuestionListenPhase.evaluating.isDismissable)
+        #expect(!QuestionListenPhase.skipping.isDismissable)
     }
 }
 
@@ -172,6 +176,26 @@ struct QuestionListenBarRenderTests {
                 try tree.find(text: "This will take a moment, no need to say anything")
             }
             #expect(throws: Never.self, "a still bar would read as frozen too") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.spinner")
+            }
+            #expect(throws: (any Error).self, "nothing is listening, so no words are on offer") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            }
+        }
+    }
+
+    /// #181 finding 4 — after "Skip" the bar said "Evaluating your answer", and
+    /// there was no answer. It must name the skip and what the wait is for, and
+    /// still spin, so the truth does not read as a frozen screen either.
+    @Test("skipping says the question is being skipped, not evaluated")
+    func skippingState() async throws {
+        try await host(.skipping) { tree in
+            #expect(throws: Never.self) { try tree.find(text: "Skipping the question") }
+            #expect(throws: Never.self) { try tree.find(text: "Loading the next question") }
+            #expect(throws: (any Error).self, "there is no answer to evaluate") {
+                try tree.find(text: "Evaluating your answer")
+            }
+            #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.spinner")
             }
             #expect(throws: (any Error).self, "nothing is listening, so no words are on offer") {

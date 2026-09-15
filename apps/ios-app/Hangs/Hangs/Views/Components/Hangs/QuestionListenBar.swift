@@ -21,6 +21,10 @@
 //   4 `.evaluating`      — the answer is being graded. A grey status line with a
 //                          spinner; the bar's whole job here is to prove the app
 //                          is working.
+//   4' `.skipping`       — same grey + spinner, but it says what is actually
+//                          happening: nothing was answered, the next question is
+//                          being fetched (#181 finding 4 — "Evaluating your
+//                          answer" after Skip was a lie the founder noticed).
 //
 //  The bar never disappears across the four (the ✕ is still the only way to hide
 //  it, and only for the question on screen — #173 B1).
@@ -36,6 +40,7 @@ enum QuestionListenPhase: Equatable {
     case thinking(remaining: Int, total: Int)
     case listening(ListenBar.AnswerKind)
     case evaluating
+    case skipping
 
     /// The phase for a quiz state, or `nil` when the question screen shows no bar
     /// at all (it is not the driver's turn — starting, results, finished, error).
@@ -51,10 +56,11 @@ enum QuestionListenPhase: Equatable {
         switch quizState {
         case .recording:
             return .listening(answerKind)
-        // `.skipping` grades nothing, but from the driver's seat it is the same
-        // promise — something is in flight, the screen has not died.
-        case .processing, .skipping:
+        case .processing:
             return .evaluating
+        // #181: a skip grades nothing, and the bar must not claim it does.
+        case .skipping:
+            return .skipping
         case .askingQuestion:
             // No window running yet = the question is still being read: the think
             // countdown only starts once the TTS finishes.
@@ -73,7 +79,7 @@ enum QuestionListenPhase: Equatable {
         switch self {
         case .readingQuestion: return [.repeatQuestion, .skip]
         case .thinking: return [.start, .repeatQuestion, .skip]
-        case .listening, .evaluating: return []
+        case .listening, .evaluating, .skipping: return []
         }
     }
 
@@ -84,6 +90,7 @@ enum QuestionListenPhase: Equatable {
         case .thinking: return .command
         case let .listening(kind): return .answer(kind)
         case .evaluating: return .evaluating
+        case .skipping: return .skipping
         }
     }
 
@@ -96,7 +103,7 @@ enum QuestionListenPhase: Equatable {
     /// The ✕ belongs to the states the driver can still act in. While the answer
     /// is graded there is nothing to dismiss — and the bar is the only thing on
     /// screen saying the app is alive.
-    var isDismissable: Bool { self != .evaluating }
+    var isDismissable: Bool { self != .evaluating && self != .skipping }
 }
 
 /// `ListenBar` wired to one `QuestionListenPhase` — the single call the MCQ body

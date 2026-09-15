@@ -31,7 +31,10 @@ primary_region = "cdg"
   internal_port = 8002
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  # Keep one machine warm: with 0, the Fly proxy autostopped the only machine
+  # mid-quiz (2026-09-15 13:37Z, founder TF test) and the ~18 s cold start made
+  # every answer/skip request fail until it was back (#181).
+  min_machines_running = 1
 
   [[services.ports]]
     port = 80

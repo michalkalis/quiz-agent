@@ -92,6 +92,16 @@ struct ListenBar: View {
         case readingQuestion // #179 D1 state 1: the TTS is reading; commands armed (teal)
         case answer(AnswerKind) // listening for an answer (pink)
         case evaluating // #179 D1 state 4: the answer is being graded; nothing is heard (grey)
+        case skipping // #181: the question is being skipped; nothing is heard (grey)
+    }
+
+    /// The two "in flight" modes: nothing is listening, the bar only proves the
+    /// app is alive. They differ only in what they SAY.
+    private var isBusy: Bool {
+        switch mode {
+        case .evaluating, .skipping: return true
+        case .command, .readingQuestion, .answer: return false
+        }
     }
 
     /// #131 Track F Option B — the one permitted variation. Same colours, same
@@ -155,7 +165,7 @@ struct ListenBar: View {
     private var isCommandMode: Bool {
         switch mode {
         case .command, .readingQuestion: return true
-        case .answer, .evaluating: return false
+        case .answer, .evaluating, .skipping: return false
         }
     }
 
@@ -181,7 +191,7 @@ struct ListenBar: View {
         switch mode {
         case .command, .readingQuestion: return teal
         case .answer: return pink
-        case .evaluating: return Theme.Hangs.Colors.muted
+        case .evaluating, .skipping: return Theme.Hangs.Colors.muted
         }
     }
 
@@ -189,7 +199,7 @@ struct ListenBar: View {
     private var accent: Color {
         // Nothing is heard while an answer is graded, so a match/no-match tint
         // there would be a claim about a mic that is closed.
-        if case .evaluating = mode { return modeAccent }
+        if isBusy { return modeAccent }
         switch feedback {
         case .idle: return modeAccent
         case .matched: return teal
@@ -200,7 +210,7 @@ struct ListenBar: View {
     /// Background fill — matched/unmatched are the #122 lit /
     /// lit-miss tints; idle uses the mode's soft accent.
     private var fill: Color {
-        if case .evaluating = mode { return Theme.Hangs.Colors.muted.opacity(0.10) }
+        if isBusy { return Theme.Hangs.Colors.muted.opacity(0.10) }
         switch feedback {
         case .matched: return teal.opacity(0.22)
         case .unmatched: return amber.opacity(0.12)
@@ -208,13 +218,13 @@ struct ListenBar: View {
             switch mode {
             case .command, .readingQuestion: return teal.opacity(0.08)
             case .answer: return Theme.Hangs.Colors.pinkSoft
-            case .evaluating: return Theme.Hangs.Colors.muted.opacity(0.10)
+            case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.10)
             }
         }
     }
 
     private var border: Color {
-        if case .evaluating = mode { return Theme.Hangs.Colors.muted.opacity(0.35) }
+        if isBusy { return Theme.Hangs.Colors.muted.opacity(0.35) }
         switch feedback {
         case .matched: return teal.opacity(0.75)
         case .unmatched: return amber.opacity(0.55)
@@ -222,7 +232,7 @@ struct ListenBar: View {
             switch mode {
             case .command, .readingQuestion: return teal.opacity(0.35)
             case .answer: return pink
-            case .evaluating: return Theme.Hangs.Colors.muted.opacity(0.35)
+            case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.35)
             }
         }
     }
@@ -254,6 +264,10 @@ struct ListenBar: View {
         if case .evaluating = mode {
             return Text("This will take a moment, no need to say anything")
         }
+        // #181: no answer exists, so no "evaluating" — say what is happening.
+        if case .skipping = mode {
+            return Text("Loading the next question")
+        }
         // Chips replace the sentence wherever they are given (question screen).
         guard isCommandMode, chipWords.isEmpty, let commandHint else { return nil }
         switch feedback {
@@ -280,6 +294,8 @@ struct ListenBar: View {
             return Text("Reading the question")
         case .evaluating:
             return Text("Evaluating your answer")
+        case .skipping:
+            return Text("Skipping the question")
         case .command:
             // #174: without the words sub-line (hints outgrown) the miss must
             // still be readable, not just amber — so it takes the caption slot.
@@ -361,7 +377,7 @@ struct ListenBar: View {
     /// live waveform once listening — one glyph slot, four states (#132 B, #179 D1).
     @ViewBuilder
     private var leadingGlyph: some View {
-        if case .evaluating = mode {
+        if isBusy {
             ProgressView()
                 .controlSize(.small)
                 .tint(accent)
@@ -489,6 +505,7 @@ struct ListenBar: View {
                       language: .slovak,
                       thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .evaluating)
+            ListenBar(mode: .skipping)
             ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#, onDismiss: {})
             ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
             ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)

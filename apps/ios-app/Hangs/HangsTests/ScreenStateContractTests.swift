@@ -135,11 +135,12 @@ struct QuestionViewStateContractTests {
 
     /// Retires `QuestionViewSnapshotTests/recordingState.1.txt`.
     ///
-    /// Recording = the mic is live, so the transcript card shows what was heard
-    /// and the button flips to Stop. #179 D1: the bar STAYS (state 3, pink) —
-    /// what must be gone is any COMMAND WORD on it, because commands are not
-    /// accepted mid-answer and a chip there would invite one that is never heard.
-    @Test("Recording state renders the listening card, the pink answer bar and Stop — no Record, no command words")
+    /// Recording = the mic is live, so the button flips to Stop. #179 D1: the bar
+    /// STAYS (state 3, pink) — what must be gone is any COMMAND WORD on it,
+    /// because commands are not accepted mid-answer and a chip there would invite
+    /// one that is never heard. #181: the transcript card is gone for good — the
+    /// bar is the only recording surface.
+    @Test("Recording state renders the pink answer bar and Stop — no Record, no command words, no transcript card")
     func recordingStateContract() async throws {
         let vm = makeVoiceViewModel(state: .recording)
         let view = QuestionView(viewModel: vm)
@@ -150,7 +151,7 @@ struct QuestionViewStateContractTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.stop")
             }
-            #expect(throws: Never.self) {
+            #expect(throws: (any Error).self, "#181: no empty transcript card above the bar") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
             #expect(throws: Never.self, "the bar must say we are listening") {

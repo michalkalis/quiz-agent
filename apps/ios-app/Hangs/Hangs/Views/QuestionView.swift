@@ -483,41 +483,12 @@ struct QuestionView: View {
         }
     }
 
-    /// Compact MCQ skip chip — mirrors the voice footer's skip styling so the
-    /// two modes read the same. Disabled while an answer is being evaluated.
+    /// #179 D3: the shared skip capsule — same shape, same word as the voice
+    /// footer's. Disabled while an answer is being evaluated.
     private var mcqSkipChip: some View {
-        Button {
+        QuestionSkipButton(isSkipping: isSkipping, isDisabled: isProcessing) {
             Task { await viewModel.skipQuestion() }
-        } label: {
-            HStack(spacing: 6) {
-                // #174: a skip in flight spins IN this chip. The label is
-                // unchanged so the capsule keeps its width.
-                if isSkipping {
-                    ProgressView()
-                        .controlSize(.small)
-                        .tint(Theme.Hangs.Colors.ink)
-                        .accessibilityIdentifier("question.processingIndicator")
-                } else {
-                    // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
-                    // the play+bar glyph read as media transport.
-                    Image(systemName: "chevron.right.2")
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                Text("Skip question")
-                    .font(.hangsBody(15, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(height: 40)
-            .padding(.horizontal, 16)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
         }
-        .buttonStyle(.plain)
-        .disabled(isProcessing)
-        // Busy is not unavailable: the skipping chip keeps full contrast so its
-        // spinner reads, while a chip disabled by an answer in flight dims.
-        .opacity(isProcessing && !isSkipping ? 0.45 : 1)
-        .accessibilityIdentifier("question.skip")
     }
 
     // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)

@@ -310,8 +310,8 @@ final class QuizViewModel: ObservableObject {
     /// `VoiceCommandCoordinator.commandListenerHint` (ListenBar call sites).
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
 
-    /// #174: the command words under the listening bar, or nil once the driver
-    /// has outgrown them (`QuizSettings.voiceHintsVisible`). The bar itself is
+    /// #174: the command words under the listening bar, or nil when the driver has
+    /// switched them off (`QuizSettings.voiceHintsVisible`). The bar itself is
     /// still gated on `commandListenerHint` — only the words go, the state stays.
     var voiceHintWords: String? {
         showsVoiceHints ? commandListenerHint : nil
@@ -319,10 +319,7 @@ final class QuizViewModel: ObservableObject {
 
     /// Whether the "say …" words are currently shown (Settings mirrors this).
     var showsVoiceHints: Bool {
-        QuizSettings.voiceHintsVisible(
-            override: settings.voiceHintsEnabled,
-            completedQuizzes: quizStats.totalQuizzes
-        )
+        QuizSettings.voiceHintsVisible(override: settings.voiceHintsEnabled)
     }
 
     /// #122 Variant C ambient-glow feedback phase — see

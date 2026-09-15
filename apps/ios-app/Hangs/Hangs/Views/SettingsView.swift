@@ -199,9 +199,9 @@ struct SettingsView: View {
 
             hairline
 
-            // #174: the "say …" words are shown for the first quizzes only, then
-            // hidden — the buttons carry the same words. The row reads the
-            // effective state; touching it makes the choice explicit and permanent.
+            // #179 D1: the words are shown until the driver turns them off (the
+            // #174 five-quiz expiry is gone — it hid them from the one person who
+            // still needed them). The row reads the effective state.
             HangsToggleRow(
                 label: "Voice hints",
                 subtitle: "Show the words to say under the listening bar",

@@ -439,40 +439,29 @@ struct QuestionView: View {
     }
 
     /// #132 Track B (variant A "odpočet v lište"): ONE bar slot from the first
-    /// countdown tick to submit. While the driver decides it shows the think
-    /// state — teal drain + seconds + the command words; the moment the mic goes
-    /// live it flips to the pink answer state. Silent while the question is
-    /// still being read, and while an answer is being evaluated.
+    /// countdown tick to submit. #179 D1 widened that slot to the whole question:
+    /// the bar is also there while the question is being READ (it was missing
+    /// entirely on MCQ — founder screenshot 9) and while the answer is EVALUATED
+    /// (it used to vanish, which read as a frozen screen). The state it shows
+    /// comes from `QuestionListenPhase`, the same one the open question uses.
     ///
-    /// #173 B1: it now carries a ✕. Dismissal is scoped to the question on
-    /// screen (`ListenBarDismissal`) — nothing is persisted, so the
-    /// next question arms its own bar and a driver cannot permanently lose the
-    /// only surface that names the voice commands.
+    /// #173 B1: it carries a ✕. Dismissal is scoped to the question on screen
+    /// (`ListenBarDismissal`) — nothing is persisted, so the next question arms
+    /// its own bar and a driver cannot permanently lose the only surface that
+    /// names the voice commands.
     @ViewBuilder
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
-        if isProcessing || listenBarDismissal.isHidden(questionId: question.id) {
-            EmptyView()
-        } else if isRecording {
-            ListenBar(
-                mode: .answer(question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq),
+        if !listenBarDismissal.isHidden(questionId: question.id),
+           let phase = listenPhase(question: question)
+        {
+            QuestionListenBar(
+                phase: phase,
                 feedback: viewModel.voiceFeedbackPhase,
+                showsWords: showsCommandWords,
                 // #131 Track F folded the old SE-class `compact` flag into the
                 // one size axis: a short container gets the slim bar.
                 size: compact ? .slim : .full,
-                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
-            )
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
-            .transition(.opacity)
-        } else if viewModel.answerWindowRemaining > 0 {
-            ListenBar(
-                mode: .command,
-                feedback: viewModel.voiceFeedbackPhase,
-                commandHint: viewModel.voiceHintWords,
-                size: compact ? .slim : .full,
                 language: viewModel.commandLanguage,
-                thinkCountdown: .init(remaining: viewModel.answerWindowRemaining,
-                                      total: viewModel.answerWindowTotal),
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
             .padding(.horizontal, 20)
@@ -729,6 +718,23 @@ struct QuestionView: View {
     }
 
     // MARK: - Derived
+
+    /// #179 D1: the one state model, asked the same way by both question types.
+    private func listenPhase(question: Question) -> QuestionListenPhase? {
+        QuestionListenPhase.current(
+            quizState: viewModel.quizState,
+            answerWindowRemaining: viewModel.answerWindowRemaining,
+            answerWindowTotal: viewModel.answerWindowTotal,
+            answerKind: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq
+        )
+    }
+
+    /// A chip is a promise the word will be heard: it needs the Settings toggle
+    /// AND an armed listener (`commandListenerHint`), which is what the bar was
+    /// gated on wholesale before #179 D1 — the bar stays either way now.
+    private var showsCommandWords: Bool {
+        viewModel.showsVoiceHints && viewModel.commandListenerHint != nil
+    }
 
     private var isRecording: Bool { viewModel.quizState == .recording }
 

@@ -143,22 +143,24 @@ struct QuestionFooterInspectorTests {
 
     // MARK: - Track C: the recording surface
 
-    /// The pink "LISTENING — SAY YOUR ANSWER" bar and the transcript card said the
-    /// same thing twice while recording. The card won: it is where the words the
-    /// driver just said actually appear, so it carries the listening affordance and
-    /// the separate answer bar is gone.
-    @Test("recording shows the transcript card and no docked answer bar")
-    func recordingShowsTranscriptCardNotBar() async throws {
+    /// The pink bar and the transcript card said the same sentence twice while
+    /// recording. #131 Track C resolved it by dropping the bar; #179 D1 resolves
+    /// it the other way — the bar is the ONE state surface of the question screen
+    /// and must not disappear mid-answer, so the CARD gave up its caption row and
+    /// keeps the job only it can do: showing what the app heard.
+    @Test("recording shows the transcript card and the answer bar, and the caption only once")
+    func recordingShowsTranscriptCardAndBar() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .recording
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
-            }
-            #expect(throws: (any Error).self, "the duplicate pink answer bar must be gone") {
+            let card = try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
+            #expect(throws: Never.self, "the bar must hold its slot while answering") {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+            #expect(throws: (any Error).self, "the card must not repeat the bar's caption") {
+                _ = try card.find(text: "LISTENING — SAY YOUR ANSWER")
             }
         }
     }
@@ -179,7 +181,7 @@ struct QuestionFooterInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
-            #expect(throws: Never.self, "and it says what to do") {
+            #expect(throws: Never.self, "and the bar above it says what to do") {
                 try tree.find(text: "LISTENING — SAY YOUR ANSWER")
             }
         }

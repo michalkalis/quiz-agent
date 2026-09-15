@@ -135,11 +135,11 @@ struct QuestionViewStateContractTests {
 
     /// Retires `QuestionViewSnapshotTests/recordingState.1.txt`.
     ///
-    /// Recording = the mic is live, so the transcript card is the listening
-    /// surface (#131 Track C) and the button flips to Stop. The command
-    /// `listen-bar` must be gone — commands are not accepted mid-answer, and
-    /// showing the bar would invite the driver to speak one.
-    @Test("Recording state renders the listening card and Stop — no Record, no command bar")
+    /// Recording = the mic is live, so the transcript card shows what was heard
+    /// and the button flips to Stop. #179 D1: the bar STAYS (state 3, pink) —
+    /// what must be gone is any COMMAND WORD on it, because commands are not
+    /// accepted mid-answer and a chip there would invite one that is never heard.
+    @Test("Recording state renders the listening card, the pink answer bar and Stop — no Record, no command words")
     func recordingStateContract() async throws {
         let vm = makeVoiceViewModel(state: .recording)
         let view = QuestionView(viewModel: vm)
@@ -153,7 +153,7 @@ struct QuestionViewStateContractTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
-            #expect(throws: Never.self, "the card must say we are listening") {
+            #expect(throws: Never.self, "the bar must say we are listening") {
                 try tree.find(text: "LISTENING — SAY YOUR ANSWER")
             }
             // Question + countdown stay on screen while answering.
@@ -167,8 +167,14 @@ struct QuestionViewStateContractTests {
             #expect(throws: (any Error).self, "Record must not coexist with Stop") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.record")
             }
-            #expect(throws: (any Error).self, "no command bar while the answer mic is live") {
+            // #179 D1 reverses #131 Track C's "the card won, drop the bar": the
+            // bar is the one state surface and it holds its slot in all four
+            // states. Only the words go while the answer mic is live.
+            #expect(throws: Never.self, "the bar must not vanish mid-answer") {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            }
+            #expect(throws: (any Error).self, "no command words while the answer mic is live") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
             #expect(vm.quizState == .recording)
         }

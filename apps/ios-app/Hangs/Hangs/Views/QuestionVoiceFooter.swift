@@ -25,6 +25,14 @@
 //     listening affordance itself (waveform + pink accent header) and appears the
 //     moment recording starts, not when the first STT partial arrives.
 //
+//  #179 D1 (founder pick 2026-09-15) REVERSES that last point. The bar is now the
+//  ONE state surface of the question screen and it holds its slot through all
+//  four states — reading, thinking, listening, evaluating — identically on MCQ
+//  and here; a bar that disappeared mid-answer is what made the screen read as
+//  frozen. The transcript card stays (it is the only place the driver sees what
+//  was heard) but gives up its caption row: the bar directly below it was saying
+//  the same sentence twice.
+//
 
 import SwiftUI
 
@@ -57,14 +65,15 @@ struct QuestionVoiceFooter: View {
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                 .padding(.horizontal, 20)
 
-            // #125 addendum + #131: the docked command bar, shown iff a command
-            // window is armed (hidden during TTS and while recording — the
-            // transcript card owns that state now).
-            if !isRecording, viewModel.commandListenerHint != nil {
-                ListenBar(
-                    mode: .command,
+            // #179 D1: the docked bar, in whichever of the four states the quiz
+            // is in — never gated on the command window any more, because two of
+            // those states listen for no command at all and the bar still has to
+            // be there. The words inside it are what the arming gates.
+            if let phase = listenPhase {
+                QuestionListenBar(
+                    phase: phase,
                     feedback: viewModel.voiceFeedbackPhase,
-                    commandHint: viewModel.voiceHintWords,
+                    showsWords: showsCommandWords,
                     // #131 Track F: the SE-class `compact` flag is now the slim size.
                     size: compact ? .slim : .full,
                     language: viewModel.commandLanguage
@@ -80,40 +89,24 @@ struct QuestionVoiceFooter: View {
 
     // MARK: - Recording surface (Track C)
 
-    /// The live transcript card, restyled to carry the listening affordance the
-    /// pink answer bar used to duplicate: animated waveform + pink caption header
-    /// + a pink hairline on the card itself. Shown from the first frame of
-    /// `.recording`, so the batch (non-streaming) path also gets a visible "I am
-    /// listening" surface — `LiveTranscriptView` renders its listening
-    /// placeholder while the text is still empty.
+    /// The live transcript card: what the app heard, from the first frame of
+    /// `.recording` — so the batch (non-streaming) path also gets a visible
+    /// surface, with `LiveTranscriptView`'s placeholder while the text is empty.
+    ///
+    /// #179 D1: its caption row is gone. The bar right below it now says
+    /// "Listening — say your answer" in every state model it shares with MCQ, and
+    /// the card was repeating that sentence word for word. The pink hairline
+    /// still ties the card to the bar's pink state.
     private var transcriptCard: some View {
         HangsCard(padding: EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Image(systemName: "waveform")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.pink)
-                        .symbolEffect(.variableColor.iterative.dimInactiveLayers)
-                        .accessibilityHidden(true)
-
-                    Text("LISTENING — SAY YOUR ANSWER")
-                        .font(.hangsMono(11, weight: .semibold))
-                        .tracking(0.6)
-                        .textCase(.uppercase)
-                        .foregroundColor(Theme.Hangs.Colors.pink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-
-                LiveTranscriptView(
-                    text: viewModel.liveTranscript,
-                    // Never "committed" while the card is on screen: the card only
-                    // exists during `.recording`, and a committed transcript ends
-                    // that state. Keeps the listening placeholder on the batch path.
-                    isCommitted: false
-                )
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            LiveTranscriptView(
+                text: viewModel.liveTranscript,
+                // Never "committed" while the card is on screen: the card only
+                // exists during `.recording`, and a committed transcript ends
+                // that state. Keeps the listening placeholder on the batch path.
+                isCommitted: false
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .overlay(
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
@@ -290,6 +283,22 @@ struct QuestionVoiceFooter: View {
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
+
+    /// #179 D1: the one state model — the same call the MCQ body makes.
+    private var listenPhase: QuestionListenPhase? {
+        QuestionListenPhase.current(
+            quizState: viewModel.quizState,
+            answerWindowRemaining: viewModel.answerWindowRemaining,
+            answerWindowTotal: viewModel.answerWindowTotal,
+            answerKind: .open
+        )
+    }
+
+    /// A chip is a promise the word will be heard: Settings toggle AND an armed
+    /// listener. The bar itself no longer depends on either.
+    private var showsCommandWords: Bool {
+        viewModel.showsVoiceHints && viewModel.commandListenerHint != nil
+    }
 
     private var canInteract: Bool { viewModel.quizState == .askingQuestion }
 

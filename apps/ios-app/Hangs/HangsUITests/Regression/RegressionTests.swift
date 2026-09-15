@@ -274,6 +274,52 @@ final nonisolated class RegressionTests: XCTestCase {
         )
     }
 
+    // MARK: - RS-mcq-long-options
+
+    //
+    // Scenario: launch with "--ui-test-mcq-long-options" so the seeded MCQ has an
+    // ordinary stem but four options of 2–3 lines each, then assert the skip chip
+    // is still hittable (isHittable is false once it is off the screen edge).
+    //
+    // Regression guarded: #179 finding 10 (founder, TF build 61) — the options
+    // grew unbounded under a stem holding a 360pt floor, so "Skip question", the
+    // only way out of a question the driver cannot answer, was pushed under the
+    // bottom edge. It is layout, so only a real run can prove it.
+
+    @MainActor
+    func testRSMCQLongOptionsFooterReachable() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test", "--ui-test-mcq-long-options"]
+        app.launch()
+
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+        question.waitForState("askingQuestion", timeout: 10)
+
+        XCTAssertTrue(
+            question.skipButton.waitForExistence(timeout: 5),
+            "RS-mcq-long-options: question.skip not found"
+        )
+        XCTAssertTrue(
+            question.skipButton.isHittable,
+            "RS-mcq-long-options: question.skip is off-screen — four long options pushed the footer off the bottom"
+        )
+        // The options are why the footer was pushed, so they must still be there:
+        // the chip must not have been bought by dropping an option or the stem.
+        XCTAssertTrue(
+            question.option("a").exists,
+            "RS-mcq-long-options: the first option is missing"
+        )
+        XCTAssertTrue(
+            question.questionText.exists,
+            "RS-mcq-long-options: the stem is missing"
+        )
+    }
+
     // MARK: - RS-paywall
 
     //

@@ -281,5 +281,24 @@ extension QuizResponse {
                 format: "opus"
             )
         )
+
+        /// Long-OPTION MCQ variant — seeded by `--ui-test-mcq-long-options`
+        /// (#179 finding 10). The stem is ordinary here; it is the four
+        /// multi-line options that ate the screen and carried the skip chip off
+        /// the bottom with them.
+        static let previewStartQuizMCQLongOptions = QuizResponse(
+            success: true,
+            message: "Quiz started",
+            session: QuizResponse.previewStartQuizMCQ.session,
+            currentQuestion: Question.previewMCQLongOptions,
+            evaluation: nil,
+            feedbackReceived: [],
+            audio: AudioInfo(
+                feedbackUrl: nil,
+                feedbackAudioBase64: nil,
+                questionUrl: "/api/v1/sessions/sess_preview_123/question/audio",
+                format: "opus"
+            )
+        )
     }
 #endif

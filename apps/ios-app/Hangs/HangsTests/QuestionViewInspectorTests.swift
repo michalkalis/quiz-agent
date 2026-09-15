@@ -693,3 +693,65 @@ struct QuestionViewReplayProcessingInspectorTests {
         return vm
     }
 }
+
+// MARK: - MCQ footer pinned under long options (#179 finding 10)
+
+/// Founder, TestFlight 2026-09-14: on an MCQ whose four options each run 2–3
+/// lines, "Skip question" was cut off below the screen edge — the driver's only
+/// escape hatch from a question they cannot answer. The options grew unbounded
+/// while the stem held a 360pt floor, and the footer was simply the last child
+/// of the stack that overflowed.
+///
+/// The fix is structural, so the test is structural: the footer is a bottom
+/// safe-area inset now (laid out first, unpushable), not a sibling stacked after
+/// the options. This suite fails on the pre-#179 layout, where `question.skip`
+/// exists only inside the body VStack.
+@MainActor
+@Suite("QuestionView — MCQ footer pinned under long options (#179)")
+struct QuestionViewMCQPinnedFooterTests {
+    /// The field shape of finding 10 (`--ui-test-mcq-long-options`): an ordinary
+    /// stem, four multi-line options, still in the think phase.
+    private func makeLongOptionsViewModel() -> QuizViewModel {
+        let (vm, _) = Fixtures.makeViewModelWithNetwork()
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = Question.previewMCQLongOptions
+        vm.quizState = .askingQuestion
+        vm.settings.autoRecordEnabled = false
+        vm.settings.answerTimeLimit = 30
+        vm.answerTimerCountdown = 12
+        return vm
+    }
+
+    /// The fixture has to be the shape under test: long options mean full-width
+    /// rows (`usesGrid == false`), which is what makes them grow unbounded.
+    @Test("the long-options fixture really renders as rows, not the 2×2 grid")
+    func fixtureIsTheRowLayout() {
+        let picker = MCQOptionPicker(
+            options: Question.previewMCQLongOptions.sortedAnswerOptions,
+            onSelect: { _, _ in }
+        )
+        #expect(picker.usesGrid == false)
+    }
+
+    @Test("four multi-line options leave the skip chip pinned to the bottom edge")
+    func skipChipIsPinnedNotStacked() async throws {
+        let view = QuestionView(viewModel: makeLongOptionsViewModel())
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let footer = try tree.find(ViewType.SafeAreaInset.self)
+            #expect(try footer.edge() == .bottom, "the footer must be pinned to the BOTTOM edge")
+            #expect(throws: Never.self, "the skip chip is not in the pinned footer") {
+                try footer.find(viewWithAccessibilityIdentifier: "question.skip")
+            }
+            // …and nothing was traded away for it: stem and all four options stay.
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.text")
+            }
+            for id in ["mcq.option.a", "mcq.option.b", "mcq.option.c", "mcq.option.d"] {
+                #expect(throws: Never.self, "\(id) went missing") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
+                }
+            }
+        }
+    }
+}

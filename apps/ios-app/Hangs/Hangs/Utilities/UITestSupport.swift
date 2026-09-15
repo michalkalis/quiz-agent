@@ -101,18 +101,26 @@
             // could not be seeded at all. Compose them instead.
             let wantsMCQ = CommandLine.arguments.contains("--ui-test-mcq")
             let wantsLong = CommandLine.arguments.contains("--ui-test-long")
-            switch (wantsMCQ, wantsLong) {
-            case (true, true):
-                network.mockSession = QuizResponse.previewStartQuizMCQLong.session
-                network.mockResponse = QuizResponse.previewStartQuizMCQLong
-            case (true, false):
-                network.mockSession = QuizResponse.previewStartQuizMCQ.session
-                network.mockResponse = QuizResponse.previewStartQuizMCQ
-            case (false, true):
-                network.mockSession = QuizResponse.previewStartQuizLong.session
-                network.mockResponse = QuizResponse.previewStartQuizLong
-            case (false, false):
-                break
+            // #179 finding 10: the other MCQ overflow — an ordinary stem with
+            // four multi-line OPTIONS. Its own flag, because it is the options
+            // that must be long here, not the stem.
+            if CommandLine.arguments.contains("--ui-test-mcq-long-options") {
+                network.mockSession = QuizResponse.previewStartQuizMCQLongOptions.session
+                network.mockResponse = QuizResponse.previewStartQuizMCQLongOptions
+            } else {
+                switch (wantsMCQ, wantsLong) {
+                case (true, true):
+                    network.mockSession = QuizResponse.previewStartQuizMCQLong.session
+                    network.mockResponse = QuizResponse.previewStartQuizMCQLong
+                case (true, false):
+                    network.mockSession = QuizResponse.previewStartQuizMCQ.session
+                    network.mockResponse = QuizResponse.previewStartQuizMCQ
+                case (false, true):
+                    network.mockSession = QuizResponse.previewStartQuizLong.session
+                    network.mockResponse = QuizResponse.previewStartQuizLong
+                case (false, false):
+                    break
+                }
             }
 
             var seededSettings = QuizSettings.default

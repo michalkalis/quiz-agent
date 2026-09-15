@@ -350,5 +350,31 @@ extension Question {
             explanation: nil,
             generatedBy: nil
         )
+
+        /// Four LONG options (each well past `MCQOptionPicker.gridMaxOptionLength`,
+        /// so they render as full-width rows of 2–3 lines) under an ordinary
+        /// stem — used by `--ui-test-mcq-long-options` (#179 finding 10). This is
+        /// the shape that pushed "Skip question" off the bottom of the screen:
+        /// `previewMCQLong` stresses the STEM, this one stresses the OPTIONS.
+        static let previewMCQLongOptions = Question(
+            id: "q_preview_mcq_long_options_001",
+            question: "Which statement about how the human body grows is correct?",
+            type: .textMultichoice,
+            possibleAnswers: [
+                "a": "Hair on the head grows roughly 1.25 centimetres every month, a little faster in summer",
+                "b": "Fingernails grow about four times faster than toenails, and faster on the dominant hand",
+                "c": "Children grow measurably faster in spring than they do in any other season of the year",
+                "d": "Toenails grow about four times faster than fingernails, mostly while you are asleep",
+            ],
+            difficulty: "hard",
+            topic: "Science",
+            category: "adults",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
     }
 #endif

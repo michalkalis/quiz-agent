@@ -51,7 +51,7 @@ struct OrderPackSummaryStep: View {
 
     private var noticeBox: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.warning)
             Text("Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.")

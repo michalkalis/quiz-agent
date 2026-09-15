@@ -207,9 +207,9 @@ struct QuestionView: View {
     // MARK: - Toolbar (#173 decision 1, variant A3)
 
     /// One toolbar for MCQ, voice and image questions, in every quiz state.
-    /// ✕ leading; the two mid-question controls (mute, pause) grouped trailing;
-    /// everything else under ⋯ — the HIG "More" rule, and the reason nothing can
-    /// overlap the category label any more.
+    /// ✕ leading; the two mid-question controls (mute, pause) joined into one
+    /// pill trailing (#179 D2); everything else under ⋯ — the HIG "More" rule,
+    /// and the reason nothing can overlap the category label any more.
     @ToolbarContentBuilder
     private var quizToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -221,16 +221,18 @@ struct QuestionView: View {
             .accessibilityIdentifier("question.closeButton")
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
-            // EFFECTIVE mute, not the persisted Settings preference.
-            QuizMuteToolbarButton(isMuted: viewModel.isAudioMuted) {
-                Task { await viewModel.toggleMute() }
-            }
-            QuizPauseToolbarButton(isPaused: viewModel.isPaused) {
-                viewModel.togglePause()
-            }
-            .disabled(!viewModel.canPauseQuiz && !viewModel.isPaused)
+        // #179 D2: one joined pill, not a group the system spacing spreads into
+        // two unrelated buttons.
+        ToolbarItem(placement: .topBarTrailing) {
+            QuizControlPill(
+                // #173 Track A: the toolbar mute is quiz-scoped — it must show
+                // the EFFECTIVE mute, not the persisted Settings preference.
+                isMuted: viewModel.isAudioMuted,
+                isPaused: viewModel.isPaused,
+                isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
+                onMute: { Task { await viewModel.toggleMute() } },
+                onPause: { viewModel.togglePause() }
+            )
         }
 
         // Separates the live controls from the menu, so the ⋯ never reads as a
@@ -309,7 +311,7 @@ struct QuestionView: View {
 
     private func errorBanner(_ error: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: "exclamationmark.triangle")
             Text(error).font(.hangsBody(13))
         }
         .foregroundColor(Theme.Hangs.Colors.error)
@@ -470,41 +472,12 @@ struct QuestionView: View {
         }
     }
 
-    /// Compact MCQ skip chip — mirrors the voice footer's skip styling so the
-    /// two modes read the same. Disabled while an answer is being evaluated.
+    /// #179 D3: the shared skip capsule — same shape, same word as the voice
+    /// footer's. Disabled while an answer is being evaluated.
     private var mcqSkipChip: some View {
-        Button {
+        QuestionSkipButton(isSkipping: isSkipping, isDisabled: isProcessing) {
             Task { await viewModel.skipQuestion() }
-        } label: {
-            HStack(spacing: 6) {
-                // #174: a skip in flight spins IN this chip. The label is
-                // unchanged so the capsule keeps its width.
-                if isSkipping {
-                    ProgressView()
-                        .controlSize(.small)
-                        .tint(Theme.Hangs.Colors.ink)
-                        .accessibilityIdentifier("question.processingIndicator")
-                } else {
-                    // Founder pick (#171, 2026-09-06): two chevrons read as "skip";
-                    // the play+bar glyph read as media transport.
-                    Image(systemName: "chevron.right.2")
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                Text("Skip question")
-                    .font(.hangsBody(15, weight: .medium))
-            }
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(height: 40)
-            .padding(.horizontal, 16)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
         }
-        .buttonStyle(.plain)
-        .disabled(isProcessing)
-        // Busy is not unavailable: the skipping chip keeps full contrast so its
-        // spinner reads, while a chip disabled by an answer in flight dims.
-        .opacity(isProcessing && !isSkipping ? 0.45 : 1)
-        .accessibilityIdentifier("question.skip")
     }
 
     // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)

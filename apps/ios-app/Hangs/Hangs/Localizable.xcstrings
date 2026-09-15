@@ -1,7 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
+    "" : {
+
+    },
     "%@ / month" : {
       "localizations" : {
         "cs" : {
@@ -774,13 +776,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povolit mikrofon"
+            "value" : "Povol mikrofon"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povoliť mikrofón"
+            "value" : "Povoľ mikrofón"
           }
         }
       }
@@ -1201,13 +1203,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Koupit balíček 100 otázek — %@"
+            "value" : "Kup balíček 100 otázek — %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kúpiť balík 100 otázok — %@"
+            "value" : "Kúp balík 100 otázok — %@"
           }
         }
       }
@@ -1318,13 +1320,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušit"
+            "value" : "Zruš"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušiť"
+            "value" : "Zruš"
           }
         }
       }
@@ -1335,13 +1337,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušit úpravu"
+            "value" : "Zruš úpravu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušiť úpravu"
+            "value" : "Zruš úpravu"
           }
         }
       }
@@ -1352,13 +1354,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušit zpracování"
+            "value" : "Zruš zpracování"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušiť spracovanie"
+            "value" : "Zruš spracovanie"
           }
         }
       }
@@ -1490,13 +1492,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavřít"
+            "value" : "Zavři"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavrieť"
+            "value" : "Zavri"
           }
         }
       }
@@ -1507,13 +1509,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavřít kvíz"
+            "value" : "Zavři kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavrieť kvíz"
+            "value" : "Zavri kvíz"
           }
         }
       }
@@ -1575,13 +1577,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Potvrdit odpověď"
+            "value" : "Potvrď odpověď"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Potvrdiť odpoveď"
+            "value" : "Potvrď odpoveď"
           }
         }
       }
@@ -1609,13 +1611,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Potvrdit bez odpovědi"
+            "value" : "Potvrď bez odpovědi"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Potvrdiť bez odpovede"
+            "value" : "Potvrď bez odpovede"
           }
         }
       }
@@ -1644,13 +1646,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokračovat"
+            "value" : "Pokračuj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokračovať"
+            "value" : "Pokračuj"
           }
         }
       }
@@ -1676,13 +1678,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopírovat"
+            "value" : "Zkopíruj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopírovať"
+            "value" : "Skopíruj"
           }
         }
       }
@@ -1829,13 +1831,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vytvořit balíček"
+            "value" : "Vytvoř balíček"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vytvoriť balík"
+            "value" : "Vytvor balík"
           }
         }
       }
@@ -1931,13 +1933,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstranit"
+            "value" : "Odstraň"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstrániť"
+            "value" : "Odstráň"
           }
         }
       }
@@ -1948,13 +1950,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstranit účet"
+            "value" : "Odstraň účet"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstrániť účet"
+            "value" : "Odstráň účet"
           }
         }
       }
@@ -1981,13 +1983,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smazat moje údaje"
+            "value" : "Smaž moje údaje"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vymazať moje údaje"
+            "value" : "Vymaž moje údaje"
           }
         }
       }
@@ -2014,13 +2016,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diktovat"
+            "value" : "Diktuj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diktovať"
+            "value" : "Diktuj"
           }
         }
       }
@@ -2084,13 +2086,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavřít"
+            "value" : "Zavři"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zavrieť"
+            "value" : "Zavri"
           }
         }
       }
@@ -2170,13 +2172,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upravit odpověď"
+            "value" : "Uprav odpověď"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upraviť odpoveď"
+            "value" : "Uprav odpoveď"
           }
         }
       }
@@ -2203,13 +2205,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončit a zobrazit výsledky"
+            "value" : "Ukonči a zobraz výsledky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončiť a zobraziť výsledky"
+            "value" : "Ukonči a zobraz výsledky"
           }
         }
       }
@@ -2221,13 +2223,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončit kvíz"
+            "value" : "Ukonči kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončiť kvíz"
+            "value" : "Ukonči kvíz"
           }
         }
       }
@@ -2256,13 +2258,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončit kvíz"
+            "value" : "Ukonči kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ukončiť kvíz"
+            "value" : "Ukonči kvíz"
           }
         }
       }
@@ -2430,13 +2432,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportovat moje data"
+            "value" : "Exportuj moje data"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportovať moje dáta"
+            "value" : "Exportuj moje dáta"
           }
         }
       }
@@ -2757,13 +2759,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opravit platbu"
+            "value" : "Oprav platbu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opraviť platbu"
+            "value" : "Oprav platbu"
           }
         }
       }
@@ -2966,13 +2968,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odemknout bez limitu"
+            "value" : "Odemkni bez limitu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odomknúť bez limitu"
+            "value" : "Odomkni bez limitu"
           }
         }
       }
@@ -3067,13 +3069,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skrýt"
+            "value" : "Skryj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skryť"
+            "value" : "Skry"
           }
         }
       }
@@ -3730,13 +3732,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spravovat"
+            "value" : "Spravuj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spravovať"
+            "value" : "Spravuj"
           }
         }
       }
@@ -3935,13 +3937,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ztlumit"
+            "value" : "Ztlum"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stlmiť"
+            "value" : "Stlm"
           }
         }
       }
@@ -4066,7 +4068,7 @@
       }
     },
     "Next" : {
-      "comment" : "Button title on the result screen — next question; equals the voice command word (#174)",
+      "comment" : "Accessibility label for the next-question button",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -4499,13 +4501,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otevřít Nastavení"
+            "value" : "Otevři Nastavení"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otvoriť Nastavenia"
+            "value" : "Otvor Nastavenia"
           }
         }
       }
@@ -4642,13 +4644,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaplatit a vytvořit balíček"
+            "value" : "Zaplať a vytvoř balíček"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaplatiť a vytvoriť balík"
+            "value" : "Zaplať a vytvor balík"
           }
         }
       }
@@ -4711,13 +4713,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hrát znovu"
+            "value" : "Hraj znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hrať znova"
+            "value" : "Hraj znova"
           }
         }
       }
@@ -4728,13 +4730,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přehrát souhrn"
+            "value" : "Přehraj souhrn"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prehrať súhrn"
+            "value" : "Prehraj súhrn"
           }
         }
       }
@@ -5247,13 +5249,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ohodnotit otázku"
+            "value" : "Ohodnoť otázku"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ohodnotiť otázku"
+            "value" : "Ohodnoť otázku"
           }
         }
       }
@@ -5264,13 +5266,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ohodnotit tuto otázku"
+            "value" : "Ohodnoť tuto otázku"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ohodnotiť túto otázku"
+            "value" : "Ohodnoť túto otázku"
           }
         }
       }
@@ -5452,13 +5454,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnovit"
+            "value" : "Obnov"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnoviť"
+            "value" : "Obnov"
           }
         }
       }
@@ -5485,13 +5487,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstranit snímek obrazovky"
+            "value" : "Odstraň snímek obrazovky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odstrániť snímku obrazovky"
+            "value" : "Odstráň snímku obrazovky"
           }
         }
       }
@@ -5503,13 +5505,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přehrát úvod znovu"
+            "value" : "Přehraj úvod znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prehrať úvod znova"
+            "value" : "Prehraj úvod znova"
           }
         }
       }
@@ -5572,13 +5574,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovat"
+            "value" : "Vynuluj"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovať"
+            "value" : "Vynuluj"
           }
         }
       }
@@ -5608,13 +5610,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovat historii otázek"
+            "value" : "Vynuluj historii otázek"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovať históriu otázok"
+            "value" : "Vynuluj históriu otázok"
           }
         }
       }
@@ -5625,13 +5627,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovat viděné otázky"
+            "value" : "Vynuluj viděné otázky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vynulovať videné otázky"
+            "value" : "Vynuluj videné otázky"
           }
         }
       }
@@ -5660,13 +5662,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnovit nákupy"
+            "value" : "Obnov nákupy"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnoviť nákupy"
+            "value" : "Obnov nákupy"
           }
         }
       }
@@ -5692,13 +5694,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnovit předplatné"
+            "value" : "Obnov předplatné"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnoviť predplatné"
+            "value" : "Obnov predplatné"
           }
         }
       }
@@ -5728,13 +5730,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnovit automatický posun"
+            "value" : "Obnov automatický posun"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obnoviť automatický posun"
+            "value" : "Obnov automatický posun"
           }
         }
       }
@@ -5744,13 +5746,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zkusit znovu"
+            "value" : "Zkus znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skúsiť znova"
+            "value" : "Skús znova"
           }
         }
       }
@@ -5908,13 +5910,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uložit"
+            "value" : "Ulož"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uložiť"
+            "value" : "Ulož"
           }
         }
       }
@@ -5925,13 +5927,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uložit hodnocení"
+            "value" : "Ulož hodnocení"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uložiť hodnotenie"
+            "value" : "Ulož hodnotenie"
           }
         }
       }
@@ -6062,13 +6064,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odeslat zpětnou vazbu"
+            "value" : "Odešli zpětnou vazbu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odoslať spätnú väzbu"
+            "value" : "Odošli spätnú väzbu"
           }
         }
       }
@@ -6078,13 +6080,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odeslat do Sentry"
+            "value" : "Odešli do Sentry"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odoslať do Sentry"
+            "value" : "Odošli do Sentry"
           }
         }
       }
@@ -6250,13 +6252,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sdílet"
+            "value" : "Sdílej"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zdieľať"
+            "value" : "Zdieľaj"
           }
         }
       }
@@ -6266,13 +6268,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobrazit"
+            "value" : "Zobraz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobraziť"
+            "value" : "Zobraz"
           }
         }
       }
@@ -6283,13 +6285,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobrazit vše"
+            "value" : "Zobraz vše"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobraziť všetky"
+            "value" : "Zobraz všetky"
           }
         }
       }
@@ -6350,13 +6352,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odhlásit se"
+            "value" : "Odhlas se"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odhlásiť sa"
+            "value" : "Odhlás sa"
           }
         }
       }
@@ -6636,7 +6638,7 @@
       }
     },
     "Source: %@" : {
-      "comment" : "Accessibility label for the result screen's source link, naming the site",
+      "comment" : "Accessibility label for the source link, naming the site",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -6744,13 +6746,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spustit kvíz"
+            "value" : "Spusť kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spustiť kvíz"
+            "value" : "Spusti kvíz"
           }
         }
       }
@@ -6967,13 +6969,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zastavit souhrn"
+            "value" : "Zastav souhrn"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zastaviť súhrn"
+            "value" : "Zastav súhrn"
           }
         }
       }
@@ -6983,13 +6985,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Předplatit"
+            "value" : "Předplať"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Predplatiť"
+            "value" : "Predplať"
           }
         }
       }
@@ -6999,13 +7001,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Předplatit za %@ / měsíc"
+            "value" : "Předplať za %@ / měsíc"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Predplatiť — %@ / mesiac"
+            "value" : "Predplať — %@ / mesiac"
           }
         }
       }
@@ -7015,13 +7017,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Předplatit za %@ / rok"
+            "value" : "Předplať za %@ / rok"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Predplatiť — %@ / rok"
+            "value" : "Predplať — %@ / rok"
           }
         }
       }
@@ -7704,13 +7706,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zkusit znovu"
+            "value" : "Zkus znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skúsiť znova"
+            "value" : "Skús znova"
           }
         }
       }
@@ -7721,13 +7723,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zkusit znovu"
+            "value" : "Zkus znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skúsiť znova"
+            "value" : "Skús znova"
           }
         }
       }
@@ -7805,13 +7807,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Psát"
+            "value" : "Piš"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Písať"
+            "value" : "Píš"
           }
         }
       }
@@ -7842,13 +7844,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raději psát odpovědi"
+            "value" : "Raději piš odpovědi"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Radšej písať odpovede"
+            "value" : "Radšej píš odpovede"
           }
         }
       }
@@ -8034,13 +8036,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odemknout bez limitu"
+            "value" : "Odemkni bez limitu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odomknúť bez limitu"
+            "value" : "Odomkni bez limitu"
           }
         }
       }
@@ -8053,13 +8055,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odemknout bez limitu za %@"
+            "value" : "Odemkni bez limitu za %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odomknúť bez limitu — %@"
+            "value" : "Odomkni bez limitu — %@"
           }
         }
       }
@@ -8070,13 +8072,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušit ztlumení"
+            "value" : "Zruš ztlumení"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zrušiť stlmenie"
+            "value" : "Zruš stlmenie"
           }
         }
       }
@@ -8102,13 +8104,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vylepšit"
+            "value" : "Vylepši"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vylepšiť"
+            "value" : "Vylepši"
           }
         }
       }
@@ -8170,13 +8172,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobrazit logy"
+            "value" : "Zobraz logy"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zobraziť logy"
+            "value" : "Zobraz logy"
           }
         }
       }
@@ -8925,13 +8927,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "poslechnout"
+            "value" : "poslechni si"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "vypočuť"
+            "value" : "vypočuj si"
           }
         }
       }

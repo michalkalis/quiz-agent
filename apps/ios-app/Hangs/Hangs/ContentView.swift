@@ -395,7 +395,7 @@ struct ErrorView: View {
         VStack(spacing: 10) {
             switch model.retryAction {
             case .retryOperation:
-                HangsPrimaryButton(title: "Try Again", icon: "arrow.counterclockwise") {
+                HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
                     if viewModel.shouldRetryWithNewSession {
                         viewModel.beginQuizStart()
                     } else {

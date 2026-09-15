@@ -101,7 +101,7 @@ struct OrderPackFailedStep: View {
         VStack(spacing: 20) {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
                 VStack(spacing: 12) {
-                    Image(systemName: isRetryable ? "exclamationmark.triangle.fill" : "clock.badge.checkmark")
+                    Image(systemName: isRetryable ? "exclamationmark.triangle" : "clock.badge.checkmark")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(isRetryable ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.blue)
                     Text(verbatim: message)

@@ -64,6 +64,20 @@ final nonisolated class RegressionTests: XCTestCase {
             "RS-start: question.record button is not hittable"
         )
 
+        // #179 D2: mute and pause live inside one custom pill now. A container
+        // `accessibilityIdentifier` is INHERITED by its children, so a label on
+        // the pill silently replaces both of these — the controls stay visible
+        // but become unaddressable to VoiceOver and to every UI test. Only a
+        // real run can see that, which is why it is asserted here.
+        XCTAssertTrue(
+            app.buttons["question.mute"].exists,
+            "RS-start: question.mute is not addressable — the toolbar pill swallowed its identifier"
+        )
+        XCTAssertTrue(
+            app.buttons["question.pause"].exists,
+            "RS-start: question.pause is not addressable — the toolbar pill swallowed its identifier"
+        )
+
         question.waitForState("askingQuestion", timeout: 5)
     }
 

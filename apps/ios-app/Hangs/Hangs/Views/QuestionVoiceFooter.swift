@@ -190,52 +190,29 @@ struct QuestionVoiceFooter: View {
     /// and a driver learns it by reading the button. #171 had made this icon-only
     /// because "Preskočiť" beside "Nahrávať" left the Record button no room; the
     /// imperative pair ("Preskoč" beside "Štart") is short enough to share the row.
+    ///
+    /// #179 D3: and it is the SAME capsule the MCQ screen draws now — one shape
+    /// and one word for the escape hatch, at the 48pt height that keeps this row
+    /// reading as one strip.
     private var skipButton: some View {
-        Button {
+        QuestionSkipButton(
+            isSkipping: isSkipping,
+            isDisabled: isRecording || isProcessing,
+            height: 48
+        ) {
             Task { await viewModel.skipQuestion() }
-        } label: {
-            if isSkipping {
-                // #174: a skip in flight spins in the chip that started it.
-                chipSurface {
-                    ProgressView()
-                        .controlSize(.small)
-                        .accessibilityIdentifier("question.processingIndicator")
-                }
-            } else {
-                chipSurface(fixedWidth: false) {
-                    Text("Skip")
-                        .font(.hangsBody(15, weight: .semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .padding(.horizontal, 16)
-                }
-            }
         }
-        .buttonStyle(.plain)
-        .disabled(isRecording || isProcessing)
-        // Busy is not unavailable: the skipping chip keeps full contrast.
-        .opacity((isRecording || isProcessing) && !isSkipping ? 0.45 : 1)
-        .accessibilityLabel("Skip")
-        .accessibilityIdentifier("question.skip")
     }
 
-    /// The shared surface of the two icon-only controls: a circle as tall as the
-    /// Record button beside it, so the row still reads as one strip.
+    /// The surface of the icon-only Type control: a circle as tall as the Record
+    /// button beside it, so the row still reads as one strip. (#179 D3 moved the
+    /// skip capsule out to `QuestionSkipButton`, which now owns its own chrome.)
     private func iconChip(_ systemName: String, size: CGFloat) -> some View {
-        chipSurface {
-            Image(systemName: systemName)
-                .font(.system(size: size, weight: .semibold))
-        }
-    }
-
-    /// The chip chrome on its own, so the skip spinner sits in exactly the same
-    /// circle as the glyph it replaces (no size jump mid-row). `fixedWidth: false`
-    /// is the #174 word chip: a capsule that hugs its text at the same height.
-    private func chipSurface(fixedWidth: Bool = true, @ViewBuilder _ content: () -> some View) -> some View {
-        content()
+        Image(systemName: systemName)
+            .font(.system(size: size, weight: .semibold))
             .foregroundColor(Theme.Hangs.Colors.ink)
             .tint(Theme.Hangs.Colors.ink)
-            .frame(width: fixedWidth ? 48 : nil, height: 48)
+            .frame(width: 48, height: 48)
             .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
             .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
     }

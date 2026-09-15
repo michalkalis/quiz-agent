@@ -52,7 +52,11 @@ struct QuizControlPill: View {
         }
         .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
         .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
-        .accessibilityIdentifier("question.controlPill")
+        // Deliberately NO identifier on the pill: `accessibilityIdentifier` is
+        // inherited, so one here overwrites `question.mute` / `question.pause`
+        // on the children and both controls vanish from the UI-test tree
+        // (caught by the #179 screenshot pass). The pill is chrome; the two
+        // buttons inside it are what anything automated or assistive addresses.
     }
 }
 

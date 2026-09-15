@@ -42,6 +42,19 @@
 //  disappears). The command-word sub-line stays exactly as every other command
 //  bar renders it — the founder's correction to the mock, which had dropped it.
 //
+//  #179 D1, variant A (founder pick 2026-09-15): on the QUESTION screen this bar
+//  has FOUR states and they are the same for MCQ and open questions — reading the
+//  question → think + countdown → listening for the answer → evaluating. The
+//  state model itself lives in `QuestionListenPhase`; this view only renders what
+//  it is handed. Two of the four are new modes here (`.readingQuestion`,
+//  `.evaluating`) because the bar previously had nothing to say while the TTS was
+//  reading and simply VANISHED while an answer was graded — which the founder
+//  read as a frozen screen (TF build 61). The command words become CHIPS
+//  (`commandWords`) instead of one sentence: a chip row is read from a car mount
+//  faster than a sentence, and it leaves room for a fourth word. The other
+//  screens (Home / result / confirmation) keep the `commandHint` sentence — D1
+//  was a decision about the question screen only.
+//
 
 import SwiftUI
 
@@ -64,16 +77,21 @@ struct ListenBarDismissal: Equatable {
 
 struct ListenBar: View {
     /// The answer form the driver should speak — drives the answer-mode caption.
-    enum AnswerKind {
+    enum AnswerKind: Equatable {
         case mcq // multiple choice (A–D)
         case trueFalse // 2-option true/false
         case open // free-text spoken answer (recording)
     }
 
-    /// The two listening states the bar swaps between. Never both at once.
+    /// What the bar is saying. The app only ever listens for EITHER commands OR
+    /// an answer, never both (founder, 2026-07-28) — and since #179 D1 it also
+    /// speaks in the two states where it is listening for nothing at all, rather
+    /// than leaving the slot empty.
     enum Mode {
         case command // listening for hands-free commands (teal)
+        case readingQuestion // #179 D1 state 1: the TTS is reading; commands armed (teal)
         case answer(AnswerKind) // listening for an answer (pink)
+        case evaluating // #179 D1 state 4: the answer is being graded; nothing is heard (grey)
     }
 
     /// #131 Track F Option B — the one permitted variation. Same colours, same
@@ -101,6 +119,13 @@ struct ListenBar: View {
     /// the bar on). Command mode only; nil keeps the bar single-line.
     var commandHint: String? = nil
 
+    /// #179 D1: the command words as discrete chips under the caption — the
+    /// question screen's form of the same promise `commandHint` makes as a
+    /// sentence elsewhere. Rendered in the COMMAND language (#120) like the
+    /// sentence, and empty when the words are hidden (Settings) or the listener
+    /// is not armed, so a chip never offers a word that would not be heard.
+    var commandWords: [String] = []
+
     /// Full on quiz screens, slim on Home (#131 Track F).
     var size: Size = .full
 
@@ -125,6 +150,20 @@ struct ListenBar: View {
         return thinkCountdown
     }
 
+    /// True while the bar is listening for COMMANDS — the two states that may
+    /// name words (D1 states 1 and 2, plus Home / result / confirmation).
+    private var isCommandMode: Bool {
+        switch mode {
+        case .command, .readingQuestion: return true
+        case .answer, .evaluating: return false
+        }
+    }
+
+    /// The chips actually rendered. Answer mode has none by the 2026-07-28 rule
+    /// (a command spoken there is not heard, so offering one would be a lie);
+    /// evaluating has none because nothing is listening at all.
+    private var chipWords: [String] { isCommandMode ? commandWords : [] }
+
     /// Left-anchored drain fraction, nil when no window is running.
     private var thinkFillFraction: CGFloat? {
         guard let countdown = activeThinkCountdown, countdown.total > 0 else { return nil }
@@ -140,13 +179,17 @@ struct ListenBar: View {
     /// The bar's resting accent before any feedback tint applies.
     private var modeAccent: Color {
         switch mode {
-        case .command: return teal
+        case .command, .readingQuestion: return teal
         case .answer: return pink
+        case .evaluating: return Theme.Hangs.Colors.muted
         }
     }
 
     /// Waveform + caption colour: feedback wins over the mode accent (#122).
     private var accent: Color {
+        // Nothing is heard while an answer is graded, so a match/no-match tint
+        // there would be a claim about a mic that is closed.
+        if case .evaluating = mode { return modeAccent }
         switch feedback {
         case .idle: return modeAccent
         case .matched: return teal
@@ -157,30 +200,36 @@ struct ListenBar: View {
     /// Background fill — matched/unmatched are the #122 lit /
     /// lit-miss tints; idle uses the mode's soft accent.
     private var fill: Color {
+        if case .evaluating = mode { return Theme.Hangs.Colors.muted.opacity(0.10) }
         switch feedback {
         case .matched: return teal.opacity(0.22)
         case .unmatched: return amber.opacity(0.12)
         case .idle:
             switch mode {
-            case .command: return teal.opacity(0.08)
+            case .command, .readingQuestion: return teal.opacity(0.08)
             case .answer: return Theme.Hangs.Colors.pinkSoft
+            case .evaluating: return Theme.Hangs.Colors.muted.opacity(0.10)
             }
         }
     }
 
     private var border: Color {
+        if case .evaluating = mode { return Theme.Hangs.Colors.muted.opacity(0.35) }
         switch feedback {
         case .matched: return teal.opacity(0.75)
         case .unmatched: return amber.opacity(0.55)
         case .idle:
             switch mode {
-            case .command: return teal.opacity(0.35)
+            case .command, .readingQuestion: return teal.opacity(0.35)
             case .answer: return pink
+            case .evaluating: return Theme.Hangs.Colors.muted.opacity(0.35)
             }
         }
     }
 
-    private var barHeight: CGFloat { Self.height(size: size, hasSubLine: subLine != nil) }
+    private var barHeight: CGFloat {
+        Self.height(size: size, hasSubLine: subLine != nil || !chipWords.isEmpty)
+    }
 
     /// Pure so the founder-picked sizes are assertable without rendering.
     /// Internal for tests.
@@ -200,7 +249,13 @@ struct ListenBar: View {
     /// corrective hint that still names them. Answer mode has none (the caption
     /// already IS the instruction).
     private var subLine: Text? {
-        guard case .command = mode, let commandHint else { return nil }
+        // #179 D1 state 4: the line that stops "the screen froze" — it says the
+        // wait is expected and that speaking will not help.
+        if case .evaluating = mode {
+            return Text("This will take a moment, no need to say anything")
+        }
+        // Chips replace the sentence wherever they are given (question screen).
+        guard isCommandMode, chipWords.isEmpty, let commandHint else { return nil }
         switch feedback {
         case .unmatched:
             return Text("Didn't catch that. \(commandHint)")
@@ -219,6 +274,12 @@ struct ListenBar: View {
             return Text("THINK — LISTENING IN \(countdown.remaining) S")
         }
         switch mode {
+        // #179 D1 state 1: during the read the bar was missing entirely on MCQ
+        // (founder screenshot 9) — it now names what the app is doing.
+        case .readingQuestion:
+            return Text("Reading the question")
+        case .evaluating:
+            return Text("Evaluating your answer")
         case .command:
             // #174: without the words sub-line (hints outgrown) the miss must
             // still be readable, not just amber — so it takes the caption slot.
@@ -243,14 +304,7 @@ struct ListenBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            // Clock while a think window drains, live waveform once listening —
-            // the mock's two glyphs for the two states of the one bar (#132 B).
-            Image(systemName: activeThinkCountdown == nil ? "waveform" : "clock")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(accent)
-                .symbolEffect(.variableColor.iterative.dimInactiveLayers,
-                              isActive: activeThinkCountdown == nil)
-                .accessibilityHidden(true)
+            leadingGlyph
 
             switch size {
             case .full:
@@ -272,7 +326,7 @@ struct ListenBar: View {
         }
         // Combined so VoiceOver reads one "listening … say X" element.
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(subLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
+        .accessibilityLabel(spokenSubLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
         .accessibilityIdentifier("listen-bar")
         // The ✕ is a sibling of the combined element, never inside it: VoiceOver
         // must reach the control, not read "hide" as part of the instruction.
@@ -302,6 +356,33 @@ struct ListenBar: View {
     }
 
     // MARK: - Parts
+
+    /// Clock while a think window drains, spinner while the answer is graded,
+    /// live waveform once listening — one glyph slot, four states (#132 B, #179 D1).
+    @ViewBuilder
+    private var leadingGlyph: some View {
+        if case .evaluating = mode {
+            ProgressView()
+                .controlSize(.small)
+                .tint(accent)
+                .accessibilityIdentifier("listen-bar.spinner")
+        } else {
+            Image(systemName: activeThinkCountdown == nil ? "waveform" : "clock")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(accent)
+                .symbolEffect(.variableColor.iterative.dimInactiveLayers,
+                              isActive: activeThinkCountdown == nil)
+                .accessibilityHidden(true)
+        }
+    }
+
+    /// What VoiceOver reads after the caption: the sentence, or the chips joined
+    /// into one — a driver using VoiceOver must hear the words too.
+    private var spokenSubLine: Text? {
+        if let subLine { return subLine }
+        guard !chipWords.isEmpty else { return nil }
+        return Text(verbatim: chipWords.joined(separator: ", "))
+    }
 
     /// The B1 dismiss ✕ — dim, outside the combined a11y element so VoiceOver
     /// reads the bar and its control separately.
@@ -337,13 +418,40 @@ struct ListenBar: View {
     /// instruction. Never wraps: it must stay one glanceable line at 40pt too.
     @ViewBuilder
     private var words: some View {
-        if let subLine {
+        if !chipWords.isEmpty {
+            HStack(spacing: 4) {
+                // #131 Track C: colour alone is not feedback — a miss must say
+                // what to do. With chips the words stay put (they are still the
+                // answer) and the correction leads the row, so the #132 countdown
+                // in the caption above is never blanked by a mis-heard word.
+                if feedback == .unmatched {
+                    Text("Didn't catch that")
+                        .font(.hangsBody(10, weight: .medium))
+                        .foregroundColor(accent)
+                        .lineLimit(1)
+                }
+                ForEach(chipWords, id: \.self) { word in
+                    Text(verbatim: word)
+                        .font(.hangsMono(10, weight: .medium))
+                        .foregroundColor(accent)
+                        .lineLimit(1)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(accent.opacity(0.12)))
+                }
+            }
+            .minimumScaleFactor(0.6)
+            .accessibilityIdentifier("listen-bar.commands")
+        } else if let subLine {
             subLine
                 .font(.hangsBody(11, weight: .medium))
                 .foregroundColor(accent.opacity(0.9))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-                .accessibilityIdentifier("listen-bar.commands")
+                // Only command words answer to "listen-bar.commands" — the
+                // evaluating note is a status line, and a test asking "are any
+                // words on offer?" must not be answered by it.
+                .accessibilityIdentifier(isCommandMode ? "listen-bar.commands" : "listen-bar.note")
         }
     }
 
@@ -373,6 +481,14 @@ struct ListenBar: View {
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
+            // #179 D1 — the question screen's four states, MCQ column.
+            ListenBar(mode: .readingQuestion,
+                      commandWords: ["„zopakuj“", "„preskoč“"], language: .slovak)
+            ListenBar(mode: .command,
+                      commandWords: ["„štart“", "„zopakuj“", "„preskoč“"],
+                      language: .slovak,
+                      thinkCountdown: .init(remaining: 32, total: 45))
+            ListenBar(mode: .evaluating)
             ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#, onDismiss: {})
             ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
             ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)

@@ -155,15 +155,15 @@ struct QuizSettingsBackwardCompatTests {
         #expect(settings.voiceHintsEnabled == nil)
     }
 
-    /// The one rule (founder 2026-09-09): the words show for the first five
-    /// completed quizzes, then hide; a Settings choice overrides both ways.
-    @Test("voice hints: automatic for the first 5 quizzes, Settings wins either way")
+    /// The one rule (founder 2026-09-15, #179 D1): the words are shown until the
+    /// driver turns them off. #174's five-quiz expiry is REVERSED — it silently
+    /// stripped the only surface naming the voice commands from exactly the
+    /// people who had used the app long enough to rely on them.
+    @Test("voice hints: on by default, forever; Settings wins either way")
     func voiceHintsRule() {
-        #expect(QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 0))
-        #expect(QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 4))
-        #expect(!QuizSettings.voiceHintsVisible(override: nil, completedQuizzes: 5))
-        #expect(QuizSettings.voiceHintsVisible(override: true, completedQuizzes: 50), "opted in = permanent")
-        #expect(!QuizSettings.voiceHintsVisible(override: false, completedQuizzes: 0), "opted out beats the free quizzes")
+        #expect(QuizSettings.voiceHintsVisible(override: nil), "default is on")
+        #expect(QuizSettings.voiceHintsVisible(override: true), "opted in")
+        #expect(!QuizSettings.voiceHintsVisible(override: false), "opted out is the only way off")
     }
 
     // MARK: - Missing showConfirmSheet

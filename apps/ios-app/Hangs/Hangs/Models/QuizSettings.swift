@@ -98,20 +98,20 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// per-question result entirely and reveals everything in the recap.
     var answerRevealMode: AnswerRevealMode
 
-    /// #174 (founder 2026-09-09): the "say …" words under the listening bar are
-    /// training wheels. nil = automatic — shown for the first
-    /// `voiceHintsFreeQuizzes` completed quizzes, then hidden. A value is the
-    /// driver's explicit Settings choice and is permanent either way.
+    /// Whether the "say …" words are shown under the listening bar. nil = the
+    /// default, which is ON; a value is the driver's explicit Settings choice.
+    ///
+    /// #179 D1 (founder 2026-09-15) REVERSES #174's five-quiz expiry: the words
+    /// silently switched themselves off after five completed quizzes, leaving the
+    /// founder — well past five — with a bare "LISTENING FOR COMMANDS" that named
+    /// nothing he could say. Voice commands are the product, not training wheels;
+    /// they stay visible until the driver turns them off.
     var voiceHintsEnabled: Bool?
 
-    /// How many completed quizzes the automatic hints last (#174).
-    static let voiceHintsFreeQuizzes = 5
-
-    /// The one rule for whether the command words are shown: an explicit
-    /// Settings choice wins; otherwise the first `voiceHintsFreeQuizzes`
-    /// quizzes get them and later ones do not.
-    static func voiceHintsVisible(override: Bool?, completedQuizzes: Int) -> Bool {
-        override ?? (completedQuizzes < voiceHintsFreeQuizzes)
+    /// The one rule for whether the command words are shown: an explicit Settings
+    /// choice wins, otherwise they are shown.
+    static func voiceHintsVisible(override: Bool?) -> Bool {
+        override ?? true
     }
 
     // MARK: - Memberwise Init

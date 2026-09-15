@@ -75,6 +75,28 @@ extension VoiceCommandLexicon {
         }
     }
 
+    /// #179 D1: the same words as `hint(on:language:)` promises, but as separate
+    /// quoted chips — the question screen renders them in a row under the bar's
+    /// caption instead of in one sentence. Takes the commands explicitly rather
+    /// than a screen, because the question screen shows a DIFFERENT subset per
+    /// bar state (no "start" while the question is still being read — saying it
+    /// there would cut the read off mid-sentence).
+    ///
+    /// Quoting follows the language's own convention, exactly as the sentence
+    /// form does, so the two never look like two different features.
+    static func spokenChips(
+        _ commands: [VoiceCommand],
+        language: CommandLanguage = .english
+    ) -> [String] {
+        commands.map { command in
+            let word = spokenWord(command, language: language)
+            switch language {
+            case .english: return "\u{201C}\(word)\u{201D}"
+            case .slovak, .czech: return "\u{201E}\(word)\u{201C}"
+            }
+        }
+    }
+
     /// Caption for the on-screen listening indicator, in the COMMAND language
     /// (#120 rule — same as `hint(on:language:)`; #122 closes the gap for the
     /// caption itself, which was hardcoded English). Deliberately NOT in

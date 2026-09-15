@@ -147,11 +147,18 @@
             mockSTT = stt
 
             // Silence mock seeded `.unavailable`: keeps the command-listener hint
-            // (and the ListenBar) hidden exactly as the old `nil` service did — a
-            // default `.ready` mock would arm the listener window and render the
-            // bar across every `--ui-test` scenario.
+            // (and, before #179 D1, the ListenBar itself) hidden exactly as the
+            // old `nil` service did — a default `.ready` mock would arm the
+            // listener window across every `--ui-test` scenario.
+            //
+            // `--ui-test-commands-ready` opts a scenario INTO the armed listener.
+            // Since #179 D1 the bar is always on screen and only its command
+            // CHIPS depend on the listener being armed, so verifying the chips
+            // needs a way to arm it without a real recognizer.
             let silence = MockSilenceDetectionService()
-            silence.commandAvailability = .unavailable(reason: "UI-test mock")
+            if !CommandLine.arguments.contains("--ui-test-commands-ready") {
+                silence.commandAvailability = .unavailable(reason: "UI-test mock")
+            }
 
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
             return (network, audio, persistence, silence, stt)

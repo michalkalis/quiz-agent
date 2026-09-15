@@ -6,7 +6,7 @@
 
 ## Prečo
 
-Opakované TF kolá (#171, #173, #174, #178, #179) hlásia ten istý druh chýb: stavové a regresné problémy v audio čítaní/odpovedaní, nákupoch a free limite. Náš setup (unit + ViewInspector + 18 RS scenárov cez LLM) tieto triedy chytá až v TestFlighte. Profi prax 2026 pre agentický vývoj: stavové bugy chytať v deterministických unit testoch s injektovaným časom, nákupy testovať offline cez StoreKit Testing, a UI scenáre po overení **zmraziť** do CI namiesto LLM-driven behu pri každej kontrole.
+Opakované TF kolá (#171 — TF feedback 09-05, #173 — TF feedback 09-07, #174 — TF feedback 09-08, #178 — TF feedback 09-13, #179 — TF feedback 09-14) hlásia ten istý druh chýb: stavové a regresné problémy v audio čítaní/odpovedaní, nákupoch a free limite. Náš setup (unit + ViewInspector + 18 RS scenárov cez LLM) tieto triedy chytá až v TestFlighte. Profi prax 2026 pre agentický vývoj: stavové bugy chytať v deterministických unit testoch s injektovaným časom, nákupy testovať offline cez StoreKit Testing, a UI scenáre po overení **zmraziť** do CI namiesto LLM-driven behu pri každej kontrole.
 
 Nadväzuje na #31 (iOS test hardening, done; XCUITest scheme wiring ostalo otvorené). Rešpektuje #43 (Maestro MCP wontfix) — ostávame na XcodeBuildMCP + XCUITest.
 
@@ -24,16 +24,16 @@ Nad existujúcim `Hangs.storekit`: prerušený nákup, Ask to Buy, refund, vypr�
 (a) free limit vyčerpaný → nákup → kvíz pokračuje bez reštartu; (b) balík kúpený + free quota vypršala → balík funguje; (c) mesačný reset vrátane DST. iOS strana s `TestClock`, backend strana pytest s injektovaným časom.
 
 ### D. Zmrazenie RS-01..RS-18 do XCUITest — Maestro / RocketSim / XcodeBuildMCP maintaineri
-`HangsUITests/Regression` už existuje; doplniť chýbajúce scenáre, spúšťať nočne na `mba` (GitHub macOS runnery flakujú 25–37 % na XCUITest). `/regression` cez LLM ostáva len na exploráciu nových scenárov. Nové RS scenáre pre paywall / nákup / obnovu.
+`HangsUITests/Regression` už existuje; doplniť chýbajúce scenáre (RS-14 a RS-18 sú unit testy a ostávajú unit), spúšťať nočne na `mba` (GitHub macOS runnery flakujú 25–37 % na XCUITest). `/regression` cez LLM ostáva len na exploráciu nových scenárov. Nové RS scenáre pre paywall / nákup / obnovu.
 
 ### E. Accessibility identifiers ako štandard — Apple XCUITest + všetci agentní tool vendori
 Každý interaktívny prvok má `accessibilityIdentifier`; textové selektory zakázané (3 jazyky UI). Checklist do `.claude/rules/ios.md` + review.
 
 ### F. Snapshot testy (swift-snapshot-testing) — Point-Free; Airbnb škála
-Textové stratégie (`.recursiveDescription`) pre agentom čitateľné diffy + pixel snapshoty hero obrazoviek × sk/cs/en × Dynamic Type. `__Snapshots__` v gite, žiadny auto re-record. Nahrádza odložený 52.18 re-record.
+Textové stratégie (`.recursiveDescription`) pre agentom čitateľné diffy + pixel snapshoty hero obrazoviek × sk/cs/en × Dynamic Type. `__Snapshots__` v gite, žiadny auto re-record. Nahrádza odložený 52.18 (re-record snapshot baseline z #52 — iOS design-refresh sweep).
 
 ### G. Audio stavový automat bez simulátora — Apple AVAudioSession API
-Prerušenie/route-change ako unit testy cez priamo postované notifikácie (dnes RS-18 v simulátore). TTS failover ElevenLabs → OpenAI → on-device testovaný per úroveň s assertom na Sentry log (tichý fallback = fail). Malý WER korpus povelov sk/cs/en pre STT vrstvu (Picovoice prax, slabší zdroj — voliteľné).
+Prerušenie/route-change ako unit testy cez priamo postované notifikácie (dnes bez pokrytia; RS-18 je čistý unit helper pre Bluetooth mic v media móde, zámerne mimo živej audio session po zamrznutí HangsTests 2026-06-17). TTS failover ElevenLabs → OpenAI → on-device testovaný per úroveň s assertom na Sentry log (tichý fallback = fail). Malý WER korpus povelov sk/cs/en pre STT vrstvu (Picovoice prax, slabší zdroj — voliteľné).
 
 ### H. Definícia „done" pre agenta — syntéza
 Nový tok = identifikátory + zmrazený test; PR = unit + snapshot zelené; TestFlight = ľudský vizuál + reálny nákup, nie hľadanie stavových bugov. Zapísať do `.claude/rules/ios.md`.
@@ -43,11 +43,11 @@ _(doplní `/prepare-issue`; rámec)_
 - [ ] A: `ios-ci.yml` beží paralelne, 5/5 zelených behov; žiadny `Task.sleep`/`XCTWaiter` s reálnym časom v dotknutých testoch
 - [ ] B: SKTestSession testy pokrývajú 7 vymenovaných scenárov, zelené v CI bez siete
 - [ ] C: 3 scenáre ako pomenované testy (iOS + pytest), zelené
-- [ ] D: RS-01..RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`
+- [ ] D: RS-01..RS-18 okrem RS-14 a RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`
 - [ ] E: lint/grep nenájde interaktívny prvok bez identifikátora na obrazovkách kvízu, paywallu, výsledku
 - [ ] F: snapshoty existujú pre Home/Question/Paywall/Result × 3 jazyky, `__Snapshots__` v gite
-- [ ] G: prerušenie + route-change + 3-úrovňový TTS failover ako unit testy, RS-18 ponechaný ako e2e
+- [ ] G: prerušenie + route-change + 3-úrovňový TTS failover ako unit testy; RS-18 ostáva unit (pure helper)
 - [ ] H: `.claude/rules/ios.md` obsahuje definíciu done
 
 ## Mimo rozsah
-Maestro (wontfix #43), RevenueCat migrácia, CarPlay simulátor (vyžaduje reálne zariadenie → #97).
+Maestro (wontfix #43), RevenueCat migrácia, CarPlay simulátor (vyžaduje reálne zariadenie → #97 — CarPlay support).

@@ -124,6 +124,61 @@ def _core_answer(text: str) -> str:
     return core or text.strip()
 
 
+def _option_value(correct_answer: object, possible_answers: dict) -> str | None:
+    """The literal correct option — from a key letter or the value itself.
+
+    Resolved locally (not via ``multi_model_scorer``) to keep this module a
+    pure, dependency-free guard layer, same as ``true_false_key`` does.
+    Returns None when the key matches no option: an unresolvable answer is a
+    different defect, and guessing here would judge the wrong text.
+    """
+    if isinstance(correct_answer, list):
+        correct_answer = correct_answer[0] if correct_answer else ""
+    ans = str(correct_answer).strip().lower()
+    for k, v in possible_answers.items():
+        if str(k).strip().lower() == ans:
+            return str(v).strip()
+    for v in possible_answers.values():
+        if str(v).strip().lower() == ans:
+            return str(v).strip()
+    return None
+
+
+def _options_posed_in_stem(question: str, possible_answers: dict) -> bool:
+    """True when the stem itself enumerates the alternatives.
+
+    "Which of these is not a starter Pokemon: Snivy, Tepig, Oshawott,
+    Pikachu?" necessarily contains the answer — that is the format, the MCQ
+    twin of the ", or " choice-in-stem exemption. Two or more option values
+    present is the signal; one (the correct one) is exactly the leak we hunt.
+    """
+    stem_tokens = _content_tokens(question)
+    present = 0
+    for v in possible_answers.values():
+        tokens = _content_tokens(str(v))
+        if tokens and tokens <= stem_tokens:
+            present += 1
+    return present >= 2
+
+
+def _distractor_tokens(correct_value: str, possible_answers: dict) -> set[str]:
+    """Content words the other options also carry.
+
+    A word shared with a distractor is the option set's common frame, not
+    what identifies the answer: with options "American/French/British Sign
+    Language", a stem saying "Sign Language" gives nothing away — the player
+    still has to know *French*. Only the distinguishing words can leak.
+    """
+    correct_low = correct_value.strip().lower()
+    shared: set[str] = set()
+    for v in possible_answers.values():
+        value = str(v).strip()
+        if value.lower() == correct_low:
+            continue
+        shared |= _content_tokens(_core_answer(value))
+    return shared
+
+
 def stem_leak_reason(
     question: str,
     correct_answer: object,
@@ -133,25 +188,37 @@ def stem_leak_reason(
 
     Flags when more than half of the core answer's content words appear in
     the stem (exact token, or shared 4-char prefix for words of 6+ chars).
-    MCQ is skipped: the key is a letter and option values legitimately appear
-    alongside the stem — `distractor_quality` owns MCQ leak shapes. T/F is
-    skipped too: every T/F stem may say "true or false", which is framing,
-    not a leak — the T/F balance guard owns that format. Choice-in-stem
-    questions (", or " alternatives) are skipped: the answer is one of the
-    offered alternatives by design.
+    MCQ is judged on the *correct option's* text with the same rule (#179
+    finding 8: the Sacher/Demel stem handed over "Sachertorte", and nothing
+    checked it — `distractor_quality` only compares options with each other),
+    judging only the words that distinguish it from its distractors, and
+    except when the stem enumerates the options, which is a format. T/F is
+    skipped: every T/F stem may say "true or false", which is framing, not a
+    leak — the T/F balance guard owns that format. Choice-in-stem questions
+    (", or " alternatives) are skipped: the answer is one of the offered
+    alternatives by design.
     """
-    if possible_answers:
-        return None
-    if true_false_key(correct_answer) is not None:
+    if true_false_key(correct_answer, possible_answers) is not None:
         return None
     if _CHOICE_IN_STEM_RE.search(question):
         return None
+    shared_with_distractors: set[str] = set()
+    if possible_answers:
+        option_value = _option_value(correct_answer, possible_answers)
+        if option_value is None or _options_posed_in_stem(
+            question, possible_answers
+        ):
+            return None
+        shared_with_distractors = _distractor_tokens(option_value, possible_answers)
+        correct_answer = option_value
     if isinstance(correct_answer, list):
         correct_answer = correct_answer[0] if correct_answer else ""
     core = _core_answer(str(correct_answer))
     ordered_tokens = [
         t for t in _TOKEN_RE.findall(core.lower())
-        if len(t) >= 3 and t not in _STOPWORDS
+        if len(t) >= 3
+        and t not in _STOPWORDS
+        and t not in shared_with_distractors
     ]
     answer_tokens = set(ordered_tokens)
     if not answer_tokens:

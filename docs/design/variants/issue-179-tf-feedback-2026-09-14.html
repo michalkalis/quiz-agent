@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#179 — TF feedback 2026-09-14 · lišta povelov, toolbar, preskočiť</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page-bg:#0F1116; --page-line:#262B36; --page-text:#E7EAF0; --page-dim:#98A0B0;
+  --pink:#FF3D8F; --teal:#14B8A6;
+  --display:Anton,"Arial Narrow",Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --pbg:#111214; --pcard:#1B1C1F; --phair:rgba(255,255,255,.10); --ptext:#F2F2F2; --pdim:#8E8E93;
+  --ppink:#FF3D8F; --pteal:#14B8A6; --ppurple:#8B7CF6; --ppurplebg:#2A2550; --pblue:#0A84FF; --pgreen:#34C759;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page-bg);color:var(--page-text);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding-block:48px 96px;padding-inline:20px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:400;font-size:44px;line-height:1.02;letter-spacing:-1px;margin:0 0 16px;text-transform:uppercase;text-wrap:balance}
+.lede{max-width:80ch;color:var(--page-dim);font-size:16px;margin:0 0 10px}
+.lede strong{color:var(--page-text);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:#6E7688;margin-top:22px;padding-top:16px;border-top:1px solid var(--page-line)}
+.block{margin-top:64px;padding-top:30px;border-top:2px solid var(--page-line)}
+.vhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vtag{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#0F1116;background:var(--pink);border-radius:5px;padding:3px 9px;font-weight:600}
+.vtag.teal{background:var(--teal)}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:-.5px;margin:0;text-transform:uppercase}
+h3{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin:34px 0 6px}
+.concept{color:var(--page-dim);max-width:88ch;margin:8px 0 0;font-size:15px}
+.concept b{color:var(--page-text);font-weight:600}
+.pros{margin:10px 0 0;padding:0;list-style:none;max-width:88ch;font-size:14px;color:var(--page-dim)}
+.pros li{padding-left:18px;position:relative;margin:4px 0}
+.pros li.p::before{content:"+";position:absolute;left:0;color:var(--teal);font-weight:700}
+.pros li.m::before{content:"\2212";position:absolute;left:0;color:var(--pink);font-weight:700}
+.rec{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--teal);border:1px solid var(--teal);border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.devices{display:flex;gap:30px;flex-wrap:nowrap;overflow-x:auto;margin:24px 0 0;align-items:flex-start;padding-bottom:10px}
+figure.device{margin:0;flex:0 0 auto}
+figure.device figcaption{font-family:var(--mono);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--page-dim);margin-top:12px;text-align:center;max-width:390px}
+.qbox{margin:18px 0 0;padding:16px 18px;border:1px solid var(--page-line);border-left:3px solid var(--pink);border-radius:8px;max-width:88ch;font-size:14.5px}
+.qbox b{color:var(--page-text)}
+.tscroll{overflow-x:auto;margin-top:14px}
+table.opts{border-collapse:collapse;font-size:13.5px;min-width:640px}
+table.opts td,table.opts th{border:1px solid var(--page-line);padding:7px 11px;text-align:left;vertical-align:top}
+table.opts th{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--page-dim)}
+table.opts code{font-family:var(--mono);font-size:12px;color:#9FD8FF}
+table.opts tr.bad td{background:rgba(255,61,143,.06)}
+.sect{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6E7688;text-transform:uppercase}
+
+/* ===== phone ===== */
+.phone{width:390px;height:844px;flex:0 0 auto;background:var(--pbg);color:var(--ptext);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 26px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);max-width:100%}
+.sb{height:47px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600}
+.toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 20px 0}
+.tr{display:flex;align-items:center;gap:8px}
+.tchip{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:grid;place-items:center;flex:0 0 auto}
+.tchip svg{width:15px;height:15px;color:var(--ptext)}
+.tpill{height:36px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid var(--phair);display:flex;align-items:center;padding:0 4px;flex:0 0 auto}
+.tpill i{width:36px;height:28px;display:grid;place-items:center}
+.tpill i+i{border-left:1px solid rgba(255,255,255,.12)}
+.tpill svg{width:16px;height:16px;color:var(--ptext)}
+.tpill svg.pk{color:var(--ppink)} .tpill svg.bl{color:var(--pblue)}
+.pseg{display:flex;gap:4px;margin:14px 24px 0}
+.pseg i{flex:1;height:4px;border-radius:2px;background:var(--phair)}
+.pseg i.on{background:var(--pteal)}
+.psegrow{display:flex;justify-content:space-between;margin:6px 24px 0;font-family:var(--mono);font-size:10px;color:var(--pdim);letter-spacing:1.4px}
+.pquestion{margin:14px 24px 0;font-family:var(--display);font-size:26px;line-height:1.14;color:var(--ptext)}
+.pmodel{margin:8px 24px 0;font-family:var(--mono);font-size:11px;color:var(--pdim)}
+.inbar{margin:12px 20px 0}
+.plist{display:flex;flex-direction:column;gap:8px;margin:14px 20px 0}
+.ptile{background:var(--pcard);border:1px solid var(--phair);border-radius:16px;display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:54px}
+.pbadge{width:28px;height:28px;border-radius:50%;background:var(--ppurplebg);color:var(--ppurple);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;flex:0 0 auto}
+.ptile .txt{font-size:15px;font-weight:600;color:var(--ptext);line-height:1.25}
+.pskiprow{display:flex;justify-content:center;margin:auto 0 30px}
+.pskip{height:44px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--ptext);font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:9px;padding:0 20px}
+.pskip.flat{background:transparent;border:0;color:var(--pdim);height:30px;padding:0}
+.pskip svg{width:14px;height:14px}
+.arow{display:flex;gap:10px;margin:auto 20px 30px;align-items:center}
+.abtn{position:relative;overflow:hidden;height:56px;border-radius:28px;background:var(--ppink);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;flex:1 1 auto}
+.abtn .fillbar{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.22)}
+.abtn span{position:relative}
+.abtn .secs{position:relative;font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.28);border-radius:9px;padding:2px 7px}
+.abtn.sec{background:rgba(255,255,255,.06);border:1px solid var(--phair);color:var(--ptext);font-size:15px;flex:0 0 auto;padding:0 18px}
+.tcard{margin:12px 20px 0;border:1px solid var(--ppink);border-radius:18px;background:var(--pcard);padding:12px 16px}
+.tcard .th{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:1.2px;color:var(--ppink);font-weight:600}
+.tcard .th svg{width:13px;height:13px;color:var(--ppink)}
+.tcard .tv{font-size:16px;color:var(--pdim);margin-top:7px}
+
+/* ===== bar strips ===== */
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px 26px;margin-top:20px;max-width:940px}
+.bcol{display:flex;flex-direction:column;gap:9px}
+.bh{font-family:var(--mono);font-size:10.5px;letter-spacing:2px;color:var(--page-dim);text-transform:uppercase;border-bottom:1px solid var(--page-line);padding-bottom:6px}
+.bstep{display:flex;align-items:center;gap:9px}
+.bstep .n{font-family:var(--mono);font-size:10px;color:#6E7688;width:10px;flex:0 0 auto}
+.bar{position:relative;overflow:hidden;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;padding:7px 12px;border-radius:26px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.35)}
+.bar.pink{background:rgba(255,61,143,.10);border-color:var(--ppink)}
+.bar.grey{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.16)}
+.bar.plain{background:transparent;border:0;padding:4px 2px;border-radius:0}
+.bar .drain{position:absolute;left:0;top:0;bottom:0;background:rgba(20,184,166,.16)}
+.bar>svg{width:14px;height:14px;flex:0 0 auto;position:relative;color:var(--pteal)}
+.bar.pink>svg{color:var(--ppink)} .bar.grey>svg{color:var(--pdim)}
+.bt{position:relative;min-width:0;flex:1 1 auto}
+.bcap{font-family:var(--mono);font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--pteal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar.pink .bcap{color:var(--ppink)} .bar.grey .bcap{color:var(--pdim)}
+.bwords{font-size:11px;color:rgba(126,226,213,.92);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar.grey .bwords{color:var(--pdim)}
+.chips{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.chips span{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;padding:2px 7px;border-radius:9px;background:rgba(20,184,166,.16);color:#7FE3D6;white-space:nowrap}
+.bx{position:relative;width:13px;height:13px;color:var(--pdim);flex:0 0 auto}
+.ring{width:30px;height:30px;flex:0 0 auto;border-radius:50%;border:2.5px solid rgba(20,184,166,.22);border-top-color:var(--pteal);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;color:var(--pteal)}
+.ring.off{border-color:rgba(255,255,255,.10);color:transparent}
+.dotspin{width:13px;height:13px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;flex:0 0 auto}
+/* ===== toolbar demo ===== */
+.tbdemo{width:390px;max-width:100%;flex:0 0 auto;background:var(--pbg);border:1px solid var(--phair);border-radius:20px;padding:12px 16px}
+.tbdemo .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.6px;color:var(--pdim);text-transform:uppercase;margin-bottom:9px}
+.tbrow{display:flex;align-items:center;justify-content:space-between}
+/* ===== checklist ===== */
+.check{margin-top:26px;border:1px solid var(--page-line);border-radius:12px;padding:22px 24px;background:#12141A;max-width:88ch}
+.check h3{margin-top:0}
+.check ul{list-style:none;margin:0;padding:0}
+.check li{padding:10px 0;border-top:1px solid var(--page-line);font-size:14.5px;color:var(--page-dim)}
+.check li:first-of-type{border-top:0}
+.check b{color:var(--page-text)}
+@media (max-width:520px){h1{font-size:32px}h2{font-size:26px}.wrap{padding-block:32px 64px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Trubbo · TestFlight build 61 · 2026-09-14 · návrhy na výber</p>
+  <h1>#179 — Lišta povelov, toolbar, preskočiť</h1>
+  <p class="lede"><strong>Bez rozhodnutia sa už opravuje:</strong> zamrznutie po nerozpoznanej odpovedi a po „Preskoč“ (timeout 30 s + watchdog), mute ktorý nezastavil čítanie, celé znenie otázky + odkaz na zdroj vo výsledku, orezaná päta pri dlhých MCQ, paywall (karta balíka len vyberá).</p>
+  <p class="lede"><strong>Na výber sú tri veci:</strong> <b>D1</b> jednotná lišta hlasových povelov · <b>D2</b> toolbar a jedna sada ikon · <b>D3</b> jedno tlačidlo Preskočiť. Pri každom bloku je odporúčanie; odpoveď stačí v tvare „D1 A · D2 A · D3 A“.</p>
+  <p class="meta">MOCKUPY 390×844 · SLOVENSKÉ TEXTY AKO V APPKE · SLOVÁ POVELOV SÚ LEN TIE, KTORÉ APPKA NA OBRAZOVKE OTÁZKY SKUTOČNE ROZOZNÁVA (ŠTART · ZOPAKUJ · PRESKOČ) · ISSUE: docs/issues/issue-179-tf-feedback-2026-09-14.md</p>
+
+  <!-- ============ D1 ============ -->
+  <section class="block" id="d1">
+    <div class="vhead"><span class="vtag">D1</span><h2>Lišta hlasových povelov — jeden model stavov</h2></div>
+    <p class="concept">Dnes lišta hovorí štyrmi rôznymi jazykmi a na dvoch obrazovkách inak. Pri MCQ <b>počas čítania otázky nie je vôbec</b> (screenshot 9), pri otvorenej otázke je odpočet schovaný vo výplni tlačidla Štart, a keď sa odpoveď vyhodnocuje, lišta <b>zmizne úplne</b> — presne to founder opísal ako „obrazovka zamrzla“. Slová nápovedy sa navyše po piatich dokončených kvízoch samy vypnú (<code>voiceHintsFreeQuizzes = 5</code>), takže ostane holé „POČÚVAM PRÍKAZY“, ktoré nepovie nič.</p>
+    <p class="concept"><b>Návrh pre všetky tri varianty rovnako:</b> štyri stavy, v rovnakom poradí, na MCQ aj na otvorenej otázke — <b>1 čítam otázku</b> → <b>2 premýšľaj + odpočet</b> → <b>3 počúvam odpoveď</b> → <b>4 vyhodnocujem</b>. Lišta počas žiadneho z nich nezmizne (mizne len cez ✕, a len pre danú otázku — rozhodnuté v #173). Slová sú <b>vždy viditeľné</b>; päťkvízová brána sa ruší, ostáva prepínač v Nastaveniach (predvolene zapnutý). Nápoveda vymenúva všetky tri povely, ktoré obrazovka otázky naozaj routuje — dnes ponúka len dva a „zopakuj“ zamlčí.</p>
+    <p class="concept"><b>Pozor na pravidlo z 2026-07-28:</b> appka počúva buď povely, alebo odpoveď — nikdy oboje. Preto v stave 3 (počúvam odpoveď) slová povelov zámerne nie sú: v tej chvíli by nefungovali. V stave 4 ostáva lišta ako tichý stavový riadok bez sľubu, že počúva.</p>
+
+    <h3>Variant A · jedna lišta: stav + slovné čipy <span class="rec">ODPORÚČAM</span></h3>
+    <p class="concept">Jeden prvok nesie všetko: hore stavový popis, dole slová ako malé čipy. Odpočet je ľavá výplň, ktorá sa vyprázdňuje doľava (už rozhodnuté v #132). Nič nepribúda ani nemizne, len sa mení farba a text — presne ten jazyk, ktorý má lišta dnes.</p>
+    <div class="devices">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:12</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg></i><i><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion">Ktorý európsky štát nemá vlastnú armádu?</div>
+        <div class="pmodel">kimi-k2.5 · sk</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><div class="drain" style="width:71%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9" opacity=".5"/><path d="M9 9l6 6M15 9l-6 6" stroke="#111" stroke-width="2" fill="none"/></svg></div></div></div>
+        <div class="plist">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Lichtenštajnsko</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Malta</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Luxembursko</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Slovinsko</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>A · MCQ, stav 2 — odpočet je výplň lišty, slová sú čipy pod popisom</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:14</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg></i><i><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>4/10</span></div>
+        <div class="pquestion">Ktorá rieka preteká Viedňou aj Bratislavou?</div>
+        <div class="pmodel">kimi-k2.5 · sk</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><div class="drain" style="width:60%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 27 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9" opacity=".5"/><path d="M9 9l6 6M15 9l-6 6" stroke="#111" stroke-width="2" fill="none"/></svg></div></div></div>
+        <div class="arow"><div class="abtn"><div class="fillbar" style="width:60%"></div><span>Štart</span><span class="secs">27 s</span></div><div class="abtn sec">Písať</div></div>
+        <div class="pskiprow" style="margin-top:-18px"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>A · otvorená otázka, stav 2 — tá istá lišta, to isté miesto; odpočet je aj v tlačidle Štart</figcaption></figure>
+    </div>
+
+    <h3>Štyri stavy vedľa seba — MCQ aj otvorená (variant A)</h3>
+    <div class="board">
+      <div class="bcol">
+        <div class="bh">MCQ</div>
+        <div class="bstep"><span class="n">1</span><div class="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg><div class="bt"><div class="bcap">Čítam otázku</div><div class="chips"><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">2</span><div class="bar"><div class="drain" style="width:71%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">3</span><div class="bar pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Počúvam — povedz A–D alebo odpoveď</div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">4</span><div class="bar grey"><div class="dotspin"></div><div class="bt"><div class="bcap">Vyhodnocujem odpoveď</div><div class="bwords">Chvíľu to potrvá, netreba nič hovoriť</div></div></div></div>
+      </div>
+      <div class="bcol">
+        <div class="bh">Otvorená otázka</div>
+        <div class="bstep"><span class="n">1</span><div class="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg><div class="bt"><div class="bcap">Čítam otázku</div><div class="chips"><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">2</span><div class="bar"><div class="drain" style="width:60%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 27 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">3</span><div class="bar pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Počúvam — povedz svoju odpoveď</div></div><svg class="bx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div></div>
+        <div class="bstep"><span class="n">4</span><div class="bar grey"><div class="dotspin"></div><div class="bt"><div class="bcap">Vyhodnocujem odpoveď</div><div class="bwords">Chvíľu to potrvá, netreba nič hovoriť</div></div></div></div>
+      </div>
+    </div>
+    <p class="concept" style="margin-top:14px">Pri otvorenej otázke ostáva v stave 3 aj kartička so živým prepisom (je to jediné miesto, kde vidno, čo appka počula) — lišta nad ňou len povie, že počúva odpoveď. Rozdiel medzi stĺpcami je teda jediný: text v stave 3.</p>
+
+    <h3>Variant B · lišta + samostatný odpočtový prstenec</h3>
+    <p class="concept">Lišta nesie len stav a slová, odpočet sa odsťahuje do krúžku napravo od nej (číslo v strede, obrúčka sa vyprázdňuje). Číslo je čitateľnejšie ako výplň, ale na obrazovke pribudne druhý prvok, ktorý sa v stavoch 1, 3 a 4 nemá čím naplniť.</p>
+    <div class="devices" style="align-items:flex-start">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:12</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg></i><i><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion">Ktorý európsky štát nemá vlastnú armádu?</div>
+        <div class="pmodel">kimi-k2.5 · sk</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam</div><div class="bwords">Povedz „štart“ · „zopakuj“ · „preskoč“</div></div></div><div class="ring">32</div></div></div>
+        <div class="plist">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Lichtenštajnsko</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Malta</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Luxembursko</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Slovinsko</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>B · MCQ, stav 2 — sekundy ako číslo v prstenci vedľa lišty</figcaption></figure>
+      <div style="min-width:300px;flex:1 1 320px">
+        <div class="board" style="grid-template-columns:1fr;margin-top:0">
+          <div class="bcol">
+            <div class="bh">Stavy 1–4 (MCQ · otvorená sa líši len textom v stave 3)</div>
+            <div class="bstep"><span class="n">1</span><div class="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg><div class="bt"><div class="bcap">Čítam otázku</div><div class="bwords">Povedz „zopakuj“ · „preskoč“</div></div></div><div class="ring off">–</div></div>
+            <div class="bstep"><span class="n">2</span><div class="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam</div><div class="bwords">Povedz „štart“ · „zopakuj“ · „preskoč“</div></div></div><div class="ring">32</div></div>
+            <div class="bstep"><span class="n">3</span><div class="bar pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Počúvam — povedz A–D alebo odpoveď</div><div class="bwords" style="color:var(--pdim)">Otvorená: „povedz svoju odpoveď“</div></div></div><div class="ring off">–</div></div>
+            <div class="bstep"><span class="n">4</span><div class="bar grey"><div class="dotspin"></div><div class="bt"><div class="bcap">Vyhodnocujem odpoveď</div><div class="bwords">Chvíľu to potrvá, netreba nič hovoriť</div></div></div><div class="ring off">–</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Variant C · minimalistický textový riadok bez pilulky</h3>
+    <p class="concept">Žiadna kapsula: dva riadky textu zarovnané vľavo pod otázkou — stav v mono, slová pod ním. Ušetrí asi 14 pt výšky, čo pri štyroch dlhých MCQ možnostiach nie je málo. Cena: bez orámovania sa lišta prestane správať ako jeden prvok, stráca farebnú plochu (dnes nesie spätnú väzbu „počul som / nepočul som“ z #122) a odpočet sa nemá kde vyprázdňovať — ostáva len číslo v texte.</p>
+    <div class="devices" style="align-items:flex-start">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:12</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6"/></svg></i><i><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion">Ktorý európsky štát nemá vlastnú armádu?</div>
+        <div class="pmodel">kimi-k2.5 · sk</div>
+        <div class="inbar" style="margin-left:24px;margin-right:24px"><div class="bstep"><div class="bar plain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="bwords">Povedz „štart“ · „zopakuj“ · „preskoč“</div></div></div></div></div>
+        <div class="plist">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Lichtenštajnsko</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Malta</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Luxembursko</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Slovinsko</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>C · MCQ, stav 2 — bez pilulky, len text</figcaption></figure>
+      <div style="min-width:300px;flex:1 1 320px">
+        <div class="board" style="grid-template-columns:1fr;margin-top:0">
+          <div class="bcol">
+            <div class="bh">Stavy 1–4 (MCQ · otvorená sa líši len textom v stave 3)</div>
+            <div class="bstep"><span class="n">1</span><div class="bar plain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg><div class="bt"><div class="bcap">Čítam otázku</div><div class="bwords">Povedz „zopakuj“ · „preskoč“</div></div></div></div>
+            <div class="bstep"><span class="n">2</span><div class="bar plain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="bwords">Povedz „štart“ · „zopakuj“ · „preskoč“</div></div></div></div>
+            <div class="bstep"><span class="n">3</span><div class="bar plain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ppink)"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap" style="color:var(--ppink)">Počúvam — povedz A–D alebo odpoveď</div><div class="bwords" style="color:var(--pdim)">Otvorená: „povedz svoju odpoveď“</div></div></div></div>
+            <div class="bstep"><span class="n">4</span><div class="bar plain"><div class="dotspin"></div><div class="bt"><div class="bcap" style="color:var(--pdim)">Vyhodnocujem odpoveď</div><div class="bwords" style="color:var(--pdim)">Chvíľu to potrvá, netreba nič hovoriť</div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Porovnanie</h3>
+    <ul class="pros">
+      <li class="p"><b>A</b> <span class="rec">ODPORÚČAM</span> — drží už schválené rozhodnutia (jedna lišta #131 F, odpočet v lište #132 B) a nepridáva ani jeden nový prvok. Čipy sa čítajú z držiaka rýchlejšie ako veta a nechajú miesto štvrtému slovu, keď pribudne. Stav 4 konečne niečo hovorí, takže „zamrznutá obrazovka“ sa nedá zameniť s tichom.</li>
+      <li class="m"><b>B</b> — číslo v prstenci je presnejšie, ale prstenec je druhý prvok, ktorý tri zo štyroch stavov nemajú čím naplniť, a zaberá šírku, ktorú lišta potrebuje na slová. Ide aj proti vlaňajšiemu „jeden prvok nesie oba stavy“ (#132 B).</li>
+      <li class="m"><b>C</b> — ušetrí výšku, ale rozpustí lištu ako komponent: zmizne plocha, ktorou appka dnes farebne odpovedá „počul som ťa / nepočul“, a slabne aj rozdiel medzi počúvam a nepočúvam. Výšku pri dlhých MCQ rieši aj tak T5 (rolovanie + pripnutá päta), takže úsporu netreba kupovať takto draho.</li>
+    </ul>
+    <div class="qbox"><b>Odporúčanie:</b> <b>D1 = A</b> — jedna lišta so stavovým popisom a slovnými čipmi, štyri stavy rovnako na MCQ aj otvorenej otázke, slová vždy viditeľné (päťkvízová brána sa ruší, ostáva prepínač v Nastaveniach).</div>
+  </section>
+
+  <!-- ============ D2 ============ -->
+  <section class="block" id="d2">
+    <div class="vhead"><span class="vtag">D2</span><h2>Toolbar a jedna sada ikon</h2></div>
+    <p class="concept">Mute a pauza sú v kóde už v jednej skupine, ale systémový rozostup ich rozťahuje tak, že pôsobia ako dve nesúvisiace tlačidlá. Obe varianty to riešia rovnako: <b>mute a pauza sa zlúčia do jednej viditeľnej pilulky s deliacou čiarkou</b>, ⋯ ostáva samostatne (HIG: v lište len to, na čo sa siaha počas otázky). Čo sa vyberá, je <b>pravidlo pre ikony</b> — dnes appka mieša plné a obrysové tvary bez systému a na dvoch miestach používa na tú istú vec dve rôzne ikony. Play v pauze ostáva modrý (rozhodnuté founderom).</p>
+    <div class="devices">
+      <div class="tbdemo">
+        <div class="lbl">Variant A · fill = zapnutý stav</div>
+        <div class="tbrow" style="margin-bottom:16px"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="lbl">Stlmené + pauza</div>
+        <div class="tbrow"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg class="pk" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/></svg></i><i><svg class="bl" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+      </div>
+      <div class="tbdemo">
+        <div class="lbl">Variant B · všetko obrysové, stav nesie farba</div>
+        <div class="tbrow" style="margin-bottom:16px"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></i></div></div></div>
+        <div class="lbl">Stlmené + pauza</div>
+        <div class="tbrow"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM16 9l5 6M21 9l-5 6"/></svg></i><i><svg class="bl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5l11 7-11 7z"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></i></div></div></div>
+      </div>
+    </div>
+    <ul class="pros">
+      <li class="p"><b>A</b> <span class="rec">ODPORÚČAM</span> — pravidlo „obrysová = vypnuté, plná = zapnuté“ je to, čo robí systémový iOS (ovládacie centrum, prehrávače). Stlmenie je nežiadúci stav, ktorý už raz spôsobil tichý kvíz (#173), a plný tvar + ružová ho urobia hlasným aj periférnym videním. Pauza ostáva v pilulke pri mute, ⋯ zvlášť — tri veci vedľa seba v jednej pilulke by zviedli ťuknúť na menu počas šoférovania.</li>
+      <li class="m"><b>B</b> — najpokojnejší a najjednotnejší obraz (jedna hrúbka, jeden tvar), ale stav potom nesie iba farba; na slnku v aute je ružová verzus biela slabší signál než plná verzus obrysová ikona. Zlúčenie ⋯ do pilulky navyše maže hranicu medzi „ovládam kvíz“ a „otváram menu“.</li>
+    </ul>
+
+    <h3>Ikonový audit — čo sa dnes používa a čo navrhujem</h3>
+    <p class="concept">Prehľad všetkých ikon v appke (<code>systemName:</code>). Ružovo označené riadky sú skutočné nezrovnalosti: tá istá vec má dve rôzne ikony.</p>
+    <div class="tscroll">
+    <table class="opts">
+      <tr><th>Kde</th><th>Dnes</th><th>Štýl</th><th>Návrh (variant A)</th></tr>
+      <tr><td>Toolbar — zvuk zapnutý</td><td><code>speaker.wave.2</code></td><td>obrys</td><td>ostáva <code>speaker.wave.2</code></td></tr>
+      <tr><td>Toolbar — stlmené</td><td><code>speaker.slash.fill</code> + ružová</td><td>plná</td><td>ostáva <code>speaker.slash.fill</code> (plná = zapnutý stav)</td></tr>
+      <tr><td>Toolbar — pauza / pokračuj</td><td><code>pause.fill</code> / <code>play.fill</code> (modrý)</td><td>plná</td><td><code>pause</code> obrysová v behu, <code>play.fill</code> modrá v pauze</td></tr>
+      <tr><td>Toolbar — menu</td><td><code>ellipsis</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Menu — nastavenia / spätná väzba / hodnotenie</td><td><code>gearshape</code> · <code>exclamationmark.bubble</code> · <code>star.bubble</code></td><td>obrys</td><td>ostáva (menu = vždy obrysové)</td></tr>
+      <tr><td>Zatvorenie obrazovky (kvíz, paywall, potvrdenie)</td><td><code>xmark</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Skrytie lišty povelov</td><td><code>xmark.circle.fill</code></td><td>plná</td><td>ostáva — kruh odlišuje „skry prvok“ od „zavri obrazovku“</td></tr>
+      <tr><td>Lišta povelov — počúvam / odpočet</td><td><code>waveform</code> · <code>clock</code></td><td>obrys</td><td>+ <code>speaker.wave.2</code> pre nový stav „čítam otázku“</td></tr>
+      <tr><td>Preskočiť otázku</td><td><code>chevron.right.2</code></td><td>obrys</td><td>ostáva (odlíšené od <code>chevron.right</code> = rozbaliť riadok)</td></tr>
+      <tr class="bad"><td>Skúsiť znova — obrazovka otázky vs. úvod</td><td><code>arrow.counterclockwise</code> vs. <code>arrow.clockwise</code></td><td>obrys</td><td>zjednotiť na <code>arrow.clockwise</code></td></tr>
+      <tr class="bad"><td>Prehrať odpoveď — výsledok vs. súhrn sady</td><td><code>speaker.wave.2</code> vs. <code>speaker.wave.2.fill</code></td><td>obrys / plná</td><td>zjednotiť na <code>speaker.wave.2</code> (prehrávanie nie je stav)</td></tr>
+      <tr><td>Výsledok — správne / nesprávne / preskočené</td><td><code>checkmark</code> · <code>xmark</code> · <code>minus</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Rozbalenie riadku v súhrne / prechod na detail</td><td><code>chevron.down</code> · <code>chevron.right</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Úprava prepisu</td><td><code>pencil</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Odoslanie napísanej odpovede</td><td><code>arrow.up</code></td><td>obrys</td><td>ostáva</td></tr>
+      <tr><td>Chyba / offline</td><td><code>exclamationmark.triangle.fill</code> · <code>bolt.slash.fill</code> · <code>wifi.slash</code></td><td>plná / obrys</td><td>zjednotiť na obrysové (<code>exclamationmark.triangle</code>, <code>bolt.slash</code>) — chyba nie je zapnutý stav, farba stačí</td></tr>
+      <tr><td>Úvod — balíky, plán, prázdny stav</td><td><code>shippingbox.fill</code> · <code>tray</code> · <code>person.crop.circle.badge.questionmark</code> · <code>infinity</code></td><td>plná / obrys</td><td><code>shippingbox</code> obrysová; zvyšok ostáva</td></tr>
+    </table>
+    </div>
+    <div class="qbox"><b>Odporúčanie:</b> <b>D2 = A</b> — mute a pauza v jednej zlúčenej pilulke, ⋯ samostatne, pravidlo „obrysová = vypnuté / plná = zapnuté“; k tomu štyri zjednotenia z tabuľky (skúsiť znova, prehrať odpoveď, chybové ikony, balík).</div>
+  </section>
+
+  <!-- ============ D3 ============ -->
+  <section class="block" id="d3">
+    <div class="vhead"><span class="vtag">D3</span><h2>Preskočiť — jeden text, jeden tvar</h2></div>
+    <p class="concept">Dnes má MCQ kapsulu s textom <b>„Preskočiť otázku“</b> a otvorená otázka ploché <b>„Preskoč“</b> v päte — dve slová aj dva tvary pre tú istú vec, a hlasový povel znie tretím spôsobom („preskoč“). Obe varianty zjednocujú text na <b>„Preskočiť“</b>: je to jedno slovo (zmestí sa aj pri dlhých MCQ, kde sa dnes text oreže), rovnaký tvar rozkazu ako ostatné tlačidlá a zároveň dostatočne blízko k povelu „preskoč“. Vybrať treba <b>tvar</b>.</p>
+    <div class="devices">
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:16</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion" style="font-size:23px">Ktorý európsky štát nemá vlastnú armádu?</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><div class="drain" style="width:71%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div></div></div></div>
+        <div class="plist">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Lichtenštajnsko</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Malta</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Luxembursko</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Slovinsko</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>A · MCQ — kapsula pripnutá na spodku (T5 ju pripne cez safeAreaInset)</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:17</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>4/10</span></div>
+        <div class="pquestion" style="font-size:23px">Ktorá rieka preteká Viedňou aj Bratislavou?</div>
+        <div class="tcard"><div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>Počúvam — povedz svoju odpoveď</div><div class="tv">dunaj…</div></div>
+        <div class="inbar"><div class="bstep"><div class="bar pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="bt"><div class="bcap">Počúvam — povedz svoju odpoveď</div></div></div></div></div>
+        <div class="arow"><div class="abtn"><span>Stop</span><span class="secs">12 s</span></div><div class="abtn sec">Písať</div></div>
+        <div class="pskiprow" style="margin-top:-18px"><div class="pskip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>Preskočiť</div></div>
+      </div><figcaption>A · otvorená otázka — tá istá kapsula pod akčným riadkom</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:16</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>3/10</span></div>
+        <div class="pquestion" style="font-size:23px">Ktorý európsky štát nemá vlastnú armádu?</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><div class="drain" style="width:71%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 32 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div></div></div></div>
+        <div class="plist">
+          <div class="ptile"><div class="pbadge">A</div><div class="txt">Lichtenštajnsko</div></div>
+          <div class="ptile"><div class="pbadge">B</div><div class="txt">Malta</div></div>
+          <div class="ptile"><div class="pbadge">C</div><div class="txt">Luxembursko</div></div>
+          <div class="ptile"><div class="pbadge">D</div><div class="txt">Slovinsko</div></div>
+        </div>
+        <div class="pskiprow"><div class="pskip flat">Preskočiť</div></div>
+      </div><figcaption>B · MCQ — plochý textový odkaz v päte, bez kapsuly</figcaption></figure>
+
+      <figure class="device"><div class="phone">
+        <div class="sb"><span>16:17</span><span>5G ▮</span></div>
+        <div class="toolbar"><div class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="tr"><div class="tpill"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 5L6 9H3v6h3l5 4zM15 9a4 4 0 010 6M18 6a8 8 0 010 12"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v14M15 5v14"/></svg></i></div><div class="tchip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div></div></div>
+        <div class="pseg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="psegrow"><span>general</span><span>4/10</span></div>
+        <div class="pquestion" style="font-size:23px">Ktorá rieka preteká Viedňou aj Bratislavou?</div>
+        <div class="inbar"><div class="bstep"><div class="bar"><div class="drain" style="width:60%"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="bt"><div class="bcap">Premýšľaj — počúvam o 27 s</div><div class="chips"><span>„štart“</span><span>„zopakuj“</span><span>„preskoč“</span></div></div></div></div></div>
+        <div class="arow"><div class="abtn"><div class="fillbar" style="width:60%"></div><span>Štart</span><span class="secs">27 s</span></div><div class="abtn sec">Písať</div></div>
+        <div class="pskiprow" style="margin-top:-18px"><div class="pskip flat">Preskočiť</div></div>
+      </div><figcaption>B · otvorená otázka — rovnaký plochý odkaz pod akčným riadkom</figcaption></figure>
+    </div>
+    <ul class="pros">
+      <li class="p"><b>A</b> <span class="rec">ODPORÚČAM</span> — kapsula je väčší a lepšie mierený cieľ pre palec z volantu, jasne hovorí „toto je tlačidlo“ a už má miesto pre spinner počas preskakovania (#174). Rovnaký tvar na oboch obrazovkách znamená, že sa Preskočiť hľadá vždy na tom istom mieste a v tej istej forme.</li>
+      <li class="m"><b>B</b> — tichšie a šetrí výšku, ale plochý text vedľa dvoch plných tlačidiel vyzerá skôr ako popis než akcia a ponúka menší cieľ. Preskočiť je pritom jediná úniková cesta z otázky, na ktorú vodič nevie odpovedať.</li>
+    </ul>
+    <div class="qbox"><b>Odporúčanie:</b> <b>D3 = A</b> — kapsula s textom „Preskočiť“ a ikonou <code>chevron.right.2</code>, rovnaká na MCQ aj na otvorenej otázke, pripnutá nad spodným okrajom.</div>
+  </section>
+
+  <!-- ============ ROZHODNUTIA ============ -->
+  <section class="block" id="rozhodnutia">
+    <div class="vhead"><span class="vtag teal">✓</span><h2>Rozhodnutia</h2></div>
+    <div class="check">
+      <h3>Stačí odpovedať tromi písmenami</h3>
+      <ul>
+        <li><b>D1 · Lišta povelov — A / B / C.</b> A = jedna lišta, stav + slovné čipy · B = lišta + odpočtový prstenec · C = textový riadok bez pilulky. <i>Odporúčam A.</i><br>Súčasťou každej: štyri stavy rovnaké na MCQ aj otvorenej, slová vždy viditeľné, „POČÚVAM PRÍKAZY“ nahradené konkrétnymi slovami.</li>
+        <li><b>D2 · Toolbar a ikony — A / B.</b> A = mute+pauza v zlúčenej pilulke, ⋯ zvlášť, pravidlo „obrysová = vypnuté, plná = zapnuté“ · B = všetky tri v pilulke, všetko obrysové, stav nesie farba. <i>Odporúčam A.</i><br>Play v pauze ostáva modrý (už rozhodnuté). Zvlášť potvrď štyri zjednotenia z tabuľky (skúsiť znova · prehrať odpoveď · chybové ikony · balík) — alebo povedz, ktoré vynechať.</li>
+        <li><b>D3 · Preskočiť — A / B.</b> A = kapsula s ikonou · B = plochý textový odkaz. Text „Preskočiť“ na oboch obrazovkách v oboch prípadoch. <i>Odporúčam A.</i></li>
+      </ul>
+    </div>
+    <p class="meta" style="margin-top:40px">ODPOVEĎ STAČÍ AKO „D1 A · D2 A · D3 A“ · PO VÝBERE: ZÁPIS DO docs/design/ui-variants-2026-09-14-decisions.md → PENCIL SYNC → SWIFTUI → TF BUILD NA POŽIADANIE</p>
+  </section>
+</div>
+</body>
+</html>

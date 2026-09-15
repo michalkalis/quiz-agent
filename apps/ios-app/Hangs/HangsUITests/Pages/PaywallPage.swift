@@ -13,7 +13,7 @@ struct PaywallPage {
     }
 
     var closeButton: XCUIElement {
-        app.buttons["paywall-close-button"]
+        app.buttons["paywall-close-x-button"]
     }
 
     var restoreButton: XCUIElement {

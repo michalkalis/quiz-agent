@@ -79,6 +79,16 @@ private func treeHasText(_ tree: InspectableView<ViewType.ClassifiedView>, conta
     }
 }
 
+/// The CTA's own `Button`. `HangsPrimaryButton` applies `.disabled(isLoading)`
+/// inside itself, below the identifier, so a disabled check has to reach it.
+@MainActor
+private func ctaButton(
+    _ tree: InspectableView<ViewType.ClassifiedView>
+) throws -> InspectableView<ViewType.Button> {
+    try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
+        .find(ViewType.Button.self)
+}
+
 // MARK: - isOffline logic
 
 @MainActor
@@ -276,41 +286,39 @@ private func makeStalledManager(
 }
 
 @MainActor
-@Suite("PaywallView — in-flight narrating CTA (#129)")
+@Suite("PaywallView — in-flight CTA + dim hierarchy (#129, CTA per #179)")
 struct PaywallViewInFlightTests {
-    // THE regression: a pack purchase in flight must NOT drive the Subscribe CTA
-    // into its loading/disabled state. It must render the purple narrating CTA
-    // naming the pack. This assertion fails on the pre-#129 code, which showed
-    // "Subscribe — …" with a global spinner while the pack row spun.
-    @Test("REGRESSION: pack in flight narrates the pack on the CTA, never a loading Subscribe button")
-    func packInFlightNarratesPackNotSubscribe() async throws {
+    /// #179 finding 9 reverses #129's narrating CTA: one pink `HangsPrimaryButton`
+    /// that spins in place. What survives is the dim hierarchy — the product
+    /// being bought stays bright, everything else recedes and stops taking taps.
+    @Test("pack in flight keeps the pack bright, recedes the plans, and locks every trigger")
+    func packInFlightKeepsDimHierarchy() async throws {
         let (manager, task) = await makeStalledManager(purchase: StoreProduct.packId)
         defer { task.cancel() }
         #expect(manager.purchaseState == .purchasing(productID: StoreProduct.packId))
 
-        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .pack)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // "Buying" + "100 Question Pack" together is unique to the CTA (the
-            // pack row title is just "100 Question Pack", no "Buying").
-            #expect(treeHasText(tree, containing: ["Buying", "100 Question Pack"]),
-                    "pack in flight must narrate the pack on the CTA")
-            #expect(!treeHasText(tree, containing: ["Subscribe —"]),
-                    "the Subscribe CTA must not render (loading or otherwise) during a pack buy")
-            // The pack is the source (bright); the plan cards recede to 24%.
-            let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-pack-button")
+            #expect(!treeHasText(tree, containing: ["Buying"]),
+                    "the narrating CTA is gone — the CTA spins instead of narrating")
+            let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
             let annual = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual")
             #expect(try pack.opacity() == 1, "the pack being bought stays full-strength")
             #expect(try annual.opacity() < 0.5, "the plan cards recede during a pack buy")
             // Every purchase trigger is occupied/dimmed — no second purchase.
             #expect(pack.isDisabled())
             #expect(annual.isDisabled())
+            // `.disabled(isLoading)` lives INSIDE HangsPrimaryButton, so the
+            // assertion has to be on the button, not on the identified wrapper.
+            #expect(try ctaButton(tree).isDisabled(),
+                    "the CTA must not start a second purchase while one is in flight")
             #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-restore-button").isDisabled())
         }
     }
 
-    @Test("subscription in flight narrates the plan + price; the bought card stays bright while others dim")
-    func subscriptionInFlightNarratesPlan() async throws {
+    @Test("subscription in flight keeps the bought card bright while the others dim")
+    func subscriptionInFlightKeepsDimHierarchy() async throws {
         let (manager, task) = await makeStalledManager(purchase: StoreProduct.annualSubId)
         defer { task.cancel() }
         #expect(manager.purchaseState == .purchasing(productID: StoreProduct.annualSubId))
@@ -318,25 +326,24 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Buying Annual", "/ year"]),
-                    "subscription in flight narrates the plan and price on the CTA")
-            #expect(!treeHasText(tree, containing: ["Subscribe —"]))
-            // The annual card is the subject — it stays bright (opacity 1) while
-            // the other plan and the pack recede to 24%; every trigger disabled.
+            // The CTA still names what is being bought — the same button, now
+            // spinning, rather than a second button with different copy.
+            #expect(treeHasText(tree, containing: ["Subscribe —", "/ year"]))
             let annual = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual")
             let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
-            let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-pack-button")
+            let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
             #expect(try annual.opacity() == 1, "the plan being bought stays full-strength")
             #expect(try monthly.opacity() < 0.5, "the other plan recedes")
             #expect(try pack.opacity() < 0.5, "the pack recedes during a subscription buy")
             #expect(annual.isDisabled())
             #expect(monthly.isDisabled())
             #expect(pack.isDisabled())
+            #expect(try ctaButton(tree).isDisabled())
         }
     }
 
-    @Test("restore in flight renders the blue 'Restoring purchases…' CTA")
-    func restoreInFlightNarratesRestore() async throws {
+    @Test("restore in flight locks the picker and the CTA")
+    func restoreInFlightLocksEverything() async throws {
         let (manager, task) = await makeStalledManager(restore: true)
         defer { task.cancel() }
         #expect(manager.purchaseState == .restoring)
@@ -344,17 +351,15 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Restoring purchases"]),
-                    "restore in flight narrates restore on the CTA")
-            #expect(!treeHasText(tree, containing: ["Subscribe —"]))
             // Whole picker dims + disables — restore acts on the account.
             #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual").isDisabled())
-            #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-pack-button").isDisabled())
+            #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled())
             #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-restore-button").isDisabled())
+            #expect(try ctaButton(tree).isDisabled())
         }
     }
 
-    @Test("idle renders the normal Subscribe CTA, not a narrating variant, with triggers enabled")
+    @Test("idle renders a live Subscribe CTA with every trigger enabled")
     func idleRendersSubscribeCTA() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
@@ -363,8 +368,132 @@ struct PaywallViewInFlightTests {
             #expect(treeHasText(tree, containing: ["Subscribe —", "/ year"]))
             #expect(!treeHasText(tree, containing: ["Buying"]), "no narrating CTA while idle")
             #expect(!treeHasText(tree, containing: ["Restoring"]), "no restore CTA while idle")
-            #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-pack-button").isDisabled()),
-                    "the pack row is tappable while idle")
+            #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled()),
+                    "the pack card is tappable while idle")
+            #expect(try !(ctaButton(tree).isDisabled()))
+        }
+    }
+}
+
+// MARK: - Select, then buy (#179 finding 9)
+
+/// Founder, TestFlight 2026-09-14: the pack card sat in a picker between two
+/// cards that only *select* — and charged the moment it was touched. The picker
+/// selects (annual / monthly / pack) now, the bottom CTA is the one thing that
+/// buys, and its title says which of the three it will buy.
+@MainActor
+@Suite("PaywallView — the picker selects, only the CTA buys (#179)")
+struct PaywallPackSelectionTests {
+    /// Manager plus the mock behind it, so a test can assert what did (and did
+    /// not) reach the store.
+    private func makeManagerWithMock(
+        stallPurchase: Bool = false
+    ) async -> (StoreManager, MockPurchaseService) {
+        let mock = MockPurchaseService()
+        mock.stubbedOfferings = makeFullOfferings()
+        mock.stubbedIsEntitled = false
+        if stallPurchase {
+            // Long enough to observe `.purchasing`, short enough that the task
+            // cannot outlive the suite.
+            mock.purchaseGate = { try? await Task.sleep(for: .milliseconds(500)) }
+        }
+        let manager = StoreManager(purchaseService: mock)
+        await Task.yield()
+        await Task.yield()
+        return (manager, mock)
+    }
+
+    // THE regression: this is the tap that used to take the founder's money.
+    @Test("REGRESSION: tapping the pack card never touches the store")
+    func packCardTapDoesNotBuy() async throws {
+        let (manager, mock) = await makeManagerWithMock()
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
+        try await ViewHosting.host(view) {
+            try view.inspect()
+                .find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
+                .button().tap()
+
+            #expect(mock.purchaseCallCount == 0, "a tap on the pack card must not buy anything")
+            #expect(manager.purchaseState == .idle)
+        }
+    }
+
+    /// The selection side of the same change. A `@State` write is not visible to
+    /// a re-inspection of the same view value, so the selected state is seeded
+    /// through `initialPlan` — the same way the monthly CTA test does it.
+    @Test("with the pack selected the CTA sells the pack, not a subscription")
+    func packSelectionDrivesTheCTATitle() async throws {
+        let (manager, _) = await makeManagerWithMock()
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .pack)
+        #expect(view.effectivePlan == .pack)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]),
+                    "the CTA must name the pack and its price")
+            #expect(!treeHasText(tree, containing: ["Subscribe —"]),
+                    "the CTA must stop selling a subscription while the pack is selected")
+        }
+    }
+
+    @Test("the CTA buys the SELECTED product — the pack when the pack is selected")
+    func ctaBuysTheSelectedProduct() async throws {
+        let (manager, mock) = await makeManagerWithMock(stallPurchase: true)
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .pack)
+        try await ViewHosting.host(view) {
+            try view.inspect()
+                .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
+                .button().tap()
+
+            // The purchase runs in an unstructured Task — poll until it parks in
+            // the stalled `.purchasing` state (the MCQ suites' pattern).
+            for _ in 0 ..< 150 where manager.purchaseState == .idle {
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
+            #expect(manager.purchaseState == .purchasing(productID: StoreProduct.packId),
+                    "the CTA must buy the selected product, not a subscription")
+            #expect(mock.purchaseCallCount == 1)
+        }
+    }
+
+    /// The subscription half of the same rule, unchanged from #94: nothing was
+    /// traded away to make the pack selectable.
+    @Test("with no pack selected the CTA still sells — and buys — the chosen plan")
+    func ctaStillBuysTheChosenSubscription() async throws {
+        let (manager, mock) = await makeManagerWithMock(stallPurchase: true)
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
+        try await ViewHosting.host(view) {
+            #expect(try treeHasText(view.inspect(), containing: ["Subscribe —", "/ month"]))
+            try view.inspect()
+                .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
+                .button().tap()
+
+            for _ in 0 ..< 150 where manager.purchaseState == .idle {
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
+            #expect(manager.purchaseState == .purchasing(productID: StoreProduct.monthlySubId))
+            #expect(mock.purchaseCallCount == 1)
+        }
+    }
+
+    /// One way out, and it is the ✕ — in BOTH variants. The offline body had no
+    /// ✕ of its own, so dropping "Maybe tomorrow" there without adding one would
+    /// have trapped the user behind an unreachable store.
+    @Test("'Maybe tomorrow' is gone and the ✕ is present", arguments: [true, false])
+    func closeIsTheXOnly(offline: Bool) async throws {
+        let manager = await makeStoreManager(
+            offerings: offline ? nil : makeFullOfferings(),
+            hasAttemptedLoad: true
+        )
+        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
+        #expect(view.isOffline == offline)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self, "\"Maybe tomorrow\" must be gone") {
+                _ = try tree.find(text: "Maybe tomorrow")
+            }
+            #expect(throws: Never.self, "the ✕ is the only way out — it must exist") {
+                try tree.find(viewWithAccessibilityIdentifier: "paywall-close-x-button")
+            }
         }
     }
 }

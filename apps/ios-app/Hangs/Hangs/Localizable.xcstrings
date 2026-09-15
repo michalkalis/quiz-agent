@@ -1196,6 +1196,22 @@
         }
       }
     },
+    "Buy 100 Question Pack — %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koupit balíček 100 otázek — %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kúpiť balík 100 otázok — %@"
+          }
+        }
+      }
+    },
     "Buying 100 Question Pack…" : {
       "localizations" : {
         "cs" : {

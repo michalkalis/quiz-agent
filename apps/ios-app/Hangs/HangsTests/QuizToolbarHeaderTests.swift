@@ -91,16 +91,74 @@ struct QuizToolbarTests {
 
     /// The pause control is a TOGGLE, not a one-way door: a driver who paused at
     /// a junction has to see the way back, and the glyph is the whole signal.
+    ///
+    /// #179 D2 icon rule "outline = off, fill = on": running is the OUTLINE
+    /// `pause` (nothing is switched on), paused is `play.fill`.
     @Test("the pause glyph flips to play once paused", arguments: [true, false])
     func pauseGlyphFlips(isPaused: Bool) async throws {
         let view = QuizPauseToolbarButton(isPaused: isPaused) {}
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let glyph = try tree.find(ViewType.Image.self).actualImage().name()
-            #expect(glyph == (isPaused ? "play.fill" : "pause.fill"))
+            #expect(glyph == (isPaused ? "play.fill" : "pause"))
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.pause")
             }
+        }
+    }
+
+    /// #179 D2 (founder 2026-09-14): "mute a pauza ďaleko od seba" — in a
+    /// `ToolbarItemGroup` the system spacing spread them until they read as two
+    /// unrelated buttons. They are ONE pill now, and the ⋯ menu is NOT in it:
+    /// the driver's two mid-question controls must be a single shape their thumb
+    /// can find, with the menu deliberately out of that reach.
+    @Test("mute and pause share one pill; the ⋯ menu is not part of it")
+    func controlPillJoinsMuteAndPause() async throws {
+        let pill = QuizControlPill(
+            isMuted: false, isPaused: false, isPauseEnabled: true,
+            onMute: {}, onPause: {}
+        )
+        try await ViewHosting.host(pill) {
+            let tree = try pill.inspect()
+            for id in ["question.mute", "question.pause"] {
+                #expect(throws: Never.self, "\(id) is not inside the control pill") {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
+                }
+            }
+            #expect(throws: (any Error).self, "the ⋯ menu must stay outside the pill") {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "question.moreMenu")
+            }
+        }
+    }
+
+    /// The pill carries the states, not just the controls: a muted quiz and a
+    /// paused one each have to be readable from the bar at a glance.
+    @Test("the pill renders the muted and paused glyphs")
+    func controlPillCarriesMutedAndPausedState() async throws {
+        let pill = QuizControlPill(
+            isMuted: true, isPaused: true, isPauseEnabled: true,
+            onMute: {}, onPause: {}
+        )
+        try await ViewHosting.host(pill) {
+            let tree = try pill.inspect()
+            let glyphs = tree.findAll(ViewType.Image.self).compactMap { try? $0.actualImage().name() }
+            #expect(glyphs.contains("speaker.slash.fill"), "muted glyph missing: \(glyphs)")
+            #expect(glyphs.contains("play.fill"), "paused glyph missing: \(glyphs)")
+        }
+    }
+
+    /// A quiz that cannot be paused must not offer the control — but a PAUSED
+    /// quiz always keeps its way back (#173 decision 4), which is why the gate
+    /// is "can pause OR already paused", not "can pause".
+    @Test("the pill disables pause only when the quiz can neither pause nor resume")
+    func controlPillGatesPause() async throws {
+        let dead = QuizControlPill(
+            isMuted: false, isPaused: false, isPauseEnabled: false,
+            onMute: {}, onPause: {}
+        )
+        try await ViewHosting.host(dead) {
+            let pause = try dead.inspect().find(viewWithAccessibilityIdentifier: "question.pause")
+            #expect(try pause.isDisabled(), "pause must be dead when the quiz cannot be frozen")
         }
     }
 

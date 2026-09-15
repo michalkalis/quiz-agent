@@ -143,7 +143,7 @@ struct SetRecapView: View {
         VStack(spacing: 8) {
             HangsPrimaryButton(
                 title: viewModel.isNarratingRecap ? "Stop summary" : "Play summary",
-                icon: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2.fill",
+                icon: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2",
                 height: 56
             ) {
                 viewModel.toggleRecapNarration()
@@ -315,7 +315,7 @@ struct SetRecapRow: View {
 
                 Button(action: onHearIt) {
                     HStack(spacing: 5) {
-                        Image(systemName: "speaker.wave.2.fill")
+                        Image(systemName: "speaker.wave.2")
                             .font(.system(size: 11, weight: .semibold))
                         Text("hear it")
                             .font(.hangsBody(13, weight: .semibold))

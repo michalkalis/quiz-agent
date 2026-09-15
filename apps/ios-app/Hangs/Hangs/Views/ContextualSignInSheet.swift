@@ -110,7 +110,7 @@ struct ContextualSignInSheet: View {
 
     private var errorBanner: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 14))
                 .foregroundColor(Theme.Hangs.Colors.error)
                 .accessibilityHidden(true)

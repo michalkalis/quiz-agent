@@ -154,7 +154,11 @@ struct ResultMetaRow: View {
                         .accessibilityIdentifier("result.reviewBadge")
                 }
                 Spacer(minLength: 8)
-                if sourceDomain != nil { sourceLink }
+                if let sourceDomain {
+                    // #179: the same link the recap's expanded row draws.
+                    HangsSourceLink(domain: sourceDomain, action: onOpenSource)
+                        .accessibilityIdentifier("result.source")
+                }
             }
             if let reviewNote {
                 Text(verbatim: reviewNote)
@@ -189,23 +193,5 @@ struct ResultMetaRow: View {
             .tracking(1.2)
             .lineLimit(1)
             .fixedSize()
-    }
-
-    /// Tappable source link — opens the existing SourceWebView sheet. Variant A
-    /// drops the domain from the label: "source ›" is the whole affordance. The
-    /// domain survives as the accessibility label, where there is no width budget.
-    private var sourceLink: some View {
-        Button(action: onOpenSource) {
-            HStack(spacing: 4) {
-                monoLabel("source")
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-            }
-            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Source: \(sourceDomain ?? "")", comment: "Accessibility label for the result screen's source link, naming the site"))
-        .accessibilityIdentifier("result.source")
     }
 }

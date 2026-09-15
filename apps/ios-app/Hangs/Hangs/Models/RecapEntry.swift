@@ -26,6 +26,10 @@ struct RecapEntry: Identifiable, Equatable, Sendable {
     /// as ResultView (46.B9); MCQ pairs letter and text ("B — Pyramída").
     let correctAnswerDisplay: String
     let explanation: String?
+    /// The question's source. The recap used to drop it (#179 finding 8), so the
+    /// one screen that shows every answer of the set was the one screen with no
+    /// way to check any of them.
+    let sourceUrl: String?
 
     var wasSkipped: Bool { result == .skipped }
     /// The recap's ✓ bucket — mirrors `Evaluation.isCorrect` (only a full
@@ -46,6 +50,7 @@ struct RecapEntry: Identifiable, Equatable, Sendable {
         )
         explanation = evaluation.explanation?.trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
+        sourceUrl = question.sourceUrl
     }
 }
 

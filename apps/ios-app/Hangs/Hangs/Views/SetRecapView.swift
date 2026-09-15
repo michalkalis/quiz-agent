@@ -166,14 +166,16 @@ struct SetRecapView: View {
 
 /// One recap row. Collapsed: badge + 2-line stem + the revealed answer +
 /// chevron (the answer is visible without expanding — variant C's whole
-/// point is glanceability). Expanded: "you said" (struck through — it was
-/// wrong), explanation, hear-it.
+/// point is glanceability). Expanded: the full stem, "you said" (struck
+/// through — it was wrong), explanation, hear-it, source.
 struct SetRecapRow: View {
     let entry: RecapEntry
     let isExpanded: Bool
     let hearItDisabled: Bool
     let onToggle: () -> Void
     let onHearIt: () -> Void
+
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -206,7 +208,10 @@ struct SetRecapRow: View {
             Text(entry.questionText)
                 .font(.hangsBody(13, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.muted)
-                .lineLimit(2)
+                // #179 finding 5: collapsed stays a 2-line teaser (the list is
+                // for glancing), expanded owes the driver the whole question —
+                // a truncated stem makes the answer under it unreadable.
+                .lineLimit(isExpanded ? nil : 2)
                 .multilineTextAlignment(.leading)
 
             Spacer(minLength: 8)
@@ -298,6 +303,17 @@ struct SetRecapRow: View {
                 .disabled(hearItDisabled)
                 .opacity(hearItDisabled ? 0.4 : 1)
                 .accessibilityIdentifier("recap.row.\(entry.id).hearIt")
+            }
+
+            // #179 finding 8: every revealed answer gets the same source link
+            // the result screen offers — same component, so the two cannot
+            // drift. Opens in the browser (the row has no sheet of its own).
+            if let sourceUrl = entry.sourceUrl,
+               let domain = HangsSourceLink.domain(from: sourceUrl),
+               let url = URL(string: sourceUrl)
+            {
+                HangsSourceLink(domain: domain) { openURL(url) }
+                    .accessibilityIdentifier("recap.row.\(entry.id).source")
             }
         }
     }

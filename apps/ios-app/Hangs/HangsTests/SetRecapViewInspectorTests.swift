@@ -216,3 +216,95 @@ struct SetRecapRowInspectorTests {
         }
     }
 }
+
+// MARK: - Expanded row: whole question + source (#179 findings 5 & 8)
+
+/// Founder, TestFlight 2026-09-14: the recap was the one screen showing every
+/// answer of the set, and the one screen where you could neither read the whole
+/// question nor check where the answer came from. Both halves are pinned here:
+/// the 2-line teaser is a COLLAPSED rule only, and the source link the result
+/// screen has must exist here too (same `HangsSourceLink`).
+@Suite("SetRecapRow — full stem + source link when expanded (#179)")
+@MainActor
+struct SetRecapRowSourceAndStemTests {
+    private static let longStem = """
+    Which European capital city, founded as a Roman settlement on the banks of \
+    a major river, later became the seat of a dual monarchy, and is today famous \
+    for its thermal baths and a castle district listed by UNESCO?
+    """
+
+    private func row(expanded: Bool, question: Question) -> SetRecapRow {
+        SetRecapRow(
+            entry: entry(number: 3, result: .incorrect, question: question),
+            isExpanded: expanded,
+            hearItDisabled: false,
+            onToggle: {},
+            onHearIt: {}
+        )
+    }
+
+    /// A question with no source at all — the link must not dangle.
+    private func sourcelessQuestion() -> Question {
+        Question(
+            id: "q_nosource",
+            question: Self.longStem,
+            type: .text,
+            possibleAnswers: nil,
+            difficulty: "medium",
+            topic: "Test Topic",
+            category: "test",
+            sourceUrl: nil,
+            sourceExcerpt: nil,
+            mediaUrl: nil,
+            imageSubtype: nil,
+            explanation: nil,
+            generatedBy: nil
+        )
+    }
+
+    @Test("the capture keeps the question's source URL (it used to be dropped)")
+    func entryCarriesSourceUrl() {
+        let question = Fixtures.makeQuestion(text: Self.longStem)
+        let captured = entry(number: 3, result: .incorrect, question: question)
+        #expect(captured.sourceUrl == question.sourceUrl)
+        #expect(HangsSourceLink.domain(from: captured.sourceUrl) == "example.com")
+    }
+
+    @Test("expanded renders the WHOLE stem — no line limit — plus the source link")
+    func expandedShowsFullStemAndSource() async throws {
+        let view = row(expanded: true, question: Fixtures.makeQuestion(text: Self.longStem))
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let stem = try tree.find(text: Self.longStem)
+            #expect(try stem.lineLimit() == nil, "an expanded row must not truncate the question")
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "recap.row.3.source")
+            }
+        }
+    }
+
+    /// The collapsed list is unchanged — this is the regression half: the row
+    /// stays a 2-line teaser with nothing new stacked into it.
+    @Test("collapsed keeps the 2-line teaser and shows no source link")
+    func collapsedUnchanged() async throws {
+        let view = row(expanded: false, question: Fixtures.makeQuestion(text: Self.longStem))
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(try tree.find(text: Self.longStem).lineLimit() == 2)
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "recap.row.3.source")
+            }
+        }
+    }
+
+    @Test("no source URL → no source link, even expanded")
+    func noSourceNoLink() async throws {
+        let view = row(expanded: true, question: sourcelessQuestion())
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                _ = try tree.find(viewWithAccessibilityIdentifier: "recap.row.3.source")
+            }
+        }
+    }
+}

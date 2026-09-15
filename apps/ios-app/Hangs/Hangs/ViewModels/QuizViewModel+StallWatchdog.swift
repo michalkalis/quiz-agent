@@ -52,7 +52,19 @@ extension QuizViewModel {
     /// (`AppErrorModel.from` maps `URLError.timedOut` to `.retryOperation`).
     private func failStalledSubmission() async {
         guard quizState == .processing || quizState == .skipping else { return }
-        guard !showAnswerConfirmation, !isEvaluatingAnswer else { return }
+        guard !showAnswerConfirmation, !isEvaluatingAnswer else {
+            // Defer, don't disarm (PR #156 review). The sheet — and the evaluation
+            // running on it (#173 C2) — is a person acting, not a stall, but this
+            // check CONSUMES the one-shot Task and `.processing` has no legal
+            // self-transition to re-arm on: the whole confirm flow stays inside it,
+            // so returning here left the phase unbounded for the rest of its life.
+            // Slide the window instead, so the phase is bounded again from the
+            // moment the sheet goes away. The absolute deadline is moved with it —
+            // re-arming on the old one would hot-loop.
+            stallEnteredAt = Date()
+            armStallWatchdog()
+            return
+        }
 
         let isSkip = quizState == .skipping
         let state = quizState.label

@@ -156,6 +156,37 @@ struct SubmissionStallTests {
         #expect(vm.quizState == .processing, "a sheet the user is looking at is not a stall")
     }
 
+    /// The other half of that rule (PR #156 review): deferring is not disarming.
+    /// The guard above consumes the one-shot watchdog Task, and the whole confirm
+    /// flow — sheet up, confirm, evaluate, response — stays inside `.processing`,
+    /// which has no legal self-transition to re-arm on. So a sheet that outlives
+    /// the deadline used to buy the phase permanent immunity: exactly the orphaned
+    /// `.processing` of finding 3, now unbounded.
+    @Test("a sheet outliving the deadline defers the watchdog; the phase is bounded again once it closes")
+    func watchdogDefersWhileSheetIsUpThenFires() async throws {
+        let vm = makeVM()
+        vm.stallWatchdogSeconds = 0.15
+
+        #expect(vm.transition(to: .processing))
+        vm.showAnswerConfirmation = true
+
+        // Several windows pass with the sheet up — the driver is reading it.
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(vm.quizState == .processing, "a sheet the user is looking at is never a stall")
+
+        // The sheet goes away with the submission still wedged: from here the
+        // phase has nobody watching it, and must not outlive one more window.
+        vm.showAnswerConfirmation = false
+        await waitUntil { vm.quizState.isError }
+
+        guard case let .error(_, context) = vm.quizState else {
+            Issue.record("expected .error after the sheet closed, got \(vm.quizState.label)")
+            return
+        }
+        #expect(context == .submission)
+        #expect(vm.activeErrorModel?.retryAction == .retryOperation)
+    }
+
     /// …and the same while the confirmed answer is being evaluated on that sheet.
     @Test("the watchdog stays silent while an answer is being evaluated")
     func watchdogIgnoresEvaluatingAnswer() async throws {

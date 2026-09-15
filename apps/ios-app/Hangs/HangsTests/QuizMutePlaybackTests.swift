@@ -20,14 +20,18 @@ import Testing
 @Suite("Mute silences whatever is playing (#179)")
 @MainActor
 struct QuizMutePlaybackTests {
-    private func makeVM() -> (QuizViewModel, MockAudioService) {
+    private func makeVM(
+        silence: MockSilenceDetectionService = MockSilenceDetectionService()
+    ) -> (QuizViewModel, MockAudioService) {
         let audio = MockAudioService()
         let network = Fixtures.makeFullMockNetwork()
         network.mockAudioData = Data("opus-bytes".utf8)
         let vm = QuizViewModel(
             networkService: network,
             audioService: audio,
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence,
+            sttService: nil
         )
         return (vm, audio)
     }
@@ -85,6 +89,30 @@ struct QuizMutePlaybackTests {
         #expect(audio.stopPlaybackCallCount >= 1)
         await replay.value
         #expect(vm.isPlayingQuestionTTS == false, "no leaked flag from the dropped run")
+    }
+
+    /// Mute is OUTPUT-only: `mayCaptureAudio` never reads it, and the muted branch
+    /// of `playQuestionAudio` arms listening itself — a silent quiz is still a
+    /// hands-free one. But the replay run tears the command listener down on its
+    /// way in and its cancelled branch re-arms nothing (it assumes a newer playback
+    /// owner took over), so the canceller has to own the restart or voice commands
+    /// die for the rest of the question (PR #156 review).
+    @Test("muting during a replay keeps voice-command listening alive")
+    func muteDuringReplayRestartsListening() async {
+        let silence = MockSilenceDetectionService()
+        let (vm, audio) = makeVM(silence: silence)
+        vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
+
+        let replay = Task { await vm.replayQuestionAudio() }
+        await waitUntil { audio.playOpusCallCount > 0 }
+        #expect(silence.isListening == false, "the replay run takes the listener down on its way in")
+
+        await vm.toggleMute()
+
+        #expect(audio.stopPlaybackCallCount >= 1, "the replay is silenced")
+        #expect(vm.isPlayingQuestionTTS == false)
+        #expect(silence.isListening, "…and mute restarts the capture the cancelled run no longer owns")
+        await replay.value
     }
 
     /// The inverse must stay true: UNmuting is not a stop command. Stopping

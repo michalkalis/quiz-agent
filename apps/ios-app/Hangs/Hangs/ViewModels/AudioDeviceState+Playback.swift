@@ -236,6 +236,17 @@ extension AudioDeviceState {
         // otherwise start speaking a moment AFTER the mute.
         taskBag.cancel(.questionReplay)
         await stopAnyPlayingAudio()
+
+        // …and then own the restart that cancellation just orphaned (PR #156
+        // review). The replay run tears the command listener down on its way in,
+        // and its cancelled branch deliberately re-arms nothing — it assumes a
+        // NEWER playback owner took over. Mute is not one. Mute is output-only
+        // here (`mayCaptureAudio` never reads it, and `playQuestionAudio`'s muted
+        // branch arms listening itself), so voice commands must keep working
+        // through a silent question. Clearing the flag first both removes the race
+        // with the cancelled run's own tail and lets the capture gate say yes.
+        setPlayingQuestionTTS(false)
+        await startSilenceDetectionListening()
     }
 
     /// Stop any currently playing audio (cleanup during state transitions)

@@ -233,13 +233,18 @@ struct SetRecapRowSourceAndStemTests {
     for its thermal baths and a castle district listed by UNESCO?
     """
 
-    private func row(expanded: Bool, question: Question) -> SetRecapRow {
+    private func row(
+        expanded: Bool,
+        question: Question,
+        onOpenSource: @escaping (String) -> Void = { _ in }
+    ) -> SetRecapRow {
         SetRecapRow(
             entry: entry(number: 3, result: .incorrect, question: question),
             isExpanded: expanded,
             hearItDisabled: false,
             onToggle: {},
-            onHearIt: {}
+            onHearIt: {},
+            onOpenSource: onOpenSource
         )
     }
 
@@ -294,6 +299,26 @@ struct SetRecapRowSourceAndStemTests {
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "recap.row.3.source")
             }
+        }
+    }
+
+    /// The link must feed the recap's OWN `SourceWebView` sheet, not `openURL` —
+    /// a driver bounced into Safari mid-recap has left the app. The row reports
+    /// the URL and `SetRecapView` turns it into `sourceSheet`; a `@State` write
+    /// is not visible to a re-inspection, so the contract is pinned at the seam
+    /// the row owns: the callback, and the exact URL it carries.
+    @Test("tapping the source link hands the URL to the owner for the in-app reader")
+    func sourceLinkReportsURLToOwner() async throws {
+        let question = Fixtures.makeQuestion(text: Self.longStem)
+        var opened: String?
+        let view = row(expanded: true, question: question) { opened = $0 }
+        try await ViewHosting.host(view) {
+            try view.inspect()
+                .find(viewWithAccessibilityIdentifier: "recap.row.3.source")
+                .find(ViewType.Button.self)
+                .tap()
+            #expect(opened == question.sourceUrl,
+                    "the link must report its own question's source URL")
         }
     }
 

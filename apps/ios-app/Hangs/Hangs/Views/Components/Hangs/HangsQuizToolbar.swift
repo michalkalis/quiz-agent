@@ -27,6 +27,11 @@ import SwiftUI
 /// as two unrelated buttons — the founder's 2026-09-14 report. ⋯ deliberately
 /// stays OUTSIDE the pill: a third target in the same shape invites a menu tap
 /// meant for pause, which is the last thing a driver needs mid-question.
+///
+/// #181 (founder, TF build 62): the pill draws NO background or border of its
+/// own. It is one `ToolbarItem`, so the system already wraps it in the same
+/// glass capsule ✕ and ⋯ get — a card fill plus hairline on top of that made it
+/// the one control in the bar that looked hand-drawn. Only the divider is ours.
 struct QuizControlPill: View {
     let isMuted: Bool
     let isPaused: Bool
@@ -50,8 +55,6 @@ struct QuizControlPill: View {
                 .frame(width: 42, height: 30)
                 .disabled(!isPauseEnabled)
         }
-        .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-        .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
         // Deliberately NO identifier on the pill: `accessibilityIdentifier` is
         // inherited, so one here overwrites `question.mute` / `question.pause`
         // on the children and both controls vanish from the UI-test tree

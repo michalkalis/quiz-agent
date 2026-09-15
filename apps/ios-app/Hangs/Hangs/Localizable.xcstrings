@@ -3607,6 +3607,23 @@
         }
       }
     },
+    "Loading the next question" : {
+      "comment" : "Listening-bar sub-line under \"Skipping the question\" — what the wait is for (#181 finding 4)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Načítám další otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Načítavam ďalšiu otázku"
+          }
+        }
+      }
+    },
     "Loading your plan…" : {
       "localizations" : {
         "cs" : {
@@ -6478,6 +6495,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preskočené"
+          }
+        }
+      }
+    },
+    "Skipping the question" : {
+      "comment" : "Listening-bar caption while a skipped question is being replaced by the next one (#181 finding 4)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přeskakuji otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preskakujem otázku"
           }
         }
       }

@@ -610,7 +610,10 @@ actor NetworkService: NetworkServiceProtocol {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.timeoutInterval = 10
+        // #181: this wait is spent with the mic SHUT and the screen saying
+        // "listening". On a cold prod machine it ran the full 10 s before the
+        // batch fallback opened the mic; 5 s is still ~10× a normal round trip.
+        request.timeoutInterval = 5
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
 

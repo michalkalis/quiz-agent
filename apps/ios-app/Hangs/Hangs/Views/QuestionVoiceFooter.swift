@@ -29,9 +29,13 @@
 //  ONE state surface of the question screen and it holds its slot through all
 //  four states — reading, thinking, listening, evaluating — identically on MCQ
 //  and here; a bar that disappeared mid-answer is what made the screen read as
-//  frozen. The transcript card stays (it is the only place the driver sees what
-//  was heard) but gives up its caption row: the bar directly below it was saying
-//  the same sentence twice.
+//  frozen.
+//
+//  #181 (founder, TF build 62, 2026-09-15): the transcript card above the bar is
+//  GONE. It sat empty on the batch path and for the first seconds of streaming,
+//  and the confirmation sheet shows what was heard anyway — so it was a blank
+//  pink box that read as "the app is not hearing me". The bar is the only
+//  recording surface now.
 //
 
 import SwiftUI
@@ -50,12 +54,6 @@ struct QuestionVoiceFooter: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // The recording surface. Pinned directly above the buttons so it
-            // never scrolls away.
-            if isRecording {
-                transcriptCard
-            }
-
             if showTextInput {
                 textInputRow
             }
@@ -85,35 +83,6 @@ struct QuestionVoiceFooter: View {
             actionRow
                 .padding(.horizontal, 20)
         }
-    }
-
-    // MARK: - Recording surface (Track C)
-
-    /// The live transcript card: what the app heard, from the first frame of
-    /// `.recording` — so the batch (non-streaming) path also gets a visible
-    /// surface, with `LiveTranscriptView`'s placeholder while the text is empty.
-    ///
-    /// #179 D1: its caption row is gone. The bar right below it now says
-    /// "Listening — say your answer" in every state model it shares with MCQ, and
-    /// the card was repeating that sentence word for word. The pink hairline
-    /// still ties the card to the bar's pink state.
-    private var transcriptCard: some View {
-        HangsCard(padding: EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            LiveTranscriptView(
-                text: viewModel.liveTranscript,
-                // Never "committed" while the card is on screen: the card only
-                // exists during `.recording`, and a committed transcript ends
-                // that state. Keeps the listening placeholder on the batch path.
-                isCommitted: false
-            )
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                .stroke(Theme.Hangs.Colors.pink, lineWidth: 1)
-        )
-        .padding(.horizontal, 24)
-        .accessibilityIdentifier("question.liveTranscript")
     }
 
     // MARK: - Action row (Record · Type · Skip)

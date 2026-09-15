@@ -195,9 +195,9 @@ struct ResultView: View {
     /// source line is gated on the URL only, never on correctness (issue #127
     /// root cause 1: the old `if isCorrect` gate dies).
     private var sourceDomain: String? {
-        let urlString = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
-        guard let urlString, let host = URL(string: urlString)?.host else { return nil }
-        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        HangsSourceLink.domain(
+            from: viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
+        )
     }
 
     /// #176: the review badge of the question just answered — TF/Debug only,

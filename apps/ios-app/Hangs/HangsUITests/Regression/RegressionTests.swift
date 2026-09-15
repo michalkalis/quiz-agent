@@ -264,13 +264,79 @@ final nonisolated class RegressionTests: XCTestCase {
         // does not fit — but it must still be REACHABLE by scrolling rather than
         // dead-clipped (that distinction is the whole of #125's stem half; making
         // the remainder *visible* without scrolling is Track B's layout call).
-        let beforeScroll = question.questionText.frame.minY
-        question.questionText.swipeUp()
-        XCTAssertNotEqual(
-            question.questionText.frame.minY,
-            beforeScroll,
-            accuracy: 0.5,
-            "RS-mcq-long: the stem region did not scroll post-reveal — the rest of the question is unreachable"
+        //
+        // #179: direction-agnostic on purpose. The stem auto-drifts to its end a
+        // few seconds in (TF build 53 feedback), and once it is parked there an
+        // up-swipe has nowhere left to go — on a slower machine the measurement
+        // lands after that drift and the old up-only assertion compared a resting
+        // offset with itself (probe on iPhone 17: minY starts at 159, drifts, parks
+        // at 82; swipe up 82 → 82, swipe down 82 → 159). A region WITH overflow
+        // answers a drag in one direction or the other; one without answers
+        // neither, which is still the regression this scenario exists to catch.
+        var moved = stemMoves(question, .up)
+        if !moved { moved = stemMoves(question, .down) }
+        XCTAssertTrue(
+            moved,
+            "RS-mcq-long: the stem region did not scroll in either direction post-reveal — the rest of the question is unreachable"
+        )
+    }
+
+    private enum StemSwipe { case up, down }
+
+    /// Swipes the stem once and reports whether it actually moved.
+    @MainActor
+    private func stemMoves(_ question: QuestionPage, _ direction: StemSwipe) -> Bool {
+        let before = question.questionText.frame.minY
+        switch direction {
+        case .up: question.questionText.swipeUp()
+        case .down: question.questionText.swipeDown()
+        }
+        return abs(question.questionText.frame.minY - before) > 0.5
+    }
+
+    // MARK: - RS-mcq-long-options
+
+    //
+    // Scenario: launch with "--ui-test-mcq-long-options" so the seeded MCQ has an
+    // ordinary stem but four options of 2–3 lines each, then assert the skip chip
+    // is still hittable (isHittable is false once it is off the screen edge).
+    //
+    // Regression guarded: #179 finding 10 (founder, TF build 61) — the options
+    // grew unbounded under a stem holding a 360pt floor, so "Skip question", the
+    // only way out of a question the driver cannot answer, was pushed under the
+    // bottom edge. It is layout, so only a real run can prove it.
+
+    @MainActor
+    func testRSMCQLongOptionsFooterReachable() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test", "--ui-test-mcq-long-options"]
+        app.launch()
+
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+
+        let question = QuestionPage(app: app)
+        question.waitForQuestion(timeout: 15)
+        question.waitForState("askingQuestion", timeout: 10)
+
+        XCTAssertTrue(
+            question.skipButton.waitForExistence(timeout: 5),
+            "RS-mcq-long-options: question.skip not found"
+        )
+        XCTAssertTrue(
+            question.skipButton.isHittable,
+            "RS-mcq-long-options: question.skip is off-screen — four long options pushed the footer off the bottom"
+        )
+        // The options are why the footer was pushed, so they must still be there:
+        // the chip must not have been bought by dropping an option or the stem.
+        XCTAssertTrue(
+            question.option("a").exists,
+            "RS-mcq-long-options: the first option is missing"
+        )
+        XCTAssertTrue(
+            question.questionText.exists,
+            "RS-mcq-long-options: the stem is missing"
         )
     }
 

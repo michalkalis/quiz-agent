@@ -21,6 +21,9 @@ import SwiftUI
 struct SetRecapView: View {
     @ObservedObject var viewModel: QuizViewModel
     @State private var expandedEntryId: Int?
+    /// #179: the source a row asked to open. ONE sheet for the whole list —
+    /// the rows just report the URL, they own no presentation state.
+    @State private var sourceSheet: RecapSource?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,6 +48,17 @@ struct SetRecapView: View {
             ctaStack
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        // #179: the SAME in-app reader the result screen opens — a driver must
+        // never be thrown out to Safari mid-recap.
+        .sheet(item: $sourceSheet) { source in
+            SourceWebView(
+                url: source.id,
+                isPresented: Binding(
+                    get: { sourceSheet != nil },
+                    set: { if !$0 { sourceSheet = nil } }
+                )
+            )
+        }
         .onAppear { viewModel.autoPlayRecapIfHandsFree() }
         .onDisappear { viewModel.stopRecapNarration() }
         .task { await viewModel.refreshUsage() }
@@ -116,7 +130,8 @@ struct SetRecapView: View {
                             expandedEntryId = expandedEntryId == entry.id ? nil : entry.id
                         }
                     },
-                    onHearIt: { viewModel.playRecapEntryExplanation(entry) }
+                    onHearIt: { viewModel.playRecapEntryExplanation(entry) },
+                    onOpenSource: { sourceSheet = RecapSource(id: $0) }
                 )
             }
         }
@@ -164,16 +179,26 @@ struct SetRecapView: View {
 
 // MARK: - Row
 
+/// The source URL a row asked to open — the URL is the identity, so tapping the
+/// same row twice re-presents the same sheet rather than a second one.
+struct RecapSource: Identifiable, Equatable {
+    let id: String
+}
+
 /// One recap row. Collapsed: badge + 2-line stem + the revealed answer +
 /// chevron (the answer is visible without expanding — variant C's whole
-/// point is glanceability). Expanded: "you said" (struck through — it was
-/// wrong), explanation, hear-it.
+/// point is glanceability). Expanded: the full stem, "you said" (struck
+/// through — it was wrong), explanation, hear-it, source.
 struct SetRecapRow: View {
     let entry: RecapEntry
     let isExpanded: Bool
     let hearItDisabled: Bool
     let onToggle: () -> Void
     let onHearIt: () -> Void
+    /// Reports the source URL the driver tapped. The row owns no presentation
+    /// state — `SetRecapView` holds the one sheet for the whole list. Defaulted
+    /// so a test can build a row without caring about the sheet.
+    var onOpenSource: (String) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -206,7 +231,10 @@ struct SetRecapRow: View {
             Text(entry.questionText)
                 .font(.hangsBody(13, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.muted)
-                .lineLimit(2)
+                // #179 finding 5: collapsed stays a 2-line teaser (the list is
+                // for glancing), expanded owes the driver the whole question —
+                // a truncated stem makes the answer under it unreadable.
+                .lineLimit(isExpanded ? nil : 2)
                 .multilineTextAlignment(.leading)
 
             Spacer(minLength: 8)
@@ -298,6 +326,18 @@ struct SetRecapRow: View {
                 .disabled(hearItDisabled)
                 .opacity(hearItDisabled ? 0.4 : 1)
                 .accessibilityIdentifier("recap.row.\(entry.id).hearIt")
+            }
+
+            // #179 finding 8: every revealed answer gets the same source link
+            // the result screen offers — same component AND same behaviour, so
+            // the two cannot drift. It opens the in-app `SourceWebView` the
+            // owner presents; never Safari, which would throw a driver out of
+            // the app mid-recap.
+            if let sourceUrl = entry.sourceUrl,
+               let domain = HangsSourceLink.domain(from: sourceUrl)
+            {
+                HangsSourceLink(domain: domain) { onOpenSource(sourceUrl) }
+                    .accessibilityIdentifier("recap.row.\(entry.id).source")
             }
         }
     }

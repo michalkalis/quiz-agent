@@ -401,7 +401,27 @@ struct QuestionView: View {
             )
             .padding(.top, compact ? 10 : 14)
 
-            // #122: light sweep strip — always reserves its 4 pt so the docked bar
+            #if DEBUG
+                Text(quizStateName)
+                    .frame(width: 0, height: 0)
+                    .accessibilityIdentifier("question.state")
+            #endif
+        }
+        .frame(maxHeight: .infinity)
+        // #179 finding 10: the footer is PINNED to the bottom edge instead of
+        // stacked after the options. Four options of 2–3 lines each grew past
+        // the screen and carried "Skip question" off with them — the driver's
+        // only escape hatch. As an inset it is laid out first and the stem
+        // takes what is left, so the chip cannot be pushed anywhere.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            mcqFooter(compact: compact)
+        }
+    }
+
+    /// The pinned MCQ footer: the feedback sweep strip and the skip chip.
+    private func mcqFooter(compact: Bool) -> some View {
+        VStack(spacing: 0) {
+            // #122: light sweep strip — always reserves its 4 pt so the chip
             // below never shifts; glows only during a feedback phase.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                 .padding(.horizontal, 20)
@@ -415,14 +435,7 @@ struct QuestionView: View {
             mcqSkipChip
                 .padding(.top, compact ? 8 : 12)
                 .padding(.bottom, compact ? 10 : 16)
-
-            #if DEBUG
-                Text(quizStateName)
-                    .frame(width: 0, height: 0)
-                    .accessibilityIdentifier("question.state")
-            #endif
         }
-        .frame(maxHeight: .infinity)
     }
 
     /// #132 Track B (variant A "odpočet v lište"): ONE bar slot from the first
@@ -507,15 +520,23 @@ struct QuestionView: View {
 
     // MARK: - MCQ stem (floor + overflow affordance — #125 Variant A)
 
-    /// The stem scroll region: a hard floor (360pt, 300 on SE-class) at Anton 34
-    /// (30 on SE); anything past the floor scrolls behind a VISIBLE overflow
+    /// The stem scroll region: the flexible child of `mcqBody`, so it still takes
+    /// every point the options and the pinned footer leave over — but no longer
+    /// more. Anything past its height scrolls behind a VISIBLE overflow
     /// affordance — a bottom fade, a "SCROLL ↓" cue, and the native indicator — so
     /// a long stem reads as scrollable, never clipped. The `GeometryReader` +
-    /// `minHeight` keeps the flexible ScrollView from being squeezed to near-zero
-    /// by the fixed-height grid below (54.2's failure mode).
+    /// `minHeight` keeps it from being squeezed to near-zero by the option cards
+    /// below (54.2's failure mode).
+    ///
+    /// #179 finding 10: that floor was 360 (300 on SE-class) — a demand the stem
+    /// made of the screen, which four 2–3 line options could not satisfy, so the
+    /// footer went off the bottom instead. It is a floor for legibility now, low
+    /// enough that the options and the skip chip always fit above it.
     private func mcqStem(question: Question, compact: Bool) -> some View {
-        let floor: CGFloat = compact ? 300 : 360
-        let stemFont: Font = .hangsDisplay(compact ? 30 : 34)
+        let floor: CGFloat = compact ? 160 : 200
+        // #179 finding 3: Anton 34 was oversized in the car mount — one step down
+        // for both classes; `minimumScaleFactor` still handles the rest.
+        let stemFont: Font = .hangsDisplay(compact ? 26 : 30)
         return GeometryReader { geo in
             ScrollView(.vertical) {
                 VStack(spacing: 0) {
@@ -644,7 +665,9 @@ struct QuestionView: View {
                         questionReplayTapTarget {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(question.question)
-                                    .font(.hangsDisplay(28))
+                                    // #179 finding 3: one step down, like the MCQ
+                                    // stem — 28 read as oversized in the car.
+                                    .font(.hangsDisplay(26))
                                     .foregroundColor(Theme.Hangs.Colors.ink)
                                     .minimumScaleFactor(0.7)
                                     .fixedSize(horizontal: false, vertical: true)

@@ -217,7 +217,7 @@ struct HomeView: View {
         } label: {
             HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
                 HStack(spacing: 6) {
-                    Image(systemName: "bolt.slash.fill")
+                    Image(systemName: "bolt.slash")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.muted)
                         .accessibilityHidden(true)

@@ -207,9 +207,9 @@ struct QuestionView: View {
     // MARK: - Toolbar (#173 decision 1, variant A3)
 
     /// One toolbar for MCQ, voice and image questions, in every quiz state.
-    /// ✕ leading; the two mid-question controls (mute, pause) grouped trailing;
-    /// everything else under ⋯ — the HIG "More" rule, and the reason nothing can
-    /// overlap the category label any more.
+    /// ✕ leading; the two mid-question controls (mute, pause) joined into one
+    /// pill trailing (#179 D2); everything else under ⋯ — the HIG "More" rule,
+    /// and the reason nothing can overlap the category label any more.
     @ToolbarContentBuilder
     private var quizToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -221,16 +221,18 @@ struct QuestionView: View {
             .accessibilityIdentifier("question.closeButton")
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
-            // EFFECTIVE mute, not the persisted Settings preference.
-            QuizMuteToolbarButton(isMuted: viewModel.isAudioMuted) {
-                Task { await viewModel.toggleMute() }
-            }
-            QuizPauseToolbarButton(isPaused: viewModel.isPaused) {
-                viewModel.togglePause()
-            }
-            .disabled(!viewModel.canPauseQuiz && !viewModel.isPaused)
+        // #179 D2: one joined pill, not a group the system spacing spreads into
+        // two unrelated buttons.
+        ToolbarItem(placement: .topBarTrailing) {
+            QuizControlPill(
+                // #173 Track A: the toolbar mute is quiz-scoped — it must show
+                // the EFFECTIVE mute, not the persisted Settings preference.
+                isMuted: viewModel.isAudioMuted,
+                isPaused: viewModel.isPaused,
+                isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
+                onMute: { Task { await viewModel.toggleMute() } },
+                onPause: { viewModel.togglePause() }
+            )
         }
 
         // Separates the live controls from the menu, so the ⋯ never reads as a
@@ -309,7 +311,7 @@ struct QuestionView: View {
 
     private func errorBanner(_ error: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            Image(systemName: "exclamationmark.triangle")
             Text(error).font(.hangsBody(13))
         }
         .foregroundColor(Theme.Hangs.Colors.error)

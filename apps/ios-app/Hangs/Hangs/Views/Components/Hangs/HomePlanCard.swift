@@ -220,7 +220,7 @@ struct HomePlanCard: View {
 
     @ViewBuilder private var statusPill: some View {
         if state == .grace {
-            planPill(text: "renewal failed", color: Theme.Hangs.Colors.warning, icon: "exclamationmark.triangle.fill")
+            planPill(text: "renewal failed", color: Theme.Hangs.Colors.warning, icon: "exclamationmark.triangle")
         } else {
             planPill(text: "active", color: Theme.Hangs.Colors.successText, icon: "checkmark")
         }
@@ -228,7 +228,7 @@ struct HomePlanCard: View {
 
     private var creditChip: some View {
         HStack(spacing: 5) {
-            Image(systemName: "shippingbox.fill")
+            Image(systemName: "shippingbox")
                 .font(.system(size: 10, weight: .semibold))
                 .accessibilityHidden(true)
             Text("\(usage.creditBalance) pack credits kept for later")

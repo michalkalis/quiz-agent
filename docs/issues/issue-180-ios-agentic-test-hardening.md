@@ -1,8 +1,8 @@
 # Issue 180: iOS test hardening v2 — deterministické testy pre agentický vývoj
 
-**Triage:** enhancement · needs-triage
+**Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Ďalší krok = `/prepare-issue` (cross-cutting, viac sessions).
+**Status:** Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Founder 2026-09-16: bez nočných behov, príprava len na úrovni smeru; detail rieši interaktívna session. Ready 2026-09-16.
 
 ## Prečo
 
@@ -33,20 +33,30 @@ Každý interaktívny prvok má `accessibilityIdentifier`; textové selektory za
 Textové stratégie (`.recursiveDescription`) pre agentom čitateľné diffy + pixel snapshoty hero obrazoviek × sk/cs/en × Dynamic Type. `__Snapshots__` v gite, žiadny auto re-record. Nahrádza odložený 52.18 (re-record snapshot baseline z #52 — iOS design-refresh sweep).
 
 ### G. Audio stavový automat bez simulátora — Apple AVAudioSession API
-Prerušenie/route-change ako unit testy cez priamo postované notifikácie (dnes bez pokrytia; RS-18 je čistý unit helper pre Bluetooth mic v media móde, zámerne mimo živej audio session po zamrznutí HangsTests 2026-06-17). TTS failover ElevenLabs → OpenAI → on-device testovaný per úroveň s assertom na Sentry log (tichý fallback = fail). Malý WER korpus povelov sk/cs/en pre STT vrstvu (Picovoice prax, slabší zdroj — voliteľné).
+Prerušenie/route-change ako unit testy cez priamo postované notifikácie (dnes bez pokrytia; RS-18 je čistý unit helper pre Bluetooth mic v media móde, zámerne mimo živej audio session po zamrznutí HangsTests 2026-06-17). TTS failover ElevenLabs → OpenAI je serverový (`apps/quiz-agent/app/tts/service.py`) — testovať per úroveň v pytest s assertom na log (tichý fallback = fail); iOS testuje len „prázdne audio = viditeľná chyba", nie failover. Malý WER korpus povelov sk/cs/en pre STT vrstvu (Picovoice prax, slabší zdroj — voliteľné).
 
 ### H. Definícia „done" pre agenta — syntéza
 Nový tok = identifikátory + zmrazený test; PR = unit + snapshot zelené; TestFlight = ľudský vizuál + reálny nákup, nie hľadanie stavových bugov. Zapísať do `.claude/rules/ios.md`.
 
+## Kde to sedí (recon 2026-09-16)
+
+- **A čas:** `ViewModels/QuizTimersController.swift`, `QuizViewModel+StallWatchdog.swift`, `RecordingCoordinator+Submission.swift` (30 s cez `Utilities/UserFacingTimeout.swift`), `Services/SilenceDetectionService*.swift`, `VoiceCommandCoordinator+*.swift`, `Utilities/TransientRetry.swift`. Reálne sleepy/XCTWaiter má ~31 testovacích súborov (grep `Task.sleep|Thread.sleep|XCTWaiter` v `HangsTests/`), napr. `QuizViewModelTimerTests`, `SubmissionStallTests`, `CommandListenerTests`, `PackRetryDurabilityTests`. Referenčný deterministický vzor už existuje: `SilenceDetectionServiceTests` (injected `FakeClock.advance`), `SubmitRetryTests` (`.zero` backoff override), `QuotaPaywallPurchaseLoopTests` (`SleepRecorder` + `pumpUntil`) — zjednotiť na jeden Clock seam. swift-clocks nie je závislosť (SPM cez `project.pbxproj`).
+- **B nákupy:** `Services/StoreManager.swift`, `PurchaseService.swift`, `PackPurchaseService.swift`, `ViewModels/EntitlementReconciler.swift`, config `Configuration/Hangs.storekit`. `SKTestSession` sa dnes nikde nepoužíva.
+- **C quota:** iOS `Models/UsageInfo.swift`, `EntitlementReconciler`, `Views/PaywallView.swift`, `HomePlanCard.swift`; backend `apps/quiz-agent/app/usage/entitlement.py`, `usage/tracker.py`, `api/routes/entitlements.py`.
+- **D RS:** `HangsUITests/Regression/RegressionTests.swift` má dnes 8 slug testov (`testRSStart`, `testRSCorrect`, `testRSIncorrect`, `testRSLongQuestion`, `testRSMCQLongReveal`, `testRSMCQLongOptionsFooterReachable`, `testRSPaywall`, `testRSPackNavStart`), žiadne číslované `RS-NN`. Číslované RS-11, 13–18 sú unit testy v `HangsTests/` (viď `docs/testing/regression-scenarios.md`); RS-06 nie je implementovaný nikde; chýbajú RS-01–10 a RS-12. Loopback v `Utilities/UITestSupport.swift`.
+- **E identifikátory:** 38 súborov ich už používa; žiadny lint hook (`.claude/hooks/` má len session-start).
+- **F snapshoty:** swift-snapshot-testing nie je závislosť; existuje len ViewInspector.
+- **G audio:** `Services/AudioService.swift` (interruption handling), testy `AudioServiceTests`. TTS failover je backend.
+
 ## Acceptance
-_(doplní `/prepare-issue`; rámec)_
+_(rámec; konkrétne testy vzniknú pri implementácii)_
 - [ ] A: `ios-ci.yml` beží paralelne, 5/5 zelených behov; žiadny `Task.sleep`/`XCTWaiter` s reálnym časom v dotknutých testoch
 - [ ] B: SKTestSession testy pokrývajú 7 vymenovaných scenárov, zelené v CI bez siete
 - [ ] C: 3 scenáre ako pomenované testy (iOS + pytest), zelené
 - [ ] D: RS-01..RS-18 okrem RS-14 a RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`
 - [ ] E: lint/grep nenájde interaktívny prvok bez identifikátora na obrazovkách kvízu, paywallu, výsledku
 - [ ] F: snapshoty existujú pre Home/Question/Paywall/Result × 3 jazyky, `__Snapshots__` v gite
-- [ ] G: prerušenie + route-change + 3-úrovňový TTS failover ako unit testy; RS-18 ostáva unit (pure helper)
+- [ ] G: prerušenie + route-change ako iOS unit testy, TTS failover per úroveň v pytest; RS-18 ostáva unit (pure helper)
 - [ ] H: `.claude/rules/ios.md` obsahuje definíciu done
 
 ## Mimo rozsah

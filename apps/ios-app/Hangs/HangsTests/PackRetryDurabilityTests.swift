@@ -39,7 +39,9 @@ private func order(_ status: String) -> OrderSnapshot {
         packId: status == "delivered" ? "pack-1" : nil,
         llmCostUsd: nil,
         searchCostCents: 0,
-        job: nil
+        job: nil,
+        actualCount: nil,
+        packGenerationStatus: nil
     )
 }
 

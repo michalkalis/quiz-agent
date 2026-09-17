@@ -54,8 +54,16 @@ struct OrderPackPreparingStep: View {
 }
 
 /// `.delivered` — the pack exists; play it now or find it in My packs later.
+/// Since #182 it is also the screen for a pack that is playable but still
+/// growing: the first batch is enough to start, and the rest is written while
+/// the player plays.
 struct OrderPackReadyStep: View {
     let packId: String?
+    /// #182: the worker is still adding questions to this pack.
+    var isStillGenerating: Bool = false
+    /// Questions playable right now / questions ordered (#182 copy).
+    var readyCount: Int = 0
+    var targetCount: Int = 0
     let onPlayPack: (String) -> Void
     let onClose: () -> Void
 
@@ -64,9 +72,17 @@ struct OrderPackReadyStep: View {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
                 VStack(spacing: 12) {
                     HangsResultBanner(kind: .correct)
-                    Text("Your pack is ready")
+                    Text(isStillGenerating ? "Your pack is ready to play" : "Your pack is ready")
                         .font(.hangsBody(18, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
+                    if isStillGenerating {
+                        Text("\(readyCount) of \(targetCount) questions ready. The rest keeps generating while you play.")
+                            .font(.hangsBody(13))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("orderPack.readyCount")
+                    }
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -134,6 +150,14 @@ struct OrderPackFailedStep: View {
             VStack(spacing: 24) {
                 OrderPackPreparingStep(progress: 0.4, onDismiss: {})
                 OrderPackReadyStep(packId: "pack", onPlayPack: { _ in }, onClose: {})
+                OrderPackReadyStep(
+                    packId: "pack",
+                    isStillGenerating: true,
+                    readyCount: 5,
+                    targetCount: 30,
+                    onPlayPack: { _ in },
+                    onClose: {}
+                )
                 OrderPackFailedStep(message: "Pack generation failed.", onRetry: {}, onClose: {})
                 OrderPackFailedStep(
                     message: "Still working — check My packs later.",

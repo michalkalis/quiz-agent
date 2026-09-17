@@ -24,7 +24,13 @@ import ViewInspector
 
 // MARK: - Fixtures
 
-private func order(status: String, orderId: String, packId: String? = nil) -> OrderSnapshot {
+private func order(
+    status: String,
+    orderId: String,
+    packId: String? = nil,
+    actualCount: Int? = nil,
+    packGenerationStatus: String? = nil
+) -> OrderSnapshot {
     OrderSnapshot(
         orderId: orderId,
         status: status,
@@ -38,7 +44,9 @@ private func order(status: String, orderId: String, packId: String? = nil) -> Or
         packId: packId,
         llmCostUsd: nil,
         searchCostCents: 0,
-        job: nil
+        job: nil,
+        actualCount: actualCount,
+        packGenerationStatus: packGenerationStatus
     )
 }
 
@@ -82,6 +90,23 @@ struct HomePacksSectionVisibilityTests {
         #expect(HomePacksSection.visibleOrders(orders).isEmpty)
     }
 
+    @Test("#182: an in_progress order WITH a pack is playable and surfaces")
+    func generatingWithPackSurfaces() {
+        let visible = HomePacksSection.visibleOrders([
+            order(status: "in_progress", orderId: "g1", packId: "p1", actualCount: 5, packGenerationStatus: "generating"),
+        ])
+        #expect(visible.count == 1)
+        #expect(visible[0].isPlayable)
+    }
+
+    @Test("#182: a failed order that produced a partial pack still stays off Home")
+    func failedWithPackHidden() {
+        let orders = [
+            order(status: "failed", orderId: "f1", packId: "p1", actualCount: 7, packGenerationStatus: "failed"),
+        ]
+        #expect(HomePacksSection.visibleOrders(orders).isEmpty)
+    }
+
     @Test("at most three rows on Home — the rest live behind Show all")
     func capsAtThree() {
         let orders = (1...5).map { order(status: "delivered", orderId: "d\($0)", packId: "p\($0)") }
@@ -120,6 +145,23 @@ struct HomePacksSectionRenderingTests {
         #expect(throws: (any Error).self) {
             try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.play")
         }
+    }
+
+    // #182: the row must invite play the moment the first batch lands, and say
+    // honestly how much of the pack is there — not "Preparing…", which reads as
+    // "nothing to do yet".
+    @Test("#182: a still-generating row with a pack plays and shows the ready count")
+    func generatingRowPlaysWithReadyCount() async throws {
+        let vm = await loadedViewModel([
+            order(status: "in_progress", orderId: "g1", packId: "pack-partial", actualCount: 5, packGenerationStatus: "generating"),
+        ])
+        var played: [String] = []
+        let view = HomePacksSection(viewModel: vm) { played.append($0) }
+
+        let tree = try view.inspect()
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.readyCount")
+        try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.play").button().tap()
+        #expect(played == ["pack-partial"])
     }
 
     @Test("the card always links through to the full My packs list")

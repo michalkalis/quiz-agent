@@ -28,7 +28,12 @@ import ViewInspector
 
 // MARK: - Fixtures
 
-private func order(status: String) -> OrderSnapshot {
+private func order(
+    status: String,
+    packId: String? = nil,
+    actualCount: Int? = nil,
+    packGenerationStatus: String? = nil
+) -> OrderSnapshot {
     OrderSnapshot(
         orderId: "order-\(status)",
         status: status,
@@ -39,10 +44,12 @@ private func order(status: String) -> OrderSnapshot {
         theme: nil,
         createdAt: "2026-08-04T10:00:00Z",
         deliveredAt: nil,
-        packId: status == "delivered" ? "pack-1" : nil,
+        packId: packId ?? (status == "delivered" ? "pack-1" : nil),
         llmCostUsd: nil,
         searchCostCents: 0,
-        job: nil
+        job: nil,
+        actualCount: actualCount,
+        packGenerationStatus: packGenerationStatus
     )
 }
 
@@ -216,6 +223,63 @@ struct MyPacksViewModelTests {
 
         #expect(vm.retryErrorMessage == "manual retry budget exhausted")
         #expect(vm.orders.first?.status == "failed", "a refused retry must not fake progress")
+    }
+}
+
+// MARK: - #182 playable rows
+
+@MainActor
+@Suite("MyPacksView playable rule (#182)")
+struct MyPacksPlayableRuleTests {
+
+    /// The row exactly as the user sees it once the list has loaded (the view
+    /// renders a spinner until `start()` clears `isLoading`, so a bare
+    /// `refresh()` would inspect an empty screen).
+    private func loadedView(_ orders: [OrderSnapshot]) async -> MyPacksView {
+        let viewModel = MyPacksViewModel(service: MockPackOrderService(listResult: .success(orders)))
+        let task = Task { await viewModel.start() }
+        for _ in 0..<400 {
+            if !viewModel.isLoading { break }
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        task.cancel()
+        return MyPacksView(viewModel: viewModel, onPlayPack: { _ in })
+    }
+
+    // WHY: the pack is paid for and the first batch is playable. Gating
+    // "Start quiz" on `delivered` would make the user wait for questions they
+    // already own — the whole point of #182.
+    @Test("an in_progress order with a pack offers Start quiz and the ready count")
+    func generatingRowIsPlayable() async throws {
+        let view = await loadedView([
+            order(status: "in_progress", packId: "pack-partial", actualCount: 5, packGenerationStatus: "generating"),
+        ])
+        let tree = try view.inspect()
+        _ = try tree.find(viewWithAccessibilityIdentifier: "myPacks.startQuiz")
+        _ = try tree.find(viewWithAccessibilityIdentifier: "myPacks.readyCount")
+    }
+
+    // WHY: a failed order's partial pack must keep "Try again" — offering it as
+    // a playable pack would sell a broken set as a finished one.
+    @Test("a failed order with a partial pack offers Try again, never Start quiz")
+    func failedRowWithPackIsNotPlayable() async throws {
+        let view = await loadedView([
+            order(status: "failed", packId: "pack-partial", actualCount: 7, packGenerationStatus: "failed"),
+        ])
+        let tree = try view.inspect()
+        _ = try tree.find(viewWithAccessibilityIdentifier: "myPacks.retry")
+        #expect(throws: (any Error).self) {
+            try tree.find(viewWithAccessibilityIdentifier: "myPacks.startQuiz")
+        }
+    }
+
+    @Test("an in_progress order with no pack yet offers nothing to play")
+    func pendingRowHasNoPlay() async throws {
+        let view = await loadedView([order(status: "in_progress")])
+        let tree = try view.inspect()
+        #expect(throws: (any Error).self) {
+            try tree.find(viewWithAccessibilityIdentifier: "myPacks.startQuiz")
+        }
     }
 }
 

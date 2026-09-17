@@ -27,6 +27,12 @@ protocol NetworkServiceProtocol: Sendable {
     /// the legacy, un-scoped behaviour.
     func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse
+    /// #182: fetch the next question of a custom pack that was still generating
+    /// when the previous answer was graded (`QuizResponse.awaitingQuestion`).
+    /// The server long-polls ~8 s and answers with the same shape as `/start`:
+    /// a question, `awaitingQuestion` again (call back in ~1 s), or a finished
+    /// session. Idempotent — an already-active question is returned, never skipped.
+    func nextQuestion(sessionId: String, audio: Bool) async throws -> QuizResponse
     /// In-app beta feedback (#109): multipart POST to `/feedback`. `message` is
     /// required; `metadataJSON`, `appVersion`, `screenshotPNG`, `audioWAV`, and
     /// `logsText` are optional attachments. `audioWAV` is the dictation recording
@@ -482,6 +488,31 @@ actor NetworkService: NetworkServiceProtocol {
         let endpointPath = "/api/v1/sessions/{id}/input"
         Logger.network.debug("🌐 POST \(url, privacy: .public) (text: \(input.prefix(50), privacy: .public)...)")
         // Breadcrumb: metadata only — do NOT include the text input (may be user answer).
+
+        let data = try await performRequestData(request, endpointPath: endpointPath)
+        return try await decodeQuizResponse(from: data)
+    }
+
+    /// #182 long-poll for the next question of a still-generating pack. Empty
+    /// body, same auth as `/input`. The timeout must outlast the server's ~8 s
+    /// wait, or the client would cancel every hold and hammer the endpoint.
+    func nextQuestion(sessionId: String, audio: Bool = true) async throws -> QuizResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/sessions/\(sessionId)/next-question"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        components.queryItems = [URLQueryItem(name: "audio", value: audio ? "true" : "false")]
+
+        guard let url = components.url else {
+            throw NetworkError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
+
+        let endpointPath = "/api/v1/sessions/{id}/next-question"
+        Logger.network.debug("🌐 POST \(url, privacy: .public)")
 
         let data = try await performRequestData(request, endpointPath: endpointPath)
         return try await decodeQuizResponse(from: data)

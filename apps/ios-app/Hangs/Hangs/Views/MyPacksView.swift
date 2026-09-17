@@ -85,7 +85,18 @@ struct MyPacksView: View {
                         .foregroundColor(statusColor(order))
                 }
 
-                if order.isDelivered, let packId = order.packId {
+                // #182: a pack is playable from its FIRST persisted batch, so an
+                // order still `in_progress` with a packId plays now and keeps
+                // growing behind the player.
+                if order.isStillGenerating {
+                    Text("\(order.readyCount) of \(order.targetCount) questions ready. The rest keeps generating while you play.")
+                        .font(.hangsBody(13))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("myPacks.readyCount")
+                }
+
+                if order.isPlayable, let packId = order.packId {
                     HangsPrimaryButton(title: "Start quiz", icon: "play.fill", height: 48) {
                         onPlayPack(packId)
                     }

@@ -36,7 +36,7 @@ struct HomePacksSection: View {
     /// brewing (non-terminal), newest-first as the service returns them,
     /// capped at three — "Show all" covers the rest.
     static func visibleOrders(_ orders: [OrderSnapshot]) -> [OrderSnapshot] {
-        Array(orders.filter { ($0.isDelivered && $0.packId != nil) || !$0.isTerminal }.prefix(3))
+        Array(orders.filter { $0.isPlayable || !$0.isTerminal }.prefix(3))
     }
 
     var body: some View {
@@ -69,14 +69,22 @@ struct HomePacksSection: View {
     }
 
     private func packRow(_ order: OrderSnapshot) -> some View {
-        let playable = order.isDelivered && order.packId != nil
+        // #182: playable from the first persisted batch, not only when delivered.
+        let playable = order.isPlayable
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: order.category ?? order.language.uppercased())
                     .font(.hangsBody(15, weight: .semibold))
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
-                if playable {
+                if order.isStillGenerating {
+                    // Honest count: what can be played right now, out of what
+                    // was ordered (#182).
+                    Text("\(order.readyCount) of \(order.targetCount) ready")
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                        .accessibilityIdentifier("home.myPacks.readyCount")
+                } else if playable {
                     Text("\(order.targetCount) questions")
                         .font(.hangsBody(12))
                         .foregroundColor(Theme.Hangs.Colors.muted)

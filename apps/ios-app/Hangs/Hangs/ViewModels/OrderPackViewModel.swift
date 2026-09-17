@@ -143,6 +143,22 @@ final class OrderPackViewModel: ObservableObject {
         prompt.trimmingCharacters(in: .whitespacesAndNewlines).count
     }
 
+    /// #182: the snapshot to offer "Start quiz" for. A pack becomes playable at
+    /// the FIRST persisted batch, so this is non-nil while the order is still
+    /// `in_progress` and the poll keeps running behind the ready screen (the
+    /// copy keeps counting up, and the state still reaches `.delivered`).
+    /// Never non-nil for a failed/refunded order: that row keeps "Try again".
+    var playableSnapshot: OrderSnapshot? {
+        switch state {
+        case let .polling(snapshot?) where snapshot.isPlayable:
+            return snapshot
+        case let .delivered(snapshot):
+            return snapshot
+        default:
+            return nil
+        }
+    }
+
     /// Swipe-to-dismiss is blocked only while the purchase call is in flight —
     /// dismissing then would leave the user unsure whether they paid. Every other
     /// state (including `.polling`) is dismissible: closing the sheet is not

@@ -264,6 +264,32 @@ import os
             return response
         }
 
+        // MARK: - #182 next-question long-poll
+
+        /// Successive `nextQuestion` answers, consumed in call order and clamped
+        /// to the last element once exhausted — the shape the awaiting-question
+        /// poll needs (still awaiting → question / finished) without wall-clock
+        /// races. Empty → falls back to `mockResponse`.
+        var nextQuestionResults: [Result<QuizResponse, Error>] = []
+        var nextQuestionCallCount = 0
+        var capturedNextQuestionAudio: Bool?
+
+        func nextQuestion(sessionId _: String, audio: Bool) async throws -> QuizResponse {
+            nextQuestionCallCount += 1
+            capturedNextQuestionAudio = audio
+            if !nextQuestionResults.isEmpty {
+                let index = min(nextQuestionCallCount - 1, nextQuestionResults.count - 1)
+                return try nextQuestionResults[index].get()
+            }
+            if shouldFail {
+                throw NetworkError.invalidResponse
+            }
+            guard let response = mockResponse else {
+                throw NetworkError.invalidResponse
+            }
+            return response
+        }
+
         func downloadAudio(from _: String) async throws -> Data {
             if shouldFail {
                 throw NetworkError.invalidResponse

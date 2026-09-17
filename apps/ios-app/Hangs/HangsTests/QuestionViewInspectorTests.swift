@@ -756,3 +756,51 @@ struct QuestionViewMCQPinnedFooterTests {
         }
     }
 }
+
+// MARK: - #182 waiting panel
+
+@MainActor
+@Suite("QuestionView — awaiting the next pack question (#182)")
+struct QuestionViewAwaitingQuestionTests {
+    private func makeAwaitingViewModel() -> QuizViewModel {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = nil
+        vm.quizState = .awaitingQuestion
+        return vm
+    }
+
+    /// The driver must see that the set is still running, not that it ended:
+    /// the waiting copy on screen AND the quiz counter still standing.
+    @Test("the waiting panel renders with the quiz header still in place")
+    func awaitingPanelRenders() async throws {
+        let view = QuestionView(viewModel: makeAwaitingViewModel())
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            _ = try tree.find(viewWithAccessibilityIdentifier: "question.awaitingQuestion")
+            _ = try tree.find(text: "Preparing the next question…")
+            // questionsAnswered = 0 → the counter is still the quiz's, not a result screen
+            _ = try tree.find(text: "1/10")
+        }
+    }
+
+    /// Nothing answerable may be on screen while we wait — an MCQ grid or a
+    /// record button here would submit against a question that does not exist.
+    @Test("no answer controls are offered while waiting")
+    func awaitingPanelHasNoAnswerControls() async throws {
+        let view = QuestionView(viewModel: makeAwaitingViewModel())
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "question.text")
+            }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+            }
+        }
+    }
+}

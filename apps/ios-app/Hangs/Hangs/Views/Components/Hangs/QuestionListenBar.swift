@@ -66,7 +66,9 @@ enum QuestionListenPhase: Equatable {
             // countdown only starts once the TTS finishes.
             guard answerWindowRemaining > 0 else { return .readingQuestion }
             return .thinking(remaining: answerWindowRemaining, total: answerWindowTotal)
-        case .idle, .startingQuiz, .showingResult, .finished, .error:
+        // #182 `.awaitingQuestion`: nothing to listen for — there is no question
+        // on screen yet, and the waiting panel speaks for itself.
+        case .idle, .startingQuiz, .awaitingQuestion, .showingResult, .finished, .error:
             return nil
         }
     }

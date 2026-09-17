@@ -82,7 +82,9 @@ struct QuestionView: View {
                 VStack(spacing: 0) {
                     topChrome(question: viewModel.currentQuestion)
 
-                    if let question = viewModel.currentQuestion {
+                    if viewModel.quizState == .awaitingQuestion {
+                        awaitingQuestionBody
+                    } else if let question = viewModel.currentQuestion {
                         if question.isMultipleChoice {
                             mcqBody(question: question, compact: compact)
                         } else {
@@ -301,6 +303,36 @@ struct QuestionView: View {
                 errorBanner(error)
             }
         }
+    }
+
+    // MARK: - #182 Waiting for the next pack question
+
+    /// The player caught up with the pack generator. Calm, large, and obviously
+    /// not the end of the quiz — a driver must read it at a glance and know the
+    /// set continues on its own. No controls: there is nothing to do but wait,
+    /// and the toolbar still offers the way out.
+    private var awaitingQuestionBody: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            ProgressView()
+                .controlSize(.large)
+                .tint(Theme.Hangs.Colors.pink)
+            Text("Preparing the next question…")
+                .font(.hangsBody(28, weight: .bold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Your pack is still being written. The quiz continues by itself the moment it lands.")
+                .font(.hangsBody(16))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .padding(.horizontal, 28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("question.awaitingQuestion")
     }
 
     private var totalQuestions: Int {
@@ -733,6 +765,7 @@ struct QuestionView: View {
         case .idle: return "idle"
         case .startingQuiz: return "startingQuiz"
         case .askingQuestion: return "askingQuestion"
+        case .awaitingQuestion: return "awaitingQuestion"
         case .recording: return "recording"
         case .processing: return "processing"
         case .skipping: return "skipping"

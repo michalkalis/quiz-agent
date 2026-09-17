@@ -34,21 +34,21 @@ struct OrderPackFlowView: View {
                     case .submitting:
                         OrderPackPreparingStep(progress: nil, onDismiss: onClose)
                     case .polling(let snapshot):
-                        OrderPackPreparingStep(
-                            progress: snapshot?.job.map { Double($0.progress) / 100 },
-                            onDismiss: onClose
-                        )
+                        // #182: the first batch makes the pack playable long
+                        // before the order is delivered — offer "Start quiz"
+                        // right there. The poll keeps running behind this
+                        // screen, so the count grows and the order still
+                        // reaches `.delivered`.
+                        if let playable = viewModel.playableSnapshot {
+                            readyStep(playable)
+                        } else {
+                            OrderPackPreparingStep(
+                                progress: snapshot?.job.map { Double($0.progress) / 100 },
+                                onDismiss: onClose
+                            )
+                        }
                     case .delivered(let snapshot):
-                        OrderPackReadyStep(
-                            packId: snapshot.packId,
-                            onPlayPack: { packId in
-                                // Close first: the sheet must not survive the
-                                // quiz start it triggers.
-                                onClose()
-                                onPlayPack(packId)
-                            },
-                            onClose: onClose
-                        )
+                        readyStep(snapshot)
                     case .failed(let message, let retryable):
                         OrderPackFailedStep(
                             message: message,
@@ -96,6 +96,24 @@ struct OrderPackFlowView: View {
         // Only the in-flight purchase blocks the swipe — dismissing mid-payment
         // would leave the user unsure whether they were charged.
         .interactiveDismissDisabled(!viewModel.allowsInteractiveDismiss)
+    }
+
+    /// The ready screen, shared by a delivered pack and a still-generating one
+    /// (#182) so both start the quiz through exactly the same path.
+    private func readyStep(_ snapshot: OrderSnapshot) -> some View {
+        OrderPackReadyStep(
+            packId: snapshot.packId,
+            isStillGenerating: snapshot.isStillGenerating,
+            readyCount: snapshot.readyCount,
+            targetCount: snapshot.targetCount,
+            onPlayPack: { packId in
+                // Close first: the sheet must not survive the quiz start it
+                // triggers.
+                onClose()
+                onPlayPack(packId)
+            },
+            onClose: onClose
+        )
     }
 
     private var navigationTitle: LocalizedStringKey {

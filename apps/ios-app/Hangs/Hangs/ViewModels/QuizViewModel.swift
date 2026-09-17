@@ -23,6 +23,11 @@ enum QuizState: Sendable {
     case idle
     case startingQuiz
     case askingQuestion
+    /// #182: the custom pack is still generating and the next question is not
+    /// ready yet. Client-only sub-state — the backend session phase stays
+    /// `asking` (see `packages/shared/quiz_shared/models/phase.py`); the quiz is
+    /// NOT finished and a poll is running for the question that is on its way.
+    case awaitingQuestion
     case recording
     case processing
     case skipping
@@ -38,6 +43,7 @@ extension QuizState: Equatable {
         case (.idle, .idle),
              (.startingQuiz, .startingQuiz),
              (.askingQuestion, .askingQuestion),
+             (.awaitingQuestion, .awaitingQuestion),
              (.recording, .recording),
              (.processing, .processing),
              (.skipping, .skipping),
@@ -68,6 +74,7 @@ extension QuizState {
         case .idle: return "idle"
         case .startingQuiz: return "startingQuiz"
         case .askingQuestion: return "askingQuestion"
+        case .awaitingQuestion: return "awaitingQuestion"
         case .recording: return "recording"
         case .processing: return "processing"
         case .skipping: return "skipping"
@@ -83,18 +90,26 @@ extension QuizState {
     var validTransitions: Set<String> {
         switch self {
         case .idle: return ["startingQuiz"]
-        case .startingQuiz: return ["askingQuestion", "error", "idle"]
+        case .startingQuiz: return ["askingQuestion", "awaitingQuestion", "error", "idle"]
         // "finished" on askingQuestion/recording is the early-exit-with-results
         // path (founder 2026-08-03): X → "End & See Results" lands on the
         // score screen mid-question.
         case .askingQuestion: return ["recording", "processing", "skipping", "finished", "error", "idle"]
+        // #182: the pack ran ahead of the generator. The only ways out are the
+        // question that lands, the pack closing (finished), a failed poll, or a
+        // teardown — never back into a capture state, since there is nothing to
+        // answer while we wait.
+        case .awaitingQuestion: return ["askingQuestion", "finished", "error", "idle"]
         case .recording: return ["processing", "skipping", "askingQuestion", "finished", "error", "idle"]
         // "finished" on processing/skipping is the #132 E deferred-reveal path:
         // with reveal-at-end there is no result interstitial, so the last
         // question's evaluation lands directly on the recap.
-        case .processing: return ["showingResult", "skipping", "askingQuestion", "finished", "error", "idle"]
-        case .skipping: return ["showingResult", "askingQuestion", "finished", "error", "idle"]
-        case .showingResult: return ["askingQuestion", "processing", "finished", "idle"]
+        // #182: "awaitingQuestion" on the advance paths is the pack-still-generating
+        // branch — the player caught up with the generator, so the next question
+        // is pending instead of present.
+        case .processing: return ["showingResult", "skipping", "askingQuestion", "awaitingQuestion", "finished", "error", "idle"]
+        case .skipping: return ["showingResult", "askingQuestion", "awaitingQuestion", "finished", "error", "idle"]
+        case .showingResult: return ["askingQuestion", "awaitingQuestion", "processing", "finished", "idle"]
         case .finished: return ["idle", "startingQuiz"]
         case .error: return ["idle", "askingQuestion", "startingQuiz"]
         }
@@ -682,6 +697,21 @@ final class QuizViewModel: ObservableObject {
     private var nextQuestionAudioUrl: String?
     private var nextQuestion: Question?
 
+    /// #182: the last server response said the next question is not ready yet
+    /// (the custom pack is still generating). Read by the advance path, which
+    /// then parks the quiz in `.awaitingQuestion` and polls instead of finishing.
+    private var awaitingNextQuestion = false
+
+    /// Gap between `next-question` polls when the server still reports
+    /// "awaiting", in seconds. The server itself long-polls ~8 s, so this is
+    /// only the breath between holds. Instance-settable so tests don't wait.
+    var awaitingQuestionPollIntervalSeconds: TimeInterval = 1
+
+    /// Consecutive `next-question` network failures tolerated before the quiz
+    /// gives up with `.error`. A blip on cellular must not kill a set the player
+    /// is in the middle of; a sustained outage must not spin forever.
+    static let maxAwaitingQuestionPollErrors = 5
+
     // #127: the feedback audio of the current result, retained so the result
     // screen's "hear it" control can replay the spoken explanation on demand via
     // the existing feedback-TTS path. Overwritten on each new result; cleared on reset.
@@ -1077,6 +1107,15 @@ final class QuizViewModel: ObservableObject {
 
             currentSession = response.session
             currentQuestion = response.currentQuestion
+            awaitingNextQuestion = response.awaitingQuestion
+
+            // #182: a pack whose first question is not persisted yet — wait for
+            // it rather than dropping the player on an empty quiz screen.
+            if response.currentQuestion == nil, response.awaitingQuestion {
+                enterAwaitingQuestion()
+                return
+            }
+
             transition(to: .askingQuestion)
 
             // Save question ID to history
@@ -1960,6 +1999,9 @@ final class QuizViewModel: ObservableObject {
         // This prevents the next question from flashing before showing results
         nextQuestion = response.currentQuestion
         nextQuestionAudioUrl = response.audio?.questionUrl
+        // #182: no next question AND not finished = the pack is still being
+        // generated. The advance path reads this to wait instead of ending.
+        awaitingNextQuestion = response.awaitingQuestion
 
         // #127: retain this result's feedback audio for the "hear it" replay.
         lastFeedbackAudioBase64 = response.audio?.feedbackAudioBase64
@@ -2087,16 +2129,11 @@ final class QuizViewModel: ObservableObject {
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {
-            // Quiz is complete — record stats
-            quizStats.recordQuizCompleted()
-            persistenceStore.saveStats(quizStats)
-            transition(to: .finished)
-            persistenceStore.clearSession()
-            // Release the audio session so Spotify/podcasts resume full volume.
-            audioService.deactivateSession()
-
-            let finalScore = score
-            Logger.quiz.info("🎮 Quiz finished! Final score: \(finalScore, privacy: .public)")
+            finishQuiz()
+        } else if nextQuestion == nil, awaitingNextQuestion {
+            // #182: the player caught up with the generator. The set is NOT over —
+            // park on the waiting panel and poll until the question lands.
+            enterAwaitingQuestion()
         } else {
             // More questions remain - NOW update currentQuestion with stored next question
             // This ensures the next question only appears AFTER showing results
@@ -2118,6 +2155,132 @@ final class QuizViewModel: ObservableObject {
             let nextQuestionText = currentQuestion?.question ?? "unknown"
             Logger.quiz.info("❓ Showing next question: \(nextQuestionText, privacy: .public)")
         }
+    }
+
+    /// End of the set: stats, teardown, result screen. Shared by the normal
+    /// advance and the #182 poll, which can also discover the pack has closed.
+    private func finishQuiz() {
+        quizStats.recordQuizCompleted()
+        persistenceStore.saveStats(quizStats)
+        transition(to: .finished)
+        persistenceStore.clearSession()
+        // Release the audio session so Spotify/podcasts resume full volume.
+        audioService.deactivateSession()
+
+        let finalScore = score
+        Logger.quiz.info("🎮 Quiz finished! Final score: \(finalScore, privacy: .public)")
+    }
+
+    // MARK: - #182 Awaiting the next pack question
+
+    /// Park the quiz on the waiting panel and start the poll. Everything that
+    /// captures or counts down is taken down first: there is no question on
+    /// screen, so a live mic or a running answer timer would be answering thin
+    /// air (and, in a car, listening to the conversation).
+    private func enterAwaitingQuestion() {
+        currentQuestion = nil
+        nextQuestionAudioUrl = nil
+        quizTimersController.cancelAnswerTimer()
+        quizTimersController.cancelThinkingTime()
+        quizTimersController.cancelAutoStopRecordingTimer()
+        recordingCoordinator.cancelSilenceDetection()
+        audioDeviceState.stopSilenceDetectionListening()
+        if isStreamingSTT { recordingCoordinator.cleanupStreamingSTT() }
+        isAutoRecording = false
+
+        guard transition(to: .awaitingQuestion) else { return }
+        startAwaitingQuestionPoll()
+    }
+
+    /// Poll `next-question` until the question lands, the pack closes, or the
+    /// network gives up. Held in the taskBag so quit/reset/new-quiz
+    /// (`cancelAll`) kill it — a poll that outlived its quiz would drag a dead
+    /// session's question onto the next one.
+    private func startAwaitingQuestionPoll() {
+        guard let sessionId = currentSession?.id else { return }
+        taskBag.add(Task { [weak self] in
+            await self?.pollForNextQuestion(sessionId: sessionId)
+        }, key: .awaitingQuestion)
+    }
+
+    private func pollForNextQuestion(sessionId: String) async {
+        var consecutiveErrors = 0
+        let audio = settings.audioMode != "off"
+
+        while !Task.isCancelled {
+            // The state is the poll's licence to run: a quit, a reset or an
+            // early "see results" moves it, and the poll must not write into
+            // the screen that replaced it.
+            guard quizState == .awaitingQuestion else { return }
+
+            do {
+                let response = try await networkService.nextQuestion(sessionId: sessionId, audio: audio)
+                consecutiveErrors = 0
+                if Task.isCancelled { return }
+                guard quizState == .awaitingQuestion else { return }
+                if await handleNextQuestionResponse(response) { return }
+            } catch {
+                if Task.isCancelled { return }
+                consecutiveErrors += 1
+                Logger.network.warning("⚠️ next-question poll failed (\(consecutiveErrors, privacy: .public)): \(error, privacy: .public)")
+                if consecutiveErrors > Self.maxAwaitingQuestionPollErrors {
+                    guard quizState == .awaitingQuestion else { return }
+                    await handleError(
+                        error,
+                        context: .submission,
+                        fallbackMessage: String(localized: "Couldn't load the next question", comment: "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended")
+                    )
+                    return
+                }
+            }
+
+            do {
+                try await Task.sleep(for: .seconds(awaitingQuestionPollIntervalSeconds))
+            } catch {
+                return // cancelled
+            }
+        }
+    }
+
+    /// Apply one `next-question` answer. Returns true when the wait is over
+    /// (a question arrived, or the pack closed), false to keep polling.
+    ///
+    /// Deliberately NOT routed through `handleQuizResponse`: that path requires
+    /// an `evaluation` (nothing was answered here) and would reject the state.
+    @discardableResult
+    func handleNextQuestionResponse(_ response: QuizResponse) async -> Bool { // internal for tests
+        guard quizState == .awaitingQuestion else { return true }
+        currentSession = response.session
+        awaitingNextQuestion = response.awaitingQuestion
+
+        if let question = response.currentQuestion {
+            currentQuestion = question
+            nextQuestion = nil
+            do {
+                try persistenceStore.addQuestionId(question.id)
+            } catch {
+                Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
+            }
+            guard transition(to: .askingQuestion) else { return true }
+            Logger.quiz.info("❓ Pack question arrived after wait: \(question.id, privacy: .public)")
+            // Same path a served question normally takes: TTS if we have it,
+            // otherwise straight to the auto-record / answer countdown.
+            if let questionUrl = response.audio?.questionUrl {
+                await audioDeviceState.playQuestionAudio(from: questionUrl)
+            } else {
+                startRecordingOrTimer()
+            }
+            return true
+        }
+
+        if response.session.isFinished {
+            // The pack closed with nothing left — this is the honest end of the
+            // set, not a failure.
+            finishQuiz()
+            return true
+        }
+
+        return false
     }
 
     /// Repeat the current question audio (public for UI button)
@@ -2157,6 +2320,7 @@ final class QuizViewModel: ObservableObject {
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil
+        awaitingNextQuestion = false
         lastFeedbackAudioBase64 = nil
         lastFeedbackUrl = nil
         isRerecording = false

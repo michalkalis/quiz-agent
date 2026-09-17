@@ -168,6 +168,136 @@ struct PackOrderCodableTests {
         #expect(!order.isFailure)
     }
 
+    // MARK: - #182 incremental pack play
+
+    @Test("a still-generating order decodes pack_generation_status + actual_count and is playable")
+    func decodesGeneratingPlayableOrder() throws {
+        // The #182 wire shape: the order is STILL in_progress, but the first
+        // batch is persisted — pack_id is set and actual_count is climbing.
+        let json = """
+        {
+          "order_id": "99999999-9999-9999-9999-999999999999",
+          "status": "in_progress",
+          "product_id": "pack_30",
+          "target_count": 30,
+          "language": "en",
+          "category": null,
+          "theme": null,
+          "created_at": "2026-09-17T10:00:00Z",
+          "delivered_at": null,
+          "pack_id": "22222222-2222-2222-2222-222222222222",
+          "actual_count": 5,
+          "pack_generation_status": "generating",
+          "llm_cost_usd": null,
+          "search_cost_cents": 0,
+          "job": {
+            "job_id": "33333333-3333-3333-3333-333333333333",
+            "status": "generating",
+            "progress": 16,
+            "retry_count": 0,
+            "total_cost_cents": 4,
+            "error": null,
+            "updated_at": "2026-09-17T10:01:00Z"
+          }
+        }
+        """
+        let order = try decode(OrderSnapshot.self, json)
+        #expect(order.packGenerationStatus == "generating")
+        #expect(order.actualCount == 5)
+        #expect(order.readyCount == 5)
+        // The money invariant of #182: this pack is playable NOW, before the
+        // order is delivered — otherwise the user waits for a pack they own.
+        #expect(order.isPlayable)
+        #expect(order.isStillGenerating)
+        #expect(!order.isDelivered)
+        #expect(!order.isTerminal)
+    }
+
+    @Test("both #182 fields are optional — a pre-#182 payload decodes with nil, readyCount 0")
+    func decodesWithoutGenerationFields() throws {
+        let json = """
+        {
+          "order_id": "44444444-4444-4444-4444-444444444444",
+          "status": "in_progress",
+          "product_id": "pack_30",
+          "target_count": 30,
+          "language": "en",
+          "category": null,
+          "theme": null,
+          "created_at": "2026-07-13T09:50:00Z",
+          "delivered_at": null,
+          "pack_id": null,
+          "llm_cost_usd": null,
+          "search_cost_cents": 0,
+          "job": null
+        }
+        """
+        let order = try decode(OrderSnapshot.self, json)
+        #expect(order.packGenerationStatus == nil)
+        #expect(order.actualCount == nil)
+        #expect(order.readyCount == 0)
+        // No pack yet = nothing to play, whatever the status says.
+        #expect(!order.isPlayable)
+        #expect(!order.isStillGenerating)
+    }
+
+    @Test("an unknown pack_generation_status decodes and still plays — never crash on a future enum")
+    func decodesUnknownGenerationStatus() throws {
+        let json = """
+        {
+          "order_id": "44444444-4444-4444-4444-444444444444",
+          "status": "delivered",
+          "product_id": "pack_30",
+          "target_count": 30,
+          "language": "en",
+          "category": null,
+          "theme": null,
+          "created_at": "2026-07-13T09:50:00Z",
+          "delivered_at": "2026-07-13T10:00:00Z",
+          "pack_id": "22222222-2222-2222-2222-222222222222",
+          "actual_count": 30,
+          "pack_generation_status": "topping_up",
+          "llm_cost_usd": null,
+          "search_cost_cents": 0,
+          "job": null
+        }
+        """
+        let order = try decode(OrderSnapshot.self, json)
+        #expect(order.packGenerationStatus == "topping_up")
+        #expect(order.isPlayable)
+    }
+
+    @Test("playable rule: a failed/refunded order with a pack is NOT playable")
+    func failedOrderWithPackIsNotPlayable() throws {
+        // A partially generated pack behind a failed order must keep today's
+        // "Try again" — offering "Start quiz" there would sell a broken set as
+        // a finished one.
+        for status in ["failed", "refunded"] {
+            let json = """
+            {
+              "order_id": "66666666-6666-6666-6666-666666666666",
+              "status": "\(status)",
+              "product_id": "pack_30",
+              "target_count": 30,
+              "language": "en",
+              "category": null,
+              "theme": null,
+              "created_at": "2026-07-13T09:00:00Z",
+              "delivered_at": null,
+              "pack_id": "22222222-2222-2222-2222-222222222222",
+              "actual_count": 7,
+              "pack_generation_status": "failed",
+              "llm_cost_usd": null,
+              "search_cost_cents": 0,
+              "job": null
+            }
+            """
+            let order = try decode(OrderSnapshot.self, json)
+            #expect(!order.isPlayable, "\(status) must never offer Start quiz")
+            #expect(!order.isStillGenerating)
+        }
+    }
+
     @Test("create response decodes its three fields")
     func decodesCreateResponse() throws {
         let json = """

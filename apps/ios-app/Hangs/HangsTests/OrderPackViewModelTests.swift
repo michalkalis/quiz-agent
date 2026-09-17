@@ -298,6 +298,69 @@ struct OrderPackViewModelTests {
         await task.value
     }
 
+    // MARK: - #182 playable while still generating
+
+    // The point of #182: the user paid, the first batch is persisted, and the
+    // pack can be played NOW. If the sheet waited for `delivered` the player
+    // would sit on "Building your pack…" while a playable pack existed.
+    @Test("a still-generating order with a pack offers Start quiz while the poll keeps running")
+    func playableWhileStillGenerating() async {
+        // Real 1 Hz cadence (like `submitPollsThenDelivers`): with a zero interval
+        // the poll can reach `.delivered` before the sampler ever observes the
+        // playable window.
+        let service = MockPackOrderService(getSequence: [.mockGenerating, .mockDelivered])
+        let vm = payingViewModel(service: service)
+
+        let task = Task { await vm.submit() }
+        let sawPlayableWhilePolling = await waitForState(vm) { state in
+            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
+            return false
+        }
+        await task.value
+
+        #expect(sawPlayableWhilePolling, "an in_progress order with a pack must be playable")
+        // And the poll did NOT stop there: the order still reaches delivered.
+        guard case .delivered = vm.state else {
+            Issue.record("expected .delivered after the generating snapshot, got \(vm.state)")
+            return
+        }
+    }
+
+    @Test("playableSnapshot carries the ready/target counts the copy promises")
+    func playableSnapshotCarriesCounts() async {
+        let service = MockPackOrderService(getSequence: [.mockGenerating, .mockGenerating])
+        let vm = payingViewModel(service: service)
+
+        let task = Task { await vm.submit() }
+        _ = await waitForState(vm) { state in
+            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
+            return false
+        }
+        let playable = vm.playableSnapshot
+        vm.stop()
+        task.cancel()
+        await task.value
+
+        #expect(playable?.packId != nil)
+        #expect(playable?.readyCount == 5)
+        #expect(playable?.targetCount == 30)
+        #expect(playable?.isStillGenerating == true)
+    }
+
+    @Test("a failed order is never playable — the sheet keeps Try again, not Start quiz")
+    func failedOrderIsNotPlayable() async {
+        let service = MockPackOrderService(getResult: .success(.mockFailed))
+        let vm = payingViewModel(service: service)
+
+        await vm.submit()
+
+        #expect(vm.playableSnapshot == nil, "a failed order must never offer Start quiz")
+        guard case .failed = vm.state else {
+            Issue.record("expected .failed, got \(vm.state)")
+            return
+        }
+    }
+
     // MARK: - submit lifecycle
 
     @Test("submit happy path reaches .delivered with a non-nil pack id")

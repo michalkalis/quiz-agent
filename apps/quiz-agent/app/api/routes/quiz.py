@@ -258,6 +258,10 @@ async def submit_input(
 
         if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
             raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.pack_id and session.current_question_id is None:
+            # #182: parked between questions while the pack fills — there is
+            # nothing to grade; the client should be polling /next-question.
+            raise HTTPException(status_code=409, detail="Waiting for the next question")
 
         try:
             flow_result = await quiz_flow.process_answer(

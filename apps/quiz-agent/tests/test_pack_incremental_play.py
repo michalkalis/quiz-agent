@@ -243,3 +243,29 @@ async def test_endpoint_returns_awaiting_flag_while_pack_generates(monkeypatch):
     assert response.awaiting_question is True
     assert response.current_question is None
     assert response.session.phase == "asking"
+
+
+async def test_submitting_while_parked_is_rejected_with_a_clear_conflict():
+    """A voice command or stray tap while the pack fills must not reach the
+    grader with no current question (a confusing 5xx); it is a 409 the client
+    can ignore while it keeps polling."""
+    from app.api.deps import SubmitInputRequest
+    from app.api.routes.quiz import submit_input
+
+    manager = SessionManager()
+    session = _pack_session(manager)
+    session.current_question_id = None
+    manager.update_session(session)
+
+    with pytest.raises(HTTPException) as exc:
+        await submit_input(
+            request=_Req(),
+            session_id=session.session_id,
+            body=SubmitInputRequest(input="Paris"),
+            session_manager=manager,
+            quiz_flow=_flow(manager, _retriever([], generating=True)),
+            audio=False,
+            subject=AuthSubject(subject_id="u1", is_legacy=False, authenticated=True),
+        )
+
+    assert exc.value.status_code == 409

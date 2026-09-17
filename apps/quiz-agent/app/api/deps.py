@@ -186,6 +186,14 @@ class InputResponse(BaseModel):
     audio: Optional[AudioInfo] = Field(
         default=None, description="Audio URLs when audio=true"
     )
+    awaiting_question: bool = Field(
+        default=False,
+        description=(
+            "#182: the custom pack is still generating and the next question "
+            "is not ready yet — the session is not finished; poll "
+            "POST /sessions/{id}/next-question"
+        ),
+    )
 
 
 class QuestionProgress(BaseModel):
@@ -587,4 +595,5 @@ def flow_to_response(flow_result: FlowResult, session: Any) -> InputResponse:
         evaluation=flow_result.evaluation,
         feedback_received=flow_result.feedback_received,
         audio=flow_result.audio_info,
+        awaiting_question=flow_result.awaiting_question,
     )

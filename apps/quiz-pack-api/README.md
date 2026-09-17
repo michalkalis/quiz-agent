@@ -1,8 +1,11 @@
 # quiz-pack-api
 
 On-demand quiz pack generation API. Verifies StoreKit JWS, enqueues an ARQ
-job per order, runs sourcing → generating → critiquing → verifying → scoring →
-persisting, and streams progress to the iOS client over SSE. Strategy lives in
+job per order, runs sourcing once and then chunked rounds of generating →
+dedup → verifying → scoring → composition, persisting each accepted batch as
+it lands (#182: the pack is playable from the first batch — `PACK_FIRST_CHUNK`
+/ `PACK_CHUNK_SIZE`, `PACK_FIRST_CHUNK=0` = single-batch walk), and streams
+progress to the iOS client over SSE. Strategy lives in
 `docs/issues/issue-32-on-demand-generation-service.md`; Phase 1 (this codebase
 shape) is tracked in `docs/issues/issue-33-quiz-pack-api-phase-1.md`.
 

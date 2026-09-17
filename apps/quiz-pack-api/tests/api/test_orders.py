@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
+from app.db.models.pack import QuestionPack
 from tests.api.conftest import TEST_ADMIN_KEY, _bearer
 from tests.storekit._chain_fixtures import JWSFactory
 
@@ -663,3 +664,75 @@ async def test_get_order_happy(
     # job starts as "queued"; order transitions to in_progress after the POST enqueue
     assert job["status"] == "queued"
     assert job["progress"] == 0
+
+
+@pytest.mark.asyncio
+async def test_get_order_reports_generating_pack_status(
+    client: httpx.AsyncClient,
+    test_session: AsyncSession,
+) -> None:
+    """#182: a pack that is still receiving batches must surface as
+    'generating' (with its live actual_count) on the order snapshot — the
+    client polls this field to show a "playable, still growing" state instead
+    of mistaking a partial pack for either missing or finished.
+    """
+    order = GenerationOrder(
+        transaction_id=f"tx-pack-generating-{uuid.uuid4().hex}",
+        product_id="pack_20",
+        prompt="Interesting facts about the solar system",
+        target_count=20,
+        language="en",
+        status="in_progress",
+    )
+    test_session.add(order)
+    await test_session.flush()
+    pack = QuestionPack(
+        order_id=order.id,
+        prompt=order.prompt,
+        language=order.language,
+        target_count=order.target_count,
+        actual_count=7,
+        generation_status="generating",
+    )
+    test_session.add(pack)
+    await test_session.flush()
+    order.pack_id = pack.id
+    await test_session.commit()
+
+    resp = await client.get(
+        f"/v1/orders/{order.id}", headers={"X-Admin-Key": TEST_ADMIN_KEY}
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["pack_generation_status"] == "generating"
+    assert data["actual_count"] == 7
+
+
+@pytest.mark.asyncio
+async def test_get_order_without_pack_reports_none_generation_status(
+    client: httpx.AsyncClient,
+    test_session: AsyncSession,
+) -> None:
+    """An order with no pack yet (still queued, or failed before persisting a
+    single batch) must report `pack_generation_status: None` — a fabricated
+    status here would make the client show a progress state for a pack that
+    doesn't exist.
+    """
+    order = GenerationOrder(
+        transaction_id=f"tx-no-pack-{uuid.uuid4().hex}",
+        product_id="pack_20",
+        prompt="Interesting facts about the solar system",
+        target_count=20,
+        language="en",
+        status="in_progress",
+    )
+    test_session.add(order)
+    await test_session.commit()
+
+    resp = await client.get(
+        f"/v1/orders/{order.id}", headers={"X-Admin-Key": TEST_ADMIN_KEY}
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["pack_generation_status"] is None
+    assert data["actual_count"] is None

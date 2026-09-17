@@ -151,6 +151,10 @@ class OrderSnapshotResponse(BaseModel):
     # instead of silently receiving fewer questions than target_count.
     # None until the pack is persisted (no pack_id yet).
     actual_count: Optional[int]
+    # #182: `generating` while the worker is still adding questions to an
+    # already-playable pack (pack_id set, status still in_progress);
+    # `complete` / `failed` once it stops. None without a pack.
+    pack_generation_status: Optional[str] = None
     # Measured spend (#95 decision 5); fine to expose while prod is
     # founder-only — hide behind the admin key before real users.
     llm_cost_usd: Optional[Decimal]
@@ -463,6 +467,7 @@ def _order_snapshot(
     order: GenerationOrder,
     job: Optional[GenerationJob],
     actual_count: Optional[int] = None,
+    pack_generation_status: Optional[str] = None,
 ) -> OrderSnapshotResponse:
     return OrderSnapshotResponse(
         order_id=order.id,
@@ -476,6 +481,7 @@ def _order_snapshot(
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,
         actual_count=actual_count,
+        pack_generation_status=pack_generation_status,
         llm_cost_usd=order.llm_cost_usd,
         search_cost_cents=order.search_cost_cents,
         refund_eligible=order.refund_eligible,
@@ -510,20 +516,23 @@ async def list_orders(
         }
 
     # #103 F5: actual_count lives on question_packs, not generation_orders.
-    actual_counts_by_pack: dict[uuid.UUID, Optional[int]] = {}
+    packs_by_id: dict[uuid.UUID, tuple[Optional[int], str]] = {}
     pack_ids = [o.pack_id for o in orders if o.pack_id is not None]
     if pack_ids:
-        pack_stmt = select(QuestionPack.id, QuestionPack.actual_count).where(
-            QuestionPack.id.in_(pack_ids)
-        )
-        actual_counts_by_pack = {
-            row.id: row.actual_count for row in (await session.execute(pack_stmt)).all()
+        pack_stmt = select(
+            QuestionPack.id, QuestionPack.actual_count, QuestionPack.generation_status
+        ).where(QuestionPack.id.in_(pack_ids))
+        packs_by_id = {
+            row.id: (row.actual_count, row.generation_status)
+            for row in (await session.execute(pack_stmt)).all()
         }
 
     return OrderListResponse(
         orders=[
             _order_snapshot(
-                o, jobs_by_id.get(o.job_id), actual_counts_by_pack.get(o.pack_id)
+                o,
+                jobs_by_id.get(o.job_id),
+                *packs_by_id.get(o.pack_id, (None, None)),
             )
             for o in orders
         ]
@@ -569,13 +578,16 @@ async def get_order(
         job = (await session.execute(job_stmt)).scalars().first()
 
     actual_count: Optional[int] = None
+    pack_generation_status: Optional[str] = None
     if order.pack_id is not None:
-        pack_stmt = select(QuestionPack.actual_count).where(
-            QuestionPack.id == order.pack_id
-        )
-        actual_count = (await session.execute(pack_stmt)).scalar_one_or_none()
+        pack_stmt = select(
+            QuestionPack.actual_count, QuestionPack.generation_status
+        ).where(QuestionPack.id == order.pack_id)
+        pack_row = (await session.execute(pack_stmt)).first()
+        if pack_row is not None:
+            actual_count, pack_generation_status = pack_row
 
-    return _order_snapshot(order, job, actual_count)
+    return _order_snapshot(order, job, actual_count, pack_generation_status)
 
 
 @router.post("/{order_id}/retry", status_code=202, response_model=OrderCreatedResponse)

@@ -85,6 +85,8 @@ The scoring axes used by `/score-qs`. (Domain-internal; see the skill for defini
 
 A custom-pack session is the exception: it scopes by `pack_id` and drops `review_status` entirely (first branch in `question_retriever.py`), so pack questions serve on every build channel whatever their status — the pack was ordered and paid for.
 
+**Pack generation status** (#182, 2026-09-17): `question_packs.generation_status` — `generating` while the worker is still adding batches to an already-playable pack, `complete` once every round finished, `failed` when the order failed for good (what was persisted stays playable). The live backend reads it only when a pack retrieval comes back empty: `generating` → the session parks with `awaiting_question` and the client polls `POST /sessions/{id}/next-question`; otherwise the quiz finishes. A pack session's `max_questions` is the pack's `target_count`, set server-side.
+
 Corollary (rewritten 2026-09-10, #177): only the **trusted CLI importer** may stamp `approved` without a human, because it reads the pipeline's own evidence. `apps/quiz-pack-api/scripts/import_questions_json.py` defaults to `--review-status auto` and decides per row; an explicit `--review-status` still forces every row (the human promotion / quarantine lever). `POST /api/v1/admin/questions/import` (`apps/quiz-agent/app/api/admin.py`) stays human-gated and defaults to `pending_review`: its payload carries no `source_url` and no gate flags, so a machine verdict there would only mean "the caller claimed the gates passed".
 
 Re-import never promotes an existing row: the importer inserts `ON CONFLICT DO NOTHING`, so rows already in the corpus keep their status. Backfilling pre-#177 rows is a separate, deliberate call, not a side effect of an import.

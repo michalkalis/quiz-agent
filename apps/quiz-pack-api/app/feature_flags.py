@@ -367,3 +367,16 @@ def grayzone_judge_max_calls() -> int | None:
         raise ValueError(
             f"GRAYZONE_JUDGE_MAX_CALLS must be an integer, got {raw!r}"
         ) from exc
+
+
+def pack_first_chunk() -> int:
+    """#182: size of the FIRST generation batch of a customer pack — the
+    questions a player can start on while the rest keeps generating. ``0``
+    restores the single-batch walk (one generation call for the whole
+    target, persist at the very end) — the rollback lever."""
+    return _int_env("PACK_FIRST_CHUNK", 5, minimum=0)
+
+
+def pack_chunk_size() -> int:
+    """#182: size of every generation batch after the first one."""
+    return _int_env("PACK_CHUNK_SIZE", 10)

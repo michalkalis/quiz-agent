@@ -96,6 +96,10 @@ class FlowResult:
     quiz_finished: bool = False
     message: str = "Input processed"
     usage_limit_error: Optional[Dict[str, Any]] = None
+    # #182: the custom pack is still generating and no next question exists
+    # yet. The session stays open (phase asking, no current question); the
+    # client polls `POST /sessions/{id}/next-question` (`resume_after_wait`).
+    awaiting_question: bool = False
 
 
 class QuizFlowService:
@@ -252,6 +256,10 @@ class QuizFlowService:
             next_question = await self.question_retriever.get_next_question(session)
 
         if not next_question:
+            if session.pack_id and await self.question_retriever.pack_is_generating(
+                session.pack_id
+            ):
+                return self._await_question(session, result)
             session.transition(
                 to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions"
             )
@@ -260,6 +268,78 @@ class QuizFlowService:
             result.message = "No more questions available"
             return result
 
+        return await self._advance_to_question(
+            session, next_question, result, include_audio
+        )
+
+    def _await_question(self, session: QuizSession, result: FlowResult) -> FlowResult:
+        """#182: park the session between questions while the pack fills.
+
+        Phase stays `asking` with no current question — the same shape the
+        session has between an answer and the next question today — so no
+        new phase is needed; `resume_after_wait` is the only way forward.
+        """
+        session.current_question_id = None
+        session.current_question_text = None
+        session.current_question_translation = None
+        self.session_manager.update_session(session)
+        result.awaiting_question = True
+        result.message = "Next question is being prepared"
+        return result
+
+    async def resume_after_wait(
+        self,
+        session: QuizSession,
+        include_audio: bool = False,
+        wait_seconds: float = 0.0,
+        poll_interval: float = 1.0,
+    ) -> FlowResult:
+        """#182: try to hand the parked session its next pack question.
+
+        Polls the retriever for up to ``wait_seconds`` (a bounded long-poll so
+        the client does not hammer the API), then either advances to the
+        question, reports `awaiting_question` again (pack still generating),
+        or finishes the quiz (pack closed with nothing left to serve).
+        """
+        result = FlowResult()
+        if session.current_question_id:
+            # Idempotent: a lost response must not skip the active question.
+            result.message = "Question already active"
+            return result
+        deadline = asyncio.get_running_loop().time() + max(wait_seconds, 0.0)
+        while True:
+            next_question = await self.question_retriever.get_next_question(session)
+            if next_question:
+                return await self._advance_to_question(
+                    session, next_question, result, include_audio
+                )
+            still_generating = bool(
+                session.pack_id
+            ) and await self.question_retriever.pack_is_generating(session.pack_id)
+            if not still_generating:
+                session.transition(
+                    to=SessionPhase.FINISHED,
+                    caller="flow.resume_after_wait:no_more_questions",
+                )
+                self.session_manager.update_session(session)
+                result.quiz_finished = True
+                result.message = "No more questions available"
+                return result
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                return self._await_question(session, result)
+            await asyncio.sleep(min(poll_interval, remaining))
+
+    async def _advance_to_question(
+        self,
+        session: QuizSession,
+        next_question: Question,
+        result: FlowResult,
+        include_audio: bool,
+    ) -> FlowResult:
+        """Make ``next_question`` the session's current question and fill
+        ``result`` with its payload (+ audio). Shared by the answer path and
+        the #182 wait path so both serve a question the exact same way."""
         # Advance session to next question. Phase stays "asking" — there's no
         # backend-side state for "answer received, next question loading", so
         # advancing the question_id is the entire transition. (No self-loop.)

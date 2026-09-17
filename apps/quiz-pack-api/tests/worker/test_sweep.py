@@ -31,6 +31,7 @@ from app.config import Settings
 from app.db.engine import build_engine, normalize_async_url
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
+from app.db.models.pack import QuestionPack
 from app.worker import sweep as sweep_module
 from app.worker.sweep import (
     IN_PROGRESS_STUCK_TIMEOUT,
@@ -694,5 +695,63 @@ async def test_sweep_recovers_parked_nonfinal_failure(
     assert job.status == "queued"
     assert job.retry_count == 2
     assert _enqueued_for(pool, order_id) == [("process_order", str(order_id))]
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_force_fail_marks_pack_failed_when_order_has_no_job(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """#182: the sweep's "job missing" force-fail branch (an order stuck
+    'pending' with no job at all — e.g. a queue handoff that never happened)
+    must fail its pack the same way the other force-fail branches do. A pack
+    the client may already be polling as 'generating' left behind after its
+    order goes terminal would look stuck forever instead of failed."""
+    order = GenerationOrder(
+        transaction_id=f"sweep-no-job-{uuid.uuid4().hex}",
+        product_id="pack_10",
+        prompt="A prompt long enough for stub generation",
+        target_count=10,
+        language="en",
+        status="pending",
+    )
+    session.add(order)
+    await session.flush()
+    pack = QuestionPack(
+        order_id=order.id,
+        prompt=order.prompt,
+        language=order.language,
+        target_count=order.target_count,
+        actual_count=3,
+        generation_status="generating",
+    )
+    session.add(pack)
+    await session.flush()
+    order.pack_id = pack.id
+    order_id = order.id
+    pack_id = pack.id
+    now = datetime.now(timezone.utc)
+    await session.execute(
+        text("UPDATE generation_orders SET enqueued_at = :enqueued WHERE id = :id"),
+        {"enqueued": now - (PENDING_STUCK_TIMEOUT + timedelta(seconds=5)), "id": order_id},
+    )
+    await session.commit()
+
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {
+        "redis": pool,
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    refreshed_order = await session.get(GenerationOrder, order_id)
+    refreshed_pack = await session.get(QuestionPack, pack_id)
+    assert refreshed_order.status == "failed"
+    assert refreshed_order.refund_eligible is True
+    assert refreshed_pack.generation_status == "failed"
+    assert refreshed_pack.generated_at is not None
 
     await _cleanup(session, order_id)

@@ -495,18 +495,19 @@ async def test_order_e2e_full(
 
     step_names = [e.get("event") for e in events]
     assert "done" in step_names, f"'done' not in step names: {step_names}"
-    assert len(events) >= 5, f"expected ≥ 5 SSE events, got {len(events)}: {step_names}"
+    # #182 incremental walk: sourcing → topup → one `round` per persisted
+    # batch → done. The `round` event is what a client counts on to learn the
+    # pack became playable before `done`.
+    assert "round" in step_names, f"'round' not in step names: {step_names}"
+    assert len(events) >= 4, f"expected ≥ 4 SSE events, got {len(events)}: {step_names}"
 
     # Replay events come from step_log; progress defaults to 0 there (1.11 note).
-    # Verify step names include the expected pipeline stages. Phase 2 stages
-    # per app/orchestrator/stages/*.name + the worker's terminal "done" event;
-    # critique runs inside GenerationStage so no separate event. "topup"
-    # (#103 F5) always runs — a no-op (0 rounds) when nothing was dropped,
-    # which is the case here since the mocked collaborators never drop.
-    expected_steps = {
-        "sourcing", "generating", "answerability", "verifying", "scoring",
-        "composition", "dedup", "topup", "persisting", "done",
-    }
+    # Verify step names match the incremental walk (#182): sourcing, the
+    # chunked `topup` walk (generation/dedup/answerability/verify/score/
+    # composition run inside it, no separate events), one `round` per
+    # persisted batch (the mocked collaborators never drop, so one round
+    # covers the whole target) and the worker's terminal "done" event.
+    expected_steps = {"sourcing", "topup", "round", "done"}
     received_steps = set(step_names)
     assert received_steps == expected_steps, (
         f"step mismatch. expected={sorted(expected_steps)}, got={sorted(received_steps)}"

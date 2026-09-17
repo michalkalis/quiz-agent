@@ -379,6 +379,19 @@ class PgvectorQuestionStore:
             result = await session.execute(stmt)
             return int(result.scalar_one())
 
+    async def pack_generation_status(self, pack_id: str) -> Optional[str]:
+        """`question_packs.generation_status` for a custom pack, or None when
+        the pack does not exist (#182). `generating` means the worker is still
+        adding questions, so an empty pack retrieval is "wait", not "done"."""
+        pid = _coerce_uuid(pack_id)
+        if pid is None:
+            return None
+        stmt = text("SELECT generation_status FROM question_packs WHERE id = :pid")
+        async with self._session_factory() as session:
+            result = await session.execute(stmt, {"pid": pid})
+            row = result.first()
+        return None if row is None else str(row[0])
+
     async def get_all(self, limit: int = 1000) -> List[Question]:
         async with self._session_factory() as session:
             result = await session.execute(select(questions_table).limit(limit))

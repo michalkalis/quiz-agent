@@ -37,6 +37,7 @@ questions exist yet, so nothing is spent).
 from __future__ import annotations
 
 import logging
+import math
 
 from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
@@ -90,6 +91,9 @@ class TopUpStage:
         answerability_stage=None,
         composition_stage=None,
         strictness: Strictness | None = None,
+        persist_stage=None,
+        first_chunk: int | None = None,
+        chunk_size: int | None = None,
     ) -> None:
         # #170 D6 — the same per-category profile DedupStage consults, so the
         # spent-fact filter and the dedup content check read ONE value (the
@@ -110,11 +114,43 @@ class TopUpStage:
         self._composition_stage = composition_stage
         self._floor_fraction = floor_fraction
         self._max_rounds = max_rounds
+        # #182 incremental delivery: when a persist stage is given, this stage
+        # IS the whole generation walk — no initial full-size pass precedes
+        # it. Round 1 asks for `first_chunk` questions (small, so the player
+        # can start early), later rounds for `chunk_size`, and every round's
+        # accepted tail is persisted immediately. `max_rounds` then means
+        # "extra rounds beyond the ones the chunking needs".
+        self._persist_stage = persist_stage
+        self._first_chunk = first_chunk
+        self._chunk_size = chunk_size
+        if persist_stage is not None and (not first_chunk or not chunk_size):
+            raise ValueError("incremental TopUpStage needs first_chunk and chunk_size > 0")
+
+    async def _emit_round(self, sink: ProgressSink, ctx: OrderContext, rounds: int) -> None:
+        """One `round` step per persisted batch so the order's step log / SSE
+        (and the client's progress bar via `job.progress`) track how many
+        questions are playable, not just which stage is running."""
+        target = max(ctx.target_count, 1)
+        info = {"round": rounds, "ready": ctx.locked_count, "target": target}
+        event_id = await sink.start_step("round", info=info)
+        await sink.finish_step("round", event_id, info=info)
+        await sink.publish(
+            event_id, "round", min(int(ctx.locked_count / target * 100), 99), info=info
+        )
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         target = ctx.target_count
         cost_cents = 0
         rounds = 0
+        incremental = self._persist_stage is not None
+        pack = None
+        max_rounds = self._max_rounds
+        if incremental:
+            # Resume: a retried attempt keeps what the previous one delivered.
+            pack = await self._persist_stage.load_existing(ctx)
+            first = min(self._first_chunk, target)
+            expected_rounds = 1 + math.ceil(max(0, target - first) / self._chunk_size)
+            max_rounds = expected_rounds + self._max_rounds
         # Recomputed from the FULL pool each round rather than shrunk in place:
         # later stages (composition caps) can drop a survivor, which un-spends
         # its fact, and only a recompute against the current `ctx.questions`
@@ -122,8 +158,11 @@ class TopUpStage:
         original_facts = ctx.facts
         exhausted = False
 
-        while len(ctx.questions) < target and rounds < self._max_rounds:
+        while len(ctx.questions) < target and rounds < max_rounds:
             shortfall = target - len(ctx.questions)
+            if incremental:
+                chunk = self._first_chunk if not ctx.questions else self._chunk_size
+                shortfall = min(shortfall, chunk)
             survivors_so_far = ctx.questions
             n_old = len(survivors_so_far)
             original_target = ctx.target_count
@@ -191,6 +230,12 @@ class TopUpStage:
                     await _run_substage(self._composition_stage, ctx, sink)
                 ).cost_cents
             rounds += 1
+            if incremental:
+                new_tail = ctx.questions[ctx.locked_count:]
+                if new_tail:
+                    pack = await self._persist_stage.persist_batch(ctx, new_tail)
+                    ctx.locked_count = len(ctx.questions)
+                    await self._emit_round(sink, ctx, rounds)
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",
                 rounds,
@@ -208,12 +253,16 @@ class TopUpStage:
                 f"{self._floor_fraction:.0%} floor ({floor:.1f})"
             )
 
-        return StageResult(
-            info={
-                "final_count": final_count,
-                "target_count": target,
-                "topup_rounds": rounds,
-                "fact_pool_exhausted": exhausted,
-            },
-            cost_cents=cost_cents,
-        )
+        info = {
+            "final_count": final_count,
+            "target_count": target,
+            "topup_rounds": rounds,
+            "fact_pool_exhausted": exhausted,
+        }
+        if incremental:
+            pack = await self._persist_stage.finalize(ctx, "complete")
+            if pack is None:
+                raise RuntimeError("incremental pipeline finished without a pack")
+            info["pack"] = pack
+            info["pack_id"] = str(pack.id)
+        return StageResult(info=info, cost_cents=cost_cents)

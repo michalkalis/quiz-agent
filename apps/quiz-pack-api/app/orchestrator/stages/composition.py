@@ -88,8 +88,14 @@ class CompositionStage:
                 return float("-inf")
             return sum(per_model.values()) / len(per_model)
 
-        ranked = sorted(
-            enumerate(ctx.questions), key=lambda pair: -mean_score(pair[1])
+        # #182: the first `ctx.locked_count` questions are already persisted
+        # (and may be mid-play), so they are ranked first and never dropped —
+        # they still consume cap budget, so a new batch cannot push a topic
+        # or the T/F count past the cap on top of them.
+        locked = min(max(ctx.locked_count, 0), len(ctx.questions))
+        ranked = list(enumerate(ctx.questions[:locked])) + sorted(
+            enumerate(ctx.questions[locked:], start=locked),
+            key=lambda pair: -mean_score(pair[1]),
         )
 
         topic_counts: dict[str, int] = {}
@@ -99,6 +105,16 @@ class CompositionStage:
         tf_dropped = 0
         for index, q in ranked:
             topic = _normalize_topic(q.topic)
+            if index < locked:
+                if topic:
+                    topic_counts[topic] = topic_counts.get(topic, 0) + 1
+                if (
+                    craft_guards.true_false_key(q.correct_answer, q.possible_answers)
+                    is not None
+                ):
+                    tf_count += 1
+                kept_indices.append(index)
+                continue
             if topic and topic_counts.get(topic, 0) >= topic_cap:
                 topic_dropped += 1
                 logger.warning(

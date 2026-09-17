@@ -47,3 +47,9 @@ class QuestionPack(Base, UUIDPrimaryKeyMixin):
     )
     actual_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    # #182: the worker persists questions in batches while the pack is still
+    # generating, so a row no longer means "complete". `generating` tells the
+    # live quiz backend that an empty retrieval is "wait", not "finished".
+    generation_status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="complete", server_default="complete"
+    )

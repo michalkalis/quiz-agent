@@ -80,7 +80,8 @@ def _sessionmaker(owns: bool):
     """Fake ``async_sessionmaker``: ``owns`` decides whether the ownership SELECT
     returns a row. It ignores the SQL, so it verifies branching, not the query —
     that is ``tests/db/test_pack_ownership.py``'s job against real Postgres."""
-    row = (1,) if owns else None
+    # The SELECT now returns the pack's target_count (#182), not a bare 1.
+    row = (30,) if owns else None
 
     def _maker():
         return _FakeDB(row)
@@ -142,3 +143,15 @@ async def test_absent_pack_id_leaves_session_unscoped():
     manager = SessionManager()
     session = await _create(manager, CreateSessionRequest())
     assert session.pack_id is None
+
+
+async def test_pack_session_length_is_the_pack_target_not_the_client_setting():
+    """#182: a 30-question pack must play all 30 — the client's "questions per
+    quiz" setting (default 10) used to silently truncate it."""
+    manager = SessionManager()
+    session = await _create(
+        manager,
+        CreateSessionRequest(pack_id=_PACK_ID, max_questions=10),
+        auth_sessionmaker=_sessionmaker(owns=True),
+    )
+    assert session.max_questions == 30

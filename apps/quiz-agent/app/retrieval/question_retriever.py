@@ -63,6 +63,18 @@ class QuestionRetriever:
         """Count questions, optionally filtered by metadata."""
         return await self._store.count(filters=filters)
 
+    async def pack_is_generating(self, pack_id: Optional[str]) -> bool:
+        """#182: True while the pack worker is still adding questions to
+        ``pack_id`` — an empty pack retrieval then means "not yet", not "no
+        more". False for no pack, an unknown pack, or a store without pack
+        state (test doubles)."""
+        if not pack_id:
+            return False
+        probe = getattr(self._store, "pack_generation_status", None)
+        if probe is None:
+            return False
+        return await probe(pack_id) == "generating"
+
     async def get_translations(
         self,
         question_ids: List[str],

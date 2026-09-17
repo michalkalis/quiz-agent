@@ -226,3 +226,47 @@ class TestPerTopicCapOverride:
         assert result.info["tf_cap"] == 2
         assert result.info["tf_cap_dropped"] == 2
         assert [q.id for q in ctx.questions] == ["q_1", "q_2"]
+
+
+# ── #182 locked prefix ───────────────────────────────────────────────────────
+# Intent: questions already persisted (and possibly mid-play) can never be
+# un-delivered by a later batch's caps — but they still spend cap budget, so
+# a new batch cannot stack a third Jazz question on top of two delivered ones.
+
+
+@pytest.mark.asyncio
+async def test_locked_prefix_is_never_dropped_even_when_outscored():
+    questions = [
+        _question(1, topic="Jazz"),  # delivered
+        _question(2, topic="Jazz"),  # delivered
+        _question(3, topic="Jazz"),  # new, best score
+    ]
+    ctx = _ctx(questions, target_count=30)
+    ctx.locked_count = 2
+    ctx.scores = {
+        "q_1": {"judge-a": 2.0},
+        "q_2": {"judge-a": 3.0},
+        "q_3": {"judge-a": 9.9},
+    }
+
+    result = await CompositionStage().run(ctx, _NullSink())
+
+    assert [q.id for q in ctx.questions] == ["q_1", "q_2"]
+    assert result.info["topic_cap_dropped"] == 1
+
+
+@pytest.mark.asyncio
+async def test_locked_prefix_counts_toward_true_false_cap():
+    tf = dict(possible_answers={"a": "True", "b": "False"}, correct_answer="a")
+    questions = [
+        _question(1, topic="A", **tf),
+        _question(2, topic="B", **tf),
+        _question(3, topic="C", **tf),
+        _question(4, topic="D"),
+    ]
+    ctx = _ctx(questions, target_count=30)
+    ctx.locked_count = 2
+
+    await CompositionStage().run(ctx, _NullSink())
+
+    assert [q.id for q in ctx.questions] == ["q_1", "q_2", "q_4"]

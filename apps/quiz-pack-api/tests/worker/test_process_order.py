@@ -265,13 +265,42 @@ def _published_on(ctx: Dict[str, Any], order_id: uuid.UUID) -> List[dict]:
 # ── Happy path ────────────────────────────────────────────────────────────────
 
 
+# #182: the default walk is incremental (sourcing → chunked rounds that
+# persist as they go); PACK_FIRST_CHUNK=0 is the single-batch rollback walk.
+# Both must deliver the same pack — only the step log differs.
+_INCREMENTAL_STEPS = ["sourcing", "topup", "round", "done"]
+_LEGACY_STEPS = [
+    "sourcing",
+    "generating",
+    "dedup",
+    # #135 D10 — round-trip check sits between dedup and verification.
+    "answerability",
+    "verifying",
+    "scoring",
+    # #153 Phase 0.1 — deterministic batch caps right after scoring.
+    "composition",
+    "topup",
+    "persisting",
+    "done",
+]
+
+
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "first_chunk, expected_steps",
+    [("5", _INCREMENTAL_STEPS), ("0", _LEGACY_STEPS)],
+    ids=["incremental", "legacy"],
+)
 async def test_happy_path(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],
     pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+    first_chunk: str,
+    expected_steps: list[str],
 ) -> None:
-    """A paid order runs the real 7-stage pipeline through to 'delivered'."""
+    """A paid order runs the real pipeline through to 'delivered'."""
+    monkeypatch.setenv("PACK_FIRST_CHUNK", first_chunk)
     order_id, job_id = await _create_order_and_job(session, target_count=10)
 
     from app.worker.tasks import process_order
@@ -292,6 +321,8 @@ async def test_happy_path(
     pack = await session.get(QuestionPack, order.pack_id)
     assert pack is not None
     assert pack.target_count == 10
+    # #182: a delivered pack is closed — the live backend stops waiting on it.
+    assert pack.generation_status == "complete"
     rows = (
         (
             await session.execute(
@@ -316,20 +347,6 @@ async def test_happy_path(
     assert job.status == "done"
     assert job.progress == 100
 
-    expected_steps = [
-        "sourcing",
-        "generating",
-        "dedup",
-        # #135 D10 — round-trip check sits between dedup and verification.
-        "answerability",
-        "verifying",
-        "scoring",
-        # #153 Phase 0.1 — deterministic batch caps right after scoring.
-        "composition",
-        "topup",
-        "persisting",
-        "done",
-    ]
     assert [e["step"] for e in job.step_log] == expected_steps
     # event_ids must be monotonic 0..n: the SSE bridge replays by
     # `event_id > Last-Event-ID`, so a gap or repeat silently drops progress
@@ -610,8 +627,9 @@ async def test_failed_attempt_records_cumulative_spend(
     session.expire_all()
     job = await session.get(GenerationJob, job_id)
     assert job.status == "failed"
-    # Premise: the run really did get past generation before dying.
-    assert [e["step"] for e in job.step_log][:2] == ["sourcing", "generating"]
+    # Premise: the run really did get past sourcing into the generation walk
+    # before dying (#182: the walk is `topup` in incremental mode).
+    assert [e["step"] for e in job.step_log][:2] == ["sourcing", "topup"]
     assert job.cumulative_cost_cents > 0, "failed attempt left no financial trace"
     assert job.total_cost_cents == 0, "nothing was delivered — no pack cost"
 
@@ -734,6 +752,9 @@ def test_worker_stages_use_default_170_parameters(
     from app.orchestrator.stages import DedupStage, GenerationStage, TopUpStage
     from app.worker.tasks import _build_stages as build_worker_stages
 
+    # The stage instances are shared by both walks; the flat legacy list is
+    # the one this test can inspect by type.
+    monkeypatch.setenv("PACK_FIRST_CHUNK", "0")
     monkeypatch.setenv("COVERAGE_STEERING", "1")
     monkeypatch.setenv("DEDUP_QA_EMBEDDING", "1")
     monkeypatch.setenv("ANSWER_CAP", "1")

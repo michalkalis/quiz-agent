@@ -10,6 +10,7 @@
 //  continues in the background; input never does.
 //
 
+import Clocks
 import os
 import SwiftUI
 
@@ -97,7 +98,7 @@ extension QuizViewModel {
         else { return }
         recordingCoordinator.backgroundSuppressedRecordingAt = nil
 
-        if Date().timeIntervalSince(suppressedAt) < Config.autoRecordingDuration {
+        if suppressedAt.duration(to: clock.now) < .seconds(Config.autoRecordingDuration) {
             Logger.audio.info("🌅 Scene → active: opening the answer window suppressed in the background")
             Task { [weak self] in await self?.recordingCoordinator.startRecording() }
         } else {

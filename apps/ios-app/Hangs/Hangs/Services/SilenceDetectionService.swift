@@ -24,6 +24,7 @@
 // audio thread (see Sentry CARQUIZ-1). The tap itself now lives in
 // SilenceDetectionService+Engine.swift, which carries the same annotation.
 @preconcurrency import AVFoundation
+import Clocks
 import Foundation
 import os
 
@@ -175,7 +176,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// useless no matter how accurate. Consumed (once) by the first transcript
     /// of the utterance; cleared on teardown so a stale anchor can never span
     /// windows.
-    var pendingFirstHypothesisSince: Date?
+    var pendingFirstHypothesisSince: AnyClock<Duration>.Instant?
 
     private var isTTSPlaybackActive = false
 
@@ -200,15 +201,15 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         case idle
         /// Speech is active; `since` marks when the utterance began so the
         /// min-speech-duration blip guard (77.11) can measure it.
-        case speechActive(since: Date)
+        case speechActive(since: AnyClock<Duration>.Instant)
         /// Silence is accumulating after an utterance. `speechStart` is carried
         /// so the blip guard knows how long the preceding speech lasted.
-        case silenceAccumulating(speechStart: Date, since: Date)
+        case silenceAccumulating(speechStart: AnyClock<Duration>.Instant, since: AnyClock<Duration>.Instant)
     }
 
     var state: State = .idle
 
-    private let now: @MainActor () -> Date
+    private let clock: AnyClock<Duration>
 
     /// Requests speech-recognition authorization and returns the resulting
     /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
@@ -217,12 +218,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
 
     init(
-        now: @escaping @MainActor () -> Date = { Date() },
+        clock: AnyClock<Duration> = .continuous,
         authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil,
         engine: CommandTranscriberAdapter? = nil,
         selection: CommandEngineSelection = .speechEnglish
     ) {
-        self.now = now
+        self.clock = clock
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
         let resolvedEngine = engine ?? selection.makeAdapter()
         transcriberEngine = resolvedEngine
@@ -273,12 +274,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
             switch state {
             case .idle:
-                state = .speechActive(since: now())
+                state = .speechActive(since: clock.now)
                 // Anchor the first-hypothesis latency clock (#120): measured
                 // from VAD speech-start (engine-independent — SpeechDetector
                 // runs identically under both engines) to the first transcriber
                 // result, so the number is comparable across engines.
-                pendingFirstHypothesisSince = now()
+                pendingFirstHypothesisSince = clock.now
                 silenceChannel.yield(.speechStarted)
                 Logger.voice.debug("🔇 Silence detection: speech started")
                 // VAD-transition telemetry: if these never fire on a device with a
@@ -295,11 +296,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         } else {
             switch state {
             case let .speechActive(speechStart):
-                state = .silenceAccumulating(speechStart: speechStart, since: now())
+                state = .silenceAccumulating(speechStart: speechStart, since: clock.now)
                 Logger.voice.debug("🔇 Silence detection: silence started after speech")
             case let .silenceAccumulating(speechStart, since):
-                let silenceElapsed = now().timeIntervalSince(since)
-                let speechDuration = since.timeIntervalSince(speechStart)
+                let silenceElapsed = since.duration(to: clock.now).timeInterval
+                let speechDuration = speechStart.duration(to: since).timeInterval
                 switch SilenceStopDecision.evaluate(speechDuration: speechDuration, silenceElapsed: silenceElapsed) {
                 case .wait:
                     break
@@ -326,7 +327,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     func consumeFirstHypothesisLatencyMs() -> Int? {
         guard let since = pendingFirstHypothesisSince else { return nil }
         pendingFirstHypothesisSince = nil
-        return Int((now().timeIntervalSince(since) * 1000).rounded())
+        return Int((since.duration(to: clock.now).timeInterval * 1000).rounded())
     }
 
     // MARK: - Helpers

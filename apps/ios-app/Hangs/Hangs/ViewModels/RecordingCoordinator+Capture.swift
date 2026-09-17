@@ -7,6 +7,7 @@
 //  escalation, and audio-interruption recovery.
 //
 
+import Clocks
 import Foundation
 import os
 import Sentry
@@ -44,7 +45,7 @@ extension RecordingCoordinator {
             // close the question out on the no-answer sheet — never leave the
             // driver parked on a question whose countdown ran out unseen.
             if backgroundSuppressedRecordingAt == nil {
-                backgroundSuppressedRecordingAt = Date()
+                backgroundSuppressedRecordingAt = clock.now
             }
             Logger.audio.info("🎙️ startRecording suppressed — app is backgrounded")
             return
@@ -284,8 +285,9 @@ extension RecordingCoordinator {
     /// stuck on RECORDING. Cancelled by handleCommittedTranscript / cancelProcessing.
     /// `seconds` is injectable for tests; production callers use the default.
     func startCommitWatchdog(seconds: TimeInterval = Config.sttCommitWatchdogSecs) {
+        let clock = clock
         let task = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            try? await clock.sleep(for: .seconds(seconds))
             guard let self, !Task.isCancelled else { return }
             guard self.quizState() == .recording else { return }
 

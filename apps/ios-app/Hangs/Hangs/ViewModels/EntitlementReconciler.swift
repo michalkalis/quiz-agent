@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 
@@ -69,17 +70,12 @@ final class EntitlementReconciler: ObservableObject {
     /// cleared by `refreshUsage()` only, cancelled in `deinit`.
     private var usageFetchTask: Task<Void, Never>?
 
-    /// Injected sleep for the two bounded-retry backoffs below. Mirrors
-    /// `VoiceCommandCoordinator.now`: a `var` a test swaps right after the
-    /// façade built this child (the launch reconcile is a `Task` that cannot
-    /// run before the test yields the MainActor), so the retry loops are driven
-    /// instantly and the schedule is *asserted* instead of waited out. The four
-    /// usage/entitlement retry tests were the repo's wall-clock-flaky set:
-    /// a `waitUntil` racing real production `Task.sleep`s under full-suite load
-    /// (#133 audit — "waitUntil against a production sleep is the defect").
-    var backoffSleep: @MainActor @Sendable (TimeInterval) async -> Void = { seconds in
-        try? await Task.sleep(for: .seconds(seconds))
-    }
+    /// The clock the two bounded-retry backoffs and the pre-paywall resync
+    /// window run on (#180 track A). A test injects a `TestClock` and *drives*
+    /// the schedule instead of waiting it out — the four usage/entitlement
+    /// retry tests were the repo's wall-clock-flaky set (#133 audit:
+    /// "waitUntil against a production sleep is the defect").
+    let clock: AnyClock<Duration>
 
     /// Whether a launch/foreground reconcile is still in flight. Test seam: a
     /// test that must observe a SECOND reconcile has to wait for the first task
@@ -92,10 +88,12 @@ final class EntitlementReconciler: ObservableObject {
 
     init(
         networkService: NetworkServiceProtocol,
-        isLocallyEntitled: @escaping @MainActor () -> Bool
+        isLocallyEntitled: @escaping @MainActor () -> Bool,
+        clock: AnyClock<Duration> = .continuous
     ) {
         self.networkService = networkService
         self.isLocallyEntitled = isLocallyEntitled
+        self.clock = clock
 
         // Entitlement re-sync on launch (#102 finding 1): the identity-mint
         // bridge (AppState.setAccountLinkedHandler) only fires on anon-
@@ -204,7 +202,7 @@ final class EntitlementReconciler: ObservableObject {
                     return
                 }
                 let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                await backoffSleep(backoffSeconds)
+                try? await clock.sleep(for: .seconds(backoffSeconds))
             }
         }
     }
@@ -286,7 +284,7 @@ final class EntitlementReconciler: ObservableObject {
                     return
                 }
                 let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
-                await backoffSleep(backoffSeconds)
+                try? await clock.sleep(for: .seconds(backoffSeconds))
             }
         }
     }
@@ -309,9 +307,10 @@ final class EntitlementReconciler: ObservableObject {
     func resyncBeforePaywallIfLocallyEntitled() async -> Bool {
         guard isLocallyEntitled() else { return false }
         let networkService = self.networkService
+        let clock = clock
         await withTaskGroup(of: Void.self) { group in
             group.addTask { try? await networkService.syncEntitlements() }
-            group.addTask { try? await Task.sleep(for: .seconds(2)) }
+            group.addTask { try? await clock.sleep(for: .seconds(2)) }
             await group.next()
             group.cancelAll()
         }

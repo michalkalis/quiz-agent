@@ -8,6 +8,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 
@@ -51,6 +52,9 @@ final class QuizTimersController: ObservableObject {
     /// The façade's shared task owner (decision 4 register/cancel handle).
     let taskBag: TaskBag
 
+    /// The façade's clock (#180 track A): every countdown below ticks on it.
+    let clock: AnyClock<Duration>
+
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
@@ -66,6 +70,7 @@ final class QuizTimersController: ObservableObject {
 
     init(
         taskBag: TaskBag,
+        clock: AnyClock<Duration>,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
         isRerecording: @escaping @MainActor () -> Bool,
@@ -78,6 +83,7 @@ final class QuizTimersController: ObservableObject {
         proceedToNextQuestion: @escaping @MainActor () async -> Void
     ) {
         self.taskBag = taskBag
+        self.clock = clock
         self.settings = settings
         self.quizState = quizState
         self.isRerecording = isRerecording
@@ -126,7 +132,7 @@ final class QuizTimersController: ObservableObject {
 
             guard thinkingSeconds > 0 else {
                 // No thinking time — start recording immediately (500ms delay like before)
-                try? await Task.sleep(nanoseconds: Config.autoRecordDelayMs * 1_000_000)
+                try? await self.clock.sleep(for: .milliseconds(Config.autoRecordDelayMs))
                 if Task.isCancelled { return }
                 guard self.quizState() == .askingQuestion else { return }
                 self.setIsAutoRecording(true)
@@ -151,7 +157,7 @@ final class QuizTimersController: ObservableObject {
                     return
                 }
                 self.thinkingTimeCountdown = i
-                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                try? await self.clock.sleep(for: .seconds(1))
             }
 
             if Task.isCancelled {
@@ -201,7 +207,7 @@ final class QuizTimersController: ObservableObject {
                 self.answerTimerCountdown = remaining
 
                 if remaining > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    try? await self.clock.sleep(for: .seconds(1))
                 }
             }
 
@@ -258,7 +264,7 @@ final class QuizTimersController: ObservableObject {
             guard let self else { return }
 
             for remaining in stride(from: ticks - 1, through: 0, by: -1) {
-                try? await Task.sleep(nanoseconds: UInt64(tickInterval * 1_000_000_000))
+                try? await self.clock.sleep(for: .seconds(tickInterval))
                 if Task.isCancelled { return }
                 self.recordingCountdown = remaining
             }
@@ -291,9 +297,10 @@ final class QuizTimersController: ObservableObject {
         let ticks = max(1, Int(hardCap.rounded()))
         let tickInterval = hardCap / Double(ticks)
 
+        let clock = clock
         let cap = Task { [weak self] in
             for _ in 0 ..< ticks {
-                try? await Task.sleep(nanoseconds: UInt64(tickInterval * 1_000_000_000))
+                try? await clock.sleep(for: .seconds(tickInterval))
                 if Task.isCancelled { return }
             }
             guard let self, self.quizState() == .recording else { return }
@@ -353,7 +360,7 @@ final class QuizTimersController: ObservableObject {
                 self.autoAdvanceCountdown = remaining
 
                 if remaining > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                    try? await self.clock.sleep(for: .seconds(1))
                 }
             }
 
@@ -390,9 +397,10 @@ final class QuizTimersController: ObservableObject {
             return
         }
         setAutoConfirmCountdown(duration)
+        let clock = clock
         let task = Task { [weak self] in
             for remaining in (0 ..< duration).reversed() {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                try? await clock.sleep(for: .seconds(1))
                 guard let self, !Task.isCancelled else { return }
                 // A pause that races this tick: stop counting rather than let
                 // the loop reach zero and auto-confirm behind the frozen sheet.

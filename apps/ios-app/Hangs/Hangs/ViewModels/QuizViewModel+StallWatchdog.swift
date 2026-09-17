@@ -18,6 +18,7 @@
 //  at and acting on, not stalls.
 //
 
+import Clocks
 import Foundation
 import os
 
@@ -27,12 +28,10 @@ extension QuizViewModel {
     /// re-arming never hands an already-stuck submission another full window.
     func armStallWatchdog() {
         guard let enteredAt = stallEnteredAt else { return }
-        let deadline = enteredAt.addingTimeInterval(stallWatchdogSeconds)
+        let deadline = enteredAt.advanced(by: .seconds(stallWatchdogSeconds))
+        let clock = clock
         taskBag.add(Task { [weak self] in
-            let remaining = deadline.timeIntervalSinceNow
-            if remaining > 0 {
-                try? await Task.sleep(for: .seconds(remaining))
-            }
+            try? await clock.sleep(until: deadline)
             guard !Task.isCancelled else { return }
             await self?.failStalledSubmission()
         }, key: .stallWatchdog)
@@ -61,7 +60,7 @@ extension QuizViewModel {
             // Slide the window instead, so the phase is bounded again from the
             // moment the sheet goes away. The absolute deadline is moved with it —
             // re-arming on the old one would hot-loop.
-            stallEnteredAt = Date()
+            stallEnteredAt = clock.now
             armStallWatchdog()
             return
         }

@@ -84,11 +84,11 @@ extension RecordingCoordinator {
                 // attempts plus their 1s/2s backoff still land within the one
                 // user-facing 30s budget — a staging machine waking up costs a
                 // pause, never an OOPS screen.
-                let backoff = self.transientBackoffOverride
-                let response = try await withUserFacingTimeout(seconds: 30) {
+                let clock = self.clock
+                let response = try await withUserFacingTimeout(seconds: 30, clock: clock) {
                     try await TransientRetry.run(
                         label: "voice answer submit",
-                        backoff: backoff
+                        clock: clock
                     ) {
                         try await self.networkService.submitVoiceAnswer(
                             sessionId: sessionId,

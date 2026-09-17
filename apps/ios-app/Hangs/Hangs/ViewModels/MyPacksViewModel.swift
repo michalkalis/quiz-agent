@@ -11,6 +11,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 
 @MainActor
@@ -33,8 +34,12 @@ final class MyPacksViewModel: ObservableObject {
 
     private let service: PackOrderServiceProtocol
 
-    init(service: PackOrderServiceProtocol) {
+    /// The clock the keep-fresh loop sleeps on (#180 track A) — a test drives it.
+    private let clock: AnyClock<Duration>
+
+    init(service: PackOrderServiceProtocol, clock: AnyClock<Duration> = .continuous) {
         self.service = service
+        self.clock = clock
     }
 
     /// Initial load, then the keep-fresh loop. The loop stays alive for the
@@ -45,7 +50,7 @@ final class MyPacksViewModel: ObservableObject {
         await initialLoad()
         while !Task.isCancelled {
             do {
-                try await Task.sleep(for: .seconds(refreshIntervalSeconds))
+                try await clock.sleep(for: .seconds(refreshIntervalSeconds))
             } catch {
                 return // cancelled — view left the screen
             }

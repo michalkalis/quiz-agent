@@ -11,6 +11,7 @@
 //  indicator breathing (#120 precision-over-recall).
 //
 
+import Clocks
 import Foundation
 
 /// The transient, app-wide voice-feedback presentation state (#122 Variant C,
@@ -33,7 +34,7 @@ extension VoiceCommandCoordinator {
     /// A command fired, or a spoken cancel was accepted: light the teal glow.
     /// Called wherever `emitEarcon(.commandAck)` fires.
     func noteMatchedForFeedback() {
-        matchedGlowStartedAt = now()
+        matchedGlowStartedAt = clock.now
         voiceFeedbackPhase = .matched
         scheduleGlowClear(after: matchedGlowMaxDisplay)
     }
@@ -49,8 +50,8 @@ extension VoiceCommandCoordinator {
         guard VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage) else { return }
         guard normalized != lastUnmatchedGlowText else { return }
         if let last = lastUnmatchedGlowAt,
-           now().timeIntervalSince(last) < unmatchedGlowCooldown { return }
-        lastUnmatchedGlowAt = now()
+           last.duration(to: clock.now).timeInterval < unmatchedGlowCooldown { return }
+        lastUnmatchedGlowAt = clock.now
         lastUnmatchedGlowText = normalized
         voiceFeedbackPhase = .unmatched
         scheduleGlowClear(after: unmatchedGlowDisplay)
@@ -62,7 +63,7 @@ extension VoiceCommandCoordinator {
     /// holding the full max window.
     func noteQuizStateChangedForFeedback() {
         guard voiceFeedbackPhase == .matched, let startedAt = matchedGlowStartedAt else { return }
-        let remaining = matchedGlowMinDisplay - now().timeIntervalSince(startedAt)
+        let remaining = matchedGlowMinDisplay - startedAt.duration(to: clock.now).timeInterval
         if remaining <= 0 {
             clearFeedbackGlow()
         } else {
@@ -88,11 +89,11 @@ extension VoiceCommandCoordinator {
     /// (Re)arm the single clear timer — re-adding under the same TaskKey
     /// cancels the previous timer, so the newest deadline always wins.
     private func scheduleGlowClear(after delay: TimeInterval) {
-        // The seam is read (not reached through `self`) so the timer keeps its
-        // weak-self semantics: a released coordinator still clears nothing.
-        let sleep = glowSleep
+        // The clock is captured (not reached through `self`) so the timer keeps
+        // its weak-self semantics: a released coordinator still clears nothing.
+        let clock = clock
         let task = Task { [weak self] in
-            await sleep(delay)
+            try? await clock.sleep(for: .seconds(delay))
             guard let self, !Task.isCancelled else { return }
             self.clearFeedbackGlow()
         }

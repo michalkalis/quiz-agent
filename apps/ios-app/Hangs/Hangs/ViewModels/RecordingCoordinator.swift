@@ -8,6 +8,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 
@@ -61,7 +62,7 @@ final class RecordingCoordinator: ObservableObject {
     }
 
     /// See `RecordingState.backgroundSuppressedRecordingAt` (#171 Track H).
-    var backgroundSuppressedRecordingAt: Date? {
+    var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant? {
         get { recordingState.backgroundSuppressedRecordingAt }
         set { recordingState.backgroundSuppressedRecordingAt = newValue }
     }
@@ -125,10 +126,6 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.autoConfirmCountdown = newValue }
     }
 
-    /// Test seam (#131 Track A): overrides the submit path's transient cold-wake
-    /// retry backoff (default 1s/2s growth) so a retry test doesn't sleep for real.
-    var transientBackoffOverride: (@Sendable (Int) -> Duration)?
-
     // MARK: - Dependencies (service handles + the façade's shared task owner)
 
     let audioService: AudioServiceProtocol
@@ -136,6 +133,10 @@ final class RecordingCoordinator: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
     let taskBag: TaskBag
+
+    /// The façade's clock (#180 track A): submit timeout, cold-wake backoff and
+    /// the STT commit watchdog all run on it.
+    let clock: AnyClock<Duration>
 
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
@@ -197,6 +198,7 @@ final class RecordingCoordinator: ObservableObject {
         silenceDetectionService: SilenceDetectionServiceProtocol,
         sttService: ElevenLabsSTTServiceProtocol?,
         taskBag: TaskBag,
+        clock: AnyClock<Duration>,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
         isAppForeground: @escaping @MainActor () -> Bool,
@@ -233,6 +235,7 @@ final class RecordingCoordinator: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
         self.taskBag = taskBag
+        self.clock = clock
         self.settings = settings
         self.quizState = quizState
         self.isAppForeground = isAppForeground

@@ -24,6 +24,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 
@@ -89,6 +90,9 @@ final class OrderPackViewModel: ObservableObject {
     /// tests aren't at the mercy of the simulator's persistent Keychain; only
     /// consulted in Debug builds.
     private let adminKeyAvailable: () -> Bool
+
+    /// The clock the delivery poll runs on (#180 track A) — a test drives it.
+    private let clock: AnyClock<Duration>
     private var pollTask: Task<Void, Never>?
 
     /// Set once the order exists server-side. A "Try again" after that point is a
@@ -121,12 +125,14 @@ final class OrderPackViewModel: ObservableObject {
         service: PackOrderServiceProtocol,
         purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
         adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil },
-        orderLanguages: @escaping () -> [Language] = { Language.packOrderLanguages }
+        orderLanguages: @escaping () -> [Language] = { Language.packOrderLanguages },
+        clock: AnyClock<Duration> = .continuous
     ) {
         self.service = service
         self.purchaseService = purchaseService
         self.adminKeyAvailable = adminKeyAvailable
         self.orderLanguages = orderLanguages
+        self.clock = clock
     }
 
     deinit {
@@ -430,7 +436,7 @@ final class OrderPackViewModel: ObservableObject {
     }
 
     private func poll(orderId: String) async {
-        let deadline = Date().addingTimeInterval(pollTimeoutSeconds)
+        let deadline = clock.now.advanced(by: .seconds(pollTimeoutSeconds))
         var consecutiveErrors = 0
 
         while !Task.isCancelled {
@@ -438,7 +444,7 @@ final class OrderPackViewModel: ObservableObject {
             // that never woke, a dropped job — would otherwise poll at 1 Hz forever
             // and never resolve the "Building your pack…" spinner. Stop and hand the
             // user off to My packs; any generation still runs server-side.
-            if Date() >= deadline {
+            if clock.now >= deadline {
                 state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
                 return
             }
@@ -457,7 +463,7 @@ final class OrderPackViewModel: ObservableObject {
                     state = .failed(Self.message(for: error), retryable: true)
                     return
                 }
-                try? await Task.sleep(for: .seconds(pollIntervalSeconds))
+                try? await clock.sleep(for: .seconds(pollIntervalSeconds))
                 continue
             }
 
@@ -487,7 +493,7 @@ final class OrderPackViewModel: ObservableObject {
             state = .polling(snapshot)
 
             do {
-                try await Task.sleep(for: .seconds(pollIntervalSeconds))
+                try await clock.sleep(for: .seconds(pollIntervalSeconds))
             } catch {
                 return // cancelled
             }

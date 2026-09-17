@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 import Sentry
@@ -477,7 +478,7 @@ final class QuizViewModel: ObservableObject {
         // dropped on any exit (including the `.error` the watchdog itself causes).
         let submittingPair = ["processing", "skipping"]
         if submittingPair.contains(to) {
-            if !submittingPair.contains(from) { stallEnteredAt = Date() }
+            if !submittingPair.contains(from) { stallEnteredAt = clock.now }
             armStallWatchdog()
         } else {
             stallEnteredAt = nil
@@ -551,12 +552,6 @@ final class QuizViewModel: ObservableObject {
     /// flow via `defer` so exactly one session is created, mirroring `isSubmittingAnswer`.
     var isStarting = false
 
-    /// Test seam: overrides the transient cold-start retry's backoff duration
-    /// (default 1s/2s growth). The cancel-during-backoff test pins it far above
-    /// wall-clock noise so the cancel deterministically lands inside the sleep —
-    /// under the full suite's parallel load the real ~1s window was racy.
-    var transientStartBackoffOverride: (@Sendable (Int) -> Duration)?
-
     // MARK: - Auto-Record State
 
     /// Whether auto-record is active for the current recording (for UI hints).
@@ -601,7 +596,7 @@ final class QuizViewModel: ObservableObject {
     /// deadline is measured from here rather than from when its Task started, so
     /// time the app spent in the background counts against it (#179).
     /// Internal for tests.
-    var stallEnteredAt: Date?
+    var stallEnteredAt: AnyClock<Duration>.Instant?
 
     /// Whether RESULT feedback TTS is currently playing (#119 root cause #3).
     /// The result screen transitions, arms the command window and only THEN
@@ -634,6 +629,10 @@ final class QuizViewModel: ObservableObject {
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
+
+    /// The one clock every timer, backoff and deadline on the quiz path runs on
+    /// (#180 track A) — handed to each child so a test drives them all at once.
+    let clock: AnyClock<Duration>
 
     /// Language-neutral earcon player (#77, task 77.10). A settable property (not
     /// an init param) so the ~15 existing call sites are untouched and tests can
@@ -726,19 +725,22 @@ final class QuizViewModel: ObservableObject {
         persistenceStore: PersistenceStoreProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
-        isLocallyEntitled: @escaping @MainActor () -> Bool = { false }
+        isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
+        clock: AnyClock<Duration> = .continuous
     ) {
         self.networkService = networkService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
+        self.clock = clock
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
         entitlementReconciler = EntitlementReconciler(
             networkService: networkService,
-            isLocallyEntitled: isLocallyEntitled
+            isLocallyEntitled: isLocallyEntitled,
+            clock: clock
         )
 
         // #67 Part A: recover from a phone-call/Siri interruption that tears down
@@ -825,6 +827,7 @@ final class QuizViewModel: ObservableObject {
         VoiceCommandCoordinator(
             silenceDetectionService: silenceDetectionService,
             taskBag: taskBag,
+            clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
@@ -866,6 +869,7 @@ final class QuizViewModel: ObservableObject {
     private func makeQuizTimersController() -> QuizTimersController {
         QuizTimersController(
             taskBag: taskBag,
+            clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
             quizState: { [weak self] in self?.quizState ?? .idle },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
@@ -890,6 +894,7 @@ final class QuizViewModel: ObservableObject {
             silenceDetectionService: silenceDetectionService,
             sttService: sttService,
             taskBag: taskBag,
+            clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
             quizState: { [weak self] in self?.quizState ?? .idle },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
@@ -1139,7 +1144,7 @@ final class QuizViewModel: ObservableObject {
                 // #171: the same settle the Q2+ path gets before it plays — the
                 // audio hardware must come up under the freshly configured
                 // session before the first AVPlayer starts.
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                try? await clock.sleep(for: .milliseconds(100))
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
@@ -1261,7 +1266,7 @@ final class QuizViewModel: ObservableObject {
     /// `RecordingCoordinator`'s voice submit shares it without a back-pointer to
     /// the façade. `label` only names the operation in the log/Sentry breadcrumb.
     func withTransientRetry<T>(label: String, _ operation: () async throws -> T) async throws -> T {
-        try await TransientRetry.run(label: label, backoff: transientStartBackoffOverride, operation)
+        try await TransientRetry.run(label: label, clock: clock, operation)
     }
 
     /// #179 (founder TF 2026-09-14, finding 4): the submit paths' transient retry
@@ -1273,9 +1278,9 @@ final class QuizViewModel: ObservableObject {
         label: String,
         _ operation: @escaping @Sendable () async throws -> T
     ) async throws -> T {
-        let backoff = transientStartBackoffOverride
-        return try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
-            try await TransientRetry.run(label: label, backoff: backoff, operation)
+        let clock = clock
+        return try await withUserFacingTimeout(seconds: submitTimeoutSeconds, clock: clock) {
+            try await TransientRetry.run(label: label, clock: clock, operation)
         }
     }
 
@@ -1483,7 +1488,7 @@ final class QuizViewModel: ObservableObject {
         silenceDetectionService.setTTSPlaybackActive(false)
 
         // 3. Wait for audio hardware to settle
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        try? await clock.sleep(for: .milliseconds(500))
 
         // 4. Guard again — state may have changed during sleep
         guard quizState == .askingQuestion else { return }
@@ -1591,7 +1596,7 @@ final class QuizViewModel: ObservableObject {
             // #178: same bounded wait as the voice submit — without it a wedged
             // request left the option spinner up with no way out (TF 2026-09-13).
             let audio = settings.audioMode != "off"
-            let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
+            let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds, clock: clock) {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
                     input: value,
@@ -1768,7 +1773,7 @@ final class QuizViewModel: ObservableObject {
         do {
             // #179: the X tap is user-initiated like any submit — bound it, or a
             // wedged end-session leaves the quiz screen up with nothing happening.
-            try await withUserFacingTimeout(seconds: submitTimeoutSeconds) {
+            try await withUserFacingTimeout(seconds: submitTimeoutSeconds, clock: clock) {
                 try await self.networkService.endSession(sessionId: sessionId)
             }
             persistenceStore.clearSession()
@@ -2125,7 +2130,7 @@ final class QuizViewModel: ObservableObject {
         await audioDeviceState.stopAnyPlayingAudio()
 
         // Small delay to ensure audio cleanup completes
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        try? await clock.sleep(for: .milliseconds(100))
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {

@@ -27,6 +27,7 @@ from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
+from app.orchestrator.stages.persist import fail_pack_in_session
 from app.orchestrator.stages import (
     AnswerabilityStage,
     CompositionStage,
@@ -113,6 +114,25 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right after
     # scoring, so judge scores decide which questions survive each cap.
     composition = CompositionStage()
+    first_chunk = feature_flags.pack_first_chunk()
+    if first_chunk > 0:
+        # #182 incremental delivery: sourcing once, then chunked rounds that
+        # persist as they go (see TopUpStage) — the pack is playable from the
+        # first persisted batch. PACK_FIRST_CHUNK=0 restores the walk below.
+        return [
+            SourcingStage(ctx["fact_sourcer"]),
+            TopUpStage(
+                generation,
+                verification,
+                scoring,
+                dedup,
+                answerability_stage=answerability,
+                composition_stage=composition,
+                persist_stage=PersistStage(session_factory),
+                first_chunk=first_chunk,
+                chunk_size=feature_flags.pack_chunk_size(),
+            ),
+        ]
     stages += [
         verification,
         scoring,
@@ -402,6 +422,9 @@ async def _handle_failure(
             if is_final:
                 order.status = "failed"
                 order.refund_eligible = True
+                # #182: a partially delivered pack stays playable with what it
+                # has, but the live backend must stop waiting for more.
+                await fail_pack_in_session(session, order)
             current_progress = job.progress
             # PackGenerator already appended a "failed" step_log entry via
             # `sink.start_step("failed", …)` inside its except handler. Capture

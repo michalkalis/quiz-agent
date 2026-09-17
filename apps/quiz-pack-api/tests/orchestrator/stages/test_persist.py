@@ -51,7 +51,11 @@ from app.db.models import (
     QuestionRow,
 )
 from app.orchestrator import OrderContext
-from app.orchestrator.stages.persist import DEFAULT_EMBEDDING_MODEL, PersistStage
+from app.orchestrator.stages.persist import (
+    DEFAULT_EMBEDDING_MODEL,
+    PersistStage,
+    fail_pack_in_session,
+)
 from quiz_shared.models.question import Question
 
 APP_ROOT = Path(__file__).resolve().parents[3]
@@ -217,6 +221,10 @@ async def test_persists_pack_and_questions(
     assert pack.order_id == order.id
     assert pack.actual_count == 3
     assert pack.generated_at is not None
+    # #182: the legacy single-shot path must still land a pack a live-quiz
+    # read treats as immediately playable, not stuck in the new 'generating'
+    # state that batch persistence introduced for the incremental path.
+    assert pack.generation_status == "complete"
 
     stmt = select(func.count()).where(QuestionRow.pack_id == ctx.pack_id)
     count = (await session.execute(stmt)).scalar_one()
@@ -361,5 +369,270 @@ async def test_allocated_subtopic_lands_and_stays_null_when_unsteered(
     row_unsteered = await session.get(QuestionRow, uuid.UUID(unsteered.id))
     assert row_unsteered is not None
     assert row_unsteered.subtopic is None
+
+    await _cleanup_order(session, order.id)
+
+
+# ── #182 incremental delivery: persist_batch / finalize / load_existing /
+# fail_pack_in_session ──────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_persist_batch_first_call_creates_generating_pack(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """The first persist_batch call is the moment a pack becomes playable —
+    it must create the pack row as 'generating' (not the legacy 'complete'
+    default), link order.pack_id so a GET on the order can find it, and set
+    ctx.pack_id so the caller's next batch resumes on the same pack instead
+    of creating a duplicate."""
+    order = await _make_order(session, target_count=5)
+    order_id = order.id
+    ctx = _make_ctx(order, [])
+    batch = [_stub_question(i) for i in range(2)]
+    stage = PersistStage(session_factory)
+
+    pack = await stage.persist_batch(ctx, batch)
+
+    assert pack.generation_status == "generating"
+    assert pack.actual_count == 2
+    assert ctx.pack_id == pack.id
+
+    session.expire_all()
+    refreshed_order = await session.get(GenerationOrder, order_id)
+    assert refreshed_order is not None
+    assert refreshed_order.pack_id == pack.id
+
+    await _cleanup_order(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_persist_batch_second_call_appends_to_same_pack(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A second accepted batch must land on the SAME pack as the first — a new
+    pack per batch would orphan the first batch's already-playable questions
+    from the pack id the client keeps polling."""
+    order = await _make_order(session, target_count=5)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+
+    batch1 = [_stub_question(i) for i in range(2)]
+    pack1 = await stage.persist_batch(ctx, batch1)
+
+    batch2 = [_stub_question(i) for i in range(2, 4)]
+    pack2 = await stage.persist_batch(ctx, batch2)
+
+    assert pack2.id == pack1.id
+    assert pack2.actual_count == 4
+
+    stmt = select(func.count()).where(QuestionRow.pack_id == pack1.id)
+    count = (await session.execute(stmt)).scalar_one()
+    assert count == 4
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_persist_batch_reinsert_same_ids_is_noop_for_actual_count(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A retried batch carrying question ids already persisted (e.g. a worker
+    retry after a partial failure) must not double-count actual_count — the
+    same ON CONFLICT (id) DO NOTHING contract the legacy `run()` path relies
+    on for retry safety."""
+    order = await _make_order(session, target_count=5)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+    batch = [_stub_question(i) for i in range(2)]
+
+    pack1 = await stage.persist_batch(ctx, batch)
+    assert pack1.actual_count == 2
+
+    pack2 = await stage.persist_batch(ctx, batch)  # same ids again
+    assert pack2.actual_count == 2  # unchanged, not 4
+
+    stmt = select(func.count()).where(QuestionRow.pack_id == pack1.id)
+    count = (await session.execute(stmt)).scalar_one()
+    assert count == 2
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_finalize_marks_pack_complete_and_stamps_generated_at(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """finalize('complete') is what turns a still-generating pack into the
+    same shape the legacy single-shot `run()` produces — the live-quiz read
+    path must see 'complete' + a generated_at, not a pack stuck announcing
+    itself as still in progress after the pipeline is actually done."""
+    order = await _make_order(session, target_count=2)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+    await stage.persist_batch(ctx, [_stub_question(i) for i in range(2)])
+
+    pack = await stage.finalize(ctx, "complete")
+
+    assert pack is not None
+    assert pack.generation_status == "complete"
+    assert pack.generated_at is not None
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_finalize_with_no_pack_id_is_a_noop(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A pipeline that fails before ever persisting a single batch has no
+    pack to finalize — finalize must return None rather than fabricate a
+    pack row or raise on the missing id."""
+    order = await _make_order(session, target_count=2)
+    ctx = _make_ctx(order, [])  # ctx.pack_id stays None
+    stage = PersistStage(session_factory)
+
+    result = await stage.finalize(ctx, "failed")
+
+    assert result is None
+    count = (
+        await session.execute(
+            select(func.count())
+            .select_from(QuestionPack)
+            .where(QuestionPack.order_id == order.id)
+        )
+    ).scalar_one()
+    assert count == 0
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_load_existing_resumes_pack_and_locks_persisted_questions(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A retried worker attempt must resume on the SAME pack and treat every
+    already-persisted question as locked (it may already be in front of a
+    player) — load_existing is what rebuilds that state on a fresh ctx
+    instead of the retry starting a duplicate pack from scratch."""
+    order = await _make_order(session, target_count=4)
+    stage = PersistStage(session_factory)
+    seed_ctx = _make_ctx(order, [])
+    batch1 = [_stub_question(i) for i in range(2)]
+    batch2 = [_stub_question(i) for i in range(2, 4)]
+    await stage.persist_batch(seed_ctx, batch1)
+    await stage.persist_batch(seed_ctx, batch2)
+    all_ids = {q.id for q in batch1 + batch2}
+
+    fresh_ctx = _make_ctx(order, [])
+    pack = await stage.load_existing(fresh_ctx)
+
+    assert pack is not None
+    assert fresh_ctx.pack_id == pack.id
+    assert {q.id for q in fresh_ctx.questions} == all_ids
+    assert fresh_ctx.locked_count == 4
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_load_existing_on_order_without_pack_returns_none(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A brand-new order has never been persisted to — load_existing must not
+    invent a pack or mutate ctx, so the caller falls through to the normal
+    first-batch path instead of resuming a pack that doesn't exist."""
+    order = await _make_order(session, target_count=4)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+
+    result = await stage.load_existing(ctx)
+
+    assert result is None
+    assert ctx.pack_id is None
+    assert ctx.questions == []
+    assert ctx.locked_count == 0
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_fail_pack_in_session_flips_generating_pack_to_failed(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """The worker's final-failure path and the sweep's force-fail paths call
+    this inside their own transaction so a pack a player might already be
+    reading from isn't left claiming 'generating' forever after its order
+    gives up."""
+    order = await _make_order(session, target_count=2)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+    await stage.persist_batch(ctx, [_stub_question(0)])
+
+    async with session_factory() as s:
+        live_order = await s.get(GenerationOrder, order.id)
+        assert live_order is not None
+        await fail_pack_in_session(s, live_order)
+        await s.commit()
+
+    pack = await session.get(QuestionPack, ctx.pack_id)
+    assert pack is not None
+    assert pack.generation_status == "failed"
+    assert pack.generated_at is not None
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_fail_pack_in_session_leaves_a_complete_pack_unchanged(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """A pack that already finished must never be clawed back to 'failed' by
+    a late-arriving failure signal (e.g. a duplicate sweep tick racing a
+    successful delivery) — fail_pack_in_session only touches a 'generating'
+    pack."""
+    order = await _make_order(session, target_count=1)
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+    await stage.persist_batch(ctx, [_stub_question(0)])
+    await stage.finalize(ctx, "complete")
+
+    async with session_factory() as s:
+        live_order = await s.get(GenerationOrder, order.id)
+        assert live_order is not None
+        await fail_pack_in_session(s, live_order)
+        await s.commit()
+
+    pack = await session.get(QuestionPack, ctx.pack_id)
+    assert pack is not None
+    assert pack.generation_status == "complete"
+
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_fail_pack_in_session_on_order_without_pack_is_a_noop(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """An order that fails before ever persisting a batch has no pack —
+    fail_pack_in_session must not raise, so the worker/sweep failure paths
+    stay uniform whether or not a pack exists yet."""
+    order = await _make_order(session, target_count=1)
+
+    async with session_factory() as s:
+        live_order = await s.get(GenerationOrder, order.id)
+        assert live_order is not None
+        await fail_pack_in_session(s, live_order)  # must not raise
+        await s.commit()
 
     await _cleanup_order(session, order.id)

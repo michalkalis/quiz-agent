@@ -119,6 +119,28 @@ async def start_quiz(
             logger.error("Exception in get_next_question: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail="Failed to retrieve question")
 
+        if (
+            not question
+            and session.pack_id
+            and await question_retriever.pack_is_generating(session.pack_id)
+        ):
+            # #182: the pack exists but every persisted question is already in
+            # the client's history (a second run on a still-filling pack).
+            # Park the session; the client polls /next-question.
+            session.current_question_id = None
+            session.transition(
+                to=SessionPhase.ASKING, caller="routes.start_quiz:awaiting"
+            )
+            session_manager.update_session(session)
+            return InputResponse(
+                success=True,
+                message="Next question is being prepared",
+                session=session_to_response(session),
+                current_question=None,
+                feedback_received=[],
+                awaiting_question=True,
+            )
+
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
             total_count = await question_retriever.count(
@@ -236,6 +258,10 @@ async def submit_input(
 
         if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
             raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.pack_id and session.current_question_id is None:
+            # #182: parked between questions while the pack fills — there is
+            # nothing to grade; the client should be polling /next-question.
+            raise HTTPException(status_code=409, detail="Waiting for the next question")
 
         try:
             flow_result = await quiz_flow.process_answer(
@@ -285,6 +311,22 @@ async def get_current_question(
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question")
 
+    translated_question = await _current_question_payload(
+        session, question_retriever, translation_service
+    )
+    return {
+        "question": translated_question,
+        "progress": {
+            "current": len(session.asked_question_ids),
+            "total": session.max_questions,
+        },
+    }
+
+
+async def _current_question_payload(session, question_retriever, translation_service):
+    """The exact payload the player was served for `session.current_question_id`
+    (shared by GET /question and the #182 /next-question idempotent replay)."""
+    session_id = session.session_id
     question = await question_retriever.get(session.current_question_id)
     if not question:
         raise HTTPException(status_code=500, detail="Question not found")
@@ -312,7 +354,7 @@ async def get_current_question(
 
     # #176: the same badge the question was served with. Idempotent, so the
     # branch that already stamped it inside the payload builder is unharmed.
-    translated_question = apply_review_badge(
+    return apply_review_badge(
         translated_question,
         question,
         record,
@@ -320,13 +362,69 @@ async def get_current_question(
         build_channel=session.build_channel,
     )
 
-    return {
-        "question": translated_question,
-        "progress": {
-            "current": len(session.asked_question_ids),
-            "total": session.max_questions,
-        },
-    }
+
+# #182: bounded server-side wait so a client polling for the next pack
+# question makes one request per ~8 s instead of one per second.
+NEXT_QUESTION_WAIT_SECONDS = 8.0
+
+
+@router.post("/sessions/{session_id}/next-question", response_model=InputResponse)
+@limiter.limit("30/minute")
+async def next_question(
+    request: Request,
+    session_id: str,
+    session_manager: SessionManager = Depends(get_session_manager),
+    quiz_flow: QuizFlowService = Depends(get_quiz_flow),
+    question_retriever: QuestionRetriever = Depends(get_question_retriever),
+    translation_service=Depends(get_translation_service),
+    audio: bool = False,
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """#182: fetch the next question of a custom pack that was still
+    generating when the previous answer was graded (`awaiting_question`).
+
+    Long-polls up to `NEXT_QUESTION_WAIT_SECONDS`. Returns the question
+    (same shape as /start), `awaiting_question=true` again, or a finished
+    session when the pack closed with nothing left. Idempotent: if a
+    question is already active it is returned instead of skipped.
+    """
+    async with session_manager.session_lock(session_id):
+        session = session_manager.get_session(session_id)
+        require_session_ownership(session, subject, session_id=session_id)  # #144
+
+        if session.phase != SessionPhase.ASKING:
+            raise HTTPException(status_code=400, detail="Not waiting for a question")
+
+        if session.current_question_id:
+            translated_question = await _current_question_payload(
+                session, question_retriever, translation_service
+            )
+            return InputResponse(
+                success=True,
+                message="Question already active",
+                session=session_to_response(session),
+                current_question=translated_question,
+                feedback_received=[],
+                audio=(
+                    AudioInfo(
+                        question_url=f"/api/v1/sessions/{session_id}/question/audio"
+                    )
+                    if audio
+                    else None
+                ),
+            )
+
+        try:
+            flow_result = await quiz_flow.resume_after_wait(
+                session, include_audio=audio, wait_seconds=NEXT_QUESTION_WAIT_SECONDS
+            )
+        except Exception as e:
+            raise submit_http_error(
+                e,
+                session_id=session_id,
+                fallback_detail="Failed to fetch next question",
+            ) from e
+        return flow_to_response(flow_result, session)
 
 
 @router.post("/sessions/{session_id}/rate")

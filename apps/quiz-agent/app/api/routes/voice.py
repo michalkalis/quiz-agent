@@ -82,6 +82,10 @@ async def transcribe_and_submit(
 
         if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
             raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.pack_id and session.current_question_id is None:
+            # #182: parked between questions while the pack fills — there is
+            # nothing to grade; the client should be polling /next-question.
+            raise HTTPException(status_code=409, detail="Waiting for the next question")
 
         try:
             if not voice_transcriber.is_supported_format(audio.filename):

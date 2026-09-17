@@ -275,10 +275,12 @@ class TestPerTopicCapFlag:
                 "session_factory": object(),
             }
         )
-        composition = next(s for s in stages if isinstance(s, CompositionStage))
+        # #182: the default worker walk is `sourcing → topup`; composition
+        # lives inside the top-up stage, not on the flat list.
         topup = next(s for s in stages if isinstance(s, TopUpStage))
+        composition = topup._composition_stage
+        assert isinstance(composition, CompositionStage)
         assert composition._per_topic_cap is None
-        assert topup._composition_stage is composition
 
 
 class _StubSourcingStage:

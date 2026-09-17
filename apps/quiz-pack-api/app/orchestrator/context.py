@@ -56,6 +56,10 @@ class OrderContext:
     questions: list[Question] = field(default_factory=list)
     scores: dict[str, dict[str, float]] = field(default_factory=dict)
     cost_cents: int = 0
+    # #182: how many leading entries of `questions` are already persisted to
+    # the pack (and possibly being played). Batch-level stages must count them
+    # but never drop them — a played question cannot be un-delivered.
+    locked_count: int = 0
 
 
 @dataclass

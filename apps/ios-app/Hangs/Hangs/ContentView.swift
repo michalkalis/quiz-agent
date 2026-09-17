@@ -122,7 +122,10 @@ struct ContentView: View {
                     case .idle, .startingQuiz:
                         HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
 
-                    case .askingQuestion, .recording, .processing, .skipping:
+                    // #182: `.awaitingQuestion` stays on QuestionView — the header
+                    // and counter must keep standing while the pack catches up,
+                    // so the set visibly continues instead of looking over.
+                    case .askingQuestion, .awaitingQuestion, .recording, .processing, .skipping:
                         // Show HomeView when minimized, otherwise QuestionView
                         if viewModel.isMinimized {
                             HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)

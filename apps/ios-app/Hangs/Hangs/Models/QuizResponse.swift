@@ -16,6 +16,12 @@ struct QuizResponse: Codable, Sendable {
     let evaluation: Evaluation?
     let feedbackReceived: [String]
     let audio: AudioInfo?
+    /// #182: the custom pack is still generating and the next question is not
+    /// ready yet — `currentQuestion` is nil, the session phase stays `asking`,
+    /// and the quiz is NOT finished. The client polls
+    /// `POST /sessions/{id}/next-question` until a question (or a finished
+    /// session) lands. Absent on every pre-#182 response → false.
+    let awaitingQuestion: Bool
 
     enum CodingKeys: String, CodingKey {
         case success
@@ -25,6 +31,42 @@ struct QuizResponse: Codable, Sendable {
         case evaluation
         case feedbackReceived = "feedback_received"
         case audio
+        case awaitingQuestion = "awaiting_question"
+    }
+
+    init(
+        success: Bool,
+        message: String,
+        session: QuizSession,
+        currentQuestion: Question?,
+        evaluation: Evaluation?,
+        feedbackReceived: [String],
+        audio: AudioInfo?,
+        awaitingQuestion: Bool = false
+    ) {
+        self.success = success
+        self.message = message
+        self.session = session
+        self.currentQuestion = currentQuestion
+        self.evaluation = evaluation
+        self.feedbackReceived = feedbackReceived
+        self.audio = audio
+        self.awaitingQuestion = awaitingQuestion
+    }
+
+    /// Hand-written so a missing `awaiting_question` decodes as `false` — the
+    /// synthesised initialiser would throw `keyNotFound` on every response from
+    /// a backend that predates #182. Everything else keeps the default shape.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        success = try container.decode(Bool.self, forKey: .success)
+        message = try container.decode(String.self, forKey: .message)
+        session = try container.decode(QuizSession.self, forKey: .session)
+        currentQuestion = try container.decodeIfPresent(Question.self, forKey: .currentQuestion)
+        evaluation = try container.decodeIfPresent(Evaluation.self, forKey: .evaluation)
+        feedbackReceived = try container.decodeIfPresent([String].self, forKey: .feedbackReceived) ?? []
+        audio = try container.decodeIfPresent(AudioInfo.self, forKey: .audio)
+        awaitingQuestion = try container.decodeIfPresent(Bool.self, forKey: .awaitingQuestion) ?? false
     }
 }
 

@@ -352,6 +352,50 @@
         }
       }
     },
+    "%lld of %lld questions ready. The rest keeps generating while you play." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připravených otázek: %1$lld z %2$lld. Zbytek se generuje, zatímco hraješ."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld questions ready. The rest keeps generating while you play."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pripravených otázok: %1$lld z %2$lld. Zvyšok sa generuje, kým hráš."
+          }
+        }
+      }
+    },
+    "%lld of %lld ready" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld z %2$lld připravených"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld ready"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld z %2$lld pripravených"
+          }
+        }
+      }
+    },
     "%lld pack credits" : {
       "localizations" : {
         "cs" : {
@@ -1738,6 +1782,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpoveď sa nepodarilo vyhodnotiť. Skús to znova."
+          }
+        }
+      }
+    },
+    "Couldn't load the next question" : {
+      "comment" : "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepodařilo se načíst další otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepodarilo sa načítať ďalšiu otázku"
           }
         }
       }
@@ -4788,6 +4849,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Poľština"
+          }
+        }
+      }
+    },
+    "Preparing the next question…" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připravuji další otázku…"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pripravujem ďalšiu otázku…"
           }
         }
       }
@@ -8586,6 +8663,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tvoj balík je hotový"
+          }
+        }
+      }
+    },
+    "Your pack is ready to play" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvůj balíček je připravený ke hraní"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoj balík je pripravený na hranie"
+          }
+        }
+      }
+    },
+    "Your pack is still being written. The quiz continues by itself the moment it lands." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balíček se ještě dopisuje. Kvíz bude pokračovat sám, jakmile otázka dorazí."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balík sa ešte dopisuje. Kvíz bude pokračovať sám, hneď ako otázka dorazí."
           }
         }
       }

@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> None:
-    """Reject unless ``subject_id`` owns the delivered custom pack ``pack_id``.
+async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> int:
+    """Reject unless ``subject_id`` owns the custom pack ``pack_id``; return
+    the pack's ``target_count`` (#182: the session's authoritative length).
 
     Scoping a session to a ``pack_id`` both serves that pack's private, paid
     questions and bypasses the free monthly quota, so a client-supplied id must be
@@ -36,7 +37,8 @@ async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> Non
     replay any pack id — their own (unmetered play) or a guessed/leaked one to read
     another user's paid pack: an IDOR plus a monetization bypass (#96 review).
 
-    A ``question_packs`` row exists only after successful delivery and carries the
+    A ``question_packs`` row exists once the first batch of questions is
+    persisted (#182 — the pack keeps filling while it is played) and carries the
     ordering subject's id (the same JWT ``sub`` space as ``subject_id``), so a row
     matching ``(id, user_id)`` is exactly the ownership predicate. Every failure —
     a malformed id, an un-verifiable (no-DB) environment, or simply no such owned
@@ -57,18 +59,20 @@ async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> Non
     async with auth_sessionmaker() as db:
         result = await db.execute(
             text(
-                "SELECT 1 FROM question_packs "
+                "SELECT target_count FROM question_packs "
                 "WHERE id = :pid AND user_id = :uid LIMIT 1"
             ),
             {"pid": pid, "uid": subject_id},
         )
-        if result.first() is None:
+        row = result.first()
+        if row is None:
             logger.warning(
                 "Pack ownership denied: subject=%s pack=%s (absent or not owned)",
                 subject_id,
                 pack_id,
             )
             raise HTTPException(status_code=404, detail="Pack not found")
+        return int(row[0])
 
 
 @router.post(
@@ -102,13 +106,16 @@ async def create_session(
     # content and bypasses the free quota, so verify the authenticated subject owns
     # it BEFORE creating the session — and outside the try below, whose broad
     # ``except`` would otherwise turn the 404 into a 500.
+    max_questions = body.max_questions
     if body.pack_id:
-        await _require_pack_ownership(
+        # #182: a pack session is as long as the pack the customer ordered —
+        # the client's "questions per quiz" setting does not apply to it.
+        max_questions = await _require_pack_ownership(
             body.pack_id, subject.subject_id, auth_sessionmaker
         )
     try:
         session = session_manager.create_session(
-            max_questions=body.max_questions,
+            max_questions=max_questions,
             difficulty=body.difficulty,
             user_id=subject.subject_id,
             mode=body.mode,

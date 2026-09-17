@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -352,3 +353,169 @@ async def test_direct_generation_passes_empty_facts_through() -> None:
     assert ctx.facts == []
     assert result.info["final_count"] == 10
     assert result.info["fact_pool_exhausted"] is False
+
+
+# ── #182 incremental delivery ────────────────────────────────────────────────
+# Intent: a player can start on the first small batch while the rest keeps
+# generating. The contract is (1) the first round is small, later rounds are
+# chunk-sized, (2) every round's accepted tail is persisted immediately and
+# locked, (3) a retried attempt resumes on what was already delivered instead
+# of regenerating or duplicating it, (4) the run ends by closing the pack.
+
+
+class _FakePersistStage:
+    name = "persisting"
+
+    def __init__(self, existing: list[Question] | None = None) -> None:
+        self.existing = existing or []
+        self.batches: list[list[Question]] = []
+        self.locked_seen: list[int] = []
+        self.finalized: str | None = None
+        self.pack = SimpleNamespace(id=uuid.uuid4())
+
+    async def load_existing(self, ctx: OrderContext):
+        if not self.existing:
+            return None
+        ctx.questions = list(self.existing)
+        ctx.locked_count = len(self.existing)
+        return self.pack
+
+    async def persist_batch(self, ctx: OrderContext, new_questions: list[Question]):
+        self.batches.append(list(new_questions))
+        self.locked_seen.append(ctx.locked_count)
+        return self.pack
+
+    async def finalize(self, ctx: OrderContext, status: str):
+        self.finalized = status
+        return self.pack
+
+
+class _CountingSink(_RecordingSink):
+    def __init__(self) -> None:
+        self.steps: list[tuple[str, Any]] = []
+        self.published: list[tuple[str, int]] = []
+
+    async def start_step(self, step: str, info: Any = None) -> int:
+        self.steps.append((step, info))
+        return len(self.steps)
+
+    async def publish(self, event_id: int, step: str, progress: int, info: Any = None) -> None:
+        self.published.append((step, progress))
+
+
+def _incremental_stage(persist: _FakePersistStage, gen: _FakeGenStage, **kw) -> TopUpStage:
+    return TopUpStage(
+        gen,
+        _FakeDropStage("verifying", 0),
+        _FakeDropStage("scoring", 0),
+        _PassthroughDedupStage(),
+        persist_stage=persist,
+        first_chunk=5,
+        chunk_size=10,
+        **kw,
+    )
+
+
+@pytest.mark.asyncio
+async def test_incremental_persists_every_round_and_closes_the_pack() -> None:
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    sink = _CountingSink()
+    ctx = _make_ctx(target_count=30, initial=0)
+
+    result = await _incremental_stage(persist, gen).run(ctx, sink)
+
+    # First round is the small one the player starts on; the rest are chunks.
+    assert gen.calls == [5, 10, 10, 5]
+    # Each round's new tail was written right away …
+    assert [len(b) for b in persist.batches] == [5, 10, 10, 5]
+    # … on top of what was already locked (nothing rewritten).
+    assert persist.locked_seen == [0, 5, 15, 25]
+    assert ctx.locked_count == 30
+    assert persist.finalized == "complete"
+    assert result.info["pack"] is persist.pack
+    # A `round` step per persisted batch carries the playable count.
+    rounds = [info for step, info in sink.steps if step == "round"]
+    assert [r["ready"] for r in rounds] == [5, 15, 25, 30]
+    assert sink.published[-1] == ("round", 99)
+
+
+@pytest.mark.asyncio
+async def test_incremental_resume_continues_from_persisted_questions() -> None:
+    """An ARQ retry / manual retry must NOT regenerate what a player may
+    already be playing: existing pack questions are loaded as the locked
+    prefix and only the shortfall is generated."""
+    existing = [_stub_question(f"delivered {i}") for i in range(12)]
+    gen = _FakeGenStage()
+    persist = _FakePersistStage(existing=existing)
+    ctx = _make_ctx(target_count=30, initial=0)
+
+    await _incremental_stage(persist, gen).run(ctx, _CountingSink())
+
+    assert gen.calls == [10, 8]
+    assert persist.locked_seen == [12, 22]
+    assert ctx.questions[:12] == existing
+    assert persist.finalized == "complete"
+
+
+@pytest.mark.asyncio
+async def test_incremental_round_budget_scales_with_chunking() -> None:
+    """`max_rounds` keeps meaning "extra rounds": a 30-pack in 5+10+10+5
+    needs 4 rounds on its own, so a lossy pipeline still gets its two
+    retries on top instead of failing the floor after 2 rounds."""
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    ctx = _make_ctx(target_count=30, initial=0)
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", 2),
+        _FakeDropStage("scoring", 0),
+        _PassthroughDedupStage(),
+        persist_stage=persist,
+        first_chunk=5,
+        chunk_size=10,
+        max_rounds=2,
+    )
+
+    await stage.run(ctx, _CountingSink())
+
+    assert len(gen.calls) <= 6
+    assert len(ctx.questions) >= 24  # above the 80 % floor
+    assert persist.finalized == "complete"
+
+
+@pytest.mark.asyncio
+async def test_incremental_floor_failure_keeps_pack_open_for_retry() -> None:
+    """Below the floor the stage still raises (fail loud), but it must not
+    close the pack: the retry resumes on it, and the worker's failure path
+    decides between `generating` (retry pending) and `failed` (final)."""
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    ctx = _make_ctx(target_count=30, initial=0)
+    stage = TopUpStage(
+        gen,
+        _FakeDropStage("verifying", 4),
+        _FakeDropStage("scoring", 0),
+        _PassthroughDedupStage(),
+        persist_stage=persist,
+        first_chunk=5,
+        chunk_size=10,
+        max_rounds=0,
+    )
+
+    with pytest.raises(ValueError, match="pack shortfall"):
+        await stage.run(ctx, _CountingSink())
+
+    assert persist.finalized is None
+    assert persist.batches, "rounds that did survive were persisted before the floor check"
+
+
+def test_incremental_requires_chunk_sizes() -> None:
+    with pytest.raises(ValueError, match="first_chunk"):
+        TopUpStage(
+            _FakeGenStage(),
+            _FakeDropStage("verifying", 0),
+            _FakeDropStage("scoring", 0),
+            _PassthroughDedupStage(),
+            persist_stage=_FakePersistStage(),
+        )

@@ -116,12 +116,21 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     let theme: String?
     let createdAt: String
     let deliveredAt: String?
-    /// Null until the order is `delivered`; this is what you pass to play the pack.
+    /// Set as soon as the FIRST batch of questions is persisted (#182) — so it
+    /// can be non-null while `status` is still `in_progress`. This is what you
+    /// pass to play the pack.
     let packId: String?
     /// Decimal-as-string (e.g. `"1.234560"`) or null — NOT a number.
     let llmCostUsd: String?
     let searchCostCents: Int
     let job: JobSnapshot?
+    /// How many questions are ready so far (#103 F5, live-growing since #182).
+    /// Nil until the pack row exists.
+    let actualCount: Int?
+    /// #182: `generating` while the worker is still adding questions to an
+    /// already-playable pack, `complete`/`failed` once it stops, nil when there
+    /// is no pack yet. Kept raw — an unknown future value must never crash a row.
+    let packGenerationStatus: String?
 
     var id: String { orderId }
 
@@ -139,10 +148,29 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         case llmCostUsd = "llm_cost_usd"
         case searchCostCents = "search_cost_cents"
         case job
+        case actualCount = "actual_count"
+        case packGenerationStatus = "pack_generation_status"
     }
 
     /// The order finished successfully and `packId` is populated.
     var isDelivered: Bool { status == "delivered" }
+
+    /// #182: the pack can be played NOW. Since the generator persists questions
+    /// in batches, a pack becomes playable at the first batch — while the order
+    /// is still `in_progress` and the rest keeps generating behind the player.
+    /// A failed/refunded order is never playable from the app even if a partial
+    /// pack exists: that row keeps today's "Try again".
+    var isPlayable: Bool { packId != nil && !isFailure }
+
+    /// Questions ready to play right now (`actual_count`, 0 before the first
+    /// batch lands) — the numerator of the "5 of 30 ready" copy.
+    var readyCount: Int { actualCount ?? 0 }
+
+    /// The pack is playable AND the worker is still adding to it, so the ready
+    /// count will keep growing while the player plays.
+    var isStillGenerating: Bool {
+        isPlayable && (packGenerationStatus == "generating" || !isTerminal)
+    }
 
     /// The poll loop should stop: delivered, failed, or refunded.
     var isTerminal: Bool {

@@ -172,7 +172,37 @@ extension OrderSnapshot {
             totalCostCents: 24,
             error: nil,
             updatedAt: "2026-07-13T10:05:00Z"
-        )
+        ),
+        actualCount: 30,
+        packGenerationStatus: "complete"
+    )
+
+    /// #182: playable but still growing — the first batches are persisted while
+    /// the order is still `in_progress`.
+    static let mockGenerating = OrderSnapshot(
+        orderId: "99999999-9999-9999-9999-999999999999",
+        status: "in_progress",
+        productId: "pack_30",
+        targetCount: 30,
+        language: "en",
+        category: "history",
+        theme: nil,
+        createdAt: "2026-09-17T10:00:00Z",
+        deliveredAt: nil,
+        packId: "22222222-2222-2222-2222-222222222222",
+        llmCostUsd: nil,
+        searchCostCents: 0,
+        job: JobSnapshot(
+            jobId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            status: "generating",
+            progress: 16,
+            retryCount: 0,
+            totalCostCents: 4,
+            error: nil,
+            updatedAt: "2026-09-17T10:01:00Z"
+        ),
+        actualCount: 5,
+        packGenerationStatus: "generating"
     )
 
     static let mockPending = OrderSnapshot(
@@ -196,7 +226,9 @@ extension OrderSnapshot {
             totalCostCents: 10,
             error: nil,
             updatedAt: "2026-07-13T09:55:00Z"
-        )
+        ),
+        actualCount: nil,
+        packGenerationStatus: nil
     )
 
     /// Terminal, paid back, and NOT retryable — the retry endpoint 409s it.
@@ -213,7 +245,9 @@ extension OrderSnapshot {
         packId: nil,
         llmCostUsd: nil,
         searchCostCents: 0,
-        job: nil
+        job: nil,
+        actualCount: nil,
+        packGenerationStatus: nil
     )
 
     static let mockFailed = OrderSnapshot(
@@ -237,6 +271,8 @@ extension OrderSnapshot {
             totalCostCents: 12,
             error: "generation failed",
             updatedAt: "2026-07-13T09:10:00Z"
-        )
+        ),
+        actualCount: nil,
+        packGenerationStatus: nil
     )
 }

@@ -38,6 +38,7 @@ from app.config import get_settings
 from app.db.models.job import GenerationJob, attempt_job_id
 from app.db.models.order import GenerationOrder
 from app.db.session import AsyncSessionLocal
+from app.orchestrator.stages.persist import fail_pack_in_session
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,7 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         if order.job_id is None:
             order.status = "failed"
             order.refund_eligible = True
+            await fail_pack_in_session(session, order)
             await session.commit()
             return
 
@@ -135,6 +137,7 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         if job is None:
             order.status = "failed"
             order.refund_eligible = True
+            await fail_pack_in_session(session, order)
             await session.commit()
             return
 

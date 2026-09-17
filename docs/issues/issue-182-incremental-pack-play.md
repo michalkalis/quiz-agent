@@ -1,6 +1,6 @@
 # #182 — Custom pack: hrať hneď po prvej otázke (inkrementálne generovanie)
 
-**Triage:** in-progress (founder 2026-09-17, implementuje Fable vo worktree `feat/182-incremental-pack-play`)
+**Triage:** done (agent-side) — PR #166 otvorený 2026-09-17; open = merge, deploy (quiz-pack-api s migráciou pred quiz-agent), `mba` worker na novom main, founder e2e z TestFlightu
 
 ## Cieľ
 

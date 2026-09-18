@@ -237,12 +237,14 @@ struct MyPacksPlayableRuleTests {
     /// renders a spinner until `start()` clears `isLoading`, so a bare
     /// `refresh()` would inspect an empty screen).
     private func loadedView(_ orders: [OrderSnapshot]) async -> MyPacksView {
-        let viewModel = MyPacksViewModel(service: MockPackOrderService(listResult: .success(orders)))
+        // Parked clock (#180 track A): start() loads, then the keep-fresh loop
+        // parks on this clock instead of the real 5 s cadence.
+        let viewModel = MyPacksViewModel(
+            service: MockPackOrderService(listResult: .success(orders)),
+            clock: AnyClock(TestClock())
+        )
         let task = Task { await viewModel.start() }
-        for _ in 0..<400 {
-            if !viewModel.isLoading { break }
-            try? await Task.sleep(for: .milliseconds(5))
-        }
+        await pumpUntil({ !viewModel.isLoading }, "the initial load never cleared the spinner")
         task.cancel()
         return MyPacksView(viewModel: viewModel, onPlayPack: { _ in })
     }

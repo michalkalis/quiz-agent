@@ -312,20 +312,20 @@ struct OrderPackViewModelTests {
     // would sit on "Building your pack…" while a playable pack existed.
     @Test("a still-generating order with a pack offers Start quiz while the poll keeps running")
     func playableWhileStillGenerating() async {
-        // Real 1 Hz cadence (like `submitPollsThenDelivers`): with a zero interval
-        // the poll can reach `.delivered` before the sampler ever observes the
-        // playable window.
+        // The poll parks on its shipped 1 s wait after the first snapshot, so
+        // the playable window is observable for as long as the clock is held;
+        // releasing that one interval lets the second getOrder deliver.
+        let clock = TestClock()
         let service = MockPackOrderService(getSequence: [.mockGenerating, .mockDelivered])
-        let vm = payingViewModel(service: service)
+        let vm = payingViewModel(service: service, clock: AnyClock(clock))
 
         let task = Task { await vm.submit() }
-        let sawPlayableWhilePolling = await waitForState(vm) { state in
-            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
-            return false
-        }
+        await pumpUntil({
+            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+        }, "an in_progress order with a pack must be playable while the poll runs")
+        await clock.advance(by: .seconds(1))
         await task.value
 
-        #expect(sawPlayableWhilePolling, "an in_progress order with a pack must be playable")
         // And the poll did NOT stop there: the order still reaches delivered.
         guard case .delivered = vm.state else {
             Issue.record("expected .delivered after the generating snapshot, got \(vm.state)")
@@ -336,13 +336,12 @@ struct OrderPackViewModelTests {
     @Test("playableSnapshot carries the ready/target counts the copy promises")
     func playableSnapshotCarriesCounts() async {
         let service = MockPackOrderService(getSequence: [.mockGenerating, .mockGenerating])
-        let vm = payingViewModel(service: service)
+        let vm = payingViewModel(service: service, clock: AnyClock(TestClock())) // parked: stays in the playable window
 
         let task = Task { await vm.submit() }
-        _ = await waitForState(vm) { state in
-            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
-            return false
-        }
+        await pumpUntil({
+            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+        }, "the generating snapshot never became the playable polling state")
         let playable = vm.playableSnapshot
         vm.stop()
         task.cancel()

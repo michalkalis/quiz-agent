@@ -2244,7 +2244,7 @@ final class QuizViewModel: ObservableObject {
             }
 
             do {
-                try await Task.sleep(for: .seconds(awaitingQuestionPollIntervalSeconds))
+                try await clock.sleep(for: .seconds(awaitingQuestionPollIntervalSeconds))
             } catch {
                 return // cancelled
             }

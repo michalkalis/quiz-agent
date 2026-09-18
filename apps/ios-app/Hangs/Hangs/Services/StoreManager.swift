@@ -3,7 +3,7 @@
 //  Hangs
 //
 //  RevenueCat integration for freemium paywall (issue #93).
-//  Offerings = one auto-renewing subscription (monthly + annual, entitlement
+//  Offerings = one auto-renewing monthly subscription (entitlement
 //  "unlimited") + one consumable question pack. RC owns receipt validation +
 //  subscription lifecycle; the backend owns the credit ledger + quota gate —
 //  entitlement is never client-trusted (see D-RC in issue-93).
@@ -21,15 +21,14 @@ import os
 /// Pinned RC / App Store identifiers (issue #93 D-ids). Seed migration `0005`
 /// and the RC offering both hardcode these exact strings.
 enum StoreProduct {
-    /// Subscription product ids (RC's built-in `.monthly`/`.annual` offering
-    /// accessors resolve these by billing period, not by this string).
+    /// Subscription product id (RC's built-in `.monthly` offering accessor
+    /// resolves this by billing period, not by this string).
     static let monthlySubId = "com.carquiz.unlimited.monthly"
-    static let annualSubId = "com.carquiz.unlimited.annual"
     /// Consumable pack (+100 questions, never expires).
     static let packId = "com.carquiz.pack.questions100"
     /// The RC *package* identifier in the `default` offering for the pack
-    /// (subs are looked up via `.monthly`/`.annual`, the pack needs its
-    /// custom package identifier — issue #93 Session 0 provisioning).
+    /// (the sub is looked up via `.monthly`, the pack needs its custom
+    /// package identifier — issue #93 Session 0 provisioning).
     static let packPackageIdentifier = "pack_questions_100"
     /// RC entitlement id granting unlimited questions.
     static let entitlementId = "unlimited"
@@ -133,7 +132,7 @@ final class StoreManager: ObservableObject {
 
     // MARK: - Purchase
 
-    /// Purchases a package by product id — either subscription (monthly/annual)
+    /// Purchases a package by product id — either the monthly subscription
     /// or the consumable pack. Only a subscription purchase flips `isPurchased`.
     func purchase(productID: String) async {
         // Reentrancy guard (#129 scope A): never start a second store operation
@@ -155,7 +154,6 @@ final class StoreManager: ObservableObject {
             switch outcome {
             case let .success(unlimitedActive):
                 let isSubscription = productID == StoreProduct.monthlySubId
-                    || productID == StoreProduct.annualSubId
                 if isSubscription && !unlimitedActive {
                     // The store sheet completed but the entitlement did NOT
                     // activate (RC product↔entitlement mapping or store-side

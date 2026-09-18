@@ -19,28 +19,6 @@ import Foundation
 @testable import Hangs
 import Testing
 
-// MARK: - Pump helper
-
-/// Spin the main serial executor until `predicate` holds or the deadline passes.
-/// Pumps the producer → AsyncStream → consumer-task hops deterministically
-/// enough for assertions without a real clock.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 2000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 // MARK: - Legacy (buggy) model — reproduces the exact starvation
 
 /// Models the OLD design: a single `AsyncStream` + continuation created once and
@@ -99,7 +77,7 @@ struct StreamChannelTests {
 
         // The value B MUST receive — starved under the old design.
         channel.yield(42)
-        await waitUntil({ !bReceived.isEmpty }, "consumer B never received the yield (starved stream = the P0 bug)")
+        await pumpUntil({ !bReceived.isEmpty }, "consumer B never received the yield (starved stream = the P0 bug)")
 
         channel.finish()
         _ = await consumerB.value
@@ -156,7 +134,7 @@ struct StreamChannelTests {
         }
         await Task.yield()
         channel.yield(3)
-        await waitUntil({ received == [3] }, "only the post-acquisition value should arrive")
+        await pumpUntil({ received == [3] }, "only the post-acquisition value should arrive")
         channel.finish()
         _ = await consumer.value
         #expect(received == [3])
@@ -177,7 +155,7 @@ struct StreamChannelTests {
         await Task.yield()
 
         _ = channel.makeStream() // must finish `first`
-        await waitUntil({ firstExited }, "prior stream did not terminate on re-acquisition")
+        await pumpUntil({ firstExited }, "prior stream did not terminate on re-acquisition")
         _ = await firstConsumer.value
         #expect(firstExited)
     }

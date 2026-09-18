@@ -14,6 +14,7 @@
 //  real breakage is worse than the bug it fixes).
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -21,25 +22,32 @@ import Testing
 @Suite("Submit / skip transient retry (#131 Track A)")
 @MainActor
 struct SubmitRetryTests {
-    /// Collapses the 1s/2s backoff so the suite doesn't sleep for real.
-    private func makeViewModel() -> (QuizViewModel, MockNetworkService) {
-        let (vm, network) = Fixtures.makeViewModelWithNetwork()
-        vm.transientStartBackoffOverride = { _ in .zero }
-        vm.recordingCoordinator.transientBackoffOverride = { _ in .zero }
+    /// #180 track A: the 1 s/2 s backoff runs on the model's injected clock, so
+    /// the suite drives it instead of sleeping. A `TestClock` — not an
+    /// `ImmediateClock` — because the same clock carries the submit's 30 s
+    /// `withUserFacingTimeout`: collapsing every wait would let that timeout win
+    /// the race and fail the submission the retry is supposed to rescue.
+    private func makeViewModel() -> (QuizViewModel, MockNetworkService, TestClock<Duration>) {
+        let clock = TestClock()
+        let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(clock))
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion()
         vm.quizState = .askingQuestion
-        return (vm, network)
+        return (vm, network, clock)
     }
+
 
     // MARK: - Skip
 
     @Test("skip survives a single cold-wake 503 — no OOPS, question advances")
     func skipRetriesTransient503() async throws {
-        let (vm, network) = makeViewModel()
+        let (vm, network, clock) = makeViewModel()
         network.textInputFailuresBeforeSuccess = 1 // one waking machine
 
-        await vm.skipQuestion()
+        let submission = Task { await vm.skipQuestion() }
+        await pumpUntil { network.submitTextInputCallCount == 1 } // the cold wake
+        await clock.advance(by: .seconds(1)) // the SHIPPED first backoff
+        await submission.value
 
         #expect(network.submitTextInputCallCount == 2, "one failure + one successful retry")
         if case .error = vm.quizState {
@@ -49,10 +57,17 @@ struct SubmitRetryTests {
 
     @Test("skip still fails loudly when the backend keeps returning 503")
     func skipStopsAfterAttemptsExhausted() async throws {
-        let (vm, network) = makeViewModel()
+        let (vm, network, clock) = makeViewModel()
         network.textInputFailuresBeforeSuccess = 99 // never recovers
 
-        await vm.skipQuestion()
+        let submission = Task { await vm.skipQuestion() }
+        // Driving the two SHIPPED backoffs in turn also pins the schedule: the
+        // next attempt only exists once its own 1 s / 2 s wait has elapsed.
+        await pumpUntil { network.submitTextInputCallCount == 1 }
+        await clock.advance(by: .seconds(1))
+        await pumpUntil { network.submitTextInputCallCount == 2 }
+        await clock.advance(by: .seconds(2))
+        await submission.value
 
         #expect(network.submitTextInputCallCount == TransientRetry.maxAttempts,
                 "bounded: 3 attempts, then surface — never an unbounded loop")
@@ -65,10 +80,13 @@ struct SubmitRetryTests {
 
     @Test("typed answer survives a single cold-wake 503")
     func typedAnswerRetriesTransient503() async throws {
-        let (vm, network) = makeViewModel()
+        let (vm, network, clock) = makeViewModel()
         network.textInputFailuresBeforeSuccess = 1
 
-        await vm.resubmitAnswer("Bratislava")
+        let submission = Task { await vm.resubmitAnswer("Bratislava") }
+        await pumpUntil { network.submitTextInputCallCount == 1 }
+        await clock.advance(by: .seconds(1))
+        await submission.value
 
         #expect(network.submitTextInputCallCount == 2)
         #expect(network.capturedTextInputInput == "Bratislava", "the retry re-sends the same answer")
@@ -81,10 +99,13 @@ struct SubmitRetryTests {
 
     @Test("voice submit survives a single cold-wake 503 and still reaches confirmation")
     func voiceSubmitRetriesTransient503() async throws {
-        let (vm, network) = makeViewModel()
+        let (vm, network, clock) = makeViewModel()
         network.submitVoiceAnswerFailuresBeforeSuccess = 1
 
-        await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2]))
+        let submission = Task { await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2])) }
+        await pumpUntil { network.submitVoiceAnswerCallCount == 1 }
+        await clock.advance(by: .seconds(1))
+        await submission.value
 
         #expect(network.submitVoiceAnswerCallCount == 2, "one failure + one successful retry")
         #expect(vm.showAnswerConfirmation == true, "the recovered submit lands on the confirmation sheet")

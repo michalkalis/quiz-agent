@@ -129,14 +129,20 @@ import os
         }
 
         /// #174: a slow engine start, so tests can land a timer inside the gap
-        /// between "recording asked for" and "mic actually open".
-        var prepareForRecordingDelay: TimeInterval = 0
+        /// between "recording asked for" and "mic actually open". #180 track A:
+        /// the gap is a GATE the test releases, not a real-time sleep — the test
+        /// fires the (clock-driven) cap inside it and then lets the handshake
+        /// finish, so nothing races the wall clock under parallel load.
+        var prepareForRecordingGate: (@MainActor () async -> Void)?
+
+        /// Incremented as the handshake is entered, before the gate is awaited,
+        /// so a test can pump until the engine start is genuinely in the gap.
+        var prepareForRecordingCallCount = 0
 
         func prepareForRecording() async {
             isPlaying = false
-            if prepareForRecordingDelay > 0 {
-                try? await Task.sleep(nanoseconds: UInt64(prepareForRecordingDelay * 1_000_000_000))
-            }
+            prepareForRecordingCallCount += 1
+            await prepareForRecordingGate?()
         }
 
         func startRecording() throws {

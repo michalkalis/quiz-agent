@@ -10,6 +10,7 @@
 //
 
 import Combine
+import Clocks
 import Foundation
 import os
 
@@ -59,9 +60,9 @@ final class VoiceCommandCoordinator: ObservableObject {
 
     /// When the current `.matched` glow lit, or `nil` — input to the
     /// min/max-display window in `noteQuizStateChangedForFeedback()`.
-    var matchedGlowStartedAt: Date?
+    var matchedGlowStartedAt: AnyClock<Duration>.Instant?
     /// When the unmatched glow last lit — the 4 s cooldown's input.
-    var lastUnmatchedGlowAt: Date?
+    var lastUnmatchedGlowAt: AnyClock<Duration>.Instant?
     /// The last transcript the unmatched glow lit for — "never twice in a row
     /// for the same transcript" (locked variant-page answer).
     var lastUnmatchedGlowText: String?
@@ -71,16 +72,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     var matchedGlowMaxDisplay: TimeInterval = 2.0
     var unmatchedGlowDisplay: TimeInterval = 1.2
     var unmatchedGlowCooldown: TimeInterval = 4.0
-
-    /// Injected sleep for the glow clear timer (`scheduleGlowClear`). Same
-    /// rationale as `now`: the two display-window tests used to shrink the
-    /// duration to 0.05 s and then wait it out for real, which flaked under
-    /// full-suite load. With the sleep injected the test drives the timer
-    /// instantly *and* asserts the window it was armed for — so the shipped
-    /// 2.0 s / 1.2 s durations are what get pinned, not a test-only value.
-    var glowSleep: @MainActor @Sendable (TimeInterval) async -> Void = { seconds in
-        try? await Task.sleep(for: .seconds(seconds))
-    }
 
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
@@ -106,11 +97,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// seems to happen, build-33: "start start start start start").
     static let commandCooldown: TimeInterval = 1.5
 
-    /// Injected clock so the cooldown is testable with a driven clock instead of
-    /// real sleeps — the repo's three flaky async voice tests all came from
-    /// `Task.sleep`. Mirrors `SilenceDetectionService(now:)`. `var` so a test can
-    /// swap it after the façade has built this child.
-    var now: @MainActor () -> Date
+    /// The façade's clock (#180 track A): the cooldown, the glow windows, the
+    /// settle fallback and the skip-undo window all run on it, so a test drives
+    /// them with a `TestClock` instead of real sleeps — the repo's three flaky
+    /// async voice tests all came from `Task.sleep`.
+    let clock: AnyClock<Duration>
 
     /// Whether a command has ALREADY fired for the utterance in progress — the
     /// at-most-one-command-per-utterance latch (see +Utterance for the full
@@ -128,7 +119,7 @@ final class VoiceCommandCoordinator: ObservableObject {
 
     /// How long an unchanged volatile hypothesis must stand before the SETTLE
     /// signal accepts it as stopped-growing (see `armVolatileSettle`). `var` and
-    /// injected for the same reason as `now`: tests drive it to a negligible
+    /// injected for the same reason as `clock`: tests drive it to a negligible
     /// value instead of sleeping — the repo's three flaky async voice tests all
     /// came from real `Task.sleep`s.
     ///
@@ -176,7 +167,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// When the previous transcript of the utterance in progress arrived, or
     /// `nil` for its first — the input to the `sincePrevMs` field the command
     /// path logs (see `noteTranscriptArrival`). Cleared by `endUtterance()`.
-    var lastTranscriptAt: Date?
+    var lastTranscriptAt: AnyClock<Duration>.Instant?
 
     /// The matched-but-unproven volatile currently waiting out
     /// `volatileSettleDelay`, or `nil`. Written ONLY through
@@ -185,7 +176,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     var pendingVolatileSettle: PendingVolatileSettle?
 
     /// The last command actually routed, and when — the cooldown's input.
-    var lastFiredCommand: (command: VoiceCommand, at: Date)?
+    var lastFiredCommand: (command: VoiceCommand, at: AnyClock<Duration>.Instant)?
 
     // MARK: - Dependencies (façade-owned service instances, shared)
 
@@ -253,6 +244,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     init(
         silenceDetectionService: SilenceDetectionServiceProtocol,
         taskBag: TaskBag,
+        clock: AnyClock<Duration> = .continuous,
         settings: @escaping @MainActor () -> QuizSettings,
         isAppForeground: @escaping @MainActor () -> Bool,
         isPlayingTTS: @escaping @MainActor () -> Bool,
@@ -272,11 +264,11 @@ final class VoiceCommandCoordinator: ObservableObject {
         continueToNext: @escaping @MainActor () -> Void,
         pauseQuiz: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
-        cancelThinkingTime: @escaping @MainActor () -> Void,
-        now: @escaping @MainActor () -> Date = { Date() }
+        cancelThinkingTime: @escaping @MainActor () -> Void
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
+        self.clock = clock
         self.settings = settings
         self.isAppForeground = isAppForeground
         self.isPlayingTTS = isPlayingTTS
@@ -297,7 +289,6 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.pauseQuiz = pauseQuiz
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
-        self.now = now
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object
@@ -364,8 +355,9 @@ final class VoiceCommandCoordinator: ObservableObject {
         emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened
         onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
 
+        let clock = clock
         let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
+            try? await clock.sleep(for: .seconds(duration))
             guard let self, !Task.isCancelled else { return }
             guard self.pendingSkipWindow != nil else { return } // aborted
             // #110 Bug 2: a pending skip is only ever committed while the quiz

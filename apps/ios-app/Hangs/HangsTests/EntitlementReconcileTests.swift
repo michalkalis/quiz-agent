@@ -17,6 +17,7 @@
 //      window before showing, since the server usage mirror is the true gate.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -24,44 +25,25 @@ import Testing
 
 // MARK: - Helpers
 
-/// Spin the main serial executor until `predicate` holds or the deadline
-/// passes. Mirrors `ScenePhaseTeardownTests.waitUntil` (duplicated locally,
-/// matching this test target's existing per-suite convention).
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 @MainActor
 private func makeVM(
     network: MockNetworkService,
     isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
-    backoff: SleepRecorder = SleepRecorder()
+    clock: AnyClock<Duration> = AnyClock(TestClock())
 ) -> QuizViewModel {
-    let vm = QuizViewModel(
+    // Deterministic time (#133 audit, #180 track A): every production wait on
+    // this path — the two bounded-retry backoffs and the pre-paywall resync
+    // window — runs on the injected clock. The default is a TestClock nobody
+    // advances, so a test that doesn't care about the schedule simply parks
+    // every wait; a test that does owns its own TestClock and DRIVES it. No
+    // test here may wait on a production sleep.
+    QuizViewModel(
         networkService: network,
         audioService: MockAudioService(),
         persistenceStore: MockPersistenceStore(),
-        isLocallyEntitled: isLocallyEntitled
+        isLocallyEntitled: isLocallyEntitled,
+        clock: clock
     )
-    // Deterministic time (#133 audit): the launch reconcile fired from
-    // `EntitlementReconciler.init` is a MainActor Task, so it cannot have run
-    // before this line — every retry backoff in this suite is driven, not
-    // waited out. No test here may wait on a production sleep.
-    vm.entitlementReconciler.backoffSleep = backoff.sleep
-    return vm
 }
 
 private func makeUsage(remaining: Int, premium: Bool = false) -> UsageInfo {
@@ -110,12 +92,12 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let vm = makeVM(network: mock)
 
-        await waitUntil({ mock.syncEntitlementsCallCount == 1 }, "launch never triggered an entitlement sync")
+        await pumpUntil({ mock.syncEntitlementsCallCount == 1 }, "launch never triggered an entitlement sync")
         // Wait for the launch reconcile to fully UNWIND rather than sleeping a
         // guess: once no attempt is in flight, a stray second caller could no
         // longer hide behind the single-flight join — so "exactly one" is a
         // settled fact, not a snapshot taken 50 ms in.
-        await waitUntil({ !vm.entitlementReconciler.isReconciling }, "the launch reconcile never completed")
+        await pumpUntil({ !vm.entitlementReconciler.isReconciling }, "the launch reconcile never completed")
         #expect(mock.syncEntitlementsCallCount == 1, "launch must sync exactly once, not per observer/view")
         #expect(vm.quizState == .idle, "keep vm alive through the async waits above")
     }
@@ -132,7 +114,7 @@ struct EntitlementReconcileTests {
         // the publish and `reconcileTask` unwinding, and the foreground call
         // below would then JOIN that still-live single flight and fire no sync
         // of its own — the ~1-in-3 flake this test used to carry (#133 audit).
-        await waitUntil(
+        await pumpUntil(
             { vm.usageInfo == usageAtLaunch && !vm.entitlementReconciler.isReconciling },
             "launch reconcile never populated usage / never completed"
         )
@@ -144,7 +126,7 @@ struct EntitlementReconcileTests {
         vm.handleScenePhase(.background)
         vm.handleScenePhase(.active)
 
-        await waitUntil({ vm.usageInfo == usageAfterForeground }, "foreground never refreshed usage — stale quota would still show")
+        await pumpUntil({ vm.usageInfo == usageAfterForeground }, "foreground never refreshed usage — stale quota would still show")
         #expect(mock.syncEntitlementsCallCount == syncCountAfterLaunch + 1, "foreground must fire its own entitlement sync")
     }
 
@@ -152,15 +134,24 @@ struct EntitlementReconcileTests {
     func retriesWithBackoff() async {
         let mock = Fixtures.makeFullMockNetwork()
         mock.syncEntitlementsFailuresBeforeSuccess = 2 // fails twice, succeeds on the 3rd (bounded) attempt
-        let backoff = SleepRecorder()
-        let vm = makeVM(network: mock, backoff: backoff)
+        let clock = TestClock()
+        let vm = makeVM(network: mock, clock: AnyClock(clock))
 
-        await waitUntil({ mock.syncEntitlementsCallCount == 3 }, "retry loop gave up before its bounded 3rd attempt")
-        await waitUntil({ vm.usageInfo != nil }, "usage never refreshed after the sync eventually recovered")
-        // The backoff itself is now asserted rather than waited out: a paying
-        // user's stranded entitlement must get spaced retries, not an instant
-        // hammer of the same failing call.
-        #expect(backoff.delays == [0.2, 0.4], "bounded exponential backoff between the three attempts")
+        await pumpUntil({ mock.syncEntitlementsCallCount == 1 }, "the launch sync never fired its first attempt")
+        // The bounded exponential backoff is DRIVEN, not waited out, and it is
+        // the SHIPPED schedule (0.2 s then 0.4 s) that is pinned: stopping just
+        // short of each boundary proves a paying user's stranded entitlement
+        // gets spaced retries, not an instant hammer of the same failing call.
+        await clock.advance(by: .milliseconds(190))
+        #expect(mock.syncEntitlementsCallCount == 1, "the 2nd attempt fired before the 0.2 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.syncEntitlementsCallCount == 2 }, "the 2nd attempt never fired once its backoff elapsed")
+
+        await clock.advance(by: .milliseconds(390))
+        #expect(mock.syncEntitlementsCallCount == 2, "the 3rd attempt fired before the doubled 0.4 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.syncEntitlementsCallCount == 3 }, "retry loop gave up before its bounded 3rd attempt")
+        await pumpUntil({ vm.usageInfo != nil }, "usage never refreshed after the sync eventually recovered")
     }
 
     @Test("launch + an immediate foreground join one in-flight sync — no duplicate concurrent syncs")
@@ -170,7 +161,7 @@ struct EntitlementReconcileTests {
         mock.syncEntitlementsGate = { await gate.wait() } // holds the launch sync in flight, deterministically
         let vm = makeVM(network: mock)
 
-        await waitUntil({ mock.syncEntitlementsCallCount == 1 }, "launch sync never started")
+        await pumpUntil({ mock.syncEntitlementsCallCount == 1 }, "launch sync never started")
         // The launch sync is now provably suspended inside the gate — not a
         // timing guess. Fire a foreground reconcile while it's still in flight.
         vm.handleScenePhase(.active)
@@ -183,7 +174,7 @@ struct EntitlementReconcileTests {
         #expect(mock.syncEntitlementsCallCount == 1, "a foreground racing an in-flight sync must join it, not fire a second call")
 
         await gate.open()
-        await waitUntil({ vm.usageInfo != nil }, "the joined reconcile never completed")
+        await pumpUntil({ vm.usageInfo != nil }, "the joined reconcile never completed")
         #expect(mock.syncEntitlementsCallCount == 1, "still only one sync after both callers settle")
     }
 
@@ -192,7 +183,7 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let vm = makeVM(network: mock, isLocallyEntitled: { true })
 
-        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
         let countBefore429 = mock.syncEntitlementsCallCount
 
         mock.createSessionError = NetworkError.quotaLimitReached(makeQuotaLimitError())
@@ -207,7 +198,7 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let vm = makeVM(network: mock) // isLocallyEntitled defaults to { false }
 
-        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
         let countBefore429 = mock.syncEntitlementsCallCount
 
         mock.createSessionError = NetworkError.quotaLimitReached(makeQuotaLimitError())
@@ -222,7 +213,7 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let vm = makeVM(network: mock, isLocallyEntitled: { true })
 
-        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
 
         // The server mirror was lagging when the 429 hit, but the pre-paywall
         // resync (#102 review follow-up) lands successfully and the
@@ -246,25 +237,46 @@ struct EntitlementReconcileTests {
     func usageFailureMarksFailedWhenNothingCached() async {
         let mock = Fixtures.makeFullMockNetwork()
         mock.getUsageError = NetworkError.invalidResponse // every attempt fails
-        let backoff = SleepRecorder()
-        let vm = makeVM(network: mock, backoff: backoff)
+        let clock = TestClock()
+        let vm = makeVM(network: mock, clock: AnyClock(clock))
 
-        await waitUntil({ vm.usageLoadState == .failed }, "a fully-failed usage fetch never surfaced as .failed — the card would silently vanish")
+        await pumpUntil({ mock.getUsageCallCount == 1 }, "the launch usage fetch never started")
+        // The retries must be SPACED — a Fly cold start needs time to answer,
+        // not three instant hits — so nothing may re-fire before the shipped
+        // 0.2 s / 0.4 s boundaries the clock is driven across here.
+        await clock.advance(by: .milliseconds(190))
+        #expect(mock.getUsageCallCount == 1, "the 2nd attempt fired before the 0.2 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.getUsageCallCount == 2 }, "the 2nd attempt never fired once its backoff elapsed")
+        await clock.advance(by: .milliseconds(390))
+        #expect(mock.getUsageCallCount == 2, "the 3rd attempt fired before the doubled 0.4 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+
+        await pumpUntil({ vm.usageLoadState == .failed }, "a fully-failed usage fetch never surfaced as .failed — the card would silently vanish")
         #expect(vm.usageInfo == nil, "no usage should be fabricated client-side when the fetch failed")
         #expect(mock.getUsageCallCount >= 3, "the fetch must exhaust its bounded retries, not give up on the first failure")
-        #expect(backoff.delays == [0.2, 0.4], "the retries must be spaced — a Fly cold start needs time to answer, not three instant hits")
     }
 
     @Test("a /usage fetch that recovers within its retries loads normally and never marks .failed")
     func usageRecoversWithinRetries() async {
         let mock = Fixtures.makeFullMockNetwork()
         mock.getUsageFailuresBeforeSuccess = 2 // fails twice, succeeds on the 3rd (bounded) attempt
-        let backoff = SleepRecorder()
-        let vm = makeVM(network: mock, backoff: backoff)
+        let clock = TestClock()
+        let vm = makeVM(network: mock, clock: AnyClock(clock))
 
-        await waitUntil({ vm.usageLoadState == .loaded }, "usage never recovered despite a bounded retry")
+        // Recovery must come from SPACED retries, not a busy loop: each further
+        // attempt is released only by advancing past its shipped backoff.
+        await pumpUntil({ mock.getUsageCallCount == 1 }, "the launch usage fetch never started")
+        await clock.advance(by: .milliseconds(190))
+        #expect(mock.getUsageCallCount == 1, "the 2nd attempt fired before the 0.2 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.getUsageCallCount == 2 }, "the 2nd attempt never fired once its backoff elapsed")
+        await clock.advance(by: .milliseconds(390))
+        #expect(mock.getUsageCallCount == 2, "the 3rd attempt fired before the doubled 0.4 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+
+        await pumpUntil({ vm.usageLoadState == .loaded }, "usage never recovered despite a bounded retry")
         #expect(vm.usageInfo != nil, "a recovered fetch must publish the usage mirror")
-        #expect(backoff.delays == [0.2, 0.4], "recovery must come from spaced retries, not a busy loop")
     }
 
     @Test("a failed refresh over an already-loaded usage keeps the stale card rather than blanking it")
@@ -272,8 +284,8 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let loaded = makeUsage(remaining: 42)
         mock.stubbedUsage = loaded
-        let backoff = SleepRecorder()
-        let vm = makeVM(network: mock, backoff: backoff)
+        let clock = TestClock()
+        let vm = makeVM(network: mock, clock: AnyClock(clock))
 
         // Wait for the launch reconcile TASK to unwind, not just for the value:
         // a plain `refreshUsage()` JOINS whatever fetch is still in flight, so a
@@ -281,7 +293,7 @@ struct EntitlementReconcileTests {
         // into the launch fetch — the failing refresh below would never run and
         // both assertions would pass vacuously (caught by the backoff assertion
         // on a repeat run, #133 audit).
-        await waitUntil(
+        await pumpUntil(
             { vm.usageInfo == loaded && !vm.entitlementReconciler.isReconciling },
             "launch reconcile never loaded usage / never completed"
         )
@@ -290,11 +302,24 @@ struct EntitlementReconcileTests {
         // A later refresh (e.g. a foreground during a cold start) now fails —
         // it must not wipe the already-visible card.
         mock.getUsageError = NetworkError.invalidResponse
-        await vm.refreshUsage()
+        let refresh = Task { await vm.refreshUsage() }
 
+        // The stale card is kept only AFTER the refresh exhausted its SPACED
+        // retries — each further attempt is released by driving the shipped
+        // backoff, so a busy re-hammer would fail the two counts below.
+        await pumpUntil({ mock.getUsageCallCount == 2 }, "the refresh never issued a fetch of its own")
+        await clock.advance(by: .milliseconds(190))
+        #expect(mock.getUsageCallCount == 2, "the 2nd attempt fired before the 0.2 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.getUsageCallCount == 3 }, "the 2nd attempt never fired once its backoff elapsed")
+        await clock.advance(by: .milliseconds(390))
+        #expect(mock.getUsageCallCount == 3, "the 3rd attempt fired before the doubled 0.4 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await refresh.value
+
+        #expect(mock.getUsageCallCount == 4, "the failing refresh must exhaust all three of its bounded attempts")
         #expect(vm.usageInfo == loaded, "a failed refresh must keep the last good usage, not blank the card")
         #expect(vm.usageLoadState != .failed, "already-loaded usage must not be downgraded to .failed by a transient refresh failure")
-        #expect(backoff.delays == [0.2, 0.4], "the stale card is kept only AFTER the refresh exhausted its spaced retries")
     }
 
     @Test("a launch fetch and a concurrent onAppear refresh join one in-flight /usage call — no duplicate fetch")
@@ -304,7 +329,7 @@ struct EntitlementReconcileTests {
         mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
         let vm = makeVM(network: mock)
 
-        await waitUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
+        await pumpUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
         // The launch fetch is provably suspended in the gate. Fire the
         // HomeView.onAppear refresh while it is still in flight.
         Task { await vm.refreshUsage() }
@@ -313,7 +338,7 @@ struct EntitlementReconcileTests {
         #expect(mock.getUsageCallCount == 1, "a concurrent refresh must join the in-flight fetch, not fire a second /usage call")
 
         await gate.open()
-        await waitUntil({ vm.usageInfo != nil }, "the joined fetch never completed")
+        await pumpUntil({ vm.usageInfo != nil }, "the joined fetch never completed")
     }
 
     @Test("a post-purchase check reads a /usage fetch issued AFTER its sync, never the pre-sync fetch it found in flight (#133 1d)")
@@ -333,13 +358,13 @@ struct EntitlementReconcileTests {
         mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
         let vm = makeVM(network: mock)
 
-        await waitUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
+        await pumpUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
         let syncsBeforePurchase = mock.syncEntitlementsCallCount
 
         // The restore lands while the launch fetch is still suspended — the Fly
         // cold-start shape where the pre-sync fetch outlives the purchase.
         let verdict = Task { await vm.notifyPremiumPurchased() }
-        await waitUntil(
+        await pumpUntil(
             { mock.syncEntitlementsCallCount == syncsBeforePurchase + 1 },
             "the post-purchase entitlement sync never fired"
         )
@@ -367,10 +392,11 @@ struct EntitlementReconcileTests {
             networkService: mock,
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
-            isLocallyEntitled: { false }
+            isLocallyEntitled: { false },
+            clock: AnyClock(TestClock()) // parked: no production wait may pass real time here
         )
 
-        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
         await vm.startNewQuiz()
         let deactivateCountBeforeSubmit = audio.deactivateSessionCallCount
 
@@ -386,7 +412,7 @@ struct EntitlementReconcileTests {
         let mock = Fixtures.makeFullMockNetwork()
         let vm = makeVM(network: mock, isLocallyEntitled: { true })
 
-        await waitUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
         await vm.startNewQuiz()
 
         // The server mirror lags when the mid-answer 429 hits, but the

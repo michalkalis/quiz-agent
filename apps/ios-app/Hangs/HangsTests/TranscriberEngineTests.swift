@@ -22,6 +22,7 @@
 //  metric), driven with a fake clock — no sleeps.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Speech
@@ -249,16 +250,16 @@ struct SlovakCommandGrammarTests {
 @MainActor
 struct FirstHypothesisLatencyTests {
     @Test("VAD speech-start arms the anchor; the first transcript consumes it once")
-    func anchorArmsAndConsumesOnce() {
+    func anchorArmsAndConsumesOnce() async {
         guard #available(iOS 26, *) else {
             withKnownIssue("SilenceDetectionService requires iOS 26+") {}
             return
         }
-        var currentTime = Date(timeIntervalSince1970: 1_000)
-        let service = SilenceDetectionService(now: { currentTime })
+        let clock = TestClock()
+        let service = SilenceDetectionService(clock: AnyClock(clock))
 
         service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
-        currentTime = currentTime.addingTimeInterval(1.2)
+        await clock.advance(by: .seconds(1.2))
 
         // First transcript of the utterance: 1200 ms from VAD speech-start.
         #expect(service.consumeFirstHypothesisLatencyMs() == 1200)
@@ -267,13 +268,13 @@ struct FirstHypothesisLatencyTests {
     }
 
     @Test("a resumed utterance does not re-arm; a NEW utterance does")
-    func anchorFollowsUtteranceBoundaries() {
+    func anchorFollowsUtteranceBoundaries() async {
         guard #available(iOS 26, *) else {
             withKnownIssue("SilenceDetectionService requires iOS 26+") {}
             return
         }
-        var currentTime = Date(timeIntervalSince1970: 2_000)
-        let service = SilenceDetectionService(now: { currentTime })
+        let clock = TestClock()
+        let service = SilenceDetectionService(clock: AnyClock(clock))
 
         service.handleSpeechDetectorResult(speechDetected: true)
         _ = service.consumeFirstHypothesisLatencyMs() // consumed by a transcript
@@ -286,12 +287,12 @@ struct FirstHypothesisLatencyTests {
 
         // Silence past the stop threshold ends the utterance (state → idle)…
         service.handleSpeechDetectorResult(speechDetected: false)
-        currentTime = currentTime.addingTimeInterval(5)
+        await clock.advance(by: .seconds(5))
         service.handleSpeechDetectorResult(speechDetected: false)
 
         // …so the next speech-start is a NEW utterance and re-arms the anchor.
         service.handleSpeechDetectorResult(speechDetected: true)
-        currentTime = currentTime.addingTimeInterval(0.8)
+        await clock.advance(by: .seconds(0.8))
         #expect(service.consumeFirstHypothesisLatencyMs() == 800)
     }
 }

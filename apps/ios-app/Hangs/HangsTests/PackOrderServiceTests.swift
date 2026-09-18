@@ -279,13 +279,15 @@ struct PackOrderServiceTests {
         let intent = PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil)
 
         async let first = service.createOrder(intent: intent)
-        // Give the first call time to reach the actor's in-flight bookkeeping
-        // and block inside the stub handler before the second call starts.
-        try? await Task.sleep(for: .milliseconds(100))
+        // The first call has reached the actor's in-flight bookkeeping exactly when
+        // its request is blocked inside the stub handler — pumped, never slept.
+        await pumpUntil({ callCount.withLock { $0 } == 1 }, turns: 5000,
+                        "first createOrder never reached the network")
         async let second = service.createOrder(intent: intent)
-        // A further delay to let the second call reach the guard and start
-        // awaiting the first task, THEN release the single blocked request.
-        try? await Task.sleep(for: .milliseconds(100))
+        // The guard is hit before any network call, so the second task only needs
+        // scheduler turns (no I/O) to reach it and start awaiting the first task.
+        // Then release the single blocked request.
+        for _ in 0 ..< 1000 { await Task.yield() }
         gate.signal()
 
         let (firstResult, secondResult) = try await (first, second)

@@ -5,13 +5,15 @@
 //  Unit tests for the three-state machine inside SilenceDetectionService:
 //    idle → speechActive → silenceAccumulating(since:) → emits silenceAfterSpeech
 //
-//  Strategy: inject a FakeClock via the `now:` seam (Task 1.6).  Drive the state
-//  machine by calling `handleSpeechDetectorResult(speechDetected:)` directly —
-//  no AVAudioEngine / SpeechAnalyzer touched.
+//  Strategy: inject a `TestClock` through the service's `clock:` seam (#180
+//  track A).  Drive the state machine by calling
+//  `handleSpeechDetectorResult(speechDetected:)` directly and move time with
+//  `await clock.advance(by:)` — no AVAudioEngine / SpeechAnalyzer touched.
 //
 //  Event collection: the test calls `collectSilenceEvents(from:driving:)`, which:
 //    1. Starts a collector task on `@MainActor`.
-//    2. Calls the user-supplied `driving` closure (synchronously on @MainActor).
+//    2. Awaits the user-supplied `driving` closure on @MainActor (it is async
+//       because advancing the TestClock is).
 //    3. Finishes the `silenceEvents` stream by deallocating the service (the
 //       `deinit` calls `silenceChannel.finish()`).  This terminates the
 //       `for await` loop inside the collector.
@@ -35,32 +37,19 @@
 //
 
 import AVFoundation
+import Clocks
 import Foundation
 @testable import Hangs
 import Speech
 import Testing
 
-// MARK: - FakeClock
-
-@MainActor
-private final class FakeClock {
-    var now: Date
-
-    init(start: Date = Date(timeIntervalSince1970: 0)) {
-        now = start
-    }
-
-    func advance(_ seconds: TimeInterval) {
-        now.addTimeInterval(seconds)
-    }
-}
-
 // MARK: - Collection helper
 
-/// Creates a `SilenceDetectionService` with an injected `FakeClock`, runs the
-/// `driving` closure (which drives `handleSpeechDetectorResult` calls), then
-/// destroys the service (triggering `deinit` → `silenceChannel.finish()`)
-/// and awaits the collector task to get the complete event list.
+/// Creates a `SilenceDetectionService` with an injected `TestClock`, runs the
+/// `driving` closure (which drives `handleSpeechDetectorResult` calls and
+/// advances the clock), then destroys the service (triggering `deinit` →
+/// `silenceChannel.finish()`) and awaits the collector task to get the
+/// complete event list.
 ///
 /// The two-step approach (drive → finish → await) is necessary because
 /// `AsyncStream` is a pull-based producer: the collector Task runs on
@@ -69,12 +58,12 @@ private final class FakeClock {
 @available(iOS 26, *)
 @MainActor
 private func collectSilenceEvents(
-    driving: @MainActor (SilenceDetectionService, FakeClock) -> Void
+    driving: @MainActor (SilenceDetectionService, TestClock<Duration>) async -> Void
 ) async -> [SilenceEvent] {
-    let clock = FakeClock()
+    let clock = TestClock()
 
     // Wrap in Optional so we can nil it out (triggering deinit) on demand.
-    var service: SilenceDetectionService? = SilenceDetectionService(now: { clock.now })
+    var service: SilenceDetectionService? = SilenceDetectionService(clock: AnyClock(clock))
 
     // Capture the stream before the service might be deallocated.
     let stream = service!.makeSilenceEventStream()
@@ -89,7 +78,7 @@ private func collectSilenceEvents(
     }
 
     // Drive state machine changes.
-    driving(service!, clock)
+    await driving(service!, clock)
 
     // Deallocate the service → deinit calls silenceChannel.finish() →
     // the `for await` loop in the collector task terminates naturally.
@@ -192,7 +181,7 @@ struct SilenceDetectionServiceTests {
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
             service.handleSpeechDetectorResult(speechDetected: false) // speechActive → silenceAccumulating(since: t0)
-            clock.advance(1.4)
+            await clock.advance(by: .seconds(1.4))
             service.handleSpeechDetectorResult(speechDetected: false) // still below threshold
         }
         let silenceAfterEvents = events.filter {
@@ -211,9 +200,9 @@ struct SilenceDetectionServiceTests {
         }
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
-            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // → silenceAccumulating(since: t0)
-            clock.advance(1.5)
+            await clock.advance(by: .seconds(1.5))
             service.handleSpeechDetectorResult(speechDetected: false) // → emits + idle
         }
         let durations = events.compactMap { event -> TimeInterval? in
@@ -238,9 +227,9 @@ struct SilenceDetectionServiceTests {
         }
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true)
-            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false)
-            clock.advance(1.6)
+            await clock.advance(by: .seconds(1.6))
             service.handleSpeechDetectorResult(speechDetected: false)
         }
         let durations = events.compactMap { event -> TimeInterval? in
@@ -250,8 +239,9 @@ struct SilenceDetectionServiceTests {
             Issue.record("Expected .silenceAfterSpeech event, got \(events)")
             return
         }
-        // TimeInterval is Double; addTimeInterval with 1.6 accumulates ~2.4e-8 error
-        // (1.6 is not exactly representable in IEEE 754). Use 1e-6 (microsecond) tolerance.
+        // The clock measures in `Duration` (attosecond integers) and 1.6 s is not
+        // exactly representable when converted back to Double seconds. Use 1e-6
+        // (microsecond) tolerance.
         #expect(abs(duration - 1.6) < 1e-6, "Expected duration ~1.6, got \(duration)")
     }
 
@@ -266,9 +256,9 @@ struct SilenceDetectionServiceTests {
         let events = await collectSilenceEvents { service, clock in
             // Full cycle: speech → silence threshold → idle
             service.handleSpeechDetectorResult(speechDetected: true)
-            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false)
-            clock.advance(1.5)
+            await clock.advance(by: .seconds(1.5))
             service.handleSpeechDetectorResult(speechDetected: false) // emits → idle
 
             // Silence while back in idle — should emit nothing
@@ -298,16 +288,16 @@ struct SilenceDetectionServiceTests {
         let events = await collectSilenceEvents { service, clock in
             // Cycle 1
             service.handleSpeechDetectorResult(speechDetected: true) // .speechStarted
-            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t0
-            clock.advance(1.5)
+            await clock.advance(by: .seconds(1.5))
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~1.5) → idle
 
             // Cycle 2
             service.handleSpeechDetectorResult(speechDetected: true) // .speechStarted
-            clock.advance(0.5) // real utterance (> min-speech guard, 77.11)
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t1
-            clock.advance(2.0)
+            await clock.advance(by: .seconds(2.0))
             service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~2.0) → idle
         }
 
@@ -320,8 +310,8 @@ struct SilenceDetectionServiceTests {
         #expect(durations.count == 2, "Expected 2 .silenceAfterSpeech events, got \(durations.count)")
 
         if durations.count == 2 {
-            // Use 1e-6 (microsecond) tolerance — TimeInterval is Double and
-            // addTimeInterval accumulates small representability errors.
+            // Use 1e-6 (microsecond) tolerance — converting the clock's `Duration`
+            // back to Double seconds is not exact.
             #expect(abs(durations[0] - 1.5) < 1e-6, "First silence duration ~1.5, got \(durations[0])")
             #expect(abs(durations[1] - 2.0) < 1e-6, "Second silence duration ~2.0, got \(durations[1])")
         }

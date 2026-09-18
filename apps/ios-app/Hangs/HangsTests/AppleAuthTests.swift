@@ -318,8 +318,10 @@ struct AppleAuthTests {
             object: nil
         )
 
-        // Allow the async observer chain (Notification -> Task -> actor method) to complete.
-        try await Task.sleep(nanoseconds: 300_000_000) // 300ms
+        // Pump the async observer chain (Notification -> Task -> actor method) until it
+        // lands, instead of guessing a duration (#180 track A: no real-time waits).
+        await pumpUntil({ store.load()?.accessToken == "fresh-anon-after-revoke" }, turns: 5000,
+                        "revocation observer never re-bootstrapped")
 
         let stored = store.load()
         #expect(stored?.appleUserId == nil, "appleUserId must be cleared after revocation")
@@ -375,7 +377,13 @@ struct AppleAuthTests {
             name: ASAuthorizationAppleIDProvider.credentialRevokedNotification,
             object: nil
         )
-        try await Task.sleep(nanoseconds: 300_000_000) // observer chain: Notification → Task → actor
+        // Observer chain: Notification → Task → actor. Pumped, not slept (#180 track A).
+        await pumpUntil({ store.load()?.accessToken == "fresh-anon-after-revoke" }, turns: 5000,
+                        "revocation observer never re-bootstrapped")
+        // The mint landing does not end the bootstrap: keep pumping so a link that
+        // fired in its tail would still be seen — the negative assertion below is
+        // worthless if the test stops at the token write.
+        for _ in 0 ..< 500 { await Task.yield() }
 
         // The mint itself must still happen — only the purchase identity stays put.
         #expect(store.load()?.accessToken == "fresh-anon-after-revoke", "the app must keep working on a fresh anon identity")

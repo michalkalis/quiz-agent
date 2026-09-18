@@ -6,30 +6,22 @@
 //  Eliminates duplicated makeViewModel helpers across test suites.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
 
 // MARK: - Deterministic time
 
-/// Records the durations a production timer/backoff asked to sleep and returns
-/// immediately — the seam that takes wall-clock time out of the retry and
-/// glow-display suites (#133 audit: a `waitUntil` racing a production
-/// `Task.sleep` is the defect, not the timeout value).
-///
-/// Asserting `delays` is strictly STRONGER than the "waitUntil eventually"
-/// shape it replaces: it pins the schedule (0.2 s → 0.4 s exponential backoff,
-/// the 2.0 s glow ceiling) rather than only the eventual outcome, and it pins
-/// the SHIPPED durations instead of a test-shrunk stand-in.
-@MainActor
-final class SleepRecorder {
-    private(set) var delays: [TimeInterval] = []
-
-    /// Assign to a production sleep seam (`backoffSleep`, `glowSleep`).
-    var sleep: @MainActor @Sendable (TimeInterval) async -> Void {
-        { [self] seconds in delays.append(seconds) }
-    }
-}
+// #180 track A: every timer, backoff and deadline on the quiz path runs on the
+// one `AnyClock<Duration>` injected through `QuizViewModel(clock:)` (and the
+// pack view models' `clock:`). A test that owns time builds the model with
+// `AnyClock(TestClock())` and DRIVES it — `await clock.advance(by:)` — instead
+// of waiting; `AnyClock(ImmediateClock())` collapses every wait for tests that
+// only need the outcome. Advancing to just before a boundary and asserting
+// nothing fired, then past it, pins the SHIPPED schedule (#133 audit: a
+// `waitUntil` racing a production sleep is the defect). Instants for a model's
+// fields come from `vm.clock.now`, never from `Date()`.
 
 /// Run the main executor until `predicate` holds, bounded by a number of
 /// scheduler turns instead of a wall-clock deadline. Valid ONLY once every
@@ -200,11 +192,12 @@ enum Fixtures {
     // MARK: - ViewModel Factories
 
     /// Simple ViewModel with default fresh mocks — no session or question pre-seeded.
-    static func makeViewModel() -> QuizViewModel {
+    static func makeViewModel(clock: AnyClock<Duration> = .continuous) -> QuizViewModel {
         QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: clock
         )
     }
 
@@ -213,6 +206,7 @@ enum Fixtures {
     /// Returns `(viewModel, mockNetwork)` so callers can assert on the network mock.
     static func makeViewModelWithNetwork(
         shouldFail: Bool = false,
+        clock: AnyClock<Duration> = .continuous,
         configure: (MockNetworkService) -> Void = { _ in }
     ) -> (QuizViewModel, MockNetworkService) {
         let mockNetwork = makeFullMockNetwork(configure: { mock in
@@ -222,7 +216,8 @@ enum Fixtures {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: clock
         )
         return (viewModel, mockNetwork)
     }
@@ -231,7 +226,8 @@ enum Fixtures {
     /// Also seeds the network mock so network-dependent flows succeed.
     /// Returns `(viewModel, mockAudio)` so callers can assert on the audio mock.
     static func makeViewModelWithAudio(
-        shouldFailRecording: Bool = false
+        shouldFailRecording: Bool = false,
+        clock: AnyClock<Duration> = .continuous
     ) -> (QuizViewModel, MockAudioService) {
         let mockAudio = MockAudioService()
         mockAudio.shouldFailRecording = shouldFailRecording
@@ -239,30 +235,35 @@ enum Fixtures {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: mockAudio,
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: clock
         )
         return (viewModel, mockAudio)
     }
 
     /// ViewModel wired to a persistence mock.
     /// Returns `(viewModel, mockStore)` so callers can assert on save counts / saved values.
-    static func makeViewModelWithPersistence() -> (QuizViewModel, MockPersistenceStore) {
+    static func makeViewModelWithPersistence(
+        clock: AnyClock<Duration> = .continuous
+    ) -> (QuizViewModel, MockPersistenceStore) {
         let mockStore = MockPersistenceStore()
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: mockStore
+            persistenceStore: mockStore,
+            clock: clock
         )
         return (viewModel, mockStore)
     }
 
     /// ViewModel pre-configured for answer-timer tests:
     /// `currentQuestion` and `quizState = .askingQuestion` are set on the returned model.
-    static func makeViewModelForTimerTests() -> QuizViewModel {
+    static func makeViewModelForTimerTests(clock: AnyClock<Duration> = .continuous) -> QuizViewModel {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: clock
         )
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .askingQuestion

@@ -12,6 +12,7 @@
 //      transcript card as its listening surface, not a second pink bar.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -74,17 +75,23 @@ struct QuestionFooterInspectorTests {
     /// silently leaving a recording running past its window.
     @Test("the recording window auto-stops and submits when it expires")
     func recordingWindowExpiryStopsAndSubmits() async throws {
-        let (vm, _) = Fixtures.makeViewModelWithAudio()
+        let clock = TestClock()
+        let (vm, _) = Fixtures.makeViewModelWithAudio(clock: AnyClock(clock))
         vm.currentQuestion = Fixtures.makeQuestion()
         vm.currentSession = Fixtures.makeActiveSession()
         vm.quizState = .recording
 
-        vm.quizTimersController.startAutoStopRecordingTimer(duration: 0.05)
+        // The SHIPPED window (5 s) and cap (15 s) — driven, not shrunk (#180 track A),
+        // so what is pinned is the visible window ending the recording, not the cap.
+        vm.quizTimersController.startAutoStopRecordingTimer()
         #expect(vm.recordingCountdown > 0, "the window is published the moment it is armed")
 
-        for _ in 0 ..< 200 where vm.quizState == .recording {
-            try? await Task.sleep(nanoseconds: 10_000_000)
-        }
+        await Task.yield()
+        await clock.advance(by: .seconds(Config.speechStartWindow - 1))
+        #expect(vm.quizState == .recording, "the window must not expire early")
+
+        await clock.advance(by: .seconds(1))
+        await pumpUntil({ vm.quizState != .recording }, turns: 2000)
         #expect(vm.quizState != .recording, "expiry must stop the recording, not just hide the number")
     }
 

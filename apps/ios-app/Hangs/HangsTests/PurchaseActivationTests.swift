@@ -18,6 +18,7 @@
 //      on `.success` within the purchase session.
 //
 
+import Clocks
 import Combine
 import Foundation
 @testable import Hangs
@@ -88,16 +89,16 @@ struct PurchaseActivationTests {
     @Test("notifyPremiumPurchased retries a failed sync with backoff before reporting the final outcome")
     func notifyPremiumPurchasedRetriesBeforeConfirming() async {
         let mock = Fixtures.makeFullMockNetwork()
+        // Deterministic time (#133 audit, #180 track A): the bounded backoff
+        // runs on this clock, so the ~0.6 s of real sleeps are DRIVEN here
+        // rather than waited out.
+        let clock = TestClock()
         let vm = QuizViewModel(
             networkService: mock,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(clock)
         )
-        // Deterministic time (#133 audit): drive the bounded backoff instead of
-        // waiting ~0.6 s of real sleeps for it. Installed before the first
-        // `await`, so the launch reconcile's Task cannot have run yet.
-        let backoff = SleepRecorder()
-        vm.entitlementReconciler.backoffSleep = backoff.sleep
         // Drain the launch-time reconcile (#102 finding 1, same view model
         // init) first so it can't consume the failure budget set below —
         // isolates the assertion to notifyPremiumPurchased's own retry pass.
@@ -111,10 +112,23 @@ struct PurchaseActivationTests {
             resetsAt: "", subscriptionStatus: "active", creditBalance: 0
         )
 
-        let confirmed = await vm.notifyPremiumPurchased()
+        let purchase = Task { await vm.notifyPremiumPurchased() }
+
+        // The retries must be SPACED (the shared bounded-backoff helper), not an
+        // instant re-hammer: each attempt is released only by advancing past the
+        // shipped 0.2 s, then 0.4 s, boundary.
+        await pumpUntil({ mock.syncEntitlementsCallCount == baseline + 1 }, "the post-purchase sync never fired")
+        await clock.advance(by: .milliseconds(190))
+        #expect(mock.syncEntitlementsCallCount == baseline + 1, "the 2nd attempt fired before the 0.2 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+        await pumpUntil({ mock.syncEntitlementsCallCount == baseline + 2 }, "the 2nd attempt never fired once its backoff elapsed")
+        await clock.advance(by: .milliseconds(390))
+        #expect(mock.syncEntitlementsCallCount == baseline + 2, "the 3rd attempt fired before the doubled 0.4 s backoff elapsed")
+        await clock.advance(by: .milliseconds(11))
+
+        let confirmed = await purchase.value
 
         #expect(confirmed == true, "the bounded retry must still land on the server-confirmed outcome")
         #expect(mock.syncEntitlementsCallCount - baseline >= 3, "a failing sync must retry (#102 finding 1's helper), not give up on the first attempt")
-        #expect(backoff.delays == [0.2, 0.4], "the retries must be spaced (the shared bounded-backoff helper), not an instant re-hammer")
     }
 }

@@ -26,6 +26,7 @@
 //  every read/write of it goes through the helpers here.
 //
 
+import Clocks
 import Foundation
 
 extension VoiceCommandCoordinator {
@@ -145,7 +146,7 @@ extension VoiceCommandCoordinator {
         if !isFinal, Self.requiresFinalResult(command, on: screen) { return .awaitingFinal }
         if let last = lastFiredCommand,
            last.command == command,
-           now().timeIntervalSince(last.at) < Self.commandCooldown {
+           last.at.duration(to: clock.now).timeInterval < Self.commandCooldown {
             return .cooldown
         }
         if !isFinal, !isStableVolatile { return .awaitingStable }
@@ -201,10 +202,10 @@ extension VoiceCommandCoordinator {
     /// cadence, and averaging it in would silently corrupt the value we tune on.
     func noteTranscriptArrival() -> Int? {
         let previous = lastTranscriptAt
-        lastTranscriptAt = now()
+        lastTranscriptAt = clock.now
         // Rounded, not truncated: `Int()` on a float-imprecise 419.999… reports
         // 419 ms for a 420 ms gap, and this number is read as a measurement.
-        return previous.map { Int((now().timeIntervalSince($0) * 1000).rounded()) }
+        return previous.map { Int(($0.duration(to: clock.now).timeInterval * 1000).rounded()) }
     }
 
     // MARK: - Settle Fallback (the second, independent stability signal)
@@ -224,8 +225,9 @@ extension VoiceCommandCoordinator {
     func armVolatileSettle(_ command: VoiceCommand, text: String, on screen: VoiceCommandScreen) {
         pendingVolatileSettle = PendingVolatileSettle(command: command, text: text, screen: screen)
         let delay = volatileSettleDelay
+        let clock = clock
         let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
+            try? await clock.sleep(for: .seconds(delay))
             guard let self, !Task.isCancelled else { return }
             self.fireSettledVolatile()
         }
@@ -340,7 +342,7 @@ extension VoiceCommandCoordinator {
     /// actually routes a command.
     func noteCommandFired(_ command: VoiceCommand) {
         commandFiredThisUtterance = true
-        lastFiredCommand = (command, now())
+        lastFiredCommand = (command, clock.now)
     }
 
     /// End the utterance in progress: a final result is the utterance boundary,

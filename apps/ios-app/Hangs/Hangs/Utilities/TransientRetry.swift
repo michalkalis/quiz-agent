@@ -30,6 +30,7 @@
 //  reached application code, and re-sending the same stale id fails identically.
 //
 
+import Clocks
 import Foundation
 import os
 
@@ -62,12 +63,12 @@ enum TransientRetry {
     }
 
     /// Runs `operation`, retrying it up to `maxAttempts` times while `isTransient`
-    /// holds. `label` names the operation in the log/Sentry breadcrumb; `backoff` is
-    /// the test seam that collapses the wait.
+    /// holds. `label` names the operation in the log/Sentry breadcrumb; `clock` is
+    /// the seam that takes the wait off real time in tests (#180 track A).
     @MainActor
     static func run<T>(
         label: String,
-        backoff: (@Sendable (Int) -> Duration)? = nil,
+        clock: AnyClock<Duration> = .continuous,
         _ operation: () async throws -> T
     ) async throws -> T {
         var attempt = 1
@@ -76,7 +77,7 @@ enum TransientRetry {
                 return try await operation()
             } catch {
                 guard attempt < maxAttempts, isTransient(error) else { throw error }
-                let delay = backoff?(attempt) ?? .seconds(Double(attempt)) // 1s, then 2s
+                let delay: Duration = .seconds(attempt) // 1s, then 2s
                 Logger.network.warning("⏳ Transient error on \(label, privacy: .public) (attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public)), retrying: \(error, privacy: .public)")
                 SentryLog.info(
                     "retrying transient error",
@@ -86,7 +87,7 @@ enum TransientRetry {
                 // `try` (not `try?`): a cancelled operation (Home "Cancel" tap, a
                 // cancelled submission) must abort the backoff immediately rather than
                 // swallow the cancellation and retry anyway.
-                try await Task.sleep(for: delay)
+                try await clock.sleep(for: delay)
                 attempt += 1
             }
         }

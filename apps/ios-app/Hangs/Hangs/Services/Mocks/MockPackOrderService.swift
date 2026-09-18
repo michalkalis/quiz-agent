@@ -18,6 +18,7 @@
 //  per-call cursor is guarded by a lock (no `nonisolated(unsafe)`).
 //
 
+import Clocks
 import Foundation
 import os
 
@@ -48,6 +49,9 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// blocks dismissal because the purchase call is in flight — has to hold
     /// the VM there deterministically rather than racing an instant mock.
     private let createDelaySeconds: Double
+    /// The clock `createDelaySeconds` sleeps on (#180 track A): a test parks a
+    /// `TestClock` to hold `.submitting` open, then advances it to release.
+    private let clock: AnyClock<Duration>
     /// Call counters so a test can prove WHICH endpoint "Try again" used — a
     /// retry of a paid order must never fall through to a second `createOrder`.
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
@@ -77,10 +81,12 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         retryResult: Result<OrderCreatedResponse, PackFailure> = .success(.mockCreated),
         createDelaySeconds: Double = 0,
         listResults: [Result<[OrderSnapshot], PackFailure>] = [],
-        retryFailure: PackOrderError? = nil
+        retryFailure: PackOrderError? = nil,
+        clock: AnyClock<Duration> = .continuous
     ) {
         self.retryFailure = retryFailure
         self.createDelaySeconds = createDelaySeconds
+        self.clock = clock
         self.createResult = createResult
         self.getResult = getResult
         self.listResult = listResult
@@ -100,7 +106,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         createCalls.withLock { $0 += 1 }
         intents.withLock { $0.append(intent) }
         if createDelaySeconds > 0 {
-            try await Task.sleep(for: .seconds(createDelaySeconds))
+            try await clock.sleep(for: .seconds(createDelaySeconds))
         }
         return try createResult.get()
     }

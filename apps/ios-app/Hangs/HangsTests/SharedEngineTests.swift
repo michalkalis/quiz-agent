@@ -39,23 +39,6 @@ private func makeStreamingVM()
     return (vm, silence, audio, stt)
 }
 
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 @Suite("Single audio engine — command-listen and answer-stream are never both live")
 @MainActor
 struct SharedEngineTests {
@@ -89,7 +72,7 @@ struct SharedEngineTests {
             // Phase 2 — record: startRecording routes to the streaming path, which
             // must stop the listener BEFORE the streaming engine starts.
             await vm.recordingCoordinator.startRecording()
-            await waitUntil({ audio.audioEngineActive }, "streaming engine never started")
+            await pumpUntil({ audio.audioEngineActive }, turns: 2000, "streaming engine never started")
             #expect(silence.isListening == false, "listener must be torn down during the answer stream")
             #expect(audio.audioEngineActive == true)
             assertNeverBothLive(silence, audio, "recording")
@@ -107,7 +90,7 @@ struct SharedEngineTests {
 
             // record (streaming)
             await vm.recordingCoordinator.startRecording()
-            await waitUntil({ audio.audioEngineActive }, "streaming engine never started")
+            await pumpUntil({ audio.audioEngineActive }, turns: 2000, "streaming engine never started")
             assertNeverBothLive(silence, audio, "record")
 
             // stop the answer stream + move to the confirmation sheet, then re-arm

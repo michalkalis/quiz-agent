@@ -14,6 +14,8 @@
 		7A3AC3E24618F03076634783 /* Hangs.storekit in Resources */ = {isa = PBXBuildFile; fileRef = D8A0CF7B2B228C1D9BFB87D4 /* Hangs.storekit */; };
 		A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */ = {isa = PBXBuildFile; productRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */; };
 		C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */; };
+		1A2B3C4D5E6F708192A3B4C5 /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3C4D5E6F708192A3B4C5D6 /* Clocks */; };
+		3C4D5E6F708192A3B4C5D6E7 /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = 4D5E6F708192A3B4C5D6E7F8 /* Clocks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +95,7 @@
 			files = (
 				12809A90D9684CE9A3A60E9E /* Sentry in Frameworks */,
 				AA11BB22CC33DD44EE55FF66 /* RevenueCat in Frameworks */,
+				1A2B3C4D5E6F708192A3B4C5 /* Clocks in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +106,7 @@
 				503020B22F8E706400A567CA /* (null) in Frameworks */,
 				A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */,
 				C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */,
+				3C4D5E6F708192A3B4C5D6E7 /* Clocks in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,6 +187,7 @@
 			packageProductDependencies = (
 				244A1B53144D4362B6C47909 /* Sentry */,
 				BB22CC33DD44EE55FF6600AA /* RevenueCat */,
+				2B3C4D5E6F708192A3B4C5D6 /* Clocks */,
 			);
 			productName = Hangs;
 			productReference = 5004B49A2EF874800068C8D1 /* Hangs.app */;
@@ -208,6 +213,7 @@
 			packageProductDependencies = (
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */,
 				F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */,
+				4D5E6F708192A3B4C5D6E7F8 /* Clocks */,
 			);
 			productName = HangsTests;
 			productReference = 5004B4A72EF874820068C8D1 /* HangsTests.xctest */;
@@ -273,6 +279,7 @@
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* XCRemoteSwiftPackageReference "swift-concurrency-extras" */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 				CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */,
+				5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5004B49B2EF874800068C8D1 /* Products */;
@@ -418,6 +425,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -438,6 +446,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -458,6 +467,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -478,6 +488,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -498,6 +509,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -518,6 +530,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = MainSerialExecutorBootstrap;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.missinghue.hangsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1073,6 +1086,14 @@
 				minimumVersion = 5.0.0;
 			};
 		};
+		5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-clocks";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1095,6 +1116,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
+		};
+		2B3C4D5E6F708192A3B4C5D6 /* Clocks */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */;
+			productName = Clocks;
+		};
+		4D5E6F708192A3B4C5D6E7F8 /* Clocks */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */;
+			productName = Clocks;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

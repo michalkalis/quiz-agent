@@ -49,22 +49,14 @@ struct SettingsViewCallModeTests {
         let viewModel = Fixtures.makeViewModelForTimerTests()
         viewModel.settings.audioMode = "media"
 
+        // toggleAudioMode() hops through an internal Task — no timer, so pumping
+        // scheduler turns is enough (#180 track A: never a wall-clock bound).
         viewModel.toggleAudioMode()
-        await waitForMode("call", on: viewModel)
+        await pumpUntil({ viewModel.settings.audioMode == "call" }, "mode never flipped to call")
         #expect(viewModel.settings.audioMode == "call")
 
         viewModel.toggleAudioMode()
-        await waitForMode("media", on: viewModel)
+        await pumpUntil({ viewModel.settings.audioMode == "media" }, "mode never flipped back to media")
         #expect(viewModel.settings.audioMode == "media")
-    }
-
-    /// toggleAudioMode() hops through an internal Task; poll wall-clock-safely.
-    private func waitForMode(_ mode: String, on viewModel: QuizViewModel) async {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
-        while ContinuousClock.now < deadline {
-            if viewModel.settings.audioMode == mode { return }
-            await Task.yield()
-            try? await Task.sleep(for: .milliseconds(1))
-        }
     }
 }

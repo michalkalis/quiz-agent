@@ -20,6 +20,7 @@
 //      elapsed must land on the no-answer confirmation sheet.
 //
 
+import Clocks
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
@@ -28,7 +29,8 @@ import Testing
 
 @MainActor
 private func makeScenePhaseVM(
-    silence: MockSilenceDetectionService = MockSilenceDetectionService()
+    silence: MockSilenceDetectionService = MockSilenceDetectionService(),
+    clock: AnyClock<Duration> = AnyClock(TestClock())
 ) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
@@ -36,29 +38,12 @@ private func makeScenePhaseVM(
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: nil
+        sttService: nil,
+        clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion()
     return (vm, silence, audio)
-}
-
-/// Spin the main serial executor until `predicate` holds or the deadline passes.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
 @Suite("Scene-phase mic teardown — background kills input, never playback")
@@ -143,7 +128,7 @@ struct ScenePhaseTeardownTests {
 
         #expect(vm.quizState == .askingQuestion)
         // The batch stop is async (stopRecording() is async throws).
-        await waitUntil({ audio.isRecording == false }, "batch recorder never stopped")
+        await pumpUntil({ audio.isRecording == false }, "batch recorder never stopped")
     }
 
     // MARK: - .active re-arms
@@ -160,7 +145,7 @@ struct ScenePhaseTeardownTests {
             #expect(mock.isListening == false)
 
             vm.handleScenePhase(.active)
-            await waitUntil({ mock.isListening }, "listener never re-armed on .active")
+            await pumpUntil({ mock.isListening }, "listener never re-armed on .active")
         }
     }
 
@@ -217,10 +202,15 @@ struct ScenePhaseTeardownTests {
             vm.handleScenePhase(.background)
             await vm.recordingCoordinator.startRecording() // suppressed, marker armed
             #expect(vm.quizState == .askingQuestion)
+            // The near side of the SHIPPED window: a second short of it, the
+            // question is still answerable (#180 track A — the marker is an
+            // instant on the model's own clock).
+            vm.recordingCoordinator.backgroundSuppressedRecordingAt =
+                vm.clock.now.advanced(by: .seconds(-(Config.autoRecordingDuration - 1)))
 
             vm.handleScenePhase(.active)
 
-            await waitUntil({ vm.quizState == .recording }, "the suppressed answer window never opened on return")
+            await pumpUntil({ vm.quizState == .recording }, "the suppressed answer window never opened on return")
             #expect(audio.isRecording == true, "the mic must open on return, not wait for a tap")
         }
     }
@@ -236,9 +226,10 @@ struct ScenePhaseTeardownTests {
         vm.quizState = .askingQuestion
         vm.handleScenePhase(.background)
         await vm.recordingCoordinator.startRecording()
-        // Backdate the suppression past the full recording window.
+        // Backdate the suppression past the full recording window, on the
+        // model's own clock (#180 track A).
         vm.recordingCoordinator.backgroundSuppressedRecordingAt =
-            Date().addingTimeInterval(-(Config.autoRecordingDuration + 1))
+            vm.clock.now.advanced(by: .seconds(-(Config.autoRecordingDuration + 1)))
 
         vm.handleScenePhase(.active)
 
@@ -261,7 +252,7 @@ struct ScenePhaseTeardownTests {
             await vm.recordingCoordinator.startRecording()
 
             vm.handleScenePhase(.active)
-            await waitUntil({ vm.quizState == .recording }, "first resume never opened the window")
+            await pumpUntil({ vm.quizState == .recording }, "first resume never opened the window")
             #expect(vm.recordingCoordinator.backgroundSuppressedRecordingAt == nil, "marker must be consumed")
 
             // Second foreground with no fresh suppression: nothing to redo.

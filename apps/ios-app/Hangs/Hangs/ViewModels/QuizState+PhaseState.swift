@@ -9,6 +9,7 @@
 //  pre-#113 scattered per-field writes.
 //
 
+import Clocks
 import Foundation
 
 /// Recording-cluster phase state — owned privately by `RecordingCoordinator`;
@@ -34,7 +35,7 @@ struct RecordingState {
     /// sight). Foregrounding reads it to do what should have happened — open the
     /// mic if the answer window still has time, otherwise hand over to the
     /// no-answer confirmation sheet.
-    var backgroundSuppressedRecordingAt: Date?
+    var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant?
 
     // Question-scoped — must SURVIVE pair exits (only full `reset()` clears
     // it): the audio URL is replayed from .showingResult.

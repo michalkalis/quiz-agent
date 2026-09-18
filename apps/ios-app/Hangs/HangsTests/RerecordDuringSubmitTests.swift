@@ -13,6 +13,7 @@
 //  re-recorded one dropped on the floor.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -36,24 +37,6 @@ private actor OneShotGate {
     }
 }
 
-/// Spin until `predicate` holds (sync @MainActor state).
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    _ comment: Comment? = nil,
-    timeoutMillis: Int = 5000,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 /// Let a just-resumed completion run its (dropping) tail before asserting.
 @MainActor
 private func drainHops() async {
@@ -68,8 +51,10 @@ struct RerecordDuringSubmitTests {
     /// Seeds a voice submit parked inside the upload, with the quiz in `.processing`.
     /// Returns the gate that releases the response.
     private func makeSubmitInFlight() async -> (QuizViewModel, MockNetworkService, OneShotGate, Task<Void, Never>) {
-        let (vm, network) = Fixtures.makeViewModelWithNetwork()
-        vm.recordingCoordinator.transientBackoffOverride = { _ in .zero }
+        // #180 track A: a `TestClock` nobody advances — the gate, not a duration,
+        // decides when the upload returns, and the submit's 30 s bound can never
+        // fire underneath it.
+        let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
@@ -78,7 +63,7 @@ struct RerecordDuringSubmitTests {
         network.submitVoiceAnswerGate = { await gate.wait() }
 
         let submit = Task { await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2])) }
-        await waitUntil({ network.submitVoiceAnswerCallCount == 1 }, "the upload never reached the network")
+        await pumpUntil({ network.submitVoiceAnswerCallCount == 1 }, "the upload never reached the network")
         #expect(vm.quizState == .processing, "the submit owns .processing while it is in flight")
         return (vm, network, gate, submit)
     }
@@ -109,7 +94,7 @@ struct RerecordDuringSubmitTests {
         let (vm, _, gate, submit) = await makeSubmitInFlight()
 
         vm.recordingCoordinator.rerecordAnswer()
-        await waitUntil({ vm.quizState != .processing }, "rerecord never left the submit's state")
+        await pumpUntil({ vm.quizState != .processing }, "rerecord never left the submit's state")
 
         await gate.open() // the rejected submission's response lands now
         await submit.value
@@ -149,8 +134,7 @@ struct RerecordDuringSubmitTests {
     /// confirmation sheet with the transcript and an armed auto-confirm countdown.
     @Test("an uninterrupted submit still surfaces the confirmation sheet and arms auto-confirm")
     func normalSubmitStillConfirms() async throws {
-        let (vm, network) = Fixtures.makeViewModelWithNetwork()
-        vm.recordingCoordinator.transientBackoffOverride = { _ in .zero }
+        let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion

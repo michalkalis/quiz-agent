@@ -9,31 +9,11 @@
 //  wording, because the card is the only pre-paywall surface of the quota.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
 import ViewInspector
-
-// MARK: - Helpers (duplicated per-suite convention, matches EntitlementReconcileTests)
-
-/// Spin the main serial executor until `predicate` holds or the deadline
-/// passes.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
 
 /// One-shot async gate: `wait()` suspends until `open()` is called. Lets a
 /// test hold the mocked `/usage` fetch in flight deterministically, so the
@@ -57,11 +37,15 @@ private actor OneShotGate {
 @Suite("Home free-plan quota card (#87)")
 @MainActor
 struct HomeFreePlanCardTests {
+    /// Every production wait runs on the injected clock (#180 track A); a
+    /// parked `TestClock` means nothing on the quiz path can pass time behind
+    /// these card assertions unless a test drives it.
     private func makeViewModel() -> QuizViewModel {
         QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(TestClock())
         )
     }
 
@@ -156,10 +140,11 @@ struct HomeFreePlanCardTests {
         let vm = QuizViewModel(
             networkService: mock,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(TestClock())
         )
 
-        await waitUntil({ mock.getUsageCallCount >= 1 }, "launch usage fetch never started")
+        await pumpUntil({ mock.getUsageCallCount >= 1 }, "launch usage fetch never started")
         #expect(vm.usageLoadState == .loading)
         #expect(vm.usageInfo == nil)
 
@@ -199,24 +184,24 @@ struct HomeFreePlanCardTests {
     func failedUsageShowsRetryPlaceholder() async throws {
         let mock = MockNetworkService()
         mock.getUsageError = NetworkError.invalidResponse // every /usage attempt fails
+        // Drive the bounded retry's backoff instead of waiting it out in real
+        // time (#133 audit, #180 track A): the fetch retries on THIS clock.
+        let clock = TestClock()
         let vm = QuizViewModel(
             networkService: mock,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(clock)
         )
 
-        // Drive the bounded retry's backoff instead of waiting it out in real
-        // time (#133 audit) — installed before the first `await`, so the launch
-        // reconcile Task cannot have started.
-        vm.entitlementReconciler.backoffSleep = SleepRecorder().sleep
-
-        // The launch reconcile exhausts its bounded retries and marks the load
+        // The launch reconcile exhausts its bounded retries — released one by
+        // one across the shipped 0.2 s / 0.4 s backoffs — and marks the load
         // failed; the card must then render a retry affordance, not disappear.
-        let deadline = ContinuousClock.now.advanced(by: .milliseconds(15000))
-        while ContinuousClock.now < deadline, vm.usageLoadState != .failed {
-            await Task.yield()
-        }
-        #expect(vm.usageLoadState == .failed, "usage load never surfaced as failed")
+        await pumpUntil({ mock.getUsageCallCount == 1 }, "the launch usage fetch never started")
+        await clock.advance(by: .milliseconds(201))
+        await pumpUntil({ mock.getUsageCallCount == 2 }, "the 2nd attempt never fired once its backoff elapsed")
+        await clock.advance(by: .milliseconds(401))
+        await pumpUntil({ vm.usageLoadState == .failed }, "usage load never surfaced as failed")
         #expect(vm.usageInfo == nil)
 
         let view = HomeView(viewModel: vm)

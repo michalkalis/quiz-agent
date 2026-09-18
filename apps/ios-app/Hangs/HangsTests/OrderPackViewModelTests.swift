@@ -26,6 +26,7 @@
 //    create (and charge for) a second one.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -39,13 +40,21 @@ private func makeOrderPackViewModel(
     service: MockPackOrderService = MockPackOrderService(),
     purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
     adminKeyAvailable: Bool = true,
-    orderLanguageCodes: [String] = LanguageAvailability.fallbackPackOrderCodes
+    orderLanguageCodes: [String] = LanguageAvailability.fallbackPackOrderCodes,
+    clock: AnyClock<Duration> = AnyClock(ImmediateClock())
 ) -> OrderPackViewModel {
+    // Time is injected (#180 track A), so the poll keeps its SHIPPED 1 Hz
+    // cadence and 180 s budget instead of being shrunk per test. The default
+    // `ImmediateClock` collapses each wait while still ADVANCING the clock by
+    // the shipped interval — so the deadline tests below still exhaust a real
+    // 180 s budget, just without spending it. A test that needs to observe an
+    // in-flight state passes its own `TestClock` and drives (or parks) it.
     OrderPackViewModel(
         service: service,
         purchaseService: purchaseService,
         adminKeyAvailable: { adminKeyAvailable },
-        orderLanguages: { Language.selectableLanguages(in: orderLanguageCodes) }
+        orderLanguages: { Language.selectableLanguages(in: orderLanguageCodes) },
+        clock: clock
     )
 }
 
@@ -58,30 +67,18 @@ private func payingViewModel(
     service: MockPackOrderService = MockPackOrderService(),
     purchaseService: MockPackPurchaseService = MockPackPurchaseService(),
     adminKeyAvailable: Bool = true,
-    prompt: String = "History of the Roman Empire in ten questions"
+    prompt: String = "History of the Roman Empire in ten questions",
+    clock: AnyClock<Duration> = AnyClock(ImmediateClock())
 ) -> OrderPackViewModel {
     let vm = makeOrderPackViewModel(
         service: service,
         purchaseService: purchaseService,
-        adminKeyAvailable: adminKeyAvailable
+        adminKeyAvailable: adminKeyAvailable,
+        clock: clock
     )
     vm.prompt = prompt
     vm.advanceToSummary()
     return vm
-}
-
-/// Spin (briefly) until the VM reaches a state matching `predicate`.
-@MainActor
-@discardableResult
-private func waitForState(
-    _ vm: OrderPackViewModel,
-    _ predicate: (OrderPackViewModel.OrderState) -> Bool
-) async -> Bool {
-    for _ in 0..<400 {
-        if predicate(vm.state) { return true }
-        try? await Task.sleep(for: .milliseconds(5))
-    }
-    return false
 }
 
 /// Fire every backwards affordance the sheet exposes and assert none of them
@@ -183,19 +180,26 @@ struct OrderPackViewModelTests {
     func inFlightOrderCannotReturnToForm() async {
         // Never-terminal poll + a slow create, so both in-flight states are
         // observable deterministically rather than raced against an instant mock.
-        let service = MockPackOrderService(getResult: .success(.mockPending), createDelaySeconds: 0.1)
-        let vm = payingViewModel(service: service)
-        vm.pollIntervalSeconds = 0.01
+        // The mock's create latency and the poll both run on one parked clock:
+        // `.submitting` holds until the clock is advanced, and once the poll
+        // parks on its shipped 1 s wait the order stays in flight for as long
+        // as the assertions need.
+        let clock = TestClock()
+        let service = MockPackOrderService(
+            getResult: .success(.mockPending), createDelaySeconds: 0.1, clock: AnyClock(clock)
+        )
+        let vm = payingViewModel(service: service, clock: AnyClock(clock))
 
         let task = Task { await vm.submit() }
 
-        #expect(await waitForState(vm) { $0 == .submitting })
+        await pumpUntil({ vm.state == .submitting }, "submit never reached .submitting")
         expectNoRouteBackToForm(vm, "a purchase in flight")
         // Reopening the sheet mid-purchase shows the purchase, not the form.
         vm.prepareForPresentation(defaultLanguage: "sk")
         #expect(vm.state == .submitting)
 
-        #expect(await waitForState(vm) { if case .polling = $0 { return true } else { return false } })
+        await clock.advance(by: .milliseconds(100))
+        await pumpUntil({ if case .polling = vm.state { true } else { false } }, "create never handed over to the poll")
         expectNoRouteBackToForm(vm, "a generating order")
         vm.prepareForPresentation(defaultLanguage: "sk")
         guard case .polling = vm.state else {
@@ -285,16 +289,19 @@ struct OrderPackViewModelTests {
 
         // `.submitting` is the one blocked state: dismissing while the purchase
         // call is in flight leaves the user unsure whether they were charged.
+        let clock = TestClock()
         let submitting = payingViewModel(
-            service: MockPackOrderService(createDelaySeconds: 0.1),
-            prompt: "Space"
+            service: MockPackOrderService(createDelaySeconds: 0.1, clock: AnyClock(clock)),
+            prompt: "Space",
+            clock: AnyClock(clock)
         )
         let task = Task { await submitting.submit() }
-        #expect(await waitForState(submitting) { $0 == .submitting })
+        await pumpUntil({ submitting.state == .submitting }, "submit never reached .submitting")
         #expect(
             !submitting.allowsInteractiveDismiss,
             "swipe-to-dismiss must be blocked while the purchase is in flight"
         )
+        await clock.advance(by: .milliseconds(100))
         await task.value
     }
 
@@ -305,20 +312,20 @@ struct OrderPackViewModelTests {
     // would sit on "Building your pack…" while a playable pack existed.
     @Test("a still-generating order with a pack offers Start quiz while the poll keeps running")
     func playableWhileStillGenerating() async {
-        // Real 1 Hz cadence (like `submitPollsThenDelivers`): with a zero interval
-        // the poll can reach `.delivered` before the sampler ever observes the
-        // playable window.
+        // The poll parks on its shipped 1 s wait after the first snapshot, so
+        // the playable window is observable for as long as the clock is held;
+        // releasing that one interval lets the second getOrder deliver.
+        let clock = TestClock()
         let service = MockPackOrderService(getSequence: [.mockGenerating, .mockDelivered])
-        let vm = payingViewModel(service: service)
+        let vm = payingViewModel(service: service, clock: AnyClock(clock))
 
         let task = Task { await vm.submit() }
-        let sawPlayableWhilePolling = await waitForState(vm) { state in
-            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
-            return false
-        }
+        await pumpUntil({
+            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+        }, "an in_progress order with a pack must be playable while the poll runs")
+        await clock.advance(by: .seconds(1))
         await task.value
 
-        #expect(sawPlayableWhilePolling, "an in_progress order with a pack must be playable")
         // And the poll did NOT stop there: the order still reaches delivered.
         guard case .delivered = vm.state else {
             Issue.record("expected .delivered after the generating snapshot, got \(vm.state)")
@@ -329,13 +336,12 @@ struct OrderPackViewModelTests {
     @Test("playableSnapshot carries the ready/target counts the copy promises")
     func playableSnapshotCarriesCounts() async {
         let service = MockPackOrderService(getSequence: [.mockGenerating, .mockGenerating])
-        let vm = payingViewModel(service: service)
+        let vm = payingViewModel(service: service, clock: AnyClock(TestClock())) // parked: stays in the playable window
 
         let task = Task { await vm.submit() }
-        _ = await waitForState(vm) { state in
-            if case .polling(let snapshot?) = state { return snapshot.isPlayable }
-            return false
-        }
+        await pumpUntil({
+            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+        }, "the generating snapshot never became the playable polling state")
         let playable = vm.playableSnapshot
         vm.stop()
         task.cancel()
@@ -409,20 +415,18 @@ struct OrderPackViewModelTests {
     @Test("submit passes through .polling before .delivered — the poll loop iterates, not a call-#1 short-circuit")
     func submitPollsThenDelivers() async {
         let service = MockPackOrderService(getSequence: [.mockPending, .mockDelivered])
-        let vm = payingViewModel(service: service)
+        let clock = TestClock()
+        let vm = payingViewModel(service: service, clock: AnyClock(clock))
 
         let task = Task { await vm.submit() }
-        // The VM publishes `.polling` then sleeps 1s before the next getOrder,
-        // so observe within that window (cap generously; ~2s max).
-        var sawPolling = false
-        for _ in 0..<200 {
-            if case .polling = vm.state { sawPolling = true; break }
-            if case .delivered = vm.state { break }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        // The VM publishes `.polling` and then parks on the shipped 1 s
+        // interval, so the intermediate snapshot is observable for as long as
+        // the clock is held — no window to race.
+        await pumpUntil({ if case .polling = vm.state { true } else { false } }, "the poll never published .polling")
+        // Only releasing that interval lets the loop run its SECOND getOrder.
+        await clock.advance(by: .seconds(1))
         await task.value
 
-        #expect(sawPolling)
         guard case .delivered = vm.state else {
             Issue.record("expected .delivered, got \(vm.state)")
             return
@@ -438,7 +442,6 @@ struct OrderPackViewModelTests {
     func transientPollErrorRetriesToDelivered() async {
         let service = MockPackOrderService(getResults: [.failure(.init("blip")), .success(.mockDelivered)])
         let vm = payingViewModel(service: service)
-        vm.pollIntervalSeconds = 0 // don't wait the real 1 Hz cadence for the retry
 
         await vm.submit()
 
@@ -457,7 +460,6 @@ struct OrderPackViewModelTests {
     func sustainedPollErrorsFail() async {
         let service = MockPackOrderService(getResult: .failure(.init("boom")))
         let vm = payingViewModel(service: service)
-        vm.pollIntervalSeconds = 0 // fast-forward the retries
 
         await vm.submit()
 
@@ -475,8 +477,10 @@ struct OrderPackViewModelTests {
     func pollDeadlineSurfacesFailure() async {
         let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
         let vm = payingViewModel(service: service)
-        vm.pollTimeoutSeconds = 0.05 // exhaust the budget almost immediately
-        vm.pollIntervalSeconds = 0.01 // …after a few real poll iterations
+        // The budget's VALUE is not under test — that it ends the poll is. Five
+        // shipped 1 s iterations on the collapsed clock reach the deadline
+        // without grinding through the full 180.
+        vm.pollTimeoutSeconds = 5
 
         await vm.submit()
 
@@ -499,8 +503,7 @@ struct OrderPackViewModelTests {
     func retryRefusedAfterTimeout() async {
         let service = MockPackOrderService(getResult: .success(.mockPending))
         let vm = payingViewModel(service: service)
-        vm.pollTimeoutSeconds = 0.05
-        vm.pollIntervalSeconds = 0.01
+        vm.pollTimeoutSeconds = 5 // runs out the budget in five shipped 1 s iterations
 
         await vm.submit()
         await vm.retry()
@@ -522,10 +525,9 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollTimeoutSeconds = 0.05
-        vm.pollIntervalSeconds = 0.01
+        vm.pollTimeoutSeconds = 5 // runs out the budget in five shipped 1 s iterations
 
-        await vm.submit()
+        await vm.submit() // the never-terminal order exhausts the poll budget
         guard case .failed = vm.state else {
             Issue.record("expected .failed from the deadline, got \(vm.state)")
             return
@@ -564,12 +566,11 @@ struct OrderPackViewModelTests {
             return
         }
 
-        vm.pollTimeoutSeconds = 5 // reopening grants a fresh budget
-        vm.pollIntervalSeconds = 0
+        vm.pollTimeoutSeconds = 180 // reopening grants a fresh (shipped) budget
         vm.prepareForPresentation(defaultLanguage: "sk")
 
-        #expect(await waitForState(vm) { if case .delivered = $0 { return true } else { return false } },
-                "the resumed poll must pick the finished pack up, got \(vm.state)")
+        await pumpUntil({ if case .delivered = vm.state { true } else { false } },
+                        "the resumed poll must pick the finished pack up, got \(vm.state)")
         #expect(purchase.purchaseCallCount == 1, "resuming a poll is not a purchase")
         #expect(service.createOrderCallCount == 1, "resuming a poll is not a new order")
     }
@@ -582,16 +583,15 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollTimeoutSeconds = 0
-        vm.pollIntervalSeconds = 0.01
+        vm.pollTimeoutSeconds = 0 // budget already spent, on both passes
 
         await vm.submit()
         let paidOrderId = vm.orderId
 
         vm.prepareForPresentation(defaultLanguage: "sk")
 
-        #expect(await waitForState(vm) {
-            if case .failed(_, retryable: false) = $0 { return true } else { return false }
+        await pumpUntil({
+            if case .failed(_, retryable: false) = vm.state { true } else { false }
         }, "expected the soft timeout again, got \(vm.state)")
         #expect(vm.orderId == paidOrderId)
         #expect(purchase.purchaseCallCount == 1)
@@ -649,7 +649,6 @@ struct OrderPackViewModelTests {
             .success(.mockDelivered) // after the retry: it delivers
         ])
         let vm = payingViewModel(service: service)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
         guard case .failed = vm.state else {
@@ -678,7 +677,6 @@ struct OrderPackViewModelTests {
         ])
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
         await vm.retry()
@@ -700,7 +698,6 @@ struct OrderPackViewModelTests {
     func deliveredOrderClearsRetainedCredentials() async {
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
 
@@ -718,7 +715,6 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService(getResult: .success(.mockFailed))
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
 
@@ -737,7 +733,6 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService(getResult: .success(.mockRefunded))
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
 
@@ -763,7 +758,6 @@ struct OrderPackViewModelTests {
         )
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0
 
         await vm.submit()
         await vm.retry()
@@ -935,13 +929,24 @@ struct OrderPackViewModelTests {
     // must not be able to walk back into the form mid-order and re-drive it.
     @Test("after a successful payment there is still no route back to the form")
     func paidOrderCannotReturnToForm() async {
-        let service = MockPackOrderService(getResult: .success(.mockPending), createDelaySeconds: 0.1)
+        // One parked clock for the mock's create latency and the poll: the
+        // order stays in `.polling` while the assertions run.
+        let clock = TestClock()
+        let service = MockPackOrderService(
+            getResult: .success(.mockPending), createDelaySeconds: 0.1, clock: AnyClock(clock)
+        )
         let purchase = MockPackPurchaseService()
-        let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
-        vm.pollIntervalSeconds = 0.01
+        let vm = payingViewModel(
+            service: service,
+            purchaseService: purchase,
+            adminKeyAvailable: false,
+            clock: AnyClock(clock)
+        )
 
         let task = Task { await vm.submit() }
-        #expect(await waitForState(vm) { if case .polling = $0 { return true } else { return false } })
+        await pumpUntil({ vm.state == .submitting }, "submit never reached .submitting")
+        await clock.advance(by: .milliseconds(100))
+        await pumpUntil({ if case .polling = vm.state { true } else { false } }, "create never handed over to the poll")
         expectNoRouteBackToForm(vm, "a paid order")
 
         vm.stop()

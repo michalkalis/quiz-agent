@@ -53,23 +53,6 @@ private func makeVoiceFeedbackVM(
     return (vm, network, audio, stt)
 }
 
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 // .serialized is REQUIRED: every test here wraps its body in
 // withMainSerialExecutor, which flips the *process-global*
 // swift_task_enqueueGlobal_hook and restores it in a defer. Run in parallel
@@ -91,18 +74,18 @@ struct FeedbackDictationTests {
             let (vm, _, _, stt) = makeVoiceFeedbackVM()
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
 
             await stt.injectEvent(.partialTranscript("the ti..."))
-            await waitUntil({ vm.partialTranscript == "the ti..." }, "partial never propagated")
+            await pumpUntil({ vm.partialTranscript == "the ti..." }, turns: 2000, "partial never propagated")
 
             await stt.injectEvent(.committedTranscript("the timer"))
-            await waitUntil({ vm.message == "the timer" }, "first committed segment never appended")
+            await pumpUntil({ vm.message == "the timer" }, turns: 2000, "first committed segment never appended")
             // A committed segment clears the live partial.
             #expect(vm.partialTranscript == "")
 
             await stt.injectEvent(.committedTranscript("kept counting"))
-            await waitUntil({ vm.message == "the timer kept counting" }, "second segment never appended with a separator")
+            await pumpUntil({ vm.message == "the timer kept counting" }, turns: 2000, "second segment never appended with a separator")
         }
     }
 
@@ -116,7 +99,7 @@ struct FeedbackDictationTests {
             await stt.setMockCommittedText("")
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
 
             // Drive PCM chunks through the streaming handler, as the real tap would.
             let chunk = Data(repeating: 0xAB, count: 640) // 320 samples of 16-bit PCM
@@ -124,7 +107,7 @@ struct FeedbackDictationTests {
             audio.emitStreamingChunk(chunk)
 
             await vm.stopDictation()
-            await waitUntil({ !vm.isDictating }, "dictation never stopped")
+            await pumpUntil({ !vm.isDictating }, turns: 2000, "dictation never stopped")
 
             vm.message = "audio should be attached"
             await vm.send()
@@ -144,18 +127,22 @@ struct FeedbackDictationTests {
     func dictationHitsCap() async {
         await withMainSerialExecutor {
             let (vm, _, _, _) = makeVoiceFeedbackVM()
-            vm.maxDictationSeconds = 0.02 // drive the cap without waiting 120 s
+            // The feedback sheet is NOT on the quiz clock seam (#180 track A):
+            // its cap timer is a plain `Task.sleep`, so the shrunk cap is still
+            // the only way to drive it. Everything after the cap fires is
+            // turn-pumped rather than wall-clock polled.
+            vm.maxDictationSeconds = 0.02
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
 
-            // Wait for the FULL settled state, not just the mic returning idle:
-            // the cap handler sets `micState = .idle` and `didHitDictationCap`
-            // across actor hops, so polling only `micState == .idle` and then
-            // asserting the flag immediately raced the flag's write (green ~1/3).
-            // Gating on both flags removes the ordering race deterministically.
-            await waitUntil(
+            // Past the shrunk cap, then pump: the cap handler sets
+            // `micState = .idle` and `didHitDictationCap` across actor hops, so
+            // asserting the flag on the first idle raced the flag's write.
+            try? await Task.sleep(for: .milliseconds(150))
+            await pumpUntil(
                 { vm.micState == .idle && vm.didHitDictationCap },
+                turns: 2000,
                 "cap never auto-stopped dictation and flagged why"
             )
             #expect(vm.didHitDictationCap == true)
@@ -214,18 +201,18 @@ struct FeedbackDictationTests {
 
             // Segment 1 — first dictation pass.
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "segment 1 never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "segment 1 never started")
             audio.emitStreamingChunk(chunk)
             await vm.stopDictation()
-            await waitUntil({ !vm.isDictating }, "segment 1 never stopped")
+            await pumpUntil({ !vm.isDictating }, turns: 2000, "segment 1 never stopped")
 
             // Segment 2 — a second pass, exactly as the UI invites ("Tap Dictate to
             // add more"). Its audio must be APPENDED, not replace segment 1's.
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "segment 2 never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "segment 2 never started")
             audio.emitStreamingChunk(chunk)
             await vm.stopDictation()
-            await waitUntil({ !vm.isDictating }, "segment 2 never stopped")
+            await pumpUntil({ !vm.isDictating }, turns: 2000, "segment 2 never stopped")
 
             vm.message = "two-pass report"
             await vm.send()
@@ -246,13 +233,13 @@ struct FeedbackDictationTests {
             let (vm, _, audio, stt) = makeVoiceFeedbackVM()
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
             #expect(audio.audioEngineActive == true)
 
             // The STT socket drops mid-dictation.
             await stt.injectEvent(.disconnected(nil))
 
-            await waitUntil({ vm.micState == .idle }, "disconnect never reset micState")
+            await pumpUntil({ vm.micState == .idle }, turns: 2000, "disconnect never reset micState")
             // The shared engine MUST be released — otherwise the next quiz recording
             // overwrites a still-live engine (the #64/#77 two-engine crash class).
             #expect(audio.audioEngineActive == false)
@@ -268,7 +255,7 @@ struct FeedbackDictationTests {
             let (vm, _, audio, _) = makeVoiceFeedbackVM()
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
             #expect(audio.audioEngineActive == true)
 
             // A phone call / Siri interrupts. The shared AudioService routes its own
@@ -280,7 +267,7 @@ struct FeedbackDictationTests {
                 userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue]
             )
 
-            await waitUntil({ vm.micState == .idle }, "interruption never reset micState")
+            await pumpUntil({ vm.micState == .idle }, turns: 2000, "interruption never reset micState")
             #expect(audio.audioEngineActive == false)
         }
     }

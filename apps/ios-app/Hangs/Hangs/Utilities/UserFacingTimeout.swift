@@ -8,6 +8,7 @@
 //  that never ends (founder TF 2026-09-13, MCQ 4/10 stuck in .processing).
 //
 
+import Clocks
 import Foundation
 
 /// Runs an async operation with a timeout, throwing `URLError(.timedOut)` if
@@ -16,6 +17,7 @@ import Foundation
 /// instead of the generic submission fallback.
 func withUserFacingTimeout<T: Sendable>(
     seconds: Int,
+    clock: AnyClock<Duration> = .continuous,
     operation: @escaping @Sendable () async throws -> T
 ) async throws -> T {
     try await withThrowingTaskGroup(of: T.self) { group in
@@ -24,7 +26,7 @@ func withUserFacingTimeout<T: Sendable>(
         }
 
         group.addTask {
-            try await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
+            try await clock.sleep(for: .seconds(seconds))
             throw URLError(.timedOut)
         }
 

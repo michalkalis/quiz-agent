@@ -9,6 +9,7 @@
 //  deterministic. Per audit A2-5: confirmation OUTSIDE, withMainSerialExecutor INSIDE.
 //
 
+import Clocks
 import Foundation
 import Testing
 import ConcurrencyExtras
@@ -20,7 +21,7 @@ import ConcurrencyExtras
 /// Session and question are pre-seeded; quizState is .askingQuestion so
 /// startRecording() can fire immediately and route to startStreamingRecording().
 @MainActor
-private func makeViewModelWithSTT()
+private func makeViewModelWithSTT(clock: AnyClock<Duration> = AnyClock(TestClock()))
     -> (QuizViewModel, MockNetworkService, MockAudioService, MockElevenLabsSTTService) {
     let mockNetwork = Fixtures.makeFullMockNetwork()
     let mockAudio = MockAudioService()
@@ -32,7 +33,8 @@ private func makeViewModelWithSTT()
         audioService: mockAudio,
         persistenceStore: mockPersistence,
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: mockSTT
+        sttService: mockSTT,
+        clock: clock
     )
 
     // Seed the minimum state the streaming path needs.
@@ -44,46 +46,23 @@ private func makeViewModelWithSTT()
     return (viewModel, mockNetwork, mockAudio, mockSTT)
 }
 
-/// Yields until `predicate()` is true or the deadline elapses. Used instead of
-/// fixed `Task.yield()` counts because the streaming path crosses actor →
-/// AsyncStream → listener Task → @MainActor handler — too many hops for a
-/// fixed yield count to pump deterministically. With `withMainSerialExecutor`
-/// in scope this becomes a deterministic spin on the same executor.
-/// Timeout is wall-clock: the mock STT actor hops through the global executor,
-/// which is starved when the full suite runs 70 suites in parallel — 1 s
-/// flaked there, so the deadline is generous. Green runs return immediately.
-/// Each iteration also really sleeps 1 ms: tests 6/7 wait on wall-clock
-/// `Task.sleep` timers, and a pure yield-spin can starve their continuations
-/// on a loaded CI runner (autoStopCapFiresOnRerecord flaked exactly this way
-/// on CI run 27445302573). The post-loop predicate check covers a runner that
-/// stalls past the deadline but does deliver the awaited state.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
+/// #180 track A: this file used to spin on a wall clock with real 1 ms sleeps
+/// because tests 6/7 armed REAL timers and the rest could be starved by them
+/// under a loaded parallel run. Both halves of that reason are gone: every
+/// production timer here sleeps on the injected clock (parked by default in
+/// `makeViewModelWithSTT`, advanced explicitly by the tests that are about a
+/// timer), so the only thing left to wait for is task scheduling across the
+/// actor → AsyncStream → listener Task → @MainActor handler hops. That is
+/// exactly what the shared `pumpUntil` does, with no deadline to lose a race
+/// to. `withMainSerialExecutor` keeps the interleaving deterministic.
 
 /// Take the recording window out of these tests entirely.
 ///
 /// #173 made the VISIBLE window 5 s ("time to start speaking"), and its expiry
-/// really stops the mic and submits. That is wall-clock time, so on a loaded CI
-/// runner it fired in the middle of tests whose subject is the STT event
-/// pipeline, not the window — the mic closed and the assertions went red for
-/// the wrong reason. CANCELLING is the right park: arming a very long window
-/// instead leaves a task ticking once a second (and publishing) for minutes
-/// after the test ends, which is main-actor noise every other suite in the
-/// parallel run then has to share. Tests that are ABOUT the window arm one.
+/// really stops the mic and submits. The parked clock already means it cannot
+/// fire under a test that is about the STT event pipeline; cancelling says so
+/// explicitly, and keeps a once-a-second ticking task off the main actor the
+/// whole parallel run shares. Tests that are ABOUT the window drive one.
 @MainActor
 private func parkRecordingWindow(_ viewModel: QuizViewModel) {
     viewModel.quizTimersController.cancelAutoStopRecordingTimer()
@@ -108,7 +87,7 @@ struct QuizViewModelStreamingTests {
             // startRecording() calls transition(.recording) then routes to startStreamingRecording()
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "isStreamingSTT never flipped true")
+            await pumpUntil({ viewModel.isStreamingSTT }, "isStreamingSTT never flipped true")
 
             #expect(viewModel.isStreamingSTT == true)
             #expect(viewModel.liveTranscript == "")
@@ -128,10 +107,10 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.partialTranscript("Par..."))
-            await waitUntil({ viewModel.liveTranscript == "Par..." }, "partial transcript never reached liveTranscript")
+            await pumpUntil({ viewModel.liveTranscript == "Par..." }, "partial transcript never reached liveTranscript")
 
             #expect(viewModel.liveTranscript == "Par...")
             // A partial must never advance the state machine — only committed text does
@@ -151,11 +130,11 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris"))
             // handleCommittedTranscript transitions to .processing as its final step.
-            await waitUntil({ viewModel.quizState == .processing }, "never reached .processing")
+            await pumpUntil({ viewModel.quizState == .processing }, "never reached .processing")
 
             #expect(viewModel.transcribedAnswer == "Paris")
             #expect(viewModel.showAnswerConfirmation == true)
@@ -176,16 +155,16 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // Establish a partial so we can verify liveTranscript is cleared too
             await mockSTT.injectEvent(.partialTranscript("Lon..."))
-            await waitUntil({ viewModel.liveTranscript == "Lon..." }, "partial never propagated")
+            await pumpUntil({ viewModel.liveTranscript == "Lon..." }, "partial never propagated")
             #expect(viewModel.isStreamingSTT == true)
 
             struct FakeNetworkError: Error {}
             await mockSTT.injectEvent(.disconnected(FakeNetworkError()))
-            await waitUntil({ !viewModel.isStreamingSTT }, "disconnected handler never ran")
+            await pumpUntil({ !viewModel.isStreamingSTT }, "disconnected handler never ran")
 
             #expect(viewModel.isStreamingSTT == false)
             #expect(viewModel.liveTranscript == "")
@@ -209,10 +188,10 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript(""))
-            await waitUntil({ viewModel.showAnswerConfirmation }, "never escaped .recording onto the sheet")
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "never escaped .recording onto the sheet")
 
             #expect(viewModel.quizState == .processing)
             #expect(viewModel.transcribedAnswer.isEmpty)
@@ -232,19 +211,24 @@ struct QuizViewModelStreamingTests {
     @Test("commit watchdog escapes .recording onto the empty confirmation sheet")
     func commitWatchdogRescuesSilentCommit() async throws {
         await withMainSerialExecutor {
-            let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
+            let clock = TestClock()
+            let (viewModel, _, _, mockSTT) = makeViewModelWithSTT(clock: AnyClock(clock))
             await mockSTT.setCommitEmitsNothing(true)
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await viewModel.recordingCoordinator.stopRecordingAndSubmit()
             #expect(viewModel.taskBag.contains(.sttCommitWatchdog), "watchdog not armed after commit")
 
-            // Re-arm with a near-zero timeout instead of waiting the production 5 s.
-            viewModel.recordingCoordinator.startCommitWatchdog(seconds: 0.01)
-            await waitUntil({ viewModel.showAnswerConfirmation }, "watchdog never rescued the stuck state")
+            // The watchdog armed by the commit above IS the one under test now
+            // (#180 track A): its SHIPPED timeout is driven on the clock, so no
+            // re-arm with a shrunk one and no real second spent waiting.
+            await clock.advance(by: .seconds(Config.sttCommitWatchdogSecs) - .milliseconds(100))
+            #expect(viewModel.showAnswerConfirmation == false, "the watchdog must not rescue early")
+            await clock.advance(by: .milliseconds(101)) // past it (integer ms: a fractional Duration can land short)
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "watchdog never rescued the stuck state")
 
             #expect(viewModel.quizState == .processing)
             #expect(viewModel.transcribedAnswer.isEmpty)
@@ -261,12 +245,17 @@ struct QuizViewModelStreamingTests {
     @Test("auto-stop hard cap is armed even when isRerecording is true")
     func autoStopCapFiresOnRerecord() async throws {
         await withMainSerialExecutor {
-            let (viewModel, _, _, _) = makeViewModelWithSTT()
+            let clock = TestClock()
+            let (viewModel, _, _, _) = makeViewModelWithSTT(clock: AnyClock(clock))
             viewModel.isRerecording = true
             viewModel.quizState = .recording
 
-            viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 0.01)
-            await waitUntil({ viewModel.quizState != .recording }, "cap never fired during re-record")
+            // The SHIPPED window, driven rather than shrunk (#180 track A).
+            viewModel.quizTimersController.startAutoStopRecordingTimer()
+            await clock.advance(by: .seconds(Config.speechStartWindow - 1))
+            #expect(viewModel.quizState == .recording, "the window must not end a re-record early")
+            await clock.advance(by: .seconds(1))
+            await pumpUntil({ viewModel.quizState != .recording }, "cap never fired during re-record")
 
             #expect(viewModel.quizState != .recording)
         }
@@ -286,7 +275,7 @@ struct QuizViewModelStreamingTests {
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // A window this test owns: what is under test is the partial
             // RETIRING it, not a wall-clock race with the real 5 s (the lengths
@@ -295,7 +284,7 @@ struct QuizViewModelStreamingTests {
             viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 30, hardCap: 30)
 
             await mockSTT.injectEvent(.partialTranscript("bratislava"))
-            await waitUntil({ viewModel.answerWindowTotal == 0 }, "the countdown never retired on first speech")
+            await pumpUntil({ viewModel.answerWindowTotal == 0 }, "the countdown never retired on first speech")
 
             #expect(viewModel.answerWindowRemaining == 0)
             #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord)
@@ -315,7 +304,7 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // A window this test owns: long enough that only the partial could
             // retire it, short enough not to keep ticking past the test.
@@ -336,15 +325,19 @@ struct QuizViewModelStreamingTests {
     @Test("the speech-start window expiring with no speech ends on the empty-answer sheet")
     func speechStartExpiryEndsOnEmptySheet() async throws {
         await withMainSerialExecutor {
-            let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
+            let clock = TestClock()
+            let (viewModel, _, _, mockSTT) = makeViewModelWithSTT(clock: AnyClock(clock))
             await mockSTT.setMockCommittedText("") // dead air: a forced commit returns nothing
-            // The production 5 s, shrunk through the seam: the recording path
-            // arms it itself, so the expiry under test is the REAL one and no
-            // wall-clock second is spent waiting for it.
-            viewModel.recordingCoordinator.speechStartWindow = 0.01
 
+            // The production 5 s, driven on the clock (#180 track A): the
+            // recording path arms it itself, so the expiry under test is the
+            // REAL one and no wall-clock second is spent waiting for it.
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.showAnswerConfirmation }, "expiry never reached the confirmation sheet")
+            await pumpUntil({ viewModel.quizTimersController.recordingCountdownTotal > 0 },
+                            "the mic never opened, so no speech-start window was armed")
+
+            await clock.advance(by: .seconds(Config.speechStartWindow))
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "expiry never reached the confirmation sheet")
 
             #expect(viewModel.quizState == .processing)
             #expect(viewModel.transcribedAnswer.isEmpty)
@@ -374,7 +367,7 @@ struct QuizViewModelStreamingTests {
             // `armedWindow → 0`).
             var armedWindow: Int?
             viewModel.recordingCoordinator.rerecordAnswer()
-            await waitUntil({
+            await pumpUntil({
                 guard mockAudio.isRecording else { return false }
                 if armedWindow == nil {
                     armedWindow = viewModel.quizTimersController.recordingCountdownTotal
@@ -418,16 +411,16 @@ struct QuizViewModelStreamingTests {
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Jupiter"))
             // #171 Track I: the match opens the sheet instead of submitting.
-            await waitUntil({ viewModel.showAnswerConfirmation }, "voice match never reached the confirmation sheet")
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "voice match never reached the confirmation sheet")
             #expect(mockNetwork.capturedTextInputInput == nil)
             #expect(viewModel.transcribedAnswer == "Jupiter")
 
             await viewModel.confirmAnswer()
-            await waitUntil({ viewModel.quizState.isShowingResult }, "confirmed voice-match submit never completed")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "confirmed voice-match submit never completed")
 
             #expect(mockNetwork.capturedTextInputInput == "Jupiter")
             #expect(viewModel.mcqVoiceMatchedKey == "b")

@@ -17,10 +17,13 @@
 //  the per-request bound, the phase watchdog for a submission whose owner is
 //  gone, and the foreground return that re-checks it.
 //
-//  Deterministic by construction: `submitTimeoutSeconds` / `stallWatchdogSeconds`
-//  are the injected durations, so nothing here waits on the real 30 s / 35 s.
+//  Deterministic by construction (#180 track A): the 30 s request bound and the
+//  35 s phase watchdog both run on the view model's injected clock, so every test
+//  below drives a `TestClock` to the SHIPPED boundary — just before it (nothing
+//  fired) and past it (it did) — instead of shrinking the durations and sleeping.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -29,27 +32,20 @@ import Testing
 @Suite("A submission can never leave the quiz stuck in .processing/.skipping (#179)")
 @MainActor
 struct SubmissionStallTests {
-    private func makeVM(configure: (MockNetworkService) -> Void = { _ in }) -> QuizViewModel {
+    private func makeVM(
+        clock: TestClock<Duration> = TestClock(),
+        configure: (MockNetworkService) -> Void = { _ in }
+    ) -> QuizViewModel {
         let vm = QuizViewModel(
             networkService: Fixtures.makeFullMockNetwork(configure: configure),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
         return vm
-    }
-
-    /// Spin until `predicate` holds, so the watchdog's own Task gets to run
-    /// without betting on wall-clock ordering.
-    private func waitUntil(_ predicate: @MainActor () -> Bool, timeoutMillis: Int = 5000) async {
-        let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-        while ContinuousClock.now < deadline {
-            if predicate() { return }
-            await Task.yield()
-            try? await Task.sleep(for: .milliseconds(1))
-        }
     }
 
     // MARK: - Per-request bound (findings 3 + 4)
@@ -58,10 +54,15 @@ struct SubmissionStallTests {
     /// end on the retryable error screen, not on a grey question forever.
     @Test("a wedged confirm/resubmit times out into the retry error screen")
     func resubmitTimesOut() async throws {
-        let vm = makeVM { $0.submitTextInputDelay = .seconds(30) }
-        vm.submitTimeoutSeconds = 1
+        let clock = TestClock()
+        // A request that never comes back: the mock's delay is real time the
+        // driven clock will never reach, so only the bound can end this submit.
+        let vm = makeVM(clock: clock) { $0.submitTextInputDelay = .seconds(600) }
 
-        await vm.resubmitAnswer("Lichtenštajnsko")
+        let submission = Task { await vm.resubmitAnswer("Lichtenštajnsko") }
+        await pumpUntil { vm.quizState == .processing }
+        await clock.advance(by: .seconds(vm.submitTimeoutSeconds))
+        await submission.value
 
         guard case let .error(message, context) = vm.quizState else {
             Issue.record("expected .error, got \(vm.quizState.label)")
@@ -77,10 +78,13 @@ struct SubmissionStallTests {
     /// one exit, the returning `await`.
     @Test("a wedged skip times out into the retry error screen")
     func skipTimesOut() async throws {
-        let vm = makeVM { $0.submitTextInputDelay = .seconds(30) }
-        vm.submitTimeoutSeconds = 1
+        let clock = TestClock()
+        let vm = makeVM(clock: clock) { $0.submitTextInputDelay = .seconds(600) }
 
-        await vm.skipQuestion()
+        let submission = Task { await vm.skipQuestion() }
+        await pumpUntil { vm.quizState == .skipping }
+        await clock.advance(by: .seconds(vm.submitTimeoutSeconds))
+        await submission.value
 
         guard case let .error(_, context) = vm.quizState else {
             Issue.record("expected .error, got \(vm.quizState.label)")
@@ -95,14 +99,21 @@ struct SubmissionStallTests {
     /// 3 × the budget — the freeze would just take three times longer to end.
     @Test("the timeout bounds the whole retry, not each attempt")
     func timeoutBoundsWholeRetry() async throws {
-        let vm = makeVM { $0.submitTextInputDelay = .seconds(30) }
-        vm.submitTimeoutSeconds = 1
+        let clock = TestClock()
+        let vm = makeVM(clock: clock) { $0.submitTextInputDelay = .seconds(600) }
 
-        let startedAt = ContinuousClock.now
-        await vm.skipQuestion()
-        let elapsed = ContinuousClock.now - startedAt
+        let submission = Task { await vm.skipQuestion() }
+        await pumpUntil { vm.quizState == .skipping }
 
-        #expect(elapsed < .seconds(3), "one 1 s budget, not one per attempt (got \(elapsed))")
+        // ONE budget, spent once: at the boundary the driver is already out. A
+        // per-attempt bound would still be inside attempt 2's fresh budget here
+        // (`URLError.timedOut` is itself classified transient) and the spinner
+        // would turn for 3 × 30 s.
+        await clock.advance(by: .seconds(vm.submitTimeoutSeconds))
+        await submission.value
+
+        #expect(vm.quizState.isError, "one budget for the whole retry, not one per attempt")
+        #expect(vm.activeErrorModel?.retryAction == .retryOperation)
     }
 
     // MARK: - Phase watchdog (orphaned submissions)
@@ -113,11 +124,14 @@ struct SubmissionStallTests {
     /// never ends. The pair itself is therefore deadlined.
     @Test("a .processing phase that outlives its deadline fails with retry")
     func watchdogFiresInProcessing() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .processing))
-        await waitUntil { vm.quizState.isError }
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds - 1))
+        #expect(vm.quizState == .processing, "the window is the SHIPPED 35 s — not a second less")
+        await clock.advance(by: .seconds(1))
+        await pumpUntil { vm.quizState.isError }
 
         guard case let .error(_, context) = vm.quizState else {
             Issue.record("expected .error, got \(vm.quizState.label)")
@@ -130,11 +144,14 @@ struct SubmissionStallTests {
     /// Same deadline on the skip half of the pair.
     @Test("a .skipping phase that outlives its deadline fails with retry")
     func watchdogFiresInSkipping() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .skipping))
-        await waitUntil { vm.quizState.isError }
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds - 1))
+        #expect(vm.quizState == .skipping, "the window is the SHIPPED 35 s — not a second less")
+        await clock.advance(by: .seconds(1))
+        await pumpUntil { vm.quizState.isError }
 
         #expect(vm.quizState.isError)
     }
@@ -145,13 +162,14 @@ struct SubmissionStallTests {
     /// captured answer while the person was still reading it.
     @Test("the watchdog stays silent while the confirmation sheet is up")
     func watchdogIgnoresOpenConfirmationSheet() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .processing))
         vm.showAnswerConfirmation = true
 
-        try await Task.sleep(for: .milliseconds(400))
+        // Three whole windows pass with the sheet up.
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds * 3))
 
         #expect(vm.quizState == .processing, "a sheet the user is looking at is not a stall")
     }
@@ -164,20 +182,21 @@ struct SubmissionStallTests {
     /// `.processing` of finding 3, now unbounded.
     @Test("a sheet outliving the deadline defers the watchdog; the phase is bounded again once it closes")
     func watchdogDefersWhileSheetIsUpThenFires() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .processing))
         vm.showAnswerConfirmation = true
 
         // Several windows pass with the sheet up — the driver is reading it.
-        try await Task.sleep(for: .milliseconds(500))
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds * 3))
         #expect(vm.quizState == .processing, "a sheet the user is looking at is never a stall")
 
         // The sheet goes away with the submission still wedged: from here the
         // phase has nobody watching it, and must not outlive one more window.
         vm.showAnswerConfirmation = false
-        await waitUntil { vm.quizState.isError }
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds))
+        await pumpUntil { vm.quizState.isError }
 
         guard case let .error(_, context) = vm.quizState else {
             Issue.record("expected .error after the sheet closed, got \(vm.quizState.label)")
@@ -190,13 +209,13 @@ struct SubmissionStallTests {
     /// …and the same while the confirmed answer is being evaluated on that sheet.
     @Test("the watchdog stays silent while an answer is being evaluated")
     func watchdogIgnoresEvaluatingAnswer() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .processing))
         vm.isEvaluatingAnswer = true
 
-        try await Task.sleep(for: .milliseconds(400))
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds * 3))
 
         #expect(vm.quizState == .processing)
     }
@@ -205,13 +224,13 @@ struct SubmissionStallTests {
     /// deadline, so a question answered in time can never be failed afterwards.
     @Test("leaving .processing drops the deadline")
     func watchdogCancelledOnExit() async throws {
-        let vm = makeVM()
-        vm.stallWatchdogSeconds = 0.15
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
 
         #expect(vm.transition(to: .processing))
         #expect(vm.transition(to: .askingQuestion))
 
-        try await Task.sleep(for: .milliseconds(400))
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds * 3))
 
         #expect(vm.quizState == .askingQuestion)
     }
@@ -226,12 +245,14 @@ struct SubmissionStallTests {
     func foregroundReturnRecoversStalledProcessing() async throws {
         let vm = makeVM()
         #expect(vm.transition(to: .processing))
-        // The window elapsed while the app was away.
-        vm.stallEnteredAt = Date().addingTimeInterval(-vm.stallWatchdogSeconds - 5)
+        // The window elapsed while the app was away. The instant comes from the
+        // model's own clock (#180 track A), so the absolute deadline is already
+        // past and the re-armed watchdog fires without time moving at all.
+        vm.stallEnteredAt = vm.clock.now.advanced(by: .seconds(-vm.stallWatchdogSeconds - 5))
 
         vm.handleScenePhase(.background)
         vm.handleScenePhase(.active)
-        await waitUntil { vm.quizState.isError }
+        await pumpUntil { vm.quizState.isError }
 
         guard case let .error(_, context) = vm.quizState else {
             Issue.record("expected .error, got \(vm.quizState.label)")
@@ -245,12 +266,15 @@ struct SubmissionStallTests {
     /// fail a submission that still has time to land.
     @Test("returning from the background mid-window leaves the submission alone")
     func foregroundReturnKeepsFreshSubmission() async throws {
-        let vm = makeVM()
+        let clock = TestClock()
+        let vm = makeVM(clock: clock)
         #expect(vm.transition(to: .processing))
 
         vm.handleScenePhase(.background)
         vm.handleScenePhase(.active)
-        try await Task.sleep(for: .milliseconds(200))
+        // Still inside the original window: re-arming keeps the ABSOLUTE
+        // deadline, and it has not arrived.
+        await clock.advance(by: .seconds(vm.stallWatchdogSeconds - 1))
 
         #expect(vm.quizState == .processing)
     }

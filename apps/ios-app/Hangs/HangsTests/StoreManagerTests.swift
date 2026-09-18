@@ -37,7 +37,6 @@ import ConcurrencyExtras
 private extension PurchasableOfferings {
     static let sample = PurchasableOfferings(
         monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
-        annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "$29.99", displayName: "Hangs Unlimited (Annual)"),
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
     )
 }
@@ -288,9 +287,9 @@ struct StoreManagerTests {
         var bridgeFired = false
         manager.onPurchaseSuccess = { bridgeFired = true; return true }
 
-        await manager.purchase(productID: StoreProduct.annualSubId)
+        await manager.purchase(productID: StoreProduct.monthlySubId)
 
-        #expect(manager.purchaseState == .success(productID: StoreProduct.annualSubId))
+        #expect(manager.purchaseState == .success(productID: StoreProduct.monthlySubId))
         #expect(bridgeFired == true)
     }
 

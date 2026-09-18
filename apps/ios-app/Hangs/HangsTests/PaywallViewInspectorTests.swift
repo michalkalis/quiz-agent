@@ -3,12 +3,14 @@
 //  HangsTests
 //
 //  #94 — Paywall synced to z8TS6 (plan picker) + Paywall-Offline (PouwN).
+//  Monthly-only for v1 (founder 2026-09-18) — the annual plan/badge/picker
+//  is gone; the picker now only selects between Monthly and the one-time pack.
 //
 //  Why these tests matter:
 //  - Token contract: the offline circle must use warning (amber), not pink —
 //    wrong colour blurs the "connectivity issue" signal.
-//  - The plan picker (Annual pre-selected, Monthly, one-time pack) only shows
-//    in the normal paywall — regression here loses the upgrade pitch entirely.
+//  - The plan picker (Monthly, one-time pack) only shows in the normal
+//    paywall — regression here loses the upgrade pitch entirely.
 //  - The single CTA must interpolate the *selected* plan's RC displayPrice —
 //    a wrong billing-period suffix misstates what the user is buying.
 //  - The auto-renew legal line is an App Store review requirement — its
@@ -58,11 +60,10 @@ private func makeLimitError(questionsLimit: Int = 10) -> QuotaLimitError {
     )
 }
 
-/// The full three-package offering (annual + monthly + pack) with distinct prices.
+/// The full offering (monthly + pack) with distinct prices.
 private func makeFullOfferings() -> PurchasableOfferings {
     PurchasableOfferings(
         monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
-        annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "€29.99", displayName: "Hangs Unlimited Annual"),
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "€1.99", displayName: "100 Question Pack")
     )
 }
@@ -172,55 +173,30 @@ struct PaywallViewNormalStructureTests {
 @MainActor
 @Suite("PaywallView — plan picker (z8TS6)")
 struct PaywallViewPlanPickerTests {
-    @Test("Annual and Monthly plan cards render with the save badge")
+    @Test("Monthly plan card renders, no annual badge")
     func planCardsRender() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Annual") }
             #expect(throws: Never.self) { try tree.find(text: "Monthly") }
-            #expect(throws: Never.self) { try tree.find(text: "SAVE 50%") }
+            #expect(throws: (any Error).self, "annual is gone for v1 — no SAVE 50% badge") {
+                try tree.find(text: "SAVE 50%")
+            }
         }
     }
 
-    @Test("Annual is pre-selected — CTA carries the yearly billing suffix")
-    func annualPreselectedCTA() async throws {
+    @Test("Monthly is the only plan — pre-selected by default, CTA carries the monthly billing suffix")
+    func monthlyPreselectedCTA() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ year"]),
-                    "default CTA must sell the annual plan")
-            #expect(!treeHasText(tree, containing: ["Subscribe —", "/ month"]),
-                    "monthly suffix must not show while annual is selected")
-        }
-    }
-
-    @Test("Monthly selection drives the CTA to the monthly billing suffix")
-    func monthlySelectionCTA() async throws {
-        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
-        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
+        #expect(view.effectivePlan == .monthly, "monthly is the only subscription plan for v1")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]),
-                    "CTA must sell the monthly plan when monthly is selected")
-            #expect(!treeHasText(tree, containing: ["Subscribe —", "/ year"]),
-                    "yearly suffix must not show while monthly is selected")
+                    "default CTA must sell the monthly plan")
+            #expect(!treeHasText(tree, containing: ["/ year"]), "annual billing suffix must never show")
         }
-    }
-
-    @Test("Missing annual package falls back to monthly (partial offerings)")
-    func partialOfferingsFallback() async {
-        let monthlyOnly = PurchasableOfferings(
-            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
-            annual: nil,
-            pack: nil
-        )
-        let manager = await makeStoreManager(offerings: monthlyOnly, hasAttemptedLoad: true)
-        let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
-        #expect(view.effectivePlan == .monthly,
-                "annual selected but unavailable → CTA must fall back to monthly, not dead-end")
     }
 
     @Test("One-time pack card renders with its non-subscription framing")
@@ -303,12 +279,12 @@ struct PaywallViewInFlightTests {
             #expect(!treeHasText(tree, containing: ["Buying"]),
                     "the narrating CTA is gone — the CTA spins instead of narrating")
             let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
-            let annual = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual")
+            let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
             #expect(try pack.opacity() == 1, "the pack being bought stays full-strength")
-            #expect(try annual.opacity() < 0.5, "the plan cards recede during a pack buy")
+            #expect(try monthly.opacity() < 0.5, "the plan card recedes during a pack buy")
             // Every purchase trigger is occupied/dimmed — no second purchase.
             #expect(pack.isDisabled())
-            #expect(annual.isDisabled())
+            #expect(monthly.isDisabled())
             // `.disabled(isLoading)` lives INSIDE HangsPrimaryButton, so the
             // assertion has to be on the button, not on the identified wrapper.
             #expect(try ctaButton(tree).isDisabled(),
@@ -319,23 +295,20 @@ struct PaywallViewInFlightTests {
 
     @Test("subscription in flight keeps the bought card bright while the others dim")
     func subscriptionInFlightKeepsDimHierarchy() async throws {
-        let (manager, task) = await makeStalledManager(purchase: StoreProduct.annualSubId)
+        let (manager, task) = await makeStalledManager(purchase: StoreProduct.monthlySubId)
         defer { task.cancel() }
-        #expect(manager.purchaseState == .purchasing(productID: StoreProduct.annualSubId))
+        #expect(manager.purchaseState == .purchasing(productID: StoreProduct.monthlySubId))
 
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             // The CTA still names what is being bought — the same button, now
             // spinning, rather than a second button with different copy.
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ year"]))
-            let annual = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual")
+            #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]))
             let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
             let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
-            #expect(try annual.opacity() == 1, "the plan being bought stays full-strength")
-            #expect(try monthly.opacity() < 0.5, "the other plan recedes")
+            #expect(try monthly.opacity() == 1, "the plan being bought stays full-strength")
             #expect(try pack.opacity() < 0.5, "the pack recedes during a subscription buy")
-            #expect(annual.isDisabled())
             #expect(monthly.isDisabled())
             #expect(pack.isDisabled())
             #expect(try ctaButton(tree).isDisabled())
@@ -352,7 +325,7 @@ struct PaywallViewInFlightTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             // Whole picker dims + disables — restore acts on the account.
-            #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-annual").isDisabled())
+            #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly").isDisabled())
             #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled())
             #expect(try tree.find(viewWithAccessibilityIdentifier: "paywall-restore-button").isDisabled())
             #expect(try ctaButton(tree).isDisabled())
@@ -365,7 +338,7 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ year"]))
+            #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]))
             #expect(!treeHasText(tree, containing: ["Buying"]), "no narrating CTA while idle")
             #expect(!treeHasText(tree, containing: ["Restoring"]), "no restore CTA while idle")
             #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled()),
@@ -379,8 +352,8 @@ struct PaywallViewInFlightTests {
 
 /// Founder, TestFlight 2026-09-14: the pack card sat in a picker between two
 /// cards that only *select* — and charged the moment it was touched. The picker
-/// selects (annual / monthly / pack) now, the bottom CTA is the one thing that
-/// buys, and its title says which of the three it will buy.
+/// selects (monthly / pack) now, the bottom CTA is the one thing that
+/// buys, and its title says which of the two it will buy.
 @MainActor
 @Suite("PaywallView — the picker selects, only the CTA buys (#179)")
 struct PaywallPackSelectionTests {
@@ -539,7 +512,7 @@ struct PaywallViewOfflineStructureTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "Annual") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Monthly") }
             #expect(throws: (any Error).self) { try tree.find(text: "100 Question Pack") }
         }
     }

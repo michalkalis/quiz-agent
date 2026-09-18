@@ -46,23 +46,6 @@ private func makeRatingVM(
     return (vm, service, audio)
 }
 
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 // MARK: - Score + submit
 
 @Suite("QuestionRatingViewModel — score and submit (#155)")
@@ -198,17 +181,17 @@ struct QuestionRatingDictationTests {
             let (vm, _, _) = makeRatingVM(stt: stt)
 
             await vm.startDictation()
-            await waitUntil({ vm.isDictating }, "dictation never started")
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
 
             await stt.injectEvent(.partialTranscript("too ea..."))
-            await waitUntil({ vm.partialTranscript == "too ea..." }, "partial never propagated")
+            await pumpUntil({ vm.partialTranscript == "too ea..." }, turns: 2000, "partial never propagated")
 
             await stt.injectEvent(.committedTranscript("too easy"))
-            await waitUntil({ vm.justification == "too easy" }, "committed segment never appended")
+            await pumpUntil({ vm.justification == "too easy" }, turns: 2000, "committed segment never appended")
             #expect(vm.partialTranscript == "")
 
             await stt.injectEvent(.committedTranscript("for adults"))
-            await waitUntil({ vm.justification == "too easy for adults" }, "second segment never appended")
+            await pumpUntil({ vm.justification == "too easy for adults" }, turns: 2000, "second segment never appended")
         }
     }
 

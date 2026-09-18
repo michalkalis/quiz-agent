@@ -22,23 +22,9 @@ import ConcurrencyExtras
 
 // MARK: - Helpers
 
-/// Spin until `predicate` is true (sync @MainActor state).
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
+// #180 track A: both advances are awaited to completion above, so the only
+// thing left to wait for is task scheduling — `pumpUntil` (turn-bounded) does
+// it without a wall-clock deadline that a loaded parallel run can blow.
 
 /// Let just-resumed handlers run their tail before we assert.
 @MainActor
@@ -106,7 +92,7 @@ struct QuizViewModelAdvanceRaceTests {
             async let b: Void = viewModel.proceedToNextQuestion()
             _ = await (a, b)
 
-            await waitUntil({ viewModel.quizState == .askingQuestion }, "never reached askingQuestion")
+            await pumpUntil({ viewModel.quizState == .askingQuestion }, "never reached askingQuestion")
             await drainHops()
 
             #expect(viewModel.currentQuestion?.id == "q_002")

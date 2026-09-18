@@ -377,6 +377,25 @@ struct PaywallViewInFlightTests {
 
 // MARK: - Select, then buy (#179 finding 9)
 
+/// One-shot async gate: `wait()` suspends until `open()` is called. Holds a
+/// mocked purchase in flight deterministically — the 500 ms sleep it replaces
+/// raced the MainActor work the assertion reads (#180 track A).
+private actor PaywallPurchaseGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters.removeAll()
+    }
+}
+
 /// Founder, TestFlight 2026-09-14: the pack card sat in a picker between two
 /// cards that only *select* — and charged the moment it was touched. The picker
 /// selects (annual / monthly / pack) now, the bottom CTA is the one thing that
@@ -387,15 +406,16 @@ struct PaywallPackSelectionTests {
     /// Manager plus the mock behind it, so a test can assert what did (and did
     /// not) reach the store.
     private func makeManagerWithMock(
-        stallPurchase: Bool = false
+        gate: PaywallPurchaseGate? = nil
     ) async -> (StoreManager, MockPurchaseService) {
         let mock = MockPurchaseService()
         mock.stubbedOfferings = makeFullOfferings()
         mock.stubbedIsEntitled = false
-        if stallPurchase {
-            // Long enough to observe `.purchasing`, short enough that the task
-            // cannot outlive the suite.
-            mock.purchaseGate = { try? await Task.sleep(for: .milliseconds(500)) }
+        if let gate {
+            // Holds the purchase in flight until the test opens the gate — a
+            // duration has no ordering guarantee against the MainActor work the
+            // assertion reads (#180 track A).
+            mock.purchaseGate = { await gate.wait() }
         }
         let manager = StoreManager(purchaseService: mock)
         await Task.yield()
@@ -437,21 +457,22 @@ struct PaywallPackSelectionTests {
 
     @Test("the CTA buys the SELECTED product — the pack when the pack is selected")
     func ctaBuysTheSelectedProduct() async throws {
-        let (manager, mock) = await makeManagerWithMock(stallPurchase: true)
+        let gate = PaywallPurchaseGate()
+        let (manager, mock) = await makeManagerWithMock(gate: gate)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .pack)
         try await ViewHosting.host(view) {
             try view.inspect()
                 .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
                 .button().tap()
 
-            // The purchase runs in an unstructured Task — poll until it parks in
-            // the stalled `.purchasing` state (the MCQ suites' pattern).
-            for _ in 0 ..< 150 where manager.purchaseState == .idle {
-                try await Task.sleep(nanoseconds: 20_000_000)
-            }
+            // The purchase runs in an unstructured Task — pump until it parks in
+            // the gated `.purchasing` state, then release it.
+            await pumpUntil({ manager.purchaseState != .idle }, turns: 2000,
+                            "the purchase never reached the store")
             #expect(manager.purchaseState == .purchasing(productID: StoreProduct.packId),
                     "the CTA must buy the selected product, not a subscription")
             #expect(mock.purchaseCallCount == 1)
+            await gate.open()
         }
     }
 
@@ -459,7 +480,8 @@ struct PaywallPackSelectionTests {
     /// traded away to make the pack selectable.
     @Test("with no pack selected the CTA still sells — and buys — the chosen plan")
     func ctaStillBuysTheChosenSubscription() async throws {
-        let (manager, mock) = await makeManagerWithMock(stallPurchase: true)
+        let gate = PaywallPurchaseGate()
+        let (manager, mock) = await makeManagerWithMock(gate: gate)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
         try await ViewHosting.host(view) {
             #expect(try treeHasText(view.inspect(), containing: ["Subscribe —", "/ month"]))
@@ -467,11 +489,11 @@ struct PaywallPackSelectionTests {
                 .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
                 .button().tap()
 
-            for _ in 0 ..< 150 where manager.purchaseState == .idle {
-                try await Task.sleep(nanoseconds: 20_000_000)
-            }
+            await pumpUntil({ manager.purchaseState != .idle }, turns: 2000,
+                            "the purchase never reached the store")
             #expect(manager.purchaseState == .purchasing(productID: StoreProduct.monthlySubId))
             #expect(mock.purchaseCallCount == 1)
+            await gate.open()
         }
     }
 

@@ -438,15 +438,32 @@ struct QuizViewModelAutoStopRecordingTests {
     @Test("a dead-air cap that fires during engine start closes the mic instead of leaving it open")
     @MainActor
     func capFiringDuringEngineStartClosesTheMic() async throws {
-        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+        // #180 track A: the gap is a gate the test holds open, and the cap is
+        // the SHIPPED 15 s driven on the clock — no wall-clock race decides
+        // whether the cap lands inside the handshake.
+        let clock = TestClock()
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio(clock: AnyClock(clock))
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.quizState = .askingQuestion
         viewModel.recordingCoordinator.speechStartWindow = 60
-        viewModel.recordingCoordinator.deadAirCap = 0.05
-        mockAudio.prepareForRecordingDelay = 0.3 // the cap lands inside this gap
+        viewModel.recordingCoordinator.deadAirCap = Config.autoRecordingDuration
 
-        await viewModel.recordingCoordinator.startRecording()
+        // A one-shot release for the engine handshake: `finish()` is what lets
+        // `prepareForRecording` return, so the mic comes up strictly after the
+        // cap has fired.
+        let gate = AsyncStream<Void>.makeStream()
+        mockAudio.prepareForRecordingGate = { for await _ in gate.stream {} }
+
+        let start = Task { await viewModel.recordingCoordinator.startRecording() }
+        await pumpUntil({ mockAudio.prepareForRecordingCallCount == 1 }, "the engine handshake never began")
+
+        await clock.advance(by: .seconds(Config.autoRecordingDuration))
+        await pumpUntil({ viewModel.quizState != .recording }, "the dead-air cap never ended the parked recording")
+
+        gate.continuation.finish() // the engine finally comes up — after the cap
+        await start.value
+        await pumpUntil { mockAudio.isRecording == false }
 
         #expect(viewModel.quizState != .recording, "the cap must have ended the recording during the handshake")
         #expect(mockAudio.isRecording == false, "the engine that came up late must be closed, not left recording")

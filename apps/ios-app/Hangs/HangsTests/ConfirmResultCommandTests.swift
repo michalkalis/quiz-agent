@@ -13,6 +13,7 @@
 //    • Question: "skip" opens the ~2.5 s undo-window (commit / abort seam).
 //
 
+import Clocks
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
@@ -20,7 +21,7 @@ import SwiftUI
 import Testing
 
 @MainActor
-private func makeVM() -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
+private func makeVM(clock: AnyClock<Duration> = .continuous) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let silence = MockSilenceDetectionService()
     let vm = QuizViewModel(
@@ -28,7 +29,8 @@ private func makeVM() -> (QuizViewModel, MockSilenceDetectionService, MockAudioS
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: nil
+        sttService: nil,
+        clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
@@ -62,10 +64,15 @@ private func makeResultState() -> QuizState {
     )
 }
 
+/// #180 track A: the only waits left here that need real time are the ones
+/// behind a sanctioned audio hardware settle (`proceedToNextQuestion`'s
+/// deliberate `Task.sleep` and the audio mock's 0.1 s playback) — a
+/// scheduler-turn pump cannot outlast those. Every other wait in this file is
+/// `pumpUntil`, which has no wall clock to lose a race to.
 @MainActor
-private func waitUntil(
+private func waitForAudioSettle(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 6000,
+    timeoutMillis: Int = 15000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -76,7 +83,7 @@ private func waitUntil(
         try? await Task.sleep(for: .milliseconds(1))
     }
     if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
+    Issue.record(comment ?? "audio-settle wait timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
 @Suite("Confirm / Result / Repeat / Skip command wiring (77.9)")
@@ -94,7 +101,7 @@ struct ConfirmResultCommandTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
-            await waitUntil({ !vm.showAnswerConfirmation }, "ok did not confirm")
+            await pumpUntil({ !vm.showAnswerConfirmation }, "ok did not confirm")
             #expect(vm.showAnswerConfirmation == false)
             #expect(vm.recordingCoordinator.pendingResponse == nil, "the pending response was consumed by confirm")
         }
@@ -148,16 +155,24 @@ struct ConfirmResultCommandTests {
     @Test("the 10 s auto-confirm still fires with NO speech (unchanged fallback)")
     func autoConfirmStillFires() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
+            // #180 track A: the SHIPPED delay, driven on a TestClock — the old
+            // shrunk 1 s raced real time and was starved under parallel load.
+            let clock = TestClock()
+            let (vm, _, _) = makeVM(clock: AnyClock(clock))
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
             vm.recordingCoordinator.pendingResponse = makePendingResponse()
             vm.settings.autoConfirmEnabled = true
 
             // No spoken command — the auto-confirm timer alone must confirm.
-            vm.quizTimersController.startAutoConfirmIfEnabled(duration: 1)
+            vm.quizTimersController.startAutoConfirmIfEnabled()
+            await pumpUntil { vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }
 
-            await waitUntil({ !vm.showAnswerConfirmation }, "auto-confirm did not fire with no speech")
+            await clock.advance(by: .seconds(Config.autoConfirmDelaySecs - 1))
+            #expect(vm.showAnswerConfirmation == true, "the sheet may not confirm before the delay is up")
+
+            await clock.advance(by: .seconds(1))
+            await pumpUntil({ !vm.showAnswerConfirmation }, "auto-confirm did not fire with no speech")
             #expect(vm.showAnswerConfirmation == false)
         }
     }
@@ -173,7 +188,7 @@ struct ConfirmResultCommandTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
-            await waitUntil({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "next did not advance")
+            await waitForAudioSettle({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "next did not advance")
             if case .showingResult = vm.quizState {
                 Issue.record("still on the result screen after 'next'")
             }
@@ -188,7 +203,7 @@ struct ConfirmResultCommandTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
-            await waitUntil({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "ok did not advance on result")
+            await waitForAudioSettle({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "ok did not advance on result")
             if case .showingResult = vm.quizState {
                 Issue.record("still on the result screen after 'ok'")
             }
@@ -209,9 +224,9 @@ struct ConfirmResultCommandTests {
             // Durable signals: the question audio was replayed, and once the replay
             // finished the command listener was re-armed (77.9). isPlayingQuestionTTS
             // is only transiently true, so it's not a reliable assertion target.
-            await waitUntil({ audio.playOpusCallCount >= 1 }, "repeat did not replay the question")
-            await waitUntil({ !vm.isPlayingQuestionTTS && silence.isListening },
-                            "listener was not re-armed after replay")
+            await waitForAudioSettle({ audio.playOpusCallCount >= 1 }, "repeat did not replay the question")
+            await waitForAudioSettle({ !vm.isPlayingQuestionTTS && silence.isListening },
+                                     "listener was not re-armed after replay")
             #expect(audio.playOpusCallCount >= 1)
             #expect(silence.isListening == true)
         }
@@ -254,14 +269,20 @@ struct ConfirmResultCommandTests {
     @Test("the skip undo-window commits the skip on expiry")
     func skipUndoCommits() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
+            let clock = TestClock()
+            let (vm, _, _) = makeVM(clock: AnyClock(clock))
             vm.quizState = .askingQuestion
 
-            // Short window so the commit path runs quickly.
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05)
+            // The SHIPPED window, driven rather than shrunk (#180 track A).
+            vm.voiceCommandCoordinator.beginSkipUndoWindow()
+            await pumpUntil { vm.voiceCommandCoordinator.pendingSkipWindow != nil }
 
+            await clock.advance(by: .milliseconds(2400)) // just inside the shipped 2.5 s window
+            #expect(vm.quizState == .askingQuestion, "the window must not commit before it expires")
+
+            await clock.advance(by: .milliseconds(101)) // …and past it (integer ms: a fractional Duration can land short)
             // On expiry the window commits via skipQuestion() (→ .skipping then advance).
-            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
+            await pumpUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
                             "skip did not commit on undo-window expiry")
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
             #expect(vm.quizState != .askingQuestion, "expiry must commit the skip")

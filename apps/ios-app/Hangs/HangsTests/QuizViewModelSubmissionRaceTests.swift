@@ -63,42 +63,24 @@ private func makeMCQQuestion() -> Question {
     )
 }
 
-/// Spin until `predicate` is true (sync @MainActor state). See the twin in
-/// QuizViewModelStreamingTests for the wall-clock / real-sleep rationale.
+/// `pumpUntil` for a predicate that lives on the STT ACTOR — the disconnect
+/// gate can only be read with an `await`, which `pumpUntil` (sync, @MainActor)
+/// cannot express. Turn-bounded like its shared twin: #180 track A left nothing
+/// on these paths that sleeps for real time, so a wall-clock deadline here
+/// would only be something for a loaded parallel run to blow.
 @MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
-/// Async variant: the disconnect-gate flag lives on the STT actor, so the
-/// predicate must be able to `await` across the actor boundary.
-@MainActor
-private func waitUntilAsync(
+private func pumpUntilAsync(
     _ predicate: () async -> Bool,
-    timeoutMillis: Int = 10_000,
+    turns: Int = 2000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
+    for _ in 0 ..< turns {
         if await predicate() { return }
         await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
     }
     if await predicate() { return }
-    Issue.record(comment ?? "waitUntilAsync timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
+    Issue.record(comment ?? "pumpUntilAsync exhausted \(turns) scheduler turns", sourceLocation: sourceLocation)
 }
 
 /// Let a just-resumed handler run its (aborting) tail before we assert.
@@ -125,12 +107,12 @@ struct QuizViewModelSubmissionRaceTests {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             // Park the committed-transcript handler inside disconnect().
             await mockSTT.setGateDisconnect(true)
             await mockSTT.injectEvent(.committedTranscript("Paris")) // voice
-            await waitUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
+            await pumpUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
 
             // Typed answer races in mid-teardown (the #79 window).
             await viewModel.resubmitAnswer("London") // typed
@@ -138,7 +120,7 @@ struct QuizViewModelSubmissionRaceTests {
 
             // Resume the parked handler — it must detect the moved epoch and bail.
             await mockSTT.releaseDisconnect()
-            await waitUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
+            await pumpUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
             await drainHops()
 
             #expect(mockNetwork.submitTextInputCallCount == 1)
@@ -160,17 +142,17 @@ struct QuizViewModelSubmissionRaceTests {
             viewModel.currentQuestion = makeMCQQuestion()
 
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.setGateDisconnect(true)
             await mockSTT.injectEvent(.committedTranscript("Jupiter")) // voice MCQ match
-            await waitUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
+            await pumpUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
 
             await viewModel.resubmitAnswer("London") // typed
             #expect(viewModel.quizState.isShowingResult)
 
             await mockSTT.releaseDisconnect()
-            await waitUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
+            await pumpUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
             await drainHops()
 
             #expect(mockNetwork.submitTextInputCallCount == 1)
@@ -190,14 +172,14 @@ struct QuizViewModelSubmissionRaceTests {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris")) // no gate → sheet appears
-            await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
             #expect(mockNetwork.submitTextInputCallCount == 0) // sheet only, nothing submitted yet
 
             await viewModel.resubmitAnswer("London") // typed
-            await waitUntil({ viewModel.quizState.isShowingResult }, "typed submit never completed")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "typed submit never completed")
 
             #expect(viewModel.showAnswerConfirmation == false)
             #expect(mockNetwork.submitTextInputCallCount == 1)
@@ -216,10 +198,10 @@ struct QuizViewModelSubmissionRaceTests {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
 
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
 
             await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await waitUntil({ viewModel.quizState == .processing }, "never reached .processing")
+            await pumpUntil({ viewModel.quizState == .processing }, "never reached .processing")
 
             #expect(viewModel.transcribedAnswer == "Paris")
             #expect(viewModel.showAnswerConfirmation == true)
@@ -240,15 +222,15 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
             await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
 
             async let first: Void = viewModel.confirmAnswer()
             async let second: Void = viewModel.confirmAnswer()
             _ = await (first, second)
 
-            await waitUntil({ viewModel.quizState.isShowingResult }, "submission never completed")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "submission never completed")
             #expect(mockNetwork.submitTextInputCallCount == 1)
             #expect(mockNetwork.capturedTextInputInput == "Paris")
         }
@@ -267,13 +249,13 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
             await viewModel.recordingCoordinator.startRecording()
-            await waitUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
             await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await waitUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
+            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
 
             // First confirm (e.g. auto-confirm timer) resolves fully.
             await viewModel.confirmAnswer()
-            await waitUntil({ viewModel.quizState.isShowingResult }, "first submit never completed")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "first submit never completed")
             #expect(mockNetwork.submitTextInputCallCount == 1)
 
             // Stray/delayed second call (e.g. a button tap recognized as the sheet
@@ -316,7 +298,7 @@ struct QuizViewModelSubmissionRaceTests {
             _ = await (first, second)
             await drainHops()
 
-            await waitUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
             // The cached Whisper response resolves locally — no /input POST ever.
             #expect(mockNetwork.submitTextInputCallCount == 0)
         }
@@ -333,7 +315,7 @@ struct QuizViewModelSubmissionRaceTests {
             try seedWhisperConfirmation(viewModel, mockNetwork)
 
             await viewModel.confirmAnswer()
-            await waitUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
+            await pumpUntil({ viewModel.quizState.isShowingResult }, "Whisper response never resolved")
 
             await viewModel.confirmAnswer() // stray/delayed second call
             await drainHops()

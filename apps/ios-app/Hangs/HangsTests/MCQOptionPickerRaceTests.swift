@@ -31,6 +31,9 @@ struct MCQDelayedSubmitTests {
         submit.schedule(delayNs: 50_000_000) { fired += 1 }
         submit.cancel()
 
+        // Real time on purpose: MCQDelayedSubmit's delay is a VIEW-level timer
+        // (#180 track A keeps views off the injected clock), and proving the
+        // cancel SUPPRESSED the fire means outliving that delay.
         try await Task.sleep(nanoseconds: 200_000_000)
         #expect(fired == 0)
     }
@@ -41,8 +44,9 @@ struct MCQDelayedSubmitTests {
         let submit = MCQDelayedSubmit()
         submit.schedule(delayNs: 50_000_000) { fired += 1 }
 
-        // Poll up to ~2s — timer resolution under TSan is too coarse for a fixed wait.
-        for _ in 0 ..< 100 where fired == 0 {
+        // View-level delay ⇒ real time; bound generously (~6 s ceiling) so a
+        // loaded parallel run cannot starve it. Exits as soon as it fires.
+        for _ in 0 ..< 300 where fired == 0 {
             try await Task.sleep(nanoseconds: 20_000_000)
         }
         #expect(fired == 1)
@@ -79,6 +83,8 @@ struct MCQOptionPickerRaceTests {
             // itself, so the picker must cancel its pending tap submit.
             try tree.find(ViewType.VStack.self).callOnChange(oldValue: String?.none, newValue: "b" as String?)
 
+            // Outlives the view-level 500 ms delay to prove the pending submit was
+            // cancelled — a negative assertion has nothing to pump on.
             try await Task.sleep(nanoseconds: 900_000_000)
             #expect(selectCount == 0)
         }
@@ -96,10 +102,9 @@ struct MCQOptionPickerRaceTests {
             let tree = try view.inspect()
             try tree.find(ViewType.Button.self).tap()
 
-            // Poll up to ~3s — the 500ms delayed submit can overshoot a fixed
-            // wait under TSan + parallel-suite load (same pattern as
-            // firesOnceWithoutCancel above).
-            for _ in 0 ..< 150 where selectCount == 0 {
+            // View-level delay ⇒ real time, bound generously (~10 s ceiling) so
+            // TSan + parallel-suite load cannot starve it.
+            for _ in 0 ..< 500 where selectCount == 0 {
                 try await Task.sleep(nanoseconds: 20_000_000)
             }
             #expect(selectCount == 1)
@@ -145,6 +150,8 @@ struct MCQOptionPickerSingleOwnerTests {
             box.key = "b"
             try tree.find(ViewType.VStack.self).callOnChange(oldValue: "a" as String?, newValue: "b" as String?)
 
+            // Outlives the view-level 500 ms delay: the assertion is that A's
+            // submit NEVER fires, so there is nothing to pump on.
             try await Task.sleep(nanoseconds: 900_000_000)
             #expect(selected == nil) // A's delayed submit never fired
             #expect(box.key == "b") // highlighted key == the voice-matched key — no divergence
@@ -172,8 +179,9 @@ struct MCQOptionPickerSingleOwnerTests {
             // the submit the tap itself just scheduled.
             try tree.find(ViewType.VStack.self).callOnChange(oldValue: String?.none, newValue: "a" as String?)
 
-            // Poll up to ~3s, same pattern as tapSubmitsOnceWithoutVoiceMatch above.
-            for _ in 0 ..< 150 where selected == nil {
+            // View-level delay ⇒ real time, same generous bound as
+            // tapSubmitsOnceWithoutVoiceMatch above.
+            for _ in 0 ..< 500 where selected == nil {
                 try await Task.sleep(nanoseconds: 20_000_000)
             }
             #expect(selected?.key == "a")

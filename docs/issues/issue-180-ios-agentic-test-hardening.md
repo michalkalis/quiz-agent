@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Founder 2026-09-16: bez nočných behov, príprava len na úrovni smeru; detail rieši interaktívna session. Ready 2026-09-16.
+**Status:** Track A HOTOVÝ 2026-09-18 (PR feat/180-track-a-clock): jeden vstrekovaný clock (swift-clocks) na celej quiz ceste, 33 testovacích súborov migrovaných na TestClock/pumpUntil, procesový serializovaný hlavný executor, 5/5 zelených behov po 1211 testov. Zistenie: paralelný režim Swift Testing je pri main-actor sade bez prínosu → CI ostáva serializované. Ďalší track = B. Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Founder 2026-09-16: bez nočných behov, príprava len na úrovni smeru; detail rieši interaktívna session. Ready 2026-09-16.
 
 ## Prečo
 
@@ -50,7 +50,7 @@ Nový tok = identifikátory + zmrazený test; PR = unit + snapshot zelené; Test
 
 ## Acceptance
 _(rámec; konkrétne testy vzniknú pri implementácii)_
-- [ ] A: `ios-ci.yml` beží paralelne, 5/5 zelených behov; žiadny `Task.sleep`/`XCTWaiter` s reálnym časom v dotknutých testoch
+- [x] A: 5/5 zelených behov celej sady (serializované — paralelný režim zamietnutý s odôvodnením v `ios-ci.yml`); žiadny quiz-path test nečaká na reálny čas (zvyšok = view-level časovače a audio settle, vymenované v PR)
 - [ ] B: SKTestSession testy pokrývajú 7 vymenovaných scenárov, zelené v CI bez siete
 - [ ] C: 3 scenáre ako pomenované testy (iOS + pytest), zelené
 - [ ] D: RS-01..RS-18 okrem RS-14 a RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`

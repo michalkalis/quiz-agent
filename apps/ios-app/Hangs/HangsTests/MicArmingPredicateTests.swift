@@ -104,12 +104,10 @@ struct MicArmingPredicateTests {
         let stopsBefore = audio.stopPlaybackCallCount
         silence.simulateBargeIn()
 
-        var fired = false
-        for _ in 0..<200 {
-            if audio.stopPlaybackCallCount > stopsBefore { fired = true; break }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
-        #expect(fired, "a barge-in event must still stop playback — gating the engine on the command screen would have killed this")
+        // `handleBargeIn` stops the TTS before its hardware-settle pause, so the
+        // stop is observable by pumping scheduler turns — no wall clock needed.
+        await pumpUntil({ audio.stopPlaybackCallCount > stopsBefore }, turns: 2000,
+                        "a barge-in event must still stop playback — gating the engine on the command screen would have killed this")
     }
 
     // MARK: F4 — no engine after the quiz is torn down

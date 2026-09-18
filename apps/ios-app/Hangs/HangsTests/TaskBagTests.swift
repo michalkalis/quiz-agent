@@ -22,10 +22,10 @@ struct TaskBagTests {
 
         let first = Task {
             await firstStarted.signal()
-            // Park until cancelled
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 5_000_000)
-            }
+            // Park until cancelled: the sleep never completes on its own, it is
+            // only ever resumed by the bag cancelling this task (#180 track A —
+            // no polling, no real time).
+            try? await Task.sleep(for: .seconds(3600))
             await firstCancelled.signal()
         }
         bag.add(first, key: .answerTimer)
@@ -51,9 +51,7 @@ struct TaskBagTests {
         let bRan = AsyncFlag()
 
         let a = Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 5_000_000)
-            }
+            try? await Task.sleep(for: .seconds(3600)) // parked until cancelled
             await aCancelled.signal()
         }
         bag.add(a, key: .answerTimer)
@@ -81,9 +79,7 @@ struct TaskBagTests {
 
         for key in [TaskKey.answerTimer, .autoAdvance, .silenceDetection] {
             let t = Task {
-                while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 5_000_000)
-                }
+                try? await Task.sleep(for: .seconds(3600)) // parked until cancelled
                 await cancellations.tick()
             }
             bag.add(t, key: key)

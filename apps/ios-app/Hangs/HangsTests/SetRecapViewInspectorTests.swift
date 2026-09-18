@@ -74,15 +74,14 @@ private func makeRecapViewModel() async -> QuizViewModel {
             feedbackReceived: [],
             audio: nil
         )
+        let target = vm.recapEntries.count + 1
+        // The recap entry is captured synchronously by `handleQuizResponse`; the
+        // deferred-reveal advance it spawns only walks on to the next question
+        // and would race this loop's state writes. Cancel it instead of waiting
+        // real time for it to settle (#180 track A) — the ledger is what this
+        // fixture is building.
         await vm.handleQuizResponse(response)
-        let target = vm.recapEntries.count
-        // The deferred advance is an untracked task — wait for it to settle
-        // before mutating state for the next round.
-        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
-        while vm.quizState != .askingQuestion, ContinuousClock.now < deadline {
-            await Task.yield()
-            try? await Task.sleep(for: .milliseconds(1))
-        }
+        vm.taskBag.cancel(.deferredAdvance)
         precondition(vm.recapEntries.count == target)
     }
     vm.quizState = .finished

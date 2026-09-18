@@ -13,11 +13,16 @@
 //    • NO auto-mic-open: a TTS finish alone never records (P1).
 //
 
+import Clocks
 import Foundation
 import Testing
 import ConcurrencyExtras
 @testable import Hangs
 
+/// The routing under test is time-free: a command either opens the mic now or
+/// never does. The model still gets a parked `TestClock` (#180 track A) so no
+/// production timer — the recording window, the dead-air cap — can fire
+/// underneath these assertions while the suite runs under load.
 @MainActor
 private func makeStartVM() -> (QuizViewModel, MockAudioService) {
     let audio = MockAudioService()
@@ -26,28 +31,12 @@ private func makeStartVM() -> (QuizViewModel, MockAudioService) {
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil // nil STT → deterministic batch recording path
+        sttService: nil, // nil STT → deterministic batch recording path
+        clock: AnyClock(TestClock())
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion()
     return (vm, audio)
-}
-
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5_000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
 @Suite("Start command — spoken START wiring (77.8)")
@@ -63,7 +52,7 @@ struct StartCommandTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
-            await waitUntil({ vm.quizState == .recording }, "start did not open the mic")
+            await pumpUntil({ vm.quizState == .recording }, turns: 2000, "start did not open the mic")
             #expect(vm.quizState == .recording)
             #expect(audio.isRecording == true)
         }
@@ -97,7 +86,7 @@ struct StartCommandTests {
             // start flag. It must still drive the TTS-replay path (durable signal:
             // the question audio was played back).
             vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
-            await waitUntil({ audio.playOpusCallCount >= 1 }, "repeat did not replay the question")
+            await pumpUntil({ audio.playOpusCallCount >= 1 }, turns: 2000, "repeat did not replay the question")
             #expect(audio.playOpusCallCount >= 1)
         }
     }
@@ -129,7 +118,7 @@ struct StartCommandTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
 
-            await waitUntil({ vm.quizState != .idle }, "start on Home did not begin the quiz")
+            await pumpUntil({ vm.quizState != .idle }, turns: 2000, "start on Home did not begin the quiz")
             #expect(vm.quizState != .idle)
         }
     }

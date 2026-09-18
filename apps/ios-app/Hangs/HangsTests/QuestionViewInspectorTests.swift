@@ -212,8 +212,11 @@ struct QuestionViewMCQOptionVisibilityTests {
             let tree = try view.inspect()
             let tile = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.b")
             try tile.find(ViewType.Button.self).tap()
-            // MCQOptionPicker debounces the tap (54.16) before submitting.
-            for _ in 0 ..< 200 where network.capturedTextInputInput == nil {
+            // MCQOptionPicker debounces the tap (54.16) before submitting. That
+            // 500 ms lives inside the VIEW, not on the injected clock (#180 track A),
+            // so this poll stays real time — bound generously (~5 s ceiling) so a
+            // loaded parallel run cannot blow it; it exits the moment the submit lands.
+            for _ in 0 ..< 500 where network.capturedTextInputInput == nil {
                 try? await Task.sleep(nanoseconds: 10_000_000)
                 await Task.yield()
             }

@@ -9,17 +9,23 @@
 //  The default (per-question) flow must be bit-for-bit today's flow.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
 
 // MARK: - Helpers (self-contained per the race-tests convention)
 
-/// Spin until `predicate` is true (sync @MainActor state).
+/// Wait for state that sits behind an audio HARDWARE settle — the deliberate
+/// real `Task.sleep` in `advanceToNextQuestionOrFinish` and the audio mock's
+/// 0.1 s playback (#180 track A keeps those on real time on purpose). No
+/// scheduler-turn pump can outlast a real sleep, so this is the one wait in
+/// this file with a wall clock; every quiz timer is parked on a `TestClock`,
+/// so nothing else here can race it.
 @MainActor
-private func waitUntil(
+private func waitForAudioSettle(
     _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10000,
+    timeoutMillis: Int = 20000,
     _ comment: Comment? = nil,
     sourceLocation: SourceLocation = #_sourceLocation
 ) async {
@@ -27,10 +33,10 @@ private func waitUntil(
     while ContinuousClock.now < deadline {
         if predicate() { return }
         await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
+        try? await Task.sleep(for: .milliseconds(5))
     }
     if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
+    Issue.record(comment ?? "audio-settle wait timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
 @MainActor
@@ -63,7 +69,11 @@ private func makeResponse(
 
 @MainActor
 private func makeDeferredViewModel() -> (QuizViewModel, MockNetworkService) {
-    let (vm, network) = Fixtures.makeViewModelWithNetwork()
+    // #180 track A: a `TestClock` nobody advances. These tests are about the
+    // reveal FLOW, so no quiz timer (answer timer, thinking time, dead-air cap,
+    // auto-advance) may fire underneath and move the state out from under an
+    // assertion while the shared main actor is busy with parallel suites.
+    let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
     vm.settings.answerRevealMode = .endOfSet
     vm.settings.autoRecordEnabled = false // keep the mic out of these tests
     vm.settings.answerTimeLimit = 0 // Off — no lingering answer-timer tasks
@@ -86,7 +96,7 @@ struct DeferredRevealFlowTests {
 
         await vm.handleQuizResponse(makeResponse(result: .correct))
 
-        await waitUntil({ vm.quizState == .askingQuestion }, "never advanced to the next question")
+        await waitForAudioSettle({ vm.quizState == .askingQuestion }, "never advanced to the next question")
         #expect(vm.currentQuestion?.id == "q_next")
         #expect(!vm.quizState.isShowingResult)
     }
@@ -99,7 +109,7 @@ struct DeferredRevealFlowTests {
 
         await vm.handleQuizResponse(makeResponse(result: .skipped, userAnswer: ""))
 
-        await waitUntil({ vm.quizState == .askingQuestion }, "never advanced after the skip")
+        await waitForAudioSettle({ vm.quizState == .askingQuestion }, "never advanced after the skip")
         #expect(vm.recapEntries.count == 1)
         #expect(vm.recapEntries[0].wasSkipped)
         #expect(vm.recapEntries[0].userAnswerDisplay == nil, "a skip said nothing (#131 D)")
@@ -118,7 +128,7 @@ struct DeferredRevealFlowTests {
             sessionPhase: "finished"
         ))
 
-        await waitUntil({ vm.quizState == .finished }, "never reached .finished")
+        await waitForAudioSettle({ vm.quizState == .finished }, "never reached .finished")
         #expect(vm.recapEntries.count == 1)
     }
 
@@ -137,7 +147,7 @@ struct DeferredRevealFlowTests {
         )
 
         await vm.handleQuizResponse(makeResponse(result: .correct, audio: audio))
-        await waitUntil { vm.quizState == .askingQuestion }
+        await waitForAudioSettle { vm.quizState == .askingQuestion }
 
         let mockAudio = vm.audioService as! MockAudioService
         #expect(mockAudio.playOpusCallCount == 0, "the verdict was spoken — an audible interstitial")
@@ -150,11 +160,11 @@ struct DeferredRevealFlowTests {
 
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct))
-        await waitUntil { vm.quizState == .askingQuestion }
+        await waitForAudioSettle { vm.quizState == .askingQuestion }
 
         vm.quizState = .skipping
         await vm.handleQuizResponse(makeResponse(result: .skipped, userAnswer: ""))
-        await waitUntil { vm.recapEntries.count == 2 }
+        await waitForAudioSettle { vm.recapEntries.count == 2 }
 
         #expect(vm.recapEntries.map(\.id) == [1, 2])
         #expect(vm.recapEntries[0].isCorrect)
@@ -194,7 +204,7 @@ struct PerQuestionModeRegressionTests {
         let (vm, _) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct))
-        await waitUntil { vm.recapEntries.count == 1 }
+        await waitForAudioSettle { vm.recapEntries.count == 1 }
         vm.quizState = .finished
 
         await vm.startNewQuiz()
@@ -268,14 +278,14 @@ struct RecapNarrationTests {
         let (vm, network) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct, nextQuestion: nil, sessionPhase: "finished"))
-        await waitUntil { vm.quizState == .finished }
+        await waitForAudioSettle { vm.quizState == .finished }
         let expected = vm.recapNarrationChunks()
 
         vm.playRecapSummary()
 
-        await waitUntil({ network.synthesizedTexts.count == expected.count }, "not all chunks were synthesized")
+        await waitForAudioSettle({ network.synthesizedTexts.count == expected.count }, "not all chunks were synthesized")
         #expect(network.synthesizedTexts == expected)
-        await waitUntil({ !vm.isNarratingRecap }, "narration flag never cleared")
+        await waitForAudioSettle({ !vm.isNarratingRecap }, "narration flag never cleared")
     }
 
     /// Mute wins everywhere TTS starts (#85) — including the recap, and
@@ -285,7 +295,7 @@ struct RecapNarrationTests {
         let (vm, network) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct, nextQuestion: nil, sessionPhase: "finished"))
-        await waitUntil { vm.quizState == .finished }
+        await waitForAudioSettle { vm.quizState == .finished }
 
         vm.settings.isMuted = true
         vm.playRecapSummary()
@@ -293,8 +303,12 @@ struct RecapNarrationTests {
         vm.settings.autoRecordEnabled = false
         vm.autoPlayRecapIfHandsFree()
 
-        // Give any wrongly-started narration a chance to surface.
-        try? await Task.sleep(for: .milliseconds(50))
+        // Give any wrongly-started narration a chance to surface — scheduler
+        // turns, not real time: a narration that started would reach the
+        // network mock within a few hops (#180 track A).
+        for _ in 0 ..< 200 {
+            await Task.yield()
+        }
         #expect(network.synthesizedTexts.isEmpty, "narration started despite mute / hands-on mode")
     }
 
@@ -304,11 +318,11 @@ struct RecapNarrationTests {
         let (vm, network) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct, nextQuestion: nil, sessionPhase: "finished"))
-        await waitUntil { vm.quizState == .finished }
+        await waitForAudioSettle { vm.quizState == .finished }
         vm.settings.autoRecordEnabled = true
 
         vm.autoPlayRecapIfHandsFree()
 
-        await waitUntil({ !network.synthesizedTexts.isEmpty }, "hands-free recap never spoke")
+        await waitForAudioSettle({ !network.synthesizedTexts.isEmpty }, "hands-free recap never spoke")
     }
 }

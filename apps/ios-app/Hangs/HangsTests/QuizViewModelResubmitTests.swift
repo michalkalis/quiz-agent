@@ -16,6 +16,7 @@
 //      transcriptWasEdited = true
 //
 
+import Clocks
 import Foundation
 import Testing
 @testable import Hangs
@@ -27,9 +28,10 @@ import Testing
 /// an early guard exit.
 @MainActor
 private func makeViewModelForResubmit(
+    clock: AnyClock<Duration> = .continuous,
     configure: (MockNetworkService) -> Void = { _ in }
 ) -> (QuizViewModel, MockNetworkService) {
-    let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: configure)
+    let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(clock: clock, configure: configure)
     viewModel.currentSession = Fixtures.makeActiveSession()
     viewModel.currentQuestion = Fixtures.makeQuestion()
     viewModel.quizState = .askingQuestion
@@ -131,7 +133,8 @@ struct QuizViewModelResubmitTests {
     /// instead of the result. The fix hands the confirm off to a fresh Task.
     @Test("auto-confirm fired countdown reaches showingResult, not error")
     func autoConfirmCountdownReachesShowingResult() async throws {
-        let (viewModel, mockNetwork) = makeViewModelForResubmit()
+        let clock = TestClock()
+        let (viewModel, mockNetwork) = makeViewModelForResubmit(clock: AnyClock(clock))
         viewModel.settings.autoConfirmEnabled = true
         // Mirror the confirmation-sheet state after a committed streaming transcript.
         viewModel.transcribedAnswer = "Paris"
@@ -140,13 +143,14 @@ struct QuizViewModelResubmitTests {
         // pendingResponse nil → confirmAnswer() takes the streaming resubmit path.
         viewModel.recordingCoordinator.pendingResponse = nil
 
-        // Fire the real auto-confirm countdown (1s injected for test speed).
-        viewModel.quizTimersController.startAutoConfirmIfEnabled(duration: 1)
+        // Fire the real auto-confirm countdown at its SHIPPED length, driven on
+        // the injected clock (#180 track A) — no real seconds, no poll budget.
+        viewModel.quizTimersController.startAutoConfirmIfEnabled()
+        await pumpUntil { viewModel.autoConfirmCountdown == Config.autoConfirmDelaySecs }
 
-        // Countdown (1s) + handed-off submit; poll up to 4s.
-        for _ in 0 ..< 40 where !viewModel.quizState.isShowingResult {
-            try await Task.sleep(nanoseconds: 100_000_000)
-        }
+        await clock.advance(by: .seconds(Config.autoConfirmDelaySecs))
+        await pumpUntil({ viewModel.quizState.isShowingResult },
+                        "the handed-off submit never reached the result screen")
 
         #expect(viewModel.quizState.isShowingResult,
                 "auto-confirm ended in \(viewModel.quizState) instead of showingResult")

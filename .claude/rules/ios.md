@@ -24,7 +24,9 @@ swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 |------|---------|
 | Open project | `open apps/ios-app/Hangs/Hangs.xcodeproj` |
 | Build (Local) | `cd apps/ios-app/Hangs && xcodebuild -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` |
-| Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO` (serialized — parallel suites starve the wall-clock tests under `withMainSerialExecutor`, see ios-ci.yml) |
+| Tests | `cd apps/ios-app/Hangs && xcodebuild test -scheme Hangs-Local -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO` (serialized — the suite is main-actor work on one process-wide serial executor, so in-process parallelism only starves it; see ios-ci.yml) |
+
+**Tests never wait on real time (#180 track A).** Every quiz-path timer, backoff and deadline sleeps on the one injected `AnyClock<Duration>` (`QuizViewModel(clock:)`, `Fixtures.makeViewModel(clock:)`; pack view models and `SilenceDetectionService` take `clock:` too). A test that owns time builds the model with `AnyClock(TestClock())` and `await clock.advance(by:)` to the SHIPPED boundary — just before it (nothing fired) and past it — instead of shrinking durations. Use integer `.milliseconds(...)` at a boundary (a fractional `Duration` can land 1 as short). Scheduling-only waits use `pumpUntil` (turn-bounded), never `Task.sleep`. `AnyClock(ImmediateClock())` is unsafe on any submit path (the user-facing timeout would fire at once). Audio hardware settles in `QuizViewModel` and the audio mock stay real time by design.
 
 ## Simulator driving & XcodeBuildMCP token cost
 

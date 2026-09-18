@@ -114,9 +114,10 @@ struct MCQAdaptiveLayoutTests {
             let tree = try view.inspect()
             try tree.find(ViewType.Button.self).tap()
 
-            // Poll up to ~3s — the 500ms delayed submit can overshoot a fixed
-            // wait under load (same pattern as MCQOptionPickerRaceTests).
-            for _ in 0 ..< 150 where selected == nil {
+            // The 500 ms delayed submit is a VIEW-level timer, not on the injected
+            // clock (#180 track A) — so this poll is deliberately real time, bound
+            // generously (~10 s ceiling) against parallel-run starvation.
+            for _ in 0 ..< 500 where selected == nil {
                 try await Task.sleep(nanoseconds: 20_000_000)
             }
             #expect(selected?.key == "a")

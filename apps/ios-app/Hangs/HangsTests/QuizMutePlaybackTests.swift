@@ -36,15 +36,11 @@ struct QuizMutePlaybackTests {
         return (vm, audio)
     }
 
-    /// Spin until `predicate` holds — the playback under test runs in its own Task.
-    private func waitUntil(_ predicate: @MainActor () -> Bool, timeoutMillis: Int = 5000) async {
-        let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-        while ContinuousClock.now < deadline {
-            if predicate() { return }
-            await Task.yield()
-            try? await Task.sleep(for: .milliseconds(1))
-        }
-    }
+    // #180 track A: the playback under test runs in its own Task and reaches
+    // the audio mock with no production sleep in between, so every wait here is
+    // `pumpUntil` — scheduler turns, not a wall-clock deadline that parallel
+    // suites can starve (the old local spin timed out SILENTLY, which is how
+    // `muteDuringReplayRestartsListening` failed under load).
 
     /// The bug in one line: the question read is NOT playing, something else is,
     /// and the old condition therefore let it carry on talking.
@@ -65,7 +61,7 @@ struct QuizMutePlaybackTests {
     func muteDuringFeedbackPlayback() async {
         let (vm, audio) = makeVM()
         let playback = Task { _ = await vm.audioDeviceState.playFeedbackAudio(from: "https://example.com/f.mp3") }
-        await waitUntil { audio.playOpusCallCount > 0 }
+        await pumpUntil({ audio.playOpusCallCount > 0 }, "the feedback playback never started")
         #expect(vm.isPlayingQuestionTTS == false, "exactly the state the old condition missed")
 
         await vm.toggleMute()
@@ -81,7 +77,7 @@ struct QuizMutePlaybackTests {
         let (vm, audio) = makeVM()
         vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         let replay = Task { await vm.replayQuestionAudio() }
-        await waitUntil { vm.taskBag.contains(.questionReplay) }
+        await pumpUntil({ vm.taskBag.contains(.questionReplay) }, "the replay run was never registered")
 
         await vm.toggleMute()
 
@@ -104,7 +100,7 @@ struct QuizMutePlaybackTests {
         vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
 
         let replay = Task { await vm.replayQuestionAudio() }
-        await waitUntil { audio.playOpusCallCount > 0 }
+        await pumpUntil({ audio.playOpusCallCount > 0 }, "the replay never reached playback")
         #expect(silence.isListening == false, "the replay run takes the listener down on its way in")
 
         await vm.toggleMute()

@@ -538,10 +538,10 @@ struct CommandListenerTests {
             // Just short of the settle: still parked, nothing fired — the window
             // it waits out is the SHIPPED one.
             await Task.yield()
-            await clock.advance(by: .seconds(settle - 0.01))
+            await clock.advance(by: .seconds(settle) - .milliseconds(10))
             #expect(recognized.isEmpty, "the parked command must not fire before the settle elapses")
 
-            await clock.advance(by: .seconds(0.01))
+            await clock.advance(by: .milliseconds(11)) // past it (integer ms: a fractional Duration can land short)
             await pumpUntil({ !recognized.isEmpty }, "the settle timer never fired the parked command")
             #expect(recognized == [.start])
             #expect(coordinator.pendingVolatileSettle == nil, "a fired settle must not stay armed")

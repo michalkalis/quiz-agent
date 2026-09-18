@@ -13,41 +13,30 @@
 //  handled in `handleCommandTranscript` BEFORE the screen-scoped matcher.
 //
 
+import Clocks
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
 import Testing
 
+/// The undo-window is the thing under test, so the model is built on a
+/// `TestClock` (#180 track A) and the tests drive it: the SHIPPED 2.5 s window
+/// (`UndoWindow.defaultDuration`) is pinned from both sides instead of being
+/// shrunk to something that elapses in wall-clock time.
 @MainActor
-private func makeVM() -> QuizViewModel {
+private func makeVM(clock: TestClock<Duration>) -> QuizViewModel {
     let vm = QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: MockAudioService(),
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil
+        sttService: nil,
+        clock: AnyClock(clock)
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
     vm.earconPlayer = MockEarconPlayer()
     return vm
-}
-
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 6000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
 }
 
 @Suite("Spoken cancel word aborts the skip undo-window (77.10 carry-over)")
@@ -56,9 +45,10 @@ struct SkipCancelWordTests {
     @Test("'stop' during an open undo-window aborts the pending skip")
     func stopAbortsOpenWindow() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window
+            vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped 2.5 s window, never advanced
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
             await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "stop", isFinal: true))
@@ -71,9 +61,10 @@ struct SkipCancelWordTests {
     @Test("'no' also aborts an open undo-window (cancel-word variant)")
     func noAbortsOpenWindow() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped window, never advanced
 
             await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
 
@@ -95,9 +86,10 @@ struct SkipCancelWordTests {
                 // The same string is NOT a command through the screen-scoped matcher.
                 #expect(VoiceCommandMatcher.match(transcript: utterance, on: .question) == nil)
 
-                let vm = makeVM()
+                let clock = TestClock()
+                let vm = makeVM(clock: clock)
                 vm.quizState = .askingQuestion
-                vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
+                vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped window, never advanced
 
                 await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: utterance, isFinal: true))
 
@@ -111,9 +103,10 @@ struct SkipCancelWordTests {
     @Test("a non-cancel utterance leaves the undo-window open")
     func nonCancelWordKeepsWindowOpen() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
+            vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped window, never advanced
 
             await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "hello there", isFinal: true))
 
@@ -124,12 +117,21 @@ struct SkipCancelWordTests {
     @Test("after the window expires the skip is committed; a later cancel word is inert")
     func cancelAfterExpiryIsInert() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05) // short window → commits quickly
+            vm.voiceCommandCoordinator.beginSkipUndoWindow()
+            await Task.yield() // the expiry task must reach its clock.sleep first
 
-            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
-                            "skip did not commit on undo-window expiry")
+            // Just short of the shipped window: nothing has committed yet.
+            await clock.advance(by: .milliseconds(2400))
+            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil, "the window closed early")
+            #expect(vm.quizState == .askingQuestion)
+
+            // Past it: the skip commits.
+            await clock.advance(by: .milliseconds(200))
+            await pumpUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
+                            turns: 2000, "skip did not commit on undo-window expiry")
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "expiry commits the skip")
 
             // A cancel word now has no window to abort — it must be a harmless no-op.
@@ -145,12 +147,15 @@ struct SkipCancelWordTests {
     @Test("skip expiry during a recording in progress does not commit")
     func skipExpiryDuringRecordingDoesNotCommit() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 0.05) // short window → expires quickly
+            vm.voiceCommandCoordinator.beginSkipUndoWindow()
             vm.quizState = .recording // user started answering during the window
+            await Task.yield() // the expiry task must reach its clock.sleep first
 
-            await waitUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil }, "expiry never fired")
+            await clock.advance(by: .seconds(2.5)) // the shipped window expires
+            await pumpUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil }, turns: 2000, "expiry never fired")
             #expect(vm.quizState == .recording, "expiry must not commit skipQuestion mid-recording")
         }
     }
@@ -159,9 +164,10 @@ struct SkipCancelWordTests {
     @Test("startRecording cancels a pending skip window")
     func startRecordingCancelsPendingSkipWindow() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped window — must not expire on its own
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
             await vm.recordingCoordinator.startRecording()
@@ -174,9 +180,10 @@ struct SkipCancelWordTests {
     @Test("submitMCQAnswer cancels a pending skip window")
     func submitMCQCancelsPendingSkipWindow() async {
         await withMainSerialExecutor {
-            let vm = makeVM()
+            let clock = TestClock()
+            let vm = makeVM(clock: clock)
             vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window — must not expire on its own
+            vm.voiceCommandCoordinator.beginSkipUndoWindow() // shipped window — must not expire on its own
             #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
 
             await vm.submitMCQAnswer(key: "a", value: "Test Answer")

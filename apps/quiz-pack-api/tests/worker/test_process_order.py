@@ -265,8 +265,8 @@ def _published_on(ctx: Dict[str, Any], order_id: uuid.UUID) -> List[dict]:
 # ── Happy path ────────────────────────────────────────────────────────────────
 
 
-# #182: the default walk is incremental (sourcing → chunked rounds that
-# persist as they go); PACK_FIRST_CHUNK=0 is the single-batch rollback walk.
+# #182: the default walk is incremental (sourcing → scheduled rounds that
+# persist as they go); PACK_BATCH_SCHEDULE=0 is the single-batch rollback walk.
 # Both must deliver the same pack — only the step log differs.
 _INCREMENTAL_STEPS = ["sourcing", "topup", "round", "done"]
 _LEGACY_STEPS = [
@@ -287,8 +287,8 @@ _LEGACY_STEPS = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "first_chunk, expected_steps",
-    [("5", _INCREMENTAL_STEPS), ("0", _LEGACY_STEPS)],
+    "batch_schedule, expected_steps",
+    [("", _INCREMENTAL_STEPS), ("0", _LEGACY_STEPS)],
     ids=["incremental", "legacy"],
 )
 async def test_happy_path(
@@ -296,11 +296,11 @@ async def test_happy_path(
     worker_ctx: Dict[str, Any],
     pipeline_http_mocks: respx.MockRouter,
     monkeypatch: pytest.MonkeyPatch,
-    first_chunk: str,
+    batch_schedule: str,
     expected_steps: list[str],
 ) -> None:
     """A paid order runs the real pipeline through to 'delivered'."""
-    monkeypatch.setenv("PACK_FIRST_CHUNK", first_chunk)
+    monkeypatch.setenv("PACK_BATCH_SCHEDULE", batch_schedule)
     order_id, job_id = await _create_order_and_job(session, target_count=10)
 
     from app.worker.tasks import process_order
@@ -754,7 +754,7 @@ def test_worker_stages_use_default_170_parameters(
 
     # The stage instances are shared by both walks; the flat legacy list is
     # the one this test can inspect by type.
-    monkeypatch.setenv("PACK_FIRST_CHUNK", "0")
+    monkeypatch.setenv("PACK_BATCH_SCHEDULE", "0")
     monkeypatch.setenv("COVERAGE_STEERING", "1")
     monkeypatch.setenv("DEDUP_QA_EMBEDDING", "1")
     monkeypatch.setenv("ANSWER_CAP", "1")

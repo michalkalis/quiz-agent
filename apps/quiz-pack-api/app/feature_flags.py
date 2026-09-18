@@ -369,14 +369,26 @@ def grayzone_judge_max_calls() -> int | None:
         ) from exc
 
 
-def pack_first_chunk() -> int:
-    """#182: size of the FIRST generation batch of a customer pack — the
-    questions a player can start on while the rest keeps generating. ``0``
-    restores the single-batch walk (one generation call for the whole
-    target, persist at the very end) — the rollback lever."""
-    return _int_env("PACK_FIRST_CHUNK", 5, minimum=0)
+DEFAULT_PACK_BATCH_SCHEDULE = (1, 2, 4, 8)
 
 
-def pack_chunk_size() -> int:
-    """#182: size of every generation batch after the first one."""
-    return _int_env("PACK_CHUNK_SIZE", 10)
+def pack_batch_schedule() -> tuple[int, ...]:
+    """#182: generation batch sizes of a customer pack, round by round; the
+    last value repeats until the target is met (founder 2026-09-18: 1 → 2 →
+    4 → 8 → 8 → rest — the first question must reach the player as fast as
+    possible, batch-level caps are not what a custom pack is about). Env
+    ``PACK_BATCH_SCHEDULE="1,2,4,8"``; empty or ``0`` = single-batch walk
+    (one generation call for the whole target, persist at the very end) —
+    the rollback lever. Junk falls back to the default."""
+    raw = (os.getenv("PACK_BATCH_SCHEDULE") or "").strip()
+    if raw == "":
+        return DEFAULT_PACK_BATCH_SCHEDULE
+    if raw == "0":
+        return ()
+    try:
+        sizes = tuple(int(x) for x in raw.split(",") if x.strip())
+    except ValueError:
+        return DEFAULT_PACK_BATCH_SCHEDULE
+    if not sizes or any(n < 1 for n in sizes):
+        return DEFAULT_PACK_BATCH_SCHEDULE
+    return sizes

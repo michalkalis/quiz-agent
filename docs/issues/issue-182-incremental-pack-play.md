@@ -1,6 +1,6 @@
 # #182 — Custom pack: hrať hneď po prvej otázke (inkrementálne generovanie)
 
-**Triage:** done (agent-side) — PR #166 otvorený 2026-09-17; open = merge, deploy (quiz-pack-api s migráciou pred quiz-agent), `mba` worker na novom main, founder e2e z TestFlightu
+**Triage:** done (agent-side) — PR #166 MERGED 2026-09-17, rampa dávok 1/2/4/8 = follow-up PR 2026-09-18; open = deploy (quiz-pack-api s migráciou pred quiz-agent, founder súhlas), `mba` worker na novom main, founder e2e z TestFlightu
 
 ## Cieľ
 
@@ -26,19 +26,24 @@ appka povie „pripravujem ďalšiu otázku“ a pokračuje, keď otázka doraz�
 - `question_packs.generation_status` (`generating | complete | failed`,
   migrácia; existujúce riadky = `complete`).
 - Hlavný chod = `sourcing → rounds` (TopUpStage v inkrementálnom režime):
-  prvá dávka malá (`PACK_FIRST_CHUNK`, default 5), ďalšie `PACK_CHUNK_SIZE`
-  (default 10), každá prejde dedup → answerability → verify → score →
-  composition a hneď sa **zapíše** (`PersistStage.persist_batch`). Prvý zápis
-  vytvorí pack (`generating`) a nastaví `order.pack_id` — od tej chvíle je
-  pack hrateľný. `actual_count` rastie priebežne.
+  dávky podľa rozvrhu **1 → 2 → 4 → 8 → 8 → zvyšok** (founder 2026-09-18:
+  prvá otázka čo najskôr, batchové capy pri custom packu nie sú podstatné;
+  `PACK_BATCH_SCHEDULE`, default `1,2,4,8`, posledná hodnota sa opakuje),
+  každá prejde dedup → answerability → verify → score → composition a hneď
+  sa **zapíše** (`PersistStage.persist_batch`). Prvý zápis vytvorí pack
+  (`generating`) a nastaví `order.pack_id` — od tej chvíle je pack hrateľný.
+  `actual_count` rastie priebežne. Overovanie beží po dávkach (v dávke
+  paralelne); ak hráč generátor dobehne, čaká.
 - Už zapísané otázky sú nemenné: composition capy ich počítajú, ale nikdy
   nevyhodia (`ctx.locked_count`).
 - Koniec: floor check ako doteraz (< 80 % → order `failed`, pack `failed`,
   zapísané otázky ostávajú hrateľné); inak pack `complete`, order `delivered`.
 - Retry / ARQ retry pokračuje na existujúcom packe (načíta zapísané otázky
   ako locked prefix) — žiadne duplikáty, žiadne mazanie.
-- `PACK_FIRST_CHUNK=0` = pôvodný jednodávkový chod (rollback páka; CLI
-  korpus `generate_pack.py` sa nemení).
+- `PACK_BATCH_SCHEDULE=0` = pôvodný jednodávkový chod (rollback páka). CLI
+  korpus `generate_pack.py` sa nemení — bez persist stage je TopUpStage
+  presne starý backfill loop (regresný test
+  `test_corpus_cli_walk_is_untouched_by_the_ramp`).
 
 ### B — živý backend: čakanie na ďalšiu otázku (`quiz-agent`)
 - Pack session: `max_questions` = `target_count` packu (autoritatívne zo
@@ -56,10 +61,18 @@ appka povie „pripravujem ďalšiu otázku“ a pokračuje, keď otázka doraz�
 - `QuizState.awaitingQuestion`: obrazovka „Pripravujem ďalšiu otázku…“,
   polling `/next-question`, po dorazení normálne `askingQuestion`.
 
+## Rozhodnutia foundera 2026-09-18
+- Rampa 1 → 2 → 4 → 8 → 8 → zvyšok (max dávka 8), pôvodných 5/10 bol odhad
+  agenta. Odhad času do prvej otázky: sourcing (nezmenené) + ~30–45 s
+  (1 generačné volanie + 1 overenie) namiesto ~1,5–2,5 min pri dávke 5;
+  celý pack má o ~2 kolá viac. Reálne číslo dá prvá objednávka.
+- Nič sa nesmie pokaziť na korpusovom generovaní (CLI) — chránené testom.
+- **Research na inú session:** ukázať používateľovi prvú vygenerovanú
+  otázku po zaplatení a spýtať sa, či je spokojný alebo chce upraviť prompt
+  (objednávku nezruší, len zmení prompt); doriešiť právo na vrátenie /
+  nespokojnosť s otázkami a čo sa stane, ak appku zabije pred úpravou promptu.
+
 ## Predpoklady (founder môže zmeniť)
-- Veľkosť dávok 5 / 10; menšie dávky = viac LLM volaní na pack (fixná réžia
-  promptu), odhad +10–20 % generačných nákladov, kvalita per otázka rovnaká
-  (rovnaké brány).
 - Čiastočne zlyhaný pack (pod 80 %) ostáva hrateľný s tým, čo má; refund
   logika nezmenená.
 

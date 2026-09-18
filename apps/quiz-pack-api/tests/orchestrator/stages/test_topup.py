@@ -410,8 +410,7 @@ def _incremental_stage(persist: _FakePersistStage, gen: _FakeGenStage, **kw) -> 
         _FakeDropStage("scoring", 0),
         _PassthroughDedupStage(),
         persist_stage=persist,
-        first_chunk=5,
-        chunk_size=10,
+        batch_schedule=(1, 2, 4, 8),
         **kw,
     )
 
@@ -425,18 +424,19 @@ async def test_incremental_persists_every_round_and_closes_the_pack() -> None:
 
     result = await _incremental_stage(persist, gen).run(ctx, sink)
 
-    # First round is the small one the player starts on; the rest are chunks.
-    assert gen.calls == [5, 10, 10, 5]
+    # Ramp 1 → 2 → 4 → 8 → 8 → rest (founder 2026-09-18): the very first
+    # question is playable after one generation + one verification.
+    assert gen.calls == [1, 2, 4, 8, 8, 7]
     # Each round's new tail was written right away …
-    assert [len(b) for b in persist.batches] == [5, 10, 10, 5]
+    assert [len(b) for b in persist.batches] == [1, 2, 4, 8, 8, 7]
     # … on top of what was already locked (nothing rewritten).
-    assert persist.locked_seen == [0, 5, 15, 25]
+    assert persist.locked_seen == [0, 1, 3, 7, 15, 23]
     assert ctx.locked_count == 30
     assert persist.finalized == "complete"
     assert result.info["pack"] is persist.pack
     # A `round` step per persisted batch carries the playable count.
     rounds = [info for step, info in sink.steps if step == "round"]
-    assert [r["ready"] for r in rounds] == [5, 15, 25, 30]
+    assert [r["ready"] for r in rounds] == [1, 3, 7, 15, 23, 30]
     assert sink.published[-1] == ("round", 99)
 
 
@@ -452,16 +452,17 @@ async def test_incremental_resume_continues_from_persisted_questions() -> None:
 
     await _incremental_stage(persist, gen).run(ctx, _CountingSink())
 
-    assert gen.calls == [10, 8]
-    assert persist.locked_seen == [12, 22]
+    # No ramp on resume — the player already has a playable prefix.
+    assert gen.calls == [8, 8, 2]
+    assert persist.locked_seen == [12, 20, 28]
     assert ctx.questions[:12] == existing
     assert persist.finalized == "complete"
 
 
 @pytest.mark.asyncio
 async def test_incremental_round_budget_scales_with_chunking() -> None:
-    """`max_rounds` keeps meaning "extra rounds": a 30-pack in 5+10+10+5
-    needs 4 rounds on its own, so a lossy pipeline still gets its two
+    """`max_rounds` keeps meaning "extra rounds": a 30-pack on the 1/2/4/8
+    ramp needs 6 rounds on its own, so a lossy pipeline still gets its two
     retries on top instead of failing the floor after 2 rounds."""
     gen = _FakeGenStage()
     persist = _FakePersistStage()
@@ -472,14 +473,13 @@ async def test_incremental_round_budget_scales_with_chunking() -> None:
         _FakeDropStage("scoring", 0),
         _PassthroughDedupStage(),
         persist_stage=persist,
-        first_chunk=5,
-        chunk_size=10,
+        batch_schedule=(1, 2, 4, 8),
         max_rounds=2,
     )
 
     await stage.run(ctx, _CountingSink())
 
-    assert len(gen.calls) <= 6
+    assert len(gen.calls) <= 8
     assert len(ctx.questions) >= 24  # above the 80 % floor
     assert persist.finalized == "complete"
 
@@ -498,8 +498,7 @@ async def test_incremental_floor_failure_keeps_pack_open_for_retry() -> None:
         _FakeDropStage("scoring", 0),
         _PassthroughDedupStage(),
         persist_stage=persist,
-        first_chunk=5,
-        chunk_size=10,
+        batch_schedule=(1, 2, 4, 8),
         max_rounds=0,
     )
 
@@ -510,12 +509,31 @@ async def test_incremental_floor_failure_keeps_pack_open_for_retry() -> None:
     assert persist.batches, "rounds that did survive were persisted before the floor check"
 
 
-def test_incremental_requires_chunk_sizes() -> None:
-    with pytest.raises(ValueError, match="first_chunk"):
+@pytest.mark.parametrize("schedule", [None, (), (0, 2)])
+def test_incremental_requires_a_valid_batch_schedule(schedule) -> None:
+    with pytest.raises(ValueError, match="batch_schedule"):
         TopUpStage(
             _FakeGenStage(),
             _FakeDropStage("verifying", 0),
             _FakeDropStage("scoring", 0),
             _PassthroughDedupStage(),
             persist_stage=_FakePersistStage(),
+            batch_schedule=schedule,
         )
+
+
+def test_corpus_cli_walk_is_untouched_by_the_ramp() -> None:
+    """Regression guard for the corpus generator (founder 2026-09-18: it
+    finally works well, no regressions): without a persist stage TopUpStage
+    is the classic backfill-only loop — one full-size initial pass happens
+    outside it, and it never chunks, persists or closes anything."""
+    gen = _FakeGenStage()
+    stage = TopUpStage(gen, _FakeDropStage("verifying", 0), _FakeDropStage("scoring", 0), _PassthroughDedupStage())
+    ctx = _make_ctx(target_count=30, initial=27)
+
+    import asyncio
+
+    asyncio.run(stage.run(ctx, _RecordingSink()))
+
+    assert gen.calls == [3]
+    assert ctx.locked_count == 0

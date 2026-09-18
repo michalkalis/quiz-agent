@@ -114,11 +114,12 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right after
     # scoring, so judge scores decide which questions survive each cap.
     composition = CompositionStage()
-    first_chunk = feature_flags.pack_first_chunk()
-    if first_chunk > 0:
-        # #182 incremental delivery: sourcing once, then chunked rounds that
-        # persist as they go (see TopUpStage) — the pack is playable from the
-        # first persisted batch. PACK_FIRST_CHUNK=0 restores the walk below.
+    batch_schedule = feature_flags.pack_batch_schedule()
+    if batch_schedule:
+        # #182 incremental delivery: sourcing once, then scheduled rounds
+        # (1 → 2 → 4 → 8 → 8 …) that persist as they go (see TopUpStage) — the
+        # pack is playable from the first persisted question.
+        # PACK_BATCH_SCHEDULE=0 restores the single-batch walk below.
         return [
             SourcingStage(ctx["fact_sourcer"]),
             TopUpStage(
@@ -129,8 +130,7 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
                 answerability_stage=answerability,
                 composition_stage=composition,
                 persist_stage=PersistStage(session_factory),
-                first_chunk=first_chunk,
-                chunk_size=feature_flags.pack_chunk_size(),
+                batch_schedule=batch_schedule,
             ),
         ]
     stages += [

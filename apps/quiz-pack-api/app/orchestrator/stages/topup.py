@@ -37,7 +37,6 @@ questions exist yet, so nothing is spent).
 from __future__ import annotations
 
 import logging
-import math
 
 from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
@@ -92,8 +91,7 @@ class TopUpStage:
         composition_stage=None,
         strictness: Strictness | None = None,
         persist_stage=None,
-        first_chunk: int | None = None,
-        chunk_size: int | None = None,
+        batch_schedule: tuple[int, ...] | list[int] | None = None,
     ) -> None:
         # #170 D6 — the same per-category profile DedupStage consults, so the
         # spent-fact filter and the dedup content check read ONE value (the
@@ -116,15 +114,30 @@ class TopUpStage:
         self._max_rounds = max_rounds
         # #182 incremental delivery: when a persist stage is given, this stage
         # IS the whole generation walk — no initial full-size pass precedes
-        # it. Round 1 asks for `first_chunk` questions (small, so the player
-        # can start early), later rounds for `chunk_size`, and every round's
-        # accepted tail is persisted immediately. `max_rounds` then means
-        # "extra rounds beyond the ones the chunking needs".
+        # it. Round i asks for `batch_schedule[i]` questions (last value
+        # repeats), each round's accepted tail is persisted immediately, and
+        # `max_rounds` then means "extra rounds beyond the ones the schedule
+        # needs". The ramp starts at 1 so the first question reaches the
+        # player as soon as one generation + one verification finish.
         self._persist_stage = persist_stage
-        self._first_chunk = first_chunk
-        self._chunk_size = chunk_size
-        if persist_stage is not None and (not first_chunk or not chunk_size):
-            raise ValueError("incremental TopUpStage needs first_chunk and chunk_size > 0")
+        self._batch_schedule = tuple(batch_schedule or ())
+        if persist_stage is not None and (
+            not self._batch_schedule or any(n < 1 for n in self._batch_schedule)
+        ):
+            raise ValueError("incremental TopUpStage needs a batch_schedule of sizes >= 1")
+
+    def _batch_size(self, round_index: int, resumed: bool) -> int:
+        # A resumed attempt already has a playable prefix — skip the ramp.
+        if resumed:
+            return self._batch_schedule[-1]
+        return self._batch_schedule[min(round_index, len(self._batch_schedule) - 1)]
+
+    def _scheduled_rounds(self, remaining: int, resumed: bool) -> int:
+        rounds = 0
+        while remaining > 0:
+            remaining -= self._batch_size(rounds, resumed)
+            rounds += 1
+        return rounds
 
     async def _emit_round(self, sink: ProgressSink, ctx: OrderContext, rounds: int) -> None:
         """One `round` step per persisted batch so the order's step log / SSE
@@ -145,12 +158,15 @@ class TopUpStage:
         incremental = self._persist_stage is not None
         pack = None
         max_rounds = self._max_rounds
+        resumed = False
         if incremental:
             # Resume: a retried attempt keeps what the previous one delivered.
             pack = await self._persist_stage.load_existing(ctx)
-            first = min(self._first_chunk, target)
-            expected_rounds = 1 + math.ceil(max(0, target - first) / self._chunk_size)
-            max_rounds = expected_rounds + self._max_rounds
+            resumed = bool(ctx.questions)
+            max_rounds = (
+                self._scheduled_rounds(target - len(ctx.questions), resumed)
+                + self._max_rounds
+            )
         # Recomputed from the FULL pool each round rather than shrunk in place:
         # later stages (composition caps) can drop a survivor, which un-spends
         # its fact, and only a recompute against the current `ctx.questions`
@@ -161,8 +177,7 @@ class TopUpStage:
         while len(ctx.questions) < target and rounds < max_rounds:
             shortfall = target - len(ctx.questions)
             if incremental:
-                chunk = self._first_chunk if not ctx.questions else self._chunk_size
-                shortfall = min(shortfall, chunk)
+                shortfall = min(shortfall, self._batch_size(rounds, resumed))
             survivors_so_far = ctx.questions
             n_old = len(survivors_so_far)
             original_target = ctx.target_count

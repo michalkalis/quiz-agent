@@ -115,7 +115,7 @@ class PersistStage:
     # the rest of the pack is still generating, so a player can start on the
     # first batch. The three methods below are the whole write surface of
     # that mode; `run` above stays the single-shot walk (CLI corpus runs,
-    # PACK_FIRST_CHUNK=0).
+    # PACK_BATCH_SCHEDULE=0).
 
     async def load_existing(self, ctx: OrderContext) -> QuestionPack | None:
         """Resume on the pack a previous attempt already created for this

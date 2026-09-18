@@ -1143,8 +1143,10 @@ final class QuizViewModel: ObservableObject {
             {
                 // #171: the same settle the Q2+ path gets before it plays — the
                 // audio hardware must come up under the freshly configured
-                // session before the first AVPlayer starts.
-                try? await clock.sleep(for: .milliseconds(100))
+                // session before the first AVPlayer starts. Real time on
+                // purpose (#180 track A): a hardware settle is not a quiz
+                // timer, and a parked test clock must not hold the quiz here.
+                try? await Task.sleep(for: .milliseconds(100))
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
@@ -1487,8 +1489,9 @@ final class QuizViewModel: ObservableObject {
         //    teardown tail of TTS audio.
         silenceDetectionService.setTTSPlaybackActive(false)
 
-        // 3. Wait for audio hardware to settle
-        try? await clock.sleep(for: .milliseconds(500))
+        // 3. Wait for audio hardware to settle (real time on purpose — a
+        //    hardware settle is not a quiz timer, #180 track A)
+        try? await Task.sleep(for: .milliseconds(500))
 
         // 4. Guard again — state may have changed during sleep
         guard quizState == .askingQuestion else { return }
@@ -2129,8 +2132,9 @@ final class QuizViewModel: ObservableObject {
         // This ensures clean state transition from ResultView to QuestionView
         await audioDeviceState.stopAnyPlayingAudio()
 
-        // Small delay to ensure audio cleanup completes
-        try? await clock.sleep(for: .milliseconds(100))
+        // Small delay to ensure audio cleanup completes (real time on purpose —
+        // a hardware settle is not a quiz timer, #180 track A)
+        try? await Task.sleep(for: .milliseconds(100))
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {

@@ -13,6 +13,7 @@
 //     behave the same.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -20,14 +21,21 @@ import Testing
 @Suite("MCQ tap submit interrupts the read and is bounded (#178)")
 @MainActor
 struct MCQSubmitInterruptTests {
-    private func makeVM(configure: (MockNetworkService) -> Void = { _ in }) -> (QuizViewModel, MockAudioService) {
+    /// #180 track A: the submit's 30 s bound and its retry backoff both run on
+    /// this clock. A `TestClock` that is never advanced therefore holds the bound
+    /// open for the two interrupt tests, and the bound test drives the SHIPPED
+    /// 30 s instead of shortening it.
+    private func makeVM(
+        clock: TestClock<Duration> = TestClock(),
+        configure: (MockNetworkService) -> Void = { _ in }
+    ) -> (QuizViewModel, MockAudioService) {
         let audio = MockAudioService()
         let vm = QuizViewModel(
             networkService: Fixtures.makeFullMockNetwork(configure: configure),
             audioService: audio,
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            clock: AnyClock(clock)
         )
-        vm.recordingCoordinator.transientBackoffOverride = { _ in .zero }
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
@@ -56,10 +64,17 @@ struct MCQSubmitInterruptTests {
 
     @Test("a wedged submit surfaces a timeout error instead of a spinner forever")
     func wedgedSubmitTimesOut() async throws {
-        let (vm, _) = makeVM { $0.submitTextInputDelay = .seconds(30) }
-        vm.submitTimeoutSeconds = 1
+        let clock = TestClock()
+        // A request that never comes back: the mock's delay is real time the
+        // driven clock will never reach, so only the bound can end this submit.
+        let (vm, _) = makeVM(clock: clock) { $0.submitTextInputDelay = .seconds(600) }
 
-        await vm.submitMCQAnswer(key: "a", value: "Paris")
+        let submission = Task { await vm.submitMCQAnswer(key: "a", value: "Paris") }
+        await pumpUntil { vm.quizState == .processing }
+        await clock.advance(by: .seconds(vm.submitTimeoutSeconds - 1))
+        #expect(vm.quizState == .processing, "the spinner gets its full shipped budget, not a millisecond less")
+        await clock.advance(by: .seconds(1))
+        await submission.value
 
         guard case let .error(message, context) = vm.quizState else {
             Issue.record("expected .error, got \(vm.quizState.label)")

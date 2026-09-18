@@ -24,6 +24,7 @@
 //      manual mic-button flow working, no crash.
 //
 
+import Clocks
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
@@ -32,7 +33,8 @@ import Testing
 @MainActor
 private func makeCommandVM(
     silence: MockSilenceDetectionService = MockSilenceDetectionService(),
-    stt: MockElevenLabsSTTService? = nil
+    stt: MockElevenLabsSTTService? = nil,
+    clock: AnyClock<Duration> = .continuous
 ) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
     let vm = QuizViewModel(
@@ -40,39 +42,12 @@ private func makeCommandVM(
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: stt
+        sttService: stt,
+        clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion()
     return (vm, silence, audio)
-}
-
-/// Spin the main serial executor until `predicate` holds or the deadline passes.
-/// Used to pump the AsyncStream → consumer-task → @MainActor handler hops.
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
-/// Driven clock for the command cooldown (#119). A reference box so the test can
-/// move "now" forward without a real `Task.sleep` — the repo's three flaky async
-/// voice tests all came from sleeping in tests.
-@MainActor
-private final class TestClock {
-    var now: Date
-    init(_ now: Date) { self.now = now }
 }
 
 @MainActor
@@ -192,7 +167,7 @@ struct CommandListenerTests {
             await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer
 
             mock.simulateCommandTranscript("start")
-            await waitUntil({ !recognized.isEmpty }, "no command recognized")
+            await pumpUntil({ !recognized.isEmpty }, "no command recognized")
 
             #expect(recognized == [.start])
         }
@@ -220,7 +195,7 @@ struct CommandListenerTests {
             // On the result screen, "next" matches.
             vm.quizState = makeResultState()
             mock.simulateCommandTranscript("next")
-            await waitUntil({ !recognized.isEmpty }, "‘next’ never matched on result")
+            await pumpUntil({ !recognized.isEmpty }, "‘next’ never matched on result")
             #expect(recognized == [.next])
         }
     }
@@ -295,7 +270,7 @@ struct CommandListenerTests {
             // a one-word command, and it still lands long before the end-of-speech
             // endpoint — the latency fix survives the stability gate.
             mock.simulateCommandTranscript("start", isFinal: false)
-            await waitUntil({ !recognized.isEmpty }, "a repeated volatile hypothesis must fire")
+            await pumpUntil({ !recognized.isEmpty }, "a repeated volatile hypothesis must fire")
 
             // The hypothesis keeps growing as he repeats himself, then finalizes.
             mock.simulateCommandTranscript("start start", isFinal: false)
@@ -460,15 +435,14 @@ struct CommandListenerTests {
 
     /// WHY: one spoken word can arrive as two utterances (he repeats himself
     /// when nothing seems to happen), which the per-utterance latch cannot see.
-    /// The cooldown is the second layer. Driven clock — no `Task.sleep`.
+    /// The cooldown is the second layer. The coordinator's own `TestClock` is
+    /// driven across the SHIPPED 1.5 s boundary — no `Task.sleep`.
     @Test("the cooldown suppresses a same-command repeat inside the window and allows it after")
     func cooldownSuppressesSameCommandRepeat() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeCommandVM()
+            let clock = TestClock()
+            let (vm, _, _) = makeCommandVM(clock: AnyClock(clock))
             let coordinator = vm.voiceCommandCoordinator
-            let clock = TestClock(Date())
-            let base = clock.now
-            coordinator.now = { clock.now }
 
             // Inert routing (see volatileFiresOncePerUtterance) so the screen stays open.
             coordinator.voiceStartOnQuestionEnabled = false
@@ -480,11 +454,13 @@ struct CommandListenerTests {
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start])
 
-            clock.now = base.addingTimeInterval(0.5) // still inside the cooldown
+            // Just SHORT of the shipped 1.5 s cooldown — still suppressed.
+            await clock.advance(by: .seconds(VoiceCommandCoordinator.commandCooldown - 0.1))
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start], "a repeat inside the cooldown must not fire twice, got \(recognized)")
 
-            clock.now = base.addingTimeInterval(VoiceCommandCoordinator.commandCooldown + 0.1)
+            // …and past it.
+            await clock.advance(by: .seconds(0.2))
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start, .start], "after the cooldown the command must work again")
         }
@@ -501,11 +477,9 @@ struct CommandListenerTests {
     @Test("a volatile arriving inside the cooldown is rejected outright, not parked for the settle")
     func cooldownRejectsVolatileRatherThanParkingIt() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeCommandVM()
+            let clock = TestClock()
+            let (vm, _, _) = makeCommandVM(clock: AnyClock(clock))
             let coordinator = vm.voiceCommandCoordinator
-            let clock = TestClock(Date())
-            let base = clock.now
-            coordinator.now = { clock.now }
 
             // Inert routing (see volatileFiresOncePerUtterance) so the screen stays open.
             coordinator.voiceStartOnQuestionEnabled = false
@@ -519,7 +493,7 @@ struct CommandListenerTests {
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized == [.start])
 
-            clock.now = base.addingTimeInterval(0.5) // still inside the cooldown
+            await clock.advance(by: .seconds(0.5)) // still inside the 1.5 s cooldown
             await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
             #expect(coordinator.pendingVolatileSettle == nil,
                     "a cooldown-suppressed volatile must not be parked for later re-evaluation")
@@ -527,7 +501,7 @@ struct CommandListenerTests {
 
             // The consequence, made executable: once the cooldown has expired
             // there is nothing left that could fire, because nothing was parked.
-            clock.now = base.addingTimeInterval(VoiceCommandCoordinator.commandCooldown + 0.1)
+            await clock.advance(by: .seconds(VoiceCommandCoordinator.commandCooldown - 0.4))
             coordinator.fireSettledVolatile()
             #expect(recognized == [.start],
                     "the cooldown must not be re-litigated after a delay, got \(recognized)")
@@ -546,9 +520,10 @@ struct CommandListenerTests {
     @Test("a single volatile 'start' that is never repeated still fires, via the settle delay")
     func lonelyVolatileFiresViaSettle() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeCommandVM()
+            let clock = TestClock()
+            let (vm, _, _) = makeCommandVM(clock: AnyClock(clock))
             let coordinator = vm.voiceCommandCoordinator
-            coordinator.volatileSettleDelay = 0 // driven to negligible — never a wall-clock race
+            let settle = coordinator.volatileSettleDelay // the SHIPPED delay, driven not shortened
             // Inert routing (see volatileFiresOncePerUtterance) so the screen stays open.
             coordinator.voiceStartOnQuestionEnabled = false
             vm.quizState = .askingQuestion
@@ -560,7 +535,14 @@ struct CommandListenerTests {
             #expect(coordinator.pendingVolatileSettle?.command == .start,
                     "an unproven volatile must be PARKED for the settle, not dropped")
 
-            await waitUntil({ !recognized.isEmpty }, "the settle timer never fired the parked command")
+            // Just short of the settle: still parked, nothing fired — the window
+            // it waits out is the SHIPPED one.
+            await Task.yield()
+            await clock.advance(by: .seconds(settle - 0.01))
+            #expect(recognized.isEmpty, "the parked command must not fire before the settle elapses")
+
+            await clock.advance(by: .seconds(0.01))
+            await pumpUntil({ !recognized.isEmpty }, "the settle timer never fired the parked command")
             #expect(recognized == [.start])
             #expect(coordinator.pendingVolatileSettle == nil, "a fired settle must not stay armed")
         }
@@ -727,23 +709,21 @@ struct CommandListenerTests {
     /// nothing to do with the transcriber.
     @Test("the inter-transcript interval is absent on an utterance's first transcript and measured after")
     func transcriptIntervalIsNilOnFirstThenMeasured() async {
-        let (vm, _, _) = makeCommandVM()
+        let clock = TestClock()
+        let (vm, _, _) = makeCommandVM(clock: AnyClock(clock))
         let coordinator = vm.voiceCommandCoordinator
-        let clock = TestClock(Date())
-        let base = clock.now
-        coordinator.now = { clock.now }
 
         #expect(coordinator.noteTranscriptArrival() == nil,
                 "the first transcript of an utterance has no interval to report")
 
-        clock.now = base.addingTimeInterval(0.42)
+        await clock.advance(by: .seconds(0.42))
         #expect(coordinator.noteTranscriptArrival() == 420,
                 "the second must report the measured gap — this is the cadence the settle is tuned against")
 
         // A final ends the utterance, so the NEXT utterance starts over: the
         // silence between two utterances must never be reported as cadence.
         coordinator.endUtterance()
-        clock.now = base.addingTimeInterval(9.0)
+        await clock.advance(by: .seconds(9.0 - 0.42))
         #expect(coordinator.noteTranscriptArrival() == nil,
                 "an utterance boundary must reset the clock, not report the 9 s pause as an interval")
     }
@@ -840,7 +820,7 @@ struct CommandListenerTests {
                 await vm.audioDeviceState.startSilenceDetectionListening()
                 return (listening: silence.isListening, feedbackPlaying: vm.isPlayingFeedbackTTS)
             }
-            await waitUntil({ release != nil }, "the re-arm never parked in engine setup")
+            await pumpUntil({ release != nil }, "the re-arm never parked in engine setup")
 
             // Task B — the feedback playback Task, which closes the command window.
             // A is released from INSIDE playback rather than on wall-clock, so

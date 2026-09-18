@@ -17,6 +17,7 @@
 //    and a refunded one has nothing left to run.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -49,14 +50,16 @@ private func order(_ status: String) -> OrderSnapshot {
 /// front so the structure assertions don't race the view's own `.task`.
 @MainActor
 private func loadedMyPacksView(_ orders: [OrderSnapshot]) async -> MyPacksView {
-    let viewModel = MyPacksViewModel(service: MockPackOrderService(listResult: .success(orders)))
-    // start() loads, then parks in the keep-fresh loop — wait out the load and
+    let viewModel = MyPacksViewModel(
+        service: MockPackOrderService(listResult: .success(orders)),
+        // Parked clock (#180 track A): the keep-fresh loop can't tick behind
+        // the structure assertions, so no real time is waited out here.
+        clock: AnyClock(TestClock())
+    )
+    // start() loads, then parks in the keep-fresh loop — wait for the load and
     // cancel, leaving the model in the state the user actually sees.
     let task = Task { await viewModel.start() }
-    for _ in 0..<400 {
-        if !viewModel.isLoading { break }
-        try? await Task.sleep(for: .milliseconds(5))
-    }
+    await pumpUntil({ !viewModel.isLoading }, "the My packs list never finished loading")
     task.cancel()
     return MyPacksView(viewModel: viewModel, onPlayPack: { _ in })
 }

@@ -15,6 +15,7 @@
 //  the player was actually looking at.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -27,9 +28,10 @@ struct QuestionScopedSubmitTests {
     /// mistakenly reads the id off the response instead of the on-screen
     /// question fails visibly rather than passing by coincidence.
     private func makeViewModel() -> (QuizViewModel, MockNetworkService) {
-        let (vm, network) = Fixtures.makeViewModelWithNetwork()
-        vm.transientStartBackoffOverride = { _ in .zero }
-        vm.recordingCoordinator.transientBackoffOverride = { _ in .zero }
+        // #180 track A: every submit here answers on the first attempt, so the
+        // model gets a `TestClock` nobody advances — no backoff and no 30 s
+        // user-facing bound can fire while the id is being asserted.
+        let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion

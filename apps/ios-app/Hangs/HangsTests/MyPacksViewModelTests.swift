@@ -20,6 +20,7 @@
 //    the field report).
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -88,15 +89,14 @@ struct MyPacksViewModelTests {
 
     @Test("initial load populates orders and clears the spinner")
     func initialLoad() async {
-        let vm = MyPacksViewModel(service: MockPackOrderService(
-            listResult: .success([order(status: "delivered")])
-        ))
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResult: .success([order(status: "delivered")])),
+            // Parked clock (#180 track A): start() loads, then the keep-fresh
+            // loop parks on this clock instead of the real 5 s cadence.
+            clock: AnyClock(TestClock())
+        )
         let task = Task { await vm.start() }
-        // start() loads then parks in the keep-fresh loop; wait for the load.
-        for _ in 0..<200 {
-            if !vm.isLoading { break }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        await pumpUntil({ !vm.isLoading }, "the initial load never cleared the spinner")
         task.cancel()
 
         #expect(!vm.isLoading)
@@ -106,14 +106,12 @@ struct MyPacksViewModelTests {
 
     @Test("a failed initial load (401 / offline) shows the graceful empty state, not a crash")
     func initialLoadFailure() async {
-        let vm = MyPacksViewModel(service: MockPackOrderService(
-            listResults: [.failure(.init("401"))]
-        ))
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResults: [.failure(.init("401"))]),
+            clock: AnyClock(TestClock())
+        )
         let task = Task { await vm.start() }
-        for _ in 0..<200 {
-            if !vm.isLoading { break }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        await pumpUntil({ !vm.isLoading }, "a failed initial load never cleared the spinner")
         task.cancel()
 
         #expect(vm.orders.isEmpty)
@@ -122,45 +120,48 @@ struct MyPacksViewModelTests {
 
     @Test("an in_progress order updates to delivered without navigation — the refresh loop re-fetches")
     func refreshLoopPicksUpDelivery() async {
-        let vm = MyPacksViewModel(service: MockPackOrderService(
-            listResults: [
+        let clock = TestClock()
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResults: [
                 .success([order(status: "in_progress")]),
                 .success([order(status: "delivered")]),
-            ]
-        ))
-        vm.refreshIntervalSeconds = 0.01 // don't wait the real cadence
+            ]),
+            clock: AnyClock(clock)
+        )
 
         let task = Task { await vm.start() }
-        var sawInProgress = false
-        var sawDelivered = false
-        for _ in 0..<400 {
-            if vm.orders.first?.status == "in_progress" { sawInProgress = true }
-            if vm.orders.first?.isDelivered == true { sawDelivered = true; break }
-            try? await Task.sleep(for: .milliseconds(5))
-        }
-        task.cancel()
+        await pumpUntil({ vm.orders.first?.status == "in_progress" }, "the initial load never showed the in-progress order")
 
-        #expect(sawInProgress)
-        #expect(sawDelivered)
+        // The SHIPPED 5 s cadence is driven, not shrunk: just short of it the
+        // row must still be the stale one (no busy re-polling), and only once
+        // the interval elapses does the loop re-fetch and flip the row —
+        // without any navigation.
+        await clock.advance(by: .milliseconds(4900))
+        #expect(vm.orders.first?.isDelivered == false, "the loop re-fetched before its 5 s interval elapsed")
+        await clock.advance(by: .milliseconds(101))
+        await pumpUntil({ vm.orders.first?.isDelivered == true }, "the keep-fresh loop never picked the delivery up")
+        task.cancel()
     }
 
     @Test("a transient refresh error keeps the last good list instead of blanking the screen")
     func transientRefreshErrorKeepsList() async {
-        let vm = MyPacksViewModel(service: MockPackOrderService(
-            listResults: [
+        let clock = TestClock()
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResults: [
                 .success([order(status: "in_progress")]),
                 .failure(.init("blip")),
-            ]
-        ))
-        vm.refreshIntervalSeconds = 0.01
+            ]),
+            clock: AnyClock(clock)
+        )
 
         let task = Task { await vm.start() }
-        for _ in 0..<200 {
-            if !vm.isLoading { break }
-            try? await Task.sleep(for: .milliseconds(10))
+        await pumpUntil({ !vm.isLoading }, "the initial load never cleared the spinner")
+        // Let several refresh ticks hit the failing call — each one is a full
+        // shipped 5 s interval, driven rather than waited out.
+        for _ in 0 ..< 3 {
+            await clock.advance(by: .milliseconds(5001))
+            await Task.yield()
         }
-        // Let several refresh ticks hit the failing call.
-        try? await Task.sleep(for: .milliseconds(100))
         task.cancel()
 
         #expect(vm.orders.first?.status == "in_progress")

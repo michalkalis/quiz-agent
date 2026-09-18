@@ -45,23 +45,6 @@ private func makeResultState() -> QuizState {
     )
 }
 
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 5000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 @Suite("Voice command observability (#96 P2)")
 @MainActor
 struct VoiceCommandObservabilityTests {
@@ -103,7 +86,7 @@ struct VoiceCommandObservabilityTests {
         mock.commandAvailability = .unavailable(reason: "assets missing")
         // Availability now mirrors through an async stream — wait for the VM to
         // observe it before asserting on the derived hint.
-        await waitUntil({ vm.commandAvailability == .unavailable(reason: "assets missing") },
+        await pumpUntil({ vm.commandAvailability == .unavailable(reason: "assets missing") },
                         "availability mirror did not pick up the unavailable state")
 
         vm.quizState = .idle
@@ -127,7 +110,7 @@ struct VoiceCommandObservabilityTests {
 
         // Fresh-install: still installing → listener arms, indicator hidden.
         mock.commandAvailability = .installingAssets
-        await waitUntil({ vm.commandAvailability == .installingAssets },
+        await pumpUntil({ vm.commandAvailability == .installingAssets },
                         "mirror did not observe the installing state")
 
         vm.quizState = .idle
@@ -137,7 +120,7 @@ struct VoiceCommandObservabilityTests {
 
         // Model install completes asynchronously → service flips to .ready.
         mock.commandAvailability = .ready
-        await waitUntil({ vm.commandAvailability == .ready },
+        await pumpUntil({ vm.commandAvailability == .ready },
                         "the observable mirror did not pick up the .ready flip")
         #expect(vm.commandListenerHint == #"Say "start""#, "ready → the Home hint must now appear")
     }
@@ -195,7 +178,7 @@ struct VoiceCommandObservabilityTests {
             vm.quizState = .idle // Home — spoken "start" is valid
             await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("start")
-            await waitUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")
+            await pumpUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")
 
             #expect(vm.lastRecognizedCommand == .start)
         }

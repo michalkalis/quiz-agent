@@ -18,6 +18,7 @@
 //  side of the gate is `MockNetworkService`).
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -46,18 +47,21 @@ struct QuotaPaywallPurchaseLoopTests {
     /// VM + StoreManager wired to each other exactly as `AppState` wires them.
     private func makeLoop(
         purchaseOutcome: PurchaseOutcome = .success(unlimitedActive: true),
-        isEntitledAfterPurchase: Bool = true
+        isEntitledAfterPurchase: Bool = true,
+        clock: TestClock<Duration> = TestClock()
     ) async -> (QuizViewModel, MockNetworkService, StoreManager) {
         let network = Fixtures.makeFullMockNetwork()
         network.stubbedUsage = makeUsage(remaining: 0) // the exhausted free tier
+        // Deterministic time (#180 track A): every production wait — the retry
+        // backoffs and the quiz-path timers — runs on this clock. Parked by
+        // default; a test whose path retries drives it past the backoffs.
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            isLocallyEntitled: { false } // RC has nothing cached yet — no pre-paywall resync
+            isLocallyEntitled: { false }, // RC has nothing cached yet — no pre-paywall resync
+            clock: AnyClock(clock)
         )
-        // Deterministic time: never wait out a production retry backoff.
-        vm.entitlementReconciler.backoffSleep = SleepRecorder().sleep
 
         let purchases = MockPurchaseService()
         purchases.stubbedPurchaseOutcome = purchaseOutcome
@@ -152,11 +156,20 @@ struct QuotaPaywallPurchaseLoopTests {
         // The other half of the loop's contract: when the sync/webhook has NOT
         // landed, the app must say so (.activating) rather than claim success —
         // and it must not fabricate an entitlement client-side.
-        let (vm, network, store) = await makeLoop()
+        let clock = TestClock()
+        let (vm, network, store) = await makeLoop(clock: clock)
         network.syncEntitlementsError = NetworkError.invalidResponse // the bridge cannot land
         network.stubbedUsage = makeUsage(remaining: 0) // …and the mirror still shows the free tier spent
 
-        await store.purchase(productID: StoreProduct.monthlySubId)
+        let syncsBeforePurchase = network.syncEntitlementsCallCount // the launch reconcile's
+        let purchase = Task { await store.purchase(productID: StoreProduct.monthlySubId) }
+        // The post-purchase sync retries on the shipped 0.2 s → 0.4 s backoff
+        // before giving up; drive the clock through both so the bounded retry
+        // runs its course instead of parking the purchase forever.
+        await pumpUntil({ network.syncEntitlementsCallCount == syncsBeforePurchase + 1 }, "purchase never triggered the entitlement sync")
+        await clock.advance(by: .seconds(1))
+        await purchase.value
+        #expect(network.syncEntitlementsCallCount == syncsBeforePurchase + 3, "the sync gives up only after its bounded three attempts")
 
         #expect(
             store.purchaseState == .activating(productID: StoreProduct.monthlySubId),

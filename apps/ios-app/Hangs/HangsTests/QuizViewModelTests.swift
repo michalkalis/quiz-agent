@@ -5,6 +5,7 @@
 //  Tests for QuizViewModel state machine and quiz flow.
 //
 
+import Clocks
 import ConcurrencyExtras
 import Foundation
 @testable import Hangs
@@ -475,32 +476,27 @@ struct QuizViewModelLoadingStateTests {
     /// cancellation and fire a second attempt — the `withTransientStartRetry`
     /// backoff switched `try?` (swallows `CancellationError`) to `try`
     /// (propagates it). The first attempt fails (cold start), then the retry
-    /// parks in its backoff sleep — pinned to 10 minutes via
-    /// `transientStartBackoffOverride` so the cancel deterministically lands
-    /// inside the sleep even when the full suite's parallel load delays this
-    /// test's poll loop by seconds (the real ~1s window was racy: the backoff
-    /// could elapse and fire attempt 2 before the poll ever observed attempt 1).
+    /// parks in its backoff sleep. #180 track A makes that window deterministic
+    /// by construction instead of by inflating the delay: the backoff runs on
+    /// the injected clock, so a `TestClock` this test never advances holds the
+    /// SHIPPED 1 s wait open forever and the cancel always lands inside it.
+    /// (The old racy shape let the real ~1 s elapse and fire attempt 2 before
+    /// the poll loop ever observed attempt 1.)
     @Test("cancelling during the cold-start backoff aborts the retry")
     @MainActor
     func cancelDuringBackoffAbortsRetry() async throws {
-        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(configure: { mock in
-            mock.createSessionFailuresBeforeSuccess = 1
-        })
-        viewModel.transientStartBackoffOverride = { _ in .seconds(600) }
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork(
+            clock: AnyClock(TestClock()),
+            configure: { mock in
+                mock.createSessionFailuresBeforeSuccess = 1
+            }
+        )
 
         let task = viewModel.beginQuizStart()
-        for _ in 0 ..< 10_000 where mockNetwork.createSessionCallCount < 1 {
-            // Paired with a tiny real sleep (not a bare `Task.yield()` spin) —
-            // matching the `waitUntil` convention elsewhere in this target
-            // (QuizViewModelStreamingTests/QuizViewModelTimerTests): a
-            // yield-only loop never really suspends, so under the full
-            // suite's heavy parallel load it was winning an outsized share of
-            // MainActor turns and measurably starving unrelated tests (the
-            // answer/thinking-timer tests' per-second ticks slowed to ~13s).
-            await Task.yield()
-            try? await Task.sleep(for: .milliseconds(1))
-        }
-        #expect(mockNetwork.createSessionCallCount == 1, "first attempt never landed — retry timing assumption broke")
+        await pumpUntil(
+            { mockNetwork.createSessionCallCount == 1 },
+            "first attempt never landed — retry timing assumption broke"
+        )
         viewModel.cancelQuizStart()
         await task.value
 

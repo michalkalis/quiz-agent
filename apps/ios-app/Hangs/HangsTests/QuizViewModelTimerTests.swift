@@ -8,6 +8,7 @@
 //  auto-starts recording during TTS.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import Testing
@@ -130,7 +131,7 @@ struct QuizViewModelAnswerTimerTests {
         // has had a chance to actually start on the spawned Task.
         #expect(viewModel.answerTimerCountdown == 0)
 
-        await waitUntil({ viewModel.quizState == .recording }, "re-record never reached .recording")
+        await pumpUntil({ viewModel.quizState == .recording }, "re-record never reached .recording")
 
         #expect(mockAudio.isRecording == true, "the mic must actually open, not just flip state")
         #expect(viewModel.answerTimerCountdown == 0, "no answer countdown should be running after re-record")
@@ -182,47 +183,31 @@ struct QuizViewModelThinkingTimeTests {
 
 // MARK: - Modal Freeze Tests (#81)
 
-/// Local copy of the streaming-suite wall-clock-safe poll (see
-/// QuizViewModelStreamingTests.waitUntil for the rationale).
-@MainActor
-private func waitUntil(
-    _ predicate: @MainActor () -> Bool,
-    timeoutMillis: Int = 10000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    let deadline = ContinuousClock.now.advanced(by: .milliseconds(timeoutMillis))
-    while ContinuousClock.now < deadline {
-        if predicate() { return }
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(1))
-    }
-    if predicate() { return }
-    Issue.record(comment ?? "waitUntil timed out after \(timeoutMillis)ms", sourceLocation: sourceLocation)
-}
-
 @Suite("QuizViewModel No Modal Freeze Tests")
 struct QuizViewModelNoModalFreezeTests {
     /// #81 follow-up (founder 2026-07-06): the answer countdown must keep
     /// running behind any modal (End-Quiz dialog, settings sheet) — a freeze
     /// is exploitable: opening a dialog would buy free thinking time. Same
     /// rationale as the no-pause-while-typing decision (2a). This test fails
-    /// if anyone reintroduces a modal-freeze hold into the timer loop: the
-    /// countdown must have decremented after real wall-clock time.
+    /// if anyone reintroduces a modal-freeze hold into the timer loop: on a
+    /// driven clock (#180 track A) the exact per-second value is now assertable,
+    /// so a hold shows up as a number that stops moving.
     @Test("answer countdown keeps ticking — no freeze mechanism exists")
     @MainActor
     func answerTimerKeepsTickingUnconditionally() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
+        let clock = TestClock()
+        let viewModel = Fixtures.makeViewModelForTimerTests(clock: AnyClock(clock))
         viewModel.settings.answerTimeLimit = 30
 
         viewModel.quizTimersController.startAnswerTimer()
-        // Poll instead of asserting an exact value: under full-suite load the
-        // observer can be starved past the first tick and miss the seed.
-        await waitUntil({ viewModel.answerTimerCountdown > 0 }, "answer countdown never seeded")
+        await pumpUntil({ viewModel.answerTimerCountdown == 30 }, "answer countdown never seeded")
 
         // A reintroduced freeze would hold the tick at the seeded 30; the loop
-        // must decrement on its 1s cadence regardless of any presented modal.
-        await waitUntil({ viewModel.answerTimerCountdown < 30 }, "answer countdown never ticked — a freeze mechanism is holding it")
+        // must decrement once per second regardless of any presented modal.
+        await clock.advance(by: .seconds(1))
+        #expect(viewModel.answerTimerCountdown == 29, "a freeze mechanism is holding the countdown")
+        await clock.advance(by: .seconds(1))
+        #expect(viewModel.answerTimerCountdown == 28)
 
         viewModel.quizTimersController.cancelAnswerTimer()
     }
@@ -233,15 +218,17 @@ struct QuizViewModelNoModalFreezeTests {
     @Test("thinking countdown keeps ticking — no freeze mechanism exists")
     @MainActor
     func thinkingTimerKeepsTickingUnconditionally() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
+        let clock = TestClock()
+        let viewModel = Fixtures.makeViewModelForTimerTests(clock: AnyClock(clock))
         viewModel.settings.thinkingTime = 30
 
         viewModel.quizTimersController.startThinkingTimeCountdown()
-        // Poll for >0 (not ==30): under full-suite load the observer can be
-        // starved past the first tick and miss the exact seed value.
-        await waitUntil({ viewModel.thinkingTimeCountdown > 0 }, "thinking countdown never seeded")
+        await pumpUntil({ viewModel.thinkingTimeCountdown == 30 }, "thinking countdown never seeded")
 
-        await waitUntil({ viewModel.thinkingTimeCountdown < 30 }, "thinking countdown never ticked — a freeze mechanism is holding it")
+        await clock.advance(by: .seconds(1))
+        #expect(viewModel.thinkingTimeCountdown == 29, "a freeze mechanism is holding the countdown")
+        await clock.advance(by: .seconds(1))
+        #expect(viewModel.thinkingTimeCountdown == 28)
 
         viewModel.quizTimersController.cancelThinkingTime()
     }
@@ -391,18 +378,21 @@ struct QuizViewModelAutoStopRecordingTests {
     @Test("the hidden dead-air cap still stops a recording whose countdown was hidden")
     @MainActor
     func hiddenCapStillStopsRecording() async throws {
-        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+        let clock = TestClock()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio(clock: AnyClock(clock))
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.quizState = .recording
 
-        // A visible window long enough that only the cap can end this.
-        viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 30, hardCap: 0.05)
+        // A visible window long enough that only the cap can end this — and the
+        // cap itself is the SHIPPED 15 s, driven rather than shrunk.
+        viewModel.quizTimersController.startAutoStopRecordingTimer(duration: 60, hardCap: Config.autoRecordingDuration)
         viewModel.quizTimersController.speechDetectedDuringRecording()
 
-        for _ in 0 ..< 200 where viewModel.quizState == .recording {
-            try? await Task.sleep(nanoseconds: 10_000_000)
-        }
+        await clock.advance(by: .seconds(Config.autoRecordingDuration - 1))
+        #expect(viewModel.quizState == .recording, "the cap must not end a recording early")
+        await clock.advance(by: .seconds(1))
+        await pumpUntil { viewModel.quizState != .recording }
         #expect(viewModel.quizState != .recording, "the cap must fire even with the countdown hidden")
     }
 
@@ -416,19 +406,23 @@ struct QuizViewModelAutoStopRecordingTests {
     @Test("the recording path arms the INJECTED dead-air cap, not the production one")
     @MainActor
     func injectedDeadAirCapEndsTheRecording() async throws {
-        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+        let clock = TestClock()
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio(clock: AnyClock(clock))
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.quizState = .askingQuestion
         viewModel.isAutoRecording = true // VAD subscribed → visible window ≠ cap
-        // Only the cap can end this recording: the visible window outlives the test.
+        // Only the cap can end this recording: the visible window outlives it.
         viewModel.recordingCoordinator.speechStartWindow = 60
-        viewModel.recordingCoordinator.deadAirCap = 0.05
+        viewModel.recordingCoordinator.deadAirCap = Config.autoRecordingDuration
 
         await viewModel.recordingCoordinator.startRecording()
         #expect(mockAudio.isRecording == true, "the mic must open before the cap can end it")
 
-        await waitUntil({ !mockAudio.isRecording }, "the injected dead-air cap never ended the recording")
+        await clock.advance(by: .seconds(Config.autoRecordingDuration - 1))
+        #expect(mockAudio.isRecording == true, "the mic may not close before the cap is reached")
+        await clock.advance(by: .seconds(1))
+        await pumpUntil({ !mockAudio.isRecording }, "the injected dead-air cap never ended the recording")
         #expect(mockAudio.isRecording == false)
 
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()

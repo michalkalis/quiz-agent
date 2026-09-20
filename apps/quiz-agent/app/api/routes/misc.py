@@ -26,6 +26,10 @@ from quiz_shared.models.session import QuizSession
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# Below this many remaining ElevenLabs credits, realtime Scribe sessions fail
+# mid-stream, so we refuse to mint tokens (clients then use batch Whisper).
+ELEVENLABS_MIN_CREDITS = 500
+
 
 @router.post("/elevenlabs/token", response_model=ElevenLabsTokenResponse)
 @limiter.limit("10/minute")
@@ -51,6 +55,38 @@ async def get_elevenlabs_token(
 
     try:
         async with httpx.AsyncClient() as client:
+            # Quota pre-check (2026-09-20 outage): with the credit pool exhausted,
+            # ElevenLabs still mints tokens but the realtime Scribe socket then
+            # fails mid-stream, which the iOS client cannot recover from. Refusing
+            # the token here makes the client's streaming setup fail loudly and
+            # drop to the batch Whisper path, so voice answers keep working.
+            try:
+                sub = await client.get(
+                    "https://api.elevenlabs.io/v1/user/subscription",
+                    headers={"xi-api-key": api_key},
+                    timeout=5.0,
+                )
+                sub.raise_for_status()
+                sub_data = sub.json()
+                remaining = sub_data.get("character_limit", 0) - sub_data.get(
+                    "character_count", 0
+                )
+                if remaining < ELEVENLABS_MIN_CREDITS:
+                    logger.warning(
+                        "ElevenLabs quota nearly exhausted (%d credits left); "
+                        "refusing realtime STT token so clients fall back to Whisper",
+                        remaining,
+                    )
+                    raise HTTPException(
+                        status_code=503,
+                        detail="ElevenLabs STT quota exhausted",
+                    )
+            except HTTPException:
+                raise
+            except Exception as e:
+                # Quota check is best-effort — never block token minting on it.
+                logger.warning("ElevenLabs subscription check failed: %s", e)
+
             response = await client.post(
                 "https://api.elevenlabs.io/v1/single-use-token/realtime_scribe",
                 headers={"xi-api-key": api_key},
@@ -61,6 +97,8 @@ async def get_elevenlabs_token(
 
         return ElevenLabsTokenResponse(token=data["token"])
 
+    except HTTPException:
+        raise
     except httpx.HTTPStatusError as e:
         logger.error(
             "ElevenLabs token mint failed: upstream %s: %s",

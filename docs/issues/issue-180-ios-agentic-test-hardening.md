@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** Track A HOTOVÝ 2026-09-18 (PR feat/180-track-a-clock): jeden vstrekovaný clock (swift-clocks) na celej quiz ceste, 33 testovacích súborov migrovaných na TestClock/pumpUntil, procesový serializovaný hlavný executor, 5/5 zelených behov po 1211 testov. Zistenie: paralelný režim Swift Testing je pri main-actor sade bez prínosu → CI ostáva serializované. Ďalší track = B. Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Founder 2026-09-16: bez nočných behov, príprava len na úrovni smeru; detail rieši interaktívna session. Ready 2026-09-16.
+**Status:** Track A HOTOVÝ 2026-09-18 (PR feat/180-track-a-clock): jeden vstrekovaný clock (swift-clocks) na celej quiz ceste, 33 testovacích súborov migrovaných na TestClock/pumpUntil, procesový serializovaný hlavný executor, 5/5 zelených behov po 1211 testov. Zistenie: paralelný režim Swift Testing je pri main-actor sade bez prínosu → CI ostáva serializované. **Track B HOTOVÝ 2026-09-21 v záložnom tvare** (PR feat/180-track-b-storekit): SKTestSession je na iOS 26.4/26.5 simulátore pri `xcodebuild` nepoužiteľný z unit-test hostiteľa AJ z UI-test runnera (SKInternalErrorDomain Code=3, Apple FB22774836, bez opravy; obchádzky = spustenie z Xcode IDE alebo runtime 26.1, ktorý nie je lokálne ani na CI) → 7 scenárov zakódovaných ako lifecycle testy nad protokolovými mockmi (`PurchaseEdgeCaseScenarioTests`, 8 testov, prepojenie ako v AppState, assert na výstup reconcilera/paywallu) + opt-in sonda `StoreKitSessionSmokeTests` (`HANGS_STOREKIT_LIVE=1`, v CI viditeľne skipped, so zapnutým prepínačom zlyhá nahlas), ktorá odhalí deň, keď Apple chybu opraví. Ďalší track = C. Založené 2026-09-15 z researchu [ios-agentic-testing-best-practices-2026-09-14.md](../research/ios-agentic-testing-best-practices-2026-09-14.md). Founder 2026-09-15: „v zásade za každé odporúčanie", podmienka = dôveryhodné zdroje (Apple, iOS devs, GitHub repá, Anthropic/OpenAI). Founder 2026-09-16: bez nočných behov, príprava len na úrovni smeru; detail rieši interaktívna session. Ready 2026-09-16.
 
 ## Prečo
 
@@ -51,7 +51,7 @@ Nový tok = identifikátory + zmrazený test; PR = unit + snapshot zelené; Test
 ## Acceptance
 _(rámec; konkrétne testy vzniknú pri implementácii)_
 - [x] A: 5/5 zelených behov celej sady (serializované — paralelný režim zamietnutý s odôvodnením v `ios-ci.yml`); žiadny quiz-path test nečaká na reálny čas (zvyšok = view-level časovače a audio settle, vymenované v PR)
-- [ ] B: SKTestSession testy pokrývajú 7 vymenovaných scenárov, zelené v CI bez siete
+- [x] B: 7 vymenovaných scenárov pokrytých ako lifecycle testy (`PurchaseEdgeCaseScenarioTests`), zelené v CI bez siete; SKTestSession blokovaný Apple bugom FB22774836 (2026-09-21) → opt-in sonda namiesto tichého skipu; ak Apple opraví simulátor, scenáre sa dajú preniesť na SKTestSession bez zmeny asertov
 - [ ] C: 3 scenáre ako pomenované testy (iOS + pytest), zelené
 - [ ] D: RS-01..RS-18 okrem RS-14 a RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`
 - [ ] E: lint/grep nenájde interaktívny prvok bez identifikátora na obrazovkách kvízu, paywallu, výsledku

@@ -70,6 +70,13 @@ import os
         var capturedStartQuizExcludedIds: [String]?
         /// When set, `createSession` throws this error instead of the default behaviour.
         var createSessionError: Error?
+        /// #180 track C: mirrors the server's `not session.pack_id` guard — a
+        /// paid pack is never gated by the free quota, so with this on the
+        /// `createSessionError` (the quota 429) fires for free sessions only
+        /// and a `packId` start goes through.
+        var createSessionErrorSparesPackSessions = false
+        /// The `packId` of the most recent `createSession` call (nil = free quiz).
+        var capturedPackId: String?
         /// When > 0, `createSession` throws a transient cold-start error
         /// (`URLError.timedOut`) this many times before succeeding, decrementing
         /// on each call — lets a test assert the FIX3 bounded transient-retry
@@ -138,9 +145,10 @@ import os
         /// concurrent syncs).
         var syncEntitlementsGate: (@Sendable () async -> Void)?
 
-        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId _: String?) async throws -> QuizSession {
+        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions
+            capturedPackId = packId
             onCreateSession?()
             // Mirrors the real NetworkService's cancellation-cooperative behaviour
             // (Task cancellation propagates through `URLSession.data(for:)` as
@@ -153,7 +161,9 @@ import os
                 createSessionFailuresBeforeSuccess -= 1
                 throw URLError(.timedOut)
             }
-            if let error = createSessionError { throw error }
+            if let error = createSessionError, !(createSessionErrorSparesPackSessions && packId != nil) {
+                throw error
+            }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

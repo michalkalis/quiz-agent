@@ -20,6 +20,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import date, datetime, timezone
+from collections.abc import Callable
 
 import uuid
 
@@ -39,17 +40,21 @@ logger = logging.getLogger(__name__)
 FREE_MONTHLY_LIMIT = int(os.getenv("FREE_MONTHLY_LIMIT", "30"))
 
 
-def _today() -> date:
-    return datetime.now(timezone.utc).date()
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
-def _month_start() -> date:
-    return _today().replace(day=1)
+def _today(now: datetime | None = None) -> date:
+    return (now or _utcnow()).date()
 
 
-def _next_reset() -> datetime:
-    """Midnight UTC on the 1st of the next month."""
-    now = datetime.now(timezone.utc)
+def _month_start(now: datetime | None = None) -> date:
+    return _today(now).replace(day=1)
+
+
+def _next_reset(now: datetime | None = None) -> datetime:
+    """Midnight UTC on the 1st of the month after ``now``."""
+    now = now or _utcnow()
     if now.month == 12:
         return datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
     return datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
@@ -62,14 +67,25 @@ class UsageTracker:
         self,
         sessionmaker: async_sessionmaker[AsyncSession],
         monthly_limit: int = FREE_MONTHLY_LIMIT,
+        now: Callable[[], datetime] | None = None,
     ) -> None:
         self._sessionmaker = sessionmaker
         self.monthly_limit = monthly_limit
+        # #180 track C: the ONE time source for the quota gate. Each public call
+        # reads it once and threads that instant through the month window, the
+        # subscription expiry check and ``resets_at`` — so a request straddling
+        # the monthly boundary can't count a question into one month and report
+        # the reset of another. Tests inject a fake to drive the rollover;
+        # ``None`` resolves to the module's ``_utcnow`` at call time.
+        self._injected_now = now
+
+    def _now(self) -> datetime:
+        return self._injected_now() if self._injected_now else _utcnow()
 
     async def _read_month(
-        self, session: AsyncSession, subject_id: str
+        self, session: AsyncSession, subject_id: str, now: datetime
     ) -> tuple[int, bool]:
-        """Return (questions_count, is_premium) for the current calendar month.
+        """Return (questions_count, is_premium) for the calendar month of ``now``.
 
         The count sums the subject's daily rows since the 1st of the month.
         Premium comes from the subject's most recent row regardless of month,
@@ -78,7 +94,7 @@ class UsageTracker:
             await session.execute(
                 select(func.coalesce(func.sum(DailyUsage.questions_count), 0)).where(
                     DailyUsage.subject_id == subject_id,
-                    DailyUsage.usage_date >= _month_start(),
+                    DailyUsage.usage_date >= _month_start(now),
                 )
             )
         ).scalar_one()
@@ -111,17 +127,18 @@ class UsageTracker:
         Returns ``(allowed, remaining, resets_at)`` (unchanged signature).
         ``daily_usage.is_premium`` is no longer read — entitlement comes solely
         from the ``subscription`` table (default-deny on a null account)."""
+        now = self._now()
         async with self._sessionmaker() as session:
-            if await account_is_entitled(session, subject_id):
-                return True, -1, _next_reset()
-            count, _ = await self._read_month(session, subject_id)
+            if await account_is_entitled(session, subject_id, now=now):
+                return True, -1, _next_reset(now)
+            count, _ = await self._read_month(session, subject_id, now)
             remaining = max(0, self.monthly_limit - count)
             if remaining > 0:
-                return True, remaining, _next_reset()
+                return True, remaining, _next_reset(now)
             balance = await account_credit_balance(session, subject_id)
             if balance > 0:
-                return True, balance, _next_reset()
-        return False, 0, _next_reset()
+                return True, balance, _next_reset(now)
+        return False, 0, _next_reset(now)
 
     async def record_question(self, subject_id: str) -> int:
         """Record one *served* question for ``subject_id`` — the single consume
@@ -140,15 +157,16 @@ class UsageTracker:
 
         Because the debit is one guarded write and the path is re-derived here,
         a pre-record 500 (question retrieval, ``quiz.py:96``) debits nothing."""
+        now = self._now()
         async with self._sessionmaker() as session:
-            if await account_is_entitled(session, subject_id):
-                count, _ = await self._read_month(session, subject_id)
+            if await account_is_entitled(session, subject_id, now=now):
+                count, _ = await self._read_month(session, subject_id, now)
                 # Keep a visible row for today, but don't increment or debit.
                 await session.execute(
                     pg_insert(DailyUsage)
                     .values(
                         subject_id=subject_id,
-                        usage_date=_today(),
+                        usage_date=_today(now),
                         questions_count=0,
                         is_premium=False,
                     )
@@ -157,13 +175,13 @@ class UsageTracker:
                 await session.commit()
                 return count
 
-            count, _ = await self._read_month(session, subject_id)
+            count, _ = await self._read_month(session, subject_id, now)
             if count < self.monthly_limit:
                 stmt = (
                     pg_insert(DailyUsage)
                     .values(
                         subject_id=subject_id,
-                        usage_date=_today(),
+                        usage_date=_today(now),
                         questions_count=1,
                         is_premium=False,
                     )
@@ -239,12 +257,13 @@ class UsageTracker:
         active/grace subscription) OR the legacy ``is_premium`` column, so a real
         subscriber shows unlimited even though the gate no longer reads the
         column."""
+        now = self._now()
         async with self._sessionmaker() as session:
-            count, premium = await self._read_month(session, subject_id)
-            entitled = await account_is_entitled(session, subject_id)
+            count, premium = await self._read_month(session, subject_id, now)
+            entitled = await account_is_entitled(session, subject_id, now=now)
             credit_balance = await account_credit_balance(session, subject_id)
             subscription_status = await account_subscription_status(session, subject_id)
-        resets_at = _next_reset()
+        resets_at = _next_reset(now)
         if premium or entitled:
             return {
                 "user_id": subject_id,
@@ -275,7 +294,7 @@ class UsageTracker:
                 pg_insert(DailyUsage)
                 .values(
                     subject_id=subject_id,
-                    usage_date=_today(),
+                    usage_date=_today(self._now()),
                     questions_count=0,
                     is_premium=is_premium,
                 )
@@ -289,5 +308,5 @@ class UsageTracker:
 
     async def is_premium(self, subject_id: str) -> bool:
         async with self._sessionmaker() as session:
-            _, premium = await self._read_month(session, subject_id)
+            _, premium = await self._read_month(session, subject_id, self._now())
         return premium

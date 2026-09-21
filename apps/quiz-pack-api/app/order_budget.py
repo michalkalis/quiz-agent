@@ -4,7 +4,7 @@ WHY: every attempt at a pack order runs the FULL frontier pipeline (sourcing →
 generation → critique → judge panel), measured at ~$4.23 for a ``pack_30`` run
 (#139 cost datapoint, #143 pack COGS). Nothing in the order/job layer used to
 know how much money one purchase had already burned: ``POST /retry`` zeroed the
-auto-attempt counter, so a single ~€4.99 purchase could walk through four
+auto-attempt counter, so a single ~€8.99 purchase could walk through four
 independent 3-attempt budgets (~12 paid runs), and cost was only ever recorded
 on delivery — so the spend left no trace at all.
 
@@ -47,7 +47,7 @@ MEASURED_COGS_CENTS: dict[str, int] = {"pack_30": 423}
 FALLBACK_COGS_CENTS = 423
 
 # How many full-COGS runs one purchase may burn before the order is cut off.
-# 3 keeps the worst case at ~$12.69 against a ~€4.99 purchase — already a loss,
+# 3 keeps the worst case at ~$12.69 against a ~€8.99 purchase (≈ €6.20 net) — already a loss,
 # but a bounded and observable one, and generous enough that the common case
 # (attempts that die early and cheap) still leaves room for a genuine manual
 # retry. Override with ORDER_SPEND_CEILING_MULTIPLIER.

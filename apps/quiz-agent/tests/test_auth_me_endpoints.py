@@ -333,7 +333,9 @@ async def test_delete_carries_the_whole_current_month_not_just_today(
     burned the month's quota on earlier days could delete → re-sign-in for a full
     fresh allotment, repeatable every day. Every row of the current month must
     land on the anon; last month's must not (that quota reset on its own)."""
-    monkeypatch.setattr(usage_tracker, "_today", lambda: date(2026, 7, 30))
+    monkeypatch.setattr(
+        usage_tracker, "_utcnow", lambda: datetime(2026, 7, 30, tzinfo=timezone.utc)
+    )
     app = _make_app(db_sessionmaker)
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.month")
     await _seed_usage(db_sessionmaker, user_id, 12, day=date(2026, 7, 5))
@@ -358,7 +360,9 @@ async def test_delete_then_resignin_cannot_reset_the_exhausted_month(
     """Adversarial audit 2026-07-30, the reason the carry exists: after the delete
     the device's App Attest key returns it to its anon subject, so the quota gate
     reads the anon. A month already spent on earlier days must still be spent."""
-    monkeypatch.setattr(usage_tracker, "_today", lambda: date(2026, 7, 30))
+    monkeypatch.setattr(
+        usage_tracker, "_utcnow", lambda: datetime(2026, 7, 30, tzinfo=timezone.utc)
+    )
     app = _make_app(db_sessionmaker)
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="apple.sub.reset")
     await _seed_usage(db_sessionmaker, user_id, 30, day=date(2026, 7, 1))

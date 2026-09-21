@@ -1,0 +1,31 @@
+{
+  "language": "sk",
+  "seed": 2026,
+  "model": "session:opus",
+  "transport": "session",
+  "prompt_version": "corpus-v2",
+  "built_at": "2026-09-21T18:58:24.062282+00:00",
+  "sample": {
+    "0f015294-0b9c-4a69-a383-3f7b41bb76e4": "buried",
+    "aaf1fee9-9c79-5cd0-bafc-5199f930f53b": "buried",
+    "32a211d7-3153-4fff-b9cc-b07f877c2d12": "buried",
+    "00e29bed-accf-461e-826a-31e0c8520828": "buried",
+    "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1": "buried",
+    "50f7966d-4f05-4afd-b8d3-c4fdafdc403c": "buried",
+    "596b8d29-f8cd-4041-b9e0-4ffe84053bfe": "buried",
+    "7b908edd-c1b9-4efe-9583-3af6eee14dd7": "buried",
+    "1ae3dd75-f197-4db5-9ead-e6830e7ff008": "buried",
+    "035077c2-f271-4f2a-846c-1459ef636270": "buried",
+    "0830cc7d-95d2-4a74-963f-590dc93e8d33": "buried",
+    "ab505aa0-9998-5e27-b911-3d2b35524d3b": "buried",
+    "41b7bf47-dfce-4faa-a72d-4cfc9c80d878": "buried",
+    "086a3325-8ce5-4246-9e0b-ef2928e6fefe": "buried",
+    "0d64947b-9ebd-4559-b8f3-94e9eccb2650": "buried",
+    "b23b6cc5-0951-596a-8859-c2afa3029e64": "control",
+    "9a98eab9-caf2-4946-9d5e-6d154712310c": "control",
+    "e0ed8486-78f5-431b-b1ee-d7da89554ad2": "control",
+    "feeaea25-bb18-418d-b89d-5406845f1a68": "control",
+    "086b4a11-d609-4d21-b63d-d73f3331e748": "control"
+  },
+  "failures": []
+}

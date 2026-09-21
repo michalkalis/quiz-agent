@@ -41,7 +41,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .workset import Job, correct_answer_key, row_source_hash, source_fields
 
-PROMPT_VERSION = "corpus-v1"
+PROMPT_VERSION = "corpus-v2"
 #: DD8 verdict, both languages (founder 2026-09-04 sk, 2026-09-06 cs).
 TRANSLATION_MODEL: dict[str, str] = {
     "sk": "google/gemini-2.5-pro",
@@ -49,6 +49,22 @@ TRANSLATION_MODEL: dict[str, str] = {
 }
 #: Order-of-magnitude per-request estimate for the API route (arm-test scale).
 EST_USD_PER_REQUEST = 0.003
+
+#: corpus-v2 (founder 2026-09-21, car test): the English corpus buries the
+#: question word mid-sentence ("...grew wary of the water thanks to which
+#: thriller...") and a literal {language} rendering is hard to parse by ear.
+#: Shared with ``rewrite.py`` so the two arms of the blind test differ only in
+#: *what* is rewritten, never in the rule.
+QUESTION_STRUCTURE_RULE = (
+    "- Question structure ({language} grammar, not English): the interrogative "
+    "must be a clause of its own. Either open the question with the question "
+    "word, or state the background as a plain declarative sentence and finish "
+    "with a short but complete interrogative sentence that says explicitly what "
+    "is being asked. Never bury the question word mid-sentence the way English "
+    "does, and never end on a bare fragment such as \"in which language?\" — "
+    "expand it into a full question. A listener must know what is asked from "
+    "the question sentence alone."
+)
 
 _INSTRUCTIONS = """Translate this quiz question into {language}.
 
@@ -59,6 +75,7 @@ Rules:
 - alternative_answers are extra spellings/forms a player might say out loud; return natural {language} variants (it may be a different number of entries than the source).
 - Translate proper nouns only where {language} has an established form; otherwise keep the original.
 - Never add, drop or change facts, numbers, dates or units.
+{structure_rule}
 - No commentary, no markdown fences.
 
 Question JSON:
@@ -68,6 +85,7 @@ Question JSON:
 def build_prompt(row: dict[str, Any], language: str) -> str:
     return _INSTRUCTIONS.format(
         language=LANGUAGE_NAMES[language],
+        structure_rule=QUESTION_STRUCTURE_RULE.format(language=LANGUAGE_NAMES[language]),
         payload=json.dumps(source_fields(row), ensure_ascii=False, indent=2),
     )
 

@@ -1,0 +1,527 @@
+{
+  "32a211d7-3153-4fff-b9cc-b07f877c2d12": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "00e29bed-accf-461e-826a-31e0c8520828": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "0f015294-0b9c-4a69-a383-3f7b41bb76e4": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "aaf1fee9-9c79-5cd0-bafc-5199f930f53b": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "major",
+            "span": "bez toho, aby ju kedykoľvek vyhral",
+            "note": "English \"ever\" is rendered literally as \"kedykoľvek\" (= \"at any time you like\"), which a native would correct to \"niekedy\"/\"a nikdy ju nevyhral\"; the item is still playable and gradable."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "50f7966d-4f05-4afd-b8d3-c4fdafdc403c": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1": {
+    "retranslate": {
+      "guards": [
+        "number_mismatch(missing=11;added=-)"
+      ],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "major",
+            "span": "preslávene prepadol z matematiky",
+            "note": "The English adverb \"famously\" is carried over word-for-word; Slovak \"preslávene\" means \"in a glorious manner\" and does not carry the \"as is well known\" sense, so a native would write \"ako je známe\" or drop it — the claim is still understandable and gradable."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "596b8d29-f8cd-4041-b9e0-4ffe84053bfe": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "7b908edd-c1b9-4efe-9583-3af6eee14dd7": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "related_language_interference",
+            "severity": "major",
+            "span": "na jednanie s ľuďmi",
+            "note": "\"jednanie\" is a Czech form/bohemism; standard Slovak would use \"zaobchádzanie s ľuďmi\" or \"rokovanie s ľuďmi\", though the item remains playable and gradable."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "related_language_interference",
+            "severity": "major",
+            "span": "na jednanie s ľuďmi",
+            "note": "\"jednanie\" is a Czechism; Slovak uses \"zaobchádzanie/styk s ľuďmi\", so a native speaker would hear the explanation as non-Slovak."
+          },
+          {
+            "category": "fluency_grammar",
+            "severity": "major",
+            "span": "že mu chýba vlohy",
+            "note": "Subject–verb agreement error: plural \"vlohy\" requires \"chýbajú\" (or singular \"chýba vloha\"), making the sentence ungrammatical when read aloud."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "1ae3dd75-f197-4db5-9ead-e6830e7ff008": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "035077c2-f271-4f2a-846c-1459ef636270": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "0830cc7d-95d2-4a74-963f-590dc93e8d33": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "minor",
+            "span": "šesť gramov zlata pozlátených navrchu",
+            "note": "Literal rendering of \"gold plated on top\" — the gold itself is described as gilded, which is semantically odd in Slovak (natural: \"len asi šesť gramov zlata na povrchu\"), but the explanation still supports the same answer and causes no grading harm."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "41b7bf47-dfce-4faa-a72d-4cfc9c80d878": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "0d64947b-9ebd-4559-b8f3-94e9eccb2650": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "086a3325-8ce5-4246-9e0b-ef2928e6fefe": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "ab505aa0-9998-5e27-b911-3d2b35524d3b": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "minor",
+            "span": "vampírsky hit",
+            "note": "Slovak normally says \"upírsky\" (from \"upír\"); \"vampírsky\" is the less native variant, though it is fully understandable and does not affect answering or grading."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "9a98eab9-caf2-4946-9d5e-6d154712310c": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "b23b6cc5-0951-596a-8859-c2afa3029e64": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "other",
+            "severity": "minor",
+            "span": "Phil Lord, Christopher Miller",
+            "note": "Two single-name entries were added to the alternative answers that are not in the source, so a player naming only one half of the duo is graded correct even though the question asks for a duo."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "e0ed8486-78f5-431b-b1ee-d7da89554ad2": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "minor",
+            "span": "Fanta oranžová",
+            "note": "Added alternative answer uses \"oranžová\" (the colour) where Slovak names the flavour \"pomarančová\" (as the explanation itself does), and it denotes the 1955 orange variant rather than the brand asked about; grading is unaffected since the key answer \"Fanta\" is intact."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "feeaea25-bb18-418d-b89d-5406845f1a68": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "idiom_calque",
+            "severity": "major",
+            "span": "ukázala známym spôsobom iné číslo",
+            "note": "English \"famously showed\" is rendered word-for-word as \"in a known manner\", which is not idiomatic Slovak and shifts the meaning; a native would write \"ako je známe, ukázala iné číslo\"."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "lexical_calque",
+            "severity": "minor",
+            "span": "sa preslávene ukázalo iné číslo",
+            "note": "English sentence adverb \"famously\" rendered word-for-word as \"preslávene\", which is not idiomatic Slovak here; a native would say e.g. \"sa objavilo iné, dnes už povestné číslo\" — the item remains fully playable and gradable."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  },
+  "086b4a11-d609-4d21-b63d-d73f3331e748": {
+    "retranslate": {
+      "guards": [],
+      "judge": {
+        "verdict": "ok",
+        "held_for_review": false,
+        "findings": [],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    },
+    "rewrite": {
+      "guards": [],
+      "judge": {
+        "verdict": "defects",
+        "held_for_review": false,
+        "findings": [
+          {
+            "category": "other",
+            "severity": "minor",
+            "span": "Voda je rozbúrenejšia, čo brzdí plavcov",
+            "note": "The Slovak alternative_answers list has six entries where the source has five — this extra accepted paraphrase was added in translation; it is semantically consistent with the correct answer, so it only makes grading slightly more lenient rather than harming the player."
+          }
+        ],
+        "notes": "",
+        "cost_cents": 0.0
+      }
+    }
+  }
+}

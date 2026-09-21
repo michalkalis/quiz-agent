@@ -1,0 +1,334 @@
+[
+  {
+    "id": "00e29bed-accf-461e-826a-31e0c8520828",
+    "question": "Najznámejšie hviezdičkové hodnotenia reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900, aby pomohol predávať istý produkt. Ktorý produkt to bol?",
+    "possible_answers": null,
+    "correct_answer": "Pneumatiky",
+    "alternative_answers": [
+      "Pneumatika",
+      "Autopneumatiky",
+      "Gumy",
+      "Automobilové pneumatiky",
+      "Pneumatiky Michelin"
+    ],
+    "explanation": "Bratia Michelinovci rozdávali sprievodcu francúzskym motoristom zadarmo v nádeji, že čím viac budú jazdiť, tým viac pneumatík zodrú.",
+    "topic": "food-everyday",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Michelin_Guide"
+  },
+  {
+    "id": "035077c2-f271-4f2a-846c-1459ef636270",
+    "question": "Koľko dávajú v súčte čísla na ľubovoľných dvoch protiľahlých stenách štandardnej šesťstennej hracej kocky?",
+    "possible_answers": null,
+    "correct_answer": "Sedem",
+    "alternative_answers": [
+      "7",
+      "sedem"
+    ],
+    "explanation": "Jednotka je oproti šestke, dvojka oproti päťke a trojka oproti štvorke, takže každá dvojica protiľahlých stien dáva v súčte sedem.",
+    "topic": "kids",
+    "difficulty": "easy",
+    "source_url": "https://mathworld.wolfram.com/Dice.html"
+  },
+  {
+    "id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+    "question": "Z ktorého kovu je takmer celá vyrobená olympijská zlatá medaila?",
+    "possible_answers": null,
+    "correct_answer": "Striebro",
+    "alternative_answers": [
+      "Zo striebra",
+      "Striebra",
+      "Rýdze striebro",
+      "Pravé striebro"
+    ],
+    "explanation": "Pravidlá vyžadujú aspoň 92,5 percenta striebra a len asi šesť gramov zlata pozlátených navrchu. Posledné medaily z rýdzeho zlata sa rozdávali v roku 1912.",
+    "topic": "sports-mix",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Olympic_medal"
+  },
+  {
+    "id": "086a3325-8ce5-4246-9e0b-ef2928e6fefe",
+    "question": "Vanilka je podľa hmotnosti druhé najdrahšie korenie na svete. Je to ručne opeľovaný a fermentovaný semenný lusk rastliny. Z ktorej čeľade kvitnúcich rastlín pochádza?",
+    "possible_answers": null,
+    "correct_answer": "Orchidey",
+    "alternative_answers": [
+      "orchidea",
+      "čeľaď orchideí",
+      "vstavačovité",
+      "čeľaď vstavačovitých",
+      "orchidaceae"
+    ],
+    "explanation": "Vanilka pochádza z popínavej orchidey a mimo jej domovského Mexika musí byť každý kvet opelený ručne do niekoľkých hodín od rozkvitnutia, preto je pravá vanilka taká drahá.",
+    "topic": "food-everyday",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Vanilla"
+  },
+  {
+    "id": "086b4a11-d609-4d21-b63d-d73f3331e748",
+    "question": "Na olympiáde v Paríži 2024 plavci označovali bazén za 'pomalý' a padlo prekvapivo málo svetových rekordov. Mal štandardnú dĺžku aj teplotu, ale hĺbku len asi 2,15 metra namiesto obvyklých 3 metrov. Prečo by plytší bazén mal plavcov spomaliť?",
+    "possible_answers": null,
+    "correct_answer": "Vlny sa odrážajú od dna a zvyšujú turbulenciu",
+    "alternative_answers": [
+      "Odraz vĺn od dna",
+      "Viac turbulencií a vlnenia",
+      "Vlny sa odrážajú od dna namiesto toho, aby sa rozptýlili",
+      "Rozvlnená voda vytvára väčší odpor",
+      "Plytká voda nepohltí energiu vĺn",
+      "Voda je rozbúrenejšia, čo brzdí plavcov"
+    ],
+    "explanation": "Plavci vytvárajú vlny, ktoré sa šíria nielen do strán, ale aj smerom nadol. V hlbokom bazéne sa táto energia rozptýli vo vodnom stĺpci, no plytké dno ju odrazí priamo späť nahor, takže hladina sa viac rozvlní. Plavci sa potom musia predierať turbulentnejšou a rozvlnenou vodou, čo zvyšuje odpor a stojí zlomky sekundy. Špičkové bazény sa práve preto stavajú s hĺbkou okolo 3 metrov. Parížsky bazén bol dočasnou konštrukciou vnútri ragbyového štadióna, takže jeho hĺbka bola obmedzená, a plavci aj tréneri mu všeobecne pripisovali vinu za pomalšie časy.",
+    "topic": "sports-mix",
+    "difficulty": "medium",
+    "source_url": "https://www.unsw.edu.au/newsroom/news/2024/08/is-the-shallow-pool-in-paris-really-slowing-olympic-swimmers-dow"
+  },
+  {
+    "id": "0d64947b-9ebd-4559-b8f3-94e9eccb2650",
+    "question": "V roku 1868 astronómovia počas zatmenia zbadali v slnečnom svetle neznámy prvok — 27 rokov predtým, než ho ktokoľvek našiel na Zemi. Príznačne ho pomenovali po gréckom bohu Slnka. Ktorý prvok to je?",
+    "possible_answers": null,
+    "correct_answer": "Hélium",
+    "alternative_answers": [
+      "Helium",
+      "He"
+    ],
+    "explanation": "Žltá spektrálna čiara pozorovaná v slnečnej koróne nezodpovedala žiadnemu známemu prvku, a tak ho pomenovali po Héliovi; pozemské hélium sa objavilo až v roku 1895, uväznené v uránovom mineráli.",
+    "topic": "science-nature",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Helium"
+  },
+  {
+    "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+    "question": "Líder Tour de France nosí žltý dres. Farba nebola zvolená kvôli viditeľnosti. Od čoho bola odkopírovaná?",
+    "possible_answers": null,
+    "correct_answer": "Od papiera novín, ktoré preteky organizovali",
+    "alternative_answers": [
+      "L'Auto",
+      "noviny L'Auto",
+      "od novín",
+      "od stránok novín",
+      "žltý novinový papier",
+      "noviny, ktoré preteky organizovali",
+      "papier novín"
+    ],
+    "explanation": "Preteky založili a organizovali športové noviny L'Auto, ktoré sa tlačili na žltom papieri, takže dres lídra sa v roku 1919 stal pohyblivou reklamou v rovnakom odtieni.",
+    "topic": "sports-mix",
+    "difficulty": "medium",
+    "source_url": "https://www.smithsonianmag.com/history/original-tour-de-france-yellow-jersey-was-made-wool-180972664/"
+  },
+  {
+    "id": "1ae3dd75-f197-4db5-9ead-e6830e7ff008",
+    "question": "Klinové písmo, najstarší známy systém písma na svete, nevzniklo preto, aby zaznamenávalo modlitby, básne či skutky kráľov. Najstaršie hlinené tabuľky zo sumerského mesta Uruk ukazujú, že vzniklo na oveľa všednejší účel. Čo si teda ľudia v skutočnosti zapisovali?",
+    "possible_answers": null,
+    "correct_answer": "Účtovné záznamy",
+    "alternative_answers": [
+      "účtovníctvo",
+      "účty",
+      "záznamy o tovare",
+      "súpisy tovaru a transakcií",
+      "zoznamy tovaru a dobytka",
+      "hospodárske záznamy",
+      "obchodné záznamy"
+    ],
+    "explanation": "Prvé písmo bola byrokracia, nie literatúra — súpisy obilia, piva a dobytka pre chrámových správcov. Eposy a hymny prišli až o stáročia neskôr.",
+    "topic": "history",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Cuneiform"
+  },
+  {
+    "id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+    "question": "Festival v Glastonbury sa v lete 2026 konal ako zvyčajne. Je to pravda alebo nepravda?",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Nepravda"
+    },
+    "correct_answer": "Nepravda",
+    "alternative_answers": [
+      "Nie je to pravda",
+      "Lož",
+      "Nepravdivé",
+      "b"
+    ],
+    "explanation": "Rok 2026 bol takzvaný oddychový rok, keď festival jedno leto úplne vynechá, aby sa poľnohospodárska pôda, na ktorej stojí, mohla zregenerovať.",
+    "topic": "entertainment",
+    "difficulty": "easy",
+    "source_url": "https://www.glastonburyfestivals.co.uk/info/?direct=true"
+  },
+  {
+    "id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+    "question": "Seriál Star Wars: Shadow Lord z roku 2026 na Disney Plus je postavený okolo jedného klasického záporáka. Ktorý je to?",
+    "possible_answers": null,
+    "correct_answer": "Darth Maul",
+    "alternative_answers": [
+      "Maul",
+      "Dart Maul",
+      "Darth Mól"
+    ],
+    "explanation": "Rohatý Sith z filmu Skrytá hrozba sa vrátil ako hlavná postava vlastného seriálu, ktorý mal premiéru dvoma epizódami v apríli 2026.",
+    "topic": "entertainment",
+    "difficulty": "easy",
+    "source_url": "https://www.disneyplus.com/en-sg/explore/articles/star-wars-maul-shadow-lord"
+  },
+  {
+    "id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+    "question": "Ak sa meria od základne na morskom dne po vrchol, je jedna havajská sopka vyššia ako Mount Everest. Ktorá sopka to je?",
+    "possible_answers": null,
+    "correct_answer": "Mauna Kea",
+    "alternative_answers": [
+      "Mauna Kea",
+      "sopka Mauna Kea",
+      "Mauna Kea na Havaji"
+    ],
+    "explanation": "Nad hladinou mora z nej vyčnieva len asi 4 200 metrov, ale sopka sa dvíha viac než 10 000 metrov od dna oceánu, teda o vyše kilometra viac ako Everest.",
+    "topic": "geography-world",
+    "difficulty": "hard",
+    "source_url": "https://mossandfog.com/mauna-kea-not-mount-everest-is-the-tallest-mountain-from-base-to-summit/"
+  },
+  {
+    "id": "596b8d29-f8cd-4041-b9e0-4ffe84053bfe",
+    "question": "Jedna krajina vyhrala mužské futbalové majstrovstvá sveta päťkrát, teda viackrát než ktorákoľvek iná. Ktorá krajina to je?",
+    "possible_answers": {
+      "a": "Brazília",
+      "b": "Nemecko",
+      "c": "Taliansko",
+      "d": "Argentína"
+    },
+    "correct_answer": "Brazília",
+    "alternative_answers": [
+      "Brazilia",
+      "Brazílie",
+      "Brazil"
+    ],
+    "explanation": "Brazília získala trofej v rokoch 1958, 1962, 1970, 1994 a 2002 a zostáva jediným národom, ktorý hral na každých majstrovstvách sveta.",
+    "topic": "sports",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/FIFA_World_Cup"
+  },
+  {
+    "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+    "question": "V roku 1952 ponúkli post prezidenta Izraela svetoznámemu fyzikovi, ktorý ponuku zdvorilo odmietol. Ktorý fyzik to bol?",
+    "possible_answers": null,
+    "correct_answer": "Albert Einstein",
+    "alternative_answers": [
+      "Einstein",
+      "Ajnštajn"
+    ],
+    "explanation": "Ponuku predložil premiér David Ben Gurion po smrti prvého prezidenta a Einstein odpovedal, že mu chýba vlohy na jednanie s ľuďmi a na oficiálne funkcie.",
+    "topic": "general",
+    "difficulty": "medium",
+    "source_url": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+  },
+  {
+    "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+    "question": "Ktorý kontinent má viac zvrchovaných štátov než ktorýkoľvek iný?",
+    "possible_answers": null,
+    "correct_answer": "Afrika",
+    "alternative_answers": [
+      "Africký kontinent"
+    ],
+    "explanation": "Afrika má 54 medzinárodne uznaných štátov, čím pohodlne predstihuje Európu aj Áziu.",
+    "topic": "general",
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent"
+  },
+  {
+    "id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+    "question": "Do roku 2024 nazbieral filmový vesmír Marvel rekordných štrnásť nominácií na Oscara v jedinej kategórii bez toho, aby ju kedykoľvek vyhral. O ktorú kategóriu ide?",
+    "possible_answers": null,
+    "correct_answer": "Najlepšie vizuálne efekty",
+    "alternative_answers": [
+      "Vizuálne efekty",
+      "VFX",
+      "Špeciálne efekty",
+      "Oscar za vizuálne efekty"
+    ],
+    "explanation": "Hoci Marvel vybudoval najväčšiu filmovú sériu postavenú na efektoch, všetkých štrnásť nominácií premenil na prehru, čím sa stal sériou s najväčším počtom nominácií v jednej kategórii, ktorú nikdy nezískal.",
+    "topic": "movies-music",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Academy_Awards"
+  },
+  {
+    "id": "ab505aa0-9998-5e27-b911-3d2b35524d3b",
+    "question": "Na Oscaroch 2026 získal Michael B. Jordan cenu za najlepší mužský herecký výkon v hlavnej úlohe za vampírsky hit Hriešnici (Sinners). Ktorý režisér, jeho dlhoročný spolupracovník z filmov Creed a Black Panther, si odniesol Oscara za scenár k tomuto filmu?",
+    "possible_answers": null,
+    "correct_answer": "Ryan Coogler",
+    "alternative_answers": [
+      "Coogler",
+      "Ryan Kúgler",
+      "Rajan Coogler"
+    ],
+    "explanation": "Coogler film Hriešnici napísal aj režíroval a na tom istom ceremoniáli v roku 2026 si odniesol Oscara za najlepší pôvodný scenár, kým jeho predstaviteľ hlavnej úlohy získal cenu za najlepší mužský herecký výkon. Jedno z najspoľahlivejších hollywoodskych spojenectiev režiséra a hviezdy tak korunovali zhodné Oscary za vampírsky film.",
+    "topic": "movies-music",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Academy_Awards"
+  },
+  {
+    "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "question": "Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?",
+    "possible_answers": null,
+    "correct_answer": "Phil Lord a Christopher Miller",
+    "alternative_answers": [
+      "Lord a Miller",
+      "Christopher Miller a Phil Lord",
+      "Phil Lord a Chris Miller",
+      "Lord & Miller",
+      "Phil Lord, Christopher Miller"
+    ],
+    "explanation": "Táto dvojica vniesla svoju typickú rýchlu a veselú energiu do románu Andyho Weira, autora knihy Marťan, a premenila potenciálne trúchlivý príbeh o prežití na jeden z najzábavnejších trhákov roku 2026.",
+    "topic": "movies-music",
+    "difficulty": "hard",
+    "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
+  },
+  {
+    "id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "question": "O Albertovi Einsteinovi sa traduje, že ako školák prepadol z matematiky. Je to pravda, alebo lož?",
+    "possible_answers": {
+      "a": "Pravda",
+      "b": "Lož"
+    },
+    "correct_answer": "Lož",
+    "alternative_answers": [
+      "Nepravda",
+      "Nie je to pravda",
+      "Lož - b"
+    ],
+    "explanation": "Lož. Z matematiky mal vysoké známky a už v 11 rokoch čítal vysokoškolské učebnice fyziky. Mýtus pravdepodobne vznikol v roku 1935 v rubrike Ripley's Believe It or Not.",
+    "topic": "science-nature",
+    "difficulty": "easy",
+    "source_url": "https://www.cracked.com/image-pictofact-7288-30-wild-facts-about-famous-historical-figures"
+  },
+  {
+    "id": "e0ed8486-78f5-431b-b1ee-d7da89554ad2",
+    "question": "V roku 1940 vojnové embargo odrezalo nemeckú továreň Coca-Coly od amerického sirupu, a tak jej chemici vytvorili novú ovocnú limonádu z miestnych zvyškov, ako sú jablkové výlisky a srvátka. Ktorá značka, ktorá sa dodnes predáva po celom svete, takto vznikla?",
+    "possible_answers": null,
+    "correct_answer": "Fanta",
+    "alternative_answers": [
+      "fanta",
+      "Fanta oranžová",
+      "Fantu"
+    ],
+    "explanation": "Šéf Max Keith vyzval zamestnancov, aby použili svoju fantáziu — po nemecky 'Fantasie' — a názov Fanta sa ujal; pomarančová verzia prišla až v roku 1955 v Taliansku.",
+    "topic": "food-everyday",
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Fanta"
+  },
+  {
+    "id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+    "question": "Keď Nadia Comăneciová v roku 1976 získala ako prvá v olympijskej gymnastike perfektnú desiatku, na svetelnej tabuli v hale sa preslávene ukázalo iné číslo. Aké číslo to bolo?",
+    "possible_answers": {
+      "a": "1,00",
+      "b": "0,00",
+      "c": "9,99",
+      "d": "10,1"
+    },
+    "correct_answer": "1,00",
+    "alternative_answers": [
+      "1.00",
+      "jedna celá nula nula",
+      "jednotka",
+      "1"
+    ],
+    "explanation": "Perfektné hodnotenie sa považovalo za natoľko nemožné, že tabuľa bola skonštruovaná len na tri číslice, takže jej 10,00 sa zobrazilo ako 1,00 a na chvíľu zmiatlo divákov.",
+    "topic": "sports",
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Nadia_Com%C4%83neci"
+  }
+]

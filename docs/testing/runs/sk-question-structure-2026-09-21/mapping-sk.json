@@ -1,0 +1,242 @@
+{
+  "q01": {
+    "arm": "rewrite",
+    "original_id": "086b4a11-d609-4d21-b63d-d73f3331e748",
+    "topic": "sports-mix",
+    "question": "Na olympiáde v Paríži 2024 plavci označovali bazén za 'pomalý' a padlo prekvapivo málo svetových rekordov. Mal štandardnú dĺžku aj teplotu, ale hĺbku len asi 2,15 metra namiesto obvyklých 3 metrov. Prečo by plytší bazén mal plavcov spomaliť?"
+  },
+  "q02": {
+    "arm": "rewrite",
+    "original_id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+    "topic": "sports-mix",
+    "question": "Z ktorého kovu je takmer celá vyrobená olympijská zlatá medaila?"
+  },
+  "q03": {
+    "arm": "rewrite",
+    "original_id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+    "topic": "geography-world",
+    "question": "Ak sa meria od základne na morskom dne po vrchol, je jedna havajská sopka vyššia ako Mount Everest. Ktorá sopka to je?"
+  },
+  "q04": {
+    "arm": "rewrite",
+    "original_id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "topic": "movies-music",
+    "question": "Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?"
+  },
+  "q05": {
+    "arm": "rewrite",
+    "original_id": "1ae3dd75-f197-4db5-9ead-e6830e7ff008",
+    "topic": "history",
+    "question": "Klinové písmo, najstarší známy systém písma na svete, nevzniklo preto, aby zaznamenávalo modlitby, básne či skutky kráľov. Najstaršie hlinené tabuľky zo sumerského mesta Uruk ukazujú, že vzniklo na oveľa všednejší účel. Čo si teda ľudia v skutočnosti zapisovali?"
+  },
+  "q06": {
+    "arm": "rewrite",
+    "original_id": "e0ed8486-78f5-431b-b1ee-d7da89554ad2",
+    "topic": "food-everyday",
+    "question": "V roku 1940 vojnové embargo odrezalo nemeckú továreň Coca-Coly od amerického sirupu, a tak jej chemici vytvorili novú ovocnú limonádu z miestnych zvyškov, ako sú jablkové výlisky a srvátka. Ktorá značka, ktorá sa dodnes predáva po celom svete, takto vznikla?"
+  },
+  "q07": {
+    "arm": "retranslate",
+    "original_id": "086b4a11-d609-4d21-b63d-d73f3331e748",
+    "topic": "sports-mix",
+    "question": "Na olympiáde v Paríži 2024 plavci označovali bazén za „pomalý“ a padlo prekvapivo málo svetových rekordov. Mal štandardnú dĺžku aj teplotu, ale hĺbku len asi 2,15 metra namiesto obvyklých 3 metrov. Prečo by plytší bazén robil plavcov pomalšími?"
+  },
+  "q08": {
+    "arm": "rewrite",
+    "original_id": "0d64947b-9ebd-4559-b8f3-94e9eccb2650",
+    "topic": "science-nature",
+    "question": "V roku 1868 astronómovia počas zatmenia zbadali v slnečnom svetle neznámy prvok — 27 rokov predtým, než ho ktokoľvek našiel na Zemi. Príznačne ho pomenovali po gréckom bohu Slnka. Ktorý prvok to je?"
+  },
+  "q09": {
+    "arm": "retranslate",
+    "original_id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+    "topic": "general",
+    "question": "Ktorý kontinent má viac zvrchovaných štátov než ktorýkoľvek iný?"
+  },
+  "q10": {
+    "arm": "retranslate",
+    "original_id": "035077c2-f271-4f2a-846c-1459ef636270",
+    "topic": "kids",
+    "question": "Na štandardnej šesťstennej hracej kocke dávajú čísla na dvoch protiľahlých stenách vždy rovnaký súčet. Koľko je tento súčet?"
+  },
+  "q11": {
+    "arm": "retranslate",
+    "original_id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+    "topic": "movies-music",
+    "question": "Ktorá režisérska dvojica prešla od rozjašene absurdného Lego príbehu k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?"
+  },
+  "q12": {
+    "arm": "retranslate",
+    "original_id": "e0ed8486-78f5-431b-b1ee-d7da89554ad2",
+    "topic": "food-everyday",
+    "question": "V roku 1940 vojnové embargo odrezalo nemeckú továreň Coca-Coly od amerického sirupu, a tak jej chemici vytvorili novú ovocnú limonádu z miestnych zvyškov, ako boli jablčné výlisky a srvátka. Ktorá značka, ktorá sa dodnes predáva po celom svete, takto vznikla?"
+  },
+  "q13": {
+    "arm": "retranslate",
+    "original_id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "topic": "science-nature",
+    "question": "Pravda alebo lož: Albert Einstein v školských časoch preslávene prepadol z matematiky."
+  },
+  "q14": {
+    "arm": "retranslate",
+    "original_id": "0d64947b-9ebd-4559-b8f3-94e9eccb2650",
+    "topic": "science-nature",
+    "question": "V roku 1868 astronómovia počas zatmenia zbadali v slnečnom svetle neznámy prvok — 27 rokov predtým, než ho ktokoľvek našiel na Zemi. Príhodne ho pomenovali podľa gréckeho boha slnka. O ktorý prvok ide?"
+  },
+  "q15": {
+    "arm": "rewrite",
+    "original_id": "086a3325-8ce5-4246-9e0b-ef2928e6fefe",
+    "topic": "food-everyday",
+    "question": "Vanilka je podľa hmotnosti druhé najdrahšie korenie na svete. Je to ručne opeľovaný a fermentovaný semenný lusk rastliny. Z ktorej čeľade kvitnúcich rastlín pochádza?"
+  },
+  "q16": {
+    "arm": "retranslate",
+    "original_id": "596b8d29-f8cd-4041-b9e0-4ffe84053bfe",
+    "topic": "sports",
+    "question": "Ktorá krajina s piatimi titulmi vyhrala majstrovstvá sveta vo futbale mužov viackrát než ktorákoľvek iná?"
+  },
+  "q17": {
+    "arm": "retranslate",
+    "original_id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+    "topic": "entertainment",
+    "question": "Festival v Glastonbury sa v lete 2026 konal ako zvyčajne. Je to pravda, alebo nepravda?"
+  },
+  "q18": {
+    "arm": "retranslate",
+    "original_id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+    "topic": "general",
+    "question": "V roku 1952 ponúkli jednému svetoznámemu fyzikovi funkciu prezidenta Izraela, ktorú zdvorilo odmietol. Ktorý fyzik to bol?"
+  },
+  "q19": {
+    "arm": "rewrite",
+    "original_id": "ab505aa0-9998-5e27-b911-3d2b35524d3b",
+    "topic": "movies-music",
+    "question": "Na Oscaroch 2026 získal Michael B. Jordan cenu za najlepší mužský herecký výkon v hlavnej úlohe za vampírsky hit Hriešnici (Sinners). Ktorý režisér, jeho dlhoročný spolupracovník z filmov Creed a Black Panther, si odniesol Oscara za scenár k tomuto filmu?"
+  },
+  "q20": {
+    "arm": "retranslate",
+    "original_id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+    "topic": "geography-world",
+    "question": "Ktorá havajská sopka je meraná od svojej základne na dne oceánu až po vrchol vyššia ako Mount Everest?"
+  },
+  "q21": {
+    "arm": "retranslate",
+    "original_id": "ab505aa0-9998-5e27-b911-3d2b35524d3b",
+    "topic": "movies-music",
+    "question": "Na Oscaroch 2026 získal Michael B. Jordan cenu za najlepší mužský herecký výkon v hlavnej úlohe za upírsky hit Sinners. Oscara za scenár k tomuto filmu si odniesol jeho dlhoročný spolupracovník z filmov Creed a Black Panther. Ktorý režisér to bol?"
+  },
+  "q22": {
+    "arm": "rewrite",
+    "original_id": "035077c2-f271-4f2a-846c-1459ef636270",
+    "topic": "kids",
+    "question": "Koľko dávajú v súčte čísla na ľubovoľných dvoch protiľahlých stenách štandardnej šesťstennej hracej kocky?"
+  },
+  "q23": {
+    "arm": "rewrite",
+    "original_id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+    "topic": "entertainment",
+    "question": "Seriál Star Wars: Shadow Lord z roku 2026 na Disney Plus je postavený okolo jedného klasického záporáka. Ktorý je to?"
+  },
+  "q24": {
+    "arm": "rewrite",
+    "original_id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+    "topic": "movies-music",
+    "question": "Do roku 2024 nazbieral filmový vesmír Marvel rekordných štrnásť nominácií na Oscara v jedinej kategórii bez toho, aby ju kedykoľvek vyhral. O ktorú kategóriu ide?"
+  },
+  "q25": {
+    "arm": "rewrite",
+    "original_id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+    "topic": "general",
+    "question": "Ktorý kontinent má viac zvrchovaných štátov než ktorýkoľvek iný?"
+  },
+  "q26": {
+    "arm": "retranslate",
+    "original_id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+    "topic": "entertainment",
+    "question": "Okolo ktorého klasického záporáka je postavený seriál Star Wars: Shadow Lord, ktorý vyšiel v roku 2026 na Disney Plus?"
+  },
+  "q27": {
+    "arm": "retranslate",
+    "original_id": "086a3325-8ce5-4246-9e0b-ef2928e6fefe",
+    "topic": "food-everyday",
+    "question": "Vanilka je druhé najdrahšie korenie na svete podľa hmotnosti. Získava sa z ručne opeľovaných a následne fermentovaných semenných toboliek. Z ktorej čeľade kvitnúcich rastlín pochádza?"
+  },
+  "q28": {
+    "arm": "retranslate",
+    "original_id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+    "topic": "sports-mix",
+    "question": "Z ktorého kovu je takmer celá vyrobená olympijská zlatá medaila?"
+  },
+  "q29": {
+    "arm": "retranslate",
+    "original_id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+    "topic": "sports",
+    "question": "Keď Nadia Comăneciová v roku 1976 získala ako prvá v dejinách olympijskej gymnastiky perfektnú desiatku, svetelná tabuľa v hale ukázala známym spôsobom iné číslo. Aké číslo sa na nej objavilo?"
+  },
+  "q30": {
+    "arm": "retranslate",
+    "original_id": "00e29bed-accf-461e-826a-31e0c8520828",
+    "topic": "food-everyday",
+    "question": "Najznámejšie hviezdičkové hodnotenie reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900 preto, aby pomohol predávať istý výrobok. O aký výrobok išlo?"
+  },
+  "q31": {
+    "arm": "rewrite",
+    "original_id": "feeaea25-bb18-418d-b89d-5406845f1a68",
+    "topic": "sports",
+    "question": "Keď Nadia Comăneciová v roku 1976 získala ako prvá v olympijskej gymnastike perfektnú desiatku, na svetelnej tabuli v hale sa preslávene ukázalo iné číslo. Aké číslo to bolo?"
+  },
+  "q32": {
+    "arm": "rewrite",
+    "original_id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+    "topic": "entertainment",
+    "question": "Festival v Glastonbury sa v lete 2026 konal ako zvyčajne. Je to pravda alebo nepravda?"
+  },
+  "q33": {
+    "arm": "rewrite",
+    "original_id": "596b8d29-f8cd-4041-b9e0-4ffe84053bfe",
+    "topic": "sports",
+    "question": "Jedna krajina vyhrala mužské futbalové majstrovstvá sveta päťkrát, teda viackrát než ktorákoľvek iná. Ktorá krajina to je?"
+  },
+  "q34": {
+    "arm": "rewrite",
+    "original_id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+    "topic": "sports-mix",
+    "question": "Líder Tour de France nosí žltý dres. Farba nebola zvolená kvôli viditeľnosti. Od čoho bola odkopírovaná?"
+  },
+  "q35": {
+    "arm": "retranslate",
+    "original_id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+    "topic": "movies-music",
+    "question": "Do roku 2024 nazbieral filmový vesmír Marvel rekordných štrnásť nominácií na Oscara v jedinej kategórii bez toho, aby ju čo i len raz vyhral. O ktorú kategóriu ide?"
+  },
+  "q36": {
+    "arm": "retranslate",
+    "original_id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+    "topic": "sports-mix",
+    "question": "Líder Tour de France nosí žltý dres. Táto farba nebola zvolená kvôli viditeľnosti – bola prevzatá odinakiaľ. Odkiaľ pochádzala?"
+  },
+  "q37": {
+    "arm": "rewrite",
+    "original_id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+    "topic": "science-nature",
+    "question": "O Albertovi Einsteinovi sa traduje, že ako školák prepadol z matematiky. Je to pravda, alebo lož?"
+  },
+  "q38": {
+    "arm": "rewrite",
+    "original_id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+    "topic": "general",
+    "question": "V roku 1952 ponúkli post prezidenta Izraela svetoznámemu fyzikovi, ktorý ponuku zdvorilo odmietol. Ktorý fyzik to bol?"
+  },
+  "q39": {
+    "arm": "rewrite",
+    "original_id": "00e29bed-accf-461e-826a-31e0c8520828",
+    "topic": "food-everyday",
+    "question": "Najznámejšie hviezdičkové hodnotenia reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900, aby pomohol predávať istý produkt. Ktorý produkt to bol?"
+  },
+  "q40": {
+    "arm": "retranslate",
+    "original_id": "1ae3dd75-f197-4db5-9ead-e6830e7ff008",
+    "topic": "history",
+    "question": "Klinové písmo, najstarší známy systém písma na svete, nevzniklo na zaznamenávanie modlitieb, básní ani činov kráľov. Najstaršie hlinené tabuľky zo sumerského mesta Uruk ukazujú, že vzniklo na oveľa všednejší účel. Čo si teda ľudia v skutočnosti zapisovali?"
+  }
+}

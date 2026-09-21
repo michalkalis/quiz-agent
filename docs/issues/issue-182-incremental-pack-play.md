@@ -1,6 +1,6 @@
 # #182 — Custom pack: hrať hneď po prvej otázke (inkrementálne generovanie)
 
-**Triage:** done (agent-side) — PR #166 MERGED 2026-09-17, rampa dávok 1/2/4/8 = follow-up PR 2026-09-18; open = deploy (quiz-pack-api s migráciou pred quiz-agent, founder súhlas), `mba` worker na novom main, founder e2e z TestFlightu
+**Triage:** done (agent-side) — PR #166 MERGED 2026-09-17, rampa dávok 1/2/4/8 = follow-up PR 2026-09-18; DEPLOYNUTÉ 2026-09-21 (migrácia na prode, pack-api v69, quiz-agent v115); open = `mba` session worker na novom main (founder krok), founder e2e z TestFlightu
 
 ## Cieľ
 

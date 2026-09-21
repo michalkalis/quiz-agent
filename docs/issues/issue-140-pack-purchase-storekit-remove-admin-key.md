@@ -41,7 +41,7 @@
 1. Open appstoreconnect.apple.com → **Apps** → the CarQuiz app.
 2. Left menu **Monetization → In-App Purchases** → **+** (Create).
 3. Type: **Consumable**. Reference Name: e.g. `Custom Pack 30`. **Product ID: `pack_30`** — exactly this, it can never be changed later. (Prefer a branded id like `com.carquiz.pack.custom30`? Say so BEFORE creating — it is a 2-line code/backend change.)
-4. Set the price — **founder decision, still open**. Premium positioning per founder; suggestion on the table: **€9.99** (2× the monthly sub). Note pack_30 COGS ≈ $4.23 (#139 measurement), so anything under ~€5 sells at a loss.
+4. Price — **DECIDED 2026-09-18 (monetization review): €8.99, base Slovakia (EUR)**. Net after SK VAT 23 % + Apple 15 % ≈ €6.20 vs measured COGS ≈ $4.23 (#139) → ~€2.6 margin on a clean first-attempt run only; a retry or a pricier generation stack (Fable gen ≈ $7, #166) turns it into a loss. Guard: re-measure COGS in API mode after #182 (incremental delivery) before end-user sale, and never swap the generator to a costlier model without re-running this calc.
 5. Fill Display Name + Description (SK and EN) — sandbox purchasing does not work while metadata is missing.
 
 **2. Then ask for a TF build** (builds are on-request only) and run the sandbox e2e on device: order → Apple charge sheet shows the price → generation → pack playable. Watch: the charge must appear, and Settings must NOT show the admin-key field in the TF build.
@@ -52,5 +52,5 @@
 
 > - [~] #140 Pack purchase on real StoreKit, retire user-facing admin key — [plan](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md) — agent side DONE 2026-08-04 (StoreKit purchase + JWS order path, entries ungated, admin door Debug-only); #138 flow redesign builds on it. Remaining = the two `[HUMAN]` items below.
 
-> - [ ] `[HUMAN]` #140 founder leg 1: **create the ASC consumable, Product ID exactly `pack_30`** + set the price (open decision — premium; suggested €9.99, COGS ≈ $4.23/pack) + SK/EN metadata. Exact numbered steps: [issue § Founder leg](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md). Prefer a branded product id instead? Say so BEFORE creating (2-line change).
+> - [x] #140 leg 1 DONE 2026-09-21 (agent via ASC web): consumable `pack_30` created, €8.99 base Slovakia, EN+SK display name/description, all territories, review notes; open = review screenshot of the order screen (needed for "Ready to Submit") once the StoreKit purchase UI ships.
 

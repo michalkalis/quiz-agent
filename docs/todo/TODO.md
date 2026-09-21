@@ -53,7 +53,7 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [~] #136 — Audio session activates at app launch (Spotify pauses) — [plan](../issues/issue-136-audio-session-on-launch-pauses-music.md) — fix SHIPPED 2026-08-04; remaining = `[HUMAN]` A2DP device check + re-run #124 A/B
 - [~] #139 — Pack generation hangs silently with zero diagnostics — [plan](../issues/issue-139-pack-generation-hang-observability.md) — agent-side shipped + deployed; remaining = founder OpenRouter top-up → 1 manual retry
 - [~] #140 — Pack purchase on real StoreKit, retire admin key — [plan](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md) — agent side DONE 2026-08-04; remaining = dva `[HUMAN]` legy nižšie
-- [ ] **[HUMAN]** #140 founder leg 1 — vytvoriť ASC consumable `pack_30` + cena — [issue § Founder leg](../issues/issue-140-pack-purchase-storekit-remove-admin-key.md) — cena ROZHODNUTÁ 2026-09-18: €8.99 (net ≈ €6.20 vs COGS ≈ $4.23, zisk len pri čistom behu — pred predajom prememerať po #182)
+- [x] #140 leg 1 — ASC consumable `pack_30` vytvorený 2026-09-21 (€8.99 base SK, EN+SK metadáta, všetky krajiny; net ≈ €6.20 vs COGS ≈ $4.23 — pred predajom prememerať po #182); open = review screenshot obrazovky objednávky
 - [ ] **[HUMAN]** #140 founder leg 2 (po leg 1) — TF build → sandbox e2e na zariadení — [detail](TODO-details.md) — pred GA prepnúť `STOREKIT_ENVIRONMENT` Sandbox→Production
 - [ ] #143 — Custom-pack COGS reduction (pack_30 ≈ $4.23 vs €8.99 retail od 2026-09-18) — [plan](../issues/issue-143-pack-cogs-reduction.md) — ~700 LLM callov/pack, 420 = judge panel; open = per-phase $ split + blind eval
 

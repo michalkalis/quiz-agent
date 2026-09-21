@@ -13,10 +13,9 @@
     final class MockPurchaseService: PurchaseService {
         // MARK: - Configuration
 
-        /// Return value for `loadOfferings`. Defaults to all three pinned packages.
+        /// Return value for `loadOfferings`. Defaults to both pinned packages.
         var stubbedOfferings: PurchasableOfferings? = PurchasableOfferings(
             monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
-            annual: PurchasableProduct(id: StoreProduct.annualSubId, displayPrice: "$29.99", displayName: "Hangs Unlimited (Annual)"),
             pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
         )
 

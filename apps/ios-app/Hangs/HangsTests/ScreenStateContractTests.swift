@@ -328,7 +328,6 @@ struct PaywallViewStateContractTests {
             monthly: PurchasableProduct(
                 id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"
             ),
-            annual: nil,
             pack: nil
         )
         let manager = await makeStoreManager(offerings: offerings)

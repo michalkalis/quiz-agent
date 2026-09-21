@@ -3,9 +3,9 @@
 //  Hangs
 //
 //  Two variants driven by RevenueCat offering availability (issue #93):
-//    z8TS6 — subscription paywall with plan picker (issue #94): Annual card
-//            pre-selected + Monthly card, one-time pack card, single CTA that
-//            purchases whichever plan is selected.
+//    z8TS6 — subscription paywall (monthly-only for v1, founder 2026-09-18):
+//            Monthly card + one-time pack card, single CTA that purchases
+//            whichever is selected.
 //    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when the offering
 //            is unavailable after a completed load attempt.
 //
@@ -21,7 +21,6 @@ import SwiftUI
 /// finding 9 folded the one-time pack in here: it used to buy itself the
 /// instant it was tapped, which is not what a card in a picker means.
 enum PaywallPlan {
-    case annual
     case monthly
     case pack
 }
@@ -37,7 +36,7 @@ struct PaywallView: View {
         storeManager: StoreManager,
         limitError: QuotaLimitError?,
         onDismiss: @escaping () -> Void,
-        initialPlan: PaywallPlan = .annual
+        initialPlan: PaywallPlan = .monthly
     ) {
         self.storeManager = storeManager
         self.limitError = limitError
@@ -261,29 +260,24 @@ struct PaywallView: View {
 
     // MARK: - Plan picker
 
-    /// Selection resilient to partial offerings: if the selected plan's product
-    /// is missing, fall back to the other one (callers must handle partial
-    /// availability — see PurchasableOfferings).
+    /// Pack selection is resilient to a dropped offering: if the pack product
+    /// goes missing mid-session, fall back to monthly rather than leaving the
+    /// CTA pointed at a product that is gone.
     var effectivePlan: PaywallPlan {
         switch selectedPlan {
-        case .annual:
-            return storeManager.offerings?.annual != nil ? .annual : .monthly
         case .monthly:
-            return storeManager.offerings?.monthly != nil ? .monthly : .annual
+            return .monthly
         case .pack:
             // The pack card only renders when the pack exists, but an offering
             // refresh could drop it under the selection — never leave the CTA
             // pointing at a product that is gone.
-            guard storeManager.offerings?.pack != nil else {
-                return storeManager.offerings?.annual != nil ? .annual : .monthly
-            }
+            guard storeManager.offerings?.pack != nil else { return .monthly }
             return .pack
         }
     }
 
     private var selectedProduct: PurchasableProduct? {
         switch effectivePlan {
-        case .annual: return storeManager.offerings?.annual
         case .monthly: return storeManager.offerings?.monthly
         case .pack: return storeManager.offerings?.pack
         }
@@ -314,7 +308,6 @@ struct PaywallView: View {
 
     private func productID(for plan: PaywallPlan) -> String {
         switch plan {
-        case .annual: return StoreProduct.annualSubId
         case .monthly: return StoreProduct.monthlySubId
         case .pack: return StoreProduct.packId
         }
@@ -335,24 +328,10 @@ struct PaywallView: View {
 
     private var planPicker: some View {
         VStack(spacing: 10) {
-            if let annual = storeManager.offerings?.annual {
-                planCard(
-                    title: "Annual",
-                    price: "\(annual.displayPrice) / year",
-                    badge: "SAVE 50%",
-                    plan: .annual,
-                    isSelected: effectivePlan == .annual
-                ) {
-                    selectedPlan = .annual
-                }
-                .accessibilityIdentifier("paywall-plan-annual")
-            }
-
             if let monthly = storeManager.offerings?.monthly {
                 planCard(
                     title: "Monthly",
                     price: "\(monthly.displayPrice) / month",
-                    badge: nil,
                     plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {
@@ -382,7 +361,6 @@ struct PaywallView: View {
     private func planCard(
         title: LocalizedStringKey,
         price: LocalizedStringKey,
-        badge: LocalizedStringKey?,
         plan: PaywallPlan,
         isSelected: Bool,
         action: @escaping () -> Void
@@ -395,20 +373,9 @@ struct PaywallView: View {
         return Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        Text(title)
-                            .font(.hangsBody(16, weight: .bold))
-                            .foregroundColor(Theme.Hangs.Colors.ink)
-                        if let badge {
-                            Text(badge)
-                                .font(.hangsBody(10, weight: .bold))
-                                .kerning(0.5)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Theme.Hangs.Colors.pink))
-                        }
-                    }
+                    Text(title)
+                        .font(.hangsBody(16, weight: .bold))
+                        .foregroundColor(Theme.Hangs.Colors.ink)
                     Text(price)
                         .font(.hangsBody(13))
                         .foregroundColor(Theme.Hangs.Colors.muted)
@@ -542,11 +509,9 @@ struct PaywallView: View {
     private var ctaButton: some View {
         if let product = selectedProduct {
             // #56: the title param is LocalizedStringKey, so the interpolated
-            // literal extracts as "Subscribe — %@ / year" (the displayPrice is a
-            // runtime placeholder, not translatable).
+            // literal extracts as "Subscribe — %@ / month" (the displayPrice is
+            // a runtime placeholder, not translatable).
             switch effectivePlan {
-            case .annual:
-                purchaseCTA(title: "Subscribe — \(product.displayPrice) / year", product: product)
             case .monthly:
                 purchaseCTA(title: "Subscribe — \(product.displayPrice) / month", product: product)
             case .pack:

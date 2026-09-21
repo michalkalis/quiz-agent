@@ -31,10 +31,9 @@ struct PurchasableProduct: Sendable, Equatable {
 /// unreachable — callers must handle partial availability.
 struct PurchasableOfferings: Sendable, Equatable {
     let monthly: PurchasableProduct?
-    let annual: PurchasableProduct?
     let pack: PurchasableProduct?
 
-    static let empty = PurchasableOfferings(monthly: nil, annual: nil, pack: nil)
+    static let empty = PurchasableOfferings(monthly: nil, pack: nil)
 }
 
 /// The outcome of a purchase attempt.
@@ -147,7 +146,6 @@ final class LivePurchaseService: PurchaseService {
             cachedOffering = current
             return PurchasableOfferings(
                 monthly: makeProduct(current.monthly),
-                annual: makeProduct(current.annual),
                 pack: makeProduct(current.package(identifier: StoreProduct.packPackageIdentifier))
             )
         } catch {

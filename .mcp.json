@@ -13,19 +13,6 @@
         "XCODEBUILDMCP_DYNAMIC_TOOLS": "true",
         "XCODEBUILDMCP_ENABLED_WORKFLOWS": "session-management,simulator,simulator-management,ui-automation,logging,utilities,project-discovery,ui-testing"
       }
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest",
-        "--browser",
-        "chromium",
-        "--user-data-dir",
-        "/Users/michalkalis/.cache/quiz-agent/playwright-profile",
-        "--output-dir",
-        "/private/tmp/claude-501/quiz-agent-playwright-out"
-      ]
     }
   }
 }

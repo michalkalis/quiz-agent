@@ -54,7 +54,8 @@ struct StartCommandTests {
 
             await pumpUntil({ vm.quizState == .recording }, turns: 2000, "start did not open the mic")
             #expect(vm.quizState == .recording)
-            #expect(audio.isRecording == true)
+            #expect(vm.isAnswerCaptureActive == true) // #184: capture on the shared engine
+            _ = audio
         }
     }
 

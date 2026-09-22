@@ -45,7 +45,7 @@ extension VoiceCommandCoordinator {
         // token count that the matcher's content cap keys off. The two DROP exits
         // are sampled (`shouldLogDroppedTranscript`); the command-carrying ones
         // are not.
-        let normalized = VoiceCommandMatcher.normalize(transcript.text)
+        let normalized = VoiceCommandMatcher.normalize(transcript.text, language: commandLanguage)
         let tokens = normalized.split(separator: " ").count
 
         // Emission cadence (`noteTranscriptArrival`): stamped BEFORE any early
@@ -87,7 +87,7 @@ extension VoiceCommandCoordinator {
         // NOT in the question screen's normal command set, so this must be
         // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
-            let cancelTokens = VoiceCommandMatcher.normalize(transcript.text).split(separator: " ").map(String.init)
+            let cancelTokens = normalized.split(separator: " ").map(String.init)
             if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 noteMatchedForFeedback() // #122: visual twin of the ack earcon
@@ -96,10 +96,30 @@ extension VoiceCommandCoordinator {
             }
         }
 
-        guard let command = VoiceCommandMatcher.match(
+        // #184 n-best: a car-noise final often ranks a near-miss first and the
+        // real command second, so when the PRIMARY text matches nothing the
+        // alternatives get the same screen-scoped matcher, best-ranked first.
+        // FINALS ONLY — a volatile is a revisable guess already, and scoring N
+        // guesses of a guess would multiply the false-fire surface that #119's
+        // stability gate exists to bound.
+        var matched = VoiceCommandMatcher.match(
             transcript: transcript.text, on: screen, isFinal: transcript.isFinal,
             language: commandLanguage
-        ) else {
+        )
+        var viaAlternative = false
+        if matched == nil, transcript.isFinal {
+            for alternative in transcript.alternatives {
+                if let fromAlternative = VoiceCommandMatcher.match(
+                    transcript: alternative, on: screen, isFinal: true, language: commandLanguage
+                ) {
+                    matched = fromAlternative
+                    viaAlternative = true
+                    break
+                }
+            }
+        }
+
+        guard let command = matched else {
             // #122: the "heard you, didn't understand" glow — throttled inside.
             noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
@@ -144,7 +164,7 @@ extension VoiceCommandCoordinator {
         fireCommand(
             command, on: screen, text: normalized,
             path: transcript.isFinal ? .finalResult : .volatileRepeat,
-            sincePrevMs: sincePrevMs
+            sincePrevMs: sincePrevMs, viaAlternative: viaAlternative
         )
     }
 

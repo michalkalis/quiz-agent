@@ -36,6 +36,7 @@ enum TaskKey: Hashable, Sendable {
     case deferredAdvance // #132 E: advance fired straight from handleQuizResponse
     case recapNarration // #132 E: sequential recap TTS chunks
     case awaitingQuestion // #182: long-poll for the next question of a generating pack
+    case answerReadBack // #184 track D: TTS of the recognised voice answer on the confirmation sheet
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

@@ -26,10 +26,13 @@ struct VADConstantsTests {
 
     // MARK: - Ranges
 
-    @Test("silence hangover sits in the documented 1.2–1.8 s band")
+    @Test("silence hangover sits in the #184 0.5–1.0 s band")
     func hangoverInBand() {
-        #expect(VADTuning.silenceHangoverSecs >= 1.2)
-        #expect(VADTuning.silenceHangoverSecs <= 1.8)
+        // #184 (car test): at 1.5 s the passenger's next words got appended to
+        // the answer. Production voice agents end an utterance at 0.5–0.8 s; the
+        // batch STT model absorbs the trailing silence the long value hedged for.
+        #expect(VADTuning.silenceHangoverSecs >= 0.5)
+        #expect(VADTuning.silenceHangoverSecs <= 1.0)
     }
 
     @Test("min-speech-duration is a small positive guard (0 < x <= 1 s)")

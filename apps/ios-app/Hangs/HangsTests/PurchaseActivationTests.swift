@@ -97,6 +97,7 @@ struct PurchaseActivationTests {
             networkService: mock,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(clock)
         )
         // Drain the launch-time reconcile (#102 finding 1, same view model

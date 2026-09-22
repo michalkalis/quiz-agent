@@ -722,11 +722,13 @@ struct QuizViewModelRecordingTests {
         await viewModel.toggleRecording()
 
         #expect(viewModel.quizState == .recording)
-        #expect(mockAudio.isRecording == true)
+        // #184: the answer is captured off the shared mic engine, not AVAudioRecorder.
+        #expect(viewModel.isAnswerCaptureActive == true)
+        #expect(mockAudio.isRecording == false, "no second mic client next to the engine")
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("toggleRecording from recording stops and submits")
+    @Test("toggleRecording from recording stops and submits the captured WAV")
     @MainActor
     func toggleRecordingFromRecordingStopsAndSubmits() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithAudio()
@@ -738,18 +740,28 @@ struct QuizViewModelRecordingTests {
             createdAt: Date()
         )
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
-        viewModel.quizState = .recording
+        viewModel.quizState = .askingQuestion
+        await viewModel.toggleRecording()
+        #expect(viewModel.quizState == .recording)
+        // One second of 16 kHz audio reaches the capture through the engine tap.
+        viewModel.mockSilence?.simulateAnswerAudio(Data(count: 32000))
 
         await viewModel.toggleRecording()
 
-        // After successful stop + submit, answer confirmation should show
+        // #184: the recording was uploaded as WAV and the sheet opened on the
+        // transcript the backend returned.
         #expect(viewModel.showAnswerConfirmation == true)
+        #expect(viewModel.transcribedAnswer == "Test")
+        #expect(viewModel.isAnswerCaptureActive == false, "the tee is released when the recording stops")
     }
 
     @Test("toggleRecording start failure rolls back to askingQuestion")
     @MainActor
     func toggleRecordingStartFailureRollsBack() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithAudio(shouldFailRecording: true)
+        // #184: the shared mic engine cannot come up AND the legacy recorder
+        // fails — only then is there genuinely no way to record.
+        viewModel.mockSilence?.shouldFailSetup = true
         viewModel.quizState = .askingQuestion
 
         await viewModel.toggleRecording()
@@ -759,25 +771,25 @@ struct QuizViewModelRecordingTests {
         #expect(viewModel.errorMessage!.contains("Recording failed"))
     }
 
-    @Test("toggleRecording stop failure sets error and returns to askingQuestion")
+    @Test("a capture with no audio in it opens the no-answer sheet, never an error banner")
     @MainActor
-    func toggleRecordingStopFailureSetsError() async throws {
-        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+    func toggleRecordingEmptyCaptureOpensNoAnswerSheet() async throws {
+        // #184 + #171 Track B: the engine delivered nothing (dead air, or it
+        // never came up) — that is "no answer", not a broken recorder.
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .askingQuestion
 
-        // First toggle: start recording successfully
         await viewModel.toggleRecording()
         #expect(viewModel.quizState == .recording)
 
-        // Now make stop fail
-        mockAudio.shouldFailRecording = true
-
-        // Second toggle: stop recording (should fail)
         await viewModel.toggleRecording()
 
-        #expect(viewModel.quizState == .askingQuestion)
-        #expect(viewModel.errorMessage != nil)
-        #expect(viewModel.errorMessage!.contains("Recording failed"))
+        #expect(viewModel.showAnswerConfirmation == true)
+        #expect(viewModel.noAnswerCaptured == true)
+        #expect(viewModel.transcribedAnswer.isEmpty)
+        #expect(viewModel.errorMessage == nil)
     }
 
     @Test("toggleRecording from processing does nothing")

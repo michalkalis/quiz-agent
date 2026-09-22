@@ -30,7 +30,8 @@ struct QuestionViewTextInputTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.preview // .text → voice body
         vm.quizState = .askingQuestion

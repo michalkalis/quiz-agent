@@ -35,7 +35,8 @@ private func makeViewModelForExclusionTests(
     let viewModel = QuizViewModel(
         networkService: mockNetwork,
         audioService: MockAudioService(),
-        persistenceStore: mockStore
+        persistenceStore: mockStore,
+        silenceDetectionService: MockSilenceDetectionService()
     )
     return (viewModel, mockNetwork, mockStore)
 }

@@ -40,6 +40,7 @@ struct SubmissionStallTests {
             networkService: Fixtures.makeFullMockNetwork(configure: configure),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()

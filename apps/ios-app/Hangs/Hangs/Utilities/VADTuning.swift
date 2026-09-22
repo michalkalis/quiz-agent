@@ -36,16 +36,20 @@ nonisolated enum VADTuning {
     // MARK: - On-device SpeechDetector VAD (SilenceDetectionService)
 
     /// Silence hangover: how long continuous silence must persist AFTER speech
-    /// before the recorder auto-stops and submits. Kept near the shipped 1.5 s;
-    /// the sane band is ~1.2–1.8 s (shorter clips a driver's thinking pause,
-    /// longer feels laggy). Finalised on-device at 77.15.
-    static let silenceHangoverSecs: TimeInterval = 1.5
+    /// before the recorder auto-stops and submits. #184 (car test 2026-09-21):
+    /// 1.5 s was the window in which the passenger's next words and the road
+    /// got appended to the answer — every production voice agent sits at
+    /// 0.5–0.8 s (OpenAI server_vad 500 ms, LiveKit 550 ms, Pipecat 250–500 ms;
+    /// research doc). 0.8 s keeps a thinking pause inside one answer while the
+    /// batch model (Scribe v2) copes with the trailing silence the old value was
+    /// hedging against. Re-measured on the car samples (track B).
+    static let silenceHangoverSecs: TimeInterval = 0.8
 
     /// Minimum speech duration for an utterance to count. A burst shorter than
     /// this (a cough, a road-noise blip, a mic pop) is rejected as a false start
-    /// rather than auto-submitted as an empty answer. Starting point; tuned in
-    /// real cabin noise at 77.15.
-    static let minSpeechDurationSecs: TimeInterval = 0.3
+    /// rather than auto-submitted as an empty answer. 0.25 s per the #184
+    /// research (one short Slovak word — "áno", "päť" — is ~200–300 ms).
+    static let minSpeechDurationSecs: TimeInterval = 0.25
 
     /// SpeechDetector sensitivity. `.medium` → `.low` for the driving use-case:
     /// road/engine/HVAC noise inflates a `.medium` detector's false-speech rate,

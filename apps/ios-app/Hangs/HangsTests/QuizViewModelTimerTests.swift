@@ -95,7 +95,8 @@ struct QuizViewModelAnswerTimerTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
@@ -119,7 +120,8 @@ struct QuizViewModelAnswerTimerTests {
         let viewModel = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: mockAudio,
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         viewModel.currentQuestion = Fixtures.makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .processing // the real call site: the confirmation sheet
@@ -133,7 +135,8 @@ struct QuizViewModelAnswerTimerTests {
 
         await pumpUntil({ viewModel.quizState == .recording }, "re-record never reached .recording")
 
-        #expect(mockAudio.isRecording == true, "the mic must actually open, not just flip state")
+        #expect(viewModel.isAnswerCaptureActive == true, "the mic must actually open, not just flip state")
+        _ = mockAudio
         #expect(viewModel.answerTimerCountdown == 0, "no answer countdown should be running after re-record")
     }
 }
@@ -327,13 +330,14 @@ struct QuizViewModelAutoStopRecordingTests {
 
     /// #173 review finding: the short window is only honest where something can
     /// say "the driver started speaking", and that is a property of the SIGNAL,
-    /// not of how recording was started. The batch path without auto-record is
-    /// the one case with neither — no partial transcripts, and silence detection
-    /// is subscribed for auto-record only — so a 5 s window there would close the
-    /// mic mid-sentence and submit the truncated clip.
-    @Test("the batch path with no VAD subscription keeps the full dead-air window")
+    /// not of how recording was started. #184 gave EVERY batch recording that
+    /// signal (the on-device VAD ends manual recordings too), so the manual path
+    /// now gets the 5 s speech-start window like the others. The one path left
+    /// with no signal is the legacy-recorder fallback (mic engine unavailable) —
+    /// there a 5 s window would still close the mic mid-sentence.
+    @Test("the manual batch path has the VAD signal → 5 s window; the legacy fallback keeps the full cap")
     @MainActor
-    func batchWithoutVADKeepsFullWindow() async throws {
+    func batchWindowFollowsTheSpeechSignal() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithAudio()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
@@ -344,11 +348,29 @@ struct QuizViewModelAutoStopRecordingTests {
 
         #expect(viewModel.quizState == .recording, "the mic must actually be open")
         #expect(
-            viewModel.quizTimersController.recordingCountdownTotal == Int(Config.autoRecordingDuration),
+            viewModel.quizTimersController.recordingCountdownTotal == Int(Config.speechStartWindow),
+            "the VAD is the speech signal on every batch recording since #184"
+        )
+        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+        viewModel.recordingCoordinator.cancelProcessing()
+
+        // Legacy fallback: no engine → AVAudioRecorder → no signal → full cap.
+        let (fallbackVM, _) = Fixtures.makeViewModelWithAudio()
+        fallbackVM.mockSilence?.shouldFailSetup = true
+        fallbackVM.currentQuestion = Fixtures.makeQuestion()
+        fallbackVM.currentSession = Fixtures.makeActiveSession()
+        fallbackVM.quizState = .askingQuestion
+        fallbackVM.isAutoRecording = false
+
+        await fallbackVM.recordingCoordinator.startRecording()
+
+        #expect(fallbackVM.quizState == .recording)
+        #expect(fallbackVM.recordingCoordinator.usesLegacyRecorder)
+        #expect(
+            fallbackVM.quizTimersController.recordingCountdownTotal == Int(Config.autoRecordingDuration),
             "no speech signal → the visible window IS the cap, as before #173"
         )
-
-        viewModel.quizTimersController.cancelAutoStopRecordingTimer()
+        fallbackVM.quizTimersController.cancelAutoStopRecordingTimer()
     }
 
     /// The contrast that keeps the fallback from swallowing the feature: the same
@@ -417,13 +439,14 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.recordingCoordinator.deadAirCap = Config.autoRecordingDuration
 
         await viewModel.recordingCoordinator.startRecording()
-        #expect(mockAudio.isRecording == true, "the mic must open before the cap can end it")
+        #expect(viewModel.isAnswerCaptureActive == true, "the mic must open before the cap can end it")
+        _ = mockAudio
 
         await clock.advance(by: .seconds(Config.autoRecordingDuration - 1))
-        #expect(mockAudio.isRecording == true, "the mic may not close before the cap is reached")
+        #expect(viewModel.isAnswerCaptureActive == true, "the mic may not close before the cap is reached")
         await clock.advance(by: .seconds(1))
-        await pumpUntil({ !mockAudio.isRecording }, "the injected dead-air cap never ended the recording")
-        #expect(mockAudio.isRecording == false)
+        await pumpUntil({ !viewModel.isAnswerCaptureActive }, "the injected dead-air cap never ended the recording")
+        #expect(viewModel.isAnswerCaptureActive == false)
 
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()
     }
@@ -463,10 +486,11 @@ struct QuizViewModelAutoStopRecordingTests {
 
         gate.continuation.finish() // the engine finally comes up — after the cap
         await start.value
-        await pumpUntil { mockAudio.isRecording == false }
+        await pumpUntil { viewModel.isAnswerCaptureActive == false }
 
         #expect(viewModel.quizState != .recording, "the cap must have ended the recording during the handshake")
-        #expect(mockAudio.isRecording == false, "the engine that came up late must be closed, not left recording")
+        #expect(viewModel.isAnswerCaptureActive == false, "the engine that came up late must not be capturing")
+        #expect(mockAudio.isRecording == false)
         #expect(viewModel.quizTimersController.recordingCountdownTotal == 0, "no window may be armed on a recording that is over")
 
         viewModel.quizTimersController.cancelAutoStopRecordingTimer()

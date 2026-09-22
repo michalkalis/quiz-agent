@@ -29,7 +29,8 @@ private func makeErrorView(
     let vm = QuizViewModel(
         networkService: MockNetworkService(),
         audioService: MockAudioService(),
-        persistenceStore: MockPersistenceStore()
+        persistenceStore: MockPersistenceStore(),
+        silenceDetectionService: MockSilenceDetectionService()
     )
     let model = AppErrorModel(title: title, description: description, retryAction: retryAction)
     return ErrorView(viewModel: vm, model: model)

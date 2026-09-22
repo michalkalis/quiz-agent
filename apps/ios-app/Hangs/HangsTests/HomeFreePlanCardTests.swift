@@ -45,6 +45,7 @@ struct HomeFreePlanCardTests {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(TestClock())
         )
     }
@@ -141,6 +142,7 @@ struct HomeFreePlanCardTests {
             networkService: mock,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(TestClock())
         )
 
@@ -191,6 +193,7 @@ struct HomeFreePlanCardTests {
             networkService: mock,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(clock)
         )
 

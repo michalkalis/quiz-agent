@@ -70,6 +70,21 @@ enum VoiceCommandAvailability: Sendable, Equatable {
 struct CommandTranscript: Sendable, Equatable {
     let text: String
     let isFinal: Bool
+    /// #184 n-best: the recognizer's other hypotheses for this same audio, best
+    /// first, empty on an engine that does not report them. A car-noise final
+    /// often ranks a near-miss first and the real command second, so the
+    /// consumer retries these when the primary text matches nothing — FINALS
+    /// only (a volatile is revisable already; widening it with alternatives
+    /// would multiply the false-fire surface).
+    let alternatives: [String]
+
+    // `nonisolated`: the bridging task that builds these runs off the main
+    // actor, and the module's default isolation would otherwise pin the init.
+    nonisolated init(text: String, isFinal: Bool, alternatives: [String] = []) {
+        self.text = text
+        self.isFinal = isFinal
+        self.alternatives = alternatives
+    }
 }
 
 // MARK: - Protocol
@@ -117,6 +132,23 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
 
     /// Signal whether TTS is currently playing (enables barge-in detection).
     func setTTSPlaybackActive(_ active: Bool)
+
+    /// #184 track B: the shared mic engine doubles as the ANSWER recorder. The
+    /// batch answer path needs to know whether an engine is live (or coming up)
+    /// before it arms a capture, because a start that never happened means no
+    /// audio will ever arrive.
+    var isListening: Bool { get }
+    var isStartingListening: Bool { get }
+
+    /// Sample rate of the 16-bit mono PCM the answer sink receives (the
+    /// analyzer format: 16 kHz, or 8 kHz on a narrowband Bluetooth route).
+    var answerAudioSampleRate: Double { get }
+
+    /// Tee the tap's post-voice-processing samples into `sink` (called on the
+    /// audio thread) while an answer is being recorded; `nil` stops the tee.
+    /// One engine, one tap: the VAD and the recording see the SAME audio, and
+    /// no second mic client (#64/#77 two-engine class) ever opens.
+    func setAnswerAudioSink(_ sink: (@Sendable (Data) -> Void)?)
 }
 
 // MARK: - Implementation
@@ -156,6 +188,20 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// call wrote last and teardown orphaned the other one (the #64 two-engine
     /// crash config). Set/cleared by `startListening()` only.
     var startInFlight = false
+
+    var isListening: Bool { audioEngine != nil }
+    var isStartingListening: Bool { startInFlight }
+
+    /// #184 track B — see the protocol. Set when the tap is installed.
+    var answerAudioSampleRate: Double = 16000
+
+    /// The answer tee (#184). Lock-held so the audio-thread tap can read it
+    /// without an actor hop; written only via `setAnswerAudioSink`.
+    let answerAudioSink = OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>(initialState: nil)
+
+    func setAnswerAudioSink(_ sink: (@Sendable (Data) -> Void)?) {
+        answerAudioSink.withLock { $0 = sink }
+    }
 
     /// The engine seam (#120): constructs, configures and normalizes the
     /// concrete transcriber. Follows the quiz language (#175) — swapped only

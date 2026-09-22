@@ -320,9 +320,14 @@ extension VoiceCommandCoordinator {
     /// The ONLY place a command is routed. Both volatile signals and the final
     /// path funnel through here so the latch, the cooldown seed, the earcon ack
     /// and the field log can never diverge per-path.
+    ///
+    /// `viaAlternative` (#184) rides on the EXISTING `path` attribute rather
+    /// than a new one: the field question is which evidence fired a command, and
+    /// an n-best hit is a fourth answer to it. `final` stays computed from
+    /// `path` so the alternative path — finals only — still reports honestly.
     func fireCommand(
         _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, path: CommandFirePath,
-        sincePrevMs: Int?
+        sincePrevMs: Int?, viaAlternative: Bool = false
     ) {
         SentryLog.info(
             "voice cmd matched",
@@ -330,7 +335,8 @@ extension VoiceCommandCoordinator {
             attributes: [
                 "screen": String(describing: screen), "command": command.rawValue,
                 "final": path == .finalResult, "tokens": text.split(separator: " ").count,
-                "path": path.rawValue, "sincePrevMs": sincePrevMs ?? -1,
+                "path": viaAlternative ? "alternative" : path.rawValue,
+                "sincePrevMs": sincePrevMs ?? -1,
             ]
         )
         noteCommandFired(command) // latch the utterance + start the cooldown

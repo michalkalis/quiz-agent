@@ -41,6 +41,7 @@ private func makeVM(
         networkService: network,
         audioService: MockAudioService(),
         persistenceStore: MockPersistenceStore(),
+        silenceDetectionService: MockSilenceDetectionService(),
         isLocallyEntitled: isLocallyEntitled,
         clock: clock
     )
@@ -392,6 +393,7 @@ struct EntitlementReconcileTests {
             networkService: mock,
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             isLocallyEntitled: { false },
             clock: AnyClock(TestClock()) // parked: no production wait may pass real time here
         )

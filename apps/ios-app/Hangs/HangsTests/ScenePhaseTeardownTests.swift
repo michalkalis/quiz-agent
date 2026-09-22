@@ -116,19 +116,21 @@ struct ScenePhaseTeardownTests {
         #expect(audio.deactivateSessionCallCount == 0, "mid-quiz session stays alive")
     }
 
-    @Test("background during BATCH recording stops the recorder and exits .recording")
+    @Test("background during BATCH recording drops the capture and exits .recording")
     func backgroundDuringBatchRecordingStopsRecorder() async throws {
-        let (vm, _, audio) = makeScenePhaseVM()
+        let (vm, silence, _) = makeScenePhaseVM()
 
-        vm.quizState = .recording
-        try audio.startRecording()
-        #expect(audio.isRecording == true)
+        vm.quizState = .askingQuestion
+        await vm.recordingCoordinator.startRecording()
+        #expect(vm.quizState == .recording)
+        #expect(silence.isAnswerCaptureActive == true)
 
         vm.handleScenePhase(.background)
 
         #expect(vm.quizState == .askingQuestion)
-        // The batch stop is async (stopRecording() is async throws).
-        await pumpUntil({ audio.isRecording == false }, "batch recorder never stopped")
+        // #184: the tee is released synchronously — nothing keeps buffering
+        // audio for a recording the app can no longer submit.
+        #expect(silence.isAnswerCaptureActive == false)
     }
 
     // MARK: - .active re-arms
@@ -183,7 +185,8 @@ struct ScenePhaseTeardownTests {
         await vm.recordingCoordinator.startRecording()
 
         #expect(vm.quizState == .askingQuestion, "must not enter .recording while backgrounded")
-        #expect(audio.isRecording == false, "mic must not open in the background")
+        #expect(vm.isAnswerCaptureActive == false, "mic must not open in the background")
+        #expect(audio.isRecording == false)
     }
 
     // MARK: - #171 Track H: foregrounding finishes what the background suppressed
@@ -211,7 +214,8 @@ struct ScenePhaseTeardownTests {
             vm.handleScenePhase(.active)
 
             await pumpUntil({ vm.quizState == .recording }, "the suppressed answer window never opened on return")
-            #expect(audio.isRecording == true, "the mic must open on return, not wait for a tap")
+            #expect(vm.isAnswerCaptureActive == true, "the mic must open on return, not wait for a tap")
+            _ = audio
         }
     }
 
@@ -236,7 +240,8 @@ struct ScenePhaseTeardownTests {
         #expect(vm.showAnswerConfirmation == true)
         #expect(vm.transcribedAnswer.isEmpty)
         #expect(vm.noAnswerCaptured == true)
-        #expect(audio.isRecording == false, "a window that already expired must not re-open the mic")
+        #expect(vm.isAnswerCaptureActive == false, "a window that already expired must not re-open the mic")
+        #expect(audio.isRecording == false)
     }
 
     /// WHY: the marker is one-shot. A second foreground event (app switcher,

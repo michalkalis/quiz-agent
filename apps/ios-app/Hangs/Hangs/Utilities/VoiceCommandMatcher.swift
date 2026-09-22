@@ -21,6 +21,19 @@
 //  `maxContentTokens` content tokens — see the gate in `match` — and a VOLATILE
 //  hypothesis is held to a stricter confidence floor than a final.
 //
+//  #184 (car-noise field test, Slovak): commands only worked when SHOUTED, so
+//  scoring gained Jaro-Winkler — it rewards a shared PREFIX, which is exactly
+//  the failure shape of a half-heard command ("znov" for "znova"), where
+//  Levenshtein's length penalty rejects it. CONFLICT with #119: JW would also
+//  score "star"→"start" at ~0.96 and reopen the one-edit-noise hole the
+//  volatile floor was tuned on field data to close. DECISION — the combined
+//  score `max(levenshtein, jaroWinkler)` applies to FINALS ONLY; a volatile
+//  hypothesis keeps Levenshtein alone, AND the JW term applies only to a
+//  TRUNCATION — a shorter token that still carries the variant's head. Every
+//  clause is load-bearing: without them "skib" burns a question, "nekst"
+//  advances the quiz, and the Czech backchannel "no" re-records the answer.
+//  See `score`.
+//
 
 import Foundation
 
@@ -62,7 +75,7 @@ enum VoiceCommandMatcher {
         transcript: String, on screen: VoiceCommandScreen, isFinal: Bool = true,
         language: CommandLanguage = .english
     ) -> VoiceCommand? {
-        let normalized = normalize(transcript)
+        let normalized = normalize(transcript, language: language)
         guard !normalized.isEmpty else { return nil }
         let tokens = normalized.split(separator: " ").map(String.init)
         guard !tokens.isEmpty else { return nil }
@@ -94,18 +107,20 @@ enum VoiceCommandMatcher {
         // Skip is strict whole-utterance — handled before (and excluded from) the
         // fuzzy token scan so it can never be triggered by a token buried in a
         // longer sentence.
-        if candidates.contains(.skip), matchesStrictSkip(tokens: tokens, language: language) {
+        if candidates.contains(.skip),
+           matchesStrictSkip(tokens: tokens, language: language, isFinal: isFinal)
+        {
             return .skip
         }
 
         // Fuzzy token scan over the remaining screen commands.
         var scores: [(command: VoiceCommand, score: Double)] = []
         for command in candidates where command != .skip {
-            let variants = VoiceCommandLexicon.variants(for: command, language: language)
+            let variants = comparableVariants(for: command, language: language)
             var best = 0.0
             for token in tokens {
                 for variant in variants {
-                    best = max(best, similarity(token, variant))
+                    best = max(best, score(token, variant, isFinal: isFinal))
                 }
             }
             scores.append((command, best))
@@ -126,6 +141,10 @@ enum VoiceCommandMatcher {
     /// non-filler token — the content-bearing gate for the unmatched-feedback
     /// throttle. Lives here so the feedback path and the matcher share one
     /// filler definition.
+    ///
+    /// `normalized` must already have come out of `normalize(_:language:)` for
+    /// the SAME language — the filler set is compared after the same phonetic
+    /// fold, so a mismatched normalization would silently stop stripping filler.
     static func hasContentTokens(
         _ normalized: String,
         language: CommandLanguage = .english
@@ -140,8 +159,25 @@ enum VoiceCommandMatcher {
     /// start"); DISTINCT rather than consecutive-only so filler between the
     /// repeats ("start um start") doesn't inflate the count either.
     private static func contentTokens(_ tokens: [String], language: CommandLanguage) -> Set<String> {
-        let filler = VoiceCommandLexicon.fillerWords(for: language)
+        // #184: the filler set is stored pre-folded but NOT phonetically folded,
+        // so it goes through the same step the tokens did — otherwise a Slovak
+        // filler could survive the fold and count as content.
+        let filler = Set(
+            VoiceCommandLexicon.fillerWords(for: language).map { phoneticFold($0, language: language) }
+        )
         return Set(tokens.filter { !filler.contains($0) })
+    }
+
+    /// A command's lexicon variants put through the SAME phonetic fold the
+    /// transcript went through (#184). Variants are stored diacritic-folded but
+    /// in dictionary spelling, so without this step a folded mishearing
+    /// ("znovy" → "znovi") would be scored against an unfolded "znova" and the
+    /// fold would buy nothing.
+    private static func comparableVariants(
+        for command: VoiceCommand, language: CommandLanguage
+    ) -> [String] {
+        VoiceCommandLexicon.variants(for: command, language: language)
+            .map { phoneticFold($0, language: language) }
     }
 
     /// STRICT skip: after stripping filler and collapsing duplicates, EXACTLY one
@@ -150,16 +186,104 @@ enum VoiceCommandMatcher {
     /// words remain) does not. The duplicate collapse matters MORE here than
     /// anywhere else: skip is the one command that may only fire from a final,
     /// and the final is precisely the transcript where repetitions merge.
-    private static func matchesStrictSkip(tokens: [String], language: CommandLanguage) -> Bool {
+    private static func matchesStrictSkip(
+        tokens: [String], language: CommandLanguage, isFinal: Bool
+    ) -> Bool {
         let content = contentTokens(tokens, language: language)
         guard content.count == 1, let token = content.first else { return false }
-        let best = VoiceCommandLexicon.variants(for: .skip, language: language)
-            .map { similarity(token, $0) }
+        let best = comparableVariants(for: .skip, language: language)
+            .map { score(token, $0, isFinal: isFinal) }
             .max() ?? 0
         return best >= skipFloor
     }
 
     // MARK: - Scoring
+
+    /// The score one token earns against one lexicon variant (#184).
+    ///
+    /// A FINAL takes `max(levenshtein, jaroWinkler)`, a VOLATILE Levenshtein
+    /// alone — see the conflict note in the file header.
+    ///
+    /// AND the JW term only applies to a TRUNCATION: a token shorter than the
+    /// variant that shares its first `truncationPrefix` characters. Both clauses
+    /// are field-tuned guards, not tidiness:
+    ///
+    ///  • equal length — edit distance is already fair there, so JW is pure
+    ///    loosening: it rates "skib"/"skip" 0.88 (burns a freemium question) and
+    ///    "nekst"/"next" 0.83 (advances the quiz), the exact near-misses #119's
+    ///    floors exist to reject;
+    ///  • no shared prefix — JW's match term is `matches / token.count`, so a
+    ///    SHORT token scores absurdly well against a long word that merely
+    ///    contains its letters: the Czech backchannel "no" rates 0.80 against
+    ///    "znovu" and would re-record the answer. A half-heard command loses its
+    ///    TAIL, never its head, so requiring the head is what separates the two.
+    static func score(_ token: String, _ variant: String, isFinal: Bool) -> Double {
+        let levenshtein = similarity(token, variant)
+        guard isFinal, isTruncation(token, of: variant) else { return levenshtein }
+        return max(levenshtein, jaroWinkler(token, variant))
+    }
+
+    /// Leading characters a shortened token must share with a variant before it
+    /// is treated as a truncation rather than a different word.
+    static let truncationPrefix = 2
+
+    /// Whether `token` looks like `variant` with its tail cut off.
+    private static func isTruncation(_ token: String, of variant: String) -> Bool {
+        guard token.count < variant.count, token.count >= truncationPrefix else { return false }
+        return token.prefix(truncationPrefix) == variant.prefix(truncationPrefix)
+    }
+
+    /// Jaro-Winkler similarity in [0, 1] (standard scaling factor p = 0.1,
+    /// common prefix capped at 4). Unlike edit distance it does not divide by
+    /// the longer string's length, so a truncated word keeps most of its score.
+    static func jaroWinkler(_ a: String, _ b: String) -> Double {
+        let x = Array(a)
+        let y = Array(b)
+        if x.isEmpty, y.isEmpty { return 1.0 }
+        guard !x.isEmpty, !y.isEmpty else { return 0.0 }
+
+        let jaro = jaroSimilarity(x, y)
+        guard jaro > 0 else { return 0.0 }
+
+        var prefix = 0
+        for index in 0 ..< min(4, min(x.count, y.count)) {
+            if x[index] == y[index] { prefix += 1 } else { break }
+        }
+        return jaro + Double(prefix) * 0.1 * (1.0 - jaro)
+    }
+
+    /// The Jaro base score: matching characters within a half-length window,
+    /// discounted by half the transpositions among them.
+    private static func jaroSimilarity(_ x: [Character], _ y: [Character]) -> Double {
+        if x == y { return 1.0 }
+        let window = max(max(x.count, y.count) / 2 - 1, 0)
+        var xMatched = [Bool](repeating: false, count: x.count)
+        var yMatched = [Bool](repeating: false, count: y.count)
+        var matches = 0
+
+        for i in 0 ..< x.count {
+            let lower = max(0, i - window)
+            let upper = min(i + window + 1, y.count)
+            guard lower < upper else { continue }
+            for j in lower ..< upper where !yMatched[j] && x[i] == y[j] {
+                xMatched[i] = true
+                yMatched[j] = true
+                matches += 1
+                break
+            }
+        }
+        guard matches > 0 else { return 0.0 }
+
+        var transpositions = 0
+        var k = 0
+        for i in 0 ..< x.count where xMatched[i] {
+            while !yMatched[k] { k += 1 }
+            if x[i] != y[k] { transpositions += 1 }
+            k += 1
+        }
+        let m = Double(matches)
+        return (m / Double(x.count) + m / Double(y.count) + (m - Double(transpositions) / 2.0) / m) / 3.0
+    }
 
     /// Normalized edit-distance similarity in [0, 1]: `1 - distance / maxLen`.
     static func similarity(_ a: String, _ b: String) -> Double {
@@ -193,8 +317,9 @@ enum VoiceCommandMatcher {
 
     /// Lowercase, diacritic-fold, and reduce every non-alphanumeric run to a
     /// single space (mirrors MCQTranscriptMatcher.normalize so accent + STT
-    /// punctuation don't defeat matching).
-    static func normalize(_ string: String) -> String {
+    /// punctuation don't defeat matching), then — for Slovak/Czech only — apply
+    /// the #184 phonetic fold.
+    static func normalize(_ string: String, language: CommandLanguage = .english) -> String {
         let folded = string.folding(
             options: [.diacriticInsensitive, .caseInsensitive],
             locale: Locale(identifier: "en_US_POSIX")
@@ -203,7 +328,42 @@ enum VoiceCommandMatcher {
         for scalar in folded.unicodeScalars {
             scalars.append(CharacterSet.alphanumerics.contains(scalar) ? scalar : " ")
         }
-        return String(scalars).split(separator: " ").joined(separator: " ")
+        return String(scalars)
+            .split(separator: " ")
+            .map { phoneticFold(String($0), language: language) }
+            .joined(separator: " ")
+    }
+
+    /// #184 Slovak/Czech phonetic fold: collapse the spelling distinctions a
+    /// noisy on-device recognizer flips between but a speaker never hears
+    /// (y/i, w/v, q/k, x/ks), then squash doubled letters. A mishearing
+    /// ("znovy", "znnova") and the lexicon form then meet on one spelling
+    /// instead of costing an edit each. ENGLISH IS LEFT ALONE — its command set
+    /// was tuned on field data with no fold, and "y" carries meaning there
+    /// ("retry" vs "retri" is not the failure we saw).
+    static func phoneticFold(_ token: String, language: CommandLanguage) -> String {
+        switch language {
+        case .english: return token
+        case .slovak, .czech: break
+        }
+        var result = ""
+        var previous: Character?
+        for character in token {
+            let mapped: String
+            switch character {
+            case "y": mapped = "i"
+            case "w": mapped = "v"
+            case "q": mapped = "k"
+            case "x": mapped = "ks"
+            default: mapped = String(character)
+            }
+            for scalar in mapped {
+                guard scalar != previous else { continue } // collapse runs
+                result.append(scalar)
+                previous = scalar
+            }
+        }
+        return result
     }
 }
 

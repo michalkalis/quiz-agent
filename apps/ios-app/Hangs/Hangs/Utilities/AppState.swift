@@ -255,7 +255,9 @@ final class AppState: ObservableObject {
             persistenceStore: persistenceStore,
             silenceDetectionService: silenceDetectionService,
             sttService: sttService,
-            isLocallyEntitled: { storeManager.isPurchased }
+            isLocallyEntitled: { storeManager.isPurchased },
+            // #184: realtime vs. batch answers is the founder's in-car A/B switch.
+            realtimeSTTEnabled: { VoicePipelineFlags.realtimeSTTEnabled }
         )
 
         #if DEBUG

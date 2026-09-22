@@ -56,7 +56,8 @@ struct QuizViewModelAdvanceRaceTests {
             let viewModel = QuizViewModel(
                 networkService: mockNetwork,
                 audioService: mockAudio,
-                persistenceStore: mockPersistence
+                persistenceStore: mockPersistence,
+                silenceDetectionService: MockSilenceDetectionService()
             )
 
             viewModel.currentSession = Fixtures.makeActiveSession() // not finished

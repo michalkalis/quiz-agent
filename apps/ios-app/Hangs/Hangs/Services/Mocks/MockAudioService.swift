@@ -18,6 +18,9 @@ import os
         var shouldFailRecording = false
         var shouldFailPlayback = false
         var mockRecordingData = Data("mock audio".utf8)
+        /// Simulated playback length (real time, by design — see ios.md). Tests
+        /// that only need "playback happened, then finished" set it to 0.
+        var playbackDurationNs: UInt64 = 100_000_000
 
         // #67 Part A. Mirrors the real service's streaming-engine liveness so the
         // interruption teardown can be exercised headlessly. `startStreamingRecording`
@@ -168,7 +171,7 @@ import os
             }
             isPlaying = true
             onPlaybackStarted?()
-            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            try await Task.sleep(nanoseconds: playbackDurationNs)
             isPlaying = false
             return 3.0 // Mock duration
         }

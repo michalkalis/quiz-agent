@@ -32,7 +32,8 @@ struct QuizViewModelReplayContractTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: mockAudio,
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         return (viewModel, mockAudio)
     }

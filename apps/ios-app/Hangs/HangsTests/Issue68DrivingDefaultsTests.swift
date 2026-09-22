@@ -76,7 +76,8 @@ struct HomeImageQuestionsToggleTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         let view = HomeView(viewModel: vm)
         try await ViewHosting.host(view) {
@@ -105,7 +106,8 @@ struct ImageOptInRequestTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.settings.includeImageQuestions = true
 
@@ -121,7 +123,8 @@ struct ImageOptInRequestTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
 
         await vm.startNewQuiz()
@@ -140,7 +143,8 @@ struct QuestionViewImageInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.previewImage
         vm.quizState = .askingQuestion
@@ -163,7 +167,8 @@ struct QuestionViewImageInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion

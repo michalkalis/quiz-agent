@@ -28,7 +28,8 @@ struct CompletionViewSummaryTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentSession = Fixtures.session(score: score, answered: answered)
         vm.sessionCorrectCount = correct
@@ -85,7 +86,8 @@ struct CompletionViewBreakdownTests {
             let v = QuizViewModel(
                 networkService: MockNetworkService(),
                 audioService: MockAudioService(),
-                persistenceStore: MockPersistenceStore()
+                persistenceStore: MockPersistenceStore(),
+                silenceDetectionService: MockSilenceDetectionService()
             )
             v.currentSession = Fixtures.session(score: 8, answered: 10)
             v.quizState = .finished
@@ -106,7 +108,8 @@ struct CompletionViewBreakdownTests {
             let v = QuizViewModel(
                 networkService: MockNetworkService(),
                 audioService: MockAudioService(),
-                persistenceStore: MockPersistenceStore()
+                persistenceStore: MockPersistenceStore(),
+                silenceDetectionService: MockSilenceDetectionService()
             )
             v.currentSession = Fixtures.session(score: 8, answered: 10)
             v.quizState = .finished
@@ -150,7 +153,8 @@ struct CompletionViewUpsellTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.usageInfo = usage
         vm.quizState = .finished
@@ -211,7 +215,8 @@ struct CompletionViewPlayAgainTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentSession = Fixtures.session(score: 8, answered: 10)
         vm.quizState = .finished

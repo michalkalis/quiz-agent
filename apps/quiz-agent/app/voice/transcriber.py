@@ -1,6 +1,9 @@
-"""Voice transcription service using OpenAI Whisper API.
+"""Voice transcription service (ElevenLabs Scribe v2 batch → OpenAI fallback).
 
-Converts audio files to text for voice-based quiz interaction.
+Converts audio files to text for voice-based quiz interaction. #184 track C:
+Scribe v2 batch is the primary recogniser (per-word confidence + keyterm
+biasing), with an OpenAI model behind it so a quota outage or provider 5xx
+still grades the answer.
 """
 
 import logging
@@ -9,6 +12,7 @@ from dataclasses import dataclass
 
 from quiz_shared.llm import factory as llm_factory
 
+from ..config import get_settings
 from ..quiz.errors import InvalidSubmission
 
 logger = logging.getLogger(__name__)
@@ -121,17 +125,18 @@ class VoiceTranscriber:
 
     MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB (Whisper API limit)
 
-    def __init__(self, model: str = "whisper-1", language: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, language: Optional[str] = None):
         """Initialize voice transcriber.
 
         Args:
-            model: Whisper model (default: whisper-1)
+            model: OpenAI *fallback* model (default: settings.stt_fallback_model).
+                   Set to "whisper-1" to roll back to the pre-#184 behaviour.
             language: ISO 639-1 language code (e.g., "en", "es")
                      If None, auto-detect language
         """
-        # Whisper is direct-only: OpenRouter does not serve transcription (issue #53).
+        # OpenAI transcription is direct-only: OpenRouter does not serve it (issue #53).
         self.client = llm_factory.openai_client(async_=True, direct=True)
-        self.model = model
+        self.model = model or get_settings().stt_fallback_model
         self.language = language
 
     async def transcribe(
@@ -140,6 +145,7 @@ class VoiceTranscriber:
         filename: str,
         prompt: Optional[str] = None,
         language: Optional[str] = None,
+        keyterms: Optional[list[str]] = None,
     ) -> TranscriptionResult:
         """Transcribe audio file to text with confidence metrics.
 
@@ -149,6 +155,8 @@ class VoiceTranscriber:
             prompt: Optional context to guide transcription
             language: Optional ISO 639-1 language code for this request
                      Overrides instance language if provided
+            keyterms: Words the recogniser should be biased toward (MCQ option
+                     texts). Scribe only — the OpenAI fallback ignores them.
 
         Returns:
             TranscriptionResult with text, language, and confidence metrics
@@ -185,71 +193,142 @@ class VoiceTranscriber:
                 f"Maximum: {self.MAX_FILE_SIZE / 1024 / 1024} MB"
             )
 
-        # Transcribe with Whisper API
-        try:
-            # Prepare request parameters
-            params = {
-                "model": self.model,
-                "file": (filename, audio_file),
-                "response_format": "verbose_json",
-            }
+        effective_language = language or self.language
+        settings = get_settings()
 
-            # Use per-request language if provided, otherwise fall back to instance language
-            effective_language = language or self.language
-            if effective_language:
-                params["language"] = effective_language
-
-            # Add prompt for context (improves accuracy)
-            if prompt:
-                params["prompt"] = prompt
-
-            # Call Whisper API
-            response = await self.client.audio.transcriptions.create(**params)
-
-            # Extract text and detected language
-            text = response.text.strip()
-            detected_language = getattr(response, "language", None)
-            duration = getattr(response, "duration", 0.0) or 0.0
-
-            # Extract confidence metrics from segments (verbose_json format)
-            segments = getattr(response, "segments", None)
-            no_speech_prob = 0.0
-            avg_logprob = 0.0
-
-            if segments and len(segments) > 0:
-                # Average metrics across all segments
-                total_no_speech = sum(
-                    getattr(seg, "no_speech_prob", 0.0) or 0.0 for seg in segments
+        if settings.stt_provider == "elevenlabs":
+            try:
+                audio_bytes = audio_file.read()
+                audio_file.seek(0)
+                result = await self._transcribe_scribe(
+                    audio_bytes=audio_bytes,
+                    filename=filename,
+                    language=effective_language,
+                    keyterms=keyterms,
+                    settings=settings,
                 )
-                total_logprob = sum(
-                    getattr(seg, "avg_logprob", 0.0) or 0.0 for seg in segments
+                logger.info(
+                    "Transcribed provider=scribe text='%s' logprob=%.3f duration=%.2fs",
+                    result.text,
+                    result.avg_logprob,
+                    result.duration,
                 )
-                no_speech_prob = total_no_speech / len(segments)
-                avg_logprob = total_logprob / len(segments)
-
-                logger.debug(
-                    "Transcribe: segments=%d, no_speech_prob=%.3f, avg_logprob=%.3f, duration=%.2fs",
-                    len(segments),
-                    no_speech_prob,
-                    avg_logprob,
-                    duration,
-                )
-            else:
-                # Fallback: no segment data available (shouldn't happen with verbose_json)
+                return result
+            except Exception as e:
+                # Any Scribe failure is recoverable by definition — the whole
+                # point of the fallback is that a quota outage or a 5xx must not
+                # cost the player their answer.
                 logger.warning(
-                    "No segment data in Whisper response, falling back to permissive defaults"
+                    "Scribe transcription failed, falling back to OpenAI %s: reason=%s",
+                    self.model,
+                    e,
                 )
 
-            return TranscriptionResult(
-                text=text,
-                language=detected_language,
-                no_speech_prob=no_speech_prob,
-                avg_logprob=avg_logprob,
-                duration=duration,
+        try:
+            result = await self._transcribe_openai(
+                audio_file=audio_file,
+                filename=filename,
+                prompt=prompt,
+                language=effective_language,
             )
-
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {str(e)}")
+
+        logger.info(
+            "Transcribed provider=openai:%s text='%s' no_speech=%.3f logprob=%.3f",
+            self.model,
+            result.text,
+            result.no_speech_prob,
+            result.avg_logprob,
+        )
+        return result
+
+    async def _transcribe_scribe(
+        self,
+        audio_bytes: bytes,
+        filename: str,
+        language: Optional[str],
+        keyterms: Optional[list[str]],
+        settings,
+    ) -> TranscriptionResult:
+        # Imported here, not at module scope: scribe.py imports
+        # TranscriptionResult from this module.
+        from .scribe import ScribeBatchTranscriber
+
+        scribe = ScribeBatchTranscriber(
+            model=settings.elevenlabs_stt_model,
+            logprob_cutoff=settings.stt_trailing_logprob_cutoff,
+        )
+        return await scribe.transcribe(
+            audio_bytes=audio_bytes,
+            filename=filename,
+            language=language,
+            keyterms=keyterms,
+        )
+
+    async def _transcribe_openai(
+        self,
+        audio_file: BinaryIO,
+        filename: str,
+        prompt: Optional[str],
+        language: Optional[str],
+    ) -> TranscriptionResult:
+        # `verbose_json` (and the per-segment no_speech_prob / avg_logprob that
+        # is_valid() leans on) is a whisper-1-only response format; the newer
+        # transcription models return plain json and no confidence at all, so
+        # their results are neutral on those two thresholds.
+        is_whisper = self.model.startswith("whisper")
+        params = {
+            "model": self.model,
+            "file": (filename, audio_file),
+            "response_format": "verbose_json" if is_whisper else "json",
+        }
+        if language:
+            params["language"] = language
+        if prompt:
+            params["prompt"] = prompt
+
+        response = await self.client.audio.transcriptions.create(**params)
+
+        text = response.text.strip()
+
+        if not is_whisper:
+            return TranscriptionResult(
+                text=text,
+                language=getattr(response, "language", None),
+                no_speech_prob=0.0,
+                avg_logprob=0.0,
+                duration=0.0,
+            )
+
+        detected_language = getattr(response, "language", None)
+        duration = getattr(response, "duration", 0.0) or 0.0
+
+        segments = getattr(response, "segments", None)
+        no_speech_prob = 0.0
+        avg_logprob = 0.0
+
+        if segments and len(segments) > 0:
+            total_no_speech = sum(
+                getattr(seg, "no_speech_prob", 0.0) or 0.0 for seg in segments
+            )
+            total_logprob = sum(
+                getattr(seg, "avg_logprob", 0.0) or 0.0 for seg in segments
+            )
+            no_speech_prob = total_no_speech / len(segments)
+            avg_logprob = total_logprob / len(segments)
+        else:
+            logger.warning(
+                "No segment data in Whisper response, falling back to permissive defaults"
+            )
+
+        return TranscriptionResult(
+            text=text,
+            language=detected_language,
+            no_speech_prob=no_speech_prob,
+            avg_logprob=avg_logprob,
+            duration=duration,
+        )
 
     async def transcribe_with_quiz_context(
         self,
@@ -257,6 +336,7 @@ class VoiceTranscriber:
         filename: str,
         current_question: Optional[str] = None,
         language: Optional[str] = None,
+        keyterms: Optional[list[str]] = None,
     ) -> TranscriptionResult:
         """Transcribe audio with quiz-specific context.
 
@@ -291,7 +371,11 @@ class VoiceTranscriber:
         prompt += "Expected: short answers, place names, proper nouns, numbers."
 
         return await self.transcribe(
-            audio_file=audio_file, filename=filename, prompt=prompt, language=language
+            audio_file=audio_file,
+            filename=filename,
+            prompt=prompt,
+            language=language,
+            keyterms=keyterms,
         )
 
     def _get_file_extension(self, filename: str) -> str:

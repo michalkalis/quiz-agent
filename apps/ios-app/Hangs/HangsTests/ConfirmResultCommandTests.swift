@@ -130,7 +130,8 @@ struct ConfirmResultCommandTests {
             // Founder-rejected the old countdown-then-record behavior: "again"
             // must open the mic right away, not park on askingQuestion.
             #expect(vm.quizState == .recording, "re-record must start recording immediately")
-            #expect(audio.isRecording == true)
+            #expect(vm.isAnswerCaptureActive == true) // #184: capture on the shared engine
+            _ = audio
             vm.quizTimersController.cancelAutoStopRecordingTimer()
         }
     }

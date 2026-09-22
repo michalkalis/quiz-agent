@@ -14,6 +14,7 @@ import os
 extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
+        cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
         // #100.2 / #79: the sheet flag is this call's single-flight token. A
@@ -79,6 +80,7 @@ extension RecordingCoordinator {
     /// Snapshots `transcribedAnswer` so `cancelEditingTranscript()` can
     /// restore it if the user backs out of the edit.
     func beginEditingTranscript() {
+        cancelAnswerReadBack()
         cancelAutoConfirm()
         pendingResponse = nil
         transcriptWasEdited = true
@@ -102,6 +104,7 @@ extension RecordingCoordinator {
     /// No-op when pendingResponse was already consumed by confirmAnswer/rerecordAnswer.
     func handleAnswerConfirmationDismissed() {
         guard pendingResponse != nil else { return }
+        cancelAnswerReadBack()
         pendingResponse = nil
         transcriptWasEdited = false
         preEditTranscript = nil
@@ -121,6 +124,7 @@ extension RecordingCoordinator {
         // the "again" voice command becomes a no-op instead of spawning a second
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
+        cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
         // The sheet can also be reached from `.processing` while the voice upload is
@@ -148,6 +152,7 @@ extension RecordingCoordinator {
 
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
+        cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
         taskBag.cancel(.voiceSubmission)
@@ -156,6 +161,7 @@ extension RecordingCoordinator {
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         cleanupStreamingSTT()
+        abandonAnswerCapture()
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
         showAnswerConfirmation = false

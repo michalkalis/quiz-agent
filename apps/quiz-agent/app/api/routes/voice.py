@@ -24,6 +24,7 @@ from ..deps import (
     require_auth_or_grace,
 )
 from ..session_auth import require_session_ownership
+from ...serializers import session_translation
 from ..submit_errors import submit_http_error
 from ...auth.identity import AuthSubject
 from ...session.manager import SessionManager
@@ -36,6 +37,26 @@ from quiz_shared.models.phase import SessionPhase
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def mcq_keyterms(current_question, session) -> list[str]:
+    """Option texts to bias the recogniser toward, for multiple-choice only.
+
+    #184: in a noisy car the recogniser has to pick between four known strings,
+    so handing it those strings is nearly free accuracy. For an open question
+    there is no such set — feeding it the correct answer would bias the
+    transcript toward the right word regardless of what the player said, which
+    is cheating, so open questions get no keyterms at all.
+    """
+    options = getattr(current_question, "possible_answers", None)
+    if not options:
+        return []
+    # Prefer the translated options the player actually heard, when the stored
+    # translation is for THIS question and this session language.
+    record = session_translation(session, current_question.id)
+    if record and record.get("possible_answers"):
+        options = record["possible_answers"]
+    return [str(v) for v in options.values() if v]
 
 
 # NOTE: a bare ``POST /voice/transcribe`` (transcribe-only, no session) used to
@@ -118,6 +139,7 @@ async def transcribe_and_submit(
                 filename=audio.filename,
                 current_question=current_question.question,
                 language=session.language,
+                keyterms=mcq_keyterms(current_question, session),
             )
 
             if not transcription_result.is_valid():

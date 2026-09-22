@@ -607,8 +607,13 @@ final class QuizViewModel: ObservableObject {
     /// command window. AudioDeviceState writes it via an injected closure.
     var isPlayingFeedbackTTS: Bool = false
 
+    /// #184 track D: the recognised voice answer being read back on the
+    /// confirmation sheet. App TTS like the other two — closes the command
+    /// window for its duration. RecordingCoordinator writes it via a closure.
+    var isPlayingAnswerReadBack: Bool = false
+
     /// ANY app TTS playback — the command window's self-trigger guard (#119).
-    var isPlayingAnyTTS: Bool { isPlayingQuestionTTS || isPlayingFeedbackTTS }
+    var isPlayingAnyTTS: Bool { isPlayingQuestionTTS || isPlayingFeedbackTTS || isPlayingAnswerReadBack }
 
     /// The option key matched by voice on an MCQ question (nil between questions).
     /// Drives the `selected` highlight in MCQOptionPicker without waiting for tap.
@@ -629,6 +634,10 @@ final class QuizViewModel: ObservableObject {
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
+    /// #184: whether a recording may take the realtime path (see
+    /// `RecordingCoordinator.realtimeSTTEnabled`). AppState injects the runtime
+    /// switch; tests keep the `{ true }` default so a mock STT service streams.
+    let realtimeSTTEnabled: @MainActor () -> Bool
 
     /// The one clock every timer, backoff and deadline on the quiz path runs on
     /// (#180 track A) — handed to each child so a test drives them all at once.
@@ -726,6 +735,7 @@ final class QuizViewModel: ObservableObject {
         silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
+        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
         clock: AnyClock<Duration> = .continuous
     ) {
         self.networkService = networkService
@@ -733,6 +743,7 @@ final class QuizViewModel: ObservableObject {
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
+        self.realtimeSTTEnabled = realtimeSTTEnabled
         self.clock = clock
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
@@ -932,7 +943,10 @@ final class QuizViewModel: ObservableObject {
             },
             cancelAutoStopRecordingTimer: { [weak self] in self?.quizTimersController.cancelAutoStopRecordingTimer() },
             onSpeechStarted: { [weak self] in self?.quizTimersController.speechDetectedDuringRecording() },
-            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() }
+            stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
+            isMuted: { [weak self] in self?.isAudioMuted ?? false },
+            setPlayingAnswerReadBack: { [weak self] in self?.isPlayingAnswerReadBack = $0 },
+            realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false }
         )
     }
 
@@ -1668,7 +1682,7 @@ final class QuizViewModel: ObservableObject {
         if isStreamingSTT {
             recordingCoordinator.cleanupStreamingSTT()
         } else if quizState == .recording {
-            _ = try? await audioService.stopRecording()
+            recordingCoordinator.abandonAnswerCapture()
         }
 
         // The confirmation modal already moved us to .processing in

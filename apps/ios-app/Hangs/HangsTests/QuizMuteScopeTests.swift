@@ -19,7 +19,8 @@ private func makeMuteTestViewModel() -> QuizViewModel {
     QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: MockAudioService(),
-        persistenceStore: MockPersistenceStore()
+        persistenceStore: MockPersistenceStore(),
+        silenceDetectionService: MockSilenceDetectionService()
     )
 }
 

@@ -138,6 +138,37 @@ final class RecordingCoordinator: ObservableObject {
     /// the STT commit watchdog all run on it.
     let clock: AnyClock<Duration>
 
+    // MARK: - #184 batch answer capture
+
+    /// The PCM accumulator the listener engine's tap tees into while a batch
+    /// answer is being recorded (#184 track B). One per coordinator; `begin` /
+    /// `finish` bracket each recording.
+    let answerCapture = AnswerCapture()
+
+    /// Whether THIS recording started the shared mic engine itself (voice
+    /// commands off → nobody else had armed it). Only then does the recording
+    /// stop it again — otherwise the command window owns the engine's lifetime.
+    var startedListenerForAnswer = false
+
+    /// Stamp of the saved car sample for this recording, so the transcript can
+    /// be attached to its sidecar once the backend answers. `nil` = not saved.
+    var savedRecordingStamp: String?
+
+    /// #184 track D: a read-back of the recognised answer is playing on the
+    /// confirmation sheet (see RecordingCoordinator+ReadBack).
+    var isReadingBackAnswer = false
+
+    /// This recording runs on the plain `AVAudioRecorder` because the shared
+    /// mic engine could not come up (recognizer setup failed). No voice
+    /// processing, no VAD — the dead-air cap ends it — but the mic button works.
+    var usesLegacyRecorder = false
+
+    /// #184: whether the NEXT recording takes the ElevenLabs Realtime path
+    /// (`sttService` present AND the runtime switch on). The façade injects the
+    /// production read (`VoicePipelineFlags.realtimeSTTEnabled`); tests default
+    /// to `true` so an injected mock STT service still means "streaming".
+    let realtimeSTTEnabled: @MainActor () -> Bool
+
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
@@ -191,6 +222,10 @@ final class RecordingCoordinator: ObservableObject {
     /// start speaking" countdown (the hidden dead-air cap keeps running).
     let onSpeechStarted: @MainActor () -> Void
     let stopSilenceDetectionListening: @MainActor () -> Void
+    /// #184 track D: the answer read-back is app TTS — while it plays the
+    /// command window must stay closed (`isPlayingAnyTTS`) and mute must win.
+    let isMuted: @MainActor () -> Bool
+    let setPlayingAnswerReadBack: @MainActor (Bool) -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -228,7 +263,10 @@ final class RecordingCoordinator: ObservableObject {
         armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
         onSpeechStarted: @escaping @MainActor () -> Void,
-        stopSilenceDetectionListening: @escaping @MainActor () -> Void
+        stopSilenceDetectionListening: @escaping @MainActor () -> Void,
+        isMuted: @escaping @MainActor () -> Bool = { false },
+        setPlayingAnswerReadBack: @escaping @MainActor (Bool) -> Void = { _ in },
+        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -266,6 +304,9 @@ final class RecordingCoordinator: ObservableObject {
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
         self.onSpeechStarted = onSpeechStarted
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
+        self.isMuted = isMuted
+        self.setPlayingAnswerReadBack = setPlayingAnswerReadBack
+        self.realtimeSTTEnabled = realtimeSTTEnabled
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)
@@ -293,6 +334,12 @@ final class RecordingCoordinator: ObservableObject {
     /// `resetState`. Long-lived task teardown stays with the façade's
     /// `taskBag.cancelAll()`.
     func reset() {
+        // #184: the read-back task may have been cancelled by the façade's
+        // `taskBag.cancelAll()` at its early-return exits, which never clear the
+        // flags — a latched `isPlayingAnswerReadBack` would keep the command
+        // window closed for the rest of the session. Idempotent.
+        cancelAnswerReadBack()
+        abandonAnswerCapture()
         // Streaming teardown first: a reset can fire while the engine is still
         // capturing; zeroing `isStreamingSTT` without stopping it would leak a
         // live recorder past cleanupStreamingSTT's guard.
@@ -307,6 +354,7 @@ final class RecordingCoordinator: ObservableObject {
     /// `currentQuestionAudioUrl` survives — it is replayed from
     /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
+        cancelAnswerReadBack() // #184 — see reset()
         cleanupStreamingSTT()
         recordingState.resetCaptureState()
         confirmationState.reset()

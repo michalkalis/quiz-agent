@@ -27,7 +27,8 @@ struct SettingsSubscriptionPlanTests {
         let vm = QuizViewModel(
             networkService: mock,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         let appState = AppState(
             networkService: MockNetworkService(),

@@ -33,7 +33,8 @@ struct QuestionViewMCQInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.previewMCQ
         vm.quizState = .askingQuestion
@@ -276,7 +277,8 @@ struct QuestionViewVoiceInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         // Question.preview is type .text (non-MCQ → voice body)
         vm.currentQuestion = Question.preview
@@ -374,7 +376,8 @@ struct QuestionViewUnifiedChromeTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = question
         vm.quizState = .askingQuestion
@@ -459,7 +462,8 @@ struct QuestionViewAudioStripTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = question
         vm.quizState = .askingQuestion
@@ -526,7 +530,8 @@ struct QuestionViewReplayProcessingInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.preview // .text → voice body
         vm.quizState = .askingQuestion
@@ -690,7 +695,8 @@ struct QuestionViewReplayProcessingInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.previewMCQ
         vm.quizState = state
@@ -769,7 +775,8 @@ struct QuestionViewAwaitingQuestionTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = nil

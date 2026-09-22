@@ -35,7 +35,8 @@ private func makeAskingViewModel(
     let viewModel = QuizViewModel(
         networkService: mockNetwork,
         audioService: mockAudio,
-        persistenceStore: MockPersistenceStore()
+        persistenceStore: MockPersistenceStore(),
+        silenceDetectionService: MockSilenceDetectionService()
     )
     viewModel.currentQuestion = Fixtures.makeQuestion()
     viewModel.quizState = .askingQuestion

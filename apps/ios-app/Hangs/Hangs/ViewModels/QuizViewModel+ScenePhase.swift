@@ -36,13 +36,10 @@ extension QuizViewModel {
 
             // (b) An in-flight answer recording aborts via the existing #67
             // interruption teardown — the single recording state-reset path
-            // (no second reset invented here). That path never touches the
-            // batch M4A recorder (on a system interruption AudioService stops
-            // it itself), so stop it explicitly for the batch case.
+            // (no second reset invented here). Since #184 it also drops the
+            // batch capture (`abandonAnswerCapture`), so nothing is stopped
+            // separately for the batch case any more.
             if quizState == .recording {
-                if !isStreamingSTT {
-                    Task { [audioService] in _ = try? await audioService.stopRecording() }
-                }
                 recordingCoordinator.handleAudioInterruption()
             }
 

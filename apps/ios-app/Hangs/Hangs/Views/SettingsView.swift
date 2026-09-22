@@ -51,6 +51,14 @@ struct SettingsView: View {
     // is the Debug-only internal door.
     @State private var adminKeyInput: String = ""
 
+    /// #184 voice-pipeline diagnostics (TestFlight/debug only). Mirrors of the
+    /// UserDefaults-backed `VoicePipelineFlags`, kept in view state so the rows
+    /// re-render on toggle.
+    @State private var voiceProcessingEnabled = VoicePipelineFlags.voiceProcessingEnabled
+    @State private var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
+    @State private var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
+    @State private var savedRecordingCount = AnswerRecordingStore.recordingCount()
+
     // #138/#146: the order flow's view model is owned by AppState, not by this
     // view — closing "Preparing" must not cancel a paid order, and neither must
     // starting a quiz, which empties the pushed path this screen lives on.
@@ -93,6 +101,9 @@ struct SettingsView: View {
                     aboutGroup
                     feedbackGroup
                     packsGroup
+                    if BuildChannel.debugSurfacesEnabled() {
+                        voiceDiagnosticsGroup
+                    }
                     #if DEBUG
                         developerGroup
                     #endif
@@ -856,6 +867,89 @@ struct SettingsView: View {
             )
         }
         return base
+    }
+
+    // MARK: - Voice pipeline diagnostics (#184, TestFlight/debug only)
+
+    /// The founder's in-car A/B switches for the answer pipeline plus the car
+    /// sample collector. Product-neutral (App Store builds never see it): the
+    /// defaults ARE the shipped behaviour; these only let one drive compare
+    /// combinations without a rebuild. Recordings stay on the device until
+    /// exported from here.
+    private var voiceDiagnosticsGroup: some View {
+        groupSection(label: "voice diagnostics", color: Theme.Hangs.Colors.blue) {
+            HangsToggleRow(
+                label: "Mic voice processing",
+                subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone",
+                isOn: Binding(
+                    get: { voiceProcessingEnabled },
+                    set: { voiceProcessingEnabled = $0; VoicePipelineFlags.voiceProcessingEnabled = $0 }
+                )
+            )
+            .accessibilityIdentifier("settings-voice-processing-toggle")
+
+            hairline
+
+            HangsToggleRow(
+                label: "Realtime transcription",
+                subtitle: "ElevenLabs Realtime with server-side end-of-speech instead of on-device silence detection and batch upload",
+                isOn: Binding(
+                    get: { realtimeSTTEnabled },
+                    set: { realtimeSTTEnabled = $0; VoicePipelineFlags.realtimeSTTEnabled = $0 }
+                )
+            )
+            .accessibilityIdentifier("settings-realtime-stt-toggle")
+
+            hairline
+
+            HangsToggleRow(
+                label: "Save answer recordings",
+                subtitle: "Keeps each spoken answer on this device for the recognition comparison",
+                isOn: Binding(
+                    get: { saveAnswerRecordings },
+                    set: { saveAnswerRecordings = $0; VoicePipelineFlags.saveAnswerRecordings = $0 }
+                )
+            )
+            .accessibilityIdentifier("settings-save-recordings-toggle")
+
+            hairline
+
+            HangsConfigRow(
+                label: "Export recordings",
+                value: "\(savedRecordingCount)",
+                valueColor: savedRecordingCount > 0 ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.muted,
+                action: { exportAnswerRecordings() }
+            )
+            .accessibilityIdentifier("settings-export-recordings-row")
+
+            hairline
+
+            HangsConfigRow(
+                label: "Delete recordings",
+                value: "",
+                valueColor: Theme.Hangs.Colors.muted,
+                showsChevron: false,
+                action: {
+                    AnswerRecordingStore.deleteAll()
+                    savedRecordingCount = AnswerRecordingStore.recordingCount()
+                }
+            )
+            .accessibilityIdentifier("settings-delete-recordings-row")
+        }
+        .onAppear { savedRecordingCount = AnswerRecordingStore.recordingCount() }
+    }
+
+    /// Share sheet over every saved WAV + sidecar (same presentation path as
+    /// `performExportData`).
+    private func exportAnswerRecordings() {
+        let files = AnswerRecordingStore.files()
+        guard !files.isEmpty else { return }
+        let activityVC = UIActivityViewController(activityItems: files, applicationActivities: nil)
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = windowScene.windows.first?.rootViewController
+        {
+            root.present(activityVC, animated: true)
+        }
     }
 
     #if DEBUG

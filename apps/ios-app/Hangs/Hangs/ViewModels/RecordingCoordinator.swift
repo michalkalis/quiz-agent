@@ -334,6 +334,12 @@ final class RecordingCoordinator: ObservableObject {
     /// `resetState`. Long-lived task teardown stays with the façade's
     /// `taskBag.cancelAll()`.
     func reset() {
+        // #184: the read-back task may have been cancelled by the façade's
+        // `taskBag.cancelAll()` at its early-return exits, which never clear the
+        // flags — a latched `isPlayingAnswerReadBack` would keep the command
+        // window closed for the rest of the session. Idempotent.
+        cancelAnswerReadBack()
+        abandonAnswerCapture()
         // Streaming teardown first: a reset can fire while the engine is still
         // capturing; zeroing `isStreamingSTT` without stopping it would leak a
         // live recorder past cleanupStreamingSTT's guard.
@@ -348,6 +354,7 @@ final class RecordingCoordinator: ObservableObject {
     /// `currentQuestionAudioUrl` survives — it is replayed from
     /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
+        cancelAnswerReadBack() // #184 — see reset()
         cleanupStreamingSTT()
         recordingState.resetCaptureState()
         confirmationState.reset()

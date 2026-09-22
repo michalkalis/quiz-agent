@@ -374,6 +374,29 @@ struct AnswerReadBackTests {
         #expect(vm.recordingCoordinator.isReadingBackAnswer == false)
     }
 
+    /// WHY (review finding on PR #182): the read-back task's cancellation exits
+    /// do not clear the TTS flag — a quiz ended mid-read-back must not leave
+    /// `isPlayingAnswerReadBack` latched, or the command window never re-arms
+    /// and no voice command (not even "start") works until relaunch.
+    @Test("ending the quiz mid-read-back clears the TTS flag")
+    func quizEndMidReadBackClearsFlag() async {
+        let (vm, silence, _, audio) = makeVM()
+        audio.playbackDurationNs = 2_000_000_000 // long enough to still be playing
+        await vm.recordingCoordinator.startRecording()
+        silence.simulateAnswerAudio(Data(count: 16000))
+        await vm.recordingCoordinator.stopRecordingAndSubmit()
+        await pumpUntil({ audio.playOpusCallCount == 1 }, "read-back never started")
+        #expect(vm.isPlayingAnswerReadBack)
+
+        // The façade's phase-exit / full reset path (what end-quiz and Home run).
+        vm.taskBag.cancelAll()
+        vm.recordingCoordinator.reset()
+
+        #expect(vm.isPlayingAnswerReadBack == false)
+        #expect(vm.recordingCoordinator.isReadingBackAnswer == false)
+        #expect(vm.isPlayingAnyTTS == false, "the command window must be free to re-arm")
+    }
+
     /// WHY: founder 2026-09-21 — only a VOICE answer is read back. An MCQ tap
     /// (or typed text) goes straight through, no TTS.
     @Test("an MCQ tap never triggers a read-back")

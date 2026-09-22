@@ -26,6 +26,8 @@ Nad existujúcim `Hangs.storekit`: prerušený nákup, Ask to Buy, refund, vypr�
 ### D. Zmrazenie RS-01..RS-18 do XCUITest — Maestro / RocketSim / XcodeBuildMCP maintaineri
 `HangsUITests/Regression` už existuje; doplniť chýbajúce scenáre (RS-14 a RS-18 sú unit testy a ostávajú unit), spúšťať nočne na `mba` (GitHub macOS runnery flakujú 25–37 % na XCUITest). `/regression` cez LLM ostáva len na exploráciu nových scenárov. Nové RS scenáre pre paywall / nákup / obnovu.
 
+**HOTOVÉ 2026-09-22:** RS-01..RS-10, RS-12, RS-13, RS-15..RS-17 zmrazené ako `HangsUITests/Regression/RS*Tests.swift` (RS-11 a RS-14/RS-18 ostávajú unit — sim polovica RS-11 nemá nič pozorovateľné navyše); nové RS-19 (stena zobrazí plány + Restore), RS-20 (Restore bez nákupu = poctivé „nič na obnovu“), RS-21 (nákup → success/activating) idú cez reálny StoreKit Testing (`Hangs.storekit` v scheme, na iOS 26.5 sim bez potvrdzovacieho dialógu). Spúšťač `scripts/run-rs-suite.sh` píše report do `docs/testing/runs/RS-suite-<dátum>.md`; mapovanie čísel → testov v `docs/testing/regression-scenarios.md`. **Nočný beh nie je** (founder 2026-09-16: žiadne nočné behy) — sada beží on-demand a v `ios-ci.yml` (Test action `Hangs-Local` už `HangsUITests` obsahuje). Odchýlky od pôvodných spec: „Again“ dnes rovno spúšťa nové nahrávanie (RS-05/07 akceptujú askingQuestion aj recording); X otvára dialóg End Quiz (RS-13 klepne „End Quiz“ podľa labelu — alert tlačidlá ignorujú identifikátory); RS-15 indikátor spracovania nie je na okamžitom mocku pozorovateľný (zmrazený len tok).
+
 ### E. Accessibility identifiers ako štandard — Apple XCUITest + všetci agentní tool vendori
 Každý interaktívny prvok má `accessibilityIdentifier`; textové selektory zakázané (3 jazyky UI). Checklist do `.claude/rules/ios.md` + review.
 
@@ -53,7 +55,7 @@ _(rámec; konkrétne testy vzniknú pri implementácii)_
 - [x] A: 5/5 zelených behov celej sady (serializované — paralelný režim zamietnutý s odôvodnením v `ios-ci.yml`); žiadny quiz-path test nečaká na reálny čas (zvyšok = view-level časovače a audio settle, vymenované v PR)
 - [x] B: 7 vymenovaných scenárov pokrytých ako lifecycle testy (`PurchaseEdgeCaseScenarioTests`), zelené v CI bez siete; SKTestSession blokovaný Apple bugom FB22774836 (2026-09-21) → opt-in sonda namiesto tichého skipu; ak Apple opraví simulátor, scenáre sa dajú preniesť na SKTestSession bez zmeny asertov
 - [x] C: (a) kvóta ohraničí dĺžku kvízu pred štartom (founder 2026-09-21: kratší kvíz + upozornenie), (b) balík × vyčerpaná kvóta, (c) mesačný reset s DST — pomenované testy iOS + pytest, zelené 2026-09-22; pokračovanie toho istého kvízu po nákupe pri stene = post-launch
-- [ ] D: RS-01..RS-18 okrem RS-14 a RS-18 + nové paywall scenáre v `HangsUITests`, nočný beh na `mba` s reportom do `docs/testing/runs/`
+- [x] D: RS-01..RS-18 okrem RS-11/14/18 (unit) + RS-19..21 paywall v `HangsUITests`; on-demand `scripts/run-rs-suite.sh` s reportom do `docs/testing/runs/` (nočný beh zrušený founderom 2026-09-16) — 2026-09-22
 - [ ] E: lint/grep nenájde interaktívny prvok bez identifikátora na obrazovkách kvízu, paywallu, výsledku
 - [ ] F: snapshoty existujú pre Home/Question/Paywall/Result × 3 jazyky, `__Snapshots__` v gite
 - [ ] G: prerušenie + route-change ako iOS unit testy, TTS failover per úroveň v pytest; RS-18 ostáva unit (pure helper)

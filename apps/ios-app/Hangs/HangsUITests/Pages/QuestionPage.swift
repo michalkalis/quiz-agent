@@ -38,6 +38,31 @@ struct QuestionPage {
         app.buttons["question.closeButton"]
     }
 
+    /// Inline error banner (`viewModel.errorMessage`). Queried across element
+    /// types: it is an HStack with a warning glyph and a Text, not a button.
+    var errorBanner: XCUIElement {
+        app.descendants(matching: .any)["question.errorBanner"]
+    }
+
+    /// Typed-answer entry (QuestionVoiceFooter): keyboard toggle, field, send.
+    var textInputToggle: XCUIElement {
+        app.buttons["question.textInputToggle"]
+    }
+
+    var textField: XCUIElement {
+        app.descendants(matching: .any)["question.textField"]
+    }
+
+    var textSubmit: XCUIElement {
+        app.buttons["question.textSubmit"]
+    }
+
+    /// Current value of the hidden state probe ("" when the probe is absent,
+    /// e.g. on Home).
+    var stateValue: String {
+        stateLabel.exists ? stateLabel.label : ""
+    }
+
     /// A multiple-choice option card by its option key ("a"…"d").
     func option(_ key: String) -> XCUIElement {
         app.buttons["mcq.option.\(key)"]
@@ -78,6 +103,35 @@ struct QuestionPage {
         let predicate = NSPredicate(format: "label == %@", state)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: stateLabel)
         let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
-        XCTAssertEqual(result, .completed, "QuestionPage: timed out waiting for state '\(state)'")
+        XCTAssertEqual(result, .completed, "QuestionPage: timed out waiting for state '\(state)', probe reads '\(stateValue)'")
+    }
+
+    /// Wait until the probe reads any of `states`. Returns the state it landed
+    /// on ("" on timeout) so the caller can assert on the exact branch.
+    @discardableResult
+    func waitForState(in states: [String], timeout: TimeInterval = 10) -> String {
+        let predicate = NSPredicate(format: "label IN %@", states)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: stateLabel)
+        let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
+        XCTAssertEqual(result, .completed, "QuestionPage: timed out waiting for one of \(states), probe reads '\(stateValue)'")
+        return stateValue
+    }
+
+    /// Wait until the probe reads anything BUT `state` (e.g. leaving `recording`).
+    func waitForStateToLeave(_ state: String, timeout: TimeInterval = 10) {
+        let predicate = NSPredicate(format: "label != %@", state)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: stateLabel)
+        let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
+        XCTAssertEqual(result, .completed, "QuestionPage: still in '\(state)' after \(timeout)s")
+    }
+
+    /// Label of the ANSWER ListenBar (nil while the bar is absent or in a
+    /// non-answer mode). Same case-insensitive match as `answerListenBarExists`.
+    var answerListenBarLabel: String? {
+        let predicate = NSPredicate(
+            format: "identifier == %@ AND label BEGINSWITH[c] %@", "listen-bar", "listening —"
+        )
+        let bar = app.descendants(matching: .any).matching(predicate).firstMatch
+        return bar.exists ? bar.label : nil
     }
 }

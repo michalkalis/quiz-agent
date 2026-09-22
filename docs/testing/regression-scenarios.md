@@ -36,14 +36,50 @@ on any `EXC_*` signal or app-process exit.
 Numbering: `RS-N` (Regression Scenario). Numbers are never recycled —
 when a scenario is removed, its number is retired.
 
-**Sibling XCUITest RS family (not in this registry):**
-`HangsUITests/Regression/RegressionTests.swift` carries the XCUITest-embodied
-scenarios (`testRSStart` / `testRSCorrect` / `testRSIncorrect` /
-`testRSLongQuestion` / `testRSPaywall` / `testRSPackNavStart` — the #111
-pack-nav voice-start teardown), run via
-`xcodebuild test -scheme Hangs-Local -only-testing:HangsUITests/RegressionTests`,
-not via the MCP-driven steps below. Check both families before concluding a
-flow is uncovered.
+## Frozen suite (XCUITest, #180 track D — 2026-09-22)
+
+Every scenario below that can be driven without a human/LLM in the loop is
+frozen as an XCUITest in `HangsUITests/Regression/`, one method per number.
+Run the whole suite with `scripts/run-rs-suite.sh [SIM_UDID]` (report lands in
+`docs/testing/runs/RS-suite-<date>.md`) or a single class with
+`xcodebuild test -scheme Hangs-Local -only-testing:HangsUITests/<Class>`.
+The suite also runs in `ios-ci.yml` (the `Hangs-Local` Test action includes
+`HangsUITests`). On-demand only — no scheduled run (founder 2026-09-16).
+
+`/regression` (LLM-driven via XcodeBuildMCP) stays for **exploring new
+scenarios**; once a scenario is verified it is frozen here, not re-driven.
+
+| RS | Frozen as | Notes |
+|---|---|---|
+| RS-01 | `RSRecordingTests.testRS01…` | |
+| RS-02 | `RSRecordingTests.testRS02…` | real 15 s auto-stop (not shortened under `--ui-test`) |
+| RS-03 | `RSRecordingTests.testRS03…` | |
+| RS-04 | `RSRecordingTests.testRS04…` | second tap lands on `question.stop` |
+| RS-05 | `RSRecordingTests.testRS05…` | "Again" bridges askingQuestion → recording; `confirmation.cancel` only in the transcribing branch, never shown by the instant mock |
+| RS-06 | `RSEditTests.testRS06…` | mock grades canned; asserts the flow, not the grade |
+| RS-07 | `RSEditTests.testRS07…` | |
+| RS-08 | `RSEditTests.testRS08…` | |
+| RS-09 | `RSMCQTests.testRS09…` | 3 launches: exact, inflected (`Jupitera`), unmatched |
+| RS-10 | `RSMCQTests.testRS10…` | `processing` is transient on the mock; asserts result + no sheet |
+| RS-11 | unit only (`QuizViewModelTTSSpyTests`) | the sim half has no observable beyond RS-start |
+| RS-12 | `RSResultTests.testRS12…` | countdown lives inside `question.record`; asserts its y stays put |
+| RS-13 | `RSResultTests.testRS13…` | X opens an End-quiz dialog (label match, no ids on alert buttons); dead-session half is unit |
+| RS-14 | unit only (ViewInspector) | by design |
+| RS-15 | `RSResultTests.testRS15…` | flow only — the in-flight indicator is not observable on the instant mock |
+| RS-16 | `RSResultTests.testRS16…` (+ unit) | control is `result.hearIt` |
+| RS-17 | `RSResultTests.testRS17…` (+ unit) | one toggle `result.stayHere`; resume proven by the auto-advance firing |
+| RS-18 | unit only (pure helper) | by design |
+| RS-19 | `RSPaywallTests.testRS19…` | free wall shows monthly + pack + Restore (real StoreKit Testing products) |
+| RS-20 | `RSPaywallTests.testRS20…` | Restore with nothing → `paywall.nothingToRestore` |
+| RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
+| RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
+
+**Identifier drift vs. the specs below:** `question.micButton` is
+`question.record`/`question.stop`; there is no `confirmation.state.*` probe —
+the sheet's branch is read from `confirmation.answer` (transcript) /
+`confirmation.answerField` (editing); `result.readAloud` is `result.hearIt`;
+Stay/Resume is one `result.stayHere` toggle. Page objects in
+`HangsUITests/Pages/` carry the truth.
 
 ---
 
@@ -526,6 +562,58 @@ it pins the exact option set `setupAudioSession` applies, with zero hang surface
 - `AudioMode.default` is `media` and carries HFP (pins the default against regression).
 - Every mode ducks others + defaults to speaker.
 - (Test body documents *why* HFP must stay: Bluetooth mic access, not phone-call UI — fails the instant anyone strips it.)
+
+---
+
+## RS-19: Free wall shows purchasable plans and Restore
+
+**Type:** XCUITest (`RSPaywallTests`). Products come from `Hangs.storekit`
+attached to the `Hangs-Local` scheme — real StoreKit Testing, not a mock.
+
+**Hypothesis:** The quota wall must offer a way out: monthly plan row, pack
+row, an enabled purchase CTA, Restore and Close — all addressable. A paywall
+that renders but cannot sell (offline branch while StoreKit works) is the
+#171/#174 TestFlight-round class of bug.
+
+**Preconditions:** launch with `--ui-test --ui-test-paywall` (createSession
+throws the free-limit error).
+
+**Steps:** tap `home.startQuiz`; wait ≤15 s for `paywall-purchase-button`.
+
+**Asserts:** `paywall-plan-monthly`, `paywall-plan-pack`, `paywall-restore-button`,
+`paywall-close-x-button` exist; purchase CTA enabled; the offline branch
+(`paywall-offline-retry-button`) is a FAIL. App alive.
+
+---
+
+## RS-20: Restore with nothing to restore is honest
+
+**Type:** XCUITest (`RSPaywallTests`).
+
+**Hypothesis:** Restore on an account with no purchases ends in the
+"nothing to restore" notice on the same sheet — not a silent no-op, not a
+fake success, not a dismissed paywall.
+
+**Steps:** RS-19 preconditions; tap `paywall-restore-button`; wait ≤15 s.
+
+**Asserts:** `paywall.nothingToRestore` present; `paywall.success.headline`
+absent; `paywall-purchase-button` still present. App alive.
+
+---
+
+## RS-21: Purchase reaches the success state
+
+**Type:** XCUITest (`RSPaywallTests`).
+
+**Hypothesis:** Confirming the StoreKit Testing purchase sheet lands the
+paywall in its success (or activating) branch with no purchase error — the
+entitlement reconciles from the test transaction.
+
+**Steps:** RS-19 preconditions; tap `paywall-purchase-button`; confirm the
+system purchase sheet (looked up in the app, then on SpringBoard); wait ≤20 s.
+
+**Asserts:** `paywall.success.headline` or `paywall.activating.headline`
+present; `paywall.purchaseError` absent. App alive.
 
 ---
 

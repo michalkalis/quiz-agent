@@ -370,6 +370,7 @@ struct PaywallView: View {
         let isSubject = isPurchasing(plan)
         let isDimmed = dimmed(isSubject)
         let check: PlanCheck = isSelected ? (isDimmed ? .hollow : .solid) : .none
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         return Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
                 VStack(alignment: .leading, spacing: 3) {

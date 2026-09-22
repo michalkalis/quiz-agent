@@ -64,6 +64,7 @@ struct OrderPackFormStep: View {
                 Menu {
                     ForEach(Language.packOrderLanguages) { language in
                         Button(language.nativeName) { viewModel.selectLanguage(language.id) }
+                            .accessibilityIdentifier("orderPack.language.\(language.id)")
                     }
                 } label: {
                     HangsConfigRow(

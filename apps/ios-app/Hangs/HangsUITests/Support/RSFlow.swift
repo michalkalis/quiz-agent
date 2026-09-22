@@ -15,10 +15,17 @@ enum RSFlow {
     /// Launch with `--ui-test` (mock services, HTTP listener) plus `extra` flags.
     /// Portrait is forced first: the template launch tests rotate the simulator
     /// and the orientation persists across launches (see RegressionTests.setUp).
+    /// `--ui-test` (mock services, HTTP listener) with the UI pinned to
+    /// English (#180 track E): locators go by accessibilityIdentifier, but the
+    /// few labels XCUITest cannot avoid — system alert buttons, the StoreKit
+    /// sheet — and the verdict/hero content assertions read English text, so
+    /// the simulator's own language must not leak in.
+    static let baseLaunchArguments = ["--ui-test", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+
     static func launch(_ extra: [String] = []) -> XCUIApplication {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test"] + extra
+        app.launchArguments = baseLaunchArguments + extra
         app.launch()
         return app
     }

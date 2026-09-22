@@ -61,6 +61,7 @@ struct AudioDevicePickerView: View {
                         dismiss()
                     }
                     .foregroundColor(Theme.Colors.accentPrimary)
+                    .accessibilityIdentifier("micPicker.done")
                 }
             }
             .onAppear {
@@ -113,6 +114,7 @@ struct AudioDevicePickerView: View {
             }
         }
         .contentShape(Rectangle())
+        .accessibilityIdentifier("micPicker.device.\(device.id)")
     }
 }
 

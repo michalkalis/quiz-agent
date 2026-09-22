@@ -46,6 +46,7 @@ echo "RS suite: destination '$DEST', log $LOG" >&2
     -only-testing:HangsUITests/RSMCQTests \
     -only-testing:HangsUITests/RSResultTests \
     -only-testing:HangsUITests/RSPaywallTests \
+    -only-testing:HangsUITests/A11yIdentifierTests \
     > "$LOG" 2>&1)
 XC_EXIT=$?
 ELAPSED=$((SECONDS - START))

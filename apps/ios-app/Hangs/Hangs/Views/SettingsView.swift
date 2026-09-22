@@ -285,6 +285,7 @@ struct SettingsView: View {
             Menu {
                 ForEach(Language.selectableLanguages) { language in
                     Button(language.nativeName) { viewModel.settings.language = language.id }
+                        .accessibilityIdentifier("settings.language.\(language.id)")
                 }
             } label: {
                 HangsConfigRow(
@@ -336,6 +337,7 @@ struct SettingsView: View {
         groupSection(label: "session", color: Theme.Hangs.Colors.blue) {
             sessionMenuRow(
                 label: "Thinking time",
+                idPrefix: "settings.thinkingTime",
                 options: QuizSettings.thinkingTimeOptions,
                 selection: $viewModel.settings.thinkingTime,
                 display: Self.secondsDisplay
@@ -346,6 +348,7 @@ struct SettingsView: View {
 
             sessionMenuRow(
                 label: "Questions per session",
+                idPrefix: "settings.questionCount",
                 options: QuizSettings.questionCountOptions,
                 selection: $viewModel.settings.numberOfQuestions,
                 display: Self.questionCountDisplay
@@ -356,6 +359,7 @@ struct SettingsView: View {
 
             sessionMenuRow(
                 label: "Auto-advance delay",
+                idPrefix: "settings.autoAdvance",
                 options: QuizSettings.autoAdvanceDelayOptions,
                 selection: $viewModel.settings.autoAdvanceDelay,
                 display: Self.secondsDisplay
@@ -366,6 +370,7 @@ struct SettingsView: View {
 
             sessionMenuRow(
                 label: "Answer time limit",
+                idPrefix: "settings.answerLimit",
                 options: QuizSettings.answerTimeLimitOptions,
                 selection: $viewModel.settings.answerTimeLimit,
                 display: Self.answerLimitDisplay
@@ -381,6 +386,7 @@ struct SettingsView: View {
                     Button(mode.displayName) {
                         viewModel.settings.answerRevealMode = mode
                     }
+                    .accessibilityIdentifier("settings.answerReveal.\(mode.rawValue)")
                 }
             } label: {
                 HangsConfigRow(
@@ -397,13 +403,16 @@ struct SettingsView: View {
 
     private func sessionMenuRow(
         label: LocalizedStringKey,
+        idPrefix: String,
         options: [Int],
         selection: Binding<Int>,
         display: @escaping (Int) -> String
     ) -> some View {
+        // a11y-id: call-site — each caller names the menu (settings-*-menu)
         Menu {
             ForEach(options, id: \.self) { option in
                 Button(display(option)) { selection.wrappedValue = option }
+                    .accessibilityIdentifier("\(idPrefix).\(option)")
             }
         } label: {
             HangsConfigRow(

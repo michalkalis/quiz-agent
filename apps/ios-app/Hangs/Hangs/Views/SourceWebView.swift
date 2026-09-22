@@ -24,11 +24,13 @@ struct SourceWebView: View {
                             Button("Done") {
                                 isPresented = false
                             }
+                            .accessibilityIdentifier("source.done")
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             ShareLink(item: validUrl) {
                                 Image(systemName: "square.and.arrow.up")
                             }
+                            .accessibilityIdentifier("source.share")
                         }
                     }
             } else {

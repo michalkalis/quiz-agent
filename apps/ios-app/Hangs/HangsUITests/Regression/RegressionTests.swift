@@ -45,7 +45,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSStart() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test"]
+        app.launchArguments = RSFlow.baseLaunchArguments
         app.launch()
 
         let home = HomePage(app: app)
@@ -99,7 +99,7 @@ final nonisolated class RegressionTests: XCTestCase {
     func testRSCorrect() async throws {
         let app = XCUIApplication()
         // Default --ui-test seeds previewAnswerCorrect as the text-input response.
-        app.launchArguments = ["--ui-test"]
+        app.launchArguments = RSFlow.baseLaunchArguments
         app.launch()
 
         let home = HomePage(app: app)
@@ -146,7 +146,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSIncorrect() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test", "--ui-test-incorrect"]
+        app.launchArguments = RSFlow.baseLaunchArguments + ["--ui-test-incorrect"]
         app.launch()
 
         let home = HomePage(app: app)
@@ -188,7 +188,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSLongQuestion() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test", "--ui-test-long"]
+        app.launchArguments = RSFlow.baseLaunchArguments + ["--ui-test-long"]
         app.launch()
 
         let home = HomePage(app: app)
@@ -230,7 +230,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSMCQLongReveal() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test", "--ui-test-mcq", "--ui-test-long"]
+        app.launchArguments = RSFlow.baseLaunchArguments + ["--ui-test-mcq", "--ui-test-long"]
         app.launch()
 
         let home = HomePage(app: app)
@@ -323,7 +323,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSMCQLongOptionsFooterReachable() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test", "--ui-test-mcq-long-options"]
+        app.launchArguments = RSFlow.baseLaunchArguments + ["--ui-test-mcq-long-options"]
         app.launch()
 
         let home = HomePage(app: app)
@@ -366,7 +366,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSPaywall() async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test", "--ui-test-paywall"]
+        app.launchArguments = RSFlow.baseLaunchArguments + ["--ui-test-paywall"]
         app.launch()
 
         let home = HomePage(app: app)
@@ -415,7 +415,7 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     private func runPackNavStartPass(startVia trigger: PackNavStartTrigger) async throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-test"]
+        app.launchArguments = RSFlow.baseLaunchArguments
         app.launch()
 
         let settings = SettingsPage(app: app)

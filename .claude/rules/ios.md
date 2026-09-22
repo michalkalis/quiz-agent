@@ -28,6 +28,17 @@ swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 
 **Tests never wait on real time (#180 track A).** Every quiz-path timer, backoff and deadline sleeps on the one injected `AnyClock<Duration>` (`QuizViewModel(clock:)`, `Fixtures.makeViewModel(clock:)`; pack view models and `SilenceDetectionService` take `clock:` too). A test that owns time builds the model with `AnyClock(TestClock())` and `await clock.advance(by:)` to the SHIPPED boundary — just before it (nothing fired) and past it — instead of shrinking durations. Use integer `.milliseconds(...)` at a boundary (a fractional `Duration` can land 1 as short). Scheduling-only waits use `pumpUntil` (turn-bounded), never `Task.sleep`. `AnyClock(ImmediateClock())` is unsafe on any submit path (the user-facing timeout would fire at once). Audio hardware settles in `QuizViewModel` and the audio mock stay real time by design.
 
+## Accessibility identifiers (#180 track E)
+
+The UI ships in sk/cs/en, so visible text is never a locator. `scripts/lint-a11y-ids.py` runs in `ios-ci.yml` and fails the PR on any miss; run it locally before pushing.
+
+- **Every interactive control declares `.accessibilityIdentifier`** on its own modifier chain: Button, NavigationLink, Toggle, Picker, TextField, Menu (and each Menu item), Link, ShareLink, `.onTapGesture` hosts, and the project buttons (`HangsPrimaryButton`, `HangsSecondaryButton`, `HangsGhostButton`, `HangsNavChip`, `HangsSourceLink`, `HangsToggleRow`). An identifier on an enclosing container also counts (SwiftUI applies it to the subtree) — use that only for grouped rows, not to skip naming a button.
+- **Naming:** `screen.element` in lowerCamel (`question.record`, `paywall.restore`), dynamic items `screen.element.<key>` (`home.language.sk`, `mcq.option.b`). Older `screen-element` ids exist and stay; don't rename them, don't add new hyphenated ones.
+- **Reusable components leave the identifier to the call site** and say so with `// a11y-id: call-site` above the inner Button. A component that owns a fixed role (e.g. `QuestionSkipButton`) hardcodes its id instead.
+- **Exemptions are explicit:** `// a11y-id: <reason>` on the element or the line above. Buttons inside `.alert` / `.confirmationDialog` are exempt automatically (UIAlertController drops identifiers); `Views/Debug/` and `#if DEBUG` regions are not linted.
+- **UI tests (HangsUITests):** `app.<query>["…"]` literals must be identifiers; a label match is allowed only for system UI the app cannot tag (alert buttons, the StoreKit sheet), marked `// a11y-id: system alert` etc. Launch via `RSFlow.launch` / `RSFlow.baseLaunchArguments`, which pin the UI to English so those label matches and the verdict/hero content assertions don't depend on the simulator's language.
+- **Definition of done for a new flow:** identifiers on its controls + a Page Object entry + a frozen RS scenario when the flow is user-visible (see `docs/testing/regression-scenarios.md`).
+
 ## Simulator driving & XcodeBuildMCP token cost
 
 XcodeBuildMCP runs locally (no LLM of its own), but its `snapshot_ui` returns the **full accessibility tree as large JSON** and `screenshot` returns an **image** — every such call lands in whatever session drives it and stays there. Driving the simulator directly from the main session (Opus) is the single biggest iOS token sink. So:

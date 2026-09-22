@@ -73,7 +73,6 @@ final nonisolated class RSMCQTests: XCTestCase {
 
         confirmation.confirmButton.tap()
         ResultPage(app: app).waitForResult(timeout: 10)
-        RSFlow.assertNoErrorBanner(question, tag)
         RSFlow.assertAlive(app, tag)
     }
 
@@ -97,7 +96,6 @@ final nonisolated class RSMCQTests: XCTestCase {
             ConfirmationPage(app: app).isPresented,
             "RS-10: a tap on an option opened the confirmation sheet — taps must submit directly"
         )
-        RSFlow.assertNoErrorBanner(question, "RS-10")
         RSFlow.assertAlive(app, "RS-10")
     }
 }

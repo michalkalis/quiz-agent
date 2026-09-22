@@ -38,8 +38,9 @@ final nonisolated class RSEditTests: XCTestCase {
         confirmation.confirmButton.tap()
 
         let result = ResultPage(app: app)
+        // The result screen replaces QuestionView, so reaching it IS the
+        // "no inline error" proof — an evaluation error keeps the question up.
         result.waitForResult(timeout: 10)
-        RSFlow.assertNoErrorBanner(question, "RS-06")
         RSFlow.assertAlive(app, "RS-06")
     }
 

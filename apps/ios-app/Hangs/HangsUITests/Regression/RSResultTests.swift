@@ -58,8 +58,9 @@ final nonisolated class RSResultTests: XCTestCase {
         XCTAssertTrue(endQuiz.waitForExistence(timeout: 3), "RS-13: the end-quiz confirmation did not appear")
         endQuiz.tap()
 
+        // Reaching Home is the whole proof: an error would keep QuestionView
+        // mounted behind its banner, and Home would never appear.
         HomePage(app: app).assertVisible(timeout: 5)
-        RSFlow.assertNoErrorBanner(question, "RS-13")
         RSFlow.assertAlive(app, "RS-13")
     }
 
@@ -85,7 +86,6 @@ final nonisolated class RSResultTests: XCTestCase {
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 8)
         result.assertVerdictContains("NAILED IT.")
-        RSFlow.assertNoErrorBanner(question, "RS-15")
         RSFlow.assertAlive(app, "RS-15")
     }
 

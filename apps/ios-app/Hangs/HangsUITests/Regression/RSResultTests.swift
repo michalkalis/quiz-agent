@@ -54,7 +54,8 @@ final nonisolated class RSResultTests: XCTestCase {
 
         XCTAssertTrue(question.closeButton.waitForExistence(timeout: 3), "RS-13: question.closeButton missing")
         question.closeButton.tap()
-        let endQuiz = app.buttons["End Quiz"]
+        // a11y-id: system alert — UIAlertController drops identifiers; English is pinned by RSFlow.baseLaunchArguments
+        let endQuiz = app.alerts.firstMatch.buttons["End Quiz"]
         XCTAssertTrue(endQuiz.waitForExistence(timeout: 3), "RS-13: the end-quiz confirmation did not appear")
         endQuiz.tap()
 

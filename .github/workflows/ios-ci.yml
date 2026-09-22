@@ -7,11 +7,13 @@ on:
     branches: [main, 'ralph/**']
     paths:
       - 'apps/ios-app/**'
+      - 'scripts/lint-a11y-ids.py'
       - '.github/workflows/ios-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'apps/ios-app/**'
+      - 'scripts/lint-a11y-ids.py'
       - '.github/workflows/ios-ci.yml'
   workflow_dispatch:
 
@@ -51,6 +53,13 @@ jobs:
           # selector silently fell back to an older Xcode without the iOS 26 SDK.
           xcodebuild -showsdks | grep -q iphoneos26 || exit 1
           xcrun simctl list devices available | grep iPhone
+
+      # #180 track E: every interactive SwiftUI control declares an
+      # accessibilityIdentifier and UI tests locate by identifier, never by
+      # visible text (three UI languages). Cheap, runs before the build so a
+      # missing identifier fails in seconds, not after a 20-minute test run.
+      - name: Lint accessibility identifiers
+        run: python3 scripts/lint-a11y-ids.py
 
       - name: Build and test
         run: |

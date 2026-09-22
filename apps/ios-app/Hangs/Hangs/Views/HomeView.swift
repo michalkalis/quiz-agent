@@ -303,6 +303,7 @@ struct HomeView: View {
                         Text(language.nativeName)
                     }
                 }
+                .accessibilityIdentifier("home.language.\(language.id)")
             }
         } label: {
             configRowVisual(
@@ -328,6 +329,7 @@ struct HomeView: View {
                         Text(display)
                     }
                 }
+                .accessibilityIdentifier("home.difficulty.\(id)")
             }
         } label: {
             configRowVisual(
@@ -351,6 +353,7 @@ struct HomeView: View {
                         Text(option.display)
                     }
                 }
+                .accessibilityIdentifier("home.category.\(option.id)")
             }
         } label: {
             configRowVisual(

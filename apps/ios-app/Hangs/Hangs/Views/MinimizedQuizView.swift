@@ -50,6 +50,7 @@ struct MinimizedQuizView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(String(localized: "End quiz", comment: "Accessibility label for the end-quiz button in the minimized widget"))
+            .accessibilityIdentifier("miniQuiz.endQuiz")
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.top, Theme.Hangs.Spacing.md)
@@ -64,6 +65,7 @@ struct MinimizedQuizView: View {
                 .stroke(Theme.Hangs.Colors.hairline, lineWidth: 1)
         )
         .hangsShadow(Theme.Hangs.Shadow.card)
+        .accessibilityIdentifier("miniQuiz.card")
         .onTapGesture {
             expand()
         }
@@ -98,6 +100,7 @@ struct MinimizedQuizView: View {
                     )
             }
             .hangsShadow(Theme.Hangs.Shadow.cta)
+            .accessibilityIdentifier("miniQuiz.mic")
         } else if viewModel.quizState == .recording {
             statusLabel(text: "Recording...") {
                 Image(systemName: "waveform")

@@ -73,6 +73,13 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-20 | `RSPaywallTests.testRS20…` | Restore with nothing → `paywall.nothingToRestore` |
 | RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
+| (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
+
+**Locators (#180 track E):** every query goes by `accessibilityIdentifier`;
+`scripts/lint-a11y-ids.py` (in `ios-ci.yml`) rejects both an untagged control
+in the app and a visible-text query in `HangsUITests`. The suite launches with
+the UI pinned to English (`RSFlow.baseLaunchArguments`) so the two unavoidable
+label matches — system alert buttons, the StoreKit sheet — stay deterministic.
 
 **Identifier drift vs. the specs below:** `question.micButton` is
 `question.record`/`question.stop`; there is no `confirmation.state.*` probe —

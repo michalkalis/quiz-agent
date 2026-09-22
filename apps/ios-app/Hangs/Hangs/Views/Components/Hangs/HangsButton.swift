@@ -42,6 +42,7 @@ struct HangsPrimaryButton: View {
     }
 
     var body: some View {
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: action) {
             HStack(spacing: 10) {
                 if isLoading {
@@ -116,6 +117,7 @@ struct HangsSecondaryButton: View {
     let action: () -> Void
 
     var body: some View {
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: action) {
             HStack(spacing: 10) {
                 if let icon {
@@ -151,6 +153,7 @@ struct HangsGhostButton: View {
     let action: () -> Void
 
     var body: some View {
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon {

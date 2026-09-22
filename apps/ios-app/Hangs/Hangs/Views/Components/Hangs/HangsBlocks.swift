@@ -143,6 +143,7 @@ struct HangsConfigRow: View {
     var action: (() -> Void)? = nil
 
     var body: some View {
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: { action?() }) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
@@ -198,6 +199,7 @@ struct HangsToggleRow: View {
                 }
             }
             Spacer()
+            // a11y-id: call-site — the identifier belongs to the screen that places this component
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(Theme.Hangs.Colors.pink)

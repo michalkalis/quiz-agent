@@ -341,6 +341,7 @@ struct AnswerConfirmationView: View {
                         Button("Done") { editFocused = false }
                             .font(.hangsBody(15, weight: .semibold))
                             .foregroundColor(Theme.Hangs.Colors.pink)
+                            .accessibilityIdentifier("confirmation.keyboardDone")
                     }
                 }
                 .accessibilityIdentifier("confirmation.answerField")

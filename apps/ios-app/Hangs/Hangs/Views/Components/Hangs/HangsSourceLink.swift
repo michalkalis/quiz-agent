@@ -22,6 +22,7 @@ struct HangsSourceLink: View {
     let action: () -> Void
 
     var body: some View {
+        // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: action) {
             HStack(spacing: 4) {
                 Text("source")

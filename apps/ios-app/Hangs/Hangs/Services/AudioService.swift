@@ -82,6 +82,16 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// See `AudioServiceProtocol.onInterruptionBegan`. Set by the owner (QuizViewModel).
     var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
 
+    /// Where the session observers register. Injected so a unit test can post the
+    /// `AVAudioSession` notifications iOS posts through a private center and watch
+    /// this service react — no live audio session, no real phone call (#180 track G).
+    private let notificationCenter: NotificationCenter
+
+    init(notificationCenter: NotificationCenter = .default) {
+        self.notificationCenter = notificationCenter
+        super.init()
+    }
+
     // MARK: - Device Management
 
     /// Available input devices (microphones)
@@ -150,10 +160,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     deinit {
         // Clean up observers
         if let observer = routeChangeObserver.withLock({ $0 }) {
-            NotificationCenter.default.removeObserver(observer)
+            notificationCenter.removeObserver(observer)
         }
         if let observer = interruptionObserver.withLock({ $0 }) {
-            NotificationCenter.default.removeObserver(observer)
+            notificationCenter.removeObserver(observer)
         }
     }
 
@@ -302,12 +312,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// interruptions. Called from every session-configuration path
     /// (`setupAudioSession`, `setupQuietListeningSession`) — remove the previous
     /// observer first or duplicate registrations pile up and every handler fires
-    /// N times.
-    private func registerSessionObservers() {
+    /// N times. Internal (not private) so a test can wire the observers without
+    /// configuring a hardware session first.
+    func registerSessionObservers() {
         if let existingRouteObserver = routeChangeObserver.withLock({ $0 }) {
-            NotificationCenter.default.removeObserver(existingRouteObserver)
+            notificationCenter.removeObserver(existingRouteObserver)
         }
-        let routeObserver = NotificationCenter.default.addObserver(
+        let routeObserver = notificationCenter.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: nil,
             queue: .main
@@ -319,9 +330,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         // Same duplicate-registration guard as the route observer above.
         if let existingInterruptionObserver = interruptionObserver.withLock({ $0 }) {
-            NotificationCenter.default.removeObserver(existingInterruptionObserver)
+            notificationCenter.removeObserver(existingInterruptionObserver)
         }
-        let interruptObserver = NotificationCenter.default.addObserver(
+        let interruptObserver = notificationCenter.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             queue: .main
@@ -393,11 +404,19 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         Logger.audio.info("🔄 Audio mode switched to: \(mode.name, privacy: .public)")
     }
 
+    /// The reason a route-change notification carries, decoded from the system
+    /// payload (`NSNumber` raw value under `AVAudioSessionRouteChangeReasonKey`).
+    /// Pure and static so the decoding is unit-testable by posting the notification
+    /// iOS would post (#180 track G); `handleRouteChange` only dispatches on it.
+    nonisolated static func routeChangeReason(from notification: Notification) -> AVAudioSession.RouteChangeReason? {
+        guard let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt else {
+            return nil
+        }
+        return AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+    }
+
     private nonisolated func handleRouteChange(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
-        else {
+        guard let reason = AudioService.routeChangeReason(from: notification) else {
             return
         }
 
@@ -458,20 +477,45 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         options.contains(.shouldResume)
     }
 
-    /// Handle audio session interruptions (phone calls, Siri, other apps)
-    private nonisolated func handleInterruption(_ notification: Notification) {
+    /// What an interruption notification says, decoded from the system payload
+    /// (`NSNumber` raw values under the `AVAudioSessionInterruption*Key`s). Pure and
+    /// static so the decoding is unit-testable by posting the notification iOS would
+    /// post (#180 track G); the real handler below and `MockAudioService` both
+    /// dispatch on this, so a wrong key or raw-value cast can't hide behind the mock.
+    enum InterruptionPhase: Equatable, Sendable {
+        case began
+        case ended(shouldResume: Bool)
+    }
+
+    nonisolated static func interruptionPhase(from notification: Notification) -> InterruptionPhase? {
         guard let userInfo = notification.userInfo,
               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue)
         else {
+            return nil
+        }
+        switch type {
+        case .began:
+            return .began
+        case .ended:
+            let optionsRawValue = (userInfo[AVAudioSessionInterruptionOptionKey] as? UInt) ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsRawValue)
+            return .ended(shouldResume: shouldResumeSession(options: options))
+        @unknown default:
+            return nil
+        }
+    }
+
+    /// Handle audio session interruptions (phone calls, Siri, other apps)
+    private nonisolated func handleInterruption(_ notification: Notification) {
+        // Decoded here (not inside the Task) because `userInfo` ([AnyHashable: Any])
+        // is not Sendable and can't be captured across the actor-isolation boundary.
+        guard let phase = AudioService.interruptionPhase(from: notification) else {
             return
         }
-        // Extracted here (not inside the Task) because `userInfo` ([AnyHashable: Any])
-        // is not Sendable and can't be captured across the actor-isolation boundary.
-        let optionsRawValue = (userInfo[AVAudioSessionInterruptionOptionKey] as? UInt) ?? 0
 
         Task { @MainActor in
-            switch type {
+            switch phase {
             case .began:
                 // Interruption started - stop any active operations to prevent corruption.
                 // #67 Part A: route to the correct teardown. The streaming PCM path holds an
@@ -494,13 +538,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                     await self.stopPlayback()
                 }
                 Logger.audio.warning("⚠️ Audio session interrupted")
-            case .ended:
+            case let .ended(shouldResume):
                 // Interruption ended (e.g. a phone call hung up). If the system says
                 // it's safe to resume, reactivate the session now — otherwise a mic
                 // tap on the same question runs against a session iOS deactivated and
                 // fails with "Recording failed" until a TTS replay reactivates it (#100.3).
-                let options = AVAudioSession.InterruptionOptions(rawValue: optionsRawValue)
-                if AudioService.shouldResumeSession(options: options) {
+                if shouldResume {
                     do {
                         try AVAudioSession.sharedInstance().setActive(true)
                         Logger.audio.info("✅ Audio session interruption ended, reactivated (.shouldResume)")
@@ -514,8 +557,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 } else {
                     Logger.audio.info("✅ Audio session interruption ended (no resume option)")
                 }
-            @unknown default:
-                break
             }
         }
     }

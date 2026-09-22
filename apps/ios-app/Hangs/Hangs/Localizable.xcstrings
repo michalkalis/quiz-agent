@@ -4566,6 +4566,29 @@
         }
       }
     },
+    "Only %lld free questions left this month (you asked for %lld)." : {
+      "comment" : "Alert message: how many free questions remain this month vs how many were requested (#180 track C)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zdarma do konce měsíce: %1$lld. Požadovaný počet: %2$lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only %1$lld free questions left this month (you asked for %2$lld)."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zadarmo do konca mesiaca: %1$lld. Požadovaný počet: %2$lld."
+          }
+        }
+      }
+    },
     "Only %lld new questions left for you in %@ (you asked for %lld)." : {
       "comment" : "Alert message: how many unseen questions remain in the chosen category vs how many were requested",
       "localizations" : {

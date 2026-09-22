@@ -15,9 +15,13 @@
 //      the next month at 23:xxZ on the last day), and picks the new allowance
 //      up from the server mirror on foreground — no restart.
 //
-//  Scenario (a) — the wall hit MID-quiz, then a purchase, then the SAME quiz
-//  continues — is a product change (today the wall ends the session on both
-//  sides) and lands separately.
+//  (a) the free quota bounds the set BEFORE the quiz starts (founder
+//      2026-09-21): 5 free questions left and a quiz set to 10 is offered as a
+//      quiz of 5 with a heads-up, through the same pre-flight the corpus
+//      shortfall uses (#174), so the quota wall is never hit mid-quiz. Zero
+//      left is not a shorter set — the start runs into the 429 paywall, which
+//      carries the real reset time. Continuing the SAME quiz after a purchase
+//      at the wall is a post-launch product change.
 //
 //  Harness mirrors `PurchaseEdgeCaseScenarioTests` (track B): `AppState`'s
 //  wiring over the protocol mocks, driven on the injected clock, asserting
@@ -129,6 +133,55 @@ struct QuotaPackScenarioTests {
         #expect(loop.vm.showPaywall == false, "no paywall — the pack is not free content")
         #expect(loop.store.isPurchased == false, "no subscription was needed")
         #expect(loop.vm.usageInfo?.remaining == 0, "the free quota stays spent; the pack neither needs nor restores it")
+    }
+
+    // MARK: - (a) the free quota bounds the set before the start
+
+    @Test("(a) 5 free questions left and a quiz set to 10: the start stops and offers a quiz of 5, then plays exactly 5")
+    func quotaShortfallOffersTheShorterSet() async throws {
+        let loop = await Loop(usage: makeUsage(remaining: 5))
+        loop.network.stubbedAvailability = QuestionAvailability(available: 5, requested: 10, sufficient: false, limitedBy: .quota)
+
+        await loop.vm.startNewQuiz(maxQuestions: 10)
+
+        #expect(loop.vm.quizState == .idle, "a set that would die on the wall at question 6 must not start")
+        #expect(loop.network.createSessionCallCount == 0)
+        #expect(loop.vm.showPaywall == false, "5 left is a shorter set, not a wall")
+        let shortfall = try #require(loop.vm.questionShortfall)
+        #expect(shortfall.reason == .quota, "the alert must say 'free questions left', and must not offer a history reset")
+        #expect(shortfall.available == 5)
+        #expect(shortfall.requested == 10)
+        #expect(shortfall.canStartShorter == true)
+
+        await loop.vm.startWithAvailableQuestions(shortfall)?.value
+
+        #expect(loop.network.capturedMaxQuestions == 5, "the session is exactly the free allowance — told 5, gets 5")
+        #expect(loop.vm.quizState == .askingQuestion)
+        #expect(loop.vm.questionShortfall == nil)
+        #expect(loop.store.isPurchased == false, "no purchase was needed for the shorter set")
+    }
+
+    @Test("(a) zero free questions left is not a shorter set: no alert, the start runs into the paywall with the real reset time")
+    func exhaustedQuotaGoesStraightToThePaywall() async {
+        let loop = await Loop(usage: makeUsage(remaining: 0))
+        loop.network.stubbedAvailability = QuestionAvailability(available: 0, requested: 10, sufficient: false, limitedBy: .quota)
+        loop.wallFreeStarts()
+
+        await loop.vm.startNewQuiz(maxQuestions: 10)
+
+        #expect(loop.vm.questionShortfall == nil, "a 'Start with 0 questions' alert would be a dead end")
+        #expect(loop.vm.showPaywall == true, "the quota 429 routes to the paywall as before")
+        #expect(loop.vm.quotaLimitError?.resetsAt == novemberFirst, "…carrying the server's reset instant for the countdown")
+        #expect(loop.vm.quizState == .idle)
+    }
+
+    @Test("(a) an older server without the limiter field still reads as a corpus shortfall")
+    func missingLimiterDecodesAsCorpus() throws {
+        let json = Data(#"{"available": 3, "requested": 10, "sufficient": false}"#.utf8)
+        let decoded = try JSONDecoder().decode(QuestionAvailability.self, from: json)
+        #expect(decoded.limitedBy == nil)
+        let quota = Data(#"{"available": 5, "requested": 10, "sufficient": false, "limited_by": "quota"}"#.utf8)
+        #expect(try JSONDecoder().decode(QuestionAvailability.self, from: quota).limitedBy == .quota)
     }
 
     // MARK: - (c) the monthly reset is the server's UTC instant

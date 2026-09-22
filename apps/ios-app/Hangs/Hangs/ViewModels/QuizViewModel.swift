@@ -1196,13 +1196,22 @@ final class QuizViewModel: ObservableObject {
                 excludedQuestionIds: persistenceStore.getExclusionList()
             )
             guard !availability.sufficient else { return nil }
-            Logger.quiz.info("🎯 Corpus short: \(availability.available, privacy: .public) unseen questions for \(requestedCount, privacy: .public) requested")
+            let reason = availability.limitedBy ?? .corpus
+            // #180 track C: an exhausted quota is not a shorter set. Let the
+            // start run into the server's quota 429 — that path carries the
+            // real `resets_at` into the paywall; an alert here would not.
+            if reason == .quota, availability.available == 0 {
+                Logger.quiz.info("🎯 Quota exhausted before start — deferring to the 429 paywall path")
+                return nil
+            }
+            Logger.quiz.info("🎯 \(reason == .quota ? "Quota" : "Corpus", privacy: .public) short: \(availability.available, privacy: .public) questions for \(requestedCount, privacy: .public) requested")
             return QuestionShortfall(
                 available: availability.available,
                 requested: requestedCount,
                 categoryName: settings.categoryDisplayName(),
                 difficulty: requestedDifficulty,
-                language: requestedLanguage
+                language: requestedLanguage,
+                reason: reason
             )
         } catch {
             Logger.quiz.warning("⚠️ Availability probe failed, starting anyway: \(error, privacy: .public)")

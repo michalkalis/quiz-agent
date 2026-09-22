@@ -2,7 +2,7 @@
 
 import logging
 
-from typing import Optional, List, Any
+from typing import Literal, Optional, List, Any
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date
 from fastapi import Depends, Request
@@ -332,6 +332,13 @@ class QuestionAvailabilityResponse(BaseModel):
         "label the alert without re-deriving it"
     )
     sufficient: bool = Field(description="available >= requested")
+    limited_by: Optional[Literal["corpus", "quota"]] = Field(
+        default=None,
+        description="When not sufficient: what bounds `available` — the unseen "
+        "corpus, or the caller's remaining free questions + pack credits "
+        "(#180 track C: a free user is offered the shorter set up front "
+        "instead of hitting the quota wall mid-quiz). None when sufficient.",
+    )
 
 
 class RefreshRequest(BaseModel):

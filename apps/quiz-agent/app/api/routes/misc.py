@@ -4,6 +4,7 @@ import asyncio
 import os
 import logging
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
 
@@ -149,7 +150,8 @@ async def get_question_availability(
     request: Request,
     body: QuestionAvailabilityRequest,
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
-    _subject: AuthSubject = Depends(require_auth_or_grace),
+    usage_tracker: Optional[UsageTracker] = Depends(get_usage_tracker),
+    subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """How many unseen questions this configuration still has (#174 finding 1).
 
@@ -183,10 +185,28 @@ async def get_question_availability(
     available = await question_retriever.count_available(
         probe, client_excluded_ids=body.excluded_question_ids
     )
+    limited_by = None
+    if available < body.requested_count:
+        limited_by = "corpus"
+
+    # #180 track C (a): the free quota bounds the set the same way the corpus
+    # does. A free user with 5 questions left who asks for 10 is offered 5 up
+    # front (founder 2026-09-21) instead of hitting the wall mid-quiz. Entitled
+    # subscribers are unbounded; pack credits extend the free count because
+    # ``record_question`` spends the free allowance first, then credits.
+    # Custom packs never reach this probe (the client skips it for ``pack_id``).
+    if usage_tracker is not None and subject.subject_id:
+        usage = await usage_tracker.get_usage(subject.subject_id)
+        if usage["questions_limit"] is not None:
+            quota = usage["remaining"] + usage["credit_balance"]
+            if quota <= available and quota < body.requested_count:
+                available, limited_by = quota, "quota"
+
     return QuestionAvailabilityResponse(
         available=available,
         requested=body.requested_count,
         sufficient=available >= body.requested_count,
+        limited_by=limited_by,
     )
 
 

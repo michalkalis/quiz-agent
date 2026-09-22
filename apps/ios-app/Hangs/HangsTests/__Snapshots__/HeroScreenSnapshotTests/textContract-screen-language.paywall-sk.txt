@@ -1,0 +1,30 @@
+# texts
+trubbo.
+BEZ LIMITU
+You've used all 30 free questions this month.
+Free questions reset in 
+Mesačne
+€4.99 / mesiac
+alebo doplň bez predplatného
+Balík 100 otázok
+Jednorazový nákup · nikdy nevyprší
+€2.99
+Predplať — €4.99 / mesiac
+Obnov nákupy
+Obnovuje sa automaticky, kým ho nezrušíš. Zrušiť môžeš kedykoľvek v Nastaveniach.
+Zásady ochrany súkromia
+·
+Podmienky používania
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall.countdownPill
+paywall-plan-monthly
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.legal
+paywall.privacyPolicy
+paywall.termsOfUse

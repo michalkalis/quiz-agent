@@ -16,6 +16,7 @@
 		C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */; };
 		1A2B3C4D5E6F708192A3B4C5 /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3C4D5E6F708192A3B4C5D6 /* Clocks */; };
 		3C4D5E6F708192A3B4C5D6E7 /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = 4D5E6F708192A3B4C5D6E7F8 /* Clocks */; };
+		9B0C1D2E3F40516273849506 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 8A9B0C1D2E3F405162738495 /* SnapshotTesting */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +108,7 @@
 				A7B8C9D0E1F2A3B4C5D6E7F8 /* ConcurrencyExtras in Frameworks */,
 				C9D0E1F2A3B4C5D6E7F8A9B0 /* ViewInspector in Frameworks */,
 				3C4D5E6F708192A3B4C5D6E7 /* Clocks in Frameworks */,
+				9B0C1D2E3F40516273849506 /* SnapshotTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,6 +216,7 @@
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* ConcurrencyExtras */,
 				F6A7B8C9D0E1F2A3B4C5D6E7 /* ViewInspector */,
 				4D5E6F708192A3B4C5D6E7F8 /* Clocks */,
+				8A9B0C1D2E3F405162738495 /* SnapshotTesting */,
 			);
 			productName = HangsTests;
 			productReference = 5004B4A72EF874820068C8D1 /* HangsTests.xctest */;
@@ -280,6 +283,7 @@
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 				CC33DD44EE55FF6600AA11BB /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */,
+				7F8A9B0C1D2E3F4051627384 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5004B49B2EF874800068C8D1 /* Products */;
@@ -1094,6 +1098,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7F8A9B0C1D2E3F4051627384 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.18.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1126,6 +1138,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5E6F708192A3B4C5D6E7F8A9 /* XCRemoteSwiftPackageReference "swift-clocks" */;
 			productName = Clocks;
+		};
+		8A9B0C1D2E3F405162738495 /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7F8A9B0C1D2E3F4051627384 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

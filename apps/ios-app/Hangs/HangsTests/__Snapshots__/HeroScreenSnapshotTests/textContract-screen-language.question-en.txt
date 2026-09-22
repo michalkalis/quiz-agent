@@ -1,0 +1,20 @@
+# texts
+adults
+1/10
+What is the capital of France?
+Reading the question
+Start
+Skip
+askingQuestion
+# identifiers
+question.progress
+question.category
+question.counter
+question.replay
+question.text
+question.replayGlyph
+listen-bar
+question.record
+question.textInputToggle
+question.skip
+question.state

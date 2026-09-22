@@ -920,6 +920,22 @@
         }
       }
     },
+    "Apple echo cancellation, noise suppression and gain control on the microphone" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potlačení ozvěny, šumu a vyrovnání hlasitosti mikrofonu od Apple"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potlačenie ozveny, šumu a vyrovnanie hlasitosti mikrofónu od Apple"
+          }
+        }
+      }
+    },
     "Are you sure you want to end the quiz? Your progress will be saved." : {
       "comment" : "Confirmation dialog message for ending a quiz.",
       "extractionState" : "stale",
@@ -2063,6 +2079,22 @@
         }
       }
     },
+    "Delete recordings" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smazat nahrávky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmazať nahrávky"
+          }
+        }
+      }
+    },
     "Delivered" : {
       "comment" : "Custom-pack order status: pack generated and playable",
       "localizations" : {
@@ -2248,6 +2280,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uprav odpoveď"
+          }
+        }
+      }
+    },
+    "ElevenLabs Realtime with server-side end-of-speech instead of on-device silence detection and batch upload" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ElevenLabs Realtime s ukončením řeči na serveru místo detekce ticha v telefonu a odeslání nahrávky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ElevenLabs Realtime s ukončením reči na serveri namiesto detekcie ticha v telefóne a odoslania nahrávky"
           }
         }
       }
@@ -2508,6 +2556,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exportuj moje dáta"
+          }
+        }
+      }
+    },
+    "Export recordings" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportovat nahrávky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportovať nahrávky"
           }
         }
       }
@@ -3472,6 +3536,22 @@
         }
       }
     },
+    "Keeps each spoken answer on this device for the recognition comparison" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každou mluvenou odpověď uloží v tomto telefonu pro porovnání rozpoznávání"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každú hovorenú odpoveď uloží v tomto telefóne na porovnanie rozpoznávania"
+          }
+        }
+      }
+    },
     "LISTENING — SAY A–D" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3915,6 +3995,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stredná"
+          }
+        }
+      }
+    },
+    "Mic voice processing" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zpracování hlasu z mikrofonu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spracovanie hlasu z mikrofónu"
           }
         }
       }
@@ -5456,6 +5552,22 @@
         }
       }
     },
+    "Realtime transcription" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přepis v reálném čase"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepis v reálnom čase"
+          }
+        }
+      }
+    },
     "Recording failed" : {
       "comment" : "Audio error: recording could not be completed\nError title: audio recording failed (no specific error)",
       "localizations" : {
@@ -6047,6 +6159,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ulož"
+          }
+        }
+      }
+    },
+    "Save answer recordings" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukládat nahrávky odpovědí"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukladať nahrávky odpovedí"
           }
         }
       }
@@ -9595,6 +9723,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "hlas"
+          }
+        }
+      }
+    },
+    "voice diagnostics" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hlasová diagnostika"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hlasová diagnostika"
           }
         }
       }

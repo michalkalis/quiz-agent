@@ -858,6 +858,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // probes above) after the format has settled.
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
+        // #184 track A: the streaming answer engine gets the SAME voice processing
+        // as the command listener (both or neither — see VoiceProcessingPolicy),
+        // armed before the format is read because enabling it changes the format.
+        let voiceProcessing = VoiceProcessingPolicy.arm(inputNode)
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
         guard Self.isValidHardwareFormat(sampleRate: hardwareFormat.sampleRate, channelCount: hardwareFormat.channelCount) else {
             // Rare race: the route flipped invalid again right after the wait
@@ -936,6 +940,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         crumb.message = "Streaming PCM recording started"
         crumb.data = ["format": "pcm_s16le", "sample_rate": 16000]
         SentryBreadcrumb.add(crumb)
+        // #184 track A: queryable (structured) — the car test needs to slice
+        // recordings by input route and voice-processing state, which the
+        // breadcrumbs above cannot answer.
+        SentryLog.info("answer recording started", category: .audio, attributes: [
+            "path": "realtime",
+            "inputPort": VoiceProcessingPolicy.currentInputPort(),
+            "inputHz": hardwareFormat.sampleRate,
+            "voiceProcessing": voiceProcessing,
+        ])
     }
 
     /// Stop streaming PCM recording. Also invalidates any in-flight
@@ -958,6 +971,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Streaming PCM recording stopped"
         crumb.data = ["duration_ms": Int(duration * 1000)]
+        SentryLog.info("answer recording stopped", category: .audio, attributes: [
+            "path": "realtime",
+            "durationMs": Int(duration * 1000),
+        ])
         SentryBreadcrumb.add(crumb)
     }
 

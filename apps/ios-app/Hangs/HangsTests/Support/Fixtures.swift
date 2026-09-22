@@ -42,6 +42,18 @@ func pumpUntil(
     Issue.record(comment ?? "pumpUntil exhausted \(turns) scheduler turns", sourceLocation: sourceLocation)
 }
 
+/// #184: where a batch-path test used to assert `mockAudio.isRecording`, the
+/// observable is now the answer capture armed on the (mock) shared mic engine.
+extension QuizViewModel {
+    var isAnswerCaptureActive: Bool {
+        (silenceDetectionService as? MockSilenceDetectionService)?.isAnswerCaptureActive ?? false
+    }
+
+    var mockSilence: MockSilenceDetectionService? {
+        silenceDetectionService as? MockSilenceDetectionService
+    }
+}
+
 // MARK: - Fixtures
 
 @MainActor
@@ -197,6 +209,7 @@ enum Fixtures {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: clock
         )
     }
@@ -217,6 +230,7 @@ enum Fixtures {
             networkService: mockNetwork,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: clock
         )
         return (viewModel, mockNetwork)
@@ -236,6 +250,7 @@ enum Fixtures {
             networkService: mockNetwork,
             audioService: mockAudio,
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: clock
         )
         return (viewModel, mockAudio)
@@ -251,6 +266,7 @@ enum Fixtures {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: mockStore,
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: clock
         )
         return (viewModel, mockStore)
@@ -263,6 +279,7 @@ enum Fixtures {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: clock
         )
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")

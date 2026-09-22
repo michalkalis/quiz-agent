@@ -136,14 +136,11 @@ extension RecordingCoordinator {
         // driver always gets the same window to correct a mishearing before it
         // is graded. Confirm routes through `resubmitAnswer`, whose text input
         // the backend value-matches to the option.
-        transcribedAnswer = matchedValue ?? text
-        noAnswerCaptured = false
-        showAnswerConfirmation = true
-        startAutoConfirmIfEnabled()
+        // #184 track D: the sheet opens and the recognised answer (the matched
+        // MCQ option's text, or the transcript) is read back; auto-confirm and
+        // the #77 "ok"/"again" command window arm once the read-back is done.
+        presentVoiceTranscript(matchedValue ?? text)
         // Stay in .recording → switch to a neutral state for the modal
         transition(to: .processing)
-        // #77 (77.5): confirmation window — re-arm the command listener for
-        // "ok"/"again" (Session 4 routes them) on top of the auto-confirm.
-        refreshCommandWindow()
     }
 }

@@ -34,6 +34,7 @@ struct MCQSubmitInterruptTests {
             networkService: Fixtures.makeFullMockNetwork(configure: configure),
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()

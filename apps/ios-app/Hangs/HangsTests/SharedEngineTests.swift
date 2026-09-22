@@ -124,10 +124,12 @@ struct SharedEngineTests {
             await vm.audioDeviceState.startSilenceDetectionListening()
             await vm.recordingCoordinator.startRecording()
 
-            // Batch uses AVAudioRecorder — the streaming engine is never created,
-            // so there is no two-engine condition even though VAD may still run.
+            // #184: batch captures off the LISTENER's engine — the streaming engine
+            // is never created and there is no AVAudioRecorder either: one mic
+            // client, full stop.
             #expect(audio.audioEngineActive == false)
-            #expect(audio.isRecording == true)
+            #expect(audio.isRecording == false)
+            #expect(silence.isAnswerCaptureActive == true)
         }
     }
 }

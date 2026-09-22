@@ -92,7 +92,9 @@ extension RecordingCoordinator {
         // which is the guarantee #131 Track B's arming used to carry.
         armRecordingDeadAirCap(deadAirCap)
 
-        if Config.useElevenLabsSTT, sttService != nil {
+        // #184: realtime is a runtime A/B choice now (VoicePipelineFlags); the
+        // default answer path is local VAD → WAV → backend batch transcription.
+        if Config.useElevenLabsSTT, sttService != nil, realtimeSTTEnabled() {
             await startStreamingRecording()
         } else {
             await startBatchRecording()
@@ -117,33 +119,78 @@ extension RecordingCoordinator {
         if speechDetectedDuringAutoRecord { onSpeechStarted() }
     }
 
-    /// Start batch M4A recording (original Whisper path)
+    /// Start the batch answer recording (#184 track B).
+    ///
+    /// The shared mic engine (SilenceDetectionService) is the recorder: its tap
+    /// tees the post-voice-processing PCM the on-device VAD already sees into
+    /// `answerCapture`, the VAD's silence-after-speech ends the recording for
+    /// EVERY batch recording (auto and manual — parity with the realtime path's
+    /// server VAD), and the WAV goes to the backend for Scribe v2 batch
+    /// transcription. No `AVAudioRecorder` next to the engine any more: that was
+    /// a second mic client that never saw the voice processing (#64/#77 class).
     private func startBatchRecording() async {
+        await audioService.prepareForRecording()
+
+        // The engine is normally already up — the command window armed it after
+        // the question TTS. Voice commands OFF (or a window that never armed)
+        // means nobody did, so this recording starts it and later stops it.
+        if !silenceDetectionService.isListening, !silenceDetectionService.isStartingListening {
+            startedListenerForAnswer = true
+            await silenceDetectionService.startListening()
+        }
+
+        // #174: the dead-air cap armed in `startRecording` (or a teardown) may
+        // have ended this recording while the engine was still coming up — the
+        // state is no longer `.recording`. Arm nothing; release what we own.
+        guard quizState() == .recording else {
+            releaseAnswerEngineIfOwned()
+            Logger.audio.info("🎙️ Recording ended during engine start — no capture armed")
+            return
+        }
+
+        // No engine and none coming up (the recognizer setup failed — the
+        // #77 degrade-to-buttons case): the mic button must still work, so fall
+        // back to the plain recorder rather than refusing to record.
+        guard silenceDetectionService.isListening || silenceDetectionService.isStartingListening else {
+            startedListenerForAnswer = false
+            await startLegacyRecorderFallback()
+            return
+        }
+
+        let sampleRate = Int(silenceDetectionService.answerAudioSampleRate)
+        let capture = answerCapture
+        capture.begin(sampleRate: sampleRate)
+        silenceDetectionService.setAnswerAudioSink { capture.append($0) }
+
+        speechDetectedDuringAutoRecord = false
+        startSilenceDetection(service: silenceDetectionService)
+
+        // The capture is armed and the VAD's `.speechStarted` is the speech
+        // signal, so this path gets the founder's 5 s "time to start speaking".
+        armRecordingWindow(hasSpeechSignal: true)
+
+        SentryLog.info("answer recording started", category: .audio, attributes: [
+            "path": "batch",
+            "inputPort": VoiceProcessingPolicy.currentInputPort(),
+            "inputHz": sampleRate,
+            "voiceProcessing": VoicePipelineFlags.voiceProcessingEnabled,
+        ])
+    }
+
+    /// The pre-#184 recorder (`AVAudioRecorder`, M4A): no voice processing and
+    /// no VAD, so the hidden dead-air cap is what ends it. Fail-loud in the
+    /// telemetry — a device that lands here every time has a broken mic engine.
+    private func startLegacyRecorderFallback() async {
         do {
-            await audioService.prepareForRecording()
             try audioService.startRecording()
-
-            // #174: the dead-air cap armed in `startRecording` (or a teardown)
-            // may have ended this recording while the engine was still coming
-            // up — the state is no longer `.recording`. Close the mic that just
-            // opened instead of arming a window: every timer guards on
-            // `.recording`, so nothing else would ever close it again.
-            guard quizState() == .recording else {
-                _ = try? await audioService.stopRecording()
-                Logger.audio.info("🎙️ Recording ended during engine start — mic closed, no window armed")
-                return
-            }
-
-            if isAutoRecording() {
-                speechDetectedDuringAutoRecord = false
-                startSilenceDetection(service: silenceDetectionService)
-            }
-
-            // The mic is open — only now does a countdown mean anything. Auto-record
-            // subscribed VAD just above, so `.speechStarted` can retire the short
-            // window; without it this path has NO speech signal (batch has no partial
-            // transcripts either) and keeps the dead-air cap as its visible window.
-            armRecordingWindow(hasSpeechSignal: isAutoRecording())
+            usesLegacyRecorder = true
+            SentryLog.warn("answer recording on legacy recorder", category: .audio, attributes: [
+                "reason": "mic_engine_unavailable",
+                "inputPort": VoiceProcessingPolicy.currentInputPort(),
+            ])
+            // No speech signal on this path (no VAD, no partial transcripts):
+            // the dead-air cap is the visible window, as before #173.
+            armRecordingWindow(hasSpeechSignal: false)
         } catch {
             cancelAutoStopRecordingTimer() // mic never opened — drop the window
             setIsAutoRecording(false)
@@ -152,6 +199,26 @@ extension RecordingCoordinator {
             setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
 
             Logger.audio.error("❌ Recording failed to start: \(error, privacy: .public)")
+        }
+    }
+
+    /// Stop the shared mic engine again — only when THIS recording started it.
+    func releaseAnswerEngineIfOwned() {
+        guard startedListenerForAnswer else { return }
+        startedListenerForAnswer = false
+        stopSilenceDetectionListening()
+    }
+
+    /// Drop an in-progress batch capture without submitting — the teardown
+    /// paths (interruption, background, a typed answer superseding the mic).
+    func abandonAnswerCapture() {
+        silenceDetectionService.setAnswerAudioSink(nil)
+        answerCapture.cancel()
+        savedRecordingStamp = nil
+        releaseAnswerEngineIfOwned()
+        if usesLegacyRecorder {
+            usesLegacyRecorder = false
+            Task { [audioService] in _ = try? await audioService.stopRecording() }
         }
     }
 
@@ -310,6 +377,7 @@ extension RecordingCoordinator {
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         cleanupStreamingSTT()
+        abandonAnswerCapture()
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
         transition(to: .askingQuestion)

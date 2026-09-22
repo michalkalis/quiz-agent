@@ -106,6 +106,10 @@ extension SilenceDetectionService {
         audioEngine = engine
 
         let inputNode = engine.inputNode
+        // #184 track A: voice processing (AEC/NS/AGC) BEFORE the format is read
+        // or the tap installed — see VoiceProcessingPolicy for why it is back
+        // after #173 and why it must be on every engine or none.
+        let voiceProcessing = VoiceProcessingPolicy.arm(inputNode)
         var inputFormat = inputNode.outputFormat(forBus: 0)
 
         // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
@@ -148,8 +152,10 @@ extension SilenceDetectionService {
         let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
         inputContinuation = continuation
 
+        answerAudioSampleRate = analyzerFormat.sampleRate
         installInputTap(
-            on: inputNode, format: inputFormat, analyzerFormat: analyzerFormat, continuation: continuation
+            on: inputNode, format: inputFormat, analyzerFormat: analyzerFormat,
+            continuation: continuation, answerSink: answerAudioSink
         )
 
         // Fail loud (#77): a swallowed throw here was the silent death of both
@@ -248,8 +254,9 @@ extension SilenceDetectionService {
             "voice command listener started",
             category: .voice,
             attributes: [
-                "inputPort": AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none",
+                "inputPort": VoiceProcessingPolicy.currentInputPort(),
                 "inputHz": inputFormat.sampleRate,
+                "voiceProcessing": voiceProcessing,
             ]
         )
     }

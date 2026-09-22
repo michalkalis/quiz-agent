@@ -35,7 +35,23 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     }
 
     var isListening = false
+    var isStartingListening = false
     var ttsPlaybackActive = false
+
+    /// #184 track B: the answer tee. `isAnswerCaptureActive` is what the
+    /// recording tests assert where they used to assert `audio.isRecording`.
+    private(set) var answerAudioSink: (@Sendable (Data) -> Void)?
+    var answerAudioSampleRate: Double = 16000
+    var isAnswerCaptureActive: Bool { answerAudioSink != nil }
+
+    func setAnswerAudioSink(_ sink: (@Sendable (Data) -> Void)?) {
+        answerAudioSink = sink
+    }
+
+    /// Push PCM into the active answer capture as the real tap would.
+    func simulateAnswerAudio(_ pcm16: Data) {
+        answerAudioSink?(pcm16)
+    }
     var startListeningCallCount = 0
     var stopListeningCallCount = 0
 

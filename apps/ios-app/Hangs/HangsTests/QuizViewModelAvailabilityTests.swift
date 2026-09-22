@@ -35,7 +35,8 @@ struct QuizViewModelAvailabilityTests {
         let viewModel = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: store
+            persistenceStore: store,
+            silenceDetectionService: MockSilenceDetectionService()
         )
         return (viewModel, network, store)
     }

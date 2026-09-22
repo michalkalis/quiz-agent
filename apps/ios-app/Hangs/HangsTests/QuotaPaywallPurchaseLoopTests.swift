@@ -59,6 +59,7 @@ struct QuotaPaywallPurchaseLoopTests {
             networkService: network,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             isLocallyEntitled: { false }, // RC has nothing cached yet — no pre-paywall resync
             clock: AnyClock(clock)
         )

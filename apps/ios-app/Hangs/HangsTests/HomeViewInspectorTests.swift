@@ -21,7 +21,8 @@ struct HomeViewInspectorTests {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         // Non-zero stats: the labels must be absent even when there IS a streak
         // to show — the row is gone by decision, not by empty data.

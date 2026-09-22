@@ -163,9 +163,14 @@ nonisolated enum Config {
 
     // MARK: - ElevenLabs Streaming STT
 
-    /// Feature flag: use ElevenLabs Scribe v2 Realtime for quiz answers instead of Whisper.
-    /// Provides live word-by-word transcript display while the user speaks.
-    /// On any setup/connection failure, recording falls back to Whisper batch.
+    /// Compile-time availability of the ElevenLabs Scribe v2 Realtime answer
+    /// path (live word-by-word transcript, server-side VAD). Whether a recording
+    /// actually takes it is a RUNTIME choice since #184 —
+    /// `VoicePipelineFlags.realtimeSTTEnabled`, default OFF: the car test showed
+    /// the server VAD (1.5 s) appending trailing words, so answers now go local
+    /// VAD → WAV → backend batch (Scribe v2). The realtime path stays wired for
+    /// the A/B measurement; on any setup/connection failure it too falls back to
+    /// the batch upload.
     static let useElevenLabsSTT: Bool = true
 
     /// ElevenLabs Scribe v2 Realtime model ID

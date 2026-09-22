@@ -77,6 +77,7 @@ private final class Loop {
             networkService: network,
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
             isLocallyEntitled: { store.isPurchased }, // AppState's wiring
             clock: AnyClock(clock)
         )

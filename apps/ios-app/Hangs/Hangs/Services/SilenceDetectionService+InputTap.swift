@@ -20,6 +20,7 @@
 // converter closures are not @Sendable.
 @preconcurrency import AVFoundation
 import Foundation
+import os
 import Speech
 
 extension SilenceDetectionService {
@@ -32,7 +33,8 @@ extension SilenceDetectionService {
         on inputNode: AVAudioInputNode,
         format: AVAudioFormat,
         analyzerFormat: AVAudioFormat,
-        continuation: AsyncStream<AnalyzerInput>.Continuation
+        continuation: AsyncStream<AnalyzerInput>.Continuation,
+        answerSink: OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>
     ) {
         let tapFormat = format
         let tapAnalyzerFormat = analyzerFormat
@@ -68,10 +70,24 @@ extension SilenceDetectionService {
 
                 if error == nil {
                     continuation.yield(AnalyzerInput(buffer: convertedBuffer))
+                    Self.tee(convertedBuffer, into: answerSink)
                 }
             } else {
                 continuation.yield(AnalyzerInput(buffer: buffer))
+                Self.tee(buffer, into: answerSink)
             }
         }
+    }
+
+    /// #184 track B: hand the analyzer-format buffer to the answer capture as
+    /// 16-bit PCM when a recording is in progress. Audio-thread code — one lock
+    /// read, one conversion, no allocation beyond the chunk itself.
+    nonisolated static func tee(
+        _ buffer: AVAudioPCMBuffer,
+        into answerSink: OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>
+    ) {
+        guard let sink = answerSink.withLock({ $0 }) else { return }
+        guard let bytes = PCM16.bytes(from: buffer) else { return }
+        sink(bytes)
     }
 }

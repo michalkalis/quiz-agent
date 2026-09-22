@@ -29,7 +29,8 @@ struct HomeCategoryMultiSelectTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.settings.categories = ["science-nature", "history"]
 
@@ -45,7 +46,8 @@ struct HomeCategoryMultiSelectTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
 
         await vm.startNewQuiz()

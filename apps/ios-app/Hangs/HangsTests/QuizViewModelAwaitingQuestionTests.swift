@@ -54,7 +54,8 @@ struct QuizViewModelAwaitingQuestionTests {
         let viewModel = QuizViewModel(
             networkService: mockNetwork,
             audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore()
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
         )
         viewModel.awaitingQuestionPollIntervalSeconds = 0 // no wall-clock waiting in tests
         viewModel.currentSession = Fixtures.makeActiveSession()

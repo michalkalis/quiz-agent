@@ -23,6 +23,7 @@ extension RecordingCoordinator {
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         setIsAutoRecording(false)
+        let heardSpeech = speechDetectedDuringAutoRecord
         speechDetectedDuringAutoRecord = false
 
         if isStreamingSTT {
@@ -42,8 +43,9 @@ extension RecordingCoordinator {
                 setErrorMessage(String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Inline error when streaming speech-to-text fails; placeholder is the underlying error"))
                 transition(to: .askingQuestion)
             }
-        } else {
-            // Batch path: stop M4A recording and upload
+        } else if usesLegacyRecorder {
+            // The no-engine fallback (see startLegacyRecorderFallback): M4A upload.
+            usesLegacyRecorder = false
             do {
                 let data = try await audioService.stopRecording()
                 await submitVoiceAnswer(audioData: data)
@@ -53,11 +55,54 @@ extension RecordingCoordinator {
 
                 Logger.audio.error("❌ Recording stop failed: \(error, privacy: .public)")
             }
+        } else {
+            // Batch path (#184 track B): stop the tee, wrap the PCM as WAV, upload.
+            silenceDetectionService.setAnswerAudioSink(nil)
+            let capture = answerCapture.finish()
+            releaseAnswerEngineIfOwned()
+
+            SentryLog.info("answer recording stopped", category: .audio, attributes: [
+                "path": "batch",
+                "durationMs": capture.durationMs,
+                "bytes": capture.bytes,
+                "droppedBytes": capture.droppedBytes,
+                "heardSpeech": heardSpeech,
+            ])
+
+            // Under a fifth of a second of audio is dead air or an engine that
+            // never delivered — not a transcription job. #171 Track B funnel.
+            guard capture.bytes >= Self.minimumAnswerBytes(sampleRate: capture.sampleRate) else {
+                Logger.audio.info("🎙️ Batch capture too short (\(capture.bytes, privacy: .public) bytes) — no-answer sheet")
+                handleTranscriptionFailure()
+                return
+            }
+
+            savedRecordingStamp = AnswerRecordingStore.save(
+                wav: capture.wav,
+                sidecar: AnswerRecordingStore.Sidecar(
+                    recordedAt: Date(),
+                    language: currentSession()?.language ?? settings().language,
+                    inputPort: VoiceProcessingPolicy.currentInputPort(),
+                    voiceProcessing: VoicePipelineFlags.voiceProcessingEnabled,
+                    sampleRate: capture.sampleRate,
+                    durationMs: capture.durationMs,
+                    questionId: currentQuestion()?.id
+                )
+            )
+            await submitVoiceAnswer(audioData: capture.wav, fileName: "answer.wav")
         }
     }
 
-    /// Submit a voice answer with timeout and cancellation support
-    func submitVoiceAnswer(audioData: Data) async {
+    /// 0.2 s of 16-bit mono at `sampleRate` — the floor under which a capture is
+    /// treated as "nothing captured" instead of being uploaded.
+    static func minimumAnswerBytes(sampleRate: Int) -> Int {
+        sampleRate * 2 / 5
+    }
+
+    /// Submit a voice answer with timeout and cancellation support.
+    /// `fileName` tells the backend the container: `answer.wav` from the #184
+    /// batch capture, `answer.m4a` for any legacy caller.
+    func submitVoiceAnswer(audioData: Data, fileName: String = "answer.m4a") async {
         guard let sessionId = currentSession()?.id else {
             setError(message: String(localized: "No active session", comment: "Inline error: no quiz session is currently active"), context: .general)
             return
@@ -93,7 +138,7 @@ extension RecordingCoordinator {
                         try await self.networkService.submitVoiceAnswer(
                             sessionId: sessionId,
                             audioData: audioData,
-                            fileName: "answer.m4a",
+                            fileName: fileName,
                             questionId: answeredQuestionId
                         )
                     }
@@ -127,10 +172,13 @@ extension RecordingCoordinator {
                         return
                     }
                     self.pendingResponse = response
-                    self.transcribedAnswer = evaluation.userAnswer
-                    self.noAnswerCaptured = false
-                    self.showAnswerConfirmation = true
-                    self.startAutoConfirmIfEnabled()
+                    if let stamp = self.savedRecordingStamp {
+                        AnswerRecordingStore.attachTranscript(evaluation.userAnswer, provider: nil, to: stamp)
+                        self.savedRecordingStamp = nil
+                    }
+                    // #184 track D: the sheet opens AND the recognised answer is
+                    // read back; auto-confirm + the "ok"/"again" window arm after.
+                    self.presentVoiceTranscript(evaluation.userAnswer)
                 }
 
                 // Don't call handleQuizResponse yet - wait for user confirmation

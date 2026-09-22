@@ -55,6 +55,9 @@ import os
         /// at — a submit carrying the NEXT question's id double-charges quota and
         /// grades an unseen question.
         var capturedTextInputQuestionId: String?
+        /// #184: the container the batch path uploaded (`answer.wav`) and its size.
+        var capturedVoiceAnswerFileName: String?
+        var capturedVoiceAnswerBytes = 0
         var capturedVoiceAnswerQuestionId: String?
         /// When set, `submitTextInput` throws this instead of returning — the
         /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
@@ -204,9 +207,11 @@ import os
             return response
         }
 
-        func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
+        func submitVoiceAnswer(sessionId _: String, audioData: Data, fileName: String, questionId: String?) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
             capturedVoiceAnswerQuestionId = questionId
+            capturedVoiceAnswerFileName = fileName
+            capturedVoiceAnswerBytes = audioData.count
             await submitVoiceAnswerGate?()
             if submitVoiceAnswerFailuresBeforeSuccess > 0 {
                 submitVoiceAnswerFailuresBeforeSuccess -= 1

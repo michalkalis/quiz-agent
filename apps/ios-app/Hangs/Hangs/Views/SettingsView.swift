@@ -415,6 +415,7 @@ struct SettingsView: View {
                     .accessibilityIdentifier("\(idPrefix).\(option)")
             }
         } label: {
+            // a11y-id: menu label, not tappable (allowsHitTesting false); the caller names the menu
             HangsConfigRow(
                 label: label,
                 value: display(selection.wrappedValue),

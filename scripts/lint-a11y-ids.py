@@ -36,7 +36,7 @@ SKIP_DIRS = {"Debug"}
 # to the call site (their definitions carry `// a11y-id: call-site`).
 CUSTOM_INTERACTIVE = (
     "HangsPrimaryButton|HangsSecondaryButton|HangsGhostButton|HangsNavChip|"
-    "HangsSourceLink|HangsToggleRow"
+    "HangsSourceLink|HangsToggleRow|HangsConfigRow"
 )
 INTERACTIVE = re.compile(
     r"(?<![\w.])(Button|NavigationLink|Toggle|Picker|TextField|SecureField|"
@@ -219,8 +219,11 @@ def lint_app_file(path: Path, rel: Path) -> list[str]:
     text = strip_comments(src)
     skip: list[tuple[int, int]] = debug_regions(text)
     for m in ALERT_LIKE.finditer(text):
-        _, end = expression_extent(text, m.start())
-        skip.append((m.start(), end))
+        # Only the alert's own arguments and trailing closures are exempt — the
+        # modifiers that follow it on the same chain (.sheet, .toolbar, …) are
+        # ordinary content and stay linted.
+        alert_end, _ = expression_extent(text, m.start())
+        skip.append((m.start(), alert_end))
     # Expressions whose own modifier chain carries an identifier: SwiftUI
     # applies it to the subtree, so a control inside their body — or a gesture
     # later in the same chain — is covered.

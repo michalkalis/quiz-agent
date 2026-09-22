@@ -74,7 +74,7 @@ fi
     echo "| Test | Result | Seconds |"
     echo "|---|---|---|"
     grep -E "^Test Case .* (passed|failed)" "$LOG" \
-        | sed -E "s/^Test Case '-\[HangsUITests\.([A-Za-z]+) ([A-Za-z0-9_]+)\]' (passed|failed) \(([0-9.]+) seconds\)\./| \1.\2 | \3 | \4 |/" \
+        | sed -E "s/^Test Case '-\[HangsUITests\.([A-Za-z0-9]+) ([A-Za-z0-9_]+)\]' (passed|failed) \(([0-9.]+) seconds\)\./| \1.\2 | \3 | \4 |/" \
         | sort -u
     if [ "$FAILED" -gt 0 ] || [ "$XC_EXIT" -ne 0 ]; then
         echo

@@ -18,9 +18,9 @@ the swap appears to do nothing.
 """
 
 import asyncio
+import logging
 
 import pytest
-
 from app.tts.cache import TTSCache
 from app.tts.service import TTSService
 from app.tts.voices import ELEVENLABS_VOICES
@@ -151,6 +151,61 @@ class TestFailover:
 
         assert service.cache.get("Question one.", "nova") == b"backup-audio"
         assert service.cache.get("Question one.", "george-id") is None
+
+
+class TestFailoverIsObservable:
+    """#180 track G: each failover level must leave a trace, never fail silently.
+
+    The cited failure mode (and the #178 TestFlight pattern): ElevenLabs quota
+    gone, the app fell back or went quiet, and nobody could tell from the logs
+    which vendor actually spoke. Behaviour alone is not enough — the fallback
+    has to be visible to whoever triages the next "no audio" report.
+    """
+
+    async def test_level_1_primary_ok_raises_no_alarm(self, caplog):
+        """A healthy primary must not spam a fallback warning on every question."""
+        primary = FakeProvider("elevenlabs", "george-id", audio=b"george-audio")
+        backup = FakeProvider("openai", "nova")
+        service = TTSService(provider=primary, fallback_provider=backup)
+
+        with caplog.at_level(logging.WARNING, logger="app.tts.service"):
+            await service.synthesize("Question one.")
+
+        assert "falling back" not in caplog.text
+
+    async def test_level_2_fallback_is_logged_with_both_vendor_names(self, caplog):
+        """The warning must name who failed and who spoke, or triage starts blind."""
+        primary = FakeProvider("elevenlabs", "george-id", fails=True)
+        backup = FakeProvider("openai", "nova", audio=b"backup-audio")
+        service = TTSService(provider=primary, fallback_provider=backup)
+
+        with caplog.at_level(logging.WARNING, logger="app.tts.service"):
+            assert await service.synthesize("Question one.") == b"backup-audio"
+
+        fallback_records = [
+            r for r in caplog.records if "falling back" in r.getMessage()
+        ]
+        assert len(fallback_records) == 1
+        record = fallback_records[0]
+        assert record.levelno == logging.WARNING
+        assert "elevenlabs" in record.getMessage() and "openai" in record.getMessage()
+        assert "quota exhausted" in record.getMessage()
+
+    async def test_level_3_total_failure_keeps_the_fallback_trace(self, caplog):
+        """When both vendors die the caller gets an error AND the log still shows
+        the fallback was attempted — the two facts together tell the whole story."""
+        primary = FakeProvider("elevenlabs", "george-id", fails=True)
+        backup = FakeProvider("openai", "nova", fails=True)
+        service = TTSService(provider=primary, fallback_provider=backup)
+
+        with (
+            caplog.at_level(logging.WARNING, logger="app.tts.service"),
+            pytest.raises(RuntimeError, match="fallback openai"),
+        ):
+            await service.synthesize("Question one.")
+
+        assert "falling back to openai" in caplog.text
+        assert backup.calls == [("Question one.", "nova")]
 
 
 class TestStaticFeedbackNamespace:

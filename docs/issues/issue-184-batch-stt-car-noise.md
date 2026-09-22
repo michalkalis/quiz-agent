@@ -1,6 +1,6 @@
 # #184 — Odpovede: prepis po nahratí + lokálna detekcia ticha + prečítanie odpovede (hluk v aute)
 
-**Triage:** bug · ready-for-agent (founder odpovedal 09-21, viď nižšie; poradie trackov A → B → C → D → E)
+**Triage:** bug · ready-for-human (kód všetkých trackov A–E hotový 2026-09-22, PR otvorený; open = merge, backend deploy, TF build na požiadanie, test v aute + 30–50 vzoriek)
 
 ## Smer
 
@@ -29,6 +29,24 @@ Poradie: A → B → C (merateľný prírastok: nahrávky z auta pred/po) → D 
 - **Vzorky z auta:** ÁNO, appka môže v debug/TF builde dočasne ukladať nahrávky odpovedí (lokálne, export cez Files), cieľ 30–50 vzoriek → meranie kombinácií (voice processing on/off, VAD parametre, Scribe batch vs Azure vs dnešný realtime). Nahrávky nejdú do repa.
 - **Čítanie odpovede:** len pri hlasovej odpovedi, nie pri MCQ tapnutí.
 - **Triage:** needs-info → **ready-for-agent** po tomto bloku; produktové otázky zodpovedané.
+
+## Stav 2026-09-22 — implementované (všetky tracky, jeden PR)
+
+**Rozhodnutia pri implementácii (odchýlky od plánu, s dôvodom):**
+- **Jeden mikrofónový engine.** Batch nahrávka odpovede už nebeží cez `AVAudioRecorder` popri engine poslucháča (dva klienti mikrofónu, nahrávka bez voice processing). Tap engine poslucháča (`SilenceDetectionService`) odbočuje tie isté 16-bit PCM vzorky, ktoré vidí VAD, do `AnswerCapture` → WAV → `/voice/submit`. Koniec reči určuje existujúci on-device `SpeechDetector` (nie nový Silero/FluidAudio — nová závislosť + model sťahovaný z HuggingFace za jazdy; ostáva ako záloha, ak SpeechDetector v aute nestačí). Keď engine nejde spustiť (zlyhanie rozpoznávača), nahráva starý `AVAudioRecorder` (bez VP, bez VAD) — tlačidlo mikrofónu funguje vždy.
+- **Voice processing** (AEC/NS/AGC) späť po #173 — na OBOCH engine (poslucháč aj realtime), s najmenším duckingom (`.min`), pod runtime prepínačom. Režim session ostáva `.spokenAudio`: `.voiceChat` by zapol Bluetooth HFP a vrátil 8 kHz mikrofón auta (#104). Či AEC skutočne bežal, je v Sentry logu každej nahrávky (`voiceProcessing`, `inputPort`, `inputHz`).
+- **`setPreferredInput(builtInMic)` NEUROBENÉ:** Media Mode už používa vstavaný mikrofón (#104), Call Mode je vedomá voľba BT mikrofónu (AirPods). Vynútiť telefón by Call Mode zrušilo. Trasa vstupu sa loguje → rozhodnúť po vzorkách z auta.
+- **VAD parametre:** hangover 1,5 → 0,8 s, min. reč 0,3 → 0,25 s (`VADTuning`); rovnaké pre auto aj manuálne nahrávanie (parita s realtime server VAD).
+- **Realtime cesta** ostáva za runtime prepínačom (default OFF), rovnako voice processing (default ON) a ukladanie vzoriek (default OFF) — Settings › „voice diagnostics" (len TF/debug), bez nového buildu na kombináciu.
+- **Prečítanie odpovede** len z hlasovej cesty (streaming commit aj batch upload); MCQ ťuk a písaná odpoveď nie. Počas čítania je okno povelov zavreté; 5 s auto-potvrdenie a okno „ok/znova" sa spustia až po dohraní (mute = hneď).
+- **Povely:** Jaro-Winkler len pre FINÁLNE prepisy a len pre skrátený začiatok slova (token kratší než variant so spoločným 2-znakovým prefixom) — plný `max(Lev, JW)` lámal 3 field-tuned guardy (#119 „skib"→skip, „nekst"→next; #175 české „no"→znovu). n-best (`.alternativeTranscriptions`) len na DictationTranscriber (sk/cs), finály. Earcony cez `AVAudioPlayer` na hlavnej trase (syntetizované tóny), systémový zvuk len fallback.
+- **Backend:** Scribe v2 batch primár (`stt_provider=elevenlabs`), fallback `gpt-transcribe` (`stt_fallback_model`; `whisper-1` = plný rollback). Keyterms = texty MCQ možností (preložené, ak sú); otvorené otázky bez keyterms (správna odpoveď nesmie ovplyvniť rozpoznávanie). Koncové slová s `logprob < -1.0` odrezané (`stt_trailing_logprob_cutoff`, kalibrovať na vzorkách). Provider v INFO logu každého prepisu.
+
+**Meranie:** `scripts/stt_compare.py <folder>` — WAV + sidecar JSON z exportu appky (+ ručný `<stamp>.ref.txt`) → WER Scribe / gpt-transcribe / prod prepis. Azure MAI-Transcribe-2 nezapojený (bez kľúča), realtime sa z súboru neprehrá (stĺpec `prod` = to, čo počul backend pri nahrávke).
+
+**Neoverené (potrebuje zariadenie / auto):** skutočný stav AEC pod `.spokenAudio`; skok hlasitosti pri zapnutí VP (#173) — obe engine teraz rovnako; kalibrácia `logprob` cutoffu; či `gpt-transcribe` prijme `language`+`prompt` na multipart (SDK signatúra áno, živý hovor nie); `.alternativeTranscriptions` na sk-SK.
+
+**Ďalší krok:** merge PR → `fly deploy` quiz-agent → TF build na požiadanie → founder: zapnúť „Save answer recordings", 30–50 odpovedí v aute, export, `stt_compare.py`.
 
 ## Done-state
 

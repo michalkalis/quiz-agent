@@ -353,7 +353,7 @@ struct HomeView: View {
                         Text(option.display)
                     }
                 }
-                .accessibilityIdentifier("home.category.\(option.id)")
+                .accessibilityIdentifier("home.category.\(option.id ?? "all")")
             }
         } label: {
             configRowVisual(

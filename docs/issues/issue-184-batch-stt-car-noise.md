@@ -48,6 +48,8 @@ Poradie: A → B → C (merateľný prírastok: nahrávky z auta pred/po) → D 
 
 **Ďalší krok:** ~~merge PR → `fly deploy` quiz-agent~~ (hotové 2026-09-22, v117) → TF build na požiadanie → founder: zapnúť „Save answer recordings", 30–50 odpovedí v aute, export, `stt_compare.py`.
 
+**RS sada po merge (2026-09-22, nájdené pri #180 track E):** default batch zhodil 9 zmrazených scenárov (RS-01/03/05/06/07/08/09/16/17): `--ui-test` mock STT je streamingový, dávková cesta jeho eventy nečíta; CI na main oba behy zrušil (concurrency), preto červená nebola vidieť. Oprava (samostatný PR): pod `--ui-test` ostáva odpoveďová cesta realtime (`AppState`, len DEBUG). **Otvorené:** dávková cesta (VAD → WAV → `/voice/submit`) nemá UI-test pokrytie — doplniť mock pre batch prepis alebo VAD event injection, aby RS scenáre chodili po produkčnej ceste.
+
 ## Done-state
 
 - Nahrávka odpovede končí do ~1 s po dohovorení v idúcom aute, bez cudzích slov na konci (overené na vzorkách z auta pred/po).

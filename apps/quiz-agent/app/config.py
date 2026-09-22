@@ -116,6 +116,17 @@ class Settings(BaseSettings):
     tts_cache_dir: str = "./data/tts_cache"
     elevenlabs_tts_model: str = "eleven_multilingual_v2"
     openai_tts_model: str = "tts-1"
+    # Answer transcription (#184 — batch STT for car noise). Scribe v2 batch is
+    # primary: it publishes Slovak quality, takes `keyterms` biasing and returns
+    # per-word logprob so trailing noise words can be cut. `stt_fallback_model`
+    # is the OpenAI model used when Scribe is unavailable — set it back to
+    # "whisper-1" to roll all the way back, or `stt_provider="openai"` to skip
+    # Scribe entirely. `stt_trailing_logprob_cutoff`: words below this at the end
+    # of a transcript are dropped as noise (logprob ≤ 0, higher = confident).
+    stt_provider: str = "elevenlabs"
+    stt_fallback_model: str = "gpt-transcribe"
+    elevenlabs_stt_model: str = "scribe_v2"
+    stt_trailing_logprob_cutoff: float = -1.0
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None

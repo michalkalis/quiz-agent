@@ -80,16 +80,25 @@ protocol CommandTranscriberAdapter: AnyObject {
 /// the attributed transcript from the concrete `Result`; `isFinal` comes from
 /// `SpeechModuleResult`. Cancellation of the consumer terminates the stream,
 /// which cancels the bridging task via `onTermination`.
+///
+/// `alternatives` is per-adapter (#184) rather than read off `SpeechModuleResult`:
+/// the n-best list lives on each CONCRETE `Result`, and only the adapter that
+/// actually asked for `.alternativeTranscriptions` should surface one.
 private nonisolated func bridgeResults<M: SpeechModule>(
     of module: M,
-    text: @escaping @Sendable (M.Result) -> AttributedString
+    text: @escaping @Sendable (M.Result) -> AttributedString,
+    alternatives: @escaping @Sendable (M.Result) -> [AttributedString] = { _ in [] }
 ) -> AsyncThrowingStream<CommandTranscript, Error> {
     AsyncThrowingStream { continuation in
         let task = Task {
             do {
                 for try await result in module.results {
                     continuation.yield(
-                        CommandTranscript(text: String(text(result).characters), isFinal: result.isFinal)
+                        CommandTranscript(
+                            text: String(text(result).characters),
+                            isFinal: result.isFinal,
+                            alternatives: alternatives(result).map { String($0.characters) }
+                        )
                     )
                 }
                 continuation.finish()
@@ -196,7 +205,13 @@ final class DictationTranscriberCommandAdapter: CommandTranscriberAdapter {
             locale: locale,
             contentHints: [.shortForm, .farField],
             transcriptionOptions: [],
-            reportingOptions: [.volatileResults, .frequentFinalization],
+            // #184: `.alternativeTranscriptions` is a REPORTING option (not a
+            // transcription option) and is enabled on THIS engine only —
+            // #119 measured the en-US primary transcript letter-perfect on real
+            // command words, so n-best there buys nothing and only widens the
+            // false-fire surface. This engine runs the sk/cs grammar in a noisy
+            // cabin, where the real command routinely ranks second.
+            reportingOptions: [.volatileResults, .frequentFinalization, .alternativeTranscriptions],
             attributeOptions: []
         )
     }
@@ -214,7 +229,9 @@ final class DictationTranscriberCommandAdapter: CommandTranscriberAdapter {
         let transcriber = makeTranscriber()
         return CommandTranscriberSession(
             module: transcriber,
-            transcripts: bridgeResults(of: transcriber) { $0.text }
+            transcripts: bridgeResults(
+                of: transcriber, text: { $0.text }, alternatives: { $0.alternatives }
+            )
         )
     }
 }

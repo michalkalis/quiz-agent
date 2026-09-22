@@ -257,7 +257,19 @@ final class AppState: ObservableObject {
             sttService: sttService,
             isLocallyEntitled: { storeManager.isPurchased },
             // #184: realtime vs. batch answers is the founder's in-car A/B switch.
-            realtimeSTTEnabled: { VoicePipelineFlags.realtimeSTTEnabled }
+            realtimeSTTEnabled: {
+                #if DEBUG
+                    // The --ui-test mock STT (UITestSupport.makeMockServices) is a
+                    // streaming mock: the frozen RS suite drives answers by injecting
+                    // realtime STT events, and the batch path (local VAD → WAV →
+                    // backend) never reads them. #184 flipped the default to batch,
+                    // which silently broke RS-01/03/05/06/07/08/09/16/17 — so under
+                    // --ui-test the answer path stays realtime. Batch has no UI-test
+                    // coverage yet (#184 follow-up).
+                    if UITestSupport.isUITesting { return true }
+                #endif
+                return VoicePipelineFlags.realtimeSTTEnabled
+            }
         )
 
         #if DEBUG

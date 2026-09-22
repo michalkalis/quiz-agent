@@ -241,9 +241,10 @@ enum Fixtures {
     /// Returns `(viewModel, mockAudio)` so callers can assert on the audio mock.
     static func makeViewModelWithAudio(
         shouldFailRecording: Bool = false,
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        notificationCenter: NotificationCenter? = nil
     ) -> (QuizViewModel, MockAudioService) {
-        let mockAudio = MockAudioService()
+        let mockAudio = MockAudioService(notificationCenter: notificationCenter)
         mockAudio.shouldFailRecording = shouldFailRecording
         let mockNetwork = makeFullMockNetwork()
         let viewModel = QuizViewModel(

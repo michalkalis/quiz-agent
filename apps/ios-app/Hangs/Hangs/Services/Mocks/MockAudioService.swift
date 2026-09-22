@@ -33,6 +33,30 @@ import os
 
         var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
 
+        /// #180 track G. When a center is given, the mock listens for the SAME
+        /// `AVAudioSession.interruptionNotification` the real service does and runs
+        /// it through the real decoder, so a test can post the notification iOS
+        /// would post and watch the quiz state machine react. The block observer
+        /// holds `self` weakly and dies with the test-private center.
+        init(notificationCenter: NotificationCenter? = nil) {
+            guard let notificationCenter else { return }
+            _ = notificationCenter.addObserver(
+                forName: AVAudioSession.interruptionNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let phase = AudioService.interruptionPhase(from: notification) else { return }
+                Task { @MainActor in
+                    switch phase {
+                    case .began:
+                        self?.simulateInterruptionBegan()
+                    case let .ended(shouldResume):
+                        self?.simulateInterruptionEnded(options: shouldResume ? [.shouldResume] : [])
+                    }
+                }
+            }
+        }
+
         /// Drive a `.began` interruption through the SAME routing decision the real
         /// AudioService uses, so this mock can never drift from production behaviour.
         func simulateInterruptionBegan() {

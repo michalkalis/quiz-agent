@@ -1,0 +1,22 @@
+# texts
+trubbo.
+00 / 10
+MÁŠ TO.
+tvoja odpoveď
+Paris
+prečo
+vypočuj si
+Paris has been the capital of France since the 10th century.
+zdroj
+Ďalej
+ZOSTAŇ
+# identifiers
+question.closeButton
+result.heroBanner
+result.verdict
+result.hearIt
+result.explanation
+result.metaRow
+result.source
+result.continue
+result.stayHere

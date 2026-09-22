@@ -39,6 +39,24 @@ The UI ships in sk/cs/en, so visible text is never a locator. `scripts/lint-a11y
 - **UI tests (HangsUITests):** `app.<query>["…"]` literals must be identifiers; a label match is allowed only for system UI the app cannot tag (alert buttons, the StoreKit sheet), marked `// a11y-id: system alert` etc. Launch via `RSFlow.launch` / `RSFlow.baseLaunchArguments`, which pin the UI to English so those label matches and the verdict/hero content assertions don't depend on the simulator's language.
 - **Definition of done for a new flow:** identifiers on its controls + a Page Object entry + a frozen RS scenario when the flow is user-visible (see `docs/testing/regression-scenarios.md`).
 
+## Snapshots (#180 track F)
+
+`HangsTests/HeroScreenSnapshotTests.swift` freezes Home / Question / Result / Paywall × sk/cs/en with swift-snapshot-testing; baselines are committed under `HangsTests/__Snapshots__/HeroScreenSnapshotTests/`.
+
+- **Text contract (`.txt`) gates every CI run.** Every rendered `Text` resolved for the language plus every accessibility identifier, in tree order. A lost translation, identifier or element fails the PR with a readable diff. It does not depend on the simulator runtime.
+- **Pixel snapshots (`.png`, 1×, default + accessibility Dynamic Type)** catch layout drift the contract cannot see. Rendering differs between iOS runtimes, so they run only on the runtime they were recorded on (`SnapshotBaseline.iosVersion`) and are visibly *skipped* elsewhere — today CI (iOS 26.2) skips them, the local iPhone 17 Pro simulator (iOS 26.5) runs them.
+- **Never re-record to turn a red run green.** A diff is either a bug (fix the code) or an intentional UI change (a human looks at the new render, then re-records on purpose):
+  `TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild test … -only-testing:HangsTests/HeroScreenSnapshotTests`, then run once more without the variable and commit the new files with the UI change.
+- **Determinism:** fixed fixtures, `TestClock`, `debugSurfaces: false`, time-relative copy anchored 12½ days out. `String(localized:)` values built outside SwiftUI stay in the process language; only `Text` keys switch with `\.locale`.
+- Adding a hero-level screen = add a `HeroScreen` case; a new language = a `HeroLanguage` case; both re-record only their own files.
+
+## Definition of done for an agent (#180 track H)
+
+- **A new or changed user-visible flow** ships with accessibility identifiers on its controls (lint enforces), a Page Object entry and a frozen RS scenario in `HangsUITests` (`docs/testing/regression-scenarios.md`); a new hero-level screen also joins the snapshot set above.
+- **A PR is done when** `xcodebuild test` is green on CI — unit + ViewInspector contracts + text snapshots + the RS suite — with no test skipped that the change touches, and any snapshot diff was re-recorded deliberately, never to pass.
+- **Stateful bugs (timers, audio, purchases, quota) are reproduced as deterministic unit tests first** (injected clock, posted notifications, StoreKit lifecycle mocks); the RS suite and `/regression` are for flows, not for hunting state bugs.
+- **TestFlight is for humans:** visual judgement on device and a real purchase. A state or regression bug found in TestFlight means a missing test at one of the layers above — add it with the fix.
+
 ## Simulator driving & XcodeBuildMCP token cost
 
 XcodeBuildMCP runs locally (no LLM of its own), but its `snapshot_ui` returns the **full accessibility tree as large JSON** and `screenshot` returns an **image** — every such call lands in whatever session drives it and stays there. Driving the simulator directly from the main session (Opus) is the single biggest iOS token sink. So:

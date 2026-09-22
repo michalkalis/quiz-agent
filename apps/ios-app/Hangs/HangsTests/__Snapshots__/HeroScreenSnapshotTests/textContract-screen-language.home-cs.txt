@@ -1,0 +1,59 @@
+# texts
+trubbo.
+hlasový kvíz na cesty
+tvůj plán
+18
+z 30 otázek zdarma
+resets in 13 days
+Vylepši
+relace
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+English
+Easy
+Medium
+Hard
+Random
+Obtížnost
+Medium
+All Categories
+Science & Nature
+History
+Geography & World
+Movies & Music
+Sports
+Food & Everyday Life
+Entertainment
+Kategorie
+All Categories
+Start
+# identifiers
+home.moreSettings
+home.freePlanUpgradeButton
+home.freePlanCard
+home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanReset
+home.freePlanUpgrade
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.category.all
+home.category.science-nature
+home.category.history
+home.category.geography-world
+home.category.movies-music
+home.category.sports
+home.category.food-everyday
+home.category.entertainment
+home.startQuiz

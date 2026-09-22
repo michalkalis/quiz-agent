@@ -1,0 +1,59 @@
+# texts
+trubbo.
+voice-based trivia for the road
+your plan
+18
+of 30 free questions left
+resets in 13 days
+Upgrade
+session
+English
+Slovenčina
+Čeština
+Quiz language
+English
+Easy
+Medium
+Hard
+Random
+Difficulty
+Medium
+All Categories
+Science & Nature
+History
+Geography & World
+Movies & Music
+Sports
+Food & Everyday Life
+Entertainment
+Categories
+All Categories
+Start
+# identifiers
+home.moreSettings
+home.freePlanUpgradeButton
+home.freePlanCard
+home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanReset
+home.freePlanUpgrade
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.category.all
+home.category.science-nature
+home.category.history
+home.category.geography-world
+home.category.movies-music
+home.category.sports
+home.category.food-everyday
+home.category.entertainment
+home.startQuiz

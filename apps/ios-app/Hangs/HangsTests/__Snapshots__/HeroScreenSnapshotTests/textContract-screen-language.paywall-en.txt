@@ -1,0 +1,30 @@
+# texts
+trubbo.
+GO UNLIMITED
+You've used all 30 free questions this month.
+Free questions reset in 
+Monthly
+€4.99 / month
+or top up without subscribing
+100 Question Pack
+One-time purchase · never expires
+€2.99
+Subscribe — €4.99 / month
+Restore purchases
+Auto-renews until cancelled. Cancel anytime in Settings.
+Privacy Policy
+·
+Terms of Use
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall.countdownPill
+paywall-plan-monthly
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.legal
+paywall.privacyPolicy
+paywall.termsOfUse

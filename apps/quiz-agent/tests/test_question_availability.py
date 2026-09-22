@@ -61,6 +61,7 @@ def store() -> MagicMock:
 def app(store: MagicMock) -> FastAPI:
     application = FastAPI()
     application.state.limiter = limiter
+    application.state.usage_tracker = None  # quota persistence off, as in tests
     application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     application.include_router(misc_routes.router, prefix="/api/v1")
     # A real retriever over a mock store: the filter construction under test is
@@ -106,7 +107,12 @@ async def test_reports_shortfall_so_the_client_can_offer_a_shorter_set(client, s
     response = await _ask(client, requested_count=10)
 
     assert response.status_code == 200
-    assert response.json() == {"available": 3, "requested": 10, "sufficient": False}
+    assert response.json() == {
+        "available": 3,
+        "requested": 10,
+        "sufficient": False,
+        "limited_by": "corpus",
+    }
 
 
 async def test_zero_available_is_a_normal_answer_not_an_error(client, store):
@@ -128,7 +134,12 @@ async def test_enough_questions_reports_sufficient(client, store):
 
     response = await _ask(client, requested_count=10)
 
-    assert response.json() == {"available": 42, "requested": 10, "sufficient": True}
+    assert response.json() == {
+        "available": 42,
+        "requested": 10,
+        "sufficient": True,
+        "limited_by": None,
+    }
 
 
 async def test_count_excludes_the_history_the_client_sends(client, store):
@@ -202,6 +213,114 @@ async def test_testflight_channel_counts_pending_review_too(client, store):
 
     statuses = store.count.await_args.kwargs["filters"]["review_status"]
     assert statuses == {"$in": ["approved", "pending_review"]}
+
+
+# --- #180 track C (a): the free quota bounds the set too ----------------------
+
+
+def _usage(*, remaining, credits=0, unlimited=False) -> dict:
+    return {
+        "questions_limit": None if unlimited else 30,
+        "remaining": None if unlimited else remaining,
+        "credit_balance": credits,
+    }
+
+
+@pytest.fixture
+def usage_tracker(app: FastAPI) -> MagicMock:
+    tracker = MagicMock()
+    tracker.get_usage = AsyncMock(return_value=_usage(remaining=30))
+    app.dependency_overrides[deps.get_usage_tracker] = lambda: tracker
+    return tracker
+
+
+async def test_free_quota_bounds_the_set_before_the_quiz_starts(
+    client, store, usage_tracker
+):
+    """WHY (founder 2026-09-21): 5 free questions left and a quiz set to 10 must
+    start as a quiz of 5 with a heads-up, not die at question 6 on the quota
+    wall. The probe reports the quota as the binding limit so the client can
+    offer the shorter set the same way it does for a short corpus."""
+    store.count.return_value = 50
+    usage_tracker.get_usage.return_value = _usage(remaining=5)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json() == {
+        "available": 5,
+        "requested": 10,
+        "sufficient": False,
+        "limited_by": "quota",
+    }
+
+
+async def test_pack_credits_extend_the_free_count(client, store, usage_tracker):
+    """WHY: the consume path spends the free allowance first, then credits — so a
+    user with 2 free + 3 credits really can play 5, and must be offered 5."""
+    store.count.return_value = 50
+    usage_tracker.get_usage.return_value = _usage(remaining=2, credits=3)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json()["available"] == 5
+    assert response.json()["limited_by"] == "quota"
+
+
+async def test_subscriber_is_never_quota_bounded(client, store, usage_tracker):
+    """WHY: an entitled subscriber has no monthly limit; only the corpus counts."""
+    store.count.return_value = 12
+    usage_tracker.get_usage.return_value = _usage(remaining=0, unlimited=True)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json() == {
+        "available": 12,
+        "requested": 10,
+        "sufficient": True,
+        "limited_by": None,
+    }
+
+
+async def test_corpus_still_wins_when_it_is_the_smaller_bound(
+    client, store, usage_tracker
+):
+    """WHY: the client's 'Reset seen questions' action only helps for a corpus
+    shortfall — so when the corpus is the tighter bound it must say so."""
+    store.count.return_value = 3
+    usage_tracker.get_usage.return_value = _usage(remaining=5)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json()["available"] == 3
+    assert response.json()["limited_by"] == "corpus"
+
+
+async def test_exhausted_quota_reports_zero_as_quota(client, store, usage_tracker):
+    """WHY: zero free questions is not a shorter set — the client lets the start
+    run into the quota 429 so the paywall gets the real `resets_at`; it needs to
+    know the zero came from the quota, not an empty corpus."""
+    store.count.return_value = 50
+    usage_tracker.get_usage.return_value = _usage(remaining=0)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json() == {
+        "available": 0,
+        "requested": 10,
+        "sufficient": False,
+        "limited_by": "quota",
+    }
+
+
+async def test_enough_quota_stays_silent(client, store, usage_tracker):
+    """WHY: the happy path is untouched — 10 asked, 12 free left, no alert."""
+    store.count.return_value = 50
+    usage_tracker.get_usage.return_value = _usage(remaining=12)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json()["sufficient"] is True
+    assert response.json()["limited_by"] is None
 
 
 async def test_route_declares_the_shared_auth_dependency():

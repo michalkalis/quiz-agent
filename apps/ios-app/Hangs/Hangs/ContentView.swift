@@ -284,12 +284,19 @@ struct ContentView: View {
                     viewModel.startWithAvailableQuestions(shortfall)
                 }
             }
-            Button("Reset seen questions") {
-                viewModel.resetSeenQuestionsAndStart(shortfall)
+            // #180 track C: a reset frees corpus history, not the free quota.
+            if shortfall.reason == .corpus {
+                Button("Reset seen questions") {
+                    viewModel.resetSeenQuestionsAndStart(shortfall)
+                }
             }
             Button("Cancel", role: .cancel) { viewModel.dismissQuestionShortfall() }
         } message: { shortfall in
-            Text("Only \(shortfall.available) new questions left for you in \(shortfall.categoryName) (you asked for \(shortfall.requested)).")
+            if shortfall.reason == .quota {
+                Text("Only \(shortfall.available) free questions left this month (you asked for \(shortfall.requested)).")
+            } else {
+                Text("Only \(shortfall.available) new questions left for you in \(shortfall.categoryName) (you asked for \(shortfall.requested)).")
+            }
         }
         .environmentObject(navModel)
     }

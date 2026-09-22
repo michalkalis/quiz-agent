@@ -14,9 +14,25 @@ import Foundation
 /// the backend used to run out of eligible questions mid-quiz and finish the
 /// session without saying why.
 struct QuestionAvailability: Codable, Sendable, Equatable {
+    /// What bounds `available` when it is not sufficient (#180 track C):
+    /// the unseen corpus, or the free quota (remaining free questions + pack
+    /// credits). Absent from older servers, so optional — nil reads as corpus.
+    enum Limiter: String, Codable, Sendable {
+        case corpus
+        case quota
+    }
+
     let available: Int
     let requested: Int
     let sufficient: Bool
+    var limitedBy: Limiter?
+
+    enum CodingKeys: String, CodingKey {
+        case available
+        case requested
+        case sufficient
+        case limitedBy = "limited_by"
+    }
 }
 
 /// The "Not enough questions" alert's contents, set by `QuizViewModel` when the
@@ -36,6 +52,10 @@ struct QuestionShortfall: Sendable, Equatable {
     /// Settings", exactly as the original call did.
     let difficulty: String?
     let language: String?
+    /// Why the set is short. `.quota` (#180 track C, founder 2026-09-21): the
+    /// free allowance is the bound — the alert says so and does not offer
+    /// "Reset seen questions", which only helps a corpus shortfall.
+    var reason: QuestionAvailability.Limiter = .corpus
 
     /// Whether "Start with N questions" is offered at all — a zero-question set
     /// is not a quiz, so at N == 0 the only ways forward are reset or cancel.

@@ -1,6 +1,6 @@
 # #184 — Odpovede: prepis po nahratí + lokálna detekcia ticha + prečítanie odpovede (hluk v aute)
 
-**Triage:** bug · ready-for-human (kód všetkých trackov A–E hotový 2026-09-22, PR otvorený; open = merge, backend deploy, TF build na požiadanie, test v aute + 30–50 vzoriek)
+**Triage:** bug · ready-for-human (kód všetkých trackov A–E hotový 2026-09-22, PR #182 MERGED, backend quiz-agent v117 v prode; open = TF build na požiadanie, test v aute + 30–50 vzoriek, `scripts/stt_compare.py`)
 
 ## Smer
 
@@ -46,7 +46,7 @@ Poradie: A → B → C (merateľný prírastok: nahrávky z auta pred/po) → D 
 
 **Neoverené (potrebuje zariadenie / auto):** skutočný stav AEC pod `.spokenAudio`; skok hlasitosti pri zapnutí VP (#173) — obe engine teraz rovnako; kalibrácia `logprob` cutoffu; či `gpt-transcribe` prijme `language`+`prompt` na multipart (SDK signatúra áno, živý hovor nie); `.alternativeTranscriptions` na sk-SK.
 
-**Ďalší krok:** merge PR → `fly deploy` quiz-agent → TF build na požiadanie → founder: zapnúť „Save answer recordings", 30–50 odpovedí v aute, export, `stt_compare.py`.
+**Ďalší krok:** ~~merge PR → `fly deploy` quiz-agent~~ (hotové 2026-09-22, v117) → TF build na požiadanie → founder: zapnúť „Save answer recordings", 30–50 odpovedí v aute, export, `stt_compare.py`.
 
 ## Done-state
 

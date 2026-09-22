@@ -8,6 +8,15 @@ model: sonnet
 
 # Run iOS Regression Scenarios
 
+## Frozen first (#180 track D, 2026-09-22)
+
+Every verified RS-NN is frozen as an XCUITest (`HangsUITests/Regression/`,
+mapping table at the top of `docs/testing/regression-scenarios.md`). For a
+regression *check*, run that suite — `scripts/run-rs-suite.sh [SIM_UDID]`
+writes `docs/testing/runs/RS-suite-<date>.md` — with no LLM in the loop. Use
+this skill only to **explore** a scenario that is not frozen yet (a new number,
+or one whose XCUITest is failing and needs a human-readable step log).
+
 ## Execution model — READ FIRST (token cost)
 
 **Do not drive the simulator from this (main) context.** `snapshot_ui` returns

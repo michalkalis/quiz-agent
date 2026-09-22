@@ -16,6 +16,16 @@ struct ResultPage {
         app.otherElements["result.heroBanner"]
     }
 
+    /// "hear it" — replays the question audio from the answer panel.
+    var hearItButton: XCUIElement {
+        app.buttons["result.hearIt"]
+    }
+
+    /// One control that toggles STAY (pause auto-advance) ⇄ RESUME.
+    var stayHereButton: XCUIElement {
+        app.buttons["result.stayHere"]
+    }
+
     /// The Anton verdict word in the result band ("NAILED IT." / "MISSED IT." /
     /// "SKIPPED.") — the one surface that tells the driver what happened.
     var verdict: XCUIElement {
@@ -27,6 +37,17 @@ struct ResultPage {
         XCTAssertTrue(
             continueButton.waitForExistence(timeout: timeout),
             "ResultPage: result.continue button not found within \(timeout)s"
+        )
+    }
+
+    /// Wait for the result screen to go away (auto-advance or continue fired).
+    func waitForDismissal(timeout: TimeInterval = 15, scenario: String) {
+        let gone = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: continueButton
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [gone], timeout: timeout), .completed,
+            "\(scenario): result.continue still on screen after \(timeout)s"
         )
     }
 

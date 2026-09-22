@@ -16,7 +16,10 @@
 //    Slovak, a CTA pushed off screen at large type. Rendering differs between
 //    iOS runtimes, so they are tied to the runtime they were recorded on
 //    (`SnapshotBaseline.iosVersion`) and are visibly SKIPPED elsewhere instead
-//    of silently passing or failing on font metrics.
+//    of silently passing or failing on font metrics. Everything else the host
+//    simulator could leak in — appearance, Dynamic Type, locale, layout
+//    direction — is pinned on the view, so a light-mode CI simulator renders
+//    the same dark screen as a developer's.
 //
 //  Baselines live in `__Snapshots__/HeroScreenSnapshotTests/` and are committed.
 //  Never re-record to make a red run green: a diff from an intentional UI change
@@ -186,14 +189,28 @@ struct HeroScreenSnapshotTests {
         arguments: HeroScreen.allCases, HeroLanguage.allCases
     )
     func pixels(screen: HeroScreen, language: HeroLanguage) async {
-        let view = await screen.make().environment(\.locale, language.locale)
+        // Pinned, not inherited: the app ships dark-first and the CI simulator
+        // boots in light mode with whatever text size the image left behind.
+        let view = await screen.make()
+            .environment(\.locale, language.locale)
+            .environment(\.layoutDirection, .leftToRight)
+            .environment(\.colorScheme, .dark)
+            .preferredColorScheme(.dark)
         let strategy: Snapshotting<AnyView, UIImage> = .image(
             precision: 0.99,
             perceptualPrecision: 0.98,
             layout: .fixed(width: SnapshotBaseline.width, height: SnapshotBaseline.height),
-            traits: UITraitCollection(displayScale: 1)
+            traits: UITraitCollection(traitsFrom: [
+                UITraitCollection(displayScale: 1),
+                UITraitCollection(userInterfaceStyle: .dark),
+                UITraitCollection(preferredContentSizeCategory: .large),
+            ])
         )
-        assertSnapshot(of: AnyView(view), as: strategy, named: "\(screen.rawValue)-\(language.rawValue)")
+        assertSnapshot(
+            of: AnyView(view.dynamicTypeSize(.large)),
+            as: strategy,
+            named: "\(screen.rawValue)-\(language.rawValue)"
+        )
         assertSnapshot(
             of: AnyView(view.dynamicTypeSize(.accessibility2)),
             as: strategy,

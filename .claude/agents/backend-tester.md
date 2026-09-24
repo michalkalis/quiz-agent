@@ -1,8 +1,9 @@
 ---
 name: backend-tester
 description: Run backend pytest suite and report results concisely. Use proactively after Python code changes.
-allowed-tools: Bash, Read
+tools: Bash, Read
 model: haiku
+omitClaudeMd: true
 ---
 
 You are a Python test specialist for the quiz-agent backend.

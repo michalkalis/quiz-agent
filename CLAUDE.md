@@ -7,7 +7,7 @@ Why split: `quiz-agent` serves the live quiz hot path (must stay fast/cheap); `q
 
 ## Tasks & Indices
 
-- `docs/todo/TODO.md` — `[ ]` todo · `[~]` wip · `[x]` done. Check `[~]` items at session start. `/todo` to manage. Session handoff: `/handoff` (durable committed file — work crosses a session/day/machine, e.g. Ralph on `mba`) · `/summarize` (ephemeral copy-paste block — finishing today in a new window) · `/catchup` (resume from git diff after a break).
+- `docs/todo/TODO.md` — `[ ]` todo · `[~]` wip · `[x]` done. Check `[~]` items at session start. `/todo` to manage. Session handoff: `/handoff` (durable committed file — work crosses a session/day/machine) · `/summarize` (ephemeral copy-paste block — finishing today in a new window) · `/catchup` (resume from git diff after a break).
 - Plan files for sizable tasks: `docs/issues/issue-NN-{slug}.md`, linked from TODO line.
 - `CONTEXT.md` — domain glossary, read before PRDs / issues / arch suggestions.
 - `docs/product/INDEX.md` — PRDs with Draft / Approved / Shipped / Deferred status.
@@ -54,7 +54,7 @@ Bias: caution over speed on non-trivial work. Use judgment on trivial tasks.
 Keep per-task output tight; manage context per Rule #12.
 
 ### 1. Minimal Footprint
-State assumptions explicitly; if uncertain, ask rather than guess, and present multiple interpretations when ambiguity exists. Push back when a simpler approach exists; stop when confused and name what's unclear.
+State assumptions explicitly. When readings differ materially, surface them per Rule #13 instead of silently picking one; routine judgment calls you make yourself. Push back when a simpler approach exists.
 Write the minimum code that solves the problem — nothing speculative, no features beyond what was asked, no abstractions for single-use code, no error handling for impossible scenarios. Would a senior engineer call this overcomplicated? If yes, simplify.
 Touch only what you must. Don't "improve" adjacent code, comments, or formatting; don't refactor what isn't broken. Match existing style and conventions even if you disagree — conformance > taste; if a convention seems harmful, raise it separately rather than forking silently. Every changed line should trace directly to the user's request.
 
@@ -82,11 +82,11 @@ Snapshot tests: assert the *meaningful* part of the snapshot.
 ### 7. Checkpoint for recoverability
 On multi-step work, keep state durable enough that a fresh context could resume — update `docs/issues/issue-NN-*.md` and `docs/todo/TODO.md` at meaningful milestones, not after every step. If you lose track, stop and restate.
 
-### 8. Commit and Build Autonomously
+### 8. Commit, Ship and Deploy Autonomously
 Commit at every natural checkpoint without asking for permission — incomplete downstream subtasks do not block a valid commit.
 Deploy the backend autonomously as soon as a testable increment exists; don't wait for the full feature to be complete.
 **TestFlight builds are on-request only (founder, 2026-07-30):** trigger one only when the founder explicitly asks for it — typically right before an on-device test — never as a routine end-of-run/session step. Do not list "trigger TF build" as a follow-up task either; the founder requests it when they go test.
-Push to remote autonomously once commits are ready — no approval needed. Ask before destructive git operations only (force-push, reset --hard, amend, history rewrites). When in doubt, act rather than defer.
+Push the branch, open the PR, address the review and squash-merge autonomously per the PR workflow in `.claude/rules/shared.md` — never push straight to `main`. Ask before destructive git operations only (force-push to shared branches, reset --hard, amend, history rewrites). When in doubt, act rather than defer.
 
 ### 9. Pivot When Approach Is Rejected
 When a user reports that an approach failed or explicitly rejects it, do not re-offer the same approach in different syntax.
@@ -108,6 +108,7 @@ Delegate bulk reading/searching to subagents so raw file contents don't accumula
 If a task genuinely won't fit, split it at a clean boundary, commit what's valid, and write a handoff via `/handoff` so a fresh session can resume without re-explaining context. Surface that you did this — never silently push past a limit.
 
 ### 13. Ask the User Sparingly, In-Session, With Full Context
+Keep going while a step doesn't need the founder; stop only when you can't continue without them, or before anything destructive. A turn that ends in text alone is a progress report, not a done-state — finish the whole task you were given.
 Before asking the user for anything — a decision, an answer, or an action for them to perform — first confirm you genuinely can't resolve it better yourself from the code, conventions, or a sensible default. Most questions never need to reach them: decide what you can, state the assumption, and proceed.
 **Always decide product matters *with* the user** (UX, scope, feature behavior, monetization, vision) — these need their input even when a reasonable default exists.
 When you do need them, **ask interactively during the session** (e.g. an in-session question prompt) with enough context to answer without digging. Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
@@ -118,3 +119,7 @@ When the user must perform an action outside the code (set a secret or API key, 
 - `.claude/rules/shared.md` — Git workflow, API contract, testing (always loaded)
 - `.claude/rules/ios.md` — iOS patterns, schemes, build commands (lazy: `apps/ios-app/**`)
 - `.claude/rules/backend.md` — Python/FastAPI, deploy pointers (lazy: backend paths)
+
+## Compact instructions
+
+When summarizing a long session, keep: the task goal and its done-criteria, founder decisions made this session (verbatim if short), open questions, files changed with branch/PR numbers, and failed approaches with why they failed. Drop raw tool output and superseded plans.

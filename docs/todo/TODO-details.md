@@ -71,7 +71,7 @@ hotové položky sú v `docs/archive/todo/TODO-done-archive-2026-08-26.md`.
 
 ### Hetzner migration plan
 
-- [ ] Hetzner migration plan — founder decision 2026-07-05: Hetzner VPS (+ Coolify/Compose) is the preferred hosting target short-to-mid term (flat €4–8/mo, no cold starts); Fly.io stays until migrated. Platform analysis: `docs/artifacts/flyio-fit-and-oom-fix-2026-07-05.html`. Next step: `/prepare-issue` for the migration (web+worker+pgvector Postgres+secrets+CI deploy path; keep Upstash or co-locate Redis)
+- [ ] Hetzner migration plan — founder decision 2026-07-05: Hetzner VPS (+ Coolify/Compose) is the preferred hosting target short-to-mid term (flat €4–8/mo, no cold starts); Fly.io stays until migrated. Platform analysis: `docs/artifacts/flyio-fit-and-oom-fix-2026-07-05.html`. Next step: light issue prep (direction + tracks) for the migration (web+worker+pgvector Postgres+secrets+CI deploy path; keep Upstash or co-locate Redis)
 
 ### Review + merge mba-only #56 localization work
 

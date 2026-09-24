@@ -163,6 +163,15 @@ extension RecordingCoordinator {
         silenceDetectionService.setAnswerAudioSink { capture.append($0) }
 
         speechDetectedDuringAutoRecord = false
+        // #185 track A: a fresh detection session per recording — nothing the
+        // command window's VAD saw may decide this answer (H3) — with the lower
+        // blip bar when the whole answer can be one syllable ("c", "dva").
+        noSpeechWindowDeferral = nil
+        silenceDetectionService.beginAnswerDetection(
+            minSpeechDuration: currentQuestion()?.isMultipleChoice == true
+                ? VADTuning.mcqMinSpeechDurationSecs
+                : VADTuning.minSpeechDurationSecs
+        )
         startSilenceDetection(service: silenceDetectionService)
 
         // The capture is armed and the VAD's `.speechStarted` is the speech
@@ -213,6 +222,7 @@ extension RecordingCoordinator {
     /// paths (interruption, background, a typed answer superseding the mic).
     func abandonAnswerCapture() {
         silenceDetectionService.setAnswerAudioSink(nil)
+        _ = silenceDetectionService.endAnswerDetection()
         answerCapture.cancel()
         savedRecordingStamp = nil
         releaseAnswerEngineIfOwned()
@@ -323,7 +333,7 @@ extension RecordingCoordinator {
                     self.noteSpeechStarted()
                 case let .silenceAfterSpeech(duration):
                     Logger.audio.debug("🔇 Auto-record: silence threshold reached (\(String(format: "%.1f", duration), privacy: .public)s), auto-stopping")
-                    await self.stopRecordingAndSubmit()
+                    await self.stopRecordingAndSubmit(reason: .vad)
                     return
                 }
             }
@@ -342,6 +352,25 @@ extension RecordingCoordinator {
     func noteSpeechStarted() {
         speechDetectedDuringAutoRecord = true
         onSpeechStarted()
+    }
+
+    /// #185 track A (founder 2026-09-24): the visible 5 s "time to start
+    /// speaking" window may end a batch recording only when the on-device
+    /// detector demonstrably works and heard nothing that could be speech. In
+    /// the car the old detector heard nothing ever, so every answer was cut at
+    /// 5 s. When the detector cannot vouch, the countdown just disappears and
+    /// the hidden dead-air cap ends the recording instead — a late or quiet
+    /// answer is never cut off by a deaf detector. The realtime stream (partial
+    /// transcripts are its signal) and the legacy recorder (its window IS the
+    /// cap) keep the plain expiry.
+    func noSpeechWindowMayEndRecording() -> Bool {
+        guard !isStreamingSTT, !usesLegacyRecorder else { return true }
+        let verdict = silenceDetectionService.noSpeechWindowVerdict
+        guard !verdict.mayEndRecording else { return true }
+        noSpeechWindowDeferral = verdict
+        onSpeechStarted() // hides the countdown; the dead-air cap keeps running
+        Logger.audio.info("🎙️ No-speech window deferred to the cap (\(verdict.rawValue, privacy: .public))")
+        return false
     }
 
     // MARK: - STT Commit Watchdog

@@ -163,6 +163,11 @@ final class RecordingCoordinator: ObservableObject {
     /// processing, no VAD — the dead-air cap ends it — but the mic button works.
     var usesLegacyRecorder = false
 
+    /// #185 track A: why the 5 s no-speech window did NOT end this recording
+    /// (the detector could not vouch for the silence), or `nil`. Telemetry
+    /// only — logged with the recording's stop.
+    var noSpeechWindowDeferral: NoSpeechWindowVerdict?
+
     /// #184: whether the NEXT recording takes the ElevenLabs Realtime path
     /// (`sttService` present AND the runtime switch on). The façade injects the
     /// production read (`VoicePipelineFlags.realtimeSTTEnabled`); tests default

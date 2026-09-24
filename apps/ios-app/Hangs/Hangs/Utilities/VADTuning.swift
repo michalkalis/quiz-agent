@@ -14,9 +14,10 @@
 //  cabin-noise / BT). Do not treat any number here as load-bearing until then.
 //
 //  NO pre-roll / prefix-padding lives here: START is the button/timer (P1), so
-//  there is no need to capture audio before the mic opens. NO new VAD engine —
-//  these only tune the existing SpeechDetector (on-device VAD) and the ElevenLabs
-//  streaming commit strategy.
+//  there is no need to capture audio before the mic opens. Since #185 track A
+//  the on-device speech signal is `EnergyVAD` (a band-limited level detector):
+//  Apple's SpeechDetector reports no speech results at all (see
+//  `commandGateSensitivity`).
 //
 
 import Foundation
@@ -33,7 +34,7 @@ nonisolated enum DetectorSensitivity: String, Equatable, Sendable {
 /// `nonisolated`: consumed from nonisolated contexts (`Config`, the STT URL
 /// builder) under the project's MainActor default isolation.
 nonisolated enum VADTuning {
-    // MARK: - On-device SpeechDetector VAD (SilenceDetectionService)
+    // MARK: - On-device VAD state machine (SilenceDetectionService)
 
     /// Silence hangover: how long continuous silence must persist AFTER speech
     /// before the recorder auto-stops and submits. #184 (car test 2026-09-21):
@@ -51,12 +52,72 @@ nonisolated enum VADTuning {
     /// research (one short Slovak word — "áno", "päť" — is ~200–300 ms).
     static let minSpeechDurationSecs: TimeInterval = 0.25
 
-    /// SpeechDetector sensitivity. `.medium` → `.low` for the driving use-case:
-    /// road/engine/HVAC noise inflates a `.medium` detector's false-speech rate,
-    /// which both burns the min-speech guard and delays the STOP. `.low` trades
-    /// some quiet-cabin responsiveness for far fewer road-noise false triggers.
-    /// A/B'd against real cabin noise at 77.15.
-    static let detectorSensitivity: DetectorSensitivity = .low
+    /// The same guard for a multiple-choice answer (#185 — car test 2026-09-23).
+    /// The whole answer can be one syllable ("c", "dva"), and at 0.25 s the
+    /// driver's "c" was thrown away as a blip; the recording then ran on to the
+    /// cap. The energy detector's onset hold still has to be met first, so a
+    /// click or a bump does not get through on this lower bar.
+    static let mcqMinSpeechDurationSecs: TimeInterval = 0.1
+
+    /// Apple `SpeechDetector` paired into the command analyzer — `nil` = not
+    /// paired (#185 track A). Apple documents its result stream as reporting
+    /// only VAD-model ERRORS ("currently only support error handling from the
+    /// VAD model", `SpeechDetector.Result`), which is why the car test saw 0 of
+    /// 16 recordings reach "vad speech began" and why no speech was ever
+    /// reported in 14 days. Its one real effect was gating what the command
+    /// transcriber hears, and `.low` — the setting shipped since 77.11 — is
+    /// already its most forgiving level ("low … more forgiving, high … more
+    /// aggressive"), so the only way to stop commands depending on it is to not
+    /// pair it. Speech is now detected by `EnergyVAD`. Set a level to pair it
+    /// again: its results are counted per recording (`detectorResults`) and a
+    /// `speechDetected` result, should an iOS update ever deliver one, counts
+    /// as speech alongside the energy detector.
+    static let commandGateSensitivity: DetectorSensitivity? = nil
+
+    // MARK: - Energy VAD (EnergyVAD, #185 track A)
+
+    /// High-pass corner of the VAD's level meter (two cascaded 2nd-order
+    /// sections, 24 dB/octave). Engine and road rumble sit below it; the voice
+    /// energy a detector needs (formants, 300–3400 Hz) sits above. It shapes
+    /// ONLY what the detector measures — the uploaded answer stays unfiltered.
+    static let energyHighPassHz: Double = 200
+
+    /// Audio at the start of every recording that sets the noise floor (the
+    /// lower quartile of its buffer levels, so a word spoken straight away
+    /// does not become "the noise").
+    static let noiseCalibrationSecs: TimeInterval = 0.3
+
+    /// Speech starts when the level stays this far above the noise floor for
+    /// `speechOnsetHoldSecs`, and ends when it drops below `speechReleaseMarginDb`
+    /// (hysteresis, so one soft syllable does not split an answer).
+    static let speechOnsetMarginDb: Float = 7
+    static let speechReleaseMarginDb: Float = 4
+    static let speechOnsetHoldSecs: TimeInterval = 0.06
+
+    /// Speech is never below this level, however quiet the room: in a silent
+    /// room the relative margin alone would fire on a rustle.
+    static let absoluteSpeechFloorDbfs: Float = -60
+
+    /// A floor at or below this is digital silence (a muted or dead input),
+    /// not a room — the detector cannot vouch for anything it measures there.
+    static let digitalSilenceDbfs: Float = -120
+
+    /// How fast the floor follows the noise between words: down quickly (a
+    /// quieter stretch is the better estimate), up slowly (so a soft voice is
+    /// not absorbed into the floor). Frozen while speech is active.
+    static let noiseFloorFallSecs: TimeInterval = 0.1
+    static let noiseFloorRiseSecs: TimeInterval = 2.0
+
+    /// Time the level may spend above the release margin without becoming
+    /// speech before the detector admits "maybe someone is talking". Past it,
+    /// the 5 s no-speech window may no longer end the recording (#185: an
+    /// answer is never cut by a detector that might be deaf) — the hidden cap
+    /// does.
+    static let ambiguousActivityMaxSecs: TimeInterval = 0.2
+
+    /// The detector counts as alive only while level buffers keep arriving —
+    /// a stalled engine is not "silence".
+    static let levelStaleAfterSecs: TimeInterval = 0.5
 
     // MARK: - ElevenLabs Scribe v2 Realtime streaming VAD
 
@@ -98,9 +159,15 @@ nonisolated enum SilenceStopDecision {
     /// - Parameters:
     ///   - speechDuration: how long the utterance lasted before silence began.
     ///   - silenceElapsed: how long silence has persisted since speech stopped.
-    static func evaluate(speechDuration: TimeInterval, silenceElapsed: TimeInterval) -> Outcome {
+    ///   - minSpeechDuration: the blip bar for this recording — lower for a
+    ///     multiple-choice answer (`VADTuning.mcqMinSpeechDurationSecs`).
+    static func evaluate(
+        speechDuration: TimeInterval,
+        silenceElapsed: TimeInterval,
+        minSpeechDuration: TimeInterval = VADTuning.minSpeechDurationSecs
+    ) -> Outcome {
         guard silenceElapsed >= VADTuning.silenceHangoverSecs else { return .wait }
-        if speechDuration < VADTuning.minSpeechDurationSecs { return .rejectBlip }
+        if speechDuration < minSpeechDuration { return .rejectBlip }
         return .stop
     }
 }

@@ -19,11 +19,38 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     private let bargeInChannel = StreamChannel<Void>()
     private let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
+    private let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
+    func makeInputLevelStream() -> AsyncStream<InputLevel> { inputLevelChannel.makeStream() }
+
+    /// #185 track A: every `beginAnswerDetection` blip bar, in order — lets a
+    /// test prove each recording starts a fresh session with the right bar.
+    private(set) var answerDetectionMinSpeechDurations: [TimeInterval] = []
+    private(set) var isAnswerDetectionActive = false
+    /// What `endAnswerDetection` hands back.
+    var answerDetectionReport = AnswerDetectionReport.empty
+    /// Defaults to `.quiet` — a live detector that heard nothing — so the 5 s
+    /// window ends a silent recording exactly as the existing tests expect;
+    /// set another verdict to drive the defer-to-cap path.
+    var noSpeechWindowVerdict: NoSpeechWindowVerdict = .quiet
+
+    func beginAnswerDetection(minSpeechDuration: TimeInterval) {
+        answerDetectionMinSpeechDurations.append(minSpeechDuration)
+        isAnswerDetectionActive = true
+    }
+
+    func endAnswerDetection() -> AnswerDetectionReport {
+        isAnswerDetectionActive = false
+        return answerDetectionReport
+    }
+
+    func simulateInputLevel(_ level: InputLevel) {
+        inputLevelChannel.yield(level)
+    }
 
     /// Defaults to `.ready` so command-listener tests exercise the armed path;
     /// settable so #77 fail-loud tests can drive the unavailable state. Each

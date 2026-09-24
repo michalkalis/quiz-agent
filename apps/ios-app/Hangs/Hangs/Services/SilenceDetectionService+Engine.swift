@@ -3,12 +3,14 @@
 //  Hangs
 //
 //  The AVAudioEngine + SpeechAnalyzer lifecycle for SilenceDetectionService:
-//  pairing the SpeechDetector with the command transcriber from the engine
-//  adapter (#120 — SpeechTranscriber or DictationTranscriber, chosen at
-//  launch), starting the engine, consuming both result streams, and tearing it
-//  all down. Split out of SilenceDetectionService.swift (past the ~300-line
-//  cap); the VAD state machine, authorization (#105) and asset preparation stay
-//  there, the per-engine transcriber configuration lives in
+//  the command transcriber from the engine adapter (#120 — SpeechTranscriber
+//  or DictationTranscriber, chosen at launch), optionally gated by a paired
+//  SpeechDetector (#185: off by default, `VADTuning.commandGateSensitivity`),
+//  starting the engine, consuming the result streams and the tap's levels,
+//  and tearing it all down. Split out of SilenceDetectionService.swift (past
+//  the ~300-line cap); the VAD state machine lives in +VAD.swift,
+//  authorization (#105) and asset preparation in the main file and +Assets,
+//  the per-engine transcriber configuration lives in
 //  CommandTranscriberAdapter.swift, and the mic side (voice processing + the
 //  input tap) is in SilenceDetectionService+InputTap.swift.
 //
@@ -48,32 +50,26 @@ extension SilenceDetectionService {
         startInFlight = true
         defer { startInFlight = false }
 
-        state = .idle
+        resetSpeechDetection()
         loggedVolatileThisSegment = false
-        pendingFirstHypothesisSince = nil
 
-        // Sensitivity centralised in VADTuning (77.11): .low for road noise.
-        let detector: SpeechDetector
-        switch VADTuning.detectorSensitivity {
-        case .low:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .low), reportResults: true)
-        case .medium:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .medium), reportResults: true)
-        case .high:
-            detector = SpeechDetector(detectionOptions: .init(sensitivityLevel: .high), reportResults: true)
-        }
-
-        // iOS 26.3 requires SpeechDetector to be paired with a transcriber
-        // module (cannot create a SpeechDetector-only worker). We use
-        // detector.results for VAD AND — since the transcriber must exist
-        // anyway — its results as the command listener (#77, task 77.5). Which
+        // The transcriber is the command listener (#77, task 77.5). Which
         // engine and locale, and why its reporting options look the way they do,
         // is the adapter's business (CommandTranscriberAdapter.swift — the #119
         // `.fastResults` measurement rationale lives with the SpeechTranscriber
         // adapter config it justifies). This file only wires modules together.
+        //
+        // #185 track A: no SpeechDetector by default. Its results never report
+        // speech (Apple: error handling only), and paired it only gates what the
+        // transcriber hears — commands had to be shouted in the car. Speech is
+        // detected on the tap instead (EnergyVAD, +VAD.swift). A SpeechDetector
+        // needs a transcriber beside it (CARQUIZ-3); a transcriber alone is fine.
         let session = transcriberEngine.makeSession()
+        let detector = Self.makeSpeechDetector()
+        speechDetectorPaired = detector != nil
+        let modules: [any SpeechModule] = [session.module] + (detector.map { [$0] } ?? [])
 
-        let analyzer = SpeechAnalyzer(modules: [session.module, detector])
+        let analyzer = SpeechAnalyzer(modules: modules)
         self.analyzer = analyzer
 
         // Vocabulary biasing (#120): fed ONLY to an engine that declares the
@@ -96,7 +92,7 @@ extension SilenceDetectionService {
         }
 
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: [session.module, detector]
+            compatibleWith: modules
         ) else {
             markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
             return
@@ -152,10 +148,23 @@ extension SilenceDetectionService {
         let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
         inputContinuation = continuation
 
+        // #185: the tap measures every buffer's level for the energy VAD; the
+        // main actor drains them in order (audio time drives the detector).
+        let (levelSequence, levels) = AsyncStream<InputLevelSample>.makeStream(
+            bufferingPolicy: .bufferingNewest(256)
+        )
+        levelContinuation = levels
+        levelTask = Task { [weak self] in
+            for await sample in levelSequence {
+                guard let self, !Task.isCancelled else { break }
+                self.handleInputLevel(sample)
+            }
+        }
+
         answerAudioSampleRate = analyzerFormat.sampleRate
         installInputTap(
             on: inputNode, format: inputFormat, analyzerFormat: analyzerFormat,
-            continuation: continuation, answerSink: answerAudioSink
+            continuation: continuation, levels: levels, answerSink: answerAudioSink
         )
 
         // Fail loud (#77): a swallowed throw here was the silent death of both
@@ -173,17 +182,19 @@ extension SilenceDetectionService {
 
         // NOTE: SpeechDetector delivers results on its own queue; route back to
         // @MainActor before touching our state.
-        detectionTask = Task { [weak self] in
-            do {
-                for try await result in detector.results {
-                    guard let self, !Task.isCancelled else { break }
-                    let speechDetected = result.speechDetected
-                    await MainActor.run { [weak self] in
-                        self?.handleSpeechDetectorResult(speechDetected: speechDetected)
+        if let detector {
+            detectionTask = Task { [weak self] in
+                do {
+                    for try await result in detector.results {
+                        guard let self, !Task.isCancelled else { break }
+                        let speechDetected = result.speechDetected
+                        await MainActor.run { [weak self] in
+                            self?.handleSpeechDetectorResult(speechDetected: speechDetected)
+                        }
                     }
+                } catch {
+                    Logger.voice.error("🔇 SilenceDetection error: \(error, privacy: .public)")
                 }
-            } catch {
-                Logger.voice.error("🔇 SilenceDetection error: \(error, privacy: .public)")
             }
         }
 
@@ -257,8 +268,20 @@ extension SilenceDetectionService {
                 "inputPort": VoiceProcessingPolicy.currentInputPort(),
                 "inputHz": inputFormat.sampleRate,
                 "voiceProcessing": voiceProcessing,
+                "speechDetector": VADTuning.commandGateSensitivity?.rawValue ?? "off",
             ]
         )
+    }
+
+    /// The optional command-gate SpeechDetector (`VADTuning.commandGateSensitivity`).
+    private static func makeSpeechDetector() -> SpeechDetector? {
+        guard let sensitivity = VADTuning.commandGateSensitivity else { return nil }
+        let level: SpeechDetector.SensitivityLevel = switch sensitivity {
+        case .low: .low
+        case .medium: .medium
+        case .high: .high
+        }
+        return SpeechDetector(detectionOptions: .init(sensitivityLevel: level), reportResults: true)
     }
 
     /// One adapter-normalized transcriber result on the command path: sampled
@@ -324,14 +347,14 @@ extension SilenceDetectionService {
 
         inputContinuation?.finish()
         inputContinuation = nil
+        stopLevelStream()
 
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
         audioEngine = nil
 
         analyzer = nil
-        state = .idle
-        pendingFirstHypothesisSince = nil
+        resetSpeechDetection()
 
         Logger.voice.info("🔇 SilenceDetection: listening stopped")
     }
@@ -347,9 +370,17 @@ extension SilenceDetectionService {
         analyzerTask = nil
         inputContinuation?.finish()
         inputContinuation = nil
+        stopLevelStream()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine = nil
         analyzer = nil
-        pendingFirstHypothesisSince = nil
+        resetSpeechDetection()
+    }
+
+    private func stopLevelStream() {
+        levelTask?.cancel()
+        levelTask = nil
+        levelContinuation?.finish()
+        levelContinuation = nil
     }
 }

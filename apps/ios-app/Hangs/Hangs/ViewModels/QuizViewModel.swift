@@ -888,7 +888,7 @@ final class QuizViewModel: ObservableObject {
             showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
             setAutoConfirmCountdown: { [weak self] in self?.recordingCoordinator.autoConfirmCountdown = $0 },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
-            stopRecordingAndSubmit: { [weak self] in await self?.recordingCoordinator.stopRecordingAndSubmit() },
+            stopRecordingAndSubmit: { [weak self] reason in await self?.recordingCoordinator.stopRecordingAndSubmit(reason: reason) },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
         )

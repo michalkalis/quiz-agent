@@ -41,9 +41,31 @@ struct VADConstantsTests {
         #expect(VADTuning.minSpeechDurationSecs <= 1.0)
     }
 
-    @Test("detector sensitivity is lowered to .low for road noise")
-    func sensitivityLowered() {
-        #expect(VADTuning.detectorSensitivity == .low)
+    /// #185 track A: Apple documents `SpeechDetector` results as VAD-model
+    /// errors only (0 of 16 car recordings ever reported speech), so pairing it
+    /// only gates what the command transcriber hears — and `.low` was already
+    /// its most forgiving level. Commands must not depend on it by default.
+    @Test("the SpeechDetector command gate is off by default")
+    func speechDetectorGateOff() {
+        #expect(VADTuning.commandGateSensitivity == nil)
+    }
+
+    /// #185 (car test): "c" / "dva" is the whole multiple-choice answer, and at
+    /// the open-answer bar it was dropped as a blip.
+    @Test("a one-syllable multiple-choice answer clears the MCQ blip bar, not the open-answer one")
+    func mcqBlipBarAcceptsOneSyllable() {
+        let syllable: TimeInterval = 0.15 // a short "c" / "a"
+        let pastHangover = VADTuning.silenceHangoverSecs + 0.1
+        #expect(
+            SilenceStopDecision.evaluate(
+                speechDuration: syllable, silenceElapsed: pastHangover,
+                minSpeechDuration: VADTuning.mcqMinSpeechDurationSecs
+            ) == .stop
+        )
+        #expect(
+            SilenceStopDecision.evaluate(speechDuration: syllable, silenceElapsed: pastHangover) == .rejectBlip,
+            "open answers keep the 0.25 s bar — a cough must not submit"
+        )
     }
 
     @Test("ElevenLabs VAD params are sane starting points")

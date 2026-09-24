@@ -172,28 +172,32 @@ struct SilenceDetectionServiceTests {
 
     // MARK: 6. Threshold boundary: 1.4 s — NOT emitted
 
-    @Test("silence of 1.4 s does NOT cross the 1.5 s threshold")
-    func silenceAt1_4sNotEmitted() async {
+    @Test("silence just under the hangover does not stop")
+    func silenceUnderHangoverNotEmitted() async {
         guard #available(iOS 26, *) else {
             withKnownIssue("SilenceDetectionService requires iOS 26+") {}
             return
         }
         let events = await collectSilenceEvents { service, clock in
             service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
+            await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard)
             service.handleSpeechDetectorResult(speechDetected: false) // speechActive → silenceAccumulating(since: t0)
-            await clock.advance(by: .seconds(1.4))
-            service.handleSpeechDetectorResult(speechDetected: false) // still below threshold
+            await clock.advance(by: .milliseconds(799))
+            service.handleSpeechDetectorResult(speechDetected: false) // still below the hangover
         }
         let silenceAfterEvents = events.filter {
             if case .silenceAfterSpeech = $0 { return true }; return false
         }
-        #expect(silenceAfterEvents.isEmpty, "Expected no silenceAfterSpeech at 1.4 s, got \(silenceAfterEvents)")
+        #expect(silenceAfterEvents.isEmpty, "Expected no silenceAfterSpeech at 0.799 s, got \(silenceAfterEvents)")
     }
 
-    // MARK: 7. Threshold boundary: 1.5 s exactly emits
+    // MARK: 7. Threshold boundary: the hangover deadline emits on the clock
 
-    @Test("silence of exactly 1.5 s emits silenceAfterSpeech(duration: ~1.5)")
-    func silenceAt1_5sEmits() async {
+    /// #185 track A: the car test's detector sent nothing after the last word,
+    /// and the stop only ever re-checked on a detector event. The hangover now
+    /// fires on the injected clock — no further detector result needed.
+    @Test("silence reaching the hangover emits at the deadline with no further detector result")
+    func silenceAtHangoverEmitsOnClock() async {
         guard #available(iOS 26, *) else {
             withKnownIssue("SilenceDetectionService requires iOS 26+") {}
             return
@@ -202,8 +206,7 @@ struct SilenceDetectionServiceTests {
             service.handleSpeechDetectorResult(speechDetected: true) // idle → speechActive
             await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // → silenceAccumulating(since: t0)
-            await clock.advance(by: .seconds(1.5))
-            service.handleSpeechDetectorResult(speechDetected: false) // → emits + idle
+            await clock.advance(by: .milliseconds(800)) // the clock-driven check fires here
         }
         let durations = events.compactMap { event -> TimeInterval? in
             if case let .silenceAfterSpeech(d) = event { return d }; return nil
@@ -212,15 +215,13 @@ struct SilenceDetectionServiceTests {
             Issue.record("Expected .silenceAfterSpeech event, got \(events)")
             return
         }
-        // 1.5 = 3/2 is exact in IEEE 754; 1e-9 is sufficient, but use 1e-6 to match
-        // other duration assertions in this file.
-        #expect(abs(duration - 1.5) < 1e-6, "Expected duration ~1.5, got \(duration)")
+        #expect(abs(duration - VADTuning.silenceHangoverSecs) < 1e-6, "Expected duration ~0.8, got \(duration)")
     }
 
-    // MARK: 8. Threshold boundary: 1.6 s emits
+    // MARK: 8. A late detector result after the deadline does not stop twice
 
-    @Test("silence of 1.6 s emits silenceAfterSpeech(duration: ~1.6)")
-    func silenceAt1_6sEmits() async {
+    @Test("a detector result after the deadline does not emit a second stop")
+    func lateResultDoesNotDoubleStop() async {
         guard #available(iOS 26, *) else {
             withKnownIssue("SilenceDetectionService requires iOS 26+") {}
             return
@@ -235,14 +236,10 @@ struct SilenceDetectionServiceTests {
         let durations = events.compactMap { event -> TimeInterval? in
             if case let .silenceAfterSpeech(d) = event { return d }; return nil
         }
-        guard let duration = durations.first else {
-            Issue.record("Expected .silenceAfterSpeech event, got \(events)")
-            return
+        #expect(durations.count == 1, "one utterance, one stop — got \(durations)")
+        if let duration = durations.first {
+            #expect(abs(duration - VADTuning.silenceHangoverSecs) < 1e-6, "stopped at the deadline, got \(duration)")
         }
-        // The clock measures in `Duration` (attosecond integers) and 1.6 s is not
-        // exactly representable when converted back to Double seconds. Use 1e-6
-        // (microsecond) tolerance.
-        #expect(abs(duration - 1.6) < 1e-6, "Expected duration ~1.6, got \(duration)")
     }
 
     // MARK: 9. After threshold, state returns to idle
@@ -291,14 +288,14 @@ struct SilenceDetectionServiceTests {
             await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t0
             await clock.advance(by: .seconds(1.5))
-            service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~1.5) → idle
+            service.handleSpeechDetectorResult(speechDetected: false) // already stopped at 0.8 s → idle
 
             // Cycle 2
             service.handleSpeechDetectorResult(speechDetected: true) // .speechStarted
             await clock.advance(by: .seconds(0.5)) // real utterance (> min-speech guard, 77.11)
             service.handleSpeechDetectorResult(speechDetected: false) // accumulating at t1
             await clock.advance(by: .seconds(2.0))
-            service.handleSpeechDetectorResult(speechDetected: false) // .silenceAfterSpeech(~2.0) → idle
+            service.handleSpeechDetectorResult(speechDetected: false) // already stopped at 0.8 s → idle
         }
 
         let speechStartedCount = events.filter { $0 == .speechStarted }.count
@@ -312,8 +309,10 @@ struct SilenceDetectionServiceTests {
         if durations.count == 2 {
             // Use 1e-6 (microsecond) tolerance — converting the clock's `Duration`
             // back to Double seconds is not exact.
-            #expect(abs(durations[0] - 1.5) < 1e-6, "First silence duration ~1.5, got \(durations[0])")
-            #expect(abs(durations[1] - 2.0) < 1e-6, "Second silence duration ~2.0, got \(durations[1])")
+            // #185: both stop AT the hangover deadline (clock-driven), however
+            // long the test then waits before the next detector result.
+            #expect(abs(durations[0] - VADTuning.silenceHangoverSecs) < 1e-6, "First silence duration ~0.8, got \(durations[0])")
+            #expect(abs(durations[1] - VADTuning.silenceHangoverSecs) < 1e-6, "Second silence duration ~0.8, got \(durations[1])")
         }
 
         // Assert ordering: speechStarted, silenceAfterSpeech, speechStarted, silenceAfterSpeech

@@ -64,7 +64,8 @@ final class QuizTimersController: ObservableObject {
     let showAnswerConfirmation: @MainActor () -> Bool
     let setAutoConfirmCountdown: @MainActor (Int) -> Void
     let startRecording: @MainActor () async -> Void
-    let stopRecordingAndSubmit: @MainActor () async -> Void
+    /// #185 track A: the recording timers say which of them ended it.
+    let stopRecordingAndSubmit: @MainActor (RecordingStopReason) async -> Void
     let confirmAnswer: @MainActor () async -> Void
     let proceedToNextQuestion: @MainActor () async -> Void
 
@@ -78,7 +79,7 @@ final class QuizTimersController: ObservableObject {
         showAnswerConfirmation: @escaping @MainActor () -> Bool,
         setAutoConfirmCountdown: @escaping @MainActor (Int) -> Void,
         startRecording: @escaping @MainActor () async -> Void,
-        stopRecordingAndSubmit: @escaping @MainActor () async -> Void,
+        stopRecordingAndSubmit: @escaping @MainActor (RecordingStopReason) async -> Void,
         confirmAnswer: @escaping @MainActor () async -> Void,
         proceedToNextQuestion: @escaping @MainActor () async -> Void
     ) {
@@ -270,7 +271,9 @@ final class QuizTimersController: ObservableObject {
             }
 
             guard self.quizState() == .recording else { return }
-            await self.stopRecordingAndSubmit()
+            // #185: ends the recording only if the detector can vouch for
+            // the silence; otherwise the countdown hides and the cap decides.
+            await self.stopRecordingAndSubmit(.noSpeechWindow)
         }
         taskBag.add(task, key: .autoStopRecording)
 
@@ -304,7 +307,7 @@ final class QuizTimersController: ObservableObject {
                 if Task.isCancelled { return }
             }
             guard let self, self.quizState() == .recording else { return }
-            await self.stopRecordingAndSubmit()
+            await self.stopRecordingAndSubmit(.cap)
         }
         taskBag.add(cap, key: .recordingHardCap)
     }

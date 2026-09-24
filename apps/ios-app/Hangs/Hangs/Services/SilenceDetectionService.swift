@@ -2,8 +2,10 @@
 //  SilenceDetectionService.swift
 //  Hangs
 //
-//  Continuous on-device voice activity detection via iOS 26 SpeechDetector,
-//  plus the paired command transcriber that feeds voice commands (#77). Since
+//  Continuous on-device voice activity detection (since #185 track A the
+//  band-limited `EnergyVAD` on the mic tap — Apple's SpeechDetector reports no
+//  speech results), plus the command transcriber that feeds voice commands
+//  (#77). Since
 //  #120 the transcriber is engine-swappable behind CommandTranscriberAdapter
 //  (SpeechTranscriber en-US by default; DictationTranscriber en-US/sk-SK as the
 //  launch-time comparison engine) — nothing above this service knows which one
@@ -14,8 +16,9 @@
 //    • command availability  — fail-loud recognizer readiness updates.
 //
 //  The AVAudioEngine/SpeechAnalyzer lifecycle lives in the sibling
-//  SilenceDetectionService+Engine.swift; this file keeps the state machine,
-//  authorization (#105) and asset preparation.
+//  SilenceDetectionService+Engine.swift, the speech state machine and the
+//  per-recording detection session in +VAD.swift; this file keeps the state,
+//  the protocol, authorization (#105) and asset preparation.
 //
 
 // @preconcurrency: AVAudio tap/converter closures are not @Sendable. Without this,
@@ -35,7 +38,7 @@ import os
 
 // MARK: - Events
 
-/// Events emitted by silence detection (SpeechDetector VAD)
+/// Events emitted by silence detection (the on-device VAD, see +VAD.swift)
 enum SilenceEvent: Sendable, Equatable {
     case speechStarted
     case silenceAfterSpeech(duration: TimeInterval)
@@ -122,6 +125,22 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// stream into an observable `@Published` so SwiftUI re-renders on every change.
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability>
 
+    /// #185 track A: the mic level of every tap buffer while the engine runs —
+    /// the signal behind a "the mic hears you" ring. No UI consumes it yet.
+    func makeInputLevelStream() -> AsyncStream<InputLevel>
+
+    /// #185 track A: one answer recording's detection session. `begin` resets
+    /// ALL speech-detection state (noise floor, speech state, silence timer —
+    /// nothing from the command window may leak into the answer, H3) and sets
+    /// the blip bar (`minSpeechDuration`, lower for multiple choice); `end`
+    /// closes it and returns what the detectors saw, for the stop telemetry.
+    func beginAnswerDetection(minSpeechDuration: TimeInterval)
+    func endAnswerDetection() -> AnswerDetectionReport
+
+    /// Whether the 5 s no-speech window may end the recording in progress —
+    /// only when a detector demonstrably works and heard nothing (#185).
+    var noSpeechWindowVerdict: NoSpeechWindowVerdict { get }
+
     func startListening() async
     func stopListening()
 
@@ -158,15 +177,17 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // Per-acquisition stream channels (dead-voice-commands fix): each consumer
     // re-arm gets a fresh AsyncStream, so cancelling a replaced consumer can
     // never starve the current one. See StreamChannel.swift for the invariant.
-    private let silenceChannel = StreamChannel<SilenceEvent>()
-    private let bargeInChannel = StreamChannel<Void>()
+    let silenceChannel = StreamChannel<SilenceEvent>()
+    let bargeInChannel = StreamChannel<Void>()
     let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
+    let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
+    func makeInputLevelStream() -> AsyncStream<InputLevel> { inputLevelChannel.makeStream() }
 
     // Engine/analyzer state. Internal rather than `private` (like `commandChannel`
     // above) because the engine lifecycle lives in the sibling
@@ -178,6 +199,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var detectionTask: Task<Void, Never>?
     var transcriptionTask: Task<Void, Never>?
     var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+    /// #185: the tap's per-buffer levels, drained on the main actor into the VAD.
+    var levelTask: Task<Void, Never>?
+    var levelContinuation: AsyncStream<InputLevelSample>.Continuation?
 
     /// Whether a `startListening()` is between its entry guard and its return
     /// (#133 audit 1c). `audioEngine` cannot express this: it stays nil across
@@ -224,7 +248,27 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// windows.
     var pendingFirstHypothesisSince: AnyClock<Duration>.Instant?
 
-    private var isTTSPlaybackActive = false
+    var isTTSPlaybackActive = false
+
+    // MARK: Speech detection (#185 track A — the logic lives in +VAD.swift)
+
+    /// The band-limited level detector fed by the tap.
+    var energyVAD = EnergyVAD()
+    /// Each detector's current opinion; speech is active when EITHER says so.
+    var energySpeaking = false
+    var speechDetectorSpeaking = false
+    /// Whether this window's analyzer has a SpeechDetector paired
+    /// (`VADTuning.commandGateSensitivity`) — its result count is reported
+    /// only then.
+    var speechDetectorPaired = false
+    /// When the last level buffer arrived — a detector with no recent audio is
+    /// not "hearing silence", it is not hearing anything.
+    var lastLevelAt: AnyClock<Duration>.Instant?
+    /// The clock-driven silence check (#185): fires at the hangover deadline
+    /// even when no detector event arrives to re-evaluate the silence.
+    var silenceCheckTask: Task<Void, Never>?
+    /// The answer recording in progress, if any (`beginAnswerDetection`).
+    var answerSession: AnswerDetectionSession?
 
     /// Fail-loud command availability (#77). Written by `prepareAssets()` and by
     /// every failure path that previously swallowed its error silently. Each
@@ -255,7 +299,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     var state: State = .idle
 
-    private let clock: AnyClock<Duration>
+    let clock: AnyClock<Duration>
 
     /// Requests speech-recognition authorization and returns the resulting
     /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
@@ -287,6 +331,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
         bargeInChannel.finish()
         commandChannel.finish()
         commandAvailabilityChannel.finish()
+        inputLevelChannel.finish()
     }
 
     // MARK: - Authorization + assets
@@ -308,82 +353,8 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     // MARK: - Result Handling
 
-    func handleSpeechDetectorResult(speechDetected: Bool) {
-        if speechDetected {
-            // Barge-in: only when TTS is playing on an external audio route
-            // (echo from the device speaker would trigger false positives).
-            if isTTSPlaybackActive && isExternalAudioRoute() {
-                bargeInChannel.yield(())
-                Logger.voice.info("🗣️ Barge-in: speech detected during TTS on external route")
-                return
-            }
-
-            switch state {
-            case .idle:
-                state = .speechActive(since: clock.now)
-                // Anchor the first-hypothesis latency clock (#120): measured
-                // from VAD speech-start (engine-independent — SpeechDetector
-                // runs identically under both engines) to the first transcriber
-                // result, so the number is comparable across engines.
-                pendingFirstHypothesisSince = clock.now
-                silenceChannel.yield(.speechStarted)
-                Logger.voice.debug("🔇 Silence detection: speech started")
-                // VAD-transition telemetry: if these never fire on a device with a
-                // silent command path, audio isn't reaching the analyzer at all.
-                SentryLog.info("vad speech began", category: .voice)
-            case let .silenceAccumulating(speechStart, _):
-                // Resume the SAME utterance — keep its original start so a brief
-                // mid-utterance pause doesn't reset the speech-duration clock.
-                state = .speechActive(since: speechStart)
-                Logger.voice.debug("🔇 Silence detection: speech resumed")
-            case .speechActive:
-                break
-            }
-        } else {
-            switch state {
-            case let .speechActive(speechStart):
-                state = .silenceAccumulating(speechStart: speechStart, since: clock.now)
-                Logger.voice.debug("🔇 Silence detection: silence started after speech")
-            case let .silenceAccumulating(speechStart, since):
-                let silenceElapsed = since.duration(to: clock.now).timeInterval
-                let speechDuration = speechStart.duration(to: since).timeInterval
-                switch SilenceStopDecision.evaluate(speechDuration: speechDuration, silenceElapsed: silenceElapsed) {
-                case .wait:
-                    break
-                case .stop:
-                    silenceChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
-                    state = .idle
-                    SentryLog.info("vad speech ended", category: .voice, attributes: ["speechSecs": speechDuration])
-                    Logger.voice.debug("🔇 Silence detection: threshold reached (\(String(format: "%.1f", silenceElapsed), privacy: .public)s)")
-                case .rejectBlip:
-                    // Utterance too short (cough/blip/mic-pop) — drop it silently.
-                    state = .idle
-                    Logger.voice.debug("🔇 Silence detection: rejected blip (\(String(format: "%.2f", speechDuration), privacy: .public)s speech)")
-                }
-            case .idle:
-                break
-            }
-        }
-    }
-
-    /// Consume the pending first-hypothesis latency anchor: milliseconds from
-    /// VAD speech-start to now, or `nil` when no utterance is pending (already
-    /// consumed, or the transcript preceded any VAD transition). One-shot per
-    /// utterance — the metric means "how long until the engine said ANYTHING".
-    func consumeFirstHypothesisLatencyMs() -> Int? {
-        guard let since = pendingFirstHypothesisSince else { return nil }
-        pendingFirstHypothesisSince = nil
-        return Int((since.duration(to: clock.now).timeInterval * 1000).rounded())
-    }
-
-    // MARK: - Helpers
-
-    private func isExternalAudioRoute() -> Bool {
-        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
-        let externalPorts: Set<AVAudioSession.Port> = [
-            .bluetoothA2DP, .bluetoothHFP, .bluetoothLE,
-            .carAudio, .airPlay, .headphones, .headsetMic,
-        ]
-        return outputs.contains { externalPorts.contains($0.portType) }
-    }
+    //
+    // handleSpeechDetectorResult() / handleInputLevel() — the speech state
+    // machine, the clock-driven silence check and the per-recording detection
+    // session — live in SilenceDetectionService+VAD.swift.
 }

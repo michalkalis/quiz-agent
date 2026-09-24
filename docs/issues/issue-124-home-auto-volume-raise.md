@@ -1,7 +1,7 @@
 # Issue 124: App raises system volume automatically on Home
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Mechanism is LIKELY (not proven): the Home screen arms Voice Processing I/O on the mic and (re)activates a `.playAndRecord` session with no user audio action, both code-confirmed; which one the founder heard needs a device A/B. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Mechanism is LIKELY (not proven): the Home screen arms Voice Processing I/O on the mic and (re)activates a `.playAndRecord` session with no user audio action, both code-confirmed; which one the founder heard needs a device A/B. Needs light issue prep (direction + tracks) before implementation.
 **Created:** 2026-07-28
 
 > **2026-08-04 — #136 landed and changes this issue's ground truth.** The launch-time eager `setupAudioSession`/`setActive(true)` in `AppState.init` (candidate (A)'s trigger) is REMOVED. Home now activates a *quiet mixable* session (`AudioService.setupQuietListeningSession`: `.playAndRecord`, `[.mixWithOthers, .allowBluetoothA2DP, .defaultToSpeaker]`, no ducking) only when the command window arms, and the settle loop's repeated `setActive(true)` now re-activates under that mixable category. Candidate (B) — VPIO armed by the Home listener — still fires exactly as before. **Re-run the device A/B after #136 is on the founder's device**; if the volume jump is gone, (A) was the mechanism and this issue closes with #136.

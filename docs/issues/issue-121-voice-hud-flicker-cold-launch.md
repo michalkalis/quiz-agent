@@ -1,7 +1,7 @@
 # Issue 121: Voice-command HUD flickers on cold launch (shown → hidden → shown)
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Symptom and the failing state transition are CONFIRMED against code + Sentry telemetry from that morning's sessions; the *ordering* that produces the first (premature) "shown" beat is LIKELY, not proven. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test. Symptom and the failing state transition are CONFIRMED against code + Sentry telemetry from that morning's sessions; the *ordering* that produces the first (premature) "shown" beat is LIKELY, not proven. Needs light issue prep (direction + tracks) before implementation.
 **Created:** 2026-07-28
 
 ## Symptom

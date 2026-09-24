@@ -38,8 +38,8 @@ The number stays as the stable anchor (file names, cross-refs, git); the title i
 | `NN.X` | Sub-task X within issue #NN (e.g. `42.20`) — name it when referenced |
 | `RS-01`..`RS-NN` | iOS regression scenario (end-to-end sim test), see `/regression` |
 | `Track A/B/…` | A parallel stream of work inside one issue |
-| `Ralph` | Overnight autonomous agent loop (runs on `mba`) |
-| `mba` | The agent Mac (`ssh mba`) that builds iOS + runs Ralph |
+| `Ralph` | Retired overnight agent loop (stopped 2026-09-16); appears in older docs only |
+| `mba` | The agent Mac (reachable via Remote Control) that builds iOS |
 | `MCQ` | Multiple-choice question (vs. open/voice answer) |
 
 ## API Contract
@@ -62,34 +62,30 @@ When changing API models:
 
 Advisor/orchestrator pattern via native `Agent`/Workflow `model` only — no third-party plugins or hooks.
 Bulk work (reads, searches, mechanical edits, tests) → Sonnet/Haiku subagents. Frontier only at decision points: planning, architecture, security, verify-before-done, or after 2+ failed attempts. For multi-file work let frontier plan, cheap workers execute.
-Session driver model is a per-session `/model` choice (not file-set); cheapest = Sonnet driver + frontier advisor subagents.
+Session driver: **Opus 5.5 at `high` effort** (founder, 2026-09-24; set in user `modelSettings`). Per-turn depth: `/effort` or `ultrathink` — changing effort keeps the prompt cache, switching models does not.
 
-### Opus 5 vs Fable 5
+### Opus 5.5 vs Fable 5.1 — escalation ladder (founder, 2026-09-24)
 
-This section picks *which frontier model* — it does **not** override the delegation rule above. Delegation is decided first (does this work belong in a cheap subagent?), model tier second (if it is frontier work, Opus or Fable?). Mechanical edits and test runs still go to Sonnet/Haiku subagents regardless of what the driver is running on.
+Delegation is decided first (does this belong in a cheap subagent?), frontier tier second. Anthropic's own evals put Opus 5.5 at or above Fable 5.1 on every published benchmark (agentic coding, research, knowledge work) at ~⅖ the price (Fable $10/$50 vs Opus $4/$20 per MTok), so **Opus 5.5 does all frontier work by default** — implementation, planning, reviews, debugging, deploys.
 
-**Opus 5 is the default frontier model.** Fable 5 costs roughly 2× Opus 5, so it is never the automatic choice for "this feels important".
+Escalate in this order, never skipping a rung:
+1. Opus 5.5 at `high` (default).
+2. Same task at `xhigh`/`max` (`/effort`, or `ultrathink` for one turn).
+3. **Fable 5.1** only when: Opus has failed twice on the same problem even at rung 2; or deep multistep research / an hours-long unattended task that ends in a finished document; or the founder asks for it.
 
-Reach for **Fable 5** only when one of these holds:
-- The problem is genuinely hard and Opus has already failed or stalled on it.
-- A long unattended autonomous run (Ralph on `mba`) where nobody is watching to course-correct.
-- Architecture / design decisions or adversarial flaw-hunting where a wrong call is expensive to undo.
-- Orchestrating many parallel subagents at once.
-- First shot at a large, well-specified implementation.
+Important plans (architecture, data model, anything costly to undo) get an **independent fresh-context review** (Opus subagent, `/design-soundness`) before implementation — a second pair of eyes buys more robustness than a pricier model.
 
-Stay on **Opus 5** for every other frontier-level call: the interactive driver, reviews, deploys, debugging, and anything where Opus at medium/high effort already lands the right answer. Paying double for the same output is a defect, not caution.
+**Prompting differs by model.**
+- *Opus 5.5* wants **brakes**, not encouragement: it always thinks and self-verifies, so "think carefully" / "double-check your work" only adds cost. State what done means and explicit limits.
+- *Fable 5.1* wants **goal + constraints + why**, not a procedure — step-by-step instructions degrade it. It sometimes ends a turn describing next steps instead of doing them: tell it to finish the whole task and to stop only for destructive actions or genuine blockers.
 
-**Prompting differs by model — this matters more than the price.**
-- *Fable 5* wants **goal + constraints + why**, not a procedure. Step-by-step instructions degrade it. The prescriptive pipeline skills (`prepare-issue`, `split-issue`) are written for Opus; do not point them at Fable without loosening them first.
-- *Opus 5* wants **brakes**, not encouragement. It self-verifies and self-critiques already, so "double-check your work at the end" only adds cost. Keep instructions short and give it explicit limits.
+### Working with subagents
 
-### Working with Opus 5 subagents
-
-- **Don't add self-verification boilerplate.** Opus 5 already re-checks its own work. Ask for verification only where a *different* pair of eyes is the point (security review, gate reviewers, adversarial checks).
-- **Keep the fan-out narrow.** Roughly ≤ 3 subagents per step is the normal shape — not a hard ceiling (Rule #12 governs *work size* by judgment; this is about *concurrent helpers*, a different axis). Going wider is fine when the work genuinely parallelises — a `/regression` sweep, a broad audit — but it should be a deliberate call, not the reflex. Delegating is not free.
-- **Delegate for context, not for prestige.** Spawn a subagent when the work would dump bulk file contents into the main context (Rule #12), or when it genuinely runs in parallel. Never spawn one for work that is faster done inline.
-- **Give subagents a tight output contract.** State what to return and how long (findings only, `file:line` + one-line fix, no audit trails) — otherwise Opus returns long reports and the token saving evaporates.
-- **Match model to job explicitly.** Every `Agent` call passes `model`; unstated means it inherits the driver, which is usually more expensive than the job deserves.
+- **Verification only from a different pair of eyes** (security review, plan review, adversarial checks) — never self-check boilerplate.
+- **Keep the fan-out narrow.** Roughly ≤ 3 concurrent subagents per step; go wider only deliberately (a `/regression` sweep, a broad audit).
+- **Delegate for context, not for prestige.** Spawn one when the work would dump bulk file contents into the main context (Rule #12) or genuinely runs in parallel; check its evidence before accepting it.
+- **Give subagents a tight output contract** — what to return and how long (findings only, `file:line` + one-line fix).
+- **Match model to job explicitly.** Every `Agent` call passes `model`; unstated inherits the driver.
 
 ## Config & Infrastructure
 

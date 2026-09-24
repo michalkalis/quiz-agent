@@ -1,8 +1,9 @@
 ---
 name: code-reviewer
 description: Review recent code changes for quality, security, and consistency. Use proactively after significant changes.
-allowed-tools: Bash, Read, Grep, Glob
+tools: Bash, Read, Grep, Glob
 model: sonnet
+effort: high
 ---
 
 You are a senior code reviewer for the quiz-agent monorepo (iOS + Python).

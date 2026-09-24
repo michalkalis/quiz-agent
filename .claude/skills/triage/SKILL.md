@@ -63,9 +63,9 @@ A DoR that bench-presses every bug-fix through 7 points is its own failure mode.
 |-----------|------|
 | `<10 turns`, reversible (class `a`) | C1 + C3 + C5 **soft** (note gaps, don't block) |
 | `10–30 turns` | all 7, **hard** on C1 / C5 / C6 |
-| `30+ turns` / cross-cutting / overnight | all 7 **hard** + independent `/ready-check` `READY` + human checkpoint before any class `b`/`c` |
+| `30+ turns` / cross-cutting / overnight | all 7 **hard** + independent `/design-soundness` `SOUND` + human checkpoint before any class `b`/`c` |
 
-So a small reversible bug-fix is **not** forced through the full 7-point gate; a cross-cutting overnight issue is. Refuse the `ready-for-agent` transition when C1/C3/C5 are absent or C6 is undeclared (at the issue's scale tier). For `30+`/cross-cutting work, also require an independent `/ready-check` pass (maker ≠ checker on the *input*, symmetric to the loop's reviewer on the output).
+So a small reversible bug-fix is **not** forced through the full 7-point gate; a cross-cutting issue is. Refuse the `ready-for-agent` transition when C1/C3/C5 are absent or C6 is undeclared (at the issue's scale tier). For `30+`/cross-cutting work, also require an independent `/design-soundness` pass (maker ≠ checker on the *input*, symmetric to the PR reviewer on the output).
 
 ## Where state lives
 
@@ -146,7 +146,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
 4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants `/to-prd`.
 
 5. **Apply the outcome:**
-   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see above), and **clear the Definition-of-Ready** (C1–C7 scaled to the task — see "Definition-of-Ready" above): set the `**Reversibility:**` header field (C6), and at the issue's scale tier confirm C1/C3/C5 are present. Do **not** move to `ready-for-agent` when C1/C3/C5 are absent or C6 is undeclared. For a `30+`-turn / cross-cutting issue, also run `/ready-check` and require `READY`. A small reversible (class `a`) bug-fix is not forced through the full 7-point gate (apply C1+C3+C5 soft). Update the `**Triage:**` line. Optionally surface to TODO.md.
+   - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see above), and **clear the Definition-of-Ready** (C1–C7 scaled to the task — see "Definition-of-Ready" above): set the `**Reversibility:**` header field (C6), and at the issue's scale tier confirm C1/C3/C5 are present. Do **not** move to `ready-for-agent` when C1/C3/C5 are absent or C6 is undeclared. For a `30+`-turn / cross-cutting issue, also run `/design-soundness` and require `SOUND`. A small reversible (class `a`) bug-fix is not forced through the full 7-point gate (apply C1+C3+C5 soft). Update the `**Triage:**` line. Optionally surface to TODO.md.
    - `ready-for-human` — same brief structure, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info` — append a Triage Notes section (template below). Update `**Triage:**`.
    - `wontfix` (bug) — short polite explanation in the issue, set state to `wontfix`, mark `[x]` in TODO if listed (don't delete the issue file — keep historical record).

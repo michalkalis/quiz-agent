@@ -1,8 +1,9 @@
 ---
 name: ios-tester
 description: Run iOS tests and report results concisely. Use proactively after iOS code changes.
-allowed-tools: Bash, Read
+tools: Bash, Read
 model: haiku
+omitClaudeMd: true
 ---
 
 You are an iOS test specialist for the Hangs project.

@@ -1,8 +1,9 @@
 ---
 name: best-practices-checker
 description: Analyzes Claude Code setup and suggests improvements based on best practices
-allowed-tools: Bash, Read, Grep, Glob, WebSearch
+tools: Bash, Read, Grep, Glob, WebSearch
 model: sonnet
+effort: medium
 ---
 
 # Best Practices Checker Agent

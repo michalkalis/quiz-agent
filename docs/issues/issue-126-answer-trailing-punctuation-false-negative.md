@@ -1,7 +1,7 @@
 # Issue 126: Correct answer marked wrong when the transcript carries a trailing period
 
 **Triage:** bug · needs-triage
-**Status:** Filed 2026-07-28 from the founder's TestFlight field test (older build). The punctuation theory in the title is REFUTED in code; the real mechanism is that answers are scored in English against a Slovak-spoken transcript — CONFIRMED as a code path, but which of the two branches fired for the two screenshots is UNPROVEN without session logs. Needs `/prepare-issue` before an agent run.
+**Status:** Filed 2026-07-28 from the founder's TestFlight field test (older build). The punctuation theory in the title is REFUTED in code; the real mechanism is that answers are scored in English against a Slovak-spoken transcript — CONFIRMED as a code path, but which of the two branches fired for the two screenshots is UNPROVEN without session logs. Needs light issue prep (direction + tracks) before implementation.
 **Created:** 2026-07-28
 
 ## Symptom

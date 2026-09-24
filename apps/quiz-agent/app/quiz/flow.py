@@ -13,7 +13,9 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from ..evaluation.evaluator import AnswerEvaluator
+from ..client_capabilities import ANSWER_CODES, has_capability
+from ..evaluation.evaluator import UNMATCHED, AnswerEvaluator
+from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
@@ -28,6 +30,7 @@ from quiz_shared.models.submit import AudioInfo, Evaluation
 from quiz_shared.models.phase import SessionPhase
 
 from .errors import (  # noqa: F401 — re-exported: routes and tests import from here
+    AnswerUnmatched,
     QuestionMismatch,
     QuestionUnavailable,
 )
@@ -384,6 +387,7 @@ class QuizFlowService:
                 spoken_question_text(
                     translated_q_dict["question"],
                     translated_q_dict.get("possible_answers"),
+                    session,
                 ),
                 session.language,
             )
@@ -420,6 +424,13 @@ class QuizFlowService:
         # Parse intents (fast-path for literal "skip")
         if answer_text.strip().lower() == "skip":
             intents = [{"intent_type": "skip", "extracted_data": {}}]
+        elif match_option(answer_text, display_question.possible_answers):
+            # #185 G: an utterance that names one option IS the answer — no LLM
+            # classifier needed, and it keeps a one-character "C" / "3" away from
+            # the parser's empty-input rule, which would turn it into a skip.
+            intents = [
+                {"intent_type": "answer", "extracted_data": {"answer": answer_text}}
+            ]
         else:
             intents = await self.input_parser.parse(
                 user_input=answer_text,
@@ -448,6 +459,18 @@ class QuizFlowService:
                     question=display_question,
                     question_text=display_question.question,
                 )
+                if eval_result == UNMATCHED:
+                    logger.info(
+                        "MCQ answer matched no option: heard=%r question=%s",
+                        user_answer,
+                        evaluated_question_id,
+                    )
+                    if has_capability(session, ANSWER_CODES):
+                        # Before any score/record mutation: the client re-asks
+                        # and the retry grades as a fresh first submission.
+                        raise AnswerUnmatched(user_answer)
+                    # Builds that predate `answer-codes` know no such verdict.
+                    eval_result = "incorrect"
 
                 translated_correct = await self._correct_answer_display(
                     question, translation, session

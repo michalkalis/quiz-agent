@@ -112,7 +112,7 @@ async def get_question_audio(
 
         # MCQ options are part of the spoken audio (founder 2026-08-03) but
         # never of the cached display text.
-        speech_text = spoken_question_text(question_text, possible_answers)
+        speech_text = spoken_question_text(question_text, possible_answers, session)
 
         # Founder bug 2026-07-12: tts-1 reads embedded digits with English
         # pronunciation in Slovak text — spell them out for the TTS input only

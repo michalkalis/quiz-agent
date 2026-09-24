@@ -122,11 +122,17 @@ class Settings(BaseSettings):
     # is the OpenAI model used when Scribe is unavailable — set it back to
     # "whisper-1" to roll all the way back, or `stt_provider="openai"` to skip
     # Scribe entirely. `stt_trailing_logprob_cutoff`: words below this at the end
-    # of a transcript are dropped as noise (logprob ≤ 0, higher = confident).
+    # of a transcript count as noise (logprob ≤ 0, higher = confident).
+    # `stt_trim_trailing_low_confidence` (#185 E): whether that noise run is
+    # actually cut from the text. OFF until the cutoff is measured on car
+    # recordings — an answer in a foreign language ("curling" in a Slovak quiz)
+    # scores low confidence and was at risk of being cut; while off, the run is
+    # only logged ("would have trimmed …") so it can be calibrated.
     stt_provider: str = "elevenlabs"
     stt_fallback_model: str = "gpt-transcribe"
     elevenlabs_stt_model: str = "scribe_v2"
     stt_trailing_logprob_cutoff: float = -1.0
+    stt_trim_trailing_low_confidence: bool = False
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None

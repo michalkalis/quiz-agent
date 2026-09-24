@@ -105,10 +105,14 @@ class ScribeBatchTranscriber:
         model: str = "scribe_v2",
         logprob_cutoff: float = -1.0,
         api_key: Optional[str] = None,
+        trim_trailing: bool = False,
     ):
         self.model = model
         self.logprob_cutoff = logprob_cutoff
         self._api_key = api_key
+        # #185 E: cutting is opt-in until the cutoff is calibrated — see
+        # `Settings.stt_trim_trailing_low_confidence`.
+        self.trim_trailing = trim_trailing
 
     @property
     def api_key(self) -> Optional[str]:
@@ -170,15 +174,36 @@ class ScribeBatchTranscriber:
         words = [w for w in raw_words if w.get("type") == "word"]
         kept, stripped = trim_trailing_low_confidence(words, self.logprob_cutoff)
 
-        if stripped:
+        text_words = kept
+        if stripped and self.trim_trailing:
             logger.info(
                 "Scribe trimmed %d trailing low-confidence word(s): %s",
                 len(stripped),
                 " ".join(stripped),
             )
+        elif stripped:
+            # Calibration data for the uncalibrated cutoff: what WOULD have been
+            # cut, with every word's confidence, while the text keeps it all.
+            text_words = words
+            logger.info(
+                "Scribe trailing low-confidence run kept (trim off, cutoff=%.2f): "
+                "would have trimmed %d word(s) %r; word logprobs=%s",
+                self.logprob_cutoff,
+                len(stripped),
+                " ".join(stripped),
+                [
+                    (
+                        str(w.get("text", "")),
+                        round(float(w.get("logprob", 0.0) or 0.0), 3),
+                    )
+                    for w in words
+                ],
+            )
 
         if kept:
-            text = " ".join(str(w.get("text", "")) for w in kept).strip()
+            text = " ".join(str(w.get("text", "")) for w in text_words).strip()
+            # Confidence stays measured on the answer run either way, so the
+            # `is_valid` low-confidence gate behaves exactly as with trimming on.
             avg_logprob = fmean(float(w.get("logprob", 0.0) or 0.0) for w in kept)
         else:
             text = str(payload.get("text") or "").strip()

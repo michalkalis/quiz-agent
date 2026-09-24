@@ -3,11 +3,12 @@
 Answers are recorded in a moving car: whisper-1 had no per-word confidence, so
 road noise and passenger speech captured after the answer were graded as part
 of it, and a quota outage on ElevenLabs must never cost the player their turn.
-These tests pin the two guarantees that follow from that — trailing
-low-confidence words get cut (but never the whole transcript), and every Scribe
-failure mode falls through to OpenAI — plus the keyterm hygiene that keeps a
-long MCQ option from 422-ing the call, and the two rollback levers
-(`STT_PROVIDER=openai`, fallback model `whisper-1`).
+These tests pin the guarantees that follow from that — the trailing
+low-confidence run is identified (and cut only when the #185 setting enables
+it, never the whole transcript), and every Scribe failure mode falls through to
+OpenAI — plus the keyterm hygiene that keeps a long MCQ option from 422-ing the
+call, and the two rollback levers (`STT_PROVIDER=openai`, fallback model
+`whisper-1`).
 """
 
 from __future__ import annotations
@@ -94,8 +95,12 @@ def key(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_API_KEY", "fake-key")
 
 
-async def test_scribe_success_trims_trailing_noise(monkeypatch, key, caplog):
-    """The trailing low-confidence run is road noise, not part of the answer."""
+async def test_scribe_success_trims_trailing_noise_when_enabled(
+    monkeypatch, key, caplog
+):
+    """With the #185 setting on, the trailing low-confidence run is cut as road
+    noise — the #184 behaviour, kept behind the lever for once it is calibrated."""
+    monkeypatch.setenv("STT_TRIM_TRAILING_LOW_CONFIDENCE", "true")
     payload = _scribe_payload(
         _words(("Paríž", -0.05), ("hmm", -2.4), ("čo", -3.1)), duration=3.0
     )
@@ -111,6 +116,27 @@ async def test_scribe_success_trims_trailing_noise(monkeypatch, key, caplog):
     assert result.avg_logprob == pytest.approx(-0.05)
     assert result.is_valid()
     assert "provider=scribe" in caplog.text
+
+
+async def test_trailing_trim_is_off_by_default_and_logs_what_it_would_cut(
+    monkeypatch, key, caplog
+):
+    """#185 E: the -1.0 cutoff was never calibrated, and a foreign answer word
+    ("curling" in a Slovak quiz) scores low confidence — so by default nothing is
+    cut. The would-be cut is logged with every word's logprob (calibration
+    data), and confidence is still measured on the answer run, so the
+    low-confidence gate rejects exactly what it rejected with trimming on."""
+    payload = _scribe_payload(_words(("Hrali", -0.1), ("curling", -1.8)), duration=2.0)
+    _mock_scribe(monkeypatch, payload=payload)
+
+    with caplog.at_level("INFO"):
+        result = await VoiceTranscriber().transcribe(io.BytesIO(b"x"), "answer.wav")
+
+    assert result.text == "Hrali curling"  # the answer word survives
+    assert result.avg_logprob == pytest.approx(-0.1)
+    assert result.is_valid()
+    assert "would have trimmed 1 word(s) 'curling'" in caplog.text
+    assert "('curling', -1.8)" in caplog.text
 
 
 async def test_trimming_never_empties_the_transcript(monkeypatch, key):
@@ -255,13 +281,38 @@ async def test_mcq_keyterms_prefers_the_translation_the_player_heard():
 
     class S:
         language = "sk"
+        client_capabilities: list[str] = []
         current_question_translation = {
             "question_id": "q1",
             "language": "sk",
             "possible_answers": {"a": "Mexiko", "b": "Brazília"},
         }
 
-    assert mcq_keyterms(Q(), S()) == ["Mexiko", "Brazília"]
+    terms = mcq_keyterms(Q(), S())
+    assert terms[:2] == ["Mexiko", "Brazília"]
+    assert "Mexico" not in terms
+
+
+async def test_mcq_keyterms_include_the_labels_the_player_says():
+    """#185 G: the car test lost a spoken "C" entirely. The recogniser is told
+    the words for the labels this client shows — letters for a build that
+    predates `option-labels`, 1–4 (or letters for numeric options) after it."""
+    from app.api.routes.voice import mcq_keyterms
+
+    class Q:
+        id = "q1"
+        possible_answers = {"a": "Mars", "b": "Venus", "c": "Jupiter", "d": "Saturn"}
+
+    class Legacy:
+        language = "sk"
+        client_capabilities: list[str] = []
+        current_question_translation = None
+
+    class Labelled(Legacy):
+        client_capabilities = ["option-labels"]
+
+    assert mcq_keyterms(Q(), Legacy())[4:] == ["áčko", "béčko", "céčko", "déčko"]
+    assert mcq_keyterms(Q(), Labelled())[4:] == ["jedna", "dva", "tri", "štyri"]
 
 
 async def test_scribe_unavailable_is_typed():

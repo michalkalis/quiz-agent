@@ -61,3 +61,19 @@ class QuestionMismatch(QuizFlowError):
             f"(current={current_question_id})"
         )
         self.current_question_id = current_question_id
+
+
+class AnswerUnmatched(QuizFlowError):
+    """An MCQ answer that names no option, from a client that re-asks (#185 G).
+
+    Not the player's fault and not a wrong answer: the recogniser heard
+    something ("xyz", "b alebo c") that maps to no single option. Only raised
+    for sessions that declared ``answer-codes`` — they re-prompt exactly as for
+    an empty answer — and before any mutation, so nothing is graded, scored or
+    charged and the retry is a fresh first submission. Older builds never see
+    it: for them the flow keeps grading such an answer "incorrect".
+    """
+
+    def __init__(self, heard: str):
+        super().__init__(f"MCQ answer matched no option (heard={heard!r})")
+        self.heard = heard

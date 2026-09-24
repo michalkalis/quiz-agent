@@ -3,7 +3,8 @@
 //  Hangs
 //
 //  The mic side of the command listener: installing the tap that pumps the
-//  input node into the SpeechAnalyzer. Split out of
+//  input node into the SpeechAnalyzer and measures each buffer's level for
+//  the energy VAD (#185 track A). Split out of
 //  SilenceDetectionService+Engine.swift (past the ~300-line cap); the analyzer
 //  lifecycle stays there.
 //
@@ -34,11 +35,14 @@ extension SilenceDetectionService {
         format: AVAudioFormat,
         analyzerFormat: AVAudioFormat,
         continuation: AsyncStream<AnalyzerInput>.Continuation,
+        levels: AsyncStream<InputLevelSample>.Continuation,
         answerSink: OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>
     ) {
         let tapFormat = format
         let tapAnalyzerFormat = analyzerFormat
         let tapConverter = format == analyzerFormat ? nil : AVAudioConverter(from: format, to: analyzerFormat)
+        // Filter state carries across buffers; the tap is its only user.
+        let meter = OSAllocatedUnfairLock(initialState: InputLevelMeter(sampleRate: analyzerFormat.sampleRate))
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { @Sendable buffer, _ in
             if let tapConverter {
@@ -71,12 +75,26 @@ extension SilenceDetectionService {
                 if error == nil {
                     continuation.yield(AnalyzerInput(buffer: convertedBuffer))
                     Self.tee(convertedBuffer, into: answerSink)
+                    Self.measure(convertedBuffer, with: meter, into: levels)
                 }
             } else {
                 continuation.yield(AnalyzerInput(buffer: buffer))
                 Self.tee(buffer, into: answerSink)
+                Self.measure(buffer, with: meter, into: levels)
             }
         }
+    }
+
+    /// #185 track A: the buffer's band-limited level for the energy VAD — on
+    /// the analyzer-format audio, the same samples the answer capture keeps.
+    /// Audio-thread code: one uncontended lock, one pass over the samples.
+    nonisolated static func measure(
+        _ buffer: AVAudioPCMBuffer,
+        with meter: OSAllocatedUnfairLock<InputLevelMeter>,
+        into levels: AsyncStream<InputLevelSample>.Continuation
+    ) {
+        guard let sample = meter.withLockUnchecked({ $0.measure(buffer) }) else { return }
+        levels.yield(sample)
     }
 
     /// #184 track B: hand the analyzer-format buffer to the answer capture as

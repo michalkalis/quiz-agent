@@ -12,10 +12,14 @@ import os
 // MARK: - Stop & Submit
 
 extension RecordingCoordinator {
-    /// Stop recording and submit the audio for evaluation
-    func stopRecordingAndSubmit() async {
+    /// Stop recording and submit the audio for evaluation. `reason` says who
+    /// ended it (#185 track A telemetry); a `.noSpeechWindow` expiry first asks
+    /// whether the detector can vouch for the silence (see
+    /// `noSpeechWindowMayEndRecording`).
+    func stopRecordingAndSubmit(reason: RecordingStopReason = .manual) async {
         // Guard against concurrent calls (silence detection + user tap can both trigger this)
         guard !isStoppingRecording else { return }
+        guard reason != .noSpeechWindow || noSpeechWindowMayEndRecording() else { return }
         isStoppingRecording = true
         defer { isStoppingRecording = false }
 
@@ -58,16 +62,25 @@ extension RecordingCoordinator {
         } else {
             // Batch path (#184 track B): stop the tee, wrap the PCM as WAV, upload.
             silenceDetectionService.setAnswerAudioSink(nil)
+            // Before the engine is released: stopping it resets the detector.
+            let detection = silenceDetectionService.endAnswerDetection()
             let capture = answerCapture.finish()
             releaseAnswerEngineIfOwned()
 
-            SentryLog.info("answer recording stopped", category: .audio, attributes: [
+            // #185 track A: why it stopped and what the detectors saw — the
+            // next car test's evidence (see AnswerDetectionReport).
+            var attributes: [String: Any] = [
                 "path": "batch",
                 "durationMs": capture.durationMs,
                 "bytes": capture.bytes,
                 "droppedBytes": capture.droppedBytes,
                 "heardSpeech": heardSpeech,
-            ])
+                "stopReason": reason.rawValue,
+                "windowDeferred": noSpeechWindowDeferral?.rawValue ?? "no",
+            ]
+            attributes.merge(detection.sentryAttributes) { current, _ in current }
+            SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
+            noSpeechWindowDeferral = nil
 
             // Under a fifth of a second of audio is dead air or an engine that
             // never delivered — not a transcription job. #171 Track B funnel.

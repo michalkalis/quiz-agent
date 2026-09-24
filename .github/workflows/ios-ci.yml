@@ -30,7 +30,8 @@ jobs:
     name: Build and Test iOS App
     # macos-latest: Xcode 26.3 may take time to land on GH-hosted runners; switch to macos-26 once available
     runs-on: macos-latest
-    timeout-minutes: 30
+    # A cold build (~11 min), unit tests (~6 min) and the RS XCUITest suite (~14 min, #180 track D) no longer fit in 30.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code

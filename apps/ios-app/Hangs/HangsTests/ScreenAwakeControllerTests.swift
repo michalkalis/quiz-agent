@@ -7,6 +7,13 @@
 //  quiz state, asleep on idle/finished/minimized) and prove the idle-timer
 //  flag is force-reset on teardown so it can never leak past a quiz.
 //
+//  #185 finding 7: the founder also reported the screen sleeping on the
+//  end-of-set recap while it was still reading answers/explanations aloud.
+//  `.finished` is where `SetRecapView`'s narration runs (`QuizViewModel+Recap.swift`
+//  — `isNarratingRecap` toggles true/false while `quizState` stays `.finished`
+//  the whole time), so the decision seam now takes that flag as the
+//  `.finished` exception instead of always sleeping there.
+//
 
 @testable import Hangs
 import Testing
@@ -23,15 +30,38 @@ struct ScreenAwakeControllerTests {
         )
     }
 
-    @Test("idle and finished never keep the screen awake, regardless of minimized")
-    func idleAndFinishedSleep() {
+    @Test("idle never keeps the screen awake, regardless of minimized or narration")
+    func idleSleeps() {
         for isMinimized in [false, true] {
-            #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .idle, isMinimized: isMinimized) == false)
-            #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .finished, isMinimized: isMinimized) == false)
+            for isNarratingRecap in [false, true] {
+                #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .idle, isMinimized: isMinimized, isNarratingRecap: isNarratingRecap) == false)
+            }
         }
     }
 
-    @Test("every other quiz state keeps the screen awake when not minimized")
+    @Test("finished sleeps once recap narration is not running")
+    func finishedSleepsWithoutNarration() {
+        for isMinimized in [false, true] {
+            #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .finished, isMinimized: isMinimized, isNarratingRecap: false) == false)
+        }
+    }
+
+    /// Founder 09-24 (#185 finding 7): the screen must not sleep while the
+    /// end-of-set recap is being read aloud, even though `quizState` is
+    /// `.finished` for the whole recap screen.
+    @Test("finished stays awake while recap narration is playing")
+    func finishedStaysAwakeDuringNarration() {
+        #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .finished, isMinimized: false, isNarratingRecap: true) == true)
+    }
+
+    /// Narration never plays while minimized (SetRecapView isn't the visible
+    /// screen), but the decision seam still honours the minimized guard first.
+    @Test("finished + narrating still sleeps while minimized")
+    func finishedNarratingSleepsWhileMinimized() {
+        #expect(ScreenAwakeController.shouldKeepScreenAwake(state: .finished, isMinimized: true, isNarratingRecap: true) == false)
+    }
+
+    @Test("every other quiz state keeps the screen awake when not minimized, regardless of narration")
     func activeStatesStayAwake() {
         let activeStates: [QuizState] = [
             .startingQuiz,
@@ -43,10 +73,12 @@ struct ScreenAwakeControllerTests {
             .error(message: "boom", context: .general),
         ]
         for state in activeStates {
-            #expect(
-                ScreenAwakeController.shouldKeepScreenAwake(state: state, isMinimized: false) == true,
-                "\(state) should keep the screen awake"
-            )
+            for isNarratingRecap in [false, true] {
+                #expect(
+                    ScreenAwakeController.shouldKeepScreenAwake(state: state, isMinimized: false, isNarratingRecap: isNarratingRecap) == true,
+                    "\(state) should keep the screen awake"
+                )
+            }
         }
     }
 
@@ -54,7 +86,7 @@ struct ScreenAwakeControllerTests {
     /// screen dimming — this must never silently regress back to "asleep".
     @Test("showingResult counts as active")
     func resultScreenStaysAwake() {
-        #expect(ScreenAwakeController.shouldKeepScreenAwake(state: makeResultState(), isMinimized: false) == true)
+        #expect(ScreenAwakeController.shouldKeepScreenAwake(state: makeResultState(), isMinimized: false, isNarratingRecap: false) == true)
     }
 
     @Test("minimized always sleeps, even mid-quiz")
@@ -62,7 +94,7 @@ struct ScreenAwakeControllerTests {
         let activeStates: [QuizState] = [.startingQuiz, .askingQuestion, .recording, .processing, .skipping, makeResultState()]
         for state in activeStates {
             #expect(
-                ScreenAwakeController.shouldKeepScreenAwake(state: state, isMinimized: true) == false,
+                ScreenAwakeController.shouldKeepScreenAwake(state: state, isMinimized: true, isNarratingRecap: false) == false,
                 "\(state) must sleep while minimized — QuestionView/ResultView aren't visible"
             )
         }
@@ -97,5 +129,33 @@ struct ScreenAwakeWriterTests {
         writer.reset()
 
         #expect(received == [true, false])
+    }
+
+    /// #185 finding 7 — the wiring ContentView actually drives: `.finished`
+    /// arrives first (recap screen shows), narration starts a moment later
+    /// (still `.finished`), then narration ends on its own (state unchanged)
+    /// and finally the user leaves the quiz back to `.idle`.
+    @Test("stays awake through finished + narration, sleeps once narration ends, stays asleep on leaving")
+    func recapNarrationLifecycle() {
+        var received: [Bool] = []
+        let writer = ScreenAwakeWriter(setIdleTimerDisabled: { received.append($0) })
+
+        // Recap screen appears; narration hasn't started yet (e.g. muted
+        // moment before autoPlayRecapIfHandsFree kicks in) — no reason to
+        // hold the screen awake yet.
+        writer.apply(state: .finished, isMinimized: false, isNarratingRecap: false)
+        // Narration starts (isNarratingRecap flips true, quizState unchanged).
+        writer.apply(state: .finished, isMinimized: false, isNarratingRecap: true)
+        #expect(received == [false, true])
+
+        // Narration finishes on its own (QuizViewModel+Recap.playRecapSummary
+        // sets isNarratingRecap = false when the chunk loop completes).
+        writer.apply(state: .finished, isMinimized: false, isNarratingRecap: false)
+        #expect(received == [false, true, false])
+
+        // User leaves the quiz back to idle — must stay asleep, never flip
+        // awake again.
+        writer.apply(state: .idle, isMinimized: false, isNarratingRecap: false)
+        #expect(received == [false, true, false, false])
     }
 }

@@ -459,6 +459,7 @@ class PublicQuestionWire(TypedDict):
     review_badge: NotRequired[str]
     translation_language: NotRequired[str]
     review_note: NotRequired[str]
+    option_labels: NotRequired[Dict[str, str]]
 
 
 class PublicQuestion(BaseModel):
@@ -503,6 +504,11 @@ class PublicQuestion(BaseModel):
     review_badge: Optional[str] = None
     translation_language: Optional[str] = None
     review_note: Optional[str] = None
+    # #185 G: option key → the label the player sees and says ("1".."4", or
+    # "A".."D" when the options are themselves numbers). Derived from the
+    # served options by the app (``app.evaluation.mcq_matcher.option_labels``);
+    # MCQ only, absent otherwise. Additive: clients that predate it ignore it.
+    option_labels: Optional[Dict[str, str]] = None
 
     @classmethod
     def from_question(cls, question: Question) -> "PublicQuestion":
@@ -559,4 +565,6 @@ class PublicQuestion(BaseModel):
             wire["translation_language"] = self.translation_language
         if self.review_note:
             wire["review_note"] = self.review_note
+        if self.option_labels:
+            wire["option_labels"] = self.option_labels
         return wire

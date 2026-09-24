@@ -23,7 +23,7 @@ from ..deps import (
     flow_to_response,
 )
 from ..session_auth import require_session_ownership
-from ..submit_errors import submit_http_error
+from ..submit_errors import retry_answer_error, submit_http_error
 from ...auth.identity import AuthSubject
 from ...review_badge import apply_review_badge
 from ...serializers import (
@@ -218,6 +218,7 @@ async def start_quiz(
                 spoken_question_text(
                     translated_question_dict["question"],
                     translated_question_dict.get("possible_answers"),
+                    session,
                 ),
                 session.language,
             )
@@ -285,9 +286,10 @@ async def submit_input(
         # untouched (no current_question_id advance, no question recorded). Surface
         # it as a 400 instead of silently returning an empty response.
         if flow_result.evaluation is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Could not understand your answer. Please try again.",
+            raise retry_answer_error(
+                session,
+                "no_answer",
+                "Could not understand your answer. Please try again.",
             )
 
         if flow_result.usage_limit_error:

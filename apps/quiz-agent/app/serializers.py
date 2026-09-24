@@ -11,6 +11,7 @@ from quiz_shared.models.question import PublicQuestion, Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.utils.text_normalization import normalize_text
 
+from .evaluation.mcq_matcher import option_labels
 from .review_badge import apply_review_badge
 from .stored_translation import stored_translation_record
 
@@ -58,7 +59,21 @@ def question_to_dict(question: Question) -> Dict[str, Any]:
     always present, media/extra keys omitted when unset), so iOS decoding is
     unchanged while OpenAPI now sees a typed contract.
     """
-    return PublicQuestion.from_question(question).model_dump()
+    return _with_option_labels(PublicQuestion.from_question(question).model_dump())
+
+
+def _with_option_labels(question_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Stamp ``option_labels`` for the options this dict actually serves (#185 G).
+
+    Recomputed whenever the options change (translation), because the label
+    scheme depends on the option text: numbers → letters.
+    """
+    options = question_dict.get("possible_answers")
+    if options:
+        question_dict["option_labels"] = option_labels(options)
+    else:
+        question_dict.pop("option_labels", None)
+    return question_dict
 
 
 def correct_option_key(question: Question) -> Optional[str]:
@@ -168,6 +183,7 @@ def apply_question_translation(
     question_dict["question"] = record["question"]
     if record.get("possible_answers"):
         question_dict["possible_answers"] = dict(record["possible_answers"])
+        _with_option_labels(question_dict)
     if record.get("explanation"):
         question_dict["explanation"] = record["explanation"]
     # No `headline_answer` overlay: the public question payload carries no

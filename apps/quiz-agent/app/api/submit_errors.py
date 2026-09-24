@@ -11,6 +11,10 @@ engage the shipped client retry, and a missing question row was a client-blaming
 Keep this the only place a submit-path exception becomes a status code. The
 statuses clients already depend on are fixed: 409 ``question_mismatch``, 400 for
 a client-side input problem, 503 for transient infra, 500 for everything else.
+
+#185: a session that declared ``answer-codes`` gets its "say it again" 400s as
+``{"code", "message"}`` (``no_speech`` / ``no_answer`` / ``mcq_unmatched``) so
+the client can tell them apart; every other session keeps the plain string.
 """
 
 import logging
@@ -20,7 +24,13 @@ from fastapi import HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as SATimeoutError
 
-from ..quiz.errors import InvalidSubmission, QuestionMismatch, QuestionUnavailable
+from ..client_capabilities import ANSWER_CODES, has_capability
+from ..quiz.errors import (
+    AnswerUnmatched,
+    InvalidSubmission,
+    QuestionMismatch,
+    QuestionUnavailable,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +67,18 @@ def submit_http_error(
             },
         )
 
+    if isinstance(exc, AnswerUnmatched):
+        # #185 G: only raised for `answer-codes` sessions, before any mutation.
+        # Same 400 family as an empty answer — the client asks again.
+        return HTTPException(
+            status_code=400,
+            detail={
+                "code": "mcq_unmatched",
+                "message": "Could not tell which option you meant. Please say it again.",
+                "heard": exc.heard,
+            },
+        )
+
     if isinstance(exc, InvalidSubmission):
         # Constructed validation text (format/size) — client-safe by design.
         logger.warning("Submission rejected for session %s: %s", session_id, exc)
@@ -79,6 +101,17 @@ def submit_http_error(
 
     # Anything unforeseen is a bug: never downgrade it to "just retry".
     return _server_fault(exc, session_id=session_id, detail=fallback_detail)
+
+
+def retry_answer_error(session, code: str, message: str) -> HTTPException:
+    """A "say it again" 400: coded for `answer-codes` sessions, legacy string otherwise.
+
+    ``code`` is ``no_speech`` (nothing usable was heard) or ``no_answer`` (speech,
+    but no answer in it). Nothing was graded or charged in either case.
+    """
+    if has_capability(session, ANSWER_CODES):
+        return HTTPException(status_code=400, detail={"code": code, "message": message})
+    return HTTPException(status_code=400, detail=message)
 
 
 def _server_fault(exc: Exception, *, session_id: str, detail: str) -> HTTPException:

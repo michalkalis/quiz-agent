@@ -81,9 +81,11 @@ class TestMCQEvaluator:
     def test_incorrect_by_value(self, evaluator):
         assert _mcq(evaluator, "London") == ("incorrect", 0.0)
 
-    def test_no_match_returns_incorrect(self, evaluator):
-        """An answer that is not one of the options is wrong, not an error."""
-        assert _mcq(evaluator, "Tokyo") == ("incorrect", 0.0)
+    def test_no_match_is_unmatched_not_incorrect(self, evaluator):
+        """#185 G (founder): an answer that names no option was not understood —
+        the player is asked again, never marked wrong. (The flow turns it back
+        into "incorrect" only for builds that predate `answer-codes`.)"""
+        assert _mcq(evaluator, "Tokyo") == ("unmatched", 0.0)
 
     def test_correct_answer_stored_as_value(self, evaluator):
         """The corpus stores ``correct_answer`` as the option TEXT on some rows
@@ -103,7 +105,7 @@ class TestMCQEvaluator:
         assert _mcq(evaluator, "b", correct_answer=["b", "c"]) == ("correct", 1.0)
 
     def test_empty_answer_matches_no_option(self, evaluator):
-        assert _mcq(evaluator, "") == ("incorrect", 0.0)
+        assert _mcq(evaluator, "") == ("unmatched", 0.0)
 
     @pytest.mark.asyncio
     async def test_empty_answer_is_skipped_before_reaching_the_matcher(self, evaluator):
@@ -120,29 +122,28 @@ class TestMCQEvaluator:
         assert normalize_text("  London  ") == "london"
 
 
-class TestMCQEvaluatorSlovakGap:
-    """Backend `_evaluate_mcq` does NOT translate Slovak ordinals / letter-forms.
+class TestMCQEvaluatorSpokenForms:
+    """#185 G: the server resolves every spoken form of a choice.
 
-    Raw transcript tokens like "jedna" (one), "dva" (two), "áčko" (A-form),
-    "pričko" (intentional non-Slovak / typo) cannot match keys (`a`–`d`) or
-    English values, so the backend returns "incorrect". This is the gap that
-    Track E task 42.15 (`MCQTranscriptMatcher` in `QuizViewModel+Recording.swift`)
-    is responsible for closing — the iOS layer normalizes the transcript to a
-    key letter BEFORE submitting to the API.
-
-    These tests pin the current contract: backend stays English-only; iOS owns
-    transcript → option resolution. If a future change adds Slovak handling
-    server-side, these tests fail loud and the iOS matcher can be simplified.
+    This class used to pin the opposite ("backend stays English-only; iOS owns
+    transcript → option resolution"). The #184 batch voice path uploads audio,
+    so the iOS matcher never runs and the founder's spoken "C" was graded
+    wrong in the car (2026-09-23). The server is now the one source of truth;
+    the full vocabulary table lives in test_mcq_matcher.py.
     """
 
     @pytest.mark.parametrize(
-        "token",
-        ["jedna", "dva", "áčko", "pričko"],
+        "spoken", ["jedna", "prvá", "áčko", "A", "the first one", "Paris"]
     )
-    def test_slovak_tokens_not_matched_backend_side(self, evaluator, token):
-        result, score = _mcq(evaluator, token)
-        assert result == "incorrect"
-        assert score == 0.0
+    def test_spoken_forms_of_the_right_option_score(self, evaluator, spoken):
+        assert _mcq(evaluator, spoken) == ("correct", 1.0)
+
+    @pytest.mark.parametrize("spoken", ["dva", "béčko", "tretia", "D"])
+    def test_spoken_forms_of_a_wrong_option_are_incorrect(self, evaluator, spoken):
+        assert _mcq(evaluator, spoken) == ("incorrect", 0.0)
+
+    def test_gibberish_is_unmatched(self, evaluator):
+        assert _mcq(evaluator, "pričko") == ("unmatched", 0.0)
 
 
 class TestMCQAwardsNoPartialCredit:
@@ -172,13 +173,23 @@ class TestMCQAwardsNoPartialCredit:
         assert evaluator._llm_evaluate.await_count == 0
 
     @pytest.mark.asyncio
-    async def test_partially_spoken_option_is_not_half_credit(self, evaluator):
-        """Saying "Paris France" is not selecting one of the options: MCQ
-        resolution is exact (post-normalization), so a near-miss scores 0.0
-        rather than partial credit."""
-        result, score = await evaluator.evaluate("Paris France", _question())
+    @pytest.mark.parametrize(
+        "spoken,expected",
+        [
+            ("Paris France", ("correct", 1.0)),  # names the option, plus filler
+            ("London please", ("incorrect", 0.0)),
+            ("Lyon", ("unmatched", 0.0)),  # names none: asked again, no score
+        ],
+    )
+    async def test_every_mcq_outcome_is_all_or_nothing(
+        self, evaluator, spoken, expected
+    ):
+        """Whatever the spoken form resolves to, an MCQ scores 1.0 or 0.0 —
+        never the judge's 0.5 / 0.25."""
+        result, score = await evaluator.evaluate(spoken, _question())
 
-        assert (result, score) == ("incorrect", 0.0)
+        assert (result, score) == expected
+        assert score not in (0.25, 0.5)
 
 
 class TestEvaluatorRoutingByPossibleAnswers:

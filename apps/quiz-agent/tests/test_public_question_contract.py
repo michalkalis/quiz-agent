@@ -11,8 +11,13 @@ One key was deliberately *removed* from the capture since: ``headline_answer``
 (#133 V8, 2026-07-30). It is the short answer gist the evaluator scores against,
 so emitting it alongside the unanswered question handed the client the answer.
 It is now structurally absent from ``PublicQuestion`` and pinned so by
-``test_answer_fields_can_never_appear_in_payload``. Any *other* diff against
-these captures is a wire break, not an improvement.
+``test_answer_fields_can_never_appear_in_payload``.
+
+One key was deliberately *added* since: ``option_labels`` (#185 — MCQ labels
+1–4 / A–D), MCQ only. It is additive — iOS ``Codable`` ignores keys it does not
+know — so the captures stay literal and the tests compare everything *but* that
+key against them, then pin the key itself. Any *other* diff against these
+captures is a wire break, not an improvement.
 """
 
 import json
@@ -176,11 +181,32 @@ EXPECTED_WIRE = {
 }
 
 
+ADDED_KEYS = {"option_labels"}
+
+
+def _legacy_view(wire: dict) -> dict:
+    return {k: v for k, v in wire.items() if k not in ADDED_KEYS}
+
+
 def test_wire_shape_unchanged_for_every_question_type():
     """The typed model must emit byte-for-byte the legacy dict per type."""
     assert set(FIXTURES) == set(EXPECTED_WIRE)
     for name, question in FIXTURES.items():
-        assert question_to_dict(question) == EXPECTED_WIRE[name], name
+        assert _legacy_view(question_to_dict(question)) == EXPECTED_WIRE[name], name
+
+
+def test_option_labels_ride_only_on_mcq():
+    """#185: a client labels the options from this map; an open question has no
+    options, so the key must be absent (not null) there."""
+    for name, question in FIXTURES.items():
+        wire = question_to_dict(question)
+        if question.possible_answers:
+            assert wire["option_labels"] == {
+                key: str(i + 1)
+                for i, key in enumerate(sorted(question.possible_answers))
+            }, name
+        else:
+            assert "option_labels" not in wire, name
 
 
 def test_wire_shape_survives_json_mode_dump():
@@ -249,4 +275,8 @@ def test_legacy_dict_roundtrips_through_typed_field():
             current_question=question_to_dict(question),
         )
         payload = json.loads(resp.model_dump_json())
-        assert payload["current_question"] == EXPECTED_WIRE[name], name
+        assert _legacy_view(payload["current_question"]) == EXPECTED_WIRE[name], name
+        # The typed field must carry the #185 labels through, not drop them.
+        assert payload["current_question"].get("option_labels") == question_to_dict(
+            question
+        ).get("option_labels"), name

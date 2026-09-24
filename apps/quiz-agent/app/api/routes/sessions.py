@@ -20,6 +20,7 @@ from quiz_shared.models.participant import Participant
 from ..session_auth import require_session_ownership
 from ...auth.identity import AuthSubject, resolve_session_subject
 from ...auth.tokens import TokenService
+from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
 from ...session.manager import SessionManager
 from ...rate_limit import limiter
 
@@ -128,6 +129,10 @@ async def create_session(
         # widen the pool — anything but the exact literal stays App Store-safe.
         if request.headers.get("X-Build-Channel") == "testflight":
             session.build_channel = "testflight"
+        # #185: opt-in response shapes for builds that understand them.
+        session.client_capabilities = parse_capabilities(
+            request.headers.get(CAPABILITIES_HEADER)
+        )
         if body.category:
             session.category = body.category
         # #82: the retriever filters on preferred_categories — session.category

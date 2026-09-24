@@ -113,6 +113,14 @@ class QuizSession(BaseModel):
             "unknown, which always means approved-only question serving."
         ),
     )
+    client_capabilities: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Opt-in behaviours the client declared via X-Client-Capabilities "
+            "when it created the session (#185, e.g. 'answer-codes'). Empty = "
+            "a build that predates them, served today's contract unchanged."
+        ),
+    )
     include_images: bool = Field(
         False,
         description=(

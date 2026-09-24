@@ -3,12 +3,23 @@
 Ported from graph.py:445-518
 """
 
+import logging
 import re
 from typing import Tuple
 
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
+
+from .mcq_matcher import match_option
+from .voice_match import sounds_like_any
+
+logger = logging.getLogger(__name__)
+
+# #185 G: an MCQ answer that names no option. Not a verdict the player ever
+# sees as such — the flow either asks again (clients declaring `answer-codes`)
+# or grades it "incorrect" (today's contract for builds that predate it).
+UNMATCHED = "unmatched"
 
 
 class AnswerEvaluator:
@@ -43,6 +54,7 @@ class AnswerEvaluator:
         Returns:
             Tuple of (result, score_delta)
             - result: "correct" | "partially_correct" | "partially_incorrect" | "incorrect" | "skipped"
+              | "unmatched" (MCQ only: the answer names no option — see ``UNMATCHED``)
             - score_delta: Points to add (0, 0.25, 0.5, or 1.0)
 
         Example:
@@ -84,6 +96,19 @@ class AnswerEvaluator:
         if question.possible_answers:
             return self._evaluate_mcq(user_answer, question)
 
+        # #185 E: a transcript that clearly SOUNDS like the answer ("Carling" for
+        # "curling") is correct without asking the judge. Only ever accepts —
+        # anything it does not recognise goes on to the LLM unchanged.
+        if sounds_like_any(
+            user_answer, [str(scoring_answer), *question.alternative_answers]
+        ):
+            logger.info(
+                "Sound-alike accepted without LLM: heard=%r expected=%r",
+                user_answer,
+                str(scoring_answer),
+            )
+            return "correct", 1.0
+
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(
             user_answer=user_answer,
@@ -107,29 +132,24 @@ class AnswerEvaluator:
         user_answer: str,
         question: Question,
     ) -> Tuple[str, float]:
-        """Evaluate an MCQ answer by matching keys ('a') or values ('Paris').
+        """Evaluate an MCQ answer spoken or typed in any form the player uses.
 
-        No partial credit for MCQ — user picked from finite options.
+        ``match_option`` resolves the label, letter, ordinal, colloquial form or
+        the option text itself (#185 G). No partial credit for MCQ — the player
+        picked from finite options — and no guess: an answer that names no
+        single option is ``UNMATCHED``, never "incorrect" by default.
 
         Args:
-            user_answer: User's answer (could be a key like "a" or value like "Paris")
+            user_answer: What the player said ("C", "tretia", "Paríž", …)
             question: Question with possible_answers dict
 
         Returns:
             Tuple of (result, score_delta)
         """
-        normalized = normalize_text(user_answer)
         options = question.possible_answers  # {"a": "Paris", "b": "London", ...}
-
-        # Resolve which key the user selected
-        selected_key = None
-        for key, value in options.items():
-            if normalized == normalize_text(key) or normalized == normalize_text(value):
-                selected_key = key
-                break
-
+        selected_key = match_option(user_answer, options)
         if selected_key is None:
-            return "incorrect", 0.0
+            return UNMATCHED, 0.0
 
         # Resolve correct_answer to a key (it might be stored as "a" or "Paris")
         correct = question.correct_answer
@@ -169,11 +189,13 @@ class AnswerEvaluator:
                 "Also Accepted Answers: " + " | ".join(alternative_answers) + "\n"
             )
 
-        eval_prompt = f"""You are a fair quiz answer evaluator. Compare the user's answer to the correct answer.
+        eval_prompt = f"""You are a fair quiz answer evaluator for a voice quiz played in a car. Compare the user's answer to the correct answer.
+
+The user's answer is a speech-to-text transcript of the player talking in a moving car. The recogniser is set to the language of the quiz, so it makes predictable mistakes: foreign words and names come back respelled the way they sound in that language, or as a similar-sounding real word or brand name (e.g. "Carling" or "Karling" for "curling"), and road noise can swap or drop a sound.
 
 Question: {question_text}
 Correct Answer: {correct_answer}
-{alternatives_line}User's Answer: {user_answer}
+{alternatives_line}User's Answer (voice transcript): {user_answer}
 
 Rules:
 - "correct": The answer captures the key concept correctly. Accept:
@@ -182,12 +204,14 @@ Rules:
   - Shorter forms that contain the essential element (e.g., "sequoia" for "giant sequoia", "carbon" for "carbon dioxide")
   - Common abbreviations (NYC for New York City, WW2 for World War II)
   - Minor spelling errors that don't change the meaning
+  - Transcripts that SOUND like the correct answer when read aloud, even when spelled differently or when they happen to spell a different real word or brand (e.g., "Carling" for "curling", "Šekspír" for "Shakespeare", "Njuton" for "Newton")
   - More specific correct answers (e.g., "carbon dioxide" when answer is "carbon")
+- Never accept a sound-alike that names a different answer that would itself be a plausible answer to this question (e.g., "Manet" when the answer is "Monet", "Austria" for "Australia", "Iraq" for "Iran"). Numbers, years and ordinals must be the same number, whether spoken as words or digits ("Henry VII" is not "Henry VIII").
 - "partially_correct": Has the right general idea but missing important qualifiers or has minor factual errors
 - "partially_incorrect": Mentions something related but is mostly wrong
 - "incorrect": Completely wrong, unrelated, or nonsensical answer
 
-The key principle: if the user clearly knows the answer, mark it correct.
+The key principle: judge what the player most likely SAID, not how it was spelled. If the user clearly knows the answer, mark it correct; when the only doubt comes from the transcription, give the player the benefit of the doubt.
 If they're in the right ballpark but not quite there, mark it partially_correct.
 
 Respond with EXACTLY one of these words: correct, partially_correct, partially_incorrect, incorrect"""
@@ -198,7 +222,7 @@ Respond with EXACTLY one of these words: correct, partially_correct, partially_i
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a fair quiz evaluator. Accept answers that demonstrate the user knows the correct information.",
+                    "content": "You are a fair quiz evaluator for a voice quiz. Accept answers that demonstrate the user knows the correct information, judging speech transcripts by how they sound.",
                 },
                 {"role": "user", "content": eval_prompt},
             ],

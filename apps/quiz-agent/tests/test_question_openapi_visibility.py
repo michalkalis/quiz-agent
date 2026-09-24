@@ -39,6 +39,8 @@ OMITTABLE_KEYS = {
     "review_badge",
     "translation_language",
     "review_note",
+    # #185 G: MCQ option labels (1–4 / A–D). Additive — iOS ignores unknown keys.
+    "option_labels",
 }
 # Answer-bearing fields that must not even exist as properties on the schema.
 # `headline_answer` is the gist the evaluator scores against, so listing it as

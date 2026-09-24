@@ -81,10 +81,10 @@ class _Transcription:
     no_speech_prob = 0.01
     avg_logprob = -0.1
 
-    def is_valid(self) -> bool:
+    def is_valid(self, min_chars: int = 2) -> bool:
         return True
 
-    def get_rejection_reason(self) -> str:  # pragma: no cover - never rejected here
+    def get_rejection_reason(self, min_chars: int = 2) -> str:  # pragma: no cover
         return ""
 
 

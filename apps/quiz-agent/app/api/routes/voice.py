@@ -25,8 +25,10 @@ from ..deps import (
 )
 from ..session_auth import require_session_ownership
 from ...serializers import session_translation
-from ..submit_errors import submit_http_error
+from ..submit_errors import retry_answer_error, submit_http_error
 from ...auth.identity import AuthSubject
+from ...client_capabilities import OPTION_LABELS, has_capability
+from ...evaluation.mcq_matcher import label_keyterms, match_option, option_labels
 from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
@@ -39,24 +41,43 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def mcq_keyterms(current_question, session) -> list[str]:
-    """Option texts to bias the recogniser toward, for multiple-choice only.
+def served_options(current_question, session) -> Optional[dict]:
+    """The MCQ options exactly as this player heard them (None for open questions).
 
-    #184: in a noisy car the recogniser has to pick between four known strings,
-    so handing it those strings is nearly free accuracy. For an open question
-    there is no such set — feeding it the correct answer would bias the
-    transcript toward the right word regardless of what the player said, which
-    is cheating, so open questions get no keyterms at all.
+    Prefers the translated options when the stored translation is for THIS
+    question and this session language.
     """
     options = getattr(current_question, "possible_answers", None)
     if not options:
-        return []
-    # Prefer the translated options the player actually heard, when the stored
-    # translation is for THIS question and this session language.
+        return None
     record = session_translation(session, current_question.id)
     if record and record.get("possible_answers"):
         options = record["possible_answers"]
-    return [str(v) for v in options.values() if v]
+    return dict(options)
+
+
+def mcq_keyterms(current_question, session) -> list[str]:
+    """Option texts and option labels to bias the recogniser toward, MCQ only.
+
+    #184: in a noisy car the recogniser has to pick between four known strings,
+    so handing it those strings is nearly free accuracy. #185 G adds the words
+    the player says for the LABELS ("dva", "céčko") — the car test lost a spoken
+    "C" entirely. For an open question there is no such set — feeding it the
+    correct answer would bias the transcript toward the right word regardless
+    of what the player said, which is cheating, so open questions get no
+    keyterms at all.
+    """
+    options = served_options(current_question, session)
+    if not options:
+        return []
+    if has_capability(session, OPTION_LABELS):
+        labels = option_labels(options)
+    else:
+        # Builds before #185 show the key letters (A–D) whatever the options are.
+        labels = {key: str(key).upper() for key in options}
+    return [str(v) for v in options.values() if v] + label_keyterms(
+        labels, session.language
+    )
 
 
 # NOTE: a bare ``POST /voice/transcribe`` (transcribe-only, no session) used to
@@ -142,8 +163,19 @@ async def transcribe_and_submit(
                 keyterms=mcq_keyterms(current_question, session),
             )
 
-            if not transcription_result.is_valid():
-                rejection_reason = transcription_result.get_rejection_reason()
+            # #185 G: a one-character MCQ answer ("C", "3") is a whole answer
+            # when it names an option — the 2-char floor exists for open answers.
+            min_chars = 2
+            if match_option(
+                transcription_result.text,
+                served_options(current_question, session),
+            ):
+                min_chars = 1
+
+            if not transcription_result.is_valid(min_chars=min_chars):
+                rejection_reason = transcription_result.get_rejection_reason(
+                    min_chars=min_chars
+                )
                 logger.warning(
                     "Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
                     session_id,
@@ -152,9 +184,10 @@ async def transcribe_and_submit(
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,
                 )
-                raise HTTPException(
-                    status_code=400,
-                    detail="No clear speech detected. Please speak clearly and try again.",
+                raise retry_answer_error(
+                    session,
+                    "no_speech",
+                    "No clear speech detected. Please speak clearly and try again.",
                 )
 
             transcribed_text = transcription_result.text
@@ -211,9 +244,10 @@ async def transcribe_and_submit(
                 logger.warning(
                     "No answer intent detected in transcription: '%s'", transcribed_text
                 )
-                raise HTTPException(
-                    status_code=400,
-                    detail="Could not understand your answer. Please speak clearly and try again.",
+                raise retry_answer_error(
+                    session,
+                    "no_answer",
+                    "Could not understand your answer. Please speak clearly and try again.",
                 )
 
             flow_result.feedback_received.insert(0, f"voice_input: {transcribed_text}")

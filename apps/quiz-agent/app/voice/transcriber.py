@@ -57,14 +57,18 @@ class TranscriptionResult:
     avg_logprob: float
     duration: float
 
-    def is_valid(self) -> bool:
+    def is_valid(self, min_chars: int = 2) -> bool:
         """Check if transcription passes quality thresholds.
+
+        Args:
+            min_chars: Shortest text that counts as an answer. 2 by default; the
+                voice route passes 1 when the text names an MCQ option ("C").
 
         Returns:
             True if transcription appears to be valid speech, False otherwise
         """
         # Empty or very short text
-        if not self.text or len(self.text.strip()) < 2:
+        if not self.text or len(self.text.strip()) < min_chars:
             return False
 
         # High probability of no speech (> 0.8 = very likely silence)
@@ -85,13 +89,13 @@ class TranscriptionResult:
 
         return True
 
-    def get_rejection_reason(self) -> Optional[str]:
+    def get_rejection_reason(self, min_chars: int = 2) -> Optional[str]:
         """Get human-readable reason why transcription was rejected.
 
         Returns:
             Rejection reason string, or None if valid
         """
-        if not self.text or len(self.text.strip()) < 2:
+        if not self.text or len(self.text.strip()) < min_chars:
             return "empty_transcription"
 
         if self.no_speech_prob > 0.8:
@@ -258,6 +262,7 @@ class VoiceTranscriber:
         scribe = ScribeBatchTranscriber(
             model=settings.elevenlabs_stt_model,
             logprob_cutoff=settings.stt_trailing_logprob_cutoff,
+            trim_trailing=settings.stt_trim_trailing_low_confidence,
         )
         return await scribe.transcribe(
             audio_bytes=audio_bytes,

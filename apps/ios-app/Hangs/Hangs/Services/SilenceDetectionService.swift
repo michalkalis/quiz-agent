@@ -159,6 +159,12 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     var isListening: Bool { get }
     var isStartingListening: Bool { get }
 
+    /// #185 track C: the live engine's voice processing (the policy's mode,
+    /// whether the input node armed it, the output it was decided on), `nil`
+    /// while no engine runs. Recording metadata and route-change handling
+    /// read it.
+    var voiceProcessingStatus: VoiceProcessingStatus? { get }
+
     /// Sample rate of the 16-bit mono PCM the answer sink receives (the
     /// analyzer format: 16 kHz, or 8 kHz on a narrowband Bluetooth route).
     var answerAudioSampleRate: Double { get }
@@ -215,6 +221,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     var isListening: Bool { audioEngine != nil }
     var isStartingListening: Bool { startInFlight }
+
+    /// #185 track C — see the protocol. Written by the +Engine lifecycle.
+    var voiceProcessingStatus: VoiceProcessingStatus?
 
     /// #184 track B — see the protocol. Set when the tap is installed.
     var answerAudioSampleRate: Double = 16000

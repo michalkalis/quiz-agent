@@ -8,8 +8,12 @@ done-state is a number, not a feeling.
 
 Layout of the sample folder (as exported by the app + one file you add):
     20260922-101500-123.wav       the recording (16 kHz mono PCM)
-    20260922-101500-123.json      sidecar: language, inputPort, voiceProcessing,
-                                  durationMs, transcript (what prod heard)
+    20260922-101500-123.json      sidecar: language, inputPort, outputPort,
+                                  voiceProcessing, voiceProcessingMode,
+                                  uploadConditioning, durationMs, transcript
+                                  (what prod heard — from the cleaned upload
+                                  when uploadConditioning is hpf_norm; the WAV
+                                  itself is always the raw capture)
     20260922-101500-123.ref.txt   YOUR hand transcript (one line) — optional;
                                   files without it are transcribed but not scored
 
@@ -117,6 +121,11 @@ async def main() -> int:
             "language": language or "",
             "inputPort": sidecar.get("inputPort", ""),
             "voiceProcessing": str(sidecar.get("voiceProcessing", "")),
+            # #185 track C: route + policy mode, to split the car cells.
+            "outputPort": sidecar.get("outputPort") or "",
+            "vpMode": sidecar.get("voiceProcessingMode") or "",
+            # raw | hpf_norm — what `prod` transcribed; the WAV here is raw.
+            "upload": sidecar.get("uploadConditioning") or "raw",
             "durationMs": str(sidecar.get("durationMs", "")),
             "reference": reference or "",
             "prod": sidecar.get("transcript") or "",

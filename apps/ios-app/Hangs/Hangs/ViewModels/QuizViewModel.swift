@@ -761,6 +761,12 @@ final class QuizViewModel: ObservableObject {
             self?.recordingCoordinator.handleAudioInterruption()
         }
 
+        // #185 track C: a device change (the car connecting or leaving) may make
+        // the live listener's voice processing wrong for the new route.
+        self.audioService.onRouteChange = { [weak self] change in
+            Task { await self?.audioDeviceState.handleAudioRouteChange(change) }
+        }
+
         // Load saved settings and stats
         settings = persistenceStore.loadSettings()
         quizStats = persistenceStore.loadStats()

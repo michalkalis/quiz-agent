@@ -47,6 +47,11 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     /// STT so no recording is stranded after the call (#67 Part A).
     var onInterruptionBegan: (@MainActor @Sendable () -> Void)? { get set }
 
+    /// #185 track C: invoked on the main actor for every audio route change
+    /// with the decoded event. The owner (QuizViewModel → AudioDeviceState)
+    /// re-evaluates the live command listener's voice processing against it.
+    var onRouteChange: (@MainActor @Sendable (AudioRouteChange) -> Void)? { get set }
+
     // Device management
     var availableInputDevices: [AudioDevice] { get }
     var currentInputDevice: AudioDevice? { get }
@@ -55,6 +60,11 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     func setupAudioSession(mode: AudioMode) throws
     func setupQuietListeningSession() throws
     func deactivateSession()
+    /// #185 track C: undo the implicit `.voiceChat` a voice-processing engine
+    /// leaves on the session — called while no command-listener engine is up
+    /// (right after its teardown, before anything plays, and before a fresh
+    /// start asks the policy). No-op when nothing drifted.
+    func restoreSessionAfterVoiceProcessing()
     func switchAudioMode(_ mode: AudioMode) async throws
     func requestMicrophonePermission() async -> Bool
     func prepareForRecording() async // Stops playback and waits for hardware settle
@@ -81,6 +91,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// See `AudioServiceProtocol.onInterruptionBegan`. Set by the owner (QuizViewModel).
     var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
+
+    /// See `AudioServiceProtocol.onRouteChange`. Set by the owner (QuizViewModel).
+    var onRouteChange: (@MainActor @Sendable (AudioRouteChange) -> Void)?
 
     /// Where the session observers register. Injected so a unit test can post the
     /// `AVAudioSession` notifications iOS posts through a private center and watch
@@ -143,6 +156,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
     private var currentAudioMode: AudioMode = .default
+
+    /// The configuration the session was last set up with (quiz or quiet Home)
+    /// — what `restoreSessionAfterVoiceProcessing` puts back (#185 track C).
+    private(set) var appliedSessionConfiguration: SessionConfiguration?
 
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
     private var recordingStartedAt: Date?
@@ -281,6 +298,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             mode: configuration.mode,
             options: configuration.options
         )
+        appliedSessionConfiguration = configuration
 
         try session.setActive(true)
 
@@ -296,11 +314,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`.
     func setupQuietListeningSession() throws {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(
-            .playAndRecord,
+        let configuration = SessionConfiguration(
+            category: .playAndRecord,
             mode: .default,
             options: Self.quietListeningCategoryOptions
         )
+        try session.setCategory(
+            configuration.category,
+            mode: configuration.mode,
+            options: configuration.options
+        )
+        appliedSessionConfiguration = configuration
         try session.setActive(true)
 
         registerSessionObservers()
@@ -416,9 +440,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     }
 
     private nonisolated func handleRouteChange(_ notification: Notification) {
-        guard let reason = AudioService.routeChangeReason(from: notification) else {
+        guard let change = AudioService.routeChange(from: notification) else {
             return
         }
+        let reason = change.reason
+
+        // #185 track C: structured, queryable — where the sound went and why.
+        AudioService.logRouteChange(change)
 
         // #131 Track E: breadcrumb every route change (reason only, no PII) so
         // it can be correlated against volume-change events from
@@ -447,6 +475,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             }
         default:
             break
+        }
+
+        // #185 track C: the owner re-evaluates the listener's voice processing
+        // (a live voice-processing engine hides the car's A2DP from the route).
+        Task { @MainActor in
+            self.onRouteChange?(change)
         }
     }
 
@@ -902,6 +936,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // #184 track A: the streaming answer engine gets the SAME voice processing
         // as the command listener (both or neither — see VoiceProcessingPolicy),
         // armed before the format is read because enabling it changes the format.
+        // #185 C: the same route rule decides it, so both engines agree.
         let voiceProcessing = VoiceProcessingPolicy.arm(inputNode)
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
         guard Self.isValidHardwareFormat(sampleRate: hardwareFormat.sampleRate, channelCount: hardwareFormat.channelCount) else {
@@ -987,8 +1022,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         SentryLog.info("answer recording started", category: .audio, attributes: [
             "path": "realtime",
             "inputPort": VoiceProcessingPolicy.currentInputPort(),
+            "outputPort": VoiceProcessingPolicy.currentOutputPort(),
             "inputHz": hardwareFormat.sampleRate,
-            "voiceProcessing": voiceProcessing,
+            "voiceProcessing": voiceProcessing.armed,
+            "vpMode": voiceProcessing.mode.rawValue,
+            "sessionMode": VoiceProcessingPolicy.modeName(AVAudioSession.sharedInstance().mode),
         ])
     }
 

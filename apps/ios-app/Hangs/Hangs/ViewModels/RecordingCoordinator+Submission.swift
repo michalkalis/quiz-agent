@@ -65,6 +65,12 @@ extension RecordingCoordinator {
             // Before the engine is released: stopping it resets the detector.
             let detection = silenceDetectionService.endAnswerDetection()
             let capture = answerCapture.finish()
+            // #185 track C: read the route and the engine's voice processing
+            // while the engine that recorded is still up — releasing it clears
+            // the status and may move the route.
+            let voiceProcessing = silenceDetectionService.voiceProcessingStatus
+            let outputPort = VoiceProcessingPolicy.currentOutputPort()
+            let conditionUpload = VoicePipelineFlags.conditionAnswerUpload
             releaseAnswerEngineIfOwned()
 
             // #185 track A: why it stopped and what the detectors saw — the
@@ -77,6 +83,10 @@ extension RecordingCoordinator {
                 "heardSpeech": heardSpeech,
                 "stopReason": reason.rawValue,
                 "windowDeferred": noSpeechWindowDeferral?.rawValue ?? "no",
+                "outputPort": outputPort,
+                "voiceProcessing": voiceProcessing?.armed ?? false,
+                "vpMode": voiceProcessing?.mode.rawValue ?? "none",
+                "upload": conditionUpload ? AnswerAudioConditioning.conditionedLabel : AnswerAudioConditioning.rawLabel,
             ]
             attributes.merge(detection.sentryAttributes) { current, _ in current }
             SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
@@ -90,19 +100,28 @@ extension RecordingCoordinator {
                 return
             }
 
+            // #185 track C: Scribe gets the captured WAV unchanged unless the
+            // diagnostics switch asks for the cleaned-up one; the saved sample
+            // is the raw WAV either way.
+            let upload = AnswerAudioConditioning.uploadWAV(
+                raw: capture.wav, sampleRate: capture.sampleRate, enabled: conditionUpload
+            )
             savedRecordingStamp = AnswerRecordingStore.save(
                 wav: capture.wav,
                 sidecar: AnswerRecordingStore.Sidecar(
                     recordedAt: Date(),
                     language: currentSession()?.language ?? settings().language,
                     inputPort: VoiceProcessingPolicy.currentInputPort(),
-                    voiceProcessing: VoicePipelineFlags.voiceProcessingEnabled,
+                    voiceProcessing: voiceProcessing?.armed ?? false,
+                    outputPort: outputPort,
+                    voiceProcessingMode: voiceProcessing?.mode.rawValue,
+                    uploadConditioning: upload.label,
                     sampleRate: capture.sampleRate,
                     durationMs: capture.durationMs,
                     questionId: currentQuestion()?.id
                 )
             )
-            await submitVoiceAnswer(audioData: capture.wav, fileName: "answer.wav")
+            await submitVoiceAnswer(audioData: upload.wav, fileName: "answer.wav")
         }
     }
 

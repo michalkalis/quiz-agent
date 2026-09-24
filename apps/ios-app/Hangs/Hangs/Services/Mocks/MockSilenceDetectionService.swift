@@ -65,6 +65,13 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     var isStartingListening = false
     var ttsPlaybackActive = false
 
+    /// #185 track C: the live engine's voice processing, as the real service
+    /// reports it — set on every successful `startListening()` from
+    /// `voiceProcessingOnStart` (nil = the policy was never consulted, the
+    /// default for tests that don't care), cleared by `stopListening()`.
+    private(set) var voiceProcessingStatus: VoiceProcessingStatus?
+    var voiceProcessingOnStart: VoiceProcessingStatus?
+
     /// #184 track B: the answer tee. `isAnswerCaptureActive` is what the
     /// recording tests assert where they used to assert `audio.isRecording`.
     private(set) var answerAudioSink: (@Sendable (Data) -> Void)?
@@ -112,10 +119,12 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
             return
         }
         isListening = true
+        voiceProcessingStatus = voiceProcessingOnStart
     }
 
     func stopListening() {
         isListening = false
+        voiceProcessingStatus = nil
         stopListeningCallCount += 1
     }
 

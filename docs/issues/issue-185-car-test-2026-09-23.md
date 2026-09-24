@@ -1,0 +1,48 @@
+# #185 — Test v aute 2026-09-23: mŕtva detekcia reči, confirm na ďalšej otázke, Bluetooth, povely, MCQ
+
+**Triage:** bug · ready-for-agent (diagnóza + founder rozhodnutia 2026-09-24; implementácia ďalšia session, s agentmi; spolu s [#186 — stabilizácia stavov kvízu](issue-186-quiz-state-robustness.md) kroky 1 a 2)
+
+## Smer
+
+Founder test TF buildu v aute 2026-09-23 (sk kvíz, Bluetooth, vyhodnotenie na konci sady). Návrhy + diagnóza: [HTML zdroj](../design/variants/issue-185-car-test-2026-09-23.md) (render `uv run scripts/md2report.py` → `docs/artifacts/`). Research: [stabilizácia stavov](../research/quiz-state-robustness-2026-09-24.md) · [BT trasa vs. potlačenie šumu](../research/bt-route-noise-suppression-2026-09-24.md).
+
+**Kľúčový dôkaz (backend logy + Sentry z jazdy, 17:10–17:27 UTC):** všetkých 16/16 nahrávok odpovede trvá 5,0–5,3 s, `heardSpeech=false`, žiadny `vad speech began` za 14 dní. Lokálny detektor reči (iOS 26 `SpeechDetector`, citlivosť `.low`) na zariadení **nedetekuje reč vôbec**; každú nahrávku ukončí 5 s okno „začni hovoriť“ (`RecordingCoordinator+Capture.swift:112`, `Config.swift:149`). Ten istý detektor gatuje aj rozpoznávanie povelov (`SilenceDetectionService+Engine.swift:56-76`) → povely treba kričať. Toto je spoločný koreň nálezov 1, 3 a 4b.
+
+## Nálezy a príčiny
+
+1. **Confirm na ďalšej otázke** (Sentry 17:12:43–17:13:02): odpoveď odseknutá na 5 s → Scribe prázdny prepis → 400 → `handleTranscriptionFailure` otvorí prázdny sheet s 5 s auto-confirm → sheet neberie hovorenú odpoveď, len povely (listener nič nezachytil) → auto-confirm prázdnej = `skipQuestion` (`+Confirmation.swift:64-67`) → v reveal-at-end móde nová otázka bez výsledku a ohlásenia → o 0,86 s `startRecording()` na N+1 počas čítania otázky (`+Capture.swift:36` nemá guard na hrajúce audio otázky; spúšťač nezalogovaný, pravdepodobne ťuknutie) → zopakovaná odpoveď k N skončí ako confirm na N+1. Vedľajší nález z kódu: chybové cesty uploadu (`+Submission.swift:151-156, 220-227`, `+ScenePhase.swift:103`) nemajú kontrolu vlastníka → neskorý 400 z N otvorí prázdny sheet na N+1 (rieši #186 krok 1).
+2. **Zvuk z iPhonu pri pripojenom BT:** #184 zapol VPIO na oba engine (`VoiceProcessingPolicy.swift:39`, `VoicePipelineFlags.swift:35`); Media Mode = `.playAndRecord` + `[.defaultToSpeaker, .allowBluetoothA2DP]` bez HFP (`AudioService.swift:207, 260`) → VPIO nevie bežať s A2DP výstupom, iOS spadne na reproduktor. `handleRouteChange` (`AudioService.swift:417-450`) trasu neobnovuje a loguje len dôvod; TTS štartuje hneď po teardown VPIO engine. Neoverené na zariadení.
+3. **Povely treba kričať:** detektor (viď vyššie) + prísny matcher (`VoiceCommandMatcher.swift:45-61, 103, 129-136`: max 1 content word, prah 0,72/0,85, ambiguity 0,15) + čakanie na FINAL (`VoiceCommandCoordinator+Utterance.swift:43-75`). Text povelov sa nikde neloguje.
+4. **a) „curling“** → Scribe (vynútené `sk`) „Paddling“ a „Carling“ (logy 17:24:20, 17:24:37); judge (`evaluator.py:22, 172-190`) odpúšťa len „minor spelling“, nevie, že ide o hlasový prepis; „Carling“ = značka piva. `trim_trailing_low_confidence` (cutoff -1,0, nekalibrovaný) môže odrezať cudzie posledné slovo. **b) Žiadny feedback, auto-stop nefungoval:** počas nahrávania len 5 s odpočet, bez level metra; stop len na `speechDetected=false` eventy, nič to nebije časovačom (`SilenceDetectionService.swift:342-362`).
+5. **Opakovanie cez „znova“:** 5 s auto-confirm štartuje súčasne s reštartom listenera (settle až 12×250 ms, „command mic settled late“), povel čaká na FINAL, „nie, znova“ = 2 content words, „ešte raz“ nie je variant, žiadny signál otvoreného okna.
+6. **MCQ „c“:** batch cesta (#184 default) obchádza iOS `MCQTranscriptMatcher` (beží len v `+Streaming.swift:126`) — **regresia**; server `_evaluate_mcq` (`evaluator.py:105-146`) len presná zhoda → inak „incorrect“; „C“ < 2 znaky → `is_valid` zamietne (`transcriber.py:67`) → 400 → prázdny sheet; slabika < 0,25 s = blip.
+7. **Obrazovka zhasne na výsledkoch počas čítania odpovedí/vysvetlení** (founder 09-24): `ScreenAwakeController` drží displej len mimo `.idle`/`.finished`; hypotéza (stredná): reveal na konci sady beží v `.finished`, kde sa idle timer znova zapne. Overiť.
+
+## Rozhodnutia foundera (2026-09-24)
+
+| Nález | Rozhodnutie |
+|---|---|
+| 1 | **1.1:** prázdny prepis → appka povie „Nepočul som, povedz to znova“ a hneď znova nahráva; po 2. neúspechu sheet Znova/Preskoč **bez auto-confirm** (preskočenie len povelom/ťuknutím). Bez ohlasovania prechodu (1.2 zamietnuté). |
+| 2 | Smer **A + B**: pri BT výstupe VPIO vypnúť (zvuk ostane v aute), voliteľne „mikrofón auta“ (HFP). Founder: HFP kvalita bola **veľmi zlá**; škoda strácať potlačenie šumu → hľadať kompromis ([research](../research/bt-route-noise-suppression-2026-09-24.md)) a **otestovať viac variantov** v aute. Pri ďalšom teste founder zapne ukladanie nahrávok. |
+| 3 | **3.1** oprava detektora · **3.4** širší slovník · **3.5** logovať text povelov v TF. Tlačidlá na volante → [#187](issue-187-car-media-buttons.md) (budúcnosť). 3.3 (tóny okna povelov) nevybrané. |
+| 4a | **4a.1**, radšej benevolentnejšie než zbytočne prísne: judge vie, že ide o hlasový prepis v aute, + deterministická zvuková/fuzzy zhoda pred LLM. 4a.2 (zobrazenie „rozumel som“) nevybrané. |
+| 4b | **A + B + jemný tón pri začiatku reči:** pulzujúci kruh podľa hlasitosti, text Počúvam… → Zachytávam… → Spracúvam…, + oprava auto-stopu. |
+| 5 | **5.1 + 5.2 + 5.3 + 5.4:** na potvrdení stačí povedať novú odpoveď; odpočet až keď mikrofón počúva; slová **nie, zle, ešte raz, stop, znova** = nahrať znova, **áno, hej, ok, potvrď** = potvrdiť; tlačidlá s alternatívnymi prepismi (n-best). **Slovník vždy aktualizovať vo všetkých jazykoch (sk/cs/en).** |
+| 6 | **Čísla 1–4**; písmená A–D len keď sú odpovede čísla. Prijímať číslo, písmeno, poradie aj text možnosti. |
+| Tóny | Všetky earcony **zjemniť a stíšiť** (sú výrazné a časom otravné) + **haptická odozva** (pre použitie mimo auta). |
+| Stavy | [#186](issue-186-quiz-state-robustness.md) **krok 1 aj 2 teraz** (spolu s touto opravou). |
+
+Predpoklad (potvrdiť pri implementácii, ak by kolidoval): na potvrdzovacom sheete „stop“ = zahodiť a nahrať znova (dnes „zruš“); samotné zrušenie ostáva cez „zruš“ a tlačidlo.
+
+## Tracky (ďalšia session)
+
+- **A — Detekcia reči na zariadení (koreň 1/3/4b):** zistiť, prečo `SpeechDetector` nevydá výsledok (log počtu výsledkov detektora na nahrávku); citlivosť/oddelenie od povelov; kontrola ticha na časovači (clock seam z #180) + záložná energia voči šumu auta (prvých 300 ms); 5 s okno len keď je detektor preukázateľne živý; reset stavu VAD pri každom nahrávaní (H3). Sentry: dôvod stopu (VAD / okno / cap / ručne), level/RMS.
+- **B — Prázdna odpoveď (1.1) + guard nahrávania:** TTS výzva + automatický 1 nový pokus; 2. neúspech bez auto-confirm; `startRecording` nečaká/nestopne čítanie otázky → vyriešiť. Pinning test: auto-confirm prázdnej odpovede nikdy nepreskočí.
+- **C — Bluetooth:** research záver: kompromis „Apple potlačenie šumu + reproduktory auta“ **neexistuje** (VPIO prepne session na `.voiceChat`, A2DP vypadne; iOS 17–26 to nemení; iOS 26 HQ BT recording = len niektoré AirPods, nie EU). Plán: VPIO len pri výstupe na reproduktor iPhonu alebo v režime hovoru (HFP, opt-in); pri A2DP/CarPlay/AirPlay/káblovom výstupe VPIO vypnuté, nepreklápať per nahrávka. Náhrada v aute: vlastný high-pass (~100–150 Hz) + vyrovnanie hlasitosti na mikrofóne (lacné, bez knižnice). Neurónové odšumenie (AUSoundIsolation, potom DeepFilterNet3) najprv offline na exportovaných nahrávkach a len pre VAD/povely; do Scribe posielať surový klip, kým `stt_compare.py` neukáže zisk (štúdia 2025: odšumenie zhoršilo WER vo všetkých 40 testoch). ElevenLabs Voice Isolator len offline (~17× cena/odpoveď). Opraviť chybný komentár o `.spokenAudio` vo `VoiceProcessingPolicy.swift`. Štruktúrovaný Sentry log pri každej zmene trasy + výstupný port a mód v metadátach nahrávky + riadok trasy v Settings › voice diagnostics; testovacia matica do auta v researchi.
+- **D — Povely + opakovanie (3.1/3.4/3.5, 5.1–5.4):** slovník + test parity sk/cs/en; stabilný volatile pre „znova“; sheet berie novú hovorenú odpoveď; odpočet až po `listener live`; n-best tlačidlá; text povelov do Sentry len TF/debug.
+- **E — Vyhodnocovanie (4a.1):** judge prompt „hlasový prepis v aute, prijmi zvukovo podobné“; fuzzy/fonetický pre-check pred LLM; prekalibrovať/vypnúť `trim_trailing_low_confidence` do merania. Backend testy s „Carling“/„curling“. Nemeniť kvalitu otázok.
+- **F — Feedback pri hovorení (4b) + tóny/haptika:** RMS z input tapu → pulzujúci kruh; text stavu; jemný tón pri začiatku reči; všetky earcony stíšiť/zjemniť + haptika. UI zmena → HTML/Pencil podľa zvyklosti.
+- **G — MCQ čísla (6):** párovanie presunúť na server (jeden zdroj pravdy: písmená, čísla, poradie, skloňovanie, fuzzy), neznáme = „unmatched“ nie „incorrect“; keyterms označení; uvoľniť `len<2` a min. dĺžku reči pre MCQ; UI čísla 1–4 / písmená pri číselných možnostiach.
+- **H — Displej (7):** overiť stav počas reveal/čítania výsledkov, displej držať do konca kvízu (+ test v `ScreenAwakeController` testoch).
+
+Poradie: A → B (+ #186 krok 1) → C → D → E → G → F → H; #186 krok 2 po B. Overenie: cielené iOS suity + backend testy; na zariadení až pri TF teste na požiadanie (founder zapne ukladanie nahrávok → `scripts/stt_compare.py`).

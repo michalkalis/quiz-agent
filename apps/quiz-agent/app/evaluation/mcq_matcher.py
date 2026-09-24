@@ -171,6 +171,16 @@ def label_keyterms(labels: Mapping[str, str], language: Optional[str]) -> list[s
     return [words[label] for label in labels.values() if label in words]
 
 
+def spoken_label(label: str, language: Optional[str]) -> str:
+    """How question audio reads a label (founder 2026-09-24): numbers in the
+    counting form ("Jedna", "Dva", "Tri"/"Tři", "Štyri"/"Čtyři", "One"…),
+    letters as letters. A label with no word in this language stays as is."""
+    if not label.isdigit():
+        return label
+    word = _LABEL_WORDS.get((language or "").lower(), {}).get(label)
+    return word.capitalize() if word else label
+
+
 # ── Matching ─────────────────────────────────────────────────────────────────
 
 

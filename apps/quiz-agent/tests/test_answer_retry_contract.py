@@ -421,13 +421,11 @@ async def test_session_create_stores_the_declared_capabilities(monkeypatch):
 # ── Spoken option labels ─────────────────────────────────────────────────────
 
 
-def test_question_audio_reads_labels_only_for_option_labels_builds():
+def test_question_audio_keeps_the_keys_for_builds_before_option_labels():
     """Today's build shows the key letters, so its audio must keep saying them
-    (and keep its TTS cache key); the new build shows 1–4 and must hear 1–4 —
-    or letters when the options are themselves numbers."""
+    (and keep its TTS cache key)."""
     stem = "Which is the largest planet?"
     legacy = _session()
-    labelled = _session(["option-labels"])
 
     assert spoken_question_text(stem, _OPTIONS, legacy) == (
         f"{stem} a: Mars. b: Venus. c: Jupiter. d: Saturn."
@@ -435,8 +433,33 @@ def test_question_audio_reads_labels_only_for_option_labels_builds():
     assert spoken_question_text(stem, _OPTIONS) == spoken_question_text(
         stem, _OPTIONS, legacy
     )
-    assert spoken_question_text(stem, _OPTIONS, labelled) == (
-        f"{stem} 1: Mars. 2: Venus. 3: Jupiter. 4: Saturn."
+
+
+@pytest.mark.parametrize(
+    "language,spoken",
+    [
+        ("sk", "Jedna: Mars. Dva: Venus. Tri: Jupiter. Štyri: Saturn."),
+        ("cs", "Jedna: Mars. Dva: Venus. Tři: Jupiter. Čtyři: Saturn."),
+        ("en", "One: Mars. Two: Venus. Three: Jupiter. Four: Saturn."),
+    ],
+)
+def test_question_audio_reads_numbered_labels_in_the_counting_form(language, spoken):
+    """Founder 2026-09-24: the new build shows 1–4 and its audio counts them
+    out in the session language ("Jedna: Paríž. Dva: Londýn.") — digits would
+    be normalised to "jeden" in Slovak, the wrong form for counting options."""
+    stem = "Which is the largest planet?"
+    session = _session(["option-labels"])
+    session.language = language
+
+    assert spoken_question_text(stem, _OPTIONS, session) == f"{stem} {spoken}"
+
+
+@pytest.mark.parametrize("language", ["sk", "cs", "en"])
+def test_letter_labels_stay_letters_when_the_options_are_numbers(language):
+    stem = "When did Apollo 11 land?"
+    session = _session(["option-labels"])
+    session.language = language
+
+    assert spoken_question_text(stem, {"a": "1969", "b": "1970"}, session) == (
+        f"{stem} A: 1969. B: 1970."
     )
-    years = {"a": "1969", "b": "1970"}
-    assert spoken_question_text(stem, years, labelled) == f"{stem} A: 1969. B: 1970."

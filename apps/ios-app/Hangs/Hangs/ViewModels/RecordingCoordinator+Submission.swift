@@ -22,6 +22,9 @@ extension RecordingCoordinator {
         guard reason != .noSpeechWindow || noSpeechWindowMayEndRecording() else { return }
         isStoppingRecording = true
         defer { isStoppingRecording = false }
+        // #186 step 1: everything this stop produces answers THIS attempt.
+        let attempt = attemptLedger.current
+        attemptLedger.record(.speech, "recording.stop", reason.rawValue)
 
         emitEarcon(.gotIt) // 77.10 got-it tone — recording stopped / auto-submitted
         cancelAutoStopRecordingTimer()
@@ -38,7 +41,7 @@ extension RecordingCoordinator {
                 // If ElevenLabs never answers the forced commit (dead air, dropped
                 // socket), only this watchdog stops the UI from showing RECORDING
                 // forever (#54 task 54.4, founder #5).
-                startCommitWatchdog()
+                startCommitWatchdog(owner: attempt)
             } catch {
                 // Cleanup and fallback
                 isStreamingSTT = false
@@ -52,7 +55,7 @@ extension RecordingCoordinator {
             usesLegacyRecorder = false
             do {
                 let data = try await audioService.stopRecording()
-                await submitVoiceAnswer(audioData: data)
+                await submitVoiceAnswer(audioData: data, owner: attempt)
             } catch {
                 setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
                 transition(to: .askingQuestion)
@@ -96,7 +99,7 @@ extension RecordingCoordinator {
             // never delivered — not a transcription job. #171 Track B funnel.
             guard capture.bytes >= Self.minimumAnswerBytes(sampleRate: capture.sampleRate) else {
                 Logger.audio.info("🎙️ Batch capture too short (\(capture.bytes, privacy: .public) bytes) — no-answer sheet")
-                handleTranscriptionFailure()
+                handleTranscriptionFailure(owner: attempt)
                 return
             }
 
@@ -121,7 +124,7 @@ extension RecordingCoordinator {
                     questionId: currentQuestion()?.id
                 )
             )
-            await submitVoiceAnswer(audioData: upload.wav, fileName: "answer.wav")
+            await submitVoiceAnswer(audioData: upload.wav, fileName: "answer.wav", owner: attempt)
         }
     }
 
@@ -134,7 +137,11 @@ extension RecordingCoordinator {
     /// Submit a voice answer with timeout and cancellation support.
     /// `fileName` tells the backend the container: `answer.wav` from the #184
     /// batch capture, `answer.m4a` for any legacy caller.
-    func submitVoiceAnswer(audioData: Data, fileName: String = "answer.m4a") async {
+    /// `owner` (#186 step 1) is the attempt that recorded the audio; `nil` =
+    /// the current one. Every write-back below checks it first — a late answer
+    /// (or a late 400) from question N must never land on question N+1.
+    func submitVoiceAnswer(audioData: Data, fileName: String = "answer.m4a", owner: AttemptID? = nil) async {
+        let owner = owner ?? attemptLedger.current
         guard let sessionId = currentSession()?.id else {
             setError(message: String(localized: "No active session", comment: "Inline error: no quiz session is currently active"), context: .general)
             return
@@ -183,7 +190,8 @@ extension RecordingCoordinator {
                 guard let evaluation = response.evaluation else {
                     Logger.network.warning("⚠️ No evaluation in response - speech may not have been recognized")
                     await MainActor.run {
-                        self.handleTranscriptionFailure()
+                        self.attemptLedger.record(.network, "voiceSubmit.noAnswer")
+                        self.handleTranscriptionFailure(owner: owner)
                     }
                     return
                 }
@@ -198,11 +206,13 @@ extension RecordingCoordinator {
                 // re-recorded one was dropped. Mirrors `handleQuizResponse`'s
                 // "only the state that submitted may commit" guard (#133 V14).
                 await MainActor.run {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.result") else { return }
                     guard self.quizState() == .processing else {
                         let state = self.quizState().label
                         Logger.network.info("🚫 Dropping voice submit result — state \(state, privacy: .public) no longer owns this submission")
                         return
                     }
+                    self.attemptLedger.record(.network, "voiceSubmit.transcript", "len=\(evaluation.userAnswer.count)")
                     self.pendingResponse = response
                     if let stamp = self.savedRecordingStamp {
                         AnswerRecordingStore.attachTranscript(evaluation.userAnswer, provider: nil, to: stamp)
@@ -210,7 +220,7 @@ extension RecordingCoordinator {
                     }
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.
-                    self.presentVoiceTranscript(evaluation.userAnswer)
+                    self.presentVoiceTranscript(evaluation.userAnswer, owner: owner)
                 }
 
                 // Don't call handleQuizResponse yet - wait for user confirmation
@@ -231,6 +241,7 @@ extension RecordingCoordinator {
                 // cold wake, 5xx — rendered the same generic "Couldn't submit your
                 // answer" OOPS. With it the user reads what actually happened.
                 await MainActor.run {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.timeout") else { return }
                     self.setError(
                         message: String(localized: "Request timed out. Please try again.", comment: "Inline error when a voice answer submission times out"),
                         context: .submission,
@@ -242,6 +253,7 @@ extension RecordingCoordinator {
             } catch let error as NetworkError {
                 // Handle daily limit reached — show paywall
                 if case .quotaLimitReached = error {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.quota") else { return }
                     await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
                     return
                 }
@@ -251,7 +263,8 @@ extension RecordingCoordinator {
                 // or re-record before it counts as no answer.
                 if case let .serverError(statusCode, _) = error, statusCode == 400 {
                     await MainActor.run {
-                        self.handleTranscriptionFailure()
+                        self.attemptLedger.record(.network, "voiceSubmit.400")
+                        self.handleTranscriptionFailure(owner: owner)
                     }
 
                     Logger.network.warning("⚠️ Speech not understood — no-answer confirmation sheet")
@@ -260,6 +273,7 @@ extension RecordingCoordinator {
 
                 // Other network errors go to error screen
                 await MainActor.run {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.error") else { return }
                     self.setError(
                         message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,
@@ -270,6 +284,7 @@ extension RecordingCoordinator {
                 Logger.network.error("❌ Error submitting answer: \(error, privacy: .public)")
             } catch {
                 await MainActor.run {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.error") else { return }
                     self.setError(
                         message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,

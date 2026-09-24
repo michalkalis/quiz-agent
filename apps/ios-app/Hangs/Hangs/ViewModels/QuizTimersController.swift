@@ -55,6 +55,10 @@ final class QuizTimersController: ObservableObject {
     /// The façade's clock (#180 track A): every countdown below ticks on it.
     let clock: AnyClock<Duration>
 
+    /// #186 step 1: every countdown captures the attempt (or question) it was
+    /// armed for and proves it still owns the quiz before it acts.
+    let attemptLedger: AttemptLedger
+
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
@@ -72,6 +76,7 @@ final class QuizTimersController: ObservableObject {
     init(
         taskBag: TaskBag,
         clock: AnyClock<Duration>,
+        attemptLedger: AttemptLedger,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
         isRerecording: @escaping @MainActor () -> Bool,
@@ -85,6 +90,7 @@ final class QuizTimersController: ObservableObject {
     ) {
         self.taskBag = taskBag
         self.clock = clock
+        self.attemptLedger = attemptLedger
         self.settings = settings
         self.quizState = quizState
         self.isRerecording = isRerecording
@@ -127,6 +133,7 @@ final class QuizTimersController: ObservableObject {
         let thinkingSeconds = settings().thinkingTime
 
         cancelThinkingTime()
+        let owner = attemptLedger.current
 
         let task = Task { [weak self] in
             guard let self else { return }
@@ -135,7 +142,9 @@ final class QuizTimersController: ObservableObject {
                 // No thinking time — start recording immediately (500ms delay like before)
                 try? await self.clock.sleep(for: .milliseconds(Config.autoRecordDelayMs))
                 if Task.isCancelled { return }
-                guard self.quizState() == .askingQuestion else { return }
+                guard self.quizState() == .askingQuestion,
+                      self.attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
+                self.attemptLedger.record(.timer, "thinkingTime.fire")
                 self.setIsAutoRecording(true)
                 await self.startRecording()
                 return
@@ -167,7 +176,9 @@ final class QuizTimersController: ObservableObject {
             }
             self.thinkingTimeCountdown = 0
 
-            guard self.quizState() == .askingQuestion else { return }
+            guard self.quizState() == .askingQuestion,
+                  self.attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
+            self.attemptLedger.record(.timer, "thinkingTime.fire")
             self.setIsAutoRecording(true)
             await self.startRecording()
         }
@@ -198,6 +209,7 @@ final class QuizTimersController: ObservableObject {
 
         cancelAnswerTimer()
         answerTimerCountdown = limit
+        let owner = attemptLedger.current
 
         let task = Task { [weak self] in
             guard let self else { return }
@@ -215,7 +227,9 @@ final class QuizTimersController: ObservableObject {
             if Task.isCancelled { return }
 
             // Auto-start recording when timer expires
-            guard self.quizState() == .askingQuestion else { return }
+            guard self.quizState() == .askingQuestion,
+                  self.attemptLedger.ownsQuestion(owner, "answerTimer.fire") else { return }
+            self.attemptLedger.record(.timer, "answerTimer.fire")
             await self.startRecording()
         }
         taskBag.add(task, key: .answerTimer)
@@ -260,6 +274,7 @@ final class QuizTimersController: ObservableObject {
         let tickInterval = duration / Double(ticks)
         recordingCountdownTotal = ticks
         recordingCountdown = ticks
+        let owner = attemptLedger.current
 
         let task = Task { [weak self] in
             guard let self else { return }
@@ -270,7 +285,9 @@ final class QuizTimersController: ObservableObject {
                 self.recordingCountdown = remaining
             }
 
-            guard self.quizState() == .recording else { return }
+            guard self.quizState() == .recording,
+                  self.attemptLedger.owns(owner, "recordingWindow.expired") else { return }
+            self.attemptLedger.record(.timer, "recordingWindow.expired")
             // #185: ends the recording only if the detector can vouch for
             // the silence; otherwise the countdown hides and the cap decides.
             await self.stopRecordingAndSubmit(.noSpeechWindow)
@@ -301,12 +318,15 @@ final class QuizTimersController: ObservableObject {
         let tickInterval = hardCap / Double(ticks)
 
         let clock = clock
+        let owner = attemptLedger.current
         let cap = Task { [weak self] in
             for _ in 0 ..< ticks {
                 try? await clock.sleep(for: .seconds(tickInterval))
                 if Task.isCancelled { return }
             }
-            guard let self, self.quizState() == .recording else { return }
+            guard let self, self.quizState() == .recording,
+                  self.attemptLedger.owns(owner, "recordingCap.expired") else { return }
+            self.attemptLedger.record(.timer, "recordingCap.expired")
             await self.stopRecordingAndSubmit(.cap)
         }
         taskBag.add(cap, key: .recordingHardCap)
@@ -348,6 +368,7 @@ final class QuizTimersController: ObservableObject {
         // `taskBag.add` cancels any previous task under .autoAdvance before
         // installing the new one, so double-fires can't leak a runner.
         autoAdvanceCountdown = duration
+        let owner = attemptLedger.current
 
         let task = Task { [weak self] in
             guard let self else { return }
@@ -374,6 +395,8 @@ final class QuizTimersController: ObservableObject {
                 Logger.quiz.debug("⏱️ Auto-advance aborted - not in showingResult state")
                 return
             }
+            guard self.attemptLedger.ownsQuestion(owner, "autoAdvance.fire") else { return }
+            self.attemptLedger.record(.timer, "autoAdvance.fire")
 
             await self.proceedToNextQuestion()
         }
@@ -401,6 +424,7 @@ final class QuizTimersController: ObservableObject {
         }
         setAutoConfirmCountdown(duration)
         let clock = clock
+        let owner = attemptLedger.current
         let task = Task { [weak self] in
             for remaining in (0 ..< duration).reversed() {
                 try? await clock.sleep(for: .seconds(1))
@@ -415,6 +439,9 @@ final class QuizTimersController: ObservableObject {
             }
             guard let self, !Task.isCancelled else { return }
             guard self.showAnswerConfirmation() else { return }
+            // #186 step 1: a countdown armed for an earlier attempt never fires.
+            guard self.attemptLedger.owns(owner, "autoConfirm.fire") else { return }
+            self.attemptLedger.record(.timer, "autoConfirm.fire")
             // Hand off to a fresh task: confirmAnswer() cancels the auto-confirm
             // task (this one), and the streaming-path submit inside it is
             // cancellation-aware — awaiting it here would throw

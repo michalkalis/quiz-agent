@@ -30,6 +30,7 @@ extension QuizViewModel {
             // nil from here on, so a racing refreshCommandWindow() or a
             // post-TTS startSilenceDetectionListening() cannot re-arm the mic.
             isAppForeground = false
+            attemptLedger.record(.scene, "background")
 
             // (a) Tear down the command/VAD listener (idempotent).
             audioDeviceState.stopSilenceDetectionListening()
@@ -53,6 +54,7 @@ extension QuizViewModel {
 
         case .active:
             isAppForeground = true
+            attemptLedger.record(.scene, "active")
             refreshCommandWindow() // re-arm via the existing window sync
             resumeSuppressedAnswerWindow()
             // #179: a submission that wedged while backgrounded has no live owner
@@ -97,7 +99,11 @@ extension QuizViewModel {
 
         if suppressedAt.duration(to: clock.now) < .seconds(Config.autoRecordingDuration) {
             Logger.audio.info("🌅 Scene → active: opening the answer window suppressed in the background")
-            Task { [weak self] in await self?.recordingCoordinator.startRecording() }
+            let owner = currentAttempt
+            Task { [weak self] in
+                guard let self, self.attemptLedger.ownsQuestion(owner, "foregroundResume.start") else { return }
+                await self.recordingCoordinator.startRecording()
+            }
         } else {
             Logger.audio.info("🌅 Scene → active: the whole answer window elapsed in the background — no answer")
             recordingCoordinator.handleTranscriptionFailure()

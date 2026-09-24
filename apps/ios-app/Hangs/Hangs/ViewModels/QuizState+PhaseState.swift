@@ -90,6 +90,12 @@ struct ConfirmationState {
     /// change just so the sheet can linger.
     var isEvaluatingAnswer: Bool = false
 
+    /// #186 step 1: the attempt this sheet was opened for. Checked by the
+    /// invariants (a sheet always belongs to the CURRENT attempt) and handed to
+    /// `handleQuizResponse` on confirm, so a sheet that somehow outlived its
+    /// attempt can never grade into the next one. `nil` only for DEBUG seeds.
+    var owner: AttemptID?
+
     /// Auto-confirm countdown — confirmation-semantic, so it lives here (its
     /// semantic owner, T7); QuizTimersController only ticks it through the
     /// façade's injected write closure (decision 4), never owning it.

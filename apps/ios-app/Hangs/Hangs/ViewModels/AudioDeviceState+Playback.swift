@@ -17,11 +17,15 @@ extension AudioDeviceState {
     func playQuestionAudio(from urlString: String) async {
         // Store URL for re-playing on demand
         setCurrentQuestionAudioUrl(urlString)
+        // #186 step 1: the tail below arms the countdown that auto-starts the
+        // mic — only for the question this read belongs to. (The audio URL is
+        // no owner: it is session-scoped and identical across questions.)
+        let owner = attemptLedger.current
 
         // Mute guard: skip TTS but still start silence detection + timer/recording
         guard !isMuted() else {
             await startSilenceDetectionListening()
-            guard isAskingQuestion() else { return }
+            guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.mutedTail") else { return }
 
             if settings().autoRecordEnabled, !isRerecording() {
                 startThinkingTimeCountdown()
@@ -44,7 +48,7 @@ extension AudioDeviceState {
         await startSilenceDetectionListening()
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
-        guard isAskingQuestion() else { return }
+        guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.tail") else { return }
 
         if settings().autoRecordEnabled, !isRerecording() {
             // Auto-record path: thinking time countdown → auto-start recording

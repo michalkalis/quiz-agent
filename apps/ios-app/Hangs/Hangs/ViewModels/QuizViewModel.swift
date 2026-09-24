@@ -123,7 +123,15 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var quizState: QuizState = .idle
-    @Published var currentQuestion: Question?
+    @Published var currentQuestion: Question? {
+        // #186 step 1: entering a question starts its first attempt — anything
+        // still in flight for the previous question loses ownership here.
+        didSet {
+            guard currentQuestion?.id != oldValue?.id else { return }
+            attemptLedger.begin(questionId: currentQuestion?.id, reason: "question")
+        }
+    }
+
     @Published var currentSession: QuizSession?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
@@ -458,6 +466,9 @@ final class QuizViewModel: ObservableObject {
 
         guard quizState.validTransitions.contains(to) else {
             Logger.quiz.error("❌ REJECTED transition: \(from) → \(to) [\(caller, privacy: .public)]")
+            // #186 step 1: a rejected transition is a bug signal — it must reach
+            // Sentry (with the input trail that led to it), not only OSLog.
+            attemptLedger.reportRejectedTransition(from: from, to: to, caller: caller)
             return false
         }
 
@@ -516,9 +527,31 @@ final class QuizViewModel: ObservableObject {
         // raises none, so the last transition before the stall was invisible.
         SentryLog.info("quiz state", category: .quiz, attributes: [
             "from": from, "to": to, "caller": caller, "index": answered,
+            "attempt": currentAttempt.description,
         ])
+        attemptLedger.record(.state, "\(from)→\(to)", caller)
+        verifyQuizInvariants(after: caller)
 
         return true
+    }
+
+    // MARK: - Attempt ownership (#186 step 1)
+
+    /// The attempt every async result must still own before it writes state —
+    /// see `AttemptLedger`.
+    var currentAttempt: AttemptID { attemptLedger.current }
+
+    /// States the quiz must never be in, checked after every transition and
+    /// whenever the confirmation sheet opens. Reported through the ledger
+    /// (Sentry in every build, a stop in DEBUG app runs).
+    func verifyQuizInvariants(after context: String) {
+        recordingCoordinator.verifyConfirmationInvariants(after: context)
+        if case let .showingResult(question, _) = quizState, question.id != currentQuestion?.id {
+            attemptLedger.reportInvariantViolation(
+                "result belongs to the current question",
+                "result=\(question.id) current=\(currentQuestion?.id ?? "-") at \(context)"
+            )
+        }
     }
 
     // MARK: - Re-entrancy Guards
@@ -531,15 +564,14 @@ final class QuizViewModel: ObservableObject {
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
     private var isAdvancing = false
 
-    /// Monotonic submission generation (#79). Bumped at the start of EVERY
-    /// submission-initiating path — `resubmitAnswer`, `submitMCQAnswer`,
-    /// `skipQuestion` — before its first `await`. A committed-voice-transcript
-    /// handler that is suspended mid-flight captures the epoch on entry and, after
-    /// each await, aborts if it moved: so a typed answer submitted during that
-    /// window can't trigger a second concurrent submission or resurrect the stale
-    /// voice confirmation sheet. Read by RecordingCoordinator via an injected
-    /// closure; internal for tests.
-    var submissionEpoch = 0
+    /// #186 step 1: owner of the current `AttemptID` — replaces the #79
+    /// `submissionEpoch`, which only the committed-voice-transcript path ever
+    /// checked. Every submission-initiating path (`resubmitAnswer`,
+    /// `submitMCQAnswer`, `skipQuestion`, a new recording, cancel, re-record)
+    /// begins a new attempt before its first `await`, and every async result
+    /// checks the attempt it captured before it writes state. Shared with the
+    /// child coordinators like `taskBag`; internal for tests.
+    let attemptLedger: AttemptLedger
 
     /// Single-flight guard for `resubmitAnswer` (#79): the typed-answer TextField's
     /// `.onSubmit` and its send button can both fire, and both call `resubmitAnswer`.
@@ -745,6 +777,7 @@ final class QuizViewModel: ObservableObject {
         self.sttService = sttService
         self.realtimeSTTEnabled = realtimeSTTEnabled
         self.clock = clock
+        attemptLedger = AttemptLedger()
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
@@ -758,6 +791,7 @@ final class QuizViewModel: ObservableObject {
         // streaming recording — leave .recording and reset streaming STT so no
         // recording is stranded after the call.
         self.audioService.onInterruptionBegan = { [weak self] in
+            self?.attemptLedger.record(.route, "audioInterruption.began")
             self?.recordingCoordinator.handleAudioInterruption()
         }
 
@@ -795,6 +829,8 @@ final class QuizViewModel: ObservableObject {
         recordingCoordinator.objectWillChange
             .sink { [weak self] in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        attemptLedger.stateLabel = { [weak self] in self?.quizState.label ?? "-" }
     }
 
     /// #113 T2: builds the audio child. Every closure captures the façade
@@ -807,6 +843,7 @@ final class QuizViewModel: ObservableObject {
             networkService: networkService,
             silenceDetectionService: silenceDetectionService,
             taskBag: taskBag,
+            attemptLedger: attemptLedger,
             settings: { [weak self] in self?.settings ?? .default },
             setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
             setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
@@ -844,6 +881,7 @@ final class QuizViewModel: ObservableObject {
         VoiceCommandCoordinator(
             silenceDetectionService: silenceDetectionService,
             taskBag: taskBag,
+            attemptLedger: attemptLedger,
             clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
@@ -887,6 +925,7 @@ final class QuizViewModel: ObservableObject {
         QuizTimersController(
             taskBag: taskBag,
             clock: clock,
+            attemptLedger: attemptLedger,
             settings: { [weak self] in self?.settings ?? .default },
             quizState: { [weak self] in self?.quizState ?? .idle },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
@@ -911,13 +950,13 @@ final class QuizViewModel: ObservableObject {
             silenceDetectionService: silenceDetectionService,
             sttService: sttService,
             taskBag: taskBag,
+            attemptLedger: attemptLedger,
             clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
             quizState: { [weak self] in self?.quizState ?? .idle },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             currentQuestion: { [weak self] in self?.currentQuestion },
             currentSession: { [weak self] in self?.currentSession },
-            submissionEpoch: { [weak self] in self?.submissionEpoch ?? 0 },
             isAutoRecording: { [weak self] in self?.isAutoRecording ?? false },
             setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
             setIsRerecording: { [weak self] in self?.isRerecording = $0 },
@@ -930,7 +969,7 @@ final class QuizViewModel: ObservableObject {
             handleError: { [weak self] error, context, fallback in
                 await self?.handleError(error, context: context, fallbackMessage: fallback)
             },
-            handleQuizResponse: { [weak self] in await self?.handleQuizResponse($0) },
+            handleQuizResponse: { [weak self] response, owner in await self?.handleQuizResponse(response, owner: owner) },
             resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
@@ -1463,11 +1502,13 @@ final class QuizViewModel: ObservableObject {
 
     /// Mic-button entry — see `RecordingCoordinator.toggleRecording`.
     func toggleRecording() async {
+        attemptLedger.record(.tap, "mic")
         await recordingCoordinator.toggleRecording()
     }
 
     /// See `RecordingCoordinator.confirmAnswer`.
     func confirmAnswer() async {
+        attemptLedger.record(.tap, "confirm")
         await recordingCoordinator.confirmAnswer()
     }
 
@@ -1479,6 +1520,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     func beginEditingTranscript() {
+        attemptLedger.record(.tap, "editTranscript")
         recordingCoordinator.beginEditingTranscript()
     }
 
@@ -1494,11 +1536,13 @@ final class QuizViewModel: ObservableObject {
 
     /// See `RecordingCoordinator.rerecordAnswer` (#108A).
     func rerecordAnswer() {
+        attemptLedger.record(.tap, "again")
         recordingCoordinator.rerecordAnswer()
     }
 
     /// See `RecordingCoordinator.cancelProcessing`.
     func cancelProcessing() {
+        attemptLedger.record(.tap, "cancel")
         recordingCoordinator.cancelProcessing()
     }
 
@@ -1508,6 +1552,8 @@ final class QuizViewModel: ObservableObject {
     /// `onBargeIn` closure (decision 4).
     func handleBargeIn() async {
         guard quizState == .askingQuestion else { return }
+        let owner = currentAttempt
+        attemptLedger.record(.speech, "bargeIn")
 
         Logger.voice.info("🗣️ Barge-in triggered — stopping TTS and starting recording")
 
@@ -1523,7 +1569,7 @@ final class QuizViewModel: ObservableObject {
         try? await Task.sleep(for: .milliseconds(500))
 
         // 4. Guard again — state may have changed during sleep
-        guard quizState == .askingQuestion else { return }
+        guard quizState == .askingQuestion, attemptLedger.ownsQuestion(owner, "bargeIn.start") else { return }
 
         // 5. Auto-start recording (same as post-TTS flow)
         quizTimersController.cancelAnswerTimer()
@@ -1591,7 +1637,10 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
-        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #79 → #186: a new attempt supersedes any suspended voice-transcript
+        // handler, upload or prompt of the previous one.
+        let attempt = attemptLedger.begin("submit.mcq")
+        attemptLedger.record(.tap, "mcqOption")
         // #173: answering IS resuming — the same rule `confirmAnswer()` follows.
         // Without this a pause taken on the question screen rides through to
         // `.showingResult`, where `startAutoAdvanceCountdown`'s own `guard
@@ -1636,7 +1685,7 @@ final class QuizViewModel: ObservableObject {
                     questionId: questionId
                 )
             }
-            await handleQuizResponse(response)
+            await handleQuizResponse(response, owner: attempt)
             SentryLog.info("answer submit finished", category: .network, attributes: [
                 "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs(),
                 "state": quizState.label,
@@ -1646,6 +1695,7 @@ final class QuizViewModel: ObservableObject {
                 "kind": "mcq", "questionId": questionId ?? "none", "elapsedMs": elapsedMs(),
                 "error": String(describing: error),
             ])
+            guard attemptLedger.owns(attempt, "mcqSubmit.error") else { return }
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }
     }
@@ -1663,7 +1713,9 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
-        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #79 → #186: a new attempt supersedes any suspended voice-transcript
+        // handler, upload or prompt of the previous one.
+        let attempt = attemptLedger.begin("submit.text")
 
         // #79: a committed-voice-transcript handler may be suspended mid-flight
         // (inside its STT disconnect) with the confirmation sheet about to appear.
@@ -1728,9 +1780,10 @@ final class QuizViewModel: ObservableObject {
                 )
             }
 
-            await handleQuizResponse(response)
+            await handleQuizResponse(response, owner: attempt)
 
         } catch {
+            guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
 
             Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
@@ -1749,7 +1802,9 @@ final class QuizViewModel: ObservableObject {
         guard quizState == .askingQuestion || quizState == .recording else { return }
         guard let sessionId = currentSession?.id else { return }
 
-        submissionEpoch &+= 1 // #79: supersede any suspended voice-transcript handler
+        // #79 → #186: a new attempt supersedes any suspended voice-transcript
+        // handler, upload or prompt of the previous one.
+        let attempt = attemptLedger.begin("submit.skip")
         // #173: skipping IS resuming — see `submitMCQAnswer`. A pause carried
         // onto the result screen would kill its auto-advance.
         isPaused = false
@@ -1787,8 +1842,9 @@ final class QuizViewModel: ObservableObject {
                 )
             }
 
-            await handleQuizResponse(response)
+            await handleQuizResponse(response, owner: attempt)
         } catch {
+            guard attemptLedger.owns(attempt, "skip.error") else { return }
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", comment: "Error prefix when skipping a question fails; error detail is appended"))
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
@@ -1962,7 +2018,16 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    func handleQuizResponse(_ response: QuizResponse) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
+    /// `owner` (#186 step 1) is the attempt that submitted the answer; `nil`
+    /// means the caller holds the current attempt synchronously (tests).
+    func handleQuizResponse(_ response: QuizResponse, owner: AttemptID? = nil) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
+        // #186: identity before phase — `.processing` is true for EVERY
+        // question, so the state check below cannot tell a late response for
+        // question N from the one question N+1 is waiting for.
+        if let owner {
+            guard attemptLedger.owns(owner, "quizResponse") else { return }
+        }
+        attemptLedger.record(.network, "quizResponse", response.evaluation?.result.rawValue)
         // Only the state that submitted may commit the answer. Everything below is
         // durable, user-visible state — the session score, the saved stats, the
         // per-session tallies, the recap row — while `.showingResult` is a legal
@@ -2085,9 +2150,11 @@ final class QuizViewModel: ObservableObject {
         // runs outside this method in the per-question flow: holding
         // isProcessingResponse through the next question's TTS would drop a
         // fast tap-answer on that question.
+        let resultOwner = currentAttempt
         if settings.answerRevealMode == .endOfSet {
             taskBag.add(Task { [weak self] in
-                await self?.advanceToNextQuestionOrFinish()
+                guard let self, self.attemptLedger.ownsQuestion(resultOwner, "deferredAdvance") else { return }
+                await self.advanceToNextQuestionOrFinish()
             }, key: .deferredAdvance)
             return
         }
@@ -2105,6 +2172,9 @@ final class QuizViewModel: ObservableObject {
         // audio now plays concurrently (async let) while the countdown runs. The configured
         // delay (default 8s) normally exceeds the feedback length, so playback isn't cut off.
         Task {
+            // #186: a result already left behind (Next tapped before this ran)
+            // must not start talking or counting over the next question.
+            guard attemptLedger.ownsQuestion(resultOwner, "resultFeedback.start") else { return }
             async let feedbackDuration: TimeInterval = {
                 guard let audioInfo = response.audio else { return 0.0 }
                 // Prioritize base64 (enhanced feedback) over URL (generic feedback)

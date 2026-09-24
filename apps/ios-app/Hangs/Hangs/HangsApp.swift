@@ -136,6 +136,13 @@ struct HangsApp: App {
             }
         }
 
+        // #186 step 1: the quiz's input trail (taps, commands, timers, speech,
+        // network answers — metadata only) rides on every event, so a broken
+        // screen can be read back after the fact instead of guessed at.
+        var extra = event.extra ?? [:]
+        extra["quizFlightRecorder"] = QuizFlightRecorder.shared.dump(last: 80)
+        event.extra = extra
+
         return event
     }
 }

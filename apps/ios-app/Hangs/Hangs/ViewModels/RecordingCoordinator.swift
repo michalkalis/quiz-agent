@@ -20,8 +20,8 @@ import os
 /// (S6b, decision 8 — see `QuizState+PhaseState.swift`); the same-file accessors
 /// below are the only doors, shared by the decision-7 extension files, the
 /// façade forwards, and tests. Cross-cluster state (`quizState`, `settings`,
-/// `isAutoRecording`, `isRerecording`, `errorMessage`, `submissionEpoch`,
-/// `mcqVoiceMatchedKey`, `isAppForeground`) stays façade-resident and is
+/// `isAutoRecording`, `isRerecording`, `errorMessage`, `mcqVoiceMatchedKey`,
+/// `isAppForeground`) stays façade-resident and is
 /// reached ONLY through the injected closures below (decision 4 — a child
 /// never holds a back-pointer to the view model).
 @MainActor
@@ -113,6 +113,12 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.noAnswerCaptured = newValue }
     }
 
+    /// See `ConfirmationState.owner` (#186 step 1).
+    var confirmationOwner: AttemptID? {
+        get { confirmationState.owner }
+        set { confirmationState.owner = newValue }
+    }
+
     /// See `ConfirmationState.isEvaluatingAnswer` (#173 C2).
     var isEvaluatingAnswer: Bool {
         get { confirmationState.isEvaluatingAnswer }
@@ -133,6 +139,9 @@ final class RecordingCoordinator: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
     let taskBag: TaskBag
+    /// #186 step 1: the façade's attempt owner, shared like `taskBag` — every
+    /// async result in this coordinator proves ownership through it.
+    let attemptLedger: AttemptLedger
 
     /// The façade's clock (#180 track A): submit timeout, cold-wake backoff and
     /// the STT commit watchdog all run on it.
@@ -181,7 +190,6 @@ final class RecordingCoordinator: ObservableObject {
     let isAppForeground: @MainActor () -> Bool
     let currentQuestion: @MainActor () -> Question?
     let currentSession: @MainActor () -> QuizSession?
-    let submissionEpoch: @MainActor () -> Int
     let isAutoRecording: @MainActor () -> Bool
     let setIsAutoRecording: @MainActor (Bool) -> Void
     let setIsRerecording: @MainActor (Bool) -> Void
@@ -190,7 +198,8 @@ final class RecordingCoordinator: ObservableObject {
     private let facadeTransition: @MainActor (QuizState, String) -> Bool
     private let facadeSetError: @MainActor (String, ErrorContext, Error?) -> Void
     private let facadeHandleError: @MainActor (Error, ErrorContext, String) async -> Void
-    let handleQuizResponse: @MainActor (QuizResponse) async -> Void
+    /// The response plus the attempt that submitted it (#186 step 1).
+    let handleQuizResponse: @MainActor (QuizResponse, AttemptID) async -> Void
     let resubmitAnswer: @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void
     let skipQuestion: @MainActor () async -> Void
     let emitEarcon: @MainActor (Earcon) -> Void
@@ -238,13 +247,13 @@ final class RecordingCoordinator: ObservableObject {
         silenceDetectionService: SilenceDetectionServiceProtocol,
         sttService: ElevenLabsSTTServiceProtocol?,
         taskBag: TaskBag,
+        attemptLedger: AttemptLedger,
         clock: AnyClock<Duration>,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
         isAppForeground: @escaping @MainActor () -> Bool,
         currentQuestion: @escaping @MainActor () -> Question?,
         currentSession: @escaping @MainActor () -> QuizSession?,
-        submissionEpoch: @escaping @MainActor () -> Int,
         isAutoRecording: @escaping @MainActor () -> Bool,
         setIsAutoRecording: @escaping @MainActor (Bool) -> Void,
         setIsRerecording: @escaping @MainActor (Bool) -> Void,
@@ -253,7 +262,7 @@ final class RecordingCoordinator: ObservableObject {
         transition: @escaping @MainActor (QuizState, String) -> Bool,
         setError: @escaping @MainActor (String, ErrorContext, Error?) -> Void,
         handleError: @escaping @MainActor (Error, ErrorContext, String) async -> Void,
-        handleQuizResponse: @escaping @MainActor (QuizResponse) async -> Void,
+        handleQuizResponse: @escaping @MainActor (QuizResponse, AttemptID) async -> Void,
         resubmitAnswer: @escaping @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void,
         skipQuestion: @escaping @MainActor () async -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
@@ -278,13 +287,13 @@ final class RecordingCoordinator: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
         self.taskBag = taskBag
+        self.attemptLedger = attemptLedger
         self.clock = clock
         self.settings = settings
         self.quizState = quizState
         self.isAppForeground = isAppForeground
         self.currentQuestion = currentQuestion
         self.currentSession = currentSession
-        self.submissionEpoch = submissionEpoch
         self.isAutoRecording = isAutoRecording
         self.setIsAutoRecording = setIsAutoRecording
         self.setIsRerecording = setIsRerecording

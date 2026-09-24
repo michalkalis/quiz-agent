@@ -185,6 +185,10 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// `resetState()`'s blanket `cancelAll()` still covers the consumer loop
     /// and a pending skip exactly as before the extraction.
     let taskBag: TaskBag
+    /// #186 step 1: attempt owner (shared like `taskBag`) — the skip undo
+    /// window proves its question is still on screen; commands go to the
+    /// flight recorder.
+    let attemptLedger: AttemptLedger
 
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
@@ -244,6 +248,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     init(
         silenceDetectionService: SilenceDetectionServiceProtocol,
         taskBag: TaskBag,
+        attemptLedger: AttemptLedger,
         clock: AnyClock<Duration> = .continuous,
         settings: @escaping @MainActor () -> QuizSettings,
         isAppForeground: @escaping @MainActor () -> Bool,
@@ -268,6 +273,7 @@ final class VoiceCommandCoordinator: ObservableObject {
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
+        self.attemptLedger = attemptLedger
         self.clock = clock
         self.settings = settings
         self.isAppForeground = isAppForeground
@@ -356,6 +362,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
 
         let clock = clock
+        let owner = attemptLedger.current
         let task = Task { [weak self] in
             try? await clock.sleep(for: .seconds(duration))
             guard let self, !Task.isCancelled else { return }
@@ -364,11 +371,14 @@ final class VoiceCommandCoordinator: ObservableObject {
             // is still asking the question — starting an answer (voice or tap)
             // supersedes it. Without this recheck, expiry could commit
             // skipQuestion() mid-recording, leaving the streaming mic live.
-            guard self.quizState() == .askingQuestion else {
+            guard self.quizState() == .askingQuestion,
+                  self.attemptLedger.ownsQuestion(owner, "skipUndo.commit")
+            else {
                 self.pendingSkipWindow = nil
                 return
             }
             self.pendingSkipWindow = nil
+            self.attemptLedger.record(.timer, "skipUndo.commit")
             await self.skipQuestion()
         }
         taskBag.add(task, key: .skipUndo)

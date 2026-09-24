@@ -14,6 +14,8 @@ import os
 extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer() async {
+        // #186 step 1: the sheet's attempt answers the response it confirms.
+        let owner = confirmationOwner ?? attemptLedger.current
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
@@ -51,7 +53,7 @@ extension RecordingCoordinator {
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
             pendingResponse = nil
-            await handleQuizResponse(response)
+            await handleQuizResponse(response, owner)
             return
         }
 
@@ -124,6 +126,9 @@ extension RecordingCoordinator {
         // the "again" voice command becomes a no-op instead of spawning a second
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
+        // #186 step 1: the rejected recording's attempt ends here — its upload,
+        // read-back or late 400 can no longer land on the re-record.
+        let owner = attemptLedger.begin("rerecord")
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
@@ -146,12 +151,15 @@ extension RecordingCoordinator {
         transition(to: .askingQuestion) // Transient bridge state before recording starts
         setErrorMessage(nil)
         Task { [weak self] in
-            await self?.startRecording()
+            guard let self, self.attemptLedger.owns(owner, "rerecord.start") else { return }
+            await self.startRecording()
         }
     }
 
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
+        // #186 step 1: whatever the cancelled attempt still has in flight is void.
+        attemptLedger.begin("cancelProcessing")
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()

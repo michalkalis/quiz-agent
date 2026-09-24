@@ -23,11 +23,16 @@ extension RecordingCoordinator {
     /// Open the confirmation sheet for a voice answer and read `text` back.
     /// The auto-confirm countdown and the command window arm after the
     /// read-back (immediately when muted, empty, or on any TTS failure).
-    func presentVoiceTranscript(_ text: String) {
+    /// `owner` (#186 step 1) is the attempt that recorded the answer — the
+    /// sheet belongs to it; `nil` = the current attempt.
+    func presentVoiceTranscript(_ text: String, owner: AttemptID? = nil) {
+        let owner = owner ?? attemptLedger.current
         cancelAnswerReadBack()
         transcribedAnswer = text
         noAnswerCaptured = false
+        confirmationOwner = owner
         showAnswerConfirmation = true
+        verifyConfirmationInvariants(after: "presentVoiceTranscript")
 
         let spoken = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !spoken.isEmpty, !isMuted() else {
@@ -59,7 +64,8 @@ extension RecordingCoordinator {
             setPlayingAnswerReadBack(false)
             // The sheet may have moved on (confirm / re-record / edit) while the
             // audio played — only the read-back that still owns it arms the tail.
-            guard showAnswerConfirmation, transcribedAnswer == text else { return }
+            guard showAnswerConfirmation, transcribedAnswer == text,
+                  attemptLedger.owns(owner, "answerReadBack.tail") else { return }
             if completed {
                 Logger.audio.debug("🔈 Answer read back — arming confirmation tail")
             }

@@ -1,8 +1,10 @@
 # Issue #75 — Automated issue-prep orchestrator (research → plan → review → split)
 
-**Triage:** tooling/process · ready-for-human (interactive build, founder-in-loop)
+**Triage:** tooling/process · done (retired 2026-09-24)
 **Reversibility:** a (commits-only — new Claude Code skills, no schema/auth/payments)
-**Status:** design approved 2026-06-27; research on disk + build-vs-adopt recorded (2026-06-28). Built: **75.1 `/split-issue`** + **75.7 `/design-soundness`** + **75.2 `/prepare-issue` orchestrator** (`.claude/skills/prepare-issue/SKILL.md`, 2026-06-28) — the orchestrator also folds in **75.3** (phase wiring) / **75.4** (all-Opus) / **75.5** (class b/c guard), since a single-prompt skill isn't separable into those code modules; they're written into the one file, not as standalone units. **All skills authored; the one remaining task is 75.6 — the end-to-end dry-run**, which is also the first real exercise of `/design-soundness` and of `/split-issue`'s large-issue path (both unproven until then).
+**Status:** **RETIRED 2026-09-24** — nightly runs stopped 2026-09-16; `prepare-issue`, `split-issue`, `ready-check` archived to `docs/archive/claude-skills/`; `/design-soundness` kept as a standalone plan review; 75.6 dry-run dropped. History below.
+
+Original status: design approved 2026-06-27; research on disk + build-vs-adopt recorded (2026-06-28). Built: **75.1 `/split-issue`** + **75.7 `/design-soundness`** + **75.2 `/prepare-issue` orchestrator** (`.claude/skills/prepare-issue/SKILL.md`, 2026-06-28) — the orchestrator also folds in **75.3** (phase wiring) / **75.4** (all-Opus) / **75.5** (class b/c guard), since a single-prompt skill isn't separable into those code modules; they're written into the one file, not as standalone units. **All skills authored; the one remaining task is 75.6 — the end-to-end dry-run**, which is also the first real exercise of `/design-soundness` and of `/split-issue`'s large-issue path (both unproven until then).
 
 Research backing this issue: [`docs/research/issue-prep-pipeline-research-2026-06-27.md`](../research/issue-prep-pipeline-research-2026-06-27.md) — outward, cited prior-art + best-practices research per D9 (the build-vs-adopt outcome is recorded below).
 

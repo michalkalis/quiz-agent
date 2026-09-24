@@ -1,7 +1,7 @@
 # #98 — On-device geography questions (MapKit blind maps + vector silhouettes)
 
 **Triage:** enhancement · needs-triage
-**Status:** Proposal drafted 2026-07-16 (founder ask — geo image questions; drive-safety "no longer a hard blocker" given partial vehicle autonomy). Approach below is a recommendation; a few product decisions still open (see §7). Run `/prepare-issue` to harden before any agent run.
+**Status:** Proposal drafted 2026-07-16 (founder ask — geo image questions; drive-safety "no longer a hard blocker" given partial vehicle autonomy). Approach below is a recommendation; a few product decisions still open (see §7). Do light issue prep (direction + tracks) before implementation.
 
 ## 1. Why
 

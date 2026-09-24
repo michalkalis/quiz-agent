@@ -61,6 +61,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.isStoppingRecording = newValue }
     }
 
+    /// See `RecordingState.emptyAnswerRetryHintQuestionKey` (#185 track B).
+    var emptyAnswerRetryHintQuestionKey: String? {
+        get { recordingState.emptyAnswerRetryHintQuestionKey }
+        set { recordingState.emptyAnswerRetryHintQuestionKey = newValue }
+    }
+
     /// See `RecordingState.backgroundSuppressedRecordingAt` (#171 Track H).
     var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant? {
         get { recordingState.backgroundSuppressedRecordingAt }

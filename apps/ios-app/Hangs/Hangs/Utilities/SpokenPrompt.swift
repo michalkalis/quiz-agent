@@ -8,7 +8,9 @@
 //  grammar in VoiceCommandLexicon+Display, none of this lives in
 //  Localizable.xcstrings. Synthesised through the backend's generic TTS
 //  (`POST /tts/synthesize`, cached server-side), the same path as the answer
-//  read-back.
+//  read-back. The same sentence is also SHOWN during the retry
+//  (`EmptyAnswerRetryHint`) — that copy is ordinary UI text and follows the
+//  app language like the rest of the screen.
 //
 
 import Foundation
@@ -20,9 +22,11 @@ enum SpokenPrompt: String, Sendable {
 
     func text(language: CommandLanguage) -> String {
         switch (self, language) {
-        case (.didNotCatch, .slovak): "Nepočul som, povedz to znova."
-        case (.didNotCatch, .czech): "Neslyšel jsem, řekni to znovu."
-        case (.didNotCatch, .english): "I didn't catch that. Say it again."
+        // Founder wording 2026-09-24. The on-screen twin is the xcstrings key
+        // "I didn't catch your answer, please try again." (app language).
+        case (.didNotCatch, .slovak): "Nezachytil som odpoveď, skús to znova."
+        case (.didNotCatch, .czech): "Nezachytil jsem odpověď, zkus to znovu."
+        case (.didNotCatch, .english): "I didn't catch your answer, please try again."
         }
     }
 }

@@ -226,6 +226,16 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.noAnswerCaptured = newValue }
     }
 
+    /// #185 track B (founder 2026-09-24): show "I didn't catch your answer,
+    /// please try again" near the mic — from the automatic retry after an empty
+    /// answer until its recording stops, spoken or muted alike.
+    var showsEmptyAnswerRetryHint: Bool {
+        guard let key = recordingCoordinator.emptyAnswerRetryHintQuestionKey,
+              key == (currentQuestion?.id ?? "")
+        else { return false }
+        return quizState == .askingQuestion || quizState == .recording
+    }
+
     /// #173 C2: the confirmation sheet stays up, in its evaluating state, from
     /// Confirm until the result lands.
     var isEvaluatingAnswer: Bool {

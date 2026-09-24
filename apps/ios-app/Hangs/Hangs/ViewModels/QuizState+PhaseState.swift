@@ -30,6 +30,12 @@ struct RecordingState {
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
+    /// #185 track B (founder 2026-09-24): the "didn't catch your answer" line is
+    /// on screen for this question (`questionId ?? ""`) from the automatic retry
+    /// until its recording stops. Keyed by question so a retry abandoned by a
+    /// skip can never show on the next one.
+    var emptyAnswerRetryHintQuestionKey: String?
+
     /// #171 Track H: when `startRecording()` was suppressed because the app was
     /// backgrounded (the think/answer countdown kept running and expired out of
     /// sight). Foregrounding reads it to do what should have happened — open the
@@ -58,6 +64,7 @@ struct RecordingState {
         speechDetectedDuringAutoRecord = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
+        emptyAnswerRetryHintQuestionKey = nil
     }
 
     /// Drop the whole subset atomically (full teardown, T7 unified reset model).

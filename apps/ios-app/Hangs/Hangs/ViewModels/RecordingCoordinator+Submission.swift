@@ -26,6 +26,9 @@ extension RecordingCoordinator {
         let attempt = attemptLedger.current
         attemptLedger.record(.speech, "recording.stop", reason.rawValue)
 
+        // #185 track B: the on-screen retry line lives until the retry's
+        // recording ends.
+        emptyAnswerRetryHintQuestionKey = nil
         emitEarcon(.gotIt) // 77.10 got-it tone — recording stopped / auto-submitted
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()

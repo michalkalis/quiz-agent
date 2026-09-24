@@ -9,8 +9,10 @@
 //  IS a skip — the next question appeared with no result and no word from the
 //  app. Founder decision 1.1 (2026-09-24):
 //
-//  1. first miss on a question → the app says "didn't catch that, say it again"
-//     (in the quiz language) and records again at once — ONE automatic retry;
+//  1. first miss on a question → the app says "I didn't catch your answer,
+//     please try again" (in the quiz language), shows the same line near the
+//     mic (in the app language, with sound or muted) and records again at once —
+//     ONE automatic retry;
 //  2. any later miss → the confirmation sheet with Again / Skip and NO
 //     auto-confirm: the question is skipped only by a tap or a spoken command.
 //     The sheet appears without being announced (1.2 was rejected).
@@ -96,6 +98,9 @@ extension RecordingCoordinator {
             finishRetryPrompt()
             return
         }
+        // After the transition: leaving the recording/processing pair resets the
+        // capture state this lives in. Cleared when the retry recording stops.
+        emptyAnswerRetryHintQuestionKey = owner.questionId ?? ""
         attemptLedger.record(.prompt, "emptyAnswer.retry", prompt.rawValue)
 
         let text = prompt.text(language: promptLanguage)

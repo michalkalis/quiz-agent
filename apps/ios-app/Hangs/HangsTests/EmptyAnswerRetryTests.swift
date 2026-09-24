@@ -129,12 +129,60 @@ struct EmptyAnswerRetryTests {
     }
 
     /// WHY: the prompt is spoken in the QUIZ language — the language the
-    /// driver answers and says commands in — for every quiz language we serve.
+    /// driver answers and says commands in — for every quiz language we serve,
+    /// in the founder's wording (2026-09-24).
     @Test("the prompt exists in every quiz language")
     func promptInEveryQuizLanguage() {
-        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Nepočul som, povedz to znova.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Neslyšel jsem, řekni to znovu.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .english) == "I didn't catch that. Say it again.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Nezachytil som odpoveď, skús to znova.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Nezachytil jsem odpověď, zkus to znovu.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .english) == "I didn't catch your answer, please try again.")
+    }
+
+    /// WHY (founder 2026-09-24): the retry line is ALSO on screen, for the whole
+    /// retry — while it is spoken and while the mic is open again — and gone
+    /// once that recording ends; a stale line would claim a miss that is over.
+    @Test("the retry line is shown during the prompt and the retry recording, then gone")
+    func retryLineShownDuringRetryOnly() async {
+        let (vm, silence, network, audio) = makeVM(clock: TestClock())
+        network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
+        var shownWhileSpeaking = false
+        audio.onPlaybackStarted = { shownWhileSpeaking = vm.showsEmptyAnswerRetryHint }
+        #expect(vm.showsEmptyAnswerRetryHint == false)
+
+        await vm.toggleRecording()
+        await recordUnderstoodAsNothing(vm, silence)
+        await pumpUntil({ vm.quizState == .recording && silence.isAnswerCaptureActive }, "the retry never re-opened the mic")
+
+        #expect(shownWhileSpeaking, "the line is on screen while it is spoken")
+        #expect(vm.showsEmptyAnswerRetryHint, "…and while the mic is open again")
+
+        network.submitVoiceAnswerError = nil
+        vm.quizMuteOverride = true // no read-back of the answer
+        await recordUnderstoodAsNothing(vm, silence)
+
+        #expect(vm.showAnswerConfirmation, "the retry's answer reached the sheet")
+        #expect(vm.showsEmptyAnswerRetryHint == false, "the line is gone once the retry recording ends")
+    }
+
+    /// WHY: muted means no spoken line — which is exactly when the driver needs
+    /// the written one to know why the mic opened again. It is on the question
+    /// screen itself, next to the mic.
+    @Test("muted: the retry line is on the question screen while the mic is open again")
+    func mutedRetryLineOnQuestionScreen() async throws {
+        let (vm, silence, network, _) = makeVM(clock: TestClock())
+        vm.quizMuteOverride = true
+        network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
+
+        await vm.toggleRecording()
+        await recordUnderstoodAsNothing(vm, silence)
+        await pumpUntil({ vm.quizState == .recording && silence.isAnswerCaptureActive }, "the retry never re-opened the mic")
+
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.retryHint") }
+            #expect(throws: Never.self) { try tree.find(text: "I didn't catch your answer, please try again.") }
+        }
     }
 }
 

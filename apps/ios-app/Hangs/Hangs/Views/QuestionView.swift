@@ -486,6 +486,14 @@ struct QuestionView: View {
     /// names the voice commands.
     @ViewBuilder
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
+        // #185 track B: the retry line sits with the bar (not behind its ✕ —
+        // a dismissed bar must not hide why the mic opened again).
+        if viewModel.showsEmptyAnswerRetryHint {
+            EmptyAnswerRetryHint()
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .transition(.opacity)
+        }
         if !listenBarDismissal.isHidden(questionId: question.id),
            let phase = listenPhase(question: question)
         {

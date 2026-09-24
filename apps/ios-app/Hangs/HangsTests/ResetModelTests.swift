@@ -110,54 +110,60 @@ struct ResetModelTests {
         #expect(viewModel.recordingCoordinator.currentQuestionAudioUrl == "https://example.com/q.mp3")
     }
 
-    /// WHY (#171 Track B, founder 2026-09-05): the old 3-tier escalation
-    /// answered an empty recording with a "Sorry, I didn't catch that" banner
-    /// and a FRESH think+answer countdown — twice — before giving up. From the
-    /// driver's seat that reads as a timer that will not end, and it was the
-    /// most confusing behaviour of the TF round. A failed capture must instead
-    /// land on the confirmation sheet with an EMPTY field: no banner, no new
-    /// countdown, and the question is one Confirm away from a result.
-    @Test("a failed capture opens the empty confirmation sheet instead of retrying")
-    func failedCaptureOpensEmptyConfirmation() async throws {
-        let viewModel = Fixtures.makeViewModel()
+    /// WHY (#185 track B, founder decision 1.1, 2026-09-24): a miss must never
+    /// end the question in silence. The first one is answered out loud — "I
+    /// didn't catch that, say it again" — and the mic opens again at once. No
+    /// sheet, no banner, no fresh think+answer countdown (#171 Track B's reason
+    /// for deleting the old escalation still holds: that read as a broken timer).
+    @Test("the first failed capture says it heard nothing and re-records — no sheet, no banner")
+    func firstFailedCaptureRetries() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        (viewModel.audioService as? MockAudioService)?.playbackDurationNs = 0
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .recording
 
         viewModel.recordingCoordinator.handleTranscriptionFailure()
 
-        #expect(viewModel.showAnswerConfirmation == true)
-        #expect(viewModel.transcribedAnswer.isEmpty)
-        #expect(viewModel.noAnswerCaptured == true, "the sheet must render the no-answer body, not the Transcribing spinner")
-        #expect(viewModel.quizState == .processing, "the sheet is a .processing screen, like every other confirmation")
-        #expect(viewModel.errorMessage == nil, "the empty sheet IS the message — a banner re-reads as 'try again'")
+        #expect(viewModel.showAnswerConfirmation == false, "the first miss is not a sheet")
+        #expect(viewModel.errorMessage == nil, "a banner re-reads as 'something broke, try again'")
+        #expect(viewModel.isRerecording, "the bridge must not arm a fresh think/answer countdown")
+        await pumpUntil({ viewModel.quizState == .recording }, "the retry never re-opened the mic")
+        #expect(mockNetwork.synthesizedTexts == [SpokenPrompt.didNotCatch.text(language: .english)])
     }
 
-    /// WHY: repetition was the bug. The second failure must behave exactly like
-    /// the first — one sheet, still no countdown restart — rather than
-    /// escalating through tiers the founder asked us to delete.
-    @Test("a second failed capture behaves identically — no escalation tiers left")
-    func repeatedFailedCaptureDoesNotEscalate() async throws {
-        let viewModel = Fixtures.makeViewModel()
+    /// WHY: one automatic retry, not a loop. The second miss on the same
+    /// question hands the decision to the driver: the Again / Skip sheet, and
+    /// NOTHING counting down on it — confirming an empty answer is a skip, and
+    /// a skip is the driver's call (1.1). It also arrives unannounced (1.2 was
+    /// rejected), so nothing more is spoken.
+    @Test("the second failed capture opens the Again/Skip sheet with no countdown")
+    func secondFailedCaptureOpensSheetWithoutCountdown() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        (viewModel.audioService as? MockAudioService)?.playbackDurationNs = 0
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .recording
         viewModel.recordingCoordinator.handleTranscriptionFailure()
+        await pumpUntil({ viewModel.quizState == .recording }, "the retry never re-opened the mic")
 
-        // Back to the question (a re-record), then fail again.
-        viewModel.transition(to: .askingQuestion)
-        viewModel.quizState = .recording
         viewModel.recordingCoordinator.handleTranscriptionFailure()
 
         #expect(viewModel.showAnswerConfirmation == true)
+        #expect(viewModel.noAnswerCaptured == true, "the sheet renders the no-answer body, not the Transcribing spinner")
         #expect(viewModel.transcribedAnswer.isEmpty)
+        #expect(viewModel.quizState == .processing, "the sheet is a .processing screen, like every other confirmation")
+        #expect(viewModel.taskBag.contains(.autoConfirm) == false, "no countdown may resolve this sheet")
+        #expect(viewModel.autoConfirmCountdown == 0)
         #expect(viewModel.errorMessage == nil)
-        #expect(viewModel.quizState == .processing)
+        #expect(mockNetwork.synthesizedTexts.count == 1, "the sheet is not announced")
     }
 
     /// WHY: the founder's exact TF trace — the answer window expires,
-    /// auto-record opens, ElevenLabs commits dead air on its own. Dead air used
-    /// to skip the question outright; it now gets the same empty sheet as every
-    /// other miss, so the driver still has a beat to type or say "again" before
-    /// it counts as no answer.
-    @Test("empty spontaneous commit during auto-record opens the empty confirmation sheet")
-    func emptyCommitDuringAutoRecordOpensConfirmation() async throws {
+    /// auto-record opens, ElevenLabs commits dead air on its own. Dead air must
+    /// take the same path as every other miss: the prompt and one re-record.
+    @Test("empty spontaneous commit during auto-record takes the retry path")
+    func emptyCommitDuringAutoRecordRetries() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
         viewModel.recordingCoordinator.setIsAutoRecording(true)
@@ -165,17 +171,16 @@ struct ResetModelTests {
 
         await viewModel.recordingCoordinator.handleCommittedTranscript("")
 
-        #expect(viewModel.showAnswerConfirmation == true)
-        #expect(viewModel.transcribedAnswer.isEmpty)
-        #expect(viewModel.noAnswerCaptured == true)
+        #expect(viewModel.showAnswerConfirmation == false)
+        #expect(viewModel.isAutoRecording == false)
         #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.taskBag.contains(.emptyAnswerRetry), "the retry is armed")
     }
 
     /// WHY: a spoken-but-lost answer (a content-bearing partial arrived, the
-    /// commit came back empty) used to be the one case that earned a retry.
-    /// It no longer forks: both misses end on the same sheet, which is what
-    /// makes the flow predictable — one screen after every recording.
-    @Test("empty commit after detected speech takes the same no-answer path")
+    /// commit came back empty) does not fork from dead air — one predictable
+    /// path after every miss.
+    @Test("empty commit after detected speech takes the same path")
     func emptyCommitAfterSpeechTakesSamePath() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
@@ -184,23 +189,23 @@ struct ResetModelTests {
 
         await viewModel.recordingCoordinator.handleCommittedTranscript("")
 
-        #expect(viewModel.showAnswerConfirmation == true)
-        #expect(viewModel.transcribedAnswer.isEmpty)
+        #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.taskBag.contains(.emptyAnswerRetry))
     }
 
-    /// WHY: the empty sheet is only humane if Confirm actually ends the
-    /// question. `confirmAnswer()` used to drop an empty answer on the floor —
-    /// the sheet closed and the quiz sat in .processing forever. An empty
-    /// confirm now means "no answer" and must reach a RESULT through the
-    /// backend's existing skip contract.
-    @Test("confirming an empty answer submits no answer and reaches a result")
-    func confirmingEmptyAnswerReachesResult() async throws {
+    /// WHY: the Again/Skip sheet is only humane if Skip actually ends the
+    /// question. Skip (and a spoken confirm) goes through `confirmAnswer()`,
+    /// whose empty branch is "no answer" — it must reach a RESULT through the
+    /// backend's skip contract, never strand the driver in `.processing`.
+    @Test("skipping from the no-answer sheet submits no answer and reaches a result")
+    func skippingFromNoAnswerSheetReachesResult() async throws {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .recording
-        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        viewModel.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        #expect(viewModel.noAnswerCaptured)
 
         await viewModel.confirmAnswer()
 

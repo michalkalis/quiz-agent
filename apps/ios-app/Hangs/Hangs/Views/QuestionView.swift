@@ -173,7 +173,8 @@ struct QuestionView: View {
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 matchedOption: matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
-                evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil
+                evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
+                noAnswerCaptured: viewModel.noAnswerCaptured
             )
         }
         .sheet(isPresented: $showQuizSettings) {

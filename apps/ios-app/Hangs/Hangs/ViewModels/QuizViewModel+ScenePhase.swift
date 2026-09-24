@@ -102,11 +102,14 @@ extension QuizViewModel {
             let owner = currentAttempt
             Task { [weak self] in
                 guard let self, self.attemptLedger.ownsQuestion(owner, "foregroundResume.start") else { return }
-                await self.recordingCoordinator.startRecording()
+                await self.recordingCoordinator.startRecording(trigger: .foregroundResume)
             }
         } else {
             Logger.audio.info("🌅 Scene → active: the whole answer window elapsed in the background — no answer")
-            recordingCoordinator.handleTranscriptionFailure()
+            // #185 track B: straight to the Again/Skip sheet — the driver was
+            // not there for a "didn't catch that", and the mic must not open by
+            // itself on the way back.
+            recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
         }
     }
 }

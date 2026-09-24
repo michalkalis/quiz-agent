@@ -11,10 +11,36 @@ import os
 
 // MARK: - Answer Confirmation
 
+/// Who confirmed the sheet (#185 track B).
+enum ConfirmTrigger: Equatable, Sendable {
+    /// A tap or a spoken confirm — the driver's decision.
+    case user
+    /// The auto-confirm countdown, armed for the attempt it carries.
+    case autoConfirm(AttemptID)
+}
+
 extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
-    func confirmAnswer() async {
-        // #186 step 1: the sheet's attempt answers the response it confirms.
+    func confirmAnswer(trigger: ConfirmTrigger = .user) async {
+        if case let .autoConfirm(owner) = trigger {
+            // #186 step 1: a countdown armed for an earlier attempt never fires.
+            guard attemptLedger.owns(owner, "autoConfirm.fire") else { return }
+            // #185 1.1 (founder 2026-09-24): confirming an empty field IS a
+            // skip, and a countdown may never skip a question — only the driver
+            // can. The no-answer sheet does not arm the countdown at all; this
+            // is the pin that keeps any other route from doing it either.
+            let isEmpty = transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if isEmpty, pendingResponse == nil {
+                cancelAutoConfirm()
+                noAnswerCaptured = true
+                attemptLedger.record(.timer, "autoConfirm.refusedEmpty")
+                SentryLog.warn("auto-confirm of an empty answer refused", category: .quiz, attributes: [
+                    "attempt": owner.description,
+                ])
+                return
+            }
+            attemptLedger.record(.timer, "autoConfirm.fire")
+        }
         let owner = confirmationOwner ?? attemptLedger.current
         cancelAnswerReadBack()
         cancelAutoConfirm()
@@ -152,7 +178,7 @@ extension RecordingCoordinator {
         setErrorMessage(nil)
         Task { [weak self] in
             guard let self, self.attemptLedger.owns(owner, "rerecord.start") else { return }
-            await self.startRecording()
+            await self.startRecording(trigger: .rerecord)
         }
     }
 

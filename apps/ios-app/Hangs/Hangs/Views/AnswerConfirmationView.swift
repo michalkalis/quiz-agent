@@ -47,6 +47,11 @@ struct AnswerConfirmationView: View {
     /// It carries the submitted text because `confirmAnswer()` consumes
     /// `transcribedAnswer` the moment it is called.
     var evaluatingAnswer: String? = nil
+    /// #185 track B (founder 1.1): the recording came back empty a second time.
+    /// The sheet offers Again / Skip and nothing counts down — the question is
+    /// skipped only when the driver says so. Skip reuses `onConfirm`: confirming
+    /// an empty answer is the backend's skip.
+    var noAnswerCaptured: Bool = false
 
     /// The driver TAPPED the pencil. Read `branch` / `isEditing` instead —
     /// evaluating outranks this, and this flag alone does not know that.
@@ -249,57 +254,92 @@ struct AnswerConfirmationView: View {
             // shrank and truncated the moment the driver pressed it. Full width
             // fits every localization at full size, and nothing moves between the
             // two states because the row never re-splits.
-            VStack(spacing: 8) {
-                // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
-                // chip, pen `R5JfD`) — replaces the old separate countdown bar.
-                HangsPrimaryButton(
-                    // #173 C2: the evaluating state IS the button. Same key the
-                    // retired full-screen overlay used, so SK/CS need nothing new.
-                    title: isEvaluating ? "Evaluating…" : "Confirm",
-                    icon: isEvaluating ? nil : "checkmark",
-                    isLoading: isEvaluating,
-                    height: 54,
-                    countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
-                        ? autoConfirmCountdown : nil,
-                    countdownTotal: autoConfirmTotal
-                ) {
-                    editFocused = false
-                    onConfirm()
-                }
-                // #171 Track B: an empty field stays confirmable — it now MEANS
-                // "no answer" and submits as such. Disabling it was what left an
-                // empty recording with no way off the sheet but a re-record.
-                .accessibilityLabel(isEmptyAnswer
-                    ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
-                    : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
-                    ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
-                    : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
-                .accessibilityIdentifier("confirmation.confirm")
+            if showsNoAnswerChoice {
+                noAnswerChoice
+                    .padding(.top, 14)
+            } else {
+                VStack(spacing: 8) {
+                    // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
+                    // chip, pen `R5JfD`) — replaces the old separate countdown bar.
+                    HangsPrimaryButton(
+                        // #173 C2: the evaluating state IS the button. Same key the
+                        // retired full-screen overlay used, so SK/CS need nothing new.
+                        title: isEvaluating ? "Evaluating…" : "Confirm",
+                        icon: isEvaluating ? nil : "checkmark",
+                        isLoading: isEvaluating,
+                        height: 54,
+                        countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
+                            ? autoConfirmCountdown : nil,
+                        countdownTotal: autoConfirmTotal
+                    ) {
+                        editFocused = false
+                        onConfirm()
+                    }
+                    // #171 Track B: an empty field stays confirmable — it now MEANS
+                    // "no answer" and submits as such. Disabling it was what left an
+                    // empty recording with no way off the sheet but a re-record.
+                    .accessibilityLabel(isEmptyAnswer
+                        ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
+                        : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
+                        ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
+                        : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
+                    .accessibilityIdentifier("confirmation.confirm")
 
-                // Secondary in weight as well as in position: a text-style
-                // control under the CTA, the standard iOS pairing.
-                // #174: "Again" — the title IS the voice command (founder
-                // 2026-09-09), so the action icon is a retry arrow.
-                HangsGhostButton(
-                    title: "Again",
-                    icon: "arrow.counterclockwise",
-                    color: Theme.Hangs.Colors.muted,
-                    font: .hangsBody(15, weight: .semibold)
-                ) {
-                    editFocused = false
-                    onReRecord()
+                    // Secondary in weight as well as in position: a text-style
+                    // control under the CTA, the standard iOS pairing.
+                    // #174: "Again" — the title IS the voice command (founder
+                    // 2026-09-09), so the action icon is a retry arrow.
+                    HangsGhostButton(
+                        title: "Again",
+                        icon: "arrow.counterclockwise",
+                        color: Theme.Hangs.Colors.muted,
+                        font: .hangsBody(15, weight: .semibold)
+                    ) {
+                        editFocused = false
+                        onReRecord()
+                    }
+                    .frame(height: 40)
+                    .accessibilityIdentifier("confirmation.reRecord")
+                    .disabled(isReRecordLocked || isEvaluating)
+                    // C2: 45 % is the mock's "this is not yours right now" tone.
+                    .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
                 }
-                .frame(height: 40)
-                .accessibilityIdentifier("confirmation.reRecord")
-                .disabled(isReRecordLocked || isEvaluating)
-                // C2: 45 % is the mock's "this is not yours right now" tone.
-                .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
+                .padding(.top, 14)
             }
-            .padding(.top, 14)
 
             // #173 decision 4: the Pause/Continue pill is GONE from this sheet —
             // pause is a toolbar control now, reachable in every quiz state
             // instead of only the one screen that happened to host it.
+        }
+    }
+
+    /// #185 track B: the second empty recording. Typing an answer (the pencil)
+    /// or grading one takes the ordinary layout back.
+    private var showsNoAnswerChoice: Bool {
+        noAnswerCaptured && !isEditing && !isEvaluating
+    }
+
+    /// Again first — it is the likelier wish after "I didn't catch that" — and
+    /// no countdown on either: this sheet never resolves itself.
+    private var noAnswerChoice: some View {
+        VStack(spacing: 8) {
+            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", height: 54) {
+                editFocused = false
+                onReRecord()
+            }
+            .accessibilityIdentifier("confirmation.reRecord")
+
+            HangsGhostButton(
+                title: "Skip",
+                icon: "chevron.right.2",
+                color: Theme.Hangs.Colors.muted,
+                font: .hangsBody(15, weight: .semibold)
+            ) {
+                editFocused = false
+                onConfirm()
+            }
+            .frame(height: 40)
+            .accessibilityIdentifier("confirmation.skip")
         }
     }
 
@@ -422,6 +462,19 @@ struct AnswerConfirmationView: View {
             autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Nothing heard twice") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            noAnswerCaptured: true
         )
     }
 

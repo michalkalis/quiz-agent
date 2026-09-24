@@ -37,6 +37,7 @@ enum TaskKey: Hashable, Sendable {
     case recapNarration // #132 E: sequential recap TTS chunks
     case awaitingQuestion // #182: long-poll for the next question of a generating pack
     case answerReadBack // #184 track D: TTS of the recognised voice answer on the confirmation sheet
+    case emptyAnswerRetry // #185 track B: "didn't catch that" prompt + the automatic re-record
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

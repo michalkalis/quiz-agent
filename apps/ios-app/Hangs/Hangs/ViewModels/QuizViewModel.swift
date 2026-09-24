@@ -902,7 +902,7 @@ final class QuizViewModel: ObservableObject {
             },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
-            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .voiceCommand) },
             repeatQuestion: { [weak self] in await self?.repeatQuestion() },
             skipQuestion: { [weak self] in await self?.skipQuestion() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
@@ -932,9 +932,9 @@ final class QuizViewModel: ObservableObject {
             setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
             showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
             setAutoConfirmCountdown: { [weak self] in self?.recordingCoordinator.autoConfirmCountdown = $0 },
-            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording() },
+            startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .autoRecord) },
             stopRecordingAndSubmit: { [weak self] reason in await self?.recordingCoordinator.stopRecordingAndSubmit(reason: reason) },
-            confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
+            confirmAnswer: { [weak self] owner in await self?.recordingCoordinator.confirmAnswer(trigger: .autoConfirm(owner)) },
             proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
         )
     }
@@ -991,6 +991,8 @@ final class QuizViewModel: ObservableObject {
             stopSilenceDetectionListening: { [weak self] in self?.audioDeviceState.stopSilenceDetectionListening() },
             isMuted: { [weak self] in self?.isAudioMuted ?? false },
             setPlayingAnswerReadBack: { [weak self] in self?.isPlayingAnswerReadBack = $0 },
+            isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
+            stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
             realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false }
         )
     }
@@ -1512,6 +1514,17 @@ final class QuizViewModel: ObservableObject {
         await recordingCoordinator.confirmAnswer()
     }
 
+    /// #185 (founder 2026-09-24): a manual record start during the question
+    /// read-out stops it — the initial read or an on-demand replay alike.
+    func stopQuestionReadOut() async {
+        taskBag.cancel(.questionReplay)
+        await audioDeviceState.stopAnyPlayingAudio()
+        // The interrupted read's own tail clears this too, but only once it
+        // runs again — the mic-live earcon and the capture gate must already
+        // see the read-out as over.
+        isPlayingQuestionTTS = false
+    }
+
     /// See `RecordingCoordinator.beginEditingTranscript`.
     /// True from the pencil tap until confirm/cancel — the sheet uses it to keep
     /// the transcript branch up while the user empties the field mid-edit.
@@ -1574,7 +1587,7 @@ final class QuizViewModel: ObservableObject {
         // 5. Auto-start recording (same as post-TTS flow)
         quizTimersController.cancelAnswerTimer()
         isAutoRecording = true
-        await recordingCoordinator.startRecording()
+        await recordingCoordinator.startRecording(trigger: .bargeIn)
     }
 
     /// Whether to retry with a new session (for initialization errors)
@@ -1641,6 +1654,7 @@ final class QuizViewModel: ObservableObject {
         // handler, upload or prompt of the previous one.
         let attempt = attemptLedger.begin("submit.mcq")
         attemptLedger.record(.tap, "mcqOption")
+        recordingCoordinator.cancelRetryPrompt()
         // #173: answering IS resuming — the same rule `confirmAnswer()` follows.
         // Without this a pause taken on the question screen rides through to
         // `.showingResult`, where `startAutoAdvanceCountdown`'s own `guard
@@ -1716,6 +1730,7 @@ final class QuizViewModel: ObservableObject {
         // #79 → #186: a new attempt supersedes any suspended voice-transcript
         // handler, upload or prompt of the previous one.
         let attempt = attemptLedger.begin("submit.text")
+        recordingCoordinator.cancelRetryPrompt()
 
         // #79: a committed-voice-transcript handler may be suspended mid-flight
         // (inside its STT disconnect) with the confirmation sheet about to appear.

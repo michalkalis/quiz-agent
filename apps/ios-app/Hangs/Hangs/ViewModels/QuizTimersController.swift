@@ -70,7 +70,8 @@ final class QuizTimersController: ObservableObject {
     let startRecording: @MainActor () async -> Void
     /// #185 track A: the recording timers say which of them ended it.
     let stopRecordingAndSubmit: @MainActor (RecordingStopReason) async -> Void
-    let confirmAnswer: @MainActor () async -> Void
+    /// Auto-confirm fire, carrying the attempt the countdown was armed for.
+    let confirmAnswer: @MainActor (AttemptID) async -> Void
     let proceedToNextQuestion: @MainActor () async -> Void
 
     init(
@@ -85,7 +86,7 @@ final class QuizTimersController: ObservableObject {
         setAutoConfirmCountdown: @escaping @MainActor (Int) -> Void,
         startRecording: @escaping @MainActor () async -> Void,
         stopRecordingAndSubmit: @escaping @MainActor (RecordingStopReason) async -> Void,
-        confirmAnswer: @escaping @MainActor () async -> Void,
+        confirmAnswer: @escaping @MainActor (AttemptID) async -> Void,
         proceedToNextQuestion: @escaping @MainActor () async -> Void
     ) {
         self.taskBag = taskBag
@@ -439,14 +440,11 @@ final class QuizTimersController: ObservableObject {
             }
             guard let self, !Task.isCancelled else { return }
             guard self.showAnswerConfirmation() else { return }
-            // #186 step 1: a countdown armed for an earlier attempt never fires.
-            guard self.attemptLedger.owns(owner, "autoConfirm.fire") else { return }
-            self.attemptLedger.record(.timer, "autoConfirm.fire")
             // Hand off to a fresh task: confirmAnswer() cancels the auto-confirm
             // task (this one), and the streaming-path submit inside it is
             // cancellation-aware — awaiting it here would throw
             // URLError.cancelled mid-submit and surface the OOPS screen (54.5).
-            Task { await self.confirmAnswer() }
+            Task { await self.confirmAnswer(owner) }
         }
         taskBag.add(task, key: .autoConfirm)
     }

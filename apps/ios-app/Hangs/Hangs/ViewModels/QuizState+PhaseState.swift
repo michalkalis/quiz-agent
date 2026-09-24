@@ -45,6 +45,12 @@ struct RecordingState {
     /// (#113 T2, decision 4).
     var currentQuestionAudioUrl: String?
 
+    /// #185 track B (founder 1.1): the question whose one automatic re-record
+    /// after an empty answer has been spent (`questionId ?? ""`). Question-scoped
+    /// on purpose — the retry itself leaves the recording/processing pair, and
+    /// the SECOND miss must still find the budget used and open the sheet.
+    var emptyAnswerRetryQuestionKey: String?
+
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         liveTranscript = ""

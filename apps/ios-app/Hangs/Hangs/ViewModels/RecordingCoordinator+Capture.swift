@@ -3,8 +3,8 @@
 //  Hangs
 //
 //  Capture lifecycle (#113 T5): toggle/start recording (batch + streaming),
-//  silence detection, the STT commit watchdog, transcription-failure
-//  escalation, and audio-interruption recovery.
+//  silence detection, the STT commit watchdog, and audio-interruption
+//  recovery. What an empty recording leads to lives in +EmptyAnswer (#185).
 //
 
 import Clocks
@@ -21,7 +21,7 @@ extension RecordingCoordinator {
         case .askingQuestion:
             cancelAnswerTimer()
             cancelThinkingTime()
-            await startRecording()
+            await startRecording(trigger: .tap)
         case .recording:
             cancelAutoStopRecordingTimer()
             await stopRecordingAndSubmit()
@@ -33,7 +33,13 @@ extension RecordingCoordinator {
     /// Start recording the user's voice answer
     /// Handles audio preparation, state transitions, and error rollback
     /// Routes to streaming STT (ElevenLabs) or batch M4A (Whisper) based on feature flag
-    func startRecording() async {
+    /// `trigger` decides what happens to a question read-out in progress (+Trigger).
+    func startRecording(trigger: RecordingTrigger = .tap) async {
+        // #185 (founder 2026-09-24): a manual start stops the read-out, the
+        // hands-free one waits for it to end — see RecordingCoordinator+Trigger.
+        let readOut = await resolveQuestionReadOut(for: trigger)
+        guard readOut != .abandon else { return }
+
         // Backgrounded → never open the mic. Auto-record's thinking-time
         // countdown can fire after question TTS finishes in the background
         // (UIBackgroundModes audio keeps us running); stay on the question
@@ -73,7 +79,21 @@ extension RecordingCoordinator {
         guard transition(to: .recording) else { return }
         // Every recording is a new attempt: whatever the previous one still has
         // in flight (an upload, a transcript, a prompt) can no longer land here.
-        let attempt = attemptLedger.begin("recording")
+        let attempt = attemptLedger.begin("recording.\(trigger.rawValue)")
+        // After the transition, as #178 orders the MCQ tap: the interrupted
+        // read's tail then sees `.recording` and arms no countdown.
+        if readOut == .interrupt {
+            attemptLedger.record(.tap, "recording.interruptsReadOut", trigger.rawValue)
+            await stopQuestionReadOut()
+        }
+        // A tap during the "didn't catch that" prompt: the mic must not open on
+        // top of the app still talking.
+        if isSpeakingRetryPrompt {
+            cancelRetryPrompt()
+            await audioService.stopPlayback()
+        }
+        // Either stop above may have suspended; a teardown in that gap wins.
+        guard quizState() == .recording, attemptLedger.owns(attempt, "recording.start") else { return }
         // Nothing has been heard in THIS recording yet — the flag is what
         // `armRecordingWindow` reads to catch a speech signal that arrived while
         // the engine was still coming up, so it must not carry over from the
@@ -436,85 +456,5 @@ extension RecordingCoordinator {
         transition(to: .askingQuestion)
         setErrorMessage(String(localized: "Recording interrupted. Tap the mic to try again.", comment: "Shown when a phone call or other audio interruption stops recording"))
         Logger.audio.warning("⚠️ Recording interrupted by audio session — reset to ready state")
-    }
-
-    // MARK: - No Answer Captured
-
-    /// The single funnel for "the recording produced nothing usable". Four paths
-    /// reach it: an empty committed transcript, the STT commit watchdog, a
-    /// Whisper response with no evaluation, and the backend's 400 "speech not
-    /// understood". Track H adds a fifth — the answer window elapsed entirely
-    /// while the app was backgrounded.
-    ///
-    /// #171 Track B (founder 2026-09-05): none of them may restart the answer
-    /// window. The old 3-tier escalation showed "Sorry, I didn't catch that",
-    /// re-armed a FULL think+answer countdown, did it a second time, and only
-    /// then skipped — which reads as a broken timer from the driver's seat, and
-    /// on the TF round it was the single most confusing behaviour. Every path
-    /// now ends where every other answer ends: the confirmation sheet, with an
-    /// EMPTY field. The driver can type the answer, say "again" to re-record,
-    /// or let the 5 s auto-confirm expire — confirming an empty field submits
-    /// "no answer" and moves on to the result (see `confirmAnswer()`).
-    /// (Internal, not private — also called from +Streaming and +Submission.)
-    ///
-    /// `owner` (#186 step 1) is the attempt the failed recording belonged to;
-    /// `nil` = the caller runs synchronously inside the current attempt. A late
-    /// failure from an earlier attempt — a 400 from question N landing on N+1 —
-    /// is dropped here and never opens anything.
-    func handleTranscriptionFailure(owner: AttemptID? = nil) {
-        let attempt = owner ?? attemptLedger.current
-        guard attemptLedger.owns(attempt, "transcriptionFailure") else { return }
-
-        // Kept for diagnostics only (it no longer changes the outcome): dead air
-        // and a spoken-but-lost answer now end identically, and the TF loop's
-        // first question about a "no answer" result is which of the two it was.
-        let heardSpeech = speechDetectedDuringAutoRecord
-        cancelAutoStopRecordingTimer()
-        setIsAutoRecording(false)
-        speechDetectedDuringAutoRecord = false
-        // No banner: the empty sheet IS the message, and an error banner under
-        // it would re-introduce the "something went wrong, try again" reading.
-        setErrorMessage(nil)
-
-        // The sheet is a `.processing` screen. The Whisper / 400 paths are
-        // already there and `.processing → .processing` is not a legal edge, so
-        // only move when we are arriving from somewhere else.
-        if quizState() != .processing {
-            guard transition(to: .processing) else { return }
-        }
-
-        pendingResponse = nil
-        transcribedAnswer = ""
-        noAnswerCaptured = true
-        confirmationOwner = attempt
-        showAnswerConfirmation = true
-        startAutoConfirmIfEnabled()
-        // #77 (77.5): same command window as any other confirmation — "ok" /
-        // "again" must work here too.
-        refreshCommandWindow()
-        verifyConfirmationInvariants(after: "noAnswerSheet")
-
-        Logger.stt.info("🎙️ Nothing captured (speech heard: \(heardSpeech, privacy: .public)) — confirmation sheet opened with an empty answer")
-    }
-
-    // MARK: - Invariants (#186 step 1)
-
-    /// The confirmation sheet is a `.processing` screen of the CURRENT attempt —
-    /// the car-test bug was exactly a sheet opened by question N's late result
-    /// on top of question N+1.
-    func verifyConfirmationInvariants(after context: String) {
-        guard showAnswerConfirmation else { return }
-        if quizState() != .processing {
-            attemptLedger.reportInvariantViolation(
-                "confirmation sheet only in .processing",
-                "state=\(quizState().label) at \(context)"
-            )
-        }
-        if let owner = confirmationOwner, !attemptLedger.isCurrent(owner) {
-            attemptLedger.reportInvariantViolation(
-                "confirmation sheet belongs to the current attempt",
-                "owner=\(owner) at \(context)"
-            )
-        }
     }
 }

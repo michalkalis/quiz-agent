@@ -98,7 +98,7 @@ extension RecordingCoordinator {
             // Under a fifth of a second of audio is dead air or an engine that
             // never delivered — not a transcription job. #171 Track B funnel.
             guard capture.bytes >= Self.minimumAnswerBytes(sampleRate: capture.sampleRate) else {
-                Logger.audio.info("🎙️ Batch capture too short (\(capture.bytes, privacy: .public) bytes) — no-answer sheet")
+                Logger.audio.info("🎙️ Batch capture too short (\(capture.bytes, privacy: .public) bytes) — no answer")
                 handleTranscriptionFailure(owner: attempt)
                 return
             }
@@ -186,8 +186,13 @@ extension RecordingCoordinator {
                 // Check for cancellation before updating UI
                 try Task.checkCancellation()
 
-                // Check if response has a valid evaluation before showing confirmation
-                guard let evaluation = response.evaluation else {
+                // Check if response has a valid evaluation before showing confirmation.
+                // #185: an evaluation with an EMPTY transcript is the same miss —
+                // on the sheet it rendered as a never-ending "Transcribing…"
+                // with auto-confirm counting down underneath.
+                guard let evaluation = response.evaluation,
+                      !evaluation.userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                else {
                     Logger.network.warning("⚠️ No evaluation in response - speech may not have been recognized")
                     await MainActor.run {
                         self.attemptLedger.record(.network, "voiceSubmit.noAnswer")

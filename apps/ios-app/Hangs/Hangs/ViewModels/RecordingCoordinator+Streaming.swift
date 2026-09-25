@@ -14,7 +14,8 @@ import os
 extension RecordingCoordinator {
     /// Listen for STT events and update live transcript / handle committed text
     /// (Internal, not private — started from +Capture's `startStreamingRecording`.)
-    func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol) {
+    func startSTTEventListener(sttService: ElevenLabsSTTServiceProtocol, attempt: AttemptID? = nil) {
+        let attempt = attempt ?? attemptLedger.current
         // Fresh stream per recording session (StreamChannel): this listener is
         // cancelled on every teardown (commit watchdog, audio interruption, a
         // superseding typed answer) and so is the feedback sheet's dictation
@@ -27,6 +28,9 @@ extension RecordingCoordinator {
         let task = Task { [weak self] in
             for await event in stream {
                 guard let self, !Task.isCancelled else { break }
+                // #186 step 1: a stream left over from an earlier recording must
+                // not write a transcript (or a disconnect) into the current one.
+                guard self.attemptLedger.owns(attempt, "stt.event") else { break }
 
                 switch event {
                 case let .partialTranscript(text):
@@ -40,8 +44,9 @@ extension RecordingCoordinator {
 
                 case let .committedTranscript(text):
                     self.liveTranscript = text
+                    self.attemptLedger.record(.speech, "stt.committed", "len=\(text.count)")
                     // Auto-stop recording and submit the committed text
-                    await self.handleCommittedTranscript(text)
+                    await self.handleCommittedTranscript(text, owner: attempt)
                     return
 
                 case .connected:
@@ -74,14 +79,16 @@ extension RecordingCoordinator {
 
     /// Handle committed transcript from ElevenLabs VAD
     /// (internal so the MCQ-voice routing can be unit-tested directly — 45.3).
-    func handleCommittedTranscript(_ text: String) async {
+    /// `owner` (#186 step 1): the recording's attempt; `nil` = the current one.
+    func handleCommittedTranscript(_ text: String, owner: AttemptID? = nil) async {
         guard quizState() == .recording else { return }
 
-        // #79: snapshot the submission epoch. If a typed answer (or a skip / MCQ
-        // tap) supersedes this transcript while we are suspended below, the epoch
-        // moves and we must abort silently rather than fire a second submission or
-        // resurrect the confirmation sheet with stale voice text.
-        let epoch = submissionEpoch()
+        // #79 → #186: the attempt replaces the old submission epoch. If a typed
+        // answer (or a skip / MCQ tap) supersedes this transcript while we are
+        // suspended below, the attempt moves and we must abort rather than fire
+        // a second submission or resurrect the sheet with stale voice text.
+        let attempt = owner ?? attemptLedger.current
+        guard attemptLedger.owns(attempt, "committedTranscript") else { return }
 
         // Stop streaming recording
         cancelAutoStopRecordingTimer()
@@ -100,8 +107,8 @@ extension RecordingCoordinator {
         // re-check the epoch now. A typed submission that raced in during that
         // await already tore down and submitted; both the MCQ branch and the
         // free-text confirmation tail below must be unreachable.
-        guard submissionEpoch() == epoch else {
-            Logger.stt.debug("🎙️ Committed transcript superseded (epoch moved) — ignoring")
+        guard attemptLedger.owns(attempt, "committedTranscript.afterDisconnect") else {
+            Logger.stt.debug("🎙️ Committed transcript superseded (attempt moved) — ignoring")
             return
         }
 
@@ -111,7 +118,7 @@ extension RecordingCoordinator {
         // #171 Track B: that is not a retry, it is "no answer" — the shared
         // funnel opens the confirmation sheet with an empty field.
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            handleTranscriptionFailure()
+            handleTranscriptionFailure(owner: attempt)
             return
         }
 
@@ -139,8 +146,9 @@ extension RecordingCoordinator {
         // #184 track D: the sheet opens and the recognised answer (the matched
         // MCQ option's text, or the transcript) is read back; auto-confirm and
         // the #77 "ok"/"again" command window arm once the read-back is done.
-        presentVoiceTranscript(matchedValue ?? text)
-        // Stay in .recording → switch to a neutral state for the modal
-        transition(to: .processing)
+        // The sheet is a `.processing` screen: move there FIRST, so the sheet
+        // never exists in `.recording` (#186 invariant), then open it.
+        guard transition(to: .processing) else { return }
+        presentVoiceTranscript(matchedValue ?? text, owner: attempt)
     }
 }

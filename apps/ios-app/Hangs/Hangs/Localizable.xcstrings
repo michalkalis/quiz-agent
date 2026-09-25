@@ -3381,6 +3381,23 @@
         }
       }
     },
+    "I didn't catch your answer, please try again." : {
+      "comment" : "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil jsem odpověď, zkus to znovu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil som odpoveď, skús to znova."
+          }
+        }
+      }
+    },
     "Image failed to load" : {
       "comment" : "Accessibility label shown when a question image fails to load",
       "localizations" : {

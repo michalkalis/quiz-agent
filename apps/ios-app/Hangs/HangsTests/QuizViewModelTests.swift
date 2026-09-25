@@ -771,12 +771,14 @@ struct QuizViewModelRecordingTests {
         #expect(viewModel.errorMessage!.contains("Recording failed"))
     }
 
-    @Test("a capture with no audio in it opens the no-answer sheet, never an error banner")
+    @Test("a capture with no audio in it says it heard nothing and records again, never an error banner")
     @MainActor
-    func toggleRecordingEmptyCaptureOpensNoAnswerSheet() async throws {
-        // #184 + #171 Track B: the engine delivered nothing (dead air, or it
-        // never came up) — that is "no answer", not a broken recorder.
-        let (viewModel, _) = Fixtures.makeViewModelWithAudio()
+    func toggleRecordingEmptyCaptureRetries() async throws {
+        // #184 + #185 track B: the engine delivered nothing (dead air, or it
+        // never came up) — that is "no answer", not a broken recorder, and the
+        // first one on a question earns the spoken prompt and a re-record.
+        let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
+        mockAudio.playbackDurationNs = 0
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .askingQuestion
@@ -786,10 +788,10 @@ struct QuizViewModelRecordingTests {
 
         await viewModel.toggleRecording()
 
-        #expect(viewModel.showAnswerConfirmation == true)
-        #expect(viewModel.noAnswerCaptured == true)
-        #expect(viewModel.transcribedAnswer.isEmpty)
+        #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.errorMessage == nil)
+        await pumpUntil({ viewModel.quizState == .recording && viewModel.isAnswerCaptureActive },
+                        "the mic never re-opened after the prompt")
     }
 
     @Test("toggleRecording from processing does nothing")

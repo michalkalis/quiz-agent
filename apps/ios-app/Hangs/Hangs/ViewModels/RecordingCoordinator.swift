@@ -20,8 +20,8 @@ import os
 /// (S6b, decision 8 — see `QuizState+PhaseState.swift`); the same-file accessors
 /// below are the only doors, shared by the decision-7 extension files, the
 /// façade forwards, and tests. Cross-cluster state (`quizState`, `settings`,
-/// `isAutoRecording`, `isRerecording`, `errorMessage`, `submissionEpoch`,
-/// `mcqVoiceMatchedKey`, `isAppForeground`) stays façade-resident and is
+/// `isAutoRecording`, `isRerecording`, `errorMessage`, `mcqVoiceMatchedKey`,
+/// `isAppForeground`) stays façade-resident and is
 /// reached ONLY through the injected closures below (decision 4 — a child
 /// never holds a back-pointer to the view model).
 @MainActor
@@ -61,6 +61,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.isStoppingRecording = newValue }
     }
 
+    /// See `RecordingState.emptyAnswerRetryHintQuestionKey` (#185 track B).
+    var emptyAnswerRetryHintQuestionKey: String? {
+        get { recordingState.emptyAnswerRetryHintQuestionKey }
+        set { recordingState.emptyAnswerRetryHintQuestionKey = newValue }
+    }
+
     /// See `RecordingState.backgroundSuppressedRecordingAt` (#171 Track H).
     var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant? {
         get { recordingState.backgroundSuppressedRecordingAt }
@@ -73,6 +79,12 @@ final class RecordingCoordinator: ObservableObject {
     var currentQuestionAudioUrl: String? {
         get { recordingState.currentQuestionAudioUrl }
         set { recordingState.currentQuestionAudioUrl = newValue }
+    }
+
+    /// See `RecordingState.emptyAnswerRetryQuestionKey` (#185 track B).
+    var emptyAnswerRetryQuestionKey: String? {
+        get { recordingState.emptyAnswerRetryQuestionKey }
+        set { recordingState.emptyAnswerRetryQuestionKey = newValue }
     }
 
     // MARK: - Confirmation-cluster accessors
@@ -113,6 +125,12 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.noAnswerCaptured = newValue }
     }
 
+    /// See `ConfirmationState.owner` (#186 step 1).
+    var confirmationOwner: AttemptID? {
+        get { confirmationState.owner }
+        set { confirmationState.owner = newValue }
+    }
+
     /// See `ConfirmationState.isEvaluatingAnswer` (#173 C2).
     var isEvaluatingAnswer: Bool {
         get { confirmationState.isEvaluatingAnswer }
@@ -133,6 +151,9 @@ final class RecordingCoordinator: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol
     let sttService: ElevenLabsSTTServiceProtocol?
     let taskBag: TaskBag
+    /// #186 step 1: the façade's attempt owner, shared like `taskBag` — every
+    /// async result in this coordinator proves ownership through it.
+    let attemptLedger: AttemptLedger
 
     /// The façade's clock (#180 track A): submit timeout, cold-wake backoff and
     /// the STT commit watchdog all run on it.
@@ -158,6 +179,10 @@ final class RecordingCoordinator: ObservableObject {
     /// confirmation sheet (see RecordingCoordinator+ReadBack).
     var isReadingBackAnswer = false
 
+    /// #185 track B: the "didn't catch that" prompt before the automatic
+    /// re-record is playing (see RecordingCoordinator+EmptyAnswer).
+    var isSpeakingRetryPrompt = false
+
     /// This recording runs on the plain `AVAudioRecorder` because the shared
     /// mic engine could not come up (recognizer setup failed). No voice
     /// processing, no VAD — the dead-air cap ends it — but the mic button works.
@@ -181,7 +206,6 @@ final class RecordingCoordinator: ObservableObject {
     let isAppForeground: @MainActor () -> Bool
     let currentQuestion: @MainActor () -> Question?
     let currentSession: @MainActor () -> QuizSession?
-    let submissionEpoch: @MainActor () -> Int
     let isAutoRecording: @MainActor () -> Bool
     let setIsAutoRecording: @MainActor (Bool) -> Void
     let setIsRerecording: @MainActor (Bool) -> Void
@@ -190,7 +214,8 @@ final class RecordingCoordinator: ObservableObject {
     private let facadeTransition: @MainActor (QuizState, String) -> Bool
     private let facadeSetError: @MainActor (String, ErrorContext, Error?) -> Void
     private let facadeHandleError: @MainActor (Error, ErrorContext, String) async -> Void
-    let handleQuizResponse: @MainActor (QuizResponse) async -> Void
+    /// The response plus the attempt that submitted it (#186 step 1).
+    let handleQuizResponse: @MainActor (QuizResponse, AttemptID) async -> Void
     let resubmitAnswer: @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void
     let skipQuestion: @MainActor () async -> Void
     let emitEarcon: @MainActor (Earcon) -> Void
@@ -231,6 +256,11 @@ final class RecordingCoordinator: ObservableObject {
     /// command window must stay closed (`isPlayingAnyTTS`) and mute must win.
     let isMuted: @MainActor () -> Bool
     let setPlayingAnswerReadBack: @MainActor (Bool) -> Void
+    /// #185 (founder 2026-09-24): the question read-out is playing — a manual
+    /// start interrupts it, the hands-free start waits for it (see +Trigger).
+    let isPlayingQuestionTTS: @MainActor () -> Bool
+    /// Stop the question read-out (initial read or a replay) so the mic can open.
+    let stopQuestionReadOut: @MainActor () async -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -238,13 +268,13 @@ final class RecordingCoordinator: ObservableObject {
         silenceDetectionService: SilenceDetectionServiceProtocol,
         sttService: ElevenLabsSTTServiceProtocol?,
         taskBag: TaskBag,
+        attemptLedger: AttemptLedger,
         clock: AnyClock<Duration>,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
         isAppForeground: @escaping @MainActor () -> Bool,
         currentQuestion: @escaping @MainActor () -> Question?,
         currentSession: @escaping @MainActor () -> QuizSession?,
-        submissionEpoch: @escaping @MainActor () -> Int,
         isAutoRecording: @escaping @MainActor () -> Bool,
         setIsAutoRecording: @escaping @MainActor (Bool) -> Void,
         setIsRerecording: @escaping @MainActor (Bool) -> Void,
@@ -253,7 +283,7 @@ final class RecordingCoordinator: ObservableObject {
         transition: @escaping @MainActor (QuizState, String) -> Bool,
         setError: @escaping @MainActor (String, ErrorContext, Error?) -> Void,
         handleError: @escaping @MainActor (Error, ErrorContext, String) async -> Void,
-        handleQuizResponse: @escaping @MainActor (QuizResponse) async -> Void,
+        handleQuizResponse: @escaping @MainActor (QuizResponse, AttemptID) async -> Void,
         resubmitAnswer: @escaping @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void,
         skipQuestion: @escaping @MainActor () async -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
@@ -271,6 +301,8 @@ final class RecordingCoordinator: ObservableObject {
         stopSilenceDetectionListening: @escaping @MainActor () -> Void,
         isMuted: @escaping @MainActor () -> Bool = { false },
         setPlayingAnswerReadBack: @escaping @MainActor (Bool) -> Void = { _ in },
+        isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
+        stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true }
     ) {
         self.audioService = audioService
@@ -278,13 +310,13 @@ final class RecordingCoordinator: ObservableObject {
         self.silenceDetectionService = silenceDetectionService
         self.sttService = sttService
         self.taskBag = taskBag
+        self.attemptLedger = attemptLedger
         self.clock = clock
         self.settings = settings
         self.quizState = quizState
         self.isAppForeground = isAppForeground
         self.currentQuestion = currentQuestion
         self.currentSession = currentSession
-        self.submissionEpoch = submissionEpoch
         self.isAutoRecording = isAutoRecording
         self.setIsAutoRecording = setIsAutoRecording
         self.setIsRerecording = setIsRerecording
@@ -311,6 +343,8 @@ final class RecordingCoordinator: ObservableObject {
         self.stopSilenceDetectionListening = stopSilenceDetectionListening
         self.isMuted = isMuted
         self.setPlayingAnswerReadBack = setPlayingAnswerReadBack
+        self.isPlayingQuestionTTS = isPlayingQuestionTTS
+        self.stopQuestionReadOut = stopQuestionReadOut
         self.realtimeSTTEnabled = realtimeSTTEnabled
     }
 
@@ -344,6 +378,7 @@ final class RecordingCoordinator: ObservableObject {
         // flags — a latched `isPlayingAnswerReadBack` would keep the command
         // window closed for the rest of the session. Idempotent.
         cancelAnswerReadBack()
+        cancelRetryPrompt() // #185 — same latch hazard as the read-back
         abandonAnswerCapture()
         // Streaming teardown first: a reset can fire while the engine is still
         // capturing; zeroing `isStreamingSTT` without stopping it would leak a

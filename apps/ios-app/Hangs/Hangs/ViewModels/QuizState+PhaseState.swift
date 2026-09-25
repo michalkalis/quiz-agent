@@ -30,6 +30,12 @@ struct RecordingState {
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
+    /// #185 track B (founder 2026-09-24): the "didn't catch your answer" line is
+    /// on screen for this question (`questionId ?? ""`) from the automatic retry
+    /// until its recording stops. Keyed by question so a retry abandoned by a
+    /// skip can never show on the next one.
+    var emptyAnswerRetryHintQuestionKey: String?
+
     /// #171 Track H: when `startRecording()` was suppressed because the app was
     /// backgrounded (the think/answer countdown kept running and expired out of
     /// sight). Foregrounding reads it to do what should have happened — open the
@@ -45,6 +51,12 @@ struct RecordingState {
     /// (#113 T2, decision 4).
     var currentQuestionAudioUrl: String?
 
+    /// #185 track B (founder 1.1): the question whose one automatic re-record
+    /// after an empty answer has been spent (`questionId ?? ""`). Question-scoped
+    /// on purpose — the retry itself leaves the recording/processing pair, and
+    /// the SECOND miss must still find the budget used and open the sheet.
+    var emptyAnswerRetryQuestionKey: String?
+
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         liveTranscript = ""
@@ -52,6 +64,7 @@ struct RecordingState {
         speechDetectedDuringAutoRecord = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
+        emptyAnswerRetryHintQuestionKey = nil
     }
 
     /// Drop the whole subset atomically (full teardown, T7 unified reset model).
@@ -89,6 +102,12 @@ struct ConfirmationState {
     /// clears synchronously as its single-flight token: that guarantee must not
     /// change just so the sheet can linger.
     var isEvaluatingAnswer: Bool = false
+
+    /// #186 step 1: the attempt this sheet was opened for. Checked by the
+    /// invariants (a sheet always belongs to the CURRENT attempt) and handed to
+    /// `handleQuizResponse` on confirm, so a sheet that somehow outlived its
+    /// attempt can never grade into the next one. `nil` only for DEBUG seeds.
+    var owner: AttemptID?
 
     /// Auto-confirm countdown — confirmation-semantic, so it lives here (its
     /// semantic owner, T7); QuizTimersController only ticks it through the

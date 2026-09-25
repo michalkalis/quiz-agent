@@ -35,7 +35,10 @@ final nonisolated class RSMCQTests: XCTestCase {
     @MainActor
     private func runMCQVoicePass(transcript: String, expectAnswer: String, expectMatch: Bool) async throws {
         let tag = "RS-09 (\(transcript))"
-        let app = RSFlow.launch(["--ui-test-mcq"])
+        // The 5 s speech-start window is parked for this scenario: it injects the
+        // answer only after several queries, and on a slow runner the window's
+        // forced commit reached the sheet first (CI 2026-09-24).
+        let app = RSFlow.launch(["--ui-test-mcq", "--ui-test-park-speech-window"])
         let question = RSFlow.startMCQQuiz(app)
 
         XCTAssertTrue(question.option("a").exists, "\(tag): mcq.option.a missing — MCQ screen not rendered")

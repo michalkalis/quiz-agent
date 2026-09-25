@@ -11,9 +11,37 @@ import os
 
 // MARK: - Answer Confirmation
 
+/// Who confirmed the sheet (#185 track B).
+enum ConfirmTrigger: Equatable, Sendable {
+    /// A tap or a spoken confirm — the driver's decision.
+    case user
+    /// The auto-confirm countdown, armed for the attempt it carries.
+    case autoConfirm(AttemptID)
+}
+
 extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
-    func confirmAnswer() async {
+    func confirmAnswer(trigger: ConfirmTrigger = .user) async {
+        if case let .autoConfirm(owner) = trigger {
+            // #186 step 1: a countdown armed for an earlier attempt never fires.
+            guard attemptLedger.owns(owner, "autoConfirm.fire") else { return }
+            // #185 1.1 (founder 2026-09-24): confirming an empty field IS a
+            // skip, and a countdown may never skip a question — only the driver
+            // can. The no-answer sheet does not arm the countdown at all; this
+            // is the pin that keeps any other route from doing it either.
+            let isEmpty = transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if isEmpty, pendingResponse == nil {
+                cancelAutoConfirm()
+                noAnswerCaptured = true
+                attemptLedger.record(.timer, "autoConfirm.refusedEmpty")
+                SentryLog.warn("auto-confirm of an empty answer refused", category: .quiz, attributes: [
+                    "attempt": owner.description,
+                ])
+                return
+            }
+            attemptLedger.record(.timer, "autoConfirm.fire")
+        }
+        let owner = confirmationOwner ?? attemptLedger.current
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
@@ -51,7 +79,7 @@ extension RecordingCoordinator {
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
             pendingResponse = nil
-            await handleQuizResponse(response)
+            await handleQuizResponse(response, owner)
             return
         }
 
@@ -124,6 +152,9 @@ extension RecordingCoordinator {
         // the "again" voice command becomes a no-op instead of spawning a second
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
+        // #186 step 1: the rejected recording's attempt ends here — its upload,
+        // read-back or late 400 can no longer land on the re-record.
+        let owner = attemptLedger.begin("rerecord")
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
@@ -146,12 +177,15 @@ extension RecordingCoordinator {
         transition(to: .askingQuestion) // Transient bridge state before recording starts
         setErrorMessage(nil)
         Task { [weak self] in
-            await self?.startRecording()
+            guard let self, self.attemptLedger.owns(owner, "rerecord.start") else { return }
+            await self.startRecording(trigger: .rerecord)
         }
     }
 
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
+        // #186 step 1: whatever the cancelled attempt still has in flight is void.
+        attemptLedger.begin("cancelProcessing")
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()

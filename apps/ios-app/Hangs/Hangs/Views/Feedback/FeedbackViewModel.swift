@@ -149,7 +149,12 @@ final class FeedbackViewModel: ObservableObject {
         context: FeedbackContext,
         screenshot: UIImage?,
         voice: FeedbackVoiceServices? = nil,
-        logsProvider: @escaping @Sendable () async -> String? = { await LogStore.shared.exportText() }
+        logsProvider: @escaping @Sendable () async -> String? = {
+            // #186 step 1: the quiz flight recorder leads the report — the input
+            // trail behind whatever the tester is describing.
+            let logs = await LogStore.shared.exportText()
+            return QuizFlightRecorder.shared.dump() + "\n\n" + logs
+        }
     ) {
         self.networkService = networkService
         self.context = context

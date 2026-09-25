@@ -273,6 +273,15 @@ final class AppState: ObservableObject {
         )
 
         #if DEBUG
+            // `--ui-test-park-speech-window` (#185 track B, RS-09): the 5 s "time
+            // to start speaking" window gets the dead-air cap's length. RS-09 opens
+            // the mic and then spends several slow XCUITest queries before it
+            // injects the transcript; on a loaded CI runner the 5 s window closed
+            // first, and the mock's forced commit ("Paris") reached the sheet
+            // instead of the injected answer. The cap still ends the recording.
+            if CommandLine.arguments.contains("--ui-test-park-speech-window") {
+                viewModel.recordingCoordinator.speechStartWindow = viewModel.recordingCoordinator.deadAirCap
+            }
             // `--ui-test-error`: land directly on a voice QuestionView with the
             // recording-error banner shown, so the error state can be screenshot-
             // verified without driving the full record→disconnect flow. Mirrors the

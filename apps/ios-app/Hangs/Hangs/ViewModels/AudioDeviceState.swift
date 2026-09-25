@@ -69,6 +69,9 @@ final class AudioDeviceState: ObservableObject {
     /// Shared so `resetState()`'s blanket `cancelAll()` still covers the
     /// barge-in and question-replay tasks exactly as before the extraction.
     let taskBag: TaskBag
+    /// #186 step 1: attempt owner (shared like `taskBag`) — the question
+    /// read-out tail proves its question is still the one on screen.
+    let attemptLedger: AttemptLedger
 
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
@@ -114,6 +117,7 @@ final class AudioDeviceState: ObservableObject {
         networkService: NetworkServiceProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol,
         taskBag: TaskBag,
+        attemptLedger: AttemptLedger,
         settings: @escaping @MainActor () -> QuizSettings,
         setAudioMode: @escaping @MainActor (String) -> Void,
         setPreferredInputDeviceId: @escaping @MainActor (String?) -> Void,
@@ -139,6 +143,7 @@ final class AudioDeviceState: ObservableObject {
         self.networkService = networkService
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
+        self.attemptLedger = attemptLedger
         self.settings = settings
         self.setAudioMode = setAudioMode
         self.setPreferredInputDeviceId = setPreferredInputDeviceId

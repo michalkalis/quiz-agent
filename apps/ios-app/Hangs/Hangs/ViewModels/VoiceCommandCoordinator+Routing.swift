@@ -211,6 +211,7 @@ extension VoiceCommandCoordinator {
     /// can't fire the wrong action.
     func handleRecognizedCommand(_ command: VoiceCommand) {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
+        attemptLedger.record(.command, command.rawValue, currentCommandScreen.map { String(describing: $0) })
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
         emitEarcon(.commandAck) // 77.10 command-ack tone
         noteMatchedForFeedback() // #122: visual twin of the ack earcon

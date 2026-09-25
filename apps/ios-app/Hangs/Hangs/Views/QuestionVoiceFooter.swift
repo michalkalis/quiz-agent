@@ -63,6 +63,13 @@ struct QuestionVoiceFooter: View {
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                 .padding(.horizontal, 20)
 
+            // #185 track B: the retry line, next to the mic it explains.
+            if viewModel.showsEmptyAnswerRetryHint {
+                EmptyAnswerRetryHint()
+                    .padding(.horizontal, 20)
+                    .transition(.opacity)
+            }
+
             // #179 D1: the docked bar, in whichever of the four states the quiz
             // is in — never gated on the command window any more, because two of
             // those states listen for no command at all and the bar still has to

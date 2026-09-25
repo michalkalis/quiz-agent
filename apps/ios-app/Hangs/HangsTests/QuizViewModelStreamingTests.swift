@@ -174,30 +174,33 @@ struct QuizViewModelStreamingTests {
         }
     }
 
-    // MARK: - Test 5: Empty committed transcript ends on the no-answer sheet (54.4 / #171 B)
+    // MARK: - Test 5: Empty committed transcript → prompt + one re-record (54.4 / #185 B)
 
-    /// 54.4 (founder #5): dead air → 15 s cap → forced commit returns "" — must
-    /// never stay stuck in .recording. #171 Track B moved where it goes: the
-    /// confirmation sheet with an EMPTY field, so the driver can still type or
-    /// re-record, instead of a "didn't catch that" banner plus a fresh full
-    /// countdown (which read as a timer that would not end).
-    @Test("empty committedTranscript opens the no-answer confirmation sheet instead of retrying")
-    func emptyCommittedTranscriptEscalates() async throws {
+    /// 54.4 (founder #5): dead air → forced commit returns "" — must never stay
+    /// stuck in .recording. #185 track B (founder 1.1): the first miss is met
+    /// with a spoken "didn't catch that" and a fresh STREAMING recording — the
+    /// retry must reconnect the stream, not fall back or strand the driver.
+    @Test("an empty committed transcript says so and re-opens the stream once")
+    func emptyCommittedTranscriptRetriesOnce() async throws {
         await withMainSerialExecutor {
-            let (viewModel, _, _, mockSTT) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, mockAudio, mockSTT) = makeViewModelWithSTT()
+            mockAudio.playbackDurationNs = 0
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
             await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            let firstAttempt = viewModel.currentAttempt
 
             await mockSTT.injectEvent(.committedTranscript(""))
-            await pumpUntil({ viewModel.showAnswerConfirmation }, "never escaped .recording onto the sheet")
+            await pumpUntil(
+                { mockNetwork.synthesizedTexts.count == 1 && viewModel.isStreamingSTT && viewModel.quizState == .recording },
+                "the miss never re-opened the stream"
+            )
 
-            #expect(viewModel.quizState == .processing)
-            #expect(viewModel.transcribedAnswer.isEmpty)
-            #expect(viewModel.noAnswerCaptured == true)
-            #expect(viewModel.errorMessage == nil, "no retry banner — the empty sheet is the message")
-            #expect(viewModel.isStreamingSTT == false)
+            #expect(mockNetwork.synthesizedTexts == [SpokenPrompt.didNotCatch.text(language: .english)])
+            #expect(viewModel.currentAttempt != firstAttempt, "the retry is a new attempt of the same question")
+            #expect(viewModel.showAnswerConfirmation == false)
+            #expect(viewModel.errorMessage == nil, "no banner — the spoken line is the message")
         }
     }
 
@@ -214,6 +217,10 @@ struct QuizViewModelStreamingTests {
             let clock = TestClock()
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT(clock: AnyClock(clock))
             await mockSTT.setCommitEmitsNothing(true)
+
+            // #185 track B: the automatic retry is spent — this test is about
+            // the watchdog's terminal escape, the no-answer sheet.
+            viewModel.recordingCoordinator.emptyAnswerRetryQuestionKey = viewModel.currentQuestion?.id
 
             await viewModel.recordingCoordinator.startRecording()
             parkRecordingWindow(viewModel)
@@ -234,6 +241,7 @@ struct QuizViewModelStreamingTests {
             #expect(viewModel.transcribedAnswer.isEmpty)
             #expect(viewModel.errorMessage == nil, "no retry banner — the empty sheet is the message")
             #expect(viewModel.isStreamingSTT == false)
+            #expect(viewModel.taskBag.contains(.autoConfirm) == false, "#185 1.1: nothing counts this sheet down")
         }
     }
 
@@ -319,15 +327,17 @@ struct QuizViewModelStreamingTests {
     }
 
     /// Expiring with no speech must land where the 15 s cap always landed —
-    /// forced commit → empty transcript → the confirmation sheet with an empty
-    /// field (#171 Track B). Shortening the window must not have invented a new
-    /// dead end for a driver who simply said nothing.
+    /// forced commit → empty transcript → the no-answer path. Shortening the
+    /// window must not have invented a new dead end for a driver who simply
+    /// said nothing. (The #185 automatic retry is spent here: this test is about
+    /// the window reaching the terminal Again/Skip sheet.)
     @Test("the speech-start window expiring with no speech ends on the empty-answer sheet")
     func speechStartExpiryEndsOnEmptySheet() async throws {
         await withMainSerialExecutor {
             let clock = TestClock()
             let (viewModel, _, _, mockSTT) = makeViewModelWithSTT(clock: AnyClock(clock))
             await mockSTT.setMockCommittedText("") // dead air: a forced commit returns nothing
+            viewModel.recordingCoordinator.emptyAnswerRetryQuestionKey = viewModel.currentQuestion?.id
 
             // The production 5 s, driven on the clock (#180 track A): the
             // recording path arms it itself, so the expiry under test is the

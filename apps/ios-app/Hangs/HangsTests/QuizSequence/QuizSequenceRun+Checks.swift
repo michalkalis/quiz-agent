@@ -30,9 +30,8 @@ extension QuizSequenceRun {
             let question = request.questionId ?? "-"
             if let intents = skipIntents[question], intents > 0 {
                 skipIntents[question] = intents - 1
-                sentSkips[question] = request.attempt
                 skipsSubmitted.append(question)
-            } else if sentSkips[question] != request.attempt {
+            } else if !request.isResend {
                 fail("question skipped without the driver asking", "question \(question)")
             }
         }

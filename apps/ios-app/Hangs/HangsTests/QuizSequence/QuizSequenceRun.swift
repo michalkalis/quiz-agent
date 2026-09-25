@@ -72,9 +72,6 @@ final class QuizSequenceRun {
     var seenRecapEntries = 0
     /// Skips the driver asked for, per question, not yet sent.
     var skipIntents: [String: Int] = [:]
-    /// The attempt of the last skip sent per question — its transient-retry
-    /// re-sends are the same skip, not a new one.
-    var sentSkips: [String: AttemptID] = [:]
     private var typedAnswers = 0
     /// Transient conditions seen at the last check → since when (ms).
     var episodes: [String: Int] = [:]
@@ -271,8 +268,8 @@ final class QuizSequenceRun {
         case .interruption:
             guard vm.quizState != .idle else { return false }
             audio.simulateInterruption()
-        case .routeChange:
-            vm.refreshAudioDevices()
+        case let .routeChange(connected):
+            audio.simulateRouteChange(connected: connected)
         case .background:
             guard vm.isAppForeground else { return false }
             vm.handleScenePhase(.background)

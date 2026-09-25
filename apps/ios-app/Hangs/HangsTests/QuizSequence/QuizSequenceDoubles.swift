@@ -13,6 +13,7 @@
 //  earcons stay the shared mocks.
 //
 
+import AVFoundation
 import Clocks
 import Foundation
 @testable import Hangs
@@ -146,6 +147,9 @@ final class SequenceNetwork: NetworkServiceProtocol {
         let isVoice: Bool
         let questionId: String?
         let input: String?
+        /// The client re-sending a request the server answered 503 (the
+        /// bounded cold-wake retry) — the same submission, not a new one.
+        let isResend: Bool
         /// The attempt that owned the quiz when the request went out.
         let attempt: AttemptID
     }
@@ -205,7 +209,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
         case .voiceServerError, .textServerError:
             .failure(NetworkError.serverError(statusCode: 500, message: "harness"))
         case .voiceColdWake, .textColdWake:
-            .failure(MockNetworkService.coldWakeError)
+            coldWake(request)
         case .textEvaluated:
             .success(response(
                 for: request,
@@ -213,6 +217,11 @@ final class SequenceNetwork: NetworkServiceProtocol {
                 verdict: request.input == "skip" ? .skipped : (detail == "incorrect" ? .incorrect : .correct)
             ))
         }
+    }
+
+    private func coldWake(_ request: Request) -> Result<QuizResponse, Error> {
+        if let key = requestKeys[request.id] { coldWoken.insert(key) }
+        return .failure(MockNetworkService.coldWakeError)
     }
 
     private func response(for request: Request, answer: String, verdict: Evaluation.EvaluationResult) -> QuizResponse {
@@ -239,9 +248,17 @@ final class SequenceNetwork: NetworkServiceProtocol {
         )
     }
 
-    private func send(isVoice: Bool, questionId: String?, input: String?) async throws -> QuizResponse {
+    /// Submissions the server answered 503, by session/question/input.
+    private var coldWoken: Set<String> = []
+
+    private func send(sessionId: String, isVoice: Bool, questionId: String?, input: String?) async throws -> QuizResponse {
         try Task.checkCancellation()
-        let request = Request(id: requests.count + 1, isVoice: isVoice, questionId: questionId, input: input, attempt: attemptProbe())
+        let key = "\(sessionId)/\(isVoice)/\(questionId ?? "-")/\(input ?? "")"
+        let request = Request(
+            id: requests.count + 1, isVoice: isVoice, questionId: questionId, input: input,
+            isResend: coldWoken.remove(key) != nil, attempt: attemptProbe()
+        )
+        requestKeys[request.id] = key
         requests.append(request)
         parked.register(request.id)
         if !isVoice { onTextSubmit(request) }
@@ -251,12 +268,14 @@ final class SequenceNetwork: NetworkServiceProtocol {
 
     // MARK: NetworkServiceProtocol
 
-    func submitVoiceAnswer(sessionId _: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
-        try await send(isVoice: true, questionId: questionId, input: nil)
+    private var requestKeys: [Int: String] = [:]
+
+    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
+        try await send(sessionId: sessionId, isVoice: true, questionId: questionId, input: nil)
     }
 
-    func submitTextInput(sessionId _: String, input: String, audio _: Bool, questionId: String?) async throws -> QuizResponse {
-        try await send(isVoice: false, questionId: questionId, input: input)
+    func submitTextInput(sessionId: String, input: String, audio _: Bool, questionId: String?) async throws -> QuizResponse {
+        try await send(sessionId: sessionId, isVoice: false, questionId: questionId, input: input)
     }
 
     func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories _: [String], userId _: String?, includeImages _: Bool, packId _: String?) async throws -> QuizSession {
@@ -334,6 +353,7 @@ final class SequenceAudio: AudioServiceProtocol {
     var playingClip: Clip? { playing?.clip }
     var isStreamingEngineActive: Bool { false }
     var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
+    var onRouteChange: (@MainActor @Sendable (AudioRouteChange) -> Void)?
     var availableInputDevices: [AudioDevice] = [.previewBuiltIn]
     var currentInputDevice: AudioDevice?
     var currentOutputDeviceName = "iPhone"
@@ -424,6 +444,17 @@ final class SequenceAudio: AudioServiceProtocol {
         onInterruptionBegan?()
     }
 
+    /// The car's Bluetooth connecting (media output: voice processing off) or
+    /// leaving (back to the speaker: on), as the service reports it.
+    func simulateRouteChange(connected: Bool) {
+        onRouteChange?(AudioRouteChange(
+            reason: connected ? .newDeviceAvailable : .oldDeviceUnavailable,
+            outputPort: connected ? "BluetoothA2DPOutput" : "Speaker",
+            previousOutputPort: connected ? "Speaker" : "BluetoothA2DPOutput",
+            voiceProcessingMode: connected ? .offOutput : .on
+        ))
+    }
+
     func teardown() {
         onCutShort = { _, _, _ in }
         cutShort(.stopped)
@@ -435,6 +466,7 @@ final class SequenceAudio: AudioServiceProtocol {
 
     func setupAudioSession(mode _: AudioMode) throws {}
     func setupQuietListeningSession() throws {}
+    func restoreSessionAfterVoiceProcessing() {}
     func deactivateSession() {}
     func switchAudioMode(_: AudioMode) async throws {}
     func requestMicrophonePermission() async -> Bool { true }

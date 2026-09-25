@@ -185,7 +185,7 @@ struct QuizSequenceGenerator {
         } else if run.isOnQuestionScreen || vm.quizState.isShowingResult {
             add(.background, 0.25)
             add(.interruption, 0.2)
-            add(.routeChange, 0.1)
+            add(.routeChange(connected: rng.chance(0.5)), 0.1)
         }
         if run.isOnQuestionScreen {
             add(.tap(.mute), 0.2)

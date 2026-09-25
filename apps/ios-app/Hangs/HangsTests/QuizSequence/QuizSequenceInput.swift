@@ -55,7 +55,10 @@ enum QuizInput: Equatable, CustomStringConvertible {
     /// `route audioInterruption.began` — the audio service's interruption
     /// callback (a phone call); the system also stops any playback.
     case interruption
-    case routeChange
+    /// `route routeChange.newDeviceAvailable` (the car's Bluetooth connects,
+    /// `connected`) or `.oldDeviceUnavailable` (it leaves) — the audio
+    /// service's route-change callback (#185 track C).
+    case routeChange(connected: Bool)
     case background
     case foreground
     /// Time passing with nothing else happening.
@@ -85,7 +88,7 @@ enum QuizInput: Equatable, CustomStringConvertible {
         case let .speech(speech): speech.rawValue
         case let .network(reply): reply.rawValue
         case .interruption: "audioInterruption.began"
-        case .routeChange: "routeChange"
+        case let .routeChange(connected): connected ? "routeChange.newDeviceAvailable" : "routeChange.oldDeviceUnavailable"
         case .background: "background"
         case .foreground: "active"
         case .idle: "idle"
@@ -133,7 +136,8 @@ enum QuizInput: Equatable, CustomStringConvertible {
         case "route":
             switch name {
             case "audioInterruption.began": self = .interruption
-            case "routeChange": self = .routeChange
+            case "routeChange.newDeviceAvailable": self = .routeChange(connected: true)
+            case "routeChange.oldDeviceUnavailable": self = .routeChange(connected: false)
             default: return nil
             }
         case "scene":

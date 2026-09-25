@@ -299,8 +299,19 @@ final class SequenceNetwork: NetworkServiceProtocol {
         throw NetworkError.invalidResponse // the harness quiz never waits for a generating pack
     }
 
-    func downloadAudio(from urlString: String) async throws -> Data { Data(urlString.utf8) }
-    func synthesizeSpeech(text: String) async throws -> Data { Data("tts:\(text)".utf8) }
+    /// Every other call that reached the "server" — part of the run's
+    /// "did anything move" fingerprint, so a chain between two waits is seen.
+    private(set) var calls = 0
+
+    func downloadAudio(from urlString: String) async throws -> Data {
+        calls += 1
+        return Data(urlString.utf8)
+    }
+
+    func synthesizeSpeech(text: String) async throws -> Data {
+        calls += 1
+        return Data("tts:\(text)".utf8)
+    }
     func submitFeedback(message _: String, metadataJSON _: String?, appVersion _: String?, screenshotPNG _: Data?, audioWAV _: Data?, logsText _: String?) async throws {}
     func endSession(sessionId _: String) async throws {}
     func extendSession(sessionId _: String, minutes _: Int) async throws {}

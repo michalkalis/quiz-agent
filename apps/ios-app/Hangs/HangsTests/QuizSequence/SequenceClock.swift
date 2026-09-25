@@ -36,6 +36,7 @@ nonisolated final class SequenceClock: Clock, @unchecked Sendable {
         var nextId = 0
         var sleepers: [Sleeper] = []
         var cancelledEarly: Set<Int> = []
+        var ended = 0
     }
 
     private let state = OSAllocatedUnfairLock<State>(uncheckedState: State())
@@ -49,8 +50,9 @@ nonisolated final class SequenceClock: Clock, @unchecked Sendable {
         }
     }
 
-    /// Sleeps ever started — part of the run's "did anything move" fingerprint.
-    var sleepCount: Int { state.withLockUnchecked { $0.nextId } }
+    /// Sleeps started + sleeps that ended (woken, cancelled or already due) —
+    /// part of the run's "did anything move" fingerprint.
+    var sleepCount: Int { state.withLockUnchecked { $0.nextId + $0.ended } }
 
     init() {}
 
@@ -66,8 +68,8 @@ nonisolated final class SequenceClock: Clock, @unchecked Sendable {
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 let outcome: Result<Void, Error>? = state.withLockUnchecked { state in
-                    if state.cancelledEarly.remove(id) != nil { return .failure(CancellationError()) }
-                    if deadline <= state.now { return .success(()) }
+                    if state.cancelledEarly.remove(id) != nil { state.ended += 1; return .failure(CancellationError()) }
+                    if deadline <= state.now { state.ended += 1; return .success(()) }
                     state.sleepers.append(Sleeper(id: id, deadline: deadline, continuation: continuation))
                     return nil
                 }
@@ -79,6 +81,7 @@ nonisolated final class SequenceClock: Clock, @unchecked Sendable {
                     state.cancelledEarly.insert(id)
                     return nil
                 }
+                state.ended += 1
                 return state.sleepers.remove(at: index).continuation
             }
             continuation?.resume(throwing: CancellationError())
@@ -101,6 +104,7 @@ nonisolated final class SequenceClock: Clock, @unchecked Sendable {
                     return nil
                 }
                 let sleeper = state.sleepers.remove(at: index)
+                state.ended += 1
                 if state.now < sleeper.deadline { state.now = sleeper.deadline }
                 return sleeper
             }

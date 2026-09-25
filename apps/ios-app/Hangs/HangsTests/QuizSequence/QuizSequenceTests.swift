@@ -11,15 +11,17 @@
 //  flight-recorder dump that replays.
 //
 //  Knobs (xcodebuild passes TEST_RUNNER_<NAME> to the runner as <NAME>):
-//    QUIZ_SEQUENCE_COUNT      sequences per run (default 500 — CI)
+//    QUIZ_SEQUENCE_COUNT      sequences per run (default 350 — CI)
 //    QUIZ_SEQUENCE_BASE_SEED  first seed (default 186000)
 //    QUIZ_SEQUENCE_LENGTH     inputs per sequence (default 30)
 //    QUIZ_SEQUENCE_SEED       run just this seed (reproduce a failure)
+//    QUIZ_SEQUENCE_QUIET      settle window in scheduler turns (default 12)
 //
-//  Cost: ~75 ms per 30-input sequence on the simulator — every scheduler turn
-//  is a main-queue round trip (~50 µs) and a sequence needs ~900 of them. The
-//  CI default stays well under a minute; run thousands locally with the knob,
-//  e.g. QUIZ_SEQUENCE_COUNT=5000 (~6 min).
+//  Cost: ~110 ms per 30-input sequence on the simulator — every scheduler turn
+//  is a main-queue round trip (~50 µs) and the 12-turn settle window (see
+//  `QuizSequenceRun.quietTurns`) needs ~2000 of them. The CI default stays
+//  under ~40 s; run thousands locally with the knob, e.g.
+//  QUIZ_SEQUENCE_COUNT=5000 (~9 min).
 //
 
 import Foundation
@@ -29,7 +31,7 @@ import Testing
 private final class QuizSequenceBundleToken {}
 
 private struct Knobs {
-    var count = 500
+    var count = 350
     var baseSeed: UInt64 = 186_000
     var length = 30
     var onlySeed: UInt64?
@@ -122,7 +124,7 @@ struct QuizSequenceTests {
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
         #expect(!run.network.requests.contains { $0.input == "skip" }, "question 1 was skipped — the car-test bug")
         #expect(run.recorder.entries.filter { $0.kind == .prompt && $0.name == "emptyAnswer.retry" }.count == 1,
-                "the first empty answer must be met with exactly one spoken retry")
+                "the first empty answer must be met with exactly one spoken retry\n\(run.recorder.dump())")
         #expect(run.sheetsSeen == ["q_001 (nothing heard)"], "the second miss must open Again/Skip on question 1")
         #expect(run.vm.currentQuestion?.id == "q_001" && run.vm.showAnswerConfirmation,
                 "a minute later the sheet still waits for the driver")
@@ -153,5 +155,27 @@ struct QuizSequenceTests {
         #expect(parsed.inputs == minimal.inputs, "the printed dump does not parse back to the same inputs")
         let replayed = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs, configure: plant)
         #expect(replayed.violation?.invariant == failing.violation?.invariant)
+    }
+
+    /// WHY (CI 2026-09-25): the car-test replay was green locally and red on
+    /// CI — the harness had advanced the clock while a chain of the app's own
+    /// hops was still running, and another Swift runtime needs more hops for
+    /// the same code. A replay's outcome must not depend on the settle window:
+    /// the app's own black box must read the same across a 4× range of it.
+    @Test("a frozen replay reads the same whatever the settle window", arguments: [6, 24])
+    func replayIndependentOfSettleWindow(quietTurns: Int) async throws {
+        let url = try #require(Bundle(for: QuizSequenceBundleToken.self)
+            .url(forResource: "quiz-flight-recorder-car-test-2026-09-23", withExtension: "txt"))
+        let parsed = try QuizSequenceDump.parse(String(contentsOf: url, encoding: .utf8))
+        let trail = { (outcome: QuizSequenceHarness.Outcome) in
+            outcome.run.recorder.entries.map { "\($0.kind.rawValue) \($0.name) \($0.attempt) \($0.state)" }
+        }
+
+        let reference = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+        let varied = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs) {
+            $0.quietTurns = quietTurns
+        }
+
+        #expect(trail(varied) == trail(reference), "settle window \(quietTurns) changed the replay")
     }
 }

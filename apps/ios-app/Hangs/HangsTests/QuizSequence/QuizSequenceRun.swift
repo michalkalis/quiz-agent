@@ -55,11 +55,18 @@ final class QuizSequenceRun {
     var skipsSubmitted: [String] = []
 
     /// A burst (or a woken timer) has settled once nothing observable moved for
-    /// `quietTurns` scheduler turns in a row, or after `maxTurns`. Every wait is
-    /// on the test clock or a parked call, so this only bounds how far a chain
-    /// runs before the next input — never whether the run is repeatable.
-    static let quietTurns = 5
-    static let maxTurns = 40
+    /// `quietTurns` scheduler turns in a row, or after `maxTurns`.
+    ///
+    /// This window IS part of the run's determinism: a chain that goes longer
+    /// than it without touching the fingerprint (a task-group race, task hops)
+    /// is still running when the clock moves, and the clock then wins races it
+    /// should lose. The car-test replay needs ≥ 4 turns on the local Xcode and
+    /// went red on CI at 5 — another Swift runtime takes more hops for the same
+    /// code. 12 gives a 3× margin; `QuizSequenceStabilityTests` pins that every
+    /// frozen replay has the same outcome across 6…24.
+    static let defaultQuietTurns = Int(ProcessInfo.processInfo.environment["QUIZ_SEQUENCE_QUIET"] ?? "") ?? 12
+    static let maxTurns = 60
+    var quietTurns = QuizSequenceRun.defaultQuietTurns
 
     private(set) var nowMs = 0
     /// The input whose effects are running; `nil` while time passes.
@@ -188,7 +195,7 @@ final class QuizSequenceRun {
             let now = fingerprint
             if now == last {
                 quiet += 1
-                if quiet >= Self.quietTurns { return }
+                if quiet >= quietTurns { return }
             } else {
                 quiet = 0
                 last = now
@@ -199,7 +206,8 @@ final class QuizSequenceRun {
     /// Everything a running chain touches on its way to its next wait.
     private var fingerprint: [Int] {
         [
-            recorder.entries.count, clock.sleepCount, network.requests.count, network.delivered, audio.activity,
+            recorder.entries.count, clock.sleepCount, network.requests.count, network.delivered, network.calls,
+            audio.activity,
             vm.taskBag.count, silence.startListeningCallCount, silence.stopListeningCallCount,
             silence.commandEngineRequests.count, silence.isAnswerCaptureActive ? 1 : 0,
             vm.showAnswerConfirmation ? 1 : 0, vm.isEvaluatingAnswer ? 1 : 0, vm.recapEntries.count,

@@ -138,7 +138,11 @@ extension AudioDeviceState {
     /// flag and re-arm the SpeechAnalyzer engine while the new AVPlayer playback
     /// is still going (the engine + player conflict documented above).
     func replayQuestionAudio() async {
-        guard !isMuted(), let urlString = currentQuestionAudioUrl() else { return }
+        // #185 (sequence harness seed 186209): never while an answer is being
+        // recorded or sent. A mic tap landing in the same instant owns the
+        // question — a replay after it would tear the recording's engine down
+        // and play under it, and the next prompt would cut it short.
+        guard !isMuted(), !isAnswerInProgress(), let urlString = currentQuestionAudioUrl() else { return }
 
         // Re-entrancy: neutralise any previous replay run FIRST so its tail
         // can't interleave with this one, then stop the in-flight TTS so this
@@ -149,7 +153,7 @@ extension AudioDeviceState {
         }
 
         let run = Task { [weak self] in
-            guard let self else { return }
+            guard let self, !self.isAnswerInProgress() else { return }
 
             // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
             // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).

@@ -883,6 +883,9 @@ final class QuizViewModel: ObservableObject {
             isMuted: { [weak self] in self?.isAudioMuted ?? false },
             setMuted: { [weak self] in self?.quizMuteOverride = $0 },
             isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
+            isAnswerInProgress: { [weak self] in
+                self?.quizState == .recording || self?.quizState == .processing
+            },
             isRerecording: { [weak self] in self?.isRerecording ?? false },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             // #149: the capture/window policy lives on the voice-command child,

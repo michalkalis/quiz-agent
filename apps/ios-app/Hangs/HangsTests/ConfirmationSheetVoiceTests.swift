@@ -178,7 +178,8 @@ struct ConfirmationSheetVoiceTests {
         #expect(network.capturedVoiceAnswerFileName == "answer.wav")
         #expect((network.capturedVoiceAnswerBytes ?? 0) > 16000, "the sheet's audio was uploaded, not the recognizer's text")
         #expect(vm.currentAttempt != oldAttempt, "a new answer is a new attempt")
-        #expect(network.synthesizedTexts.last == "Curling", "the new answer is read back")
+        // The read-back is its own task: wait for it rather than assume it ran.
+        await pumpUntil({ network.synthesizedTexts.last == "Curling" }, "the new answer is not read back")
         await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "no countdown for the new answer")
         #expect(vm.attemptLedger.invariantViolations.isEmpty)
     }

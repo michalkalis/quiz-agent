@@ -111,4 +111,31 @@ struct QuizViewModelReplayContractTests {
         #expect(viewModel.thinkingTimeCountdown == 0)
         #expect(viewModel.answerTimerCountdown == 0)
     }
+
+    /// WHY (#185, sequence harness seed 186209): a replay tap racing the mic
+    /// tap used to start AFTER the recording — it tore the recording's mic
+    /// engine down and played the question under it, and the next "didn't
+    /// catch that" prompt then cut it short. An answer in progress wins.
+    @Test("replayQuestionAudio does nothing while an answer is being recorded")
+    func replayNeverRunsUnderARecording() async {
+        let silence = MockSilenceDetectionService()
+        let mockAudio = MockAudioService()
+        let viewModel = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: mockAudio,
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence
+        )
+        viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
+        viewModel.quizState = .recording
+        let stopsBefore = silence.stopListeningCallCount
+
+        await viewModel.replayQuestionAudio()
+        for _ in 0 ..< 20 {
+            await Task.yield()
+        }
+
+        #expect(mockAudio.playOpusCallCount == 0, "the question played under the recording")
+        #expect(silence.stopListeningCallCount == stopsBefore, "the recording's mic engine was torn down")
+    }
 }

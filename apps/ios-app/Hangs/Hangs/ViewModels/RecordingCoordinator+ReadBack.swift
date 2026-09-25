@@ -54,8 +54,13 @@ extension RecordingCoordinator {
                 _ = try await audioService.playOpusAudio(audio)
                 completed = true
             } catch is CancellationError {
-                // cancelAnswerReadBack already restored the flags
-                return
+                // cancelAnswerReadBack cancels this task and restores the flags
+                // itself. #186 step 2 (found by the sequence harness): a playback
+                // stopped from OUTSIDE — the mute or pause button — leaves the task
+                // running, and returning here left the read-back flags latched and
+                // nothing armed: the sheet never auto-confirmed and voice commands
+                // stayed off. That is a read-back cut short, so fall through.
+                if Task.isCancelled { return }
             } catch {
                 Logger.audio.warning("🔈 Answer read-back failed: \(error, privacy: .public)")
             }

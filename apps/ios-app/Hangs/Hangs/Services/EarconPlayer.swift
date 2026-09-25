@@ -59,6 +59,17 @@ protocol EarconPlaying: AnyObject {
 /// generated tones without touching any call site.
 @MainActor
 final class SystemEarconPlayer: EarconPlaying {
+    /// The one player of the process. Its cached `AVAudioPlayer`s must outlive
+    /// every cue they play: AVFoundation delivers `finishedPlaying:` to the
+    /// player on the main run loop after the tone ends, and a player released
+    /// mid-cue (its owner — a view model — went away within the 60–220 ms of a
+    /// tone) crashes there with EXC_BAD_ACCESS → abort. Seen as intermittent
+    /// "signal abrt" test crashes on CI (#186 step 2); a shared instance is
+    /// never released, so no cue can outlive its player.
+    static let shared = SystemEarconPlayer()
+
+    private init() {}
+
     /// Whether this device has a Taptic Engine. Cached — the capability query is
     /// not free and the answer cannot change at runtime.
     private static let supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics

@@ -97,6 +97,7 @@ extension QuizViewModel {
 
     /// The toolbar's single pause/resume control (and the spoken "pauza").
     func togglePause() {
+        attemptLedger.record(.tap, "pause") // #186 step 2: replayable black box
         if isPaused {
             exitPause()
         } else {

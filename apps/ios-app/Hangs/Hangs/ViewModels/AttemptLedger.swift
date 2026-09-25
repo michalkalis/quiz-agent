@@ -84,6 +84,23 @@ final class AttemptLedger {
         attempt == current
     }
 
+    /// The attempt whose answer has been sent (a confirm, the auto-confirm, a
+    /// typed answer). Founder decision 2026-09-25: from then on the answer is
+    /// final — "stop" / "again" for that attempt are dropped, never reopen it.
+    private(set) var answerSent: AttemptID?
+
+    func markAnswerSent() {
+        answerSent = current
+    }
+
+    /// `true` = the current attempt's answer is already sent: the caller's
+    /// action is dropped and reported like any other late input.
+    func refuseAfterAnswerSent(_ path: String) -> Bool {
+        guard let answerSent, answerSent == current else { return false }
+        reportStale(path, owner: answerSent)
+        return true
+    }
+
     /// Owner check for an ATTEMPT-scoped result (upload, transcript, read-back,
     /// prompt, auto-confirm, recording window). `false` = dropped and reported.
     func owns(_ attempt: AttemptID, _ path: String) -> Bool {

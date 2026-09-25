@@ -685,11 +685,19 @@ final class QuizViewModel: ObservableObject {
     /// (#180 track A) — handed to each child so a test drives them all at once.
     let clock: AnyClock<Duration>
 
+    /// The audio-hardware settles (before a question read, the barge-in pause)
+    /// stay on real time by design — a parked test clock must not hold the
+    /// quiz there (#180 track A). #186 step 2: the seeded sequence harness
+    /// points this at its test clock too, because a wait it cannot drive is a
+    /// wait whose end it cannot order, and a replayed seed must interleave
+    /// exactly as it did the first time.
+    var settleClock: AnyClock<Duration> = .continuous
+
     /// Language-neutral earcon player (#77, task 77.10). A settable property (not
     /// an init param) so the ~15 existing call sites are untouched and tests can
     /// inject a `MockEarconPlayer`. Cues route through `emitEarcon(_:)`, which
     /// suppresses them during question TTS.
-    var earconPlayer: EarconPlaying = SystemEarconPlayer()
+    var earconPlayer: EarconPlaying = SystemEarconPlayer.shared
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -778,7 +786,8 @@ final class QuizViewModel: ObservableObject {
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        flightRecorder: QuizFlightRecorder = .shared
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -787,7 +796,9 @@ final class QuizViewModel: ObservableObject {
         self.sttService = sttService
         self.realtimeSTTEnabled = realtimeSTTEnabled
         self.clock = clock
-        attemptLedger = AttemptLedger()
+        // The app keeps one black box; the #186 sequence harness gives each run
+        // its own so a failing seed prints only its own input trail.
+        attemptLedger = AttemptLedger(recorder: flightRecorder)
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
@@ -920,11 +931,11 @@ final class QuizViewModel: ObservableObject {
             startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .voiceCommand) },
             repeatQuestion: { [weak self] in await self?.repeatQuestion() },
-            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            skipQuestion: { [weak self] in await self?.submitSkip() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
-            continueToNext: { [weak self] in self?.continueToNext() },
+            continueToNext: { [weak self] in self?.advanceFromResult() },
             pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
@@ -987,7 +998,7 @@ final class QuizViewModel: ObservableObject {
             },
             handleQuizResponse: { [weak self] response, owner in await self?.handleQuizResponse(response, owner: owner) },
             resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
-            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            skipQuestion: { [weak self] in await self?.submitSkip() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
             abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
@@ -1223,7 +1234,7 @@ final class QuizViewModel: ObservableObject {
                 // session before the first AVPlayer starts. Real time on
                 // purpose (#180 track A): a hardware settle is not a quiz
                 // timer, and a parked test clock must not hold the quiz here.
-                try? await Task.sleep(for: .milliseconds(100))
+                try? await settleClock.sleep(for: .milliseconds(100))
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
@@ -1494,6 +1505,7 @@ final class QuizViewModel: ObservableObject {
 
     /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
     func toggleMute() async {
+        attemptLedger.record(.tap, "mute")
         await audioDeviceState.toggleMute()
     }
 
@@ -1595,7 +1607,7 @@ final class QuizViewModel: ObservableObject {
 
         // 3. Wait for audio hardware to settle (real time on purpose — a
         //    hardware settle is not a quiz timer, #180 track A)
-        try? await Task.sleep(for: .milliseconds(500))
+        try? await settleClock.sleep(for: .milliseconds(500))
 
         // 4. Guard again — state may have changed during sleep
         guard quizState == .askingQuestion, attemptLedger.ownsQuestion(owner, "bargeIn.start") else { return }
@@ -1684,6 +1696,17 @@ final class QuizViewModel: ObservableObject {
         // and the thinking task still owns a pending auto-start of recording.
         quizTimersController.cancelThinkingTime()
         quizTimersController.cancelAutoStopRecordingTimer()
+        // #186 step 2 (found by the sequence harness): a tap that answers while
+        // the mic is open ends that recording, as a typed answer does
+        // (`resubmitAnswer`). The answer capture used to stay armed through the
+        // whole evaluation, and with voice commands off the mic stayed live.
+        recordingCoordinator.cancelSilenceDetection()
+        if isStreamingSTT {
+            recordingCoordinator.cleanupStreamingSTT()
+        } else if quizState == .recording {
+            recordingCoordinator.abandonAnswerCapture()
+        }
+        isAutoRecording = false
         // #79: a rejected transition means another submission already claimed
         // .processing (e.g. a double-tapped option) — bail instead of firing a
         // second concurrent submit.
@@ -1746,6 +1769,7 @@ final class QuizViewModel: ObservableObject {
         // #79 → #186: a new attempt supersedes any suspended voice-transcript
         // handler, upload or prompt of the previous one.
         let attempt = attemptLedger.begin("submit.text")
+        attemptLedger.markAnswerSent() // #186: a sent answer is final
         recordingCoordinator.cancelRetryPrompt()
 
         // #79: a committed-voice-transcript handler may be suspended mid-flight
@@ -1821,8 +1845,16 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Skip the current question
+    /// The Skip button. #186 step 2: the tap goes into the black box so a
+    /// field dump replays it; spoken skips and the Again/Skip sheet reach
+    /// `submitSkip` through their own recorded inputs.
     func skipQuestion() async {
+        attemptLedger.record(.tap, "skip")
+        await submitSkip()
+    }
+
+    /// Skip the current question
+    func submitSkip() async {
         // A skip is legal only while the question is open (.askingQuestion) or is
         // being voice-answered (.recording) — mirroring submitMCQAnswer. The MCQ
         // Skip button stays enabled through the 1-3 s evaluation, and
@@ -1998,8 +2030,15 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
     }
 
-    /// Continue to next question after user paused current one
+    /// The result screen's Next button (recorded like every tap, #186 step 2).
     func continueToNext() {
+        attemptLedger.record(.tap, "next")
+        advanceFromResult()
+    }
+
+    /// Continue to next question after user paused current one — the Next
+    /// button and the spoken "next"/"ok" alike.
+    func advanceFromResult() {
         // Reset per-question pause state
         isPaused = false
 
@@ -2264,7 +2303,7 @@ final class QuizViewModel: ObservableObject {
 
         // Small delay to ensure audio cleanup completes (real time on purpose —
         // a hardware settle is not a quiz timer, #180 track A)
-        try? await Task.sleep(for: .milliseconds(100))
+        try? await settleClock.sleep(for: .milliseconds(100))
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {

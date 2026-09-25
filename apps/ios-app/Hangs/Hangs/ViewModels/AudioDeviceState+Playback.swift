@@ -38,14 +38,24 @@ extension AudioDeviceState {
         // Stop silence detection before TTS to avoid AVAudioEngine + AVPlayer conflict
         // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously).
         // isPlayingQuestionTTS closes the command window for the duration (77.5).
+        questionReadOutGeneration += 1
+        let generation = questionReadOutGeneration
         setPlayingQuestionTTS(true)
         stopSilenceDetectionListening()
 
-        await playQuestionTTSWithRetry(from: urlString)
+        let heard = await playQuestionTTSWithRetry(from: urlString)
+        // #186 step 2: when the read-out ended — the one timing a field dump
+        // needs to replay what the driver heard (and what cut it short).
+        attemptLedger.record(.prompt, "questionReadOut.end", heard ? "completed" : "cut")
 
-        // Restart silence detection (+ command listener) after TTS finishes.
-        setPlayingQuestionTTS(false)
-        await startSilenceDetectionListening()
+        // Restart silence detection (+ command listener) after TTS finishes —
+        // unless a replay took the read-out over (#186 step 2, found by the
+        // sequence harness): clearing the flag under it let the hands-free
+        // start open the mic over the replay. The replay's own tail does both.
+        if generation == questionReadOutGeneration {
+            setPlayingQuestionTTS(false)
+            await startSilenceDetectionListening()
+        }
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.tail") else { return }
@@ -73,13 +83,14 @@ extension AudioDeviceState {
     /// A supersede (barge-in, mute mid-read, a newer read) surfaces as
     /// `CancellationError` and must NOT be retried: the app would talk over
     /// whatever took over.
-    private func playQuestionTTSWithRetry(from urlString: String) async {
+    /// `true` when the question was read to its end.
+    private func playQuestionTTSWithRetry(from urlString: String) async -> Bool {
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
             _ = try await audioService.playOpusAudio(audioData)
-            return
+            return true
         } catch is CancellationError {
-            return
+            return false
         } catch {
             Logger.audio.warning("⚠️ Failed to play question audio: \(error, privacy: .public)")
             // Don't fail the quiz if audio doesn't play — but fail loud to Sentry.
@@ -87,19 +98,21 @@ extension AudioDeviceState {
         }
 
         // Nothing to rescue if the question is gone or the user muted meanwhile.
-        guard isAskingQuestion(), !isMuted() else { return }
+        guard isAskingQuestion(), !isMuted() else { return false }
 
         try? await Task.sleep(for: .milliseconds(300))
 
         do {
             let audioData = try await networkService.downloadAudio(from: urlString)
             _ = try await audioService.playOpusAudio(audioData)
+            return true
         } catch is CancellationError {
             // superseded — the newer owner speaks
         } catch {
             Logger.audio.warning("⚠️ Question audio retry failed: \(error, privacy: .public)")
             Self.reportAudioFailure(error, kind: "question-retry")
         }
+        return false
     }
 
     /// Whether the on-demand "replay question" control can actually do something:
@@ -140,13 +153,17 @@ extension AudioDeviceState {
 
             // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
             // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
+            questionReadOutGeneration += 1
+            let generation = questionReadOutGeneration
             setPlayingQuestionTTS(true)
             stopSilenceDetectionListening()
 
             do {
                 let audioData = try await networkService.downloadAudio(from: urlString)
                 _ = try await audioService.playOpusAudio(audioData)
+                attemptLedger.record(.prompt, "questionReplay.end", "completed") // #186 step 2
             } catch {
+                attemptLedger.record(.prompt, "questionReplay.end", "cut")
                 Logger.audio.warning("⚠️ Failed to replay question audio: \(error, privacy: .public)")
                 Self.reportAudioFailure(error, kind: "question-replay")
             }
@@ -156,12 +173,14 @@ extension AudioDeviceState {
             // leak `true` past the run, but re-arming the engine here would
             // race the newer run's playback.
             guard !Task.isCancelled else {
-                setPlayingQuestionTTS(false)
+                if generation == questionReadOutGeneration { setPlayingQuestionTTS(false) }
                 return
             }
 
             // Restart silence detection (and barge-in) after TTS finishes — but
             // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
+            // A newer read that took over owns the flag (#186 step 2).
+            guard generation == questionReadOutGeneration else { return }
             setPlayingQuestionTTS(false)
             await startSilenceDetectionListening()
         }

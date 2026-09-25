@@ -184,4 +184,18 @@ struct EarconTests {
             #expect(earcon.played == [.micLive])
         }
     }
+
+    /// WHY (CI "signal abrt", 2026-09-25): a cue's AVAudioPlayer gets
+    /// `finishedPlaying:` from AVFoundation after the tone ends — a player
+    /// released mid-cue, because the view model that owned it went away,
+    /// crashed the process there. Every view model must therefore share the
+    /// one process-lifetime player instead of owning its own.
+    @Test("every quiz shares the one process-lifetime earcon player")
+    func earconPlayerOutlivesItsViewModel() {
+        let first = Fixtures.makeViewModel()
+        let second = Fixtures.makeViewModel()
+
+        #expect(first.earconPlayer === SystemEarconPlayer.shared)
+        #expect(second.earconPlayer === first.earconPlayer)
+    }
 }

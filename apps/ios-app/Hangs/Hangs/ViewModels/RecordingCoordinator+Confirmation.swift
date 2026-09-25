@@ -75,6 +75,9 @@ extension RecordingCoordinator {
         let answer = transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         transcribedAnswer = ""
         noAnswerCaptured = false
+        // #186 (founder 2026-09-25): the answer on the sheet is sent — "stop"
+        // and "again" can no longer reopen the question (see rerecordAnswer).
+        if wasShowingSheet { attemptLedger.markAnswerSent() }
 
         // If we have a pending Whisper response, use it directly
         if let response = pendingResponse {
@@ -152,6 +155,10 @@ extension RecordingCoordinator {
         // the "again" voice command becomes a no-op instead of spawning a second
         // startRecording() Task (two-engine crash class, #64/#77).
         guard quizState() == .processing else { return }
+        // #186 (founder 2026-09-25, found by the sequence harness): once the
+        // answer is sent, "again" is too late — dropped, not a reopened
+        // question racing the advance to the next one.
+        guard !attemptLedger.refuseAfterAnswerSent("rerecord.afterAnswerSent") else { return }
         // #186 step 1: the rejected recording's attempt ends here — its upload,
         // read-back or late 400 can no longer land on the re-record.
         let owner = attemptLedger.begin("rerecord")
@@ -184,6 +191,9 @@ extension RecordingCoordinator {
 
     /// Cancel the processing operation and return to question state
     func cancelProcessing() {
+        // #186 (founder 2026-09-25): a sent answer cannot be taken back — a
+        // spoken "stop" after the confirm is dropped (see rerecordAnswer).
+        guard !attemptLedger.refuseAfterAnswerSent("cancelProcessing.afterAnswerSent") else { return }
         // #186 step 1: whatever the cancelled attempt still has in flight is void.
         attemptLedger.begin("cancelProcessing")
         cancelAnswerReadBack()

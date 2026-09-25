@@ -28,7 +28,7 @@ capture() {
 
 # --- edit below ---------------------------------------------------------
 
-step "Open Hangs on the simulator and start a quiz."
+step "Open Trubbo on the simulator and start a quiz."
 
 capture ERRORED "Did the confirmation sheet auto-confirm before you could tap? (y/n)"
 

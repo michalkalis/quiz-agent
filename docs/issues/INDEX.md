@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 188 | [Jednotný design systém: jeden zdroj pravdy, katalóg na claude.ai, synchronizácia do appky](issue-188-design-system.md) | enhancement · needs-triage | `[ ]` #188 | Založené 2026-09-25 z design researchu; founder: katalóg na claude.ai, Pencil ostáva na tvorbu, kód = zdroj pravdy; nič kritické teraz, po #185/#186 |
 | 187 | [Ovládanie kvízu tlačidlami na volante / slúchadlách](issue-187-car-media-buttons.md) | enhancement · needs-info | | Založené 2026-09-24 z #185; founder: teraz nie, do budúcnosti; aj tlačidlo hlasu v aute (overiť dostupnosť mimo Siri) |
 | 186 | [Stabilizácia stavov kvízovej obrazovky (vlastníctvo async výsledkov + náhodné testy sekvencií)](issue-186-quiz-state-robustness.md) | enhancement · ready-for-agent | `[ ]` #186 | Založené 2026-09-24; koreň = async výsledky neviazané na otázku/pokus; founder: krok 1 (AttemptID + Sentry čierna skrinka) aj krok 2 (náhodné sekvencie) teraz spolu s #185; kroky 3–4 neskôr |
 | 185 | [Test v aute 2026-09-23: mŕtva detekcia reči, confirm na ďalšej otázke, Bluetooth, povely, MCQ](issue-185-car-test-2026-09-23.md) | bug · ready-for-agent | `[ ]` #185 | Založené 2026-09-24; 16/16 nahrávok odseknutých 5 s oknom (SpeechDetector na zariadení nedetekuje reč); VPIO odtláča zvuk z BT; MCQ regresia z #184; founder rozhodnutia zapísané, tracky A–H na ďalšiu session |

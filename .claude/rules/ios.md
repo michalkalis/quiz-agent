@@ -2,7 +2,7 @@
 paths: ["apps/ios-app/**"]
 ---
 
-# iOS Development Rules (Hangs)
+# iOS Development Rules (Trubbo)
 
 - **Swift:** 6.0 (strict concurrency), **iOS:** 26.0+
 - **Architecture:** MVVM with Service Layer

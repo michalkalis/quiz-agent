@@ -9,7 +9,7 @@ argument-hint: "[local|prod|clean]"
 
 # Build iOS App
 
-Build the Hangs iOS app.
+Build the Trubbo iOS app (Xcode target `Hangs`).
 
 ## Based on $ARGUMENTS:
 

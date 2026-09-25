@@ -4,11 +4,11 @@
 
 ## Executive Summary
 
-- **Najväčší problém nie je nástroj, ale chýbajúci jeden zdroj pravdy.** V appke dnes žijú tri paralelné sady tokenov (pôvodná `Theme.*`, novšia `Theme.Hangs.*`, samostatné fonty v `Font+Theme`) + „legacy aliasy“. Agent si z toho vyberá náhodne → nejednotný vzhľad. Prvý krok = zlúčiť do jednej sady a zakázať ručne písané hodnoty lintom.
+- **Najväčší problém nie je nástroj, ale chýbajúci jeden zdroj pravdy.** V appke dnes žijú tri paralelné sady tokenov (pôvodná `Theme.*`, novšia `Theme.Hangs.*` (interný názov, appka = Trubbo), samostatné fonty v `Font+Theme`) + „legacy aliasy“. Agent si z toho vyberá náhodne → nejednotný vzhľad. Prvý krok = zlúčiť do jednej sady a zakázať ručne písané hodnoty lintom.
 - **Pencil (pen.dev) nechať ako skicár, nie ako zdroj pravdy.** Má MCP, je zadarmo a vie SwiftUI export, ale review je „git-ový“, nie komentárový — pre foundera slabý. Zdroj pravdy pre agentický vývoj má byť **kód** (tokeny + komponenty), všetko ostatné sa z neho generuje.
 - **Prehľad + komentovanie bez terminálu:** najlacnejšia cesta je **Design System artefakt na claude.ai** (máme ho k dispozícii zadarmo): tokeny, komponenty s náhľadmi, pravidlá, komentáre priamo na komponent, a agenti ho čítajú ako referenciu. Náhľady plníme skutočnými SwiftUI snapshotmi z testov, takže founder vidí reálnu appku, nie web napodobeninu. Figma (~$16/mes.) je lepšia v komentovaní, ale znamená druhý zdroj pravdy a migráciu z Pencilu.
 - **Mobbin má od 05/2026 oficiálne MCP** (620k+ obrazoviek reálnych appiek, ~$10/mes. ročne) — hodnota pre výskum vzorov (onboarding, paywall, povolenia), nie na generovanie kódu. Oplatí sa ako mesačný „research sprint“, nie trvalé predplatné.
-- **UI/UX pre Hangs:** hlas je primárne rozhranie, obrazovka len na pohľad (≤ 2 s pohľad, ≤ 12 s spolu — NHTSA); Liquid Glass len na navigačnej vrstve, obsah nepriehľadný; mierna spätná väzba pri zlej odpovedi, oslavy len na prirodzených koncoch; mikrofón pýtať v kontexte prvej otázky s pred-vysvetlením.
+- **UI/UX pre Trubbo:** hlas je primárne rozhranie, obrazovka len na pohľad (≤ 2 s pohľad, ≤ 12 s spolu — NHTSA); Liquid Glass len na navigačnej vrstve, obsah nepriehľadný; mierna spätná väzba pri zlej odpovedi, oslavy len na prirodzených koncoch; mikrofón pýtať v kontexte prvej otázky s pred-vysvetlením.
 
 ## Key Findings
 
@@ -35,7 +35,7 @@
 - **Ikona cez Icon Composer** (vrstvená, prežije Default/Dark/Clear/Tinted varianty).
 - **Pozor na posun:** Apple už v iOS 26.1 pridal prepínač priehľadnosti skla; ďalšie zmierňovanie v iOS 27 je podľa sekundárnych zdrojov (NEOVERENÉ). Nestavať dizajn na maximálnej priehľadnosti.
 
-### 3. Hands-free a hlas (jadro Hangs)
+### 3. Hands-free a hlas (jadro Trubbo)
 
 - **NHTSA:** jeden pohľad ≤ 2 s, spolu ≤ 12 s mimo cesty. CarPlay HIG: pri hlasových appkách je hlas **predvolený** spôsob a obrazovka nesmie byť „odpoveďou“ na hlasovú interakciu. → Každá obrazovka počas kvízu: jedna hlavná akcia, čitateľná na jeden pohľad; nič sa nesmie dať *iba* prečítať.
 - **Ticho > 3 s po reči pôsobí ako pád** — vždy krátky zvuk pre „počúvam / spracúvam / správne / chyba“ (sedí s naším pravidlom tichých earconov + haptiky).
@@ -64,9 +64,21 @@
 - Pravidlá pre layout/tokeny existujú (`ios-swiftui-layout.md`), ale sú necommitnuté a nič ich automaticky nevynucuje.
 - Proces „HTML varianty → founder vyberie → Pencil → kód“ funguje pre veľké rozhodnutia, ale nemá trvalé miesto na komentáre.
 
-## Implications for Hangs
+## Implications for Trubbo
 
 Nástroj na kreslenie nie je úzke hrdlo — agent už vie kresliť v Penciliu aj písať SwiftUI. Úzke hrdlá sú dve: **(a)** agent nemá jednu jednoznačnú sadu pravidiel a nič ho nekontroluje, **(b)** founder nemá jedno miesto, kde vidí „toto je náš vizuál“ a kde môže napísať „tento stav je zlý“. Obe rieši jednotný design systém v kóde + z neho generovaný katalóg s komentármi.
+
+## Zdroj pravdy a tok zmien (founder 2026-09-25: katalóg na claude.ai, Pencil ostáva)
+
+Konsenzus pre tímy, kde kód píše agent: **zdroj pravdy je kód** (tokeny + komponenty), pretože ho agent priamo používa a CI ho vie strážiť (lint, snapshoty). Nástroje okolo sú buď pohľad na kód, alebo miesto na návrh zmeny:
+
+| Miesto | Rola |
+|---|---|
+| Kód | čo platí v appke; generuje katalóg aj Pencil premenné |
+| Pencil | skicár pre nové obrazovky a väčšie zmeny → návrh |
+| Katalóg na claude.ai | okno do kódu + schránka (komentáre, úprava hodnoty) → návrh |
+
+Všetko, čo sa v katalógu alebo Penciliu líši od kódu, je **čakajúca zmena**. Katalóg ju ukazuje v sekcii „Čaká na appku“. Synchronizácia (`/design-sync`) ju premení na PR a po merge sa katalóg pregeneruje, takže sa znova zhoduje s kódom. Detail a tracky: [issue #188 — jednotný design systém](../issues/issue-188-design-system.md).
 
 ## Recommendations
 

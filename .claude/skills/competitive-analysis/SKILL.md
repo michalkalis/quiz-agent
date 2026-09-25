@@ -34,7 +34,7 @@ Research competitor apps and produce a feature comparison matrix with strategic 
 
 ## Feature Matrix
 
-| Feature | Hangs | [Comp 1] | [Comp 2] | [Comp 3] |
+| Feature | Trubbo | [Comp 1] | [Comp 2] | [Comp 3] |
 |---------|---------|----------|----------|----------|
 | Voice input | Yes | ... | ... | ... |
 | Hands-free mode | Yes | ... | ... | ... |
@@ -49,17 +49,17 @@ Research competitor apps and produce a feature comparison matrix with strategic 
 ### [Competitor 1]
 - **What they do well:** ...
 - **Weaknesses:** ...
-- **Key takeaway for Hangs:** ...
+- **Key takeaway for Trubbo:** ...
 
 ...
 
-## Hangs Positioning
+## Trubbo Positioning
 
 ### Unique Advantages
-- [What Hangs does that nobody else does]
+- [What Trubbo does that nobody else does]
 
 ### Gaps to Address
-- [Features competitors have that Hangs lacks]
+- [Features competitors have that Trubbo lacks]
 
 ### Strategic Recommendations
 1. [Recommendation with rationale]
@@ -75,7 +75,7 @@ Research competitor apps and produce a feature comparison matrix with strategic 
 
 ## Notes
 
-- Focus on features relevant to Hangs's driving/voice-first use case
+- Focus on features relevant to Trubbo's driving/voice-first use case
 - Note any competitor that has shut down (e.g., QuizUp) — explain why
-- Be honest about Hangs's current gaps
+- Be honest about Trubbo's current gaps
 - If info isn't available, mark as "Unknown" rather than guessing

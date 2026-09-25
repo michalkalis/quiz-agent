@@ -52,9 +52,7 @@ extension QuizSequenceRun {
         let why = "\(cut.rawValue) while \(context.map(\.description) ?? "time passed")"
         switch cut {
         case .recordingPrep where sameQuestion:
-            if vm.isPlayingQuestionTTS || !knownBug(.readOutFlagLost) {
-                fail("mic opened over the question read-out without the driver", why)
-            }
+            fail("mic opened over the question read-out without the driver", why)
         case .callerCancelled where stillOpen:
             fail("question read-out ended before it was heard", why)
         case .stopped where stillOpen, .superseded where stillOpen:
@@ -62,24 +60,6 @@ extension QuizSequenceRun {
         default:
             break
         }
-    }
-
-    /// Bugs this harness found OUTSIDE step 1 / #185 track B, reported with
-    /// #186 step 2 and not fixed there. Counted, not failed, so the harness
-    /// keeps guarding everything else; `QUIZ_SEQUENCE_STRICT=1` fails on them.
-    /// Delete a case with its fix.
-    enum KnownBug: String, CaseIterable {
-        /// A replay tap during the initial read-out stops it; the initial
-        /// read's tail then clears `isPlayingQuestionTTS` while the REPLAY is
-        /// playing and arms the think countdown, so the hands-free start sees
-        /// no read-out and opens the mic over the replay.
-        case readOutFlagLost
-    }
-
-    private func knownBug(_ bug: KnownBug) -> Bool {
-        guard allowsKnownBug else { return false }
-        knownBugHits[bug, default: 0] += 1
-        return true
     }
 
     func fail(_ invariant: String, _ detail: String) {

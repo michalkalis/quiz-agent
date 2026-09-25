@@ -73,6 +73,11 @@ final class AudioDeviceState: ObservableObject {
     /// read-out tail proves its question is still the one on screen.
     let attemptLedger: AttemptLedger
 
+    /// #186 step 2: the question read-out (initial read or replay) that owns
+    /// `isPlayingQuestionTTS`. A read superseded by a newer one must not
+    /// clear the flag or re-arm the listener under the newer read.
+    var questionReadOutGeneration = 0
+
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings

@@ -38,14 +38,21 @@ extension AudioDeviceState {
         // Stop silence detection before TTS to avoid AVAudioEngine + AVPlayer conflict
         // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously).
         // isPlayingQuestionTTS closes the command window for the duration (77.5).
+        questionReadOutGeneration += 1
+        let generation = questionReadOutGeneration
         setPlayingQuestionTTS(true)
         stopSilenceDetectionListening()
 
         await playQuestionTTSWithRetry(from: urlString)
 
-        // Restart silence detection (+ command listener) after TTS finishes.
-        setPlayingQuestionTTS(false)
-        await startSilenceDetectionListening()
+        // Restart silence detection (+ command listener) after TTS finishes —
+        // unless a replay took the read-out over (#186 step 2, found by the
+        // sequence harness): clearing the flag under it let the hands-free
+        // start open the mic over the replay. The replay's own tail does both.
+        if generation == questionReadOutGeneration {
+            setPlayingQuestionTTS(false)
+            await startSilenceDetectionListening()
+        }
 
         // After TTS finishes (or was interrupted by barge-in), choose next path
         guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.tail") else { return }
@@ -140,6 +147,8 @@ extension AudioDeviceState {
 
             // Stop silence detection before TTS to avoid the AVAudioEngine + AVPlayer
             // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
+            questionReadOutGeneration += 1
+            let generation = questionReadOutGeneration
             setPlayingQuestionTTS(true)
             stopSilenceDetectionListening()
 
@@ -156,12 +165,14 @@ extension AudioDeviceState {
             // leak `true` past the run, but re-arming the engine here would
             // race the newer run's playback.
             guard !Task.isCancelled else {
-                setPlayingQuestionTTS(false)
+                if generation == questionReadOutGeneration { setPlayingQuestionTTS(false) }
                 return
             }
 
             // Restart silence detection (and barge-in) after TTS finishes — but
             // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
+            // A newer read that took over owns the flag (#186 step 2).
+            guard generation == questionReadOutGeneration else { return }
             setPlayingQuestionTTS(false)
             await startSilenceDetectionListening()
         }

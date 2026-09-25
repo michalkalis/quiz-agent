@@ -75,10 +75,6 @@ final class QuizSequenceRun {
     /// The attempt of the last skip sent per question — its transient-retry
     /// re-sends are the same skip, not a new one.
     var sentSkips: [String: AttemptID] = [:]
-    /// See `KnownBug` in +Checks.
-    var knownBugHits: [KnownBug: Int] = [:]
-    /// `QUIZ_SEQUENCE_STRICT=1` turns the known bug back into a failure.
-    var allowsKnownBug = ProcessInfo.processInfo.environment["QUIZ_SEQUENCE_STRICT"] != "1"
     private var typedAnswers = 0
     /// Transient conditions seen at the last check → since when (ms).
     var episodes: [String: Int] = [:]

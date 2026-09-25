@@ -15,7 +15,6 @@
 //    QUIZ_SEQUENCE_BASE_SEED  first seed (default 186000)
 //    QUIZ_SEQUENCE_LENGTH     inputs per sequence (default 30)
 //    QUIZ_SEQUENCE_SEED       run just this seed (reproduce a failure)
-//    QUIZ_SEQUENCE_STRICT=1   fail on the known bugs too (see `KnownBug`)
 //
 //  Cost: ~75 ms per 30-input sequence on the simulator — every scheduler turn
 //  is a main-queue round trip (~50 µs) and a sequence needs ~900 of them. The

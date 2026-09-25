@@ -116,7 +116,6 @@ struct QuizSequenceStats {
     var results = 0
     var driverSkips = 0
     var retryPrompts = 0
-    var knownBugSequences: [String: Int] = [:]
     var drops: [String: Int] = [:]
     var rejects: [String: Int] = [:]
     var states: [String: Int] = [:]
@@ -130,9 +129,6 @@ struct QuizSequenceStats {
         sheets += run.sheetsSeen.count
         results += run.vm.recapEntries.count
         driverSkips += run.skipsSubmitted.count
-        for bug in run.knownBugHits.keys {
-            knownBugSequences[bug.rawValue, default: 0] += 1
-        }
         for entry in run.recorder.entries {
             switch entry.kind {
             case .drop: drops[entry.name, default: 0] += 1
@@ -155,8 +151,6 @@ struct QuizSequenceStats {
         states entered: \(top(states))
         stale results dropped by the attempt check: \(drops.isEmpty ? "none" : top(drops))
         rejected transitions: \(rejects.isEmpty ? "none" : top(rejects))
-        known bugs, sequences hit (QUIZ_SEQUENCE_STRICT=1 fails on them): \
-        \(knownBugSequences.isEmpty ? "none" : top(knownBugSequences))
         """
     }
 }

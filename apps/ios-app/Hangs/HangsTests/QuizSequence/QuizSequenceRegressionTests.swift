@@ -61,4 +61,24 @@ struct QuizSequenceRegressionTests {
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
         #expect(outcome.run.questionReadOutsCompleted.contains("q_002"), "question 2 was never read to the end")
     }
+
+    /// WHY (harness known bug): a replay tap during the first read-out stopped
+    /// it, and that read's tail then cleared the "question is being read" flag
+    /// while the REPLAY was playing. The hands-free start waits only on that
+    /// flag (#185 founder rule), so with no think time it opened the mic over
+    /// the replay — the question was cut off by the app, not the driver.
+    @Test("a replay during the first read-out keeps the hands-free start waiting")
+    func replayKeepsReadOutFlag() async {
+        let dump = """
+        # quiz-sequence seed=0 questions=3 mcq=- autoRecord=1 thinking=0 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
+        00:00:00.000 state quizStart attempt=- state=idle
+        00:00:00.919 tap replay attempt=q_001#1 state=askingQuestion
+        00:00:10.000 timer idle attempt=q_001#1 state=askingQuestion
+        """
+        let parsed = QuizSequenceDump.parse(dump)
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+
+        #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
+        #expect(outcome.run.questionReadOutsCompleted.filter { $0 == "q_001" }.count == 1, "the replay must play to its end")
+    }
 }

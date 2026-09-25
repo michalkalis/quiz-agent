@@ -56,9 +56,7 @@ extension QuizSequenceRun {
                 fail("mic opened over the question read-out without the driver", why)
             }
         case .callerCancelled where stillOpen:
-            if context != nil || !knownBug(.autoAdvanceSelfCancel) {
-                fail("question read-out ended before it was heard", why)
-            }
+            fail("question read-out ended before it was heard", why)
         case .stopped where stillOpen, .superseded where stillOpen:
             fail("question read-out cut short without the driver", why)
         default:
@@ -71,14 +69,6 @@ extension QuizSequenceRun {
     /// keeps guarding everything else; `QUIZ_SEQUENCE_STRICT=1` fails on them.
     /// Delete a case with its fix.
     enum KnownBug: String, CaseIterable {
-        /// The auto-advance countdown runs the advance INSIDE its own
-        /// `.autoAdvance` task, and the advance begins with
-        /// `taskBag.cancel(.autoAdvance)` — it cancels itself. The rest runs
-        /// cancelled: the settle is skipped and the next question's read-out
-        /// ends at once (on a device the audio download throws
-        /// `URLError.cancelled`), so an auto-advanced question is never read
-        /// aloud and its countdown starts at once.
-        case autoAdvanceSelfCancel
         /// A replay tap during the initial read-out stops it; the initial
         /// read's tail then clears `isPlayingQuestionTTS` while the REPLAY is
         /// playing and arms the think countdown, so the hands-free start sees

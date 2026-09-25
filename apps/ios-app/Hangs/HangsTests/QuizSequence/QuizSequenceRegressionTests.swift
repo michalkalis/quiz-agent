@@ -40,4 +40,25 @@ struct QuizSequenceRegressionTests {
                 "the countdown must still confirm the heard answer")
         #expect(outcome.run.vm.isPlayingAnswerReadBack == false, "a latched read-back keeps voice commands off")
     }
+
+    /// WHY (harness known bug, seed 186000): the auto-advance countdown ran the
+    /// advance inside its own `.autoAdvance` task, and the advance begins by
+    /// cancelling `.autoAdvance` — itself. The rest ran cancelled, so the next
+    /// question's read-out ended the instant it started: a hands-free driver
+    /// never heard question 2 and its countdown started at once.
+    @Test("an auto-advanced question is read aloud to the end")
+    func autoAdvanceReadsNextQuestion() async {
+        let dump = """
+        # quiz-sequence seed=0 questions=3 mcq=- autoRecord=1 thinking=10 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
+        00:00:00.000 state quizStart attempt=- state=idle
+        00:00:02.943 tap skip attempt=q_001#1 state=askingQuestion
+        00:00:03.065 network quizResponse attempt=q_001#2 state=skipping correct
+        00:00:20.000 timer idle attempt=q_002#3 state=askingQuestion
+        """
+        let parsed = QuizSequenceDump.parse(dump)
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+
+        #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
+        #expect(outcome.run.questionReadOutsCompleted.contains("q_002"), "question 2 was never read to the end")
+    }
 }

@@ -322,6 +322,8 @@ final class SequenceAudio: AudioServiceProtocol {
     private var nextId = 0
 
     /// Set by the run: a clip was cut short (stop, supersede, recording prep).
+    /// Question read-outs that played to their end, in order (question ids).
+    private(set) var completedQuestionClips: [String] = []
     /// Set by the run: a clip was cut short (and, for a read-out, whose question).
     var onCutShort: @MainActor (Clip, Cut, String?) -> Void = { _, _, _ in }
 
@@ -382,6 +384,7 @@ final class SequenceAudio: AudioServiceProtocol {
     private func finish(_ id: Int) {
         guard let current = playing, current.id == id else { return }
         playing = nil
+        if let questionId = current.questionId { completedQuestionClips.append(questionId) }
         parked.resolve(id, .success(Double(Self.length(of: current.clip).components.seconds)))
     }
 

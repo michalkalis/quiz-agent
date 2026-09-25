@@ -399,7 +399,16 @@ final class QuizTimersController: ObservableObject {
             guard self.attemptLedger.ownsQuestion(owner, "autoAdvance.fire") else { return }
             self.attemptLedger.record(.timer, "autoAdvance.fire")
 
-            await self.proceedToNextQuestion()
+            // #186 step 2 (found by the sequence harness): hand off to a fresh
+            // task, as auto-confirm does. The advance cancels `.autoAdvance` —
+            // THIS task — so running it here ran the whole advance cancelled:
+            // the next question's read-out ended the instant it began and a
+            // hands-free driver never heard it. The hand-off still answers to
+            // the same question ticket.
+            Task { [weak self] in
+                guard let self, self.attemptLedger.ownsQuestion(owner, "autoAdvance.handoff") else { return }
+                await self.proceedToNextQuestion()
+            }
         }
         taskBag.add(task, key: .autoAdvance)
     }

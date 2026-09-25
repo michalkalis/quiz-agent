@@ -219,6 +219,8 @@ final class QuizSequenceRun {
 
     // MARK: - Screen predicates (what the driver can reach right now)
 
+    var questionReadOutsCompleted: [String] { audio.completedQuestionClips }
+
     var isSheetUp: Bool { vm.showAnswerConfirmation || vm.isEvaluatingAnswer }
 
     var isOnQuestionScreen: Bool {

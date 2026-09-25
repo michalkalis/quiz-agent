@@ -49,6 +49,12 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
     /// One line naming what the gate objected to — only ever sent for the
     /// flagged/critical states.
     let reviewNote: String?
+    /// #185 track G: the label the client shows (and the server's question audio
+    /// reads) for each MCQ option key — "1".."4", or "A".."D" when an option is
+    /// itself a number. Stamped by the server on every MCQ payload; nil on open
+    /// questions and on anything decoded from before the field existed, which
+    /// then keeps the legacy letter labels (`optionLabel(for:)`).
+    let optionLabels: [String: String]?
 
     /// Whether this question has an associated image
     var hasImage: Bool {
@@ -90,6 +96,7 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         case reviewBadge = "review_badge"
         case translationLanguage = "translation_language"
         case reviewNote = "review_note"
+        case optionLabels = "option_labels"
     }
 
     /// Backward-compatible decoder — `ageAppropriate` is optional so existing
@@ -119,6 +126,7 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         reviewBadge = try container.decodeIfPresent(String.self, forKey: .reviewBadge)
         translationLanguage = try container.decodeIfPresent(String.self, forKey: .translationLanguage)
         reviewNote = try container.decodeIfPresent(String.self, forKey: .reviewNote)
+        optionLabels = try container.decodeIfPresent([String: String].self, forKey: .optionLabels)
     }
 
     init(
@@ -144,7 +152,8 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         costCents: Int? = nil,
         reviewBadge: String? = nil,
         translationLanguage: String? = nil,
-        reviewNote: String? = nil
+        reviewNote: String? = nil,
+        optionLabels: [String: String]? = nil
     ) {
         self.id = id
         self.question = question
@@ -169,6 +178,7 @@ nonisolated struct Question: Codable, Identifiable, Equatable, Sendable {
         self.reviewBadge = reviewBadge
         self.translationLanguage = translationLanguage
         self.reviewNote = reviewNote
+        self.optionLabels = optionLabels
     }
 }
 
@@ -327,7 +337,8 @@ extension Question {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: "Jupiter is by far the largest planet, with a mass more than twice that of all other planets combined.",
-            generatedBy: "gpt-4.1"
+            generatedBy: "gpt-4.1",
+            optionLabels: ["a": "1", "b": "2", "c": "3", "d": "4"]
         )
 
         /// Long-stem MCQ (~300 chars) — used by `--ui-test-mcq --ui-test-long`
@@ -348,7 +359,8 @@ extension Question {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: nil,
-            generatedBy: nil
+            generatedBy: nil,
+            optionLabels: ["a": "1", "b": "2", "c": "3", "d": "4"]
         )
 
         /// Four LONG options (each well past `MCQOptionPicker.gridMaxOptionLength`,
@@ -374,7 +386,9 @@ extension Question {
             mediaUrl: nil,
             imageSubtype: nil,
             explanation: nil,
-            generatedBy: nil
+            generatedBy: nil,
+            // "1.25 centimetres" is a number, so the server labels these A–D.
+            optionLabels: ["a": "A", "b": "B", "c": "C", "d": "D"]
         )
     }
 #endif

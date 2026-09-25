@@ -13,10 +13,28 @@
 //  renders unchanged. Extracted from ResultView for #132 Track E — the recap
 //  entries freeze the same composition at capture time.
 //
+//  #185 track G: the label is the server's `optionLabels` ("2 — Pyramid", or
+//  "B — 1969" when the options are numbers), the same one the option grid
+//  shows and the question audio reads.
+//
 
 import Foundation
 
 extension Question {
+    /// The label shown for option `key`: the server's (#185 track G), else the
+    /// legacy letter — a question decoded without labels is also read out with
+    /// letters, so screen and voice still agree.
+    func optionLabel(for key: String) -> String {
+        optionLabels?[key] ?? key.uppercased()
+    }
+
+    /// Whether the options are labelled with letters (A–D) rather than numbers —
+    /// what the driver is told to say when an answer named no option.
+    var usesLetterLabels: Bool {
+        guard let optionLabels, !optionLabels.isEmpty else { return true }
+        return optionLabels.values.contains { !$0.allSatisfy(\.isNumber) }
+    }
+
     func labelledAnswer(_ raw: String) -> String {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty, let options = possibleAnswers else { return raw }
@@ -24,10 +42,10 @@ extension Question {
         if let text = options[value.lowercased()],
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         {
-            return "\(value.uppercased()) — \(text)"
+            return "\(optionLabel(for: value.lowercased())) — \(text)"
         }
         if let match = options.first(where: { $0.value.caseInsensitiveCompare(value) == .orderedSame }) {
-            return "\(match.key.uppercased()) — \(match.value)"
+            return "\(optionLabel(for: match.key)) — \(match.value)"
         }
         return raw
     }

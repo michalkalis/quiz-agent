@@ -12,8 +12,12 @@
 import SwiftUI
 
 struct EmptyAnswerRetryHint: View {
+    /// Which line is being spoken (#185 track G: an MCQ answer that named no
+    /// option has its own).
+    var prompt: SpokenPrompt = .didNotCatch
+
     var body: some View {
-        Text("I didn't catch your answer, please try again.")
+        line
             .font(.hangsBody(15, weight: .semibold))
             .foregroundColor(Theme.Hangs.Colors.ink)
             .multilineTextAlignment(.center)
@@ -21,5 +25,13 @@ struct EmptyAnswerRetryHint: View {
             .minimumScaleFactor(0.8)
             .frame(maxWidth: .infinity)
             .accessibilityIdentifier("question.retryHint")
+    }
+
+    private var line: Text {
+        switch prompt {
+        case .didNotCatch: Text("I didn't catch your answer, please try again.")
+        case .mcqUnmatchedNumber: Text("I didn't catch which option you meant. Please say its number.")
+        case .mcqUnmatchedLetter: Text("I didn't catch which option you meant. Please say its letter.")
+        }
     }
 }

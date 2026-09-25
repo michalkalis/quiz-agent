@@ -246,6 +246,12 @@ final class QuizViewModel: ObservableObject {
     /// by the bar's glow alone (see `RecordingInputLevel`).
     var recordingInputLevel: RecordingInputLevel { recordingCoordinator.inputLevel }
 
+    /// The line `showsEmptyAnswerRetryHint` puts on screen (#185 track G), or
+    /// nil while there is none.
+    var emptyAnswerRetryHintPrompt: SpokenPrompt? {
+        showsEmptyAnswerRetryHint ? recordingCoordinator.emptyAnswerRetryPrompt : nil
+    }
+
     /// #173 C2: the confirmation sheet stays up, in its evaluating state, from
     /// Confirm until the result lands.
     var isEvaluatingAnswer: Bool {
@@ -1871,6 +1877,15 @@ final class QuizViewModel: ObservableObject {
 
             await handleQuizResponse(response, owner: attempt)
 
+        } catch let NetworkError.answerNotCaptured(code, _) {
+            // #185 track G: the server could not place the answer (an MCQ
+            // transcript naming no option, or no answer in it) and graded
+            // nothing — ask again like an empty answer, never an error screen.
+            attemptLedger.record(.network, "textSubmit.400", code.rawValue)
+            recordingCoordinator.handleTranscriptionFailure(
+                owner: attempt,
+                prompt: .retry(for: code, question: currentQuestion)
+            )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
             await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))

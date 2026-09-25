@@ -274,6 +274,20 @@ extension RecordingCoordinator {
                     return
                 }
 
+                // #185 track G: the server's coded "say it again" — nothing was
+                // graded. An MCQ answer that named no option gets its own line.
+                if case let .answerNotCaptured(code, _) = error {
+                    await MainActor.run {
+                        self.attemptLedger.record(.network, "voiceSubmit.400", code.rawValue)
+                        self.handleTranscriptionFailure(
+                            owner: owner,
+                            prompt: .retry(for: code, question: self.currentQuestion())
+                        )
+                    }
+                    Logger.network.warning("⚠️ Answer not captured (\(code.rawValue, privacy: .public)) — asking again")
+                    return
+                }
+
                 // "Speech not understood" (#171 Track B): no banner, no retry
                 // loop — the empty confirmation sheet, where the driver can type
                 // or re-record before it counts as no answer.

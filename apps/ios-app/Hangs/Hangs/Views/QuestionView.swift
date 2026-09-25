@@ -57,9 +57,10 @@ struct QuestionView: View {
     /// option grid highlights, so the sheet can never disagree with the grid.
     private var matchedVoiceOptionLabel: String? {
         guard let key = viewModel.mcqVoiceMatchedKey,
-              let value = viewModel.currentQuestion?.possibleAnswers?[key]
+              let question = viewModel.currentQuestion,
+              let value = question.possibleAnswers?[key]
         else { return nil }
-        return "\(key.uppercased()) · \(value)"
+        return "\(question.optionLabel(for: key)) · \(value)"
     }
 
     var body: some View {
@@ -425,6 +426,7 @@ struct QuestionView: View {
 
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
+                labels: question.optionLabels,
                 onSelect: { key, value in
                     submittedAnswer = value
                     Task { await viewModel.submitMCQAnswer(key: key, value: value) }
@@ -488,8 +490,8 @@ struct QuestionView: View {
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
         // #185 track B: the retry line sits with the bar (not behind its ✕ —
         // a dismissed bar must not hide why the mic opened again).
-        if viewModel.showsEmptyAnswerRetryHint {
-            EmptyAnswerRetryHint()
+        if let prompt = viewModel.emptyAnswerRetryHintPrompt {
+            EmptyAnswerRetryHint(prompt: prompt)
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .transition(.opacity)
@@ -741,7 +743,9 @@ struct QuestionView: View {
             quizState: viewModel.quizState,
             answerWindowRemaining: viewModel.answerWindowRemaining,
             answerWindowTotal: viewModel.answerWindowTotal,
-            answerKind: question.sortedAnswerOptions.count == 2 ? .trueFalse : .mcq
+            answerKind: question.sortedAnswerOptions.count == 2
+                ? .trueFalse
+                : (question.usesLetterLabels ? .mcqLetters : .mcq)
         )
     }
 

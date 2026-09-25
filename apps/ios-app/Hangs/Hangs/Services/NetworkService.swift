@@ -64,6 +64,10 @@ protocol NetworkServiceProtocol: Sendable {
 
 /// Thread-safe network service using Swift 6 actor
 actor NetworkService: NetworkServiceProtocol {
+    /// `X-Client-Capabilities` sent on session create (#185 track G): coded
+    /// "say it again" 400s, and question audio that reads the option labels.
+    nonisolated static let clientCapabilities = "answer-codes, option-labels"
+
     private let baseURL: URL
     private let session: URLSession
     /// Server-trusted anonymous identity (#60). When present, every request
@@ -189,6 +193,16 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.questionMismatch(currentQuestionId: mismatch.detail.currentQuestionId)
         }
 
+        // #185 track G: a coded "say it again" 400 (the session declared
+        // `answer-codes`). Nothing was graded or charged; the caller asks again.
+        if httpResponse.statusCode == 400,
+           let retry = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data),
+           let code = AnswerRetryCode(rawValue: retry.detail.code)
+        {
+            logHTTPError(endpoint: endpointPath, status: 400)
+            throw NetworkError.answerNotCaptured(code: code, heard: retry.detail.heard)
+        }
+
         guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
@@ -236,6 +250,10 @@ actor NetworkService: NetworkServiceProtocol {
         if BuildChannel.debugSurfacesEnabled() {
             request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
         }
+        // #185 track G: the session remembers what this build understands —
+        // coded "say it again" 400s and question audio that reads the option
+        // labels this build displays.
+        request.setValue(Self.clientCapabilities, forHTTPHeaderField: "X-Client-Capabilities")
 
         var body: [String: Any] = [
             "max_questions": maxQuestions,
@@ -735,6 +753,27 @@ private nonisolated struct ErrorResponse: Decodable, Sendable {
     let detail: String
 }
 
+/// Why the server asked for the answer again (#185 track G, `answer-codes`):
+/// nothing was graded, scored or charged.
+nonisolated enum AnswerRetryCode: String, Sendable {
+    /// Nothing usable was heard.
+    case noSpeech = "no_speech"
+    /// Speech, but no answer in it.
+    case noAnswer = "no_answer"
+    /// An MCQ answer that names no single option.
+    case mcqUnmatched = "mcq_unmatched"
+}
+
+/// `{"detail": {"code": "mcq_unmatched", "message": "…", "heard": "…"}}`.
+private nonisolated struct AnswerRetryWrapper: Decodable, Sendable {
+    struct Detail: Decodable, Sendable {
+        let code: String
+        let heard: String?
+    }
+
+    let detail: Detail
+}
+
 /// Backend 429 response wraps QuotaLimitError in "detail" field
 private nonisolated struct QuotaLimitErrorWrapper: Decodable, Sendable {
     let detail: QuotaLimitError
@@ -770,6 +809,9 @@ enum NetworkError: LocalizedError {
     /// current question id (nullable) for diagnostics. Never retryable — the
     /// request demonstrably reached application code.
     case questionMismatch(currentQuestionId: String?)
+    /// A coded "say it again" 400 from a submit route (#185 track G). `heard`
+    /// is the transcript an `mcq_unmatched` could not place.
+    case answerNotCaptured(code: AnswerRetryCode, heard: String?)
 
     var errorDescription: String? {
         switch self {
@@ -788,6 +830,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:
             return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
+        case .answerNotCaptured:
+            return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
         }
     }
 }

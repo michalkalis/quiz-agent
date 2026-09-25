@@ -123,9 +123,10 @@ extension RecordingCoordinator {
         }
 
         // MCQ voice path (45.3 + #171 Track I): resolve a spoken letter /
-        // ordinal / answer text to an option. The prefill is the option's VALUE,
-        // never the raw transcript — the backend's MCQ evaluator matches the
-        // option value with no LLM fallback, so "kocku" would grade as wrong.
+        // ordinal / answer text to an option, for the grid highlight and the
+        // sheet's "2 · Kocka" line. This realtime path is a debug-only
+        // fallback (`realtimeSTTEnabled`); the server grades whatever is
+        // confirmed (#185 track G) and asks again when it names no option.
         // An ambiguous / unrecognized transcript falls through to the sheet with
         // the raw transcript, exactly as before.
         var matchedValue: String?

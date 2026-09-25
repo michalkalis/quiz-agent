@@ -104,6 +104,7 @@ extension RecordingCoordinator {
         // After the transition: leaving the recording/processing pair resets the
         // capture state this lives in. Cleared when the retry recording stops.
         emptyAnswerRetryHintQuestionKey = owner.questionId ?? ""
+        emptyAnswerRetryPrompt = prompt
         attemptLedger.record(.prompt, "emptyAnswer.retry", prompt.rawValue)
 
         let text = prompt.text(language: promptLanguage)

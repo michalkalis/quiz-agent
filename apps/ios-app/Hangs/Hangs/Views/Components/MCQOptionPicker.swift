@@ -38,6 +38,9 @@ final class MCQDelayedSubmit {
 
 struct MCQOptionPicker: View {
     let options: [(key: String, value: String)]
+    /// #185 track G: key → badge label from the server (`Question.optionLabels`);
+    /// a key without one keeps its legacy letter.
+    let labels: [String: String]
     let onSelect: (String, String) -> Void
     /// The single VM-owned selection key (#110 T4 — was a view-local `@State`
     /// with local-wins precedence over the voice-matched key, which let a tap
@@ -61,12 +64,14 @@ struct MCQOptionPicker: View {
 
     init(
         options: [(key: String, value: String)],
+        labels: [String: String]? = nil,
         onSelect: @escaping (String, String) -> Void,
         externalSelectedKey: Binding<String?> = .constant(nil),
         compact: Bool = false,
         isSubmitting: Bool = false
     ) {
         self.options = options
+        self.labels = labels ?? [:]
         self.onSelect = onSelect
         _externalSelectedKey = externalSelectedKey
         self.compact = compact
@@ -110,6 +115,7 @@ struct MCQOptionPicker: View {
                 AnswerOption(
                     key: option.key,
                     value: option.value,
+                    label: labels[option.key],
                     state: externalSelectedKey == option.key ? .selected : .default,
                     isLoading: isLoading(option.key),
                     minHeight: optionMinHeight,
@@ -143,6 +149,7 @@ struct MCQOptionPicker: View {
                 AnswerTile(
                     key: option.key,
                     value: option.value,
+                    label: labels[option.key],
                     state: externalSelectedKey == option.key ? .selected : .default,
                     isLoading: isLoading(option.key),
                     compact: compact,

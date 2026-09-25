@@ -138,7 +138,6 @@ struct QuestionView: View {
         .sheet(item: $ratingPresentation) { presentation in
             QuestionRatingSheet(viewModel: presentation.viewModel)
         }
-        .sensoryFeedback(.start, trigger: viewModel.quizState == .recording)
         .interactiveMinimize(
             isMinimized: $viewModel.isMinimized,
             canMinimize: viewModel.canMinimize
@@ -506,6 +505,8 @@ struct QuestionView: View {
                 // one size axis: a short container gets the slim bar.
                 size: compact ? .slim : .full,
                 language: viewModel.commandLanguage,
+                speechHeard: viewModel.isHearingAnswer,
+                inputLevel: viewModel.recordingInputLevel,
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
             .padding(.horizontal, 20)

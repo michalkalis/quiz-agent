@@ -155,7 +155,7 @@ struct QuestionViewStateContractTests {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
             #expect(throws: Never.self, "the bar must say we are listening") {
-                try tree.find(text: "LISTENING — SAY YOUR ANSWER")
+                try tree.find(text: "Listening…")
             }
             // Question + countdown stay on screen while answering.
             #expect(throws: Never.self) {

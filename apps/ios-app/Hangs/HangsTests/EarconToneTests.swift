@@ -68,13 +68,52 @@ struct EarconToneTests {
         #expect(samples(.micLive) == 2 * Int((0.070 * rate).rounded()))
         #expect(samples(.gotIt) == samples(.micLive), "gotIt is micLive mirrored, same length")
         #expect(samples(.skipConfirm) == 2 * Int((0.090 * rate).rounded()) + Int((0.040 * rate).rounded()))
+        #expect(samples(.speechStart) == Int((0.050 * rate).rounded()))
+    }
+
+    /// WHY (#185 track F, founder 2026-09-24): the tones were loud and grew
+    /// tiresome over a quiz. Every cue plays at no more than a quarter of full
+    /// scale (6 dB under the old half scale), and the speech-start tone — it
+    /// plays while the driver is TALKING — is the quietest of all.
+    @Test("Every cue is at most quarter scale; speech-start is the quietest")
+    func cuesAreQuiet() {
+        func peak(_ earcon: Earcon) -> Int {
+            let data = EarconTone.wavData(for: earcon)
+            return stride(from: 44, to: data.count, by: 2).map { offset in
+                abs(Int(Int16(bitPattern: UInt16(data[offset]) | UInt16(data[offset + 1]) << 8)))
+            }.max() ?? 0
+        }
+        let quarter = Int(0.25 * Double(Int16.max)) + 1
+        for earcon in Earcon.allCases {
+            #expect(peak(earcon) <= quarter, "\(earcon) is louder than quarter scale")
+        }
+        for earcon in Earcon.allCases where earcon != .speechStart {
+            #expect(peak(.speechStart) < peak(earcon), "speech-start must be quieter than \(earcon)")
+        }
+    }
+
+    /// WHY (#185 track F): every cue has a haptic now, and the recording cues
+    /// — mic open, speech heard, mic closed — fire on EVERY question, so they
+    /// must be the soft generator: a firm tap that often becomes a buzz the
+    /// driver learns to ignore.
+    @Test("Recording cues tap softly; command cues keep their firmer haptics")
+    func haptics() {
+        for earcon in [Earcon.micLive, .speechStart, .gotIt] {
+            guard case let .soft(intensity) = EarconHaptic.haptic(for: earcon) else {
+                Issue.record("\(earcon) must use the soft generator")
+                continue
+            }
+            #expect(intensity > 0 && intensity < 1)
+        }
+        #expect(EarconHaptic.haptic(for: .commandAck) == .light)
+        #expect(EarconHaptic.haptic(for: .skipConfirm) == .warning)
     }
 
     /// WHY: a waveform that starts or ends mid-cycle clicks, and on a car
     /// speaker the click is louder than the tone. The fade is what removes it,
     /// so the first and last samples of a tone must be at (or next to) zero
-    /// while the body reaches the designed half-scale peak.
-    @Test("Tones fade in and out and peak at half scale")
+    /// while the body reaches the designed peak.
+    @Test("Tones fade in and out and reach the designed peak")
     func fadeAndPeak() {
         let data = EarconTone.wavData(for: .commandAck)
         let samples: [Int16] = stride(from: 44, to: data.count, by: 2).map { offset in

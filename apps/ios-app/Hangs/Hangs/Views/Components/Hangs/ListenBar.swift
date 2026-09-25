@@ -55,6 +55,14 @@
 //  screens (Home / result / confirmation) keep the `commandHint` sentence — D1
 //  was a decision about the question screen only.
 //
+//  #185 track F, variant F2 "Lišta dýcha" (founder pick 2026-09-25): while the
+//  driver answers, the bar has to answer "does the mic hear me?" from the corner
+//  of the eye. In the answer and in-flight states it grows to 58pt and says its
+//  state in large text — "Listening…" → "Capturing…" (speech heard) →
+//  "Processing…" — with the instruction as a small caption under it, and the
+//  whole capsule glows with the live mic level (`inputLevel`). Command states
+//  and the slim size keep the layout above.
+//
 
 import SwiftUI
 
@@ -150,6 +158,14 @@ struct ListenBar: View {
     /// ignores it (the mic is already live, there is nothing left to count down).
     var thinkCountdown: ThinkCountdown? = nil
 
+    /// #185 track F: the answer recording has heard speech — "Capturing…"
+    /// instead of "Listening…". Answer mode only.
+    var speechHeard: Bool = false
+
+    /// #185 track F: the live mic level the capsule glows with. Answer mode
+    /// only; nil (previews, tests) glows at the quiet level.
+    var inputLevel: RecordingInputLevel? = nil
+
     /// #173 B1 (founder locked 2026-09-07): a trailing ✕ that hides the bar for
     /// the CURRENT question only. Nil = no dismiss affordance (Home, result,
     /// confirmation — screens where the bar is the only thing talking). The
@@ -221,7 +237,8 @@ struct ListenBar: View {
         case .idle:
             switch mode {
             case .command, .readingQuestion: return teal.opacity(0.08)
-            case .answer: return Theme.Hangs.Colors.pinkSoft
+            // #185 track F: a shade warmer once speech is heard (F2 "hot").
+            case .answer: return speechHeard ? pink.opacity(0.18) : Theme.Hangs.Colors.pinkSoft
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.10)
             }
         }
@@ -242,8 +259,29 @@ struct ListenBar: View {
     }
 
     private var barHeight: CGFloat {
-        Self.height(size: size, hasSubLine: subLine != nil || !chipWords.isEmpty)
+        if usesStatusLayout { return Self.statusHeight }
+        return Self.height(size: size, hasSubLine: subLine != nil || !chipWords.isEmpty)
     }
+
+    /// #185 track F (F2): the answer and in-flight states on the full bar say
+    /// their state in large text inside a taller bar. The command states keep
+    /// the caption-over-chips layout; the slim bar keeps its single row.
+    var usesStatusLayout: Bool {
+        guard size == .full else { return false }
+        if case .answer = mode { return true }
+        return isBusy
+    }
+
+    /// Whether the capsule glows with the mic level — only while the mic is
+    /// open for an answer (a glow over a closed mic would be a lie).
+    private var showsLevelGlow: Bool {
+        if case .answer = mode { return true }
+        return false
+    }
+
+    /// F2's 58pt: large enough to read at a glance, 10pt over the command
+    /// bar — the price the MCQ grid pays only while an answer is in flight.
+    static let statusHeight: CGFloat = 58
 
     /// Pure so the founder-picked sizes are assertable without rendering.
     /// Internal for tests.
@@ -266,7 +304,7 @@ struct ListenBar: View {
         // #179 D1 state 4: the line that stops "the screen froze" — it says the
         // wait is expected and that speaking will not help.
         if case .evaluating = mode {
-            return Text("This will take a moment, no need to say anything")
+            return Text("No need to say anything")
         }
         // #181: no answer exists, so no "evaluating" — say what is happening.
         if case .skipping = mode {
@@ -296,8 +334,9 @@ struct ListenBar: View {
         // (founder screenshot 9) — it now names what the app is doing.
         case .readingQuestion:
             return Text("Reading the question")
+        // #185 track F: the same word the Stop button says while it spins.
         case .evaluating:
-            return Text("Evaluating your answer")
+            return Text("Processing…")
         case .skipping:
             return Text("Skipping the question")
         case .command:
@@ -310,19 +349,113 @@ struct ListenBar: View {
                 language: language,
                 short: size == .slim || shortCaption
             ))
-        case let .answer(kind):
-            switch kind {
-            // #171 Track I: answering with the option TEXT works (and now goes
-            // through the confirmation sheet like every other answer), so the
-            // caption must say so — "say A–D" read as letters-only.
-            case .mcq: return Text("Listening — say A–D or the answer")
-            case .trueFalse: return Text("LISTENING — SAY TRUE OR FALSE")
-            case .open: return Text("LISTENING — SAY YOUR ANSWER")
-            }
+        // #185 track F: the state, not the instruction — the instruction
+        // moved to `statusCaption` under it.
+        case .answer:
+            return speechHeard ? Text("Capturing…") : Text("Listening…")
+        }
+    }
+
+    /// #185 track F: the small line under the large status. While waiting for
+    /// speech it is the instruction; once speech is heard it says how the
+    /// recording will end, so nobody talks on to fill the silence.
+    private var statusCaption: Text? {
+        guard case let .answer(kind) = mode else { return subLine }
+        if speechHeard { return Text("I'll stop when you go quiet") }
+        switch kind {
+        // #171 Track I: answering with the option TEXT works (and goes through
+        // the confirmation sheet like every other answer), so the caption must
+        // say so — "say A–D" read as letters-only.
+        case .mcq: return Text("Say A–D or the answer")
+        case .trueFalse: return Text("Say true or false")
+        case .open: return Text("Say your answer")
         }
     }
 
     var body: some View {
+        content
+            // Combined so VoiceOver reads one "listening … say X" element.
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(spokenSubLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
+            .accessibilityIdentifier("listen-bar")
+            // The ✕ is a sibling of the combined element, never inside it: VoiceOver
+            // must reach the control, not read "hide" as part of the instruction.
+            .overlay(alignment: .trailing) { dismissButton }
+            .padding(.leading, usesStatusLayout ? 18 : (size == .slim ? 16 : 14))
+            .padding(.trailing, trailingPadding)
+            .frame(maxWidth: .infinity)
+            .frame(height: barHeight)
+            .background(
+                ZStack(alignment: .leading) {
+                    Capsule().fill(fill)
+                    // #132 B: the draining think window — right edge retreats
+                    // leftwards each tick ("vyprázdňuje sa doľava").
+                    if let fraction = thinkFillFraction {
+                        GeometryReader { geo in
+                            Rectangle()
+                                .fill(teal.opacity(0.14))
+                                .frame(width: geo.size.width * fraction)
+                                .animation(.linear(duration: 1), value: fraction)
+                        }
+                        .clipShape(Capsule())
+                    }
+                }
+            )
+            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
+            // #185 track F: the breathing glow sits OUTSIDE the capsule, so it
+            // never changes the bar's own colours or its layout slot.
+            .background {
+                if showsLevelGlow {
+                    ListenBarLevelGlow(meter: inputLevel, color: accent)
+                }
+            }
+            .animation(.easeInOut(duration: 0.25), value: feedback)
+            .animation(.easeInOut(duration: 0.25), value: speechHeard)
+    }
+
+    /// Room for the ✕ when there is one (F2 widens it with the larger bar).
+    private var trailingPadding: CGFloat {
+        if onDismiss != nil { return usesStatusLayout ? 44 : 40 }
+        return usesStatusLayout ? 18 : 14
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if usesStatusLayout {
+            statusContent
+        } else {
+            standardContent
+        }
+    }
+
+    /// #185 track F (F2): large state + small caption, glyph at 18pt.
+    private var statusContent: some View {
+        HStack(spacing: 12) {
+            leadingGlyph
+            VStack(alignment: .leading, spacing: 2) {
+                captionText
+                    .font(.hangsBody(17, weight: .bold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                if let statusCaption {
+                    statusCaption
+                        .font(.hangsMono(10, weight: .medium))
+                        .tracking(1)
+                        .textCase(.uppercase)
+                        .foregroundColor(accent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        // Same id contract as the standard layout: only command
+                        // words answer to "listen-bar.commands".
+                        .accessibilityIdentifier("listen-bar.note")
+                }
+            }
+            Spacer(minLength: 8)
+        }
+    }
+
+    private var standardContent: some View {
         HStack(spacing: 8) {
             leadingGlyph
 
@@ -344,35 +477,6 @@ struct ListenBar: View {
 
             Spacer(minLength: 8)
         }
-        // Combined so VoiceOver reads one "listening … say X" element.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(spokenSubLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
-        .accessibilityIdentifier("listen-bar")
-        // The ✕ is a sibling of the combined element, never inside it: VoiceOver
-        // must reach the control, not read "hide" as part of the instruction.
-        .overlay(alignment: .trailing) { dismissButton }
-        .padding(.leading, size == .slim ? 16 : 14)
-        .padding(.trailing, onDismiss == nil ? 14 : 40)
-        .frame(maxWidth: .infinity)
-        .frame(height: barHeight)
-        .background(
-            ZStack(alignment: .leading) {
-                Capsule().fill(fill)
-                // #132 B: the draining think window — right edge retreats
-                // leftwards each tick ("vyprázdňuje sa doľava").
-                if let fraction = thinkFillFraction {
-                    GeometryReader { geo in
-                        Rectangle()
-                            .fill(teal.opacity(0.14))
-                            .frame(width: geo.size.width * fraction)
-                            .animation(.linear(duration: 1), value: fraction)
-                    }
-                    .clipShape(Capsule())
-                }
-            }
-        )
-        .overlay(Capsule().strokeBorder(border, lineWidth: 1))
-        .animation(.easeInOut(duration: 0.25), value: feedback)
     }
 
     // MARK: - Parts
@@ -383,12 +487,12 @@ struct ListenBar: View {
     private var leadingGlyph: some View {
         if isBusy {
             ProgressView()
-                .controlSize(.small)
+                .controlSize(usesStatusLayout ? .regular : .small)
                 .tint(accent)
                 .accessibilityIdentifier("listen-bar.spinner")
         } else {
             Image(systemName: activeThinkCountdown == nil ? "waveform" : "clock")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: usesStatusLayout ? 18 : 14, weight: .semibold))
                 .foregroundColor(accent)
                 .symbolEffect(.variableColor.iterative.dimInactiveLayers,
                               isActive: activeThinkCountdown == nil)
@@ -399,6 +503,7 @@ struct ListenBar: View {
     /// What VoiceOver reads after the caption: the sentence, or the chips joined
     /// into one — a driver using VoiceOver must hear the words too.
     private var spokenSubLine: Text? {
+        if usesStatusLayout { return statusCaption }
         if let subLine { return subLine }
         guard !chipWords.isEmpty else { return nil }
         return Text(verbatim: chipWords.joined(separator: ", "))
@@ -490,6 +595,74 @@ struct ListenBar: View {
     }
 }
 
+/// #185 track F (F2): the halo around the answer bar, driven by the live mic
+/// level. A separate view observing `RecordingInputLevel` so the ~47 Hz level
+/// re-renders this ring alone, never the screen around it.
+struct ListenBarLevelGlow: View {
+    /// The ring and halo for one level — pure so the level → glow mapping is
+    /// assertable without rendering.
+    struct Glow: Equatable {
+        /// How far the ring reaches outside the capsule.
+        let ringWidth: CGFloat
+        /// Halo (blurred shadow) opacity.
+        let haloOpacity: Double
+        /// Halo blur radius.
+        let haloRadius: CGFloat
+
+        /// 0 (quiet mic) → a thin, faint ring that still says "the mic is
+        /// open"; 1 (loud voice) → a wide ring and a bright halo. Linear in
+        /// between: the level is already dB-above-floor, i.e. perceptual.
+        static func forLevel(_ level: Double) -> Glow {
+            let l = min(max(level, 0), 1)
+            return Glow(
+                ringWidth: 2 + 10 * l,
+                haloOpacity: 0.16 + 0.24 * l,
+                haloRadius: 12 + 18 * l
+            )
+        }
+    }
+
+    /// Nil in previews and state tests: glows at the quiet level.
+    let meter: RecordingInputLevel?
+    let color: Color
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if let meter {
+            ObservedGlow(meter: meter, color: color, reduceMotion: reduceMotion)
+        } else {
+            ring(Glow.forLevel(0))
+        }
+    }
+
+    fileprivate func ring(_ glow: Glow) -> some View {
+        Self.ring(glow, color: color)
+    }
+
+    fileprivate static func ring(_ glow: Glow, color: Color) -> some View {
+        Capsule()
+            .strokeBorder(color.opacity(0.16), lineWidth: glow.ringWidth)
+            .padding(-glow.ringWidth)
+            .shadow(color: color.opacity(glow.haloOpacity), radius: glow.haloRadius)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    private struct ObservedGlow: View {
+        @ObservedObject var meter: RecordingInputLevel
+        let color: Color
+        let reduceMotion: Bool
+
+        var body: some View {
+            // Reduce Motion: a steady ring — the status text still changes.
+            let glow = Glow.forLevel(reduceMotion ? 0 : meter.level)
+            ListenBarLevelGlow.ring(glow, color: color)
+                .animation(.easeOut(duration: 0.12), value: glow)
+        }
+    }
+}
+
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
@@ -501,6 +674,7 @@ struct ListenBar: View {
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
+            ListenBar(mode: .answer(.open), speechHeard: true)
             // #179 D1 — the question screen's four states, MCQ column.
             ListenBar(mode: .readingQuestion,
                       commandWords: ["„zopakuj“", "„preskoč“"], language: .slovak)

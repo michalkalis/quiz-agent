@@ -378,6 +378,26 @@ extension RecordingCoordinator {
             }
         }
         taskBag.add(task, key: .silenceDetection)
+        startInputLevelFeed(service: service, attempt: attempt)
+    }
+
+    /// #185 track F: pipe the engine's per-buffer level into `inputLevel` for
+    /// the listen bar's glow — for this recording only. Acquired synchronously
+    /// like the silence stream; the owner check is the cheap equality path of
+    /// `owns`, so running it per buffer costs nothing until the attempt is
+    /// superseded, at which point the feed ends.
+    private func startInputLevelFeed(service: SilenceDetectionServiceProtocol, attempt: AttemptID) {
+        let levels = service.makeInputLevelStream()
+        let meter = inputLevel
+        let task = Task { [weak self] in
+            for await level in levels {
+                guard let self, !Task.isCancelled else { break }
+                guard self.quizState() == .recording else { continue }
+                guard self.attemptLedger.owns(attempt, "inputLevel") else { break }
+                meter.ingest(Double(level.normalized))
+            }
+        }
+        taskBag.add(task, key: .inputLevel)
     }
 
     /// The driver is audibly answering — recorded once per recording by BOTH
@@ -389,6 +409,10 @@ extension RecordingCoordinator {
     /// a path that set the flag without hiding the countdown would leave the
     /// driver watching a 5 s clock run out under an answer already in progress.
     func noteSpeechStarted() {
+        // #185 track F (founder 2026-09-24): a gentle tone the moment the
+        // driver is first heard — once per recording. The streaming path calls
+        // this on EVERY content-bearing partial, so the flag is the gate.
+        if !speechDetectedDuringAutoRecord { emitEarcon(.speechStart) }
         speechDetectedDuringAutoRecord = true
         onSpeechStarted()
     }

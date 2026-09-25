@@ -60,6 +60,10 @@ enum QuizInput: Equatable, CustomStringConvertible {
     case foreground
     /// Time passing with nothing else happening.
     case idle
+    /// `prompt questionReadOut.end completed` (or a replay's): a field dump's
+    /// read-out lasted exactly this long. Replayed dumps end question clips
+    /// only on this line (see `QuizSequenceConfig.readOutEndsFromDump`).
+    case readOutEnd
 
     var kind: QuizFlightRecorder.Kind {
         switch self {
@@ -70,6 +74,7 @@ enum QuizInput: Equatable, CustomStringConvertible {
         case .interruption, .routeChange: .route
         case .background, .foreground: .scene
         case .idle: .timer
+        case .readOutEnd: .prompt
         }
     }
 
@@ -84,6 +89,7 @@ enum QuizInput: Equatable, CustomStringConvertible {
         case .background: "background"
         case .foreground: "active"
         case .idle: "idle"
+        case .readOutEnd: "questionReadOut.end"
         }
     }
 
@@ -138,6 +144,8 @@ enum QuizInput: Equatable, CustomStringConvertible {
             }
         case "timer" where name == "idle":
             self = .idle
+        case "prompt" where (name == "questionReadOut.end" || name == "questionReplay.end") && detail == "completed":
+            self = .readOutEnd
         default:
             return nil
         }
@@ -200,6 +208,9 @@ enum QuizSequenceDump {
             guard let input = QuizInput(kind: fields[1], name: fields[2], detail: detail) else { continue }
             inputs.append(TimedInput(atMs: ms - base, input: input, detail: detail))
         }
+        // A dump that says when each read-out ended replays those ends, not
+        // the harness's fixed clip length.
+        config.readOutEndsFromDump = inputs.contains { $0.input == .readOutEnd }
         return Parsed(config: config, inputs: inputs)
     }
 

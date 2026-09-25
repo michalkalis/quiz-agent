@@ -931,11 +931,11 @@ final class QuizViewModel: ObservableObject {
             startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .voiceCommand) },
             repeatQuestion: { [weak self] in await self?.repeatQuestion() },
-            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            skipQuestion: { [weak self] in await self?.submitSkip() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
             cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
-            continueToNext: { [weak self] in self?.continueToNext() },
+            continueToNext: { [weak self] in self?.advanceFromResult() },
             pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
@@ -998,7 +998,7 @@ final class QuizViewModel: ObservableObject {
             },
             handleQuizResponse: { [weak self] response, owner in await self?.handleQuizResponse(response, owner: owner) },
             resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
-            skipQuestion: { [weak self] in await self?.skipQuestion() },
+            skipQuestion: { [weak self] in await self?.submitSkip() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
             abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
@@ -1505,6 +1505,7 @@ final class QuizViewModel: ObservableObject {
 
     /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
     func toggleMute() async {
+        attemptLedger.record(.tap, "mute")
         await audioDeviceState.toggleMute()
     }
 
@@ -1843,8 +1844,16 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Skip the current question
+    /// The Skip button. #186 step 2: the tap goes into the black box so a
+    /// field dump replays it; spoken skips and the Again/Skip sheet reach
+    /// `submitSkip` through their own recorded inputs.
     func skipQuestion() async {
+        attemptLedger.record(.tap, "skip")
+        await submitSkip()
+    }
+
+    /// Skip the current question
+    func submitSkip() async {
         // A skip is legal only while the question is open (.askingQuestion) or is
         // being voice-answered (.recording) — mirroring submitMCQAnswer. The MCQ
         // Skip button stays enabled through the 1-3 s evaluation, and
@@ -2020,8 +2029,15 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
     }
 
-    /// Continue to next question after user paused current one
+    /// The result screen's Next button (recorded like every tap, #186 step 2).
     func continueToNext() {
+        attemptLedger.record(.tap, "next")
+        advanceFromResult()
+    }
+
+    /// Continue to next question after user paused current one — the Next
+    /// button and the spoken "next"/"ok" alike.
+    func advanceFromResult() {
         // Reset per-question pause state
         isPaused = false
 

@@ -101,6 +101,7 @@ final class QuizSequenceRun {
         // #185 track A: a detector that cannot vouch for silence hands the 5 s
         // window's decision to the dead-air cap (the car-test device).
         silence.noSpeechWindowVerdict = config.deafDetector ? .noAudio : .quiet
+        audio.questionClipsEndOnCue = config.readOutEndsFromDump
 
         vm = QuizViewModel(
             networkService: network,
@@ -280,6 +281,8 @@ final class QuizSequenceRun {
             vm.handleScenePhase(.active)
         case .idle:
             return false
+        case .readOutEnd:
+            return audio.finishQuestionClip()
         }
         return true
     }

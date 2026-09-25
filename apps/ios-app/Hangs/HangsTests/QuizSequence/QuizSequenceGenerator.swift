@@ -54,6 +54,9 @@ struct QuizSequenceConfig: Equatable {
     /// The on-device detector cannot vouch for silence (#185 track A verdict
     /// `.noAudio`), so the 5 s window defers to the dead-air cap.
     var deafDetector = false
+    /// Set by `QuizSequenceDump.parse` when the dump carries read-out ends:
+    /// a question clip then plays until its `questionReadOut.end` line.
+    var readOutEndsFromDump = false
 
     /// Production defaults, for a black box pulled off a device.
     static let fieldDefaults = QuizSequenceConfig()

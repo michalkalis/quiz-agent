@@ -81,4 +81,41 @@ struct QuizSequenceRegressionTests {
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
         #expect(outcome.run.questionReadOutsCompleted.filter { $0 == "q_001" }.count == 1, "the replay must play to its end")
     }
+
+    /// WHY: a TestFlight black box must replay without hand edits. The step-1
+    /// recorder left out the Skip, Next, Pause and Mute taps and when a
+    /// question read-out ended, so a field dump could not reproduce what the
+    /// driver did or heard. Replaying a dump must now leave the app's own
+    /// black box describing the same inputs, in the same order.
+    @Test("a field dump replays, and the replay's black box records the same inputs")
+    func fieldDumpRoundTrips() async {
+        let dump = """
+        Quiz flight recorder — field dump, production defaults
+        16:02:00.000 state idle→startingQuiz attempt=-#0 state=startingQuiz beginQuizStart
+        16:02:04.700 prompt questionReadOut.end attempt=q_001#1 state=askingQuestion completed
+        16:02:06.000 tap pause attempt=q_001#1 state=askingQuestion
+        16:02:09.000 tap pause attempt=q_001#1 state=askingQuestion
+        16:02:10.000 tap mute attempt=q_001#1 state=askingQuestion
+        16:02:11.000 tap mute attempt=q_001#1 state=askingQuestion
+        16:02:12.000 tap skip attempt=q_001#1 state=askingQuestion
+        16:02:12.900 network quizResponse attempt=q_001#2 state=skipping skipped
+        16:02:14.000 tap next attempt=q_001#2 state=showingResult
+        16:02:19.300 prompt questionReadOut.end attempt=q_002#3 state=askingQuestion completed
+        """
+        let parsed = QuizSequenceDump.parse(dump)
+        #expect(parsed.config.readOutEndsFromDump)
+        #expect(parsed.inputs.map(\.input) == [
+            .readOutEnd, .tap(.pause), .tap(.pause), .tap(.mute), .tap(.mute),
+            .tap(.skip), .network(.textEvaluated), .tap(.next), .readOutEnd,
+        ])
+
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+
+        #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
+        #expect(outcome.run.log.allSatisfy { $0.applied }, "every input of the dump must reach the app")
+        #expect(outcome.run.questionReadOutsCompleted.prefix(2) == ["q_001", "q_002"])
+        let recorded = QuizSequenceDump.parse(outcome.run.recorder.dump()).inputs.map(\.input)
+        #expect(Array(recorded.prefix(parsed.inputs.count)) == parsed.inputs.map(\.input),
+                "the replay's own black box must describe the inputs that drove it")
+    }
 }

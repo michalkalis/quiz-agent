@@ -338,8 +338,19 @@ final class SequenceAudio: AudioServiceProtocol {
     var currentInputDevice: AudioDevice?
     var currentOutputDeviceName = "iPhone"
 
+    /// Question clips end only on `finishQuestionClip()` (a replayed dump).
+    var questionClipsEndOnCue = false
+
     init(clock: AnyClock<Duration>) {
         self.clock = clock
+    }
+
+    /// A replayed `questionReadOut.end`: the question clip playing now ends.
+    func finishQuestionClip() -> Bool {
+        guard let current = playing, current.clip == .question else { return false }
+        current.timer.cancel()
+        finish(current.id)
+        return true
     }
 
     static func length(of clip: Clip) -> Duration {
@@ -361,7 +372,7 @@ final class SequenceAudio: AudioServiceProtocol {
         let id = nextId
         parked.register(id)
         let clock = clock
-        let length = Self.length(of: clip)
+        let length = clip == .question && questionClipsEndOnCue ? .seconds(3600) : Self.length(of: clip)
         let timer = Task { [weak self] in
             guard (try? await clock.sleep(for: length)) != nil else { return }
             self?.finish(id)
@@ -385,7 +396,7 @@ final class SequenceAudio: AudioServiceProtocol {
         guard let current = playing, current.id == id else { return }
         playing = nil
         if let questionId = current.questionId { completedQuestionClips.append(questionId) }
-        parked.resolve(id, .success(Double(Self.length(of: current.clip).components.seconds)))
+        parked.resolve(id, .success(4))
     }
 
     private func cutShort(_ cut: Cut) {

@@ -133,7 +133,7 @@ struct QuizSequenceStats {
             switch entry.kind {
             case .drop: drops[entry.name, default: 0] += 1
             case .reject: rejects["\(entry.name) [\(entry.detail ?? "-")]", default: 0] += 1
-            case .prompt: retryPrompts += 1
+            case .prompt where entry.name == "emptyAnswer.retry": retryPrompts += 1
             case .state:
                 if let to = entry.name.split(separator: "→").last { states[String(to), default: 0] += 1 }
             default: break

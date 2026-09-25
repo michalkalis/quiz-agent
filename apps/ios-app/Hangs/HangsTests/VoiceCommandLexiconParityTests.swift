@@ -156,7 +156,9 @@ struct VoiceCommandLexiconParityTests {
     func hints(_ language: CommandLanguage) {
         let sheet = VoiceCommandLexicon.hint(on: .confirmation, language: language)
         #expect(sheet.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))
-        #expect(sheet.contains(language == .english ? "new answer" : (language == .czech ? "novou odpověď" : "novú odpoveď")))
+        #expect(sheet.contains(sheetIntents[0].phrase(language).lowercased()), "names the yes-word")
+        #expect(sheet.contains(sheetIntents[5].phrase(language).lowercased().trimmingCharacters(in: .punctuationCharacters)),
+                "names the no-word")
         #expect(!sheet.contains("zruš") && !sheet.contains("cancel"))
         let noAnswer = VoiceCommandLexicon.hint(on: .noAnswer, language: language)
         #expect(noAnswer.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))

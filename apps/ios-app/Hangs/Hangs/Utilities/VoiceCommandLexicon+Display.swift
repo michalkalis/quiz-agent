@@ -63,19 +63,20 @@ extension VoiceCommandLexicon {
         case (.english, .question): return #"Say "start" or "skip""#
         // #174: names the words printed on the sheet's buttons (Confirm / Again).
         // #185 5.1: anything else said on the sheet is a new answer — the hint
-        // says so, because nothing else on the sheet can.
-        case (.english, .confirmation): return #"Say "confirm", "again" or a new answer"#
+        // says so, because nothing else on the sheet can (founder wording,
+        // voice-feedback variants D1, 2026-09-25).
+        case (.english, .confirmation): return #"Say the answer again or "yes" / "no""#
         // #185: the no-answer sheet's buttons are Again / Skip.
         case (.english, .noAnswer): return #"Say "again" or "skip""#
         case (.english, .result): return #"Say "next""#
         case (.slovak, .home): return "Povedz „štart“"
         case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"
-        case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo novú odpoveď"
+        case (.slovak, .confirmation): return "Povedz odpoveď znova alebo „áno“ / „nie“"
         case (.slovak, .noAnswer): return "Povedz „znova“ alebo „preskoč“"
         case (.slovak, .result): return "Povedz „ďalej“"
         case (.czech, .home): return "Řekni „start“"
         case (.czech, .question): return "Řekni „start“ nebo „přeskoč“"
-        case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo novou odpověď"
+        case (.czech, .confirmation): return "Řekni odpověď znovu nebo „ano“ / „ne“"
         case (.czech, .noAnswer): return "Řekni „znovu“ nebo „přeskoč“"
         case (.czech, .result): return "Řekni „dál“"
         }

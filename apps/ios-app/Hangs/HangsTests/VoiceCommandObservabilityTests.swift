@@ -58,7 +58,7 @@ struct VoiceCommandObservabilityTests {
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or a new answer"#)
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say the answer again or "yes" / "no""#)
         #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "skip""#)
         #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
     }

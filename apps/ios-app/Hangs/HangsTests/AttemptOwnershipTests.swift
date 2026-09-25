@@ -124,9 +124,9 @@ struct AttemptOwnershipTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .processing
-        vm.quizMuteOverride = true // no read-back: the countdown arms at once
+        vm.quizMuteOverride = true // no read-back: the countdown arms once the mic is live (#185 5.2)
         vm.recordingCoordinator.presentVoiceTranscript("Paris")
-        #expect(vm.taskBag.contains(.autoConfirm))
+        await pumpUntil({ vm.taskBag.contains(.autoConfirm) }, "the countdown never armed")
 
         // A new attempt starts without anything cancelling that countdown.
         vm.attemptLedger.begin("test.newAttempt")

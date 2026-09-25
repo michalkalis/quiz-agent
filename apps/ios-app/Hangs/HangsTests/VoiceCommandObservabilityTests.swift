@@ -51,12 +51,15 @@ struct VoiceCommandObservabilityTests {
     // MARK: - Indicator hint copy
 
     /// #174: the hint names exactly the words printed on the screen's buttons
-    /// (Confirm / Again / Cancel) — one vocabulary, seen and heard.
+    /// (Confirm / Again) — one vocabulary, seen and heard. #185: the answer
+    /// sheet also says a new answer can simply be spoken (5.1), and the
+    /// no-answer sheet names ITS buttons (Again / Skip), not Confirm.
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or "cancel""#)
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or a new answer"#)
+        #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "skip""#)
         #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
     }
 
@@ -207,25 +210,36 @@ struct VoiceCommandObservabilityTests {
         #expect(coordinator.shouldLogDroppedTranscript(isFinal: false), "the next utterance is sampled afresh")
     }
 
-    /// WHY: the no-raw-speech rule (Logging.swift) is a GA privacy invariant —
-    /// drop logs may carry triage metadata, never what the user actually said.
-    /// The pre-GA "text while founder is the only user" exception was removed
-    /// 2026-07-30; this test keeps it from creeping back in either switch state.
-    @Test("raw speech is never attached to a drop log, regardless of the master switch")
-    func dropLogNeverCarriesText() {
+    /// WHY (#185 3.5, founder 2026-09-24): commands that did not fire could not
+    /// be debugged from Sentry, because only the text LENGTH was logged — so
+    /// TestFlight and debug builds now log what the recognizer heard (and a
+    /// final's alternatives). The App Store build keeps the no-raw-speech rule
+    /// of Logging.swift: that half of the gate is the privacy invariant, and
+    /// the Settings switch has no say in it either way.
+    @Test("drop logs carry what was heard in TestFlight/debug builds only")
+    func dropLogTextFollowsBuildChannel() {
         let (vm, _, _) = makeVM()
         let coordinator = vm.voiceCommandCoordinator
+        let heard = CommandTranscript(text: "Start now", isFinal: true, alternatives: ["star now"])
 
-        vm.settings.voiceCommandsEnabled = true
-        let on = coordinator.droppedTranscriptAttributes("start now", isFinal: false, tokens: 2, sincePrevMs: 420)
-        #expect(on["text"] == nil, "commands ON must not upload transcripts either")
-        #expect(on["len"] as? Int == 9)
-        #expect(on["sincePrevMs"] as? Int == 420)
+        let appStore = coordinator.droppedTranscriptAttributes(
+            heard, normalized: "start now", tokens: 2, sincePrevMs: 420, logsText: false
+        )
+        #expect(appStore["text"] == nil, "an App Store build must never upload what the driver said")
+        #expect(appStore["alternatives"] == nil)
+        #expect(appStore["len"] as? Int == 9, "the metadata that makes the event triageable stays")
+        #expect(appStore["sincePrevMs"] as? Int == 420)
 
-        vm.settings.voiceCommandsEnabled = false
-        let off = coordinator.droppedTranscriptAttributes("start now", isFinal: false, tokens: 2, sincePrevMs: 420)
-        #expect(off["text"] == nil, "commands OFF must never upload transcripts")
-        #expect(off["len"] as? Int == 9, "the metadata that makes the event triageable stays")
+        let testFlight = coordinator.droppedTranscriptAttributes(
+            heard, normalized: "start now", tokens: 2, sincePrevMs: 420, logsText: true
+        )
+        #expect(testFlight["text"] as? String == "Start now", "raw recognizer text, diacritics and all")
+        #expect(testFlight["alternatives"] as? String == "star now")
+
+        #expect(VoiceCommandCoordinator.heardTextAttributes("stop", enabled: false).isEmpty)
+        #expect(VoiceCommandCoordinator.heardTextAttributes("stop", enabled: true)["text"] as? String == "stop")
+        // The gate itself is the build channel, not a Settings toggle.
+        #expect(VoiceCommandCoordinator.logsHeardText == BuildChannel.debugSurfacesEnabled())
     }
 
     // MARK: - Persisted settings backward-compat

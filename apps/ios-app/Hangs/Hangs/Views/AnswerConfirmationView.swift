@@ -52,6 +52,10 @@ struct AnswerConfirmationView: View {
     /// skipped only when the driver says so. Skip reuses `onConfirm`: confirming
     /// an empty answer is the backend's skip.
     var noAnswerCaptured: Bool = false
+    /// #185: the countdown is not running ON PURPOSE (read-back, the mic
+    /// coming up, the driver speaking, a spoken "stop") — a countdown of 0
+    /// then means "waiting", not "ran out".
+    var autoConfirmHeld: Bool = false
 
     /// The driver TAPPED the pencil. Read `branch` / `isEditing` instead —
     /// evaluating outranks this, and this flag alone does not know that.
@@ -350,7 +354,7 @@ struct AnswerConfirmationView: View {
     /// time, and re-recording is one of the things they take it for. Locking
     /// it there would leave a paused sheet with Confirm as its only exit.
     private var isReRecordLocked: Bool {
-        autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing && !isPaused
+        autoConfirmEnabled && autoConfirmCountdown == 0 && !isEditing && !isPaused && !autoConfirmHeld
     }
 
     /// The field holds nothing to submit — either the recording captured no

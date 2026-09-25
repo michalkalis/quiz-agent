@@ -26,7 +26,9 @@ import Foundation
 /// The language of the spoken COMMAND grammar (start/skip/… vs štart/preskoč/…).
 /// Since #175 this is the quiz language (`QuizSettings.language`) — the one
 /// thing code above the engine seam (lexicon, matcher, hints) keys off.
-enum CommandLanguage: String, Sendable, Equatable {
+/// `CaseIterable` (#185): the lexicon parity test walks every language, so a
+/// new one cannot ship without its command words.
+enum CommandLanguage: String, CaseIterable, Sendable, Equatable {
     case english = "en"
     case slovak = "sk"
     /// #175 — Czech shares the Slovak precision-over-recall design (same

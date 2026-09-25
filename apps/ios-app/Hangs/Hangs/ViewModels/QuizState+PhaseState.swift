@@ -114,6 +114,32 @@ struct ConfirmationState {
     /// façade's injected write closure (decision 4), never owning it.
     var autoConfirmCountdown: Int = 0
 
+    /// #185: why the auto-confirm countdown is NOT running on an open answer
+    /// sheet, or `nil` when it runs (or is off in Settings).
+    var countdownHold: ConfirmationCountdownHold?
+
+    /// #185 5.1: the driver said a new answer on the sheet and it is being
+    /// transcribed — carries the answer it replaces, which comes back if the
+    /// new one turns out to be nothing (or a command word).
+    var spokenReplacement: SpokenReplacement?
+
     /// Drop the whole subset atomically (T7 unified reset model).
     mutating func reset() { self = ConfirmationState() }
+}
+
+/// #185 (car test 2026-09-23): why an open answer sheet is not counting down.
+enum ConfirmationCountdownHold: String, Sendable, Equatable {
+    /// 5.2: the answer is being read back or the mic is still coming up — the
+    /// countdown starts once the command listener is live.
+    case awaitingListener
+    /// 5.1: someone is speaking; resumes when the utterance ends in nothing.
+    case speech
+    /// 5.3: the driver said "stop". Holds until the sheet closes.
+    case driverStop
+}
+
+/// #185 5.1: a spoken new answer in flight on the sheet.
+struct SpokenReplacement: Sendable, Equatable {
+    /// The answer on the sheet when the driver spoke.
+    let previousAnswer: String
 }

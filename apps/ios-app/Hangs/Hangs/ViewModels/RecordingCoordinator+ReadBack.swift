@@ -14,6 +14,8 @@
 //  (`synthesizeSpeech`, cached server-side) → THEN auto-confirm and the
 //  "ok"/"again" command window arm. Arming them under the read-back would
 //  spend the 5 s auto-confirm on the app talking, and open the mic to it.
+//  #185 5.2: and the countdown waits until the mic is actually live again
+//  (`armConfirmationCountdown`, RecordingCoordinator+SpokenAnswer).
 //
 
 import Foundation
@@ -28,6 +30,12 @@ extension RecordingCoordinator {
     func presentVoiceTranscript(_ text: String, owner: AttemptID? = nil) {
         let owner = owner ?? attemptLedger.current
         cancelAnswerReadBack()
+        // #185: a new answer on the sheet — the previous one's audio is done,
+        // and its countdown waits for the read-back and a live mic (5.2). A
+        // spoken "stop" holds for as long as the sheet is up.
+        stopSheetCapture()
+        spokenReplacement = nil
+        if countdownHold != .driverStop { countdownHold = .awaitingListener }
         transcribedAnswer = text
         noAnswerCaptured = false
         confirmationOwner = owner
@@ -89,10 +97,9 @@ extension RecordingCoordinator {
         Task { [audioService] in await audioService.stopPlayback() }
     }
 
-    /// The tail every voice-sheet opening shares: the auto-confirm countdown
-    /// and the #77 "ok"/"again" command window.
+    /// The tail every voice-sheet opening shares: the #77 "ok"/"again" command
+    /// window, and the auto-confirm countdown once that window is live (#185).
     private func armConfirmationTail() {
-        startAutoConfirmIfEnabled()
-        refreshCommandWindow()
+        armConfirmationCountdown()
     }
 }

@@ -22,6 +22,12 @@ enum ConfirmTrigger: Equatable, Sendable {
 extension RecordingCoordinator {
     /// Confirm the transcribed answer and proceed to show result
     func confirmAnswer(trigger: ConfirmTrigger = .user) async {
+        // #185 5.1: a new spoken answer is still being transcribed — there is
+        // nothing on the sheet to confirm yet (a spoken "potvrď" can land here).
+        guard spokenReplacement == nil else {
+            attemptLedger.record(.command, "confirm.ignoredWhileTranscribing")
+            return
+        }
         if case let .autoConfirm(owner) = trigger {
             // #186 step 1: a countdown armed for an earlier attempt never fires.
             guard attemptLedger.owns(owner, "autoConfirm.fire") else { return }
@@ -44,6 +50,7 @@ extension RecordingCoordinator {
         let owner = confirmationOwner ?? attemptLedger.current
         cancelAnswerReadBack()
         cancelAutoConfirm()
+        stopSheetCapture() // #185 5.1: the sheet stops listening for a new answer
         clearPause()
         // #100.2 / #79: the sheet flag is this call's single-flight token. A
         // stray or concurrent second confirm finds it already down, and must not

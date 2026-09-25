@@ -89,6 +89,9 @@ nonisolated final class AnswerCapture: Sendable {
         var sampleRate = 16000
         var samples = Data()
         var dropped = 0
+        /// #185 5.1: keep the NEWEST audio instead of refusing it once full —
+        /// the answer sheet listens for as long as the driver leaves it open.
+        var rolling = false
     }
 
     private let state: OSAllocatedUnfairLock<State>
@@ -102,9 +105,11 @@ nonisolated final class AnswerCapture: Sendable {
     var isActive: Bool { state.withLock { $0.active } }
 
     /// Start a fresh capture at `sampleRate` Hz, discarding anything buffered.
-    func begin(sampleRate: Int) {
+    /// `rolling` (#185 5.1): once full, drop the OLDEST half instead of the
+    /// newest audio.
+    func begin(sampleRate: Int, rolling: Bool = false) {
         state.withLock { current in
-            current = State(active: true, sampleRate: sampleRate)
+            current = State(active: true, sampleRate: sampleRate, rolling: rolling)
         }
     }
 
@@ -113,8 +118,16 @@ nonisolated final class AnswerCapture: Sendable {
         state.withLock { current in
             guard current.active else { return }
             if current.samples.count + chunk.count > maxBytes {
-                current.dropped += chunk.count
-                return
+                guard current.rolling else {
+                    current.dropped += chunk.count
+                    return
+                }
+                // Halving (sample-aligned) keeps the copy cost amortized;
+                // `subdata` copies, so the dropped half's memory is released.
+                let half = (current.samples.count / 2) & ~1
+                let start = current.samples.startIndex + half
+                current.samples = current.samples.subdata(in: start ..< current.samples.endIndex)
+                current.dropped += half
             }
             current.samples.append(chunk)
         }

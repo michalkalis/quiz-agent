@@ -83,14 +83,19 @@ extension QuizViewModel {
         isPaused = false
 
         if showAnswerConfirmation {
-            quizTimersController.startAutoConfirmIfEnabled()
-        } else if quizState == .askingQuestion {
-            // Re-arms the thinking-time countdown or the answer timer, whichever
-            // this session's settings use — the same entry point the question
-            // flow itself calls, so resume can never diverge from a fresh ask.
-            startRecordingOrTimer()
+            // #185 5.2: the countdown waits for the listener, which this call
+            // brings back up itself.
+            recordingCoordinator.armConfirmationCountdown()
+        } else {
+            if quizState == .askingQuestion {
+                // Re-arms the thinking-time countdown or the answer timer,
+                // whichever this session's settings use — the same entry point
+                // the question flow itself calls, so resume can never diverge
+                // from a fresh ask.
+                startRecordingOrTimer()
+            }
+            voiceCommandCoordinator.refreshCommandWindow()
         }
-        voiceCommandCoordinator.refreshCommandWindow()
 
         Logger.quiz.info("▶️ Quiz resumed")
     }

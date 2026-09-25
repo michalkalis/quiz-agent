@@ -6,7 +6,7 @@
 //  / skip command wiring. Drives `handleRecognizedCommand` directly (routing seam).
 //  Covers:
 //    • Confirmation sheet: "ok" → confirmAnswer, "again" → rerecordAnswer, "stop" →
-//      cancelProcessing — all ON TOP of the untouched 10 s auto-confirm + buttons;
+//      holds the countdown (#185) — all ON TOP of the auto-confirm + buttons;
 //    • the 10 s auto-confirm still fires with NO speech (regression guard);
 //    • Result: "next" advances (auto-advance untouched);
 //    • Question: "repeat" replays the question audio + re-arms the listener;
@@ -136,20 +136,25 @@ struct ConfirmResultCommandTests {
         }
     }
 
-    @Test("'stop' on the confirmation sheet cancels processing")
-    func stopCancels() async {
+    /// #185 5.3 (founder 2026-09-24): "stop" only holds the auto-confirm — the
+    /// voice cancel that threw the answer away is gone.
+    @Test("'stop' on the confirmation sheet holds the countdown and keeps the answer")
+    func stopHolds() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeVM()
             vm.quizState = .processing
             vm.showAnswerConfirmation = true
+            vm.recordingCoordinator.pendingResponse = makePendingResponse()
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.stop)
 
             for _ in 0 ..< 40 {
                 await Task.yield()
             }
-            #expect(vm.showAnswerConfirmation == false)
-            #expect(vm.quizState == .askingQuestion)
+            #expect(vm.showAnswerConfirmation)
+            #expect(vm.quizState == .processing)
+            #expect(vm.recordingCoordinator.pendingResponse != nil, "the answer survives 'stop'")
+            #expect(vm.recordingCoordinator.countdownHold == .driverStop)
         }
     }
 
@@ -348,6 +353,8 @@ struct ConfirmationPauseTests {
             vm.exitPause()
 
             #expect(vm.isPaused == false)
+            // #185 5.2: the window re-arms once the listener is live again.
+            await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "resume never re-armed")
             #expect(
                 vm.autoConfirmCountdown == Config.autoConfirmDelaySecs,
                 "resume must re-arm the whole window, not the remainder"

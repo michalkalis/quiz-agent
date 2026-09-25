@@ -74,11 +74,32 @@ extension VoiceCommandCoordinator {
                     "voice cmd transcript dropped — window closed",
                     category: .voice,
                     attributes: droppedTranscriptAttributes(
-                        normalized, isFinal: transcript.isFinal, tokens: tokens, sincePrevMs: sincePrevMs
+                        transcript, normalized: normalized, tokens: tokens, sincePrevMs: sincePrevMs
                     )
                 )
             }
             return
+        }
+
+        // #185 5.1 (founder 2026-09-24): on the answer sheet anything that is
+        // not a command is a NEW answer. Two duties here, the rest is the
+        // recording side's: (1) any content-bearing speech holds the countdown,
+        // so it never confirms the old answer under a new one; (2) every final
+        // ends an utterance the sheet cares about, reported as what it turned
+        // out to be. Declared after the `endUtterance` defer, so it runs BEFORE
+        // the latch is cleared.
+        let onAnswerSheet = screen == .confirmation
+        let hasContent = VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage)
+        var spokenAnswer: String?
+        defer {
+            if onAnswerSheet, transcript.isFinal {
+                noteConfirmationUtteranceEnded(
+                    commandFiredThisUtterance ? .command : spokenAnswer.map { .newAnswer($0) } ?? .noise
+                )
+            }
+        }
+        if onAnswerSheet, hasContent, !commandFiredThisUtterance {
+            noteConfirmationSpeech()
         }
 
         // Spoken-cancel path (77.10 carry-over): while a skip undo-window is
@@ -120,13 +141,21 @@ extension VoiceCommandCoordinator {
         }
 
         guard let command = matched else {
-            // #122: the "heard you, didn't understand" glow — throttled inside.
-            noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
+            // #185 5.1: a finished non-command utterance on the answer sheet is
+            // the driver's new answer — understood, so no "didn't get that" glow.
+            let isNewAnswer = onAnswerSheet && transcript.isFinal && hasContent && !commandFiredThisUtterance
+            if isNewAnswer {
+                spokenAnswer = transcript.text
+            } else {
+                // #122: the "heard you, didn't understand" glow — throttled inside.
+                noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
+            }
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 var attributes = droppedTranscriptAttributes(
-                    normalized, isFinal: transcript.isFinal, tokens: tokens, sincePrevMs: sincePrevMs
+                    transcript, normalized: normalized, tokens: tokens, sincePrevMs: sincePrevMs
                 )
                 attributes["screen"] = String(describing: screen)
+                if isNewAnswer { attributes["outcome"] = "newAnswer" }
                 SentryLog.info("voice cmd transcript unmatched", category: .voice, attributes: attributes)
             }
             return
@@ -141,7 +170,7 @@ extension VoiceCommandCoordinator {
             // otherwise the command only ever fires from the end-of-speech
             // final and the latency fix is a no-op. Every other reason is final.
             if suppression == .awaitingStable {
-                armVolatileSettle(command, text: normalized, on: screen)
+                armVolatileSettle(command, text: normalized, heard: transcript.text, on: screen)
             }
             // NOT sampled, unlike the two drop exits above: reaching here already
             // required a hit on the seven-word vocabulary, and the latch + the
@@ -156,13 +185,13 @@ extension VoiceCommandCoordinator {
                     "screen": String(describing: screen), "command": command.rawValue,
                     "reason": suppression.rawValue, "final": transcript.isFinal, "tokens": tokens,
                     "sincePrevMs": sincePrevMs ?? -1,
-                ]
+                ].merging(Self.heardTextAttributes(transcript.text)) { current, _ in current }
             )
             return
         }
 
         fireCommand(
-            command, on: screen, text: normalized,
+            command, on: screen, text: normalized, heard: transcript.text,
             path: transcript.isFinal ? .finalResult : .volatileRepeat,
             sincePrevMs: sincePrevMs, viaAlternative: viaAlternative
         )
@@ -190,16 +219,22 @@ extension VoiceCommandCoordinator {
 
     /// Attributes shared by the two drop logs.
     ///
-    /// Metadata only — never the transcript text itself, per the no-raw-speech
-    /// rule in Logging.swift (the pre-GA temporary `text` exception was removed
-    /// 2026-07-30).
+    /// Metadata only in App Store builds, per the no-raw-speech rule in
+    /// Logging.swift. #185 3.5: TestFlight and debug builds add what was heard
+    /// (and a final's alternatives) — see `heardTextAttributes`.
     func droppedTranscriptAttributes(
-        _ normalized: String, isFinal: Bool, tokens: Int, sincePrevMs: Int?
+        _ transcript: CommandTranscript, normalized: String, tokens: Int, sincePrevMs: Int?,
+        logsText: Bool = VoiceCommandCoordinator.logsHeardText
     ) -> [String: Any] {
-        [
-            "len": normalized.count, "final": isFinal, "tokens": tokens,
+        var attributes: [String: Any] = [
+            "len": normalized.count, "final": transcript.isFinal, "tokens": tokens,
             "sincePrevMs": sincePrevMs ?? -1,
         ]
+        attributes.merge(Self.heardTextAttributes(transcript.text, enabled: logsText)) { current, _ in current }
+        if logsText, !transcript.alternatives.isEmpty {
+            attributes["alternatives"] = transcript.alternatives.joined(separator: " | ")
+        }
+        return attributes
     }
 
     // MARK: - Fan-out
@@ -254,15 +289,21 @@ extension VoiceCommandCoordinator {
         case (.question, .skip):
             beginSkipUndoWindow()
 
-        // Confirmation sheet — on top of the 10 s auto-confirm + buttons.
+        // Confirmation sheet — on top of the 5 s auto-confirm + buttons.
         case (.confirmation, .ok):
             Task { [weak self] in await self?.confirmAnswer() }
 
-        case (.confirmation, .again):
+        case (.confirmation, .again), (.noAnswer, .again):
             rerecordAnswer()
 
+        // #185 5.3: "stop" only stops the automatic advance; the sheet then
+        // waits for another command, a new answer or a tap.
         case (.confirmation, .stop):
-            cancelProcessing()
+            holdAutoConfirm()
+
+        // #185: the no-answer sheet — confirming its empty field IS the skip.
+        case (.noAnswer, .skip), (.noAnswer, .next):
+            Task { [weak self] in await self?.confirmAnswer() }
 
         // Freeze the quiz (#171 Track D, widened to the question screen by #173
         // now that pause lives in the toolbar). Not offered as a spoken RESUME:

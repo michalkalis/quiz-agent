@@ -352,7 +352,7 @@ struct QuizToolbarPauseTests {
     /// it must actually resume. Whether the tap LANDS through the sheet is
     /// `presentationBackgroundInteraction`'s job and is checked on the simulator.
     @Test("a pause taken onto the confirmation sheet can be resumed from the toolbar")
-    func pausedSheetIsResumable() {
+    func pausedSheetIsResumable() async {
         let vm = makeQuestionViewModel(question: Question.preview, state: .processing)
         vm.settings.autoConfirmEnabled = true
         vm.transcribedAnswer = "Paris"
@@ -369,6 +369,8 @@ struct QuizToolbarPauseTests {
         vm.togglePause()
 
         #expect(vm.isPaused == false)
+        // #185 5.2: the window re-arms once the listener is live again.
+        await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "resume never re-armed")
         #expect(vm.autoConfirmCountdown == Config.autoConfirmDelaySecs,
                 "resuming the sheet re-arms its full window")
         vm.quizTimersController.cancelAutoConfirm()

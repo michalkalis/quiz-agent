@@ -14,6 +14,18 @@ import Clocks
 import Foundation
 import os
 
+/// #185 5.1: what one finished utterance on the answer confirmation sheet
+/// turned out to be.
+enum ConfirmationUtterance: Equatable, Sendable {
+    /// A command fired for it — its action already ran.
+    case command
+    /// Not a command, with words in it: the driver's new answer (the local
+    /// recognizer's text — the answer itself is transcribed from the audio).
+    case newAnswer(String)
+    /// Filler, silence, a blip — nothing to act on.
+    case noise
+}
+
 /// The windowed voice-command slice as its own child object (#113 T3).
 /// Owns the capture-phase observable (77.4), the recognizer-availability
 /// mirror (#96 S2), the recognized-command diagnostics (#96 P2), the
@@ -230,7 +242,18 @@ final class VoiceCommandCoordinator: ObservableObject {
     let skipQuestion: @MainActor () async -> Void
     let confirmAnswer: @MainActor () async -> Void
     let rerecordAnswer: @MainActor () -> Void
-    let cancelProcessing: @MainActor () -> Void
+    /// #185 5.3: spoken "stop" on the confirmation sheet holds the auto-confirm
+    /// countdown — it used to CANCEL the answer, which the founder does not want.
+    let holdAutoConfirm: @MainActor () -> Void
+    /// #185: the sheet is the no-answer choice (Again / Skip, no countdown) —
+    /// its own command screen, so "potvrď" can no longer skip there.
+    let isNoAnswerSheet: @MainActor () -> Bool
+    /// #185 5.1: someone is speaking on the confirmation sheet — the countdown
+    /// must not confirm the old answer under a new one.
+    let noteConfirmationSpeech: @MainActor () -> Void
+    /// #185 5.1: an utterance on the confirmation sheet ended — see
+    /// `ConfirmationUtterance`.
+    let noteConfirmationUtteranceEnded: @MainActor (ConfirmationUtterance) -> Void
     let continueToNext: @MainActor () -> Void
     /// #171 Track D / #173: spoken "pause"/"pauza" — on the question screen and
     /// on the confirmation sheet alike.
@@ -265,7 +288,10 @@ final class VoiceCommandCoordinator: ObservableObject {
         skipQuestion: @escaping @MainActor () async -> Void,
         confirmAnswer: @escaping @MainActor () async -> Void,
         rerecordAnswer: @escaping @MainActor () -> Void,
-        cancelProcessing: @escaping @MainActor () -> Void,
+        holdAutoConfirm: @escaping @MainActor () -> Void,
+        isNoAnswerSheet: @escaping @MainActor () -> Bool,
+        noteConfirmationSpeech: @escaping @MainActor () -> Void,
+        noteConfirmationUtteranceEnded: @escaping @MainActor (ConfirmationUtterance) -> Void,
         continueToNext: @escaping @MainActor () -> Void,
         pauseQuiz: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
@@ -290,7 +316,10 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.skipQuestion = skipQuestion
         self.confirmAnswer = confirmAnswer
         self.rerecordAnswer = rerecordAnswer
-        self.cancelProcessing = cancelProcessing
+        self.holdAutoConfirm = holdAutoConfirm
+        self.isNoAnswerSheet = isNoAnswerSheet
+        self.noteConfirmationSpeech = noteConfirmationSpeech
+        self.noteConfirmationUtteranceEnded = noteConfirmationUtteranceEnded
         self.continueToNext = continueToNext
         self.pauseQuiz = pauseQuiz
         self.cancelAnswerTimer = cancelAnswerTimer

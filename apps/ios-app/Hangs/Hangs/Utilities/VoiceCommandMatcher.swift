@@ -34,6 +34,14 @@
 //  advances the quiz, and the Czech backchannel "no" re-records the answer.
 //  See `score`.
 //
+//  #185 (car test 2026-09-23, founder 5.3): "nie, znova" was two content
+//  words and never matched. A multi-word utterance now matches when EVERY
+//  content word is itself a word of the SAME command (`agreeingCommand`) — the
+//  #119 protection is intact because conversation always carries a word that
+//  is not a command. Two-word phrases ("ešte raz") are joined into one token by
+//  `normalize`, words that open sentences ("nie") act on finals only, and a
+//  word that is a command on this screen is never stripped as filler there.
+//
 
 import Foundation
 
@@ -56,9 +64,12 @@ enum VoiceCommandMatcher {
     /// A stricter floor for the destructive `skip` word.
     static let skipFloor: Double = 0.8
     /// Upper bound on DISTINCT content tokens (filler stripped, duplicates
-    /// collapsed) for an utterance to be treated as a command at all. ONE,
+    /// collapsed) for an utterance to be read as ONE command word. ONE,
     /// because every word in this grammar is one word — see the gate in `match`.
     static let maxContentTokens = 1
+    /// #185: upper bound for an utterance made only of words of ONE command
+    /// ("nie, zle, znova") — see `agreeingCommand`.
+    static let maxAgreeingTokens = 3
 
     /// Resolve `transcript` to the single command valid on `screen`, or `nil`
     /// when there is no confident, unambiguous match (caller re-listens).
@@ -100,15 +111,44 @@ enum VoiceCommandMatcher {
         // (`armVolatileSettle`). Only the second is contractual — Apple emits a
         // volatile when the hypothesis CHANGES, never on a timer — so the settle
         // is the real gate and the re-delivery is an accelerator.
-        guard contentTokens(tokens, language: language).count <= maxContentTokens else { return nil }
+        let content = contentTokens(tokens, language: language, on: screen)
+        // Filler only is never a command (#185: a lone "ešte" must not score as
+        // a cut-off "ešte raz"), and only content words are scored.
+        guard !content.isEmpty else { return nil }
+        if content.count > maxContentTokens {
+            return agreeingCommand(content, on: screen, isFinal: isFinal, language: language)
+        }
+        return matchOneWord(Array(content), on: screen, isFinal: isFinal, language: language)
+    }
 
+    /// #185: several content words, each of which is on its own a confident
+    /// match for the SAME command — "nie, znova", "áno, potvrď". Any word that
+    /// is not a command, or two words that disagree ("áno, znova"), and the
+    /// utterance is not a command.
+    private static func agreeingCommand(
+        _ content: Set<String>, on screen: VoiceCommandScreen, isFinal: Bool, language: CommandLanguage
+    ) -> VoiceCommand? {
+        guard content.count <= maxAgreeingTokens else { return nil }
+        var agreed: VoiceCommand?
+        for word in content.sorted() {
+            guard let command = matchOneWord([word], on: screen, isFinal: isFinal, language: language),
+                  agreed == nil || agreed == command else { return nil }
+            agreed = command
+        }
+        return agreed
+    }
+
+    /// The pre-#185 matcher: an utterance with at most ONE content word.
+    private static func matchOneWord(
+        _ tokens: [String], on screen: VoiceCommandScreen, isFinal: Bool, language: CommandLanguage
+    ) -> VoiceCommand? {
         let candidates = VoiceCommandLexicon.commands(on: screen)
 
         // Skip is strict whole-utterance — handled before (and excluded from) the
         // fuzzy token scan so it can never be triggered by a token buried in a
         // longer sentence.
         if candidates.contains(.skip),
-           matchesStrictSkip(tokens: tokens, language: language, isFinal: isFinal)
+           matchesStrictSkip(tokens: tokens, on: screen, language: language, isFinal: isFinal)
         {
             return .skip
         }
@@ -116,7 +156,7 @@ enum VoiceCommandMatcher {
         // Fuzzy token scan over the remaining screen commands.
         var scores: [(command: VoiceCommand, score: Double)] = []
         for command in candidates where command != .skip {
-            let variants = comparableVariants(for: command, language: language)
+            let variants = comparableVariants(for: command, on: screen, language: language, isFinal: isFinal)
             var best = 0.0
             for token in tokens {
                 for variant in variants {
@@ -157,26 +197,32 @@ enum VoiceCommandMatcher {
     /// collapsed. Duplicates collapse because a driver repeating an unanswered
     /// command is still saying ONE word (build-33: "start start start start
     /// start"); DISTINCT rather than consecutive-only so filler between the
-    /// repeats ("start um start") doesn't inflate the count either.
-    private static func contentTokens(_ tokens: [String], language: CommandLanguage) -> Set<String> {
+    /// repeats ("start um start") doesn't inflate the count either. With a
+    /// `screen`, that screen's command words are never filler (#185).
+    private static func contentTokens(
+        _ tokens: [String], language: CommandLanguage, on screen: VoiceCommandScreen? = nil
+    ) -> Set<String> {
         // #184: the filler set is stored pre-folded but NOT phonetically folded,
         // so it goes through the same step the tokens did — otherwise a Slovak
         // filler could survive the fold and count as content.
-        let filler = Set(
-            VoiceCommandLexicon.fillerWords(for: language).map { phoneticFold($0, language: language) }
-        )
+        let words = screen.map { VoiceCommandLexicon.fillerWords(for: language, on: $0) }
+            ?? VoiceCommandLexicon.fillerWords(for: language)
+        let filler = Set(words.map { phoneticFold($0, language: language) })
         return Set(tokens.filter { !filler.contains($0) })
     }
 
-    /// A command's lexicon variants put through the SAME phonetic fold the
-    /// transcript went through (#184). Variants are stored diacritic-folded but
-    /// in dictionary spelling, so without this step a folded mishearing
-    /// ("znovy" → "znovi") would be scored against an unfolded "znova" and the
-    /// fold would buy nothing.
+    /// A command's lexicon variants on `screen` put through the SAME phonetic
+    /// fold the transcript went through (#184). Variants are stored
+    /// diacritic-folded but in dictionary spelling, so without this step a
+    /// folded mishearing ("znovy" → "znovi") would be scored against an unfolded
+    /// "znova" and the fold would buy nothing. A volatile never sees the
+    /// sentence-opening words (#185 `finalOnlyVariants`).
     private static func comparableVariants(
-        for command: VoiceCommand, language: CommandLanguage
+        for command: VoiceCommand, on screen: VoiceCommandScreen, language: CommandLanguage, isFinal: Bool
     ) -> [String] {
-        VoiceCommandLexicon.variants(for: command, language: language)
+        let finalOnly = isFinal ? [] : VoiceCommandLexicon.finalOnlyVariants(for: language)
+        return VoiceCommandLexicon.variants(for: command, language: language, on: screen)
+            .filter { !finalOnly.contains($0) }
             .map { phoneticFold($0, language: language) }
     }
 
@@ -187,11 +233,11 @@ enum VoiceCommandMatcher {
     /// anywhere else: skip is the one command that may only fire from a final,
     /// and the final is precisely the transcript where repetitions merge.
     private static func matchesStrictSkip(
-        tokens: [String], language: CommandLanguage, isFinal: Bool
+        tokens: [String], on screen: VoiceCommandScreen, language: CommandLanguage, isFinal: Bool
     ) -> Bool {
-        let content = contentTokens(tokens, language: language)
+        let content = contentTokens(tokens, language: language, on: screen)
         guard content.count == 1, let token = content.first else { return false }
-        let best = comparableVariants(for: .skip, language: language)
+        let best = comparableVariants(for: .skip, on: screen, language: language, isFinal: isFinal)
             .map { score(token, $0, isFinal: isFinal) }
             .max() ?? 0
         return best >= skipFloor
@@ -318,7 +364,8 @@ enum VoiceCommandMatcher {
     /// Lowercase, diacritic-fold, and reduce every non-alphanumeric run to a
     /// single space (mirrors MCQTranscriptMatcher.normalize so accent + STT
     /// punctuation don't defeat matching), then — for Slovak/Czech only — apply
-    /// the #184 phonetic fold.
+    /// the #184 phonetic fold, and join the #185 command phrases ("ešte raz")
+    /// into one token.
     static func normalize(_ string: String, language: CommandLanguage = .english) -> String {
         let folded = string.folding(
             options: [.diacriticInsensitive, .caseInsensitive],
@@ -328,10 +375,29 @@ enum VoiceCommandMatcher {
         for scalar in folded.unicodeScalars {
             scalars.append(CharacterSet.alphanumerics.contains(scalar) ? scalar : " ")
         }
-        return String(scalars)
+        let tokens = String(scalars)
             .split(separator: " ")
             .map { phoneticFold(String($0), language: language) }
-            .joined(separator: " ")
+        return joinPhrases(tokens, language: language).joined(separator: " ")
+    }
+
+    /// Replace every run of a lexicon phrase's words with its single token.
+    private static func joinPhrases(_ tokens: [String], language: CommandLanguage) -> [String] {
+        let phrases = VoiceCommandLexicon.phrases(for: language).map { phrase in
+            (words: phrase.words.map { phoneticFold($0, language: language) }, token: phrase.token)
+        }
+        var result: [String] = []
+        var index = 0
+        scan: while index < tokens.count {
+            for phrase in phrases where tokens[index...].starts(with: phrase.words) {
+                result.append(phrase.token)
+                index += phrase.words.count
+                continue scan
+            }
+            result.append(tokens[index])
+            index += 1
+        }
+        return result
     }
 
     /// #184 Slovak/Czech phonetic fold: collapse the spelling distinctions a

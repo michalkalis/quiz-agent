@@ -251,6 +251,10 @@ final class QuizViewModel: ObservableObject {
         set { recordingCoordinator.autoConfirmCountdown = newValue }
     }
 
+    /// #185: the sheet's countdown is held on purpose (read-back, a mic still
+    /// coming up, the driver speaking, a spoken "stop") — not run out.
+    var isAutoConfirmHeld: Bool { recordingCoordinator.countdownHold != nil }
+
     // MARK: - Timers — forwarded to QuizTimersController (#113 T4)
 
     // Timer slice — owned by QuizTimersController. Permanent forwarding
@@ -934,7 +938,15 @@ final class QuizViewModel: ObservableObject {
             skipQuestion: { [weak self] in await self?.submitSkip() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
-            cancelProcessing: { [weak self] in self?.recordingCoordinator.cancelProcessing() },
+            holdAutoConfirm: { [weak self] in self?.recordingCoordinator.holdAutoConfirmByDriver() },
+            isNoAnswerSheet: { [weak self] in
+                self?.recordingCoordinator.showAnswerConfirmation == true
+                    && self?.recordingCoordinator.noAnswerCaptured == true
+            },
+            noteConfirmationSpeech: { [weak self] in self?.recordingCoordinator.holdCountdownForSpeech() },
+            noteConfirmationUtteranceEnded: { [weak self] in
+                self?.recordingCoordinator.handleConfirmationUtterance($0)
+            },
             continueToNext: { [weak self] in self?.advanceFromResult() },
             pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
@@ -1001,6 +1013,9 @@ final class QuizViewModel: ObservableObject {
             skipQuestion: { [weak self] in await self?.submitSkip() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
+            armCommandWindow: { [weak self] in
+                await self?.voiceCommandCoordinator.armCommandWindowReportingLive() ?? false
+            },
             abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },

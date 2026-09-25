@@ -66,7 +66,8 @@ struct CzechCommandGrammarTests {
         #expect(VoiceCommandMatcher.match(transcript: "potvrď", on: .confirmation, language: .czech) == .ok)
         #expect(VoiceCommandMatcher.match(transcript: "ok", on: .confirmation, language: .czech) == .ok)
         #expect(VoiceCommandMatcher.match(transcript: "Stop", on: .confirmation, language: .czech) == .stop)
-        #expect(VoiceCommandMatcher.match(transcript: "zruš", on: .confirmation, language: .czech) == .stop)
+        // #185 5.3: no voice cancel — "zruš" is not a sheet command any more.
+        #expect(VoiceCommandMatcher.match(transcript: "zruš", on: .confirmation, language: .czech) == nil)
         #expect(VoiceCommandMatcher.match(transcript: "Pauza", on: .confirmation, language: .czech) == .pause)
     }
 
@@ -79,10 +80,12 @@ struct CzechCommandGrammarTests {
 
     @Test("precision: Czech backchannels and particles never fire a command")
     func czechConversationIsInert() {
-        // "jo" is THE Czech yes-word; it must never confirm an answer (#175
-        // inherits the Slovak precision-over-recall trade).
+        // "jo" is THE Czech yes-word (#175 inherits the Slovak precision-over-
+        // recall trade). #185 5.3: on the confirmation sheet "ano"/"jo" DO
+        // confirm (founder) — covered in VoiceCommandLexiconParityTests; every
+        // other screen keeps them inert.
         for phrase in ["jo", "ano", "dobře", "jasně", "no", "tak", "no tak", "jo jo", "ano ano", "tedy"] {
-            for screen: VoiceCommandScreen in [.home, .question, .confirmation, .result] {
+            for screen: VoiceCommandScreen in [.home, .question, .result] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .czech) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -146,14 +149,14 @@ struct CzechCommandGrammarTests {
     func czechDisplayStrings() {
         #expect(VoiceCommandLexicon.hint(on: .home, language: .czech) == "Řekni „start“")
         #expect(VoiceCommandLexicon.hint(on: .question, language: .czech).contains("přeskoč"))
-        #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .czech).contains("zruš"))
+        #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .czech).contains("znovu"))
         #expect(VoiceCommandLexicon.hint(on: .result, language: .czech).contains("dál"))
         #expect(VoiceCommandLexicon.spokenWord(.skip, language: .czech) == "přeskoč")
         #expect(VoiceCommandLexicon.spokenWord(.next, language: .czech) == "dál")
         #expect(VoiceCommandLexicon.listeningCaption(language: .czech) == "POSLOUCHÁM PŘÍKAZY")
         #expect(VoiceCommandLexicon.listeningCaption(language: .czech, short: true) == "POSLOUCHÁM")
-        // Slovak: the confirmation hint now names the "Zruš" button, not "stop".
-        #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .slovak).contains("zruš"))
-        #expect(VoiceCommandLexicon.spokenWord(.stop, language: .slovak) == "zruš")
+        // #185: no voice cancel — the hint no longer offers "zruš"; "stop" holds.
+        #expect(!VoiceCommandLexicon.hint(on: .confirmation, language: .slovak).contains("zruš"))
+        #expect(VoiceCommandLexicon.spokenWord(.stop, language: .slovak) == "stop")
     }
 }

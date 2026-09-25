@@ -171,7 +171,8 @@ struct SlovakCommandGrammarTests {
         #expect(VoiceCommandMatcher.match(transcript: "Znova", on: .confirmation, language: .slovak) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "potvrď", on: .confirmation, language: .slovak) == .ok)
         #expect(VoiceCommandMatcher.match(transcript: "Stop", on: .confirmation, language: .slovak) == .stop)
-        #expect(VoiceCommandMatcher.match(transcript: "zruš", on: .confirmation, language: .slovak) == .stop)
+        // #185 5.3: no voice cancel — "zruš" is not a sheet command any more.
+        #expect(VoiceCommandMatcher.match(transcript: "zruš", on: .confirmation, language: .slovak) == nil)
     }
 
     @Test("precision: Slovak backchannels and particles never fire a command")
@@ -180,8 +181,11 @@ struct SlovakCommandGrammarTests {
         // so a backchannel-only utterance strips to zero content tokens. "áno"
         // must NOT confirm an answer; that is the precision-over-recall trade
         // the Slovak set is built on (#120).
+        // #185 5.3 (founder): on the confirmation sheet "áno"/"hej" DO confirm —
+        // covered in VoiceCommandLexiconParityTests; every other screen keeps
+        // them inert.
         for phrase in ["áno", "dobre", "hej", "jasné", "no", "tak", "no tak", "áno áno", "dobre dobre"] {
-            for screen: VoiceCommandScreen in [.home, .question, .confirmation, .result] {
+            for screen: VoiceCommandScreen in [.home, .question, .result] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .slovak) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -226,8 +230,7 @@ struct SlovakCommandGrammarTests {
         #expect(VoiceCommandLexicon.isCancelWord("nie", language: .slovak))
         #expect(VoiceCommandLexicon.isCancelWord("stop", language: .slovak))
         #expect(VoiceCommandLexicon.isCancelWord("zrus", language: .slovak))
-        // …but "nie" is NOT a `.stop` variant — the destructive direction stays
-        // strict (a false `.stop` discards an in-flight answer).
+        // …and "nie" is NOT a `.stop` variant (#185: it re-records instead).
         #expect(!VoiceCommandLexicon.variants(for: .stop, language: .slovak).contains("nie"))
     }
 

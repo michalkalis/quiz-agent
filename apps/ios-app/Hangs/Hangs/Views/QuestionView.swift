@@ -174,7 +174,8 @@ struct QuestionView: View {
                 matchedOption: matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
-                noAnswerCaptured: viewModel.noAnswerCaptured
+                noAnswerCaptured: viewModel.noAnswerCaptured,
+                autoConfirmHeld: viewModel.isAutoConfirmHeld
             )
         }
         .sheet(isPresented: $showQuizSettings) {

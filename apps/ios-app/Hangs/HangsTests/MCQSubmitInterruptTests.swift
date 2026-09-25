@@ -84,4 +84,34 @@ struct MCQSubmitInterruptTests {
         #expect(context == .submission)
         #expect(message.isEmpty == false)
     }
+
+    /// WHY (#186 step 2, found by the sequence harness): a tap that answers
+    /// while the mic is open ends that recording. The answer capture used to
+    /// stay armed through the whole evaluation — and with voice commands off,
+    /// the recording had started the mic engine itself, so the mic stayed live
+    /// while nothing was listening for an answer (#149: the switch means OFF).
+    @Test("a tap during a recording ends the answer capture")
+    func tapDuringRecordingEndsCapture() async throws {
+        let silence = MockSilenceDetectionService()
+        let vm = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence,
+            clock: AnyClock(TestClock())
+        )
+        vm.settings.voiceCommandsEnabled = false
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
+        vm.quizState = .askingQuestion
+        await vm.toggleRecording()
+        #expect(silence.isAnswerCaptureActive && silence.isListening, "the recording opened the mic itself")
+
+        let submission = Task { await vm.submitMCQAnswer(key: "a", value: "Paris") }
+        await pumpUntil { vm.quizState != .recording }
+
+        #expect(silence.isAnswerCaptureActive == false, "the tapped answer left the recording's capture armed")
+        #expect(silence.isListening == false, "voice commands are off — nothing may keep the mic live")
+        submission.cancel()
+    }
 }

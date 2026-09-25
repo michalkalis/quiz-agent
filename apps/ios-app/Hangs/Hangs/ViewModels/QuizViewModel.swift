@@ -1684,6 +1684,17 @@ final class QuizViewModel: ObservableObject {
         // and the thinking task still owns a pending auto-start of recording.
         quizTimersController.cancelThinkingTime()
         quizTimersController.cancelAutoStopRecordingTimer()
+        // #186 step 2 (found by the sequence harness): a tap that answers while
+        // the mic is open ends that recording, as a typed answer does
+        // (`resubmitAnswer`). The answer capture used to stay armed through the
+        // whole evaluation, and with voice commands off the mic stayed live.
+        recordingCoordinator.cancelSilenceDetection()
+        if isStreamingSTT {
+            recordingCoordinator.cleanupStreamingSTT()
+        } else if quizState == .recording {
+            recordingCoordinator.abandonAnswerCapture()
+        }
+        isAutoRecording = false
         // #79: a rejected transition means another submission already claimed
         // .processing (e.g. a double-tapped option) — bail instead of firing a
         // second concurrent submit.

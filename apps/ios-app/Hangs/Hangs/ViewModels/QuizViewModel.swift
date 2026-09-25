@@ -697,7 +697,7 @@ final class QuizViewModel: ObservableObject {
     /// an init param) so the ~15 existing call sites are untouched and tests can
     /// inject a `MockEarconPlayer`. Cues route through `emitEarcon(_:)`, which
     /// suppresses them during question TTS.
-    var earconPlayer: EarconPlaying = SystemEarconPlayer()
+    var earconPlayer: EarconPlaying = SystemEarconPlayer.shared
 
     private var cancellables = Set<AnyCancellable>()
 

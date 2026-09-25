@@ -21,3 +21,7 @@ Founder 2026-09-24: stavy na kvízovej a súvisiacich obrazovkách sa dlhodobo o
 
 - Krok 1: všetky async cesty v kvízovom flow overujú `AttemptID` (zoznam ciest v PR), Sentry dostáva zamietnuté prechody, pinning testy zelené.
 - Krok 2: harness beží v cielenej suite, ≥ niekoľko tisíc sekvencií na beh bez porušenia invariantov, a pozná prehrať uložený záznam.
+
+## Stav 2026-09-25
+
+Kroky 1 a 2 hotové: PR #194 (AttemptLedger, 34 async ciest, Sentry + QuizFlightRecorder) a PR #198 (harness: 350 sekvencií v CI, `TEST_RUNNER_QUIZ_SEQUENCE_COUNT` lokálne, replay záznamu z auta). Harness našiel a opravili sa: MCQ ťuk počas nahrávania, mute/pauza počas prečítania odpovede, auto-advance zrušil vlastný task (ďalšia otázka sa neprečítala), replay počas prvého čítania, povely po odoslaní odpovede, pád earcon prehrávača po uvoľnení (zdieľaný prehrávač). Kroky 3–4 neskôr.

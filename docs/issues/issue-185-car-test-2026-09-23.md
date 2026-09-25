@@ -48,3 +48,7 @@ Founder 09-24: hlasové „zrušenie“ odpovede (dnes „zruš“/„stop“ = 
 - **H — Displej (7):** overiť stav počas reveal/čítania výsledkov, displej držať do konca kvízu (+ test v `ScreenAwakeController` testoch).
 
 Poradie: A → B (+ #186 krok 1) → C → D → E → G → F → H; #186 krok 2 po B. Overenie: cielené iOS suity + backend testy; na zariadení až pri TF teste na požiadanie (founder zapne ukladanie nahrávok → `scripts/stt_compare.py`).
+
+## Stav 2026-09-25
+
+Kód tracky A–H hotový: A PR #192 · B PR #194 · C PR #195 · D PR #199 · E+G backend PR #193 (v118) · G iOS PR #200 · F PR #201 (varianty PR #197, founder F2 + D1) · H PR #196. Founder 09-25: n-best čipy D1 vynechané (Scribe ani záloha nevracajú alternatívy); „no“ = nahrať znova len v anglickom kvíze; výzva „Nezachytil som odpoveď, skús to znova.“ hovorená v jazyku kvízu + text na obrazovke; MCQ nezhoda = rovnaký tok; ťuk počas čítania otázky ho zastaví; ručne napísaná nezhoda → rovno Znova/Preskoč; vibrácie ostávajú aj pri vypnutých zvukoch. SpeechDetector: Apple dokumentácia — `SpeechDetector.Result` zatiaľ hlási len chyby VAD modelu, nie reč (neoverené na zariadení). Open: TF build na požiadanie → test v aute (matica v PR #195, Sentry `answer recording stopped` polia z PR #192) → kalibrácia VAD prahov a `trim_trailing_low_confidence`; Pencil pass F2/D1.

@@ -1,0 +1,39 @@
+# Car test 2026-09-23 — #185 finding 1 (an empty answer silently skipped the
+# question, and the repeated answer landed on the next one), reconstructed in
+# the #186 flight recorder's dump format. The black box did not exist on that
+# build yet, so the times come from the drive's Sentry breadcrumbs.
+#
+# Replay (QuizSequenceTests.carTestDumpReplays) feeds the INPUT lines to the
+# current build on the production defaults: tap/command/speech/network/route/
+# scene lines. Consequence lines (state, attempt, timer, recording.stop) show
+# what the old build did and are ignored — the replay derives its own.
+# `speech audio` is the one line the black box cannot record: sound reaching
+# the answer capture without a VAD event (the detector heard nothing in 16 of
+# 16 recordings on that device).
+Quiz flight recorder — 26 of 26 events
+16:02:00.000 state idle→startingQuiz attempt=-#0 state=startingQuiz beginQuizStart(maxQuestions:difficulty:language:packId:skipAvailabilityCheck:)
+16:02:00.012 attempt question attempt=q_001#1 state=startingQuiz
+16:02:00.013 state startingQuiz→askingQuestion attempt=q_001#1 state=askingQuestion startNewQuiz(maxQuestions:difficulty:language:packId:skipAvailabilityCheck:)
+16:02:14.100 timer thinkingTime.fire attempt=q_001#1 state=askingQuestion
+16:02:14.101 state askingQuestion→recording attempt=q_001#1 state=recording startRecording(trigger:)
+16:02:14.101 attempt recording.autoRecord attempt=q_001#2 state=recording
+16:02:15.500 speech audio attempt=q_001#2 state=recording
+16:02:16.500 speech audio attempt=q_001#2 state=recording
+16:02:17.500 speech audio attempt=q_001#2 state=recording
+16:02:19.300 timer recordingWindow.expired attempt=q_001#2 state=recording
+16:02:19.300 speech recording.stop attempt=q_001#2 state=recording
+16:02:19.301 state recording→processing attempt=q_001#2 state=processing submitVoiceAnswer(audioData:fileName:owner:)
+16:02:21.000 network voiceSubmit.400 attempt=q_001#2 state=processing
+16:02:26.050 timer autoConfirm.fire attempt=q_001#2 state=processing
+16:02:26.051 state processing→askingQuestion attempt=q_001#2 state=askingQuestion confirmAnswer(trigger:)
+16:02:26.052 state askingQuestion→skipping attempt=q_001#3 state=skipping skipQuestion()
+16:02:26.900 network quizResponse attempt=q_001#3 state=skipping skipped
+16:02:26.901 state skipping→showingResult attempt=q_001#3 state=showingResult handleQuizResponse(_:owner:)
+16:02:27.100 attempt question attempt=q_002#4 state=showingResult
+16:02:27.101 state showingResult→askingQuestion attempt=q_002#4 state=askingQuestion advanceToNextQuestionOrFinish()
+16:02:27.960 state askingQuestion→recording attempt=q_002#4 state=recording startRecording(trigger:)
+16:02:27.960 attempt recording.autoRecord attempt=q_002#5 state=recording
+16:02:28.500 speech vad.speechStarted attempt=q_002#5 state=recording
+16:02:29.300 speech audio attempt=q_002#5 state=recording
+16:02:30.100 speech vad.silenceAfterSpeech attempt=q_002#5 state=recording
+16:02:31.800 network voiceSubmit.transcript attempt=q_002#5 state=processing len=6

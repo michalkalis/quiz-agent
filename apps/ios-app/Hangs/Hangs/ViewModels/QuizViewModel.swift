@@ -685,6 +685,14 @@ final class QuizViewModel: ObservableObject {
     /// (#180 track A) — handed to each child so a test drives them all at once.
     let clock: AnyClock<Duration>
 
+    /// The audio-hardware settles (before a question read, the barge-in pause)
+    /// stay on real time by design — a parked test clock must not hold the
+    /// quiz there (#180 track A). #186 step 2: the seeded sequence harness
+    /// points this at its test clock too, because a wait it cannot drive is a
+    /// wait whose end it cannot order, and a replayed seed must interleave
+    /// exactly as it did the first time.
+    var settleClock: AnyClock<Duration> = .continuous
+
     /// Language-neutral earcon player (#77, task 77.10). A settable property (not
     /// an init param) so the ~15 existing call sites are untouched and tests can
     /// inject a `MockEarconPlayer`. Cues route through `emitEarcon(_:)`, which
@@ -778,7 +786,8 @@ final class QuizViewModel: ObservableObject {
         sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        flightRecorder: QuizFlightRecorder = .shared
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -787,7 +796,9 @@ final class QuizViewModel: ObservableObject {
         self.sttService = sttService
         self.realtimeSTTEnabled = realtimeSTTEnabled
         self.clock = clock
-        attemptLedger = AttemptLedger()
+        // The app keeps one black box; the #186 sequence harness gives each run
+        // its own so a failing seed prints only its own input trail.
+        attemptLedger = AttemptLedger(recorder: flightRecorder)
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
@@ -1223,7 +1234,7 @@ final class QuizViewModel: ObservableObject {
                 // session before the first AVPlayer starts. Real time on
                 // purpose (#180 track A): a hardware settle is not a quiz
                 // timer, and a parked test clock must not hold the quiz here.
-                try? await Task.sleep(for: .milliseconds(100))
+                try? await settleClock.sleep(for: .milliseconds(100))
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection then recording/timer
@@ -1595,7 +1606,7 @@ final class QuizViewModel: ObservableObject {
 
         // 3. Wait for audio hardware to settle (real time on purpose — a
         //    hardware settle is not a quiz timer, #180 track A)
-        try? await Task.sleep(for: .milliseconds(500))
+        try? await settleClock.sleep(for: .milliseconds(500))
 
         // 4. Guard again — state may have changed during sleep
         guard quizState == .askingQuestion, attemptLedger.ownsQuestion(owner, "bargeIn.start") else { return }
@@ -2275,7 +2286,7 @@ final class QuizViewModel: ObservableObject {
 
         // Small delay to ensure audio cleanup completes (real time on purpose —
         // a hardware settle is not a quiz timer, #180 track A)
-        try? await Task.sleep(for: .milliseconds(100))
+        try? await settleClock.sleep(for: .milliseconds(100))
 
         // Determine next state based on session status
         if let session = currentSession, session.isFinished {

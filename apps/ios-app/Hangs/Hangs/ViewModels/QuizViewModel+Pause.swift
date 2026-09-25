@@ -82,11 +82,13 @@ extension QuizViewModel {
         guard isPaused else { return }
         isPaused = false
 
-        if showAnswerConfirmation {
+        if showAnswerConfirmation, !noAnswerCaptured {
             // #185 5.2: the countdown waits for the listener, which this call
             // brings back up itself.
             recordingCoordinator.armConfirmationCountdown()
         } else {
+            // The no-answer sheet has no countdown, but its "znova" /
+            // "preskoč" listener must come back all the same (PR #199 review).
             if quizState == .askingQuestion {
                 // Re-arms the thinking-time countdown or the answer timer,
                 // whichever this session's settings use — the same entry point

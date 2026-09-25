@@ -297,4 +297,26 @@ struct ConfirmationSheetVoiceTests {
         silence.simulateCommandTranscript("skip")
         await pumpUntil({ network.submitTextInputCallCount == 1 }, "'skip' did not skip")
     }
+
+    /// WHY (PR #199 review): pausing takes the mic down; resuming on the
+    /// Again/Skip sheet must bring its "znova" / "preskoč" listener back even
+    /// though that sheet has no countdown to re-arm — otherwise the driver is
+    /// left with a tap as the only way off it.
+    @Test("resuming a paused no-answer sheet re-arms its command listener")
+    func resumeNoAnswerSheetReArmsListener() async {
+        let (vm, silence, network) = makeVM(clock: TestClock())
+        vm.quizState = .processing
+        vm.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        vm.enterPause()
+        await pumpUntil({ vm.voiceCommandCoordinator.commandCapturePhase == .idle }, "pause kept the mic up")
+
+        vm.exitPause()
+        await pumpUntil({ vm.voiceCommandCoordinator.commandCapturePhase == .listening }, "resume never re-armed the listener")
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .noAnswer)
+        #expect(vm.autoConfirmCountdown == 0, "the no-answer sheet still never counts down")
+
+        silence.simulateCommandTranscript("skip")
+        await pumpUntil({ network.submitTextInputCallCount == 1 }, "'skip' after resume did nothing")
+    }
 }

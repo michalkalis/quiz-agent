@@ -298,9 +298,11 @@ struct ListenBar: View {
     }
 
     /// The sub-line under the caption: the words to say, or — on a no-match — a
-    /// corrective hint that still names them. Answer mode has none (the caption
-    /// already IS the instruction).
+    /// corrective hint that still names them. In answer mode it is the answer
+    /// instruction (#185 track F) — under the large status on the full bar, beside
+    /// the status on the slim one, so no size loses it.
     private var subLine: Text? {
+        if case .answer = mode { return answerInstruction }
         // #179 D1 state 4: the line that stops "the screen froze" — it says the
         // wait is expected and that speaking will not help.
         if case .evaluating = mode {
@@ -350,17 +352,17 @@ struct ListenBar: View {
                 short: size == .slim || shortCaption
             ))
         // #185 track F: the state, not the instruction — the instruction
-        // moved to `statusCaption` under it.
+        // moved to `answerInstruction` (the sub-line).
         case .answer:
             return speechHeard ? Text("Capturing…") : Text("Listening…")
         }
     }
 
-    /// #185 track F: the small line under the large status. While waiting for
-    /// speech it is the instruction; once speech is heard it says how the
-    /// recording will end, so nobody talks on to fill the silence.
-    private var statusCaption: Text? {
-        guard case let .answer(kind) = mode else { return subLine }
+    /// #185 track F: the answer-mode sub-line. While waiting for speech it is
+    /// the instruction; once speech is heard it says how the recording will
+    /// end, so nobody talks on to fill the silence.
+    private var answerInstruction: Text? {
+        guard case let .answer(kind) = mode else { return nil }
         if speechHeard { return Text("I'll stop when you go quiet") }
         switch kind {
         // #171 Track I: answering with the option TEXT works (and goes through
@@ -438,8 +440,8 @@ struct ListenBar: View {
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if let statusCaption {
-                    statusCaption
+                if let subLine {
+                    subLine
                         .font(.hangsMono(10, weight: .medium))
                         .tracking(1)
                         .textCase(.uppercase)
@@ -503,7 +505,6 @@ struct ListenBar: View {
     /// What VoiceOver reads after the caption: the sentence, or the chips joined
     /// into one — a driver using VoiceOver must hear the words too.
     private var spokenSubLine: Text? {
-        if usesStatusLayout { return statusCaption }
         if let subLine { return subLine }
         guard !chipWords.isEmpty else { return nil }
         return Text(verbatim: chipWords.joined(separator: ", "))

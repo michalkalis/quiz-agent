@@ -25,15 +25,22 @@ final class RecordingInputLevel: ObservableObject {
     /// second the glow would otherwise redraw for movements nobody can see.
     nonisolated static let publishThreshold = 0.02
 
+    /// The filter's own state, advanced on EVERY sample. Kept apart from the
+    /// published `level` so skipping a render never stalls the filter — with
+    /// one variable for both, the release tail froze just under the threshold
+    /// and the glow never settled back to quiet (PR #201 review).
+    private var filtered: Double = 0
+
     /// Feed one tap buffer's level (`InputLevel.normalized`, 0…1).
     func ingest(_ sample: Double) {
-        let next = Self.smoothed(previous: level, sample: sample)
-        guard abs(next - level) >= Self.publishThreshold || (next == 0 && level != 0) else { return }
-        level = next
+        filtered = Self.smoothed(previous: filtered, sample: sample)
+        guard abs(filtered - level) >= Self.publishThreshold || (filtered == 0 && level != 0) else { return }
+        level = filtered
     }
 
     /// The recording ended: the bar must not keep glowing for a closed mic.
     func reset() {
+        filtered = 0
         if level != 0 { level = 0 }
     }
 

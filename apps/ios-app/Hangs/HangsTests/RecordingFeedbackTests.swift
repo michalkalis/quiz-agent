@@ -70,6 +70,24 @@ struct ListenBarRecordingStatusTests {
         }
     }
 
+    /// WHY (PR #201 review): the SE-class slim bar has no room for the large
+    /// status, but it must not lose the instruction — neither on screen nor
+    /// for VoiceOver — or a small-phone driver is told "Listening…" and
+    /// never what to say.
+    @Test("the slim answer bar keeps the instruction, on screen and for VoiceOver",
+          arguments: [(ListenBar.AnswerKind.mcq, "Say A–D or the answer"),
+                      (ListenBar.AnswerKind.open, "Say your answer")])
+    func slimKeepsInstruction(kind: ListenBar.AnswerKind, instruction: String) async throws {
+        let bar = ListenBar(mode: .answer(kind), size: .slim)
+        try await host(bar) { tree in
+            #expect(throws: Never.self) { try tree.find(text: "Listening…") }
+            #expect(throws: Never.self) { try tree.find(text: instruction) }
+            let label = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+                .accessibilityLabel().string()
+            #expect(label.contains(instruction), "VoiceOver reads '\(label)'")
+        }
+    }
+
     /// WHY: `speechHeard` is an answer-mode fact — a stale flag must never make
     /// a closed mic claim it is capturing.
     @Test("a stale speech flag cannot make the in-flight bar claim it is capturing")
@@ -157,6 +175,19 @@ struct RecordingInputLevelTests {
         var level = 1.0
         for _ in 0 ..< 60 { level = RecordingInputLevel.smoothed(previous: level, sample: 0) }
         #expect(level == 0)
+    }
+
+    /// WHY (PR #201 review): skipping a render must not stall the filter. When
+    /// the published value doubled as the filter state, the release tail froze
+    /// just under the publish threshold, so after the first word the bar kept a
+    /// faint "you are speaking" glow over a silent mic for the whole recording.
+    @Test("after speech, silence brings the published glow all the way back to quiet")
+    func releaseTailReachesQuiet() {
+        let meter = RecordingInputLevel()
+        for _ in 0 ..< 10 { meter.ingest(1) }
+        #expect(meter.level > 0.9)
+        for _ in 0 ..< 60 { meter.ingest(0) } // ~1.3 s of silence at 47 Hz
+        #expect(meter.level == 0, "the glow stalled at \(meter.level)")
     }
 
     /// WHY: ~47 samples a second — an invisible wobble must not cost a render.

@@ -56,6 +56,7 @@ async def _pending_rows(
     limit: int,
     status: str = "pending",
     only_answerability_flips: bool = False,
+    question_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Translation rows joined with their English source (``src_*`` keys).
 
@@ -80,6 +81,8 @@ async def _pending_rows(
             )
             == "translation_flip"
         )
+    if question_ids is not None:
+        stmt = stmt.where(tt.c.question_id.in_(question_ids))
     stmt = stmt.order_by(tt.c.updated_at).limit(limit)
     async with engine.connect() as conn:
         return [dict(r) for r in (await conn.execute(stmt)).mappings().all()]
@@ -158,6 +161,7 @@ async def verify_rows(
     answerability_model: str | None = None,
     status: str = "pending",
     only_answerability_flips: bool = False,
+    question_ids: list[str] | None = None,
     log: Callable[[str], None] = print,
 ) -> Counter:
     """Run the gate over up to ``limit`` rows in ``status``; returns status counts.
@@ -165,7 +169,9 @@ async def verify_rows(
     ``status="rejected"`` + ``only_answerability_flips`` re-gates rows that were
     rejected solely by a weak answerability model, without re-translating
     (#168) — same outcome/persistence path as a pending row, just a different
-    starting ``status`` filter.
+    starting ``status`` filter. ``question_ids`` narrows the gate to exactly the
+    rows a caller just rewrote (question-structure fix), so an unrelated pending
+    row is never swept into that run.
     """
     rows = await _pending_rows(
         engine,
@@ -173,8 +179,11 @@ async def verify_rows(
         limit,
         status=status,
         only_answerability_flips=only_answerability_flips,
+        question_ids=question_ids,
     )
-    default_selection = status == "pending" and not only_answerability_flips
+    default_selection = (
+        status == "pending" and not only_answerability_flips and question_ids is None
+    )
     if not rows:
         log(
             "no pending rows"

@@ -81,6 +81,7 @@ __all__ = [
     "question_translations_table",
     "SERVABLE_TRANSLATION_STATUSES",
     "fetch_servable_translations",
+    "fetch_structure_fix_pending_ids",
     "demote_stale_translations",
 ]
 
@@ -131,6 +132,24 @@ async def fetch_servable_translations(
             record["verification"] = dict(record["verification"] or {})
             out[record["question_id"]] = record
     return out
+
+
+async def fetch_structure_fix_pending_ids(
+    session: AsyncSession, language: str
+) -> List[str]:
+    """Question ids whose `language` translation still copies the English word
+    order and waits for its question-structure rewrite (founder 2026-09-25).
+
+    The flag (`verification.structure_fix = "pending"`) is set and cleared by
+    `apps/quiz-pack-api/scripts/question_structure_fix.py`; the retriever keeps
+    these questions out of sessions in that language until the rewrite lands.
+    """
+    stmt = select(question_translations_table.c.question_id).where(
+        question_translations_table.c.language == language,
+        question_translations_table.c.verification["structure_fix"].astext == "pending",
+    )
+    result = await session.execute(stmt)
+    return [str(qid) for qid in result.scalars().all()]
 
 
 async def demote_stale_translations(

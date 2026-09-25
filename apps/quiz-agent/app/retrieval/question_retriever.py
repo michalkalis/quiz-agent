@@ -91,6 +91,28 @@ class QuestionRetriever:
         """
         return await self._store.get_translations(question_ids, language, statuses)
 
+    async def _structure_fix_pending(self, session: QuizSession) -> List[str]:
+        """Questions whose translation into the session language still copies
+        the English word order (founder 2026-09-25: out of the beta until the
+        question sentence is rewritten, see ``question_structure_fix.py``).
+
+        English and custom-pack sessions are untouched: English is the source,
+        and a pack is generated in its own language. A failed lookup degrades to
+        serving those questions (the pre-fix behaviour), never to an empty quiz.
+        """
+        if session.pack_id or not session.language or session.language == "en":
+            return []
+        probe = getattr(self._store, "structure_fix_pending_ids", None)
+        if probe is None:
+            return []
+        try:
+            return list(await probe(session.language))
+        except Exception as e:
+            logger.warning(
+                "structure-fix lookup failed for %s: %s", session.language, e
+            )
+            return []
+
     async def count_available(
         self,
         session: QuizSession,
@@ -116,6 +138,7 @@ class QuestionRetriever:
                 list(client_excluded_ids or [])
                 + session.asked_question_ids
                 + session.client_excluded_ids
+                + await self._structure_fix_pending(session)
             )
         )
         return await self._store.count(
@@ -159,7 +182,13 @@ class QuestionRetriever:
         # Step 4: Merge session-scoped and client-side exclusions
         session_excluded = session.asked_question_ids
         client_excluded = list(client_excluded_ids or []) + session.client_excluded_ids
-        all_excluded_ids = list(set(session_excluded + client_excluded))
+        all_excluded_ids = list(
+            set(
+                session_excluded
+                + client_excluded
+                + await self._structure_fix_pending(session)
+            )
+        )
 
         logger.debug(
             "Excluding %d questions total (session: %d, client: %d)",

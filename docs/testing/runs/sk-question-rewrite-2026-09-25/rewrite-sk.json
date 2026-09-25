@@ -1,0 +1,372 @@
+{
+  "summary": {
+    "language": "sk",
+    "finished_at": "2026-09-25T10:11:24.086354+00:00",
+    "chosen": 50,
+    "rewritten": 46,
+    "unchanged": 4,
+    "failed": 0,
+    "gate": {
+      "approved": 45,
+      "rejected": 1
+    },
+    "rewrite_seconds": 62,
+    "total_seconds": 320
+  },
+  "rows": [
+    {
+      "question_id": "035077c2-f271-4f2a-846c-1459ef636270",
+      "status_before": "approved",
+      "before": "Na štandardnej šesťstennej hracej kocke dávajú čísla na ľubovoľných dvoch protiľahlých stenách vždy v súčte koľko?",
+      "after": "Koľko vždy dávajú v súčte čísla na ľubovoľných dvoch protiľahlých stenách štandardnej šesťstennej hracej kocky?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+      "status_before": "approved",
+      "before": "Najväčší ostrov sveta je samosprávnym územím ktorého európskeho kráľovstva?",
+      "after": "Ktorého európskeho kráľovstva je najväčší ostrov sveta samosprávnym územím?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e8ea634e-60b8-4f8e-af72-b69bf4018521",
+      "status_before": "approved",
+      "before": "V roku 1984 prišiel bubeník ktorej britskej rockovej kapely pri autonehode o ľavú ruku — a potom sa vrátil s elektronickou bicou súpravou vyrobenou na mieru, aby nahral album 'Hysteria', najpredávanejší album kapely?",
+      "after": "V roku 1984 prišiel bubeník istej britskej rockovej kapely pri autonehode o ľavú ruku a potom sa vrátil s elektronickou bicou súpravou vyrobenou na mieru, aby nahral album 'Hysteria', najpredávanejší album kapely. O ktorú kapelu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2fac4c7c-92b9-415d-9b79-f701647339c3",
+      "status_before": "approved",
+      "before": "Počas prvých 200 rokov boli antické olympijské hry predovšetkým akým druhom podujatia?",
+      "after": "Akým druhom podujatia boli antické olympijské hry predovšetkým počas prvých 200 rokov?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "01ec843f-3b11-47fd-9bde-fb7d2215699d",
+      "status_before": "approved",
+      "before": "Čaj Earl Grey vďačí za svoju charakteristickú vôňu oleju lisovanému z kôry ktorého horkého stredomorského citrusového plodu?",
+      "after": "Čaj Earl Grey vďačí za svoju charakteristickú vôňu oleju lisovanému z kôry horkého stredomorského citrusového plodu. Ako sa tento citrusový plod volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "a062c8fa-58f4-4f18-a220-282106ff7a6e",
+      "status_before": "approved",
+      "before": "Slnečné svetlo, ktoré ti práve teraz dopadá na tvár, nie je úplne čerstvé. Približne ako dávno opustilo povrch Slnka?",
+      "after": "Slnečné svetlo, ktoré ti práve teraz dopadá na tvár, nie je úplne čerstvé. Približne ako dávno opustilo povrch Slnka?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "81df305d-7728-4b3a-b187-a18c195c19cc",
+      "status_before": "approved",
+      "before": "S priemernými teplotami okolo bodu mrazu počas celého roka, ktoré ázijské hlavné mesto sa vo všeobecnosti považuje za najchladnejšie hlavné mesto na svete?",
+      "after": "Ktoré ázijské hlavné mesto s priemernými teplotami okolo bodu mrazu počas celého roka sa vo všeobecnosti považuje za najchladnejšie hlavné mesto na svete?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+      "status_before": "approved",
+      "before": "Ktorá japonská spoločnosť, založená v roku 1889 v Kjóte na výrobu ručne robených hracích kariet, sa neskôr stala jedným z najväčších mien vo svete videohier?",
+      "after": "Ktorá japonská spoločnosť, založená v roku 1889 v Kjóte na výrobu ručne robených hracích kariet, sa neskôr stala jedným z najväčších mien vo svete videohier?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "c05166c7-1bfb-42d7-bdeb-052e277ab2c9",
+      "status_before": "approved",
+      "before": "Najčastejšie nominovaná černošská žena v histórii Oscarov, ktorá mala do roku 2026 päť nominácií, pracuje za kamerou – v ktorej remeselnej kategórii?",
+      "after": "Najčastejšie nominovaná černošská žena v histórii Oscarov mala do roku 2026 päť nominácií a pracuje za kamerou. V ktorej remeselnej kategórii bola nominovaná?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2bf1fb8d-106c-4b44-a63b-eaee9147d74b",
+      "status_before": "approved",
+      "before": "Po rozkole so svojím bratom Adim v 40. rokoch 20. storočia založil Rudolf Dassler ktorú značku športového oblečenia, ktorá dodnes sídli v tom istom malom nemeckom mestečku ako Adidas?",
+      "after": "Po rozkole so svojím bratom Adim v 40. rokoch 20. storočia založil Rudolf Dassler vlastnú značku športového oblečenia, ktorá dodnes sídli v tom istom malom nemeckom mestečku ako Adidas. Ako sa táto značka volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e7c3a836-a5ff-53a1-bfeb-b8093ac4208a",
+      "status_before": "approved",
+      "before": "V roku 2026 vydala Grimes plnohodnotnú spoluprácu s ktorou slávnou japonskou virtuálnou popovou hviezdou — syntetickým spevackym hlasom bez ľudského interpreta, ktorého piesne píšu desaťtisíce domácich producentov?",
+      "after": "Existuje slávna japonská virtuálna popová hviezda, ktorá je len syntetickým spevácky hlasom bez ľudského interpreta a ktorej piesne píšu desaťtisíce domácich producentov. V roku 2026 s ňou Grimes vydala plnohodnotnú spoluprácu. Ako sa táto virtuálna speváčka volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "913dd84f-e408-4441-85b4-7f57bd2b08ad",
+      "status_before": "approved",
+      "before": "Vrchol Mount Everestu leží presne na hranici medzi Nepálom a ktorou ďalšou krajinou?",
+      "after": "Vrchol Mount Everestu leží presne na hranici medzi Nepálom a ďalšou krajinou. S ktorou krajinou okrem Nepálu hraničí vrchol Mount Everestu?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+      "status_before": "approved",
+      "before": "Líder Tour de France nosí žltý dres. Farba nebola zvolená kvôli viditeľnosti – od čoho bola odkopírovaná?",
+      "after": "Líder Tour de France nosí žltý dres. Táto farba nebola zvolená kvôli viditeľnosti. Od čoho bola žltá farba dresu skopírovaná?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9b20d737-74d1-4016-9d53-b6afd103b8b6",
+      "status_before": "approved",
+      "before": "Bublinková fólia bola vynájdená v roku 1957 dvoma inžiniermi, ktorí vôbec nemysleli na balenie — neúspešne sa pokúšali vytvoriť ktorý produkt do domácnosti?",
+      "after": "Bublinková fólia bola vynájdená v roku 1957 dvoma inžiniermi, ktorí vôbec nemysleli na balenie. Aký produkt do domácnosti sa vtedy neúspešne pokúšali vytvoriť?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4d7d9677-846f-5448-8f18-4b39f7ca414d",
+      "status_before": "approved",
+      "before": "Point Nemo v južnom Tichom oceáne je miesto v oceáne najvzdialenejšie od akejkoľvek pevniny — vo všetkých smeroch je to viac než 2 600 kilometrov. Keďže nikto nikdy nie je nablízku, vesmírne agentúry ho používajú ako zámernú zónu dopadu pre čo?",
+      "after": "Point Nemo v južnom Tichom oceáne je miesto v oceáne najvzdialenejšie od akejkoľvek pevniny — vo všetkých smeroch je to viac než 2 600 kilometrov. Keďže nikto nikdy nie je nablízku, vesmírne agentúry ho používajú ako zámernú zónu dopadu. Čo nechávajú vesmírne agentúry dopadnúť na toto miesto?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4ba3e579-c9cb-44e8-9dfb-97d0a3c3b7a3",
+      "status_before": "approved",
+      "before": "Iba dve krajiny na Zemi sú dvojnásobne vnútrozemské — obklopené výlučne susedmi, ktorí sami nemajú prístup k moru. Jednou z nich je Uzbekistan; ktorý európsky ministát je ten druhý?",
+      "after": "Iba dve krajiny na Zemi sú dvojnásobne vnútrozemské — obklopené výlučne susedmi, ktorí sami nemajú prístup k moru. Jednou z nich je Uzbekistan. Ktorý európsky ministát je tou druhou dvojnásobne vnútrozemskou krajinou?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "37108bde-0306-48bf-b9c5-db4663b3c37b",
+      "status_before": "approved",
+      "before": "Takmer 2 000 rokov pred automatmi na občerstvenie opísal grécky inžinier Herón Alexandrijský prvý známy predajný automat na svete, zostrojený pre egyptské chrámy. Vhodili ste mincu – a čo vám vydal?",
+      "after": "Takmer 2 000 rokov pred automatmi na občerstvenie opísal grécky inžinier Herón Alexandrijský prvý známy predajný automat na svete, zostrojený pre egyptské chrámy. Čo tento automat vydal, keď doň človek vhodil mincu?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+      "status_before": "approved",
+      "before": "Olympijská zlatá medaila je takmer celá vyrobená z ktorého kovu?",
+      "after": "Z ktorého kovu je takmer celá vyrobená olympijská zlatá medaila?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e5e1cfa6-3708-41e7-a615-f1d4a8f95af7",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: na odovzdávaní Oscarov v roku 2026 získala žena Oscara za najlepšiu kameru po prvý raz v histórii.",
+      "after": "Na odovzdávaní Oscarov v roku 2026 získala žena Oscara za najlepšiu kameru po prvý raz v histórii. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "5cb92722-870a-52c2-becc-083e45675cdf",
+      "status_before": "approved",
+      "before": "Zvláštne presná maratónska vzdialenosť 42,195 kilometra pochádza z olympijských hier v Londýne v roku 1908, keď sa trať predĺžila tak, aby preteky mohli odštartovať na trávniku ktorého kráľovského sídla?",
+      "after": "Zvláštne presná maratónska vzdialenosť 42,195 kilometra pochádza z olympijských hier v Londýne v roku 1908, keď sa trať predĺžila tak, aby preteky mohli odštartovať na trávniku kráľovského sídla. Na trávniku ktorého kráľovského sídla sa vtedy maratón odštartoval?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7ee6f43d-66f1-4764-83fe-b3b03bea7f54",
+      "status_before": "approved",
+      "before": "V roku 1974 bol prvým produktom, ktorý kedy v supermarkete pri pokladni načítali skenovaním čiarového kódu, balíček čoho?",
+      "after": "V roku 1974 v supermarkete pri pokladni po prvý raz načítali produkt skenovaním čiarového kódu. Balíček čoho to bol?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "044bf206-2137-5061-b83b-765bb3b74805",
+      "status_before": "approved",
+      "before": "Na Live Aid v roku 1985 nahral David Bowie duet – coververziu piesne 'Dancing in the Street', ktorá sa dostala na vrchol britského rebríčka. S ktorou ďalšou rockovou legendou ju naspieval?",
+      "after": "Na Live Aid v roku 1985 nahral David Bowie duet – coververziu piesne 'Dancing in the Street', ktorá sa dostala na vrchol britského rebríčka. S ktorou ďalšou rockovou legendou ju naspieval?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "086a3325-8ce5-4246-9e0b-ef2928e6fefe",
+      "status_before": "approved",
+      "before": "Vanilka je podľa hmotnosti druhé najdrahšie korenie na svete. Je to ručne opeľovaný a fermentovaný semenný lusk ktorej čeľade kvitnúcich rastlín?",
+      "after": "Vanilka je podľa hmotnosti druhé najdrahšie korenie na svete. Je to ručne opeľovaný a fermentovaný semenný lusk. Z ktorej čeľade kvitnúcich rastlín tento lusk pochádza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "46ab66c1-65b6-4844-8923-77e272e212fa",
+      "status_before": "approved",
+      "before": "Iba dve krajiny na svete majú dokonale štvorcové štátne vlajky. Jednou z nich je Vatikán — ktorá alpská krajina je tou druhou?",
+      "after": "Iba dve krajiny na svete majú dokonale štvorcové štátne vlajky. Jednou z nich je Vatikán. Ktorá alpská krajina je tou druhou krajinou so štvorcovou vlajkou?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "6f2090b8-2a43-43cb-96eb-53dd2669eced",
+      "status_before": "approved",
+      "before": "Kontinenty sa po Zemi pohybujú približne rovnakou rýchlosťou, akou rastie ktorá časť ľudského tela?",
+      "after": "Kontinenty sa po Zemi pohybujú približne rovnakou rýchlosťou, akou rastie istá časť ľudského tela. Ktorá časť ľudského tela to je?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "c640e4c6-c6d9-4daf-b12a-67b7116a64ed",
+      "status_before": "approved",
+      "before": "Najväčší titul Netflixu z prvej polovice roka 2026, War Machine, získal za tých šesť mesiacov približne koľko zhliadnutí?",
+      "after": "Najväčším titulom Netflixu z prvej polovice roka 2026 bol War Machine. Koľko zhliadnutí približne získal za tých šesť mesiacov?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "1ae3dd75-f197-4db5-9ead-e6830e7ff008",
+      "status_before": "approved",
+      "before": "Klinové písmo, najstarší známy systém písma na svete, nevzniklo preto, aby zaznamenávalo modlitby, básne či skutky kráľov. Najstaršie hlinené tabuľky zo sumerského mesta Uruk ukazujú, že vzniklo na oveľa všednejší účel — čo si teda ľudia v skutočnosti zapisovali?",
+      "after": "Klinové písmo, najstarší známy systém písma na svete, nevzniklo preto, aby zaznamenávalo modlitby, básne či skutky kráľov. Najstaršie hlinené tabuľky zo sumerského mesta Uruk ukazujú, že vzniklo za oveľa všednejším účelom. Čo si teda ľudia v skutočnosti zapisovali?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7f4a5602-80c2-4ec7-9e03-c987241947c0",
+      "status_before": "approved",
+      "before": "Trofej pre víťaza majstrovstiev sveta v ragby nesie meno Williama Webba Ellisa, školáka, ktorý podľa zakladateľskej legendy tohto športu vynašiel hru v roku 1823 tým, že uprostred futbalového zápasu urobil čo?",
+      "after": "Trofej pre víťaza majstrovstiev sveta v ragby nesie meno Williama Webba Ellisa, školáka, ktorý podľa zakladateľskej legendy tohto športu vynašiel túto hru v roku 1823 uprostred futbalového zápasu. Čo vtedy podľa legendy urobil?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "be77f0a4-b65e-4573-b42a-28b5fa5e9162",
+      "status_before": "approved",
+      "before": "Simpsonovci sa najprv objavili ako krátke skeče v inej komediálnej šou. V ktorom roku sa prvýkrát vysielali ako samostatný polhodinový seriál?",
+      "after": "Simpsonovci sa najprv objavili ako krátke skeče v inej komediálnej šou. V ktorom roku sa prvýkrát vysielali ako samostatný polhodinový seriál?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+      "status_before": "approved",
+      "before": "Vedci navrhli, že planéta 55 Cancri e môže byť z veľkej časti tvorená ktorým drahým kameňom?",
+      "after": "Vedci navrhli, že planéta 55 Cancri e môže byť z veľkej časti tvorená drahým kameňom. Ktorý drahý kameň to je?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "3befd125-2465-45c8-87b9-9bf61c5516a0",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: pôvodný Scovillov test z roku 1912 meral pálivosť čili tak, že ľudskí degustátori popíjali stále viac zriedený extrakt z papričiek v cukrovej vode, až kým už necítili žiadne pálenie.",
+      "after": "Pôvodný Scovillov test z roku 1912 meral pálivosť čili tak, že ľudskí degustátori popíjali stále viac zriedený extrakt z papričiek v cukrovej vode, až kým už necítili žiadne pálenie. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "00e29bed-accf-461e-826a-31e0c8520828",
+      "status_before": "approved",
+      "before": "Najznámejšie hviezdičkové hodnotenia reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900, aby sa predával istý produkt. Ktorý?",
+      "after": "Najznámejšie hviezdičkové hodnotenia reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900, aby sa predával istý produkt. Aký produkt mal tento sprievodca pomôcť predávať?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "bdfb912c-5c81-46f4-999a-664c95937f75",
+      "status_before": "approved",
+      "before": "V ktorej juhoamerickej púšti niektoré meteorologické stanice nikdy nezaznamenali ani jedinú kvapku dažďa — na mieste takom pustom, že NASA tam testuje svoje marsovské vozidlá?",
+      "after": "Niektoré meteorologické stanice v jednej juhoamerickej púšti nikdy nezaznamenali ani jedinú kvapku dažďa a toto miesto je také pusté, že NASA tam testuje svoje marsovské vozidlá. Ako sa volá táto púšť?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "c875bed5-0416-4e74-9900-4553bc90b61a",
+      "status_before": "approved",
+      "before": "Farebná otáčavá kocka-hlavolam, ktorá sa v 80. rokoch stala celosvetovým šialenstvom, bola vynálezom profesora architektúry z ktorej krajiny?",
+      "after": "Farebná otáčavá kocka-hlavolam, ktorá sa v 80. rokoch stala celosvetovým šialenstvom, bola vynálezom profesora architektúry. Z ktorej krajiny pochádzal tento profesor?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4716079c-6547-4467-82ec-362237cdab34",
+      "status_before": "approved",
+      "before": "Návštevníci pláží sa v roku 1975 zrazu začali báť vody vďaka ktorému thrilleru Stevena Spielberga, ktorý sa všeobecne považuje za prvý moderný letný trhák?",
+      "after": "Návštevníci pláží sa v roku 1975 zrazu začali báť vody. Vďaka ktorému thrilleru Stevena Spielberga, ktorý sa všeobecne považuje za prvý moderný letný trhák, sa to stalo?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0abe16a4-4df3-4985-8977-6bdbd34487d5",
+      "status_before": "approved",
+      "before": "Ako zo školskej hodiny telesnej výchovy: až do hier v roku 1932 mohli olympijskí gymnasti získať medailu v obyčajných pretekoch o to, kto sa prvý dostane na vrchol čoho?",
+      "after": "Ako zo školskej hodiny telesnej výchovy: až do hier v roku 1932 mohli olympijskí gymnasti získať medailu v obyčajných pretekoch o to, kto sa prvý dostane na vrchol. Na vrchol čoho sa museli v týchto pretekoch dostať ako prví?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7336ab85-ed14-56f3-ae9e-08a36d8b0d90",
+      "status_before": "approved",
+      "before": "Analýza kostí gladiátorov pochovaných v Efeze ukazuje, že jedli prevažne rastlinnú stravu — natoľko jej dominovala jedna obilnina, že Rimania im dali prezývku „hordearii“, čo znamená jedáci čoho?",
+      "after": "Analýza kostí gladiátorov pochovaných v Efeze ukazuje, že jedli prevažne rastlinnú stravu, v ktorej natoľko dominovala jedna obilnina, že im Rimania dali prezývku „hordearii“. Jedákov akej obilniny táto prezývka označuje?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "580e1b0d-8895-45fd-81cb-52ec01aa9680",
+      "status_before": "approved",
+      "before": "Voyager 1, prvý ľuďmi vyrobený objekt, ktorý dosiahol medzihviezdny priestor, bol vypustený v ktorom roku?",
+      "after": "Voyager 1 bol prvý ľuďmi vyrobený objekt, ktorý dosiahol medzihviezdny priestor. V ktorom roku bol vypustený?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "eb92a5b7-44e1-424f-a318-42abc48eb7f8",
+      "status_before": "approved",
+      "before": "Croissant, priam symbol francúzskych raňajok, pochádza z pečiva v tvare polmesiaca, ktoré prvýkrát upiekli v ktorej európskej metropole?",
+      "after": "Croissant, priam symbol francúzskych raňajok, pochádza z pečiva v tvare polmesiaca. V ktorej európskej metropole toto pečivo prvýkrát upiekli?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "80ec52c8-e041-5353-9929-26faed681b8c",
+      "status_before": "approved",
+      "before": "Kanada a Dánsko takmer päťdesiat rokov viedli najzdvorilejší územný spor na svete — takzvanú whisky vojnu — tak, že si striedavo osádzali vlajky a nechávali fľaše alkoholu na ktorom malom neobývanom arktickom ostrove?",
+      "after": "Kanada a Dánsko takmer päťdesiat rokov viedli najzdvorilejší územný spor na svete, takzvanú whisky vojnu, tak, že si na malom neobývanom arktickom ostrove striedavo osádzali vlajky a nechávali tam fľaše alkoholu. Ako sa tento ostrov volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ae368719-7318-526b-8690-015ceb92e54e",
+      "status_before": "approved",
+      "before": "Úplne prvé papierové bankovky v Európe vydala v roku 1661 súkromná banka v ktorej krajine — v tej, ktorá sa dnes, dosť ironicky, snaží stať jednou z prvých úplne bezhotovostných spoločností na svete?",
+      "after": "Úplne prvé papierové bankovky v Európe vydala už v roku 1661 súkromná banka v krajine, ktorá sa dnes, dosť ironicky, snaží stať jednou z prvých úplne bezhotovostných spoločností na svete. O ktorú krajinu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d8c7a633-02f1-418e-99da-d4d909519581",
+      "status_before": "approved",
+      "before": "Predpokladá sa, že húževnatý mýtus o tom, že Einstein prepadol z matematiky, vznikol v roku 1935 v rubrike ktorej slávnej značky typu „verte či neverte“?",
+      "after": "Predpokladá sa, že húževnatý mýtus o tom, že Einstein prepadol z matematiky, vznikol v roku 1935 v novinovej rubrike slávnej značky typu „verte či neverte“. Ktorá značka to bola?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+      "status_before": "approved",
+      "before": "Festival v Glastonbury sa v lete 2026 konal ako zvyčajne. Pravda alebo nepravda?",
+      "after": "Festival v Glastonbury sa v lete 2026 konal ako zvyčajne. Je to pravda, alebo nepravda?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "99bc37f7-ea9d-4d0f-804e-eb56798e37c1",
+      "status_before": "approved",
+      "before": "Zápasy ktorého športu môžu byť naplánované na päť celých dní — a aj tak sa môžu skončiť bez víťaza?",
+      "after": "V ktorom športe môžu byť zápasy naplánované na päť celých dní – a aj tak sa môžu skončiť bez víťaza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e2fd6bf2-e9eb-512d-8038-f44a7cc7501f",
+      "status_before": "approved",
+      "before": "Rekord v počte cien Grammy držal desaťročia nie popová hviezda, ale klasický dirigent — ktorá superhviezda si napokon svojou tridsiatou druhou soškou vybojovala titul najoceňovanejšieho umelca v histórii Grammy?",
+      "after": "Rekord v počte cien Grammy desaťročia nedržala popová hviezda, ale klasický dirigent. Ktorá superhviezda si napokon svojou tridsiatou druhou soškou vybojovala titul najoceňovanejšieho umelca v histórii Grammy?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "91ad26c0-d9b8-4e0b-829d-76532f188370",
+      "status_before": "approved",
+      "before": "Fax alebo telefón: ktorý z týchto dvoch vynálezov vznikol skôr?",
+      "after": "Ktorý z týchto dvoch vynálezov vznikol skôr – fax, alebo telefón?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "6e378542-1f8f-49dc-a9d9-d6496e85ce17",
+      "status_before": "approved",
+      "before": "Šafran je najdrahšie korenie na svete, pretože každý kvet krokusu poskytne len tri drobné vlákna. Približne koľko kvetov treba ručne pozbierať na jeden kilogram šafranu?",
+      "after": "Šafran je najdrahšie korenie na svete, pretože každý kvet krokusu poskytne len tri drobné vlákna. Koľko kvetov treba približne ručne pozbierať na jeden kilogram šafranu?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "944c79db-14c3-41e4-8fa1-b13d54ed78fb",
+      "status_before": "approved",
+      "before": "Cestujete cez Africký roh a potrebujete zameniť peniaze. Čím by ste platili v Etiópii, ak je táto mena pomenovaná podľa starého slova pre striebro?",
+      "after": "Cestujete cez Africký roh a potrebujete zameniť peniaze. Mena Etiópie je pomenovaná podľa starého slova pre striebro. Ako sa volá mena, ktorou by ste platili v Etiópii?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "48de98bb-1a16-4468-9bb9-99bf13f4eb84",
+      "status_before": "approved",
+      "before": "Výbuch sopky Tambora v Indonézii v roku 1815 ochladil celú planétu a z roku 1816 urobil 'rok bez leta' — skupinu priateľov tak uväznil v dome pri Ženevskom jazere, kde osemnásťročná Mary Shelleyová začala písať ktorý slávny román?",
+      "after": "Výbuch sopky Tambora v Indonézii v roku 1815 ochladil celú planétu a z roku 1816 urobil 'rok bez leta' — skupinu priateľov tak uväznil v dome pri Ženevskom jazere, kde osemnásťročná Mary Shelleyová začala písať slávny román. Ako sa tento román volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "3650abf5-1d07-5514-bd3f-fafd47d1b216",
+      "status_before": "approved",
+      "before": "Hemoglobín získava svoju silu z jediného atómu železa v srdci molekuly. Chlorofyl, zelené farbivo rastlín, má pozoruhodne podobnú štruktúru — ale ktorý kov sa nachádza v jeho strede namiesto železa?",
+      "after": "Hemoglobín získava svoju silu z jediného atómu železa v srdci molekuly. Chlorofyl, zelené farbivo rastlín, má pozoruhodne podobnú štruktúru. Ktorý kov sa však nachádza v strede chlorofylu namiesto železa?",
+      "status_after": "approved"
+    }
+  ]
+}

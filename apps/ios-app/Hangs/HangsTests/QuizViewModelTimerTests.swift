@@ -466,6 +466,10 @@ struct QuizViewModelAutoStopRecordingTests {
         // whether the cap lands inside the handshake.
         let clock = TestClock()
         let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio(clock: AnyClock(clock))
+        // Hermetic: the mic-live / got-it cues must not reach a real
+        // AVAudioPlayer in the test host (a TSan run crashed in its
+        // finishedPlaying callback while this test waited).
+        viewModel.earconPlayer = MockEarconPlayer()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.quizState = .askingQuestion
@@ -481,8 +485,21 @@ struct QuizViewModelAutoStopRecordingTests {
         let start = Task { await viewModel.recordingCoordinator.startRecording() }
         await pumpUntil({ mockAudio.prepareForRecordingCallCount == 1 }, "the engine handshake never began")
 
-        await clock.advance(by: .seconds(Config.autoRecordingDuration))
-        await pumpUntil({ viewModel.quizState != .recording }, "the dead-air cap never ended the parked recording")
+        // The cap TICKS (1 s per sleep, #173), and each tick must re-register
+        // its sleep before the clock moves on. One 15 s jump let a slow CI
+        // runner register a tick after the jump and wait for time that never
+        // came. Stepping second by second, with scheduling pumped between
+        // steps, waits for every tick whatever the machine's speed.
+        var advanced = 0
+        while viewModel.quizState == .recording, advanced < Int(Config.autoRecordingDuration) * 2 {
+            await clock.advance(by: .seconds(1))
+            advanced += 1
+            for _ in 0 ..< 20 {
+                await Task.yield()
+            }
+        }
+        #expect(viewModel.quizState != .recording, "the dead-air cap never ended the parked recording")
+        #expect(advanced >= Int(Config.autoRecordingDuration), "the recording ended before the cap was due")
 
         gate.continuation.finish() // the engine finally comes up — after the cap
         await start.value

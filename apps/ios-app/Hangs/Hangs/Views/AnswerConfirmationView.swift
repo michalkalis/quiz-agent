@@ -269,9 +269,10 @@ struct AnswerConfirmationView: View {
                     // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                     // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                     HangsPrimaryButton(
-                        // #173 C2: the evaluating state IS the button. Same key the
-                        // retired full-screen overlay used, so SK/CS need nothing new.
-                        title: isEvaluating ? "Evaluating…" : "Confirm",
+                        // #173 C2: the evaluating state IS the button. #185 track F:
+                        // "Processing…", the word the question screen's bar and
+                        // Stop button say for the same wait.
+                        title: isEvaluating ? "Processing…" : "Confirm",
                         icon: isEvaluating ? nil : "checkmark",
                         isLoading: isEvaluating,
                         height: 54,

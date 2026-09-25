@@ -432,12 +432,12 @@ struct AnswerConfirmationEvaluatingTests {
 
     /// The founder's finding 5: the full-screen "Vyhodnocujem" overlay was ugly
     /// and disowned the button that had just been pressed. The state belongs IN
-    /// that button — spinner + "Evaluating…", the same catalog key the overlay
-    /// used, so SK/CS need nothing new.
-    @Test("the primary button becomes the spinning Evaluating… control")
+    /// that button — spinner + "Processing…" (#185 track F: the same word the
+    /// question screen's bar and Stop button say for this wait).
+    @Test("the primary button becomes the spinning Processing… control")
     func primaryButtonShowsEvaluating() throws {
         let tree = try makeSheet(evaluating: "A · Textured wallpaper").inspect()
-        #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: Never.self) { try tree.find(text: "Processing…") }
         #expect(throws: (any Error).self, "Confirm is not offered twice for one submission") {
             try tree.find(text: "Confirm")
         }
@@ -473,7 +473,7 @@ struct AnswerConfirmationEvaluatingTests {
         )
         let tree = try view.inspect()
 
-        #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: Never.self) { try tree.find(text: "Processing…") }
         #expect(throws: Never.self, "the submitted answer stays on screen") {
             try tree.find(text: "Paris")
         }
@@ -531,7 +531,7 @@ struct AnswerConfirmationEvaluatingTests {
         #expect(throws: Never.self, "the edited words stay on screen") {
             try tree.find(text: "The Eiffel Tower")
         }
-        #expect(throws: Never.self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: Never.self) { try tree.find(text: "Processing…") }
         #expect(throws: (any Error).self, "a live field here mutates the answer being graded") {
             _ = try tree.find(ViewType.TextField.self)
         }
@@ -556,7 +556,7 @@ struct AnswerConfirmationEvaluatingTests {
         )
         let tree = try view.inspect()
         #expect(throws: Never.self) { try tree.find(text: "Transcribing…") }
-        #expect(throws: (any Error).self) { try tree.find(text: "Evaluating…") }
+        #expect(throws: (any Error).self) { try tree.find(text: "Processing…") }
     }
 
     /// Everything else on the sheet is dead while the answer is in flight. A

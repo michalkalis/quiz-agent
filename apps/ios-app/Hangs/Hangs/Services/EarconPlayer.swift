@@ -78,7 +78,11 @@ enum EarconHaptic: Equatable {
 /// event, and none during TTS).
 @MainActor
 protocol EarconPlaying: AnyObject {
+    /// The tone and its haptic.
     func play(_ earcon: Earcon)
+    /// #185 track F (founder 2026-09-25): the haptic alone — "Recording
+    /// sounds" off silences the tone, the tap still confirms the event.
+    func playHaptic(_ earcon: Earcon)
 }
 
 /// Production earcon player: distinct built-in iOS system sounds per cue. System
@@ -122,7 +126,7 @@ final class SystemEarconPlayer: EarconPlaying {
             // cue at all if AVAudioPlayer construction ever fails.
             AudioServicesPlaySystemSound(Self.soundID(for: earcon))
         }
-        playHaptic(for: earcon)
+        playHaptic(earcon)
     }
 
     /// The cached player for `earcon`, synthesized on first request. Does NOT
@@ -147,7 +151,7 @@ final class SystemEarconPlayer: EarconPlaying {
     /// a tap on every question never becomes a buzz. This is the only place
     /// the recording haptics fire (QuestionView's own `.sensoryFeedback` on
     /// entering recording is gone — two taps per cue would be noise).
-    private func playHaptic(for earcon: Earcon) {
+    func playHaptic(_ earcon: Earcon) {
         guard Self.supportsHaptics else { return }
         switch EarconHaptic.haptic(for: earcon) {
         case let .soft(intensity):

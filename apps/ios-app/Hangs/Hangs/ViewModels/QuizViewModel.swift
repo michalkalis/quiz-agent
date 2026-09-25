@@ -385,13 +385,18 @@ final class QuizViewModel: ObservableObject {
     /// Single funnel for every earcon (77.10). Suppresses cues during question
     /// TTS (`isPlayingQuestionTTS`) so a tone never plays over the spoken
     /// question — the one hard rule for the language-neutral cue set.
-    /// The "Recording sounds" setting (#68) gates only the recording cues
-    /// (mic-live, #185 speech-start, got-it) and their haptics; command-ack and
-    /// skip cues stay on as driving-safety feedback.
+    /// The "Recording sounds" setting (#68) silences only the TONES of the
+    /// recording cues (mic-live, #185 speech-start, got-it); their haptics stay
+    /// (founder 2026-09-25: sound off = silent, the tap still confirms start /
+    /// speech heard / stop). Command-ack and skip cues stay on as
+    /// driving-safety feedback.
     func emitEarcon(_ earcon: Earcon) {
         guard !isPlayingQuestionTTS else { return }
-        if earcon == .micLive || earcon == .speechStart || earcon == .gotIt {
-            guard settings.recordingSoundsEnabled else { return }
+        if earcon == .micLive || earcon == .speechStart || earcon == .gotIt,
+           !settings.recordingSoundsEnabled
+        {
+            earconPlayer.playHaptic(earcon)
+            return
         }
         earconPlayer.play(earcon)
     }

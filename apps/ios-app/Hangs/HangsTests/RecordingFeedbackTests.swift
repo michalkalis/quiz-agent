@@ -254,16 +254,18 @@ struct RecordingFeedbackPipelineTests {
         #expect(earcons.played == [.speechStart])
     }
 
-    /// WHY: the "Recording sounds" setting silences the recording cues — the
-    /// speech-start tone is one of them, not a new always-on sound.
-    @Test("the recording-sounds setting silences the speech-start tone")
-    func settingGatesSpeechStart() async {
+    /// WHY (founder 2026-09-25): "Recording sounds" off means SILENT, not
+    /// unconfirmed — the tones go, the haptics for mic open / speech heard /
+    /// mic closed stay, so the driver still feels each step.
+    @Test("recording sounds off: no tones, but start / speech / stop still tap")
+    func soundsOffKeepsRecordingHaptics() async {
         let (vm, _, earcons) = makeVM()
         vm.settings.recordingSoundsEnabled = false
         await vm.recordingCoordinator.startRecording()
-
         vm.recordingCoordinator.noteSpeechStarted()
+        await vm.recordingCoordinator.stopRecordingAndSubmit()
 
-        #expect(earcons.played.isEmpty, "got \(earcons.played)")
+        #expect(earcons.played.isEmpty, "no tone may play, got \(earcons.played)")
+        #expect(earcons.hapticsOnly == [.micLive, .speechStart, .gotIt])
     }
 }

@@ -87,15 +87,56 @@ final class AppleStubURLProtocol: URLProtocol, @unchecked Sendable {
 // MARK: - AppleTestTokenStore
 
 final nonisolated class AppleTestTokenStore: TokenStore, @unchecked Sendable {
+    /// What the service did to the store, in order — lets a test wait for a
+    /// specific write instead of guessing how long a stubbed mint takes.
+    enum Event: Sendable {
+        case cleared
+        case saved(accessToken: String)
+    }
+
     private let lock = OSAllocatedUnfairLock<AuthTokens?>(initialState: nil)
+    private let listeners = OSAllocatedUnfairLock<[AsyncStream<Event>.Continuation]>(initialState: [])
 
     init(seed: AuthTokens? = nil) {
         lock.withLock { $0 = seed }
     }
 
     func load() -> AuthTokens? { lock.withLock { $0 } }
-    func save(_ tokens: AuthTokens) { lock.withLock { $0 = tokens } }
-    func clear() { lock.withLock { $0 = nil } }
+    func save(_ tokens: AuthTokens) {
+        lock.withLock { $0 = tokens }
+        emit(.saved(accessToken: tokens.accessToken))
+    }
+
+    func clear() {
+        lock.withLock { $0 = nil }
+        emit(.cleared)
+    }
+
+    /// Events from NOW on (earlier ones are not replayed).
+    func makeEventStream() -> AsyncStream<Event> {
+        let (stream, continuation) = AsyncStream<Event>.makeStream()
+        listeners.withLock { $0.append(continuation) }
+        return stream
+    }
+
+    /// Waits until the store is cleared and then re-saved with `accessToken` —
+    /// one complete drop-to-anon, however long the stubbed mint takes.
+    static func waitForDropAndSave(_ events: AsyncStream<Event>, accessToken: String) async {
+        var cleared = false
+        for await event in events {
+            switch event {
+            case .cleared: cleared = true
+            case let .saved(token) where cleared && token == accessToken: return
+            case .saved: break
+            }
+        }
+    }
+
+    private func emit(_ event: Event) {
+        for continuation in listeners.withLock({ $0 }) {
+            continuation.yield(event)
+        }
+    }
 }
 
 // MARK: - Fixtures
@@ -131,7 +172,9 @@ private nonisolated enum AppleAuthStubs {
 
 // MARK: - AppleAuthTests
 
-@Suite("Apple Auth — nonce + credential flow", .serialized)
+// `.timeLimit`: the revocation tests wait on store events, not a turn budget —
+// a regression that never re-bootstraps must fail, not hang the run.
+@Suite("Apple Auth — nonce + credential flow", .serialized, .timeLimit(.minutes(1)))
 struct AppleAuthTests {
     // MARK: - 0. Raw nonce generation (#91 item 1)
 
@@ -310,18 +353,20 @@ struct AppleAuthTests {
         defer { AppleStubURLProtocol.handler = nil }
 
         // Wire up the revocation observer (normally called from AppState.init).
+        // It also runs the cold-launch credential check, which on a simulator
+        // (no real Apple ID) drops to anon ITSELF — fully awaited here.
         await service.setupAppleCredentialObservation()
 
-        // Post the notification that Apple sends when the user revokes access.
+        // Only the NOTIFICATION's drop counts from here: waiting on the token
+        // value alone was already satisfied by the cold-launch drop, and the
+        // observer's clear then raced the assertions (CI 2026-09-25).
+        let events = store.makeEventStream()
         NotificationCenter.default.post(
             name: ASAuthorizationAppleIDProvider.credentialRevokedNotification,
             object: nil
         )
-
-        // Pump the async observer chain (Notification -> Task -> actor method) until it
-        // lands, instead of guessing a duration (#180 track A: no real-time waits).
-        await pumpUntil({ store.load()?.accessToken == "fresh-anon-after-revoke" }, turns: 5000,
-                        "revocation observer never re-bootstrapped")
+        // Event-driven, no duration and no turn budget (#180 track A).
+        await AppleTestTokenStore.waitForDropAndSave(events, accessToken: "fresh-anon-after-revoke")
 
         let stored = store.load()
         #expect(stored?.appleUserId == nil, "appleUserId must be cleared after revocation")
@@ -373,13 +418,15 @@ struct AppleAuthTests {
         defer { AppleStubURLProtocol.handler = nil }
 
         await service.setupAppleCredentialObservation()
+        // Wait for the NOTIFICATION's drop specifically — see test 4 above: the
+        // cold-launch check already minted the same token, so a value-only wait
+        // returned at once and the observer's clear later left the store empty.
+        let events = store.makeEventStream()
         NotificationCenter.default.post(
             name: ASAuthorizationAppleIDProvider.credentialRevokedNotification,
             object: nil
         )
-        // Observer chain: Notification → Task → actor. Pumped, not slept (#180 track A).
-        await pumpUntil({ store.load()?.accessToken == "fresh-anon-after-revoke" }, turns: 5000,
-                        "revocation observer never re-bootstrapped")
+        await AppleTestTokenStore.waitForDropAndSave(events, accessToken: "fresh-anon-after-revoke")
         // The mint landing does not end the bootstrap: keep pumping so a link that
         // fired in its tail would still be seen — the negative assertion below is
         // worthless if the test stops at the token write.

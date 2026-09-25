@@ -1,6 +1,6 @@
 ---
 name: test-ios
-description: Run iOS unit tests for Hangs app. Use after iOS code changes.
+description: Run iOS unit tests for the Trubbo app. Use after iOS code changes.
 disable-model-invocation: true
 allowed-tools: Bash
 model: haiku
@@ -9,7 +9,7 @@ argument-hint: "[unit|ui|all|specific-test-name]"
 
 # Run iOS Tests
 
-Run iOS tests for the Hangs app.
+Run iOS tests for the Trubbo app.
 
 ## Based on $ARGUMENTS:
 

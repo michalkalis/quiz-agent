@@ -8,7 +8,7 @@ model: sonnet
 
 # Check Crashes / Logs / Feedback from Sentry
 
-One-stop Sentry query command. Covers crashes, structured logs (experimental), and user-feedback submissions (shake-to-report) from Hangs iOS.
+One-stop Sentry query command. Covers crashes, structured logs (experimental), and user-feedback submissions (shake-to-report) from Trubbo iOS.
 
 ## Prerequisites
 

@@ -7,7 +7,7 @@ model: sonnet
 
 # Review UI — iOS Design Analysis
 
-Analyze a screenshot of the Hangs app against Apple's Human Interface Guidelines and provide actionable SwiftUI code suggestions.
+Analyze a screenshot of the Trubbo app against Apple's Human Interface Guidelines and provide actionable SwiftUI code suggestions.
 
 ## Arguments
 

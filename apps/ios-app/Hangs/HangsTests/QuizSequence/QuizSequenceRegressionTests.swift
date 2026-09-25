@@ -118,4 +118,39 @@ struct QuizSequenceRegressionTests {
         #expect(Array(recorded.prefix(parsed.inputs.count)) == parsed.inputs.map(\.input),
                 "the replay's own black box must describe the inputs that drove it")
     }
+
+    /// WHY (harness seed 186115, founder decision 2026-09-25): with reveal at
+    /// the end, the auto-confirm sent question 2's answer and the advance to
+    /// question 3 was already on its way when the driver said "stop" (or
+    /// "again"). That reopened question 2 for a moment — a new attempt, the
+    /// advance then landing on top of it (rejected transition), and "again"
+    /// even starting a recording the advance cut off. A sent answer is final:
+    /// the late command is dropped and reported, the quiz moves on.
+    @Test("stop / again after the answer is sent are dropped, never reopen the question", arguments: ["stop", "again"])
+    func commandAfterAnswerSentIsDropped(command: String) async {
+        let dump = """
+        # quiz-sequence seed=186115 questions=4 mcq=4 autoRecord=0 thinking=0 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
+        00:00:00.000 state quizStart attempt=- state=idle
+        00:00:32.242 tap mute attempt=q_001#1 state=askingQuestion
+        00:00:52.891 tap confirm attempt=q_001#3 state=processing
+        00:01:00.605 network quizResponse attempt=q_001#4 state=skipping correct
+        00:01:06.533 tap mic attempt=q_002#5 state=askingQuestion
+        00:01:12.919 speech vad.speechStarted attempt=q_002#7 state=recording
+        00:01:14.234 speech vad.silenceAfterSpeech attempt=q_002#7 state=recording
+        00:01:18.489 network voiceSubmit.transcript attempt=q_002#7 state=processing
+        00:01:23.585 command \(command) attempt=q_002#7 state=processing
+        """
+        let parsed = QuizSequenceDump.parse(dump)
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+        let entries = outcome.run.recorder.entries
+
+        #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
+        #expect(!entries.contains { $0.kind == .reject }, "the advance collided with a reopened question")
+        #expect(entries.contains { $0.kind == .drop && $0.name.hasSuffix(".afterAnswerSent") },
+                "the late command must be reported as dropped")
+        #expect(!entries.contains { $0.kind == .attempt && ($0.name == "cancelProcessing" || $0.name == "rerecord") },
+                "question 2 was reopened after its answer was sent")
+        #expect(outcome.run.vm.recapEntries.count >= 2 && outcome.run.vm.recapEntries[1].userAnswerDisplay != nil,
+                "question 2's sent answer must stand")
+    }
 }

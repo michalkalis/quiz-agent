@@ -1769,6 +1769,7 @@ final class QuizViewModel: ObservableObject {
         // #79 → #186: a new attempt supersedes any suspended voice-transcript
         // handler, upload or prompt of the previous one.
         let attempt = attemptLedger.begin("submit.text")
+        attemptLedger.markAnswerSent() // #186: a sent answer is final
         recordingCoordinator.cancelRetryPrompt()
 
         // #79: a committed-voice-transcript handler may be suspended mid-flight

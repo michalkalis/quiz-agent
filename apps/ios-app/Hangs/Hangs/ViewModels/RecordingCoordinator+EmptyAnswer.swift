@@ -48,6 +48,9 @@ extension RecordingCoordinator {
     ) {
         let attempt = owner ?? attemptLedger.current
         guard attemptLedger.owns(attempt, "transcriptionFailure") else { return }
+        // #185 5.1: a new answer spoken ON the sheet that came back empty keeps
+        // the answer it was meant to replace — no retry prompt, no second miss.
+        if restoreAfterUnheardReplacement() { return }
 
         // Diagnostics only: dead air and a spoken-but-lost answer end alike, and
         // the TF loop's first question about a miss is which of the two it was.

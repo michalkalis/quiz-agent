@@ -89,6 +89,8 @@ final class AudioDeviceState: ObservableObject {
     let isMuted: @MainActor () -> Bool
     let setMuted: @MainActor (Bool) -> Void
     let isAskingQuestion: @MainActor () -> Bool
+    /// #185: an answer is being recorded or sent — no question replay then.
+    let isAnswerInProgress: @MainActor () -> Bool
     let isRerecording: @MainActor () -> Bool
     let isPlayingQuestionTTS: @MainActor () -> Bool
     /// #149: the ONE capture predicate — may the engine / input tap be live at
@@ -129,6 +131,7 @@ final class AudioDeviceState: ObservableObject {
         isMuted: @escaping @MainActor () -> Bool,
         setMuted: @escaping @MainActor (Bool) -> Void,
         isAskingQuestion: @escaping @MainActor () -> Bool,
+        isAnswerInProgress: @escaping @MainActor () -> Bool,
         isRerecording: @escaping @MainActor () -> Bool,
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
         mayCaptureAudio: @escaping @MainActor () -> Bool,
@@ -155,6 +158,7 @@ final class AudioDeviceState: ObservableObject {
         self.isMuted = isMuted
         self.setMuted = setMuted
         self.isAskingQuestion = isAskingQuestion
+        self.isAnswerInProgress = isAnswerInProgress
         self.isRerecording = isRerecording
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
         self.mayCaptureAudio = mayCaptureAudio

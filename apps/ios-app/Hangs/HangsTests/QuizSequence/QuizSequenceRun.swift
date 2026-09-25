@@ -236,9 +236,11 @@ final class QuizSequenceRun {
         vm.transcribedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// AnswerConfirmationView disables Again until the countdown runs.
+    /// AnswerConfirmationView disables Again once the countdown has run out —
+    /// not while it is held on purpose (#185).
     private var isRerecordLocked: Bool {
         vm.settings.autoConfirmEnabled && vm.autoConfirmCountdown == 0 && !vm.isEditingTranscript && !vm.isPaused
+            && !vm.isAutoConfirmHeld
     }
 
     private func noteSkipIntent() {
@@ -257,6 +259,8 @@ final class QuizSequenceRun {
             let screen = vm.voiceCommandCoordinator.currentCommandScreen
             if command == .skip, screen == .question { noteSkipIntent() }
             if command == .ok, screen == .confirmation, vm.showAnswerConfirmation, isSheetEmpty { noteSkipIntent() }
+            // #185: on the Again/Skip sheet "preskoč" / "ďalej" skip ("potvrď" no longer does).
+            if command == .skip || command == .next, screen == .noAnswer { noteSkipIntent() }
             vm.voiceCommandCoordinator.handleRecognizedCommand(command)
         case .speech(.speechStarted):
             guard silence.isAnswerCaptureActive else { return false }

@@ -182,6 +182,8 @@ struct VoiceCommandMatcherTests {
     /// fires — and "no okej" is an everyday Slovak phrase that would have
     /// submitted the answer on the confirmation sheet (0.80 against `.ok`).
     /// Precision here is what lets the benign commands act on a volatile at all.
+    /// #185: several words pass only when EVERY one is a word of the same
+    /// command ("nie, znova") — "no okej" (en: again + ok) disagrees.
     @Test("A two-content-token fragment containing a command word is rejected")
     func twoContentTokensRejected() {
         #expect(VoiceCommandMatcher.match(transcript: "no okej", on: .confirmation) == nil)
@@ -189,14 +191,12 @@ struct VoiceCommandMatcherTests {
         #expect(VoiceCommandMatcher.match(transcript: "stat chee", on: .home) == nil)
     }
 
-    /// WHY: "no" is a top-frequency Slovak discourse particle (~"well/so") and
-    /// the founder speaks Slovak to passengers with the mic open. A false
-    /// `.stop` on the confirmation sheet calls cancelProcessing() and discards
-    /// an in-flight answer with NO undo — so bare "no" must not reach `.stop`
-    /// through the matcher, while the fail-safe undo-abort path still takes it.
-    @Test("Bare 'no' is not a stop command on the confirmation sheet")
-    func bareNoIsNotStop() {
-        #expect(VoiceCommandMatcher.match(transcript: "no", on: .confirmation) == nil)
+    /// WHY (#185 5.3, founder 2026-09-24): on the confirmation sheet "no" asks
+    /// for the answer again — it never reaches `.stop` (which only holds the
+    /// countdown), and the fail-safe undo-abort path still takes it.
+    @Test("Bare 'no' re-records on the confirmation sheet, never stops")
+    func bareNoIsAgainNotStop() {
+        #expect(VoiceCommandMatcher.match(transcript: "no", on: .confirmation) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "stop", on: .confirmation) == .stop)
         #expect(VoiceCommandLexicon.isCancelWord("no"), "aborting a skip is fail-safe — that path keeps 'no'")
     }

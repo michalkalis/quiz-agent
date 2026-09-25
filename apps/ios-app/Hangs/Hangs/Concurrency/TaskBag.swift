@@ -38,6 +38,8 @@ enum TaskKey: Hashable, Sendable {
     case awaitingQuestion // #182: long-poll for the next question of a generating pack
     case answerReadBack // #184 track D: TTS of the recognised voice answer on the confirmation sheet
     case emptyAnswerRetry // #185 track B: "didn't catch that" prompt + the automatic re-record
+    case confirmationCountdown // #185 5.2: the sheet's countdown waits for a live command listener
+    case confirmationSpeechHold // #185 5.1: bound on how long speech may hold the countdown
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

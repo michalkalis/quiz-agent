@@ -26,6 +26,13 @@
 //  Potvrď / Znova / Zruš / Ďalej / Pauza), so the hints below and the button
 //  labels in Localizable.xcstrings must stay word-for-word aligned.
 //
+//  #185 (car test 2026-09-23, founder 5.3 — 2026-09-24) moved ONE screen off
+//  that trade: on the answer confirmation sheet "áno / hej" (cs "ano / jo",
+//  en "yes / yeah") confirm and "nie / zle / ešte raz" re-record, because the
+//  driver answers the sheet the way people answer a question. They stay filler
+//  everywhere else (`VoiceCommandLexicon+Sheet.swift`). Every lexicon change
+//  lands in sk / cs / en at once (`VoiceCommandLexiconParityTests`).
+//
 
 import Foundation
 
@@ -48,6 +55,9 @@ enum VoiceCommandScreen: Sendable, Equatable {
     case home // idle — pre-quiz
     case question // askingQuestion, after TTS
     case confirmation // processing — the answer-confirmation sheet
+    /// #185 track B: the same sheet after a second empty recording — Again /
+    /// Skip, no countdown. Its own screen so "potvrď" can never skip there.
+    case noAnswer
     case result // showingResult
 }
 
@@ -65,6 +75,10 @@ enum VoiceCommandLexicon {
         // the sheet is the universal "after answer" point, so it is the one
         // place a pause cannot lose an in-flight question or recording.
         case .confirmation: return [.ok, .again, .stop, .pause]
+        // #185 (founder 2026-09-24): "znova" retries, "preskoč" / "ďalej"
+        // skip. No `.ok` — confirming an empty field IS a skip, and the old
+        // sheet let a "potvrď" do that.
+        case .noAnswer: return [.again, .skip, .next]
         case .result: return [.next, .ok]
         }
     }
@@ -90,16 +104,17 @@ enum VoiceCommandLexicon {
         // the word on the button must be a word the matcher accepts.
         case (.english, .ok): return ["ok", "okay", "okey", "oukej", "confirm"]
         case (.english, .next): return ["next"]
-        case (.english, .again): return ["again", "retry"]
+        // #185 5.3 (founder 2026-09-24): "no" / "wrong" / "one more time" ask
+        // for the answer again. The two-word phrases arrive as ONE token
+        // (`phrases(for:)`). "no" and "wrong" start sentences, so they act on a
+        // final only (`finalOnlyVariants`).
+        case (.english, .again): return ["again", "retry", "no", "wrong", "onemoretime", "oncemore", "tryagain"]
         case (.english, .repeatQuestion): return ["repeat"]
-        case (.english, .skip): return ["skip"]
-        // Bare "no" is deliberately NOT a stop variant — it is one of the
-        // highest-frequency Slovak discourse particles (~"well/so") and the
-        // founder talks to passengers with the mic open. A false `.stop` on the
-        // confirmation sheet calls cancelProcessing() and discards an in-flight
-        // answer with no undo. The fail-safe undo-abort path keeps accepting it
-        // via `undoCancelVariants`.
-        case (.english, .stop): return ["stop", "cancel"]
+        case (.english, .skip): return ["skip", "pass"]
+        // #185 5.3: "stop" only HOLDS the auto-confirm countdown — the voice
+        // cancel of an answer ("cancel"/"zruš") is gone by founder decision.
+        // "cancel" still aborts a pending skip (`undoCancelVariants`).
+        case (.english, .stop): return ["stop", "wait"]
         case (.english, .pause): return ["pause"]
         // "štart" folds to "start" — the command is IDENTICAL across languages,
         // which also keeps founder muscle memory intact.
@@ -109,20 +124,21 @@ enum VoiceCommandLexicon {
         // final-only + one-content-token capped, (b) on the result screen the
         // action is benign (advance = the default outcome anyway), and
         // (c) dropping the founder's habitual "ok" would cost real recall.
-        // "potvrď" is the recommended disjoint form. "áno"/"dobre" are NOT
-        // variants — they are filler (see `fillerWords`), by design.
+        // "potvrď" is the recommended disjoint form. "áno"/"hej" confirm on
+        // the sheet only (#185, `confirmationOnlyVariants`); elsewhere they
+        // are filler, like "dobre".
         case (.slovak, .ok): return ["ok", "okej", "oukej", "potvrd"]
         // ⚠️ FLAGGED HAZARD (#120): a lone conversational "ďalej?" ("go on")
         // can fire `.next` — accepted because it is result-screen-only and
         // benign (auto-advance was coming anyway).
         case (.slovak, .next): return ["dalej", "pokracuj"]
-        case (.slovak, .again): return ["znova", "znovu"]
+        // #185 5.3: "nie", "zle", "ešte raz", "znova" = record the answer again.
+        case (.slovak, .again): return ["znova", "znovu", "nie", "zle", "esteraz"]
         case (.slovak, .repeatQuestion): return ["zopakuj", "opakuj"]
         case (.slovak, .skip): return ["preskoc", "vynechaj"]
         // ⚠️ FLAGGED (minor): "stoj" scores 0.75 vs "stop" — above the final
-        // floor. Rare in cabin conversation; `.stop` is final-only and
-        // confirmation-screen-scoped, so the exposure is bounded.
-        case (.slovak, .stop): return ["stop", "zrus"]
+        // floor. Harmless since #185: `.stop` only holds the countdown.
+        case (.slovak, .stop): return ["stop", "pockaj"]
         // "pauza" is the same word in Slovak and Czech, and it is not a
         // discourse particle in either — a rare, multi-syllable noun, which
         // is exactly the disjointness the Slovak set is chosen for.
@@ -138,10 +154,10 @@ enum VoiceCommandLexicon {
         // reason as Slovak "ďalej": result-screen-only and benign (advance was
         // coming anyway). "dále" is the formal form, "dál" the spoken one.
         case (.czech, .next): return ["dal", "dale", "pokracuj"]
-        case (.czech, .again): return ["znovu", "znova"]
+        case (.czech, .again): return ["znovu", "znova", "ne", "spatne", "jestejednou"]
         case (.czech, .repeatQuestion): return ["zopakuj", "opakuj"]
         case (.czech, .skip): return ["preskoc", "vynech"]
-        case (.czech, .stop): return ["stop", "zrus"]
+        case (.czech, .stop): return ["stop", "pockej"]
         case (.czech, .pause): return ["pauza"]
         }
     }
@@ -157,7 +173,9 @@ enum VoiceCommandLexicon {
     /// made of. As filler they can never fire a command (a backchannel-only
     /// utterance strips to zero content tokens) while still tolerating
     /// "dobre, preskoč" as padding. This is the precision-over-recall trade the
-    /// Slovak set is built on: saying "áno" will NOT confirm an answer.
+    /// Slovak set is built on. #185: a word that IS a command on the screen in
+    /// question ("áno" on the confirmation sheet) is not filler there — see
+    /// `fillerWords(for:on:)`.
     static func fillerWords(
         for language: CommandLanguage = .english
     ) -> Set<String> {
@@ -188,18 +206,18 @@ enum VoiceCommandLexicon {
     static let cancelWords: [VoiceCommand] = [.stop]
 
     /// Words accepted ONLY on the loose undo-abort path: every `.stop` variant
-    /// PLUS the plain no-words ("no"/"know"; Slovak adds "nie"). #119: that
-    /// direction is deliberately looser than the matcher because it is fail-safe
-    /// — aborting a pending skip loses nothing when it fires spuriously, while
-    /// missing it burns a question. The reverse (a false `.stop` on the
-    /// confirmation sheet) is destructive, which is why "no"/"nie" are never
-    /// `.stop` variants.
+    /// PLUS the plain no-words ("no"/"know"; Slovak adds "nie") and the cancel
+    /// words. #119: that direction is deliberately looser than the matcher
+    /// because it is fail-safe — aborting a pending skip loses nothing when it
+    /// fires spuriously, while missing it burns a question. #185 took
+    /// "cancel"/"zruš" out of `.stop` (no voice cancel of an answer), so they
+    /// are listed here to keep aborting a skip.
     static func undoCancelVariants(for language: CommandLanguage) -> Set<String> {
         let looseNoWords: [String]
         switch language {
-        case .english: looseNoWords = ["no", "know"]
-        case .slovak: looseNoWords = ["nie", "no"]
-        case .czech: looseNoWords = ["ne", "no"]
+        case .english: looseNoWords = ["no", "know", "cancel"]
+        case .slovak: looseNoWords = ["nie", "no", "zrus"]
+        case .czech: looseNoWords = ["ne", "no", "zrus"]
         }
         return Set(
             cancelWords.flatMap { variants(for: $0, language: language) } + looseNoWords
@@ -223,16 +241,21 @@ enum VoiceCommandLexicon {
     static func contextualVocabulary(for language: CommandLanguage) -> [String] {
         switch language {
         case .english:
-            return ["start", "ok", "okay", "confirm", "next", "again", "retry", "repeat", "skip", "stop", "cancel", "pause"]
+            return [
+                "start", "ok", "okay", "confirm", "yes", "yeah", "next", "again", "retry", "no", "wrong",
+                "one more time", "once more", "try again", "repeat", "skip", "pass", "stop", "wait", "cancel", "pause",
+            ]
         case .slovak:
             return [
-                "štart", "ok", "okej", "potvrď", "ďalej", "pokračuj",
-                "znova", "znovu", "zopakuj", "opakuj", "preskoč", "vynechaj", "stop", "zruš", "pauza",
+                "štart", "ok", "okej", "potvrď", "áno", "hej", "ďalej", "pokračuj",
+                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "preskoč", "vynechaj",
+                "stop", "počkaj", "zruš", "pauza",
             ]
         case .czech:
             return [
-                "start", "ok", "okej", "potvrď", "dál", "dále", "pokračuj",
-                "znovu", "znova", "zopakuj", "opakuj", "přeskoč", "vynech", "stop", "zruš", "pauza",
+                "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
+                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "přeskoč", "vynech",
+                "stop", "počkej", "zruš", "pauza",
             ]
         }
     }

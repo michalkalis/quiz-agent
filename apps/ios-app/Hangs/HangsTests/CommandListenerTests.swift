@@ -340,13 +340,14 @@ struct CommandListenerTests {
         }
     }
 
-    /// WHY: both discard an answer irreversibly — `again` throws away the
-    /// transcribed answer, `stop` cancels the in-flight evaluation — so neither
-    /// may act on a hypothesis the transcriber can still revise. (`ok` on this
-    /// sheet is held to the same rule, for the opposite reason — see
-    /// `okRequiresFinalOnConfirmationOnly`.)
-    @Test("volatile 'again' / 'stop' on the confirmation sheet do not fire; finals do")
-    func destructiveConfirmationCommandsRequireFinal() async {
+    /// WHY (#185 track D): in the car "znova" waited for the end-of-speech final
+    /// and lost the race against the countdown. A STABLE volatile "again" /
+    /// "stop" acts at once ("stop" only holds the countdown; "again" asks for
+    /// the answer the driver is giving anyway). "no" opens ordinary sentences,
+    /// so it still waits for the final. (`ok` on this sheet stays final-only —
+    /// see `okRequiresFinalOnConfirmationOnly`.)
+    @Test("stable volatile 'again' / 'stop' fire on the sheet; 'no' waits for the final")
+    func confirmationCommandsOnStableVolatiles() async {
         await withMainSerialExecutor {
             for (text, expected) in [("again", VoiceCommand.again), ("stop", VoiceCommand.stop)] {
                 let (vm, _, _) = makeCommandVM()
@@ -357,11 +358,20 @@ struct CommandListenerTests {
                 coordinator.onCommandRecognized = { recognized.append($0) }
 
                 await coordinator.handleCommandTranscript(CommandTranscript(text: text, isFinal: false))
-                #expect(recognized.isEmpty, "'\(text)' must not discard an answer from a revisable hypothesis")
-
-                await coordinator.handleCommandTranscript(CommandTranscript(text: text, isFinal: true))
-                #expect(recognized == [expected], "'\(text)' must still work on the final result")
+                await coordinator.handleCommandTranscript(CommandTranscript(text: text, isFinal: false))
+                #expect(recognized == [expected], "a stable '\(text)' must not wait for the final")
             }
+
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            vm.quizState = .processing
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
+            #expect(recognized.isEmpty, "a volatile 'no' is usually the start of a sentence")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
+            #expect(recognized == [.again])
         }
     }
 

@@ -45,11 +45,14 @@ extension VoiceCommandCoordinator {
         // confirmation sheet it SUBMITS the answer, and the 10 s auto-confirm
         // does NOT make that benign: that timer exists precisely so a wrong
         // transcription can be caught with "again", and an early `ok` removes
-        // the escape before the founder can use it. Note the asymmetry it would
-        // otherwise create — `again` (the escape) waits for a final, so ambient
-        // speech would race the correction and win. "okay" is also the single
-        // highest-frequency backchannel in conversation.
+        // the escape before the founder can use it. "okay" is also the single
+        // highest-frequency backchannel in conversation, and since #185 "áno"
+        // / "hej" confirm here too — both open ordinary sentences ("áno, to
+        // bol…"), which on this sheet are a NEW answer (5.1), not a confirm.
         if screen == .confirmation, command == .ok { return true }
+        // #185: on the no-answer sheet "ďalej" SKIPS the question — exactly as
+        // unrecoverable as "preskoč".
+        if screen == .noAnswer, command == .next { return true }
 
         switch command {
         // Benign — worst case is an early version of the default outcome.
@@ -65,10 +68,18 @@ extension VoiceCommandCoordinator {
         // Destructive — a revised hypothesis cannot undo these.
         case .skip: // burns a freemium question (100/month) — unrecoverable
             return true
-        case .again: // rerecordAnswer() DISCARDS the transcribed answer
-            return true
-        case .stop: // cancelProcessing() DISCARDS the in-flight answer
-            return true
+        // #185 track D (car test 2026-09-23): "znova" waited for the end-of-
+        // speech final and lost the race against the 5 s countdown. A STABLE
+        // volatile "znova" / "ešte raz" is not the leading edge of anything
+        // else; the words that do open sentences ("nie", "zle") are kept off
+        // volatiles by the matcher (`finalOnlyVariants`), and a re-record
+        // only asks for the answer the driver is about to give anyway.
+        case .again:
+            return false
+        // #185 5.3: "stop" only HOLDS the countdown — nothing is discarded,
+        // and holding it early is the point.
+        case .stop:
+            return false
         // #171 Track D: pausing STOPS the command listener, so a false
         // pause is the one command the driver cannot undo by voice — it
         // forces a hand to the phone. Final results only.
@@ -116,6 +127,8 @@ extension VoiceCommandCoordinator {
         /// The NORMALIZED text it matched from — re-validated against
         /// `lastVolatileText` when the delay elapses.
         let text: String
+        /// What the recognizer actually said — for the TestFlight log (#185 3.5).
+        let heard: String
         /// The screen it matched on. A command must never land on a screen the
         /// founder left while we were waiting.
         let screen: VoiceCommandScreen
@@ -222,8 +235,8 @@ extension VoiceCommandCoordinator {
     /// extending the segment and pushing finalization past the window). Elapsed
     /// silence is independent evidence: it needs no cooperation from the
     /// transcriber, only the absence of a newer hypothesis.
-    func armVolatileSettle(_ command: VoiceCommand, text: String, on screen: VoiceCommandScreen) {
-        pendingVolatileSettle = PendingVolatileSettle(command: command, text: text, screen: screen)
+    func armVolatileSettle(_ command: VoiceCommand, text: String, heard: String, on screen: VoiceCommandScreen) {
+        pendingVolatileSettle = PendingVolatileSettle(command: command, text: text, heard: heard, screen: screen)
         let delay = volatileSettleDelay
         let clock = clock
         let task = Task { [weak self] in
@@ -271,8 +284,8 @@ extension VoiceCommandCoordinator {
         // `sincePrevMs: nil` — a settle fires on the ABSENCE of a newer
         // transcript, so there is no interval to report; `path` already says so.
         fireCommand(
-            pending.command, on: pending.screen, text: pending.text, path: .volatileSettle,
-            sincePrevMs: nil
+            pending.command, on: pending.screen, text: pending.text, heard: pending.heard,
+            path: .volatileSettle, sincePrevMs: nil
         )
     }
 
@@ -302,7 +315,7 @@ extension VoiceCommandCoordinator {
                 "screen": String(describing: pending.screen), "command": pending.command.rawValue,
                 "reason": CommandSuppression.settleSuperseded.rawValue,
                 "final": isFinal, "tokens": tokens,
-            ]
+            ].merging(Self.heardTextAttributes(pending.heard)) { current, _ in current }
         )
     }
 
@@ -313,7 +326,7 @@ extension VoiceCommandCoordinator {
             attributes: [
                 "screen": String(describing: pending.screen), "command": pending.command.rawValue,
                 "reason": reason.rawValue, "final": false, "path": CommandFirePath.volatileSettle.rawValue,
-            ]
+            ].merging(Self.heardTextAttributes(pending.heard)) { current, _ in current }
         )
     }
 
@@ -326,8 +339,8 @@ extension VoiceCommandCoordinator {
     /// an n-best hit is a fourth answer to it. `final` stays computed from
     /// `path` so the alternative path — finals only — still reports honestly.
     func fireCommand(
-        _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, path: CommandFirePath,
-        sincePrevMs: Int?, viaAlternative: Bool = false
+        _ command: VoiceCommand, on screen: VoiceCommandScreen, text: String, heard: String,
+        path: CommandFirePath, sincePrevMs: Int?, viaAlternative: Bool = false
     ) {
         SentryLog.info(
             "voice cmd matched",
@@ -337,11 +350,26 @@ extension VoiceCommandCoordinator {
                 "final": path == .finalResult, "tokens": text.split(separator: " ").count,
                 "path": viaAlternative ? "alternative" : path.rawValue,
                 "sincePrevMs": sincePrevMs ?? -1,
-            ]
+            ].merging(Self.heardTextAttributes(heard)) { current, _ in current }
         )
         noteCommandFired(command) // latch the utterance + start the cooldown
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
         handleRecognizedCommand(command)
+    }
+
+    // MARK: - What was heard (#185 3.5)
+
+    /// Whether command-path logs carry the recognized text. Founder 2026-09-24
+    /// (3.5): commands could not be debugged from Sentry because only the text
+    /// LENGTH was logged — so TestFlight and debug builds log what the
+    /// recognizer heard. App Store builds keep the no-raw-speech rule
+    /// (Logging.swift): metadata only.
+    static let logsHeardText = BuildChannel.debugSurfacesEnabled()
+
+    /// The `text` attribute for a command-path log, or nothing when the build
+    /// may not log speech. Pure so the gate is testable without Sentry.
+    static func heardTextAttributes(_ heard: String, enabled: Bool = logsHeardText) -> [String: Any] {
+        enabled ? ["text": heard] : [:]
     }
 
     /// Latch the utterance and start the cooldown. Called ONLY on the path that

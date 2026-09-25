@@ -156,7 +156,12 @@ extension RecordingCoordinator {
         // against THAT question instead of grading the next, unseen one.
         let answeredQuestionId = currentQuestion()?.id
 
-        transition(to: .processing)
+        // #185 5.1: a new answer spoken on the confirmation sheet is uploaded
+        // from `.processing` already, and `.processing → .processing` is not a
+        // legal edge.
+        if quizState() != .processing {
+            transition(to: .processing)
+        }
         setErrorMessage(nil)
 
         // Create a task that can be cancelled via cancelProcessing()
@@ -221,6 +226,9 @@ extension RecordingCoordinator {
                         return
                     }
                     self.attemptLedger.record(.network, "voiceSubmit.transcript", "len=\(evaluation.userAnswer.count)")
+                    // #185 5.1: a new answer spoken on the sheet may turn out
+                    // to be a command word the on-device recognizer missed.
+                    if self.resolveSpokenReplacement(evaluation.userAnswer) { return }
                     self.pendingResponse = response
                     if let stamp = self.savedRecordingStamp {
                         AnswerRecordingStore.attachTranscript(evaluation.userAnswer, provider: nil, to: stamp)

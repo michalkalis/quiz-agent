@@ -34,9 +34,9 @@ extension VoiceCommandLexicon {
         case (.slovak, .again): return "znova"
         case (.slovak, .repeatQuestion): return "zopakuj"
         case (.slovak, .skip): return "preskoč"
-        // #174: the confirmation sheet's button reads "Zruš" — the spoken
-        // word shown must be the button word (buttons ARE the hint).
-        case (.slovak, .stop): return "zruš"
+        // #185 5.3: "stop" only holds the countdown now; "zruš" is no longer
+        // a voice command (the Cancel button stays a button).
+        case (.slovak, .stop): return "stop"
         case (.slovak, .pause): return "pauza"
         case (.czech, .start): return "start"
         case (.czech, .ok): return "potvrď"
@@ -44,7 +44,7 @@ extension VoiceCommandLexicon {
         case (.czech, .again): return "znovu"
         case (.czech, .repeatQuestion): return "zopakuj"
         case (.czech, .skip): return "přeskoč"
-        case (.czech, .stop): return "zruš"
+        case (.czech, .stop): return "stop"
         case (.czech, .pause): return "pauza"
         }
     }
@@ -61,16 +61,23 @@ extension VoiceCommandLexicon {
         switch (language, screen) {
         case (.english, .home): return #"Say "start""#
         case (.english, .question): return #"Say "start" or "skip""#
-        // #174: names the words printed on the sheet's buttons (Confirm / Again / Cancel).
-        case (.english, .confirmation): return #"Say "confirm", "again" or "cancel""#
+        // #174: names the words printed on the sheet's buttons (Confirm / Again).
+        // #185 5.1: anything else said on the sheet is a new answer — the hint
+        // says so, because nothing else on the sheet can (founder wording,
+        // voice-feedback variants D1, 2026-09-25).
+        case (.english, .confirmation): return #"Say the answer again or "yes" / "no""#
+        // #185: the no-answer sheet's buttons are Again / Skip.
+        case (.english, .noAnswer): return #"Say "again" or "skip""#
         case (.english, .result): return #"Say "next""#
         case (.slovak, .home): return "Povedz „štart“"
         case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"
-        case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo „zruš“"
+        case (.slovak, .confirmation): return "Povedz odpoveď znova alebo „áno“ / „nie“"
+        case (.slovak, .noAnswer): return "Povedz „znova“ alebo „preskoč“"
         case (.slovak, .result): return "Povedz „ďalej“"
         case (.czech, .home): return "Řekni „start“"
         case (.czech, .question): return "Řekni „start“ nebo „přeskoč“"
-        case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo „zruš“"
+        case (.czech, .confirmation): return "Řekni odpověď znovu nebo „ano“ / „ne“"
+        case (.czech, .noAnswer): return "Řekni „znovu“ nebo „přeskoč“"
         case (.czech, .result): return "Řekni „dál“"
         }
     }

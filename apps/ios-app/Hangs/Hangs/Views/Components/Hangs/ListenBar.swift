@@ -139,6 +139,10 @@ struct ListenBar: View {
     /// Full on quiz screens, slim on Home (#131 Track F).
     var size: Size = .full
 
+    /// #185 (founder, variant D1): the answer sheet listens for an ANSWER as
+    /// well as commands, so its caption is the short "LISTENING" alone.
+    var shortCaption: Bool = false
+
     /// Command-mode caption language (#120) — independent of the app/quiz locale.
     var language: CommandLanguage = .english
 
@@ -304,7 +308,7 @@ struct ListenBar: View {
             }
             return Text(verbatim: VoiceCommandLexicon.listeningCaption(
                 language: language,
-                short: size == .slim
+                short: size == .slim || shortCaption
             ))
         case let .answer(kind):
             switch kind {

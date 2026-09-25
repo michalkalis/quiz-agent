@@ -144,6 +144,18 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.autoConfirmCountdown = newValue }
     }
 
+    /// See `ConfirmationState.countdownHold` (#185).
+    var countdownHold: ConfirmationCountdownHold? {
+        get { confirmationState.countdownHold }
+        set { confirmationState.countdownHold = newValue }
+    }
+
+    /// See `ConfirmationState.spokenReplacement` (#185 5.1).
+    var spokenReplacement: SpokenReplacement? {
+        get { confirmationState.spokenReplacement }
+        set { confirmationState.spokenReplacement = newValue }
+    }
+
     // MARK: - Dependencies (service handles + the façade's shared task owner)
 
     let audioService: AudioServiceProtocol
@@ -183,6 +195,11 @@ final class RecordingCoordinator: ObservableObject {
     /// re-record is playing (see RecordingCoordinator+EmptyAnswer).
     var isSpeakingRetryPrompt = false
 
+    /// #185 5.1: the listener's audio is being kept while the answer sheet is
+    /// up, so a new spoken answer can be transcribed without saying it twice
+    /// (see RecordingCoordinator+SpokenAnswer).
+    var isSheetCaptureActive = false
+
     /// This recording runs on the plain `AVAudioRecorder` because the shared
     /// mic engine could not come up (recognizer setup failed). No voice
     /// processing, no VAD — the dead-air cap ends it — but the mic button works.
@@ -220,6 +237,9 @@ final class RecordingCoordinator: ObservableObject {
     let skipQuestion: @MainActor () async -> Void
     let emitEarcon: @MainActor (Earcon) -> Void
     let refreshCommandWindow: @MainActor () -> Void
+    /// #185 5.2: bring the command window up and report whether the listener
+    /// is live — the auto-confirm countdown waits for it.
+    let armCommandWindow: @MainActor () async -> Bool
     let abortSkipUndoWindow: @MainActor () -> Void
     let startAutoConfirmIfEnabled: @MainActor () -> Void
     let cancelAutoConfirm: @MainActor () -> Void
@@ -288,6 +308,7 @@ final class RecordingCoordinator: ObservableObject {
         skipQuestion: @escaping @MainActor () async -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
         refreshCommandWindow: @escaping @MainActor () -> Void,
+        armCommandWindow: @escaping @MainActor () async -> Bool,
         abortSkipUndoWindow: @escaping @MainActor () -> Void,
         startAutoConfirmIfEnabled: @escaping @MainActor () -> Void,
         cancelAutoConfirm: @escaping @MainActor () -> Void,
@@ -330,6 +351,7 @@ final class RecordingCoordinator: ObservableObject {
         self.skipQuestion = skipQuestion
         self.emitEarcon = emitEarcon
         self.refreshCommandWindow = refreshCommandWindow
+        self.armCommandWindow = armCommandWindow
         self.abortSkipUndoWindow = abortSkipUndoWindow
         self.startAutoConfirmIfEnabled = startAutoConfirmIfEnabled
         self.cancelAutoConfirm = cancelAutoConfirm
@@ -379,6 +401,7 @@ final class RecordingCoordinator: ObservableObject {
         // window closed for the rest of the session. Idempotent.
         cancelAnswerReadBack()
         cancelRetryPrompt() // #185 — same latch hazard as the read-back
+        stopSheetCapture() // #185 5.1 — before the capture it shares is abandoned
         abandonAnswerCapture()
         // Streaming teardown first: a reset can fire while the engine is still
         // capturing; zeroing `isStreamingSTT` without stopping it would leak a
@@ -395,6 +418,7 @@ final class RecordingCoordinator: ObservableObject {
     /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
         cancelAnswerReadBack() // #184 — see reset()
+        stopSheetCapture() // #185 5.1: the sheet it listened for is gone
         cleanupStreamingSTT()
         recordingState.resetCaptureState()
         confirmationState.reset()

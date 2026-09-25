@@ -78,7 +78,7 @@ extension VoiceCommandCoordinator {
         switch quizState() {
         case .idle: return .home
         case .askingQuestion: return .question
-        case .processing: return .confirmation
+        case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
         case .showingResult: return .result
         default: return nil // startingQuiz / skipping / finished / error / recording
         }
@@ -122,6 +122,31 @@ extension VoiceCommandCoordinator {
     func refreshCommandWindow() {
         Task { [weak self] in await self?.syncCommandListenerWindow() }
     }
+
+    /// #185 5.2 (founder 2026-09-24): bring the window up and report whether
+    /// the command listener is actually LIVE — engine running, consumer
+    /// listening. The confirmation countdown starts only then: in the car the
+    /// mic took up to 3 s to settle after the read-back ("command mic settled
+    /// late"), and the 5 s countdown was spent on a deaf mic. `false` (voice
+    /// commands off, recognizer unavailable, a failed start) means no listener
+    /// is coming, and the countdown must not wait for one.
+    func armCommandWindowReportingLive() async -> Bool {
+        await syncCommandListenerWindow()
+        // A start already in flight (another window sync, a route-change
+        // restart) owns the engine: ours returned at once, so wait for that
+        // one to settle — bounded, on the injected clock.
+        var waitedMs = 0
+        while silenceDetectionService.isStartingListening, waitedMs < Self.listenerSettleBudgetMs {
+            try? await clock.sleep(for: .milliseconds(100))
+            waitedMs += 100
+        }
+        return currentCommandScreen != nil
+            && commandCapturePhase == .listening
+            && silenceDetectionService.isListening
+    }
+
+    /// The real start settles the mic for up to 12 × 250 ms; a little over.
+    static let listenerSettleBudgetMs = 4000
 
     // MARK: - Consumer
 

@@ -154,7 +154,9 @@ extension QuizSequenceRun {
         case .processing where !isSheetUp:
             active["processing \(attempt)"] = ("stuck processing with no sheet", 40000)
         case .processing where vm.showAnswerConfirmation && !vm.noAnswerCaptured && !isSheetEmpty
-            && vm.settings.autoConfirmEnabled && !vm.isPaused && !vm.isEditingTranscript:
+            && vm.settings.autoConfirmEnabled && !vm.isPaused && !vm.isEditingTranscript
+            // #185 5.3 (founder): after a spoken "stop" the sheet waits for the driver.
+            && vm.recordingCoordinator.countdownHold != .driverStop:
             active["sheet \(attempt) \(vm.transcribedAnswer)"] = ("confirmation sheet never auto-confirmed", 12000)
         case .showingResult where !vm.isPaused:
             active["result \(vm.resultQuestion?.id ?? "-")"] = ("result never auto-advanced", 15000)

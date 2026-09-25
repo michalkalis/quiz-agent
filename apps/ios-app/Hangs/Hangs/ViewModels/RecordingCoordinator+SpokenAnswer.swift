@@ -69,6 +69,8 @@ extension RecordingCoordinator {
     /// up. The listener keeps running — "potvrď", "znova", a new answer or a
     /// tap decide.
     func holdAutoConfirmByDriver() {
+        // #186: a sent answer is final — a late "stop" is dropped and reported.
+        guard !attemptLedger.refuseAfterAnswerSent("stop.afterAnswerSent") else { return }
         guard showAnswerConfirmation, !noAnswerCaptured, !isEvaluatingAnswer else { return }
         countdownHold = .driverStop
         taskBag.cancel(.confirmationSpeechHold)

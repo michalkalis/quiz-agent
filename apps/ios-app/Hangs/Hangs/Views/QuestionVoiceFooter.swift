@@ -81,7 +81,9 @@ struct QuestionVoiceFooter: View {
                     showsWords: showsCommandWords,
                     // #131 Track F: the SE-class `compact` flag is now the slim size.
                     size: compact ? .slim : .full,
-                    language: viewModel.commandLanguage
+                    language: viewModel.commandLanguage,
+                    speechHeard: viewModel.isHearingAnswer,
+                    inputLevel: viewModel.recordingInputLevel
                 )
                 .padding(.horizontal, 20)
                 .transition(.opacity)
@@ -116,7 +118,9 @@ struct QuestionVoiceFooter: View {
             // used to cover the footer is gone). `isLoading` also disables it.
             // #174 (founder 2026-09-09): "Start" — the title IS the voice command
             // that opens the mic, on Home and here alike.
-            title: isEvaluating ? "Evaluating…" : (isRecording ? "Stop" : "Start"),
+            // #185 track F (F2 mockup): "Processing…" — the same word the bar
+            // above says, so the two never tell the driver different stories.
+            title: isEvaluating ? "Processing…" : (isRecording ? "Stop" : "Start"),
             icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "play.fill"),
             isLoading: isEvaluating,
             // G1 (#83): action buttons deliberately modest so long question text

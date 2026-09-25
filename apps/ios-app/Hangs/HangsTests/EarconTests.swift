@@ -168,6 +168,9 @@ struct EarconTests {
 
             #expect(earcon.played == [.commandAck, .skipConfirm],
                     "with recording sounds off only command/skip cues may play, got \(earcon.played)")
+            // #185 track F (founder 2026-09-25): silent is not unconfirmed —
+            // the recording pair still taps.
+            #expect(earcon.hapticsOnly == [.micLive, .gotIt])
         }
     }
 

@@ -123,6 +123,13 @@ struct QuestionListenBar: View {
 
     var size: ListenBar.Size = .full
     var language: CommandLanguage = .english
+
+    /// #185 track F: the recording has heard the driver ("Capturing…").
+    var speechHeard: Bool = false
+
+    /// #185 track F: the live mic level the bar breathes with while listening.
+    var inputLevel: RecordingInputLevel? = nil
+
     var onDismiss: (() -> Void)? = nil
 
     private var words: [String] {
@@ -138,6 +145,8 @@ struct QuestionListenBar: View {
             size: size,
             language: language,
             thinkCountdown: phase.countdown,
+            speechHeard: speechHeard,
+            inputLevel: inputLevel,
             onDismiss: phase.isDismissable ? onDismiss : nil
         )
     }

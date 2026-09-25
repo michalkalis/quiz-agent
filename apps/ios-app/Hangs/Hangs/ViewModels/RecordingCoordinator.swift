@@ -178,6 +178,11 @@ final class RecordingCoordinator: ObservableObject {
     /// `finish` bracket each recording.
     let answerCapture = AnswerCapture()
 
+    /// #185 track F: the live mic level the question screen's listen bar
+    /// breathes with. Its own observable so a ~47 Hz level never re-renders
+    /// the whole screen (see `RecordingInputLevel`).
+    let inputLevel = RecordingInputLevel()
+
     /// Whether THIS recording started the shared mic engine itself (voice
     /// commands off → nobody else had armed it). Only then does the recording
     /// stop it again — otherwise the command window owns the engine's lifetime.
@@ -403,6 +408,7 @@ final class RecordingCoordinator: ObservableObject {
         cancelRetryPrompt() // #185 — same latch hazard as the read-back
         stopSheetCapture() // #185 5.1 — before the capture it shares is abandoned
         abandonAnswerCapture()
+        inputLevel.reset() // #185 track F — the façade's cancelAll ended its feed
         // Streaming teardown first: a reset can fire while the engine is still
         // capturing; zeroing `isStreamingSTT` without stopping it would leak a
         // live recorder past cleanupStreamingSTT's guard.
@@ -429,6 +435,10 @@ final class RecordingCoordinator: ObservableObject {
     /// Cancel silence detection subscription
     func cancelSilenceDetection() {
         taskBag.cancel(.silenceDetection)
+        // #185 track F: the level feed shares the VAD's lifetime — both end
+        // when the recording does, and the bar must stop glowing with them.
+        taskBag.cancel(.inputLevel)
+        inputLevel.reset()
     }
 
     /// Clean up streaming STT resources

@@ -155,8 +155,8 @@ struct QuestionListenBarRenderTests {
     /// State 3 — the ONE difference between the two columns of the founder's
     /// board: the answer prompt. And no chips in either, by the 2026-07-28 rule.
     @Test("state 3 prompts for the answer form and shows no command chips",
-          arguments: [(ListenBar.AnswerKind.mcq, "Listening — say A–D or the answer"),
-                      (ListenBar.AnswerKind.open, "LISTENING — SAY YOUR ANSWER")])
+          arguments: [(ListenBar.AnswerKind.mcq, "Say A–D or the answer"),
+                      (ListenBar.AnswerKind.open, "Say your answer")])
     func listeningState(kind: ListenBar.AnswerKind, caption: String) async throws {
         try await host(.listening(kind)) { tree in
             #expect(throws: Never.self) { try tree.find(text: caption) }
@@ -171,9 +171,9 @@ struct QuestionListenBarRenderTests {
     @Test("state 4 says the answer is being evaluated and that nothing need be said")
     func evaluatingState() async throws {
         try await host(.evaluating) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "Evaluating your answer") }
+            #expect(throws: Never.self) { try tree.find(text: "Processing…") }
             #expect(throws: Never.self) {
-                try tree.find(text: "This will take a moment, no need to say anything")
+                try tree.find(text: "No need to say anything")
             }
             #expect(throws: Never.self, "a still bar would read as frozen too") {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.spinner")
@@ -193,7 +193,7 @@ struct QuestionListenBarRenderTests {
             #expect(throws: Never.self) { try tree.find(text: "Skipping the question") }
             #expect(throws: Never.self) { try tree.find(text: "Loading the next question") }
             #expect(throws: (any Error).self, "there is no answer to evaluate") {
-                try tree.find(text: "Evaluating your answer")
+                try tree.find(text: "Processing…")
             }
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.spinner")
@@ -281,7 +281,7 @@ struct QuestionViewListenBarPresenceTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: Never.self) { try tree.find(text: "Evaluating your answer") }
+            #expect(throws: Never.self) { try tree.find(text: "Processing…") }
         }
     }
 

@@ -15,6 +15,11 @@
 //    • skipConfirm — the skip undo-window opened (destructive, tap/say to abort)
 //    • commandAck — a spoken command was recognized
 //
+//  #185 track F (car test 2026-09-23, founder 2026-09-24) adds a fifth:
+//    • speechStart — the driver was first heard in this recording
+//  and makes every cue quieter and softer (they were loud and grew tiresome
+//  over a quiz) with a matching haptic for each (useful outside the car too).
+//
 //  This ALSO delivers #68's record-start / record-stop earcon item (micLive +
 //  gotIt) — #68 should mark that delivered-by-#77.
 //
@@ -37,19 +42,47 @@ import CoreHaptics
 import Foundation
 import UIKit
 
-/// The four hands-free audio cues (77.10). Language-neutral tones — no words.
+/// The hands-free audio cues (77.10, #185 track F). Language-neutral tones — no words.
 enum Earcon: String, CaseIterable, Sendable, Equatable {
     case micLive       // mic opened
+    case speechStart   // #185 track F: the driver's answer was first heard
     case gotIt         // STOP: recording ended / auto-submitted
     case skipConfirm   // skip undo-window opened
     case commandAck    // a spoken command was recognized
+}
+
+/// The haptic that accompanies a cue (#185 track F: every cue has one). Pure so
+/// "no cue without a haptic" is assertable without a Taptic Engine.
+enum EarconHaptic: Equatable {
+    /// `UIImpactFeedbackGenerator(style: .soft)` at this intensity.
+    case soft(intensity: Double)
+    /// `UIImpactFeedbackGenerator(style: .light)` — "heard you".
+    case light
+    /// `UINotificationFeedbackGenerator` `.warning` — destructive, undoable.
+    case warning
+
+    static func haptic(for earcon: Earcon) -> EarconHaptic {
+        switch earcon {
+        // The recording cues fire on every question, so they are the softest
+        // taps the engine makes — present, never a buzz to learn to ignore.
+        case .micLive: return .soft(intensity: 0.7)
+        case .speechStart: return .soft(intensity: 0.4)
+        case .gotIt: return .soft(intensity: 0.6)
+        case .commandAck: return .light
+        case .skipConfirm: return .warning
+        }
+    }
 }
 
 /// Seam so the earcon player can be mocked in tests (assert exactly-one cue per
 /// event, and none during TTS).
 @MainActor
 protocol EarconPlaying: AnyObject {
+    /// The tone and its haptic.
     func play(_ earcon: Earcon)
+    /// #185 track F (founder 2026-09-25): the haptic alone — "Recording
+    /// sounds" off silences the tone, the tap still confirms the event.
+    func playHaptic(_ earcon: Earcon)
 }
 
 /// Production earcon player: distinct built-in iOS system sounds per cue. System
@@ -75,6 +108,7 @@ final class SystemEarconPlayer: EarconPlaying {
     private static let supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
     private let impact = UIImpactFeedbackGenerator(style: .light)
+    private let softImpact = UIImpactFeedbackGenerator(style: .soft)
     private let notification = UINotificationFeedbackGenerator()
 
     /// One prepared player per cue, built on first use and kept — decoding and
@@ -92,7 +126,7 @@ final class SystemEarconPlayer: EarconPlaying {
             // cue at all if AVAudioPlayer construction ever fails.
             AudioServicesPlaySystemSound(Self.soundID(for: earcon))
         }
-        playHaptic(for: earcon)
+        playHaptic(earcon)
     }
 
     /// The cached player for `earcon`, synthesized on first request. Does NOT
@@ -109,23 +143,23 @@ final class SystemEarconPlayer: EarconPlaying {
         return player
     }
 
-    /// #119: `AudioServicesPlaySystemSound` routes through the SYSTEM-SOUND
-    /// channel, not the media session the founder turns up to hear feedback over
-    /// road noise — so the command ack can be inaudible in a moving car, and the
-    /// 2.5 s skip undo-window is only real protection if he can perceive that a
-    /// skip fired at all. Haptics survive ringer volume, silent mode and road
-    /// noise, so the two COMMAND cues get one alongside the tone. The recording
-    /// pair stays tone-only: it fires on every question and a buzz that often
-    /// would train him to ignore it.
-    private func playHaptic(for earcon: Earcon) {
+    /// #119: haptics survive ringer volume, silent mode and road noise, so the
+    /// command cues got one alongside the tone. #185 track F (founder
+    /// 2026-09-24): EVERY cue gets one now — outside the car (a party, a
+    /// cottage) the phone is in a hand and the tap carries the cue when the
+    /// quieter tone does not. The recording cues use the soft generator so
+    /// a tap on every question never becomes a buzz. This is the only place
+    /// the recording haptics fire (QuestionView's own `.sensoryFeedback` on
+    /// entering recording is gone — two taps per cue would be noise).
+    func playHaptic(_ earcon: Earcon) {
         guard Self.supportsHaptics else { return }
-        switch earcon {
-        case .commandAck:
-            impact.impactOccurred() // light tap — "heard you"
-        case .skipConfirm:
-            notification.notificationOccurred(.warning) // destructive, undoable for 2.5 s
-        case .micLive, .gotIt:
-            break
+        switch EarconHaptic.haptic(for: earcon) {
+        case let .soft(intensity):
+            softImpact.impactOccurred(intensity: intensity)
+        case .light:
+            impact.impactOccurred()
+        case .warning:
+            notification.notificationOccurred(.warning)
         }
     }
 
@@ -133,6 +167,7 @@ final class SystemEarconPlayer: EarconPlaying {
     private static func soundID(for earcon: Earcon) -> SystemSoundID {
         switch earcon {
         case .micLive:     return 1113 // begin_record.caf
+        case .speechStart: return 1057 // Tink — the lightest there is
         case .gotIt:       return 1114 // end_record.caf
         case .skipConfirm: return 1104 // Tock — distinct, cautionary
         case .commandAck:  return 1057 // Tink — light acknowledgement
@@ -151,6 +186,13 @@ final class SystemEarconPlayer: EarconPlaying {
 /// Each cue's SHAPE carries its meaning, since the driver cannot look:
 /// rising = something opened, falling = something closed, low repeated = a
 /// destructive action you may still undo, one high blip = "heard you".
+///
+/// #185 track F (founder 2026-09-24: the tones were loud and grew tiresome):
+/// every cue is 6 dB quieter (peak 0.5 → 0.25), sits lower (micLive/gotIt
+/// 880↔1175 → 660↔880 Hz, commandAck 1320 → 988 Hz) and swells in and out on
+/// a 20 ms raised-cosine instead of a 10 ms linear ramp — the hard edges were
+/// what made them read as beeps. Shapes and lengths are unchanged, so the cues
+/// the driver already learned still mean the same.
 enum EarconTone {
     /// One tone step, or — with a `nil` frequency — a silent gap.
     struct Segment: Sendable, Equatable {
@@ -159,24 +201,37 @@ enum EarconTone {
     }
 
     static let sampleRate: Double = 44100
-    /// Peak amplitude. Half scale: the cue must cut through road noise without
-    /// clipping when it mixes over TTS on the same session.
-    static let peak: Double = 0.5
-    /// Linear fade at each end of every TONE segment. Without it the waveform
-    /// starts mid-air and the discontinuity is audible as a click — which on a
-    /// car speaker is louder than the tone itself.
-    static let fadeDuration: TimeInterval = 0.010
+    /// Peak amplitude. Quarter scale (#185 track F; was half): the cue rides
+    /// the same session and volume as the TTS, which the driver already set to
+    /// be heard over the road, so it needs no headroom of its own.
+    static let peak: Double = 0.25
+    /// Raised-cosine fade at each end of every TONE segment. Without it the
+    /// waveform starts mid-air and the discontinuity is audible as a click —
+    /// which on a car speaker is louder than the tone itself; the cosine shape
+    /// (#185 track F) also takes the edge off the attack.
+    static let fadeDuration: TimeInterval = 0.020
+
+    /// Per-cue level on top of `peak`. The speech-start tone plays while the
+    /// driver is talking — it confirms, it must never interrupt — so it is the
+    /// quietest cue by far.
+    static func gain(for earcon: Earcon) -> Double {
+        earcon == .speechStart ? 0.6 : 1.0
+    }
 
     /// The tone sequence for a cue.
     static func segments(for earcon: Earcon) -> [Segment] {
         switch earcon {
         // Rising two-step — the mic OPENED.
         case .micLive:
-            return [Segment(frequency: 880, duration: 0.070), Segment(frequency: 1175, duration: 0.070)]
+            return [Segment(frequency: 660, duration: 0.070), Segment(frequency: 880, duration: 0.070)]
+        // #185 track F: one short, low, quiet blip between the two — "I hear
+        // you" in the middle of the answer, softer than anything around it.
+        case .speechStart:
+            return [Segment(frequency: 784, duration: 0.050)]
         // The same two steps falling — the mic CLOSED. Deliberately the mirror
         // of micLive so the pair is learnable as one gesture.
         case .gotIt:
-            return [Segment(frequency: 1175, duration: 0.070), Segment(frequency: 880, duration: 0.070)]
+            return [Segment(frequency: 880, duration: 0.070), Segment(frequency: 660, duration: 0.070)]
         // Low, repeated, with a gap — a warning shape, matching the 2.5 s undo
         // window it announces.
         case .skipConfirm:
@@ -188,18 +243,22 @@ enum EarconTone {
         // One short high blip — the cheapest possible "heard you"; it fires on
         // every recognized command, so it must never feel heavy.
         case .commandAck:
-            return [Segment(frequency: 1320, duration: 0.060)]
+            return [Segment(frequency: 988, duration: 0.060)]
         }
     }
 
     /// The WAV bytes for a cue.
     static func wavData(for earcon: Earcon) -> Data {
-        wavData(for: segments(for: earcon))
+        wavData(for: segments(for: earcon), gain: gain(for: earcon))
     }
 
     /// Render segments to a 16-bit mono PCM WAV (44-byte canonical RIFF header
     /// + samples).
-    static func wavData(for segments: [Segment], sampleRate: Double = EarconTone.sampleRate) -> Data {
+    static func wavData(
+        for segments: [Segment],
+        gain: Double = 1.0,
+        sampleRate: Double = EarconTone.sampleRate
+    ) -> Data {
         var samples: [Int16] = []
         for segment in segments {
             let count = Int((segment.duration * sampleRate).rounded())
@@ -211,15 +270,17 @@ enum EarconTone {
             let fadeSamples = min(Int((fadeDuration * sampleRate).rounded()), count / 2)
             for index in 0 ..< count {
                 let value = sin(2 * .pi * frequency * Double(index) / sampleRate)
-                var envelope = 1.0
+                var ramp = 1.0
                 if fadeSamples > 0 {
                     if index < fadeSamples {
-                        envelope = Double(index) / Double(fadeSamples)
+                        ramp = Double(index) / Double(fadeSamples)
                     } else if index >= count - fadeSamples {
-                        envelope = Double(count - 1 - index) / Double(fadeSamples)
+                        ramp = Double(count - 1 - index) / Double(fadeSamples)
                     }
                 }
-                let scaled = value * envelope * peak * Double(Int16.max)
+                // Raised cosine: 0 → 1 with a zero slope at both ends.
+                let envelope = 0.5 - 0.5 * cos(.pi * ramp)
+                let scaled = value * envelope * peak * gain * Double(Int16.max)
                 samples.append(Int16(scaled.rounded()))
             }
         }

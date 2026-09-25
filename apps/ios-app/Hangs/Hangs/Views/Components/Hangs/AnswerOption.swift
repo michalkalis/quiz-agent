@@ -21,6 +21,9 @@ struct AnswerOption: View {
 
     let key: String
     let value: String
+    /// #185 track G: the badge glyph — the server's option label ("1".."4" or
+    /// "A".."D"); nil keeps the legacy letter from the key.
+    var label: String? = nil
     var state: State = .default
     /// #174: this option's answer is being evaluated — the letter badge becomes a
     /// spinner in place, so the loading state lives in the control that was tapped.
@@ -28,6 +31,8 @@ struct AnswerOption: View {
     /// Minimum row height. Defaults to 64pt (4-option MCQ); pass 80pt for the 2-option T/F variant.
     var minHeight: CGFloat = 64
     var action: (() -> Void)? = nil
+
+    private var badgeText: String { label ?? key.uppercased() }
 
     // MARK: - State → style mapping
 
@@ -56,7 +61,7 @@ struct AnswerOption: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "Option \(key.uppercased()): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
+        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
         .accessibilityIdentifier("mcq.option.\(key)")
     }
 
@@ -70,7 +75,7 @@ struct AnswerOption: View {
                         .tint(letterColor)
                         .accessibilityIdentifier("question.processingIndicator")
                 } else {
-                    Text(key.uppercased())
+                    Text(verbatim: badgeText)
                         .font(.hangsBody(17, weight: .bold))
                         .foregroundColor(letterColor)
                 }
@@ -169,6 +174,8 @@ extension AnswerOption.State {
 struct AnswerTile: View {
     let key: String
     let value: String
+    /// #185 track G: see `AnswerOption.label`.
+    var label: String? = nil
     var state: AnswerOption.State = .default
     /// #174: this tile's answer is being evaluated — the letter badge becomes a
     /// spinner in place, so the loading state lives in the tile that was tapped
@@ -177,6 +184,8 @@ struct AnswerTile: View {
     /// SE-class shrinks the tile 88 → 76 and tightens the internal gap.
     var compact: Bool = false
     var action: (() -> Void)? = nil
+
+    private var badgeText: String { label ?? key.uppercased() }
 
     var body: some View {
         Group {
@@ -188,7 +197,7 @@ struct AnswerTile: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "Option \(key.uppercased()): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
+        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
         .accessibilityIdentifier("mcq.option.\(key)")
     }
 
@@ -205,7 +214,7 @@ struct AnswerTile: View {
                         .tint(state.letterColor)
                         .accessibilityIdentifier("question.processingIndicator")
                 } else {
-                    Text(key.uppercased())
+                    Text(verbatim: badgeText)
                         .font(.hangsBody(14, weight: .bold))
                         .foregroundColor(state.letterColor)
                 }

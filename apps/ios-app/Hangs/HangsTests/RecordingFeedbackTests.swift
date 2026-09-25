@@ -75,7 +75,7 @@ struct ListenBarRecordingStatusTests {
     /// for VoiceOver — or a small-phone driver is told "Listening…" and
     /// never what to say.
     @Test("the slim answer bar keeps the instruction, on screen and for VoiceOver",
-          arguments: [(ListenBar.AnswerKind.mcq, "Say A–D or the answer"),
+          arguments: [(ListenBar.AnswerKind.mcq, "Say 1–4 or the answer"),
                       (ListenBar.AnswerKind.open, "Say your answer")])
     func slimKeepsInstruction(kind: ListenBar.AnswerKind, instruction: String) async throws {
         let bar = ListenBar(mode: .answer(kind), size: .slim)

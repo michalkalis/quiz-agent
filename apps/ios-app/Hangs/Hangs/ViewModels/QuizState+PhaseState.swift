@@ -35,6 +35,8 @@ struct RecordingState {
     /// until its recording stops. Keyed by question so a retry abandoned by a
     /// skip can never show on the next one.
     var emptyAnswerRetryHintQuestionKey: String?
+    /// …and which line it is (#185 track G: an unmatched MCQ answer has its own).
+    var emptyAnswerRetryPrompt: SpokenPrompt = .didNotCatch
 
     /// #171 Track H: when `startRecording()` was suppressed because the app was
     /// backgrounded (the think/answer countdown kept running and expired out of

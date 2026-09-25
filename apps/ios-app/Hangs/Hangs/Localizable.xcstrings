@@ -3400,6 +3400,40 @@
         }
       }
     },
+    "I didn't catch which option you meant. Please say its letter." : {
+      "comment" : "Question screen: shown above the mic during the automatic re-record after a multiple-choice answer that named no option; the same line is spoken (options labelled A–D)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
+          }
+        }
+      }
+    },
+    "I didn't catch which option you meant. Please say its number." : {
+      "comment" : "Question screen: shown above the mic during the automatic re-record after a multiple-choice answer that named no option; the same line is spoken (options labelled 1–4)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
+          }
+        }
+      }
+    },
     "I didn't catch your answer, please try again." : {
       "comment" : "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken",
       "localizations" : {
@@ -6448,6 +6482,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Povedz „štart“, „ďalej“, „zopakuj“ alebo „preskoč“ — tlačidlá fungujú vždy"
+          }
+        }
+      }
+    },
+    "Say 1–4 or the answer" : {
+      "comment" : "Recording prompt for multiple-choice questions whose options are labelled 1–4",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Řekni 1–4 nebo odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Povedz 1–4 alebo odpoveď"
           }
         }
       }

@@ -86,7 +86,8 @@ struct ListenBarDismissal: Equatable {
 struct ListenBar: View {
     /// The answer form the driver should speak — drives the answer-mode caption.
     enum AnswerKind: Equatable {
-        case mcq // multiple choice (A–D)
+        case mcq // multiple choice labelled 1–4 (#185 track G)
+        case mcqLetters // multiple choice labelled A–D (the options are numbers)
         case trueFalse // 2-option true/false
         case open // free-text spoken answer (recording)
     }
@@ -368,7 +369,9 @@ struct ListenBar: View {
         // #171 Track I: answering with the option TEXT works (and goes through
         // the confirmation sheet like every other answer), so the caption must
         // say so — "say A–D" read as letters-only.
-        case .mcq: return Text("Say A–D or the answer")
+        // #185 track G: the caption names the labels the options carry.
+        case .mcq: return Text("Say 1–4 or the answer")
+        case .mcqLetters: return Text("Say A–D or the answer")
         case .trueFalse: return Text("Say true or false")
         case .open: return Text("Say your answer")
         }

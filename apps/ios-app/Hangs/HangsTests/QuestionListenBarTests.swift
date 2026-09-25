@@ -155,7 +155,8 @@ struct QuestionListenBarRenderTests {
     /// State 3 — the ONE difference between the two columns of the founder's
     /// board: the answer prompt. And no chips in either, by the 2026-07-28 rule.
     @Test("state 3 prompts for the answer form and shows no command chips",
-          arguments: [(ListenBar.AnswerKind.mcq, "Say A–D or the answer"),
+          arguments: [(ListenBar.AnswerKind.mcq, "Say 1–4 or the answer"),
+                      (ListenBar.AnswerKind.mcqLetters, "Say A–D or the answer"),
                       (ListenBar.AnswerKind.open, "Say your answer")])
     func listeningState(kind: ListenBar.AnswerKind, caption: String) async throws {
         try await host(.listening(kind)) { tree in

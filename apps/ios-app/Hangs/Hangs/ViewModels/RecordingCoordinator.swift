@@ -67,6 +67,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.emptyAnswerRetryHintQuestionKey = newValue }
     }
 
+    /// See `RecordingState.emptyAnswerRetryPrompt` (#185 track G).
+    var emptyAnswerRetryPrompt: SpokenPrompt {
+        get { recordingState.emptyAnswerRetryPrompt }
+        set { recordingState.emptyAnswerRetryPrompt = newValue }
+    }
+
     /// See `RecordingState.backgroundSuppressedRecordingAt` (#171 Track H).
     var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant? {
         get { recordingState.backgroundSuppressedRecordingAt }
@@ -238,7 +244,9 @@ final class RecordingCoordinator: ObservableObject {
     private let facadeHandleError: @MainActor (Error, ErrorContext, String) async -> Void
     /// The response plus the attempt that submitted it (#186 step 1).
     let handleQuizResponse: @MainActor (QuizResponse, AttemptID) async -> Void
-    let resubmitAnswer: @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void
+    /// `spoken`: the text is an unedited voice transcript (#185 track G — only
+    /// a spoken answer may reopen the mic when the server cannot place it).
+    let resubmitAnswer: @MainActor (_ answer: String, _ suppressAudio: Bool, _ spoken: Bool) async -> Void
     let skipQuestion: @MainActor () async -> Void
     let emitEarcon: @MainActor (Earcon) -> Void
     let refreshCommandWindow: @MainActor () -> Void
@@ -309,7 +317,7 @@ final class RecordingCoordinator: ObservableObject {
         setError: @escaping @MainActor (String, ErrorContext, Error?) -> Void,
         handleError: @escaping @MainActor (Error, ErrorContext, String) async -> Void,
         handleQuizResponse: @escaping @MainActor (QuizResponse, AttemptID) async -> Void,
-        resubmitAnswer: @escaping @MainActor (_ answer: String, _ suppressAudio: Bool) async -> Void,
+        resubmitAnswer: @escaping @MainActor (_ answer: String, _ suppressAudio: Bool, _ spoken: Bool) async -> Void,
         skipQuestion: @escaping @MainActor () async -> Void,
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
         refreshCommandWindow: @escaping @MainActor () -> Void,

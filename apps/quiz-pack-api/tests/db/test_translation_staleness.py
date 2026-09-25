@@ -262,6 +262,53 @@ async def test_get_translations_returns_only_approved_rows(store, factory) -> No
             await _cleanup(session, stale_qid)
 
 
+async def test_structure_fix_pending_ids_lists_only_flagged_rows_of_that_language(
+    store, factory
+) -> None:
+    """Founder 2026-09-25: a translation still copying the English word order
+    stays out of the beta until its question sentence is rewritten. The flag is
+    per language — a flagged Slovak row must not hide the Czech quiz's copy,
+    and a rewritten row (flag removed by the gate) must come back.
+    """
+    flagged_qid = uuid.uuid4()
+    clean_qid = uuid.uuid4()
+    flagged = _question(flagged_qid, stem="Flagged question?")
+    clean = _question(clean_qid, stem="Clean question?")
+    async with factory() as session:
+        try:
+            assert await store.add(flagged) is True
+            assert await store.add(clean) is True
+            for qid, q in ((flagged_qid, flagged), (clean_qid, clean)):
+                for lang in ("sk", "cs"):
+                    await _seed_approved_translation(session, qid, lang, source_hash_for(q))
+            await session.execute(
+                text(
+                    "UPDATE question_translations SET verification = "
+                    "verification || '{\"structure_fix\": \"pending\"}'::jsonb "
+                    "WHERE question_id = :qid AND language = 'sk'"
+                ),
+                {"qid": flagged_qid},
+            )
+            await session.commit()
+
+            assert str(flagged_qid) in await store.structure_fix_pending_ids("sk")
+            assert str(clean_qid) not in await store.structure_fix_pending_ids("sk")
+            assert str(flagged_qid) not in await store.structure_fix_pending_ids("cs")
+
+            await session.execute(
+                text(
+                    "UPDATE question_translations SET verification = "
+                    "verification - 'structure_fix' WHERE question_id = :qid"
+                ),
+                {"qid": flagged_qid},
+            )
+            await session.commit()
+            assert str(flagged_qid) not in await store.structure_fix_pending_ids("sk")
+        finally:
+            await _cleanup(session, flagged_qid)
+            await _cleanup(session, clean_qid)
+
+
 def test_source_hash_ignores_cosmetic_churn_but_not_wording() -> None:
     """Whitespace and Unicode form are not edits; a changed word is.
 

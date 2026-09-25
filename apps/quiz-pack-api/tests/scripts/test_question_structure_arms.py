@@ -109,3 +109,37 @@ def test_arm_item_never_names_the_arm_and_keeps_the_rater_context():
     assert item["question"] == "Ktorý thriller?"
     assert item["topic"] == "film" and item["source_url"] == _ROW["source_url"]
     assert "arm" not in item and "bucket" not in item
+
+
+class TestStructureFixSelection:
+    """``question_structure_fix.py`` must flag exactly the rows the rule
+    targets and never re-flag a row already fixed — a re-flagged row would
+    silently drop out of the beta again."""
+
+    @staticmethod
+    def _row(status="approved", version="corpus-v1", src=_ROW["question"], cat="film"):
+        return {"status": status, "prompt_version": version, "src_question": src, "src_category": cat}
+
+    def test_buried_old_row_needs_fix(self):
+        from scripts.question_structure_fix import needs_fix
+
+        assert needs_fix(self._row())
+        assert needs_fix(self._row(status="rejected"))
+
+    def test_clean_rewritten_new_or_unservable_rows_do_not(self):
+        from scripts.question_structure_fix import REWRITE_SUFFIX, needs_fix
+
+        assert not needs_fix(self._row(src="Which thriller made beachgoers wary in 1975?"))
+        assert not needs_fix(self._row(version="corpus-v1" + REWRITE_SUFFIX))
+        assert not needs_fix(self._row(version=tr.PROMPT_VERSION))
+        assert not needs_fix(self._row(status="pending"))
+
+    def test_pick_prefers_approved_and_spreads_categories(self):
+        from scripts.question_structure_fix import pick
+
+        rows = [dict(self._row(cat=c), n=i) for i, c in enumerate("aaaabbbb")]
+        rows.append(dict(self._row(status="rejected", cat="c"), n=99))
+        chosen = pick(rows, 4, seed=1)
+        assert all(r["status"] == "approved" for r in chosen)
+        assert sorted(r["src_category"] for r in chosen) == ["a", "a", "b", "b"]
+        assert pick(rows, 9, seed=1)[-1]["status"] == "rejected"

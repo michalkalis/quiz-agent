@@ -66,7 +66,11 @@ from ..utils.embeddings import generate_embedding_async
 from ..utils.qa_text import qa_text
 from ..utils.source_hash import source_hash_for
 from ._schema import metadata as _metadata
-from .translation_queries import demote_stale_translations, fetch_servable_translations
+from .translation_queries import (
+    demote_stale_translations,
+    fetch_servable_translations,
+    fetch_structure_fix_pending_ids,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +341,12 @@ class PgvectorQuestionStore:
             return {}
         async with self._session_factory() as session:
             return await fetch_servable_translations(session, qids, language, statuses)
+
+    async def structure_fix_pending_ids(self, language: str) -> List[str]:
+        """Ids of questions whose `language` translation awaits its
+        question-structure rewrite — kept out of sessions in that language."""
+        async with self._session_factory() as session:
+            return await fetch_structure_fix_pending_ids(session, language)
 
     async def count(
         self,

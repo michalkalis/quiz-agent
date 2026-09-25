@@ -5,10 +5,11 @@
 //  #184 track B — the car-sample collector. When the founder opts in
 //  (`VoicePipelineFlags.saveAnswerRecordings`, TestFlight/debug Settings), every
 //  batch answer recording is kept as `<stamp>.wav` plus a `<stamp>.json`
-//  sidecar (language, input route, voice-processing state, duration, and the
-//  backend transcript once it lands) under Documents/AnswerRecordings. The
-//  offline comparison script feeds those WAVs to Scribe batch / Azure / today's
-//  realtime path against a hand transcript. Recordings never leave the device
+//  sidecar (language, input and output route, voice-processing state and
+//  policy mode, what was uploaded, duration, and the backend transcript once
+//  it lands) under Documents/AnswerRecordings. The offline comparison script
+//  feeds those WAVs to Scribe batch / Azure / today's realtime path against a
+//  hand transcript. Recordings never leave the device
 //  unless the founder exports them from Settings (share sheet). Nothing here
 //  runs on the quiz hot path unless the switch is on.
 //
@@ -21,7 +22,16 @@ nonisolated enum AnswerRecordingStore {
         var recordedAt: Date
         var language: String
         var inputPort: String
+        /// Whether the recording engine's input node had voice processing on.
         var voiceProcessing: Bool
+        /// #185 track C: where the quiz's sound went during the answer and
+        /// the policy mode behind `voiceProcessing` (`VoiceProcessingMode`).
+        /// Optional so sidecars written before them still decode.
+        var outputPort: String?
+        var voiceProcessingMode: String?
+        /// #185 track C: what the backend transcribed — `raw` or `hpf_norm`
+        /// (`AnswerAudioConditioning`). The saved WAV is always the raw one.
+        var uploadConditioning: String?
         var sampleRate: Int
         var durationMs: Int
         var questionId: String?

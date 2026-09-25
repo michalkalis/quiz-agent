@@ -11,6 +11,7 @@
 //
 
 import AuthenticationServices
+import AVFoundation
 import Combine
 import os
 import SwiftUI
@@ -55,6 +56,11 @@ struct SettingsView: View {
     /// UserDefaults-backed `VoicePipelineFlags`, kept in view state so the rows
     /// re-render on toggle.
     @State private var voiceProcessingEnabled = VoicePipelineFlags.voiceProcessingEnabled
+    @State private var voiceProcessingOnExternalOutput = VoicePipelineFlags.voiceProcessingOnExternalOutput
+    /// #185 track C: the live route line (output · input · session mode · the
+    /// voice-processing mode a mic engine would get now).
+    @State private var audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+    @State private var conditionAnswerUpload = VoicePipelineFlags.conditionAnswerUpload
     @State private var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
     @State private var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
     @State private var savedRecordingCount = AnswerRecordingStore.recordingCount()
@@ -890,13 +896,53 @@ struct SettingsView: View {
         groupSection(label: "voice diagnostics", color: Theme.Hangs.Colors.blue) {
             HangsToggleRow(
                 label: "Mic voice processing",
-                subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone",
+                subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone, while sound plays from the iPhone or in Call Mode",
                 isOn: Binding(
                     get: { voiceProcessingEnabled },
-                    set: { voiceProcessingEnabled = $0; VoicePipelineFlags.voiceProcessingEnabled = $0 }
+                    set: {
+                        voiceProcessingEnabled = $0
+                        VoicePipelineFlags.voiceProcessingEnabled = $0
+                        audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+                    }
                 )
             )
             .accessibilityIdentifier("settings-voice-processing-toggle")
+
+            hairline
+
+            // #185 track C: the #184 behaviour, only for an in-car comparison.
+            HangsToggleRow(
+                label: "Voice processing on car audio",
+                subtitle: "Also on Bluetooth, CarPlay, AirPlay or wired output. iOS then moves the sound to the iPhone speaker",
+                isOn: Binding(
+                    get: { voiceProcessingOnExternalOutput },
+                    set: {
+                        voiceProcessingOnExternalOutput = $0
+                        VoicePipelineFlags.voiceProcessingOnExternalOutput = $0
+                        audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+                    }
+                )
+            )
+            .disabled(!voiceProcessingEnabled)
+            .accessibilityIdentifier("settings.voiceProcessingExternalOutputToggle")
+
+            hairline
+
+            audioRouteRow
+
+            hairline
+
+            // #185 track C: the software stand-in for voice processing in the
+            // car, on the upload only; the offline comparison decides it.
+            HangsToggleRow(
+                label: "Clean up uploaded answers",
+                subtitle: "High-pass filter and level normalization on the audio sent for transcription. Saved recordings stay unprocessed",
+                isOn: Binding(
+                    get: { conditionAnswerUpload },
+                    set: { conditionAnswerUpload = $0; VoicePipelineFlags.conditionAnswerUpload = $0 }
+                )
+            )
+            .accessibilityIdentifier("settings.conditionAnswerUploadToggle")
 
             hairline
 
@@ -946,7 +992,36 @@ struct SettingsView: View {
             )
             .accessibilityIdentifier("settings-delete-recordings-row")
         }
-        .onAppear { savedRecordingCount = AnswerRecordingStore.recordingCount() }
+        .onAppear {
+            savedRecordingCount = AnswerRecordingStore.recordingCount()
+            audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
+                .receive(on: RunLoop.main)
+        ) { _ in
+            audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+        }
+    }
+
+    /// #185 track C: where the sound goes right now and what voice processing
+    /// a mic engine would get on it — the same fields the Sentry route log
+    /// carries, so a car test can read them off the screen.
+    private var audioRouteRow: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Audio route")
+                .font(.hangsBody(16, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+            Text(verbatim: audioRouteSummary)
+                .font(.hangsMono(12, weight: .medium))
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("settings.audioRoute")
     }
 
     /// Share sheet over every saved WAV + sidecar (same presentation path as

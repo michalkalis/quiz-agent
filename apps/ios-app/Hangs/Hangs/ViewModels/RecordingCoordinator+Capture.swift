@@ -178,11 +178,17 @@ extension RecordingCoordinator {
         // signal, so this path gets the founder's 5 s "time to start speaking".
         armRecordingWindow(hasSpeechSignal: true)
 
+        // #185 track C: the ACTUAL voice processing of the engine that records
+        // (the route decides it, not the switch alone); "pending" while the
+        // engine is still coming up.
+        let voiceProcessing = silenceDetectionService.voiceProcessingStatus
         SentryLog.info("answer recording started", category: .audio, attributes: [
             "path": "batch",
             "inputPort": VoiceProcessingPolicy.currentInputPort(),
+            "outputPort": VoiceProcessingPolicy.currentOutputPort(),
             "inputHz": sampleRate,
-            "voiceProcessing": VoicePipelineFlags.voiceProcessingEnabled,
+            "voiceProcessing": voiceProcessing?.armed ?? false,
+            "vpMode": voiceProcessing?.mode.rawValue ?? "pending",
         ])
     }
 

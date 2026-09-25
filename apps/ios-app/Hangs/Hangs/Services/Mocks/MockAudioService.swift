@@ -33,6 +33,10 @@ import os
 
         var onInterruptionBegan: (@MainActor @Sendable () -> Void)?
 
+        /// #185 track C. Set by the owner exactly like on the real service; a
+        /// test fires it with the event the real decoder would produce.
+        var onRouteChange: (@MainActor @Sendable (AudioRouteChange) -> Void)?
+
         /// #180 track G. When a center is given, the mock listens for the SAME
         /// `AVAudioSession.interruptionNotification` the real service does and runs
         /// it through the real decoder, so a test can post the notification iOS
@@ -143,6 +147,17 @@ import os
 
         func deactivateSession() {
             deactivateSessionCallCount += 1
+        }
+
+        /// #185 track C: counts session restores after a mic-engine teardown;
+        /// the hook lets a test see what else was true at that moment (the
+        /// voice-processing engine must already be gone).
+        var restoreSessionCallCount = 0
+        var onRestoreSession: (@MainActor () -> Void)?
+
+        func restoreSessionAfterVoiceProcessing() {
+            restoreSessionCallCount += 1
+            onRestoreSession?()
         }
 
         func switchAudioMode(_: AudioMode) async throws {

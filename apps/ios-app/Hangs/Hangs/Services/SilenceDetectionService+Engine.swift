@@ -104,8 +104,10 @@ extension SilenceDetectionService {
         let inputNode = engine.inputNode
         // #184 track A: voice processing (AEC/NS/AGC) BEFORE the format is read
         // or the tap installed — see VoiceProcessingPolicy for why it is back
-        // after #173 and why it must be on every engine or none.
+        // after #173, why it must be on every engine or none, and why (#185 C)
+        // the output route decides whether it is armed at all.
         let voiceProcessing = VoiceProcessingPolicy.arm(inputNode)
+        voiceProcessingStatus = voiceProcessing
         var inputFormat = inputNode.outputFormat(forBus: 0)
 
         // Real devices (esp. Bluetooth) can return 0 Hz / 0 channels right after
@@ -266,8 +268,11 @@ extension SilenceDetectionService {
             category: .voice,
             attributes: [
                 "inputPort": VoiceProcessingPolicy.currentInputPort(),
+                "outputPort": VoiceProcessingPolicy.currentOutputPort(),
                 "inputHz": inputFormat.sampleRate,
-                "voiceProcessing": voiceProcessing,
+                "voiceProcessing": voiceProcessing.armed,
+                "vpMode": voiceProcessing.mode.rawValue,
+                "sessionMode": VoiceProcessingPolicy.modeName(AVAudioSession.sharedInstance().mode),
                 "speechDetector": VADTuning.commandGateSensitivity?.rawValue ?? "off",
             ]
         )
@@ -352,6 +357,7 @@ extension SilenceDetectionService {
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
         audioEngine = nil
+        voiceProcessingStatus = nil
 
         analyzer = nil
         resetSpeechDetection()
@@ -373,6 +379,7 @@ extension SilenceDetectionService {
         stopLevelStream()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine = nil
+        voiceProcessingStatus = nil
         analyzer = nil
         resetSpeechDetection()
     }

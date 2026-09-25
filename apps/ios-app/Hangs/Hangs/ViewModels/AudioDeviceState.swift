@@ -30,6 +30,11 @@ final class AudioDeviceState: ObservableObject {
     /// Sheet presentation state for microphone picker
     @Published var showingMicrophonePicker = false
 
+    /// #185 track C loop brake: the listener was already restarted for a route
+    /// change in this listening window (see AudioDeviceState+Route). Cleared by
+    /// every stop of the listener.
+    var routeRestartedThisWindow = false
+
     // MARK: - Device State (computed over AudioService)
 
     /// Available input devices from AudioService
@@ -192,6 +197,14 @@ final class AudioDeviceState: ObservableObject {
         await service.setCommandEngine(.forQuizLanguage(settings().language))
         guard mayCaptureAudio() else { return }
 
+        // #185 track C: a fresh engine decides voice processing from the output
+        // route, so the route must be the session's own — not the `.voiceChat`
+        // left by an engine torn down outside the stop choke point (the
+        // realtime answer engine, feedback dictation, a failed start). No
+        // listener engine is up here; no-op when nothing drifted.
+        if !service.isListening, !service.isStartingListening {
+            audioService.restoreSessionAfterVoiceProcessing()
+        }
         await service.startListening()
 
         // RE-VALIDATE AFTER THE SUSPENSION — a synchronous stop cannot cancel
@@ -246,6 +259,12 @@ final class AudioDeviceState: ObservableObject {
         taskBag.cancel(.bargeIn)
         stopCommandConsumer()
         silenceDetectionService.stopListening()
+        // #185 track C: the engine is gone — undo the `.voiceChat` its voice
+        // processing may have left on the session NOW, before the caller plays
+        // anything (every TTS path stops the listener first), so the next sound
+        // can take the car route again. No-op when nothing drifted.
+        audioService.restoreSessionAfterVoiceProcessing()
+        routeRestartedThisWindow = false
     }
 
     // MARK: - Audio Device Management

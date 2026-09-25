@@ -106,7 +106,8 @@ extension RecordingCoordinator {
         }
 
         // Streaming STT path: submit the transcribed text via /sessions/{id}/input
-        await resubmitAnswer(answer, silent)
+        // An edited transcript is the driver's typing, not a spoken answer.
+        await resubmitAnswer(answer, silent, !silent)
     }
 
     /// User tapped the pencil to edit the transcribed answer. Cancels the

@@ -1034,7 +1034,9 @@ final class QuizViewModel: ObservableObject {
                 await self?.handleError(error, context: context, fallbackMessage: fallback)
             },
             handleQuizResponse: { [weak self] response, owner in await self?.handleQuizResponse(response, owner: owner) },
-            resubmitAnswer: { [weak self] answer, suppress in await self?.resubmitAnswer(answer, suppressAudio: suppress) },
+            resubmitAnswer: { [weak self] answer, suppress, spoken in
+                await self?.resubmitAnswer(answer, suppressAudio: suppress, spoken: spoken)
+            },
             skipQuestion: { [weak self] in await self?.submitSkip() },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             refreshCommandWindow: { [weak self] in self?.voiceCommandCoordinator.refreshCommandWindow() },
@@ -1793,8 +1795,9 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    /// Resubmit an edited text answer
-    func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false) async {
+    /// Resubmit an edited text answer. `spoken` = an unedited voice transcript
+    /// confirmed on the sheet; typed and edited answers pass `false`.
+    func resubmitAnswer(_ newAnswer: String, suppressAudio: Bool = false, spoken: Bool = false) async {
         // #79: single-flight — .onSubmit and the send button can both fire.
         // Held across the whole submission so exactly one proceeds.
         guard !isSubmittingAnswer else { return }
@@ -1881,10 +1884,13 @@ final class QuizViewModel: ObservableObject {
             // #185 track G: the server could not place the answer (an MCQ
             // transcript naming no option, or no answer in it) and graded
             // nothing — ask again like an empty answer, never an error screen.
+            // Founder 2026-09-25: only a spoken answer reopens the mic; a typed
+            // or edited one goes straight to Again / Skip.
             attemptLedger.record(.network, "textSubmit.400", code.rawValue)
             recordingCoordinator.handleTranscriptionFailure(
                 owner: attempt,
-                prompt: .retry(for: code, question: currentQuestion)
+                prompt: .retry(for: code, question: currentQuestion),
+                allowAutoRetry: spoken
             )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }

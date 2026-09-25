@@ -147,6 +147,29 @@ struct MCQOptionLabelTests {
         #expect(mcq(labels: nil).labelledAnswer("Jupiter") == "B — Jupiter")
     }
 
+    /// WHY: hand-added catalog entries have shipped untranslated before — the
+    /// on-screen twin of each spoken line must resolve in every app language.
+    @Test("the on-screen retry lines resolve in en, sk and cs", arguments: [
+        (SpokenPrompt.mcqUnmatchedNumber, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."),
+        (SpokenPrompt.mcqUnmatchedNumber, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."),
+        (SpokenPrompt.mcqUnmatchedNumber, "en", "I didn't catch which option you meant. Please say its number."),
+        (SpokenPrompt.mcqUnmatchedLetter, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."),
+        (SpokenPrompt.mcqUnmatchedLetter, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."),
+        (SpokenPrompt.mcqUnmatchedLetter, "en", "I didn't catch which option you meant. Please say its letter."),
+    ])
+    func retryLineResolves(prompt: SpokenPrompt, language: String, expected: String) throws {
+        let text = try EmptyAnswerRetryHint(prompt: prompt).inspect().find(ViewType.Text.self)
+        #expect(try text.string(locale: Locale(identifier: language)) == expected)
+    }
+
+    @Test("the 1–4 listen-bar caption resolves in en, sk and cs")
+    func captionResolves() throws {
+        let text = try ListenBar(mode: .answer(.mcq)).inspect().find(text: "Say 1–4 or the answer")
+        #expect(try text.string(locale: Locale(identifier: "sk")) == "Povedz 1–4 alebo odpoveď")
+        #expect(try text.string(locale: Locale(identifier: "cs")) == "Řekni 1–4 nebo odpověď")
+        #expect(try text.string(locale: Locale(identifier: "en")) == "Say 1–4 or the answer")
+    }
+
     /// WHY (founder wording 2026-09-24): the retry line asks for what the
     /// options carry — a number on 1–4, a letter on A–D — in every quiz
     /// language; an empty answer keeps the track B line.
@@ -238,17 +261,50 @@ struct MCQUnmatchedRetryTests {
         }
     }
 
-    /// WHY: a confirmed or edited transcript goes to the text route, which can
+    /// Put an answer on the confirmation sheet, as the realtime path does.
+    private func sheet(_ vm: QuizViewModel, _ text: String) {
+        vm.quizState = .processing
+        vm.transcribedAnswer = text
+        vm.showAnswerConfirmation = true
+    }
+
+    /// WHY: a confirmed spoken transcript goes to the text route, which can
     /// refuse it the same way. Before the codes that 400 raised an error screen.
-    @Test("text: a refused confirmed transcript is asked again, not an error")
-    func textUnmatchedRetries() async {
+    @Test("text: a refused spoken transcript is asked again, mic and all")
+    func spokenConfirmUnmatchedRetries() async {
         let (vm, silence, network) = makeVM(labels: numberLabels)
         network.submitTextInputError = NetworkError.answerNotCaptured(code: .mcqUnmatched, heard: "xyz")
+        sheet(vm, "xyz")
 
-        await vm.resubmitAnswer("xyz")
+        await vm.confirmAnswer()
 
         await pumpUntil({ vm.quizState == .recording && silence.isAnswerCaptureActive }, "the retry never re-opened the mic")
         #expect(network.synthesizedTexts == [SpokenPrompt.mcqUnmatchedNumber.text(language: .english)])
+        #expect(vm.attemptLedger.invariantViolations.isEmpty)
+    }
+
+    /// WHY (founder 2026-09-25): the mic retry is for spoken answers. A driver
+    /// who typed or edited the answer is not talking — opening the mic and
+    /// speaking at them is wrong; they get Znova / Preskoč straight away.
+    @Test("text: a refused typed or edited answer goes straight to Again/Skip", arguments: [true, false])
+    func typedUnmatchedGoesToSheet(edited: Bool) async {
+        let (vm, silence, network) = makeVM(labels: numberLabels)
+        network.submitTextInputError = NetworkError.answerNotCaptured(code: .mcqUnmatched, heard: "xyz")
+
+        if edited {
+            sheet(vm, "dva")
+            vm.beginEditingTranscript()
+            vm.transcribedAnswer = "xyz"
+            await vm.confirmAnswer()
+        } else {
+            await vm.resubmitAnswer("xyz") // the typed-answer field
+        }
+
+        #expect(vm.showAnswerConfirmation)
+        #expect(vm.noAnswerCaptured)
+        #expect(vm.quizState == .processing)
+        #expect(silence.isAnswerCaptureActive == false, "the mic must not open for a typed answer")
+        #expect(network.synthesizedTexts.isEmpty)
         #expect(vm.attemptLedger.invariantViolations.isEmpty)
     }
 }

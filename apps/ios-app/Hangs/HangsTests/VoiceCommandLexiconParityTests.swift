@@ -150,6 +150,23 @@ struct VoiceCommandLexiconParityTests {
         }
     }
 
+    /// WHY (founder 2026-09-25): "no" means "record again" ONLY in an English
+    /// quiz. In Slovak and Czech it is filler that often AGREES ("no jasné",
+    /// "no, potvrď") — it must never throw an answer away there.
+    @Test("'no' re-records in English only; in sk/cs it stays filler", arguments: CommandLanguage.allCases)
+    func noIsAgainInEnglishOnly(_ language: CommandLanguage) {
+        let bare = VoiceCommandMatcher.match(transcript: "No.", on: .confirmation, language: language)
+        switch language {
+        case .english:
+            #expect(bare == .again)
+        case .slovak, .czech:
+            #expect(bare == nil, "\(language) 'no' is filler, not 'again'")
+            #expect(VoiceCommandMatcher.match(transcript: "no, potvrď", on: .confirmation, language: language) == .ok)
+            #expect(VoiceCommandMatcher.match(transcript: "no", on: .noAnswer, language: language) == nil)
+            #expect(!VoiceCommandLexicon.variants(for: .again, language: language).contains("no"))
+        }
+    }
+
     /// WHY: the hint is the only place the sheet can say a new answer may simply
     /// be spoken (5.1), and the no-answer sheet must name ITS buttons.
     @Test("hints: the answer sheet invites a new answer, the no-answer sheet names again/skip", arguments: CommandLanguage.allCases)

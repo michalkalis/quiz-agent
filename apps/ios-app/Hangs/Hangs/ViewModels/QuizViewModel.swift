@@ -808,6 +808,12 @@ final class QuizViewModel: ObservableObject {
         // #185 track C: a device change (the car connecting or leaving) may make
         // the live listener's voice processing wrong for the new route.
         self.audioService.onRouteChange = { [weak self] change in
+            // #186 step 1: route changes belong in the quiz's input trail.
+            self?.attemptLedger.record(
+                .route,
+                "routeChange.\(AudioService.routeChangeReasonName(change.reason))",
+                "\(change.previousOutputPort)→\(change.outputPort) vp=\(change.voiceProcessingMode.rawValue)"
+            )
             Task { await self?.audioDeviceState.handleAudioRouteChange(change) }
         }
 

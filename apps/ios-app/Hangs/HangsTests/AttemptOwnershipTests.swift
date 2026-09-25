@@ -207,6 +207,40 @@ struct AttemptOwnershipTests {
         #expect(vm.attemptLedger.invariantViolations == ["confirmation sheet belongs to the current attempt"])
     }
 
+    /// WHY (RS-09 on CI, 2026-09-24): once a recording's forced commit has put
+    /// its transcript on the sheet, a committed transcript arriving LATER on
+    /// the same stream must never replace it — the sheet would otherwise show
+    /// (and grade) an answer the driver never confirmed.
+    @Test("a committed transcript arriving after the recording ended never replaces the sheet's transcript")
+    func lateCommittedTranscriptNeverReplacesSheet() async {
+        let stt = MockElevenLabsSTTService()
+        let vm = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            sttService: stt,
+            clock: AnyClock(TestClock())
+        )
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
+        vm.quizState = .askingQuestion
+        vm.quizMuteOverride = true
+
+        await vm.recordingCoordinator.startRecording()
+        await pumpUntil({ vm.isStreamingSTT }, "streaming never started")
+        await vm.recordingCoordinator.stopRecordingAndSubmit(reason: .noSpeechWindow) // forced commit → "Paris"
+        await pumpUntil({ vm.showAnswerConfirmation }, "the forced commit never reached the sheet")
+        #expect(vm.transcribedAnswer == "Paris")
+
+        await stt.injectEvent(.committedTranscript("Jupiter"))
+        await drainHops()
+
+        #expect(vm.transcribedAnswer == "Paris", "a late transcript replaced the one on the sheet")
+        #expect(vm.quizState == .processing)
+        #expect(vm.attemptLedger.invariantViolations.isEmpty)
+    }
+
     /// WHY: the ownership checks must not cost the normal flow anything — a
     /// full voice answer (record → upload → sheet → confirm → result) drops no
     /// result and breaks no invariant, or the checks are wrong.

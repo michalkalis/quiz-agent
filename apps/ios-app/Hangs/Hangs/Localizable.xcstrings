@@ -9587,15 +9587,81 @@
       "comment" : "Paywall subtitle when the monthly free-question limit is known",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tento měsíc už máš za sebou všech %lld otázek zdarma."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všechny %lld otázky zdarma."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všech %lld otázek zdarma."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou %lld otázku zdarma."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všech %lld otázek zdarma."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You've used your %lld free question this month."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You've used all %lld free questions this month."
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tento mesiac už máš za sebou všetkých %lld otázok zadarmo."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetky %lld otázky zadarmo."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetkých %lld otázok zadarmo."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou %lld otázku zadarmo."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetkých %lld otázok zadarmo."
+                }
+              }
+            }
           }
         }
       }

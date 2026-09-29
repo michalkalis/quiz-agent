@@ -4,6 +4,15 @@
 //
 //  Reusable view modifier for interactive pull-down-to-minimize gesture
 //
+//  #189 (founder feedback 2026-09-29): the offset used to live in `@State`, set
+//  in `onChanged` and cleared only in `onEnded`. Pulling down Control Center (or
+//  any system gesture that steals the touch) CANCELS the drag gesture without
+//  ever calling `onEnded`, so the offset stayed latched and the question screen
+//  stayed shifted/scaled/faded. `@GestureState` resets to its initial value on
+//  ANY end of the gesture — normal release or cancellation — so the fix is to
+//  keep the offset there instead: `onEnded` now only decides whether to
+//  minimize, never the snap-back.
+//
 
 import SwiftUI
 
@@ -12,7 +21,7 @@ struct InteractiveMinimizeModifier: ViewModifier {
     let canMinimize: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var dragOffset: CGFloat = 0
+    @GestureState private var dragOffset: CGFloat = 0
 
     // Thresholds for triggering minimize
     private let minimizeThreshold: CGFloat = 150
@@ -29,7 +38,14 @@ struct InteractiveMinimizeModifier: ViewModifier {
             .scaleEffect(1.0 - (dragOffset / 2000).clamped(to: 0 ... maxScaleReduction))
             .gesture(
                 DragGesture()
-                    .onChanged { value in
+                    .updating($dragOffset) { value, state, transaction in
+                        // The transaction SwiftUI uses to animate `state` back to
+                        // its initial value (0) once the gesture ends OR is
+                        // cancelled — set on every update so it is always current
+                        // for whichever happens. Reduce Motion-aware, same as the
+                        // old explicit snap-back animations were.
+                        transaction.animation = reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)
+
                         guard canMinimize else { return }
                         let translation = value.translation.height
 
@@ -37,16 +53,11 @@ struct InteractiveMinimizeModifier: ViewModifier {
                         if translation > 0 {
                             // Apply rubber-banding: diminishing returns as you drag further
                             // sqrt gives a nice deceleration curve
-                            dragOffset = sqrt(translation) * 8
+                            state = sqrt(translation) * 8
                         }
                     }
                     .onEnded { value in
-                        guard canMinimize else {
-                            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)) {
-                                dragOffset = 0
-                            }
-                            return
-                        }
+                        guard canMinimize else { return }
 
                         let translation = value.translation.height
                         let velocity = value.predictedEndTranslation.height - translation
@@ -57,16 +68,11 @@ struct InteractiveMinimizeModifier: ViewModifier {
                         let shouldMinimize = translation > minimizeThreshold
                             || (translation > 50 && velocity > velocityThreshold)
 
+                        // Not minimizing: `@GestureState` snaps `dragOffset` back
+                        // to 0 on its own, via the transaction set in `updating`.
                         if shouldMinimize {
-                            // Animate minimize
                             withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8)) {
                                 isMinimized = true
-                                dragOffset = 0
-                            }
-                        } else {
-                            // Snap back to original position
-                            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8)) {
-                                dragOffset = 0
                             }
                         }
                     }

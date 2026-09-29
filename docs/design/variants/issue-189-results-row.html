@@ -1,0 +1,358 @@
+<title>Riadky súhrnu sady</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* page chrome */
+  --page:#E6E9EE; --ptext:#0E1A2B; --pdim:#4F5968; --pfaint:#7A8494; --pline:rgba(14,26,43,.12);
+  --drop:rgba(14,26,43,.18); --edge:rgba(14,26,43,.10);
+  /* Trubbo app tokens, light (Theme+Hangs.swift) */
+  --bg:#F6F7F9; --card:#FFFFFF; --ink:#0E1A2B; --muted:#6B7280; --faint:#9CA3AF;
+  --pink:#FF3D8F; --blue:#0A84FF; --success:#16A34A; --pinkText:#C2185B; --blueText:#0A5DC2;
+  --hair:rgba(14,26,43,.078); --border:rgba(14,26,43,.122); --nsoft:rgba(14,26,43,.055);
+  --greenSoft:rgba(34,197,94,.12); --pinkSoft:rgba(255,61,143,.12);
+  --navShadow:0 2px 8px rgba(14,26,43,.06);
+  --display:Anton,"Arial Narrow",Impact,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0F1116; --ptext:#E7EAF0; --pdim:#98A0B0; --pfaint:#6E7688; --pline:#262B36;
+    --drop:rgba(0,0,0,.55); --edge:rgba(255,255,255,.09);
+    --bg:#161616; --card:#1F1F22; --ink:#F4F4F4; --muted:#9CA3AF; --faint:#6B7280;
+    --success:#4ADE80; --pinkText:#FF3D8F; --blueText:#0A84FF;
+    --hair:rgba(255,255,255,.078); --border:rgba(255,255,255,.141); --nsoft:rgba(244,244,244,.055);
+    --navShadow:0 2px 8px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0F1116; --ptext:#E7EAF0; --pdim:#98A0B0; --pfaint:#6E7688; --pline:#262B36;
+  --drop:rgba(0,0,0,.55); --edge:rgba(255,255,255,.09);
+  --bg:#161616; --card:#1F1F22; --ink:#F4F4F4; --muted:#9CA3AF; --faint:#6B7280;
+  --success:#4ADE80; --pinkText:#FF3D8F; --blueText:#0A84FF;
+  --hair:rgba(255,255,255,.078); --border:rgba(255,255,255,.141); --nsoft:rgba(244,244,244,.055);
+  --navShadow:0 2px 8px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ptext);font-family:var(--body);-webkit-font-smoothing:antialiased}
+p{margin:0}
+.wrap{max-width:1760px;margin:0 auto;padding-block:40px 88px;padding-inline:20px}
+
+/* ===== page header ===== */
+.head{max-width:68ch}
+.kick{font:500 11px/1.4 var(--mono);letter-spacing:2.5px;text-transform:uppercase;color:var(--pinkText);margin-bottom:10px}
+h1{font:400 clamp(32px,6vw,44px)/1.04 var(--display);text-transform:uppercase;letter-spacing:-.3px;margin:0 0 14px;text-wrap:balance}
+.lede{font-size:16px;line-height:1.55;color:var(--pdim)}
+.lede b{color:var(--ptext);font-weight:600}
+.note{font:500 11px/1.7 var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--pfaint);margin-top:18px;padding-top:14px;border-top:1px solid var(--pline)}
+
+/* ===== variant grid ===== */
+.grid{display:grid;grid-template-columns:minmax(0,390px);justify-content:center;align-items:start;gap:64px 48px;margin-top:52px}
+@media (min-width:920px){.grid{grid-template-columns:repeat(2,minmax(0,390px))}}
+@media (min-width:1800px){.grid{grid-template-columns:repeat(4,minmax(0,390px))}}
+figure{margin:0;min-width:0}
+.fh{display:flex;gap:14px;align-items:flex-start;min-height:44px;margin-bottom:24px}
+.let{flex:0 0 auto;width:40px;height:40px;border-radius:10px;background:var(--pink);color:#fff;font:400 26px/1 var(--display);display:grid;place-items:center}
+.fh p{font-size:14px;line-height:1.45;color:var(--pdim);padding-top:1px}
+
+/* ===== phone shell ===== */
+.phone{width:100%;max-width:390px;background:var(--bg);color:var(--ink);border-radius:52px;overflow:hidden;
+  box-shadow:0 0 0 1px var(--edge),0 0 0 7px #07080B,0 0 0 8px rgba(255,255,255,.10),0 26px 60px var(--drop)}
+.sb{position:relative;height:50px;display:flex;align-items:center;justify-content:space-between;padding:4px 28px 0 36px;font:600 16px/1 var(--body)}
+.island{position:absolute;top:11px;left:50%;width:122px;height:35px;margin-left:-61px;background:#000;border-radius:20px}
+.sbi{display:flex;align-items:center;gap:6px}
+.sbi svg{fill:currentColor}
+.i-sig{width:18px;height:12px}.i-wifi{width:16px;height:12px}.i-bat{width:27px;height:13px}
+.brand{display:flex;align-items:center;justify-content:space-between;padding:8px 20px}
+.mark{font:400 17px/1 var(--mono);color:var(--blue);display:flex;align-items:center;gap:6px}
+.mark i{width:6px;height:6px;border-radius:50%;background:var(--pink)}
+.navx{width:36px;height:36px;border-radius:10px;background:var(--card);box-shadow:var(--navShadow);display:grid;place-items:center;color:var(--ink)}
+.navx svg{width:14px;height:14px}
+.rows{display:flex;flex-direction:column;gap:8px;padding:8px 20px 14px}
+.cta{display:flex;flex-direction:column;gap:8px;padding:4px 20px 14px}
+.pri{height:56px;border-radius:999px;background:var(--pink);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font:700 17px/1 var(--body);box-shadow:0 6px 16px rgba(255,61,143,.20)}
+.stop{width:14px;height:14px;border-radius:3px;background:#fff}
+.sec2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sec{height:48px;border-radius:999px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:10px;font:600 16px/1 var(--body);color:var(--ink);white-space:nowrap}
+.sec svg{width:16px;height:16px}
+.home{position:relative;height:34px}
+.home i{position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.85}
+
+/* ===== shared row parts (SetRecapView.swift) ===== */
+.card{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:14px}
+.bd{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+.bd svg{width:11px;height:11px}
+.bd.s20{width:20px;height:20px}
+.bd.s20 svg{width:10px;height:10px}
+.bd.ok{background:var(--greenSoft);color:var(--success)}
+.bd.no{background:var(--pinkSoft);color:var(--pinkText)}
+.bd.sk{background:var(--nsoft);color:var(--muted)}
+.chev{flex:0 0 auto;width:12px;height:12px;color:var(--faint)}
+.chev.dn{transform:rotate(90deg)}
+.q{font:500 13px/1.32 var(--body);color:var(--muted)}
+.q.full{font-size:13.5px;line-height:1.4;color:var(--ink)}
+.c2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
+.said{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;font:400 10px/1.4 var(--mono);color:var(--faint)}
+.said span{letter-spacing:1px;text-transform:uppercase}
+.why{font:400 13.5px/1.45 var(--body);color:var(--ink)}
+.acts{display:flex;align-items:center;justify-content:space-between;padding-top:2px}
+.hear{display:inline-flex;align-items:center;gap:5px;font:600 13px/1 var(--body);color:var(--blueText)}
+.hear svg{width:14px;height:14px}
+.src{display:inline-flex;align-items:center;gap:4px;font:400 10px/1 var(--mono);letter-spacing:1.2px;color:var(--faint)}
+.src svg{width:9px;height:9px}
+
+/* ===== A: question, answer underneath ===== */
+.a-top{display:grid;grid-template-columns:22px minmax(0,1fr) 12px;column-gap:12px;align-items:start}
+.a-top .bd{margin-top:-2px}
+.a-top .chev{margin-top:3px}
+.a-ans{margin-top:6px;font:600 15px/1.3 var(--body);color:var(--ink)}
+
+/* ===== B: answer as the headline ===== */
+.b-top{display:grid;grid-template-columns:22px minmax(0,1fr) 12px;column-gap:12px;align-items:start}
+.b-top .bd{margin-top:1px}
+.b-top .chev{margin-top:6px}
+.b-ans{font:400 22px/1.08 var(--display);letter-spacing:.2px;text-transform:uppercase;color:var(--ink)}
+.b-top .q{margin-top:5px}
+.b-top .q.c1{font-size:12.5px}
+
+/* ===== C: answer as a chip ===== */
+.c-top{display:flex;gap:12px;align-items:flex-start}
+.c-q{flex:1 1 auto;min-width:0;font:500 14px/1.36 var(--body);color:var(--ink)}
+.c-top .chev{margin-top:4px}
+.c-line{display:flex;align-items:flex-start;gap:8px;margin-top:10px}
+.c-line .bd{margin-top:3px}
+.c-chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{font:500 12px/1.3 var(--mono);letter-spacing:.3px;text-transform:uppercase;color:var(--ink);background:var(--nsoft);border:1px solid var(--hair);border-radius:12px;padding:4px 10px;overflow-wrap:anywhere}
+.chip.said{text-transform:none;letter-spacing:0;font-weight:400;background:var(--pinkSoft);border-color:transparent;color:var(--pinkText)}
+.chip.said em{font-style:normal;opacity:.7;margin-right:4px}
+
+/* ===== D: one grouped list, two lines per row ===== */
+.rows.one{gap:0}
+.group{background:var(--card);border:1px solid var(--hair);border-radius:18px;overflow:hidden}
+.drow{position:relative;display:grid;grid-template-columns:20px minmax(0,1fr) 12px;column-gap:12px;align-items:start;padding:12px 14px}
+.drow + .drow::before{content:"";position:absolute;top:0;left:46px;right:0;height:1px;background:var(--hair)}
+.drow .bd{margin-top:-2px}
+.drow .chev{margin-top:3px}
+.drow .q.c1{font-size:12.5px}
+.d-ans{margin-top:3px;font:600 15px/1.3 var(--body);color:var(--ink)}
+.drow .exp{grid-column:2 / 4}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ok" viewBox="0 0 12 12"><path d="M2.4 6.3l2.4 2.4 4.8-5.2" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="no" viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="sk" viewBox="0 0 12 12"><path d="M2.8 6h6.4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="chev" viewBox="0 0 12 12"><path d="M4.4 2.2L8.2 6l-3.8 3.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="close" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="spk" viewBox="0 0 16 16"><path d="M1.8 5.8h2.6L7.8 3v10L4.4 10.2H1.8z" fill="currentColor"/><path d="M10.4 5.6a3.4 3.4 0 010 4.8M12.5 3.6a6.2 6.2 0 010 8.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="again" viewBox="0 0 16 16"><path d="M3.1 8.6A5 5 0 1 0 5.2 4.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M5.6 1.6L5.2 4.4 8 4.9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="house" viewBox="0 0 16 16"><path d="M8 1.6L.9 7.6l1.1 1.3.9-.8V14.4h4V10.6h2.2v3.8h4V8.1l.9.8 1.1-1.3z" fill="currentColor"/></symbol>
+    <symbol id="sig" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/></symbol>
+    <symbol id="wifi" viewBox="0 0 16 12"><path d="M1.4 4.4a9.4 9.4 0 0113.2 0M3.9 7.1a5.9 5.9 0 018.2 0M6.4 9.7a2.4 2.4 0 013.2 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="bat" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="8" rx="2"/><path d="M25 4.5v4a2 2 0 000-4z" opacity=".4"/></symbol>
+  </defs>
+</svg>
+
+<main class="wrap">
+  <header class="head">
+    <p class="kick">#189 · súhrn sady · riadok otázky</p>
+    <h1>Riadok v súhrne sady</h1>
+    <p class="lede">Dnes stojí otázka vľavo a odpoveď vpravo v rovnako širokom stĺpci, zvislo na strede. <b>Dlhá otázka sa zlomí do úzkeho stĺpca a dlhá odpoveď sa odreže</b> (PHIL LORD A CHRISTOPHER…). Štyri návrhy nižšie dávajú otázke šírku a odpovedi toľko miesta, koľko potrebuje.</p>
+    <p class="note">Obsah zo screenshotu IMG_8087 · konce skrátených otázok a vysvetlenia doplnené · prvé štyri riadky zbalené, posledný rozbalený · farby a písmo z Theme+Hangs.swift</p>
+  </header>
+
+  <section class="grid">
+
+    <!-- ================= A ================= -->
+    <figure>
+      <figcaption class="fh"><span class="let">A</span><p>Otázka na celú šírku, odpoveď hneď pod ňou. Nič sa neodreže, najmenšia zmena.</p></figcaption>
+      <div class="phone">
+        <div class="sb"><span>10:51</span><i class="island"></i><span class="sbi"><svg class="i-sig"><use href="#sig"/></svg><svg class="i-wifi"><use href="#wifi"/></svg><svg class="i-bat"><use href="#bat"/></svg></span></div>
+        <div class="brand"><span class="mark">trubbo.<i></i></span><span class="navx"><svg><use href="#close"/></svg></span></div>
+        <div class="rows">
+          <div class="card"><div class="a-top">
+            <span class="bd ok"><svg><use href="#ok"/></svg></span>
+            <div><p class="q c2">Mikrovlnná rúra sa zrodila v roku 1945, keď sa inžinierovi Percymu Spencerovi pri magnetróne roztopilo niečo vo vrecku. Čo to bolo?</p><p class="a-ans">Čokoládová tyčinka</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="a-top">
+            <span class="bd sk"><svg><use href="#sk"/></svg></span>
+            <div><p class="q c2">Ktorý album skupiny BTS z roku 2026 bol ich prvým po návrate všetkých členov z vojenskej služby?</p><p class="a-ans">Arirang</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="a-top">
+            <span class="bd no"><svg><use href="#no"/></svg></span>
+            <div><p class="q c2">Ktorý orech rastie zavesený pod šťavnatým plodom, ktorému sa hovorí jablko?</p><p class="a-ans">Kešu</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="a-top">
+            <span class="bd no"><svg><use href="#no"/></svg></span>
+            <div><p class="q c2">Ktorá krajina má najdlhšie pobrežie na svete, dlhšie ako 200 000 kilometrov?</p><p class="a-ans">Kanada</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card">
+            <div class="a-top">
+              <span class="bd no"><svg><use href="#no"/></svg></span>
+              <div><p class="q full">Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?</p><p class="a-ans">Phil Lord a Christopher Miller</p></div>
+              <svg class="chev dn"><use href="#chev"/></svg>
+            </div>
+            <div class="exp">
+              <p class="said"><span>Tvoja odpoveď</span><s>Chile. Neviem</s></p>
+              <p class="why">Táto dvojica vniesla svoju typickú rýchlu a veselú energiu do románu Andyho Weira, autora knihy Marťan, a premenila potenciálne trúchlivý príbeh o prežití na jeden z najzábavnejších filmov roka.</p>
+              <div class="acts"><span class="hear"><svg><use href="#spk"/></svg>vypočuj si</span><span class="src">zdroj<svg><use href="#chev"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cta">
+          <div class="pri"><i class="stop"></i>Zastav súhrn</div>
+          <div class="sec2"><div class="sec"><svg><use href="#again"/></svg>Hraj znova</div><div class="sec"><svg><use href="#house"/></svg>Úvod</div></div>
+        </div>
+        <div class="home"><i></i></div>
+      </div>
+    </figure>
+
+    <!-- ================= B ================= -->
+    <figure>
+      <figcaption class="fh"><span class="let">B</span><p>Odpoveď je nadpis v Antone, otázka pod ňou na jeden riadok. Číta sa ako ťahák.</p></figcaption>
+      <div class="phone">
+        <div class="sb"><span>10:51</span><i class="island"></i><span class="sbi"><svg class="i-sig"><use href="#sig"/></svg><svg class="i-wifi"><use href="#wifi"/></svg><svg class="i-bat"><use href="#bat"/></svg></span></div>
+        <div class="brand"><span class="mark">trubbo.<i></i></span><span class="navx"><svg><use href="#close"/></svg></span></div>
+        <div class="rows">
+          <div class="card"><div class="b-top">
+            <span class="bd ok"><svg><use href="#ok"/></svg></span>
+            <div><p class="b-ans">Čokoládová tyčinka</p><p class="q c1">Mikrovlnná rúra sa zrodila v roku 1945, keď sa inžinierovi Percymu Spencerovi pri magnetróne roztopilo niečo vo vrecku. Čo to bolo?</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="b-top">
+            <span class="bd sk"><svg><use href="#sk"/></svg></span>
+            <div><p class="b-ans">Arirang</p><p class="q c1">Ktorý album skupiny BTS z roku 2026 bol ich prvým po návrate všetkých členov z vojenskej služby?</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="b-top">
+            <span class="bd no"><svg><use href="#no"/></svg></span>
+            <div><p class="b-ans">Kešu</p><p class="q c1">Ktorý orech rastie zavesený pod šťavnatým plodom, ktorému sa hovorí jablko?</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card"><div class="b-top">
+            <span class="bd no"><svg><use href="#no"/></svg></span>
+            <div><p class="b-ans">Kanada</p><p class="q c1">Ktorá krajina má najdlhšie pobrežie na svete, dlhšie ako 200 000 kilometrov?</p></div>
+            <svg class="chev"><use href="#chev"/></svg>
+          </div></div>
+          <div class="card">
+            <div class="b-top">
+              <span class="bd no"><svg><use href="#no"/></svg></span>
+              <div><p class="b-ans">Phil Lord a Christopher Miller</p><p class="q full">Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?</p></div>
+              <svg class="chev dn"><use href="#chev"/></svg>
+            </div>
+            <div class="exp">
+              <p class="said"><span>Tvoja odpoveď</span><s>Chile. Neviem</s></p>
+              <p class="why">Táto dvojica vniesla svoju typickú rýchlu a veselú energiu do románu Andyho Weira, autora knihy Marťan, a premenila potenciálne trúchlivý príbeh o prežití na jeden z najzábavnejších filmov roka.</p>
+              <div class="acts"><span class="hear"><svg><use href="#spk"/></svg>vypočuj si</span><span class="src">zdroj<svg><use href="#chev"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cta">
+          <div class="pri"><i class="stop"></i>Zastav súhrn</div>
+          <div class="sec2"><div class="sec"><svg><use href="#again"/></svg>Hraj znova</div><div class="sec"><svg><use href="#house"/></svg>Úvod</div></div>
+        </div>
+        <div class="home"><i></i></div>
+      </div>
+    </figure>
+
+    <!-- ================= C ================= -->
+    <figure>
+      <figcaption class="fh"><span class="let">C</span><p>Otázka má celú šírku, odpoveď je štítok. Po rozbalení pribudne tvoj štítok.</p></figcaption>
+      <div class="phone">
+        <div class="sb"><span>10:51</span><i class="island"></i><span class="sbi"><svg class="i-sig"><use href="#sig"/></svg><svg class="i-wifi"><use href="#wifi"/></svg><svg class="i-bat"><use href="#bat"/></svg></span></div>
+        <div class="brand"><span class="mark">trubbo.<i></i></span><span class="navx"><svg><use href="#close"/></svg></span></div>
+        <div class="rows">
+          <div class="card">
+            <div class="c-top"><p class="c-q c2">Mikrovlnná rúra sa zrodila v roku 1945, keď sa inžinierovi Percymu Spencerovi pri magnetróne roztopilo niečo vo vrecku. Čo to bolo?</p><svg class="chev"><use href="#chev"/></svg></div>
+            <div class="c-line"><span class="bd s20 ok"><svg><use href="#ok"/></svg></span><div class="c-chips"><span class="chip">Čokoládová tyčinka</span></div></div>
+          </div>
+          <div class="card">
+            <div class="c-top"><p class="c-q c2">Ktorý album skupiny BTS z roku 2026 bol ich prvým po návrate všetkých členov z vojenskej služby?</p><svg class="chev"><use href="#chev"/></svg></div>
+            <div class="c-line"><span class="bd s20 sk"><svg><use href="#sk"/></svg></span><div class="c-chips"><span class="chip">Arirang</span></div></div>
+          </div>
+          <div class="card">
+            <div class="c-top"><p class="c-q c2">Ktorý orech rastie zavesený pod šťavnatým plodom, ktorému sa hovorí jablko?</p><svg class="chev"><use href="#chev"/></svg></div>
+            <div class="c-line"><span class="bd s20 no"><svg><use href="#no"/></svg></span><div class="c-chips"><span class="chip">Kešu</span></div></div>
+          </div>
+          <div class="card">
+            <div class="c-top"><p class="c-q c2">Ktorá krajina má najdlhšie pobrežie na svete, dlhšie ako 200 000 kilometrov?</p><svg class="chev"><use href="#chev"/></svg></div>
+            <div class="c-line"><span class="bd s20 no"><svg><use href="#no"/></svg></span><div class="c-chips"><span class="chip">Kanada</span></div></div>
+          </div>
+          <div class="card">
+            <div class="c-top"><p class="c-q">Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?</p><svg class="chev dn"><use href="#chev"/></svg></div>
+            <div class="c-line"><span class="bd s20 no"><svg><use href="#no"/></svg></span><div class="c-chips"><span class="chip">Phil Lord a Christopher Miller</span><span class="chip said"><em>tvoja:</em><s>Chile. Neviem</s></span></div></div>
+            <div class="exp">
+              <p class="why">Táto dvojica vniesla svoju typickú rýchlu a veselú energiu do románu Andyho Weira, autora knihy Marťan, a premenila potenciálne trúchlivý príbeh o prežití na jeden z najzábavnejších filmov roka.</p>
+              <div class="acts"><span class="hear"><svg><use href="#spk"/></svg>vypočuj si</span><span class="src">zdroj<svg><use href="#chev"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cta">
+          <div class="pri"><i class="stop"></i>Zastav súhrn</div>
+          <div class="sec2"><div class="sec"><svg><use href="#again"/></svg>Hraj znova</div><div class="sec"><svg><use href="#house"/></svg>Úvod</div></div>
+        </div>
+        <div class="home"><i></i></div>
+      </div>
+    </figure>
+
+    <!-- ================= D ================= -->
+    <figure>
+      <figcaption class="fh"><span class="let">D</span><p>Jedna karta, otázka na riadok, odpoveď pod ňou. Najviac otázok na obrazovke.</p></figcaption>
+      <div class="phone">
+        <div class="sb"><span>10:51</span><i class="island"></i><span class="sbi"><svg class="i-sig"><use href="#sig"/></svg><svg class="i-wifi"><use href="#wifi"/></svg><svg class="i-bat"><use href="#bat"/></svg></span></div>
+        <div class="brand"><span class="mark">trubbo.<i></i></span><span class="navx"><svg><use href="#close"/></svg></span></div>
+        <div class="rows one">
+          <div class="group">
+            <div class="drow">
+              <span class="bd s20 ok"><svg><use href="#ok"/></svg></span>
+              <div><p class="q c1">Mikrovlnná rúra sa zrodila v roku 1945, keď sa inžinierovi Percymu Spencerovi pri magnetróne roztopilo niečo vo vrecku. Čo to bolo?</p><p class="d-ans">Čokoládová tyčinka</p></div>
+              <svg class="chev"><use href="#chev"/></svg>
+            </div>
+            <div class="drow">
+              <span class="bd s20 sk"><svg><use href="#sk"/></svg></span>
+              <div><p class="q c1">Ktorý album skupiny BTS z roku 2026 bol ich prvým po návrate všetkých členov z vojenskej služby?</p><p class="d-ans">Arirang</p></div>
+              <svg class="chev"><use href="#chev"/></svg>
+            </div>
+            <div class="drow">
+              <span class="bd s20 no"><svg><use href="#no"/></svg></span>
+              <div><p class="q c1">Ktorý orech rastie zavesený pod šťavnatým plodom, ktorému sa hovorí jablko?</p><p class="d-ans">Kešu</p></div>
+              <svg class="chev"><use href="#chev"/></svg>
+            </div>
+            <div class="drow">
+              <span class="bd s20 no"><svg><use href="#no"/></svg></span>
+              <div><p class="q c1">Ktorá krajina má najdlhšie pobrežie na svete, dlhšie ako 200 000 kilometrov?</p><p class="d-ans">Kanada</p></div>
+              <svg class="chev"><use href="#chev"/></svg>
+            </div>
+            <div class="drow">
+              <span class="bd s20 no"><svg><use href="#no"/></svg></span>
+              <div><p class="q full">Ktoré režisérske duo prešlo od radostne absurdného filmu Lego príbeh k vesmírnemu trháku Project Hail Mary z roku 2026 s Ryanom Goslingom?</p><p class="d-ans">Phil Lord a Christopher Miller</p></div>
+              <svg class="chev dn"><use href="#chev"/></svg>
+              <div class="exp">
+                <p class="said"><span>Tvoja odpoveď</span><s>Chile. Neviem</s></p>
+                <p class="why">Táto dvojica vniesla svoju typickú rýchlu a veselú energiu do románu Andyho Weira, autora knihy Marťan, a premenila potenciálne trúchlivý príbeh o prežití na jeden z najzábavnejších filmov roka.</p>
+                <div class="acts"><span class="hear"><svg><use href="#spk"/></svg>vypočuj si</span><span class="src">zdroj<svg><use href="#chev"/></svg></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cta">
+          <div class="pri"><i class="stop"></i>Zastav súhrn</div>
+          <div class="sec2"><div class="sec"><svg><use href="#again"/></svg>Hraj znova</div><div class="sec"><svg><use href="#house"/></svg>Úvod</div></div>
+        </div>
+        <div class="home"><i></i></div>
+      </div>
+    </figure>
+
+  </section>
+</main>

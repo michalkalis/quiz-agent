@@ -167,20 +167,43 @@ struct VoiceCommandLexiconParityTests {
         }
     }
 
-    /// WHY: the hint is the only place the sheet can say a new answer may simply
-    /// be spoken (5.1), and the no-answer sheet must name ITS buttons.
+    /// WHY (#189 founder 2026-09-29): the hint must still say a new answer may
+    /// simply be spoken (5.1) and never resurrect the removed voice cancel; the
+    /// no-answer sheet must name ITS buttons. Which words the confirmation hint
+    /// quotes is covered by `confirmationHintQuotesButtonWords` below.
     @Test("hints: the answer sheet invites a new answer, the no-answer sheet names again/skip", arguments: CommandLanguage.allCases)
     func hints(_ language: CommandLanguage) {
         let sheet = VoiceCommandLexicon.hint(on: .confirmation, language: language)
         #expect(sheet.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))
-        #expect(sheet.contains(sheetIntents[0].phrase(language).lowercased()), "names the yes-word")
-        #expect(sheet.contains(sheetIntents[5].phrase(language).lowercased().trimmingCharacters(in: .punctuationCharacters)),
-                "names the no-word")
         #expect(!sheet.contains("zruš") && !sheet.contains("cancel"))
         let noAnswer = VoiceCommandLexicon.hint(on: .noAnswer, language: language)
         #expect(noAnswer.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))
         #expect(noAnswer.contains(VoiceCommandLexicon.spokenWord(.skip, language: language)))
         #expect(!noAnswer.contains(VoiceCommandLexicon.spokenWord(.ok, language: language)))
+    }
+
+    /// WHY (#189 founder feedback 2026-09-29, car test): the old wording ("say
+    /// the answer again") never actually said the word "again", so the driver
+    /// had nothing to repeat back. The hint must quote the two words printed on
+    /// the sheet's own buttons (Confirm / Again in Localizable.xcstrings) — a
+    /// word not one of the sheet's own valid commands is a hint nobody can act
+    /// on.
+    @Test("confirmation hint quotes the confirm and again button words, each a valid sheet command", arguments: CommandLanguage.allCases)
+    func confirmationHintQuotesButtonWords(_ language: CommandLanguage) {
+        let confirmButton = language == .english ? "confirm" : "potvrď"
+        let againButton: String = switch language {
+        case .english: "again"
+        case .slovak: "znova"
+        case .czech: "znovu"
+        }
+        let hint = VoiceCommandLexicon.hint(on: .confirmation, language: language).lowercased()
+        for word in [confirmButton, againButton] {
+            #expect(hint.contains(word), "\(language) hint must quote the button word '\(word)'")
+            #expect(
+                VoiceCommandMatcher.match(transcript: word, on: .confirmation, isFinal: true, language: language) != nil,
+                "\(language) '\(word)' must be a valid confirmation-sheet command"
+            )
+        }
     }
 
     @Test("phrases join into one token and every joined token is a variant", arguments: CommandLanguage.allCases)

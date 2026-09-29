@@ -10401,6 +10401,24 @@
             }
           }
         },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "resets in %lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "resets in %lld days"
+                }
+              }
+            }
+          }
+        },
         "sk" : {
           "variations" : {
             "plural" : {
@@ -10461,6 +10479,24 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "obnoví se za %lld hodin"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "resets in %lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "resets in %lld hours"
                 }
               }
             }

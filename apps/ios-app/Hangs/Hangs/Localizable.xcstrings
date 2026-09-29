@@ -5121,6 +5121,12 @@
             "value" : "Nejdřív se přihlas"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in first"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",

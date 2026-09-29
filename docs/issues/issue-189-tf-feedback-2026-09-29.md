@@ -1,6 +1,6 @@
 # #189 — TF feedback 2026-09-29 (AirPods, mimo auta, slovenský kvíz)
 
-**Triage:** in-progress · **Build:** TF z `6310b647` (2026-09-25) · **Zdroj:** founder poznámky + 5 screenshotov, Sentry 08:43–09:04 UTC, Fly logy
+**Triage:** code-complete (2026-09-29) · open = TF test na požiadanie + Pencil D · **Build:** TF z `6310b647` (2026-09-25) · **Zdroj:** founder poznámky + 5 screenshotov, Sentry 08:43–09:04 UTC, Fly logy
 
 ## Nálezy a diagnóza
 
@@ -22,16 +22,25 @@
 - **M5** — „povedz to znova“ zo servera po napísanej/upravenej odpovedi otvorí sheet vlastnený už odoslaným pokusom → Znova/Zruš odmietnuté. Fix: nový pokus v `presentNoAnswerChoice`.
 - Nechané, len log: L6 (zrušené preskočenie nechá otázku bez odpočtu), L7 (prečítanie odpovede bez timeoutu), P8 (engine zastavený OS pri zmene trasy).
 
-## PR plán
-- **PR A** `fix/189-session-finished` (backend + iOS, Opus): #2a — hotové: opätovná odpoveď na poslednú otázku sa preoceňuje, inak `session_finished` → výsledky. Známa hrana: posledná otázka + „znova“ + preskoč → riadok poslednej otázky vo výsledkoch chýba, skóre zo servera ju obsahuje.
-- **PR B** `fix/189-mic-engine-states` (iOS, Opus): H1, H2, M3, M4, M5 + telemetria (hluchý analyzér, `listener.stop` v ledgeri, P8/L7 logy, detail HTTP chyby).
-- **PR C** `fix/189-confirm-sheet-and-drag` (iOS, Sonnet): #1 nápoveda, #5 lišta počas prečítania, #4 gesto + tento issue a varianty.
-- Workeri needitujú mimo svojho worktree a nebuildujú; build + cielené testy sériovo jeden tester (vlastný simulátor).
+## Stav (2026-09-29)
+- PR #206 — koniec sady: opätovná odpoveď na poslednú otázku, inak `session_finished` → výsledky · MERGED · backend v120 v prode (pomáha už aj buildu z 6310b647).
+- PR #207 — nápoveda citujúca povely, lišta „Čítam odpoveď“ počas prečítania, reset ťahu po Control Center (overené na simulátore) · MERGED.
+- PR #208 — H1/H2/M3/M4/M5 + telemetria (hluchý analyzér, `listener.stop`, zmeny trasy) · MERGED.
+- PR #209 — `docs/design/copy-style.md` + CI job `copy-review` (subscription token) · MERGED. Founder 09-29: ručná revízia 500 textov je príliš dlhá → automatická kontrola ako pri otázkach.
+- PR #210 — výsledky sady ako jeden zoskupený zoznam, odpoveď pod otázkou (founder vybral variant D) · MERGED · Pencil pass otvorený (Pencil nebežal).
+- PR #211 — jednorazová oprava textov: Opus návrhy → nezávislý Opus sudca → 172 hodnôt, 8 plurálov, InfoPlist sk/cs; founder: „kvíz“ všade, rodovo neutrálne oslovenie, „Hraj bez limitu“, „z českých dějin“.
 
-## Revízia textov
-Editor všetkých textov sk/cs/en s kontextom: artefakt (odkaz doplnený po publikovaní). Founder píše nové verzie → Claude ich prečíta a zapracuje samostatným PR.
+## Overenie na zariadení (ďalší TF build, na požiadanie)
+1. Posledná otázka: odpovedz, na sheete „znova“, odpovedz znova → prijme a ohodnotí; preskoč na prázdnom sheete poslednej otázky → rovno výsledky, žiadne „Ojoj“.
+2. Na sheete hneď po zobrazení lišta „ČÍTAM ODPOVEĎ“, potom „POČÚVAM“ + „Povedz „potvrď“, „znova“ alebo novú odpoveď“.
+3. S AirPods: „Znova“ hneď po prečítaní odpovede a ihneď hovoriť, 5×; appka musí rozumieť. Ak nie, poznač čas → Sentry „deaf analyzer“ / `listener.stop`.
+4. Počas nahrávania odpovede stiahni Control Center a zavri → nahrávka pokračuje a sama skončí po odmlke.
+5. Počas otázky stiahni Control Center z pravého rohu → rozloženie ostane.
+6. Pauza počas nahrávania → mikrofón sa neotvorí, po obnovení odpočet beží.
+7. Výsledky sady (odhalenie na konci): jeden zoznam, celé odpovede.
 
-## Otvorené (founder)
-- Varianta riadku výsledkov (A–D).
-- Režim odhalenia odpovedí pri #4 (po otázke / na konci sady).
-- Overenie #2b na zariadení podľa postupu po PR B.
+## Follow-upy
+- Úvodná karta povelov: zoznam slov generovať zo slovníka povelov podľa jazyka kvízu (dnes pevný text).
+- „sada“ vs „kvíz“ pre koniec sady (founder nerozhodol; nezmenené).
+- Hrana: posledná otázka + „znova“ + preskoč → chýba riadok vo výsledkoch, skóre ho obsahuje.
+- Nechané len ako log: zrušené preskočenie bez odpočtu (L6), prečítanie bez timeoutu (L7), engine zastavený OS (P8).

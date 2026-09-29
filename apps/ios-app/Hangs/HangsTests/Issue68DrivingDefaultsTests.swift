@@ -44,7 +44,7 @@ struct SettingsViewSessionGroupTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             for label in [
-                "Thinking time", "Questions per session",
+                "Thinking time", "Questions per quiz",
                 "Auto-advance delay", "Answer time limit",
             ] {
                 #expect(throws: Never.self, "session row '\(label)' must render") {

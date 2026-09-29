@@ -62,7 +62,7 @@ struct HomeViewInspectorTests {
             let tree = try view.inspect()
 
             #expect(throws: Never.self) {
-                try tree.find(text: "session")
+                try tree.find(text: "quiz")
             }
             #expect(throws: Never.self) {
                 try tree.find(button: "Start")

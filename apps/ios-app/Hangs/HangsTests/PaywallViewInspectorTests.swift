@@ -193,7 +193,7 @@ struct PaywallViewPlanPickerTests {
         #expect(view.effectivePlan == .monthly, "monthly is the only subscription plan for v1")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]),
+            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]),
                     "default CTA must sell the monthly plan")
             #expect(!treeHasText(tree, containing: ["/ year"]), "annual billing suffix must never show")
         }
@@ -304,7 +304,7 @@ struct PaywallViewInFlightTests {
             let tree = try view.inspect()
             // The CTA still names what is being bought — the same button, now
             // spinning, rather than a second button with different copy.
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
             let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
             let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
             #expect(try monthly.opacity() == 1, "the plan being bought stays full-strength")
@@ -338,7 +338,7 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe —", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
             #expect(!treeHasText(tree, containing: ["Buying"]), "no narrating CTA while idle")
             #expect(!treeHasText(tree, containing: ["Restoring"]), "no restore CTA while idle")
             #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled()),
@@ -423,7 +423,7 @@ struct PaywallPackSelectionTests {
             let tree = try view.inspect()
             #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]),
                     "the CTA must name the pack and its price")
-            #expect(!treeHasText(tree, containing: ["Subscribe —"]),
+            #expect(!treeHasText(tree, containing: ["Subscribe for"]),
                     "the CTA must stop selling a subscription while the pack is selected")
         }
     }
@@ -457,7 +457,7 @@ struct PaywallPackSelectionTests {
         let (manager, mock) = await makeManagerWithMock(gate: gate)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
         try await ViewHosting.host(view) {
-            #expect(try treeHasText(view.inspect(), containing: ["Subscribe —", "/ month"]))
+            #expect(try treeHasText(view.inspect(), containing: ["Subscribe for", "/ month"]))
             try view.inspect()
                 .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
                 .button().tap()

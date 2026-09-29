@@ -61,7 +61,7 @@ struct ListenBarInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "THINK — LISTENING IN 32 S")
+                try tree.find(text: "THINK. LISTENING IN 32 S")
             }
             let words = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try words.text().string() == #"Say "start" or "skip""#)
@@ -125,7 +125,7 @@ struct ListenBarInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Say true or false")
+                try tree.find(text: "Say \"true\" or \"false\"")
             }
         }
     }

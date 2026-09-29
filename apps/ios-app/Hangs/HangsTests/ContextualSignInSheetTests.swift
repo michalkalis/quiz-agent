@@ -120,6 +120,6 @@ struct ContextualSignInSheetStateTests {
         #expect(throws: Never.self) {
             try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.appleButton")
         }
-        #expect(throws: Never.self) { try tree.find(text: "Later — I'll sign in from Settings") }
+        #expect(throws: Never.self) { try tree.find(text: "Later, I'll sign in from Settings") }
     }
 }

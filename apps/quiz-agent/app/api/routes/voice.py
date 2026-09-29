@@ -25,7 +25,7 @@ from ..deps import (
 )
 from ..session_auth import require_session_ownership
 from ...serializers import session_translation
-from ..submit_errors import retry_answer_error, submit_http_error
+from ..submit_errors import phase_guard_error, retry_answer_error, submit_http_error
 from ...auth.identity import AuthSubject
 from ...client_capabilities import OPTION_LABELS, has_capability
 from ...evaluation.mcq_matcher import label_keyterms, match_option, option_labels
@@ -34,6 +34,7 @@ from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
 from ...quiz.errors import InvalidSubmission, QuestionUnavailable
 from ...quiz.flow import QuizFlowService
+from ...quiz.resubmission import reanswers_finished_session
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
 
@@ -122,8 +123,11 @@ async def transcribe_and_submit(
         # subject — "is this *a* valid user", never "is this *the* session's user".
         require_session_ownership(session, subject, session_id=session_id)
 
-        if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
-            raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.phase not in (
+            SessionPhase.ASKING,
+            SessionPhase.AWAITING_ANSWER,
+        ) and not reanswers_finished_session(session, question_id):
+            raise phase_guard_error(session)
         if session.pack_id and session.current_question_id is None:
             # #182: parked between questions while the pack fills — there is
             # nothing to grade; the client should be polling /next-question.

@@ -23,7 +23,7 @@ from ..deps import (
     flow_to_response,
 )
 from ..session_auth import require_session_ownership
-from ..submit_errors import retry_answer_error, submit_http_error
+from ..submit_errors import phase_guard_error, retry_answer_error, submit_http_error
 from ...auth.identity import AuthSubject
 from ...review_badge import apply_review_badge
 from ...serializers import (
@@ -37,6 +37,7 @@ from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
+from ...quiz.resubmission import reanswers_finished_session
 from ...tts.spoken_text import spoken_question_text
 from ...rate_limit import limiter
 from quiz_shared.models.phase import SessionPhase
@@ -257,8 +258,11 @@ async def submit_input(
         session = session_manager.get_session(session_id)
         require_session_ownership(session, subject, session_id=session_id)  # #144
 
-        if session.phase not in (SessionPhase.ASKING, SessionPhase.AWAITING_ANSWER):
-            raise HTTPException(status_code=400, detail="Not waiting for input")
+        if session.phase not in (
+            SessionPhase.ASKING,
+            SessionPhase.AWAITING_ANSWER,
+        ) and not reanswers_finished_session(session, body.question_id, body.input):
+            raise phase_guard_error(session)
         if session.pack_id and session.current_question_id is None:
             # #182: parked between questions while the pack fills — there is
             # nothing to grade; the client should be polling /next-question.

@@ -15,6 +15,7 @@ a client-side input problem, 503 for transient infra, 500 for everything else.
 #185: a session that declared ``answer-codes`` gets its "say it again" 400s as
 ``{"code", "message"}`` (``no_speech`` / ``no_answer`` / ``mcq_unmatched``) so
 the client can tell them apart; every other session keeps the plain string.
+#189 adds ``session_finished`` to the same family (``phase_guard_error``).
 """
 
 import logging
@@ -23,6 +24,8 @@ import sentry_sdk
 from fastapi import HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as SATimeoutError
+
+from quiz_shared.models.phase import SessionPhase
 
 from ..client_capabilities import ANSWER_CODES, has_capability
 from ..quiz.errors import (
@@ -111,6 +114,28 @@ def retry_answer_error(session, code: str, message: str) -> HTTPException:
     """
     if has_capability(session, ANSWER_CODES):
         return HTTPException(status_code=400, detail={"code": code, "message": message})
+    return HTTPException(status_code=400, detail=message)
+
+
+def phase_guard_error(session) -> HTTPException:
+    """The submit routes' "not waiting for input" 400, logged (#189).
+
+    A FINISHED session tells `answer-codes` clients so with ``session_finished``:
+    TF 2026-09-29 read the plain 400 as "didn't catch that" on voice (retry loop)
+    and as a failed submit on skip (error screen), while the set was simply over.
+    Every other session and phase keeps the plain string.
+    """
+    phase = getattr(session.phase, "value", session.phase)
+    logger.warning(
+        "Submit refused for session %s: not waiting for input (phase=%s)",
+        session.session_id,
+        phase,
+    )
+    message = "Not waiting for input"
+    if phase == SessionPhase.FINISHED.value and has_capability(session, ANSWER_CODES):
+        return HTTPException(
+            status_code=400, detail={"code": "session_finished", "message": message}
+        )
     return HTTPException(status_code=400, detail=message)
 
 

@@ -12,7 +12,8 @@ Tokens:
 - ``answer-codes`` — "say it again" 400s from the submit routes carry a
   machine-readable ``detail.code`` (``no_speech`` / ``no_answer`` /
   ``mcq_unmatched``), and an MCQ answer that names no option is refused with
-  ``mcq_unmatched`` instead of being graded "incorrect".
+  ``mcq_unmatched`` instead of being graded "incorrect". A submit the set has
+  already ended for is refused with ``session_finished`` (#189).
 - ``option-labels`` — question audio reads the MCQ options with the served
   ``option_labels`` ("1".."4", or "A".."D" when the options are numbers)
   instead of the raw keys, matching what the client now displays.

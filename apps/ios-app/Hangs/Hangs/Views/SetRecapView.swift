@@ -118,9 +118,19 @@ struct SetRecapView: View {
 
     // MARK: - Rows
 
+    /// #189 finding 3: one grouped card for the whole set instead of a stack of
+    /// separate row cards — a hairline divider between rows stands in for the
+    /// per-row border, inset so it starts after the badge column (not under it).
     private var rowsList: some View {
-        VStack(spacing: 8) {
-            ForEach(viewModel.recapEntries) { entry in
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.recapEntries.enumerated()), id: \.element.id) { index, entry in
+                if index > 0 {
+                    Rectangle()
+                        .fill(Theme.Hangs.Colors.hairline)
+                        .frame(height: 1)
+                        .padding(.leading, SetRecapRow.groupDividerInset)
+                }
+
                 SetRecapRow(
                     entry: entry,
                     isExpanded: expandedEntryId == entry.id,
@@ -135,6 +145,15 @@ struct SetRecapView: View {
                 )
             }
         }
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card)
+                .fill(Theme.Hangs.Colors.bgCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card)
+                .stroke(Theme.Hangs.Colors.hairline, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card))
     }
 
     // MARK: - CTA stack
@@ -185,10 +204,12 @@ struct RecapSource: Identifiable, Equatable {
     let id: String
 }
 
-/// One recap row. Collapsed: badge + 2-line stem + the revealed answer +
-/// chevron (the answer is visible without expanding — variant C's whole
-/// point is glanceability). Expanded: the full stem, "you said" (struck
-/// through — it was wrong), explanation, hear-it, source.
+/// One recap row inside `SetRecapView`'s grouped list (#189 finding 3).
+/// Collapsed: badge + 1-line question teaser + the revealed answer (wraps,
+/// never truncated — the answer is visible without expanding) + chevron.
+/// Expanded: the full question, the same answer, then "you said" (struck
+/// through — it was wrong), explanation, hear-it, source, all inset to the
+/// text column so they line up under the question rather than the badge.
 struct SetRecapRow: View {
     let entry: RecapEntry
     let isExpanded: Bool
@@ -200,6 +221,16 @@ struct SetRecapRow: View {
     /// so a test can build a row without caring about the sheet.
     var onOpenSource: (String) -> Void = { _ in }
 
+    /// Badge diameter = the grid's badge column width (#189).
+    fileprivate static let badgeSize: CGFloat = 20
+    /// Gap between the badge column and the text column.
+    fileprivate static let columnGap: CGFloat = 12
+    fileprivate static let horizontalPadding: CGFloat = 14
+    /// Where the expanded content starts, and — from the group's edge — where
+    /// the inter-row hairline in `SetRecapView.rowsList` starts too.
+    fileprivate static let textColumnInset = badgeSize + columnGap
+    fileprivate static let groupDividerInset = horizontalPadding + textColumnInset
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: onToggle) {
@@ -210,42 +241,34 @@ struct SetRecapRow: View {
 
             if isExpanded {
                 expandedSection
+                    .padding(.leading, Self.textColumnInset)
             }
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Theme.Hangs.Colors.bgCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Theme.Hangs.Colors.hairline, lineWidth: 1)
-        )
+        .padding(.horizontal, Self.horizontalPadding)
+        .padding(.vertical, 12)
         .accessibilityIdentifier("recap.row.\(entry.id)")
     }
 
     private var collapsedRow: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: Self.columnGap) {
             badge
 
-            Text(entry.questionText)
-                .font(.hangsBody(13, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                // #179 finding 5: collapsed stays a 2-line teaser (the list is
-                // for glancing), expanded owes the driver the whole question —
-                // a truncated stem makes the answer under it unreadable.
-                .lineLimit(isExpanded ? nil : 2)
-                .multilineTextAlignment(.leading)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(entry.questionText)
+                    .font(.hangsBody(isExpanded ? 13.5 : 12.5, weight: .medium))
+                    .foregroundColor(isExpanded ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.muted)
+                    // #189 finding 3: collapsed is a 1-line teaser (the list is
+                    // for glancing, the answer under it carries the row),
+                    // expanded owes the driver the whole question.
+                    .lineLimit(isExpanded ? nil : 1)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.leading)
 
-            Spacer(minLength: 8)
-
-            Text(entry.correctAnswerDisplay)
-                .textCase(.uppercase)
-                .font(.hangsMono(11, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .frame(maxWidth: 120, alignment: .trailing)
+                Text(entry.correctAnswerDisplay)
+                    .font(.hangsBody(15, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.leading)
+            }
 
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
@@ -261,7 +284,7 @@ struct SetRecapRow: View {
                 .font(.system(size: 10, weight: .bold))
                 .foregroundColor(badgeColor)
         }
-        .frame(width: 22, height: 22)
+        .frame(width: Self.badgeSize, height: Self.badgeSize)
         .accessibilityHidden(true)
     }
 

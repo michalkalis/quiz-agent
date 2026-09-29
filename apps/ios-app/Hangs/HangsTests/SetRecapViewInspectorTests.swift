@@ -221,8 +221,9 @@ struct SetRecapRowInspectorTests {
 /// Founder, TestFlight 2026-09-14: the recap was the one screen showing every
 /// answer of the set, and the one screen where you could neither read the whole
 /// question nor check where the answer came from. Both halves are pinned here:
-/// the 2-line teaser is a COLLAPSED rule only, and the source link the result
-/// screen has must exist here too (same `HangsSourceLink`).
+/// the 1-line teaser (#189: was 2-line pre-redesign) is a COLLAPSED rule only,
+/// and the source link the result screen has must exist here too (same
+/// `HangsSourceLink`).
 @Suite("SetRecapRow — full stem + source link when expanded (#179)")
 @MainActor
 struct SetRecapRowSourceAndStemTests {
@@ -287,14 +288,14 @@ struct SetRecapRowSourceAndStemTests {
         }
     }
 
-    /// The collapsed list is unchanged — this is the regression half: the row
-    /// stays a 2-line teaser with nothing new stacked into it.
-    @Test("collapsed keeps the 2-line teaser and shows no source link")
+    /// The collapsed row still truncates the question to a single-line teaser
+    /// (#189: one-line, not two) and shows no source link.
+    @Test("collapsed keeps the 1-line teaser and shows no source link")
     func collapsedUnchanged() async throws {
         let view = row(expanded: false, question: Fixtures.makeQuestion(text: Self.longStem))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(try tree.find(text: Self.longStem).lineLimit() == 2)
+            #expect(try tree.find(text: Self.longStem).lineLimit() == 1)
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "recap.row.3.source")
             }

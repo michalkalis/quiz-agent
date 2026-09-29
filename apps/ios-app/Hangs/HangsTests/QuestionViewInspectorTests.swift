@@ -172,7 +172,7 @@ struct QuestionViewMCQOptionVisibilityTests {
             // The think caption counts the running window down (12 s left in the
             // fixture's legacy answer window — the bar covers both timer paths)…
             #expect(throws: Never.self) {
-                try tree.find(text: "THINK — LISTENING IN 12 S")
+                try tree.find(text: "THINK. LISTENING IN 12 S")
             }
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {

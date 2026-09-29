@@ -144,7 +144,7 @@ struct QuestionListenBarRenderTests {
     @Test("state 2 counts the think window down and offers all three words")
     func thinkingState() async throws {
         try await host(.thinking(remaining: 32, total: 45), language: .slovak) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "THINK — LISTENING IN 32 S") }
+            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 32 S") }
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             for word in ["„štart“", "„zopakuj“", "„preskoč“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
@@ -222,7 +222,7 @@ struct QuestionListenBarRenderTests {
     func wordsOffKeepsTheBar() async throws {
         try await host(.thinking(remaining: 9, total: 30), showsWords: false) { tree in
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: Never.self) { try tree.find(text: "THINK — LISTENING IN 9 S") }
+            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 9 S") }
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }

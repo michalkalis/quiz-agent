@@ -62,21 +62,22 @@ extension VoiceCommandLexicon {
         case (.english, .home): return #"Say "start""#
         case (.english, .question): return #"Say "start" or "skip""#
         // #174: names the words printed on the sheet's buttons (Confirm / Again).
-        // #185 5.1: anything else said on the sheet is a new answer — the hint
-        // says so, because nothing else on the sheet can (founder wording,
-        // voice-feedback variants D1, 2026-09-25).
-        case (.english, .confirmation): return #"Say the answer again or "yes" / "no""#
+        // #189 founder feedback (2026-09-29): the previous wording ("say the
+        // answer again") never actually said the word "again" — quote both
+        // button words, then name the fallback (a new answer covers anything
+        // else spoken on the sheet, per #185 5.1 D1 2026-09-25).
+        case (.english, .confirmation): return #"Say "confirm", "again" or a new answer"#
         // #185: the no-answer sheet's buttons are Again / Skip.
         case (.english, .noAnswer): return #"Say "again" or "skip""#
         case (.english, .result): return #"Say "next""#
         case (.slovak, .home): return "Povedz „štart“"
         case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"
-        case (.slovak, .confirmation): return "Povedz odpoveď znova alebo „áno“ / „nie“"
+        case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo novú odpoveď"
         case (.slovak, .noAnswer): return "Povedz „znova“ alebo „preskoč“"
         case (.slovak, .result): return "Povedz „ďalej“"
         case (.czech, .home): return "Řekni „start“"
         case (.czech, .question): return "Řekni „start“ nebo „přeskoč“"
-        case (.czech, .confirmation): return "Řekni odpověď znovu nebo „ano“ / „ne“"
+        case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo novou odpověď"
         case (.czech, .noAnswer): return "Řekni „znovu“ nebo „přeskoč“"
         case (.czech, .result): return "Řekni „dál“"
         }
@@ -122,6 +123,19 @@ extension VoiceCommandLexicon {
         case (.slovak, true): return "POČÚVAM"
         case (.czech, false): return "POSLOUCHÁM PŘÍKAZY"
         case (.czech, true): return "POSLOUCHÁM"
+        }
+    }
+
+    /// #189 (founder feedback 2026-09-29): caption for the sheet's listening
+    /// indicator while the answer read-back plays or the listener has not yet
+    /// come back up afterwards — same COMMAND-language rule as
+    /// `listeningCaption`, and the same pre-uppercased convention (the caller
+    /// applies `.textCase(.uppercase)` on top, as it does for that caption).
+    static func readingBackCaption(language: CommandLanguage = .english) -> String {
+        switch language {
+        case .english: return "READING BACK"
+        case .slovak: return "ČÍTAM ODPOVEĎ"
+        case .czech: return "ČTU ODPOVĚĎ"
         }
     }
 }

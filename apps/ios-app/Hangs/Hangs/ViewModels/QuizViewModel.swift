@@ -376,6 +376,16 @@ final class QuizViewModel: ObservableObject {
         QuizSettings.voiceHintsVisible(override: settings.voiceHintsEnabled)
     }
 
+    /// #189: the confirmation/no-answer sheet's own listening-indicator state —
+    /// see `VoiceCommandCoordinator.sheetListenerState`.
+    var sheetListenerState: SheetListenerState? { voiceCommandCoordinator.sheetListenerState }
+
+    /// #189: the sheet's hint words for `sheetListenerState`, hidden by the same
+    /// settings toggle as `voiceHintWords`.
+    var sheetHintWords: String? {
+        showsVoiceHints ? voiceCommandCoordinator.sheetHint : nil
+    }
+
     /// #122 Variant C ambient-glow feedback phase — see
     /// `VoiceCommandCoordinator.voiceFeedbackPhase` (glow/bar call sites).
     var voiceFeedbackPhase: VoiceFeedbackPhase { voiceCommandCoordinator.voiceFeedbackPhase }

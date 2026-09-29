@@ -23,8 +23,10 @@ struct AnswerConfirmationView: View {
     var onCancelEditing: (() -> Void)? = nil
     var onCancel: (() -> Void)? = nil
     /// #77/#96 P2: the "LISTENING FOR COMMANDS" bar (pen `s49sd`) is shown iff
-    /// the confirmation command window is armed. Supplied by the presenter.
-    var isListeningForCommands: Bool = false
+    /// non-nil. #189: `.readingBack` covers the read-back + engine-restart gap
+    /// right after the sheet opens, so the bar never vanishes; `.listening`
+    /// once the command window is actually armed. Supplied by the presenter.
+    var sheetListenerState: SheetListenerState? = nil
     /// #174: the words to say under that bar, nil once the driver has outgrown
     /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
     var commandHint: String? = nil
@@ -246,10 +248,12 @@ struct AnswerConfirmationView: View {
             .frame(maxHeight: .infinity)
 
             // #131 Track F: full ListenBar — confirmation is a quiz screen, and
-            // its three commands need the words on their own line.
-            if isListeningForCommands, !isEditing, !isEvaluating {
+            // its three commands need the words on their own line. #189: it
+            // spans the sheet's whole lifetime now, `.readingBack` included.
+            if let sheetListenerState, !isEditing, !isEvaluating {
                 ListenBar(
-                    mode: .command, feedback: commandFeedback, commandHint: commandHint,
+                    mode: sheetListenerState == .listening ? .command : .readingAnswerBack,
+                    feedback: commandFeedback, commandHint: commandHint,
                     shortCaption: true, language: commandLanguage
                 )
                     .padding(.top, 12)

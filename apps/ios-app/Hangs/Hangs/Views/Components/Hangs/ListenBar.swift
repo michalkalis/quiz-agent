@@ -63,6 +63,12 @@
 //  whole capsule glows with the live mic level (`inputLevel`). Command states
 //  and the slim size keep the layout above.
 //
+//  #189 (founder feedback 2026-09-29): the confirmation sheet tore the listener
+//  down for the answer read-back and the pill simply vanished for the ~4 s it
+//  took to come back — read as a frozen sheet. `.readingAnswerBack` fills that
+//  gap: same teal/layout as `.command` (same words below), but a speaker glyph
+//  and no "live mic" dots, since nothing is heard yet.
+//
 
 import SwiftUI
 
@@ -99,6 +105,10 @@ struct ListenBar: View {
     enum Mode {
         case command // listening for hands-free commands (teal)
         case readingQuestion // #179 D1 state 1: the TTS is reading; commands armed (teal)
+        /// #189: the confirmation/no-answer sheet's own state while the answer
+        /// read-back plays or the listener has not yet reported live afterwards
+        /// (teal, like `.command` — the words below are the same).
+        case readingAnswerBack
         case answer(AnswerKind) // listening for an answer (pink)
         case evaluating // #179 D1 state 4: the answer is being graded; nothing is heard (grey)
         case skipping // #181: the question is being skipped; nothing is heard (grey)
@@ -109,7 +119,7 @@ struct ListenBar: View {
     private var isBusy: Bool {
         switch mode {
         case .evaluating, .skipping: return true
-        case .command, .readingQuestion, .answer: return false
+        case .command, .readingQuestion, .readingAnswerBack, .answer: return false
         }
     }
 
@@ -185,7 +195,7 @@ struct ListenBar: View {
     /// name words (D1 states 1 and 2, plus Home / result / confirmation).
     private var isCommandMode: Bool {
         switch mode {
-        case .command, .readingQuestion: return true
+        case .command, .readingQuestion, .readingAnswerBack: return true
         case .answer, .evaluating, .skipping: return false
         }
     }
@@ -194,6 +204,16 @@ struct ListenBar: View {
     /// (a command spoken there is not heard, so offering one would be a lie);
     /// evaluating has none because nothing is listening at all.
     private var chipWords: [String] { isCommandMode ? commandWords : [] }
+
+    /// #189: the trailing "live mic" dots only mean something while a command
+    /// window is actually armed — the read-back/settle state never had a live
+    /// mic to represent.
+    private var showsDots: Bool {
+        switch mode {
+        case .command, .readingQuestion: return true
+        case .readingAnswerBack, .answer, .evaluating, .skipping: return false
+        }
+    }
 
     /// Left-anchored drain fraction, nil when no window is running.
     private var thinkFillFraction: CGFloat? {
@@ -210,7 +230,7 @@ struct ListenBar: View {
     /// The bar's resting accent before any feedback tint applies.
     private var modeAccent: Color {
         switch mode {
-        case .command, .readingQuestion: return teal
+        case .command, .readingQuestion, .readingAnswerBack: return teal
         case .answer: return pink
         case .evaluating, .skipping: return Theme.Hangs.Colors.muted
         }
@@ -237,7 +257,7 @@ struct ListenBar: View {
         case .unmatched: return amber.opacity(0.12)
         case .idle:
             switch mode {
-            case .command, .readingQuestion: return teal.opacity(0.08)
+            case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.08)
             // #185 track F: a shade warmer once speech is heard (F2 "hot").
             case .answer: return speechHeard ? pink.opacity(0.18) : Theme.Hangs.Colors.pinkSoft
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.10)
@@ -252,7 +272,7 @@ struct ListenBar: View {
         case .unmatched: return amber.opacity(0.55)
         case .idle:
             switch mode {
-            case .command, .readingQuestion: return teal.opacity(0.35)
+            case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.35)
             case .answer: return pink
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.35)
             }
@@ -337,6 +357,9 @@ struct ListenBar: View {
         // (founder screenshot 9) — it now names what the app is doing.
         case .readingQuestion:
             return Text("Reading the question")
+        // #189: the sheet's own "not live yet" state — read-back or settle.
+        case .readingAnswerBack:
+            return Text(verbatim: VoiceCommandLexicon.readingBackCaption(language: language))
         // #185 track F: the same word the Stop button says while it spins.
         case .evaluating:
             return Text("Processing…")
@@ -469,14 +492,14 @@ struct ListenBar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         caption
-                        dots
+                        if showsDots { dots }
                     }
                     words
                 }
             case .slim:
                 // One row: the short caption and the words share the 40pt bar.
                 caption
-                dots
+                if showsDots { dots }
                 words
             }
 
@@ -490,7 +513,14 @@ struct ListenBar: View {
     /// live waveform once listening — one glyph slot, four states (#132 B, #179 D1).
     @ViewBuilder
     private var leadingGlyph: some View {
-        if isBusy {
+        // #189: a speaker, not the listening waveform — nothing is heard while
+        // the answer plays back or the mic is still settling.
+        if case .readingAnswerBack = mode {
+            Image(systemName: "speaker.wave.2.fill")
+                .font(.system(size: usesStatusLayout ? 18 : 14, weight: .semibold))
+                .foregroundColor(accent)
+                .accessibilityHidden(true)
+        } else if isBusy {
             ProgressView()
                 .controlSize(usesStatusLayout ? .regular : .small)
                 .tint(accent)
@@ -682,6 +712,10 @@ struct ListenBarLevelGlow: View {
             // #179 D1 — the question screen's four states, MCQ column.
             ListenBar(mode: .readingQuestion,
                       commandWords: ["„zopakuj“", "„preskoč“"], language: .slovak)
+            // #189 — the confirmation sheet right after it opens.
+            ListenBar(mode: .readingAnswerBack,
+                      commandHint: "Povedz „potvrď“, „znova“ alebo novú odpoveď",
+                      shortCaption: true, language: .slovak)
             ListenBar(mode: .command,
                       commandWords: ["„štart“", "„zopakuj“", "„preskoč“"],
                       language: .slovak,

@@ -16,6 +16,13 @@
 
 import Foundation
 
+/// #189: the confirmation/no-answer sheet's own listening-indicator state — see
+/// `VoiceCommandCoordinator.sheetListenerState`.
+enum SheetListenerState: Equatable {
+    case readingBack
+    case listening
+}
+
 extension VoiceCommandCoordinator {
     // MARK: - Window
 
@@ -97,6 +104,29 @@ extension VoiceCommandCoordinator {
               let screen = currentCommandScreen,
               commandAvailability == .ready else { return nil }
         return VoiceCommandLexicon.hint(on: screen, language: commandLanguage)
+    }
+
+    /// #189 (founder feedback 2026-09-29): which state the confirmation/
+    /// no-answer sheet's OWN listening indicator is in, or `nil` when nothing
+    /// is coming at all (voice commands off, recognizer unavailable, paused,
+    /// backgrounded, or this isn't the sheet's quiz state). Unlike
+    /// `commandListenerHint` — which only ever reports LIVE, so the sheet had
+    /// no indicator during the read-back + engine-restart gap right after it
+    /// opened (~4 s: TTS, playback, engine settle) — this covers the sheet's
+    /// whole lifetime: `.readingBack` before the listener reports LIVE,
+    /// `.listening` once it has.
+    var sheetListenerState: SheetListenerState? {
+        guard settings().voiceCommandsEnabled, isAppForeground(), !isQuizPaused(),
+              commandAvailability == .ready, quizState() == .processing else { return nil }
+        return commandCapturePhase == .listening ? .listening : .readingBack
+    }
+
+    /// The sheet's hint sentence for either `SheetListenerState` case — the
+    /// words are the same whether the listener has reported LIVE yet or not,
+    /// so the `.readingBack` pill can show them too instead of going blank.
+    var sheetHint: String? {
+        guard sheetListenerState != nil else { return nil }
+        return VoiceCommandLexicon.hint(on: isNoAnswerSheet() ? .noAnswer : .confirmation, language: commandLanguage)
     }
 
     /// Arm or tear down the command/VAD listener to match the current window.

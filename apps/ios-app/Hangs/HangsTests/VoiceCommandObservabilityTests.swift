@@ -58,7 +58,7 @@ struct VoiceCommandObservabilityTests {
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say the answer again or "yes" / "no""#)
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or a new answer"#)
         #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "skip""#)
         #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
     }
@@ -80,6 +80,26 @@ struct VoiceCommandObservabilityTests {
         // Tearing the listener down hides the indicator.
         vm.audioDeviceState.stopSilenceDetectionListening()
         #expect(vm.commandListenerHint == nil)
+    }
+
+    /// #189 (founder feedback 2026-09-29, TF build 6310b647): right after the
+    /// confirmation sheet opens the listener is torn down for the answer
+    /// read-back and takes up to ~4 s (TTS, playback, engine restart) to come
+    /// back — `commandListenerHint` stays nil for that whole gap, which is what
+    /// made the "Počúvam" pill vanish. `sheetListenerState` must cover it:
+    /// `.readingBack` (with its own non-nil hint words) until the listener
+    /// reports live, then `.listening`.
+    @Test("sheetListenerState is readingBack until the listener is live, then listening")
+    func sheetListenerStateCoversTheReadBackGap() async {
+        let (vm, _, _) = makeVM()
+        vm.quizState = .processing
+        #expect(vm.sheetListenerState == .readingBack, "sheet is up, listener not armed yet")
+        #expect(vm.sheetHintWords != nil, "the hint words must not go blank during the gap")
+
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
+        #expect(vm.sheetListenerState == .listening)
+        #expect(vm.sheetHintWords == vm.voiceHintWords, "same words once actually listening")
     }
 
     @Test("indicator stays hidden when the recognizer is unavailable (never lies)")

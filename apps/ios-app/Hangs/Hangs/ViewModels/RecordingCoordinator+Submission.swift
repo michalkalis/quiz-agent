@@ -288,6 +288,15 @@ extension RecordingCoordinator {
                     return
                 }
 
+                // #189: the set already ended server-side (its last answer was
+                // graded before this re-answer) — end into the results. As a
+                // plain 400 this looped "didn't catch that" (TF 2026-09-29).
+                if case .sessionFinished = error {
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.sessionFinished") else { return }
+                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
+                    return
+                }
+
                 // "Speech not understood" (#171 Track B): no banner, no retry
                 // loop — the empty confirmation sheet, where the driver can type
                 // or re-record before it counts as no answer.

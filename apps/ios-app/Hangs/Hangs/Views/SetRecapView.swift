@@ -269,6 +269,8 @@ struct SetRecapRow: View {
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .multilineTextAlignment(.leading)
             }
+            // A short question must not pull the chevron off the trailing edge.
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 12, weight: .semibold))

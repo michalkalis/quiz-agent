@@ -402,15 +402,81 @@
     "%lld pack credits" : {
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kreditů z balíčku"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredit z balíčku"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredity z balíčku"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditů z balíčku"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditů z balíčku"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kreditov z balíka"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredit z balíka"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredity z balíka"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditov z balíka"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditov z balíka"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pack credit"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pack credits"
+                }
+              }
+            }
           }
         }
       }
@@ -418,15 +484,81 @@
     "%lld pack credits kept for later" : {
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kreditů z balíčku uloženo na později"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredit z balíčku uložený na později"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredity z balíčku uložené na později"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditů z balíčku uložených na později"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditů z balíčku uložených na později"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kreditov z balíka uchovaných na neskôr"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredit z balíka uchovaný na neskôr"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kredity z balíka uchované na neskôr"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditov z balíka uchovaných na neskôr"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld kreditov z balíka uchovaných na neskôr"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pack credit kept for later"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pack credits kept for later"
+                }
+              }
+            }
           }
         }
       }
@@ -493,6 +625,24 @@
               }
             }
           }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld questions"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -519,7 +669,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lldd %2$lldh"
+            "value" : "%1$lld d %2$lld h"
           }
         },
         "en" : {
@@ -531,7 +681,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lldd %2$lldh"
+            "value" : "%1$lld d %2$lld h"
           }
         }
       }
@@ -542,7 +692,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lldh %2$lldm"
+            "value" : "%1$lld h %2$lld min"
           }
         },
         "en" : {
@@ -554,7 +704,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lldh %2$lldm"
+            "value" : "%1$lld h %2$lld min"
           }
         }
       }
@@ -565,13 +715,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldm"
+            "value" : "%lld min"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldm"
+            "value" : "%lld min"
           }
         }
       }
@@ -994,13 +1144,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Na konci sady"
+            "value" : "Na konci kvízu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Na konci sady"
+            "value" : "Na konci kvízu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At the end of the quiz"
           }
         }
       }
@@ -1317,13 +1473,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kup balíček 100 otázek — %@"
+            "value" : "Kup balíček 100 otázek za %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kúp balík 100 otázok — %@"
+            "value" : "Kúp balík 100 otázok za %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buy 100 Question Pack for %@"
           }
         }
       }
@@ -1625,13 +1787,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vymaž historii otázek v Nastavení (Vynulovat historii otázek) a začni novou hru."
+            "value" : "Vynuluj historii otázek v Nastavení a začni nový kvíz."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vymaž históriu otázok v Nastaveniach (Vynulovať históriu otázok) a začni novú hru."
+            "value" : "Vynuluj históriu otázok v Nastaveniach a začni nový kvíz."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset your question history in Settings and start a new quiz."
           }
         }
       }
@@ -1675,13 +1843,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Příkazy se ve výchozím nastavení říkají anglicky. Slovenské příkazy zapneš v Nastavení."
+            "value" : "Příkazy se ve výchozím nastavení říkají anglicky. Když v Nastavení změníš jazyk kvízu na češtinu, říkáš je česky."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Príkazy sa predvolene hovoria po anglicky — slovenské príkazy zapneš v Nastaveniach."
+            "value" : "Príkazy sa predvolene hovoria po anglicky. Keď v Nastaveniach zmeníš jazyk kvízu na slovenčinu, hovoríš ich po slovensky."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commands are spoken in English by default. Set your quiz language to Slovak or Czech in Settings to speak them in that language."
           }
         }
       }
@@ -1742,15 +1916,81 @@
       "comment" : "Accessibility label for the confirm button while auto-confirm counts down",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Potvrdit odpověď, automatické potvrzení za %lld sekund"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpověď, automatické potvrzení za %lld sekundu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpověď, automatické potvrzení za %lld sekundy"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpověď, automatické potvrzení za %lld sekund"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpověď, automatické potvrzení za %lld sekund"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Potvrdiť odpoveď, automatické potvrdenie o %lld sekúnd"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpoveď, automatické potvrdenie o %lld sekundu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpoveď, automatické potvrdenie o %lld sekundy"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpoveď, automatické potvrdenie o %lld sekúnd"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Potvrď odpoveď, automatické potvrdenie o %lld sekúnd"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Confirm answer, auto-confirming in %lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Confirm answer, auto-confirming in %lld seconds"
+                }
+              }
+            }
           }
         }
       }
@@ -2166,13 +2406,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smazat nahrávky"
+            "value" : "Smaž nahrávky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zmazať nahrávky"
+            "value" : "Zmaž nahrávky"
           }
         }
       }
@@ -2304,7 +2544,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Např. vesmír pro děti, těžké otázky z dějin Slovenska, hudba 90. let…"
+            "value" : "Např. vesmír pro děti, těžké otázky z českých dějin, hudba 90. let…"
           }
         },
         "sk" : {
@@ -2633,13 +2873,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportuj moje data"
+            "value" : "Exportuj moje údaje"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportuj moje dáta"
+            "value" : "Exportuj moje údaje"
           }
         }
       }
@@ -2649,13 +2889,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportovat nahrávky"
+            "value" : "Exportuj nahrávky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportovať nahrávky"
+            "value" : "Exportuj nahrávky"
           }
         }
       }
@@ -2927,13 +3167,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokonči nahrávání kvízu, abys mohl nadiktovat zpětnou vazbu."
+            "value" : "Zpětnou vazbu nadiktuješ, až dokončíš nahrávání kvízu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokonči nahrávanie kvízu, aby si mohol nadiktovať spätnú väzbu."
+            "value" : "Spätnú väzbu nadiktuješ, keď dokončíš nahrávanie kvízu."
           }
         }
       }
@@ -2944,13 +3184,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokonči nahrávání kvízu, abys mohl diktovat poznámku."
+            "value" : "Poznámku nadiktuješ, až dokončíš nahrávání kvízu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokonči nahrávanie kvízu, aby si mohol diktovať poznámku."
+            "value" : "Poznámku nadiktuješ, keď dokončíš nahrávanie kvízu."
           }
         }
       }
@@ -3050,7 +3290,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bezplatné otázky sa obnovia o %@"
+            "value" : "Otázky zadarmo sa obnovia o %@"
           }
         }
       }
@@ -3059,15 +3299,81 @@
       "comment" : "Settings subscription row value: free plan with pack credits remaining",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zdarma · %lld kreditů"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zdarma · %lld kredit"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zdarma · %lld kredity"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zdarma · %lld kreditů"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zdarma · %lld kreditů"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zadarmo · %lld kreditov"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zadarmo · %lld kredit"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zadarmo · %lld kredity"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zadarmo · %lld kreditov"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zadarmo · %lld kreditov"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Free · %lld credit"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Free · %lld credits"
+                }
+              }
+            }
           }
         }
       }
@@ -3185,13 +3491,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odemkni bez limitu"
+            "value" : "Hraj bez limitu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odomkni bez limitu"
+            "value" : "Hraj bez limitu"
           }
         }
       }
@@ -3304,13 +3610,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skrýt lištu"
+            "value" : "Skryj lištu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Skryť lištu"
+            "value" : "Skry lištu"
           }
         }
       }
@@ -3337,13 +3643,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nápovědný obrázek k otázce"
+            "value" : "Obrázek s nápovědou k otázce"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nápovedný obrázok k otázke"
+            "value" : "Obrázok s nápovedou k otázke"
           }
         }
       }
@@ -3600,6 +3906,12 @@
             "state" : "translated",
             "value" : "Neplatné zvukové dáta"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid audio data"
+          }
         }
       }
     },
@@ -3794,13 +4106,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Později, přihlásím se z Nastavení"
+            "value" : "Později, přihlásím se v Nastavení"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neskôr — prihlásim sa z Nastavení"
+            "value" : "Neskôr, prihlásim sa v Nastaveniach"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later, I'll sign in from Settings"
           }
         }
       }
@@ -4233,7 +4551,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prístup k mikrofónu je vypnutý — písať môžeš aj tak. Na diktovanie ho zapni v Nastaveniach."
+            "value" : "Prístup k mikrofónu je vypnutý, písať môžeš aj tak. Na diktovanie ho zapni v Nastaveniach."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone access is off, but you can still type. Enable it in Settings to dictate."
           }
         }
       }
@@ -4400,7 +4724,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Na review"
+            "value" : "Na kontrolu"
           }
         }
       }
@@ -4479,15 +4803,81 @@
       "comment" : "Accessibility label for the next-question button while auto-advance counts down",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Další otázka, automatický posun za %lld sekund"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Další otázka, automatický posun za %lld sekundu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Další otázka, automatický posun za %lld sekundy"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Další otázka, automatický posun za %lld sekund"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Další otázka, automatický posun za %lld sekund"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ďalšia otázka, automatický posun o %lld sekúnd"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ďalšia otázka, automatický posun o %lld sekundu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ďalšia otázka, automatický posun o %lld sekundy"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ďalšia otázka, automatický posun o %lld sekúnd"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ďalšia otázka, automatický posun o %lld sekúnd"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Next question, auto-advancing in %lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Next question, auto-advancing in %lld seconds"
+                }
+              }
+            }
           }
         }
       }
@@ -4515,13 +4905,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Žádná aktivní relace"
+            "value" : "Žádný probíhající kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Žiadna aktívna relácia"
+            "value" : "Žiadny prebiehajúci kvíz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active quiz"
           }
         }
       }
@@ -4665,13 +5061,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nenašla se uložená relace"
+            "value" : "Nenašel se uložený kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nenašla sa uložená relácia"
+            "value" : "Nenašiel sa uložený kvíz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved quiz found"
           }
         }
       }
@@ -4716,13 +5118,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nepřihlášený"
+            "value" : "Nejdřív se přihlas"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neprihlásený"
+            "value" : "Najprv sa prihlás"
           }
         }
       }
@@ -4877,9 +5279,21 @@
           }
         },
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Only %1$lld free questions left this month (you asked for %2$lld)."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only %1$lld free question left this month (you asked for %2$lld)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only %1$lld free questions left this month (you asked for %2$lld)."
+                }
+              }
+            }
           }
         },
         "sk" : {
@@ -5296,13 +5710,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zpracovávám..."
+            "value" : "Zpracovávám…"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spracúvam..."
+            "value" : "Spracúvam…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing…"
           }
         }
       }
@@ -5354,7 +5774,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nákup bol zrušený. Nebola vám strhnutá žiadna platba."
+            "value" : "Nákup bol zrušený. Nebola ti strhnutá žiadna platba."
           }
         }
       }
@@ -5426,14 +5846,14 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question %1$lld — correct. %2$@."
+            "state" : "translated",
+            "value" : "Question %1$lld, correct. %2$@."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázka %1$lld — správne. %2$@."
+            "value" : "Otázka %1$lld, správne. %2$@."
           }
         }
       }
@@ -5449,14 +5869,14 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question %1$lld — missed. The answer: %2$@."
+            "state" : "translated",
+            "value" : "Question %1$lld, missed. The answer: %2$@."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázka %1$lld — vedľa. Správna odpoveď: %2$@."
+            "value" : "Otázka %1$lld, vedľa. Správna odpoveď: %2$@."
           }
         }
       }
@@ -5472,14 +5892,14 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question %1$lld — skipped. The answer: %2$@."
+            "state" : "translated",
+            "value" : "Question %1$lld, skipped. The answer: %2$@."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázka %1$lld — preskočená. Správna odpoveď: %2$@."
+            "value" : "Otázka %1$lld, preskočená. Správna odpoveď: %2$@."
           }
         }
       }
@@ -5556,13 +5976,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Počet otázek ve hře"
+            "value" : "Počet otázek v kvízu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Počet otázok v hre"
+            "value" : "Počet otázok v kvíze"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questions per quiz"
           }
         }
       }
@@ -5729,13 +6155,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dosáhl jsi 2minutového limitu diktování. Klepni na Diktovat a pokračuj."
+            "value" : "Diktování dosáhlo 2minutového limitu. Klepni na Diktuj a pokračuj."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dosiahol si 2-minútový limit diktovania. Klepni na Diktovať a pokračuj."
+            "value" : "Diktovanie dosiahlo 2-minútový limit. Klepni na Diktuj a pokračuj."
           }
         }
       }
@@ -5900,13 +6326,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nahrávám..."
+            "value" : "Nahrávám…"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nahrávam..."
+            "value" : "Nahrávam…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording…"
           }
         }
       }
@@ -5967,13 +6399,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přehraj úvod znovu"
+            "value" : "Zobraz úvod znovu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prehraj úvod znova"
+            "value" : "Zobraz úvod znova"
           }
         }
       }
@@ -6308,13 +6740,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VÝSLEDEK SADY · %@"
+            "value" : "VÝSLEDEK KVÍZU · %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VÝSLEDOK SADY · %@"
+            "value" : "VÝSLEDOK KVÍZU · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QUIZ RESULT · %@"
           }
         }
       }
@@ -6526,13 +6964,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Řekni pravda nebo nepravda"
+            "value" : "Řekni „pravda“ nebo „nepravda“"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povedz pravda alebo nepravda"
+            "value" : "Povedz „pravda“ alebo „nepravda“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say \"true\" or \"false\""
           }
         }
       }
@@ -6727,13 +7171,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relace vypršela"
+            "value" : "Kvíz už skončil"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relácia vypršala"
+            "value" : "Kvíz už skončil"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiz ended"
           }
         }
       }
@@ -6744,13 +7194,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relace se nenašla nebo už skončila"
+            "value" : "Kvíz se nenašel nebo už skončil"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relácia sa nenašla alebo už skončila"
+            "value" : "Kvíz sa nenašiel alebo už skončil"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiz not found or already ended"
           }
         }
       }
@@ -6761,19 +7217,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sada dokončena. Máš %1$lld z %2$lld správně."
+            "value" : "Konec kvízu. Máš %1$lld z %2$lld správně."
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set finished. You got %1$lld out of %2$lld right."
+            "state" : "translated",
+            "value" : "Quiz finished. You got %1$lld out of %2$lld right."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sada dokončená. Máš %1$lld z %2$lld správne."
+            "value" : "Koniec kvízu. Máš %1$lld z %2$lld správne."
           }
         }
       }
@@ -6867,13 +7323,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přihlas se, aby ti po přeinstalování zůstalo prémium i historie."
+            "value" : "Přihlas se, aby ti po přeinstalování zůstalo Premium i historie."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prihlás sa, aby ti po preinštalovaní zostalo prémium aj história."
+            "value" : "Prihlás sa, aby ti po preinštalovaní zostalo Premium aj história."
           }
         }
       }
@@ -6922,7 +7378,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prihlásenie sa nepodarilo. Skontroluj pripojenie a skús to znova — tvoj nákup zostáva uložený v tomto zariadení."
+            "value" : "Prihlásenie sa nepodarilo. Skontroluj pripojenie a skús to znova. Tvoj nákup zostáva uložený v tomto zariadení."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in didn't work. Check your connection and try again. Your purchase is still saved on this device."
           }
         }
       }
@@ -6938,7 +7400,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prihlásením sa Premium naviaže na tvoj Apple účet — zostane ti aj na novom telefóne či po preinštalovaní."
+            "value" : "Po prihlásení sa Premium naviaže na tvoj Apple účet. Zostane ti aj na novom telefóne či po preinštalovaní."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing in links Premium to your Apple account, so it stays with you on a new phone or after reinstalling."
           }
         }
       }
@@ -7055,13 +7523,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přeskakuji..."
+            "value" : "Přeskakuji…"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preskakujem..."
+            "value" : "Preskakujem…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipping…"
           }
         }
       }
@@ -7251,7 +7725,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hovoriť skóre nahlas"
+            "value" : "Oznamovať skóre nahlas"
           }
         }
       }
@@ -7370,25 +7844,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustit s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustit s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustit s %lld otázkou"
+                  "value" : "Začni s %lld otázkou"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustit s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
                 }
               }
             }
@@ -7400,25 +7874,43 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustiť s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustiť s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustiť s %lld otázkou"
+                  "value" : "Začni s %lld otázkou"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Spustiť s %lld otázkami"
+                  "value" : "Začni s %lld otázkami"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Start with %lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Start with %lld questions"
                 }
               }
             }
@@ -7490,7 +7982,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ešte to beží — pozri sa neskôr do Mojich balíkov."
+            "value" : "Ešte to beží. Pozri sa neskôr do Mojich balíkov."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still working. Check My packs later."
           }
         }
       }
@@ -7574,7 +8072,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Predplať — %@ / mesiac"
+            "value" : "Predplať za %@ / mesiac"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribe for %@ / month"
           }
         }
       }
@@ -7730,7 +8234,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PREMÝŠĽAJ — POČÚVAM O %lld S"
+            "value" : "PREMÝŠĽAJ, POČÚVAM O %lld S"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "THINK. LISTENING IN %lld S"
           }
         }
       }
@@ -7835,7 +8345,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Napíšte, o čom má kvíz byť — téma, obtiažnosť, pre koho. Stačí pár slov."
+            "value" : "Napíš, o čom má kvíz byť: téma, náročnosť, pre koho. Stačí pár slov."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell us what the quiz should be about: topic, difficulty, audience. A few words are enough."
           }
         }
       }
@@ -7868,7 +8384,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Doklad z App Store sa nepodarilo overiť. Skúste to znova."
+            "value" : "Doklad z App Store sa nepodarilo overiť. Skús to znova."
           }
         }
       }
@@ -7885,7 +8401,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Balík sa momentálne nedá kúpiť. Skúste to neskôr."
+            "value" : "Balík sa momentálne nedá kúpiť. Skús to neskôr."
           }
         }
       }
@@ -7913,13 +8429,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nákup prošel, ale neaktivoval se. Zkus Obnovit nákupy. Pokud to nepomůže, ozvi se podpoře."
+            "value" : "Nákup prošel, ale neaktivoval se. Klepni na Obnov nákupy. Pokud to nepomůže, ozvi se podpoře."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nákup prešiel, ale neaktivoval sa. Skús Obnoviť nákupy — ak to nepomôže, ozvi sa podpore."
+            "value" : "Nákup prešiel, ale neaktivoval sa. Klepni na Obnov nákupy. Ak to nepomôže, ozvi sa podpore."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The purchase went through but didn't activate. Tap Restore purchases. If that doesn't help, contact support."
           }
         }
       }
@@ -7947,13 +8469,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kvíz už přešel na jinou otázku. Pokračuj novou hrou."
+            "value" : "Kvíz už přešel na jinou otázku. Pokračuj novým kvízem."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kvíz už prešiel na inú otázku. Pokračuj novou hrou."
+            "value" : "Kvíz už prešiel na inú otázku. Pokračuj novým kvízom."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The quiz moved on to another question. Start a new quiz to continue."
           }
         }
       }
@@ -7981,13 +8509,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server odpovídal příliš dlouho. Zkus to znovu."
+            "value" : "Server neodpověděl včas. Zkus to znovu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server odpovedal príliš dlho. Skús to znova."
+            "value" : "Server neodpovedal včas. Skús to znova."
           }
         }
       }
@@ -8032,13 +8560,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tato objednávka byla vrácena."
+            "value" : "Za tuto objednávku ti byly vráceny peníze."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Táto objednávka bola vrátená."
+            "value" : "Za túto objednávku ti boli vrátené peniaze."
           }
         }
       }
@@ -8049,13 +8577,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Natrvalo se odstraní tvoje data, historie i prémiový přístup. Nedá se to vrátit."
+            "value" : "Natrvalo se odstraní tvoje údaje, historie i prémiový přístup. Nedá se to vrátit."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Natrvalo sa odstránia tvoje dáta, história aj prémiový prístup. Nedá sa to vrátiť."
+            "value" : "Natrvalo sa odstránia tvoje údaje, história aj prémiový prístup. Nedá sa to vrátiť."
           }
         }
       }
@@ -8066,13 +8594,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tato relace už není aktivní. Začni novou hru."
+            "value" : "Tento kvíz už není aktivní. Začni nový kvíz."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Táto relácia už nie je aktívna. Začni novú hru."
+            "value" : "Tento kvíz už nie je aktívny. Začni nový kvíz."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This quiz is no longer active. Start a new quiz."
           }
         }
       }
@@ -8084,13 +8618,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znovu uvidíš všechny otázky. Tuto akci nelze vrátit."
+            "value" : "Znovu uvidíš všechny otázky. Nedá se to vrátit."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znova uvidíš všetky otázky. Táto akcia sa nedá vrátiť."
+            "value" : "Znova uvidíš všetky otázky. Nedá sa to vrátiť."
           }
         }
       }
@@ -8844,13 +9378,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vylepšení se teď nepodařilo načíst. Zkontroluj připojení a zkus to znovu."
+            "value" : "Nabídku se teď nepodařilo načíst. Zkontroluj připojení a zkus to znovu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vylepšenie sa teraz nepodarilo načítať. Skontroluj pripojenie a skús to znova."
+            "value" : "Ponuku sa teraz nepodarilo načítať. Skontroluj pripojenie a skús to znova."
           }
         }
       }
@@ -8963,13 +9497,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ŘEKL JSI"
+            "value" : "TVOJE ODPOVĚĎ"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "POVEDAL SI"
+            "value" : "TVOJA ODPOVEĎ"
           }
         }
       }
@@ -8979,13 +9513,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JSI PŘIPRAVENÝ"
+            "value" : "VŠE PŘIPRAVENO"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SI PRIPRAVENÝ"
+            "value" : "VŠETKO PRIPRAVENÉ"
           }
         }
       }
@@ -9020,7 +9554,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appku môžete zavrieť — hotový balík nájdete v Moje balíky."
+            "value" : "Aplikáciu môžeš zavrieť. Hotový balík nájdeš v Mojich balíkoch."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can close the app. Your finished pack will be waiting in My packs."
           }
         }
       }
@@ -9049,13 +9589,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento měsíc jsi vyčerpal všech %lld otázek zdarma."
+            "value" : "Tento měsíc už máš za sebou všech %lld otázek zdarma."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento mesiac si vyčerpal všetkých %lld otázok zadarmo."
+            "value" : "Tento mesiac už máš za sebou všetkých %lld otázok zadarmo."
           }
         }
       }
@@ -9066,13 +9606,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento měsíc jsi vyčerpal všechny otázky zdarma."
+            "value" : "Tento měsíc už máš za sebou všechny otázky zdarma."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento mesiac si vyčerpal všetky otázky zadarmo."
+            "value" : "Tento mesiac už máš za sebou všetky otázky zadarmo."
           }
         }
       }
@@ -9187,7 +9727,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Váš nákup čaká na schválenie. Po schválení sa vráťte a skúste to znova."
+            "value" : "Tvoj nákup čaká na schválenie. Po schválení sa vráť a skús to znova."
           }
         }
       }
@@ -9605,7 +10145,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dobrá práca — tu je tvoj výsledok"
+            "value" : "dobrá práca, tu je tvoj výsledok"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nice work, here's your result"
           }
         }
       }
@@ -9633,13 +10179,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "teď"
+            "value" : "chvíli"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "teraz"
+            "value" : "chvíľu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a moment"
           }
         }
       }
@@ -9748,15 +10300,63 @@
       "comment" : "Home quota card: days until the free-question reset",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "obnoví se za %lld dní"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld den"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld dny"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld dní"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld dní"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "obnoví sa o %lld dní"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld deň"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld dni"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld dní"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld dní"
+                }
+              }
+            }
           }
         }
       }
@@ -9765,15 +10365,63 @@
       "comment" : "Home quota card: hours until the free-question reset",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "obnoví se za %lld hodin"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld hodinu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld hodiny"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld hodin"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví se za %lld hodin"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "obnoví sa o %lld hodín"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld hodinu"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld hodiny"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld hodín"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "obnoví sa o %lld hodín"
+                }
+              }
+            }
           }
         }
       }
@@ -9852,13 +10500,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relace"
+            "value" : "kvíz"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relácia"
+            "value" : "kvíz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "quiz"
           }
         }
       }

@@ -72,7 +72,7 @@ struct HomeViewStateContractTests {
 
             // Session config card (its section label) — where difficulty /
             // language / categories are chosen before starting.
-            #expect(throws: Never.self) { try tree.find(text: "session") }
+            #expect(throws: Never.self) { try tree.find(text: "quiz") }
 
             // The one CTA that must exist on Home, and it must be usable.
             let start = try tree.find(viewWithAccessibilityIdentifier: "home.startQuiz").button()

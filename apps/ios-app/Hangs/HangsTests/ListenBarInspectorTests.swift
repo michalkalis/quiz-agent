@@ -125,7 +125,7 @@ struct ListenBarInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Say true or false")
+                try tree.find(text: "Say \"true\" or \"false\"")
             }
         }
     }

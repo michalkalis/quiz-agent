@@ -1147,7 +1147,7 @@ struct QuizViewModelMCQSubmissionTests {
 
         await viewModel.submitMCQAnswer(key: "a", value: "Paris")
 
-        #expect(viewModel.errorMessage == "No active session")
+        #expect(viewModel.errorMessage == "No active quiz")
     }
 }
 

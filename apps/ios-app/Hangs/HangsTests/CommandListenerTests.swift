@@ -115,8 +115,16 @@ struct CommandListenerTests {
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
 
-        // Recording → torn down (NEVER armed during recording).
+        // Recording → left alone (#189 H1): since #184 the engine IS the answer
+        // recorder, so the window neither arms a screen there nor tears the
+        // engine down under the answer.
         vm.quizState = .recording
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+        #expect(mock.isListening == true)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
+
+        // A non-listening state outside a recording → torn down.
+        vm.quizState = .finished
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
 
@@ -137,8 +145,13 @@ struct CommandListenerTests {
         #expect(mock.isListening == false, "listener must stay down while TTS is playing")
     }
 
-    @Test("entering .recording tears down the listener (never both mic-command + answer)")
-    func recordingTearsDownListener() async {
+    /// WHY (#189 H1, TF 2026-09-29): since #184 the listener's engine is also
+    /// the answer recorder. A window sync during `.recording` (a return from
+    /// Control Center, minimizing, the Settings toggle) used to tear it down
+    /// and the answer went deaf. The recording owns the engine until it ends;
+    /// no command is matched meanwhile (no screen).
+    @Test("a window sync during .recording leaves the answer recorder's engine up")
+    func recordingKeepsListenerEngine() async {
         let (vm, silence, _) = makeCommandVM()
         let mock = silence
 
@@ -149,7 +162,9 @@ struct CommandListenerTests {
         // Simulate the answer window opening.
         vm.quizState = .recording
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
-        #expect(mock.isListening == false)
+        #expect(mock.isListening == true)
+        #expect(mock.stopListeningCallCount == 0)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "nothing is matched while answering")
     }
 
     // MARK: - Consumer routing (screen-scoped)

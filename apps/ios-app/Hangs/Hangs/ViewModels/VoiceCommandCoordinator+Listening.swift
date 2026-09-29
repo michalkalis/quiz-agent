@@ -132,6 +132,14 @@ extension VoiceCommandCoordinator {
     /// Arm or tear down the command/VAD listener to match the current window.
     /// Idempotent (the underlying choke points are).
     func syncCommandListenerWindow() async {
+        // #189 H1: since #184 the shared engine IS the answer recorder, so a
+        // window sync during a recording must leave it alone — a return from
+        // Control Center, minimizing or the Settings toggle used to tear it
+        // down and the answer went deaf. The recording's own stop /
+        // interruption / background paths release the engine. A pause is the
+        // exception: it ends the recording (stop → submit), and the mic comes
+        // down with it (#173).
+        if isRecordingActive, !isQuizPaused() { return }
         if let screen = currentCommandScreen {
             // #136 (founder decision B): Home listening runs under the QUIET
             // mixable session — external audio keeps playing while the app

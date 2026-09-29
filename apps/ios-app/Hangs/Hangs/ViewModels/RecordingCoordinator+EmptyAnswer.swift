@@ -62,18 +62,24 @@ extension RecordingCoordinator {
         setErrorMessage(nil)
 
         let questionKey = attempt.questionId ?? ""
-        let retries = allowAutoRetry && emptyAnswerRetryQuestionKey != questionKey
+        // #189 M3: a paused quiz never reopens the mic by itself. Pausing
+        // mid-recording submits what was said; when that comes back empty it
+        // lands on Again / Skip (no countdown) — the automatic retry is the
+        // driver's to take once they resume.
+        let paused = isPaused()
+        let retries = allowAutoRetry && !paused && emptyAnswerRetryQuestionKey != questionKey
         SentryLog.info("no answer captured", category: .audio, attributes: [
             "heardSpeech": heardSpeech,
             "outcome": retries ? "autoRetry" : "sheet",
             "attempt": attempt.description,
+            "paused": paused,
         ])
 
         if retries {
             emptyAnswerRetryQuestionKey = questionKey
             retryAfterEmptyAnswer(prompt: prompt, owner: attempt)
         } else {
-            presentNoAnswerChoice(owner: attempt)
+            presentNoAnswerChoice()
         }
     }
 
@@ -116,6 +122,15 @@ extension RecordingCoordinator {
                   self.quizState() == .askingQuestion,
                   self.attemptLedger.owns(owner, "emptyAnswer.retry")
             else { return }
+            // #189 M3: paused while the prompt played — the mic stays shut.
+            // P9: drop the re-record latch too, or resuming finds this
+            // question's own window (`startRecordingOrTimer`) blocked by it and
+            // the question sits with no countdown and no mic.
+            guard !self.isPaused() else {
+                self.setIsRerecording(false)
+                self.attemptLedger.record(.prompt, "emptyAnswer.retryHeldByPause")
+                return
+            }
             await self.startRecording(trigger: .emptyAnswerRetry)
         }
         taskBag.add(task, key: .emptyAnswerRetry)
@@ -167,17 +182,23 @@ extension RecordingCoordinator {
     /// The second miss: the confirmation sheet with an empty field, Again and
     /// Skip — and no auto-confirm. Skip (or a spoken confirm) goes through
     /// `confirmAnswer()`, whose empty branch submits the backend's skip.
-    private func presentNoAnswerChoice(owner: AttemptID) {
+    private func presentNoAnswerChoice() {
         // The sheet is a `.processing` screen; the upload paths are already
         // there and `.processing → .processing` is not a legal edge.
         if quizState() != .processing {
             guard transition(to: .processing) else { return }
         }
+        // #189 M5: the sheet is the driver's NEW decision, so it gets a new
+        // attempt. Owned by the failed one, a sheet opened after a typed or
+        // edited answer the server could not place belonged to an attempt
+        // already marked sent — and Again / Cancel were refused on it. It also
+        // voids anything the failed attempt still has in flight.
+        let sheetOwner = attemptLedger.begin("noAnswerSheet")
         cancelAutoConfirm()
         pendingResponse = nil
         transcribedAnswer = ""
         noAnswerCaptured = true
-        confirmationOwner = owner
+        confirmationOwner = sheetOwner
         showAnswerConfirmation = true
         // #77 (77.5): "again" / "ok" work here like on any confirmation.
         refreshCommandWindow()

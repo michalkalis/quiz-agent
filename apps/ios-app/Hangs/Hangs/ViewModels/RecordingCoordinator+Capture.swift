@@ -160,9 +160,18 @@ extension RecordingCoordinator {
         // The engine is normally already up — the command window armed it after
         // the question TTS. Voice commands OFF (or a window that never armed)
         // means nobody did, so this recording starts it and later stops it.
+        // #189 H2: a start still in flight (the sheet's listener settling after
+        // the read-back, typically on Bluetooth) is adopted — but only once it
+        // has landed: the capture's sample rate is the one that start picks
+        // (8 kHz on a narrowband route), and until then there is no audio.
+        var listener = "window"
         if !silenceDetectionService.isListening, !silenceDetectionService.isStartingListening {
             startedListenerForAnswer = true
+            listener = "own"
             await silenceDetectionService.startListening()
+        } else if silenceDetectionService.isStartingListening {
+            listener = "adoptedStart"
+            await awaitListenerStartInFlight()
         }
 
         // #174: the dead-air cap armed in `startRecording` (or a teardown) may
@@ -212,6 +221,7 @@ extension RecordingCoordinator {
         let voiceProcessing = silenceDetectionService.voiceProcessingStatus
         SentryLog.info("answer recording started", category: .audio, attributes: [
             "path": "batch",
+            "listener": listener,
             "inputPort": VoiceProcessingPolicy.currentInputPort(),
             "outputPort": VoiceProcessingPolicy.currentOutputPort(),
             "inputHz": sampleRate,
@@ -242,6 +252,23 @@ extension RecordingCoordinator {
             setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
 
             Logger.audio.error("❌ Recording failed to start: \(error, privacy: .public)")
+        }
+    }
+
+    /// #189 H2: wait — bounded, on the injected clock — for a listener start
+    /// someone else began (the same budget the confirmation countdown waits
+    /// for it, `VoiceCommandCoordinator.listenerSettleBudgetMs`). A cancelled
+    /// recording stops waiting; the owner check after it decides what's next.
+    private func awaitListenerStartInFlight() async {
+        var waitedMs = 0
+        while silenceDetectionService.isStartingListening,
+              waitedMs < VoiceCommandCoordinator.listenerSettleBudgetMs {
+            do {
+                try await clock.sleep(for: .milliseconds(100))
+            } catch {
+                return
+            }
+            waitedMs += 100
         }
     }
 

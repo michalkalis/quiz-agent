@@ -1449,6 +1449,13 @@ final class QuizViewModel: ObservableObject {
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
     func handleError(_ error: Error, context: ErrorContext, fallbackMessage: String) async { // internal for tests; RecordingCoordinator reaches it via an injected closure
+        // #189: the server already ended the set — its last answer was graded
+        // before the driver confirmed it. That is the end of the set, not a
+        // failure: TF 2026-09-29 showed "couldn't submit your answer" here.
+        if case .sessionFinished? = error as? NetworkError {
+            finishSetEndedByServer()
+            return
+        }
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
@@ -2402,6 +2409,16 @@ final class QuizViewModel: ObservableObject {
 
         let finalScore = score
         Logger.quiz.info("🎮 Quiz finished! Final score: \(finalScore, privacy: .public)")
+    }
+
+    /// #189: a submit, skip or re-answer came back `session_finished` — the set
+    /// is over server-side, so land on the results exactly like the normal end
+    /// of the set. Asking again (the old voice path) looped the driver on a
+    /// question the server no longer has open.
+    private func finishSetEndedByServer() {
+        attemptLedger.record(.network, "sessionFinished", quizState.label)
+        guard quizState.validTransitions.contains(QuizState.finished.label) else { return }
+        finishQuiz()
     }
 
     // MARK: - #182 Awaiting the next pack question

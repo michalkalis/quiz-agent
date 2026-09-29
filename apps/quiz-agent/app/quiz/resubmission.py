@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import sentry_sdk
 
+from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.session import LastEvaluation, QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 
@@ -92,6 +93,10 @@ def classify_submission(
     Pure and side-effect free, so callers can gate expensive work on it — the
     voice route checks it before paying for transcription.
     """
+    if reanswers_finished_session(session, submitted_question_id):
+        # #189: the set ended on this answer, so the current question IS the
+        # graded one — without this a re-answer would be graded as a first one.
+        return True
     if (
         submitted_question_id is None
         or submitted_question_id == session.current_question_id
@@ -101,6 +106,30 @@ def classify_submission(
     if previous is not None and previous.question_id == submitted_question_id:
         return True
     raise QuestionMismatch(session.current_question_id)
+
+
+def reanswers_finished_session(
+    session: QuizSession,
+    submitted_question_id: Optional[str],
+    answer_text: Optional[str] = None,
+) -> bool:
+    """Whether a submit to a FINISHED session re-answers its last graded question (#189).
+
+    The answer that ends a set is graded before the player confirms it, so
+    "again" on that confirmation re-submits to a session that is already
+    finished. It is re-graded exactly as on a live session. Anything else —
+    a skip (there is no next question to skip to), a legacy submit without
+    ``question_id``, any other id — is refused by the routes' phase guard.
+    ``answer_text`` is None on the voice route (unknown before transcription).
+    """
+    previous = session.last_evaluation
+    return (
+        session.phase == SessionPhase.FINISHED
+        and submitted_question_id is not None
+        and previous is not None
+        and previous.question_id == submitted_question_id
+        and (answer_text is None or answer_text.strip().lower() != "skip")
+    )
 
 
 def evaluation_record(
@@ -258,9 +287,10 @@ async def _current_question_payload(
 
     Rebuilt from the stored serve-time translation record, never re-translated,
     so replaying a lost response costs no LLM call. None when there is no
-    current question or the row has since disappeared.
+    current question or the row has since disappeared — and on a finished
+    session (#189), whose current question is the graded one, not a next one.
     """
-    if not session.current_question_id:
+    if not session.current_question_id or session.phase == SessionPhase.FINISHED:
         return None
     question = await flow.question_retriever.get(session.current_question_id)
     if not question:
@@ -296,6 +326,6 @@ def _resubmitted_audio_info(
     was already warmed when it was served.
     """
     info = flow._build_audio_info(session.session_id, evaluation, feedback_audio)
-    if session.current_question_id:
+    if session.current_question_id and session.phase != SessionPhase.FINISHED:
         info.question_url = f"/api/v1/sessions/{session.session_id}/question/audio"
     return info

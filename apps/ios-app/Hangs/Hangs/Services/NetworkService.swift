@@ -141,12 +141,18 @@ actor NetworkService: NetworkServiceProtocol {
         SentryBreadcrumb.add(crumb)
     }
 
-    private nonisolated func logHTTPError(endpoint: String, status: Int) {
-        // Response body is NOT included — may contain user-generated data.
-        SentryLog.error("HTTP error", category: .network, attributes: [
+    private nonisolated func logHTTPError(endpoint: String, status: Int, code: String? = nil, detail: String? = nil) {
+        // Response body is NOT included — may contain user-generated data (an
+        // `mcq_unmatched` carries the transcript). #189: the server's error code
+        // and plain-string detail are server-constructed, and without them the
+        // TF 2026-09-29 log showed only "400" for a session that had ended.
+        var attributes: [String: Any] = [
             "status": status,
             "endpoint": endpoint,
-        ])
+        ]
+        if let code { attributes["code"] = code }
+        if let detail { attributes["detail"] = detail }
+        SentryLog.error("HTTP error", category: .network, attributes: attributes)
     }
 
     // MARK: - Generic Request Pipeline
@@ -189,7 +195,7 @@ actor NetworkService: NetworkServiceProtocol {
            let mismatch = try? JSONDecoder().decode(QuestionMismatchWrapper.self, from: data),
            mismatch.detail.code == "question_mismatch"
         {
-            logHTTPError(endpoint: endpointPath, status: 409)
+            logHTTPError(endpoint: endpointPath, status: 409, code: mismatch.detail.code)
             throw NetworkError.questionMismatch(currentQuestionId: mismatch.detail.currentQuestionId)
         }
 
@@ -199,8 +205,18 @@ actor NetworkService: NetworkServiceProtocol {
            let retry = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data),
            let code = AnswerRetryCode(rawValue: retry.detail.code)
         {
-            logHTTPError(endpoint: endpointPath, status: 400)
+            logHTTPError(endpoint: endpointPath, status: 400, code: retry.detail.code)
             throw NetworkError.answerNotCaptured(code: code, heard: retry.detail.heard)
+        }
+
+        // #189: the set already ended server-side — the caller ends into the
+        // results instead of asking again or showing a submit failure.
+        if httpResponse.statusCode == 400,
+           let coded = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data),
+           coded.detail.code == "session_finished"
+        {
+            logHTTPError(endpoint: endpointPath, status: 400, code: coded.detail.code)
+            throw NetworkError.sessionFinished
         }
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
@@ -209,10 +225,15 @@ actor NetworkService: NetworkServiceProtocol {
             if let responseString = String(data: data, encoding: .utf8) {
                 Logger.network.error("📄 Response body: \(responseString, privacy: .public)")
             }
-            logHTTPError(endpoint: endpointPath, status: statusCode)
-
             // Surface the backend's error detail (e.g. "question database is empty") instead of a generic message.
-            if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
+            logHTTPError(
+                endpoint: endpointPath,
+                status: statusCode,
+                code: (try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data))?.detail.code,
+                detail: errorResponse?.detail
+            )
+            if let errorResponse {
                 throw NetworkError.serverError(statusCode: statusCode, message: errorResponse.detail)
             }
 
@@ -812,6 +833,10 @@ enum NetworkError: LocalizedError {
     /// A coded "say it again" 400 from a submit route (#185 track G). `heard`
     /// is the transcript an `mcq_unmatched` could not place.
     case answerNotCaptured(code: AnswerRetryCode, heard: String?)
+    /// HTTP 400 `session_finished` (#189): the set already ended server-side
+    /// (its last answer was graded before the driver confirmed it), so there
+    /// is nothing left to answer or skip. Not a failure — end into the results.
+    case sessionFinished
 
     var errorDescription: String? {
         switch self {
@@ -832,6 +857,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
         case .answerNotCaptured:
             return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
+        case .sessionFinished:
+            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
         }
     }
 }

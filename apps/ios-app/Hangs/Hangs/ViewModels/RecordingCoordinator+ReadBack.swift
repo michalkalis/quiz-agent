@@ -56,8 +56,16 @@ extension RecordingCoordinator {
         let task = Task { [weak self] in
             guard let self else { return }
             var completed = false
+            // #189 L7 (telemetry only): the read-back has no timeout, and the
+            // sheet's countdown and listener wait for it — how long synthesis
+            // takes in the field decides whether it needs one.
+            let synthesisStartedAt = ContinuousClock.now
             do {
                 let audio = try await networkService.synthesizeSpeech(text: spoken)
+                SentryLog.info("answer read-back synthesized", category: .audio, attributes: [
+                    "synthMs": Int((ContinuousClock.now - synthesisStartedAt) / .milliseconds(1)),
+                    "bytes": audio.count,
+                ])
                 try Task.checkCancellation()
                 _ = try await audioService.playOpusAudio(audio)
                 completed = true
@@ -71,6 +79,10 @@ extension RecordingCoordinator {
                 if Task.isCancelled { return }
             } catch {
                 Logger.audio.warning("🔈 Answer read-back failed: \(error, privacy: .public)")
+                SentryLog.warn("answer read-back failed", category: .audio, attributes: [
+                    "elapsedMs": Int((ContinuousClock.now - synthesisStartedAt) / .milliseconds(1)),
+                    "error_type": String(describing: type(of: error)),
+                ])
             }
             guard !Task.isCancelled else { return }
             isReadingBackAnswer = false

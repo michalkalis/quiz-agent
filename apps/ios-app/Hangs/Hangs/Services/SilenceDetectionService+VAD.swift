@@ -30,6 +30,9 @@ struct AnswerDetectionSession {
     var speechDetectorHeardSpeech = false
     var levelBuffers = 0
     var speechSecs: TimeInterval = 0
+    /// #189 telemetry: non-empty results the on-device transcriber delivered
+    /// during the recording (see `logDeafAnalyzerIfNeeded`).
+    var transcriberResults = 0
 }
 
 extension SilenceDetectionService {
@@ -196,6 +199,7 @@ extension SilenceDetectionService {
     func endAnswerDetection() -> AnswerDetectionReport {
         defer { answerSession = nil }
         guard let session = answerSession else { return .empty }
+        logDeafAnalyzerIfNeeded(session)
         return AnswerDetectionReport(
             energyHeardSpeech: session.energyHeardSpeech,
             speechDetectorHeardSpeech: session.speechDetectorHeardSpeech,

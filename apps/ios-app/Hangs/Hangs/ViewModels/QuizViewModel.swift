@@ -924,6 +924,12 @@ final class QuizViewModel: ObservableObject {
             // reached as closures so the audio child keeps no reference to it.
             mayCaptureAudio: { [weak self] in self?.voiceCommandCoordinator.mayCaptureAudio ?? false },
             isCommandWindowOpen: { [weak self] in self?.voiceCommandCoordinator.currentCommandScreen != nil },
+            // #189 H2: see `AudioDeviceState.answerRecordingOwnsListener`.
+            answerRecordingOwnsListener: { [weak self] in
+                guard let self else { return false }
+                return self.quizState == .recording && !self.isPaused
+                    && !self.recordingCoordinator.isStreamingSTT
+            },
             setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
             setPlayingFeedbackTTS: { [weak self] in self?.isPlayingFeedbackTTS = $0 },
             currentQuestionAudioUrl: { [weak self] in self?.recordingCoordinator.currentQuestionAudioUrl },
@@ -1057,6 +1063,7 @@ final class QuizViewModel: ObservableObject {
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
             clearPause: { [weak self] in self?.isPaused = false },
+            isPaused: { [weak self] in self?.isPaused ?? false },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] duration, hardCap in
@@ -2414,6 +2421,10 @@ final class QuizViewModel: ObservableObject {
         persistenceStore.saveStats(quizStats)
         transition(to: .finished)
         persistenceStore.clearSession()
+        // #189 M4: the result screen's command listener was still live — the
+        // mic stayed hot on the results and the recap played over a running
+        // engine. Down before the session goes, like `endQuizWithResults`.
+        audioDeviceState.stopSilenceDetectionListening()
         // Release the audio session so Spotify/podcasts resume full volume.
         audioService.deactivateSession()
 

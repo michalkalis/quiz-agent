@@ -208,6 +208,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// #185: the tap's per-buffer levels, drained on the main actor into the VAD.
     var levelTask: Task<Void, Never>?
     var levelContinuation: AsyncStream<InputLevelSample>.Continuation?
+    /// #189 P8 (telemetry only): the listening window's engine-configuration
+    /// and interruption observers (see +Telemetry).
+    var engineEventObservers: [NSObjectProtocol] = []
 
     /// Whether a `startListening()` is between its entry guard and its return
     /// (#133 audit 1c). `audioEngine` cannot express this: it stays nil across

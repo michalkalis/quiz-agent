@@ -100,6 +100,7 @@ extension SilenceDetectionService {
 
         let engine = AVAudioEngine()
         audioEngine = engine
+        observeEngineEvents(engine) // #189 P8 telemetry (+Telemetry)
 
         let inputNode = engine.inputNode
         // #184 track A: voice processing (AEC/NS/AGC) BEFORE the format is read
@@ -303,6 +304,7 @@ extension SilenceDetectionService {
     /// first-hypothesis measurement is always logged — dropping it would lose
     /// the engine-comparison data point #120 exists for.
     func handleEngineTranscript(_ transcript: CommandTranscript) {
+        answerSession?.transcriberResults += 1 // #189: results out (+Telemetry)
         let firstHypothesisMs = consumeFirstHypothesisLatencyMs()
         if transcript.isFinal || !loggedVolatileThisSegment || firstHypothesisMs != nil {
             var attributes: [String: Any] = [
@@ -353,6 +355,7 @@ extension SilenceDetectionService {
         inputContinuation?.finish()
         inputContinuation = nil
         stopLevelStream()
+        removeEngineEventObservers()
 
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
@@ -377,6 +380,7 @@ extension SilenceDetectionService {
         inputContinuation?.finish()
         inputContinuation = nil
         stopLevelStream()
+        removeEngineEventObservers()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine = nil
         voiceProcessingStatus = nil

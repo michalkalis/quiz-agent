@@ -103,6 +103,11 @@ final class AudioDeviceState: ObservableObject {
     /// separate from `mayCaptureAudio` so the screen map can never take the
     /// microphone (or barge-in) with it.
     let isCommandWindowOpen: @MainActor () -> Bool
+    /// #189 H2: a batch answer recording is live and records through the
+    /// shared engine (#184) — a listener start it adopted mid-flight must
+    /// survive the capture gate below. False on the realtime path, whose own
+    /// engine must never run beside this one (#64), and while paused.
+    let answerRecordingOwnsListener: @MainActor () -> Bool
     let setPlayingQuestionTTS: @MainActor (Bool) -> Void
     /// Feedback-TTS twin of the flag above — closes the command window while the
     /// result feedback plays so the recognizer can't hear it (#119).
@@ -136,6 +141,7 @@ final class AudioDeviceState: ObservableObject {
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool,
         mayCaptureAudio: @escaping @MainActor () -> Bool,
         isCommandWindowOpen: @escaping @MainActor () -> Bool,
+        answerRecordingOwnsListener: @escaping @MainActor () -> Bool,
         setPlayingQuestionTTS: @escaping @MainActor (Bool) -> Void,
         setPlayingFeedbackTTS: @escaping @MainActor (Bool) -> Void,
         currentQuestionAudioUrl: @escaping @MainActor () -> String?,
@@ -163,6 +169,7 @@ final class AudioDeviceState: ObservableObject {
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
         self.mayCaptureAudio = mayCaptureAudio
         self.isCommandWindowOpen = isCommandWindowOpen
+        self.answerRecordingOwnsListener = answerRecordingOwnsListener
         self.setPlayingQuestionTTS = setPlayingQuestionTTS
         self.setPlayingFeedbackTTS = setPlayingFeedbackTTS
         self.currentQuestionAudioUrl = currentQuestionAudioUrl
@@ -242,6 +249,16 @@ final class AudioDeviceState: ObservableObject {
         // Re-evaluates the SAME predicate — a teardown that lands inside the
         // suspension must lose to it, whatever made capture illegal.
         guard mayCaptureAudio() else {
+            // #189 H2: the one exception — a batch answer recording that began
+            // while this start was in flight has adopted the engine as its
+            // recorder (#184). Stopping it here left the answer deaf ("znova"
+            // right after the read-back while the sheet's listener was still
+            // settling on Bluetooth). No barge-in and no command consumer
+            // during a recording; the recording's own stop / interruption /
+            // background paths release the engine. Every other reason capture
+            // became illegal (TTS, background, `.finished`, a pause, the
+            // realtime stream's own engine) still tears it down.
+            if answerRecordingOwnsListener() { return }
             stopSilenceDetectionListening()
             return
         }
@@ -270,6 +287,15 @@ final class AudioDeviceState: ObservableObject {
 
     /// Stop silence-detection listening and tear down the barge-in subscription.
     func stopSilenceDetectionListening() {
+        // #189 telemetry: every mic teardown in the black box, with the quiz
+        // state the ledger stamps and what the engine was doing — a deaf
+        // answer then shows WHO took the mic down, and when.
+        attemptLedger.record(
+            .route,
+            "listener.stop",
+            silenceDetectionService.isListening ? "live"
+                : silenceDetectionService.isStartingListening ? "starting" : "idle"
+        )
         taskBag.cancel(.bargeIn)
         stopCommandConsumer()
         silenceDetectionService.stopListening()

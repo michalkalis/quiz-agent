@@ -1,7 +1,7 @@
 # #172 — Session worker: custom packy v bete cez Claude Code subscription (mba ako worker na prod fronte)
 
 **Triage:** feature · ready-for-agent (founder GO 2026-09-06)
-**Status:** Plán + implementácia 2026-09-06. Zapnutie v prode + spustenie na `mba` = founder krok (mba nedostupný cez Tailscale, Remote Control).
+**Status:** Plán + implementácia 2026-09-06. Prod prepnutý na session frontu (Fly worker zastavený 2026-09-09). **Worker BEŽÍ na `mba` od 2026-09-15** (`session_worker_local.sh start`, log `~/Library/Logs/quiz-session-worker/`); mba má `fly auth login` + `PROD_DATABASE_URL`/`PROD_REDIS_URL` v `.env`. Open = testovacia objednávka z TF + slepé porovnanie.
 **Created:** 2026-09-06
 **Reversibility:** `a` — prepínač v env; rollback = odstrániť `ORDER_QUEUE_NAME` + vrátiť Fly worker na 1.
 
@@ -55,6 +55,6 @@ iOS → POST /v1/orders (Fly web) ──enqueue──▶ Redis queue ORDER_QUEUE
 ## Hotovo, keď
 
 - [ ] PR merged; testy zelené.
-- [ ] Prod: `ORDER_QUEUE_NAME` nastavený, Fly worker na 0 (founder GO pred prepnutím).
+- [x] Prod: `ORDER_QUEUE_NAME` nastavený, Fly worker na 0 (2026-09-09); worker beží na `mba` (2026-09-15).
 - [ ] mba: worker beží, testovacia objednávka z TF doručená cez session.
 - [ ] Slepé porovnanie session vs. API packov (founder).

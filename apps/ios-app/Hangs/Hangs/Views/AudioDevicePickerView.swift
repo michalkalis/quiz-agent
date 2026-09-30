@@ -9,6 +9,10 @@ import SwiftUI
 
 /// Sheet view for selecting audio input device
 struct AudioDevicePickerView: View {
+    private enum Metrics {
+        static let iconColumn: CGFloat = 32 // fixed column so device names align
+    }
+
     @ObservedObject var viewModel: QuizViewModel
     @Environment(\.dismiss) private var dismiss
 
@@ -29,13 +33,13 @@ struct AudioDevicePickerView: View {
                         }
                     } header: {
                         Text("Available Devices")
-                            .font(.labelSM)
-                            .foregroundColor(Theme.Colors.textSecondary)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(Theme.Hangs.Colors.muted)
                     } footer: {
                         if viewModel.selectedAudioMode.id == "media" {
                             Text("Switch to Call Mode to use Bluetooth microphones. With a Bluetooth microphone the car treats the quiz as a phone call.")
-                                .font(.textXS)
-                                .foregroundColor(Theme.Colors.textSecondary)
+                                .font(.footnote)
+                                .foregroundColor(Theme.Hangs.Colors.muted)
                         }
                     }
                 }
@@ -43,12 +47,12 @@ struct AudioDevicePickerView: View {
                 // No devices available message
                 if viewModel.availableInputDevices.isEmpty {
                     Section {
-                        HStack(spacing: Theme.Spacing.sm) {
+                        HStack(spacing: Theme.Hangs.Spacing.sm) {
                             Image(systemName: "info.circle")
-                                .foregroundColor(Theme.Colors.textSecondary)
+                                .foregroundColor(Theme.Hangs.Colors.muted)
                             Text("No external microphones detected. Connect Bluetooth or wired audio devices to see them here.")
-                                .font(.textSM)
-                                .foregroundColor(Theme.Colors.textSecondary)
+                                .font(.subheadline)
+                                .foregroundColor(Theme.Hangs.Colors.muted)
                         }
                     }
                 }
@@ -60,7 +64,7 @@ struct AudioDevicePickerView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(Theme.Colors.accentPrimary)
+                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
                     .accessibilityIdentifier("micPicker.done")
                 }
             }
@@ -79,27 +83,27 @@ struct AudioDevicePickerView: View {
                 viewModel.setPreferredInputDevice(device)
             }
         }) {
-            HStack(spacing: Theme.Spacing.sm) {
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
                 // Device icon
                 Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
-                    .font(.textLG)
-                    .foregroundColor(device.isAutomatic ? Theme.Colors.accentPrimary : Theme.Colors.accentPrimary)
-                    .frame(width: Theme.Components.iconLG)
+                    .font(.title3)
+                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                    .frame(width: Metrics.iconColumn)
 
                 // Device name and subtitle
                 VStack(alignment: .leading, spacing: 2) {
                     Text(device.name)
-                        .font(.textMD)
-                        .foregroundColor(Theme.Colors.textPrimary)
+                        .font(.body)
+                        .foregroundColor(Theme.Hangs.Colors.ink)
 
                     if !device.isAutomatic {
                         Text(device.subtitle)
-                            .font(.textXS)
-                            .foregroundColor(Theme.Colors.textSecondary)
+                            .font(.footnote)
+                            .foregroundColor(Theme.Hangs.Colors.muted)
                     } else {
                         Text("Let iOS choose the best microphone")
-                            .font(.textXS)
-                            .foregroundColor(Theme.Colors.textSecondary)
+                            .font(.footnote)
+                            .foregroundColor(Theme.Hangs.Colors.muted)
                     }
                 }
 
@@ -108,7 +112,7 @@ struct AudioDevicePickerView: View {
                 // Checkmark for selected device
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundColor(Theme.Colors.accentPrimary)
+                        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
                         .fontWeight(.semibold)
                 }
             }

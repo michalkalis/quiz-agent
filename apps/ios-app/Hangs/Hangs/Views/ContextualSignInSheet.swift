@@ -123,7 +123,7 @@ struct ContextualSignInSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Theme.Hangs.Colors.errorDim)
+                .fill(Theme.Hangs.Colors.errorSoft)
         )
         .accessibilityIdentifier("signInPrompt.errorBanner")
     }
@@ -192,7 +192,7 @@ struct ContextualSignInSheet: View {
             Text("We only use your name and email. No tracking.")
                 .font(.hangsBody(12))
         }
-        .foregroundColor(Theme.Hangs.Colors.textTertiary)
+        .foregroundColor(Theme.Hangs.Colors.mutedFaint)
         .accessibilityIdentifier("signInPrompt.privacyNote")
     }
 

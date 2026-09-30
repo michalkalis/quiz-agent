@@ -1,7 +1,7 @@
 # #188 — Jednotný design systém: jeden zdroj pravdy, katalóg na claude.ai, synchronizácia do appky
 
-**Triage:** enhancement · needs-triage (founder 2026-09-25: založiť issue; nič kritické teraz nemeniť)
-**Status:** Smer schválený founderom 2026-09-25 (katalóg na claude.ai, Pencil ostáva na tvorbu dizajnu, kód = zdroj pravdy). Čaká na zaradenie po #185 / #186.
+**Triage:** enhancement · in-progress (founder 2026-09-30: začať)
+**Status:** Smer schválený founderom 2026-09-25 (katalóg na claude.ai, Pencil ostáva na tvorbu dizajnu, kód = zdroj pravdy). Track A hotový 2026-09-30.
 **Research:** [mobile-design-workflow-2026-09-25](../research/mobile-design-workflow-2026-09-25.md)
 
 ## Problém
@@ -43,9 +43,9 @@ Prečo kód: agent pracuje v kóde, CI ho vie kontrolovať (lint, snapshoty) a z
 
 ## Tracky
 
-- [ ] **A — Jedna sada tokenov.** Zlúčiť do `Theme.Hangs` (interný namespace ostáva, viď CONTEXT.md), dve vrstvy (základné hodnoty → významové), zmazať staré `Theme.*` a paralelné fonty, commitnúť `ios-swiftui-layout.md` + `ios-swift-conventions.md`. **Vizuálne neutrálne:** existujúce pixelové snapshoty hero obrazoviek musia ostať identické.
+- [x] **A — Jedna sada tokenov.** Zlúčiť do `Theme.Hangs` (interný namespace ostáva, viď CONTEXT.md), dve vrstvy (základné hodnoty → významové), zmazať staré `Theme.*` a paralelné fonty, commitnúť `ios-swiftui-layout.md` + `ios-swift-conventions.md`. **Vizuálne neutrálne:** existujúce pixelové snapshoty hero obrazoviek musia ostať identické. — **Hotové 2026-09-30:** jediný súbor `Utilities/Theme.swift` (súkromná `Palette` → významové `Colors`/`Shadow`/`Spacing`/`Radius`/`Fonts`); zmazané `Theme.*`, `Font+Theme`, nepoužité `ButtonStyles` (4 štýly, nikde nepoužité) a legacy aliasy + nepoužité farby; výber mikrofónu a mini-kvíz prevedené (rozmery → `Metrics` vo view). Hero pixelové snapshoty identické (iOS 26.5). Pozn. pre G: výber mikrofónu ostáva na systémovom písme (SF), nie Inter.
 - [ ] **B — Lint na ručné hodnoty v CI** (vzor `scripts/lint-a11y-ids.py`): farby, veľkosť písma, odsadenie, rohy mimo token súborov; výnimka len pomenovaná `Metrics` konštanta. Najprv prečistiť súčasné výskyty, potom zapnúť ako gate.
-- [ ] **C — Súpis komponentov + snapshoty komponentov.** Každý zdieľaný komponent (dnes 14 + 4 štýly tlačidiel) so stavmi (normálny, stlačený, vypnutý, dlhý SK text, veľké písmo) ako pixelový snapshot, rovnaký runtime ako hero snapshoty. Súpis „kedy použiť ktorý komponent“ v pravidlách pre agenta.
+- [ ] **C — Súpis komponentov + snapshoty komponentov.** Každý zdieľaný komponent (dnes 14; 4 staré štýly tlačidiel zmazané v A) so stavmi (normálny, stlačený, vypnutý, dlhý SK text, veľké písmo) ako pixelový snapshot, rovnaký runtime ako hero snapshoty. Súpis „kedy použiť ktorý komponent“ v pravidlách pre agenta.
 - [ ] **D — Katalóg na claude.ai** (typ artefaktu Design System), generovaný skriptom z kódu: README (značka, tón, pravidlá použitia), tokeny v oboch témach, každý komponent s popisom a obrázkami zo snapshotov (reálne SwiftUI, nie web napodobenina). Nikdy ručne písaný.
 - [ ] **E — `/design-sync` skill:** katalóg (hodnoty tokenov + komentáre) a Pencil premenné vs. kód → zoznam čakajúcich zmien → PR; po merge pregenerovať katalóg, uzavrieť komentáre odkazom, aktualizovať sekciu „Čaká na appku“. Pravidlo v `ios.md`: spustiť pred každou UI prácou.
 - [ ] **F — Pencil premenné z tokenov** (cez Pencil MCP), aby nové návrhy v Penciliu začínali z hodnôt, ktoré naozaj platia.

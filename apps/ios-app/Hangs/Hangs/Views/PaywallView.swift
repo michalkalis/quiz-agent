@@ -143,7 +143,7 @@ struct PaywallView: View {
             }
             .accessibilityHidden(true)
 
-            VStack(spacing: 8) {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
                 Text(productID == StoreProduct.packId ? "PACK ADDED" : "YOU'RE ALL SET")
                     .font(.hangsDisplayMD)
                     .lineLimit(1)
@@ -185,7 +185,7 @@ struct PaywallView: View {
             }
             .accessibilityHidden(true)
 
-            VStack(spacing: 8) {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
                 Text("FINISHING UP")
                     .font(.hangsDisplayMD)
                     .lineLimit(1)
@@ -222,7 +222,7 @@ struct PaywallView: View {
     }
 
     private var paywallHeroBlock: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             // #96 P3 (founder no-wrap): single line, never the old "GO\nUNLIMITED"
             // two-line break — scales down before it would wrap.
             Text("GO UNLIMITED")
@@ -414,7 +414,7 @@ struct PaywallView: View {
                     .fill(Theme.Hangs.Colors.pink)
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.Hangs.Colors.textOnAccent)
             case .hollow:
                 // Demoted: pink outline + pink check, still readable as "this is
                 // what you'd buy next" without competing with the busy product.
@@ -465,7 +465,7 @@ struct PaywallView: View {
                 Text(verbatim: pack.displayPrice)
                     .font(.hangsBody(13, weight: .bold))
                     .foregroundColor(isSource ? .white : Theme.Hangs.Colors.accentPrimary)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Theme.Hangs.Spacing.sm)
                     .padding(.vertical, 6)
                     .frame(minHeight: 30)
                     .background(
@@ -476,7 +476,7 @@ struct PaywallView: View {
                 planRadio(check)
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .padding(.vertical, 12)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
                     .fill(Theme.Hangs.Colors.bgCard)
@@ -632,7 +632,7 @@ struct PaywallView: View {
     }
 
     private var offlineHeroBlock: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             Text("CAN'T REACH\nTHE STORE")
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
@@ -650,7 +650,7 @@ struct PaywallView: View {
                 .foregroundColor(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Theme.Hangs.Spacing.xs)
                 .accessibilityIdentifier("paywall.offline.subtitle")
         }
         .padding(.horizontal, Theme.Hangs.Spacing.lg)

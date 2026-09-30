@@ -27,23 +27,23 @@ struct CompletionView: View {
                         subtitle: "nice work — here's your run",
                         titleFont: .hangsDisplayMD
                     )
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
                     finalScoreCard
-                        .padding(.horizontal, 20)
-                        .padding(.top, 12)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        .padding(.top, Theme.Hangs.Spacing.sm)
 
                     breakdownCard
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
                         .padding(.top, 14)
 
                     if let remaining = upsellRemaining {
                         upsellCard(remaining: remaining)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, Theme.Hangs.Spacing.lg)
                             .padding(.top, 14)
                     }
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
             }
 
             Spacer(minLength: 0)
@@ -154,9 +154,9 @@ struct CompletionView: View {
                     Spacer()
                     Text("Go Unlimited")
                         .font(.hangsBody(13, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+                        .padding(.horizontal, Theme.Hangs.Spacing.sm)
+                        .padding(.vertical, Theme.Hangs.Spacing.xs)
                         .background(Capsule().fill(Theme.Hangs.Colors.pink))
                 }
             }
@@ -168,7 +168,7 @@ struct CompletionView: View {
     // MARK: - CTA stack
 
     private var ctaStack: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsPrimaryButton(
                 title: "Play Again",
                 icon: "arrow.counterclockwise",
@@ -193,7 +193,7 @@ struct CompletionView: View {
             }
             .accessibilityIdentifier("completion.home")
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.bottom, 14)
     }
 

@@ -17,7 +17,7 @@ struct FeedbackView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
                     if let screenshot = viewModel.screenshot {
                         screenshotThumbnail(screenshot)
                     }
@@ -44,7 +44,7 @@ struct FeedbackView: View {
                     .disabled(!viewModel.canSend || viewModel.sendState == .success)
                     .accessibilityIdentifier("feedback.send")
                 }
-                .padding(20)
+                .padding(Theme.Hangs.Spacing.lg)
             }
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle("Send feedback")
@@ -84,7 +84,7 @@ struct FeedbackView: View {
     // MARK: - Subviews
 
     private func screenshotThumbnail(_ image: UIImage) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HangsSectionLabel(text: "screenshot", color: Theme.Hangs.Colors.blue)
             ZStack(alignment: .topTrailing) {
                 Image(uiImage: image)
@@ -104,7 +104,7 @@ struct FeedbackView: View {
                         .font(.system(size: 26))
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.white, Color.black.opacity(0.55))
-                        .padding(8)
+                        .padding(Theme.Hangs.Spacing.xs)
                 }
                 .accessibilityLabel("Remove screenshot")
                 .accessibilityIdentifier("feedback.removeScreenshot")
@@ -113,7 +113,7 @@ struct FeedbackView: View {
     }
 
     private var messageEditor: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack {
                 HangsSectionLabel(text: "your feedback", color: Theme.Hangs.Colors.pink)
                 Spacer()

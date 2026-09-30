@@ -25,7 +25,7 @@ struct OrderPackFlowView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: Theme.Hangs.Spacing.lg) {
                     switch viewModel.state {
                     case .editing:
                         OrderPackFormStep(viewModel: viewModel)
@@ -58,8 +58,8 @@ struct OrderPackFlowView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 24)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.vertical, Theme.Hangs.Spacing.xl)
             }
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle(navigationTitle)

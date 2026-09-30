@@ -50,7 +50,7 @@ struct HangsQuizProgressHeader: View {
                 )
             }
 
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
                 Text(verbatim: category.lowercased())
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .lineLimit(1)
@@ -67,7 +67,7 @@ struct HangsQuizProgressHeader: View {
             // reference, not a headline.
             .font(.hangsMono(10, weight: .medium))
             .tracking(1.4)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.Hangs.Spacing.xl)
         }
     }
 
@@ -95,7 +95,7 @@ struct HangsSegmentedProgress: View {
     func isFilled(_ index: Int) -> Bool { index < current }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
             ForEach(0 ..< max(total, 0), id: \.self) { index in
                 Capsule()
                     .fill(isFilled(index)
@@ -104,7 +104,7 @@ struct HangsSegmentedProgress: View {
                     .frame(height: 4)
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .animation(.easeInOut(duration: 0.25), value: current)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Question \(current) of \(total)"))

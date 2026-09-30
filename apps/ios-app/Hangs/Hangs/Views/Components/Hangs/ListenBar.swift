@@ -458,7 +458,7 @@ struct ListenBar: View {
 
     /// #185 track F (F2): large state + small caption, glyph at 18pt.
     private var statusContent: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
             leadingGlyph
             VStack(alignment: .leading, spacing: 2) {
                 captionText
@@ -484,7 +484,7 @@ struct ListenBar: View {
     }
 
     private var standardContent: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             leadingGlyph
 
             switch size {
@@ -578,7 +578,7 @@ struct ListenBar: View {
     @ViewBuilder
     private var words: some View {
         if !chipWords.isEmpty {
-            HStack(spacing: 4) {
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
                 // #131 Track C: colour alone is not feedback — a miss must say
                 // what to do. With chips the words stay put (they are still the
                 // answer) and the correction leads the row, so the #132 countdown
@@ -617,7 +617,7 @@ struct ListenBar: View {
     /// Three trailing dots fading back (opacity 1 · 0.55 · 0.3) — the "live mic"
     /// tell migrated from `CmdListenBar` when it was retired (#131 Track F).
     private var dots: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
             ForEach(Array([1.0, 0.55, 0.3].enumerated()), id: \.offset) { _, opacity in
                 Circle()
                     .fill(accent)

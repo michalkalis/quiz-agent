@@ -26,7 +26,7 @@ struct HangsQuestionPrompt: View {
     var textIdentifier: String = ""
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
                 .fill(barColor)
                 .frame(width: 3)

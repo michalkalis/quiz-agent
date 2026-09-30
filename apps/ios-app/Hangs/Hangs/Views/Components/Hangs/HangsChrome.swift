@@ -67,8 +67,8 @@ struct HangsBrandRow<Right: View>: View {
             Spacer()
             right()
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        .padding(.vertical, Theme.Hangs.Spacing.xs)
     }
 }
 
@@ -106,9 +106,9 @@ struct HangsQuizNav: View {
                 .tracking(2)
                 .foregroundColor(counterAccent)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.top, 14)
-        .padding(.bottom, 4)
+        .padding(.bottom, Theme.Hangs.Spacing.xxs)
     }
 }
 
@@ -133,7 +133,7 @@ struct HangsProgressBar: View {
             }
         }
         .frame(height: 3)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .animation(.easeInOut(duration: 0.25), value: tint)
     }
 }
@@ -158,7 +158,7 @@ struct HangsPageIndicator: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             ForEach(0 ..< pageCount, id: \.self) { i in
                 Capsule()
                     .fill(dotColor(at: i))
@@ -207,7 +207,7 @@ struct HangsStatusBar: View {
                     .frame(width: 6, height: 6)
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.vertical, 10)
         .background(backgroundColor)
     }
@@ -221,7 +221,7 @@ struct HangsRecordingBar: View {
 
     var body: some View {
         HStack {
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 Circle()
                     .fill(Theme.Hangs.Colors.pink)
                     .frame(width: 8, height: 8)
@@ -235,7 +235,7 @@ struct HangsRecordingBar: View {
                 .font(.hangsMono(13, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.pink)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.vertical, 10)
         .background(Theme.Hangs.Colors.bg)
     }
@@ -265,8 +265,8 @@ struct HangsFooterBar: View {
                 Circle().fill(Theme.Hangs.Colors.muted).frame(width: 5, height: 5)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
     }
 }
 

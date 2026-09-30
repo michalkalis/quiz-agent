@@ -129,9 +129,9 @@ struct AnswerConfirmationView: View {
                     transcriptBody
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.Hangs.Spacing.xl)
             .padding(.top, 28)
-            .padding(.bottom, 24)
+            .padding(.bottom, Theme.Hangs.Spacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         // A hairline where the layer starts — the top edge is the only part of
@@ -169,7 +169,7 @@ struct AnswerConfirmationView: View {
                     // vanished chip reads as "auto-confirm off", not "paused".
                     HangsSectionLabel(text: "PAUSED", color: Theme.Hangs.Colors.blue)
                         .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Theme.Hangs.Spacing.xxs)
                         .background(Capsule().fill(Theme.Hangs.Colors.neutralSoft))
                         .accessibilityIdentifier("confirmation.paused")
                 }
@@ -181,7 +181,7 @@ struct AnswerConfirmationView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Theme.Hangs.Colors.pink)
-                            .padding(8)
+                            .padding(Theme.Hangs.Spacing.xs)
                             .background(
                                 Circle().fill(Theme.Hangs.Colors.pinkSoft)
                             )
@@ -195,7 +195,7 @@ struct AnswerConfirmationView: View {
                         Image(systemName: "pencil")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Theme.Hangs.Colors.pink)
-                            .padding(8)
+                            .padding(Theme.Hangs.Spacing.xs)
                             .background(
                                 Circle().fill(Theme.Hangs.Colors.pinkSoft)
                             )
@@ -256,7 +256,7 @@ struct AnswerConfirmationView: View {
                     feedback: commandFeedback, commandHint: commandHint,
                     shortCaption: true, language: commandLanguage
                 )
-                    .padding(.top, 12)
+                    .padding(.top, Theme.Hangs.Spacing.sm)
                     .transition(.opacity)
             }
 
@@ -269,7 +269,7 @@ struct AnswerConfirmationView: View {
                 noAnswerChoice
                     .padding(.top, 14)
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: Theme.Hangs.Spacing.xs) {
                     // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                     // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                     HangsPrimaryButton(
@@ -334,7 +334,7 @@ struct AnswerConfirmationView: View {
     /// Again first — it is the likelier wish after "I didn't catch that" — and
     /// no countdown on either: this sheet never resolves itself.
     private var noAnswerChoice: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", height: 54) {
                 editFocused = false
                 onReRecord()
@@ -372,7 +372,7 @@ struct AnswerConfirmationView: View {
     }
 
     private var editableTranscript: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
                 .fill(Theme.Hangs.Colors.pink)
                 .frame(width: 3)
@@ -421,7 +421,7 @@ struct AnswerConfirmationView: View {
         VStack(alignment: .leading, spacing: 18) {
             HangsSectionLabel(text: "PROCESSING", color: Theme.Hangs.Colors.blue)
 
-            HStack(alignment: .top, spacing: 8) {
+            HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(Theme.Hangs.Colors.blue)
                     .frame(width: 3, height: 56)

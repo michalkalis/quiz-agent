@@ -68,7 +68,7 @@ struct HomePlanCard: View {
 
     var body: some View {
         HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                 planLabel
                 switch state {
                 case .subscriber, .subscriberWithCredits, .grace:
@@ -100,8 +100,8 @@ struct HomePlanCard: View {
         let showLegend = remaining > 0 && credits > 0
         let primary = hasCredits ? Self.combinedTotal(usage) : remaining
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        return VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                 Text(verbatim: "\(primary)")
                     .font(.hangsDisplay(40))
                     .foregroundColor(Theme.Hangs.Colors.ink)
@@ -190,7 +190,7 @@ struct HomePlanCard: View {
     // MARK: - Family B: subscriber / subscriber+credits / grace
 
     private var subscriberBody: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack(spacing: 10) {
                 Text("Unlimited")
                     .font(.hangsDisplay(32))
@@ -304,7 +304,7 @@ struct HomePlanCard: View {
     }
 
     private func planPill(text: LocalizedStringKey, color: Color, icon: String?) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
             if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 9, weight: .bold))
@@ -315,13 +315,13 @@ struct HomePlanCard: View {
                 .accessibilityIdentifier("home.planStatusPill")
         }
         .foregroundColor(color)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Theme.Hangs.Spacing.xs)
         .padding(.vertical, 3)
         .background(Capsule().fill(color.opacity(0.14)))
     }
 
     private func linkLabel(_ title: LocalizedStringKey, color: Color, id: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
             Text(title)
                 .font(.hangsBody(13, weight: .semibold))
                 .accessibilityIdentifier(id)

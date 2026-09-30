@@ -102,7 +102,7 @@ struct HangsStatBox: View {
             : .hangsNumber
 
         HangsCard(padding: padding) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
                 HangsSectionLabel(text: label, color: labelColor)
                 if inlineSuffix, let suffix {
                     HStack(alignment: .lastTextBaseline, spacing: 6) {
@@ -170,7 +170,7 @@ struct HangsConfigRow: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .padding(.vertical, Theme.Hangs.Spacing.md)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -186,7 +186,7 @@ struct HangsToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
                     .font(.hangsBody(16, weight: .semibold))
@@ -252,7 +252,7 @@ struct HangsResultBanner: View {
     let kind: HangsResultKind
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             Image(systemName: kind.icon)
                 .font(.system(size: 11, weight: .bold))
             Text(kind.label)
@@ -260,7 +260,7 @@ struct HangsResultBanner: View {
                 .tracking(2)
         }
         .foregroundColor(kind.color)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Theme.Hangs.Spacing.sm)
         .padding(.vertical, 6)
         .background(
             Capsule().fill(kind.softBg)
@@ -276,7 +276,7 @@ struct HangsInlineBadge: View {
     var body: some View {
         Image(systemName: kind.icon)
             .font(.system(size: size * 0.5, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(Theme.Hangs.Colors.textOnAccent)
             .frame(width: size, height: size)
             .background(Circle().fill(kind.color))
     }
@@ -353,8 +353,8 @@ struct HangsAnswerRow: View {
                 .font(.hangsBody(16, weight: .semibold))
                 .foregroundColor(valueColor)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
         .background(Theme.Hangs.Colors.bgCard)
     }
 }

@@ -109,7 +109,7 @@ private struct QuestionRatingEntryModifier: ViewModifier {
         if let entry, entry.isEnabled, let questionId {
             content
                 .overlay(alignment: .topTrailing) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: Theme.Hangs.Spacing.xs) {
                         if let openFeedback = entry.openFeedback {
                             FeedbackEntryButton(action: openFeedback)
                         }

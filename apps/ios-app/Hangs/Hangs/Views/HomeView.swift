@@ -28,15 +28,15 @@ struct HomeView: View {
             }
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
                     Text("voice-based trivia for the road")
                         .font(.hangsBody(14))
                         .foregroundColor(Theme.Hangs.Colors.muted)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 4)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        .padding(.top, Theme.Hangs.Spacing.xxs)
 
                     freePlanCard
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
                     // #141: pick-and-play entry for owned custom packs
                     // (variant B — founder 2026-08-05). Renders nothing for
@@ -48,14 +48,14 @@ struct HomeView: View {
                     }
 
                     HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        .padding(.top, Theme.Hangs.Spacing.xs)
 
                     configCard
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 }
-                .padding(.top, 8)
-                .padding(.bottom, 24)
+                .padding(.top, Theme.Hangs.Spacing.xs)
+                .padding(.bottom, Theme.Hangs.Spacing.xl)
             }
 
             // #77/#96 P2: listening indicator above the primary action — visible
@@ -70,14 +70,14 @@ struct HomeView: View {
                     size: .slim,
                     language: viewModel.commandLanguage
                 )
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
                     .padding(.bottom, 10)
                     .transition(.opacity)
             }
 
             startQuizButton
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.bottom, Theme.Hangs.Spacing.lg)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
@@ -182,7 +182,7 @@ struct HomeView: View {
     // resolves into the loaded (or failed) state.
     private var freePlanCardLoading: some View {
         HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                 Text("your plan")
                     .font(.hangsMono(11, weight: .medium))
                     .tracking(1)
@@ -225,7 +225,7 @@ struct HomeView: View {
                         .font(.hangsBody(13, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
                     Spacer()
-                    HStack(spacing: 4) {
+                    HStack(spacing: Theme.Hangs.Spacing.xxs) {
                         Text("Retry")
                             .font(.hangsBody(13, weight: .semibold))
                         Image(systemName: "arrow.clockwise")
@@ -410,7 +410,7 @@ struct HomeView: View {
             }
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.vertical, Theme.Hangs.Spacing.md)
         .contentShape(Rectangle())
     }
 

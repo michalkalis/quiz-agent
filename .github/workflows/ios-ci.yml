@@ -8,12 +8,16 @@ on:
     paths:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'
+      - 'scripts/lint-design-tokens.py'
+      - 'scripts/design-token-baseline.txt'
       - '.github/workflows/ios-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'
+      - 'scripts/lint-design-tokens.py'
+      - 'scripts/design-token-baseline.txt'
       - '.github/workflows/ios-ci.yml'
   workflow_dispatch:
 
@@ -61,6 +65,11 @@ jobs:
       # missing identifier fails in seconds, not after a 20-minute test run.
       - name: Lint accessibility identifiers
         run: python3 scripts/lint-a11y-ids.py
+
+      # #188: colors, font sizes, spacing and radii come from Theme.swift; the
+      # baseline lists pre-#188 values and may only shrink.
+      - name: Lint design tokens
+        run: python3 scripts/lint-design-tokens.py
 
       - name: Build and test
         run: |

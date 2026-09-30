@@ -99,9 +99,9 @@ struct ResultVerdictBand: View {
                     .accessibilityIdentifier("result.verdict")
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 16)
-        .padding(.bottom, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
+        .padding(.top, Theme.Hangs.Spacing.md)
+        .padding(.bottom, Theme.Hangs.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         // Edge-to-edge: the band IS the hierarchy, so it is not a card.
         .background(verdict.fieldFill)
@@ -117,7 +117,7 @@ struct ResultVerdictBand: View {
         } else if verdict == .skipped {
             Image(systemName: "minus")
                 .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.Hangs.Colors.textOnAccent)
                 .frame(width: 22, height: 22)
                 .background(Circle().fill(Theme.Hangs.Colors.mutedFaint))
                 .accessibilityIdentifier("result.heroBanner")
@@ -146,7 +146,7 @@ struct ResultMetaRow: View {
     let onOpenSource: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
             HStack(spacing: 10) {
                 if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
                 if let reviewBadge {

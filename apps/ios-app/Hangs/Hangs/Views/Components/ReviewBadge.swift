@@ -137,7 +137,7 @@ struct QuestionProvenanceRow: View {
 
     var body: some View {
         if isEnabled, hasContent {
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 if let generatedBy {
                     Text(verbatim: generatedBy)
                     separator

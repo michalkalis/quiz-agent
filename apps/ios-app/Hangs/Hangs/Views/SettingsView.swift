@@ -93,11 +93,11 @@ struct SettingsView: View {
                     subtitle: "tune your experience",
                     titleFont: .hangsDisplayMD
                 )
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 24)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.top, Theme.Hangs.Spacing.md)
+                .padding(.bottom, Theme.Hangs.Spacing.xl)
 
-                VStack(spacing: 20) {
+                VStack(spacing: Theme.Hangs.Spacing.lg) {
                     voiceGroup
                     languageGroup
                     sessionGroup
@@ -114,7 +114,7 @@ struct SettingsView: View {
                         developerGroup
                     #endif
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .padding(.bottom, 40)
             }
         }
@@ -487,14 +487,14 @@ struct SettingsView: View {
 
     private var signedOutAccountGroup: some View {
         groupSection(label: "account", color: Theme.Hangs.Colors.accentTeal) {
-            VStack(spacing: 16) {
+            VStack(spacing: Theme.Hangs.Spacing.md) {
                 Text("Sign in to keep your premium and history when you reinstall.")
                     .font(.hangsBody(14))
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 18)
-                    .padding(.top, 16)
+                    .padding(.top, Theme.Hangs.Spacing.md)
 
                 SignInWithAppleButton(.signIn) { request in
                     let rawNonce = appState.authService.generateRawNonce()
@@ -507,7 +507,7 @@ struct SettingsView: View {
                 .signInWithAppleButtonStyle(.black)
                 .frame(height: 50)
                 .padding(.horizontal, 18)
-                .padding(.bottom, 16)
+                .padding(.bottom, Theme.Hangs.Spacing.md)
                 .disabled(isSigningIn)
                 .accessibilityIdentifier("account.signInWithApple")
 
@@ -765,7 +765,7 @@ struct SettingsView: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 18)
-                .padding(.vertical, 12)
+                .padding(.vertical, Theme.Hangs.Spacing.sm)
                 .accessibilityIdentifier("settings.aiDisclosure")
         }
     }
@@ -1063,7 +1063,7 @@ struct SettingsView: View {
         let inner = content()
         return VStack(alignment: .leading, spacing: 10) {
             HangsSectionLabel(text: label, color: color)
-                .padding(.leading, 4)
+                .padding(.leading, Theme.Hangs.Spacing.xxs)
             HangsCard {
                 VStack(spacing: 0) {
                     inner

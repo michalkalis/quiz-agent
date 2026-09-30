@@ -42,10 +42,10 @@ struct HomePacksSection: View {
     var body: some View {
         let visible = Self.visibleOrders(viewModel.orders)
         if !visible.isEmpty {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
                 HangsSectionLabel(text: "my packs", color: Theme.Hangs.Colors.pink)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                    .padding(.top, Theme.Hangs.Spacing.xs)
                 HangsCard {
                     VStack(spacing: 0) {
                         ForEach(visible) { order in
@@ -55,7 +55,7 @@ struct HomePacksSection: View {
                         showAllRow
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
             }
             .accessibilityIdentifier("home.myPacksSection")
         }
@@ -71,7 +71,7 @@ struct HomePacksSection: View {
     private func packRow(_ order: OrderSnapshot) -> some View {
         // #182: playable from the first persisted batch, not only when delivered.
         let playable = order.isPlayable
-        return HStack(spacing: 12) {
+        return HStack(spacing: Theme.Hangs.Spacing.sm) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: order.category ?? order.language.uppercased())
                     .font(.hangsBody(15, weight: .semibold))
@@ -109,7 +109,7 @@ struct HomePacksSection: View {
             }
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 12)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
     }
 
     private func playIcon(active: Bool) -> some View {
@@ -125,7 +125,7 @@ struct HomePacksSection: View {
 
     private var showAllRow: some View {
         NavigationLink(value: AppRoute.myPacks) {
-            HStack(spacing: 4) {
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
                 Text("Show all")
                     .font(.hangsBody(13, weight: .semibold))
                 Image(systemName: "chevron.right")
@@ -134,7 +134,7 @@ struct HomePacksSection: View {
             }
             .foregroundColor(Theme.Hangs.Colors.pinkText)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -36,7 +36,7 @@ struct ResultFooter: View {
             // #122/rule V1: light sweep strip, docked above the bar — reserves its
             // 4 pt in every phase so the bar never shifts.
             GlowSweepLine(phase: feedbackPhase)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Theme.Hangs.Spacing.xxs)
 
             if isListeningForCommands {
                 ListenBar(mode: .command, feedback: feedbackPhase, commandHint: commandHint, language: commandLanguage)
@@ -65,7 +65,7 @@ struct ResultFooter: View {
                 stayPill
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .padding(.bottom, 28)
     }
 

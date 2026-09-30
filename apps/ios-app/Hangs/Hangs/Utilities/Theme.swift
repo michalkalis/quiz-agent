@@ -2,254 +2,226 @@
 //  Theme.swift
 //  Hangs
 //
-//  Centralized design system tokens extracted from Pencil design
+//  The app's one set of design tokens (#188 — unified design system).
+//  Code is the source of truth: the design catalog and Pencil variables are
+//  generated from this file, never the other way round.
+//
+//  Two layers:
+//  - `Palette` — raw base values (hex). File-private: views never pick a raw hue.
+//  - `Colors`, `Shadow`, `Spacing`, `Radius`, `Fonts` — semantic tokens views use.
+//
+//  `Theme.Hangs` is the internal namespace (the product is Trubbo, see CONTEXT.md).
 //
 
 import SwiftUI
 
-/// Design system tokens for consistent styling across the app
 enum Theme {
+    enum Hangs {}
+}
 
-    // MARK: - Colors
+// MARK: - Palette (base values)
 
+/// Base values only — reference them from the semantic tokens below, never from a view.
+private enum Palette {
+    // Brand
+    static let pink500 = "#FF3D8F"
+    static let pink600 = "#D91E72"
+    static let pink700 = "#C2185B"
+    static let violet500 = "#8B5CF6"
+    static let blue500 = "#0A84FF"
+    static let blue700 = "#0A5DC2"
+    static let teal500 = "#14B8A6"
+
+    // Feedback
+    static let green400 = "#4ADE80"
+    static let green500 = "#22C55E"
+    static let green600 = "#16A34A"
+    static let red500 = "#FF4444"
+    static let amber500 = "#F59E0B"
+
+    // Neutrals — light surfaces
+    static let white = "#FFFFFF"
+    static let cloud = "#F6F7F9"
+    static let snow = "#F4F4F4"
+    static let gray400 = "#9CA3AF"
+    static let gray500 = "#6B7280"
+
+    // Neutrals — dark surfaces
+    static let navy900 = "#0E1A2B"
+    static let night900 = "#161616"
+    static let night850 = "#1C1D22"
+    static let night800 = "#1F1F22"
+}
+
+// MARK: - Semantic tokens
+
+extension Theme.Hangs {
     enum Colors {
-        // Brand colors (same in both modes)
-        static let accentPrimary = Color(hex: "#8B5CF6")
-        static let accentPrimarySoft = Color(hex: "#8B5CF6").opacity(0.125) // 20/255 ≈ 0.125
-        static let accentSecondary = Color(hex: "#EC4899")
-        static let accentTeal = Color(hex: "#14B8A6")
+        // Surfaces (light / dark). See issue #45 task 45.1.
+        static let bg = Color(light: Palette.cloud, dark: Palette.night900) // page bg
+        static let bgCard = Color(light: Palette.white, dark: Palette.night800) // white card
+        // #174 A1: modal sheet surface. MUST stay distinct from `bg` — a sheet
+        // painted in the page colour reads as part of the screen, which is the
+        // founder's 2026-09-08 report. Lighter than `bg` in dark mode (HIG:
+        // a sheet is an elevated plane), lighter than the page in light mode.
+        static let bgSheet = Color(light: Palette.white, dark: Palette.night850) // sheet surface
 
-        // Semantic colors (same in both modes)
-        static let success = Color(hex: "#22C55E")
-        static let successLight = Color(hex: "#10B981")
-        static let error = Color(hex: "#EF4444")
-        static let errorDark = Color(hex: "#DC2626")
-        static let warning = Color(hex: "#F59E0B")
-        static let warningDark = Color(hex: "#D97706")
-        static let recording = Color(hex: "#EF4444")
-
-        // WCAG-compliant text variants for semantic colors on tinted backgrounds
-        static let successText = Color(light: "#15803D", dark: "#4ADE80") // 4.5:1+ on successBg
-        static let errorText = Color(light: "#B91C1C", dark: "#FCA5A5")  // 4.5:1+ on errorBg
-
-        // Gold colors (for trophy, achievements)
-        static let goldLight = Color(hex: "#FCD34D")
-        static let goldDark = Color(hex: "#F59E0B")
-
-        // Adaptive colors (light/dark mode)
-        static let bgPrimary = Color(light: "#FFFFFF", dark: "#0A0A0A")
-        static let bgSecondary = Color(light: "#F8F9FA", dark: "#1A1A1A")
-        static let bgCard = Color(light: "#F4F4F5", dark: "#27272A")
-        static let bgElevated = Color(light: "#E4E4E7", dark: "#3F3F46")
-
-        static let border = Color(light: "#D4D4D8", dark: "#52525B")
-        static let borderStrong = Color(light: "#A1A1AA", dark: "#71717A")
-
-        static let textPrimary = Color(light: "#18181B", dark: "#FAFAFA")
-        static let textSecondary = Color(light: "#71717A", dark: "#A1A1AA")
-        static let textTertiary = Color(light: "#6B7280", dark: "#9CA3AF") // Fixed: 4.6:1 on white (was 2.6:1)
-        static let textMuted = Color(light: "#D4D4D8", dark: "#52525B")
+        // Text
+        static let ink = Color(light: Palette.navy900, dark: Palette.snow) // primary text
+        static let muted = Color(light: Palette.gray500, dark: Palette.gray400) // subtext
+        static let mutedFaint = Color(light: Palette.gray400, dark: Palette.gray500) // struck-through answer text
         static let textOnAccent = Color.white
 
-        // Result backgrounds (adaptive)
-        static let successBg = Color(light: "#DCFCE7", dark: "#14532D")
-        static let errorBg = Color(light: "#FEE2E2", dark: "#7F1D1D")
-        static let warningBg = Color(light: "#FEF3C7", dark: "#78350F")
+        // Accents
+        static let pink = Color(hex: Palette.pink500) // brand accent / primary CTA (both modes)
+        static let pinkDeep = Color(hex: Palette.pink600) // CTA countdown base — elapsed time behind the bright remaining fill (#108B, both modes)
+        static let accentPrimary = Color(hex: Palette.violet500) // purple accent — MCQ badge/selected (both modes)
+        static let accentPrimarySoft = Color(hex: Palette.violet500).opacity(0.125) // accent-primary-soft (#8B5CF6 @ 0x20)
+        static let blue = Color(hex: Palette.blue500) // accent-blue (secondary accent)
+        static let accentTeal = Color(hex: Palette.teal500) // accent-teal
+        // #82 item 6: small chip text on the soft accent-tinted capsules
+        // fails WCAG AA in light mode with the raw accents (pink 2.68:1,
+        // blue 2.96:1) — these darker light-mode variants measure 4.73:1 /
+        // 5.07:1 on the tinted background. Dark mode keeps the brand hues.
+        static let pinkText = Color(light: Palette.pink700, dark: Palette.pink500)
+        static let blueText = Color(light: Palette.blue700, dark: Palette.blue500)
 
-        // Tinted backgrounds for badges
-        static let accentPrimaryTint = Color(hex: "#8B5CF6").opacity(0.1)
+        // Feedback
+        static let greenCheck = Color(hex: Palette.green500) // accent-green
+        static let greenCorrect = Color(hex: Palette.green600)
+        static let successText = Color(light: Palette.green600, dark: Palette.green400) // success-text adapts per mode
+        static let error = Color(hex: Palette.red500) // design `error` token (distinct from brand pink)
+        static let warning = Color(hex: Palette.amber500)
+
+        // Border tokens — alpha differs by mode, so build per-mode Colors
+        // (UIColor(hex:) treats 8-digit hex as ARGB, so don't suffix alpha).
+        static let hairline = Color( // border-subtle
+            light: Color(hex: Palette.navy900).opacity(0.078),
+            dark: Color(hex: Palette.white).opacity(0.078)
+        )
+        static let subtleBorder = Color( // border-standard
+            light: Color(hex: Palette.navy900).opacity(0.122),
+            dark: Color(hex: Palette.white).opacity(0.141)
+        )
+        static let mutedBorder = ink.opacity(0.10) // derived, auto-adapts
+
+        // Soft washes — translucent fills that read in both appearances.
+        static let pinkSoft = Color(hex: Palette.pink500).opacity(0.12)
+        static let greenSoft = Color(hex: Palette.green500).opacity(0.12)
+        static let errorSoft = error.opacity(0.15)
+        /// neutral-soft — the "no verdict either way" wash (skipped result
+        /// band, neutral chips). Derived from ink so it adapts per mode
+        /// (#131 Track F token sheet).
+        static let neutralSoft = ink.opacity(0.055)
     }
 
-    // MARK: - Typography
-
-    enum Typography {
-        // Font families
-        static let display = "SF Pro Display"
-        static let rounded = "SF Pro Rounded"
-        static let text = "SF Pro Text"
-
-        // Font sizes
-        static let sizeXXS: CGFloat = 11
-        static let sizeXS: CGFloat = 13
-        static let sizeSM: CGFloat = 15
-        static let sizeMD: CGFloat = 17
-        static let sizeLG: CGFloat = 20
-        static let sizeXL: CGFloat = 28
-        static let sizeXXL: CGFloat = 36
-        static let sizeHuge: CGFloat = 48
+    enum Shadow {
+        static let card = ShadowSpec(color: Color(hex: Palette.navy900).opacity(0.08), radius: 20, y: 4)
+        static let navChip = ShadowSpec(color: Color(hex: Palette.navy900).opacity(0.06), radius: 8, y: 2)
+        static let cta = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.20), radius: 16, y: 6)
+        static let ctaStrong = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.25), radius: 16, y: 6)
+        static let mic = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.30), radius: 24, y: 8)
+        static let micStrong = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.40), radius: 24, y: 10)
     }
 
-    // MARK: - Font Weights
-
-    enum Weights {
-        static let regular: Font.Weight = .regular     // 400
-        static let medium: Font.Weight = .medium       // 500
-        static let semibold: Font.Weight = .semibold   // 600
-        static let bold: Font.Weight = .bold           // 700
-        static let heavy: Font.Weight = .heavy         // 800
+    struct ShadowSpec {
+        let color: Color
+        let radius: CGFloat
+        let y: CGFloat
     }
-
-    // MARK: - Spacing
 
     enum Spacing {
+        static let xxs: CGFloat = 4
         static let xs: CGFloat = 8
         static let sm: CGFloat = 12
         static let md: CGFloat = 16
-        static let lg: CGFloat = 24
-        static let xl: CGFloat = 32
-        static let xxl: CGFloat = 48
-    }
-
-    // MARK: - Corner Radius
-
-    enum Radius {
-        static let xs: CGFloat = 8
-        static let sm: CGFloat = 14
-        static let md: CGFloat = 18
         static let lg: CGFloat = 20
         static let xl: CGFloat = 24
-        static let xxl: CGFloat = 26
-        static let full: CGFloat = 100  // Pill shape
+        static let xxl: CGFloat = 32
     }
 
-    // MARK: - Shadows
-
-    enum Shadows {
-        /// Primary button shadow (purple glow)
-        static func primaryButton() -> some View {
-            Color(hex: "#8B5CF6").opacity(0.25)
-        }
-
-        /// Elevation shadow for cards
-        static let elevationColor = Color.black.opacity(0.08)
-        static let elevationRadius: CGFloat = 16
-        static let elevationY: CGFloat = 4
-
-        /// Mic button glow shadow
-        static let micGlowColor = Color(hex: "#8B5CF6").opacity(0.31) // 50/255
-        static let micGlowRadius: CGFloat = 32
-        static let micGlowY: CGFloat = 8
+    enum Radius {
+        static let card: CGFloat = 18
+        static let cardInner: CGFloat = 16
+        static let cta: CGFloat = 32
+        static let ctaSmall: CGFloat = 28
+        static let chip: CGFloat = 14
+        static let navSquare: CGFloat = 10
+        static let navRound: CGFloat = 18
     }
+}
 
-    // MARK: - Gradients
+// MARK: - Fonts
 
-    enum Gradients {
-        /// Primary accent gradient (purple) - 135° angle
-        static func primary() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#8B5CF6"), Color(hex: "#7C3AED")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+extension Theme.Hangs {
+    /// Design-token font roles — map to bundled custom typefaces (task 52.2).
+    /// display = Anton · body = Inter · mono = IBM Plex Mono (all OFL, confirmed 2026-06-11).
+    enum Fonts {
+        // Display role — Anton (single weight, decorative caps)
+        static func display(_ size: CGFloat) -> Font {
+            .custom("Anton-Regular", size: size)
         }
 
-        /// Alternate primary gradient (purple to indigo)
-        static func primaryAlt() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#8B5CF6"), Color(hex: "#6366F1")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        // Body role — Inter (4 weights bundled: 400/500/600/700)
+        static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+            switch weight {
+            case .medium: return .custom("Inter-Medium", size: size)
+            case .semibold: return .custom("Inter-SemiBold", size: size)
+            case .bold: return .custom("Inter-Bold", size: size)
+            default: return .custom("Inter-Regular", size: size)
+            }
         }
 
-        /// Recording state gradient (red)
-        static func recording() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#EF4444"), Color(hex: "#DC2626")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        /// Gold/trophy gradient
-        static func gold() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#FCD34D"), Color(hex: "#F59E0B")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        /// Correct answer gradient (green)
-        static func correct() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#22C55E"), Color(hex: "#10B981")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        /// Incorrect answer gradient (red)
-        static func incorrect() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#EF4444"), Color(hex: "#DC2626")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        /// Partial answer gradient (orange) - 90° angle
-        static func partial() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#F59E0B"), Color(hex: "#D97706")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
-
-        /// Level badge gradient (purple) - 90° angle
-        static func level() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(hex: "#8B5CF6"), Color(hex: "#7C3AED")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
-
-        /// Card gradient border (adaptive)
-        static func cardBorder() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(light: "#E0E7FF", dark: "#3730A3"), Color(light: "#DDD6FE", dark: "#4C1D95")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        /// Stats card background gradient (adaptive)
-        static func statsCard() -> LinearGradient {
-            LinearGradient(
-                colors: [Color(light: "#FFFFFF", dark: "#27272A"), Color(light: "#F8FAFC", dark: "#1C1C1E")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        // Mono role — IBM Plex Mono (2 weights bundled: 400/500)
+        static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+            switch weight {
+            case .medium: return .custom("IBMPlexMono-Medium", size: size)
+            default: return .custom("IBMPlexMono-Regular", size: size)
+            }
         }
     }
+}
 
-    // MARK: - Component Sizes
+extension Font {
+    /// Display (Anton) — large hero text, screen titles, score numbers.
+    static func hangsDisplay(_ size: CGFloat, weight _: Font.Weight = .black) -> Font {
+        // Fallback to compressed-system for any callers that need a weight variant;
+        // Anton is single-weight so the weight param is accepted but unused for the custom path.
+        Theme.Hangs.Fonts.display(size)
+    }
 
-    enum Components {
-        // Mic button sizes (updated to match Pencil design)
-        static let micButtonLarge: CGFloat = 140
-        static let micIconLarge: CGFloat = 56
-        static let micGlowInner: CGFloat = 100
+    /// Monospace label (IBM Plex Mono) — "streak", "GEOGRAPHY", "03 / 10".
+    static func hangsMono(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+        Theme.Hangs.Fonts.mono(size, weight: weight)
+    }
 
-        // Widget sizes
-        static let widgetWidth: CGFloat = 140
-        static let widgetMicHeight: CGFloat = 44
+    /// Body / button copy (Inter) — "Start Quiz", settings rows, descriptions.
+    static func hangsBody(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Theme.Hangs.Fonts.body(size, weight: weight)
+    }
 
-        // Icon sizes
-        static let iconSM: CGFloat = 20
-        static let iconMD: CGFloat = 24
-        static let iconLG: CGFloat = 32
-        static let iconXL: CGFloat = 40
-        static let iconHuge: CGFloat = 80
+    // Convenience presets that match common Pencil sizes.
+    static var hangsBlock: Font { .hangsDisplay(80) }
+    static var hangsDisplayLG: Font { .hangsDisplay(72) }
+    static var hangsDisplayMD: Font { .hangsDisplay(62) }
+    static var hangsDisplaySM: Font { .hangsDisplay(40) }
+    static var hangsQuestion: Font { .hangsDisplay(26) }
+    static var hangsNumber: Font { .hangsDisplay(44) }
+    static var hangsNumberLG: Font { .hangsDisplay(80) }
+    static var hangsSubHero: Font { .hangsDisplay(22) }
+    static var hangsMonoLabel: Font { .hangsMono(11, weight: .medium) }
+    static var hangsMonoMini: Font { .hangsMono(10, weight: .medium) }
+    static var hangsMonoValue: Font { .hangsMono(14, weight: .medium) }
+    static var hangsBrand: Font { .hangsMono(17, weight: .semibold) }
+    static var hangsButton: Font { .hangsBody(17, weight: .bold) }
+    static var hangsBody: Font { .hangsBody(14) }
+}
 
-        // Trophy icon
-        static let trophySize: CGFloat = 80
-        static let trophyIconSize: CGFloat = 40
+// MARK: - View helpers
 
-        // Result badge icon
-        static let resultIconCircle: CGFloat = 64
-        static let resultIcon: CGFloat = 40
+extension View {
+    /// Apply a HangsShadow spec as a SwiftUI shadow.
+    func hangsShadow(_ spec: Theme.Hangs.ShadowSpec) -> some View {
+        shadow(color: spec.color, radius: spec.radius, x: 0, y: spec.y)
     }
 }

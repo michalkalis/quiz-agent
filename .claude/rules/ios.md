@@ -7,6 +7,7 @@ paths: ["apps/ios-app/**"]
 - **Swift:** 6.0 (strict concurrency), **iOS:** 26.0+
 - **Architecture:** MVVM with Service Layer
 - **Voice-first** for hands-free driving use
+- **Layout & implementation rules:** `.claude/rules/ios-swiftui-layout.md` and `.claude/rules/ios-swift-conventions.md` (auto-loaded for `apps/ios-app/**/*.swift`; read them explicitly before creating a brand-new Swift file).
 
 ## Knowledge Reference
 

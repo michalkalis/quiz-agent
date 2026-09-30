@@ -8,6 +8,13 @@
 import SwiftUI
 
 struct MinimizedQuizView: View {
+    /// Design inputs from the Pencil widget frame.
+    private enum Metrics {
+        static let width: CGFloat = 140
+        static let controlHeight: CGFloat = 44 // mic button / status row, = HIG min tap target
+        static let micIcon: CGFloat = 20
+    }
+
     @ObservedObject var viewModel: QuizViewModel
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -55,7 +62,7 @@ struct MinimizedQuizView: View {
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.top, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.xxs)
-        .frame(width: Theme.Components.widgetWidth)
+        .frame(width: Metrics.width)
         .background(
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
                 .fill(Theme.Hangs.Colors.bgCard)
@@ -90,10 +97,10 @@ struct MinimizedQuizView: View {
                 expand()
             } label: {
                 Image(systemName: "mic.fill")
-                    .font(.system(size: Theme.Components.iconSM))
+                    .font(.system(size: Metrics.micIcon))
                     .foregroundColor(Theme.Hangs.Colors.textOnAccent)
                     .frame(maxWidth: .infinity)
-                    .frame(height: Theme.Components.widgetMicHeight)
+                    .frame(height: Metrics.controlHeight)
                     .background(
                         RoundedRectangle(cornerRadius: Theme.Hangs.Radius.ctaSmall, style: .continuous)
                             .fill(Theme.Hangs.Colors.pink)
@@ -137,7 +144,7 @@ struct MinimizedQuizView: View {
                 .foregroundColor(Theme.Hangs.Colors.muted)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: Theme.Components.widgetMicHeight)
+        .frame(height: Metrics.controlHeight)
     }
 
     private func expand() {

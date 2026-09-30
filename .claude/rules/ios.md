@@ -7,7 +7,7 @@ paths: ["apps/ios-app/**"]
 - **Swift:** 6.0 (strict concurrency), **iOS:** 26.0+
 - **Architecture:** MVVM with Service Layer
 - **Voice-first** for hands-free driving use
-- **Layout & implementation rules:** `.claude/rules/ios-swiftui-layout.md` and `.claude/rules/ios-swift-conventions.md` (auto-loaded for `apps/ios-app/**/*.swift`; read them explicitly before creating a brand-new Swift file).
+- **Layout & implementation rules:** `.claude/rules/ios-swiftui-layout.md`, `.claude/rules/ios-swift-conventions.md` and the component guide `.claude/rules/ios-components.md` (auto-loaded for `apps/ios-app/**/*.swift`; read them explicitly before creating a brand-new Swift file).
 
 ## Knowledge Reference
 
@@ -42,7 +42,7 @@ The UI ships in sk/cs/en, so visible text is never a locator. `scripts/lint-a11y
 
 ## Snapshots (#180 track F)
 
-`HangsTests/HeroScreenSnapshotTests.swift` freezes Home / Question / Result / Paywall × sk/cs/en with swift-snapshot-testing; baselines are committed under `HangsTests/__Snapshots__/HeroScreenSnapshotTests/`.
+`HangsTests/HeroScreenSnapshotTests.swift` freezes Home / Question / Result / Paywall × sk/cs/en with swift-snapshot-testing; baselines are committed under `HangsTests/__Snapshots__/HeroScreenSnapshotTests/`. Shared components are frozen the same way per state (`ComponentSnapshotTests`, samples in `ComponentSamples+*.swift`: dark, light, dark at accessibility type) — a new shared component or state adds a sample.
 
 - **Text contract (`.txt`) gates every CI run.** Every rendered `Text` resolved for the language plus every accessibility identifier, in tree order. A lost translation, identifier or element fails the PR with a readable diff. It does not depend on the simulator runtime.
 - **Pixel snapshots (`.png`, 1×, dark, default + accessibility Dynamic Type)** catch layout drift the contract cannot see. Rendering differs between iOS runtimes, so they run only on the runtime they were recorded on (`SnapshotBaseline.iosVersion`, iOS 26.5 = both the local iPhone 17 Pro simulator and today's `macos-latest` runner) and are visibly *skipped* on any other runtime. Appearance, Dynamic Type, locale and layout direction are pinned on the view — the host simulator's settings must never reach a baseline (the first CI run rendered light mode against a dark baseline).

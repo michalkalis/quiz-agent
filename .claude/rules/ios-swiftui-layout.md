@@ -39,6 +39,9 @@ Target is iOS 26+, so every API below is available without gating.
   file-private base values; views use the semantic tokens only. A missing token
   is added there (semantic name → palette value), never as `Color(hex:)` or a
   system color in a view.
+  `scripts/lint-design-tokens.py` enforces this in CI; its baseline of older
+  values only shrinks (`--update-baseline` after removing some). Exceptions
+  need a `// design-token: <reason>` comment.
 - Before adding a constant ask "what rule is this number faking?" A pager height
   fakes "as tall as the tallest page"; asymmetric top/bottom padding fakes
   "centred, slightly above the middle". Express the rule (Spacer ratios,

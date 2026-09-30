@@ -32,7 +32,7 @@ struct MyPacksView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: Theme.Hangs.Spacing.md) {
                 if viewModel.isLoading {
                     ProgressView()
                         .tint(Theme.Hangs.Colors.pink)
@@ -46,8 +46,8 @@ struct MyPacksView: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 24)
+            .padding(.horizontal, Theme.Hangs.Spacing.lg)
+            .padding(.vertical, Theme.Hangs.Spacing.xl)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationTitle("My packs")
@@ -119,7 +119,7 @@ struct MyPacksView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: viewModel.loadFailed ? "person.crop.circle.badge.questionmark" : "tray")
                 .font(.system(size: 32, weight: .regular))
                 .foregroundColor(Theme.Hangs.Colors.muted)

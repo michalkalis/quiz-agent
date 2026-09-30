@@ -46,13 +46,13 @@ struct ResultAnswerPanel: View {
                 .padding(.top, 6)
 
             if let explanation {
-                hairline.padding(.top, 12)
+                hairline.padding(.top, Theme.Hangs.Spacing.sm)
                 HStack {
                     HangsSectionLabel(text: "why", color: Theme.Hangs.Colors.blue)
                     Spacer()
                     hearItControl
                 }
-                .padding(.top, 12)
+                .padding(.top, Theme.Hangs.Spacing.sm)
                 explanationScroll(explanation)
                     .padding(.top, 6)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -61,7 +61,7 @@ struct ResultAnswerPanel: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(16)
+        .padding(Theme.Hangs.Spacing.md)
         .background(
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
                 .fill(Theme.Hangs.Colors.bgCard)

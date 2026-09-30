@@ -60,7 +60,7 @@ struct ResultView: View {
                     onHearIt: { Task { await viewModel.replayFeedbackAudio() } }
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Theme.Hangs.Spacing.xl)
                 .padding(.top, 10)
 
                 // Rank 3 — everything else, in one quiet line.
@@ -71,8 +71,8 @@ struct ResultView: View {
                     reviewNote: reviewNote,
                     onOpenSource: { showSourceWebView = true }
                 )
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+                .padding(.horizontal, Theme.Hangs.Spacing.xl)
+                .padding(.top, Theme.Hangs.Spacing.xs)
 
                 ResultFooter(
                     feedbackPhase: viewModel.voiceFeedbackPhase,

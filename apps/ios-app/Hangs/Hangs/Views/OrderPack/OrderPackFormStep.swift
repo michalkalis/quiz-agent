@@ -15,7 +15,7 @@ struct OrderPackFormStep: View {
     @ObservedObject var viewModel: OrderPackViewModel
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             topicGroup
             languageGroup
 
@@ -31,9 +31,9 @@ struct OrderPackFormStep: View {
     private var topicGroup: some View {
         VStack(alignment: .leading, spacing: 10) {
             HangsSectionLabel(text: "Quiz topic", color: Theme.Hangs.Colors.pink)
-                .padding(.leading, 4)
+                .padding(.leading, Theme.Hangs.Spacing.xxs)
             HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                     TextField(
                         "E.g. space for kids, tough questions on Slovak history, 90s music…",
                         text: $viewModel.prompt,
@@ -54,7 +54,7 @@ struct OrderPackFormStep: View {
                 .font(.hangsBody(12))
                 .foregroundColor(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, 4)
+                .padding(.leading, Theme.Hangs.Spacing.xxs)
         }
     }
 
@@ -82,7 +82,7 @@ struct OrderPackFormStep: View {
                 .font(.hangsBody(12))
                 .foregroundColor(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, 4)
+                .padding(.leading, Theme.Hangs.Spacing.xxs)
         }
     }
 }

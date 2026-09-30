@@ -24,7 +24,7 @@ struct HangsSourceLink: View {
     var body: some View {
         // a11y-id: call-site — the identifier belongs to the screen that places this component
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
                 Text("source")
                     .font(.hangsMono(10, weight: .medium))
                     .tracking(1.2)

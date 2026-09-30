@@ -340,7 +340,7 @@ struct ErrorView: View {
 
             Spacer(minLength: 40)
 
-            VStack(spacing: 24) {
+            VStack(spacing: Theme.Hangs.Spacing.xl) {
                 errorIconCircle
 
                 heroBlock
@@ -386,7 +386,7 @@ struct ErrorView: View {
     }
 
     private var heroBlock: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             Text("OOPS")
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
@@ -404,7 +404,7 @@ struct ErrorView: View {
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("error.title")
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
     }
 
     @ViewBuilder
@@ -439,8 +439,8 @@ struct ErrorView: View {
                 .accessibilityIdentifier("error.dismiss")
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        .padding(.bottom, Theme.Hangs.Spacing.lg)
     }
 }
 

@@ -17,7 +17,7 @@ struct OrderPackSummaryStep: View {
     @ObservedObject var viewModel: OrderPackViewModel
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 18, leading: 18, bottom: 18, trailing: 18)) {
                 VStack(alignment: .leading, spacing: 14) {
                     HangsSectionLabel(text: "Custom pack · 30 questions", color: Theme.Hangs.Colors.accentTeal)
@@ -28,7 +28,7 @@ struct OrderPackSummaryStep: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("orderPack.summaryPrompt")
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: Theme.Hangs.Spacing.xs) {
                         Text("Quiz language")
                             .font(.hangsBody(13))
                             .foregroundColor(Theme.Hangs.Colors.muted)
@@ -50,7 +50,7 @@ struct OrderPackSummaryStep: View {
     }
 
     private var noticeBox: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.warning)
@@ -59,7 +59,7 @@ struct OrderPackSummaryStep: View {
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
+        .padding(Theme.Hangs.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)

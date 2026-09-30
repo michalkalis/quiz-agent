@@ -35,14 +35,14 @@ struct SetRecapView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     hero
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        .padding(.top, Theme.Hangs.Spacing.xs)
 
                     rowsList
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
+                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        .padding(.top, Theme.Hangs.Spacing.md)
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
             }
 
             ctaStack
@@ -85,7 +85,7 @@ struct SetRecapView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
 
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 chip(glyph: "✓", Text("\(correctCount) CORRECT"),
                      color: Theme.Hangs.Colors.successText,
                      fill: Theme.Hangs.Colors.greenSoft)
@@ -103,7 +103,7 @@ struct SetRecapView: View {
     }
 
     private func chip(glyph: String, _ label: Text, color: Color, fill: Color) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
             Text(verbatim: glyph)
             label
         }
@@ -159,7 +159,7 @@ struct SetRecapView: View {
     // MARK: - CTA stack
 
     private var ctaStack: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsPrimaryButton(
                 title: viewModel.isNarratingRecap ? "Stop summary" : "Play summary",
                 icon: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2",
@@ -171,7 +171,7 @@ struct SetRecapView: View {
             .opacity(viewModel.isAudioMuted ? 0.5 : 1)
             .accessibilityIdentifier("recap.playSummary")
 
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 HangsSecondaryButton(
                     title: "Play Again",
                     icon: "arrow.counterclockwise",
@@ -191,7 +191,7 @@ struct SetRecapView: View {
                 .accessibilityIdentifier("recap.home")
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.bottom, 14)
     }
 }
@@ -245,7 +245,7 @@ struct SetRecapRow: View {
             }
         }
         .padding(.horizontal, Self.horizontalPadding)
-        .padding(.vertical, 12)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
         .accessibilityIdentifier("recap.row.\(entry.id)")
     }
 
@@ -306,12 +306,12 @@ struct SetRecapRow: View {
     }
 
     private var expandedSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             Rectangle()
                 .fill(Theme.Hangs.Colors.hairline)
                 .frame(height: 1)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
+                .padding(.top, Theme.Hangs.Spacing.sm)
+                .padding(.bottom, Theme.Hangs.Spacing.xxs)
 
             // "you said" only when something wrong was actually said — never on
             // a correct answer (it IS the shown answer) or a skip (#131 D).

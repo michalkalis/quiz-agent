@@ -13,12 +13,12 @@ struct QuestionRatingSheet: View {
     @ObservedObject var viewModel: QuestionRatingViewModel
     @Environment(\.dismiss) private var dismiss
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.xs), count: 5)
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
                     if let questionText = viewModel.questionText {
                         Text(questionText)
                             .font(.hangsBody(14))
@@ -48,7 +48,7 @@ struct QuestionRatingSheet: View {
                     .disabled(!viewModel.canSubmit)
                     .accessibilityIdentifier("rating.submit")
                 }
-                .padding(20)
+                .padding(Theme.Hangs.Spacing.lg)
             }
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle("Rate question")
@@ -84,9 +84,9 @@ struct QuestionRatingSheet: View {
     // MARK: - Subviews
 
     private var scoreGrid: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HangsSectionLabel(text: "your rating", color: Theme.Hangs.Colors.pink)
-            LazyVGrid(columns: columns, spacing: 8) {
+            LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.xs) {
                 ForEach(Array(QuestionRatingViewModel.scoreRange), id: \.self) { score in
                     scoreButton(score)
                 }
@@ -117,7 +117,7 @@ struct QuestionRatingSheet: View {
     }
 
     private var justificationEditor: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack {
                 HangsSectionLabel(text: "why? (optional)", color: Theme.Hangs.Colors.blue)
                 Spacer()

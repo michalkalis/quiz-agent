@@ -53,11 +53,11 @@ struct ContextualSignInSheet: View {
                 .padding(.top, 28)
 
             heroBlock
-                .padding(.top, 20)
+                .padding(.top, Theme.Hangs.Spacing.lg)
 
             if phase == .failed {
                 errorBanner
-                    .padding(.top, 16)
+                    .padding(.top, Theme.Hangs.Spacing.md)
             }
 
             actionStack
@@ -66,7 +66,7 @@ struct ContextualSignInSheet: View {
             Spacer(minLength: 0)
 
             privacyNote
-                .padding(.bottom, 12)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
         .padding(.horizontal, 28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -109,7 +109,7 @@ struct ContextualSignInSheet: View {
     }
 
     private var errorBanner: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 14))
                 .foregroundColor(Theme.Hangs.Colors.error)
@@ -119,7 +119,7 @@ struct ContextualSignInSheet: View {
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(12)
+        .padding(Theme.Hangs.Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -129,7 +129,7 @@ struct ContextualSignInSheet: View {
     }
 
     private var actionStack: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             if phase == .signingIn {
                 signingInIndicator
             } else {
@@ -170,16 +170,16 @@ struct ContextualSignInSheet: View {
     private var signingInIndicator: some View {
         HStack(spacing: 10) {
             ProgressView()
-                .tint(.white)
+                .tint(Theme.Hangs.Colors.textOnAccent)
             Text("Signing in…")
                 .font(.hangsBody(17, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.Hangs.Colors.textOnAccent)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 54)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.black)
+                .fill(Color.black) // design-token: mirrors Apple's black Sign in with Apple button
         )
         .accessibilityIdentifier("signInPrompt.signingIn")
     }

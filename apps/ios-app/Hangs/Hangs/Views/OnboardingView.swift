@@ -37,7 +37,7 @@ struct OnboardingView: View {
     // MARK: - Pages
 
     private var welcomePage: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
             Spacer()
 
             iconCircle(
@@ -71,12 +71,12 @@ struct OnboardingView: View {
 
                 subtitle("Perfect for driving, cooking, or walking.")
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
             Spacer(minLength: 20)
 
             featuresCard
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
             Spacer()
             Spacer()
@@ -85,7 +85,7 @@ struct OnboardingView: View {
     }
 
     private var permissionPage: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
             Spacer()
 
             iconCircle(
@@ -105,7 +105,7 @@ struct OnboardingView: View {
     }
 
     private var deniedPage: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.Hangs.Spacing.xl) {
             Spacer()
 
             iconCircle(
@@ -139,7 +139,7 @@ struct OnboardingView: View {
     }
 
     private func headlineBlock(title: LocalizedStringKey, accentColor: Color) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             Text(title)
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
@@ -147,7 +147,7 @@ struct OnboardingView: View {
                 .accessibilityAddTraits(.isHeader)
             accentLine(color: accentColor)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
     }
 
     private func accentLine(color: Color) -> some View {
@@ -206,14 +206,14 @@ struct OnboardingView: View {
 
             Spacer()
         }
-        .padding(16)
+        .padding(Theme.Hangs.Spacing.md)
         .accessibilityElement(children: .combine)
     }
 
     // MARK: - Bottom controls
 
     private var bottomControls: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Theme.Hangs.Spacing.md) {
             HangsPageIndicator(
                 pageCount: viewModel.pageCount,
                 currentPage: viewModel.pageIndex,
@@ -227,7 +227,7 @@ struct OnboardingView: View {
 
             secondaryButton
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.bottom, 28)
     }
 

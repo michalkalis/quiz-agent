@@ -53,7 +53,7 @@ struct QuestionVoiceFooter: View {
     var compact: Bool = false
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             if showTextInput {
                 textInputRow
             }
@@ -61,12 +61,12 @@ struct QuestionVoiceFooter: View {
             // #122: light sweep strip — reserved in every phase so the stack
             // below never shifts; glows only during feedback.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
             // #185 track B: the retry line, next to the mic it explains.
             if viewModel.showsEmptyAnswerRetryHint {
                 EmptyAnswerRetryHint()
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
                     .transition(.opacity)
             }
 
@@ -85,12 +85,12 @@ struct QuestionVoiceFooter: View {
                     speechHeard: viewModel.isHearingAnswer,
                     inputLevel: viewModel.recordingInputLevel
                 )
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .transition(.opacity)
             }
 
             actionRow
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
         }
     }
 
@@ -201,7 +201,7 @@ struct QuestionVoiceFooter: View {
 
     private var textInputRow: some View {
         HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8)) {
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 TextField("Type your answer…", text: $textAnswer)
                     .font(.hangsBody(15))
                     .foregroundColor(Theme.Hangs.Colors.ink)
@@ -214,7 +214,7 @@ struct QuestionVoiceFooter: View {
                 Button(action: submitTypedAnswer) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.Hangs.Colors.textOnAccent)
                         .frame(width: 40, height: 40)
                         .background(
                             Circle()
@@ -225,7 +225,7 @@ struct QuestionVoiceFooter: View {
                 .accessibilityIdentifier("question.textSubmit")
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
     }
 
     private func submitTypedAnswer() {

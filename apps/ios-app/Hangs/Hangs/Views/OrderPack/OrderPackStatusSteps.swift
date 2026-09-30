@@ -20,9 +20,9 @@ struct OrderPackPreparingStep: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
-                VStack(spacing: 16) {
+                VStack(spacing: Theme.Hangs.Spacing.md) {
                     ProgressView()
                         .tint(Theme.Hangs.Colors.pink)
                     Text("Building your pack…")
@@ -68,9 +68,9 @@ struct OrderPackReadyStep: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
-                VStack(spacing: 12) {
+                VStack(spacing: Theme.Hangs.Spacing.sm) {
                     HangsResultBanner(kind: .correct)
                     Text(isStillGenerating ? "Your pack is ready to play" : "Your pack is ready")
                         .font(.hangsBody(18, weight: .semibold))
@@ -114,9 +114,9 @@ struct OrderPackFailedStep: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
-                VStack(spacing: 12) {
+                VStack(spacing: Theme.Hangs.Spacing.sm) {
                     Image(systemName: isRetryable ? "exclamationmark.triangle" : "clock.badge.checkmark")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(isRetryable ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.blue)

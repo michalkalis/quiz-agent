@@ -46,10 +46,10 @@ struct HangsPrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 if isLoading {
-                    ProgressView().tint(.white)
+                    ProgressView().tint(Theme.Hangs.Colors.textOnAccent)
                 } else {
                     if showsSpinner {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(Theme.Hangs.Colors.textOnAccent)
                     }
                     if let icon {
                         Image(systemName: icon)
@@ -70,7 +70,7 @@ struct HangsPrimaryButton: View {
                     Text(verbatim: "\(remaining)s")
                         .font(.hangsMono(12, weight: .medium))
                         .padding(.vertical, 3)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, Theme.Hangs.Spacing.xs)
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .fill(Color.black.opacity(0.22))
@@ -84,7 +84,7 @@ struct HangsPrimaryButton: View {
                         .accessibilityHidden(true)
                 }
             }
-            .foregroundColor(.white)
+            .foregroundColor(Theme.Hangs.Colors.textOnAccent)
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .background(

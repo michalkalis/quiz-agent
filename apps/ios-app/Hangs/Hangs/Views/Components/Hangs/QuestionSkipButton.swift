@@ -55,7 +55,7 @@ struct QuestionSkipButton: View {
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(height: height)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
             .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
             .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
         }

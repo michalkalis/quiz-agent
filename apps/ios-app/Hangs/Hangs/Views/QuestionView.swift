@@ -289,7 +289,7 @@ struct QuestionView: View {
     /// row. Replaces BOTH the merged MCQ row and the voice `metaRow` — one
     /// header, every question type.
     private func topChrome(question: Question?) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsQuizProgressHeader(
                 category: question.map { Config.categoryDisplayName(for: $0.category) } ?? "",
                 current: currentQuestionNumber,
@@ -299,7 +299,7 @@ struct QuestionView: View {
                     ? Theme.Hangs.Colors.accentTeal : nil,
                 isRecording: isRecording
             )
-            .padding(.top, 8)
+            .padding(.top, Theme.Hangs.Spacing.xs)
 
             if let error = viewModel.errorMessage {
                 errorBanner(error)
@@ -314,7 +314,7 @@ struct QuestionView: View {
     /// set continues on its own. No controls: there is nothing to do but wait,
     /// and the toolbar still offers the way out.
     private var awaitingQuestionBody: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
             Spacer()
             ProgressView()
                 .controlSize(.large)
@@ -344,7 +344,7 @@ struct QuestionView: View {
     // MARK: - Error banner
 
     private func errorBanner(_ error: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             Image(systemName: "exclamationmark.triangle")
             Text(error).font(.hangsBody(13))
         }
@@ -360,7 +360,7 @@ struct QuestionView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
         )
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
         .accessibilityIdentifier("question.errorBanner")
     }
@@ -461,8 +461,8 @@ struct QuestionView: View {
             // #122: light sweep strip — always reserves its 4 pt so the chip
             // below never shifts; glows only during a feedback phase.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.top, Theme.Hangs.Spacing.xs)
 
             // Founder 2026-08-03: skip is a secondary escape hatch, not the
             // screen's CTA — a compact centered chip (voice footer's skip
@@ -492,7 +492,7 @@ struct QuestionView: View {
         // a dismissed bar must not hide why the mic opened again).
         if let prompt = viewModel.emptyAnswerRetryHintPrompt {
             EmptyAnswerRetryHint(prompt: prompt)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .padding(.top, 10)
                 .transition(.opacity)
         }
@@ -511,7 +511,7 @@ struct QuestionView: View {
                 inputLevel: viewModel.recordingInputLevel,
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Theme.Hangs.Spacing.lg)
             .padding(.top, 10)
             .transition(.opacity)
         }
@@ -552,7 +552,7 @@ struct QuestionView: View {
                         // dropped it for vertical space, and the founder read the
                         // stem as untappable — a 12pt glyph is a cheaper price
                         // than an undiscoverable replay.
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                             HangsQuestionPrompt(
                                 text: question.question,
                                 barColor: Theme.Hangs.Colors.blue,
@@ -567,7 +567,7 @@ struct QuestionView: View {
                             replayGlyph
                         }
                         .padding(.horizontal, 28)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Theme.Hangs.Spacing.sm)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     // #176: model · language · review badge, TF/Debug only.
@@ -640,7 +640,7 @@ struct QuestionView: View {
             }
             .foregroundColor(Theme.Hangs.Colors.muted)
             .padding(.trailing, 22)
-            .padding(.bottom, 8)
+            .padding(.bottom, Theme.Hangs.Spacing.xs)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -659,12 +659,12 @@ struct QuestionView: View {
             // minHeight keeps short questions top-aligned, not centered.
             GeometryReader { geo in
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: Theme.Hangs.Spacing.md) {
                         // #68: image-type question — image above the text, scrolls
                         // with it. Text/TTS below stays the driving-mode fallback.
                         if question.hasImage {
                             ImageQuestionView(question: question)
-                                .padding(.horizontal, 24)
+                                .padding(.horizontal, Theme.Hangs.Spacing.xl)
                         }
 
                         // Question: Anton display, no left bar. The whole block is
@@ -682,7 +682,7 @@ struct QuestionView: View {
                                     .accessibilityIdentifier("question.text")
                                 replayGlyph
                             }
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, Theme.Hangs.Spacing.xl)
                         }
                         // #176: model · language · review badge, TF/Debug only.
                         QuestionProvenanceRow(
@@ -706,7 +706,7 @@ struct QuestionView: View {
 
             // Pinned controls below the scroll region — mute strip (G1: audio
             // controls at the bottom), then the #131 footer.
-            VStack(spacing: 12) {
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
                 // #131 Track B: the voice countdown lives in the Record/Stop
                 // button. #173: the mute strip is gone — mute is a toolbar
                 // control now, on one fixed spot in every state.
@@ -724,7 +724,7 @@ struct QuestionView: View {
             }
             // #96 P3 (founder): tighter side padding + lower footprint so the
             // action row doesn't sit needlessly high (was h24 / bottom 28).
-            .padding(.bottom, 16)
+            .padding(.bottom, Theme.Hangs.Spacing.md)
 
             #if DEBUG
                 Text(quizStateName)

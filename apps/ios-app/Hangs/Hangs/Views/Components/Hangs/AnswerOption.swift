@@ -231,7 +231,7 @@ struct AnswerTile: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Theme.Hangs.Spacing.sm)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, minHeight: compact ? 54 : 60, alignment: .leading)
         .background(

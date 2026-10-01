@@ -5,7 +5,7 @@ paths:
 
 # Shared Components (Trubbo iOS) — which one to use
 
-Inventory of `Views/Components` (#188 track C). Reuse before inventing: a new
+Inventory of `Views/Components` (#188 — unified design system, track C). Reuse before inventing: a new
 screen composes these; a genuinely new shared component gets a row here and a
 sample in `HangsTests/ComponentSamples+*.swift` (pixel snapshots per state, the
 images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.

@@ -153,7 +153,9 @@ class _ColorParser:
 
 
 def call_sites(root: Path, needle: str) -> int:
-    pattern = re.compile(re.escape(needle) + r"\b")
+    # `(?!\()`: a preset like `.hangsBody` shares its name with the raw-size
+    # helper `.hangsBody(14)`, which must not count as a use of the preset.
+    pattern = re.compile(re.escape(needle) + r"\b(?!\()")
     return sum(
         len(pattern.findall(p.read_text(encoding="utf-8")))
         for p in (root / APP).rglob("*.swift")
@@ -187,7 +189,7 @@ def build_tokens(root: Path) -> dict:
         out = []
         for name, value in re.findall(r"static let (\w+): CGFloat = ([\d.]+)", _block(src, f"enum {enum}")):
             used = call_sites(root, f"Theme.Hangs.{enum}.{name}")
-            out.append({"name": f"{prefix}-{name}", "value": f"{value}px", "usage": f"Theme.Hangs.{enum}.{name}; used in {used} places."})
+            out.append({"name": f"{prefix}-{name}", "value": f"{value}px", "usage": f"Theme.Hangs.{enum}.{name}; used in {used} place{'s' * (used != 1)}."})
         return out
 
     shadows = []
@@ -196,7 +198,7 @@ def build_tokens(root: Path) -> dict:
     ):
         c = parser.parse(color)["light"].css()
         used = call_sites(root, f"Theme.Hangs.Shadow.{name}")
-        shadows.append({"name": f"shadow-{name}", "value": f"0 {y}px {radius}px {c}", "usage": f"Theme.Hangs.Shadow.{name}; used in {used} places."})
+        shadows.append({"name": f"shadow-{name}", "value": f"0 {y}px {radius}px {c}", "usage": f"Theme.Hangs.Shadow.{name}; used in {used} place{'s' * (used != 1)}."})
 
     return {
         "name": "Trubbo",
@@ -229,12 +231,17 @@ def build_type(root: Path, src: str) -> dict:
     groups: dict[str, list[dict]] = {"display": [], "mono": [], "body": []}
     presets = re.findall(r"static var hangs(\w+): Font \{ \.hangs(Display|Mono|Body)\(([\d.]+)(?:, weight: \.(\w+))?\) \}", src)
     defaults = {"Display": "regular", "Mono": "medium", "Body": "regular"}
+    bundled = {fam: {int(f["weight"]) for f in fonts if f["family"] == name} for fam, name in (("Display", "Anton"), ("Body", "Inter"), ("Mono", "IBM Plex Mono"))}
     for name, role, size, weight in presets:
-        w = FONT_WEIGHTS[weight or defaults[role]] if role != "Display" else 400
+        asked = FONT_WEIGHTS[weight or defaults[role]] if role != "Display" else 400
+        # Theme.Hangs.Fonts falls back to Regular for a weight with no bundled
+        # face; publish what the app renders and name the mismatch.
+        w = asked if asked in bundled[role] else 400
+        note = f" Asks for weight {asked}, which is not bundled, so it renders at 400." if w != asked else ""
         style = name[0].lower() + name[1:]
         used = call_sites(root, f".hangs{name}")
         groups[role.lower()].append(
-            {"name": style, "fontSize": f"{size}px", "fontWeight": w, "usage": f"Font.hangs{name}; used in {used} places."}
+            {"name": style, "fontSize": f"{size}px", "fontWeight": w, "usage": f"Font.hangs{name}; used in {used} place{'s' * (used != 1)}.{note}"}
         )
     if not presets:
         raise ValueError("no Font.hangs* presets found")

@@ -1,0 +1,1 @@
+reconcile --language cs: 0 stale, 0 mismatch → clean

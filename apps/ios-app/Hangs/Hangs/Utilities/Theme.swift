@@ -57,43 +57,43 @@ private enum Palette {
 
 extension Theme.Hangs {
     enum Colors {
-        // Surfaces (light / dark). See issue #45 task 45.1.
+        // MARK: Surfaces (light / dark), issue #45 task 45.1
         static let bg = Color(light: Palette.cloud, dark: Palette.night900) // page bg
         static let bgCard = Color(light: Palette.white, dark: Palette.night800) // white card
-        // #174 A1: modal sheet surface. MUST stay distinct from `bg` — a sheet
-        // painted in the page colour reads as part of the screen, which is the
-        // founder's 2026-09-08 report. Lighter than `bg` in dark mode (HIG:
-        // a sheet is an elevated plane), lighter than the page in light mode.
+        /// #174 A1: modal sheet surface. MUST stay distinct from `bg` — a sheet
+        /// painted in the page colour reads as part of the screen, which is the
+        /// founder's 2026-09-08 report. Lighter than `bg` in dark mode (HIG:
+        /// a sheet is an elevated plane), lighter than the page in light mode.
         static let bgSheet = Color(light: Palette.white, dark: Palette.night850) // sheet surface
 
-        // Text
+        // MARK: Text
         static let ink = Color(light: Palette.navy900, dark: Palette.snow) // primary text
         static let muted = Color(light: Palette.gray500, dark: Palette.gray400) // subtext
         static let mutedFaint = Color(light: Palette.gray400, dark: Palette.gray500) // struck-through answer text
         static let textOnAccent = Color.white
 
-        // Accents
+        // MARK: Accents
         static let pink = Color(hex: Palette.pink500) // brand accent / primary CTA (both modes)
         static let pinkDeep = Color(hex: Palette.pink600) // CTA countdown base — elapsed time behind the bright remaining fill (#108B, both modes)
         static let accentPrimary = Color(hex: Palette.violet500) // purple accent — MCQ badge/selected (both modes)
         static let accentPrimarySoft = Color(hex: Palette.violet500).opacity(0.125) // accent-primary-soft (#8B5CF6 @ 0x20)
         static let blue = Color(hex: Palette.blue500) // accent-blue (secondary accent)
         static let accentTeal = Color(hex: Palette.teal500) // accent-teal
-        // #82 item 6: small chip text on the soft accent-tinted capsules
-        // fails WCAG AA in light mode with the raw accents (pink 2.68:1,
-        // blue 2.96:1) — these darker light-mode variants measure 4.73:1 /
-        // 5.07:1 on the tinted background. Dark mode keeps the brand hues.
+        /// #82 item 6: small chip text on the soft accent-tinted capsules
+        /// fails WCAG AA in light mode with the raw accents (pink 2.68:1,
+        /// blue 2.96:1) — these darker light-mode variants measure 4.73:1 /
+        /// 5.07:1 on the tinted background. Dark mode keeps the brand hues.
         static let pinkText = Color(light: Palette.pink700, dark: Palette.pink500)
         static let blueText = Color(light: Palette.blue700, dark: Palette.blue500)
 
-        // Feedback
+        // MARK: Feedback
         static let greenCheck = Color(hex: Palette.green500) // accent-green
         static let greenCorrect = Color(hex: Palette.green600)
         static let successText = Color(light: Palette.green600, dark: Palette.green400) // success-text adapts per mode
         static let error = Color(hex: Palette.red500) // design `error` token (distinct from brand pink)
         static let warning = Color(hex: Palette.amber500)
 
-        // Border tokens — alpha differs by mode, so build per-mode Colors
+        // MARK: Borders. Alpha differs by mode, so build per-mode Colors
         // (UIColor(hex:) treats 8-digit hex as ARGB, so don't suffix alpha).
         static let hairline = Color( // border-subtle
             light: Color(hex: Palette.navy900).opacity(0.078),
@@ -105,7 +105,7 @@ extension Theme.Hangs {
         )
         static let mutedBorder = ink.opacity(0.10) // derived, auto-adapts
 
-        // Soft washes — translucent fills that read in both appearances.
+        // MARK: Soft washes, translucent fills that read in both appearances
         static let pinkSoft = Color(hex: Palette.pink500).opacity(0.12)
         static let greenSoft = Color(hex: Palette.green500).opacity(0.12)
         static let errorSoft = error.opacity(0.15)

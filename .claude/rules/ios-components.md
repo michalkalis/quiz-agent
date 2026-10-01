@@ -35,6 +35,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsValueRow` | Read-only label + mono value (build info, stats). |
 | `HangsDivider` | Hairline between rows. |
 | `HangsBrandRow` | Brand mark row at the top of the root and onboarding screens. |
+| `HangsPageIndicator` | Page dots under a horizontal pager (onboarding). |
 
 ## Quiz
 
@@ -43,6 +44,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsQuizNav`, `HangsQuizProgressHeader`, `HangsProgressBar` | Quiz top chrome: close + counter, category + segmented progress (recording tint), thin progress. |
 | `HangsQuestionPrompt` | The question text with its accent bar; scales down, never wraps off screen. |
 | `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
+| `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
 | `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping). |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
 | `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |

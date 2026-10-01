@@ -1,0 +1,161 @@
+"""Build the Trubbo design catalog (claude.ai Design System artifact) from code.
+
+#188 — unified design system, track D. Code is the source of truth: this script
+reads Theme.swift, the component sources, the component guide, the copy rules
+and the committed component snapshots, and writes the artifact's `project/`
+tree. The catalog is never edited by hand; proposals made on it are pending
+changes until they land in the app (track E, /design-sync).
+
+Usage:
+  uv run --no-sync python -m scripts.design_catalog.build --out <dir> [--index-from <design-system.json>]
+Then publish <dir> to the artifact with the batches the script prints.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
+
+from .components import GUIDE, collect, write_component
+from .cover import cover_html
+from .swift_tokens import APP, build_tokens
+
+REPO = "michalkalis/quiz-agent"
+COPY_RULES = Path("docs/design/copy-style.md")
+BASELINE = Path("scripts/design-token-baseline.txt")
+MAX_PATHS_PER_CALL = 250
+
+
+def git(root: Path, *args: str) -> str:
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def readme(tokens: dict, components: list, root: Path, ref: str) -> str:
+    names = {t["name"] for fam in ("color", "spacing", "radius", "shadow") for t in tokens[fam]["tokens"]}
+    styles = {s["name"] for g in tokens["type"]["groups"] for s in g["styles"]}
+
+    def tok(*ns: str) -> str:
+        missing = [n for n in ns if n not in names | styles]
+        if missing:
+            raise ValueError(f"README names tokens that no longer exist: {missing}")
+        return ", ".join(f"`{n}`" for n in ns)
+
+    baseline = sum(int(line.rsplit("\t", 1)[1]) for line in (root / BASELINE).read_text().splitlines() if line and not line.startswith("#"))
+    guide = (root / GUIDE).read_text(encoding="utf-8")
+    unused = len(re.findall(r"`(\w+)`", guide.split("## Unused", 1)[1])) if "## Unused" in guide else 0
+    frozen = sum(len(c.states) for c in components)
+    return f"""Trubbo is hands-free voice trivia for the car, and for any group that plays out loud. Every screen is read at a glance, every action also works by voice, and the app ships dark-first.
+
+This catalog is generated from the iOS code at `{ref}`: `Utilities/Theme.swift` (tokens), the component sources and their frozen snapshots. **The code is the source of truth.** A comment or an edited value here is a proposal: it is a pending change until it lands in the app through a pull request, after which this catalog is generated again.
+
+## Color
+
+- Page {tok("bg")}, cards {tok("bgCard")}, sheets {tok("bgSheet")}; a sheet never uses the page color.
+- Text {tok("ink")}; secondary text {tok("muted")}; struck-through answers {tok("mutedFaint")}; text and icons on a colored fill {tok("textOnAccent")}.
+- The one primary action of a screen and the brand: {tok("pink")}. Secondary accent {tok("blue")}. Multiple-choice selection {tok("accentPrimary")}. Listening for voice commands {tok("accentTeal")}.
+- Verdicts: correct {tok("greenCheck", "greenCorrect")} with text {tok("successText")}; wrong {tok("error")}; warnings {tok("warning")}. Soft fills behind them {tok("pinkSoft", "greenSoft", "errorSoft", "neutralSoft")}.
+- Small text on a tinted chip uses {tok("pinkText", "blueText")}, which keep 4.5:1 contrast in light mode.
+- Lines {tok("hairline", "subtleBorder")}.
+- `palette-*` entries are the base values the tokens above are built from. Views never use them directly.
+
+## Type
+
+Three bundled faces: Anton for display text and numbers, Inter for body and buttons, IBM Plex Mono for labels and counters. Use the named styles, `Font.hangs*` in code ({tok("displayMD", "button", "monoLabel")} and the rest); a raw font size in a view is a lint finding.
+
+## Spacing, radius, shadow
+
+- Spacing steps {tok("space-xxs", "space-xs", "space-sm", "space-md", "space-lg", "space-xl", "space-xxl")}.
+- Radii by role: cards {tok("radius-card")}, inner cards {tok("radius-cardInner")}, primary buttons {tok("radius-cta")}, chips {tok("radius-chip")}.
+- Shadows: cards {tok("shadow-card")}, primary buttons {tok("shadow-cta")}.
+
+## Components
+
+{len(components)} shared components with {frozen} states, each shown as the real SwiftUI rendering in the current theme and at the largest text size. Use them before building anything new; each card says what the screen provides.
+
+## Iconography
+
+SF Symbols (Apple system icons) throughout; there is no custom icon set. The brand mark is set in type.
+
+## Known gaps
+
+- {baseline} older hand-typed values remain in views (spacing off the scale, about 20 font sizes, a few radii). A CI lint blocks new ones and the count only goes down.
+- Not frozen as snapshots: pressed states, open menus, the animated voice glows.
+- {unused} unused components are left out of this catalog.
+"""
+
+
+def copy_section(root: Path) -> str:
+    text = (root / COPY_RULES).read_text(encoding="utf-8")
+    rules = text.split("## Rules", 1)[1].split("## Review procedure", 1)[0]
+    return "# Copy\n\nHow every text a player sees or hears is written (sk, cs, en). Source: `docs/design/copy-style.md`.\n\n## Rules" + rules.rstrip() + "\n"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--index-from", type=Path, help="the artifact's current design-system.json, to keep its keys")
+    parser.add_argument("--by", default="Michal Kalis")
+    args = parser.parse_args()
+    root, out = args.root, args.out
+
+    if (out / "project").exists():
+        shutil.rmtree(out / "project")
+    project = out / "project"
+    project.mkdir(parents=True)
+
+    sha = git(root, "rev-parse", "--short", "HEAD")
+    branch = git(root, "rev-parse", "--abbrev-ref", "HEAD")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    tokens = build_tokens(root)
+    tokens["meta"] = {
+        "source": "github",
+        "repo": REPO,
+        "ref": f"{branch}@{sha}",
+        "paths": {"tokens": ["apps/ios-app/Hangs/Hangs/Utilities/Theme.swift"], "fonts": [f"{APP}/Fonts"], "docs": [str(GUIDE), str(COPY_RULES)]},
+        "synced": now[:10],
+    }
+    components = collect(root)
+
+    files = [project / "tokens.json"]
+    (project / "tokens.json").write_text(json.dumps(tokens, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    (project / "README.md").write_text(readme(tokens, components, root, f"{branch}@{sha}"), encoding="utf-8")
+    (project / "copy.md").write_text(copy_section(root), encoding="utf-8")
+    files += [project / "README.md", project / "copy.md"]
+    (project / "fonts").mkdir()
+    for font in tokens["type"]["fonts"]:
+        dst = project / font["file"]
+        if not dst.exists():
+            shutil.copyfile(root / APP / "Fonts" / Path(font["file"]).name, dst)
+            files.append(dst)
+    for c in components:
+        files += write_component(root, out, c)
+    cover = project / "components/Cover/preview.html"
+    cover.parent.mkdir(parents=True)
+    cover.write_text(cover_html(tokens), encoding="utf-8")
+    files.append(cover)
+
+    index = json.loads(args.index_from.read_text()) if args.index_from else {
+        "v": 3, "layout": "files", "createdOnFiles": {"v": 1, "at": now}, "namespace": "Trubbo", "libraries": [],
+        "sections": {}, "groups": [], "assetGroups": {}, "blobs": {}, "docs": {"readme": "project/README.md", "sections": []},
+    }
+    index["title"] = "Trubbo"
+    index["lastChange"] = {"by": args.by, "at": now, "via": f"scripts/design_catalog · {REPO}@{sha}", "note": "Generated from code"}
+    (project / "design-system.json").write_text(json.dumps(index, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    rel = [str(f.relative_to(out)) for f in files]
+    batches = [rel[i : i + MAX_PATHS_PER_CALL] for i in range(0, len(rel), MAX_PATHS_PER_CALL)]
+    plan = {"root": str(out.resolve()), "batches": batches, "index": "project/design-system.json"}
+    (out / "publish-plan.json").write_text(json.dumps(plan, indent=1) + "\n", encoding="utf-8")
+    print(f"{len(rel)} files + index in {len(batches)} batch(es); components {len(components)}, states {sum(len(c.states) for c in components)}")
+    print(f"plan: {out / 'publish-plan.json'}")
+
+
+if __name__ == "__main__":
+    main()

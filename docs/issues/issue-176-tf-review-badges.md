@@ -1,6 +1,6 @@
 # #176 — Review štítok otázky v TF buildoch + TF servíruje aj odmietnuté preklady
 
-**Triage:** `in-progress` (kód hotový 2026-09-10: backend PR #142 v prode v110, iOS PR #143 merged; open = Pencil sync + founder TF kontrola) · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
+**Triage:** `in-progress` (kód hotový 2026-09-10: backend PR #142 v prode v110, iOS PR #143 merged; Pencil sync hotový 2026-10-05 (PR #220); open = founder TF kontrola) · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
 **Design:** [HTML varianty](../design/variants/issue-168-tf-review-badges.html) → **Variant A**, všetkých 5 stavov · [decisions](../design/ui-variants-2026-09-10-decisions.md)
 
 ## Prečo
@@ -67,5 +67,5 @@ Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pend
 ## Poradie
 1. ~~Backend (polia + TF serving rejected + TF-bez-gate) → PR~~ **hotové, v prode** (PR #142, quiz-agent-api v110, 2026-09-10).
 2. ~~iOS (Codable + riadok + result meta + lokalizácia) → PR~~ **hotové** (PR #143 merged 2026-09-10; 59 cielených testov, verify-api čistý). Pozn.: `swiftformat` nie je na tomto stroji nainštalovaný, hook je no-op.
-3. Pencil sync → founder ⌘S.
+3. ~~Pencil sync → founder ⌘S~~ **hotové 2026-10-05** (PR #220).
 4. TF build **len na požiadanie foundera**.

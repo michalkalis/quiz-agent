@@ -1,6 +1,6 @@
 # #189 — TF feedback 2026-09-29 (AirPods, mimo auta, slovenský kvíz)
 
-**Triage:** code-complete (2026-09-29) · open = TF test na požiadanie + Pencil D · **Build:** TF z `6310b647` (2026-09-25) · **Zdroj:** founder poznámky + 5 screenshotov, Sentry 08:43–09:04 UTC, Fly logy
+**Triage:** code-complete (2026-09-29) · open = TF test na požiadanie (Pencil D hotový 2026-10-05, PR #220) · **Build:** TF z `6310b647` (2026-09-25) · **Zdroj:** founder poznámky + 5 screenshotov, Sentry 08:43–09:04 UTC, Fly logy
 
 ## Nálezy a diagnóza
 
@@ -27,7 +27,7 @@
 - PR #207 — nápoveda citujúca povely, lišta „Čítam odpoveď“ počas prečítania, reset ťahu po Control Center (overené na simulátore) · MERGED.
 - PR #208 — H1/H2/M3/M4/M5 + telemetria (hluchý analyzér, `listener.stop`, zmeny trasy) · MERGED.
 - PR #209 — `docs/design/copy-style.md` + CI job `copy-review` (subscription token) · MERGED. Founder 09-29: ručná revízia 500 textov je príliš dlhá → automatická kontrola ako pri otázkach.
-- PR #210 — výsledky sady ako jeden zoskupený zoznam, odpoveď pod otázkou (founder vybral variant D) · MERGED · Pencil pass otvorený (Pencil nebežal).
+- PR #210 — výsledky sady ako jeden zoskupený zoznam, odpoveď pod otázkou (founder vybral variant D) · MERGED · Pencil hotový 2026-10-05 (PR #220).
 - PR #211 — jednorazová oprava textov: Opus návrhy → nezávislý Opus sudca → 172 hodnôt, 8 plurálov, InfoPlist sk/cs; founder: „kvíz“ všade, rodovo neutrálne oslovenie, „Hraj bez limitu“, „z českých dějin“.
 
 ## Overenie na zariadení (ďalší TF build, na požiadanie)

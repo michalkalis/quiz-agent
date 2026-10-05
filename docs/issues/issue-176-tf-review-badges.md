@@ -67,5 +67,5 @@ Priorita pri kombinácii: `translation_critical` > `translation_flagged` > `pend
 ## Poradie
 1. ~~Backend (polia + TF serving rejected + TF-bez-gate) → PR~~ **hotové, v prode** (PR #142, quiz-agent-api v110, 2026-09-10).
 2. ~~iOS (Codable + riadok + result meta + lokalizácia) → PR~~ **hotové** (PR #143 merged 2026-09-10; 59 cielených testov, verify-api čistý). Pozn.: `swiftformat` nie je na tomto stroji nainštalovaný, hook je no-op.
-3. Pencil sync → founder ⌘S.
+3. ~~Pencil sync → founder ⌘S~~ **hotové 2026-10-05** (PR #220).
 4. TF build **len na požiadanie foundera**.

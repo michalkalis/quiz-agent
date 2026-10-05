@@ -7,7 +7,10 @@ tree. The catalog is never edited by hand; proposals made on it are pending
 changes until they land in the app (track E, /design-sync).
 
 Usage:
-  uv run --no-sync python -m scripts.design_catalog.build --out <dir> [--index-from <design-system.json>]
+  python3 -m scripts.design_catalog.build --out <dir> [--index-from <design-system.json>] [--blobs <snapshot-blobs.json>]
+Snapshots are asset uploads. When some are not uploaded yet the script writes
+<dir>/upload-needed.json and stops: upload those files to the artifact, record
+the returned URLs with `--record-uploads <json {file name: url}>`, run again.
 Then publish <dir> to the artifact with the batches the script prints.
 """
 
@@ -101,8 +104,21 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--index-from", type=Path, help="the artifact's current design-system.json, to keep its keys")
     parser.add_argument("--by", default="Michal Kalis")
+    parser.add_argument("--blobs", type=Path, help="snapshot sha256 -> /_blob/ URL map (the artifact's project/snapshot-blobs.json)")
+    parser.add_argument("--record-uploads", type=Path, help="JSON {staged file name: upload URL} to merge into --blobs, then exit")
     args = parser.parse_args()
     root, out = args.root, args.out
+    blobs: dict[str, str] = json.loads(args.blobs.read_text()) if args.blobs and args.blobs.exists() else {}
+
+    if args.record_uploads:
+        needed = json.loads((out / "upload-needed.json").read_text())["sha_by_file"]
+        for name, url in json.loads(args.record_uploads.read_text()).items():
+            if not re.fullmatch(r"/_blob/[0-9a-f]{32}", url):
+                raise ValueError(f"not an upload URL for {name}: {url}")
+            blobs[needed[name]] = url
+        args.blobs.write_text(json.dumps(blobs, indent=1, sort_keys=True) + "\n")
+        print(f"{len(blobs)} snapshot uploads recorded in {args.blobs}")
+        return
 
     if (out / "project").exists():
         shutil.rmtree(out / "project")
@@ -134,8 +150,29 @@ def main() -> None:
         if not dst.exists():
             shutil.copyfile(root / APP / "Fonts" / Path(font["file"]).name, dst)
             files.append(dst)
+    missing: dict[str, Path] = {}
+    if (out / "uploads").exists():
+        shutil.rmtree(out / "uploads")
     for c in components:
-        files += write_component(root, out, c)
+        files += write_component(root, out, c, blobs, missing)
+    if missing:
+        staged = sorted(missing.values())
+        (out / "upload-needed.json").write_text(json.dumps({
+            "batches": [[str(f.resolve()) for f in staged[i : i + 25]] for i in range(0, len(staged), 25)],
+            "sha_by_file": {f.name: sha for sha, f in missing.items()},
+        }, indent=1) + "\n")
+        raise SystemExit(f"{len(missing)} snapshot(s) not uploaded yet: see {out / 'upload-needed.json'}")
+    (project / "snapshot-blobs.json").write_text(json.dumps(blobs, indent=1, sort_keys=True) + "\n")
+    files.append(project / "snapshot-blobs.json")
+    # The page only runs previews live (on the catalog's origin, where uploads
+    # load) when a bundle exists; without one it renders them in an isolated
+    # frame that blocks every image. The previews need no code, so the bundle
+    # is an empty namespace whose header lists the components in catalog order.
+    header = {"format": 4, "namespace": "Trubbo", "components": [{"name": c.name} for c in components]}
+    (project / "components/bundle.js").write_text(
+        f"/* @ds-bundle: {json.dumps(header, separators=(',', ':'))} */\nwindow.Trubbo = {{}};\n", encoding="utf-8"
+    )
+    files.append(project / "components/bundle.js")
     cover = project / "components/Cover/preview.html"
     cover.parent.mkdir(parents=True)
     cover.write_text(cover_html(tokens), encoding="utf-8")

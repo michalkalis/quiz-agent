@@ -8,6 +8,7 @@ the component's own Swift source (its parameters). Nothing is typed in here.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import struct
 from dataclasses import dataclass, field
@@ -99,10 +100,17 @@ def collect(root: Path) -> list[Component]:
     return list(comps.values())
 
 
-def write_component(root: Path, out: Path, c: Component) -> list[Path]:
-    """Write README, preview and snapshot files under out/project/components/<name>/."""
+def write_component(root: Path, out: Path, c: Component, blobs: dict[str, str], missing: dict[str, Path]) -> list[Path]:
+    """Write README and preview under out/project/components/<name>/.
+
+    Snapshots are asset uploads, referenced by their `/_blob/<id>` URL: the
+    page may render a preview without its file context (srcdoc), where a
+    relative path to a published file does not resolve. `blobs` maps a
+    snapshot's sha256 to its upload URL; a snapshot not uploaded yet is staged
+    in `missing` (sha256 -> file under out/uploads) and its preview not written.
+    """
     folder = out / "project/components" / c.name
-    (folder / "snapshots").mkdir(parents=True, exist_ok=True)
+    folder.mkdir(parents=True, exist_ok=True)
     states = ", ".join(c.states) if c.states else "none"
     readme = [
         f"{c.use_for}",
@@ -119,21 +127,28 @@ def write_component(root: Path, out: Path, c: Component) -> list[Path]:
     if not c.states:
         return written
 
-    rows, height = [], 36
+    rows, height, complete = [], 36, True
     for state in c.states:
         cells = []
         sizes = []
         for v in VARIANTS:
             src = root / SNAPSHOTS / f"pixels-id.{c.sample_prefix}-{state}-{v}.png"
-            dst = folder / "snapshots" / f"{state}-{v}.png"
-            dst.write_bytes(src.read_bytes())
-            written.append(dst)
+            data = src.read_bytes()
+            sha = hashlib.sha256(data).hexdigest()
+            if sha not in blobs:
+                staged = out / "uploads" / f"{c.name}-{state}-{v}.png"
+                staged.parent.mkdir(parents=True, exist_ok=True)
+                staged.write_bytes(data)
+                missing[sha] = staged
+                complete = False
             w, h = png_size(src)
             sizes.append(h)
             cls = "xl" if v == "dark-xl" else v
-            cells.append(f'<img class="shot {cls}" src="../../components/{c.name}/snapshots/{state}-{v}.png" width="{w}" height="{h}" alt="{c.name} {state} {v}">')
+            cells.append(f'<img class="shot {cls}" src="{blobs.get(sha, "")}" width="{w}" height="{h}" alt="{c.name} {state} {v}">')
         height += max(sizes[0], sizes[2]) + 30
         rows.append(f'<div class="row"><p class="state">{state}</p><div class="pair"><div>{cells[0]}{cells[1]}</div><div>{cells[2]}</div></div></div>')
+    if not complete:
+        return written
     preview = f"""<!-- @dsCard group="{c.group}" height={min(height, 4000)} width=860 subtitle="{len(c.states)} state{'s' * (len(c.states) != 1)}" -->
 <div class="ds-shots">
 <style>

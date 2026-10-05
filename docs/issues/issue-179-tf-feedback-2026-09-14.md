@@ -41,7 +41,7 @@ Varianty: `docs/design/variants/issue-179-tf-feedback-2026-09-14.html` · rozhod
 - [x] **D1 (iOS)** Lišta povelov = variant A: jeden model 4 stavov (čítam otázku → premýšľaj + odpočet → počúvam odpoveď → vyhodnocujem) pre MCQ aj otvorenú, stavový popis + slovné čipy („štart“ · „zopakuj“ · „preskoč“), slová vždy viditeľné (`voiceHintsFreeQuizzes` brána preč, Settings prepínač ostáva), „POČÚVAM PRÍKAZY“ preč, lišta nemizne počas vyhodnocovania. **Podmienka:** zvyšný layout nemenný — spodný rad tlačidiel ostáva v jednom riadku. Testy: stavový mapping lišty pre oba typy, prítomnosť čipov bez ohľadu na počet kvízov, footer v jednom riadku (structure test).
 - [x] **D2 (iOS)** Toolbar = variant A (podľa HIG): mute + pauza v jednej viditeľnej pilulke, ⋯ zvlášť; pravidlo obrysová = vypnuté / plná = zapnuté; play v pauze modrý; 4 zjednotenia ikon z auditu (skúsiť znova → `arrow.clockwise`, prehrať odpoveď → `speaker.wave.2`, chybové ikony obrysové, balík `shippingbox` obrysový).
 - [x] **D3 (iOS)** Preskoč: jeden text v rozkazovacom spôsobe („Preskoč“, nie „Preskočiť otázku“/„Preskočiť“) a jeden tvar (kapsula s `chevron.right.2`) na MCQ aj otvorenej; audit ostatných tlačidiel na rozkazovací spôsob (Potvrď, Zopakuj, …) vo VŠETKÝCH jazykoch katalógu; spodný rad tlačidiel ostáva v jednom riadku.
-- [ ] **Pencil sync** (`design/quiz-agent.pen`: question frame — lišta, toolbar, päta) po odsúhlasení kódu founderom.
+- [x] **Pencil sync** (hotové 2026-10-05, PR #220) (`design/quiz-agent.pen`: question frame — lišta, toolbar, päta) po odsúhlasení kódu founderom.
 
 ## Regresné riziko (pozor)
 

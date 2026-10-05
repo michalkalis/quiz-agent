@@ -1,6 +1,6 @@
 # #176 — Review štítok otázky v TF buildoch + TF servíruje aj odmietnuté preklady
 
-**Triage:** `in-progress` (kód hotový 2026-09-10: backend PR #142 v prode v110, iOS PR #143 merged; open = Pencil sync + founder TF kontrola) · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
+**Triage:** `in-progress` (kód hotový 2026-09-10: backend PR #142 v prode v110, iOS PR #143 merged; Pencil sync hotový 2026-10-05 (PR #220); open = founder TF kontrola) · founder rozhodnutia 2026-09-10 · nadväzuje na #168 (T23 cutover, HG-4/HG-5)
 **Design:** [HTML varianty](../design/variants/issue-168-tf-review-badges.html) → **Variant A**, všetkých 5 stavov · [decisions](../design/ui-variants-2026-09-10-decisions.md)
 
 ## Prečo

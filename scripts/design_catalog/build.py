@@ -38,6 +38,49 @@ def git(root: Path, *args: str) -> str:
     return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=True).stdout.strip()
 
 
+KEEP = {"proposal", "conflict", "added-in-catalog", "differs"}
+
+
+def keep_proposals(tokens: dict, rows: list[dict]) -> list[dict]:
+    """Leave the founder's undecided catalog values in place (code stays the truth
+    for the app; the catalog must not silently drop a proposal). Returns the rows kept."""
+    kept = []
+    for r in rows:
+        if r["kind"] not in KEEP or r["catalog"] is None:
+            continue
+        note = f" Waiting for the app: the catalog proposes {json.dumps(r['catalog'])}, the app has {json.dumps(r['code'])}."
+        if r["token"].startswith("type."):
+            for g in tokens["type"]["groups"]:
+                for st in g["styles"]:
+                    if st["name"] == r["token"][5:]:
+                        st.update(r["catalog"])
+                        st["usage"] = st.get("usage", "") + note
+        else:
+            fam = next((f for f in ("color", "spacing", "radius", "shadow") if any(t["name"] == r["token"] for t in tokens[f]["tokens"])), None)
+            entry = {"name": r["token"], "value": r["catalog"], "usage": "Added in the catalog." + note}
+            if fam is None:
+                tokens["color" if isinstance(r["catalog"], dict) or str(r["catalog"]).startswith("#") else "spacing"]["tokens"].append(entry)
+            else:
+                t = next(t for t in tokens[fam]["tokens"] if t["name"] == r["token"])
+                t["value"] = r["catalog"]
+                t["usage"] = t.get("usage", "") + note
+        kept.append(r)
+    return kept
+
+
+def pending_section(rows: list[dict], open_comments: int) -> str:
+    waiting = [r for r in rows if r["kind"] in KEEP | {"removed-in-catalog"}]
+    lines = ["## Waiting for the app", ""]
+    if not waiting and not open_comments:
+        return "\n".join(lines + ["Nothing: the catalog and the app agree.", ""])
+    lines.append(f"{len(waiting)} proposed value{'s' * (len(waiting) != 1)} and {open_comments} open comment{'s' * (open_comments != 1)} are not in the app yet. They reach it through `/design-sync`, as a pull request with before and after pictures.")
+    lines.append("")
+    for r in waiting:
+        what = "removed in the catalog" if r["kind"] == "removed-in-catalog" else f"catalog `{json.dumps(r['catalog'])}`, app `{json.dumps(r['code'])}`"
+        lines.append(f"- `{r['token']}`: {what}" + (" (conflict: the app changed too)" if r["kind"] == "conflict" else ""))
+    return "\n".join(lines + [""])
+
+
 def readme(tokens: dict, components: list, root: Path, ref: str) -> str:
     names = {t["name"] for fam in ("color", "spacing", "radius", "shadow") for t in tokens[fam]["tokens"]}
     styles = {s["name"] for g in tokens["type"]["groups"] for s in g["styles"]}
@@ -106,6 +149,9 @@ def main() -> None:
     parser.add_argument("--by", default="Michal Kalis")
     parser.add_argument("--blobs", type=Path, help="snapshot sha256 -> /_blob/ URL map (the artifact's project/snapshot-blobs.json)")
     parser.add_argument("--record-uploads", type=Path, help="JSON {staged file name: upload URL} to merge into --blobs, then exit")
+    parser.add_argument("--pending", type=Path, help="sync.py report: undecided catalog proposals stay in the catalog, listed as waiting")
+    parser.add_argument("--open-comments", type=int, default=0, help="open comment threads on the catalog, for the waiting section")
+    parser.add_argument("--check", action="store_true", help="CI: build everything except upload-dependent previews, publish nothing")
     args = parser.parse_args()
     root, out = args.root, args.out
     blobs: dict[str, str] = json.loads(args.blobs.read_text()) if args.blobs and args.blobs.exists() else {}
@@ -130,6 +176,8 @@ def main() -> None:
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     tokens = build_tokens(root)
+    rows = json.loads(args.pending.read_text())["rows"] if args.pending else []
+    kept = keep_proposals(tokens, rows)
     tokens["meta"] = {
         "source": "github",
         "repo": REPO,
@@ -141,7 +189,9 @@ def main() -> None:
 
     files = [project / "tokens.json"]
     (project / "tokens.json").write_text(json.dumps(tokens, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    (project / "README.md").write_text(readme(tokens, components, root, f"{branch}@{sha}"), encoding="utf-8")
+    (project / "README.md").write_text(
+        readme(tokens, components, root, f"{branch}@{sha}") + "\n" + pending_section(rows, args.open_comments), encoding="utf-8"
+    )
     (project / "copy.md").write_text(copy_section(root), encoding="utf-8")
     files += [project / "README.md", project / "copy.md"]
     (project / "fonts").mkdir()
@@ -155,6 +205,9 @@ def main() -> None:
         shutil.rmtree(out / "uploads")
     for c in components:
         files += write_component(root, out, c, blobs, missing)
+    if args.check:
+        print(f"check: tokens, {len(components)} components and {sum(len(c.states) for c in components)} states build ({len(missing)} snapshot(s) would need upload)")
+        return
     if missing:
         staged = sorted(missing.values())
         (out / "upload-needed.json").write_text(json.dumps({
@@ -190,7 +243,7 @@ def main() -> None:
     batches = [rel[i : i + MAX_PATHS_PER_CALL] for i in range(0, len(rel), MAX_PATHS_PER_CALL)]
     plan = {"root": str(out.resolve()), "batches": batches, "index": "project/design-system.json"}
     (out / "publish-plan.json").write_text(json.dumps(plan, indent=1) + "\n", encoding="utf-8")
-    print(f"{len(rel)} files + index in {len(batches)} batch(es); components {len(components)}, states {sum(len(c.states) for c in components)}")
+    print(f"{len(rel)} files + index in {len(batches)} batch(es); components {len(components)}, states {sum(len(c.states) for c in components)}, catalog proposals kept {len(kept)}")
     print(f"plan: {out / 'publish-plan.json'}")
 
 

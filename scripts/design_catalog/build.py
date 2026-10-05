@@ -164,6 +164,15 @@ def main() -> None:
         raise SystemExit(f"{len(missing)} snapshot(s) not uploaded yet: see {out / 'upload-needed.json'}")
     (project / "snapshot-blobs.json").write_text(json.dumps(blobs, indent=1, sort_keys=True) + "\n")
     files.append(project / "snapshot-blobs.json")
+    # The page only runs previews live (on the catalog's origin, where uploads
+    # load) when a bundle exists; without one it renders them in an isolated
+    # frame that blocks every image. The previews need no code, so the bundle
+    # is an empty namespace whose header lists the components in catalog order.
+    header = {"format": 4, "namespace": "Trubbo", "components": [{"name": c.name} for c in components]}
+    (project / "components/bundle.js").write_text(
+        f"/* @ds-bundle: {json.dumps(header, separators=(',', ':'))} */\nwindow.Trubbo = {{}};\n", encoding="utf-8"
+    )
+    files.append(project / "components/bundle.js")
     cover = project / "components/Cover/preview.html"
     cover.parent.mkdir(parents=True)
     cover.write_text(cover_html(tokens), encoding="utf-8")

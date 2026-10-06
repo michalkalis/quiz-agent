@@ -9,7 +9,7 @@ argument-hint: "[release notes — optional]"
 # TestFlight Release
 
 Triggers the `ios-release.yml` GitHub Actions workflow which:
-1. Runs on `macos-26` with Xcode 26.3
+1. Runs on `xcode-27` (GitHub Xcode 27 image) with Xcode 27.0
 2. Uses fastlane `match` (read-only) to import the distribution cert from `carquiz-certs` repo into an isolated keychain
 3. Runs `fastlane ios beta` (staging) or `fastlane ios release` (production) — archives, exports IPA, uploads to TestFlight
 4. Auto-increments build number based on latest TestFlight build
@@ -110,7 +110,7 @@ Common failure modes (see `TESTFLIGHT_SETUP.md` troubleshooting table):
 | `Invalid JWT token` | ASC API key revoked or `ASC_API_KEY_CONTENT` missing BEGIN/END lines |
 | `No code signing identity found` | `MATCH_DEPLOY_KEY` SSH key can't reach `carquiz-certs` repo |
 | `Build already exists` | Shouldn't happen — Fastfile auto-bumps via `latest_testflight_build_number + 1` |
-| Xcode version mismatch | Runner's Xcode changed — check `Select Xcode 26.3` step logs |
+| Xcode version mismatch | Runner's Xcode changed — check `Select Xcode 27.0` step logs |
 
 Do NOT amend the failing commit or force-push. Diagnose, fix forward, push a new commit, re-trigger.
 

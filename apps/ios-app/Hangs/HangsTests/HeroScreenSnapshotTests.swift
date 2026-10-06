@@ -41,7 +41,7 @@ import ViewInspector
 nonisolated enum SnapshotBaseline {
     /// Simulator runtime the pixel baselines were recorded on. Bump it only when
     /// re-recording the whole set on that runtime.
-    static let iosVersion = "26.5"
+    static let iosVersion = "27.0"
     /// iPhone 17 Pro logical size — the device the RS suite and CI both use.
     static let width: CGFloat = 402
     static let height: CGFloat = 874

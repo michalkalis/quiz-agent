@@ -78,7 +78,7 @@ final class AttestStubURLProtocol: URLProtocol, @unchecked Sendable {
 
 /// In-memory DeviceAttestor: records how many attestations/assertions it built
 /// and owns a mutable keyId (the thing AuthService.confirmKey/forgetKey drive).
-private final class MockAttestor: DeviceAttestor, @unchecked Sendable {
+nonisolated private final class MockAttestor: DeviceAttestor, @unchecked Sendable {
     private let supported: Bool
     private let state = OSAllocatedUnfairLock<(keyID: String?, attests: Int, asserts: Int)>(
         initialState: (nil, 0, 0)
@@ -120,7 +120,7 @@ private final class MockAttestor: DeviceAttestor, @unchecked Sendable {
 
 // MARK: - In-memory token store
 
-private final class MemTokenStore: TokenStore, @unchecked Sendable {
+nonisolated private final class MemTokenStore: TokenStore, @unchecked Sendable {
     private let lock = OSAllocatedUnfairLock<AuthTokens?>(initialState: nil)
     init(seed: AuthTokens? = nil) { lock.withLock { $0 = seed } }
     func load() -> AuthTokens? { lock.withLock { $0 } }

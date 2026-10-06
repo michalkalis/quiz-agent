@@ -9,8 +9,11 @@
 //    that window is submitted by the ViewModel directly — if the pending tap task
 //    is not cancelled, onSelect fires too and the answer submits twice.
 //  - The race guard lives in MCQDelayedSubmit (a reference type) precisely so it
-//    can be asserted deterministically here; the picker wiring (tap schedules,
-//    voice-match onChange cancels) is covered by the hosted inspector tests.
+//    can be asserted deterministically here — including which key changes
+//    cancel (`supersede(with:)`). The hosted inspector tests cover the tap side
+//    only: since ViewInspector 0.10.4 a tap and a `callOnChange` on the hosted
+//    picker resolve its @State to two different MCQDelayedSubmit instances, so
+//    a hosted cancel assertion can no longer reach the submit the tap scheduled.
 //
 
 import Foundation
@@ -55,6 +58,35 @@ struct MCQDelayedSubmitTests {
         try await Task.sleep(nanoseconds: 200_000_000)
         #expect(fired == 1)
     }
+
+    /// A voice match lands inside the tap's delay: the VM submits it itself, so
+    /// the tap's pending submit must die or the answer goes in twice.
+    @Test("a voice match on another key cancels the pending tap submit")
+    func otherKeySupersedeCancels() async throws {
+        var fired = 0
+        let submit = MCQDelayedSubmit()
+        submit.schedule(key: "a", delayNs: 50_000_000) { fired += 1 }
+        submit.supersede(with: "b")
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(fired == 0)
+    }
+
+    /// The tap writes its key into the same binding onChange watches (#110 T4),
+    /// and the VM clears the key to nil on a new question. Neither is a voice
+    /// match, so neither may cancel the submit the tap just scheduled.
+    @Test("the tap's own echo and a nil reset do not cancel", arguments: ["a", nil] as [String?])
+    func echoAndResetDoNotCancel(newKey: String?) async throws {
+        var fired = 0
+        let submit = MCQDelayedSubmit()
+        submit.schedule(key: "a", delayNs: 50_000_000) { fired += 1 }
+        submit.supersede(with: newKey)
+
+        for _ in 0 ..< 300 where fired == 0 {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        #expect(fired == 1)
+    }
 }
 
 // MARK: - Picker wiring — hosted
@@ -67,29 +99,6 @@ private let testOptions = [
 @Suite("MCQOptionPicker tap/voice race wiring (54.16)")
 @MainActor
 struct MCQOptionPickerRaceTests {
-    @Test("voice match during the tap delay cancels the pending tap submit")
-    func voiceMatchCancelsPendingTapSubmit() async throws {
-        var selectCount = 0
-        let view = MCQOptionPicker(
-            options: testOptions,
-            onSelect: { _, _ in selectCount += 1 }
-        )
-
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            // Tap option A — schedules the delayed submit
-            try tree.find(ViewType.Button.self).tap()
-            // Voice match lands before the 500ms delay elapses; the VM submits it
-            // itself, so the picker must cancel its pending tap submit.
-            try tree.find(ViewType.VStack.self).callOnChange(oldValue: String?.none, newValue: "b" as String?)
-
-            // Outlives the view-level 500 ms delay to prove the pending submit was
-            // cancelled — a negative assertion has nothing to pump on.
-            try await Task.sleep(nanoseconds: 900_000_000)
-            #expect(selectCount == 0)
-        }
-    }
-
     @Test("tap with no voice match still submits exactly once after the delay")
     func tapSubmitsOnceWithoutVoiceMatch() async throws {
         var selectCount = 0
@@ -125,66 +134,23 @@ private final class KeyBox {
 @Suite("MCQOptionPicker single VM owner (#110 T4)")
 @MainActor
 struct MCQOptionPickerSingleOwnerTests {
-    @Test("tap then voice-match submits and highlights the same key (no divergence)")
-    func tapThenVoiceMatchSubmitsAndHighlightsSameKey() async throws {
-        var selected: (key: String, value: String)?
+    /// The highlight and the submit read ONE key: the tap writes it through the
+    /// VM binding instead of a view-local copy, so a later voice match that
+    /// rewrites that key is what the screen shows (no divergence). Which key
+    /// changes cancel the tap's submit is pinned on MCQDelayedSubmit above.
+    @Test("a tap writes its key into the single VM-owned binding")
+    func tapWritesTheOwnedKey() async throws {
         let box = KeyBox()
         let binding = Binding<String?>(get: { box.key }, set: { box.key = $0 })
         let view = MCQOptionPicker(
             options: testOptions,
-            onSelect: { key, value in selected = (key, value) },
+            onSelect: { _, _ in },
             externalSelectedKey: binding
         )
 
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            // Tap option A — writes "a" into the single owned key (highlight)
-            // and schedules its delayed submit.
-            try tree.find(ViewType.Button.self).tap()
+            try view.inspect().find(ViewType.Button.self).tap()
             #expect(box.key == "a")
-
-            // Voice match on B lands before the tap's delay elapses. In
-            // production the VM writes the same `mcqVoiceMatchedKey` the tap
-            // just wrote — an other-source supersede — which must cancel A's
-            // pending submit.
-            box.key = "b"
-            try tree.find(ViewType.VStack.self).callOnChange(oldValue: "a" as String?, newValue: "b" as String?)
-
-            // Outlives the view-level 500 ms delay: the assertion is that A's
-            // submit NEVER fires, so there is nothing to pump on.
-            try await Task.sleep(nanoseconds: 900_000_000)
-            #expect(selected == nil) // A's delayed submit never fired
-            #expect(box.key == "b") // highlighted key == the voice-matched key — no divergence
-        }
-    }
-
-    @Test("a tap's own echo does not cancel its own pending submit")
-    func tapEchoDoesNotCancelOwnSubmit() async throws {
-        var selected: (key: String, value: String)?
-        let box = KeyBox()
-        let binding = Binding<String?>(get: { box.key }, set: { box.key = $0 })
-        let view = MCQOptionPicker(
-            options: testOptions,
-            onSelect: { key, value in selected = (key, value) },
-            externalSelectedKey: binding
-        )
-
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            try tree.find(ViewType.Button.self).tap()
-            #expect(box.key == "a")
-
-            // The tap wrote "a" into the same bound key onChange watches — its
-            // own echo (#110 T4 cancel-semantics rework). This must NOT cancel
-            // the submit the tap itself just scheduled.
-            try tree.find(ViewType.VStack.self).callOnChange(oldValue: String?.none, newValue: "a" as String?)
-
-            // View-level delay ⇒ real time, same generous bound as
-            // tapSubmitsOnceWithoutVoiceMatch above.
-            for _ in 0 ..< 500 where selected == nil {
-                try await Task.sleep(nanoseconds: 20_000_000)
-            }
-            #expect(selected?.key == "a")
         }
     }
 }

@@ -44,7 +44,7 @@ nonisolated struct AttestCredential: Sendable {
 /// with a mock — the real `DCAppAttestService` only runs on a physical device.
 // `nonisolated` requirements so the `actor AuthService` can drive this under the
 // project's `-default-isolation=MainActor` build flag (mirrors `TokenStore`).
-protocol DeviceAttestor: Sendable {
+nonisolated protocol DeviceAttestor: Sendable {
     /// False on the simulator and on unsupported devices. When false, AuthService
     /// skips App Attest and mints a plain identity (backend allows that only with
     /// `APP_ATTEST_REQUIRED` off).

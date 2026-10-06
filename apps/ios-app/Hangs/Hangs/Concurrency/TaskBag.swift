@@ -41,6 +41,8 @@ enum TaskKey: Hashable, Sendable {
     case confirmationCountdown // #185 5.2: the sheet's countdown waits for a live command listener
     case confirmationSpeechHold // #185 5.1: bound on how long speech may hold the countdown
     case inputLevel // #185 track F: the mic level the listen bar breathes with
+    case quizEndPrompt // #188 G1/G3: the error / set-end line, then that screen's command window
+    case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

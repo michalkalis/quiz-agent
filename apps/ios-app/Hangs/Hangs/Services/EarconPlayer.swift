@@ -58,8 +58,6 @@ enum EarconHaptic: Equatable {
     case soft(intensity: Double)
     /// `UIImpactFeedbackGenerator(style: .light)` — "heard you".
     case light
-    /// `UINotificationFeedbackGenerator` `.warning` — destructive, undoable.
-    case warning
 
     static func haptic(for earcon: Earcon) -> EarconHaptic {
         switch earcon {
@@ -69,7 +67,9 @@ enum EarconHaptic: Equatable {
         case .speechStart: return .soft(intensity: 0.4)
         case .gotIt: return .soft(intensity: 0.6)
         case .commandAck: return .light
-        case .skipConfirm: return .warning
+        // #188 G5 (founder 2026-10-06): a skip is not an error — a soft tap,
+        // not the warning buzz. The two-tone cue still marks the undo window.
+        case .skipConfirm: return .soft(intensity: 0.7)
         }
     }
 }
@@ -109,7 +109,6 @@ final class SystemEarconPlayer: EarconPlaying {
 
     private let impact = UIImpactFeedbackGenerator(style: .light)
     private let softImpact = UIImpactFeedbackGenerator(style: .soft)
-    private let notification = UINotificationFeedbackGenerator()
 
     /// One prepared player per cue, built on first use and kept — decoding and
     /// `prepareToPlay()` cost is paid once, off the moment the driver needs the
@@ -158,8 +157,6 @@ final class SystemEarconPlayer: EarconPlaying {
             softImpact.impactOccurred(intensity: intensity)
         case .light:
             impact.impactOccurred()
-        case .warning:
-            notification.notificationOccurred(.warning)
         }
     }
 

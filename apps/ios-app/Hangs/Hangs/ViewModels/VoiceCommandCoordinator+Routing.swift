@@ -316,6 +316,18 @@ extension VoiceCommandCoordinator {
         case (.result, .next), (.result, .ok):
             continueToNext()
 
+        // #188 G1: the error screen — retry like its primary button, or leave.
+        case (.error, .again):
+            Task { [weak self] in await self?.retryFromError() }
+
+        // #188 G3: the set-end score screen — play again (the Play Again
+        // button's path), or go Home.
+        case (.setEnd, .again):
+            Task { [weak self] in await self?.startNewQuiz() }
+
+        case (.error, .stop), (.setEnd, .home):
+            goHome()
+
         default:
             // Command not valid on this screen — inert. Logged so a matched
             // command that silently does nothing is visible in Sentry.

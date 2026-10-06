@@ -49,4 +49,56 @@ enum SpokenPrompt: String, Sendable {
         case (.mcqUnmatchedLetter, .english): "I didn't catch which option you meant. Please say its letter."
         }
     }
+
+    // MARK: - #188 G1–G3: lines outside the answer retry
+
+    /// #188 G2 (founder 2026-10-06): the free questions ran out mid-quiz. Said
+    /// once, before the paywall opens, so the stop is not a silent "crash".
+    static func quotaReachedLine(language: CommandLanguage) -> String {
+        switch language {
+        case .slovak: "Otázky zadarmo na tento mesiac sa minuli. Ako pokračovať, uvidíš na obrazovke."
+        case .czech: "Otázky zdarma na tento měsíc došly. Jak pokračovat, uvidíš na obrazovce."
+        case .english: "You've used up this month's free questions. The screen shows how to continue."
+        }
+    }
+
+    /// The error screen's line (#188 G1, founder 2026-10-06). `commands` are
+    /// the words that screen will act on — empty when voice commands are off,
+    /// so the line never promises a word nobody listens for. Command words
+    /// come from the lexicon, so the line and the matcher cannot drift.
+    static func errorLine(commands: [VoiceCommand], language: CommandLanguage) -> String {
+        let opening = switch language {
+        case .slovak: "Niečo sa pokazilo."
+        case .czech: "Něco se pokazilo."
+        case .english: "Something went wrong."
+        }
+        return [opening, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// The set-end score (#188 G3): "Hotovo, 7 z 10 správne." then the words
+    /// the score screen acts on.
+    static func setFinishedLine(
+        correct: Int, total: Int, commands: [VoiceCommand], language: CommandLanguage
+    ) -> String {
+        let score = switch language {
+        case .slovak: "Hotovo, \(correct) z \(total) správne."
+        case .czech: "Hotovo, \(correct) z \(total) správně."
+        case .english: "Done, \(correct) out of \(total) right."
+        }
+        return [score, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// "Povedz znova alebo stop." — no quote marks, the voice would read them
+    /// (copy rule 10).
+    private static func saySentence(_ commands: [VoiceCommand], language: CommandLanguage) -> String? {
+        let words = commands.map { VoiceCommandLexicon.spokenWord($0, language: language) }
+        guard let last = words.last else { return nil }
+        let (verb, or) = switch language {
+        case .slovak: ("Povedz", "alebo")
+        case .czech: ("Řekni", "nebo")
+        case .english: ("Say", "or")
+        }
+        let list = words.count > 1 ? "\(words.dropLast().joined(separator: ", ")) \(or) \(last)" : last
+        return "\(verb) \(list)."
+    }
 }

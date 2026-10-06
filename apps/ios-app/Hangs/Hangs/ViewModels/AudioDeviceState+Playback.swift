@@ -220,6 +220,20 @@ extension AudioDeviceState {
         }
     }
 
+    /// #188 G1–G4: play an app-composed line (error, score, quota, explanation)
+    /// with the command window CLOSED, like the result feedback. Never re-arms:
+    /// what listens next depends on the screen, so the caller decides.
+    func playAppSpeech(_ audio: Data) async {
+        setPlayingFeedbackTTS(true)
+        stopSilenceDetectionListening()
+        defer { setPlayingFeedbackTTS(false) }
+        do {
+            _ = try await audioService.playOpusAudio(audio)
+        } catch {
+            Logger.audio.warning("⚠️ Failed to play app speech: \(error, privacy: .public)")
+        }
+    }
+
     /// Run feedback playback with the command window CLOSED (#119 root cause
     /// #3): `handleAnswerResponse` transitions to `.showingResult`, arms the
     /// command listener and only then plays the feedback, so the recognizer sat

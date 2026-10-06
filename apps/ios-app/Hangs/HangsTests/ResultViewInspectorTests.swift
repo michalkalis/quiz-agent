@@ -675,13 +675,19 @@ struct ResultViewSkipHapticTests {
         #expect(ResultView.haptic(for: .skipped) != ResultView.haptic(for: .incorrect))
     }
 
-    @Test("non-skip results keep their existing haptics")
+    /// #188 G5 (founder 2026-10-06): a miss is shown mildly ("not quite"), so
+    /// it must not be felt as the harshest pattern the system has — one soft
+    /// tap for every non-correct verdict, and a correct answer still feels
+    /// different from a miss.
+    @Test("a miss gets one soft tap, never the error or warning buzz")
     @MainActor
-    func nonSkipHapticsUnchanged() {
+    func missHapticIsSoftTap() {
         #expect(ResultView.haptic(for: .correct) == .success)
-        #expect(ResultView.haptic(for: .incorrect) == .error)
-        #expect(ResultView.haptic(for: .partiallyCorrect) == .warning)
-        #expect(ResultView.haptic(for: .partiallyIncorrect) == .warning)
+        for result in [Evaluation.EvaluationResult.incorrect, .partiallyCorrect, .partiallyIncorrect] {
+            #expect(ResultView.haptic(for: result) == ResultView.missHaptic)
+            #expect(ResultView.haptic(for: result) != .error)
+            #expect(ResultView.haptic(for: result) != .warning)
+        }
     }
 }
 

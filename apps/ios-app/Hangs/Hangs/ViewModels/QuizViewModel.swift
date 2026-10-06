@@ -520,6 +520,7 @@ final class QuizViewModel: ObservableObject {
 
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+        quizEndCommandsArmed = false
         // T7 (decision 8): leaving the recording/processing phase-pair drops the
         // confirmation + capture subsets atomically via the owner child — never
         // mid-pair (recording → processing keeps in-flight state), and never the
@@ -806,11 +807,14 @@ final class QuizViewModel: ObservableObject {
     /// is in the middle of; a sustained outage must not spin forever.
     static let maxAwaitingQuestionPollErrors = 5
 
-    // #127: the feedback audio of the current result, retained so the result
-    // screen's "hear it" control can replay the spoken explanation on demand via
-    // the existing feedback-TTS path. Overwritten on each new result; cleared on reset.
-    private var lastFeedbackAudioBase64: String?
-    private var lastFeedbackUrl: String?
+    /// #188 G1/G3: the error / set-end screen's spoken line has played (and,
+    /// at the set end, the quiet session is up), so that screen may listen.
+    /// Any state change drops it (`transition`).
+    var quizEndCommandsArmed = false
+
+    /// #188 G1: the error line, synthesized while the quiz could still reach
+    /// the server — the network is usually what just failed. Keyed by text.
+    var prefetchedPromptAudio: [String: Data] = [:]
 
     // MARK: - Initialization
 
@@ -991,7 +995,10 @@ final class QuizViewModel: ObservableObject {
             continueToNext: { [weak self] in self?.advanceFromResult() },
             pauseQuiz: { [weak self] in self?.enterPause() },
             cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
-            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() }
+            cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
+            quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
+            retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
+            goHome: { [weak self] in self?.resetToHome() }
         )
     }
 
@@ -1240,6 +1247,7 @@ final class QuizViewModel: ObservableObject {
 
             currentSession = session
             persistenceStore.saveSession(id: session.id)
+            prefetchErrorPrompt()
 
             // A fresh set starts with a fresh ledger. "Play Again" reaches here
             // WITHOUT resetState (it goes .finished → .startingQuiz), which had
@@ -1448,8 +1456,9 @@ final class QuizViewModel: ObservableObject {
         TransientRetry.isTransient(error)
     }
 
-    /// Set error state. Errors are surfaced visually via `errorMessage`
-    /// and the `.error` state — we deliberately do not speak them aloud.
+    /// Set error state. Errors are surfaced via `errorMessage` and the
+    /// `.error` state; #188 G1 (founder 2026-10-06) adds one short spoken line
+    /// and the screen's voice commands, so a failure no longer needs a look.
     /// `error` is optional; when present it is formatted into `lastErrorDebugInfo` (DEBUG only)
     /// so `DebugErrorDetailsView` can show the full chain without parsing log files.
     /// `model` overrides the derived display model for failures whose copy/CTA
@@ -1461,7 +1470,8 @@ final class QuizViewModel: ObservableObject {
         activeErrorModel = model
             ?? error.map { AppErrorModel.from($0, context: context) }
             ?? AppErrorModel.from(context: context)
-        transition(to: .error(message: message, context: context))
+        guard transition(to: .error(message: message, context: context)) else { return }
+        announceError()
     }
 
     /// Handle an error, detecting 429 daily limit and showing paywall instead of error state
@@ -1477,6 +1487,9 @@ final class QuizViewModel: ObservableObject {
            case let .quotaLimitReached(limitError) = networkError
         {
             let entitlementConfirmed = await entitlementReconciler.resyncBeforePaywallIfLocallyEntitled()
+            // #188 G2: the paywall used to end the quiz without a word — it
+            // read as a crash at the wheel. One line first, then the sheet.
+            if !entitlementConfirmed { await announceQuotaReached() }
             audioService.deactivateSession()
             if entitlementConfirmed {
                 // #102 review follow-up: skip the paywall when the resync just
@@ -1555,18 +1568,6 @@ final class QuizViewModel: ObservableObject {
     /// On-demand question replay — see `AudioDeviceState.replayQuestionAudio`.
     func replayQuestionAudio() async {
         await audioDeviceState.replayQuestionAudio()
-    }
-
-    /// #127: replay the current result's feedback audio (the spoken explanation)
-    /// on demand — the result screen's "hear it" control. Reuses the existing
-    /// feedback-TTS playback path; a no-op when this result carried no audio (the
-    /// full explanation text stays reachable via the panel's internal scroll).
-    func replayFeedbackAudio() async {
-        if let base64 = lastFeedbackAudioBase64 {
-            _ = await audioDeviceState.playFeedbackAudioBase64(base64)
-        } else if let url = lastFeedbackUrl {
-            _ = await audioDeviceState.playFeedbackAudio(from: url)
-        }
     }
 
     /// See `AudioDeviceState.toggleMute` (founder bug 2026-07-11).
@@ -2254,10 +2255,6 @@ final class QuizViewModel: ObservableObject {
         // generated. The advance path reads this to wait instead of ending.
         awaitingNextQuestion = response.awaitingQuestion
 
-        // #127: retain this result's feedback audio for the "hear it" replay.
-        lastFeedbackAudioBase64 = response.audio?.feedbackAudioBase64
-        lastFeedbackUrl = response.audio?.feedbackUrl
-
         // Save question ID to history
         if let questionId = response.currentQuestion?.id {
             do {
@@ -2425,11 +2422,23 @@ final class QuizViewModel: ObservableObject {
         // mic stayed hot on the results and the recap played over a running
         // engine. Down before the session goes, like `endQuizWithResults`.
         audioDeviceState.stopSilenceDetectionListening()
-        // Release the audio session so Spotify/podcasts resume full volume.
-        audioService.deactivateSession()
+        if endsOnRecap {
+            // Release the audio session so Spotify/podcasts resume full volume.
+            audioService.deactivateSession()
+        } else {
+            // #188 G3: the score screen says the score first (it releases the
+            // session once it has spoken).
+            announceSetFinished()
+        }
 
         let finalScore = score
         Logger.quiz.info("🎮 Quiz finished! Final score: \(finalScore, privacy: .public)")
+    }
+
+    /// Whether `.finished` shows the end-of-set recap (which narrates itself)
+    /// rather than the score screen — the same test ContentView routes on.
+    var endsOnRecap: Bool {
+        settings.answerRevealMode == .endOfSet && !recapEntries.isEmpty
     }
 
     /// #189: a submit, skip or re-answer came back `session_finished` — the set
@@ -2592,8 +2601,6 @@ final class QuizViewModel: ObservableObject {
         nextQuestionAudioUrl = nil
         nextQuestion = nil
         awaitingNextQuestion = false
-        lastFeedbackAudioBase64 = nil
-        lastFeedbackUrl = nil
         isRerecording = false
         isAutoRecording = false
         // The two ownerless façade fields (T7) — no child owns them, so this is

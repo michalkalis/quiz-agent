@@ -148,9 +148,7 @@ struct ContentView: View {
                         // the setting flipped after a quota-cut set of zero
                         // recorded questions) degrades to the score screen
                         // rather than an empty list.
-                        if viewModel.settings.answerRevealMode == .endOfSet,
-                           !viewModel.recapEntries.isEmpty
-                        {
+                        if viewModel.endsOnRecap {
                             SetRecapView(viewModel: viewModel)
                         } else {
                             CompletionView(viewModel: viewModel)

@@ -511,6 +511,13 @@ class QuizFlowService:
                     headline_answer=display_question.headline_answer,
                     explanation=display_question.explanation,
                 )
+                # #188 G4 (founder 2026-10-06): a skip must SAY the answer too —
+                # the static "Skipped." clip left the driver without it unless
+                # they looked at the screen.
+                if include_audio and self.tts_service:
+                    outcome.feedback_audio = await self._generate_feedback_audio(
+                        "skipped", translated_correct, session.language
+                    )
                 result.feedback_received.append("skipped question")
 
             elif intent_type == "rating":

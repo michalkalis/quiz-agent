@@ -57,7 +57,7 @@ struct ResultView: View {
                     answerText: answerText,
                     isRecap: isRecap,
                     explanation: explanationText,
-                    onHearIt: { Task { await viewModel.replayFeedbackAudio() } }
+                    onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, Theme.Hangs.Spacing.xl)
@@ -262,14 +262,17 @@ struct ResultView: View {
         return Self.haptic(for: evaluation.result)
     }
 
+    /// #188 G5 (founder 2026-10-06): a miss is met as mildly as the verdict
+    /// band shows it — one soft tap, never the triple error buzz.
+    static let missHaptic = SensoryFeedback.impact(flexibility: .soft, intensity: 0.6)
+
     /// Pure mapping so the skip-is-not-a-failure decision is testable.
     static func haptic(for result: Evaluation.EvaluationResult) -> SensoryFeedback {
         switch result {
         case .correct: return .success
-        case .incorrect: return .error
+        case .incorrect, .partiallyCorrect, .partiallyIncorrect: return missHaptic
         // #82 item 2 (decision 7): a skip is not a failure — gentle tick.
         case .skipped: return .selection
-        case .partiallyCorrect, .partiallyIncorrect: return .warning
         // #148: a verdict this build does not know — neutral, never a failure buzz.
         case .unknown: return .impact
         }

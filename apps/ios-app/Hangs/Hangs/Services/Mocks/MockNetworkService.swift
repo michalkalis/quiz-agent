@@ -17,6 +17,14 @@ import os
         /// response that includes an `Evaluation` without overwriting the
         /// start-quiz fixture used by `startQuiz`. Falls back to `mockResponse`.
         var mockTextInputResponse: QuizResponse?
+        /// Backend-like session totals (#188 G14, see +Scoring): each text
+        /// answer adds its verdict's points to the session instead of
+        /// returning the fixture's frozen totals. Off for unit tests that pin
+        /// a fixed response; the UI-test app turns it on.
+        var tracksSessionScore = false
+        var trackedScore: Double = 0
+        var trackedAnswered = 0
+        var trackedCorrect = 0
         var mockAudioData: Data?
         var shouldFail = false
         /// When set, `getUsage` returns this instead of the default fixture — lets
@@ -198,6 +206,7 @@ import os
 
         func startQuiz(sessionId _: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
+            (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -276,7 +285,7 @@ import os
             guard let response = mockTextInputResponse ?? mockResponse else {
                 throw NetworkError.invalidResponse
             }
-            return response
+            return tracksSessionScore ? scoredTextInputResponse(input: input, template: response) : response
         }
 
         // MARK: - #182 next-question long-poll

@@ -16,7 +16,10 @@ struct QuizCompleteSummary: Equatable, Sendable {
     let incorrectCount: Int
     let totalAnswered: Int
     let totalQuestions: Int
-    let sessionAccuracyPercent: Double // this-quiz accuracy (not cumulative)
+    /// Correct answers out of the whole set, the same base as the "out of N"
+    /// under the score and the spoken "1 z 10" (#188 G14). Counting only the
+    /// answered ones showed 100 % next to "1 out of 10".
+    let sessionAccuracyPercent: Double
     let bestStreak: Int // session end best streak from QuizStats
     let avgPointsPerQuestion: Double
 
@@ -27,6 +30,24 @@ struct QuizCompleteSummary: Equatable, Sendable {
             return "\(Int(finalScore))"
         }
         return String(format: "%.1f", finalScore)
+    }
+
+    /// Which end-of-set message fits the score (#188 G14): the line under the
+    /// headline used to praise every run, even 0 out of 10. Bands follow the
+    /// displayed score (partial credit included) over the whole set.
+    enum ScoreBand: Equatable, Sendable {
+        case top // 80 % and up
+        case good // 50 % and up
+        case low // something, under half
+        case none // nothing scored
+    }
+
+    var scoreBand: ScoreBand {
+        guard totalQuestions > 0, finalScore > 0 else { return .none }
+        let ratio = finalScore / Double(totalQuestions)
+        if ratio >= 0.8 { return .top }
+        if ratio >= 0.5 { return .good }
+        return .low
     }
 
     /// Aggregate from the primitive values available on QuizViewModel at .finished state.
@@ -48,9 +69,7 @@ struct QuizCompleteSummary: Equatable, Sendable {
         stats: QuizStats
     ) -> QuizCompleteSummary {
         let total = maxQuestions ?? questionsAnswered
-        let accuracy = questionsAnswered > 0
-            ? Double(correctCount) / Double(questionsAnswered) * 100.0
-            : 0.0
+        let accuracy = total > 0 ? Double(correctCount) / Double(total) * 100.0 : 0.0
         let avg = questionsAnswered > 0 ? score / Double(questionsAnswered) : 0.0
 
         return QuizCompleteSummary(

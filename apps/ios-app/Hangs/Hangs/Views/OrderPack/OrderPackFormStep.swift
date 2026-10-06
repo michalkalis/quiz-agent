@@ -30,7 +30,7 @@ struct OrderPackFormStep: View {
 
     private var topicGroup: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HangsSectionLabel(text: "Quiz topic", color: Theme.Hangs.Colors.pink)
+            HangsSectionLabel(text: "Quiz topic")
                 .padding(.leading, Theme.Hangs.Spacing.xxs)
             HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
@@ -71,7 +71,6 @@ struct OrderPackFormStep: View {
                         label: "Quiz language",
                         value: Language.forCode(viewModel.language)?.nativeName
                             ?? Language.default.nativeName,
-                        valueColor: Theme.Hangs.Colors.pink,
                         action: {}
                     )
                     .allowsHitTesting(false)

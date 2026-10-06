@@ -87,11 +87,12 @@ struct SetRecapView: View {
 
             HStack(spacing: Theme.Hangs.Spacing.xs) {
                 chip(glyph: "✓", Text("\(correctCount) CORRECT"),
-                     color: Theme.Hangs.Colors.successText,
-                     fill: Theme.Hangs.Colors.greenSoft)
+                     color: correctCount > 0 ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted,
+                     fill: correctCount > 0 ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.neutralSoft)
+                // A zero is no news either way: neutral, not a red "0 missed" (#188 G14).
                 chip(glyph: "✗", Text("\(missedCount) MISSED"),
-                     color: Theme.Hangs.Colors.pinkText,
-                     fill: Theme.Hangs.Colors.pinkSoft)
+                     color: missedCount > 0 ? Theme.Hangs.Colors.pinkText : Theme.Hangs.Colors.muted,
+                     fill: missedCount > 0 ? Theme.Hangs.Colors.pinkSoft : Theme.Hangs.Colors.neutralSoft)
                 chip(glyph: "–", Text("\(skippedCount) SKIPPED"),
                      color: Theme.Hangs.Colors.muted,
                      fill: Theme.Hangs.Colors.neutralSoft)

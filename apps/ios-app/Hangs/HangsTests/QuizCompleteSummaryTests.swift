@@ -123,4 +123,48 @@ struct QuizCompleteSummaryTests {
 
         #expect(summary.displayScore == "4")
     }
+
+    // MARK: - Honest end-of-set numbers (#188 G14)
+
+    // The screen showed "1 out of 10" next to "Accuracy 100 %" because accuracy
+    // counted only the answered questions. Every number now shares the set as
+    // its base, the same base the spoken "1 z 10" uses.
+    @Test("accuracy is over the whole set, not only the answered questions")
+    func accuracyOverWholeSet() {
+        let summary = QuizCompleteSummary.from(
+            score: 1.0, questionsAnswered: 1, correctCount: 1, incorrectCount: 0,
+            maxQuestions: 10, stats: .empty
+        )
+
+        #expect(summary.sessionAccuracyPercent == 10.0)
+    }
+
+    // The message under the headline praised every run, 0 out of 10 included.
+    @Test("score message band follows the score over the set", arguments: [
+        (10.0, QuizCompleteSummary.ScoreBand.top),
+        (8.0, .top),
+        (7.5, .good),
+        (5.0, .good),
+        (4.5, .low),
+        (0.5, .low),
+        (0.0, .none),
+    ])
+    func scoreBands(score: Double, band: QuizCompleteSummary.ScoreBand) {
+        let summary = QuizCompleteSummary.from(
+            score: score, questionsAnswered: 10, correctCount: Int(score), incorrectCount: 0,
+            maxQuestions: 10, stats: .empty
+        )
+
+        #expect(summary.scoreBand == band)
+    }
+
+    @Test("an empty set never reads as a good run")
+    func emptySetBand() {
+        let summary = QuizCompleteSummary.from(
+            score: 0, questionsAnswered: 0, correctCount: 0, incorrectCount: 0,
+            maxQuestions: 0, stats: .empty
+        )
+
+        #expect(summary.scoreBand == .none)
+    }
 }

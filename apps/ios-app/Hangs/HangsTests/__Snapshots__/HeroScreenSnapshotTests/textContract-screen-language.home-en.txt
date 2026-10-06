@@ -12,10 +12,14 @@ Slovenčina
 Čeština
 Quiz language
 English
+Quiz language
+English
 Easy
 Medium
 Hard
 Random
+Difficulty
+Medium
 Difficulty
 Medium
 All Categories
@@ -26,6 +30,8 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
+Categories
+All Categories
 Categories
 All Categories
 Start

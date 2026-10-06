@@ -20,7 +20,7 @@ struct OrderPackSummaryStep: View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 18, leading: 18, bottom: 18, trailing: 18)) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HangsSectionLabel(text: "Custom pack · 30 questions", color: Theme.Hangs.Colors.accentTeal)
+                    HangsSectionLabel(text: "Custom pack · 30 questions")
 
                     Text(verbatim: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.hangsBody(16))

@@ -135,20 +135,22 @@ struct HomePacksSectionRenderingTests {
         #expect(played == ["pack-xyz"])
     }
 
-    @Test("an in-progress row shows Preparing… and offers no tappable play control")
+    // #188 G14: Home and the pack list said two different things ("Preparing…"
+    // vs "In progress") for the same order; both now read `statusLabel`.
+    @Test("an in-progress row shows the pack-list status word and offers no tappable play control")
     func inProgressRowNotPlayable() async throws {
         let vm = await loadedViewModel([order(status: "in_progress", orderId: "g1")])
         let view = HomePacksSection(viewModel: vm) { _ in Issue.record("no play possible") }
 
         let tree = try view.inspect()
-        _ = try tree.find(text: "Preparing…")
+        _ = try tree.find(text: String(localized: "Preparing"))
         #expect(throws: (any Error).self) {
             try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.play")
         }
     }
 
     // #182: the row must invite play the moment the first batch lands, and say
-    // honestly how much of the pack is there — not "Preparing…", which reads as
+    // honestly how much of the pack is there — not "Preparing", which reads as
     // "nothing to do yet".
     @Test("#182: a still-generating row with a pack plays and shows the ready count")
     func generatingRowPlaysWithReadyCount() async throws {

@@ -4,7 +4,7 @@
 //
 //  Home "my packs" entry (issue #141, founder variant B 2026-08-05): up to
 //  three custom-pack rows directly on Home — a delivered pack plays on one
-//  tap, an in-progress pack shows "Preparing…" so a fresh buyer sees their
+//  tap, an in-progress pack shows "Preparing" so a fresh buyer sees their
 //  order exists (founder pick: visible even before the first delivery).
 //  Failed/refunded orders never surface here — Home is a play entry, not an
 //  order-status surface; MyPacksView owns failure comms. Hidden entirely for
@@ -43,7 +43,7 @@ struct HomePacksSection: View {
         let visible = Self.visibleOrders(viewModel.orders)
         if !visible.isEmpty {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                HangsSectionLabel(text: "my packs", color: Theme.Hangs.Colors.pink)
+                HangsSectionLabel(text: "my packs")
                     .padding(.horizontal, Theme.Hangs.Spacing.lg)
                     .padding(.top, Theme.Hangs.Spacing.xs)
                 HangsCard {
@@ -89,7 +89,8 @@ struct HomePacksSection: View {
                         .font(.hangsBody(12))
                         .foregroundColor(Theme.Hangs.Colors.muted)
                 } else {
-                    Text("Preparing…")
+                    // Same wording as the pack list (#188 G14): one source.
+                    Text(verbatim: order.statusLabel)
                         .font(.hangsBody(12))
                         .foregroundColor(Theme.Hangs.Colors.accentPrimary)
                 }

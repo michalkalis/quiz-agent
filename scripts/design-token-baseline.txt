@@ -18,6 +18,9 @@ apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	.padding(.to
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	spacing: 14	1
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	spacing: 18	1
+apps/ios-app/Hangs/Hangs/Views/AudioDevicePickerView.swift	font	.hangsBody(12	3
+apps/ios-app/Hangs/Hangs/Views/AudioDevicePickerView.swift	font	.hangsBody(14	1
+apps/ios-app/Hangs/Hangs/Views/AudioDevicePickerView.swift	font	.hangsBody(16	1
 apps/ios-app/Hangs/Hangs/Views/AudioDevicePickerView.swift	spacing	spacing: 2	1
 apps/ios-app/Hangs/Hangs/Views/CompletionView.swift	font	.hangsBody(12	1
 apps/ios-app/Hangs/Hangs/Views/CompletionView.swift	font	.hangsBody(13	2
@@ -37,27 +40,22 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/AnswerOption.swift	font	.system(
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/AnswerOption.swift	radius	cornerRadius: 16	4
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/AnswerOption.swift	spacing	.padding(.vertical, 10)	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/EmptyAnswerRetryHint.swift	font	.hangsBody(15	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(12	4
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(12	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(14	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(16	3
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(17	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsBody(16	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDisplay(26	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDisplay(28	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDisplay(36	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(11	2
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(14	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(14	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.system(size: 11	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.system(size: 12	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.system(size: 13	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.horizontal, 10)	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.horizontal, 18)	3
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.vertical, 14)	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.vertical, 5)	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.vertical, 6)	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 10	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 3	2
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 6	3
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 6	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	font	.hangsBody(14	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	font	.hangsBody(16	1
@@ -81,6 +79,15 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuestionCard.swift	radius	c
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuestionCard.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuizProgressHeader.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuizProgressHeader.swift	spacing	spacing: 6	1
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	font	.hangsBody(12	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	font	.hangsBody(16	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	font	.hangsBody(17	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	font	.hangsMono(14	1
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	font	.system(size: 13	1
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	spacing	.padding(.horizontal, 18)	3
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	spacing	.padding(.vertical, 14)	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	spacing	spacing: 3	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsRows.swift	spacing	spacing: 6	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsSourceLink.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsSourceLink.swift	font	.system(size: 9	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HomePacksSection.swift	font	.hangsBody(12	3
@@ -145,15 +152,13 @@ apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	spacing	.padding(.hor
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	spacing	.padding(.vertical, 10)	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.hangsBody(13	3
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.hangsBody(14	1
-apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.hangsBody(17	2
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.hangsMono(11	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.system(size: 11	1
-apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.system(size: 13	2
+apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.system(size: 13	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.system(size: 16	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	radius	cornerRadius: 3	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	.padding(.bottom, 10)	1
-apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	.padding(.horizontal, 18)	1
-apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	spacing: 6	3
+apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	spacing: 6	2
 apps/ios-app/Hangs/Hangs/Views/ImageQuestionView.swift	font	.system(size: 40	1
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsBody(13	2
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsBody(16	2

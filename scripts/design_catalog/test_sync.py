@@ -7,6 +7,7 @@ winner on its own. Run: python3 -m unittest scripts.design_catalog.test_sync
 import unittest
 
 from scripts.design_catalog.build import keep_proposals, pending_section
+from scripts.design_catalog.pen import code_view, payload, pen_view
 from scripts.design_catalog.sync import classify
 
 BASE = {"pink": {"light": "#ff3d8f", "dark": "#ff3d8f"}, "space-md": "16px"}
@@ -68,6 +69,60 @@ class KeepProposalTests(unittest.TestCase):
         rows = [{"token": "space-md", "kind": "code", "catalog": "16px", "code": "18px"}]
         self.assertEqual(keep_proposals(tokens, rows), [])
         self.assertIn("Nothing", pending_section(rows, 0))
+
+
+PEN_TOKENS = {
+    "color": {"tokens": [
+        {"name": "bg", "value": {"light": "#f6f7f9", "dark": "#161616"}},
+        {"name": "palette-pink500", "value": "#ff3d8f"},
+    ]},
+    "spacing": {"tokens": [{"name": "space-md", "value": "16px"}]},
+    "radius": {"tokens": [{"name": "radius-card", "value": "18px"}]},
+    "shadow": {"tokens": [{"name": "shadow-card", "value": "0 4px 20px #0e1a2b14"}]},
+    "type": {"groups": [{"name": "Display (Anton)", "family": "display",
+                         "styles": [{"name": "question", "fontSize": "26px", "fontWeight": 400}]}]},
+}
+
+
+class PenTests(unittest.TestCase):
+    """Track F: Pen variables follow the same rules as the catalog. Designs start from
+    the values the app really uses, and a value changed in Pen is a proposal."""
+
+    def written(self):
+        return {k: {"type": v["type"], "value": v["value"]} for k, v in payload(PEN_TOKENS, "main@abc1234").items()}
+
+    def test_values_written_to_pen_read_back_as_the_code(self):
+        # otherwise every sync would report phantom differences right after a write
+        self.assertEqual(pen_view(self.written()), code_view(PEN_TOKENS))
+
+    def test_pen_does_not_carry_palette_or_shadows(self):
+        names = set(self.written())
+        self.assertNotIn("palette-pink500", names)  # views never use the private palette
+        self.assertNotIn("shadow-card", names)  # a Pen variable cannot hold a shadow
+
+    def test_old_names_and_pen_helpers_never_show_up_as_differences(self):
+        variables = {**self.written(), "bg-page": {"type": "color", "value": "$bg"},
+                     "radius-pill": {"type": "number", "value": 100}}
+        self.assertEqual(classify(code_view(PEN_TOKENS), pen_view(variables), code_view(PEN_TOKENS)), [])
+
+    def test_value_changed_in_pen_is_a_proposal(self):
+        variables = {**self.written(), "type-question-size": {"type": "number", "value": 28}}
+        base = code_view(PEN_TOKENS)
+        self.assertEqual(kinds(base, pen_view(variables), base), {"type.question": "proposal"})
+
+    def test_new_variable_in_pen_is_proposed_for_the_code(self):
+        variables = {**self.written(), "space-huge": {"type": "number", "value": 48}}
+        base = code_view(PEN_TOKENS)
+        self.assertEqual(kinds(base, pen_view(variables), base), {"space-huge": "added-in-catalog"})
+
+    def test_app_change_reaches_pen_on_the_next_write(self):
+        base = code_view(PEN_TOKENS)
+        code = {**base, "space-md": "18px"}
+        self.assertEqual(kinds(base, pen_view(self.written()), code), {"space-md": "code"})
+
+    def test_undecided_pen_proposal_is_not_overwritten(self):
+        self.assertNotIn("type-question-size", payload(PEN_TOKENS, "main@abc1234", {"type.question"}))
+        self.assertNotIn("bg-page", payload(PEN_TOKENS, "main@abc1234", {"bg"}))
 
 
 if __name__ == "__main__":

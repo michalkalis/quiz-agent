@@ -8,7 +8,7 @@ paths: ["apps/ios-app/**"]
 - **Architecture:** MVVM with Service Layer
 - **Voice-first** for hands-free driving use
 - **Layout & implementation rules:** `.claude/rules/ios-swiftui-layout.md`, `.claude/rules/ios-swift-conventions.md` and the component guide `.claude/rules/ios-components.md` (auto-loaded for `apps/ios-app/**/*.swift`; read them explicitly before creating a brand-new Swift file).
-- **Design catalog (#188 — unified design system):** run `/design-sync` before UI work (the founder may have proposed values or left comments in the claude.ai catalog) and after a PR touching `Theme.swift`, shared components or their snapshots merges (republish). Code is the truth; catalog edits are proposals.
+- **Design catalog (#188 — unified design system):** run `/design-sync` before UI work (the founder may have proposed values or left comments in the claude.ai catalog, or changed variables in Pen) and after a PR touching `Theme.swift`, shared components or their snapshots merges (republish the catalog and Pen variables). Code is the truth; catalog and Pen edits are proposals.
 
 ## Knowledge Reference
 

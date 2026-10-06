@@ -12,13 +12,12 @@ import Foundation
 import UIKit
 
 /// Pure decision seam: should the idle timer be disabled for this
-/// `(quizState, isMinimized, isNarratingRecap)` triple? Kept free of
+/// `(quizState, isNarratingRecap)` pair? Kept free of
 /// `UIApplication` so it is trivially unit-testable across every `QuizState`
 /// case.
 enum ScreenAwakeController {
     /// Awake for every state except `.idle` (home) and `.finished`
-    /// (completion) — and never while the quiz is minimized, since
-    /// QuestionView/ResultView aren't the visible screen at that point.
+    /// (completion).
     /// `.showingResult` counts as active on purpose (the founder's report was
     /// specifically about the result screen dimming).
     ///
@@ -28,8 +27,7 @@ enum ScreenAwakeController {
     /// while `quizState` stays `.finished` the whole time. The screen must
     /// stay awake for that narration and only sleep once it stops (playback
     /// ends, or the user leaves the recap).
-    nonisolated static func shouldKeepScreenAwake(state: QuizState, isMinimized: Bool, isNarratingRecap: Bool) -> Bool {
-        guard !isMinimized else { return false }
+    nonisolated static func shouldKeepScreenAwake(state: QuizState, isNarratingRecap: Bool) -> Bool {
         switch state {
         case .idle:
             return false
@@ -51,9 +49,9 @@ struct ScreenAwakeWriter {
     var setIdleTimerDisabled: (Bool) -> Void = { UIApplication.shared.isIdleTimerDisabled = $0 }
 
     /// Recompute and apply the idle-timer flag for the given quiz state.
-    func apply(state: QuizState, isMinimized: Bool, isNarratingRecap: Bool = false) {
+    func apply(state: QuizState, isNarratingRecap: Bool = false) {
         setIdleTimerDisabled(ScreenAwakeController.shouldKeepScreenAwake(
-            state: state, isMinimized: isMinimized, isNarratingRecap: isNarratingRecap
+            state: state, isNarratingRecap: isNarratingRecap
         ))
     }
 

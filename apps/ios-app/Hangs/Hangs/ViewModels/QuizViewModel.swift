@@ -335,9 +335,6 @@ final class QuizViewModel: ObservableObject {
         set { quizTimersController.isPaused = newValue }
     }
 
-    // Minimize state
-    @Published var isMinimized: Bool = false
-
     // MARK: - Voice Commands — forwarded to VoiceCommandCoordinator (#113 T3)
 
     // Voice-command slice — owned by VoiceCommandCoordinator. Permanent
@@ -472,17 +469,6 @@ final class QuizViewModel: ObservableObject {
         set { audioDeviceState.showingMicrophonePicker = newValue }
     }
 
-    /// Whether minimize is allowed in current state
-    /// Enabled during active quiz states (question, recording, processing, results)
-    var canMinimize: Bool {
-        switch quizState {
-        case .askingQuestion, .recording, .processing, .skipping, .showingResult:
-            return true
-        default:
-            return false
-        }
-    }
-
     // MARK: - Result Accessors (extract associated values for Views)
 
     /// The question being displayed on the result screen
@@ -544,9 +530,6 @@ final class QuizViewModel: ObservableObject {
         // #122: "action landed" signal — a matched glow clears as soon as the
         // min-display floor allows once the screen visibly changed.
         voiceCommandCoordinator.noteQuizStateChangedForFeedback()
-        // #110 Bug 3: .finished never cleared isMinimized, so a stale
-        // MinimizedQuizView floated over CompletionView with nothing to dismiss it.
-        if case .finished = newState { isMinimized = false }
 
         // Sentry: tag + context + breadcrumb (metadata only — no transcripts/PII)
         let questionId = currentQuestion?.id
@@ -2605,9 +2588,6 @@ final class QuizViewModel: ObservableObject {
         // their single explicit reset site.
         activeErrorModel = nil
         mcqVoiceMatchedKey = nil
-        // Ending a quiz from the minimized widget must dismiss the widget —
-        // otherwise a stale card floats over Home (#54 task 54.6).
-        isMinimized = false
         // T7 unified reset model: full teardown clears every child's scoped
         // state through one reset() per child instead of scattered per-field
         // writes (paywall/mic-picker sheets + command capture + timers +

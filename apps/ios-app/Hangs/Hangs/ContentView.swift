@@ -126,20 +126,10 @@ struct ContentView: View {
                     // and counter must keep standing while the pack catches up,
                     // so the set visibly continues instead of looking over.
                     case .askingQuestion, .awaitingQuestion, .recording, .processing, .skipping:
-                        // Show HomeView when minimized, otherwise QuestionView
-                        if viewModel.isMinimized {
-                            HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
-                        } else {
-                            QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
-                        }
+                        QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
 
                     case .showingResult:
-                        // Show HomeView when minimized, otherwise ResultView
-                        if viewModel.isMinimized {
-                            HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
-                        } else {
-                            ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
-                        }
+                        ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
 
                     case .finished:
                         // #132 E: deferred reveal ends on the recap (variant C);
@@ -180,39 +170,25 @@ struct ContentView: View {
                     }
                 }
             }
-
-            // Floating minimized quiz view overlay
-            if viewModel.isMinimized, viewModel.canMinimize {
-                VStack {
-                    Spacer()
-                    MinimizedQuizView(viewModel: viewModel)
-                        .padding()
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
         }
-        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: viewModel.isMinimized)
         // #108C: keep the screen awake for the duration of an active quiz —
-        // state, the minimized flag and (#185 finding 7) recap narration all
+        // state and (#185 finding 7) recap narration all
         // affect the answer, and the flag must never outlive this view
         // (onDisappear force-resets it).
         .onAppear {
-            screenAwakeWriter.apply(state: viewModel.quizState, isMinimized: viewModel.isMinimized, isNarratingRecap: viewModel.isNarratingRecap)
+            screenAwakeWriter.apply(state: viewModel.quizState, isNarratingRecap: viewModel.isNarratingRecap)
         }
         .onDisappear {
             screenAwakeWriter.reset()
         }
         .onChange(of: viewModel.quizState) { _, newState in
-            screenAwakeWriter.apply(state: newState, isMinimized: viewModel.isMinimized, isNarratingRecap: viewModel.isNarratingRecap)
-        }
-        .onChange(of: viewModel.isMinimized) { _, isMinimized in
-            screenAwakeWriter.apply(state: viewModel.quizState, isMinimized: isMinimized, isNarratingRecap: viewModel.isNarratingRecap)
+            screenAwakeWriter.apply(state: newState, isNarratingRecap: viewModel.isNarratingRecap)
         }
         // #185 finding 7: recap narration starts/stops without a quizState
         // change (state stays `.finished` throughout) — re-evaluate so the
         // screen wakes for the narration and sleeps once it stops.
         .onChange(of: viewModel.isNarratingRecap) { _, isNarratingRecap in
-            screenAwakeWriter.apply(state: viewModel.quizState, isMinimized: viewModel.isMinimized, isNarratingRecap: isNarratingRecap)
+            screenAwakeWriter.apply(state: viewModel.quizState, isNarratingRecap: isNarratingRecap)
         }
         .fullScreenCover(isPresented: $showOnboardingReplay) {
             OnboardingView(viewModel: onboardingVM)

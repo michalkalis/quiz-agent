@@ -99,7 +99,6 @@ struct ResultView: View {
             questionText: questionStem,
             trailingInset: 108
         )
-        .interactiveMinimize(isMinimized: $viewModel.isMinimized, canMinimize: viewModel.canMinimize)
         .simultaneousGesture(
             DragGesture(minimumDistance: 4).onChanged { _ in pauseAutoAdvanceIfActive() }
         )

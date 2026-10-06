@@ -66,6 +66,9 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     /// start asks the policy). No-op when nothing drifted.
     func restoreSessionAfterVoiceProcessing()
     func switchAudioMode(_ mode: AudioMode) async throws
+    /// #188 G7: where the system stands on microphone access right now, so a
+    /// caller can ask only while it is still undetermined.
+    var microphonePermissionStatus: MicrophonePermissionStatus { get }
     func requestMicrophonePermission() async -> Bool
     func prepareForRecording() async // Stops playback and waits for hardware settle
     func startRecording() throws
@@ -662,6 +665,14 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     }
 
     // MARK: - Microphone Permission
+
+    var microphonePermissionStatus: MicrophonePermissionStatus {
+        switch AVAudioApplication.shared.recordPermission {
+        case .granted: .granted
+        case .denied: .denied
+        default: .undetermined
+        }
+    }
 
     func requestMicrophonePermission() async -> Bool {
         await withCheckedContinuation { continuation in
@@ -1432,4 +1443,23 @@ enum AudioError: LocalizedError {
 private extension Data.SubSequence {
     /// Convert Data.SubSequence back to Data
     var asData: Data { Data(self) }
+}
+
+// MARK: - Microphone permission at the first question (#188 G7)
+
+enum MicrophonePermissionStatus: Equatable {
+    case undetermined
+    case granted
+    case denied
+}
+
+extension AudioServiceProtocol {
+    /// Ask for microphone access only if the user has not decided yet (they
+    /// tapped "Maybe later" in onboarding). A granted or denied answer is left
+    /// alone: asking again would be a no-op for the system and a denied mic
+    /// keeps today's behaviour of a quiz that works with buttons.
+    func requestMicrophonePermissionIfUndetermined() async {
+        guard microphonePermissionStatus == .undetermined else { return }
+        _ = await requestMicrophonePermission()
+    }
 }

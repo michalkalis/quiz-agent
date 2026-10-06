@@ -67,6 +67,11 @@ extension RecordingCoordinator {
             return
         }
 
+        // #188 G7: onboarding's "Maybe later" leaves the mic undecided; the
+        // first recording is where the reason to allow it is obvious, so ask
+        // here, before anything opens it. Denied keeps today's behaviour.
+        await audioService.requestMicrophonePermissionIfUndetermined()
+
         // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
         abortSkipUndoWindow()
 

@@ -15,8 +15,10 @@ nonisolated extension ComponentSample {
         [
             ComponentSample("primaryButton.default") { HangsPrimaryButton(title: "Start quiz", icon: "play.fill") {} },
             ComponentSample("primaryButton.disabled") { HangsPrimaryButton(title: "Start quiz", icon: "play.fill") {}.disabled(true) },
+            ComponentSample("primaryButton.disabledTrailingIcon") {
+                HangsPrimaryButton(title: "Continue", trailingIcon: "arrow.right") {}.disabled(true)
+            },
             ComponentSample("primaryButton.loading") { HangsPrimaryButton(title: "Start quiz", isLoading: true, showsSpinner: true) {} },
-            ComponentSample("primaryButton.destructive") { HangsPrimaryButton(title: "End quiz", isDestructive: true) {} },
             ComponentSample("primaryButton.countdown") {
                 HangsPrimaryButton(title: "Next question", countdownSecondsRemaining: 3, countdownTotal: 5) {}
             },

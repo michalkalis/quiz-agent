@@ -646,6 +646,89 @@
         }
       }
     },
+    "%lld seconds left" : {
+      "comment" : "Listening-bar VoiceOver: seconds left in the think or recording window (#188 G11)",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zbývají %lld sekundy"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zbývá %lld sekund"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zbývá %lld sekunda"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zbývá %lld sekund"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld second left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seconds left"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zostávajú %lld sekundy"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zostáva %lld sekúnd"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zostáva %lld sekunda"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "zostáva %lld sekúnd"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld selected" : {
       "comment" : "Home category picker value when several categories are selected; placeholder is the count",
       "localizations" : {
@@ -6142,6 +6225,7 @@
       }
     },
     "Rate this question" : {
+      "extractionState" : "stale",
       "comment" : "Accessibility label for the TestFlight-only question rating button",
       "localizations" : {
         "cs" : {
@@ -8547,6 +8631,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zdrojovú adresu sa nepodarilo načítať."
+          }
+        }
+      }
+    },
+    "Think" : {
+      "comment" : "Listening-bar state while the think window counts down before the mic opens; the seconds are shown beside it (#188 G11)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přemýšlej"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premýšľaj"
           }
         }
       }

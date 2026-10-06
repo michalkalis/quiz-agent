@@ -16,7 +16,6 @@ nonisolated extension ComponentSample {
     private static var chrome: [ComponentSample] {
         [
             ComponentSample("brandRow.default") { HangsBrandRow() },
-            ComponentSample("quizNav.default") { HangsQuizNav(onClose: {}, counterText: "03 / 10") },
             ComponentSample("progressHeader.default") { HangsQuizProgressHeader(category: "Geography", current: 3, total: 10) },
             ComponentSample("progressHeader.recording") {
                 HangsQuizProgressHeader(category: "Geography", current: 3, total: 10, isRecording: true)
@@ -58,6 +57,9 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.reading") { QuestionListenBar(phase: .readingQuestion) },
             ComponentSample("questionListenBar.thinking") { QuestionListenBar(phase: .thinking(remaining: 3, total: 5)) },
             ComponentSample("questionListenBar.listeningMCQ") { QuestionListenBar(phase: .listening(.mcq)) },
+            ComponentSample("questionListenBar.listeningCountdown") {
+                QuestionListenBar(phase: .listening(.open), answerRemaining: 12)
+            },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },

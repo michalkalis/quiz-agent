@@ -119,7 +119,6 @@ extension Theme.Hangs {
         static let card = ShadowSpec(color: Color(hex: Palette.navy900).opacity(0.08), radius: 20, y: 4)
         static let navChip = ShadowSpec(color: Color(hex: Palette.navy900).opacity(0.06), radius: 8, y: 2)
         static let cta = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.20), radius: 16, y: 6)
-        static let ctaStrong = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.25), radius: 16, y: 6)
         static let mic = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.30), radius: 24, y: 8)
         static let micStrong = ShadowSpec(color: Color(hex: Palette.pink500).opacity(0.40), radius: 24, y: 10)
     }

@@ -1,6 +1,6 @@
 # texts
-trubbo.
-00 / 10
+adults
+0/10
 MÁŠ TO.
 tvoje odpověď
 Paris
@@ -10,8 +10,11 @@ Paris has been the capital of France since the 10th century.
 zdroj
 Dál
 ZŮSTAŇ
+Nastavení
 # identifiers
-question.closeButton
+question.progress
+question.category
+question.counter
 result.heroBanner
 result.verdict
 result.hearIt
@@ -20,3 +23,8 @@ result.metaRow
 result.source
 result.continue
 result.stayHere
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

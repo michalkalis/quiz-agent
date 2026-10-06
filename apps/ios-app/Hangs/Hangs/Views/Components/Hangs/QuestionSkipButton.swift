@@ -49,9 +49,11 @@ struct QuestionSkipButton: View {
                 Text("Skip")
                     .font(.hangsBody(15, weight: .semibold))
                     // The founder's one-line rule for the bottom row: the word
-                    // shrinks before it ever wraps or pushes a neighbour out.
+                    // never wraps. #188 G9 (D10): and it is never cut either —
+                    // at large text it truncated to "Pres…". It keeps its full
+                    // width; the flexible Start button beside it gives way.
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .fixedSize()
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(height: height)

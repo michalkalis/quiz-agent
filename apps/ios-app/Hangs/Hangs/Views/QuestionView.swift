@@ -113,6 +113,10 @@ struct QuestionView: View {
                     .accessibilityIdentifier("question.sheetDim")
             }
         }
+        // #188 G9: the quiz stops growing at the largest non-accessibility size,
+        // so the options and the controls keep a screen to live on. Applied to
+        // the screen only — the Settings sheet below is not a quiz screen.
+        .dynamicTypeSize(...QuizTypeSize.screenCap)
         // The echo belongs to one question only.
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
             submittedAnswer = ""
@@ -133,7 +137,20 @@ struct QuestionView: View {
         // collided with the MCQ category label at a fixed inset.
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar { quizToolbar }
+        // #188 G9 (D9): the same bar the result screen draws.
+        .quizToolbar(
+            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
+            // EFFECTIVE mute, not the persisted Settings preference.
+            isMuted: viewModel.isAudioMuted,
+            isPaused: viewModel.isPaused,
+            isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
+            onClose: { showEndQuizConfirmation = true },
+            onMute: { Task { await viewModel.toggleMute() } },
+            onPause: { viewModel.togglePause() },
+            onSettings: { showQuizSettings = true },
+            onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
+            onRateQuestion: rateQuestionAction
+        )
         // #155 (TestFlight/Debug only): rate the question. Rating-only — it
         // never reads an answer or moves the quiz state machine.
         .sheet(item: $ratingPresentation) { presentation in
@@ -173,6 +190,8 @@ struct QuestionView: View {
                 noAnswerCaptured: viewModel.noAnswerCaptured,
                 autoConfirmHeld: viewModel.isAutoConfirmHeld
             )
+            // #188 G9: the answer sheet is part of the quiz — same cap.
+            .dynamicTypeSize(...QuizTypeSize.screenCap)
         }
         .sheet(isPresented: $showQuizSettings) {
             // #68 resolution: the chip opens the full settings screen, which now
@@ -204,49 +223,7 @@ struct QuestionView: View {
         // the no-pause-while-typing decision 2a).
     }
 
-    // MARK: - Toolbar (#173 decision 1, variant A3)
-
-    /// One toolbar for MCQ, voice and image questions, in every quiz state.
-    /// ✕ leading; the two mid-question controls (mute, pause) joined into one
-    /// pill trailing (#179 D2); everything else under ⋯ — the HIG "More" rule,
-    /// and the reason nothing can overlap the category label any more.
-    @ToolbarContentBuilder
-    private var quizToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button { showEndQuizConfirmation = true } label: {
-                Image(systemName: "xmark")
-            }
-            .tint(Theme.Hangs.Colors.ink)
-            .accessibilityLabel(Text("Close quiz"))
-            .accessibilityIdentifier("question.closeButton")
-        }
-
-        // #179 D2: one joined pill, not a group the system spacing spreads into
-        // two unrelated buttons.
-        ToolbarItem(placement: .topBarTrailing) {
-            QuizControlPill(
-                // #173 Track A: the toolbar mute is quiz-scoped — it must show
-                // the EFFECTIVE mute, not the persisted Settings preference.
-                isMuted: viewModel.isAudioMuted,
-                isPaused: viewModel.isPaused,
-                isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
-                onMute: { Task { await viewModel.toggleMute() } },
-                onPause: { viewModel.togglePause() }
-            )
-        }
-
-        // Separates the live controls from the menu, so the ⋯ never reads as a
-        // third mid-question button.
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-        ToolbarItem(placement: .topBarTrailing) {
-            QuizOverflowMenu(
-                onSettings: { showQuizSettings = true },
-                onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
-                onRateQuestion: rateQuestionAction
-            )
-        }
-    }
+    // MARK: - Toolbar actions
 
     /// The #155 gate, unchanged: TestFlight/Debug only, and only with a question
     /// to rate. nil = the row is absent, which is what an App Store build gets.
@@ -370,6 +347,11 @@ struct QuestionView: View {
     /// question TTS from the top. Disabled when there's nothing to replay (muted or
     /// no question audio URL, #59.5); the question must stay fully readable, so only
     /// the speaker glyph fades, never the text.
+    ///
+    /// #188 G8: `.plain` dimmed the WHOLE label of the disabled button — the
+    /// question went half contrast for the entire read/record/evaluate, near
+    /// unreadable in light mode. `QuestionReplayButtonStyle` keeps the label at
+    /// full contrast; the glyph alone says whether replay is available.
     private func questionReplayTapTarget(@ViewBuilder content: () -> some View) -> some View {
         Button {
             Task { await viewModel.replayQuestionAudio() }
@@ -377,7 +359,7 @@ struct QuestionView: View {
             content()
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(QuestionReplayButtonStyle())
         .disabled(!viewModel.canReplayAudio)
         .accessibilityHint("Replays the question")
         .accessibilityIdentifier("question.replay")
@@ -505,6 +487,7 @@ struct QuestionView: View {
                 language: viewModel.commandLanguage,
                 speechHeard: viewModel.isHearingAnswer,
                 inputLevel: viewModel.recordingInputLevel,
+                answerRemaining: viewModel.answerWindowRemaining,
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
             .padding(.horizontal, Theme.Hangs.Spacing.lg)
@@ -555,6 +538,10 @@ struct QuestionView: View {
                                 textFont: stemFont,
                                 textIdentifier: "question.text"
                             )
+                            // #188 G9 (D11): display type is already large; past
+                            // this size it only pushed the stem under the
+                            // scroll cue and starved the options.
+                            .dynamicTypeSize(...QuizTypeSize.questionCap)
                             // Keep the stem its OWN a11y element inside the
                             // replay button. A button label that resolves to a
                             // single element gets folded into the button, taking
@@ -675,6 +662,8 @@ struct QuestionView: View {
                                     .minimumScaleFactor(0.7)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                    // #188 G9: same ceiling as the MCQ stem.
+                                    .dynamicTypeSize(...QuizTypeSize.questionCap)
                                     .accessibilityIdentifier("question.text")
                                 replayGlyph
                             }
@@ -784,6 +773,17 @@ struct QuestionView: View {
         case .finished: return "finished"
         case .error: return "error"
         }
+    }
+}
+
+/// #188 G8: the tap-to-replay question block. Unlike `.plain`, it does NOT dim a
+/// disabled label — the label is the question itself, and it must read at full
+/// contrast in every state. Pressed feedback stays (only an enabled button can
+/// be pressed); availability is shown by `replayGlyph` alone.
+struct QuestionReplayButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 

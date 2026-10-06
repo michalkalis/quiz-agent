@@ -130,6 +130,10 @@ struct QuestionListenBar: View {
     /// #185 track F: the live mic level the bar breathes with while listening.
     var inputLevel: RecordingInputLevel? = nil
 
+    /// #188 G11: seconds left in the recording window while listening — the
+    /// bar is the quiz's one countdown, so the Stop button no longer carries it.
+    var answerRemaining: Int? = nil
+
     var onDismiss: (() -> Void)? = nil
 
     private var words: [String] {
@@ -147,6 +151,7 @@ struct QuestionListenBar: View {
             thinkCountdown: phase.countdown,
             speechHeard: speechHeard,
             inputLevel: inputLevel,
+            answerRemaining: answerRemaining,
             onDismiss: phase.isDismissable ? onDismiss : nil
         )
     }

@@ -86,12 +86,15 @@ struct AnswerOption: View {
                 .font(.hangsBody(16, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 // #174 C2: this row is the layout long options fall back to, so
-                // it must never be the thing that truncates them. Three lines at
-                // (almost) full size — the row grows instead, and 0.9 is a floor
-                // the driver can still read from a windscreen mount.
-                .lineLimit(3)
-                .minimumScaleFactor(0.9)
+                // it must never be the thing that truncates them: the row grows.
+                // #188 G9 (D11): at large text the option was still cut ("…")
+                // because a scaled, wrapped text reported less height than it
+                // needed. Now it wraps at full size and claims its height, up to
+                // four lines (every option lands here at large text, see
+                // `MCQOptionPicker.gridMaxTypeSize`).
+                .lineLimit(4)
                 .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: Theme.Hangs.Spacing.sm)
 

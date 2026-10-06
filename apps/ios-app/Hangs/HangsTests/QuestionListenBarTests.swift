@@ -140,11 +140,15 @@ struct QuestionListenBarRenderTests {
         }
     }
 
-    /// State 2 — the #132 B countdown, plus all three words.
+    /// State 2 — the #132 B countdown, plus all three words. #188 G11: the state
+    /// is one large word and the seconds are their own large number, the ONE
+    /// place the question screen counts down.
     @Test("state 2 counts the think window down and offers all three words")
     func thinkingState() async throws {
         try await host(.thinking(remaining: 32, total: 45), language: .slovak) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 32 S") }
+            #expect(throws: Never.self) { try tree.find(text: "Think") }
+            let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
+            #expect(try seconds.text().string() == "32 s")
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             for word in ["„štart“", "„zopakuj“", "„preskoč“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
@@ -222,7 +226,10 @@ struct QuestionListenBarRenderTests {
     func wordsOffKeepsTheBar() async throws {
         try await host(.thinking(remaining: 9, total: 30), showsWords: false) { tree in
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 9 S") }
+            #expect(throws: Never.self) { try tree.find(text: "Think") }
+            #expect(throws: Never.self, "the countdown is the state too") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
+            }
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }

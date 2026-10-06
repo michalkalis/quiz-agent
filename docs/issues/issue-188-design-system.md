@@ -61,7 +61,7 @@ Pravidlo pre celý zoznam: **radšej menej zvukovej odozvy ako priveľa.** Nepri
 - [x] **G3 (D3)** Koniec setu (režim po každej otázke): krátko vysloviť skóre („Hotovo, 7 z 10“) + povely „znova“ / „domov“.
 - [x] **G4 (D4+D5)** „Vypočuj si“ prečíta vysvetlenie (dnes prehrá znova verdikt); pri preskočení vysloviť správnu odpoveď.
 - [x] **G5 (M4)** Zlá odpoveď a preskočenie: jemný ťuk namiesto chybovej vibrácie.
-- [ ] **G6 (M10)** Tiché úseky (10 s premýšľania, ticho pred ďalšou otázkou): najviac jeden veľmi minimalistický zvuk, founder ho posúdi napočutie; inak nič.
+- [x] **G6 (M10)** Tiché úseky (10 s premýšľania, ticho pred ďalšou otázkou): žiadny nový zvuk (hlas ďalšej otázky a povel „štart“ ich už pokrývajú); founder ponechal len tón „mikrofón zapnutý“, ostatné signály (začiatok reči, prijaté, povel, preskočenie) sú len vibrácia.
 - [ ] **G7 (M12)** Mikrofón pýtať v onboardingu aj pri prvej otázke, ak ešte nie je povolený.
 - [ ] **G8 (D1)** Text otázky vždy plným kontrastom (dnes ho stlmí vypnuté tlačidlo „prehraj znova“); stlmiť len ikonku.
 - [ ] **G9 (D7–D11)** Veľké písmo: **horný limit veľkosti písma** (hlavne kvíz; možnosti MCQ nesmú zakryť zvyšok obrazovky), hero nadpisy na jeden riadok so zmenšením, hodnoty v riadkoch pod názov namiesto delenia slova, jedna horná lišta pre otázku aj výsledok (počítadlo sa neprekrýva), tlačidlá bez „…“ (aj podnet z C).

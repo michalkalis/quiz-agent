@@ -269,11 +269,12 @@ struct RecordingFeedbackPipelineTests {
         await pumpUntil({ vm.isHearingAnswer }, "speech never reached the bar")
     }
 
-    /// WHY (founder 2026-09-24): ONE gentle tone when speech starts. The
+    /// WHY (founder 2026-09-24): ONE gentle cue when speech starts. The
     /// streaming path reports speech on every partial transcript, so without
-    /// the once-per-recording gate the driver would hear a tone per word.
-    @Test("the speech-start tone plays once per recording")
-    func speechStartToneOnce() async {
+    /// the once-per-recording gate the driver would feel a tap per word.
+    /// #188 G6: it is a haptic only now (no tone).
+    @Test("the speech-start cue fires once per recording, as a tap")
+    func speechStartCueOnce() async {
         let (vm, _, earcons) = makeVM()
         await vm.recordingCoordinator.startRecording()
         earcons.reset()
@@ -282,7 +283,8 @@ struct RecordingFeedbackPipelineTests {
         vm.recordingCoordinator.noteSpeechStarted()
         vm.recordingCoordinator.noteSpeechStarted()
 
-        #expect(earcons.played == [.speechStart])
+        #expect(earcons.hapticsOnly == [.speechStart])
+        #expect(earcons.played.isEmpty)
     }
 
     /// WHY (founder 2026-09-25): "Recording sounds" off means SILENT, not

@@ -64,7 +64,7 @@ struct EarconTests {
         }
     }
 
-    @Test("stopping recording plays exactly the got-it (STOP) cue")
+    @Test("stopping recording gives exactly the got-it (STOP) cue, as a haptic only")
     func gotItOnStop() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
@@ -73,12 +73,13 @@ struct EarconTests {
 
             await vm.recordingCoordinator.stopRecordingAndSubmit()
 
-            #expect(earcon.played.first == .gotIt, "stop must play got-it first, got \(earcon.played)")
-            #expect(earcon.played == [.gotIt], "stop must play exactly got-it, got \(earcon.played)")
+            // #188 G6: only the mic-live cue has a tone; STOP is a tap.
+            #expect(earcon.hapticsOnly == [.gotIt], "stop must give exactly got-it, got \(earcon.hapticsOnly)")
+            #expect(earcon.played.isEmpty, "stop must make no sound, got \(earcon.played)")
         }
     }
 
-    @Test("opening the skip undo-window plays exactly the skip-confirm cue")
+    @Test("opening the skip undo-window gives exactly the skip-confirm cue, as a haptic only")
     func skipConfirmOnUndoWindow() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
@@ -86,11 +87,12 @@ struct EarconTests {
 
             vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window: no commit during the assertion
 
-            #expect(earcon.played == [.skipConfirm], "opening the skip window must play exactly skip-confirm, got \(earcon.played)")
+            #expect(earcon.hapticsOnly == [.skipConfirm], "opening the skip window must give exactly skip-confirm, got \(earcon.hapticsOnly)")
+            #expect(earcon.played.isEmpty, "skip-confirm makes no sound (#188 G6), got \(earcon.played)")
         }
     }
 
-    @Test("recognizing a command plays exactly the command-ack cue")
+    @Test("recognizing a command gives exactly the command-ack cue, as a haptic only")
     func commandAckOnRecognition() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
@@ -100,7 +102,8 @@ struct EarconTests {
 
             // command-ack is emitted synchronously; the routed action (advance) emits
             // no earcon, so this is the only cue.
-            #expect(earcon.played == [.commandAck], "recognizing a command must play exactly command-ack, got \(earcon.played)")
+            #expect(earcon.hapticsOnly == [.commandAck], "recognizing a command must give exactly command-ack, got \(earcon.hapticsOnly)")
+            #expect(earcon.played.isEmpty, "command-ack makes no sound (#188 G6), got \(earcon.played)")
         }
     }
 
@@ -117,8 +120,10 @@ struct EarconTests {
             vm.emitEarcon(.gotIt)
             vm.emitEarcon(.skipConfirm)
             vm.emitEarcon(.commandAck)
+            vm.emitEarcon(.speechStart)
 
             #expect(earcon.played.isEmpty, "no cue may play during TTS, got \(earcon.played)")
+            #expect(earcon.hapticsOnly.isEmpty, "no tap during TTS either, got \(earcon.hapticsOnly)")
         }
     }
 
@@ -131,7 +136,8 @@ struct EarconTests {
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
-            #expect(earcon.played.isEmpty, "command-ack must be suppressed during TTS, got \(earcon.played)")
+            #expect(earcon.played.isEmpty && earcon.hapticsOnly.isEmpty,
+                    "command-ack must be suppressed during TTS, got \(earcon.played) / \(earcon.hapticsOnly)")
         }
     }
 
@@ -140,23 +146,44 @@ struct EarconTests {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
             vm.isPlayingQuestionTTS = true
-            vm.emitEarcon(.commandAck)
+            vm.emitEarcon(.micLive)
             #expect(earcon.played.isEmpty)
 
             vm.isPlayingQuestionTTS = false
-            vm.emitEarcon(.commandAck)
-            #expect(earcon.played == [.commandAck], "cue must fire once TTS ends, got \(earcon.played)")
+            vm.emitEarcon(.micLive)
+            #expect(earcon.played == [.micLive], "cue must fire once TTS ends, got \(earcon.played)")
         }
     }
 
     // MARK: - "Recording sounds" setting (#68)
 
-    /// #68: the Settings toggle must actually silence the recording pair —
-    /// otherwise the user-facing switch is a lie. Only mic-live/got-it are
-    /// gated; command-ack and skip stay on as driving-safety feedback, so a
-    /// driver still hears that a spoken command landed.
-    @Test("recording sounds off silences mic-live and got-it but not command cues")
-    func recordingSoundsToggleGatesOnlyRecordingPair() async {
+    /// #188 G6 (founder 2026-10-06, earcons were "really annoying and
+    /// frequent"): of all cues only mic-live has a tone, so one answer carries
+    /// at most ONE sound. The other four are taps, whatever the setting.
+    @Test("only mic-live makes a sound; the other cues are haptic only")
+    func onlyMicLiveHasATone() async {
+        await withMainSerialExecutor {
+            let (vm, earcon) = makeVM()
+
+            for cue in Earcon.allCases { vm.emitEarcon(cue) }
+
+            #expect(earcon.played == [.micLive], "only mic-live may play a tone, got \(earcon.played)")
+            #expect(earcon.hapticsOnly == [.speechStart, .gotIt, .skipConfirm, .commandAck])
+        }
+    }
+
+    /// WHY: the policy lives in one pure rule; a cue added later must opt in to
+    /// a tone explicitly, and every cue (tone or not) must still be felt.
+    @Test("every cue keeps a haptic; exactly one has a tone")
+    func toneRuleAndHaptics() {
+        #expect(Earcon.allCases.filter(\.hasTone) == [.micLive])
+    }
+
+    /// #68: the Settings toggle must actually silence the one remaining tone —
+    /// otherwise the user-facing switch is a lie. The tap stays, so the mic
+    /// opening is still felt (founder 2026-09-25).
+    @Test("recording sounds off silences the mic-live tone but keeps its haptic")
+    func recordingSoundsToggleSilencesMicLiveTone() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
             vm.settings.recordingSoundsEnabled = false
@@ -166,11 +193,8 @@ struct EarconTests {
             vm.emitEarcon(.commandAck)
             vm.emitEarcon(.skipConfirm)
 
-            #expect(earcon.played == [.commandAck, .skipConfirm],
-                    "with recording sounds off only command/skip cues may play, got \(earcon.played)")
-            // #185 track F (founder 2026-09-25): silent is not unconfirmed —
-            // the recording pair still taps.
-            #expect(earcon.hapticsOnly == [.micLive, .gotIt])
+            #expect(earcon.played.isEmpty, "with recording sounds off nothing may sound, got \(earcon.played)")
+            #expect(earcon.hapticsOnly == [.micLive, .gotIt, .commandAck, .skipConfirm])
         }
     }
 

@@ -145,26 +145,26 @@ struct ResultMetaRow: View {
     var reviewNote: String? = nil
     let onOpenSource: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-            HStack(spacing: 10) {
+            // #188 G9 (D10 rule, founder screenshot at large text): the driver's
+            // own answer is never cut to "…" — it wraps. At enlarged text it also
+            // takes its own line and the badge and source move under it, so it
+            // is not squeezed into a sliver beside them.
+            let layout = dynamicTypeSize > .large
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 10))
+            layout {
                 if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
-                if let reviewBadge {
-                    ReviewBadge(badge: reviewBadge, filled: true)
-                        .accessibilityIdentifier("result.reviewBadge")
-                }
-                Spacer(minLength: 8)
-                if let sourceDomain {
-                    // #179: the same link the recap's expanded row draws.
-                    HangsSourceLink(domain: sourceDomain, action: onOpenSource)
-                        .accessibilityIdentifier("result.source")
-                }
+                HStack(spacing: 10) { labels }
             }
             if let reviewNote {
                 Text(verbatim: reviewNote)
                     .font(.hangsMono(10, weight: .medium))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                    // A sentence: it wraps rather than ending in "…" (#188 G9).
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("result.reviewNote")
             }
         }
@@ -173,18 +173,35 @@ struct ResultMetaRow: View {
         .accessibilityIdentifier("result.metaRow")
     }
 
+    /// Badge, then the source link at the trailing edge.
+    @ViewBuilder
+    private var labels: some View {
+        if let reviewBadge {
+            ReviewBadge(badge: reviewBadge, filled: true)
+                .fixedSize()
+                .accessibilityIdentifier("result.reviewBadge")
+        }
+        Spacer(minLength: 8)
+        if let sourceDomain {
+            // #179: the same link the recap's expanded row draws.
+            HangsSourceLink(domain: sourceDomain, action: onOpenSource)
+                .accessibilityIdentifier("result.source")
+        }
+    }
+
     /// The label is `.fixedSize()`: without it SwiftUI shares the squeeze and the
-    /// row degrades to "you s… Saturn" (sim check, long-answer case). Only the
-    /// spoken answer may truncate — it is the one part with unbounded length.
+    /// row degrades to "you s… Saturn" (sim check, long-answer case).
+    /// #188 G9: the answer is never truncated either — it wraps, and takes its
+    /// width before the spacer does.
     private func saidEntry(_ answer: String) -> some View {
-        HStack(spacing: 5) {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
             monoLabel("you said")
             Text(verbatim: answer)
                 .font(.hangsMono(10, weight: .medium))
                 .strikethrough()
-                .lineLimit(1)
-                .truncationMode(.tail)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .layoutPriority(1)
     }
 
     private func monoLabel(_ key: LocalizedStringKey) -> some View {

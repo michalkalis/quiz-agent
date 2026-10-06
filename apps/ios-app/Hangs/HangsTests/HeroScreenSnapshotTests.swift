@@ -67,9 +67,13 @@ nonisolated enum HeroLanguage: String, CaseIterable {
 @MainActor
 enum HeroScreen: String, CaseIterable {
     case home, question, result, paywall
-    /// #188 G9: four long options while the mic is open — the screen whose
-    /// rows overlapped at large text (founder screenshot, 2026-10-06).
+    /// #188 G9: four long options in the think state — the screen whose rows
+    /// overlapped, whose skip chip covered the last option and whose countdown
+    /// ran under the bar's ✕ at large text (founder screenshots, 2026-10-06).
     case questionMCQ
+    /// #188 G9: a wrong answer long enough that the meta row must wrap rather
+    /// than cut the driver's answer to "…" at large text.
+    case resultMissed
 
     func make() async -> AnyView {
         switch self {
@@ -94,8 +98,21 @@ enum HeroScreen: String, CaseIterable {
         case .questionMCQ:
             let vm = Self.quizViewModel()
             vm.currentQuestion = Question.previewMCQLongOptions
-            vm.quizState = .recording
+            vm.quizState = .askingQuestion
+            vm.settings.thinkingTime = 30
+            vm.thinkingTimeCountdown = 27
             return AnyView(QuestionView(viewModel: vm, debugSurfaces: false))
+
+        case .resultMissed:
+            let vm = Self.quizViewModel()
+            let evaluation = Evaluation(
+                userAnswer: "Somewhere on the Rhône, I think Lyon or maybe Marseille",
+                result: .incorrect, points: 0.0,
+                correctAnswer: "Paris", questionId: Question.preview.id,
+                explanation: Question.preview.explanation
+            )
+            vm.quizState = .showingResult(question: Question.preview, evaluation: evaluation)
+            return AnyView(ResultView(viewModel: vm, debugSurfaces: false))
 
         case .result:
             let vm = Self.quizViewModel()

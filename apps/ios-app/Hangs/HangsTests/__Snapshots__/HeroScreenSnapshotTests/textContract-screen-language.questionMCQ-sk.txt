@@ -2,8 +2,7 @@
 adults
 1/10
 Which statement about how the human body grows is correct?
-Počúvam…
-Povedz A–D alebo odpoveď
+PREMÝŠĽAJ, POČÚVAM O 27 S
 A
 Hair on the head grows roughly 1.25 centimetres every month, a little faster in summer
 B
@@ -12,7 +11,7 @@ C
 Children grow measurably faster in spring than they do in any other season of the year
 D
 Toenails grow about four times faster than fingernails, mostly while you are asleep
-recording
+askingQuestion
 Preskoč
 Nastavenia
 # identifiers
@@ -23,7 +22,6 @@ question.replay
 question.text
 question.replayGlyph
 listen-bar
-listen-bar.note
 listen-bar.dismiss
 mcq.option.a
 mcq.option.b

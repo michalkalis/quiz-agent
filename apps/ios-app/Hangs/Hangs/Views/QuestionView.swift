@@ -412,16 +412,18 @@ struct QuestionView: View {
                     .frame(width: 0, height: 0)
                     .accessibilityIdentifier("question.state")
             #endif
+
+            // #179 finding 10: the footer stays PINNED to the bottom edge — four
+            // long options once grew past the screen and carried "Skip question"
+            // off with them, the driver's only escape hatch. #188 G9: it is the
+            // last row of this stack, no longer a bottom inset. The options scroll
+            // now, so nothing can push it away; and as an inset it let the
+            // options' scroll view run underneath it, where the chip covered the
+            // last option (founder screenshot, large text). A row never overlaps.
+            mcqFooter(compact: compact)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxHeight: .infinity)
-        // #179 finding 10: the footer is PINNED to the bottom edge instead of
-        // stacked after the options. Four options of 2–3 lines each grew past
-        // the screen and carried "Skip question" off with them — the driver's
-        // only escape hatch. As an inset it is laid out first and the stem
-        // takes what is left, so the chip cannot be pushed anywhere.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            mcqFooter(compact: compact)
-        }
     }
 
     /// #188 G9 (founder screenshot, xxxLarge): the options are sized to their

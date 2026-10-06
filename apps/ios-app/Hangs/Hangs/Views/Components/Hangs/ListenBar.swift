@@ -449,11 +449,13 @@ struct ListenBar: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityText)
             .accessibilityIdentifier("listen-bar")
-            // The ✕ is a sibling of the combined element, never inside it: VoiceOver
-            // must reach the control, not read "hide" as part of the instruction.
-            .overlay(alignment: .trailing) { dismissButton }
             .padding(.leading, usesStatusLayout ? 18 : (size == .slim ? 16 : 14))
             .padding(.trailing, trailingPadding)
+            // The ✕ is a sibling of the combined element, never inside it: VoiceOver
+            // must reach the control, not read "hide" as part of the instruction.
+            // #188 G11: laid over the trailing padding reserved for it, never over
+            // the content — the countdown now ends the row and sat under it.
+            .overlay(alignment: .trailing) { dismissButton }
             .frame(maxWidth: .infinity)
             // A floor, not a fixed height: at large text the status line must
             // never be clipped by its own capsule (#188 G9).
@@ -637,8 +639,8 @@ struct ListenBar: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            // Sits in the trailing padding this bar reserves for it (40pt).
-            .offset(x: 20)
+            // Sits in the trailing padding this bar reserves for it (40–44pt).
+            .padding(.trailing, Theme.Hangs.Spacing.xxs)
             .accessibilityLabel(String(localized: "Hide the listening bar", comment: "Accessibility label for the button that hides the in-quiz listening bar for the current question"))
             .accessibilityIdentifier("listen-bar.dismiss")
         }

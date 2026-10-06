@@ -38,6 +38,15 @@ nonisolated extension ComponentSample {
             ComponentSample("reviewBadge.pendingReview") { ReviewBadge(badge: "pending_review") },
             ComponentSample("reviewBadge.machineTranslation") { ReviewBadge(badge: "translation_machine", filled: true) },
             ComponentSample("reviewBadge.englishFallback") { ReviewBadge(badge: "en_fallback") },
+            ComponentSample("resultMetaRow.longAnswer") {
+                ResultMetaRow(
+                    userAnswer: "Somewhere on the Rhône, I think Lyon or maybe Marseille",
+                    sourceDomain: "en.wikipedia.org",
+                    reviewBadge: "pending_review",
+                    reviewNote: "answerability: flip, the answer is given away in the question",
+                    onOpenSource: {}
+                )
+            },
             ComponentSample("provenanceRow.default") {
                 QuestionProvenanceRow(question: Question.preview, isEnabled: true, horizontalPadding: 0)
             },
@@ -56,9 +65,13 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("questionListenBar.reading") { QuestionListenBar(phase: .readingQuestion) },
             ComponentSample("questionListenBar.thinking") { QuestionListenBar(phase: .thinking(remaining: 3, total: 5)) },
+            ComponentSample("questionListenBar.thinkingDismissable") {
+                QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {})
+            },
             ComponentSample("questionListenBar.listeningMCQ") { QuestionListenBar(phase: .listening(.mcq)) },
             ComponentSample("questionListenBar.listeningCountdown") {
-                QuestionListenBar(phase: .listening(.open), answerRemaining: 12)
+                // With the ✕: the countdown and the ✕ each need their own room.
+                QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
             },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },

@@ -110,6 +110,9 @@ struct AnswerOption: View {
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        // #188 G9: a wrapped option keeps air above and below it inside its
+        // border (the 64pt floor used to provide it while text was one line).
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
         .frame(maxWidth: .infinity, minHeight: minHeight)
         .background(
             RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)

@@ -339,9 +339,10 @@ struct QuestionViewListenBarPresenceTests {
         }
     }
 
-    /// The MCQ side of the same condition: T5 pinned the footer as a bottom
-    /// safe-area inset, and a taller bar must not un-pin it.
-    @Test("the MCQ skip chip stays in the pinned bottom inset with the chips on screen")
+    /// The MCQ side of the same condition: the skip chip stays pinned with a
+    /// taller bar on screen. #188 G9: it is the stack's last row now (an inset
+    /// let the options scroll under it), always outside the options' scroll.
+    @Test("the MCQ skip chip stays pinned with the chips on screen")
     func mcqFooterStaysPinned() async throws {
         let vm = await makeArmedViewModel(question: .previewMCQLongOptions)
         vm.answerTimerCountdown = 12
@@ -352,10 +353,11 @@ struct QuestionViewListenBarPresenceTests {
             #expect(throws: Never.self, "precondition: the chip row is on screen") {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
-            let footer = try tree.find(ViewType.SafeAreaInset.self)
-            #expect(try footer.edge() == .bottom)
-            #expect(throws: Never.self) {
-                try footer.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.skip") }
+            let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+                .find(ViewType.ScrollView.self, relation: .parent)
+            #expect(throws: (any Error).self, "the chip never scrolls with (or over) the options") {
+                try options.find(viewWithAccessibilityIdentifier: "question.skip")
             }
         }
     }

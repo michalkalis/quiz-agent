@@ -773,15 +773,20 @@ struct QuestionViewMCQPinnedFooterTests {
         #expect(picker.usesGrid == false)
     }
 
-    @Test("four multi-line options leave the skip chip pinned to the bottom edge")
+    /// #188 G9: the chip is the stack's last row, OUTSIDE the options' scroll
+    /// region — as a bottom inset it let that scroll view run under it, and the
+    /// chip covered the last option at large text. Pinned because the options
+    /// scroll instead of growing.
+    @Test("four multi-line options leave the skip chip pinned, outside the options' scroll")
     func skipChipIsPinnedNotStacked() async throws {
         let view = QuestionView(viewModel: makeLongOptionsViewModel())
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let footer = try tree.find(ViewType.SafeAreaInset.self)
-            #expect(try footer.edge() == .bottom, "the footer must be pinned to the BOTTOM edge")
-            #expect(throws: Never.self, "the skip chip is not in the pinned footer") {
-                try footer.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.skip") }
+            let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+                .find(ViewType.ScrollView.self, relation: .parent)
+            #expect(throws: (any Error).self, "the chip must not scroll with (or over) the options") {
+                try options.find(viewWithAccessibilityIdentifier: "question.skip")
             }
             // …and nothing was traded away for it: stem and all four options stay.
             #expect(throws: Never.self) {

@@ -532,7 +532,9 @@ struct ListenBar: View {
             }
             Spacer(minLength: 8)
             if let trailingSeconds {
-                secondsLabel(trailingSeconds, font: .hangsMono(Metrics.statusSeconds, weight: .medium))
+                // Inter with tabular digits, not the mono face: a mono space is a full
+                // character wide, and "27 s" read as two things ("27    s").
+                secondsLabel(trailingSeconds, font: .hangsBody(Metrics.statusSeconds, weight: .semibold))
             }
         }
     }

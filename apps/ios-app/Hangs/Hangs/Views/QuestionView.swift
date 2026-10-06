@@ -48,6 +48,8 @@ struct QuestionView: View {
     /// #188 G9: the options' own height, so their scroll region is exactly as
     /// tall as they are while they fit (see `mcqOptions`).
     @State private var optionsHeight: CGFloat = 0
+    /// #188 G9: more options below the visible ones — the same cue the stem uses.
+    @State private var showOptionsScrollCue = false
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -450,10 +452,26 @@ struct QuestionView: View {
             )
         }
         .scrollBounceBehavior(.basedOnSize)
+        // #188 G9 (founder screenshot): at large text option D sat wholly below
+        // the fold with nothing saying it existed. The native indicator stays
+        // visible and flashes on arrival, and the stem's own overflow cue (fade
+        // over the last visible row + "SCROLL ↓") marks that more follow.
+        .scrollIndicators(.visible)
+        .scrollIndicatorsFlash(onAppear: true)
         // Content height depends on the width only, never on this frame, so
         // feeding it back cannot loop.
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.height } action: { _, height in
             optionsHeight = height
+        }
+        .onScrollGeometryChange(for: Bool.self) { g in
+            g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
+        } action: { _, more in
+            showOptionsScrollCue = more
+        }
+        .overlay(alignment: .bottom) {
+            if showOptionsScrollCue {
+                stemOverflowCue
+            }
         }
         .frame(maxHeight: optionsHeight > 0 ? optionsHeight : nil)
         .padding(.top, compact ? 10 : 14)
@@ -630,7 +648,8 @@ struct QuestionView: View {
     }
 
     /// Bottom fade + a small mono "SCROLL ↓" cue — the visible overflow
-    /// affordance. a11y-hidden (peripheral cue), never blocks taps.
+    /// affordance of the stem, and since #188 G9 of the options too.
+    /// a11y-hidden (peripheral cue), never blocks taps.
     private var stemOverflowCue: some View {
         ZStack(alignment: .bottomTrailing) {
             LinearGradient(

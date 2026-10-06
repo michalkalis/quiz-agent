@@ -45,6 +45,9 @@ struct QuestionView: View {
     /// branches, never on screen together.
     @State private var stemScroll = ScrollPosition()
     @State private var stemOverflow: CGFloat = 0
+    /// #188 G9: the options' own height, so their scroll region is exactly as
+    /// tall as they are while they fit (see `mcqOptions`).
+    @State private var optionsHeight: CGFloat = 0
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -402,19 +405,7 @@ struct QuestionView: View {
             // the mic is about to open.
             mcqListenBar(question: question, compact: compact)
 
-            MCQOptionPicker(
-                options: question.sortedAnswerOptions,
-                labels: question.optionLabels,
-                onSelect: { key, value in
-                    submittedAnswer = value
-                    Task { await viewModel.submitMCQAnswer(key: key, value: value) }
-                },
-                externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
-                compact: compact,
-                // #174: a tapped option evaluates IN the tile it was tapped on.
-                isSubmitting: isProcessing
-            )
-            .padding(.top, compact ? 10 : 14)
+            mcqOptions(question: question, compact: compact)
 
             #if DEBUG
                 Text(quizStateName)
@@ -431,6 +422,41 @@ struct QuestionView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             mcqFooter(compact: compact)
         }
+    }
+
+    /// #188 G9 (founder screenshot, xxxLarge): the options are sized to their
+    /// content and never squeezed. A plain VStack slot was proposed less height
+    /// than four 3–4 line rows need once text was enlarged, and the rows drew
+    /// over each other. Now the options sit in their own scroll region that is
+    /// exactly as tall as they are, and takes layout priority over the stem, so
+    /// the stem keeps only its legibility floor (`mcqStem`) and, past that, the
+    /// options scroll instead of overlapping. At default text nothing changes:
+    /// the region fits, so it neither scrolls nor bounces.
+    private func mcqOptions(question: Question, compact: Bool) -> some View {
+        ScrollView(.vertical) {
+            MCQOptionPicker(
+                options: question.sortedAnswerOptions,
+                labels: question.optionLabels,
+                onSelect: { key, value in
+                    submittedAnswer = value
+                    Task { await viewModel.submitMCQAnswer(key: key, value: value) }
+                },
+                externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
+                compact: compact,
+                // #174: a tapped option evaluates IN the tile it was tapped on.
+                isSubmitting: isProcessing
+            )
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        // Content height depends on the width only, never on this frame, so
+        // feeding it back cannot loop.
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.height } action: { _, height in
+            optionsHeight = height
+        }
+        .frame(maxHeight: optionsHeight > 0 ? optionsHeight : nil)
+        .padding(.top, compact ? 10 : 14)
+        // Outermost on purpose: VStack reads the priority of its direct child.
+        .layoutPriority(1)
     }
 
     /// The pinned MCQ footer: the feedback sweep strip and the skip chip.

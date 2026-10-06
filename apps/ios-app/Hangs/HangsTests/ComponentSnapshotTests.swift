@@ -76,6 +76,10 @@ struct ComponentSnapshotTests {
         AnyView(
             sample.make()
                 .frame(width: SnapshotBaseline.width - 2 * Theme.Hangs.Spacing.md)
+                // #188 G9: size to the content's own height at this width. The
+                // -xl samples were measured shorter than they drew, so wrapped
+                // text spilled out of its frame and an overlap could not show.
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(Theme.Hangs.Spacing.md)
                 .background(Theme.Hangs.Colors.bg)
                 .environment(\.locale, Locale(identifier: "en"))

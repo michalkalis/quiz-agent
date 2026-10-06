@@ -89,10 +89,11 @@ struct AnswerOption: View {
                 // it must never be the thing that truncates them: the row grows.
                 // #188 G9 (D11): at large text the option was still cut ("…")
                 // because a scaled, wrapped text reported less height than it
-                // needed. Now it wraps at full size and claims its height, up to
-                // four lines (every option lands here at large text, see
-                // `MCQOptionPicker.gridMaxTypeSize`).
-                .lineLimit(4)
+                // needed. Now it wraps at full size and claims its full height,
+                // never cut (every option lands here at large text, see
+                // `MCQOptionPicker.gridMaxTypeSize`); the options scroll on the
+                // question screen when they outgrow it.
+                .lineLimit(nil)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
 

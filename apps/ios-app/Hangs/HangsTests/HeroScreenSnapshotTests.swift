@@ -67,6 +67,9 @@ nonisolated enum HeroLanguage: String, CaseIterable {
 @MainActor
 enum HeroScreen: String, CaseIterable {
     case home, question, result, paywall
+    /// #188 G9: four long options while the mic is open — the screen whose
+    /// rows overlapped at large text (founder screenshot, 2026-10-06).
+    case questionMCQ
 
     func make() async -> AnyView {
         switch self {
@@ -86,6 +89,12 @@ enum HeroScreen: String, CaseIterable {
         case .question:
             let vm = Self.quizViewModel()
             vm.quizState = .askingQuestion
+            return AnyView(QuestionView(viewModel: vm, debugSurfaces: false))
+
+        case .questionMCQ:
+            let vm = Self.quizViewModel()
+            vm.currentQuestion = Question.previewMCQLongOptions
+            vm.quizState = .recording
             return AnyView(QuestionView(viewModel: vm, debugSurfaces: false))
 
         case .result:

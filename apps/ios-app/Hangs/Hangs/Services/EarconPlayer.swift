@@ -9,19 +9,22 @@
 //  the command layer is English-only regardless of app language — a spoken cue
 //  would be jarring for the Slovak UI). Tones are locale-independent by design.
 //
-//  Four distinct cues, one per meaningful transition:
+//  Five cues, one per meaningful transition:
 //    • micLive    — the mic just opened (start recording)
+//    • speechStart — the driver was first heard in this recording
 //    • gotIt      — STOP: recording ended / was auto-submitted
 //    • skipConfirm — the skip undo-window opened (destructive, tap/say to abort)
 //    • commandAck — a spoken command was recognized
 //
-//  #185 track F (car test 2026-09-23, founder 2026-09-24) adds a fifth:
-//    • speechStart — the driver was first heard in this recording
-//  and makes every cue quieter and softer (they were loud and grew tiresome
-//  over a quiz) with a matching haptic for each (useful outside the car too).
+//  #188 G6 (founder 2026-10-06, after the car test: earcons were "really
+//  annoying and frequent"): ONLY `micLive` still plays a tone. The other four
+//  are haptic-only; every cue keeps its haptic. No new sound was added for the
+//  silent stretches (thinking time, before the next question) — the next
+//  question's voice and the "start" command already cover them. See
+//  `Earcon.hasTone`. (#185 track F earlier made every cue quieter and gave each
+//  a haptic, useful outside the car too.)
 //
-//  This ALSO delivers #68's record-start / record-stop earcon item (micLive +
-//  gotIt) — #68 should mark that delivered-by-#77.
+//  This ALSO delivers #68's record-start earcon item (micLive).
 //
 //  Earcons are NEVER emitted during question TTS (the funnel that plays them —
 //  `QuizViewModel.emitEarcon` — guards on `isPlayingQuestionTTS`).
@@ -32,8 +35,8 @@
 //  over A2DP/CarPlay they can be swallowed entirely — so the founder heard no
 //  ack at all while driving. TTS already reaches the car speakers; these tones
 //  now take the same route, at the same volume the driver set for it. The tones
-//  are synthesized in memory (`EarconTone`) rather than bundled: four short
-//  sine cues, no assets, and the shapes stay editable in one place.
+//  is synthesized in memory (`EarconTone`) rather than bundled: a short
+//  sine cue, no assets, and the shape stays editable in one place.
 //
 
 import AudioToolbox
@@ -49,6 +52,12 @@ enum Earcon: String, CaseIterable, Sendable, Equatable {
     case gotIt         // STOP: recording ended / auto-submitted
     case skipConfirm   // skip undo-window opened
     case commandAck    // a spoken command was recognized
+
+    /// #188 G6 (founder 2026-10-06: earcons in the car were "really annoying and
+    /// frequent"): the single policy for which cues make a sound. Only the
+    /// mic-live tone ("the mic is open, talk now") earns one; every other cue is
+    /// haptic-only. At most one tone per answer, never a tone for a state.
+    var hasTone: Bool { self == .micLive }
 }
 
 /// The haptic that accompanies a cue (#185 track F: every cue has one). Pure so
@@ -116,6 +125,10 @@ final class SystemEarconPlayer: EarconPlaying {
     private var players: [Earcon: AVAudioPlayer] = [:]
 
     func play(_ earcon: Earcon) {
+        guard earcon.hasTone else { // #188 G6: haptic-only cue
+            playHaptic(earcon)
+            return
+        }
         if let player = player(for: earcon) {
             player.currentTime = 0 // re-trigger rather than stack overlapping cues
             player.play()
@@ -161,14 +174,8 @@ final class SystemEarconPlayer: EarconPlaying {
     }
 
     /// Fallback only (see `play`) — the pre-#184 system sounds.
-    private static func soundID(for earcon: Earcon) -> SystemSoundID {
-        switch earcon {
-        case .micLive:     return 1113 // begin_record.caf
-        case .speechStart: return 1057 // Tink — the lightest there is
-        case .gotIt:       return 1114 // end_record.caf
-        case .skipConfirm: return 1104 // Tock — distinct, cautionary
-        case .commandAck:  return 1057 // Tink — light acknowledgement
-        }
+    private static func soundID(for _: Earcon) -> SystemSoundID {
+        1113 // begin_record.caf — only micLive has a tone (#188 G6)
     }
 }
 
@@ -180,16 +187,13 @@ final class SystemEarconPlayer: EarconPlaying {
 /// cue into a 16-bit mono 44.1 kHz WAV, which `AVAudioPlayer(data:)` accepts
 /// directly.
 ///
-/// Each cue's SHAPE carries its meaning, since the driver cannot look:
-/// rising = something opened, falling = something closed, low repeated = a
-/// destructive action you may still undo, one high blip = "heard you".
+/// The one tone left (#188 G6): rising two-step = "the mic OPENED". The shape
+/// carries the meaning because the driver cannot look.
 ///
 /// #185 track F (founder 2026-09-24: the tones were loud and grew tiresome):
-/// every cue is 6 dB quieter (peak 0.5 → 0.25), sits lower (micLive/gotIt
-/// 880↔1175 → 660↔880 Hz, commandAck 1320 → 988 Hz) and swells in and out on
-/// a 20 ms raised-cosine instead of a 10 ms linear ramp — the hard edges were
-/// what made them read as beeps. Shapes and lengths are unchanged, so the cues
-/// the driver already learned still mean the same.
+/// 6 dB quieter (peak 0.5 → 0.25), lower (660 → 880 Hz) and a 20 ms
+/// raised-cosine swell in and out instead of a 10 ms linear ramp — the hard
+/// edges were what made it read as a beep.
 enum EarconTone {
     /// One tone step, or — with a `nil` frequency — a silent gap.
     struct Segment: Sendable, Equatable {
@@ -208,52 +212,22 @@ enum EarconTone {
     /// (#185 track F) also takes the edge off the attack.
     static let fadeDuration: TimeInterval = 0.020
 
-    /// Per-cue level on top of `peak`. The speech-start tone plays while the
-    /// driver is talking — it confirms, it must never interrupt — so it is the
-    /// quietest cue by far.
-    static func gain(for earcon: Earcon) -> Double {
-        earcon == .speechStart ? 0.6 : 1.0
-    }
-
-    /// The tone sequence for a cue.
+    /// The tone sequence for a cue; empty for the haptic-only cues (#188 G6,
+    /// see `Earcon.hasTone`).
     static func segments(for earcon: Earcon) -> [Segment] {
-        switch earcon {
-        // Rising two-step — the mic OPENED.
-        case .micLive:
-            return [Segment(frequency: 660, duration: 0.070), Segment(frequency: 880, duration: 0.070)]
-        // #185 track F: one short, low, quiet blip between the two — "I hear
-        // you" in the middle of the answer, softer than anything around it.
-        case .speechStart:
-            return [Segment(frequency: 784, duration: 0.050)]
-        // The same two steps falling — the mic CLOSED. Deliberately the mirror
-        // of micLive so the pair is learnable as one gesture.
-        case .gotIt:
-            return [Segment(frequency: 880, duration: 0.070), Segment(frequency: 660, duration: 0.070)]
-        // Low, repeated, with a gap — a warning shape, matching the 2.5 s undo
-        // window it announces.
-        case .skipConfirm:
-            return [
-                Segment(frequency: 440, duration: 0.090),
-                Segment(frequency: nil, duration: 0.040),
-                Segment(frequency: 440, duration: 0.090),
-            ]
-        // One short high blip — the cheapest possible "heard you"; it fires on
-        // every recognized command, so it must never feel heavy.
-        case .commandAck:
-            return [Segment(frequency: 988, duration: 0.060)]
-        }
+        guard earcon.hasTone else { return [] }
+        return [Segment(frequency: 660, duration: 0.070), Segment(frequency: 880, duration: 0.070)]
     }
 
     /// The WAV bytes for a cue.
     static func wavData(for earcon: Earcon) -> Data {
-        wavData(for: segments(for: earcon), gain: gain(for: earcon))
+        wavData(for: segments(for: earcon))
     }
 
     /// Render segments to a 16-bit mono PCM WAV (44-byte canonical RIFF header
     /// + samples).
     static func wavData(
         for segments: [Segment],
-        gain: Double = 1.0,
         sampleRate: Double = EarconTone.sampleRate
     ) -> Data {
         var samples: [Int16] = []
@@ -277,7 +251,7 @@ enum EarconTone {
                 }
                 // Raised cosine: 0 → 1 with a zero slope at both ends.
                 let envelope = 0.5 - 0.5 * cos(.pi * ramp)
-                let scaled = value * envelope * peak * gain * Double(Int16.max)
+                let scaled = value * envelope * peak * Double(Int16.max)
                 samples.append(Int16(scaled.rounded()))
             }
         }

@@ -79,8 +79,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Whether TTS audio playback is muted (questions still display visually)
     var isMuted: Bool
 
-    /// Whether recording start/stop earcons play (#68). Only gates the mic-live /
-    /// got-it cues — command-ack and skip earcons stay on (driving-safety feedback).
+    /// Whether the mic-live tone plays (#68). #188 G6: it is the only earcon with
+    /// a tone; off → haptic only. Every other cue is haptic-only regardless.
     var recordingSoundsEnabled: Bool
 
     /// Whether image questions may be served (#68). Default OFF — images are

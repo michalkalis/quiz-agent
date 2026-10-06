@@ -6,6 +6,7 @@ What is the capital of France?
 Start
 Přeskoč
 askingQuestion
+Nastavení
 # identifiers
 question.progress
 question.category
@@ -18,3 +19,8 @@ question.record
 question.textInputToggle
 question.skip
 question.state
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

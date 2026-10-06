@@ -4,7 +4,7 @@
 #
 # Usage: scripts/run-rs-suite.sh [SIM_UDID]
 #   SIM_UDID  simulator to use; default = first booted iPhone, else the
-#             `iPhone 17 Pro` destination by name.
+#             `iPhone 18 Pro` destination by name.
 #
 # Exit status: 0 when every scenario passed, 1 otherwise (or on build failure).
 # No LLM in the loop — this is the suite the /regression skill explores with,
@@ -30,7 +30,7 @@ fi
 if [ -n "$SIM" ]; then
     DEST="platform=iOS Simulator,id=$SIM"
 else
-    DEST="platform=iOS Simulator,name=iPhone 17 Pro"
+    DEST="platform=iOS Simulator,name=iPhone 18 Pro"
 fi
 
 LOG=$(mktemp -t rs-suite.XXXXXX)

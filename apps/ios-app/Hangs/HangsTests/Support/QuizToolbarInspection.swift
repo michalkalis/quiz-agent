@@ -33,4 +33,16 @@ enum QuizToolbarInspection {
     static func hasToolbar(_ view: QuestionView) -> Bool {
         (try? toolbar(of: view)) != nil
     }
+
+    /// How often `identifier` is drawn in the screen body, i.e. outside the
+    /// toolbar. Since ViewInspector 0.10.4 a tree-wide `find` also walks into the
+    /// toolbar items, so "not in the body" has to subtract the toolbar's share.
+    static func bodyOccurrences(of identifier: String, in view: QuestionView) throws -> Int {
+        let matches: (InspectableView<ViewType.ClassifiedView>) -> Bool = {
+            (try? $0.accessibilityIdentifier()) == identifier
+        }
+        let everywhere = try view.inspect().findAll(where: matches).count
+        let inToolbar = try toolbar(of: view).findAll(where: matches).count
+        return everywhere - inToolbar
+    }
 }

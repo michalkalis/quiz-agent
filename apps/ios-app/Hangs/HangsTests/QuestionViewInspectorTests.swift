@@ -395,9 +395,10 @@ struct QuestionViewUnifiedChromeTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             #expect(QuizToolbarInspection.hasToolbar(view))
-            #expect(throws: (any Error).self, "the close chip belongs to the toolbar, not the body") {
-                _ = try view.inspect().find(viewWithAccessibilityIdentifier: "question.closeButton")
-            }
+            #expect(
+                (try? QuizToolbarInspection.bodyOccurrences(of: "question.closeButton", in: view)) == 0,
+                "the close chip belongs to the toolbar, not the body"
+            )
         }
     }
 
@@ -423,11 +424,11 @@ struct QuestionViewUnifiedChromeTests {
         let vm = makeViewModel(question: question)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
             for id in ["question.timerStrip", "question.mute"] {
-                #expect(throws: (any Error).self, "\(id) must not be drawn in the body any more") {
-                    _ = try tree.find(viewWithAccessibilityIdentifier: id)
-                }
+                #expect(
+                    (try? QuizToolbarInspection.bodyOccurrences(of: id, in: view)) == 0,
+                    "\(id) must not be drawn in the body any more"
+                )
             }
             #expect(QuizToolbarInspection.hasToolbar(view), "the mute still exists — in the toolbar")
         }

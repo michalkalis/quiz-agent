@@ -18,7 +18,7 @@ Build with Local environment (localhost):
 ```bash
 cd apps/ios-app/Hangs && xcodebuild \
   -scheme Hangs-Local \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro' \
   -configuration Debug \
   build \
   2>&1 | xcpretty --color || cat
@@ -29,7 +29,7 @@ Build with Production environment:
 ```bash
 cd apps/ios-app/Hangs && xcodebuild \
   -scheme Hangs-Prod \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro' \
   -configuration Release \
   build \
   2>&1 | xcpretty --color || cat
@@ -40,7 +40,7 @@ Clean and rebuild:
 ```bash
 cd apps/ios-app/Hangs && xcodebuild clean && xcodebuild \
   -scheme Hangs-Local \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro' \
   build \
   2>&1 | xcpretty --color || cat
 ```

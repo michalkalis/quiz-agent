@@ -43,7 +43,7 @@ something this orchestrator runs directly.
 
 ---
 
-Drive `docs/testing/regression-scenarios.md` end-to-end on the iPhone 17 Pro
+Drive `docs/testing/regression-scenarios.md` end-to-end on the iPhone 18 Pro
 simulator. Each scenario produces `docs/testing/runs/<RS-id>-<date>.md`
 with a final `VERDICT: PASS|FAIL` line. **Stop on the first FAIL.**
 
@@ -57,7 +57,7 @@ scenario assertion. If a scenario fails, write the report and halt.
 | Workspace | `apps/ios-app/Hangs/Hangs.xcodeproj` (or `.xcworkspace` if present) |
 | Scheme | `Hangs-Local` |
 | Configuration | `Debug-Local` |
-| Simulator | iPhone 17 Pro · `918FD36A-8869-48F8-A1F8-3047CB122582` |
+| Simulator | iPhone 18 Pro · `D14252B4-9605-4E17-BF8A-222179A6FDD2` |
 | Bundle root (Debug-Local) | `<DerivedData>/.../Build/Products/Debug-Local-iphonesimulator/Hangs.app` |
 | HTTP listener | `http://127.0.0.1:9999` (DEBUG-Local builds only) |
 | Bundle id | inferred via `get_app_bundle_id` if needed |
@@ -99,7 +99,7 @@ list available ids and stop.
    build_sim({
      scheme: "Hangs-Local",
      configuration: "Debug-Local",
-     simulatorName: "iPhone 17 Pro",
+     simulatorName: "iPhone 18 Pro",
      workspacePath or projectPath: <discovered>
    })
    ```
@@ -202,7 +202,7 @@ Use the structure modeled by `RS-01-2026-04-29.md`:
 # <RS-id> — <title>
 
 **Date:** <YYYY-MM-DD>
-**Build:** Hangs-Local · Debug-Local · iPhone 17 Pro sim (918FD36A-8869-48F8-A1F8-3047CB122582)
+**Build:** Hangs-Local · Debug-Local · iPhone 18 Pro sim (D14252B4-9605-4E17-BF8A-222179A6FDD2)
 **Tree:** <git rev-parse --short HEAD> + <wip note if dirty>
 **Driver:** Claude (XcodeBuildMCP UI automation + curl HTTP listener)
 
@@ -275,7 +275,7 @@ decides whether to triage and re-run.
    land in tens of ms. A single 1-second sleep + snapshot can land
    *after* the next-state, missing the assertion window.
 6. **Two booted sims.** If multiple are booted, always pin to
-   `918FD36A-8869-48F8-A1F8-3047CB122582` explicitly in raw `xcrun simctl`
+   `D14252B4-9605-4E17-BF8A-222179A6FDD2` explicitly in raw `xcrun simctl`
    calls. XcodeBuildMCP picks it up via `simulatorUuid:`.
 7. **WIP files.** If `git status` shows unrelated WIP that breaks the build,
    stop and ask the user to stash. Don't silently revert.

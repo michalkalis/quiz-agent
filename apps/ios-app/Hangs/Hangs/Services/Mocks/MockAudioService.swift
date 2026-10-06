@@ -166,7 +166,15 @@ import os
 
         var micPermissionResult = true
 
+        /// #188 G7: what the system currently reports; a request settles it.
+        var micPermissionStatus: MicrophonePermissionStatus = .granted
+        var micPermissionRequestCount = 0
+
+        var microphonePermissionStatus: MicrophonePermissionStatus { micPermissionStatus }
+
         func requestMicrophonePermission() async -> Bool {
+            micPermissionRequestCount += 1
+            micPermissionStatus = micPermissionResult ? .granted : .denied
             return micPermissionResult
         }
 

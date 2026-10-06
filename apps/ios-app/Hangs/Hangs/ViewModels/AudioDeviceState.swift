@@ -211,6 +211,11 @@ final class AudioDeviceState: ObservableObject {
         // master switch.
         guard mayCaptureAudio() else { return }
 
+        // #188 G7: while the user has not decided, no listener may be the first
+        // to touch the mic (iOS would prompt implicitly, at a random moment).
+        // The quiz start asks explicitly; the next window sync arms this.
+        guard audioService.microphonePermissionStatus != .undetermined else { return }
+
         // #175: the recognizer follows the quiz language. Resolved here — the
         // one window-start choke point — so a language change in Settings
         // lands on the next window, never mid-window. Suspends (asset

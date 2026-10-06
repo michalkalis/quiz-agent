@@ -480,6 +480,7 @@ final class SequenceAudio: AudioServiceProtocol {
     func restoreSessionAfterVoiceProcessing() {}
     func deactivateSession() {}
     func switchAudioMode(_: AudioMode) async throws {}
+    var microphonePermissionStatus: MicrophonePermissionStatus { .granted }
     func requestMicrophonePermission() async -> Bool { true }
     func startRecording() throws { isRecording = true }
 

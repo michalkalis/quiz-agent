@@ -158,7 +158,7 @@ struct ResultMetaRow: View {
                 : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 10))
             layout {
                 if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
-                HStack(spacing: 10) { labels }
+                HStack(spacing: Theme.Hangs.Spacing.xs) { labels }
             }
             if let reviewNote {
                 Text(verbatim: reviewNote)

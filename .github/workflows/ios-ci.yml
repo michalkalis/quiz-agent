@@ -38,7 +38,8 @@ jobs:
     # Switch to the GA macOS image once it ships Xcode 27.
     runs-on: xcode-27
     # A cold build (~11 min), unit tests (~6 min) and the RS XCUITest suite (~14 min, #180 track D) no longer fit in 30.
-    timeout-minutes: 45
+    # The xcode-27 preview image runs the whole job in 42–46 min, so 45 cut a green run off.
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code

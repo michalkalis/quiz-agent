@@ -1212,6 +1212,12 @@ final class QuizViewModel: ObservableObject {
             // and settles before it plays.
             audioDeviceState.stopSilenceDetectionListening()
 
+            // #188 G7: onboarding's "Maybe later" leaves the mic undecided. Ask
+            // here, the one moment before every mic user of the quiz (question
+            // read, command listener, barge-in, recording), so iOS never raises
+            // the prompt implicitly mid-question. Denied keeps today's behaviour.
+            await audioService.requestMicrophonePermissionIfUndetermined()
+
             // #173: a new quiz starts audible unless Settings says otherwise —
             // drop any mute the in-quiz button set during a previous run.
             quizMuteOverride = nil

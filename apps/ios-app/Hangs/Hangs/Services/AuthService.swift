@@ -88,7 +88,7 @@ nonisolated struct AuthTokens: Codable, Sendable, Equatable {
 
 /// Minimal token-pair persistence, abstracted so unit tests can swap the
 /// Keychain for an in-memory store.
-protocol TokenStore: Sendable {
+nonisolated protocol TokenStore: Sendable {
     nonisolated func load() -> AuthTokens?
     nonisolated func save(_ tokens: AuthTokens)
     nonisolated func clear()
@@ -96,7 +96,7 @@ protocol TokenStore: Sendable {
 
 /// What NetworkService needs from the auth layer. Both methods degrade to `nil`
 /// rather than throwing so callers can fall back to the grace path.
-protocol AuthServiceProtocol: Sendable {
+nonisolated protocol AuthServiceProtocol: Sendable {
     /// A valid access token, bootstrapping a fresh identity on first use.
     /// Returns nil when auth is unavailable (backend 503 / offline).
     func accessToken() async -> String?

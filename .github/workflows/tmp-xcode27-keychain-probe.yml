@@ -1,0 +1,28 @@
+# TEMPORARY (chore/xcode-27): checks that the isolated-keychain steps of
+# ios-release.yml work on the xcode-27 image (runner-images#14837 reports
+# unlock-keychain failing there). Deleted before the PR merges.
+name: TMP Xcode 27 keychain probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-xcode27-keychain-probe.yml'
+
+jobs:
+  probe:
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - name: Same keychain steps as ios-release.yml
+        run: |
+          set -x
+          sw_vers
+          PW="$(uuidgen)"
+          KC="$RUNNER_TEMP/hangs-build.keychain"
+          security create-keychain -p "$PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$PW" "$KC"
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          security show-keychain-info "$KC"
+          security delete-keychain "$KC"

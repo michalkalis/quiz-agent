@@ -213,7 +213,7 @@ extension Question {
 // MARK: - Preview Helpers
 
 #if DEBUG
-    extension Question {
+    nonisolated extension Question {
         static let preview = Question(
             id: "q_preview_123",
             question: "What is the capital of France?",

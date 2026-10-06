@@ -33,7 +33,8 @@ env:
 jobs:
   testflight:
     name: Build and upload to TestFlight
-    runs-on: macos-26
+    # xcode-27: GitHub's Xcode 27 image (public preview, runner-images#14404).
+    runs-on: xcode-27
     timeout-minutes: 45
     permissions:
       contents: read
@@ -81,14 +82,10 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
 
-      - name: Select Xcode 26.3
-        # macos-26 runner ships with 26.0 / 26.1 / 26.2 / 26.3. Fall back to default if missing.
+      - name: Select Xcode 27.0
+        # No fallback: an archive built with another Xcode would not be the build we tested.
         run: |
-          if [ -d "/Applications/Xcode_26.3.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-          else
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          fi
+          sudo xcode-select -s /Applications/Xcode_27.0.app/Contents/Developer
           xcodebuild -version
 
       - name: Configure SSH for match repo

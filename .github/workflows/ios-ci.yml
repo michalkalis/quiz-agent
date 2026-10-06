@@ -34,8 +34,9 @@ env:
 jobs:
   build-and-test:
     name: Build and Test iOS App
-    # macos-latest: Xcode 26.3 may take time to land on GH-hosted runners; switch to macos-26 once available
-    runs-on: macos-latest
+    # xcode-27: GitHub's Xcode 27 image (public preview, runner-images#14404).
+    # Switch to the GA macOS image once it ships Xcode 27.
+    runs-on: xcode-27
     # A cold build (~11 min), unit tests (~6 min) and the RS XCUITest suite (~14 min, #180 track D) no longer fit in 30.
     timeout-minutes: 45
 
@@ -51,14 +52,13 @@ jobs:
           restore-keys: spm-
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        run: sudo xcode-select -s /Applications/Xcode_27.0.app/Contents/Developer
 
       - name: Show build environment
         run: |
           xcodebuild -version
-          # #115: deployment target is 26.0 — fail loud if the Xcode_26.3
-          # selector silently fell back to an older Xcode without the iOS 26 SDK.
-          xcodebuild -showsdks | grep -q iphoneos26 || exit 1
+          # Fail loud if the runner image no longer ships the iOS 27.0 SDK.
+          xcodebuild -showsdks | grep -q iphoneos27.0 || exit 1
           xcrun simctl list devices available | grep iPhone
 
       # #180 track E: every interactive SwiftUI control declares an
@@ -98,9 +98,12 @@ jobs:
           # suites — measured: parallel runs failed on a different suite each time,
           # serialized 5 of 5 passed at ~55 s. No test on the quiz path waits on
           # real time any more; the timers are driven, not waited out.
+          # Destination OS is pinned to the runtime the pixel snapshots were
+          # recorded on (SnapshotBaseline.iosVersion); "latest" would pick a newer
+          # beta runtime from the image and silently skip them.
           xcodebuild test \
             -scheme Hangs-Local \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' \
             -parallel-testing-enabled NO \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \

@@ -13,8 +13,13 @@ diff per token:
   both changed, live != code   -> conflict   (ask the founder, never pick)
   both changed, live == code   -> settled    (a proposal that already landed)
 
+Pen (track F) follows the same rules: `live` is the variables read from the .pen
+file (GetVariables via Pen MCP) and `base` is the commit in its `tokens-ref`
+variable; see pen.py for what Pen carries.
+
 Usage:
   python3 -m scripts.design_catalog.sync --live <live tokens.json> --out <pending.json>
+  python3 -m scripts.design_catalog.sync --pen <pen variables.json> --out <pen-pending.json>
 Prints a readable summary; writes the machine-readable report to --out.
 """
 
@@ -27,6 +32,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from .pen import REF_VAR, code_view, pen_view
 from .swift_tokens import THEME, build_tokens
 
 FAMILIES = ("color", "spacing", "radius", "shadow")
@@ -108,24 +114,37 @@ def classify(base: dict | None, live: dict, code: dict) -> list[dict]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--live", type=Path, required=True, help="the catalog's current project/tokens.json")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--live", type=Path, help="the catalog's current project/tokens.json")
+    source.add_argument("--pen", type=Path, help="GetVariables() output read from design/quiz-agent.pen")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
-    live_tokens = json.loads(args.live.read_text())
-    ref = live_tokens.get("meta", {}).get("ref", "")
+    side = "pen" if args.pen else "catalog"
+    if args.pen:
+        data = json.loads(args.pen.read_text())
+        variables = data.get("variables", data)
+        ref = str(variables.get(REF_VAR, {}).get("value", ""))
+        view, live = code_view, pen_view(variables)
+    else:
+        live_tokens = json.loads(args.live.read_text())
+        ref = live_tokens.get("meta", {}).get("ref", "")
+        view, live = flatten, flatten(live_tokens)
     base = base_tokens(args.root, ref)
-    rows = classify(flatten(base) if base else None, flatten(live_tokens), flatten(build_tokens(args.root)))
+    rows = classify(view(base) if base else None, live, view(build_tokens(args.root)))
     for r in rows:
+        if args.pen:
+            r["kind"] = r["kind"].replace("catalog", "pen")
+            r["pen"] = r.pop("catalog")
         r["swiftLine"] = swift_line(args.root, r["token"])
     args.out.write_text(json.dumps({"ref": ref, "baseFound": base is not None, "rows": rows}, indent=1) + "\n")
 
     if base is None:
         print(f"base commit {ref or '(none)'} not reachable: differences are listed without telling who changed what")
     if not rows:
-        print("catalog and code agree: nothing pending")
+        print(f"{side} and code agree: nothing pending")
     for r in rows:
-        print(f"{r['kind']:>18}  {r['token']}: catalog {json.dumps(r['catalog'])} · code {json.dumps(r['code'])}"
+        print(f"{r['kind']:>18}  {r['token']}: {side} {json.dumps(r[side])} · code {json.dumps(r['code'])}"
               + (f" · Theme.swift:{r['swiftLine']}" if r["swiftLine"] else ""))
 
 

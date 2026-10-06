@@ -139,10 +139,6 @@ struct QuestionView: View {
         .sheet(item: $ratingPresentation) { presentation in
             QuestionRatingSheet(viewModel: presentation.viewModel)
         }
-        .interactiveMinimize(
-            isMinimized: $viewModel.isMinimized,
-            canMinimize: viewModel.canMinimize
-        )
         // #173 C2: the sheet OUTLIVES the confirm tap — it stays up, showing the
         // evaluating state in its own primary button, until the result lands.
         .sheet(isPresented: confirmationSheetBinding, onDismiss: {

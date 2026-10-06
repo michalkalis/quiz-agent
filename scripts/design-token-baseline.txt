@@ -158,9 +158,6 @@ apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	.padding(.bottom, 10)	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	.padding(.horizontal, 18)	1
 apps/ios-app/Hangs/Hangs/Views/HomeView.swift	spacing	spacing: 6	3
 apps/ios-app/Hangs/Hangs/Views/ImageQuestionView.swift	font	.system(size: 40	1
-apps/ios-app/Hangs/Hangs/Views/MinimizedQuizView.swift	font	.hangsBody(12	3
-apps/ios-app/Hangs/Hangs/Views/MinimizedQuizView.swift	font	.hangsBody(13	1
-apps/ios-app/Hangs/Hangs/Views/MinimizedQuizView.swift	font	.hangsDisplay(28	1
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsBody(13	2
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsBody(16	2
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsMono(11	1

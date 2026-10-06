@@ -129,7 +129,7 @@ def payload(tokens: dict, ref: str, skip: set[str] = frozenset()) -> dict[str, d
         else:
             out[name] = {"type": "number", "value": _px(value)}
     for old, new in LEGACY.items():
-        if new not in skip:
+        if new not in skip and old not in skip:
             out[old] = {"type": "color", "value": f"${new}"}
     out[REF_VAR] = {"type": "string", "value": ref}
     return out

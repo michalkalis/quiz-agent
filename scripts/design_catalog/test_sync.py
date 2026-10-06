@@ -123,6 +123,8 @@ class PenTests(unittest.TestCase):
     def test_undecided_pen_proposal_is_not_overwritten(self):
         self.assertNotIn("type-question-size", payload(PEN_TOKENS, "main@abc1234", {"type.question"}))
         self.assertNotIn("bg-page", payload(PEN_TOKENS, "main@abc1234", {"bg"}))
+        # founder edited the legacy alias itself: the report names the alias, not its target
+        self.assertNotIn("bg-page", payload(PEN_TOKENS, "main@abc1234", {"bg-page"}))
 
 
 if __name__ == "__main__":

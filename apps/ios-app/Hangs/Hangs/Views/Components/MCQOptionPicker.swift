@@ -34,6 +34,14 @@ final class MCQDelayedSubmit {
         task = nil
         pendingKey = nil
     }
+
+    /// The selection key changed to `newKey`. Only an other-source supersede (a
+    /// different key, e.g. a voice match overriding a pending tap) cancels; the
+    /// tap's own echo and a nil reset (new question) do not.
+    func supersede(with newKey: String?) {
+        guard let newKey, newKey != pendingKey else { return }
+        cancel()
+    }
 }
 
 struct MCQOptionPicker: View {
@@ -194,9 +202,7 @@ struct MCQOptionPicker: View {
     /// absorbed by the entry guard in `submitMCQAnswer` (answers are legal only
     /// from .askingQuestion/.recording), not here.
     private func handleSelectionChange(_ newValue: String?) {
-        guard let newValue else { return }
-        guard newValue != pendingSubmit.pendingKey else { return }
-        pendingSubmit.cancel()
+        pendingSubmit.supersede(with: newValue)
     }
 
     private func submitAfterDelay(key: String, value: String) {

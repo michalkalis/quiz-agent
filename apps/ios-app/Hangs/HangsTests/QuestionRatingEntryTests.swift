@@ -82,9 +82,10 @@ struct QuestionRatingEntryTests {
     func questionScreenHasNoFloatingChip(gateOpen: Bool) async throws {
         let view = QuestionView(viewModel: makeAskingViewModel(), ratingEntry: makeEntry(enabled: gateOpen))
         try await ViewHosting.host(view) {
-            #expect(throws: (any Error).self, "the overlay chip is what collided with the category") {
-                _ = try view.inspect().find(viewWithAccessibilityIdentifier: "rating.entry")
-            }
+            #expect(
+                (try? QuizToolbarInspection.bodyOccurrences(of: "rating.entry", in: view)) == 0,
+                "the overlay chip is what collided with the category"
+            )
             #expect(QuizToolbarInspection.hasToolbar(view), "it lives under the ⋯ menu now")
         }
     }

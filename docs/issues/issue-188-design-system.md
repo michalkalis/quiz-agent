@@ -56,11 +56,11 @@ Prečo kód: agent pracuje v kóde, CI ho vie kontrolovať (lint, snapshoty) a z
 
 Pravidlo pre celý zoznam: **radšej menej zvukovej odozvy ako priveľa.** Nepridávať zvuky pre stavy (spracovanie, čakanie); ak nejaký zvuk, tak veľmi minimalistický. Zmena vzhľadu len cez schválenie pred/po (B2), každá úloha cez PR. Kódy v zátvorke = nález na stránke auditu.
 
-- [ ] **G1 (K1)** Obrazovka chyby: krátka hlasová veta + povely „znova“ / „stop“ (sk/cs/en naraz); bez earconu.
-- [ ] **G2 (K2)** Paywall uprostred kvízu: pred otvorením jedna krátka hlasová veta, žiadny ďalší zvuk (founder: zvuková odozva tu nie je veľmi potrebná → len veta).
-- [ ] **G3 (D3)** Koniec setu (režim po každej otázke): krátko vysloviť skóre („Hotovo, 7 z 10“) + povely „znova“ / „domov“.
-- [ ] **G4 (D4+D5)** „Vypočuj si“ prečíta vysvetlenie (dnes prehrá znova verdikt); pri preskočení vysloviť správnu odpoveď.
-- [ ] **G5 (M4)** Zlá odpoveď a preskočenie: jemný ťuk namiesto chybovej vibrácie.
+- [x] **G1 (K1)** Obrazovka chyby: krátka hlasová veta + povely „znova“ / „stop“ (sk/cs/en naraz); bez earconu.
+- [x] **G2 (K2)** Paywall uprostred kvízu: pred otvorením jedna krátka hlasová veta, žiadny ďalší zvuk (founder: zvuková odozva tu nie je veľmi potrebná → len veta).
+- [x] **G3 (D3)** Koniec setu (režim po každej otázke): krátko vysloviť skóre („Hotovo, 7 z 10“) + povely „znova“ / „domov“.
+- [x] **G4 (D4+D5)** „Vypočuj si“ prečíta vysvetlenie (dnes prehrá znova verdikt); pri preskočení vysloviť správnu odpoveď.
+- [x] **G5 (M4)** Zlá odpoveď a preskočenie: jemný ťuk namiesto chybovej vibrácie.
 - [ ] **G6 (M10)** Tiché úseky (10 s premýšľania, ticho pred ďalšou otázkou): najviac jeden veľmi minimalistický zvuk, founder ho posúdi napočutie; inak nič.
 - [ ] **G7 (M12)** Mikrofón pýtať v onboardingu aj pri prvej otázke, ak ešte nie je povolený.
 - [ ] **G8 (D1)** Text otázky vždy plným kontrastom (dnes ho stlmí vypnuté tlačidlo „prehraj znova“); stlmiť len ikonku.

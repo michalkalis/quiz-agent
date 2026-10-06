@@ -229,8 +229,9 @@ final class VoiceCommandCoordinator: ObservableObject {
     let stopSilenceDetectionListening: @MainActor () -> Void
     /// #136 (founder decision B): applies the QUIET mixable audio session
     /// before the Home command window arms, so listening on Home never ducks
-    /// or pauses external audio. In-quiz windows never call this — the quiz
-    /// session set by `startNewQuiz` must stay as-is.
+    /// or pauses external audio. #188 G3: the set-end screen listens the same
+    /// way. In-quiz windows never call this — the quiz session set by
+    /// `startNewQuiz` must stay as-is.
     let configureQuietListeningSession: @MainActor () -> Void
     /// The façade's single earcon funnel (suppresses cues during question TTS).
     let emitEarcon: @MainActor (Earcon) -> Void
@@ -260,6 +261,12 @@ final class VoiceCommandCoordinator: ObservableObject {
     let pauseQuiz: @MainActor () -> Void
     let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
+    /// #188 G1/G3: the error / set-end screen has spoken its line and may listen.
+    let quizEndCommandsArmed: @MainActor () -> Bool
+    /// #188 G1: spoken "znova" on the error screen — what its primary button does.
+    let retryFromError: @MainActor () async -> Void
+    /// #188 G1/G3: spoken "stop" on the error screen, "domov" at the set end.
+    let goHome: @MainActor () -> Void
 
     /// Long-lived observer of `commandAvailabilityUpdates`. Deliberately NOT in
     /// `taskBag` (quiz-scoped, cleared by `resetState`) — availability changes
@@ -295,7 +302,10 @@ final class VoiceCommandCoordinator: ObservableObject {
         continueToNext: @escaping @MainActor () -> Void,
         pauseQuiz: @escaping @MainActor () -> Void,
         cancelAnswerTimer: @escaping @MainActor () -> Void,
-        cancelThinkingTime: @escaping @MainActor () -> Void
+        cancelThinkingTime: @escaping @MainActor () -> Void,
+        quizEndCommandsArmed: @escaping @MainActor () -> Bool,
+        retryFromError: @escaping @MainActor () async -> Void,
+        goHome: @escaping @MainActor () -> Void
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
@@ -324,6 +334,9 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.pauseQuiz = pauseQuiz
         self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
+        self.quizEndCommandsArmed = quizEndCommandsArmed
+        self.retryFromError = retryFromError
+        self.goHome = goHome
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object

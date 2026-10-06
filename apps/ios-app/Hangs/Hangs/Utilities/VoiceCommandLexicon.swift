@@ -46,6 +46,7 @@ enum VoiceCommand: String, Sendable, CaseIterable, Equatable {
     case skip // destructive: strict whole-utterance match only
     case stop // cancel / undo word — resolves an open UndoWindow
     case pause // #171 Track D: freeze the confirmation sheet (hands-free pause)
+    case home // #188 G3: leave the set-end screen for Home
 }
 
 /// The screen a command is heard on. Command routing is screen-scoped so an
@@ -59,6 +60,12 @@ enum VoiceCommandScreen: Sendable, Equatable {
     /// Skip, no countdown. Its own screen so "potvrď" can never skip there.
     case noAnswer
     case result // showingResult
+    /// #188 G1 (founder 2026-10-06): the error screen — "znova" retries,
+    /// "stop" goes Home, so a failure no longer needs a tap.
+    case error
+    /// #188 G3: the per-question flow's end-of-set score screen — "znova"
+    /// plays again, "domov" goes Home.
+    case setEnd
 }
 
 enum VoiceCommandLexicon {
@@ -80,6 +87,8 @@ enum VoiceCommandLexicon {
         // sheet let a "potvrď" do that.
         case .noAnswer: return [.again, .skip, .next]
         case .result: return [.next, .ok]
+        case .error: return [.again, .stop]
+        case .setEnd: return [.again, .home]
         }
     }
 
@@ -116,6 +125,7 @@ enum VoiceCommandLexicon {
         // "cancel" still aborts a pending skip (`undoCancelVariants`).
         case (.english, .stop): return ["stop", "wait"]
         case (.english, .pause): return ["pause"]
+        case (.english, .home): return ["home"]
         // "štart" folds to "start" — the command is IDENTICAL across languages,
         // which also keeps founder muscle memory intact.
         case (.slovak, .start): return ["start"]
@@ -143,6 +153,8 @@ enum VoiceCommandLexicon {
         // discourse particle in either — a rare, multi-syllable noun, which
         // is exactly the disjointness the Slovak set is chosen for.
         case (.slovak, .pause): return ["pauza"]
+        // #188 G3: set-end screen only, where leaving is benign (the quiz is over).
+        case (.slovak, .home): return ["domov"]
         // Czech (#175): "přeskoč" folds to "preskoc", "potvrď" to "potvrd",
         // "dál"/"dále" to "dal"/"dale" — the same folding the Slovak set relies
         // on, so the edit-distance floors behave identically.
@@ -159,6 +171,7 @@ enum VoiceCommandLexicon {
         case (.czech, .skip): return ["preskoc", "vynech"]
         case (.czech, .stop): return ["stop", "pockej"]
         case (.czech, .pause): return ["pauza"]
+        case (.czech, .home): return ["domu"]
         }
     }
 
@@ -244,18 +257,19 @@ enum VoiceCommandLexicon {
             return [
                 "start", "ok", "okay", "confirm", "yes", "yeah", "next", "again", "retry", "no", "wrong",
                 "one more time", "once more", "try again", "repeat", "skip", "pass", "stop", "wait", "cancel", "pause",
+                "home",
             ]
         case .slovak:
             return [
                 "štart", "ok", "okej", "potvrď", "áno", "hej", "ďalej", "pokračuj",
                 "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "preskoč", "vynechaj",
-                "stop", "počkaj", "zruš", "pauza",
+                "stop", "počkaj", "zruš", "pauza", "domov",
             ]
         case .czech:
             return [
                 "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
                 "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "přeskoč", "vynech",
-                "stop", "počkej", "zruš", "pauza",
+                "stop", "počkej", "zruš", "pauza", "domů",
             ]
         }
     }

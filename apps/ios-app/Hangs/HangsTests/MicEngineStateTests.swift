@@ -227,7 +227,8 @@ struct MicEngineStateTests {
         #expect(vm.quizState == .finished)
         #expect(silence.isListening == false, "the mic stayed hot on the results")
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .idle)
-        #expect(audio.deactivateSessionCallCount == 1)
+        // #188 G3: the quiz session is released once the score has been said.
+        await pumpUntil({ audio.deactivateSessionCallCount == 1 }, "the quiz session was never released")
     }
 
     // MARK: - M5

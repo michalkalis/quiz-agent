@@ -96,9 +96,11 @@ struct EarconToneTests {
     /// — mic open, speech heard, mic closed — fire on EVERY question, so they
     /// must be the soft generator: a firm tap that often becomes a buzz the
     /// driver learns to ignore.
-    @Test("Recording cues tap softly; command cues keep their firmer haptics")
+    /// #188 G5 (founder 2026-10-06): a skip is not an error, so the skip cue
+    /// taps softly too — the warning buzz it had read as "you did wrong".
+    @Test("Recording and skip cues tap softly; the command ack keeps its firmer tap")
     func haptics() {
-        for earcon in [Earcon.micLive, .speechStart, .gotIt] {
+        for earcon in [Earcon.micLive, .speechStart, .gotIt, .skipConfirm] {
             guard case let .soft(intensity) = EarconHaptic.haptic(for: earcon) else {
                 Issue.record("\(earcon) must use the soft generator")
                 continue
@@ -106,7 +108,6 @@ struct EarconToneTests {
             #expect(intensity > 0 && intensity < 1)
         }
         #expect(EarconHaptic.haptic(for: .commandAck) == .light)
-        #expect(EarconHaptic.haptic(for: .skipConfirm) == .warning)
     }
 
     /// WHY: a waveform that starts or ends mid-cycle clicks, and on a car

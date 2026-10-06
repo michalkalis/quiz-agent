@@ -71,7 +71,11 @@ extension VoiceCommandCoordinator {
     private var isCaptureSafeQuizState: Bool {
         switch quizState() {
         case .idle, .askingQuestion, .processing, .showingResult: true
-        default: false // startingQuiz / skipping / finished / error / recording
+        // #188 G1/G3: only once the screen's spoken line has played (and, at
+        // the set end, the released session is back up as the quiet one), so
+        // a tail resuming after the quiz ended still finds capture closed.
+        case .error, .finished: quizEndCommandsArmed()
+        default: false // startingQuiz / skipping / recording
         }
     }
 
@@ -87,7 +91,9 @@ extension VoiceCommandCoordinator {
         case .askingQuestion: return .question
         case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
         case .showingResult: return .result
-        default: return nil // startingQuiz / skipping / finished / error / recording
+        case .error: return .error
+        case .finished: return .setEnd
+        default: return nil // startingQuiz / skipping / recording
         }
     }
 
@@ -145,7 +151,7 @@ extension VoiceCommandCoordinator {
             // mixable session — external audio keeps playing while the app
             // waits for "start". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
-            if screen == .home {
+            if screen == .home || screen == .setEnd {
                 configureQuietListeningSession()
             }
             await startSilenceDetectionListening()

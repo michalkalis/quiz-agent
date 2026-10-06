@@ -53,6 +53,9 @@ extension VoiceCommandCoordinator {
         // #185: on the no-answer sheet "ďalej" SKIPS the question — exactly as
         // unrecoverable as "preskoč".
         if screen == .noAnswer, command == .next { return true }
+        // #188 G3: on the set-end screen "znova" starts a whole new quiz — a
+        // revised hypothesis cannot take that back.
+        if screen == .setEnd, command == .again { return true }
 
         switch command {
         // Benign — worst case is an early version of the default outcome.
@@ -63,6 +66,8 @@ extension VoiceCommandCoordinator {
         case .next: // the result screen auto-advances anyway
             return false
         case .repeatQuestion: // replays audio; loses nothing
+            return false
+        case .home: // set-end screen only: the quiz is already over
             return false
 
         // Destructive — a revised hypothesis cannot undo these.

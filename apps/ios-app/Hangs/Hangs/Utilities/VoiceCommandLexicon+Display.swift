@@ -28,6 +28,7 @@ extension VoiceCommandLexicon {
         case (.english, .skip): return "skip"
         case (.english, .stop): return "stop"
         case (.english, .pause): return "pause"
+        case (.english, .home): return "home"
         case (.slovak, .start): return "štart"
         case (.slovak, .ok): return "potvrď"
         case (.slovak, .next): return "ďalej"
@@ -38,6 +39,7 @@ extension VoiceCommandLexicon {
         // a voice command (the Cancel button stays a button).
         case (.slovak, .stop): return "stop"
         case (.slovak, .pause): return "pauza"
+        case (.slovak, .home): return "domov"
         case (.czech, .start): return "start"
         case (.czech, .ok): return "potvrď"
         case (.czech, .next): return "dál"
@@ -46,6 +48,7 @@ extension VoiceCommandLexicon {
         case (.czech, .skip): return "přeskoč"
         case (.czech, .stop): return "stop"
         case (.czech, .pause): return "pauza"
+        case (.czech, .home): return "domů"
         }
     }
 
@@ -70,16 +73,22 @@ extension VoiceCommandLexicon {
         // #185: the no-answer sheet's buttons are Again / Skip.
         case (.english, .noAnswer): return #"Say "again" or "skip""#
         case (.english, .result): return #"Say "next""#
+        case (.english, .error): return #"Say "again" or "stop""#
+        case (.english, .setEnd): return #"Say "again" or "home""#
         case (.slovak, .home): return "Povedz „štart“"
         case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"
         case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo novú odpoveď"
         case (.slovak, .noAnswer): return "Povedz „znova“ alebo „preskoč“"
         case (.slovak, .result): return "Povedz „ďalej“"
+        case (.slovak, .error): return "Povedz „znova“ alebo „stop“"
+        case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
         case (.czech, .home): return "Řekni „start“"
         case (.czech, .question): return "Řekni „start“ nebo „přeskoč“"
         case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo novou odpověď"
         case (.czech, .noAnswer): return "Řekni „znovu“ nebo „přeskoč“"
         case (.czech, .result): return "Řekni „dál“"
+        case (.czech, .error): return "Řekni „znovu“ nebo „stop“"
+        case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
         }
     }
 

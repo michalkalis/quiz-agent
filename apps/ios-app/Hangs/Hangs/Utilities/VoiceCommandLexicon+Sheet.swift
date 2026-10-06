@@ -31,15 +31,36 @@ extension VoiceCommandLexicon {
     }
 
     /// The variants the matcher scores on `screen`: the command's own words,
-    /// plus the confirmation-only ones on the sheet.
+    /// plus the confirmation-only ones on the sheet, minus the sheet words
+    /// that mean nothing on the quiz-end screens.
     static func variants(
         for command: VoiceCommand,
         language: CommandLanguage,
         on screen: VoiceCommandScreen
     ) -> [String] {
         let base = variants(for: command, language: language)
-        guard screen == .confirmation else { return base }
-        return base + confirmationOnlyVariants(for: command, language: language)
+        switch screen {
+        case .confirmation:
+            return base + confirmationOnlyVariants(for: command, language: language)
+        case .error, .setEnd:
+            let excluded = quizEndExcludedVariants(for: language)
+            return base.filter { !excluded.contains($0) }
+        default:
+            return base
+        }
+    }
+
+    /// #188 G1/G3: words the error and set-end screens do NOT take. On the
+    /// sheet "nie" / "zle" answer the read-back and "počkaj" holds the
+    /// countdown; on a screen that retries or restarts the whole quiz, a
+    /// passenger's "nie" must not start a new set and there is no countdown
+    /// to hold. "znova" / "ešte raz" / "stop" stay.
+    static func quizEndExcludedVariants(for language: CommandLanguage) -> Set<String> {
+        switch language {
+        case .english: return finalOnlyVariants(for: language).union(["wait"])
+        case .slovak: return finalOnlyVariants(for: language).union(["pockaj"])
+        case .czech: return finalOnlyVariants(for: language).union(["pockej"])
+        }
     }
 
     /// Variants that may only act on a FINAL result. They open ordinary

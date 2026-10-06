@@ -1216,7 +1216,12 @@ final class QuizViewModel: ObservableObject {
             // here, the one moment before every mic user of the quiz (question
             // read, command listener, barge-in, recording), so iOS never raises
             // the prompt implicitly mid-question. Denied keeps today's behaviour.
-            await audioService.requestMicrophonePermissionIfUndetermined()
+            // The status check is synchronous on purpose: awaiting a nonisolated
+            // helper hops off the main actor even when it does nothing, which
+            // shifted the RS timing for every quiz start.
+            if audioService.microphonePermissionStatus == .undetermined {
+                _ = await audioService.requestMicrophonePermission()
+            }
 
             // #173: a new quiz starts audible unless Settings says otherwise —
             // drop any mute the in-quiz button set during a previous run.

@@ -1452,14 +1452,3 @@ enum MicrophonePermissionStatus: Equatable {
     case granted
     case denied
 }
-
-extension AudioServiceProtocol {
-    /// Ask for microphone access only if the user has not decided yet (they
-    /// tapped "Maybe later" in onboarding). A granted or denied answer is left
-    /// alone: asking again would be a no-op for the system and a denied mic
-    /// keeps today's behaviour of a quiz that works with buttons.
-    func requestMicrophonePermissionIfUndetermined() async {
-        guard microphonePermissionStatus == .undetermined else { return }
-        _ = await requestMicrophonePermission()
-    }
-}

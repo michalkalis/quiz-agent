@@ -37,6 +37,11 @@ nonisolated enum BuildChannel {
         receiptURL: URL? = Bundle.main.appStoreReceiptURL,
         isDebugBuild: Bool = BuildChannel.isDebugBuild
     ) -> Bool {
-        isDebugBuild || isTestFlight(receiptURL: receiptURL)
+        #if DEBUG
+            // #190: store-screenshot mode renders the App Store look — no review
+            // label, rating entry or diagnostics. Test processes never pass the flag.
+            if CommandLine.arguments.contains("--store-screenshots") { return false }
+        #endif
+        return isDebugBuild || isTestFlight(receiptURL: receiptURL)
     }
 }

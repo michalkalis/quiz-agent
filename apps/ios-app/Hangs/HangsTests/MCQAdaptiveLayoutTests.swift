@@ -51,6 +51,18 @@ struct MCQAdaptiveLayoutTests {
         #expect(picker(mixed).usesGrid == false, "one long option must move the whole set to rows")
     }
 
+    /// #188 G9 (D8): at large text a half-width tile broke even a short answer
+    /// mid-word ("Budapes / t"), so above `.xLarge` the short set takes the rows
+    /// too. Long options are on rows at every size already.
+    @Test("short options leave the grid above the tile's text-size limit")
+    func gridGivesWayAtLargeText() {
+        #expect(picker(shortOptions).usesGrid(at: .large))
+        #expect(picker(shortOptions).usesGrid(at: .xLarge), "the limit itself still fits")
+        #expect(picker(shortOptions).usesGrid(at: .xxLarge) == false)
+        #expect(picker(shortOptions).usesGrid(at: .xxxLarge) == false)
+        #expect(picker(longOptions).usesGrid(at: .xSmall) == false)
+    }
+
     /// The threshold is a real boundary, not a vibe: at the limit the tile still
     /// holds the text, one character past it the row takes over. Pinned so a
     /// silent retune of the constant has to be deliberate.

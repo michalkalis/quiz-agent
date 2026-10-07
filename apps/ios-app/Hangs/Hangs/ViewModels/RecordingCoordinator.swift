@@ -297,6 +297,8 @@ final class RecordingCoordinator: ObservableObject {
     let isPlayingQuestionTTS: @MainActor () -> Bool
     /// Stop the question read-out (initial read or a replay) so the mic can open.
     let stopQuestionReadOut: @MainActor () async -> Void
+    /// #51 product analytics — the façade attaches the session id.
+    let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -341,7 +343,8 @@ final class RecordingCoordinator: ObservableObject {
         setPlayingAnswerReadBack: @escaping @MainActor (Bool) -> Void = { _ in },
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
         stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
-        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true }
+        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
+        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -386,6 +389,7 @@ final class RecordingCoordinator: ObservableObject {
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
         self.stopQuestionReadOut = stopQuestionReadOut
         self.realtimeSTTEnabled = realtimeSTTEnabled
+        self.trackAnalytics = trackAnalytics
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

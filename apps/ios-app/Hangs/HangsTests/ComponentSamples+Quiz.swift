@@ -16,7 +16,6 @@ nonisolated extension ComponentSample {
     private static var chrome: [ComponentSample] {
         [
             ComponentSample("brandRow.default") { HangsBrandRow() },
-            ComponentSample("quizNav.default") { HangsQuizNav(onClose: {}, counterText: "03 / 10") },
             ComponentSample("progressHeader.default") { HangsQuizProgressHeader(category: "Geography", current: 3, total: 10) },
             ComponentSample("progressHeader.recording") {
                 HangsQuizProgressHeader(category: "Geography", current: 3, total: 10, isRecording: true)
@@ -57,7 +56,14 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("questionListenBar.reading") { QuestionListenBar(phase: .readingQuestion) },
             ComponentSample("questionListenBar.thinking") { QuestionListenBar(phase: .thinking(remaining: 3, total: 5)) },
+            ComponentSample("questionListenBar.thinkingDismissable") {
+                QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {})
+            },
             ComponentSample("questionListenBar.listeningMCQ") { QuestionListenBar(phase: .listening(.mcq)) },
+            ComponentSample("questionListenBar.listeningCountdown") {
+                // With the ✕: the countdown and the ✕ each need their own room.
+                QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
+            },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },

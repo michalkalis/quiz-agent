@@ -1,62 +1,56 @@
 # Analytics Events — Quiz Agent
 
-> Tool: **Sentry** (org `missinghue` / project `carquiz`). Decision recorded in issue #51 and launch decision #11.
-> Sentry mechanism: **custom event** (`sentry_sdk.capture_event()` backend; `SentrySDK.capture(event:)` iOS).
-> SDK versions verified: sentry-sdk ≥ 2.0.0 (backend `pyproject.toml:17`); sentry-cocoa (iOS Xcode SPM ref confirmed in `project.pbxproj`).
-> No-PII rule: no transcript text, no audio references. `question_id` + `category` + `question_type` + `result` are safe per #50 privacy labels.
+> **Tool: own Postgres table `analytics_events`** (quiz-agent DB) — decision revised 2026-10-07 in issue #51 (product analytics); Sentry stays for crashes/health only.
+> **Allowlist in code:** `apps/quiz-agent/app/analytics/taxonomy.py` is the source of truth — names and property keys not listed there are dropped, never stored. Change both together.
+> **No PII:** no transcript or answer text, no names/emails. Identity = the anonymous/account `subject_id` (same id `daily_usage` uses). Rows are deleted on account erase.
+> **Viewing:** ask Claude to query the table (recipes below). Dashboard deferred.
+> Founder-approved: original 10 events 2026-07-14; extra groups (money, voice & controls, usage context, first run) 2026-10-07.
 
----
+## Server events (emitted by the API — where the truth lives)
 
-## Event Table
+| Event | When | Properties |
+|---|---|---|
+| `quiz_started` | first question served (`routes/quiz.py` start_quiz) | `category`, `language`, `difficulty`, `mode`, `is_pack`, `max_questions` |
+| `answer_evaluated` | first grade of a question (`quiz/flow.py` process_answer) | `question_id`, `result` (correct / incorrect / partially_correct / skipped …), `category`, `question_type`, `difficulty`, `route` (voice / text), `is_regrade`, `question_index` |
+| `quiz_completed` | session → finished | `reason` (max_questions / usage_limit / no_more_questions), `questions_asked`, `score`, `is_pack` |
+| `quota_hit` | free limit blocks a start or the next question | `stage` (start / mid_quiz), `questions_used`, `questions_limit` |
+| `transcription_failed` | server rejects a voice upload as no speech | `reason`, `question_id` |
+| `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 
-| Event | Exact Trigger (file:function, line) | Properties | PRD Metric | Emitter |
-|---|---|---|---|---|
-| `quiz_started` | iOS `ViewModels/QuizViewModel.swift:355` — `startNewQuiz()` → `transition(to: .startingQuiz)` | `session_id`, `category` | Completion rate — numerator; #49 daily-active (distinct `session_id` per day) | iOS |
-| `quiz_completed` | iOS `ViewModels/QuizViewModel.swift:923` — `transition(to: .finished)` (auto-advance after last result) | `session_id`, `questions_answered` | Completion rate — completed denominator | iOS |
-| `quiz_abandoned` | iOS `ViewModels/QuizViewModel.swift:722` — `resetToHome()`, emitted only when `quizState ∉ {.idle, .finished}` before the reset | `session_id`, `questions_answered` | Completion rate — abandoned denominator | iOS |
-| `question_presented` | iOS `ViewModels/QuizViewModel.swift:416` (first question) and `:937` (each subsequent) — both → `transition(to: .askingQuestion)` | `session_id`, `question_id`, `question_index`, `question_type` | Voice reliability — denominator (each presentation is one capture opportunity); #49 cost model (questions-per-session) | iOS |
-| `answer_captured` | iOS `ViewModels/QuizViewModel+Recording.swift:197` (batch path) and `:277` (silence-detect path) — both → `transition(to: .processing)` after recording stops | `session_id`, `question_id`, `is_retry` (bool — true if called from `resubmitAnswer()`) | Voice reliability — numerator (audio reached server for evaluation) | iOS |
-| `answer_retry` | iOS `ViewModels/QuizViewModel+Recording.swift:431` — `resubmitAnswer()` entry | `session_id`, `question_id` | Voice reliability — retry count (complement to first-try rate) | iOS |
-| `transcription_failed` | Backend `apps/quiz-agent/app/api/routes/voice.py:190` — `transcribe_and_submit()` except block, after `RuntimeError` from `app/voice/transcriber.py:249` | `session_id` (from request query param), `error_type` (exception class name) | Voice reliability — failure path (counts against first-try capture rate) | Backend |
-| `answer_correct` | Backend `apps/quiz-agent/app/quiz/flow.py:140` — `process_answer()` after `answer_evaluator.evaluate()` returns `"correct"` | `session_id`, `question_id`, `category`, `question_type`, `difficulty` | Wrong-answer rate — correct count | Backend |
-| `answer_incorrect` | Backend `apps/quiz-agent/app/quiz/flow.py:140` — `process_answer()` after `answer_evaluator.evaluate()` returns `"incorrect"` | `session_id`, `question_id`, `category`, `question_type`, `difficulty` | Wrong-answer rate — incorrect count | Backend |
-| `quota_hit` | Backend `apps/quiz-agent/app/quiz/flow.py:250` — `process_answer()`, after `usage_tracker.check_limit()` (called `:247`) returns `allowed=False` (mid-quiz gate); same rejection shape also raised at `apps/quiz-agent/app/api/routes/quiz.py:65` — `start_quiz()`, after `check_limit()` (called `:62`) returns `allowed=False` (new-session gate) | `session_id`, `questions_used`, `questions_limit` | #49 cost model — quota/limit tuning signal; upgrade-funnel volume (#93 monetization) | Backend |
+## App events (posted to `POST /api/v1/analytics/events` — only what the server cannot see)
 
----
+| Event | When | Properties |
+|---|---|---|
+| `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
+| `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (mic_granted / mic_denied / mic_later / skipped), `step` |
+| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point` |
+| `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
+| `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry` |
+| `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
+| `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
+| `paywall_viewed` | paywall shown | `source` (quota / home / settings / completion) |
+| `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending) |
+| `restore_result` | restore purchases ends | `outcome` |
 
-## PRD Metric Derivations (Sentry Discover queries)
+## Already in other tables — query there, don't duplicate
 
-| PRD Metric | Derivation |
+- Custom pack orders and delivery: `generation_orders` (status, created/delivered timestamps).
+- Question ratings / flags: `question_ratings`. In-app feedback: `feedback`.
+- Questions per subject per day: `daily_usage`.
+
+## Metric recipes (SQL against `analytics_events`)
+
+| Metric | Derivation |
 |---|---|
-| **Completion rate** | `count(quiz_completed)` / `count(quiz_started)` grouped by day. Abandon rate = `count(quiz_abandoned)` / `count(quiz_started)`. |
-| **Voice reliability — first-try capture rate** | Among `answer_captured` events: fraction where `is_retry = false` AND no prior `transcription_failed` for that (`session_id`, `question_id`) pair. Approximation: `count(answer_captured where is_retry=false)` / `count(question_presented)`. |
-| **Wrong-answer rate** | `count(answer_incorrect)` / (`count(answer_correct)` + `count(answer_incorrect)`). Slice by `category`, `question_type`, or `difficulty` tags. |
-| **#49 cost model: questions/session** | `count(question_presented)` grouped by `session_id`, then avg/p50 across sessions per day. |
-| **#49 cost model: daily active** | `count_unique(session_id)` on `quiz_started` grouped by day. |
+| Completion rate | sessions with `quiz_completed` (reason ≠ usage_limit) ÷ sessions with `quiz_started`, per day |
+| Abandon rate | `quiz_abandoned` sessions ÷ `quiz_started` sessions |
+| Wrong-answer rate | `answer_evaluated` result = incorrect ÷ all graded (exclude skipped), sliced by category / question_type / difficulty |
+| Voice first-try capture | per (session_id, question_id) with a voice attempt: first try succeeded = no `voice_capture_failed` / `transcription_failed` for that pair AND its `answer_submitted` voice row has is_retry = false. (A server-rejected upload also logs `answer_submitted`, so never use that event alone as the success count.) |
+| Skip rate | `answer_evaluated` result = skipped ÷ all |
+| DAU / retention | distinct `subject_id` per day on `app_opened` (D1/D7/D30 cohorts by first `app_opened`) |
+| Paywall conversion | `purchase_result` outcome = success ÷ `paywall_viewed`, by `source` |
+| Quota pressure | `quota_hit` per subject per month; share followed by `paywall_viewed` / purchase |
+| Usage context | `quiz_context.audio_route` mix (car vs. home vs. party) |
+| Voice command usage | `voice_command` counts by `command` |
 
----
-
-## Property Field Mapping
-
-| Property | iOS source | Backend source | Notes |
-|---|---|---|---|
-| `session_id` | `currentSession?.sessionId` | `session.id` (from `QuizSession`) | Low-cardinality grouping key — use as Sentry tag |
-| `question_id` | `currentQuestion?.id` | `evaluated_question_id` (`flow.py:114`) | High-cardinality — use as Sentry extra, not tag |
-| `category` | `currentSession?.category` | `current_question.category` | Sentry tag — indexed for slice-by-category |
-| `question_type` | `currentQuestion?.type.rawValue` (`Question.swift:14`, `QuestionType` enum at `:150`) | `current_question.question_type` (`question.py:111`) | Sentry tag — values: `text`, `mcq`, `image` |
-| `difficulty` | n/a (backend only for answer events) | `current_question.difficulty` (`question.py:115`) | Sentry tag — values: `easy`, `medium`, `hard` |
-| `questions_answered` | `questionsAnswered` (`QuizViewModel.swift:107`) | n/a | Sentry extra |
-| `is_retry` | bool: true when emitting from `resubmitAnswer()` path | n/a | Sentry tag |
-| `error_type` | n/a | `type(e).__name__` from caught exception | Sentry tag — backend only |
-| `question_index` | `questionsAnswered` at time of `transition(to: .askingQuestion)` | n/a | Sentry extra |
-| `questions_used` | n/a | `usage["questions_used"]` (`tracker.py:252`/`:262`, from `get_usage()`) | Sentry extra — backend only |
-| `questions_limit` | n/a | `usage["questions_limit"]` (`tracker.py:263`; free-tier constant, currently `30`) | Sentry tag — backend only, low-cardinality |
-
----
-
-## Scope guards (from issue #51)
-
-- These 10 events are the complete set (6 iOS, 4 backend) — no additional events without a named PRD metric or #49/#50 link.
-- No transcript text, no audio blobs, no user identifiers in any property.
-- Privacy labels (#50) and this table must agree before 51.3/51.4 ship.
-- Do not add a parallel state source; hook the existing transitions listed above.
+Always filter `app_version` / `environment` when sandbox or TestFlight noise matters.

@@ -1,0 +1,32 @@
+# texts
+adults
+0/10
+TĚSNĚ VEDLE.
+správná odpověď
+Paris
+proč
+poslechni si
+Paris has been the capital of France since the 10th century.
+tvoje odpověď
+Somewhere on the Rhône, I think Lyon or maybe Marseille
+zdroj
+Dál
+ZŮSTAŇ
+Nastavení
+# identifiers
+question.progress
+question.category
+question.counter
+result.heroBanner
+result.verdict
+result.hearIt
+result.explanation
+result.metaRow
+result.source
+result.continue
+result.stayHere
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

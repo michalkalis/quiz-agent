@@ -22,8 +22,8 @@ struct OrderPackFormStep: View {
             HangsPrimaryButton(title: "Continue", trailingIcon: "arrow.right") {
                 viewModel.advanceToSummary()
             }
+            // #188 G14 (M9): the button draws its own legible disabled state.
             .disabled(!viewModel.isValid)
-            .opacity(viewModel.isValid ? 1 : 0.5)
             .accessibilityIdentifier("orderPack.submit")
         }
     }

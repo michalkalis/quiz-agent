@@ -400,5 +400,18 @@ import os
                 throw NetworkError.invalidResponse
             }
         }
+
+        /// #51: every analytics batch posted, in order (failed attempts included).
+        var postedAnalyticsBatches: [AnalyticsBatch] = []
+        /// How many analytics posts throw before one succeeds.
+        var analyticsPostFailures = 0
+
+        func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws {
+            postedAnalyticsBatches.append(batch)
+            if analyticsPostFailures > 0 {
+                analyticsPostFailures -= 1
+                throw NetworkError.invalidResponse
+            }
+        }
     }
 #endif

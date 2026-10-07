@@ -5,9 +5,9 @@
 //  #131 Tracks B + C — the voice-answer question screen's footer, rebuilt after
 //  the founder's 2026-07-29 TestFlight session:
 //
-//   B. ONE countdown from the end of the question read to submit or expiry, living
-//      in the Record/Stop button. The THINK chip is gone; nothing the driver does
-//      may blank the number.
+//   B. ONE countdown from the end of the question read to submit or expiry.
+//      Nothing the driver does may blank the number. (#188 G11 moved it from the
+//      Record/Stop button into the listen bar: two copies of one countdown.)
 //   C. Footer row = Record · Type · Skip; while recording the screen shows the
 //      transcript card as its listening surface, not a second pink bar.
 //
@@ -55,6 +55,44 @@ struct QuestionFooterInspectorTests {
         #expect(vm.quizState == .recording)
         #expect(vm.answerWindowRemaining > 0, "the number must NOT blank when the mic opens")
         #expect(vm.answerWindowTotal > 0, "…and the button's fill must still have a window to drain")
+    }
+
+    /// #188 G11 (founder audit D13 + M8): the seconds showed twice — in the bar
+    /// and as "Štart 23s" in the button — and the button's pair truncated at
+    /// large text. ONE home: the bar, in the think window AND while recording.
+    @Test("the countdown lives in the bar, never in the Start/Stop button")
+    func countdownLivesInTheBarOnly() async throws {
+        let vm = makeVoiceViewModel()
+        vm.settings.thinkingTime = 10
+        vm.thinkingTimeCountdown = 7
+        let thinking = QuestionView(viewModel: vm)
+        try await ViewHosting.host(thinking) {
+            let tree = try thinking.inspect()
+            let button = try #require(try? tree.find(viewWithAccessibilityIdentifier: "question.record"))
+            #expect(throws: (any Error).self, "no seconds chip in the button") { try button.find(text: "7s") }
+            #expect(Self.bar(in: tree, shows: "7"), "the think window is counted in the bar")
+        }
+
+        vm.quizState = .recording
+        vm.recordingCountdown = 12
+        #expect(vm.answerWindowRemaining == 12)
+        let recording = QuestionView(viewModel: vm)
+        try await ViewHosting.host(recording) {
+            let tree = try recording.inspect()
+            let button = try #require(try? tree.find(viewWithAccessibilityIdentifier: "question.stop"))
+            #expect(throws: (any Error).self) { try button.find(text: "12s") }
+            #expect(Self.bar(in: tree, shows: "12"), "the recording window is counted in the bar too")
+        }
+    }
+
+    /// Whether the listen bar renders `seconds` in any of its texts. The full
+    /// bar shows it as its own number, the slim (short-screen) bar inside its
+    /// caption; the rule under test is WHERE the countdown lives, not its form.
+    private static func bar(in tree: InspectableView<ViewType.ClassifiedView>, shows seconds: String) -> Bool {
+        guard let bar = try? tree.find(viewWithAccessibilityIdentifier: "listen-bar") else { return false }
+        return bar.findAll(ViewType.Text.self).contains { text in
+            ((try? text.string()) ?? "").contains(seconds)
+        }
     }
 
     /// The chip that used to carry it is gone from the voice screen — if it comes

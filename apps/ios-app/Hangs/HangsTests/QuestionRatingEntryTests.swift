@@ -90,36 +90,20 @@ struct QuestionRatingEntryTests {
         }
     }
 
-    @Test("result screen shows the rating chip when the gate is open")
-    func resultScreenShowsChipWhenEnabled() async throws {
-        let view = ResultView(viewModel: makeResultViewModel(), ratingEntry: makeEntry(enabled: true))
+    /// #188 G9 (D9) did for the result what #173 did for the question: the
+    /// floating chips were what the result counter collided with at large text.
+    /// The row's gating is pinned on the menu component itself
+    /// (`QuizToolbarTests.overflowMenuGating`).
+    @Test("the result screen no longer overlays a floating rating chip",
+          arguments: [true, false])
+    func resultScreenHasNoFloatingChip(gateOpen: Bool) async throws {
+        let view = ResultView(viewModel: makeResultViewModel(), ratingEntry: makeEntry(enabled: gateOpen))
         try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "rating.entry")
-            }
-        }
-    }
-
-    @Test("result screen hides the rating chip when the gate is closed")
-    func resultScreenHidesChipWhenDisabled() async throws {
-        let view = ResultView(viewModel: makeResultViewModel(), ratingEntry: makeEntry(enabled: false))
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: (any Error).self, "an App Store build must render no rating affordance") {
-                try tree.find(viewWithAccessibilityIdentifier: "rating.entry")
-            }
-        }
-    }
-
-    @Test("default construction (no entry passed) renders no chip at all")
-    func defaultConstructionHasNoChip() async throws {
-        let view = ResultView(viewModel: makeResultViewModel())
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
-                try tree.find(viewWithAccessibilityIdentifier: "rating.entry")
-            }
+            #expect(
+                (try? QuizToolbarInspection.bodyOccurrences(of: "rating.entry", in: view)) == 0,
+                "the overlay chip is what collided with the counter"
+            )
+            #expect(QuizToolbarInspection.hasToolbar(view), "it lives under the ⋯ menu now")
         }
     }
 

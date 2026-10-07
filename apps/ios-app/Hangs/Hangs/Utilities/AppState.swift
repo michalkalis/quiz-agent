@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import os
+import SwiftUI
 
 /// App-wide state and dependency container
 @MainActor
@@ -26,6 +27,12 @@ final class AppState: ObservableObject {
     let packPurchaseService: PackPurchaseServiceProtocol
     /// In-app question ratings (#155), targeting the quiz-pack-api host.
     let questionRatingService: QuestionRatingServiceProtocol
+    /// Product analytics (#51): live in the app, a no-op in UI tests and tests.
+    let analytics: AnalyticsClient
+
+    /// The `app_opened` launch kind still to report: cold until the first
+    /// activation, then foreground after every trip to the background.
+    private var pendingAppOpen: AppLaunchKind? = .cold
 
     /// The custom-pack order flow's view model (#146). Owned HERE, not in
     /// `SettingsView`'s `@State`: Settings is a pushed route that quiz-start
@@ -34,7 +41,8 @@ final class AppState: ObservableObject {
     /// Lazy — it costs nothing until the user opens the pack flow.
     private(set) lazy var orderPackViewModel = OrderPackViewModel(
         service: packOrderService,
-        purchaseService: packPurchaseService
+        purchaseService: packPurchaseService,
+        analytics: analytics
     )
 
     /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
@@ -51,6 +59,7 @@ final class AppState: ObservableObject {
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
                 sttService = mocks.stt
+                analytics = NoopAnalyticsClient()
                 let purchaseMock = MockPurchaseService()
                 // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
                 // the paywall's in-flight states stay on screen long enough to
@@ -69,7 +78,17 @@ final class AppState: ObservableObject {
                 }
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
-                packOrderService = MockPackOrderService()
+                if StoreScreenshotFixtures.isActive {
+                    // #190: one ready custom pack on Home (the topic preset for the
+                    // order form is applied in `makeQuizViewModel`).
+                    let language = StoreScreenshotFixtures.quizLanguage
+                    let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
+                    packOrderService = MockPackOrderService(
+                        listResult: .success([StoreScreenshotFixtures.readyPack(content, language: language)])
+                    )
+                } else {
+                    packOrderService = MockPackOrderService()
+                }
                 packPurchaseService = MockPackPurchaseService()
                 questionRatingService = MockQuestionRatingService()
                 storeManager.onPurchaseSuccess = { [weak self] in
@@ -103,11 +122,14 @@ final class AppState: ObservableObject {
         // refresh transparently.
         let authService = AuthService(baseURL: Config.apiBaseURL, attestor: AppAttestor())
         self.authService = authService
-        self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
+        let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
+        self.networkService = networkService
+        let analytics = LiveAnalyticsClient(networkService: networkService)
+        self.analytics = analytics
         audioService = AudioService()
         let persistence = PersistenceStore()
         persistenceStore = persistence
-        self.storeManager = StoreManager()
+        self.storeManager = StoreManager(analytics: analytics)
         packOrderService = PackOrderService(authService: authService)
         packPurchaseService = StoreKitPackPurchaseService()
         questionRatingService = QuestionRatingService(authService: authService)
@@ -178,7 +200,6 @@ final class AppState: ObservableObject {
         // mirror. Without the bootstrap leg, a purchase on a fresh install
         // lands under an unmappable $RCAnonymousID.
         let storeManager = self.storeManager
-        let networkService = self.networkService
         Task {
             await authService.setAccountLinkedHandler { accountId in
                 await storeManager.logIn(accountId: accountId)
@@ -229,7 +250,8 @@ final class AppState: ObservableObject {
         authService: AuthService? = nil,
         packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
         packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
-        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService()
+        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
+        analytics: AnalyticsClient = NoopAnalyticsClient()
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -241,7 +263,65 @@ final class AppState: ObservableObject {
         self.packOrderService = packOrderService
         self.packPurchaseService = packPurchaseService
         self.questionRatingService = questionRatingService
+        self.analytics = analytics
     }
+
+    /// #51: `app_opened` on the first activation and on every return from the
+    /// background (an inactive blip — Control Center, a call banner — is not a
+    /// new open); queued events go out as the app leaves the foreground.
+    func trackScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .active:
+            guard let launch = pendingAppOpen else { return }
+            pendingAppOpen = nil
+            analytics.track(.appOpened(launch: launch))
+        case .background:
+            // A background phase before the first activation (launch order
+            // varies) must not turn the cold open into a foreground one.
+            if pendingAppOpen == nil { pendingAppOpen = .foreground }
+            analytics.flush()
+        default:
+            break
+        }
+    }
+
+    #if DEBUG
+        /// `--store-screenshots` scenes (#190): listening | confirm | result | mcq.
+        /// Home (no scene) needs no seeding; the pack summary is reached via the UI.
+        private func seedStoreScreenshotScene(on viewModel: QuizViewModel) {
+            let language = StoreScreenshotFixtures.quizLanguage
+            let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
+            let open = StoreScreenshotFixtures.openQuestion(content, language: language)
+            let mcq = StoreScreenshotFixtures.mcqQuestion(content, language: language)
+            orderPackViewModel.prompt = content.packTopic
+            switch StoreScreenshotFixtures.scene {
+            case "listening":
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
+                viewModel.quizState = .recording
+                viewModel.liveTranscript = content.openAnswer
+                viewModel.isStreamingSTT = true
+            case "confirm":
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
+                viewModel.quizState = .processing
+                viewModel.transcribedAnswer = content.openAnswer
+                viewModel.showAnswerConfirmation = true
+            case "result":
+                let evaluation = StoreScreenshotFixtures.correctEvaluation(content, questionId: open.id)
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
+                viewModel.quizState = .showingResult(question: open, evaluation: evaluation)
+            case "mcq":
+                viewModel.currentQuestion = mcq
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
+                viewModel.quizState = .recording
+                viewModel.isStreamingSTT = true
+            default:
+                break
+            }
+        }
+    #endif
 
     /// Create a new QuizViewModel with injected dependencies
     func makeQuizViewModel() -> QuizViewModel {
@@ -269,7 +349,8 @@ final class AppState: ObservableObject {
                     if UITestSupport.isUITesting { return true }
                 #endif
                 return VoicePipelineFlags.realtimeSTTEnabled
-            }
+            },
+            analytics: analytics
         )
 
         #if DEBUG
@@ -434,6 +515,11 @@ final class AppState: ObservableObject {
                         explanation: nil
                     )
                 )
+            }
+            // #190 store-screenshot mode: seed the named static scene (no timers
+            // run, so no ticking pills) and preset the custom-pack topic.
+            if StoreScreenshotFixtures.isActive {
+                seedStoreScreenshotScene(on: viewModel)
             }
         #endif
 

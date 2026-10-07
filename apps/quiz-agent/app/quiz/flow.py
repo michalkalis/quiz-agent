@@ -13,6 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from ..analytics.recorder import AnalyticsRecorder
 from ..client_capabilities import ANSWER_CODES, has_capability
 from ..evaluation.evaluator import UNMATCHED, AnswerEvaluator
 from ..evaluation.mcq_matcher import match_option
@@ -117,7 +118,9 @@ class QuizFlowService:
         tts_service: Optional[TTSService],
         usage_tracker: Optional[UsageTracker],
         translation_service: Any,
+        analytics: Optional[AnalyticsRecorder] = None,
     ):
+        self.analytics = analytics or AnalyticsRecorder()
         self.session_manager = session_manager
         self.input_parser = input_parser
         self.question_retriever = question_retriever
@@ -144,6 +147,7 @@ class QuizFlowService:
         include_audio: bool = False,
         next_question: Optional[Question] = None,
         submitted_question_id: Optional[str] = None,
+        route: Optional[str] = None,
     ) -> FlowResult:
         """Process a user's answer through the full quiz flow.
 
@@ -158,6 +162,8 @@ class QuizFlowService:
                 already-graded id is replayed or re-graded against that question
                 instead of scoring the current one; anything else raises
                 ``QuestionMismatch``.
+            route: Which submit route carried the answer ("voice" | "text"),
+                for analytics only (#51).
 
         Returns:
             FlowResult with evaluation, next question, audio info, etc.
@@ -213,6 +219,21 @@ class QuizFlowService:
             participant_id=participant_id,
             outcome=outcome,
         )
+        self.analytics.emit(
+            "answer_evaluated",
+            subject_id=session.user_id,
+            session_id=session.session_id,
+            properties={
+                "question_id": evaluated_question_id,
+                "result": result.evaluation.result,
+                "category": current_question.category,
+                "question_type": current_question.type,
+                "difficulty": current_question.difficulty,
+                "route": route,
+                "is_regrade": False,
+                "question_index": len(session.asked_question_ids),
+            },
+        )
 
         # Build audio info
         if include_audio:
@@ -226,6 +247,7 @@ class QuizFlowService:
                 to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions"
             )
             self.session_manager.update_session(session)
+            self._emit_completed(session, "max_questions")
             result.quiz_finished = True
             result.message = "Quiz completed!"
             return result
@@ -242,6 +264,17 @@ class QuizFlowService:
                 )
                 self.session_manager.update_session(session)
                 usage = await self.usage_tracker.get_usage(session.user_id)
+                self.analytics.emit(
+                    "quota_hit",
+                    subject_id=session.user_id,
+                    session_id=session.session_id,
+                    properties={
+                        "stage": "mid_quiz",
+                        "questions_used": usage["questions_used"],
+                        "questions_limit": usage["questions_limit"],
+                    },
+                )
+                self._emit_completed(session, "usage_limit")
                 result.usage_limit_error = {
                     "error": "quota_limit_reached",
                     "questions_used": usage["questions_used"],
@@ -267,12 +300,30 @@ class QuizFlowService:
                 to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions"
             )
             self.session_manager.update_session(session)
+            self._emit_completed(session, "no_more_questions")
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
 
         return await self._advance_to_question(
             session, next_question, result, include_audio
+        )
+
+    def _emit_completed(self, session: QuizSession, reason: str) -> None:
+        self.analytics.emit(
+            "quiz_completed",
+            subject_id=session.user_id,
+            session_id=session.session_id,
+            properties={
+                "reason": reason,
+                "questions_asked": len(session.asked_question_ids),
+                # session.score is never updated; the score lives on the
+                # participant (single player = participants[0]).
+                "score": (
+                    session.participants[0].score if session.participants else 0.0
+                ),
+                "is_pack": bool(session.pack_id),
+            },
         )
 
     def _await_question(self, session: QuizSession, result: FlowResult) -> FlowResult:
@@ -325,6 +376,7 @@ class QuizFlowService:
                     caller="flow.resume_after_wait:no_more_questions",
                 )
                 self.session_manager.update_session(session)
+                self._emit_completed(session, "no_more_questions")
                 result.quiz_finished = True
                 result.message = "No more questions available"
                 return result

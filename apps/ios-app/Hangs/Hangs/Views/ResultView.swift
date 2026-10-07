@@ -16,6 +16,10 @@
 //  row's score/streak stats are gone — one replay affordance ("hear it" on the
 //  why card) and no per-question score echo.
 //
+//  #188 G9 (D9): the top is the question screen's — the native quiz toolbar
+//  (✕, sound + pause, ⋯) over `HangsQuizProgressHeader`. The old hand-drawn row
+//  (✕ + logo + "03 / 10", TestFlight chips floated on top) broke at large text.
+//
 
 import SwiftUI
 
@@ -34,6 +38,9 @@ struct ResultView: View {
     @State private var didAppear = false
     @State private var showSourceWebView = false
     @State private var showEndQuizConfirmation = false
+    @State private var showQuizSettings = false
+    /// The ⋯ menu's "Rate question" row (TestFlight/Debug), as on the question screen.
+    @State private var ratingPresentation: QuestionRatingPresentation?
 
     var body: some View {
         ZStack {
@@ -42,11 +49,17 @@ struct ResultView: View {
             // NO ScrollView at the screen level — the zones are laid out in a
             // fixed VStack, so nothing can clip under the nav (issue #127).
             VStack(spacing: 0) {
-                HangsQuizNav(
-                    onClose: { showEndQuizConfirmation = true },
-                    counterText: counterString
+                HangsQuizProgressHeader(
+                    category: (viewModel.resultQuestion ?? viewModel.currentQuestion)
+                        .map { Config.categoryDisplayName(for: $0.category) } ?? "",
+                    // #79: 1-based index of the question just answered
+                    // (questionsAnswered is incremented before .showingResult),
+                    // so the count matches the question screen it came from.
+                    current: viewModel.questionsAnswered,
+                    total: totalQuestions
                 )
-                HangsProgressBar(progress: progressFraction)
+                .padding(.top, Theme.Hangs.Spacing.xs)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
 
                 // Rank 1 — the verdict, edge to edge (Variant A).
                 ResultVerdictBand(verdict: verdict)
@@ -89,16 +102,31 @@ struct ResultView: View {
                 )
             }
         }
-        // #155 (TestFlight/Debug only): rate the question just answered —
-        // `resultQuestion` first so an advanced quiz can't re-target the rating.
-        // Trailing inset clears the nav's NN/NN counter, so the chip never
-        // lands on the verdict band below it.
-        .questionRatingEntry(
-            ratingEntry,
-            questionId: (viewModel.resultQuestion ?? viewModel.currentQuestion)?.id,
-            questionText: questionStem,
-            trailingInset: 108
+        // #188 G9: same Dynamic Type ceiling as the question screen.
+        .dynamicTypeSize(...QuizTypeSize.screenCap)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        // #188 G9 (D9): the question screen's bar, with sound and pause in the
+        // same places. Pause here holds the auto-advance (the STAY pill's job).
+        .quizToolbar(
+            isMuted: viewModel.isAudioMuted,
+            isPaused: viewModel.isPaused,
+            isPauseEnabled: autoAdvanceActive || viewModel.isPaused,
+            onClose: { showEndQuizConfirmation = true },
+            onMute: { Task { await viewModel.toggleMute() } },
+            onPause: { viewModel.isPaused ? viewModel.resumeAutoAdvance() : viewModel.pauseQuiz() },
+            onSettings: { showQuizSettings = true },
+            onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
+            onRateQuestion: rateQuestionAction
         )
+        // #155 (TestFlight/Debug only), via the ⋯ menu since #188 G9 — the
+        // floating chips were what the counter collided with.
+        .sheet(item: $ratingPresentation) { presentation in
+            QuestionRatingSheet(viewModel: presentation.viewModel)
+        }
+        .sheet(isPresented: $showQuizSettings) {
+            SettingsView(viewModel: viewModel)
+        }
         .simultaneousGesture(
             DragGesture(minimumDistance: 4).onChanged { _ in pauseAutoAdvanceIfActive() }
         )
@@ -118,6 +146,20 @@ struct ResultView: View {
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
+        }
+    }
+
+    /// The #155 gate: TestFlight/Debug only, and only with a question to rate —
+    /// `resultQuestion` first so an advanced quiz can't re-target the rating.
+    private var rateQuestionAction: (() -> Void)? {
+        guard let ratingEntry, ratingEntry.isEnabled,
+              let questionId = (viewModel.resultQuestion ?? viewModel.currentQuestion)?.id
+        else { return nil }
+        let questionText = questionStem
+        return {
+            ratingPresentation = QuestionRatingPresentation(
+                viewModel: ratingEntry.makeViewModel(questionId, questionText)
+            )
         }
     }
 
@@ -243,17 +285,6 @@ struct ResultView: View {
     private var totalQuestions: Int {
         // 54.10: fall back to the configured length, not a hardcoded 10.
         viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
-    }
-
-    private var counterString: String {
-        // #79: 1-based index of the question just answered (questionsAnswered is
-        // already incremented before .showingResult — keep in lockstep with QuestionView).
-        String(format: "%02d / %02d", viewModel.questionsAnswered, totalQuestions)
-    }
-
-    private var progressFraction: Double {
-        guard totalQuestions > 0 else { return 0 }
-        return Double(viewModel.questionsAnswered) / Double(totalQuestions)
     }
 
     private var resultHaptic: SensoryFeedback {

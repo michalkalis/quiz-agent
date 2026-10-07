@@ -12,7 +12,21 @@ import SwiftUI
 /// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
 /// #108B: optional Waze-like countdown — bright pink = remaining time draining
 /// right→left over a darker base, plus a mono "Ns" chip (pen annotation `sYSN7`).
+///
+/// #188 G9 (D10): a title never ends in "…". At the default text size it stays
+/// one line and scales down; once the reader has asked for larger text it may
+/// take a second line and the capsule grows to hold it (`height` is a floor).
+/// #188 G11: `loadingStyle: .spinnerOnly` for a button that sits under its own
+/// status surface (the question screen's listen bar says "Processing…"): the
+/// spinner alone, because a second "Processing…" in the button was the pair that
+/// truncated to "Spr…". Where the button IS the status (the answer sheet), the
+/// default keeps the title beside the spinner.
 struct HangsPrimaryButton: View {
+    enum LoadingStyle {
+        case spinnerAndTitle
+        case spinnerOnly
+    }
+
     let title: LocalizedStringKey
     var icon: String? = nil
     var trailingIcon: String? = nil
@@ -22,8 +36,9 @@ struct HangsPrimaryButton: View {
     /// in-button loading) needs to stay tappable while work is in flight, unlike
     /// `isLoading`, which both spins and disables (see `HangsPrimaryButton.isLoading`).
     var showsSpinner: Bool = false
+    var loadingStyle: LoadingStyle = .spinnerAndTitle
+    /// Minimum height; a two-line title at large text grows past it.
     var height: CGFloat = 64
-    var isDestructive: Bool = false
     /// Seconds left on an active countdown; nil = plain button.
     var countdownSecondsRemaining: Int? = nil
     /// Full countdown duration the fill fraction is computed against.
@@ -31,9 +46,25 @@ struct HangsPrimaryButton: View {
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// The CALLER's `.disabled(…)` — read at this level, so the button's own
+    /// `.disabled(isLoading)` below never turns a loading button grey.
+    @Environment(\.isEnabled) private var isEnabled
+
+    /// #188 G14 (M9): a disabled button used to be the pink capsule at half
+    /// opacity — white on pale pink, near invisible in light mode. Now it is a
+    /// neutral fill with muted text, readable in both modes, no CTA shadow.
+    private var looksDisabled: Bool { !isEnabled && !isLoading }
 
     private var isCountingDown: Bool {
         (countdownSecondsRemaining ?? 0) > 0 && countdownTotal > 0
+    }
+
+    private static let noShadow = Theme.Hangs.ShadowSpec(color: .clear, radius: 0, y: 0)
+
+    private var fill: Color {
+        if looksDisabled { return Theme.Hangs.Colors.mutedBorder }
+        return isCountingDown ? Theme.Hangs.Colors.pinkDeep : Theme.Hangs.Colors.pink
     }
 
     private var countdownFraction: CGFloat {
@@ -56,12 +87,14 @@ struct HangsPrimaryButton: View {
                             .font(.system(size: 17, weight: .semibold))
                     }
                 }
-                Text(title)
-                    .font(.hangsButton)
-                    // Localized titles ("Nahrávať") outgrow the EN layout —
-                    // scale down, never wrap inside the fixed-height capsule.
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                if !(isLoading && loadingStyle == .spinnerOnly) {
+                    Text(title)
+                        .font(.hangsButton)
+                        // Localized titles ("Nahrávať") outgrow the EN layout:
+                        // scale down first, and at large text wrap rather than
+                        // ever cut the word (D10).
+                        .hangsButtonTitle(dynamicTypeSize)
+                }
                 if let trailingIcon {
                     Image(systemName: trailingIcon)
                         .font(.system(size: 15, weight: .semibold))
@@ -84,12 +117,13 @@ struct HangsPrimaryButton: View {
                         .accessibilityHidden(true)
                 }
             }
-            .foregroundColor(Theme.Hangs.Colors.textOnAccent)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
+            .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.textOnAccent)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.xs)
+            .frame(maxWidth: .infinity, minHeight: height)
             .background(
                 ZStack(alignment: .leading) {
-                    Capsule().fill(isCountingDown ? Theme.Hangs.Colors.pinkDeep : Theme.Hangs.Colors.pink)
+                    Capsule().fill(fill)
                     if isCountingDown {
                         GeometryReader { geo in
                             Rectangle()
@@ -101,7 +135,8 @@ struct HangsPrimaryButton: View {
                     }
                 }
             )
-            .hangsShadow(isDestructive ? Theme.Hangs.Shadow.ctaStrong : Theme.Hangs.Shadow.cta)
+            // A grey capsule casting a pink glow would still read as the CTA.
+            .hangsShadow(looksDisabled ? Self.noShadow : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isLoading ? Text("Loading", comment: "Accessibility label for a button while in its loading state") : Text(title))
@@ -110,11 +145,15 @@ struct HangsPrimaryButton: View {
 }
 
 /// Secondary CTA — card-surface pill with hairline border and ink text + optional icon.
+/// Same title rule as the primary (D10): one scaled line, two at large text.
 struct HangsSecondaryButton: View {
     let title: LocalizedStringKey
     var icon: String? = nil
+    /// Minimum height; a two-line title at large text grows past it.
     var height: CGFloat = 52
     let action: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         // a11y-id: call-site — the identifier belongs to the screen that places this component
@@ -126,12 +165,12 @@ struct HangsSecondaryButton: View {
                 }
                 Text(title)
                     .font(.hangsBody(16, weight: .semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .hangsButtonTitle(dynamicTypeSize)
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.xs)
+            .frame(maxWidth: .infinity, minHeight: height)
             .background(
                 Capsule().fill(Theme.Hangs.Colors.bgCard)
             )
@@ -168,6 +207,30 @@ struct HangsGhostButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+    }
+}
+
+/// #188 G9 (D10): how a button title fits. At the default text size it stays
+/// one line and scales down (localized titles outgrow the EN layout), so the
+/// bottom rows keep their single strip. At any larger size it wraps instead and
+/// the capsule grows: a title scaled to its floor and still too wide was cut to
+/// "…" ("Š… 23s", "Spr…"), and scaling a wrapped title made SwiftUI report a
+/// smaller size than it drew (the text overflowed the capsule). Pure so the
+/// rule is assertable without rendering.
+enum HangsButtonTitle {
+    static func lineLimit(for size: DynamicTypeSize) -> Int {
+        wraps(at: size) ? 3 : 1
+    }
+
+    static func wraps(at size: DynamicTypeSize) -> Bool { size > .large }
+}
+
+private extension Text {
+    func hangsButtonTitle(_ size: DynamicTypeSize) -> some View {
+        lineLimit(HangsButtonTitle.lineLimit(for: size))
+            .minimumScaleFactor(HangsButtonTitle.wraps(at: size) ? 1 : 0.7)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: HangsButtonTitle.wraps(at: size))
     }
 }
 

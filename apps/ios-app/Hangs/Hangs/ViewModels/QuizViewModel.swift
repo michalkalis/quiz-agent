@@ -717,6 +717,9 @@ final class QuizViewModel: ObservableObject {
     /// suppresses them during question TTS.
     var earconPlayer: EarconPlaying = SystemEarconPlayer.shared
 
+    /// Product analytics (#51) — see `QuizViewModel+Analytics`.
+    let analytics: AnalyticsClient
+
     private var cancellables = Set<AnyCancellable>()
 
     /// Entitlement/usage/paywall slice owner (#113 T1). The façade owns the
@@ -808,9 +811,11 @@ final class QuizViewModel: ObservableObject {
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
         clock: AnyClock<Duration> = .continuous,
-        flightRecorder: QuizFlightRecorder = .shared
+        flightRecorder: QuizFlightRecorder = .shared,
+        analytics: AnalyticsClient = NoopAnalyticsClient()
     ) {
         self.networkService = networkService
+        self.analytics = analytics
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
@@ -979,7 +984,8 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
-            goHome: { [weak self] in self?.resetToHome() }
+            goHome: { [weak self] in self?.resetToHome() },
+            trackAnalytics: { [weak self] in self?.trackAnalytics($0) }
         )
     }
 
@@ -1067,7 +1073,8 @@ final class QuizViewModel: ObservableObject {
             setPlayingAnswerReadBack: { [weak self] in self?.isPlayingAnswerReadBack = $0 },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
-            realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false }
+            realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false },
+            trackAnalytics: { [weak self] in self?.trackAnalytics($0) }
         )
     }
 
@@ -1129,6 +1136,7 @@ final class QuizViewModel: ObservableObject {
         isStarting = true
         defer { isStarting = false }
 
+        let entryPoint = QuizEntryPoint(packId: packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
         errorMessage = nil
         #if DEBUG
@@ -1260,6 +1268,7 @@ final class QuizViewModel: ObservableObject {
             currentSession = response.session
             currentQuestion = response.currentQuestion
             awaitingNextQuestion = response.awaitingQuestion
+            trackQuizContext(entryPoint: entryPoint)
 
             // #182: a pack whose first question is not persisted yet — wait for
             // it rather than dropping the player on an empty quiz screen.
@@ -1493,6 +1502,7 @@ final class QuizViewModel: ObservableObject {
                 )
             } else {
                 entitlementReconciler.presentQuotaPaywall(limitError)
+                trackAnalytics(.paywallViewed(source: .quota))
                 transition(to: .idle)
             }
         } else {
@@ -1532,8 +1542,10 @@ final class QuizViewModel: ObservableObject {
     // MARK: - Entitlements / paywall — forwarded to EntitlementReconciler (#113 T1)
 
     /// Proactive paywall entry (#93) — see `EntitlementReconciler.presentPaywall`.
-    func presentPaywall() {
+    /// `source` is the screen that offered it (#51).
+    func presentPaywall(source: PaywallSource) {
         entitlementReconciler.presentPaywall()
+        trackAnalytics(.paywallViewed(source: source))
     }
 
     /// Fetch current usage info — see `EntitlementReconciler.refreshUsage`.
@@ -1780,6 +1792,7 @@ final class QuizViewModel: ObservableObject {
         }
 
         let questionId = currentQuestion?.id // #133 1a: the tapped option answers THIS question
+        trackAnswerSubmitted(.tap, questionId: questionId)
         SentryLog.info("answer submit", category: .network, attributes: [
             "kind": "mcq", "questionId": questionId ?? "none",
         ])
@@ -1883,6 +1896,7 @@ final class QuizViewModel: ObservableObject {
             // the retry closure: every attempt must carry the same id, or a retry
             // would grade a different question than the first attempt did.
             let answeredQuestionId = currentQuestion?.id
+            trackAnswerSubmitted(spoken ? .voice : .typed, questionId: answeredQuestionId)
             let audio = !suppressAudio && settings.audioMode != "off"
             // #179 finding 3: bounded, like the MCQ tap (#178) — a wedged confirm
             // used to leave the driver on a dead `.processing` screen forever.
@@ -1989,6 +2003,7 @@ final class QuizViewModel: ObservableObject {
     /// End the current quiz session
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }
+        let abandoned = AnalyticsEvent.quizAbandoned(questionsAnswered: questionsAnswered, phase: quizState.label)
 
         quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelAutoStopRecordingTimer()
@@ -2001,6 +2016,7 @@ final class QuizViewModel: ObservableObject {
             }
             persistenceStore.clearSession()
             await audioDeviceState.stopAnyPlayingAudio() // Await properly (we're async here)
+            trackAnalytics(abandoned)
             resetState()
 
             Logger.quiz.info("🎮 Quiz ended")
@@ -2011,6 +2027,7 @@ final class QuizViewModel: ObservableObject {
             // treat an already-ended session as success rather than stranding the user behind
             // a misleading "session not found" banner.
             Logger.quiz.info("🎮 Session already ended on backend (404) — resetting to home")
+            trackAnalytics(abandoned)
             resetToHome()
         } catch {
             // Errors here mean the session may still be live on the backend (e.g. a timeout).
@@ -2030,7 +2047,9 @@ final class QuizViewModel: ObservableObject {
     /// server session TTLs out on its own.
     func endQuizWithResults() async {
         guard let sessionId = currentSession?.id else { return }
+        let phase = quizState.label
         guard transition(to: .finished) else { return }
+        trackAnalytics(.quizAbandoned(questionsAnswered: questionsAnswered, phase: phase))
 
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.

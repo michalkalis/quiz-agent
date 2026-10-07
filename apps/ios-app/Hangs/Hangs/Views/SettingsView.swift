@@ -90,7 +90,6 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 HangsHeroBlock(
                     title: "SETTINGS",
-                    subtitle: "tune your experience",
                     titleFont: .hangsDisplayMD
                 )
                 .padding(.horizontal, Theme.Hangs.Spacing.lg)

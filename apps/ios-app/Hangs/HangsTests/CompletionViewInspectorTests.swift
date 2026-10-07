@@ -119,8 +119,8 @@ struct CompletionViewBreakdownTests {
         let view = CompletionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "not this time") }
-            #expect(throws: (any Error).self) { try tree.find(text: "excellent run") }
+            #expect(throws: Never.self) { try tree.find(text: "no points this time") }
+            #expect(throws: (any Error).self) { try tree.find(text: "great result") }
         }
     }
 

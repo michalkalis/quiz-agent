@@ -207,10 +207,10 @@ struct CompletionView: View {
 
     private var scoreMessage: LocalizedStringKey {
         switch summary.scoreBand {
-        case .top: "excellent run"
-        case .good: "solid result"
-        case .low: "the next one will go better"
-        case .none: "not this time"
+        case .top: "great result"
+        case .good: "good result"
+        case .low: "better luck next time"
+        case .none: "no points this time"
         }
     }
 

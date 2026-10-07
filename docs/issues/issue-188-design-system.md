@@ -54,6 +54,8 @@ Prečo kód: agent pracuje v kóde, CI ho vie kontrolovať (lint, snapshoty) a z
 
 ### G — vybrané opravy (founder 2026-10-06)
 
+Stránka schválenia pred/po (2 kolá, founder 2026-10-07): https://claude.ai/artifact/55janX2GmXTjjMWZe6LJsV
+
 Pravidlo pre celý zoznam: **radšej menej zvukovej odozvy ako priveľa.** Nepridávať zvuky pre stavy (spracovanie, čakanie); ak nejaký zvuk, tak veľmi minimalistický. Zmena vzhľadu len cez schválenie pred/po (B2), každá úloha cez PR. Kódy v zátvorke = nález na stránke auditu.
 
 - [x] **G1 (K1)** Obrazovka chyby: krátka hlasová veta + povely „znova“ / „stop“ (sk/cs/en naraz); bez earconu.
@@ -62,14 +64,14 @@ Pravidlo pre celý zoznam: **radšej menej zvukovej odozvy ako priveľa.** Nepri
 - [x] **G4 (D4+D5)** „Vypočuj si“ prečíta vysvetlenie (dnes prehrá znova verdikt); pri preskočení vysloviť správnu odpoveď.
 - [x] **G5 (M4)** Zlá odpoveď a preskočenie: jemný ťuk namiesto chybovej vibrácie.
 - [x] **G6 (M10)** Tiché úseky (10 s premýšľania, ticho pred ďalšou otázkou): žiadny nový zvuk (hlas ďalšej otázky a povel „štart“ ich už pokrývajú); founder ponechal len tón „mikrofón zapnutý“, ostatné signály (začiatok reči, prijaté, povel, preskočenie) sú len vibrácia.
-- [ ] **G7 (M12)** Mikrofón pýtať v onboardingu aj pri prvej otázke, ak ešte nie je povolený.
-- [ ] **G8 (D1)** Text otázky vždy plným kontrastom (dnes ho stlmí vypnuté tlačidlo „prehraj znova“); stlmiť len ikonku.
-- [ ] **G9 (D7–D11)** Veľké písmo: **horný limit veľkosti písma** (hlavne kvíz; možnosti MCQ nesmú zakryť zvyšok obrazovky), hero nadpisy na jeden riadok so zmenšením, hodnoty v riadkoch pod názov namiesto delenia slova, jedna horná lišta pre otázku aj výsledok (počítadlo sa neprekrýva), tlačidlá bez „…“ (aj podnet z C).
-- [ ] **G10 (D12)** Zrušiť mini-kvíz (zmenšenú verziu kvízovej obrazovky).
-- [ ] **G11 (D13+M8)** Stav „čítam / premýšľaj“ čitateľný na pohľad (ako „Počúvam…“); odpočet a „Spracúvam…“ len na jednom mieste.
-- [ ] **G12 (M3+M7)** Farby: jedna farba nadpisov sekcií, jedna farba hodnôt, ružová len hlavná akcia; výber mikrofónu na písmo a farby appky.
-- [ ] **G13 (M1+M2)** Deštruktívny variant hlavného tlačidla zmazať (nepoužíva sa) alebo mu dať odlišný vzhľad; logo: pribaliť polotučný mono rez alebo prepnúť na stredný.
-- [ ] **G14 (M5, M6, M9, M13)** Kontrast „PRESKOČENÉ“ v svetlom režime; stav balíka všade „Pripravuje sa“ / „Připravuje se“; čitateľné vypnuté „Pokračuj“ v svetlom režime; čísla na konci setu (úspešnosť vs „z 10“, neutrálna nula, text podľa skóre).
+- [x] **G7 (M12)** Mikrofón pýtať v onboardingu aj pri prvej otázke, ak ešte nie je povolený. — **Hotové 2026-10-07 (PR #231):** ak bol mikrofón v onboardingu odložený, appka sa opýta pri štarte kvízu pred prvou otázkou; kým nie je rozhodnuté, žiadne počúvanie povelov mikrofón neotvorí.
+- [x] **G8 (D1)** Text otázky vždy plným kontrastom (dnes ho stlmí vypnuté tlačidlo „prehraj znova“); stlmiť len ikonku. — **Hotové 2026-10-07 (PR #233):** text otázky plným kontrastom, stlmí sa len ikonka; stav „čítam / premýšľaj“ zelený (founder: nie čierny).
+- [x] **G9 (D7–D11)** Veľké písmo: **horný limit veľkosti písma** (hlavne kvíz; možnosti MCQ nesmú zakryť zvyšok obrazovky), hero nadpisy na jeden riadok so zmenšením, hodnoty v riadkoch pod názov namiesto delenia slova, jedna horná lišta pre otázku aj výsledok (počítadlo sa neprekrýva), tlačidlá bez „…“ (aj podnet z C). — **Hotové 2026-10-07 (PR #233 kvíz, #232 zvyšok):** kvíz do `.accessibility2` (otázka `.accessibility1`, pri MCQ najviac 45 % výšky, možnosti sa posúvajú s výzvou „POSUŇ NADOL“), appka do `.accessibility3`; jedna horná lišta pre otázku aj výsledok (pauza na výsledku ostáva aj dole, founder); tlačidlá sa zalamujú; hero nadpisy na jeden riadok; hodnoty pod názov.
+- [x] **G10 (D12)** Zrušiť mini-kvíz (zmenšenú verziu kvízovej obrazovky). — **Hotové 2026-10-06 (PR #230).**
+- [x] **G11 (D13+M8)** Stav „čítam / premýšľaj“ čitateľný na pohľad (ako „Počúvam…“); odpočet a „Spracúvam…“ len na jednom mieste. — **Hotové 2026-10-07 (PR #233):** stav veľkým riadkom vo farbe stavu, odpočet len v lište, tlačidlo pri spracovaní len so spinnerom.
+- [x] **G12 (M3+M7)** Farby: jedna farba nadpisov sekcií, jedna farba hodnôt, ružová len hlavná akcia; výber mikrofónu na písmo a farby appky. — **Hotové 2026-10-07 (PR #232):** tokeny `sectionLabel` a `rowValue`, výber mikrofónu na písme a farbách appky.
+- [x] **G13 (M1+M2)** Deštruktívny variant hlavného tlačidla zmazať (nepoužíva sa) alebo mu dať odlišný vzhľad; logo: pribaliť polotučný mono rez alebo prepnúť na stredný. — **Hotové 2026-10-07 (PR #233 variant zmazaný, #232 logo na IBM Plex Mono Medium).**
+- [x] **G14 (M5, M6, M9, M13)** Kontrast „PRESKOČENÉ“ v svetlom režime; stav balíka všade „Pripravuje sa“ / „Připravuje se“; čitateľné vypnuté „Pokračuj“ v svetlom režime; čísla na konci setu (úspešnosť vs „z 10“, neutrálna nula, text podľa skóre). — **Hotové 2026-10-07 (PR #232 + vypnuté tlačidlo v #233):** úspešnosť z celého setu, nuly neutrálne; vety pod HOTOVO founder zrušil; zrušené aj výplňové texty (podnadpis Nastavení, tagline na Home).
 
 Zamietnuté: **D2** (zvuk pri spracovaní a čakaní: „skôr otravuje“), **D6** (povely pauza / stop / ukonči kvíz), **M11** (písaná odpoveď sa nevyslovuje; necítiť vibrácie v aute je v poriadku).
 

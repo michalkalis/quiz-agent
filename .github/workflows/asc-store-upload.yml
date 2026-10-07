@@ -3,6 +3,8 @@ name: asc-store-upload
 # Pushes listing, review info, TestFlight Test Information, IAP texts and screenshots
 # from apps/ios-app/Hangs/fastlane/ to App Store Connect (issue #190). Dry run unless `apply` is checked.
 on:
+  push:  # TEMP dry-run trigger, removed before merge
+    branches: [feat/190-store-copy]
   workflow_dispatch:
     inputs:
       steps:
@@ -33,6 +35,6 @@ jobs:
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
         run: |
-          python scripts/asc_store_upload.py --steps "${{ inputs.steps }}" \
+          python scripts/asc_store_upload.py --steps "${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}" \
             ${{ inputs.build && format('--build {0}', inputs.build) || '' }} \
             ${{ inputs.apply && '--apply' || '' }}

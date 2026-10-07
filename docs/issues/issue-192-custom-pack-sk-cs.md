@@ -1,6 +1,6 @@
 # #192 — Vlastné balíky v slovenčine a češtine (natívne generovanie)
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · ready-for-human
 **Založené:** 2026-10-07 (founder: „vlastné balíky v slovenčine a češtine“)
 **Nadväzuje na:** TODO „Custom packy: natívne generovanie v jazyku promptu“ (founder 2026-09-01, pri príprave #168 — batch preklad SK/CS, DD15)
 
@@ -35,7 +35,8 @@ Text zadania zákazníka sa pri predvolenom priamom generovaní (#166 D21b) **v�
 ### D — Overenie · ČIASTOČNE
 - 2026-10-07 skúšobné balíky (dry-run, subscription, 10 otázok): sk „Slovenské hrady, zámky a povesti o nich“, cs zadanie po anglicky „Czech beer and the history of brewing“ → otázky natívne, k téme, cs správne v češtine.
 - Prvý sk beh odhalil 2 chyby, opravené: (1) dávky dopĺňania nevedeli, čo už v balíku je → rovnaký fakt 2× z iného uhla (týka sa všetkých jazykov, vidno až pri úzkom zadaní); (2) kontrola zodpovedateľnosti vyhadzovala správne odpovede v inom tvare („Čachtická hrad“). Druhý sk beh: 9 rôznych otázok, vyradená 1/10 (predtým 5/10).
-- Zostáva: founder posúdi kvalitu skúšobných otázok; po deployi e2e objednávka v TF (na požiadanie).
+- 2026-10-07 nasadené: quiz-agent v125, quiz-pack-api v70 (`GET /api/v1/languages` → `pack_order` en/sk/cs).
+- Zostáva (founder): posúdiť skúšobné otázky; TF build na požiadanie → objednať sk/cs balík. Session worker (`session_worker_local.sh start`, `docs/setup/session-worker-mba.md`) musí bežať z aktuálneho `main`, inak generuje starým kódom.
 
 ## Známe obmedzenia (vedome mimo rozsahu)
 - `tier_router` (smerovanie fact-checku podľa „najnovší/rekord“) má len anglické výrazy — platí len pri zapnutom tier routingu.

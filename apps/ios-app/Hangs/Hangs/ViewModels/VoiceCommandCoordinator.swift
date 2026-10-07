@@ -67,6 +67,9 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// through the helpers in VoiceCommandCoordinator+Feedback.swift; internal
     /// (not `private(set)`) because those helpers are a sibling-file extension.
     @Published var voiceFeedbackPhase: VoiceFeedbackPhase = .idle
+    /// The command a transcript matched but that has not fired yet; non-nil only
+    /// while `voiceFeedbackPhase == .recognizing` (#122 follow-up).
+    @Published var recognizingCommand: VoiceCommand?
 
     // MARK: - Glow Feedback State (#122 — policy lives in +Feedback)
 
@@ -84,6 +87,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     var matchedGlowMaxDisplay: TimeInterval = 2.0
     var unmatchedGlowDisplay: TimeInterval = 1.2
     var unmatchedGlowCooldown: TimeInterval = 4.0
+    /// #122 follow-up: `.hearing` / `.recognizing` self-clear — a rejected VAD
+    /// blip emits no end event, and a recognized-but-never-fired command must
+    /// not lie about progress.
+    var hearingGlowMaxDisplay: TimeInterval = 3.0
+    var recognizingGlowMaxDisplay: TimeInterval = 3.0
 
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer

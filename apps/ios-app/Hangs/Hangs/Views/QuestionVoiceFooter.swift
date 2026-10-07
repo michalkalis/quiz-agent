@@ -79,6 +79,7 @@ struct QuestionVoiceFooter: View {
                 QuestionListenBar(
                     phase: phase,
                     feedback: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
                     showsWords: showsCommandWords,
                     // #131 Track F: the SE-class `compact` flag is now the slim size.
                     size: compact ? .slim : .full,

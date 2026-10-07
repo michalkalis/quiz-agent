@@ -100,6 +100,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     // every listening window, and cancelling a `for await` permanently finishes
     // a shared AsyncStream — the dead-voice-commands P0.
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent>
+    /// The same VAD speech edges as `makeSilenceEventStream`, on a channel of
+    /// their own for the command bar's "hearing" cue (TF 2026-10-07). Separate
+    /// because a channel serves ONE consumer (StreamChannel): sharing the
+    /// silence channel would let the cue steal auto-stop from an answer.
+    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent>
     func makeBargeInStream() -> AsyncStream<Void>
 
     /// English transcripts from the paired command transcriber (#77, task 77.5),
@@ -184,12 +189,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // re-arm gets a fresh AsyncStream, so cancelling a replaced consumer can
     // never starve the current one. See StreamChannel.swift for the invariant.
     let silenceChannel = StreamChannel<SilenceEvent>()
+    let speechActivityChannel = StreamChannel<SilenceEvent>()
     let bargeInChannel = StreamChannel<Void>()
     let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
     let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
+    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
@@ -340,6 +347,7 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     deinit {
         silenceChannel.finish()
+        speechActivityChannel.finish()
         bargeInChannel.finish()
         commandChannel.finish()
         commandAvailabilityChannel.finish()

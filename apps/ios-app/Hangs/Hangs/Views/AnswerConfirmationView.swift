@@ -34,6 +34,7 @@ struct AnswerConfirmationView: View {
     var commandLanguage: CommandLanguage = .english
     /// #122 Variant C: transient match/miss tint for the listening bar.
     var commandFeedback: VoiceFeedbackPhase = .idle
+    var recognizingWord: String? = nil
     /// #171 Track I: the MCQ option a spoken answer resolved to, pre-formatted
     /// as "A · Kocka". Shown above the transcript so the driver can check the
     /// match — the field itself holds the option VALUE, which is what gets
@@ -253,7 +254,7 @@ struct AnswerConfirmationView: View {
             if let sheetListenerState, !isEditing, !isEvaluating {
                 ListenBar(
                     mode: sheetListenerState == .listening ? .command : .readingAnswerBack,
-                    feedback: commandFeedback, commandHint: commandHint,
+                    feedback: commandFeedback, recognizingWord: recognizingWord, commandHint: commandHint,
                     shortCaption: true, language: commandLanguage
                 )
                     .padding(.top, Theme.Hangs.Spacing.sm)

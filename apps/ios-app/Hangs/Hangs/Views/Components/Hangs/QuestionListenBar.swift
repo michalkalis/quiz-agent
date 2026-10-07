@@ -117,6 +117,9 @@ struct QuestionListenBar: View {
     /// #122 Variant C transient tint.
     var feedback: VoiceFeedbackPhase = .idle
 
+    /// #122 follow-up: the recognized-but-not-yet-fired command caption.
+    var recognizingWord: String? = nil
+
     /// Whether the command words may be shown at all: the Settings toggle AND an
     /// armed listener. A chip is a promise that the word will be heard.
     var showsWords: Bool = true
@@ -145,6 +148,7 @@ struct QuestionListenBar: View {
         ListenBar(
             mode: phase.barMode,
             feedback: feedback,
+            recognizingWord: recognizingWord,
             commandWords: words,
             size: size,
             language: language,

@@ -147,4 +147,16 @@ extension VoiceCommandLexicon {
         case .czech: return "ČTU ODPOVĚĎ"
         }
     }
+
+    /// #122 follow-up (TF 2026-10-07, founder: no feedback that the app heard a
+    /// command): the listen bar's caption while a matched command waits to fire
+    /// — the recognized word, quoted and trailed by an ellipsis, in the COMMAND
+    /// language (same quote style as `hint`). Verbatim, never localized.
+    static func recognizingCaption(
+        _ command: VoiceCommand,
+        language: CommandLanguage = .english
+    ) -> String {
+        let word = spokenWord(command, language: language)
+        return language == .english ? "\"\(word)\"…" : "„\(word)“…"
+    }
 }

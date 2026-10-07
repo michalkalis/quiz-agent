@@ -226,11 +226,31 @@ extension VoiceCommandCoordinator {
             )
         }
         taskBag.add(task, key: .commandListener)
+        startCommandSpeechConsumer()
+    }
+
+    /// #122 follow-up (TF 2026-10-07, founder: no feedback that the app heard a
+    /// command): feed the energy VAD's speech edges into the "hearing" cue —
+    /// from their OWN channel, never the silence channel the answer recording's
+    /// auto-stop consumes (a channel serves one consumer).
+    private func startCommandSpeechConsumer() {
+        let events = silenceDetectionService.makeSpeechActivityStream()
+        let task = Task { [weak self] in
+            for await event in events {
+                guard let self, !Task.isCancelled else { break }
+                switch event {
+                case .speechStarted: self.noteSpeechStartedForFeedback()
+                case .silenceAfterSpeech: self.noteSpeechEndedForFeedback()
+                }
+            }
+        }
+        taskBag.add(task, key: .commandSpeechEvents)
     }
 
     /// Stop the consumer loop and reset the capture phase to idle.
     func stopCommandConsumer() {
         taskBag.cancel(.commandListener)
+        taskBag.cancel(.commandSpeechEvents)
         applyCaptureEvent(.reset)
         // A torn-down listener will never deliver the final that would have
         // ended the utterance, so the latch must not survive it (#119).

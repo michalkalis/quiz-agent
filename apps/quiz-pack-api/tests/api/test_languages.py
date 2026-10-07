@@ -7,9 +7,9 @@ endpoint is that the *contents* come from the environment — if these tests eve
 pass against a hard-coded list, the deploy-time flip is dead and the language
 rollout is back to needing App Store review.
 
-``quiz`` and ``pack_order`` are deliberately different lists: packs are
-generated in English and only stamped with the ordered code (DD15), so ordering
-a non-EN pack would silently deliver English.
+``quiz`` and ``pack_order`` are separate levers: a pack language is orderable
+only once generation writes natively in it (DD15 → #192: en, sk, cs), while a
+quiz language needs an approved translated corpus.
 """
 
 from __future__ import annotations
@@ -28,27 +28,33 @@ async def _get_languages() -> httpx.Response:
 
 
 @pytest.mark.asyncio
-async def test_defaults_are_servable_three_and_english_packs(monkeypatch):
-    """No env set → the DD14/DD15 defaults, not the full ten-language list."""
+async def test_defaults_are_servable_three_and_native_packs(monkeypatch):
+    """No env set → the DD14 / #192 defaults, not the full ten-language list:
+    packs are orderable exactly in the languages generation writes natively."""
     monkeypatch.delenv("SERVABLE_QUIZ_LANGUAGES", raising=False)
     monkeypatch.delenv("PACK_ORDER_LANGUAGES", raising=False)
 
     response = await _get_languages()
 
     assert response.status_code == 200
-    assert response.json() == {"quiz": ["en", "sk", "cs"], "pack_order": ["en"]}
+    assert response.json() == {
+        "quiz": ["en", "sk", "cs"],
+        "pack_order": ["en", "sk", "cs"],
+    }
 
 
 @pytest.mark.asyncio
 async def test_adding_a_language_is_an_env_flip(monkeypatch):
     """Re-enabling Polish must not require a code change or a client build."""
     monkeypatch.setenv("SERVABLE_QUIZ_LANGUAGES", "en,sk,cs,pl")
+    monkeypatch.delenv("PACK_ORDER_LANGUAGES", raising=False)
 
     response = await _get_languages()
 
     assert response.json()["quiz"] == ["en", "sk", "cs", "pl"]
-    # Pack ordering is a separate lever and must not follow along (DD15).
-    assert response.json()["pack_order"] == ["en"]
+    # Pack ordering is a separate lever and must not follow along: Polish
+    # generation is not native (DD15 / #192).
+    assert response.json()["pack_order"] == ["en", "sk", "cs"]
 
 
 @pytest.mark.asyncio

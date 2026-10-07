@@ -78,7 +78,11 @@ async def test_owner_passes_non_owner_and_unknown_pack_denied(factory):
         # Owner → allowed (no raise, returns None).
         # #182: the owner also gets the pack's length — it becomes the
         # session's max_questions, so the client setting can't truncate a pack.
-        assert await _require_pack_ownership(str(pack_id), owner, factory) == 30
+        # #192: and the pack's language — the session is played in it.
+        assert await _require_pack_ownership(str(pack_id), owner, factory) == (
+            30,
+            "en",
+        )
 
         # A different authenticated subject → IDOR blocked with 404.
         with pytest.raises(HTTPException) as exc:

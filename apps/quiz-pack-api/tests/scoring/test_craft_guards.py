@@ -9,6 +9,7 @@ false-positive cases are the load-bearing half of this file.
 
 from __future__ import annotations
 
+from app.scoring import craft_guards
 from app.scoring.craft_guards import (
     long_answer_reason,
     stem_leak_reason,
@@ -360,3 +361,33 @@ def test_balanced_and_small_batches_pass() -> None:
     # Below the minimum count there is no distribution to judge.
     assert tf_imbalance_excess([("q0", "true"), ("q1", "true"), ("q2", "true")]) == []
     assert tf_imbalance_excess([]) == []
+
+
+# ── #192: Slovak / Czech custom packs ───────────────────────────────────────
+
+
+def test_stem_leak_sees_slovak_words_whole() -> None:
+    """The ASCII tokenizer cut "čokoláda" into "okol"/"d"/"a", so a Slovak stem
+    that hands over the answer passed the guard. Whole-word tokens catch it."""
+    assert (
+        craft_guards.stem_leak_reason(
+            "Ktorá sladkosť z kakaa sa volá čokoláda?", "čokoláda"
+        )
+        is not None
+    )
+    assert (
+        craft_guards.stem_leak_reason(
+            "Ktoré mesto je známe pivom a Škodovkou?", "Plzeň"
+        )
+        is None
+    )
+
+
+def test_pravda_nepravda_counts_as_true_false() -> None:
+    """Slovak/Czech T/F items say "Pravda"/"Nepravda"; if they did not count,
+    a native pack could be all T/F and slip past the balance caps."""
+    options = {"a": "Pravda", "b": "Nepravda"}
+    assert craft_guards.true_false_key("b", options) == "false"
+    assert craft_guards.true_false_key("Pravda") == "true"
+    assert craft_guards.true_false_key("Nepravda – vznikla v roku 1993") == "false"
+    assert craft_guards.true_false_key("Pravdepodobne") is None

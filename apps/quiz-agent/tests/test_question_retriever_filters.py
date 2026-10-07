@@ -172,12 +172,11 @@ def test_pack_session_scopes_to_pack_id_only():
     assert "image" not in filters["type"]["$in"]
 
 
-def test_pack_session_non_english_excludes_language_dependent():
-    # #128: a paid custom pack is not exempt from the translation guard.
-    # Wordplay/collective-noun questions ("a murder of crows") break under
-    # literal translation regardless of which corpus they came from, so a
-    # Slovak pack session must still exclude them even though pack scoping
-    # drops every other global constraint (review_status/difficulty/category).
+def test_pack_session_non_english_keeps_language_dependent_questions():
+    # #192: a Slovak pack session is a Slovak pack played in Slovak (the session
+    # takes the pack's language at creation), so nothing is translated. #128's
+    # guard exists for wordplay that breaks under translation; applied here it
+    # would silently drop a native pack's own Slovak wordplay from a paid set.
     retriever = _retriever()
     session = QuizSession(
         session_id="sess_pack",
@@ -188,7 +187,7 @@ def test_pack_session_non_english_excludes_language_dependent():
 
     filters = retriever._build_metadata_filters("medium", session)
 
-    assert filters["language_dependent"] is False
+    assert "language_dependent" not in filters
 
 
 def test_pack_session_english_keeps_no_language_filter():

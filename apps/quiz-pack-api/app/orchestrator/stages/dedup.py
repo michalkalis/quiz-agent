@@ -80,7 +80,10 @@ DEFAULT_IN_BATCH_JACCARD_THRESHOLD = 0.60
 # ways.
 DEFAULT_FACT_JACCARD_THRESHOLD = 0.35
 
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+# #192: letters of any alphabet, so Slovak/Czech words keep their diacritic
+# letters ("[a-z0-9]+" cut "čokoláda" into "okol", "d", "a"). ASCII text
+# tokenizes exactly as before.
+_TOKEN_RE = re.compile(r"[^\W_]+")
 
 logger = logging.getLogger(__name__)
 

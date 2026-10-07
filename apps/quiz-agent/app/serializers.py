@@ -262,6 +262,20 @@ async def translated_question_payload(
     A ``language_dependent`` question in a non-English session is still served
     (see ``_flag_language_dependent``), but it is reported to Sentry first.
     """
+    if question.language == language:
+        # #192: a native custom-pack question is already written in the
+        # session's language — nothing to translate (a "translation" of Slovak
+        # into Slovak only rewords it), and its wordplay belongs here.
+        return (
+            apply_review_badge(
+                question_to_dict(question),
+                question,
+                None,
+                language=language,
+                build_channel=build_channel,
+            ),
+            None,
+        )
     if language != "en" and question.language_dependent:
         _flag_language_dependent(question, language, session_id)
     question_dict = question_to_dict(question)

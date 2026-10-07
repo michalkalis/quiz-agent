@@ -8,6 +8,12 @@ primary_region = "cdg"
   dockerfile = "Dockerfile"
   build_context = "../.."
 
+# Migrate before rollout: Fly runs this once in a temporary machine built from
+# the new image (app secrets, no volumes) and aborts the deploy if it fails, so
+# the boot-time migration-head check never meets a behind database.
+[deploy]
+  release_command = "alembic upgrade head"
+
 [env]
   # Drives Sentry env labeling and the production-only startup SECURITY
   # warnings (warn_if_insecure_production) — without it prod boots as

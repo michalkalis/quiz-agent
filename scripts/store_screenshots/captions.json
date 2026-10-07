@@ -1,12 +1,19 @@
 {
  "_comment": "App Store screenshot captions (issue #190). Order = order in the store. *text* = accent words. Scene = raw capture name.",
- "scenes": ["listening", "confirm", "result", "mcq", "home", "pack"],
+ "scenes": [
+  "listening",
+  "confirm",
+  "result",
+  "mcq",
+  "home",
+  "pack"
+ ],
  "captions": {
   "en": {
    "listening": "Trivia you play *by voice*",
    "confirm": "Answer in *your own words*",
    "result": "Every answer *explained*",
-   "mcq": "Multiple choice? *Say the letter*",
+   "mcq": "Multiple choice? *Say the answer or its number*",
    "home": "Choose *categories and difficulty*",
    "pack": "A pack on *any topic you like*"
   },
@@ -14,7 +21,7 @@
    "listening": "Kvíz, ktorý hráš *hlasom*",
    "confirm": "Odpovedaj *vlastnými slovami*",
    "result": "Ku každej odpovedi *vysvetlenie*",
-   "mcq": "Otázka s možnosťami? *Povedz písmeno*",
+   "mcq": "Otázka s možnosťami? *Povedz odpoveď alebo číslo*",
    "home": "Vyber si *kategórie a náročnosť*",
    "pack": "Balík otázok *na akúkoľvek tému*"
   },
@@ -22,7 +29,7 @@
    "listening": "Kvíz, který hraješ *hlasem*",
    "confirm": "Odpovídej *vlastními slovy*",
    "result": "Ke každé odpovědi *vysvětlení*",
-   "mcq": "Otázka s možnostmi? *Řekni písmeno*",
+   "mcq": "Otázka s možnostmi? *Řekni odpověď nebo číslo*",
    "home": "Vyber si *kategorie a obtížnost*",
    "pack": "Balíček otázek *na jakékoli téma*"
   }

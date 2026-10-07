@@ -1,9 +1,9 @@
-Trubbo is a trivia quiz you play with your voice. It reads each question aloud, you answer out loud in your own words, and you hear right away whether you got it. No tapping and no reading, so it works in the car, on a walk or around the table with friends.
+Trubbo is a trivia quiz you play with your voice. It reads each question aloud, you answer out loud in your own words, and you hear right away whether you got it. No tapping and no reading, so you can play with friends, with the kids, while cooking or on a road trip.
 
 HOW IT WORKS
 • A natural voice reads every question
 • Answer in your own words. Trubbo understands what you mean, not only the exact wording
-• Multiple choice questions: just say the letter
+• Multiple choice questions: say the answer or its number
 • Control the quiz by voice: start, ok, next, repeat, skip
 • After every answer you get a short explanation and a link to the source
 
@@ -20,7 +20,7 @@ FREE OR UNLIMITED
 30 questions free every month. The Unlimited subscription removes the monthly limit. A one-time pack of 100 questions never expires. Prices are shown in the app before you buy. The subscription renews automatically until you cancel it in your Apple Account settings.
 
 SAFETY
-In the car, the driver should play by voice only. Never operate your phone while driving and always follow traffic laws.
+If you play in the car, the driver should use voice only. Never operate your phone while driving and always follow traffic laws.
 
 GOOD TO KNOW
 Questions and answer evaluation are created with the help of AI and can contain mistakes. You can export or delete your data anytime in Settings.

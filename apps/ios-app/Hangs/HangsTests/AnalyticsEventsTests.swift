@@ -29,7 +29,6 @@ private let backendClientEvents: [String: Set<String>] = [
     "answer_submitted": ["input_mode", "question_id", "is_retry"],
     "voice_capture_failed": ["reason", "question_id"],
     "voice_command": ["command", "phase"],
-    "quiz_minimized": ["phase"],
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome"],
     "restore_result": ["outcome"],

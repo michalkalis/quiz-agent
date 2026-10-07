@@ -1,0 +1,38 @@
+[
+ {
+  "file": "car-1.jpg",
+  "page_url": "https://www.pexels.com/photo/photo-of-women-sitting-on-car-3753039/",
+  "photographer": "Andrea Piacquadio",
+  "license": "Pexels License",
+  "width": 5427,
+  "height": 3580,
+  "note": "Four friends laughing in a convertible at sunset, shot from the back seat; driver's hand on wheel, no phones"
+ },
+ {
+  "file": "picnic-1.jpg",
+  "page_url": "https://www.pexels.com/photo/laughing-friends-having-fun-on-picnic-7150075/",
+  "photographer": "Ashford Marx",
+  "license": "Pexels License",
+  "width": 3456,
+  "height": 5184,
+  "note": "Portrait: group of young women laughing together on a picnic blanket, sunny field"
+ },
+ {
+  "file": "party-1.jpg",
+  "page_url": "https://www.pexels.com/photo/a-group-of-friends-on-a-couch-7219231/",
+  "photographer": "Cedric Fauntleroy",
+  "license": "Pexels License",
+  "width": 6000,
+  "height": 4004,
+  "note": "Five diverse friends laughing on a sofa, balloons in background (landscape, croppable)"
+ },
+ {
+  "file": "kids-2.jpg",
+  "page_url": "https://www.pexels.com/photo/a-family-playing-jenga-on-the-table-8065098/",
+  "photographer": "Los Muertos Crew",
+  "license": "Pexels License",
+  "width": 7952,
+  "height": 5304,
+  "note": "Grandma and kids playing Jenga, laughing (landscape)"
+ }
+]

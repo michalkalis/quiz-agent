@@ -31,6 +31,8 @@ VARIANTS = {
     "b": {"bg": "#FF3D8F", "ink": "#FFFFFF", "accent": "#0E1A2B", "font": "Anton", "upper": True, "size": 128, "shot": "light", "glow": "rgba(120,0,50,.35)"},
     # c: night, sentence-case Inter caption, app in dark mode
     "c": {"bg": "#161616", "ink": "#F4F4F4", "accent": "#FF3D8F", "font": "Inter", "upper": False, "size": 112, "shot": "dark", "glow": "rgba(255,61,143,.22)"},
+    # p: variant a plus a lifestyle photo behind the caption on scenes listed under "photos" in captions.json
+    "p": {"bg": "#F6F7F9", "ink": "#0E1A2B", "accent": "#FF3D8F", "font": "Anton", "upper": True, "size": 128, "shot": "light", "glow": "rgba(14,26,43,.14)"},
 }
 
 
@@ -39,8 +41,19 @@ def caption_html(text: str) -> str:
     return "".join(f'<em>{p}</em>' if i % 2 else p for i, p in enumerate(parts))
 
 
-def page(v: dict, caption: str, shot: Path) -> str:
+def page(v: dict, caption: str, shot: Path, photo: Path | None = None) -> str:
     weight = 400 if v["font"] == "Anton" else 700
+    if photo:  # photo fills the upper part and fades into the background; caption turns white on it
+        v = {**v, "ink": "#FFFFFF", "accent": "#FF7AB3"}
+        extra = f"""
+.photo {{ position: absolute; inset: 0 0 auto 0; height: 1900px; background: url('{photo.as_uri()}') center 35% / cover; }}
+.photo::after {{ content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(14,26,43,.62) 0%, rgba(14,26,43,.18) 34%, rgba(14,26,43,0) 55%, {v["bg"]} 100%); }}
+.cap {{ text-shadow: 0 4px 30px rgba(0,0,0,.35); }}
+.shot {{ top: 900px !important; width: 960px !important; }}"""
+        layer = '<div class="photo"></div>'
+    else:
+        extra, layer = "", ""
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face {{ font-family: Anton; src: url('{(FONTS / "Anton-Regular.ttf").as_uri()}'); }}
 @font-face {{ font-family: Inter; font-weight: 700; src: url('{(FONTS / "Inter-Bold.ttf").as_uri()}'); }}
@@ -50,8 +63,8 @@ html, body {{ margin: 0; width: {W}px; height: {H}px; overflow: hidden; backgrou
   text-transform: {"uppercase" if v["upper"] else "none"}; text-wrap: balance; }}
 .cap em {{ font-style: normal; color: {v["accent"]}; }}
 .shot {{ position: absolute; left: 50%; top: 700px; width: 1060px; transform: translateX(-50%);
-  border-radius: 92px; box-shadow: 0 40px 120px {v["glow"]}, 0 0 0 10px rgba(255,255,255,{.0 if v["shot"] == "dark" else .55}); }}
-</style></head><body><div class="cap">{caption_html(caption)}</div><img class="shot" src="{shot.as_uri()}"></body></html>"""
+  border-radius: 92px; box-shadow: 0 40px 120px {v["glow"]}, 0 0 0 10px rgba(255,255,255,{.0 if v["shot"] == "dark" else .55}); }}{extra}
+</style></head><body>{layer}<div class="cap">{caption_html(caption)}</div><img class="shot" src="{shot.as_uri()}"></body></html>"""
 
 
 def render(doc: str, out: Path) -> None:
@@ -72,6 +85,7 @@ def main() -> None:
     ap.add_argument("out_dir", type=Path)
     ap.add_argument("--variants", default="a,b,c")
     ap.add_argument("--locales", default="en,sk,cs")
+    ap.add_argument("--photo-dir", type=Path, help="lifestyle photos for variant p (file names from captions.json photos)")
     args = ap.parse_args()
     cfg = json.loads((Path(__file__).parent / "captions.json").read_text())
     for vk in args.variants.split(","):
@@ -84,7 +98,9 @@ def main() -> None:
                     print(f"skip {vk}/{loc}/{scene}: no {name}")
                     continue
                 out = args.out_dir / vk / loc / f"{n:02d}-{scene}.png"
-                render(page(v, cfg["captions"][loc][scene], shot), out)
+                photo_name = cfg.get("photos", {}).get(scene) if vk == "p" else None
+                photo = args.photo_dir / photo_name if photo_name and args.photo_dir else None
+                render(page(v, cfg["captions"][loc][scene], shot, photo), out)
                 print(out)
 
 

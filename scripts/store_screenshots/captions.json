@@ -1,5 +1,5 @@
 {
- "_comment": "App Store screenshot captions (issue #190). Order = order in the store. *text* = accent words. Scene = raw capture name.",
+ "_comment": "App Store screenshot captions (issue #190). Order = order in the store. *text* = accent words. Scene = raw capture name. photos = lifestyle background per scene for variant p (Pexels License, sources in docs/design/store-photos-sources.json).",
  "scenes": [
   "listening",
   "confirm",
@@ -33,5 +33,11 @@
    "home": "Vyber si *kategorie a obtížnost*",
    "pack": "Balíček otázek *na jakékoli téma*"
   }
+ },
+ "photos": {
+  "listening": "party-1.jpg",
+  "confirm": "car-1.jpg",
+  "mcq": "kids-2.jpg",
+  "pack": "picnic-1.jpg"
  }
 }

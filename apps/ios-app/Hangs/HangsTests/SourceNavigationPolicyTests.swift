@@ -14,12 +14,13 @@ import Testing
 
 @Suite("Source viewer navigation policy")
 struct SourceNavigationPolicyTests {
-    private let page = URL(string: "https://en.wikipedia.org/wiki/Paris")!
+    private static let page = URL(string: "https://en.wikipedia.org/wiki/Paris")!
+    private var page: URL { Self.page }
     private let other = URL(string: "https://example.com/elsewhere")!
 
     private func allows(
         _ url: URL,
-        current: URL? = nil,
+        current: URL? = SourceNavigationPolicyTests.page,
         kind: SourceNavigationKind = .other,
         isMainFrame: Bool = true,
         opensNewWindow: Bool = false,
@@ -27,7 +28,7 @@ struct SourceNavigationPolicyTests {
     ) -> Bool {
         SourceNavigationPolicy.allows(
             requestURL: url,
-            currentURL: current ?? page,
+            currentURL: current,
             kind: kind,
             isMainFrame: isMainFrame,
             opensNewWindow: opensNewWindow,

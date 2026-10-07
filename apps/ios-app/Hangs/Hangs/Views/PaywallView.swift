@@ -146,8 +146,7 @@ struct PaywallView: View {
             VStack(spacing: Theme.Hangs.Spacing.xs) {
                 Text(productID == StoreProduct.packId ? "PACK ADDED" : "YOU'RE ALL SET")
                     .font(.hangsDisplayMD)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .hangsHeadlineFit()
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("paywall.success.headline")
@@ -188,8 +187,7 @@ struct PaywallView: View {
             VStack(spacing: Theme.Hangs.Spacing.xs) {
                 Text("FINISHING UP")
                     .font(.hangsDisplayMD)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .hangsHeadlineFit()
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("paywall.activating.headline")
@@ -228,8 +226,7 @@ struct PaywallView: View {
             Text("GO UNLIMITED")
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
+                .hangsHeadlineFit()
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("paywall.headline")
@@ -637,6 +634,7 @@ struct PaywallView: View {
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
+                .hangsHeadlineFit(lines: 2)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("paywall.offline.headline")
 

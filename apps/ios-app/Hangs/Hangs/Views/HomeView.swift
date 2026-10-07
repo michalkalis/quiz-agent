@@ -29,12 +29,6 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                    Text("trivia you play by voice")
-                        .font(.hangsBody(14))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                        .padding(.top, Theme.Hangs.Spacing.xxs)
-
                     freePlanCard
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
@@ -47,7 +41,7 @@ struct HomeView: View {
                         }
                     }
 
-                    HangsSectionLabel(text: "session", color: Theme.Hangs.Colors.pink)
+                    HangsSectionLabel(text: "session")
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
                         .padding(.top, Theme.Hangs.Spacing.xs)
 
@@ -306,12 +300,11 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.language.\(language.id)")
             }
         } label: {
-            configRowVisual(
+            HangsConfigRowLabel(
                 // #130: same scope wording as Settings — this picks the quiz
                 // content language, not the interface language.
                 label: "Quiz language",
-                value: Language.selectable(viewModel.settings.language).nativeName,
-                valueColor: Theme.Hangs.Colors.blue
+                value: Language.selectable(viewModel.settings.language).nativeName
             )
         }
         .accessibilityIdentifier("home-language-menu")
@@ -332,10 +325,9 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.difficulty.\(id)")
             }
         } label: {
-            configRowVisual(
+            HangsConfigRowLabel(
                 label: "Difficulty",
-                value: viewModel.settings.difficultyDisplayName(),
-                valueColor: Theme.Hangs.Colors.blue
+                value: viewModel.settings.difficultyDisplayName()
             )
         }
         .accessibilityIdentifier("home-difficulty-menu")
@@ -356,10 +348,9 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.category.\(option.id ?? "all")")
             }
         } label: {
-            configRowVisual(
+            HangsConfigRowLabel(
                 label: "Categories",
-                value: viewModel.settings.categoryDisplayName(),
-                valueColor: Theme.Hangs.Colors.blue
+                value: viewModel.settings.categoryDisplayName()
             )
         }
         .accessibilityIdentifier("home-categories-menu")
@@ -390,28 +381,6 @@ struct HomeView: View {
             isOn: $viewModel.settings.includeImageQuestions
         )
         .accessibilityIdentifier("home-image-questions-toggle")
-    }
-
-    // MARK: - Row visual (replicates HangsConfigRow body w/o inner Button)
-
-    private func configRowVisual(label: LocalizedStringKey, value: String, valueColor: Color) -> some View {
-        HStack {
-            Text(label)
-                .font(.hangsBody(17, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-            Spacer()
-            HStack(spacing: 6) {
-                Text(value)
-                    .font(.hangsBody(17, weight: .semibold))
-                    .foregroundColor(valueColor)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(valueColor)
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, Theme.Hangs.Spacing.md)
-        .contentShape(Rectangle())
     }
 
     // MARK: - Nav chip visual (used inside NavigationLink label)

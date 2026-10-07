@@ -313,22 +313,15 @@ class QuestionRetriever:
         # in its ordered language, and its questions stay `pending_review` (they
         # are never promoted into the shared corpus), so requiring "approved"
         # here would serve zero. The image-safety opt-out (type) is kept — no
-        # visual prompts at the wheel unless opted in — and so is #128's
-        # language_dependent guard: wordplay/collective-noun questions break
-        # under literal translation regardless of which corpus they came from.
-        # Safe to filter on here because `language_dependent` is a Postgres
-        # column declared NOT NULL with a server-side default of false
-        # (QuestionRow.language_dependent / migration 1c5e0fa7b3d4), so every
-        # pack question carries an explicit value — this can never silently
-        # exclude a row for lacking the key.
+        # visual prompts at the wheel unless opted in. #128's language_dependent
+        # guard is NOT: a pack session always runs in the pack's own language
+        # (#192, set at session creation), so a pack question is never
+        # translated and its wordplay is exactly what its language allows.
         if session.pack_id:
-            pack_filters: dict = {
+            return {
                 "pack_id": session.pack_id,
                 "type": {"$in": allowed_types},
             }
-            if session.language and session.language != "en":
-                pack_filters["language_dependent"] = False
-            return pack_filters
 
         # TestFlight/dev installs also see pending_review questions so the
         # founder can field-test fresh corpus before approving it; App Store

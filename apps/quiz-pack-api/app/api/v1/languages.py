@@ -8,9 +8,8 @@ display catalogue, and re-enabling a language becomes an env flip
 (``SERVABLE_QUIZ_LANGUAGES`` / ``PACK_ORDER_LANGUAGES``) on a running deploy.
 
 Two lists, because they differ: quiz sessions can serve any language with an
-approved corpus, while custom packs are generated in English and only *stamped*
-with the ordered code (DD15), so pack ordering stays English-only until pack
-generation is natively multi-language.
+approved corpus, while a custom pack can be ordered only in a language its
+generation writes natively (DD15 → #192: en, sk, cs).
 
 Unauthenticated on purpose — it is public product configuration, needed before
 a client has any identity, and it exposes nothing a user cannot read off the

@@ -78,6 +78,8 @@ cd "$DEPLOY_DIR" && set -a && source "$CLAUDE_PROJECT_DIR/.env" && set +a && \
 - `backend`: `FLY_API_TOKEN="$FLY_API_TOKEN" fly deploy -c apps/quiz-agent/fly.toml --yes`
 - `pack-api`: `FLY_API_TOKEN="$FLY_API_TOKEN_QUIZ_PACK_API" fly deploy -c apps/quiz-pack-api/fly.toml --yes`
 
+Database migrations need no separate step: each `fly.toml` has a `release_command` (`alembic upgrade head`) that Fly runs in a one-off machine from the new image before rollout. If it fails, Fly aborts the deploy and the old version keeps serving — report the release-command output as a failed deploy.
+
 ### `--dry-run`
 Same command with `--build-only` (builds the image for the chosen target, deploys nothing). Skip post-deploy verification.
 

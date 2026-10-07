@@ -16,7 +16,10 @@ struct QuizCompleteSummary: Equatable, Sendable {
     let incorrectCount: Int
     let totalAnswered: Int
     let totalQuestions: Int
-    let sessionAccuracyPercent: Double // this-quiz accuracy (not cumulative)
+    /// Correct answers out of the whole set, the same base as the "out of N"
+    /// under the score and the spoken "1 z 10" (#188 G14). Counting only the
+    /// answered ones showed 100 % next to "1 out of 10".
+    let sessionAccuracyPercent: Double
     let bestStreak: Int // session end best streak from QuizStats
     let avgPointsPerQuestion: Double
 
@@ -48,9 +51,7 @@ struct QuizCompleteSummary: Equatable, Sendable {
         stats: QuizStats
     ) -> QuizCompleteSummary {
         let total = maxQuestions ?? questionsAnswered
-        let accuracy = questionsAnswered > 0
-            ? Double(correctCount) / Double(questionsAnswered) * 100.0
-            : 0.0
+        let accuracy = total > 0 ? Double(correctCount) / Double(total) * 100.0 : 0.0
         let avg = questionsAnswered > 0 ? score / Double(questionsAnswered) : 0.0
 
         return QuizCompleteSummary(

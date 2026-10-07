@@ -22,7 +22,10 @@ import math
 import re
 from collections import Counter
 
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+# #192: letters of any alphabet, so Slovak/Czech words keep their diacritic
+# letters ("[a-z0-9]+" cut "čokoláda" into "okol", "d", "a"). ASCII text
+# tokenizes exactly as before.
+_TOKEN_RE = re.compile(r"[^\W_]+")
 
 # Generic quiz-prose words that co-occur with answers without leaking them
 # ("How many TIMES does the heart beat..." → answer "100,000 times" is a
@@ -324,6 +327,10 @@ def undated_record_reason(
     return f"undated_record({m.group(0).lower()})"
 
 
+# #192: Slovak/Czech packs write the T/F options as "Pravda" / "Nepravda".
+_TF_WORDS = {"true": "true", "false": "false", "pravda": "true", "nepravda": "false"}
+
+
 def true_false_key(
     correct_answer: object, possible_answers: dict | None = None
 ) -> str | None:
@@ -341,16 +348,18 @@ def true_false_key(
 
     if possible_answers:
         values = {str(v).strip().lower() for v in possible_answers.values()}
-        if values != {"true", "false"}:
+        if {_TF_WORDS.get(v) for v in values} != {"true", "false"} or len(values) != 2:
             return None
         resolved = {str(k).strip().lower(): str(v).strip().lower()
                     for k, v in possible_answers.items()}.get(ans)
-        return resolved if resolved is not None else (ans if ans in values else None)
+        if resolved is None:
+            resolved = ans if ans in values else None
+        return _TF_WORDS.get(resolved) if resolved is not None else None
 
-    if ans in {"true", "false"}:
-        return ans
-    m = re.match(r"^(true|false)\s*[—–:,.;-]", ans)
-    return m.group(1) if m else None
+    if ans in _TF_WORDS:
+        return _TF_WORDS[ans]
+    m = re.match(r"^(true|false|pravda|nepravda)\s*[—–:,.;-]", ans)
+    return _TF_WORDS[m.group(1)] if m else None
 
 
 def tf_imbalance_excess(items: list[tuple[str, str]]) -> list[str]:

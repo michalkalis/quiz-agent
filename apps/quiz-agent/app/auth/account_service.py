@@ -20,7 +20,7 @@ import uuid
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +28,7 @@ from ..db.models import (
     AnalyticsEvent,
     AnonymousIdentity,
     DailyUsage,
+    Feedback,
     RefreshToken,
     User,
 )
@@ -173,13 +174,23 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     0004 dropped the cascade, so these go explicitly). The merged anonymous trail
     is de-linked by nulling ``upgraded_to_user_id``; the leftover anon row is then
     an unlinked random id (not personal data) and, unlike deleting it, the
-    device's App Attest key binding is left intact. The caller commits."""
+    device's App Attest key binding is left intact.
+
+    In-app ``feedback`` rows are deleted outright (screenshot, dictation audio,
+    logs, free text). Custom pack orders and their packs stay for refunds and
+    accounting but are unlinked (see ``_unlink_pack_orders``). Purchase records
+    (``subscription``, ``credit_ledger``, ``revoked_transactions``) are kept
+    untouched: accounting/refund law requires them. Quiz sessions and ratings
+    live in the separate ratings store and are unlinked by the route
+    (``SessionManager.forget_user``). The caller commits."""
     user_id = str(user.id)
     await _preserve_month_usage_on_anons(session, user_id)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
     await session.execute(
         delete(AnalyticsEvent).where(AnalyticsEvent.subject_id == user_id)
     )
+    await session.execute(delete(Feedback).where(Feedback.user_id == user_id))
+    await _unlink_pack_orders(session, user_id)
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))
     await session.execute(
         update(AnonymousIdentity)
@@ -187,6 +198,26 @@ async def erase_account(session: AsyncSession, user: User) -> None:
         .values(upgraded_to_user_id=None)
     )
     await session.execute(delete(User).where(User.id == user.id))
+
+
+async def _unlink_pack_orders(session: AsyncSession, user_id: str) -> None:
+    """Unlink the account's custom pack orders and packs (quiz-pack-api tables in
+    the same Postgres; Core ``text()`` so quiz-agent never imports pack-api models).
+
+    The rows stay, text included (founder decision 2026-10-07): an order is the
+    purchase's accounting/refund record and the pack is what was delivered for
+    it. Only ``user_id`` is nulled (nullable on both tables). A nulled pack owner
+    also makes the pack unplayable for everyone, since the play-time ownership
+    check is ``user_id = :subject``."""
+    params = {"uid": user_id}
+    await session.execute(
+        text("UPDATE question_packs SET user_id = NULL WHERE user_id = :uid"),
+        params,
+    )
+    await session.execute(
+        text("UPDATE generation_orders SET user_id = NULL WHERE user_id = :uid"),
+        params,
+    )
 
 
 async def _preserve_month_usage_on_anons(session: AsyncSession, user_id: str) -> None:

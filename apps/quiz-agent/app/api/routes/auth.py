@@ -365,6 +365,14 @@ async def delete_account(
         user_id = str(user.id)
         encrypted = user.apple_refresh_token_encrypted
         await erase_account(session, user)
+        # Sessions + ratings live in the separate ratings store (its own engine),
+        # so they cannot share this transaction. Unlink them *before* the commit:
+        # if that fails, nothing is committed and the user can retry (after the
+        # commit a retry would 404 and leave them linked). Unlinking is harmless
+        # if the commit then fails.
+        session_manager = getattr(request.app.state, "session_manager", None)
+        if session_manager is not None:
+            session_manager.forget_user(user_id)
         await session.commit()
 
     await revoke_apple_grant(oauth_client, cipher, encrypted, user_id)

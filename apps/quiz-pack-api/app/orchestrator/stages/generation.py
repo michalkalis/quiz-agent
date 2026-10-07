@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
+from app.generation.prompt_builder import order_brief_section
 from app.generation.classification import normalize_category, normalize_difficulty
 from app.generation.mcq_answer import is_bare_option_key, resolve_mcq_answer
 from app.generation.expiry_classifier import (
@@ -29,6 +30,7 @@ from app.generation.expiry_classifier import (
 )
 from app.generation import inline_options
 from app.generation.pattern_routing import (
+    MCQ_EMPHASIS_MARKER,
     MCQ_ONLY_PATTERNS,
     PATTERNS_TO_MCQ,
     choose_question_type,
@@ -110,6 +112,10 @@ _DETERMINISTIC_SPLIT_MARKERS = (
     " namely ",
     " due to ",
     " i.e.",
+    # #192: Slovak / Czech "because".
+    " pretože ",
+    " lebo ",
+    " protože ",
 )
 
 
@@ -283,6 +289,18 @@ class GenerationStage:
                 # flag the generator itself gates its MCQ path on
                 # (`advanced_generator.py:482`).
                 question_type="text_multichoice" if ctx.mcq_emphasis else "text",
+                # #192 — the player's request and the order language reach the
+                # generation LLM (root cause D of #42: until now `ctx.prompt`
+                # never did). The CLI's `--mcq-bias` footer is cut off: it is
+                # pipeline steering, carried by `mcq_emphasis` above.
+                # On a top-up round `ctx.questions` still holds the questions
+                # already accepted into the pack (TopUpStage merges after this
+                # stage), so the next round is told not to repeat their facts.
+                order_brief=order_brief_section(
+                    (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0],
+                    ctx.language,
+                    [q.question for q in ctx.questions],
+                ),
                 **coverage_kwargs,
             )
 

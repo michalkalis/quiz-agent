@@ -28,9 +28,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> int:
+async def _require_pack_ownership(
+    pack_id, subject_id, auth_sessionmaker
+) -> tuple[int, str]:
     """Reject unless ``subject_id`` owns the custom pack ``pack_id``; return
-    the pack's ``target_count`` (#182: the session's authoritative length).
+    the pack's ``(target_count, language)`` — the session's authoritative
+    length (#182) and language (#192: a pack is generated natively in the
+    language it was ordered in, so it is always played in that language).
 
     Scoping a session to a ``pack_id`` both serves that pack's private, paid
     questions and bypasses the free monthly quota, so a client-supplied id must be
@@ -60,7 +64,7 @@ async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> int
     async with auth_sessionmaker() as db:
         result = await db.execute(
             text(
-                "SELECT target_count FROM question_packs "
+                "SELECT target_count, language FROM question_packs "
                 "WHERE id = :pid AND user_id = :uid LIMIT 1"
             ),
             {"pid": pid, "uid": subject_id},
@@ -73,7 +77,7 @@ async def _require_pack_ownership(pack_id, subject_id, auth_sessionmaker) -> int
                 pack_id,
             )
             raise HTTPException(status_code=404, detail="Pack not found")
-        return int(row[0])
+        return int(row[0]), str(row[1])
 
 
 @router.post(
@@ -108,10 +112,14 @@ async def create_session(
     # it BEFORE creating the session — and outside the try below, whose broad
     # ``except`` would otherwise turn the 404 into a 500.
     max_questions = body.max_questions
+    language = body.language
     if body.pack_id:
         # #182: a pack session is as long as the pack the customer ordered —
         # the client's "questions per quiz" setting does not apply to it.
-        max_questions = await _require_pack_ownership(
+        # #192: and it is played in the pack's own language — never translated
+        # into the client's quiz language. The client reads it back from the
+        # session for its voice stack.
+        max_questions, language = await _require_pack_ownership(
             body.pack_id, subject.subject_id, auth_sessionmaker
         )
     try:
@@ -122,7 +130,7 @@ async def create_session(
             mode=body.mode,
             ttl_minutes=body.ttl_minutes,
         )
-        session.language = body.language
+        session.language = language
         session.include_images = body.include_images
         # TestFlight builds may see pending_review questions (founder rule,
         # 2026-08-28); the value is whitelisted so a garbage header can never

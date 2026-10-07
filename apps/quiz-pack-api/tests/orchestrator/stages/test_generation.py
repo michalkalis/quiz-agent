@@ -30,6 +30,7 @@ from typing import Any, Optional, Sequence
 import pytest
 
 from app.generation import inline_options
+from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER
 from app.generation.expiry_classifier import (
     CONTENT_CLASS_TTL,
     Classification,
@@ -758,6 +759,47 @@ async def test_calls_generator_with_target_count_and_facts() -> None:
     emphasis_ctx.mcq_emphasis = True
     await stage.run(emphasis_ctx, sink=_RecordingSink())  # type: ignore[arg-type]
     assert gen.calls[1]["mcq_emphasis"] is True
+
+
+@pytest.mark.asyncio
+async def test_player_request_and_language_reach_the_generator() -> None:
+    """#192 — a custom pack is about what the player asked for, in the
+    language they ordered. Until #192 the order prompt never reached the
+    generation LLM (#42 root cause D): with direct generation as the default
+    and no category from the app, a paid "custom" pack was generic trivia, and
+    a Slovak order came back in English. The brief must carry both, and the
+    CLI's MCQ steering footer must not leak in as part of the player's text."""
+    gen = _FakeGenerator([_stub_question(i) for i in range(3)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+
+    ctx = _make_ctx(
+        prompt=f"Slovenské hrady a zámky\n\n{MCQ_EMPHASIS_MARKER}: at least 7 of 10",
+        language="sk",
+    )
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    brief = gen.calls[0]["order_brief"]
+    assert "Slovenské hrady a zámky" in brief
+    assert "OUTPUT LANGUAGE: Slovak" in brief
+    assert MCQ_EMPHASIS_MARKER not in brief
+
+
+@pytest.mark.asyncio
+async def test_top_up_round_is_told_what_the_pack_already_holds() -> None:
+    """#192 trial run: on a narrow request every top-up round picked the same
+    stand-out facts again from a new angle (the Omar well legend asked twice,
+    once for the reason and once for the castle). A top-up round must see the
+    questions already in the pack — `ctx.questions` before this stage runs."""
+    gen = _FakeGenerator([_stub_question(9)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+
+    ctx = _make_ctx(prompt="Slovenské hrady", language="sk")
+    ctx.questions = [_stub_question(1, question="Prečo kopal Omar studňu?")]
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    brief = gen.calls[0]["order_brief"]
+    assert "ALREADY IN THIS PACK" in brief
+    assert "Prečo kopal Omar studňu?" in brief
 
 
 @pytest.mark.asyncio

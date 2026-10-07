@@ -95,6 +95,7 @@ struct ContextualSignInSheet: View {
                 .font(.hangsDisplaySM)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
+                .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("signInPrompt.title")
 

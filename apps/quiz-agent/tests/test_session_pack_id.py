@@ -80,8 +80,8 @@ def _sessionmaker(owns: bool):
     """Fake ``async_sessionmaker``: ``owns`` decides whether the ownership SELECT
     returns a row. It ignores the SQL, so it verifies branching, not the query —
     that is ``tests/db/test_pack_ownership.py``'s job against real Postgres."""
-    # The SELECT now returns the pack's target_count (#182), not a bare 1.
-    row = (30,) if owns else None
+    # The SELECT returns the pack's target_count (#182) and language (#192).
+    row = (30, "sk") if owns else None
 
     def _maker():
         return _FakeDB(row)
@@ -110,6 +110,20 @@ async def test_owned_pack_id_reaches_session():
         auth_sessionmaker=_sessionmaker(owns=True),
     )
     assert session.pack_id == _PACK_ID
+
+
+async def test_pack_session_plays_in_the_pack_language():
+    """#192: a Slovak pack is written in Slovak. Played from an app set to
+    English it must still run in Slovak — an English session would grade the
+    spoken answers and pick voices against the wrong language, and translating
+    a native pack is exactly what native generation exists to avoid."""
+    manager = SessionManager()
+    session = await _create(
+        manager,
+        CreateSessionRequest(pack_id=_PACK_ID, language="en"),
+        auth_sessionmaker=_sessionmaker(owns=True),
+    )
+    assert session.language == "sk"
 
 
 async def test_unowned_pack_id_is_rejected():

@@ -68,6 +68,10 @@ _ANSWER_TAIL_MARKERS = (
     " namely ",
     " i.e.",
     " which means ",
+    # #192: Slovak / Czech "because".
+    " pretože ",
+    " lebo ",
+    " protože ",
 )
 
 # Bound on concurrent judge calls per score_batch (dimensions × judges ×

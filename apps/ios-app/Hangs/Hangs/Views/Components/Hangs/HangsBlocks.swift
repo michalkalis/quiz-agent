@@ -3,7 +3,7 @@
 //  Hangs
 //
 //  Reusable building blocks: hero header, section label, card wrapper,
-//  stat box, config row, result banner, answer row.
+//  stat box, result banner, answer row. Settings-style rows: HangsRows.swift.
 //
 
 import SwiftUI
@@ -26,7 +26,7 @@ struct HangsHeroBlock: View {
                 .tracking(-2)
                 .foregroundColor(textColor)
                 .multilineTextAlignment(alignment == .center ? .center : .leading)
-                .fixedSize(horizontal: false, vertical: true)
+                .hangsHeadlineFit()
             Rectangle()
                 .fill(Theme.Hangs.Colors.pink)
                 .frame(width: underlineWidth, height: 2)
@@ -41,11 +41,29 @@ struct HangsHeroBlock: View {
     }
 }
 
-// MARK: - Section label (pink / blue mono micro-caps)
+// MARK: - Display headline rule
 
+extension View {
+    /// The display (Anton) headline rule: one line, scaled down to fit, never
+    /// wrapped mid-word and never cut to "…" (#188 G9 D7). The headline is
+    /// already the biggest text on screen, so it stops growing with Dynamic
+    /// Type at the largest standard size instead of shrinking back from a
+    /// size it could never show. `lines` > 1 only for a headline written with
+    /// an explicit line break.
+    func hangsHeadlineFit(lines: Int = 1) -> some View {
+        lineLimit(lines)
+            .minimumScaleFactor(0.4)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+}
+
+// MARK: - Section label (mono micro-caps)
+
+/// Label above a group of rows. One colour everywhere (#188 G12); pass
+/// `color` only when the label itself carries a verdict (correct / wrong).
 struct HangsSectionLabel: View {
     let text: LocalizedStringKey
-    var color: Color = Theme.Hangs.Colors.pink
+    var color: Color = Theme.Hangs.Colors.sectionLabel
 
     var body: some View {
         Text(text)
@@ -127,106 +145,6 @@ struct HangsStatBox: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Config row (Language / Difficulty / Categories / settings)
-
-struct HangsConfigRow: View {
-    let label: LocalizedStringKey
-    let value: String
-    /// Optional muted line under the label, for rows whose scope isn't
-    /// self-evident (#130: quiz language vs. app language).
-    var subtitle: LocalizedStringKey? = nil
-    var valueColor: Color = Theme.Hangs.Colors.blue
-    var showsChevron: Bool = true
-    var action: (() -> Void)? = nil
-
-    var body: some View {
-        // a11y-id: call-site — the identifier belongs to the screen that places this component
-        Button(action: { action?() }) {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(label)
-                        .font(.hangsBody(17, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.hangsBody(12))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                Spacer()
-                HStack(spacing: 6) {
-                    Text(value)
-                        .font(.hangsBody(17, weight: .semibold))
-                        .foregroundColor(valueColor)
-                    if showsChevron {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(valueColor)
-                    }
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, Theme.Hangs.Spacing.md)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// Toggle row for settings (Voice commands, Speak scores aloud). An optional
-/// subtitle renders muted under the label for toggles whose effect isn't
-/// self-evident (Call Mode — founder batch 2026-07-12, pen Jjcs5 `arow3`).
-struct HangsToggleRow: View {
-    let label: LocalizedStringKey
-    var subtitle: LocalizedStringKey? = nil
-    @Binding var isOn: Bool
-
-    var body: some View {
-        HStack(spacing: Theme.Hangs.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(label)
-                    .font(.hangsBody(16, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Spacer()
-            // a11y-id: call-site — the identifier belongs to the screen that places this component
-            Toggle("", isOn: $isOn)
-                .labelsHidden()
-                .tint(Theme.Hangs.Colors.pink)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-    }
-}
-
-/// Static value row (Version · 1.0.0).
-struct HangsValueRow: View {
-    let label: LocalizedStringKey
-    let value: String
-    var valueFont: Font = .hangsMono(14, weight: .medium)
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.hangsBody(16, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-            Spacer()
-            Text(value)
-                .font(valueFont)
-                .foregroundColor(Theme.Hangs.Colors.muted)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
     }
 }
 
@@ -363,7 +281,7 @@ struct HangsAnswerRow: View {
     #Preview {
         ScrollView {
             VStack(spacing: 16) {
-                HangsHeroBlock(title: "TRUBBO", subtitle: "trivia you play by voice")
+                HangsHeroBlock(title: "TRUBBO")
                 HStack(spacing: 12) {
                     HangsStatBox(label: "streak", value: "47")
                     HangsStatBox(label: "best", value: "9.5",
@@ -374,8 +292,7 @@ struct HangsAnswerRow: View {
                     VStack(spacing: 0) {
                         HangsConfigRow(label: "Language", value: "English")
                         Rectangle().fill(Theme.Hangs.Colors.hairline).frame(height: 1)
-                        HangsConfigRow(label: "Difficulty", value: "Medium",
-                                       valueColor: Theme.Hangs.Colors.pink)
+                        HangsConfigRow(label: "Difficulty", value: "Medium")
                     }
                 }
                 HangsResultBanner(kind: .correct)

@@ -32,6 +32,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.generation.advanced_generator import AdvancedQuestionGenerator
+from app.generation.prompt_builder import order_brief_section
 
 
 @pytest.fixture(autouse=True)
@@ -280,6 +281,47 @@ async def test_generate_batch_emphasis_puts_quota_in_prompt() -> None:
     prompt_text = fake_ainvoke.await_args.args[0][0].content
     assert "MULTIPLE-CHOICE EMPHASIS" in prompt_text
     assert "at least 7 of every 10 questions" in prompt_text
+
+
+@pytest.mark.asyncio
+async def test_order_brief_reaches_every_generation_prompt() -> None:
+    """#192: the player's request + output language must be in the prompt the
+    generation LLM actually receives — on every call the order fans out into
+    (here the open slice and the closed batch), not just the first — and must
+    be gone once the order's call returns, so a concurrent or later order on
+    the same generator never inherits another player's request."""
+    fake_ainvoke = AsyncMock(return_value=_llm_response(_TEXT_RESPONSE))
+    gen = _make_generator_with_fake_llm(fake_ainvoke)
+    brief = order_brief_section("Hrady na Slovensku", "sk")
+
+    await gen.generate_questions(
+        count=2, open_count=1, enable_best_of_n=False, order_brief=brief
+    )
+    prompts = [call.args[0][0].content for call in fake_ainvoke.await_args_list]
+    assert len(prompts) == 2
+    assert all(p.endswith(brief) for p in prompts)
+
+    fake_ainvoke.reset_mock()
+    await gen.generate_questions(count=1, enable_best_of_n=False)
+    assert "Hrady na Slovensku" not in fake_ainvoke.await_args.args[0][0].content
+
+
+def test_order_brief_section_english_without_request_is_empty() -> None:
+    """Corpus/CLI runs carry no request and are English: their prompts must
+    stay byte-identical to pre-#192 (question quality must not shift)."""
+    assert order_brief_section("", "en") == ""
+    assert order_brief_section(None, "en") == ""
+    english = order_brief_section("Roman emperors", "en")
+    assert "Roman emperors" in english
+    assert "OUTPUT LANGUAGE" not in english
+
+
+def test_order_brief_section_czech_names_slovak_as_the_interference_risk() -> None:
+    """The commonest native-speaker complaint is Slovak forms leaking into Czech
+    (and vice versa); the section must warn about the right neighbour."""
+    czech = order_brief_section("Hrady", "cs")
+    assert "OUTPUT LANGUAGE: Czech" in czech
+    assert "no Slovak words or forms" in czech
 
 
 def test_format_mcq_patterns_section_empty_when_no_patterns() -> None:

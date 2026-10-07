@@ -50,6 +50,7 @@ extension RecordingCoordinator {
                 isStreamingSTT = false
                 audioService.stopStreamingRecording()
                 await sttService?.disconnect()
+                trackCaptureFailure(.sttCommitFailed)
                 setErrorMessage(String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Inline error when streaming speech-to-text fails; placeholder is the underlying error"))
                 transition(to: .askingQuestion)
             }
@@ -60,6 +61,7 @@ extension RecordingCoordinator {
                 let data = try await audioService.stopRecording()
                 await submitVoiceAnswer(audioData: data, owner: attempt)
             } catch {
+                trackCaptureFailure(.recorderFailed)
                 setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
                 transition(to: .askingQuestion)
 
@@ -102,6 +104,7 @@ extension RecordingCoordinator {
             // never delivered — not a transcription job. #171 Track B funnel.
             guard capture.bytes >= Self.minimumAnswerBytes(sampleRate: capture.sampleRate) else {
                 Logger.audio.info("🎙️ Batch capture too short (\(capture.bytes, privacy: .public) bytes) — no answer")
+                trackCaptureFailure(.tooShort)
                 handleTranscriptionFailure(owner: attempt)
                 return
             }
@@ -155,6 +158,7 @@ extension RecordingCoordinator {
         // any response can advance it. A retry of this upload is then replayed
         // against THAT question instead of grading the next, unseen one.
         let answeredQuestionId = currentQuestion()?.id
+        trackVoiceAnswerSubmitted(questionId: answeredQuestionId)
 
         // #185 5.1: a new answer spoken on the confirmation sheet is uploaded
         // from `.processing` already, and `.processing → .processing` is not a

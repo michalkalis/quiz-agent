@@ -26,10 +26,16 @@ final class OnboardingViewModel: ObservableObject {
 
     private let audioService: AudioServiceProtocol
     private let persistenceStore: PersistenceStoreProtocol
+    private let analytics: AnalyticsClient
 
-    init(audioService: AudioServiceProtocol, persistenceStore: PersistenceStoreProtocol) {
+    init(
+        audioService: AudioServiceProtocol,
+        persistenceStore: PersistenceStoreProtocol,
+        analytics: AnalyticsClient = NoopAnalyticsClient()
+    ) {
         self.audioService = audioService
         self.persistenceStore = persistenceStore
+        self.analytics = analytics
     }
 
     /// First-launch gate: present onboarding only while the persisted flag is unset.
@@ -55,7 +61,7 @@ final class OnboardingViewModel: ObservableObject {
     func requestMicPermission() async {
         micPermissionGranted = await audioService.requestMicrophonePermission()
         if micPermissionGranted {
-            finish()
+            finish(.micGranted)
         } else {
             page = .permissionDenied
         }
@@ -63,7 +69,12 @@ final class OnboardingViewModel: ObservableObject {
 
     /// Exit from the denied page without mic access (typed answers remain available).
     func continueWithoutMic() {
-        finish()
+        let outcome: OnboardingOutcome = switch page {
+        case .welcome, .features: .skipped
+        case .permission: .micLater
+        case .permissionDenied: .micDenied
+        }
+        finish(outcome)
     }
 
     /// Replay entry point (Settings row, 52.9). Restarts the flow without clearing
@@ -74,8 +85,9 @@ final class OnboardingViewModel: ObservableObject {
         micPermissionGranted = false
     }
 
-    private func finish() {
+    private func finish(_ outcome: OnboardingOutcome) {
         persistenceStore.completeOnboarding()
         isComplete = true
+        analytics.track(.onboardingFinished(outcome: outcome, step: String(describing: page)))
     }
 }

@@ -95,12 +95,15 @@ final class StoreManager: ObservableObject {
     var onPurchaseSuccess: (@MainActor () async -> Bool)?
 
     private let purchaseService: PurchaseService
+    /// #51 product analytics — see `StoreManager+Analytics`.
+    let analytics: AnalyticsClient
     private var transactionListener: Task<Void, Never>?
 
     /// Default initializer — uses LivePurchaseService backed by the real RC SDK.
     /// Preserves callsite compatibility: `StoreManager()` continues to work.
-    init() {
+    init(analytics: AnalyticsClient = NoopAnalyticsClient()) {
         purchaseService = LivePurchaseService()
+        self.analytics = analytics
         transactionListener = nil
         transactionListener = listenForEntitlementUpdates()
         Task { await loadOfferings() }
@@ -108,8 +111,9 @@ final class StoreManager: ObservableObject {
     }
 
     /// Testable initializer — injects a PurchaseService (e.g. MockPurchaseService).
-    init(purchaseService: PurchaseService) {
+    init(purchaseService: PurchaseService, analytics: AnalyticsClient = NoopAnalyticsClient()) {
         self.purchaseService = purchaseService
+        self.analytics = analytics
         transactionListener = nil
         transactionListener = listenForEntitlementUpdates()
         Task { await loadOfferings() }
@@ -197,6 +201,7 @@ final class StoreManager: ObservableObject {
             Logger.quiz.error("❌ StoreManager: Purchase failed: \(error, privacy: .public)")
         }
 
+        trackPurchaseResult(productID: productID)
         isLoading = false
     }
 
@@ -255,6 +260,7 @@ final class StoreManager: ObservableObject {
             purchaseState = .failed(message: message)
         }
 
+        trackRestoreResult()
         isLoading = false
     }
 

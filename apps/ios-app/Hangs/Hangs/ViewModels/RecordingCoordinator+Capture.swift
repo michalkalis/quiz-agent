@@ -246,6 +246,7 @@ extension RecordingCoordinator {
             armRecordingWindow(hasSpeechSignal: false)
         } catch {
             cancelAutoStopRecordingTimer() // mic never opened — drop the window
+            trackCaptureFailure(.recorderFailed)
             setIsAutoRecording(false)
             speechDetectedDuringAutoRecord = false
             transition(to: .askingQuestion)
@@ -483,6 +484,7 @@ extension RecordingCoordinator {
             Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
 
             self.cleanupStreamingSTT()
+            self.trackCaptureFailure(.sttTimeout)
             self.handleTranscriptionFailure(owner: owner)
         }
         taskBag.add(task, key: .sttCommitWatchdog)

@@ -101,6 +101,17 @@ final class AttemptLedger {
         return true
     }
 
+    /// The question the last answer attempt — a submission or a failed
+    /// on-device capture — was made on (#51 analytics).
+    private var lastAnsweredQuestionId: String?
+
+    /// Records an answer attempt on `questionId`; `true` when an earlier
+    /// attempt on the same question came first, i.e. this one is a retry.
+    func noteAnswerAttempt(questionId: String?) -> Bool {
+        defer { lastAnsweredQuestionId = questionId }
+        return questionId != nil && questionId == lastAnsweredQuestionId
+    }
+
     /// Owner check for an ATTEMPT-scoped result (upload, transcript, read-back,
     /// prompt, auto-confirm, recording window). `false` = dropped and reported.
     func owns(_ attempt: AttemptID, _ path: String) -> Bool {

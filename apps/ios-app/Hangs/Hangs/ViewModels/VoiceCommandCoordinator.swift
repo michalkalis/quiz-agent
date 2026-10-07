@@ -267,6 +267,8 @@ final class VoiceCommandCoordinator: ObservableObject {
     let retryFromError: @MainActor () async -> Void
     /// #188 G1/G3: spoken "stop" on the error screen, "domov" at the set end.
     let goHome: @MainActor () -> Void
+    /// #51 product analytics — the façade attaches the session id.
+    let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
 
     /// Long-lived observer of `commandAvailabilityUpdates`. Deliberately NOT in
     /// `taskBag` (quiz-scoped, cleared by `resetState`) — availability changes
@@ -305,7 +307,8 @@ final class VoiceCommandCoordinator: ObservableObject {
         cancelThinkingTime: @escaping @MainActor () -> Void,
         quizEndCommandsArmed: @escaping @MainActor () -> Bool,
         retryFromError: @escaping @MainActor () async -> Void,
-        goHome: @escaping @MainActor () -> Void
+        goHome: @escaping @MainActor () -> Void,
+        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in }
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
@@ -337,6 +340,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.quizEndCommandsArmed = quizEndCommandsArmed
         self.retryFromError = retryFromError
         self.goHome = goHome
+        self.trackAnalytics = trackAnalytics
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object

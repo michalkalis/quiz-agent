@@ -201,17 +201,18 @@ Rules:
 - "correct": The answer captures the key concept correctly. Accept:
   - Valid paraphrases that express the same fact in different words (e.g., "his parachute didn't open" for "His parachute failed to open", "it goes faster than sound" for "It breaks the sound barrier")
   - Anything matching one of the Also Accepted Answers, if listed
-  - Shorter forms that contain the essential element (e.g., "sequoia" for "giant sequoia", "carbon" for "carbon dioxide")
+  - Shorter forms of the same name (e.g., "sequoia" for "giant sequoia", "Lincoln" for "Abraham Lincoln")
+  - Synonyms, symbols and other-language names of the same thing (e.g., "F" or "fluorine" for "fluór")
   - Common abbreviations (NYC for New York City, WW2 for World War II)
   - Minor spelling errors that don't change the meaning
   - Transcripts that SOUND like the correct answer when read aloud, even when spelled differently or when they happen to spell a different real word or brand (e.g., "Carling" for "curling", "Šekspír" for "Shakespeare", "Njuton" for "Newton")
-  - More specific correct answers (e.g., "carbon dioxide" when answer is "carbon")
+- An answer that names a DIFFERENT thing than the one asked for is "incorrect" (not partially_correct or partially_incorrect), even when it is related to, made from, or contains the correct answer: a compound or product for its element, a material for its ingredient, a country for its capital, a band for its singer, a whole for its part. Example: the question asks which element besides carbon makes up the polymer on non-stick pans (answer: fluorine); "Teflon" is the polymer itself, not the element, so it is "incorrect", while "fluorine", "F" or "fluór" is "correct". Likewise "carbon dioxide" is not "carbon".
 - Never accept a sound-alike that names a different answer that would itself be a plausible answer to this question (e.g., "Manet" when the answer is "Monet", "Austria" for "Australia", "Iraq" for "Iran"). Numbers, years and ordinals must be the same number, whether spoken as words or digits ("Henry VII" is not "Henry VIII").
 - "partially_correct": Has the right general idea but missing important qualifiers or has minor factual errors
 - "partially_incorrect": Mentions something related but is mostly wrong
 - "incorrect": Completely wrong, unrelated, or nonsensical answer
 
-The key principle: judge what the player most likely SAID, not how it was spelled. If the user clearly knows the answer, mark it correct; when the only doubt comes from the transcription, give the player the benefit of the doubt.
+The key principle: judge what the player most likely SAID, not how it was spelled. If the user clearly names the asked-for answer, mark it correct; when the only doubt comes from the transcription, give the player the benefit of the doubt.
 If they're in the right ballpark but not quite there, mark it partially_correct.
 
 Respond with EXACTLY one of these words: correct, partially_correct, partially_incorrect, incorrect"""

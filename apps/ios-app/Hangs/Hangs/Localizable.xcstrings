@@ -2705,22 +2705,6 @@
         }
       }
     },
-    "Email" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-mail"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-mail"
-          }
-        }
-      }
-    },
     "End & See Results" : {
       "comment" : "Alert button that ends the quiz early and shows the results screen.",
       "localizations" : {
@@ -4117,6 +4101,23 @@
         }
       }
     },
+    "Keeps your purchases and progress across devices. Nothing else is shared." : {
+      "comment" : "Sign-in sheet privacy note under the Sign in with Apple button",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachová tvé nákupy a pokrok na všech zařízeních. Nic jiného se nesdílí."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachová tvoje nákupy a pokrok na všetkých zariadeniach. Nič iné sa nezdieľa."
+          }
+        }
+      }
+    },
     "LISTENING — SAY A–D" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4777,22 +4778,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MÁŠ TO."
-          }
-        }
-      }
-    },
-    "Name" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jméno"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meno"
           }
         }
       }
@@ -7521,6 +7506,23 @@
         }
       }
     },
+    "Signed in with" : {
+      "comment" : "Settings account row label; value is the provider name (Apple)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlášení přes"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prihlásenie cez"
+          }
+        }
+      }
+    },
     "Signing in links Premium to your Apple account — it stays with you on a new phone or after reinstalling." : {
       "localizations" : {
         "cs" : {
@@ -9536,22 +9538,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ponuku sa teraz nepodarilo načítať. Skontroluj pripojenie a skús to znova."
-          }
-        }
-      }
-    },
-    "We only use your name and email. No tracking." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Používáme jen tvoje jméno a e-mail. Žádné sledování."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Používame len tvoje meno a e-mail. Žiadne sledovanie."
           }
         }
       }

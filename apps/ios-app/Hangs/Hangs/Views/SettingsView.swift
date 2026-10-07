@@ -493,7 +493,7 @@ struct SettingsView: View {
                 SignInWithAppleButton(.signIn) { request in
                     let rawNonce = appState.authService.generateRawNonce()
                     pendingRawNonce = rawNonce
-                    request.requestedScopes = [.fullName, .email]
+                    request.requestedScopes = []
                     request.nonce = appState.authService.hashedNonce(for: rawNonce)
                 } onCompletion: { result in
                     handleAppleSignInResult(result)
@@ -539,16 +539,9 @@ struct SettingsView: View {
     private func signedInAccountGroup(tokens: AuthTokens) -> some View {
         groupSection(label: "account") {
             VStack(spacing: 0) {
-                if let name = tokens.accountName {
-                    HangsValueRow(label: "Name", value: name)
-                        .accessibilityIdentifier("account.name")
-                    hairline
-                }
-                if let email = tokens.accountEmail {
-                    HangsValueRow(label: "Email", value: email)
-                        .accessibilityIdentifier("account.email")
-                    hairline
-                }
+                HangsValueRow(label: "Signed in with", value: "Apple")
+                    .accessibilityIdentifier("account.provider")
+                hairline
                 HangsConfigRow(
                     label: "Export my data",
                     value: "",

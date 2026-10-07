@@ -102,28 +102,6 @@ struct CompletionViewBreakdownTests {
         }
     }
 
-    // #188 G14: a 0 out of 10 run was greeted with "nice work".
-    @Test("a scoreless run gets the low-band message, not praise")
-    func scorelessRunMessage() async throws {
-        let vm: QuizViewModel = {
-            let v = QuizViewModel(
-                networkService: MockNetworkService(),
-                audioService: MockAudioService(),
-                persistenceStore: MockPersistenceStore(),
-                silenceDetectionService: MockSilenceDetectionService()
-            )
-            v.currentSession = Fixtures.session(score: 0, answered: 10)
-            v.quizState = .finished
-            return v
-        }()
-        let view = CompletionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "no points this time") }
-            #expect(throws: (any Error).self) { try tree.find(text: "great result") }
-        }
-    }
-
     @Test("'Avg points' label does NOT render (replaced by Accuracy)")
     func avgPointsRowAbsent() async throws {
         let vm: QuizViewModel = {

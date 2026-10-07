@@ -29,12 +29,6 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                    Text("voice-based trivia for the road")
-                        .font(.hangsBody(14))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                        .padding(.top, Theme.Hangs.Spacing.xxs)
-
                     freePlanCard
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
 

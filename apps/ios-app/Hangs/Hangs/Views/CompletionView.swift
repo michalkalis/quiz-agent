@@ -24,7 +24,6 @@ struct CompletionView: View {
                 VStack(spacing: 0) {
                     HangsHeroBlock(
                         title: "COMPLETE",
-                        subtitle: scoreMessage,
                         titleFont: .hangsDisplayMD
                     )
                     .padding(.horizontal, Theme.Hangs.Spacing.lg)
@@ -205,14 +204,6 @@ struct CompletionView: View {
 
     // MARK: - Derived
 
-    private var scoreMessage: LocalizedStringKey {
-        switch summary.scoreBand {
-        case .top: "great result"
-        case .good: "good result"
-        case .low: "better luck next time"
-        case .none: "no points this time"
-        }
-    }
 
     /// Summary aggregated from viewModel state at .finished phase (52.6).
     var summary: QuizCompleteSummary {

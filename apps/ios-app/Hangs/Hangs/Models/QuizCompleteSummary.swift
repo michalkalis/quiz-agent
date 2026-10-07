@@ -32,24 +32,6 @@ struct QuizCompleteSummary: Equatable, Sendable {
         return String(format: "%.1f", finalScore)
     }
 
-    /// Which end-of-set message fits the score (#188 G14): the line under the
-    /// headline used to praise every run, even 0 out of 10. Bands follow the
-    /// displayed score (partial credit included) over the whole set.
-    enum ScoreBand: Equatable, Sendable {
-        case top // 80 % and up
-        case good // 50 % and up
-        case low // something, under half
-        case none // nothing scored
-    }
-
-    var scoreBand: ScoreBand {
-        guard totalQuestions > 0, finalScore > 0 else { return .none }
-        let ratio = finalScore / Double(totalQuestions)
-        if ratio >= 0.8 { return .top }
-        if ratio >= 0.5 { return .good }
-        return .low
-    }
-
     /// Aggregate from the primitive values available on QuizViewModel at .finished state.
     /// - Parameters:
     ///   - score: `QuizViewModel.score` (backend points; partial credit makes it fractional)

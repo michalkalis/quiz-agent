@@ -78,7 +78,17 @@ final class AppState: ObservableObject {
                 }
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
-                packOrderService = MockPackOrderService()
+                if StoreScreenshotFixtures.isActive {
+                    // #190: one ready custom pack on Home (the topic preset for the
+                    // order form is applied in `makeQuizViewModel`).
+                    let language = StoreScreenshotFixtures.quizLanguage
+                    let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
+                    packOrderService = MockPackOrderService(
+                        listResult: .success([StoreScreenshotFixtures.readyPack(content, language: language)])
+                    )
+                } else {
+                    packOrderService = MockPackOrderService()
+                }
                 packPurchaseService = MockPackPurchaseService()
                 questionRatingService = MockQuestionRatingService()
                 storeManager.onPurchaseSuccess = { [weak self] in
@@ -275,6 +285,44 @@ final class AppState: ObservableObject {
         }
     }
 
+    #if DEBUG
+        /// `--store-screenshots` scenes (#190): listening | confirm | result | mcq.
+        /// Home (no scene) needs no seeding; the pack summary is reached via the UI.
+        private func seedStoreScreenshotScene(on viewModel: QuizViewModel) {
+            let language = StoreScreenshotFixtures.quizLanguage
+            let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
+            let open = StoreScreenshotFixtures.openQuestion(content, language: language)
+            let mcq = StoreScreenshotFixtures.mcqQuestion(content, language: language)
+            orderPackViewModel.prompt = content.packTopic
+            switch StoreScreenshotFixtures.scene {
+            case "listening":
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
+                viewModel.quizState = .recording
+                viewModel.liveTranscript = content.openAnswer
+                viewModel.isStreamingSTT = true
+            case "confirm":
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
+                viewModel.quizState = .processing
+                viewModel.transcribedAnswer = content.openAnswer
+                viewModel.showAnswerConfirmation = true
+            case "result":
+                let evaluation = StoreScreenshotFixtures.correctEvaluation(content, questionId: open.id)
+                viewModel.currentQuestion = open
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
+                viewModel.quizState = .showingResult(question: open, evaluation: evaluation)
+            case "mcq":
+                viewModel.currentQuestion = mcq
+                viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
+                viewModel.quizState = .recording
+                viewModel.isStreamingSTT = true
+            default:
+                break
+            }
+        }
+    #endif
+
     /// Create a new QuizViewModel with injected dependencies
     func makeQuizViewModel() -> QuizViewModel {
         // #102 finding 1: lets the paywall's pre-429 reconciliation check RC's
@@ -467,6 +515,11 @@ final class AppState: ObservableObject {
                         explanation: nil
                     )
                 )
+            }
+            // #190 store-screenshot mode: seed the named static scene (no timers
+            // run, so no ticking pills) and preset the custom-pack topic.
+            if StoreScreenshotFixtures.isActive {
+                seedStoreScreenshotScene(on: viewModel)
             }
         #endif
 

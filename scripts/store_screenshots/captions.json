@@ -1,0 +1,43 @@
+{
+ "_comment": "App Store screenshot captions (issue #190). Order = order in the store. *text* = accent words. Scene = raw capture name. photos = lifestyle background per scene for variant p (Pexels License, sources in docs/design/store-photos-sources.json).",
+ "scenes": [
+  "listening",
+  "confirm",
+  "result",
+  "mcq",
+  "home",
+  "pack"
+ ],
+ "captions": {
+  "en": {
+   "listening": "Trivia you play *by voice*",
+   "confirm": "Answer in *your own words*",
+   "result": "Every answer *explained*",
+   "mcq": "Multiple choice? *Say the answer or its number*",
+   "home": "Choose *categories and difficulty*",
+   "pack": "A pack on *any topic you like*"
+  },
+  "sk": {
+   "listening": "Kvíz, ktorý hráš *hlasom*",
+   "confirm": "Odpovedaj *vlastnými slovami*",
+   "result": "Ku každej odpovedi *vysvetlenie*",
+   "mcq": "Otázka s možnosťami? *Povedz odpoveď alebo číslo*",
+   "home": "Vyber si *kategórie a náročnosť*",
+   "pack": "Balík otázok *na akúkoľvek tému*"
+  },
+  "cs": {
+   "listening": "Kvíz, který hraješ *hlasem*",
+   "confirm": "Odpovídej *vlastními slovy*",
+   "result": "Ke každé odpovědi *vysvětlení*",
+   "mcq": "Otázka s možnostmi? *Řekni odpověď nebo číslo*",
+   "home": "Vyber si *kategorie a obtížnost*",
+   "pack": "Balíček otázek *na jakékoli téma*"
+  }
+ },
+ "photos": {
+  "listening": "party-1.jpg",
+  "confirm": "car-1.jpg",
+  "mcq": "kids-2.jpg",
+  "pack": "picnic-1.jpg"
+ }
+}

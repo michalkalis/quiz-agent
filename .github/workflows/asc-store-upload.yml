@@ -1,0 +1,51 @@
+name: asc-store-upload
+
+# Pushes listing, review info, TestFlight Test Information, IAP texts and screenshots
+# from apps/ios-app/Hangs/fastlane/ to App Store Connect (issue #190). Dry run unless `apply` is checked.
+on:
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: "Comma list: listing,review,testflight,iap,screenshots,beta-group"
+        default: listing,review,testflight,iap
+      build:
+        description: "Build number that gets What to Test (optional)"
+        default: ""
+      submit_beta_review:
+        description: "beta-group + build: submit the build to Beta App Review"
+        type: boolean
+        default: false
+      apply:
+        description: "Write to App Store Connect (unchecked = dry run)"
+        type: boolean
+        default: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyjwt cryptography requests
+      - name: Upload to App Store Connect
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+          ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          # Inputs go through env, never into the script text (no shell injection).
+          STEPS: ${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}
+          BUILD: ${{ inputs.build }}
+          SUBMIT: ${{ inputs.submit_beta_review }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          [[ "$STEPS" =~ ^[a-z,-]+$ ]] || { echo "invalid steps: $STEPS"; exit 1; }
+          [[ -z "$BUILD" || "$BUILD" =~ ^[0-9]+$ ]] || { echo "invalid build: $BUILD"; exit 1; }
+          args=(--steps "$STEPS")
+          [[ -n "$BUILD" ]] && args+=(--build "$BUILD")
+          [[ "$SUBMIT" == "true" ]] && args+=(--submit-beta-review)
+          [[ "$APPLY" == "true" ]] && args+=(--apply)
+          python scripts/asc_store_upload.py "${args[@]}"

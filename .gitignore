@@ -53,7 +53,6 @@ DerivedData/
 # fastlane
 apps/ios-app/Hangs/fastlane/report.xml
 apps/ios-app/Hangs/fastlane/Preview.html
-apps/ios-app/Hangs/fastlane/screenshots
 apps/ios-app/Hangs/fastlane/test_output
 apps/ios-app/Hangs/fastlane/README.md
 apps/ios-app/Hangs/fastlane/README.md.bak

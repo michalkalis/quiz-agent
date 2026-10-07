@@ -1,0 +1,81 @@
+{
+ "_comment": "TestFlight Test Information, What to Test and in-app purchase texts (issue #190). Uploaded by scripts/asc_store_upload.py. Limits: IAP name 30, IAP description 45, beta description and What to Test 4000.",
+ "testflight": {
+  "feedback_email": "hello@missinghue.com",
+  "privacy_policy_url": "https://quiz-agent-api.fly.dev/legal/privacy",
+  "beta_description": {
+   "en-GB": "Trubbo is a trivia quiz you play with your voice: it reads each question aloud and you answer out loud in your own words. Thanks for testing! We especially want to hear where your spoken answer was misunderstood, which questions are wrong or unclear, and anything that confused you. Purchases in TestFlight are test purchases and are not charged.",
+   "en-US": "Trubbo is a trivia quiz you play with your voice: it reads each question aloud and you answer out loud in your own words. Thanks for testing! We especially want to hear where your spoken answer was misunderstood, which questions are wrong or unclear, and anything that confused you. Purchases in TestFlight are test purchases and are not charged.",
+   "sk": "Trubbo je vedomostný kvíz, ktorý hráš hlasom: otázku ti prečíta a ty odpovieš nahlas vlastnými slovami. Ďakujeme, že testuješ! Najviac nás zaujíma, kde appka nepochopila tvoju odpoveď, ktoré otázky sú zlé alebo nejasné a čokoľvek, čo ťa zmiatlo. Nákupy v TestFlighte sú testovacie a nič sa nezaplatí.",
+   "cs": "Trubbo je vědomostní kvíz, který hraješ hlasem: otázku ti přečte a ty odpovíš nahlas vlastními slovy. Díky, že testuješ! Nejvíc nás zajímá, kde appka nepochopila tvou odpověď, které otázky jsou špatně nebo nejasné a cokoli, co tě zmátlo. Nákupy v TestFlightu jsou testovací a nic se nezaplatí."
+  },
+  "what_to_test": {
+   "en-GB": "First public beta. Please try:\n• A whole quiz by voice, ideally in the car or with some background noise\n• Answering in your own words and the voice commands: start, ok, next, repeat, skip\n• Your own pack on a topic you like: Settings › Create a pack\n• Purchases: free test purchases, nothing is charged\n\nWrong or unclear question? Tap ⋯ › Rate question. Anything else: Settings › Send feedback, or take a screenshot and send it through TestFlight.",
+   "en-US": "First public beta. Please try:\n• A whole quiz by voice, ideally in the car or with some background noise\n• Answering in your own words and the voice commands: start, ok, next, repeat, skip\n• Your own pack on a topic you like: Settings › Create a pack\n• Purchases: free test purchases, nothing is charged\n\nWrong or unclear question? Tap ⋯ › Rate question. Anything else: Settings › Send feedback, or take a screenshot and send it through TestFlight.",
+   "sk": "Prvá verejná beta. Vyskúšaj prosím:\n• Celý kvíz hlasom, ideálne v aute alebo s hlukom v pozadí\n• Odpovede vlastnými slovami a hlasové povely: štart, ok, ďalej, zopakuj, preskoč\n• Vlastný balík na tému, ktorá ťa baví: Nastavenia › Vytvor balík\n• Nákupy: sú testovacie, nič sa nezaplatí\n\nZlá alebo nejasná otázka? Ťukni na ⋯ › Ohodnoť otázku. Všetko ostatné: Nastavenia › Odošli spätnú väzbu, alebo urob screenshot a pošli ho cez TestFlight.",
+   "cs": "První veřejná beta. Vyzkoušej prosím:\n• Celý kvíz hlasem, ideálně v autě nebo s hlukem v pozadí\n• Odpovědi vlastními slovy a hlasové povely: start, ok, dál, zopakuj, přeskoč\n• Vlastní balíček na téma, které tě baví: Nastavení › Vytvoř balíček\n• Nákupy: jsou testovací, nic se nezaplatí\n\nŠpatná nebo nejasná otázka? Ťukni na ⋯ › Ohodnoť otázku. Všechno ostatní: Nastavení › Odešli zpětnou vazbu, nebo udělej screenshot a pošli ho přes TestFlight."
+  }
+ },
+ "in_app_purchases": {
+  "subscription_group": {
+   "en-GB": "Trubbo Unlimited",
+   "en-US": "Trubbo Unlimited",
+   "sk": "Trubbo bez limitu",
+   "cs": "Trubbo bez limitu"
+  },
+  "com.carquiz.unlimited.monthly": {
+   "en-GB": [
+    "Trubbo Unlimited",
+    "Unlimited questions, no monthly cap"
+   ],
+   "en-US": [
+    "Trubbo Unlimited",
+    "Unlimited questions, no monthly cap"
+   ],
+   "sk": [
+    "Trubbo bez limitu",
+    "Neobmedzené otázky bez mesačného limitu"
+   ],
+   "cs": [
+    "Trubbo bez limitu",
+    "Neomezené otázky bez měsíčního limitu"
+   ]
+  },
+  "com.carquiz.pack.questions100": {
+   "en-GB": [
+    "100 Question Pack",
+    "100 extra questions that never expire"
+   ],
+   "en-US": [
+    "100 Question Pack",
+    "100 extra questions that never expire"
+   ],
+   "sk": [
+    "Balík 100 otázok",
+    "100 otázok navyše, ktoré nikdy nevypršia"
+   ],
+   "cs": [
+    "Balíček 100 otázek",
+    "100 otázek navíc, které nikdy nevyprší"
+   ]
+  },
+  "pack_30": {
+   "en-GB": [
+    "Custom Pack, 30 Questions",
+    "30 questions on a topic you choose"
+   ],
+   "en-US": [
+    "Custom Pack, 30 Questions",
+    "30 questions on a topic you choose"
+   ],
+   "sk": [
+    "Vlastný balík, 30 otázok",
+    "30 otázok na tému, ktorú si vyberieš"
+   ],
+   "cs": [
+    "Vlastní balíček, 30 otázek",
+    "30 otázek na téma, které si vybereš"
+   ]
+  }
+ }
+}

@@ -25,8 +25,9 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from ...analytics.recorder import AnalyticsRecorder
 from ...usage import rc_service
-from ..deps import get_auth_sessionmaker
+from ..deps import get_analytics, get_auth_sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ router = APIRouter()
 async def revenuecat_webhook(
     request: Request,
     sessionmaker=Depends(get_auth_sessionmaker),
+    analytics: AnalyticsRecorder = Depends(get_analytics),
 ):
     secret = os.getenv("REVENUECAT_WEBHOOK_SECRET")
     if not secret:
@@ -66,4 +68,17 @@ async def revenuecat_webhook(
         raise HTTPException(status_code=400, detail="Malformed RevenueCat event")
 
     await rc_service.handle_webhook_event(sessionmaker, event)
+    # #51: purchase/renewal/cancel history (the subscription table only keeps
+    # current state). Emitted after the write so a failed handler logs nothing.
+    analytics.emit(
+        "store_event",
+        subject_id=event.get("app_user_id"),
+        properties={
+            "type": etype,
+            "product_id": event.get("product_id"),
+            "environment": event.get("environment"),
+            "store": event.get("store"),
+            "period_type": event.get("period_type"),
+        },
+    )
     return {"status": "ok"}

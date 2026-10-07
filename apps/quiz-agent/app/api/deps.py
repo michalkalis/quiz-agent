@@ -19,6 +19,7 @@ from quiz_shared.database.question_store import QuestionStore
 
 from ..session.manager import SessionManager
 from ..retrieval.question_retriever import QuestionRetriever
+from ..analytics.recorder import AnalyticsRecorder
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
@@ -541,6 +542,13 @@ def get_app_attest_service(request: Request) -> Optional[AppAttestService]:
     # APP_ATTEST_REQUIRED is on, the bootstrap route turns a None service into a
     # 503 rather than minting an unattested identity.
     return getattr(request.app.state, "app_attest_service", None)
+
+
+def get_analytics(request: Request) -> AnalyticsRecorder:
+    # A no-op recorder when the app never wired one (unit-test apps and the
+    # bare request stubs some route tests pass, no DB).
+    state = getattr(getattr(request, "app", None), "state", None)
+    return getattr(state, "analytics", None) or AnalyticsRecorder()
 
 
 def get_auth_sessionmaker(request: Request):

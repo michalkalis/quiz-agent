@@ -188,6 +188,15 @@ async def transcribe_and_submit(
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,
                 )
+                quiz_flow.analytics.emit(
+                    "transcription_failed",
+                    subject_id=session.user_id,
+                    session_id=session_id,
+                    properties={
+                        "reason": "no_speech",
+                        "question_id": session.current_question_id,
+                    },
+                )
                 raise retry_answer_error(
                     session,
                     "no_speech",
@@ -241,6 +250,7 @@ async def transcribe_and_submit(
                 include_audio=include_audio,
                 next_question=next_question,
                 submitted_question_id=question_id,
+                route="voice",
             )
 
             # Voice-specific: require an answer intent

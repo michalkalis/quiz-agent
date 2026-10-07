@@ -314,3 +314,36 @@ class Feedback(Base):
     screenshot_content_type: Mapped[str | None] = mapped_column(Text, nullable=True)
     audio: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     audio_content_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AnalyticsEvent(Base):
+    """One product-analytics event (issue #51).
+
+    First-party, append-only: emitted server-side where the truth lives (quiz
+    start/finish, graded answers, quota, store webhooks) plus a small set of
+    client-only events posted by the app. ``subject_id`` is the same anonymous
+    / account id ``daily_usage`` keys on — never a name, email or transcript.
+    ``name`` and ``properties`` keys are allowlisted in ``app.analytics.taxonomy``.
+    """
+
+    __tablename__ = "analytics_events"
+    __table_args__ = (
+        Index("ix_analytics_events_name_occurred", "name", "occurred_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    subject_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # "server" (emitted by this API) or "ios" (posted by the app).
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    app_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    properties: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)

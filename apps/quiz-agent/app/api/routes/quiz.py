@@ -15,6 +15,7 @@ from ..deps import (
     get_usage_tracker,
     get_feedback_service,
     get_quiz_flow,
+    get_analytics,
     get_translation_service,
     get_tts_service,
     require_auth_or_grace,
@@ -62,6 +63,9 @@ async def start_quiz(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Start the quiz and get first question."""
+    # Resolved here rather than as a Depends param: several tests call this
+    # route function directly and pass only the params they care about.
+    analytics = get_analytics(request)
     try:
         session = session_manager.get_session(session_id)
         # #144: the session id alone is not a credential — the bearer's subject
@@ -79,6 +83,16 @@ async def start_quiz(
             )
             if not allowed:
                 usage = await usage_tracker.get_usage(session.user_id)
+                analytics.emit(
+                    "quota_hit",
+                    subject_id=session.user_id,
+                    session_id=session_id,
+                    properties={
+                        "stage": "start",
+                        "questions_used": usage["questions_used"],
+                        "questions_limit": usage["questions_limit"],
+                    },
+                )
                 raise HTTPException(
                     status_code=429,
                     detail={
@@ -205,6 +219,19 @@ async def start_quiz(
         session.current_question_translation = translation_record
         session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
         session_manager.update_session(session)
+        analytics.emit(
+            "quiz_started",
+            subject_id=session.user_id,
+            session_id=session_id,
+            properties={
+                "category": session.category,
+                "language": session.language,
+                "difficulty": session.current_difficulty,
+                "mode": session.mode,
+                "is_pack": bool(session.pack_id),
+                "max_questions": session.max_questions,
+            },
+        )
 
         audio_info = None
         if audio:
@@ -275,6 +302,7 @@ async def submit_input(
                 participant_id=body.participant_id,
                 include_audio=audio,
                 submitted_question_id=body.question_id,
+                route="text",
             )
         except Exception as e:
             # #148: one mapping for both submit routes — the same flow condition

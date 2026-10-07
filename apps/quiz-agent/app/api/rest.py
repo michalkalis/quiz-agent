@@ -6,7 +6,17 @@ All shared state, models, and helpers live in deps.py.
 
 from fastapi import APIRouter
 
-from .routes import sessions, quiz, voice, tts, misc, auth, entitlements, feedback
+from .routes import (
+    sessions,
+    quiz,
+    voice,
+    tts,
+    misc,
+    auth,
+    entitlements,
+    feedback,
+    analytics,
+)
 
 # Main router with /api/v1 prefix
 router = APIRouter(prefix="/api/v1", tags=["Quiz Agent"])
@@ -20,3 +30,4 @@ router.include_router(tts.router)
 router.include_router(misc.router)
 router.include_router(entitlements.router)
 router.include_router(feedback.router)
+router.include_router(analytics.router)

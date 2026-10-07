@@ -112,16 +112,28 @@ struct QuestionSkipControlTests {
     }
 
     /// The MCQ half of the same condition: the pinned footer (#179 T5) carries
-    /// the capsule and nothing else that could share — or steal — its line.
-    @Test("the MCQ pinned footer carries the skip capsule on its own line")
+    /// the capsule on its own line, outside the options. #188 G9 made that footer
+    /// the stack's last row instead of a bottom inset (the options' scroll view
+    /// ran under the inset and the chip covered the last option), so the rule is
+    /// asserted on the chip itself: never inside the options' scroll, one line,
+    /// and never cut ("Pres…", D10).
+    @Test("the MCQ footer carries the skip capsule on its own line, outside the options")
     func mcqFooterStaysOneLine() async throws {
         let vm = makeViewModel(question: Question.previewMCQLongOptions)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
-            let footer = try view.inspect().find(ViewType.SafeAreaInset.self)
-            let skip = try footer.find(viewWithAccessibilityIdentifier: "question.skip")
-            #expect(try skip.find(text: "Skip").lineLimit() == 1,
+            let tree = try view.inspect()
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            let label = try skip.find(text: "Skip")
+            #expect(try label.lineLimit() == 1,
                     "a wrapped label is what pushed the chip off the screen in the first place")
+            let fixed = try label.fixedSize()
+            #expect(fixed.horizontal && fixed.vertical, "the word keeps its full width; it is never truncated")
+            let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+                .find(ViewType.ScrollView.self, relation: .parent)
+            #expect(throws: (any Error).self, "the chip must not share the options' scroll") {
+                try options.find(viewWithAccessibilityIdentifier: "question.skip")
+            }
         }
     }
 }

@@ -73,6 +73,7 @@ from .usage.tracker import UsageTracker
 from .api import rest, admin
 from .api.routes import legal, webhooks
 from .quiz.flow import QuizFlowService
+from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -345,6 +346,9 @@ async def lifespan(app: FastAPI):
     app.state.apple_verifier = apple_verifier
     app.state.apple_oauth_client = apple_oauth_client
     app.state.apple_token_cipher = apple_token_cipher
+    # #51: first-party product analytics (no-op without DATABASE_URL).
+    analytics = AnalyticsRecorder(auth_sessionmaker)
+    app.state.analytics = analytics
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,
@@ -353,6 +357,7 @@ async def lifespan(app: FastAPI):
         tts_service=tts_service,
         usage_tracker=usage_tracker,
         translation_service=translation_service,
+        analytics=analytics,
     )
     logger.info("API dependencies configured")
 
@@ -367,6 +372,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
+    await drain_pending()
     logger.info("Cleanup stopped")
 
 
@@ -384,6 +390,8 @@ app = FastAPI(
 # Register rate limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.add_middleware(AppVersionMiddleware)
 
 # CORS middleware for web clients (iOS native client doesn't use CORS)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")

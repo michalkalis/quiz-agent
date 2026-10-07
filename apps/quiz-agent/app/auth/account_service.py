@@ -24,7 +24,13 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db.models import AnonymousIdentity, DailyUsage, RefreshToken, User
+from ..db.models import (
+    AnalyticsEvent,
+    AnonymousIdentity,
+    DailyUsage,
+    RefreshToken,
+    User,
+)
 from ..usage.tracker import _month_start
 from .app_attest import AppAttestError
 from .apple_oauth import AppleOAuthClient, AppleOAuthError
@@ -162,7 +168,7 @@ async def resolve_account(subject: AuthSubject, session: AsyncSession) -> User:
 async def erase_account(session: AsyncSession, user: User) -> None:
     """Erase the account's local data in the caller's transaction (GDPR Art. 17).
 
-    The ``users`` row, its ``daily_usage`` (keyed on ``subject_id`` == ``users.id``)
+    The ``users`` row, its ``daily_usage`` and ``analytics_events`` (keyed on ``subject_id`` == ``users.id``)
     and its ``refresh_tokens`` (filtered on ``anon_id`` == ``users.id`` — migration
     0004 dropped the cascade, so these go explicitly). The merged anonymous trail
     is de-linked by nulling ``upgraded_to_user_id``; the leftover anon row is then
@@ -171,6 +177,9 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     user_id = str(user.id)
     await _preserve_month_usage_on_anons(session, user_id)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
+    await session.execute(
+        delete(AnalyticsEvent).where(AnalyticsEvent.subject_id == user_id)
+    )
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))
     await session.execute(
         update(AnonymousIdentity)

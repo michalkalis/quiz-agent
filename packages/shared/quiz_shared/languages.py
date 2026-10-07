@@ -40,10 +40,10 @@ QUIZ_LANGUAGES: tuple[str, ...] = (
 
 # DD14: quiz sessions default to the three languages with an approved corpus.
 _DEFAULT_SERVABLE_QUIZ = "en,sk,cs"
-# DD15: packs are generated in English and merely stamped with the ordered
-# code, so ordering a non-EN pack would silently deliver English. English only
-# until pack generation is natively multi-language (follow-up issue).
-_DEFAULT_PACK_ORDER = "en"
+# DD15 → #192: packs are generated natively in the ordered language (the
+# generation prompt carries an output-language section for sk/cs), so the
+# orderable set matches the servable one.
+_DEFAULT_PACK_ORDER = "en,sk,cs"
 
 
 def _parse(env_var: str, default: str) -> tuple[str, ...]:

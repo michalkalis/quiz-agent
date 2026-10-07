@@ -121,9 +121,10 @@ def badge_for(
     translation); None means no translation was applied at all.
     """
     question_badge = APPROVED if question.review_status == APPROVED else PENDING_REVIEW
-    if language == "en":
-        # No translation dimension: the question's own review state is the
-        # whole story, and a stale record from a language switch is not.
+    if language == "en" or question.language == language:
+        # No translation dimension (an English session, or a native #192 pack
+        # question): the question's own review state is the whole story, and a
+        # stale record from a language switch is not.
         return question_badge, None
 
     if record is None:
@@ -153,9 +154,12 @@ def review_badge_fields(
     badge, note = badge_for(question, record, language)
     fields = {
         "review_badge": badge,
-        # The language the served text is actually in — English whenever no
-        # translation was applied, whatever the session asked for.
-        "translation_language": (record or {}).get("language") or "en",
+        # The language the served text is actually in — the question's own
+        # (English, or a native #192 pack's) whenever no translation was
+        # applied, whatever the session asked for.
+        "translation_language": (record or {}).get("language")
+        or question.language
+        or "en",
     }
     if note:
         fields["review_note"] = note

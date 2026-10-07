@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 import re
+from contextvars import ContextVar
 from typing import List, Optional, Dict, Any, Literal
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError
@@ -29,6 +30,13 @@ from ..scoring.multi_model_scorer import resolve_correct_answer
 from .. import feature_flags
 
 logger = logging.getLogger(__name__)
+
+# #192 — the per-order prompt tail (player's request + output language,
+# `prompt_builder.order_brief_section`). Set for the duration of one
+# `generate_questions` call and read in `_build_batch_prompt`, so every LLM
+# call the order fans out into (open slice, best-of-N batch, MCQ sub-batches)
+# carries it; a ContextVar keeps concurrent orders on one generator apart.
+_ORDER_BRIEF: ContextVar[str] = ContextVar("order_brief", default="")
 
 try:
     from ..sourcing.models import Fact
@@ -427,6 +435,7 @@ class AdvancedQuestionGenerator:
         mcq_patterns: Optional[set[str]] = None,
         mcq_emphasis: bool = False,
         open_count: int = 0,
+        order_brief: str = "",
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
 
@@ -468,6 +477,9 @@ class AdvancedQuestionGenerator:
                 exempts those patterns from the diversity rule's cap. The
                 order prompt never reaches the generation LLM, so this bool
                 is the only channel for the emphasis.
+            order_brief: #192 — rendered ``order_brief_section`` (the
+                player's request + output language) appended to every
+                generation prompt of this call. Empty = no tail.
 
         Returns:
             List of Question objects with quality metadata
@@ -482,6 +494,45 @@ class AdvancedQuestionGenerator:
             ...     n_multiplier=3  # Generate 30, return best 10
             ... )
         """
+        token = _ORDER_BRIEF.set(order_brief)
+        try:
+            return await self._generate_questions(
+                count=count,
+                difficulty=difficulty,
+                topics=topics,
+                categories=categories,
+                question_type=question_type,
+                excluded_topics=excluded_topics,
+                avoid_questions=avoid_questions,
+                user_bad_examples=user_bad_examples,
+                enable_best_of_n=enable_best_of_n,
+                n_multiplier=n_multiplier,
+                source_facts=source_facts,
+                mcq_patterns=mcq_patterns,
+                mcq_emphasis=mcq_emphasis,
+                open_count=open_count,
+            )
+        finally:
+            _ORDER_BRIEF.reset(token)
+
+    async def _generate_questions(
+        self,
+        *,
+        count: int,
+        difficulty: Optional[str],
+        topics: Optional[List[str]],
+        categories: Optional[List[str]],
+        question_type: str,
+        excluded_topics: Optional[List[str]],
+        avoid_questions: Optional[List[str]],
+        user_bad_examples: Optional[List[str]],
+        enable_best_of_n: bool,
+        n_multiplier: Optional[int],
+        source_facts: Optional[list],
+        mcq_patterns: Optional[set[str]],
+        mcq_emphasis: bool,
+        open_count: int,
+    ) -> List[Question]:
         # Issue #46 task 46.B4b — generate the open-shape slice through the
         # dedicated open/logical prompt (two-field `headline_answer` +
         # `explanation` contract, 46.B3). Best-of-N / critique stays on the
@@ -1148,7 +1199,7 @@ class AdvancedQuestionGenerator:
             user_bad_examples=user_bad_examples,
             generation_model=self.generation_model,
             **extra_kwargs,
-        )
+        ) + _ORDER_BRIEF.get()
         return prompt, prompt_version, use_open, use_fact_first
 
     def _prompt_message_content(self, prompt: str):

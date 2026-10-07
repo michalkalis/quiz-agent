@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 _ARTICLES = ("the ", "a ", "an ")
 
-_PROMPT = """You are a strong quiz player. Answer the question below. You cannot look anything up — use reasoning, estimation, elimination and general knowledge. Commit to your single best answer.
+_PROMPT = """You are a strong quiz player. Answer the question below. You cannot look anything up — use reasoning, estimation, elimination and general knowledge. Commit to your single best answer, written in the language of the question.
 
 QUESTION: {question}
 {options_block}
@@ -49,7 +49,8 @@ class AnswerabilityResult:
 
 
 def _normalize(text: str) -> str:
-    text = re.sub(r"[^a-z0-9 ]+", " ", text.lower()).strip()
+    # #192: keep letters of any alphabet (Slovak/Czech pack answers).
+    text = re.sub(r"[^\w ]+|_", " ", text.lower()).strip()
     for article in _ARTICLES:
         if text.startswith(article):
             text = text[len(article):]

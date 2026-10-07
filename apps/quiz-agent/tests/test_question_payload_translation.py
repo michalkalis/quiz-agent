@@ -396,3 +396,45 @@ def test_payload_translation_is_cached_across_sessions(service):
 
     assert first == second == SK_MCQ_PAYLOAD
     assert service.client.chat.completions.create.call_count == 1
+
+
+# ── #192: native custom-pack questions are never translated ────────────────
+
+
+def test_native_slovak_pack_question_is_served_as_written():
+    """#192: a Slovak pack is generated in Slovak. "Translating" it into Slovak
+    again costs one LLM call per question and can only reword it — the stem the
+    player hears and the answer they are graded against would drift from what
+    generation and its checks approved. It is served exactly as written, no
+    translation record, and its wordplay is not reported as a #128 hazard."""
+    question = Question(
+        id="q_native_sk",
+        question=STEM_SK,
+        type="text_multichoice",
+        possible_answers=dict(MCQ_OPTIONS_SK),
+        correct_answer="a",
+        topic="Geografia",
+        category="general",
+        difficulty="easy",
+        language="sk",
+        language_dependent=True,
+        pack_id="pack-sk",
+    )
+    service = AsyncMock()
+
+    with patch("app.serializers.sentry_sdk") as mock_sentry:
+        payload, record = asyncio.run(
+            translated_question_payload(
+                question, "sk", service, build_channel="testflight"
+            )
+        )
+
+    service.translate_question_payload.assert_not_called()
+    mock_sentry.capture_message.assert_not_called()
+    assert record is None
+    assert payload["question"] == STEM_SK
+    assert payload["possible_answers"] == MCQ_OPTIONS_SK
+    # TestFlight badge: the question's own review state, in its own language —
+    # not "English fallback" just because no translation record exists.
+    assert payload["review_badge"] == "pending_review"
+    assert payload["translation_language"] == "sk"

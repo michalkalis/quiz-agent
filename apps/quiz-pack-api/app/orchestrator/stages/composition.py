@@ -37,7 +37,10 @@ logger = logging.getLogger(__name__)
 PER_30_TOPIC_CAP = 2
 PER_30_TF_CAP = 2
 
-_NORM_RE = re.compile(r"[a-z0-9]+")
+# #192: letters of any alphabet, so Slovak/Czech words keep their diacritic
+# letters ("[a-z0-9]+" cut "čokoláda" into "okol", "d", "a"). ASCII text
+# tokenizes exactly as before.
+_NORM_RE = re.compile(r"[^\W_]+")
 
 
 def _scaled_cap(per_30: int, target: int, floor: int = 1) -> int:

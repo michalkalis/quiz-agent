@@ -36,8 +36,16 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          # Inputs go through env, never into the script text (no shell injection).
+          STEPS: ${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}
+          BUILD: ${{ inputs.build }}
+          SUBMIT: ${{ inputs.submit_beta_review }}
+          APPLY: ${{ inputs.apply }}
         run: |
-          python scripts/asc_store_upload.py --steps "${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}" \
-            ${{ inputs.build && format('--build {0}', inputs.build) || '' }} \
-            ${{ inputs.submit_beta_review && '--submit-beta-review' || '' }} \
-            ${{ inputs.apply && '--apply' || '' }}
+          [[ "$STEPS" =~ ^[a-z,-]+$ ]] || { echo "invalid steps: $STEPS"; exit 1; }
+          [[ -z "$BUILD" || "$BUILD" =~ ^[0-9]+$ ]] || { echo "invalid build: $BUILD"; exit 1; }
+          args=(--steps "$STEPS")
+          [[ -n "$BUILD" ]] && args+=(--build "$BUILD")
+          [[ "$SUBMIT" == "true" ]] && args+=(--submit-beta-review)
+          [[ "$APPLY" == "true" ]] && args+=(--apply)
+          python scripts/asc_store_upload.py "${args[@]}"

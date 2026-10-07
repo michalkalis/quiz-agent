@@ -271,6 +271,29 @@ class SessionManager:
                 return True
             return False
 
+    def forget_user(self, user_id: str) -> tuple[int, int]:
+        """Unlink an erased account from its quiz sessions and ratings (GDPR).
+
+        Live in-memory sessions owned by the account are dropped first: they would
+        otherwise re-persist the id on their next update, and scrubbing the owner
+        in place would turn one into an unmetered (``user_id=None``) session. The
+        stored rows are then unlinked in the ratings store, which raises on
+        failure so the caller can abort the erasure. Returns
+        (sessions_unlinked, ratings_unlinked); (0, 0) without a store."""
+        with self._lock:
+            owned = [
+                sid
+                for sid, s in self._sessions.items()
+                if s.user_id == user_id
+                or any(p.user_id == user_id for p in s.participants)
+            ]
+            for sid in owned:
+                del self._sessions[sid]
+                self._session_locks.pop(sid, None)
+        if not self._sql_client:
+            return 0, 0
+        return self._sql_client.unlink_user(user_id)
+
     def extend_session(self, session_id: str, minutes: int = 30) -> bool:
         """Extend session expiry time.
 

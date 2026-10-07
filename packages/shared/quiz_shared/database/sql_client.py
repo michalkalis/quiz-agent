@@ -1,5 +1,6 @@
 """SQL client for ratings and session persistence."""
 
+import json
 import logging
 from sqlalchemy import (
     create_engine,
@@ -69,6 +70,24 @@ class ModelScoreDB(Base):
     )  # JSON: {"conversation_spark": 8, "fun": 9, ...}
     overall_score = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.now, index=True)
+
+
+def _scrub_value(value, user_id: str):
+    """Return ``value`` with every string equal to ``user_id`` replaced: a
+    ``display_name`` (required on a participant) becomes the anonymous default
+    "Player", anything else becomes None."""
+    if isinstance(value, dict):
+        return {
+            k: (
+                ("Player" if k == "display_name" else None)
+                if v == user_id
+                else _scrub_value(v, user_id)
+            )
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [None if v == user_id else _scrub_value(v, user_id) for v in value]
+    return value
 
 
 class SQLClient:
@@ -372,6 +391,47 @@ class SQLClient:
         except Exception as e:
             logger.error("Error loading active sessions: %s", e)
             return []
+
+    def unlink_user(self, user_id: str) -> tuple[int, int]:
+        """Remove ``user_id`` from stored sessions and ratings (GDPR erasure).
+
+        Rows are kept so answers and ratings still count in statistics, but no
+        longer point at the person: ``question_ratings.user_id`` is nulled, and
+        every occurrence of the id inside a session's ``data_json`` (the session
+        owner, each participant's ``user_id``, and the ``display_name`` that
+        defaults to the id) is replaced and the session is deactivated. One
+        transaction; raises on failure so the caller can abort the erasure
+        instead of reporting it done.
+
+        Returns:
+            (sessions_unlinked, ratings_unlinked)
+        """
+        db_session = self._get_session()
+        try:
+            rows = (
+                db_session.query(QuizSessionDB)
+                .filter(QuizSessionDB.data_json.contains(user_id, autoescape=True))
+                .all()
+            )
+            for row in rows:
+                row.data_json = json.dumps(
+                    _scrub_value(json.loads(row.data_json), user_id)
+                )
+                # Never reload it on restart: an ownerless live session would
+                # skip every quota gate (they key on the session's user_id).
+                row.is_active = False
+            ratings = (
+                db_session.query(RatingDB)
+                .filter(RatingDB.user_id == user_id)
+                .update({RatingDB.user_id: None}, synchronize_session=False)
+            )
+            db_session.commit()
+            return len(rows), ratings
+        except Exception:
+            db_session.rollback()
+            raise
+        finally:
+            db_session.close()
 
     # ── Model score tracking (A/B testing) ──────────────────────────────
 

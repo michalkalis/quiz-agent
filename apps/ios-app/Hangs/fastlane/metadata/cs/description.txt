@@ -1,0 +1,29 @@
+Trubbo je vědomostní kvíz, který hraješ hlasem. Otázku ti přečte, odpovíš nahlas vlastními slovy a hned víš, jestli máš pravdu. Nemusíš ťukat ani číst, takže se hodí do auta, na procházku i ke stolu s přáteli.
+
+JAK TO FUNGUJE
+• Každou otázku čte přirozený hlas
+• Odpovídáš vlastními slovy. Trubbo pochopí, co myslíš, nejen přesné znění
+• U otázek s možnostmi stačí říct písmeno
+• Kvíz ovládáš hlasem: start, ok, dál, zopakuj, přeskoč
+• Po každé odpovědi dostaneš krátké vysvětlení a odkaz na zdroj
+
+VYBER SI KVÍZ
+• Kategorie od vědy a historie po sport, filmy a jídlo
+• Lehké, střední i těžké otázky
+• Hraj česky, slovensky nebo anglicky
+• Raději píšeš? Každou odpověď můžeš zadat i na obrazovce
+
+VLASTNÍ BALÍČEK
+Napiš jakékoli téma, třeba vesmír pro děti nebo hudba 90. let, a Trubbo ti připraví balíček 30 otázek. První otázky můžeš hrát už za pár minut.
+
+ZDARMA NEBO BEZ LIMITU
+Každý měsíc 30 otázek zdarma. Předplatné Bez limitu zruší měsíční limit. Jednorázový balíček 100 otázek nikdy nevyprší. Ceny uvidíš v aplikaci ještě před nákupem. Předplatné se obnovuje automaticky, dokud ho nezrušíš v nastavení Apple účtu.
+
+BEZPEČNOST
+V autě by měl řidič hrát jen hlasem. Za jízdy nikdy neovládej telefon a vždy dodržuj dopravní předpisy.
+
+DOBRÉ VĚDĚT
+Otázky a vyhodnocení odpovědí vznikají s pomocí umělé inteligence a mohou obsahovat chyby. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
+
+Zásady ochrany soukromí: https://quiz-agent-api.fly.dev/legal/privacy
+Podmínky použití: https://quiz-agent-api.fly.dev/legal/terms

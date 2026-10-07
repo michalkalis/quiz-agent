@@ -1,0 +1,38 @@
+name: asc-store-upload
+
+# Pushes listing, review info, TestFlight Test Information, IAP texts and screenshots
+# from apps/ios-app/Hangs/fastlane/ to App Store Connect (issue #190). Dry run unless `apply` is checked.
+on:
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: "Comma list: listing,review,testflight,iap,screenshots"
+        default: listing,review,testflight,iap
+      build:
+        description: "Build number that gets What to Test (optional)"
+        default: ""
+      apply:
+        description: "Write to App Store Connect (unchecked = dry run)"
+        type: boolean
+        default: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyjwt cryptography requests
+      - name: Upload to App Store Connect
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+          ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+        run: |
+          python scripts/asc_store_upload.py --steps "${{ inputs.steps }}" \
+            ${{ inputs.build && format('--build {0}', inputs.build) || '' }} \
+            ${{ inputs.apply && '--apply' || '' }}

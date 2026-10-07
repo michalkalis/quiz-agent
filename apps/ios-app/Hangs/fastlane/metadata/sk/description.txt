@@ -1,20 +1,29 @@
-Trubbo je hlasový vedomostný kvíz stvorený na cesty autom. Spusti kvíz, vypočuj si otázku a odpovedz nahlas. Žiadne ťukanie, žiadne čítanie, len rozprávanie.
+Trubbo je vedomostný kvíz, ktorý hráš hlasom. Otázku ti prečíta, odpovieš nahlas vlastnými slovami a hneď vieš, či si trafil správne. Netreba ťukať ani čítať, takže sa hodí do auta, na prechádzku aj k stolu s priateľmi.
 
-PREČO TRUBBO
-• Plne hlasové ovládanie: štart, odpoveď, preskočenie aj zopakovanie otázky
-• Otázky číta prirodzený hlas
-• Odpovedaj vlastnými slovami. AI pochopí, čo máš na mysli, nielen presné znenie
-• Funguje v slovenčine aj angličtine
-• Navrhnutý na šoférovanie: zvuk na prvom mieste, veľké ovládacie prvky, obrazovka nezhasína
+AKO TO FUNGUJE
+• Každú otázku číta prirodzený hlas
+• Odpovedáš vlastnými slovami. Trubbo pochopí, čo myslíš, nielen presné znenie
+• Pri otázkach s možnosťami stačí povedať písmeno
+• Kvíz ovládaš hlasom: štart, ok, ďalej, zopakuj, preskoč
+• Po každej odpovedi dostaneš krátke vysvetlenie a odkaz na zdroj
 
-HRAJ ZADARMO
-Každý mesiac máš balík otázok zadarmo. Predplatné Unlimited limit odstráni a jednorazové balíčky otázok nikdy neexpirujú. Ceny sa zobrazujú v aplikácii pred nákupom.
+VYBER SI KVÍZ
+• Kategórie od vedy a histórie po šport, filmy a jedlo
+• Ľahké, stredné aj ťažké otázky
+• Hraj po slovensky, česky alebo anglicky
+• Radšej píšeš? Každú odpoveď môžeš zadať aj na obrazovke
 
-BEZPEČNOSŤ PREDOVŠETKÝM
-Trubbo je navrhnuté na hands-free použitie. Počas jazdy nikdy neobsluhuj obrazovku a vždy dodržiavaj dopravné predpisy.
+VLASTNÝ BALÍK
+Napíš akúkoľvek tému, napríklad vesmír pre deti alebo hudba 90. rokov, a Trubbo ti pripraví balík 30 otázok. Prvé otázky môžeš hrať už o pár minút.
+
+ZADARMO ALEBO BEZ LIMITU
+Každý mesiac 30 otázok zadarmo. Predplatné Bez limitu zruší mesačný limit. Jednorazový balík 100 otázok nikdy nevyprší. Ceny vidíš v aplikácii ešte pred nákupom. Predplatné sa obnovuje automaticky, kým ho nezrušíš v nastaveniach Apple účtu.
+
+BEZPEČNOSŤ
+V aute by mal vodič hrať iba hlasom. Počas jazdy nikdy neobsluhuj telefón a vždy dodržiavaj dopravné predpisy.
 
 DOBRÉ VEDIEŤ
-Otázky a vyhodnotenie odpovedí generuje umelá inteligencia a môžu obsahovať nepresnosti. Svoje údaje si môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
+Otázky a vyhodnotenie odpovedí vznikajú s pomocou umelej inteligencie a môžu obsahovať chyby. Svoje údaje môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
 
 Zásady ochrany súkromia: https://quiz-agent-api.fly.dev/legal/privacy
 Podmienky používania: https://quiz-agent-api.fly.dev/legal/terms

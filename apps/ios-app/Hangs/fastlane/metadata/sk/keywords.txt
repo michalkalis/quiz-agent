@@ -1,1 +1,1 @@
-kvíz,vedomostný,hlasový,auto,cesta,otázky,vedomosti,rodina,zábava,hra
+otázky,auto,cesta,rodina,deti,párty,zábava,hra,vedomosti,trivia,hlas,mozog,fakty

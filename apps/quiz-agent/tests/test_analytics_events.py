@@ -145,14 +145,19 @@ async def test_client_batch_drops_unknown_events_and_clamps_future_clock(
             ClientEvent("paywall_viewed", future, None, {"source": "quota"}),
             ClientEvent("quiz_started", None, "s1", {}),  # server-only name
             ClientEvent("made_up", None, None, {}),
+            # Offset-less device timestamp: stored as UTC, never a 500.
+            ClientEvent("app_opened", datetime(2026, 10, 1, 12, 0), None, {}),
         ],
         subject_id="anon-2",
         app_version="1.4",
     )
-    assert (accepted, dropped) == (1, 2)
-    (row,) = await _rows(db_sessionmaker)
-    assert row.name == "paywall_viewed" and row.source == "ios"
-    assert row.occurred_at <= datetime.now(timezone.utc)
+    assert (accepted, dropped) == (2, 2)
+    rows = {r.name: r for r in await _rows(db_sessionmaker)}
+    assert rows["paywall_viewed"].source == "ios"
+    assert rows["paywall_viewed"].occurred_at <= datetime.now(timezone.utc)
+    assert rows["app_opened"].occurred_at == datetime(
+        2026, 10, 1, 12, 0, tzinfo=timezone.utc
+    )
 
 
 async def test_ingest_route_takes_subject_from_bearer_not_body(db_sessionmaker):

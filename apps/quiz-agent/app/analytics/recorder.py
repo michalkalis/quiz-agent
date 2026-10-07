@@ -114,6 +114,10 @@ class AnalyticsRecorder:
                 continue
             now = utcnow()
             occurred = event.occurred_at or now
+            # An offset-less client timestamp is read as UTC (timestamptz column;
+            # comparing it to the aware ``now`` would otherwise raise).
+            if occurred.tzinfo is None:
+                occurred = occurred.replace(tzinfo=now.tzinfo)
             # A device clock far in the future would poison day buckets.
             occurred = min(occurred, now)
             rows.append(

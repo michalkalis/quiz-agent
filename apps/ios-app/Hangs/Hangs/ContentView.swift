@@ -34,7 +34,8 @@ struct ContentView: View {
         _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
-            persistenceStore: appState.persistenceStore
+            persistenceStore: appState.persistenceStore,
+            analytics: appState.analytics
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
         #if DEBUG

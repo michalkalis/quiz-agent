@@ -121,18 +121,23 @@ final class OrderPackViewModel: ObservableObject {
     /// launch — and so a test can pin a list without touching global defaults.
     private let orderLanguages: () -> [Language]
 
+    /// #51: the outcome of each App Store payment sheet this flow runs.
+    private let analytics: AnalyticsClient
+
     init(
         service: PackOrderServiceProtocol,
         purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
         adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil },
         orderLanguages: @escaping () -> [Language] = { Language.packOrderLanguages },
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        analytics: AnalyticsClient = NoopAnalyticsClient()
     ) {
         self.service = service
         self.purchaseService = purchaseService
         self.adminKeyAvailable = adminKeyAvailable
         self.orderLanguages = orderLanguages
         self.clock = clock
+        self.analytics = analytics
     }
 
     deinit {
@@ -432,7 +437,27 @@ final class OrderPackViewModel: ObservableObject {
         if let pending = purchaseService.pendingProof() {
             return pending
         }
-        return try await purchaseService.purchase()
+        do {
+            let proof = try await purchaseService.purchase()
+            trackPackPurchase(.success)
+            return proof
+        } catch {
+            let outcome: PurchaseResultOutcome = switch error as? PackPurchaseError {
+            case .cancelled: .cancelled
+            case .pending: .pending
+            default: .failed
+            }
+            trackPackPurchase(outcome)
+            throw error
+        }
+    }
+
+    private func trackPackPurchase(_ outcome: PurchaseResultOutcome) {
+        analytics.track(.purchaseResult(
+            productId: StoreKitPackPurchaseService.productId,
+            kind: .customPack,
+            outcome: outcome
+        ))
     }
 
     private func poll(orderId: String) async {

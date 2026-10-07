@@ -112,6 +112,7 @@ extension VoiceCommandCoordinator {
             if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 noteMatchedForFeedback() // #122: visual twin of the ack earcon
+                trackAnalytics(.voiceCommand(command: .stop, phase: String(describing: screen)))
                 abortSkipUndoWindow()
                 return
             }
@@ -248,6 +249,9 @@ extension VoiceCommandCoordinator {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         attemptLedger.record(.command, command.rawValue, currentCommandScreen.map { String(describing: $0) })
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
+        if let screen = currentCommandScreen {
+            trackAnalytics(.voiceCommand(command: command, phase: String(describing: screen)))
+        }
         emitEarcon(.commandAck) // 77.10 command-ack tone
         noteMatchedForFeedback() // #122: visual twin of the ack earcon
         onCommandRecognized?(command)

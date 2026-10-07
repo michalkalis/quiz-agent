@@ -118,6 +118,7 @@ extension RecordingCoordinator {
         // #171 Track B: that is not a retry, it is "no answer" — the shared
         // funnel opens the confirmation sheet with an empty field.
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            trackCaptureFailure(.emptyTranscript)
             handleTranscriptionFailure(owner: attempt)
             return
         }

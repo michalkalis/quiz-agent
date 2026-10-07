@@ -92,6 +92,10 @@ struct HangsApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     appState.quizViewModel?.handleScenePhase(newPhase)
                 }
+                // #51: `app_opened` + flushing queued analytics on background.
+                .onChange(of: scenePhase, initial: true) { _, newPhase in
+                    appState.trackScenePhase(newPhase)
+                }
         }
     }
 

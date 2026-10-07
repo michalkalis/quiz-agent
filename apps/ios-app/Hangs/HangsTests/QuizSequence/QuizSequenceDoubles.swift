@@ -320,6 +320,8 @@ final class SequenceNetwork: NetworkServiceProtocol {
     func fetchElevenLabsToken() async throws -> String { "harness-token" }
     func syncEntitlements() async throws {}
 
+    func postAnalyticsEvents(_: AnalyticsBatch) async throws {}
+
     func getUsage() async throws -> UsageInfo {
         UsageInfo(
             userId: "harness", isPremium: true, questionsUsed: 0, questionsLimit: nil, remaining: nil,

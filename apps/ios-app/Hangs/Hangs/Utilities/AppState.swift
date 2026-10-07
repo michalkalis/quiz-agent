@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import os
+import SwiftUI
 
 /// App-wide state and dependency container
 @MainActor
@@ -26,6 +27,12 @@ final class AppState: ObservableObject {
     let packPurchaseService: PackPurchaseServiceProtocol
     /// In-app question ratings (#155), targeting the quiz-pack-api host.
     let questionRatingService: QuestionRatingServiceProtocol
+    /// Product analytics (#51): live in the app, a no-op in UI tests and tests.
+    let analytics: AnalyticsClient
+
+    /// The `app_opened` launch kind still to report: cold until the first
+    /// activation, then foreground after every trip to the background.
+    private var pendingAppOpen: AppLaunchKind? = .cold
 
     /// The custom-pack order flow's view model (#146). Owned HERE, not in
     /// `SettingsView`'s `@State`: Settings is a pushed route that quiz-start
@@ -34,7 +41,8 @@ final class AppState: ObservableObject {
     /// Lazy — it costs nothing until the user opens the pack flow.
     private(set) lazy var orderPackViewModel = OrderPackViewModel(
         service: packOrderService,
-        purchaseService: packPurchaseService
+        purchaseService: packPurchaseService,
+        analytics: analytics
     )
 
     /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
@@ -51,6 +59,7 @@ final class AppState: ObservableObject {
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
                 sttService = mocks.stt
+                analytics = NoopAnalyticsClient()
                 let purchaseMock = MockPurchaseService()
                 // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
                 // the paywall's in-flight states stay on screen long enough to
@@ -103,11 +112,14 @@ final class AppState: ObservableObject {
         // refresh transparently.
         let authService = AuthService(baseURL: Config.apiBaseURL, attestor: AppAttestor())
         self.authService = authService
-        self.networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
+        let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
+        self.networkService = networkService
+        let analytics = LiveAnalyticsClient(networkService: networkService)
+        self.analytics = analytics
         audioService = AudioService()
         let persistence = PersistenceStore()
         persistenceStore = persistence
-        self.storeManager = StoreManager()
+        self.storeManager = StoreManager(analytics: analytics)
         packOrderService = PackOrderService(authService: authService)
         packPurchaseService = StoreKitPackPurchaseService()
         questionRatingService = QuestionRatingService(authService: authService)
@@ -178,7 +190,6 @@ final class AppState: ObservableObject {
         // mirror. Without the bootstrap leg, a purchase on a fresh install
         // lands under an unmappable $RCAnonymousID.
         let storeManager = self.storeManager
-        let networkService = self.networkService
         Task {
             await authService.setAccountLinkedHandler { accountId in
                 await storeManager.logIn(accountId: accountId)
@@ -229,7 +240,8 @@ final class AppState: ObservableObject {
         authService: AuthService? = nil,
         packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
         packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
-        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService()
+        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
+        analytics: AnalyticsClient = NoopAnalyticsClient()
     ) {
         self.networkService = networkService
         self.audioService = audioService
@@ -241,6 +253,26 @@ final class AppState: ObservableObject {
         self.packOrderService = packOrderService
         self.packPurchaseService = packPurchaseService
         self.questionRatingService = questionRatingService
+        self.analytics = analytics
+    }
+
+    /// #51: `app_opened` on the first activation and on every return from the
+    /// background (an inactive blip — Control Center, a call banner — is not a
+    /// new open); queued events go out as the app leaves the foreground.
+    func trackScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .active:
+            guard let launch = pendingAppOpen else { return }
+            pendingAppOpen = nil
+            analytics.track(.appOpened(launch: launch))
+        case .background:
+            // A background phase before the first activation (launch order
+            // varies) must not turn the cold open into a foreground one.
+            if pendingAppOpen == nil { pendingAppOpen = .foreground }
+            analytics.flush()
+        default:
+            break
+        }
     }
 
     /// Create a new QuizViewModel with injected dependencies
@@ -269,7 +301,8 @@ final class AppState: ObservableObject {
                     if UITestSupport.isUITesting { return true }
                 #endif
                 return VoicePipelineFlags.realtimeSTTEnabled
-            }
+            },
+            analytics: analytics
         )
 
         #if DEBUG

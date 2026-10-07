@@ -124,14 +124,13 @@ async def test_refresh_rotates_to_a_new_pair(client):
     assert rotated["anon_id"] == body["anon_id"]  # same subject
 
 
-async def test_refresh_round_trips_full_name_and_email_for_an_apple_account(
+async def test_refresh_returns_null_name_and_email_even_if_legacy_row_has_them(
     client, db_sessionmaker
 ):
-    """#78: an Apple-upgraded account's subject is users.id (not an anon id) —
-    the refresh response must carry its stored full_name/email, or a signed-in
-    user's displayed name silently disappears every ~900s (the access-token
-    TTL, config.py) as the client re-decodes the response, not just on the
-    sign-out/re-sign-in path #78 originally reported."""
+    """Founder 2026-10-07 (GDPR data minimisation): refresh no longer round-trips
+    a stored name/email (reverses #78). Migration 0009 erases legacy values, but
+    the endpoint must not depend on that having run: it never reads them, so a
+    leftover row value can never reach the wire again."""
     user_id = uuid.uuid4()
     async with db_sessionmaker() as s:
         s.add(
@@ -154,8 +153,8 @@ async def test_refresh_round_trips_full_name_and_email_for_an_apple_account(
     )
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body["full_name"] == "Petra Horvathova"
-    assert body["email"] == "petra@example.com"
+    assert body["full_name"] is None
+    assert body["email"] is None
 
 
 async def test_refresh_leaves_full_name_and_email_null_for_anonymous_subject(client):

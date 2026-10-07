@@ -442,8 +442,12 @@ async def test_export_returns_account_data_and_leaks_no_secret(db_sessionmaker):
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["apple_sub"] == "apple.sub.exp"
-    assert body["email"] == "jan@privaterelay.appleid.com"
-    assert body["full_name"] == "Jan Novak"
+    # Data minimisation (founder 2026-10-07): the export no longer carries a
+    # name/email, even for a legacy row that still holds them.
+    assert "email" not in body
+    assert "full_name" not in body
+    assert "jan@privaterelay.appleid.com" not in resp.text
+    assert "Jan Novak" not in resp.text
     assert body["created_at"]
     assert body["is_premium"] is True  # today's row is premium
 

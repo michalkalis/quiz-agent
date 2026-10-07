@@ -405,26 +405,23 @@ class AuthTokenResponse(BaseModel):
     anon_id: str = Field(description="The server-assigned subject id (JWT sub)")
     full_name: Optional[str] = Field(
         default=None,
-        description="Account display name (Apple sign-in only; null for anonymous or if Apple never shared one)",
+        description="Deprecated, always null (no longer stored; kept for older iOS builds)",
     )
     email: Optional[str] = Field(
         default=None,
-        description="Account email (Apple sign-in only; null for anonymous)",
+        description="Deprecated, always null (no longer stored; kept for older iOS builds)",
     )
 
 
 class AppleSignInUser(BaseModel):
-    """First-authorization profile Apple hands the *client* exactly once, via the
-    native credential only (never inside the id_token). Both fields are optional —
-    absent on every sign-in after the first. ``name`` is the display name the
-    client assembles from Apple's name components (decision F5)."""
+    """Legacy first-authorization profile older iOS builds still send. Accepted so
+    their requests keep parsing, but ignored: the server never stores name/email
+    (GDPR data minimisation, founder 2026-10-07)."""
 
-    name: Optional[str] = Field(
-        default=None, description="Display name (first auth only)"
-    )
+    name: Optional[str] = Field(default=None, description="Ignored, never stored")
     email: Optional[str] = Field(
         default=None,
-        description="Email (first auth only; the verified id_token email is preferred)",
+        description="Ignored, never stored",
     )
 
 
@@ -448,7 +445,7 @@ class AppleSignInRequest(BaseModel):
         ),
     )
     user: Optional[AppleSignInUser] = Field(
-        default=None, description="First-login name/email Apple returns only once"
+        default=None, description="Legacy, ignored: name/email are never stored"
     )
 
 
@@ -468,10 +465,6 @@ class AccountExportResponse(BaseModel):
     or any other secret, so the export cannot leak one."""
 
     apple_sub: str = Field(description="Apple's stable per-app subject id (anchor)")
-    email: Optional[str] = Field(default=None, description="Email, if Apple shared one")
-    full_name: Optional[str] = Field(
-        default=None, description="Name from first sign-in (F5)"
-    )
     created_at: datetime = Field(description="When the account was created")
     is_premium: bool = Field(
         description="Derived premium state as of today (F8: no plan tier)"

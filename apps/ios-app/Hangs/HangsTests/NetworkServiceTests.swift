@@ -310,6 +310,38 @@ struct NetworkServiceTests {
         #expect(usage.resetsAt == "2026-05-08T00:00:00Z")
     }
 
+    // MARK: 9b. Analytics batch (#51)
+
+    /// WHY: the server attributes every analytics row to the build from
+    /// `X-App-Version` (TestFlight noise is filtered on it) and stores only the
+    /// allowlisted body shape — a missing header or a renamed field loses data
+    /// silently.
+    @Test("postAnalyticsEvents posts the batch with X-App-Version")
+    func postAnalyticsEventsShape() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data(#"{"accepted": 1, "dropped": 0}"#.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        try await service.postAnalyticsEvents(AnalyticsBatch(events: [AnalyticsBatch.Event(
+            name: "paywall_viewed", occurredAt: Date(), sessionId: nil, properties: ["source": .string("home")]
+        )]))
+
+        let request = try #require(captured.withLock { $0 })
+        #expect(request.httpMethod == "POST")
+        #expect(request.url?.path == "/api/v1/analytics/events")
+        #expect(request.value(forHTTPHeaderField: "X-App-Version") == NetworkService.appVersion)
+        #expect(NetworkService.appVersion.contains(" ("), "<short version> (<build>)")
+        let body = try #require(readBody(from: request))
+        let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        let event = try #require((json["events"] as? [[String: Any]])?.first)
+        #expect(event["name"] as? String == "paywall_viewed")
+        #expect((event["properties"] as? [String: String])?["source"] == "home")
+    }
+
     // MARK: 10. getUsage decode failure
 
     @Test("getUsage 200 with malformed JSON → throws DecodingError")

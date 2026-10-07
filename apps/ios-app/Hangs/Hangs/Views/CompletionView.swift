@@ -139,7 +139,7 @@ struct CompletionView: View {
 
     private func upsellCard(remaining: Int) -> some View {
         Button {
-            viewModel.presentPaywall()
+            viewModel.presentPaywall(source: .completion)
         } label: {
             HangsCard(padding: EdgeInsets(top: 14, leading: 18, bottom: 14, trailing: 18)) {
                 HStack(spacing: Theme.Hangs.Spacing.sm) {

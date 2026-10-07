@@ -140,11 +140,15 @@ struct QuestionListenBarRenderTests {
         }
     }
 
-    /// State 2 — the #132 B countdown, plus all three words.
+    /// State 2 — the #132 B countdown, plus all three words. #188 G11: the state
+    /// is one large word and the seconds are their own large number, the ONE
+    /// place the question screen counts down.
     @Test("state 2 counts the think window down and offers all three words")
     func thinkingState() async throws {
         try await host(.thinking(remaining: 32, total: 45), language: .slovak) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 32 S") }
+            #expect(throws: Never.self) { try tree.find(text: "Think") }
+            let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
+            #expect(try seconds.text().string() == "32 s")
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             for word in ["„štart“", "„zopakuj“", "„preskoč“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
@@ -222,7 +226,10 @@ struct QuestionListenBarRenderTests {
     func wordsOffKeepsTheBar() async throws {
         try await host(.thinking(remaining: 9, total: 30), showsWords: false) { tree in
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: Never.self) { try tree.find(text: "THINK. LISTENING IN 9 S") }
+            #expect(throws: Never.self) { try tree.find(text: "Think") }
+            #expect(throws: Never.self, "the countdown is the state too") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
+            }
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
@@ -332,9 +339,10 @@ struct QuestionViewListenBarPresenceTests {
         }
     }
 
-    /// The MCQ side of the same condition: T5 pinned the footer as a bottom
-    /// safe-area inset, and a taller bar must not un-pin it.
-    @Test("the MCQ skip chip stays in the pinned bottom inset with the chips on screen")
+    /// The MCQ side of the same condition: the skip chip stays pinned with a
+    /// taller bar on screen. #188 G9: it is the stack's last row now (an inset
+    /// let the options scroll under it), always outside the options' scroll.
+    @Test("the MCQ skip chip stays pinned with the chips on screen")
     func mcqFooterStaysPinned() async throws {
         let vm = await makeArmedViewModel(question: .previewMCQLongOptions)
         vm.answerTimerCountdown = 12
@@ -345,10 +353,11 @@ struct QuestionViewListenBarPresenceTests {
             #expect(throws: Never.self, "precondition: the chip row is on screen") {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
-            let footer = try tree.find(ViewType.SafeAreaInset.self)
-            #expect(try footer.edge() == .bottom)
-            #expect(throws: Never.self) {
-                try footer.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.skip") }
+            let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+                .find(ViewType.ScrollView.self, relation: .parent)
+            #expect(throws: (any Error).self, "the chip never scrolls with (or over) the options") {
+                try options.find(viewWithAccessibilityIdentifier: "question.skip")
             }
         }
     }

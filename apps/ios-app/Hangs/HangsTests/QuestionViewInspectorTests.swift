@@ -169,11 +169,10 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
-            // The think caption counts the running window down (12 s left in the
+            // The think state counts the running window down (12 s left in the
             // fixture's legacy answer window — the bar covers both timer paths)…
-            #expect(throws: Never.self) {
-                try tree.find(text: "THINK. LISTENING IN 12 S")
-            }
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(bar.findAll(ViewType.Text.self).contains { ((try? $0.string()) ?? "").contains("12") })
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
                 _ = try tree.find(text: "Listening…")
@@ -188,9 +187,8 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(throws: Never.self) {
                 try tree.find(text: "Listening…")
             }
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "THINK — LISTENING IN 0 S")
-            }
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "Think") }
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "THINK. LISTENING IN 0 S") }
             // #173: the mute is a toolbar control now — the on-screen strip that
             // used to carry it is gone from both phases.
             #expect(throws: (any Error).self) {
@@ -554,6 +552,29 @@ struct QuestionViewReplayProcessingInspectorTests {
         }
     }
 
+    /// #188 G8 (founder audit D1): `.plain` dimmed the whole label of the
+    /// disabled replay button, so the QUESTION read at half contrast while it was
+    /// being read, recorded and evaluated (grey on light grey in light mode).
+    /// Disabled must stay disabled (no tap, VoiceOver "dimmed"), but the label —
+    /// the question — keeps full contrast; only the small glyph fades.
+    @Test("a disabled replay keeps the question at full contrast (#188 G8)")
+    func disabledReplayKeepsQuestionReadable() async throws {
+        let vm = makeVoiceViewModel()
+        vm.recordingCoordinator.currentQuestionAudioUrl = nil
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let replay = try tree.find(viewWithAccessibilityIdentifier: "question.replay")
+            #expect(try replay.isDisabled(), "nothing to replay is still nothing to replay")
+            #expect(try replay.buttonStyle() is QuestionReplayButtonStyle,
+                    "`.plain` is the style that halves a disabled label's contrast")
+            let glyph = try replay.find(viewWithAccessibilityIdentifier: "question.replayGlyph")
+            #expect(try glyph.opacity() < 1, "the glyph alone says replay is unavailable")
+        }
+        // The style itself never fades the label at rest.
+        #expect(try QuestionReplayButtonStyle().inspect(isPressed: false).opacity() == 1)
+    }
+
     @Test("replay button is enabled when a question audio URL is available (RS-14)")
     func replayEnabledWhenAudioPresent() async throws {
         let vm = makeVoiceViewModel()
@@ -578,10 +599,15 @@ struct QuestionViewReplayProcessingInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // #185 track F (F2): the button says the bar's word, "Processing…" —
-            // looked up INSIDE the button, since the bar above says it too.
+            // #188 G11: the button spins and says nothing — "Processing…" is the
+            // bar's word, in ONE place (two copies truncated to "Spr…").
             let button = try tree.find(viewWithAccessibilityIdentifier: "question.record")
-            #expect(throws: Never.self) { try button.find(text: "Processing…") }
+            #expect(throws: Never.self) { try button.find(ViewType.ProgressView.self) }
+            #expect(throws: (any Error).self, "the state word lives in the bar only") {
+                try button.find(text: "Processing…")
+            }
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(throws: Never.self) { try bar.find(text: "Processing…") }
         }
     }
 
@@ -747,15 +773,20 @@ struct QuestionViewMCQPinnedFooterTests {
         #expect(picker.usesGrid == false)
     }
 
-    @Test("four multi-line options leave the skip chip pinned to the bottom edge")
+    /// #188 G9: the chip is the stack's last row, OUTSIDE the options' scroll
+    /// region — as a bottom inset it let that scroll view run under it, and the
+    /// chip covered the last option at large text. Pinned because the options
+    /// scroll instead of growing.
+    @Test("four multi-line options leave the skip chip pinned, outside the options' scroll")
     func skipChipIsPinnedNotStacked() async throws {
         let view = QuestionView(viewModel: makeLongOptionsViewModel())
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let footer = try tree.find(ViewType.SafeAreaInset.self)
-            #expect(try footer.edge() == .bottom, "the footer must be pinned to the BOTTOM edge")
-            #expect(throws: Never.self, "the skip chip is not in the pinned footer") {
-                try footer.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.skip") }
+            let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
+                .find(ViewType.ScrollView.self, relation: .parent)
+            #expect(throws: (any Error).self, "the chip must not scroll with (or over) the options") {
+                try options.find(viewWithAccessibilityIdentifier: "question.skip")
             }
             // …and nothing was traded away for it: stem and all four options stay.
             #expect(throws: Never.self) {

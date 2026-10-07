@@ -147,7 +147,7 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.planManageButton")
             } else {
                 Button {
-                    viewModel.presentPaywall()
+                    viewModel.presentPaywall(source: .home)
                 } label: {
                     HomePlanCard(usage: usage)
                 }

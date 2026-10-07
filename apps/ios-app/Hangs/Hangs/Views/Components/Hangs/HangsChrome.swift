@@ -76,45 +76,9 @@ extension HangsBrandRow where Right == EmptyView {
     init() { self.init { EmptyView() } }
 }
 
-// MARK: - In-quiz nav (close + brand + progress counter)
-
-struct HangsQuizNav: View {
-    let onClose: () -> Void
-    let counterText: String
-    var counterAccent: Color = Theme.Hangs.Colors.muted
-
-    var body: some View {
-        HStack {
-            HStack(spacing: 10) {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                        .frame(width: 36, height: 36)
-                        .background(
-                            Circle().fill(Theme.Hangs.Colors.bgCard)
-                        )
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "Close quiz", comment: "Accessibility label for the in-quiz close button"))
-                .accessibilityIdentifier("question.closeButton")
-                HangsBrandMark(size: 13)
-            }
-            Spacer()
-            Text(counterText)
-                .font(.hangsMono(13, weight: .semibold))
-                .tracking(2)
-                .foregroundColor(counterAccent)
-        }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-        .padding(.top, 14)
-        .padding(.bottom, Theme.Hangs.Spacing.xxs)
-    }
-}
-
 // MARK: - Progress bar
 
-/// 3pt pink/ink progress bar used under the quiz nav.
+/// 3pt progress bar — the long-set fallback of `HangsQuizProgressHeader`.
 struct HangsProgressBar: View {
     /// 0…1
     let progress: Double
@@ -181,8 +145,7 @@ struct HangsDivider: View {
 
 /// Legacy `HangsStatusBar(leading:trailing:)` shim — renders the new brand row
 /// with the `leading` mono text shown when provided instead of `hangs.`, and
-/// `trailing` mono text on the right. New code should use `HangsBrandRow` /
-/// `HangsQuizNav` directly.
+/// `trailing` mono text on the right. New code should use `HangsBrandRow`.
 struct HangsStatusBar: View {
     let leading: String
     let trailing: String
@@ -214,7 +177,7 @@ struct HangsStatusBar: View {
 }
 
 /// Legacy `HangsRecordingBar(liveLabel:timeLabel:)` shim — renders a pink rec
-/// indicator + timer. New code should compose `HangsQuizNav` with a recording counter.
+/// indicator + timer. New code should use `HangsQuizProgressHeader(isRecording:)`.
 struct HangsRecordingBar: View {
     let liveLabel: String
     let timeLabel: String
@@ -299,7 +262,6 @@ struct HangsSessionDot: View {
             HangsBrandRow {
                 HangsNavChip(icon: "gearshape") {}
             }
-            HangsQuizNav(onClose: {}, counterText: "03 / 10")
             HangsProgressBar(progress: 0.3)
             Spacer()
         }

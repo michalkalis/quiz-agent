@@ -45,6 +45,19 @@ struct QuestionView: View {
     /// branches, never on screen together.
     @State private var stemScroll = ScrollPosition()
     @State private var stemOverflow: CGFloat = 0
+    /// #188 G9: the options' own height, so their scroll region is exactly as
+    /// tall as they are while they fit (see `mcqOptions`).
+    @State private var optionsHeight: CGFloat = 0
+    /// #188 G9: more options below the visible ones — the same cue the stem uses.
+    @State private var showOptionsScrollCue = false
+    /// #188 G9: the MCQ stem's natural height — its floor grows to it (capped).
+    @State private var stemContentHeight: CGFloat = 0
+
+    private enum Metrics {
+        /// The most of the screen the MCQ question may claim before it scrolls:
+        /// under half, so the options always keep the larger share.
+        static let stemMaxShare: CGFloat = 0.45
+    }
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -87,7 +100,7 @@ struct QuestionView: View {
                         awaitingQuestionBody
                     } else if let question = viewModel.currentQuestion {
                         if question.isMultipleChoice {
-                            mcqBody(question: question, compact: compact)
+                            mcqBody(question: question, compact: compact, height: geo.size.height)
                         } else {
                             voiceBody(question: question, compact: compact)
                         }
@@ -113,6 +126,10 @@ struct QuestionView: View {
                     .accessibilityIdentifier("question.sheetDim")
             }
         }
+        // #188 G9: the quiz stops growing at the largest non-accessibility size,
+        // so the options and the controls keep a screen to live on. Applied to
+        // the screen only — the Settings sheet below is not a quiz screen.
+        .dynamicTypeSize(...QuizTypeSize.screenCap)
         // The echo belongs to one question only.
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
             submittedAnswer = ""
@@ -133,7 +150,20 @@ struct QuestionView: View {
         // collided with the MCQ category label at a fixed inset.
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar { quizToolbar }
+        // #188 G9 (D9): the same bar the result screen draws.
+        .quizToolbar(
+            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
+            // EFFECTIVE mute, not the persisted Settings preference.
+            isMuted: viewModel.isAudioMuted,
+            isPaused: viewModel.isPaused,
+            isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
+            onClose: { showEndQuizConfirmation = true },
+            onMute: { Task { await viewModel.toggleMute() } },
+            onPause: { viewModel.togglePause() },
+            onSettings: { showQuizSettings = true },
+            onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
+            onRateQuestion: rateQuestionAction
+        )
         // #155 (TestFlight/Debug only): rate the question. Rating-only — it
         // never reads an answer or moves the quiz state machine.
         .sheet(item: $ratingPresentation) { presentation in
@@ -173,6 +203,8 @@ struct QuestionView: View {
                 noAnswerCaptured: viewModel.noAnswerCaptured,
                 autoConfirmHeld: viewModel.isAutoConfirmHeld
             )
+            // #188 G9: the answer sheet is part of the quiz — same cap.
+            .dynamicTypeSize(...QuizTypeSize.screenCap)
         }
         .sheet(isPresented: $showQuizSettings) {
             // #68 resolution: the chip opens the full settings screen, which now
@@ -204,49 +236,7 @@ struct QuestionView: View {
         // the no-pause-while-typing decision 2a).
     }
 
-    // MARK: - Toolbar (#173 decision 1, variant A3)
-
-    /// One toolbar for MCQ, voice and image questions, in every quiz state.
-    /// ✕ leading; the two mid-question controls (mute, pause) joined into one
-    /// pill trailing (#179 D2); everything else under ⋯ — the HIG "More" rule,
-    /// and the reason nothing can overlap the category label any more.
-    @ToolbarContentBuilder
-    private var quizToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button { showEndQuizConfirmation = true } label: {
-                Image(systemName: "xmark")
-            }
-            .tint(Theme.Hangs.Colors.ink)
-            .accessibilityLabel(Text("Close quiz"))
-            .accessibilityIdentifier("question.closeButton")
-        }
-
-        // #179 D2: one joined pill, not a group the system spacing spreads into
-        // two unrelated buttons.
-        ToolbarItem(placement: .topBarTrailing) {
-            QuizControlPill(
-                // #173 Track A: the toolbar mute is quiz-scoped — it must show
-                // the EFFECTIVE mute, not the persisted Settings preference.
-                isMuted: viewModel.isAudioMuted,
-                isPaused: viewModel.isPaused,
-                isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
-                onMute: { Task { await viewModel.toggleMute() } },
-                onPause: { viewModel.togglePause() }
-            )
-        }
-
-        // Separates the live controls from the menu, so the ⋯ never reads as a
-        // third mid-question button.
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-        ToolbarItem(placement: .topBarTrailing) {
-            QuizOverflowMenu(
-                onSettings: { showQuizSettings = true },
-                onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
-                onRateQuestion: rateQuestionAction
-            )
-        }
-    }
+    // MARK: - Toolbar actions
 
     /// The #155 gate, unchanged: TestFlight/Debug only, and only with a question
     /// to rate. nil = the row is absent, which is what an App Store build gets.
@@ -370,6 +360,11 @@ struct QuestionView: View {
     /// question TTS from the top. Disabled when there's nothing to replay (muted or
     /// no question audio URL, #59.5); the question must stay fully readable, so only
     /// the speaker glyph fades, never the text.
+    ///
+    /// #188 G8: `.plain` dimmed the WHOLE label of the disabled button — the
+    /// question went half contrast for the entire read/record/evaluate, near
+    /// unreadable in light mode. `QuestionReplayButtonStyle` keeps the label at
+    /// full contrast; the glyph alone says whether replay is available.
     private func questionReplayTapTarget(@ViewBuilder content: () -> some View) -> some View {
         Button {
             Task { await viewModel.replayQuestionAudio() }
@@ -377,7 +372,7 @@ struct QuestionView: View {
             content()
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(QuestionReplayButtonStyle())
         .disabled(!viewModel.canReplayAudio)
         .accessibilityHint("Replays the question")
         .accessibilityIdentifier("question.replay")
@@ -407,11 +402,11 @@ struct QuestionView: View {
     /// see the options while thinking, so the grid renders from the first frame.
     /// The answer `ListenBar` is NOT part of that reversal — it still claims the
     /// mic is live, so it stays gated on `.recording`.
-    private func mcqBody(question: Question, compact: Bool) -> some View {
+    private func mcqBody(question: Question, compact: Bool, height: CGFloat) -> some View {
         VStack(spacing: 0) {
             // Merged top row (close + category + counter) lives in `topChrome`
             // now; the MCQ body starts at the stem.
-            mcqStem(question: question, compact: compact)
+            mcqStem(question: question, compact: compact, screenHeight: height)
 
             // #173 B1 (founder pick): the listening banner sits ABOVE the option
             // grid, directly under the stem — where the eye already is when the
@@ -420,6 +415,48 @@ struct QuestionView: View {
             // the mic is about to open.
             mcqListenBar(question: question, compact: compact)
 
+            mcqOptions(question: question, compact: compact)
+
+            // #188 G9: the "more options below" label gets its own row, so it
+            // never sits on option text; the list edge keeps only the fade.
+            if showOptionsScrollCue {
+                scrollCueLabel
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.top, Theme.Hangs.Spacing.xxs)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
+            }
+
+            #if DEBUG
+                Text(quizStateName)
+                    .frame(width: 0, height: 0)
+                    .accessibilityIdentifier("question.state")
+            #endif
+
+            // #179 finding 10: the footer stays PINNED to the bottom edge — four
+            // long options once grew past the screen and carried "Skip question"
+            // off with them, the driver's only escape hatch. #188 G9: it is the
+            // last row of this stack, no longer a bottom inset. The options scroll
+            // now, so nothing can push it away; and as an inset it let the
+            // options' scroll view run underneath it, where the chip covered the
+            // last option (founder screenshot, large text). A row never overlaps.
+            mcqFooter(compact: compact)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    /// #188 G9 (founder screenshot, xxxLarge): the options are sized to their
+    /// content and never squeezed. A plain VStack slot was proposed less height
+    /// than four 3–4 line rows need once text was enlarged, and the rows drew
+    /// over each other. Now the options sit in their own scroll region that is
+    /// exactly as tall as they are, and takes layout priority over the stem, so
+    /// the stem keeps only its legibility floor (`mcqStem`) and, past that, the
+    /// options scroll instead of overlapping. At default text nothing changes:
+    /// the region fits, so it neither scrolls nor bounces.
+    private func mcqOptions(question: Question, compact: Bool) -> some View {
+        ScrollView(.vertical) {
             MCQOptionPicker(
                 options: question.sortedAnswerOptions,
                 labels: question.optionLabels,
@@ -432,23 +469,33 @@ struct QuestionView: View {
                 // #174: a tapped option evaluates IN the tile it was tapped on.
                 isSubmitting: isProcessing
             )
-            .padding(.top, compact ? 10 : 14)
-
-            #if DEBUG
-                Text(quizStateName)
-                    .frame(width: 0, height: 0)
-                    .accessibilityIdentifier("question.state")
-            #endif
         }
-        .frame(maxHeight: .infinity)
-        // #179 finding 10: the footer is PINNED to the bottom edge instead of
-        // stacked after the options. Four options of 2–3 lines each grew past
-        // the screen and carried "Skip question" off with them — the driver's
-        // only escape hatch. As an inset it is laid out first and the stem
-        // takes what is left, so the chip cannot be pushed anywhere.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            mcqFooter(compact: compact)
+        .scrollBounceBehavior(.basedOnSize)
+        // #188 G9 (founder screenshot): at large text option D sat wholly below
+        // the fold with nothing saying it existed. The native indicator stays
+        // visible and flashes on arrival, and the stem's own overflow cue (fade
+        // over the last visible row + "SCROLL ↓") marks that more follow.
+        .scrollIndicators(.visible)
+        .scrollIndicatorsFlash(onAppear: true)
+        // Content height depends on the width only, never on this frame, so
+        // feeding it back cannot loop.
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.height } action: { _, height in
+            optionsHeight = height
         }
+        .onScrollGeometryChange(for: Bool.self) { g in
+            g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
+        } action: { _, more in
+            showOptionsScrollCue = more
+        }
+        .overlay(alignment: .bottom) {
+            if showOptionsScrollCue {
+                scrollFade
+            }
+        }
+        .frame(maxHeight: optionsHeight > 0 ? optionsHeight : nil)
+        .padding(.top, compact ? 10 : 14)
+        // Outermost on purpose: VStack reads the priority of its direct child.
+        .layoutPriority(1)
     }
 
     /// The pinned MCQ footer: the feedback sweep strip and the skip chip.
@@ -505,6 +552,7 @@ struct QuestionView: View {
                 language: viewModel.commandLanguage,
                 speechHeard: viewModel.isHearingAnswer,
                 inputLevel: viewModel.recordingInputLevel,
+                answerRemaining: viewModel.answerWindowRemaining,
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
             .padding(.horizontal, Theme.Hangs.Spacing.lg)
@@ -535,8 +583,15 @@ struct QuestionView: View {
     /// made of the screen, which four 2–3 line options could not satisfy, so the
     /// footer went off the bottom instead. It is a floor for legibility now, low
     /// enough that the options and the skip chip always fit above it.
-    private func mcqStem(question: Question, compact: Bool) -> some View {
-        let floor: CGFloat = compact ? 160 : 200
+    ///
+    /// #188 G9 (founder review): at the raised text-size cap the question no
+    /// longer fit that floor and slid under the scroll cue while the options
+    /// took the screen. The floor now grows to the question's own height, up to
+    /// `Metrics.stemMaxShare` of the screen — the whole question stays in view,
+    /// and the options scroll behind their cue instead.
+    private func mcqStem(question: Question, compact: Bool, screenHeight: CGFloat) -> some View {
+        let baseFloor: CGFloat = compact ? 160 : 200
+        let floor = max(baseFloor, min(stemContentHeight, screenHeight * Metrics.stemMaxShare))
         // #179 finding 3: Anton 34 was oversized in the car mount — one step down
         // for both classes; `minimumScaleFactor` still handles the rest.
         let stemFont: Font = .hangsDisplay(compact ? 26 : 30)
@@ -555,6 +610,10 @@ struct QuestionView: View {
                                 textFont: stemFont,
                                 textIdentifier: "question.text"
                             )
+                            // #188 G9 (D11): display type is already large; past
+                            // this size it only pushed the stem under the
+                            // scroll cue and starved the options.
+                            .dynamicTypeSize(...QuizTypeSize.questionCap)
                             // Keep the stem its OWN a11y element inside the
                             // replay button. A button label that resolves to a
                             // single element gets folded into the button, taking
@@ -573,6 +632,9 @@ struct QuestionView: View {
                         horizontalPadding: 28
                     )
                 }
+                // The stem's NATURAL height, measured before the min-height frame
+                // below — measuring after it would feed the floor back into itself.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemContentHeight = $0 }
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
             .scrollIndicators(.visible)
@@ -615,32 +677,44 @@ struct QuestionView: View {
     }
 
     /// Bottom fade + a small mono "SCROLL ↓" cue — the visible overflow
-    /// affordance. a11y-hidden (peripheral cue), never blocks taps.
+    /// affordance of the stem, and since #188 G9 of the options too.
+    /// a11y-hidden (peripheral cue), never blocks taps.
     private var stemOverflowCue: some View {
         ZStack(alignment: .bottomTrailing) {
-            LinearGradient(
-                colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 56)
-            .frame(maxWidth: .infinity)
-
-            HStack(spacing: 5) {
-                Text("SCROLL")
-                    .font(.hangsMono(9, weight: .medium))
-                    .tracking(1.4)
-                    .textCase(.uppercase)
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundColor(Theme.Hangs.Colors.muted)
-            .padding(.trailing, 22)
-            .padding(.bottom, Theme.Hangs.Spacing.xs)
+            scrollFade
+            scrollCueLabel
+                .padding(.bottom, Theme.Hangs.Spacing.xs)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .transition(.opacity)
+    }
+
+    /// The bottom fade of a region with more content below.
+    private var scrollFade: some View {
+        LinearGradient(
+            colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: 56)
+        .frame(maxWidth: .infinity)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// "SCROLL ↓" in the app language.
+    private var scrollCueLabel: some View {
+        HStack(spacing: 5) {
+            Text("SCROLL")
+                .font(.hangsMono(9, weight: .medium))
+                .tracking(1.4)
+                .textCase(.uppercase)
+            Image(systemName: "arrow.down")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundColor(Theme.Hangs.Colors.muted)
+        .padding(.trailing, 22)
     }
 
     // MARK: - Voice body (frames f9csl / uGhZg)
@@ -675,6 +749,8 @@ struct QuestionView: View {
                                     .minimumScaleFactor(0.7)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                    // #188 G9: same ceiling as the MCQ stem.
+                                    .dynamicTypeSize(...QuizTypeSize.questionCap)
                                     .accessibilityIdentifier("question.text")
                                 replayGlyph
                             }
@@ -784,6 +860,17 @@ struct QuestionView: View {
         case .finished: return "finished"
         case .error: return "error"
         }
+    }
+}
+
+/// #188 G8: the tap-to-replay question block. Unlike `.plain`, it does NOT dim a
+/// disabled label — the label is the question itself, and it must read at full
+/// contrast in every state. Pressed feedback stays (only an enabled button can
+/// be pressed); availability is shown by `replayGlyph` alone.
+struct QuestionReplayButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 

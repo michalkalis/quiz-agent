@@ -680,7 +680,7 @@ struct SettingsView: View {
                 valueColor: Theme.Hangs.Colors.pink,
                 showsChevron: true
             ) {
-                viewModel.presentPaywall()
+                viewModel.presentPaywall(source: .settings)
             }
             .accessibilityIdentifier("settings.subscription")
         }

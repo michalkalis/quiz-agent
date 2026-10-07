@@ -1,0 +1,36 @@
+# texts
+adults
+1/10
+Which statement about how the human body grows is correct?
+PREMÝŠĽAJ, POČÚVAM O 27 S
+A
+Hair on the head grows roughly 1.25 centimetres every month, a little faster in summer
+B
+Fingernails grow about four times faster than toenails, and faster on the dominant hand
+C
+Children grow measurably faster in spring than they do in any other season of the year
+D
+Toenails grow about four times faster than fingernails, mostly while you are asleep
+askingQuestion
+Preskoč
+Nastavenia
+# identifiers
+question.progress
+question.category
+question.counter
+question.replay
+question.text
+question.replayGlyph
+listen-bar
+listen-bar.dismiss
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d
+question.state
+question.skip
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

@@ -60,6 +60,9 @@ protocol NetworkServiceProtocol: Sendable {
     /// `/usage` — otherwise a just-paid user can still hit the 429 gate until
     /// the webhook mirror catches up.
     func syncEntitlements() async throws
+    /// #51: one batch of client analytics events. Callers fire and forget —
+    /// a failure is theirs to drop, never to surface.
+    func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -67,6 +70,15 @@ actor NetworkService: NetworkServiceProtocol {
     /// `X-Client-Capabilities` sent on session create (#185 track G): coded
     /// "say it again" 400s, and question audio that reads the option labels.
     nonisolated static let clientCapabilities = "answer-codes, option-labels"
+
+    /// `X-App-Version` on every request (#51), "<short version> (<build>)", so
+    /// the server's analytics events carry the build that caused them.
+    nonisolated static let appVersion: String = {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+        let build = info?["CFBundleVersion"] as? String ?? "0"
+        return "\(version) (\(build))"
+    }()
 
     private let baseURL: URL
     private let session: URLSession
@@ -101,11 +113,12 @@ actor NetworkService: NetworkServiceProtocol {
     /// plain send when no `authService` is present or no token is available, so
     /// the legacy `user_id` grace path keeps working through the staged rollout.
     private func sendAuthorized(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        var req = request
+        req.setValue(Self.appVersion, forHTTPHeaderField: "X-App-Version")
         guard let authService else {
-            return try await session.data(for: request)
+            return try await session.data(for: req)
         }
 
-        var req = request
         let token = await authService.accessToken()
         if let token {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -727,6 +740,20 @@ actor NetworkService: NetworkServiceProtocol {
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public)")
 
         try await performRequest(request, endpointPath: "/api/v1/entitlements/sync")
+    }
+
+    // MARK: - Analytics (#51)
+
+    func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/analytics/events")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+        request.httpBody = try batch.encoded()
+
+        try await performRequest(request, endpointPath: "/api/v1/analytics/events")
     }
 
     // MARK: - Helper Methods

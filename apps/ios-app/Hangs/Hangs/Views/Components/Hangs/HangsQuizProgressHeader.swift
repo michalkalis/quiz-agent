@@ -15,6 +15,9 @@
 //     `metaRow`), and the MCQ one collided with the TestFlight chips. One row,
 //     one layout, both modes.
 //
+//  #188 G9 (D9): the result screen renders this header too (it had its own
+//  ✕ + logo + "03 / 10" row), so the question and the result share one top.
+//
 //  Segments only read as "question N of M" while you can count them at a glance,
 //  so a long set (> `maxSegments`) degrades to the linear bar — still 1-based.
 //

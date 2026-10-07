@@ -14,13 +14,14 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 
 | Component | Use for |
 |---|---|
-| `HangsPrimaryButton` | The one main action of a screen (start, next, buy). States: disabled, `isLoading`/`showsSpinner`, `isDestructive` (end quiz), countdown fill (auto-advance). One per screen. |
+| `HangsPrimaryButton` | The one main action of a screen (start, next, buy). States: disabled, `isLoading`/`showsSpinner` (`loadingStyle: .spinnerOnly` under a status surface that already names the wait), countdown fill (auto-advance). Title: one line at default size, two at larger text, never "…". One per screen. |
 | `HangsSecondaryButton` | A secondary full-width action under the primary (settings, maybe later). |
 | `HangsGhostButton` | Low-emphasis text action (restore purchases, "not now"). |
 | `QuestionSkipButton` | Skipping the current question; has its own skipping/disabled states. |
 | `HangsNavChip` | Square icon chip in a top bar (close, back). |
 | `HangsSourceLink` | Tappable source domain under an answer. |
 | `QuizControlPill` | Quiz-screen mute + pause pair (toolbar glass). |
+| `.quizToolbar(…)` | The one quiz top bar (✕, mute + pause, ⋯) on the question AND result screens. Quiz screens also cap Dynamic Type at `QuizTypeSize.screenCap`. |
 | `QuizOverflowMenu` | Quiz "…" menu (settings, feedback, rate question). |
 
 ## Layout and rows
@@ -41,11 +42,11 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 
 | Component | Use for |
 |---|---|
-| `HangsQuizNav`, `HangsQuizProgressHeader`, `HangsProgressBar` | Quiz top chrome: close + counter, category + segmented progress (recording tint), thin progress. |
+| `HangsQuizProgressHeader`, `HangsProgressBar` | Quiz top chrome under `.quizToolbar`: category + counter + segmented progress (recording tint); the thin bar is its long-set fallback. |
 | `HangsQuestionPrompt` | The question text with its accent bar; scales down, never wraps off screen. |
 | `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
-| `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping). |
+| `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
 | `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |

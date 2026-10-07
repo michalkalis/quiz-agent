@@ -82,6 +82,36 @@ struct HangsPrimaryButtonInspectorTests {
         }
     }
 
+    /// #188 G9 (D10): a title must never end in "…" ("Š… 23s", "Spr…"). One
+    /// scaled line at the default size keeps the bottom rows a single strip; any
+    /// larger size wraps (and the capsule grows) instead of being cut.
+    @Test("button titles wrap instead of truncating once text is enlarged")
+    func titleLineLimitFollowsTextSize() {
+        #expect(HangsButtonTitle.lineLimit(for: .large) == 1)
+        #expect(HangsButtonTitle.lineLimit(for: .medium) == 1)
+        #expect(!HangsButtonTitle.wraps(at: .large))
+        #expect(HangsButtonTitle.wraps(at: .xLarge))
+        #expect(HangsButtonTitle.lineLimit(for: .xLarge) > 1)
+        #expect(HangsButtonTitle.lineLimit(for: .accessibility3) > 1)
+    }
+
+    /// #188 G11: under a status surface that already says "Processing…", the
+    /// button spins and says nothing; where the button IS the status (the answer
+    /// sheet), the default keeps its word.
+    @Test("spinner-only loading hides the title; the default keeps it")
+    func spinnerOnlyLoadingHidesTitle() async throws {
+        let quiet = HangsPrimaryButton(title: "Start", isLoading: true, loadingStyle: .spinnerOnly) {}
+        try await ViewHosting.host(quiet) {
+            let tree = try quiet.inspect()
+            #expect(throws: Never.self) { try tree.find(ViewType.ProgressView.self) }
+            #expect(throws: (any Error).self) { try tree.find(text: "Start") }
+        }
+        let worded = HangsPrimaryButton(title: "Processing…", isLoading: true) {}
+        try await ViewHosting.host(worded) {
+            #expect(throws: Never.self) { try worded.inspect().find(text: "Processing…") }
+        }
+    }
+
     @Test("Loading state shows ProgressView instead of icon text")
     func loadingStateShowsProgressView() async throws {
         let view = HangsPrimaryButton(title: "Loading", isLoading: true) {}

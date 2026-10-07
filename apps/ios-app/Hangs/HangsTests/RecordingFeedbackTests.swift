@@ -97,19 +97,24 @@ struct ListenBarRecordingStatusTests {
         }
     }
 
-    /// WHY: F2's large status lives only where the recording is — the command
-    /// states keep their chips layout, and the SE-class slim bar has no room
-    /// for two lines. The taller bar is the price the MCQ grid pays only while
-    /// an answer is in flight, so it must stay limited to those states.
-    @Test("the 58pt status layout is used only by the answer and in-flight states")
+    /// WHY: F2's large status is the question screen's — #188 G11 extended it
+    /// from the answer and in-flight states to the reading and think states,
+    /// because the tiny teal caption there was the one state a driver could not
+    /// read at a glance. The other screens' command bars (Home, confirmation,
+    /// result: `.command` with no think window, the read-back) keep their
+    /// layout, and the SE-class slim bar has no room for two lines.
+    @Test("the 58pt status layout is the question screen's, in every state")
     func statusLayoutScope() {
         #expect(ListenBar(mode: .answer(.open)).usesStatusLayout)
         #expect(ListenBar(mode: .answer(.mcq), onDismiss: {}).usesStatusLayout)
         #expect(ListenBar(mode: .evaluating).usesStatusLayout)
         #expect(ListenBar(mode: .skipping).usesStatusLayout)
-        #expect(!ListenBar(mode: .command).usesStatusLayout)
-        #expect(!ListenBar(mode: .readingQuestion).usesStatusLayout)
+        #expect(ListenBar(mode: .readingQuestion).usesStatusLayout)
+        #expect(ListenBar(mode: .command, thinkCountdown: .init(remaining: 5, total: 10)).usesStatusLayout)
+        #expect(!ListenBar(mode: .command).usesStatusLayout, "Home, confirmation and result keep theirs")
+        #expect(!ListenBar(mode: .readingAnswerBack).usesStatusLayout)
         #expect(!ListenBar(mode: .answer(.open), size: .slim).usesStatusLayout)
+        #expect(!ListenBar(mode: .readingQuestion, size: .slim).usesStatusLayout)
         #expect(ListenBar.statusHeight == 58)
         #expect(ListenBar.statusHeight > ListenBar.height(size: .full, hasSubLine: true),
                 "the status bar is the larger, glanceable one")

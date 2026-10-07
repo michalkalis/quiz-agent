@@ -471,7 +471,33 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "00 / 05") }
+            let counter = try tree.find(viewWithAccessibilityIdentifier: "question.counter")
+            #expect(try counter.text().string() == "0/5")
+        }
+    }
+
+    // MARK: - #188 G9 (D9): one top bar for question and result
+
+    /// The result used to draw its own row (✕ + logo + "03 / 10") with the
+    /// TestFlight chips floated over it; at large text the counter landed on the
+    /// chips. It now wears the question screen's native toolbar (sound and pause
+    /// in the same places) and the same header, so the count can only scale.
+    @Test("the result shares the question screen's toolbar and header")
+    func resultSharesQuizChrome() async throws {
+        let vm = makeViewModel(evaluation: Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: nil
+        ))
+        let view = ResultView(viewModel: vm, ratingEntry: nil)
+        try await ViewHosting.host(view) {
+            #expect(QuizToolbarInspection.hasToolbar(view), "the native quiz toolbar, as on the question screen")
+            #expect(
+                (try? QuizToolbarInspection.bodyOccurrences(of: "question.closeButton", in: view)) == 0,
+                "the ✕ lives in the toolbar, not a hand-drawn row"
+            )
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.progress") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.counter") }
         }
     }
 

@@ -58,6 +58,7 @@ struct MCQOptionPicker: View {
     @Binding var externalSelectedKey: String?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Pending tap submit (54.16) — a concurrent voice match cancels it; the VM
     /// submits voice matches itself, so letting both run fired onSelect twice.
     @State private var pendingSubmit = MCQDelayedSubmit()
@@ -103,9 +104,20 @@ struct MCQOptionPicker: View {
         options.count != 2 && options.allSatisfy { $0.value.count <= Self.gridMaxOptionLength }
     }
 
+    /// #188 G9 (D8): the largest text size a half-width tile holds a single word
+    /// at. Above it the grid broke words mid-letter ("Budapes / t"), so the set
+    /// moves to full-width rows.
+    static let gridMaxTypeSize: DynamicTypeSize = .xLarge
+
+    /// The layout actually drawn: the length rule above AND the text-size rule.
+    /// Pure so it is assertable without rendering.
+    func usesGrid(at size: DynamicTypeSize) -> Bool {
+        usesGrid && size <= Self.gridMaxTypeSize
+    }
+
     @ViewBuilder
     var body: some View {
-        if usesGrid {
+        if usesGrid(at: dynamicTypeSize) {
             optionGrid
         } else {
             optionRows

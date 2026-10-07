@@ -21,6 +21,82 @@
 
 import SwiftUI
 
+/// #188 G9 (D9): the ONE quiz top bar, shared by the question and the result
+/// screen. The result screen used to draw its own row (✕ + logo + "03 / 10"
+/// counter) with the TestFlight chips floated over it, and at large text the
+/// counter landed on the chips and the logo's dot wrapped. Now both screens put
+/// sound and pause in the same place, and the counter lives in
+/// `HangsQuizProgressHeader` under the bar, where it scales down instead.
+///
+/// ✕ leading; the mute + pause pill trailing (#179 D2); everything else under ⋯
+/// — the HIG "More" rule (#173 decision 1).
+///
+/// A modifier rather than a `ToolbarContent` type on purpose: the items stay a
+/// plain `TupleToolbarContent` on the screen's own `.toolbar`, which is the shape
+/// the screens' toolbar tests and text contracts already walk.
+extension View {
+    func quizToolbar(
+        isMuted: Bool,
+        isPaused: Bool,
+        isPauseEnabled: Bool,
+        onClose: @escaping () -> Void,
+        onMute: @escaping () -> Void,
+        onPause: @escaping () -> Void,
+        onSettings: @escaping () -> Void,
+        onFeedback: (() -> Void)? = nil,
+        onRateQuestion: (() -> Void)? = nil
+    ) -> some View {
+        toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                }
+                .tint(Theme.Hangs.Colors.ink)
+                .accessibilityLabel(Text("Close quiz"))
+                .accessibilityIdentifier("question.closeButton")
+            }
+
+            // #179 D2: one joined pill, not a group the system spacing spreads
+            // into two unrelated buttons.
+            ToolbarItem(placement: .topBarTrailing) {
+                QuizControlPill(
+                    isMuted: isMuted,
+                    isPaused: isPaused,
+                    isPauseEnabled: isPauseEnabled,
+                    onMute: onMute,
+                    onPause: onPause
+                )
+            }
+
+            // Separates the live controls from the menu, so the ⋯ never reads
+            // as a third mid-question button.
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .topBarTrailing) {
+                QuizOverflowMenu(
+                    onSettings: onSettings,
+                    onFeedback: onFeedback,
+                    onRateQuestion: onRateQuestion
+                )
+            }
+        }
+    }
+}
+
+/// #188 G9: how large Dynamic Type may make the quiz screens (question, answer
+/// sheet, result). At the largest accessibility sizes the MCQ options alone
+/// covered the screen (founder audit D7–D11). The founder found `.xxxLarge` too
+/// small (review 2026-10-07), so the cap is `.accessibility2`: the highest size
+/// at which the question stays visible, the options scroll behind their cue and
+/// no control text is cut. Screens outside the quiz are not capped.
+enum QuizTypeSize {
+    static let screenCap: DynamicTypeSize = .accessibility2
+    /// The question is display type (26–30 pt Anton) that already reads larger
+    /// than body text; one step under the screen cap keeps the stem above the
+    /// options instead of under the scroll cue (D11).
+    static let questionCap: DynamicTypeSize = .accessibility1
+}
+
 /// #179 D2 (founder 2026-09-15, variant A): the two mid-question controls are
 /// ONE visibly joined pill with a divider between them. They were already a
 /// `ToolbarItemGroup`, but the system spacing pushed them apart until they read

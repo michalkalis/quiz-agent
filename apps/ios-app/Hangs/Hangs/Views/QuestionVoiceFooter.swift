@@ -9,7 +9,8 @@
 //  Founder spec, 2026-07-29 TestFlight test:
 //
 //   - Track B — ONE countdown, from the end of the question read to submit or
-//     expiry, and it lives IN the Record button (`HangsPrimaryButton`'s #108B
+//     expiry. (#188 G11 moved it from the Record button into the listen bar,
+//     see `recordButton`.) It used to live IN the Record button (`HangsPrimaryButton`'s #108B
 //     fill + seconds chip, the same treatment as Confirm / Next question). The
 //     Stop state keeps it running: `viewModel.answerWindowRemaining` switches
 //     from the think/answer window to the recording window without ever going
@@ -83,7 +84,9 @@ struct QuestionVoiceFooter: View {
                     size: compact ? .slim : .full,
                     language: viewModel.commandLanguage,
                     speechHeard: viewModel.isHearingAnswer,
-                    inputLevel: viewModel.recordingInputLevel
+                    inputLevel: viewModel.recordingInputLevel,
+                    // #188 G11: the recording window, moved out of the Stop button.
+                    answerRemaining: viewModel.answerWindowRemaining
                 )
                 .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .transition(.opacity)
@@ -108,33 +111,33 @@ struct QuestionVoiceFooter: View {
     /// `.askingQuestion` and stops + submits from `.recording`. Auto-record still
     /// fires on its own via `startRecordingOrTimer()`.
     ///
-    /// Track B: this is where the countdown lives now. `answerWindowTotal` is 0
-    /// when nothing is running, which is exactly `HangsPrimaryButton`'s "no
-    /// countdown" contract — the fill and the seconds chip simply don't render.
+    /// #188 G11 (founder audit D13 + M8) reverses #131 Track B here: the
+    /// countdown is NOT in this button any more. It showed twice ("Štart 23s"
+    /// under a bar counting the same seconds) and the pair truncated at large
+    /// text. The listen bar above is the one home of state, countdown and
+    /// "Processing…"; this button says only its action.
     private var recordButton: some View {
         HangsPrimaryButton(
-            // #174: the typed-answer path never opens the confirmation sheet, so
-            // this button IS its evaluating state (the full-screen overlay that
-            // used to cover the footer is gone). `isLoading` also disables it.
             // #174 (founder 2026-09-09): "Start" — the title IS the voice command
             // that opens the mic, on Home and here alike.
-            // #185 track F (F2 mockup): "Processing…" — the same word the bar
-            // above says, so the two never tell the driver different stories.
-            title: isEvaluating ? "Processing…" : (isRecording ? "Stop" : "Start"),
-            icon: isEvaluating ? nil : (isRecording ? "stop.fill" : "play.fill"),
+            title: isRecording ? "Stop" : "Start",
+            icon: isRecording ? "stop.fill" : "play.fill",
+            // #174: the typed-answer path never opens the confirmation sheet, so
+            // this button IS its evaluating state — a spinner alone (G11), the
+            // word "Processing…" is the bar's. `isLoading` also disables it.
             isLoading: isEvaluating,
+            loadingStyle: .spinnerOnly,
             // G1 (#83): action buttons deliberately modest so long question text
             // keeps as much room as possible.
-            height: 48,
-            countdownSecondsRemaining: viewModel.answerWindowRemaining,
-            countdownTotal: viewModel.answerWindowTotal
+            height: 48
         ) {
             Task { await viewModel.toggleRecording() }
         }
         // #174 review: during an in-flight skip the footer stays mounted, so
         // gate the CTA on `.skipping` too — a tap there is a silent no-op.
+        // #188 G14: the button draws its own disabled state now; an extra
+        // opacity on top would fade it twice.
         .disabled(isSkipping)
-        .opacity(isSkipping ? 0.45 : 1)
         // #122: teal ring while a matched-command glow is live.
         .overlay {
             if viewModel.voiceFeedbackPhase == .matched {

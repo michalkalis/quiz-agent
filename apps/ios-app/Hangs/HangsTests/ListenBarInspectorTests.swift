@@ -48,9 +48,9 @@ struct ListenBarInspectorTests {
 
     // MARK: - Think countdown (#132 Track B, variant A)
 
-    /// The MCQ think countdown lives IN the bar: the caption counts the window
-    /// down and — the founder's correction to the mock — the concrete command
-    /// words stay on the sub-line exactly as every other command bar shows them.
+    /// The MCQ think countdown lives IN the bar: the state reads "Think", the
+    /// seconds are a large number of their own (#188 G11) and — the founder's
+    /// correction to the mock — the concrete command words stay on the sub-line.
     @Test("Think countdown swaps the caption but keeps the command words")
     func thinkCountdownCaptionAndWords() async throws {
         let view = ListenBar(
@@ -60,9 +60,9 @@ struct ListenBarInspectorTests {
         )
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(text: "THINK. LISTENING IN 32 S")
-            }
+            #expect(throws: Never.self) { try tree.find(text: "Think") }
+            let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
+            #expect(try seconds.text().string() == "32 s")
             let words = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try words.text().string() == #"Say "start" or "skip""#)
         }
@@ -79,9 +79,7 @@ struct ListenBarInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(text: "Say 1–4 or the answer")
             }
-            #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "THINK — LISTENING IN 10 S")
-            }
+            #expect(throws: (any Error).self) { _ = try tree.find(text: "Think") }
         }
     }
 

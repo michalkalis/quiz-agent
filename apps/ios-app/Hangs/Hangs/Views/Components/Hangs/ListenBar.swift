@@ -69,6 +69,16 @@
 //  gap: same teal/layout as `.command` (same words below), but a speaker glyph
 //  and no "live mic" dots, since nothing is heard yet.
 //
+//  #188 G11 (founder audit D13 + M8): on the QUESTION screen every state now
+//  speaks in the F2 status layout. "Reading the question" and the think state
+//  were a tiny teal mono caption while only "Listening…" read at a glance; and
+//  the countdown showed twice (here and in the Start button). Now the state is
+//  the large line in every state, the capsule colour says which state it is
+//  (teal reading/think, pink listening, grey in flight), and the seconds left —
+//  think window or recording window — are a large number at the trailing edge,
+//  the ONE place the quiz counts down. The slim bar and the other screens'
+//  command bars (Home, confirmation, result) are unchanged.
+//
 
 import SwiftUI
 
@@ -90,6 +100,12 @@ struct ListenBarDismissal: Equatable {
 }
 
 struct ListenBar: View {
+    private enum Metrics {
+        /// #188 G11: the countdown beside the 17pt status line — one step
+        /// larger, so the number is what the eye lands on.
+        static let statusSeconds: CGFloat = 20
+    }
+
     /// The answer form the driver should speak — drives the answer-mode caption.
     enum AnswerKind: Equatable {
         case mcq // multiple choice labelled 1–4 (#185 track G)
@@ -176,6 +192,11 @@ struct ListenBar: View {
     /// #185 track F: the live mic level the capsule glows with. Answer mode
     /// only; nil (previews, tests) glows at the quiet level.
     var inputLevel: RecordingInputLevel? = nil
+
+    /// #188 G11: seconds left in the answer-recording window. Answer mode only;
+    /// nil or 0 = no window running, nothing shown. It moved here from the
+    /// Stop button so the quiz counts down in one place.
+    var answerRemaining: Int? = nil
 
     /// #173 B1 (founder locked 2026-09-07): a trailing ✕ that hides the bar for
     /// the CURRENT question only. Nil = no dismiss affordance (Home, result,
@@ -287,10 +308,29 @@ struct ListenBar: View {
     /// #185 track F (F2): the answer and in-flight states on the full bar say
     /// their state in large text inside a taller bar. The command states keep
     /// the caption-over-chips layout; the slim bar keeps its single row.
+    ///
+    /// #188 G11: the question screen's reading and think states join them —
+    /// both are question-screen-only (the think state is the command mode WITH
+    /// a countdown), so the command bars of the other screens keep their layout.
     var usesStatusLayout: Bool {
         guard size == .full else { return false }
-        if case .answer = mode { return true }
-        return isBusy
+        switch mode {
+        case .answer, .evaluating, .skipping, .readingQuestion: return true
+        case .command: return activeThinkCountdown != nil
+        case .readingAnswerBack: return false
+        }
+    }
+
+    /// #188 G11: the large trailing number — the think window in the status
+    /// layout (the small layouts keep it inside the caption), the recording
+    /// window while listening. Internal for tests.
+    var trailingSeconds: Int? {
+        if case .answer = mode {
+            guard let answerRemaining, answerRemaining > 0 else { return nil }
+            return answerRemaining
+        }
+        guard usesStatusLayout, let countdown = activeThinkCountdown else { return nil }
+        return countdown.remaining
     }
 
     /// Whether the capsule glows with the mic level — only while the mic is
@@ -350,6 +390,9 @@ struct ListenBar: View {
     /// flow ("listening in N s"), not the command engine.
     private var captionText: Text {
         if let countdown = activeThinkCountdown {
+            // #188 G11: in the status layout the seconds are their own large
+            // number, so the state line is the one word.
+            if usesStatusLayout { return Text("Think") }
             return Text("THINK — LISTENING IN \(countdown.remaining) S")
         }
         switch mode {
@@ -404,15 +447,19 @@ struct ListenBar: View {
         content
             // Combined so VoiceOver reads one "listening … say X" element.
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(spokenSubLine.map { captionText + Text(verbatim: ". ") + $0 } ?? captionText)
+            .accessibilityLabel(accessibilityText)
             .accessibilityIdentifier("listen-bar")
-            // The ✕ is a sibling of the combined element, never inside it: VoiceOver
-            // must reach the control, not read "hide" as part of the instruction.
-            .overlay(alignment: .trailing) { dismissButton }
             .padding(.leading, usesStatusLayout ? 18 : (size == .slim ? 16 : 14))
             .padding(.trailing, trailingPadding)
+            // The ✕ is a sibling of the combined element, never inside it: VoiceOver
+            // must reach the control, not read "hide" as part of the instruction.
+            // #188 G11: laid over the trailing padding reserved for it, never over
+            // the content — the countdown now ends the row and sat under it.
+            .overlay(alignment: .trailing) { dismissButton }
             .frame(maxWidth: .infinity)
-            .frame(height: barHeight)
+            // A floor, not a fixed height: at large text the status line must
+            // never be clipped by its own capsule (#188 G9).
+            .frame(minHeight: barHeight)
             .background(
                 ZStack(alignment: .leading) {
                     Capsule().fill(fill)
@@ -457,16 +504,20 @@ struct ListenBar: View {
     }
 
     /// #185 track F (F2): large state + small caption, glyph at 18pt.
+    /// #188 G11: the command words (reading/think) sit under the state as chips,
+    /// and the seconds left are a large trailing number.
     private var statusContent: some View {
         HStack(spacing: Theme.Hangs.Spacing.sm) {
             leadingGlyph
             VStack(alignment: .leading, spacing: 2) {
                 captionText
                     .font(.hangsBody(17, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .foregroundColor(statusTextColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if let subLine {
+                if !chipWords.isEmpty {
+                    words
+                } else if let subLine {
                     subLine
                         .font(.hangsMono(10, weight: .medium))
                         .tracking(1)
@@ -476,11 +527,39 @@ struct ListenBar: View {
                         .minimumScaleFactor(0.6)
                         // Same id contract as the standard layout: only command
                         // words answer to "listen-bar.commands".
-                        .accessibilityIdentifier("listen-bar.note")
+                        .accessibilityIdentifier(isCommandMode ? "listen-bar.commands" : "listen-bar.note")
                 }
             }
             Spacer(minLength: 8)
+            if let trailingSeconds {
+                // Inter with tabular digits, not the mono face: a mono space is a full
+                // character wide, and "27 s" read as two things ("27    s").
+                secondsLabel(trailingSeconds, font: .hangsBody(Metrics.statusSeconds, weight: .semibold))
+            }
         }
+    }
+
+    /// #188 G11 (founder review): the large state line carries the state's
+    /// colour where the founder asked for it — reading and think stay green
+    /// (teal text, readable in light mode); listening and in-flight keep ink,
+    /// as #185 F2 picked, with the capsule saying pink or grey.
+    private var statusTextColor: Color {
+        switch mode {
+        case .readingQuestion, .command, .readingAnswerBack: return Theme.Hangs.Colors.tealText
+        case .answer, .evaluating, .skipping: return Theme.Hangs.Colors.ink
+        }
+    }
+
+    /// The countdown number — tabular so the bar does not jitter each tick, and
+    /// never scaled away: it is the one part the driver cannot infer.
+    private func secondsLabel(_ seconds: Int, font: Font) -> some View {
+        Text(verbatim: "\(seconds) s")
+            .font(font)
+            .monospacedDigit()
+            .foregroundColor(statusTextColor)
+            .lineLimit(1)
+            .fixedSize()
+            .accessibilityIdentifier("listen-bar.seconds")
     }
 
     private var standardContent: some View {
@@ -504,6 +583,11 @@ struct ListenBar: View {
             }
 
             Spacer(minLength: 8)
+            // #188 G11: the recording window on the slim bar (the think window
+            // is already inside its caption).
+            if let trailingSeconds {
+                secondsLabel(trailingSeconds, font: .hangsMonoLabel)
+            }
         }
     }
 
@@ -535,6 +619,18 @@ struct ListenBar: View {
         }
     }
 
+    /// The bar as one VoiceOver element: state, seconds left, then what to say.
+    private var accessibilityText: Text {
+        var text = captionText
+        if let trailingSeconds {
+            text = text + Text(verbatim: ", ") + Text("\(trailingSeconds) seconds left")
+        }
+        if let spokenSubLine {
+            text = text + Text(verbatim: ". ") + spokenSubLine
+        }
+        return text
+    }
+
     /// What VoiceOver reads after the caption: the sentence, or the chips joined
     /// into one — a driver using VoiceOver must hear the words too.
     private var spokenSubLine: Text? {
@@ -556,8 +652,8 @@ struct ListenBar: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            // Sits in the trailing padding this bar reserves for it (40pt).
-            .offset(x: 20)
+            // Sits in the trailing padding this bar reserves for it (40–44pt).
+            .padding(.trailing, Theme.Hangs.Spacing.xxs)
             .accessibilityLabel(String(localized: "Hide the listening bar", comment: "Accessibility label for the button that hides the in-quiz listening bar for the current question"))
             .accessibilityIdentifier("listen-bar.dismiss")
         }

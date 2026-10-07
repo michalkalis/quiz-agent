@@ -67,6 +67,21 @@ html, body {{ margin: 0; width: {W}px; height: {H}px; overflow: hidden; backgrou
 </style></head><body>{layer}<div class="cap">{caption_html(caption)}</div><img class="shot" src="{shot.as_uri()}"></body></html>"""
 
 
+# Simulator captures include the Dynamic Island only on some screens; draw it on every frame
+# so the set looks consistent (iPhone 17 Pro Max, 1320x2868 capture).
+ISLAND = (472, 42, 847, 151)
+
+
+def with_island(shot: Path, tmp: Path) -> Path:
+    from PIL import ImageDraw
+
+    im = Image.open(shot).convert("RGB")
+    ImageDraw.Draw(im).rounded_rectangle(ISLAND, radius=(ISLAND[3] - ISLAND[1]) // 2, fill=(0, 0, 0))
+    out = tmp / f"{shot.parent.name}-{shot.name}"
+    im.save(out)
+    return out
+
+
 def render(doc: str, out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
@@ -88,6 +103,7 @@ def main() -> None:
     ap.add_argument("--photo-dir", type=Path, help="lifestyle photos for variant p (file names from captions.json photos)")
     args = ap.parse_args()
     cfg = json.loads((Path(__file__).parent / "captions.json").read_text())
+    island_dir = Path(tempfile.mkdtemp())
     for vk in args.variants.split(","):
         v = VARIANTS[vk]
         for loc in args.locales.split(","):
@@ -100,7 +116,7 @@ def main() -> None:
                 out = args.out_dir / vk / loc / f"{n:02d}-{scene}.png"
                 photo_name = cfg.get("photos", {}).get(scene) if vk == "p" else None
                 photo = args.photo_dir / photo_name if photo_name and args.photo_dir else None
-                render(page(v, cfg["captions"][loc][scene], shot, photo), out)
+                render(page(v, cfg["captions"][loc][scene], with_island(shot, island_dir), photo), out)
                 print(out)
 
 

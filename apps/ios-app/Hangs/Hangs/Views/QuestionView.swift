@@ -844,7 +844,8 @@ struct QuestionView: View {
 
     private var currentQuestionNumber: Int {
         let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
-        return min(viewModel.questionsAnswered + 1, max(total, 1))
+        let number = viewModel.askedQuestionNumber ?? viewModel.questionsAnswered + 1
+        return min(max(number, 1), max(total, 1))
     }
 
     private var quizStateName: String {

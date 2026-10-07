@@ -19,6 +19,11 @@ struct QuizSession: Codable, Identifiable, Sendable {
     let participants: [Participant]
     let expiresAt: Date
     let createdAt: Date
+    /// Questions served so far, answered OR skipped (backend `asked_count`) —
+    /// the source of the "question N of M" counter, because `answeredCount`
+    /// does not move on a skip. Optional: backends that predate the field
+    /// omit it, and the counter then falls back to `answeredCount`.
+    var askedCount: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case id = "session_id"
@@ -31,6 +36,7 @@ struct QuizSession: Codable, Identifiable, Sendable {
         case participants
         case expiresAt = "expires_at"
         case createdAt = "created_at"
+        case askedCount = "asked_count"
     }
 }
 
@@ -102,7 +108,8 @@ struct Participant: Codable, Identifiable, Sendable {
             answered: Int = 0,
             correct: Int = 0,
             maxQuestions: Int = 10,
-            phase: String = "asking"
+            phase: String = "asking",
+            askedCount: Int? = nil
         ) -> QuizSession {
             QuizSession(
                 id: "preview-session",
@@ -128,7 +135,8 @@ struct Participant: Codable, Identifiable, Sendable {
                     ),
                 ],
                 expiresAt: Date().addingTimeInterval(3600),
-                createdAt: Date()
+                createdAt: Date(),
+                askedCount: askedCount
             )
         }
     }

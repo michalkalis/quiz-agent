@@ -141,6 +141,21 @@ final class QuizViewModel: ObservableObject {
     var score: Double { currentSession?.participants.first?.score ?? 0.0 }
     var questionsAnswered: Int { currentSession?.participants.first?.answeredCount ?? 0 }
 
+    /// 1-based number of the question the quiz screens are about: the one on
+    /// screen, or the one whose result is showing. Built on the backend's
+    /// `askedCount` (answered OR skipped) — never on `questionsAnswered`, which a
+    /// skip does not move, so the counter used to fall back by one after a skip
+    /// (Q3 → skip → "2/10"). nil = a backend that predates `asked_count`; the
+    /// views then keep their old answered-count derivation.
+    var askedQuestionNumber: Int? {
+        guard let asked = currentSession?.askedCount else { return nil }
+        // Waiting for a pack question: the counter names the one being prepared.
+        if quizState == .awaitingQuestion { return asked + 1 }
+        // A verdict response that also served the next question already counts
+        // it; that question waits in `nextQuestion` until the result is left.
+        return nextQuestion == nil ? asked : asked - 1
+    }
+
     // Per-session evaluation tallies for the completion breakdown (54.13) —
     // partials and skips land in neither bucket.
     @Published var sessionCorrectCount: Int = 0
@@ -1267,6 +1282,10 @@ final class QuizViewModel: ObservableObject {
 
             currentSession = response.session
             currentQuestion = response.currentQuestion
+            // A set left from its result screen ("End quiz" → Play Again) can
+            // carry its served-but-unshown question here; it must not count
+            // against the new set's question number (`askedQuestionNumber`).
+            nextQuestion = nil
             awaitingNextQuestion = response.awaitingQuestion
             trackQuizContext(entryPoint: entryPoint)
 

@@ -68,7 +68,7 @@ struct HomeViewStateContractTests {
 
             // Brand hero + tagline: the driver must land on a recognisable app.
             #expect(throws: Never.self) { try tree.find(text: "trubbo.") }
-            #expect(throws: Never.self) { try tree.find(text: "voice-based trivia for the road") }
+            #expect(throws: Never.self) { try tree.find(text: "trivia you play by voice") }
 
             // Session config card (its section label) — where difficulty /
             // language / categories are chosen before starting.

@@ -1,6 +1,6 @@
 # texts
 trubbo.
-hlasový kvíz na cesty
+kvíz, ktorý hráš hlasom
 tvoj plán
 18
 z 30 otázok zadarmo

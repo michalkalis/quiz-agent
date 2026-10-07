@@ -29,7 +29,7 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                    Text("voice-based trivia for the road")
+                    Text("trivia you play by voice")
                         .font(.hangsBody(14))
                         .foregroundColor(Theme.Hangs.Colors.muted)
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)

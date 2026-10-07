@@ -25,6 +25,11 @@
 - **D — Upload** after approval: metadata (fastlane deliver / ASC API), screenshots, TF Test Information + review contact, IAP localizations + review screenshots, age rating, public link group, What to Test wired into the release workflow.
 - **E — Founder-only ASC steps:** DSA trader status, App Privacy labels publish, Paid Apps Agreement check, beta review submission go.
 
+## Follow-ups owned elsewhere
+
+- Custom packs in sk/cs = #192 (in progress, other session). When it ships: drop the "custom packs are in English for now" sentence from all four descriptions and recapture the pack screenshot.
+- Full account erase (feedback, sessions, pack orders) = PR #248, merged 2026-10-07. Privacy manifest completed in PR #246.
+
 ## Open
 
 - Review contact phone number + feedback email (founder).

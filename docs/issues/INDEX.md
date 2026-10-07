@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 190 | [Externý TestFlight beta + App Store listing ready (en/sk/cs, screenshoty, ASC)](issue-190-beta-and-store-readiness.md) | enhancement · in-progress | `[~]` #190 | 2026-10-07: audit ASC, texty en/sk/cs + nahrávací skript (dry run OK), len iPhone (PR #237); open = founder schválenie textov a screenshotov, údaje firmy, DSA |
 | 188 | [Jednotný design systém: jeden zdroj pravdy, katalóg na claude.ai, synchronizácia do appky](issue-188-design-system.md) | enhancement · in-progress | `[~]` #188 | Tracky A (tokeny) + B (lint) + C (snímky komponentov) 2026-09-30, D (katalóg na claude.ai) 2026-10-01, E (`/design-sync`) 2026-10-05; založené 2026-09-25 z design researchu; founder: katalóg na claude.ai, Pencil ostáva na tvorbu, kód = zdroj pravdy; nič kritické teraz, po #185/#186 |
 | 187 | [Ovládanie kvízu tlačidlami na volante / slúchadlách](issue-187-car-media-buttons.md) | enhancement · needs-info | | Založené 2026-09-24 z #185; founder: teraz nie, do budúcnosti; aj tlačidlo hlasu v aute (overiť dostupnosť mimo Siri) |
 | 186 | [Stabilizácia stavov kvízovej obrazovky (vlastníctvo async výsledkov + náhodné testy sekvencií)](issue-186-quiz-state-robustness.md) | enhancement · in-progress | `[~]` #186 | Kroky 1+2 HOTOVÉ 2026-09-25 (PR #194 AttemptLedger + čierna skrinka, PR #198 náhodné sekvencie, 6 chýb opravených); kroky 3–4 neskôr |

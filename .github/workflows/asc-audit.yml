@@ -2,6 +2,12 @@ name: asc-audit
 
 on:
   workflow_dispatch:
+    inputs:
+      script:
+        description: "asc_audit (products/prices) or asc_readiness_audit (TestFlight + listing)"
+        default: asc_audit
+        type: choice
+        options: [asc_audit, asc_readiness_audit]
 
 jobs:
   audit:
@@ -18,4 +24,4 @@ jobs:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
-        run: python scripts/asc_audit.py
+        run: python scripts/${{ inputs.script }}.py

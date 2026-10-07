@@ -38,15 +38,6 @@ nonisolated extension ComponentSample {
             ComponentSample("reviewBadge.pendingReview") { ReviewBadge(badge: "pending_review") },
             ComponentSample("reviewBadge.machineTranslation") { ReviewBadge(badge: "translation_machine", filled: true) },
             ComponentSample("reviewBadge.englishFallback") { ReviewBadge(badge: "en_fallback") },
-            ComponentSample("resultMetaRow.longAnswer") {
-                ResultMetaRow(
-                    userAnswer: "Somewhere on the Rhône, I think Lyon or maybe Marseille",
-                    sourceDomain: "en.wikipedia.org",
-                    reviewBadge: "pending_review",
-                    reviewNote: "answerability: flip, the answer is given away in the question",
-                    onOpenSource: {}
-                )
-            },
             ComponentSample("provenanceRow.default") {
                 QuestionProvenanceRow(question: Question.preview, isEnabled: true, horizontalPadding: 0)
             },

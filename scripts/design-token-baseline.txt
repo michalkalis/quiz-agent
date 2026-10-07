@@ -241,7 +241,7 @@ apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 10	2
 apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 3	1
 apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	font	.hangsMono(10	3
 apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	font	.system(size: 11	1
-apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	spacing	spacing: 10	2
+apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	spacing	spacing: 5	1
 apps/ios-app/Hangs/Hangs/Views/ResultView.swift	spacing	.padding(.top, 10)	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	font	.hangsBody(13	1

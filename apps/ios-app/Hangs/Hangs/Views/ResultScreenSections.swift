@@ -155,7 +155,7 @@ struct ResultMetaRow: View {
             // is not squeezed into a sliver beside them.
             let layout = dynamicTypeSize > .large
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs))
-                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 10))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs))
             layout {
                 if let userAnswer, !userAnswer.isEmpty { saidEntry(userAnswer) }
                 HStack(spacing: Theme.Hangs.Spacing.xs) { labels }

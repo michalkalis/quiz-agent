@@ -107,3 +107,46 @@ class TestParaphraseTolerance:
         sent = evaluator.client.chat.completions.create.await_args.kwargs
         prompt = sent["messages"][1]["content"]
         assert "Also Accepted Answers:" not in prompt
+
+
+class TestDifferentEntityRejected:
+    """Prod 2026-10-07: "Teflón" was graded correct for "which element besides
+    carbon forms the non-stick pan polymer" (answer: fluór). The judge prompt
+    accepted "more specific correct answers" and "shorter forms that contain the
+    essential element", so a related/containing entity passed. Founder decision:
+    naming a DIFFERENT entity than the one asked for is incorrect, not partial."""
+
+    @pytest.mark.asyncio
+    async def test_prompt_states_different_entity_rule_without_containment_leniency(
+        self,
+    ):
+        from app.evaluation.evaluator import AnswerEvaluator
+
+        evaluator = AnswerEvaluator()
+        evaluator.client = MagicMock()
+        evaluator.client.chat.completions.create = AsyncMock(
+            return_value=_mock_llm_response("incorrect")
+        )
+
+        q = _make_question(
+            question="Ktorý prvok okrem uhlíka tvorí polymér na nepriľnavých panviciach?",
+            correct_answer="Fluór",
+            alternative_answers=["F", "fluór", "ef", "prvok fluór"],
+        )
+        result, score = await evaluator.evaluate("Teflón. Teflón.", q, q.question)
+
+        assert result == "incorrect"
+        assert score == 0.0
+        prompt = evaluator.client.chat.completions.create.await_args.kwargs["messages"][
+            1
+        ]["content"]
+        # The different-entity rule, with the Teflon counter-example, is present.
+        assert 'DIFFERENT thing than the one asked for is "incorrect"' in prompt
+        assert "Teflon" in prompt
+        # The leniencies that let a related/containing entity pass are gone.
+        assert "More specific correct answers" not in prompt
+        assert "contain the essential element" not in prompt
+        assert "clearly knows the answer" not in prompt
+        # Same-entity tolerance is kept.
+        assert "Synonyms, symbols and other-language names" in prompt
+        assert "SOUND like the correct answer" in prompt

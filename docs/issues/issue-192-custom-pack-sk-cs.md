@@ -16,9 +16,11 @@ Text zadania zákazníka sa pri predvolenom priamom generovaní (#166 D21b) **v�
 
 ## Tracky
 
-### A — Server: generovanie (quiz-pack-api) · HOTOVÉ v kóde
+### A — Server: generovanie (quiz-pack-api) · HOTOVÉ v kóde (PR #247)
 - Do každého generovacieho promptu sa pridáva zadanie zákazníka (ako dáta, nie ako inštrukcie) a pre sk/cs aj sekcia s výstupným jazykom (natívne písanie, žiadne kalky, žiadne české/slovenské tvary navzájom, originálne názvy diel, Pravda/Nepravda). Anglický beh bez zadania (korpus/CLI) má prompt bez zmeny.
 - Deterministické kontroly čítajú slová s diakritikou celé (stem leak, dedup, kompozícia, answerability), Pravda/Nepravda sa ráta ako T/F, „pretože/lebo/protože“ ako chvost odpovede. Answerability model odpovedá v jazyku otázky.
+- Dávky dopĺňania dostanú zoznam otázok, ktoré už v balíku sú (nepýtať sa na ten istý fakt z iného uhla).
+- Answerability pre sk/cs akceptuje iný gramatický tvar odpovede (stem matcher z #168).
 - `PACK_ORDER_LANGUAGES` predvolene `en,sk,cs`.
 
 ### B — Server: hranie (quiz-agent) · HOTOVÉ v kóde
@@ -26,13 +28,14 @@ Text zadania zákazníka sa pri predvolenom priamom generovaní (#166 D21b) **v�
 - Otázka v jazyku session sa neprekladá (žiadne LLM „sk → sk“), TF štítok ukazuje jej vlastný jazyk.
 - Pri balíkoch sa nevyraďujú `language_dependent` otázky (natívna slovná hra patrí do svojho jazyka).
 
-### C — iOS · TODO
+### C — iOS · HOTOVÉ v kóde (PR #249)
 - Hlasové povely a rozpoznávanie reči sa riadia jazykom session (`currentSession.language`), nie nastavením appky (`VoiceCommandCoordinator` `commandLanguage`, `AudioDeviceState` command engine).
 - Formulár sa nemení: zoznam jazykov už ide zo servera (`GET /api/v1/languages`).
 
-### D — Overenie · TODO
-- Skúšobný sk a cs balík cez CLI `generate_pack.py --language sk --prompt …` (dry-run) → founder posúdi kvalitu otázok.
-- Po deployi e2e objednávka v TF (na požiadanie).
+### D — Overenie · ČIASTOČNE
+- 2026-10-07 skúšobné balíky (dry-run, subscription, 10 otázok): sk „Slovenské hrady, zámky a povesti o nich“, cs zadanie po anglicky „Czech beer and the history of brewing“ → otázky natívne, k téme, cs správne v češtine.
+- Prvý sk beh odhalil 2 chyby, opravené: (1) dávky dopĺňania nevedeli, čo už v balíku je → rovnaký fakt 2× z iného uhla (týka sa všetkých jazykov, vidno až pri úzkom zadaní); (2) kontrola zodpovedateľnosti vyhadzovala správne odpovede v inom tvare („Čachtická hrad“). Druhý sk beh: 9 rôznych otázok, vyradená 1/10 (predtým 5/10).
+- Zostáva: founder posúdi kvalitu skúšobných otázok; po deployi e2e objednávka v TF (na požiadanie).
 
 ## Známe obmedzenia (vedome mimo rozsahu)
 - `tier_router` (smerovanie fact-checku podľa „najnovší/rekord“) má len anglické výrazy — platí len pri zapnutom tier routingu.

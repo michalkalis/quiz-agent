@@ -156,7 +156,7 @@ struct ContextualSignInSheet: View {
         SignInWithAppleButton(.signIn) { request in
             let rawNonce = authService.generateRawNonce()
             pendingRawNonce = rawNonce
-            request.requestedScopes = [.fullName, .email]
+            request.requestedScopes = []
             request.nonce = authService.hashedNonce(for: rawNonce)
         } onCompletion: { result in
             handleAppleSignInResult(result)
@@ -190,7 +190,7 @@ struct ContextualSignInSheet: View {
             Image(systemName: "lock")
                 .font(.system(size: 11))
                 .accessibilityHidden(true)
-            Text("We only use your name and email. No tracking.")
+            Text("Keeps your purchases and progress across devices. Nothing else is shared.")
                 .font(.hangsBody(12))
         }
         .foregroundColor(Theme.Hangs.Colors.mutedFaint)

@@ -49,7 +49,6 @@ from ...auth.account_service import (
     resolve_account,
     revoke_apple_grant,
     usage_history,
-    user_profile_fields,
 )
 from ...auth.app_attest import AppAttestService
 from ...auth.apple import AppleIdentityVerifier, AppleVerificationError
@@ -181,17 +180,11 @@ async def refresh(
 
     access_token = token_service.create_access_token(result.anon_id)
 
-    # #78: round-trip a signed-in user's stored full_name/email on every refresh
-    # too — see user_profile_fields for the why.
-    full_name, email = await user_profile_fields(sessionmaker, result.anon_id)
-
     return AuthTokenResponse(
         access_token=access_token,
         refresh_token=result.refresh.raw_token,
         expires_in=token_service.access_ttl_seconds,
         anon_id=result.anon_id,
-        full_name=full_name,
-        email=email,
     )
 
 
@@ -283,9 +276,8 @@ async def apple_sign_in(
     except AppleOAuthError:
         raise HTTPException(status_code=502, detail="Apple token exchange failed")
 
-    # email: trust the verified id_token claim over the client-supplied body.
-    email = claims.get("email") or (body.user.email if body.user else None)
-    full_name = body.user.name if body.user else None
+    # Data minimisation (founder 2026-10-07): the id_token email claim and any
+    # client-supplied body.user name/email are deliberately dropped — never stored.
     encrypted = (
         cipher.encrypt(exchange.refresh_token) if exchange.refresh_token else None
     )
@@ -294,8 +286,6 @@ async def apple_sign_in(
         user = await upsert_apple_user(
             session,
             apple_sub=apple_sub,
-            email=email,
-            full_name=full_name,
             encrypted_refresh=encrypted,
         )
         user_id = str(user.id)
@@ -311,11 +301,6 @@ async def apple_sign_in(
         refresh_token=issued.raw_token,
         expires_in=token_service.access_ttl_seconds,
         anon_id=user_id,  # subject is now users.id (field name is legacy)
-        # #78: read from the persisted user row, not the local full_name/email
-        # request variables — a re-sign-in's body carries no name (Apple only
-        # sends it once), but the row still holds it from the first sign-in.
-        full_name=user.full_name,
-        email=user.email,
     )
 
 
@@ -403,8 +388,6 @@ async def export_account(
     is_premium = any(row.is_premium for row in rows if row.usage_date == today)
     return AccountExportResponse(
         apple_sub=user.apple_sub,
-        email=user.email,
-        full_name=user.full_name,
         created_at=user.created_at,
         is_premium=is_premium,
         usage=[

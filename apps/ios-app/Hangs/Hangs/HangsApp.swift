@@ -26,8 +26,9 @@ struct HangsApp: App {
             options.enableAutoSessionTracking = true
             options.tracesSampleRate = Config.isDebug ? 1.0 : 0.1
 
-            options.attachScreenshot = true
-            options.attachViewHierarchy = true
+            // Crash reports must not carry screen content (question text, answers, account name/email).
+            options.attachScreenshot = false
+            options.attachViewHierarchy = false
             options.enableFileIOTracing = true
             options.maxBreadcrumbs = 200
 

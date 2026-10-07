@@ -3621,18 +3621,18 @@
         }
       }
     },
-    "Hands-free spoken commands while driving" : {
+    "Hands-free voice commands" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hlasové příkazy bez rukou během jízdy"
+            "value" : "Hlasové příkazy bez rukou"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hlasové príkazy bez rúk počas jazdy"
+            "value" : "Hlasové príkazy bez rúk"
           }
         }
       }
@@ -5426,6 +5426,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otvor Nastavenia"
+          }
+        }
+      }
+    },
+    "Open in Browser" : {
+      "comment" : "Source viewer toolbar button: opens the source page outside the app (Safari or the site's app). Imperative.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otevři v prohlížeči"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otvor v prehliadači"
           }
         }
       }
@@ -9230,23 +9247,6 @@
         }
       }
     },
-    "Unlimited questions for every drive, no monthly cap." : {
-      "comment" : "Paywall subtitle when opened proactively from Home/Settings (quota not hit)",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neomezené otázky na každou jízdu, bez měsíčního limitu."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neobmedzené otázky na každú jazdu, bez mesačného limitu."
-          }
-        }
-      }
-    },
     "Unlimited questions, every day" : {
       "comment" : "A description of a paywall feature.",
       "extractionState" : "stale",
@@ -9262,6 +9262,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neobmedzené otázky, každý deň"
+          }
+        }
+      }
+    },
+    "Unlimited questions, no monthly cap." : {
+      "comment" : "Paywall subtitle when opened proactively from Home/Settings (quota not hit)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neomezené otázky bez měsíčního limitu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neobmedzené otázky bez mesačného limitu."
           }
         }
       }

@@ -252,7 +252,7 @@ struct PaywallView: View {
         if let limit = limitError {
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "Unlimited questions for every drive, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
+        return String(localized: "Unlimited questions, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
     }
 
     // MARK: - Plan picker

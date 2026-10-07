@@ -205,7 +205,7 @@ struct SettingsView: View {
             // immediately so flipping it off tears the listener down at once.
             HangsToggleRow(
                 label: "Voice commands",
-                subtitle: "Hands-free spoken commands while driving",
+                subtitle: "Hands-free voice commands",
                 isOn: $viewModel.settings.voiceCommandsEnabled
             )
             .accessibilityIdentifier("settings.voiceCommands")

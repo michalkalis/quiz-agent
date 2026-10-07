@@ -141,6 +141,28 @@
             if wantsMCQ {
                 seededSettings.answerTimeLimit = wantsLong ? 5 : 1
             }
+            // #190: store-screenshot mode — listing-quality content in the quiz
+            // language, calm frames (no ticking pills), populated Home.
+            if StoreScreenshotFixtures.isActive {
+                let language = StoreScreenshotFixtures.quizLanguage
+                let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
+                let open = StoreScreenshotFixtures.openQuestion(content, language: language)
+                let mcq = StoreScreenshotFixtures.mcqQuestion(content, language: language)
+                let first = wantsMCQ ? mcq : open
+                let start = StoreScreenshotFixtures.quizResponse(question: first)
+                network.mockSession = start.session
+                network.mockResponse = start
+                network.mockTextInputResponse = StoreScreenshotFixtures.quizResponse(
+                    question: mcq,
+                    evaluation: StoreScreenshotFixtures.correctEvaluation(content, questionId: open.id),
+                    answered: 1, correct: 1
+                )
+                network.stubbedUsage = StoreScreenshotFixtures.usage
+                seededSettings.language = language
+                // No ticking answer-timer pill. (Thinking / auto-advance countdowns
+                // never start: the scenes are seeded statically in AppState.)
+                seededSettings.answerTimeLimit = 0
+            }
             persistence.savedSettings = seededSettings
 
             let stt = MockElevenLabsSTTService()

@@ -169,7 +169,6 @@ struct SetRecapView: View {
                 viewModel.toggleRecapNarration()
             }
             .disabled(viewModel.isAudioMuted)
-            .opacity(viewModel.isAudioMuted ? 0.5 : 1)
             .accessibilityIdentifier("recap.playSummary")
 
             HStack(spacing: Theme.Hangs.Spacing.xs) {

@@ -476,6 +476,17 @@ struct ResultViewInspectorTests {
         }
     }
 
+    /// #188 G9 (founder run): Q3 read "3/10", its result after a skip "2/10".
+    /// `answered_count` counts answers, never skips, so the result of a skipped
+    /// question must add the one the question screen added.
+    @Test("a result shows the same question number as its question, skipped or not")
+    func resultNumberMatchesQuestion() {
+        // Two answered, question 3 on screen ("3/10" = answered + 1).
+        #expect(ResultView.questionNumber(answered: 2, wasSkipped: true) == 3)
+        // Question 3 answered: the count is already 3 when the result shows.
+        #expect(ResultView.questionNumber(answered: 3, wasSkipped: false) == 3)
+    }
+
     // MARK: - #188 G9 (D9): one top bar for question and result
 
     /// The result used to draw its own row (✕ + logo + "03 / 10") with the

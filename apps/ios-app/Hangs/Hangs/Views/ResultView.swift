@@ -52,10 +52,10 @@ struct ResultView: View {
                 HangsQuizProgressHeader(
                     category: (viewModel.resultQuestion ?? viewModel.currentQuestion)
                         .map { Config.categoryDisplayName(for: $0.category) } ?? "",
-                    // #79: 1-based index of the question just answered
-                    // (questionsAnswered is incremented before .showingResult),
-                    // so the count matches the question screen it came from.
-                    current: viewModel.questionsAnswered,
+                    current: Self.questionNumber(
+                        answered: viewModel.questionsAnswered,
+                        wasSkipped: viewModel.resultEvaluation?.wasSkipped == true
+                    ),
                     total: totalQuestions
                 )
                 .padding(.top, Theme.Hangs.Spacing.xs)
@@ -285,6 +285,14 @@ struct ResultView: View {
     private var totalQuestions: Int {
         // 54.10: fall back to the configured length, not a hardcoded 10.
         viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
+    }
+
+    /// The number the question screen showed for this question (`answered + 1`
+    /// there). An answer is already counted when the result shows (#79), but a
+    /// skip never is — the backend's `answered_count` excludes skips — so the
+    /// skipped question's result used to read one lower than its question.
+    static func questionNumber(answered: Int, wasSkipped: Bool) -> Int {
+        wasSkipped ? answered + 1 : answered
     }
 
     private var resultHaptic: SensoryFeedback {

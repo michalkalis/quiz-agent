@@ -417,6 +417,17 @@ struct QuestionView: View {
 
             mcqOptions(question: question, compact: compact)
 
+            // #188 G9: the "more options below" label gets its own row, so it
+            // never sits on option text; the list edge keeps only the fade.
+            if showOptionsScrollCue {
+                scrollCueLabel
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.top, Theme.Hangs.Spacing.xxs)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
+            }
+
             #if DEBUG
                 Text(quizStateName)
                     .frame(width: 0, height: 0)
@@ -478,7 +489,7 @@ struct QuestionView: View {
         }
         .overlay(alignment: .bottom) {
             if showOptionsScrollCue {
-                stemOverflowCue
+                scrollFade
             }
         }
         .frame(maxHeight: optionsHeight > 0 ? optionsHeight : nil)
@@ -670,29 +681,40 @@ struct QuestionView: View {
     /// a11y-hidden (peripheral cue), never blocks taps.
     private var stemOverflowCue: some View {
         ZStack(alignment: .bottomTrailing) {
-            LinearGradient(
-                colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 56)
-            .frame(maxWidth: .infinity)
-
-            HStack(spacing: 5) {
-                Text("SCROLL")
-                    .font(.hangsMono(9, weight: .medium))
-                    .tracking(1.4)
-                    .textCase(.uppercase)
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundColor(Theme.Hangs.Colors.muted)
-            .padding(.trailing, 22)
-            .padding(.bottom, Theme.Hangs.Spacing.xs)
+            scrollFade
+            scrollCueLabel
+                .padding(.bottom, Theme.Hangs.Spacing.xs)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .transition(.opacity)
+    }
+
+    /// The bottom fade of a region with more content below.
+    private var scrollFade: some View {
+        LinearGradient(
+            colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: 56)
+        .frame(maxWidth: .infinity)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// "SCROLL ↓" in the app language.
+    private var scrollCueLabel: some View {
+        HStack(spacing: 5) {
+            Text("SCROLL")
+                .font(.hangsMono(9, weight: .medium))
+                .tracking(1.4)
+                .textCase(.uppercase)
+            Image(systemName: "arrow.down")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundColor(Theme.Hangs.Colors.muted)
+        .padding(.trailing, 22)
     }
 
     // MARK: - Voice body (frames f9csl / uGhZg)

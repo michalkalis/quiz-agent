@@ -785,6 +785,24 @@ async def test_player_request_and_language_reach_the_generator() -> None:
 
 
 @pytest.mark.asyncio
+async def test_top_up_round_is_told_what_the_pack_already_holds() -> None:
+    """#192 trial run: on a narrow request every top-up round picked the same
+    stand-out facts again from a new angle (the Omar well legend asked twice,
+    once for the reason and once for the castle). A top-up round must see the
+    questions already in the pack — `ctx.questions` before this stage runs."""
+    gen = _FakeGenerator([_stub_question(9)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+
+    ctx = _make_ctx(prompt="Slovenské hrady", language="sk")
+    ctx.questions = [_stub_question(1, question="Prečo kopal Omar studňu?")]
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    brief = gen.calls[0]["order_brief"]
+    assert "ALREADY IN THIS PACK" in brief
+    assert "Prečo kopal Omar studňu?" in brief
+
+
+@pytest.mark.asyncio
 async def test_mcq_emphasis_order_requests_mcq_typed_exemplars() -> None:
     """V18 — an MCQ-emphasis order must reach the generator as `question_type`.
 

@@ -28,10 +28,12 @@ from quiz_shared.models.question import Question
 
 from app import feature_flags
 from app.generation.pattern_routing import audited_answer_shape
+from app.translation_verification.normalize import covers_tokens
 
 logger = logging.getLogger(__name__)
 
 _ARTICLES = ("the ", "a ", "an ")
+_INFLECTED_LANGUAGES = frozenset({"sk", "cs"})
 
 _PROMPT = """You are a strong quiz player. Answer the question below. You cannot look anything up — use reasoning, estimation, elimination and general knowledge. Commit to your single best answer, written in the language of the question.
 
@@ -186,6 +188,11 @@ class AnswerabilityChecker:
             references = [str(question.correct_answer)]
             references.extend(str(a) for a in (question.alternative_answers or []))
             matched = _text_answers_match(model_answer, references)
+            if not matched and question.language in _INFLECTED_LANGUAGES:
+                # #192: Slovak/Czech inflect the ending — "Čachtická hrad" for
+                # "Čachtický hrad" is the right answer, not a miss. The #168
+                # stem matcher (all reference words, 2+ words) keeps it strict.
+                matched = any(covers_tokens(ref, model_answer) for ref in references)
 
         if matched:
             return AnswerabilityResult(passed=True, model_answer=model_answer)

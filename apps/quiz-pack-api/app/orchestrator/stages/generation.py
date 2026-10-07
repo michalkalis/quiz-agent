@@ -293,8 +293,13 @@ class GenerationStage:
                 # generation LLM (root cause D of #42: until now `ctx.prompt`
                 # never did). The CLI's `--mcq-bias` footer is cut off: it is
                 # pipeline steering, carried by `mcq_emphasis` above.
+                # On a top-up round `ctx.questions` still holds the questions
+                # already accepted into the pack (TopUpStage merges after this
+                # stage), so the next round is told not to repeat their facts.
                 order_brief=order_brief_section(
-                    (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0], ctx.language
+                    (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0],
+                    ctx.language,
+                    [q.question for q in ctx.questions],
                 ),
                 **coverage_kwargs,
             )

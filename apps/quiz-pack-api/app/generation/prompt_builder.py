@@ -1,7 +1,7 @@
 """Dynamic prompt builder for question generation."""
 
 import os
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from quiz_shared.llm import factory as llm_factory
 
@@ -194,8 +194,20 @@ write in {name}.
   specified; `reasoning` may be in English."""
 
 
-def order_brief_section(request: str | None, language: str) -> str:
-    """Per-order prompt tail: the player's request and the output language.
+_ALREADY_IN_PACK_SECTION = """
+
+## ALREADY IN THIS PACK
+
+The pack is generated in rounds and these questions are already in it. Do not
+ask about the same facts again, not even from another angle (asking for the
+place when a question already asks for the person, or the reverse)."""
+
+
+def order_brief_section(
+    request: str | None, language: str, already_in_pack: Sequence[str] = ()
+) -> str:
+    """Per-order prompt tail: the player's request, the output language and,
+    on a top-up round, the questions the pack already holds.
 
     Empty for an English order without a request, so corpus/CLI runs that
     carry no prompt render byte-identical to before #192.
@@ -207,6 +219,14 @@ def order_brief_section(request: str | None, language: str) -> str:
     if name:
         section += _OUTPUT_LANGUAGE_SECTION.format(
             name=name, neighbour=_NEIGHBOUR[language]
+        )
+    # #192 trial run: a narrow request ("Slovak castle legends") has few
+    # stand-out facts, and every top-up round reached for the same ones again
+    # from a new angle — in-pack dedup only compares wording, and the corpus
+    # embedding check never sees pack questions.
+    if section and already_in_pack:
+        section += _ALREADY_IN_PACK_SECTION + "".join(
+            f"\n- {q}" for q in already_in_pack
         )
     return section
 

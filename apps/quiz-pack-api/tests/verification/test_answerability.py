@@ -146,3 +146,31 @@ async def test_open_shape_ignores_answer_mismatch_but_honours_flags() -> None:
     result = await flagged.check(open_q)
     assert result.passed is False
     assert result.reason == "flagged_unclear"
+
+
+@pytest.mark.asyncio
+async def test_slovak_answer_with_another_ending_is_not_a_miss() -> None:
+    """#192 trial run: the blind model answered "Čachtická hrad" for
+    "Čachtický hrad" and the question was dropped as unanswerable. Slovak and
+    Czech inflect word endings, so a right answer in another form must pass —
+    otherwise native packs lose good questions and pay for extra top-ups."""
+    question = _question(
+        question="Na ktorom hrade zomrela v roku 1614 Alžbeta Báthoryová?",
+        correct_answer="Čachtický hrad",
+        language="sk",
+    )
+    checker = _checker_returning('{"answer": "Čachtická Hrad", "gave_up": false, "issue": null}')
+    assert (await checker.check(question)).passed is True
+
+    # Still strict: a different castle shares only the generic word.
+    checker = _checker_returning('{"answer": "Oravský hrad", "gave_up": false, "issue": null}')
+    assert (await checker.check(question)).passed is False
+
+
+@pytest.mark.asyncio
+async def test_english_answers_get_no_stem_tolerance() -> None:
+    """Prefix matching is only safe for inflected languages; in English it would
+    let "Marseille" pass for "Mars landing site" style near-misses."""
+    question = _question(correct_answer="Mars rover")
+    checker = _checker_returning('{"answer": "Marseille rovers", "gave_up": false, "issue": null}')
+    assert (await checker.check(question)).passed is False

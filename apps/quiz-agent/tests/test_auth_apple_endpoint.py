@@ -293,10 +293,11 @@ async def test_happy_path_creates_account_folds_usage_and_returns_user_subject(
     assert payload["sub"] == str(user.id)
     assert body["refresh_token"] and body["token_type"] == "bearer"
 
-    # F5: the Apple name is stored. Email prefers the *verified* id_token claim
-    # over the client-supplied body value.
-    assert user.full_name == "Jan Novak"
-    assert user.email == "apple.sub.0001@privaterelay.appleid.com"
+    # Data minimisation (founder 2026-10-07): nothing uses the Apple name/email,
+    # so a sign-in carrying both (client body AND verified id_token claim) must
+    # persist neither.
+    assert user.full_name is None
+    assert user.email is None
 
     # The anon's usage was folded into the account, and the anon is marked upgraded.
     assert await _usage_today(db_sessionmaker, str(user.id)) == 3
@@ -308,34 +309,44 @@ async def test_happy_path_creates_account_folds_usage_and_returns_user_subject(
     assert anon.upgraded_to_user_id == str(user.id)
 
 
-async def test_response_carries_full_name_on_first_and_on_resign_in_without_name(
+async def test_sign_in_never_stores_or_returns_email_and_name(
     client, keypair, db_sessionmaker
 ):
-    """#78: Apple sends ``user.name`` only on the FIRST authorization of an Apple
-    ID with the app — on a later sign-in (sign-out → sign-in, reinstall) the
-    request carries no name at all. Before #78, the response had no full_name
-    field, so the client had nothing to recover it from and silently lost the
-    stored name. First sign-in must persist it AND return it; a re-sign-in with
-    no ``user`` payload must still return the name from the stored row."""
+    """Founder 2026-10-07 (GDPR data minimisation): nothing uses the Apple
+    email/name, so even an older iOS build (or id_token) that still sends them
+    must result in nothing stored and null on the wire. Reverses the #78
+    round-trip, which existed only to show the name client-side. The fields stay
+    in the response (null) so older clients still decode it."""
     _, bearer1 = await _make_anon(db_sessionmaker)
     r1 = await _call_apple(
         client,
         keypair,
         sub="apple.sub.resignin",
         bearer=bearer1,
-        user={"name": "Anna Kovacova"},
+        user={"name": "Anna Kovacova", "email": "anna@x.sk"},
     )
     assert r1.status_code == 200, r1.text
-    assert r1.json()["full_name"] == "Anna Kovacova"
-    assert r1.json()["email"] == "apple.sub.resignin@privaterelay.appleid.com"
+    assert r1.json()["full_name"] is None
+    assert r1.json()["email"] is None
+    user = await _get_user(db_sessionmaker, "apple.sub.resignin")
+    assert user.full_name is None
+    assert user.email is None
 
-    # Re-sign-in (e.g. after sign-out): no `user` in the body — matches what
-    # Apple actually sends on every authorization after the first.
+    # Re-sign-in still returns null and still stores nothing.
     _, bearer2 = await _make_anon(db_sessionmaker)
-    r2 = await _call_apple(client, keypair, sub="apple.sub.resignin", bearer=bearer2)
+    r2 = await _call_apple(
+        client,
+        keypair,
+        sub="apple.sub.resignin",
+        bearer=bearer2,
+        user={"name": "Anna Kovacova"},
+    )
     assert r2.status_code == 200, r2.text
-    assert r2.json()["full_name"] == "Anna Kovacova"  # recovered from the DB row
-    assert r2.json()["email"] == "apple.sub.resignin@privaterelay.appleid.com"
+    assert r2.json()["full_name"] is None
+    assert r2.json()["email"] is None
+    user = await _get_user(db_sessionmaker, "apple.sub.resignin")
+    assert user.full_name is None
+    assert user.email is None
 
 
 async def test_apple_refresh_token_is_stored_encrypted(

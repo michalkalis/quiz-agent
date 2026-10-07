@@ -81,6 +81,9 @@ final class AudioDeviceState: ObservableObject {
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
+    /// #192: the running session — its language (a custom pack's own) picks
+    /// the command recognizer over the Settings language.
+    let currentSession: @MainActor () -> QuizSession?
     let setAudioMode: @MainActor (String) -> Void
     let setPreferredInputDeviceId: @MainActor (String?) -> Void
     /// #173: the EFFECTIVE mute (in-quiz override over the persisted Settings
@@ -131,6 +134,7 @@ final class AudioDeviceState: ObservableObject {
         taskBag: TaskBag,
         attemptLedger: AttemptLedger,
         settings: @escaping @MainActor () -> QuizSettings,
+        currentSession: @escaping @MainActor () -> QuizSession?,
         setAudioMode: @escaping @MainActor (String) -> Void,
         setPreferredInputDeviceId: @escaping @MainActor (String?) -> Void,
         isMuted: @escaping @MainActor () -> Bool,
@@ -159,6 +163,7 @@ final class AudioDeviceState: ObservableObject {
         self.taskBag = taskBag
         self.attemptLedger = attemptLedger
         self.settings = settings
+        self.currentSession = currentSession
         self.setAudioMode = setAudioMode
         self.setPreferredInputDeviceId = setPreferredInputDeviceId
         self.isMuted = isMuted
@@ -220,7 +225,10 @@ final class AudioDeviceState: ObservableObject {
         // one window-start choke point — so a language change in Settings
         // lands on the next window, never mid-window. Suspends (asset
         // download on a first switch), so the capture gate is re-checked.
-        await service.setCommandEngine(.forQuizLanguage(settings().language))
+        // #192: a custom pack session runs in the pack's language.
+        await service.setCommandEngine(
+            .forQuizLanguage(currentSession()?.language ?? settings().language)
+        )
         guard mayCaptureAudio() else { return }
 
         // #185 track C: a fresh engine decides voice processing from the output

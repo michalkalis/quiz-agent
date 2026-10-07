@@ -7,19 +7,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mikrofon potřebujeme, abychom mohli nahrávat tvoje odpovědi v kvízu. Hraješ tak bez rukou, i během jízdy."
+            "value" : "Trubbo používá mikrofon k poslouchání tvých hlasových odpovědí v kvízu a hlasových příkazů."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "We need microphone access to record your quiz answers hands-free while driving."
+            "value" : "Trubbo uses the microphone to hear your spoken quiz answers and voice commands."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mikrofón potrebujeme, aby sme mohli nahrávať tvoje odpovede v kvíze. Hráš tak bez rúk, aj počas jazdy."
+            "value" : "Trubbo používa mikrofón na počúvanie tvojich hlasových odpovedí v kvíze a hlasových príkazov."
           }
         }
       }

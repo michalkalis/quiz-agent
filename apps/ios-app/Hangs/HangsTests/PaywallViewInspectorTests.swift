@@ -138,7 +138,7 @@ struct PaywallViewNormalStructureTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Unlimited questions for every drive, no monthly cap.")
+                try tree.find(text: "Unlimited questions, no monthly cap.")
             }
             #expect(!treeHasText(tree, containing: ["free questions this month"]),
                     "quota copy must not show on proactive entry")

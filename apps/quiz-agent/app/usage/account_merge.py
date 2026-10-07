@@ -63,15 +63,13 @@ async def upsert_apple_user(
     session: AsyncSession,
     *,
     apple_sub: str,
-    email: Optional[str],
-    full_name: Optional[str],
     encrypted_refresh: Optional[bytes],
 ) -> User:
     """Find the account for ``apple_sub`` or create it.
 
-    Apple sends email/name only on first authorization, so they are written once
-    and never clobbered by a later null (the user may also hide their email); the
-    encrypted Apple refresh token is refreshed whenever Apple returns a new one."""
+    Never persists email or name (GDPR data minimisation, founder 2026-10-07):
+    nothing uses them, so they are deliberately not parameters. The encrypted
+    Apple refresh token is refreshed whenever Apple returns a new one."""
     user = (
         await session.execute(select(User).where(User.apple_sub == apple_sub))
     ).scalar_one_or_none()
@@ -84,8 +82,6 @@ async def upsert_apple_user(
             async with session.begin_nested():
                 user = User(
                     apple_sub=apple_sub,
-                    email=email,
-                    full_name=full_name,
                     apple_refresh_token_encrypted=encrypted_refresh,
                 )
                 session.add(user)
@@ -97,10 +93,6 @@ async def upsert_apple_user(
             ).scalar_one()
     if encrypted_refresh is not None:
         user.apple_refresh_token_encrypted = encrypted_refresh
-    if email and not user.email:
-        user.email = email
-    if full_name and not user.full_name:
-        user.full_name = full_name
     return user
 
 

@@ -205,11 +205,16 @@ final class VoiceCommandCoordinator: ObservableObject {
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
+    /// #192: the running session, whose language wins over the Settings one —
+    /// a custom pack is played in its own language (the backend sets it).
+    let currentSession: @MainActor () -> QuizSession?
     let isAppForeground: @MainActor () -> Bool
 
     /// #175: the command grammar is the quiz language — the single value every
     /// lexicon/matcher call above the engine seam passes explicitly.
-    var commandLanguage: CommandLanguage { .forQuizLanguage(settings().language) }
+    var commandLanguage: CommandLanguage {
+        .forQuizLanguage(currentSession()?.language ?? settings().language)
+    }
     /// ANY TTS playback — question OR feedback. Widened in #119: the flag used
     /// to be question-only, so the result screen armed the window and then
     /// played feedback TTS underneath a live input tap, and the app transcribed
@@ -283,6 +288,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         attemptLedger: AttemptLedger,
         clock: AnyClock<Duration> = .continuous,
         settings: @escaping @MainActor () -> QuizSettings,
+        currentSession: @escaping @MainActor () -> QuizSession?,
         isAppForeground: @escaping @MainActor () -> Bool,
         isPlayingTTS: @escaping @MainActor () -> Bool,
         quizState: @escaping @MainActor () -> QuizState,
@@ -315,6 +321,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.attemptLedger = attemptLedger
         self.clock = clock
         self.settings = settings
+        self.currentSession = currentSession
         self.isAppForeground = isAppForeground
         self.isPlayingTTS = isPlayingTTS
         self.quizState = quizState

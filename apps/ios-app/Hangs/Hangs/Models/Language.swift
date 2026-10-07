@@ -54,8 +54,8 @@ extension Language {
         selectableLanguages(in: LanguageAvailability.shared.quizCodes)
     }
 
-    /// Languages a custom pack may be ordered in — a narrower list, since packs
-    /// are still generated in English and merely stamped with the code (DD15).
+    /// Languages a custom pack may be ordered in — the ones pack generation
+    /// writes natively (#192), served by `GET /api/v1/languages`.
     static var packOrderLanguages: [Language] {
         selectableLanguages(in: LanguageAvailability.shared.packOrderCodes)
     }

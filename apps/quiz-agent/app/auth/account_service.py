@@ -116,34 +116,6 @@ async def bootstrap_with_assertion(
     return anon_id, issued.raw_token
 
 
-async def user_profile_fields(
-    sessionmaker, subject_id: str
-) -> tuple[Optional[str], Optional[str]]:
-    """The stored ``(full_name, email)`` for a token subject, or ``(None, None)``.
-
-    #78: an Apple-upgraded account's subject is users.id — round-trip its
-    full_name/email on refresh too, or a signed-in user's stored name silently
-    disappears client-side on every routine refresh (~900s), not just on
-    sign-out/re-sign-in. Plain anon subjects are also UUIDs, so the lookup
-    runs for them too and simply finds no row; the parse guard only filters
-    legacy non-UUID device ids."""
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    try:
-        user_uuid = uuid.UUID(subject_id)
-    except ValueError:
-        user_uuid = None
-    if user_uuid is not None:
-        async with sessionmaker() as session:
-            user = (
-                await session.execute(select(User).where(User.id == user_uuid))
-            ).scalar_one_or_none()
-        if user is not None:
-            full_name = user.full_name
-            email = user.email
-    return full_name, email
-
-
 async def resolve_account(subject: AuthSubject, session: AsyncSession) -> User:
     """Resolve an authenticated subject to its ``users`` row, or reject.
 

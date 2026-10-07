@@ -17,13 +17,29 @@ from app.main import app
     [
         (
             "/legal/privacy",
-            ["Zásady ochrany súkromia", "Privacy Policy", "michal.kalis@gmail.com"],
+            [
+                "Zásady ochrany súkromia",
+                "Zásady ochrany soukromí",
+                "Privacy Policy",
+                "missinghue s.r.o.",
+                "07288093",
+                "hello@missinghue.com",
+                "uoou.gov.cz",
+            ],
         ),
         (
             "/legal/terms",
-            ["Podmienky používania", "Terms of Use", "automaticky obnovuje"],
+            [
+                "Podmienky používania",
+                "Podmínky používání",
+                "Terms of Use",
+                "automaticky obnovuje",
+                "missinghue s.r.o.",
+                "právom Českej republiky",
+                "law of the Czech Republic",
+            ],
         ),
-        ("/legal/support", ["Podpora / Support", "michal.kalis@gmail.com"]),
+        ("/legal/support", ["Podpora / Support", "hello@missinghue.com"]),
     ],
 )
 async def test_legal_page_public_and_complete(
@@ -37,3 +53,7 @@ async def test_legal_page_public_and_complete(
     assert response.headers["content-type"].startswith("text/html")
     for fragment in required_fragments:
         assert fragment in response.text
+    # The App Store developer account is the company: the founder's personal
+    # identity and mailbox must not reappear as operator/contact.
+    assert "michal.kalis" not in response.text
+    assert "Michal Kalis" not in response.text

@@ -3,8 +3,6 @@ name: asc-store-upload
 # Pushes listing, review info, TestFlight Test Information, IAP texts and screenshots
 # from apps/ios-app/Hangs/fastlane/ to App Store Connect (issue #190). Dry run unless `apply` is checked.
 on:
-  push:  # TEMP dry-run trigger, removed before merge
-    branches: [feat/190-store-copy]
   workflow_dispatch:
     inputs:
       steps:

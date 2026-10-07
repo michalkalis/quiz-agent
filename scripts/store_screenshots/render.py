@@ -46,7 +46,7 @@ def page(v: dict, caption: str, shot: Path) -> str:
 @font-face {{ font-family: Inter; font-weight: 700; src: url('{(FONTS / "Inter-Bold.ttf").as_uri()}'); }}
 html, body {{ margin: 0; width: {W}px; height: {H}px; overflow: hidden; background: {v["bg"]}; }}
 .cap {{ position: absolute; left: 110px; right: 110px; top: 190px; color: {v["ink"]};
-  font: {weight} {v["size"]}px/1.02 {v["font"]}, sans-serif; letter-spacing: {"0.5px" if v["upper"] else "-2px"};
+  font: {weight} {v["size"]}px/1.12 {v["font"]}, sans-serif; letter-spacing: {"0.5px" if v["upper"] else "-2px"};
   text-transform: {"uppercase" if v["upper"] else "none"}; text-wrap: balance; }}
 .cap em {{ font-style: normal; color: {v["accent"]}; }}
 .shot {{ position: absolute; left: 50%; top: 700px; width: 1060px; transform: translateX(-50%);

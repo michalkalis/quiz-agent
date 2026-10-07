@@ -200,33 +200,22 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     await session.execute(delete(User).where(User.id == user.id))
 
 
-ERASED_PROMPT = "[erased]"
-
-
 async def _unlink_pack_orders(session: AsyncSession, user_id: str) -> None:
     """Unlink the account's custom pack orders and packs (quiz-pack-api tables in
     the same Postgres; Core ``text()`` so quiz-agent never imports pack-api models).
 
-    The rows stay: an order is the purchase's accounting/refund record and the
-    pack is what was delivered for it. ``user_id`` is nulled (nullable on both
-    tables) and the free-text ``prompt`` the person typed is replaced with a fixed
-    placeholder (the column is NOT NULL), because a topic like "my family's trip"
-    can identify them on its own. A nulled pack owner also makes the pack
-    unplayable for everyone, since the play-time ownership check is
-    ``user_id = :subject``."""
-    params = {"uid": user_id, "erased": ERASED_PROMPT}
+    The rows stay, text included (founder decision 2026-10-07): an order is the
+    purchase's accounting/refund record and the pack is what was delivered for
+    it. Only ``user_id`` is nulled (nullable on both tables). A nulled pack owner
+    also makes the pack unplayable for everyone, since the play-time ownership
+    check is ``user_id = :subject``."""
+    params = {"uid": user_id}
     await session.execute(
-        text(
-            "UPDATE question_packs SET user_id = NULL, prompt = :erased, "
-            "prompt_embedding = NULL WHERE user_id = :uid"
-        ),
+        text("UPDATE question_packs SET user_id = NULL WHERE user_id = :uid"),
         params,
     )
     await session.execute(
-        text(
-            "UPDATE generation_orders SET user_id = NULL, prompt = :erased "
-            "WHERE user_id = :uid"
-        ),
+        text("UPDATE generation_orders SET user_id = NULL WHERE user_id = :uid"),
         params,
     )
 

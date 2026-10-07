@@ -6,7 +6,7 @@ The person asked to be forgotten, so:
 - in-app feedback (screenshot, dictation audio, logs, free text) is deleted;
 - quiz sessions, question ratings and custom pack orders/packs are kept (answers
   feed statistics; an order is the refund/accounting record) but no longer point
-  at the person, and the free-text pack topic is scrubbed;
+  at the person (pack text is kept, founder decision);
 - purchase records (``subscription``, ``credit_ledger``) are left untouched:
   accounting and refund law requires keeping them.
 
@@ -23,7 +23,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from app.auth.account_service import ERASED_PROMPT
 from app.db.models import CreditLedger, Feedback, Product, Subscription
 from app.session.manager import SessionManager
 from quiz_shared.database.sql_client import QuizSessionDB, RatingDB, SQLClient
@@ -109,8 +108,8 @@ async def test_delete_unlinks_pack_orders_and_packs_but_keeps_the_rows(
     db_sessionmaker,
 ):
     """The order row is the refund/accounting record for a paid pack, so it must
-    survive; but its owner id and the topic the person typed (which can name
-    them) must not. Another account's order stays exactly as it was."""
+    survive with its text (founder: pack text is kept); only the owner id goes.
+    Another account's order stays exactly as it was."""
     app = _make_app(db_sessionmaker)
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="a.pack")
     mine = await _seed_order(db_sessionmaker, user_id, "Jan's family trip 2025")
@@ -119,8 +118,8 @@ async def test_delete_unlinks_pack_orders_and_packs_but_keeps_the_rows(
         assert (await _delete(app, bearer)).status_code == 204
 
         order, pack = await _order_and_pack(db_sessionmaker, mine)
-        assert order == (None, ERASED_PROMPT)
-        assert pack == (None, ERASED_PROMPT)
+        assert order == (None, "Jan's family trip 2025")
+        assert pack == (None, "Jan's family trip 2025")
         other_order, other_pack = await _order_and_pack(db_sessionmaker, theirs)
         assert other_order == (OTHER, "Roman emperors")
         assert other_pack == (OTHER, "Roman emperors")

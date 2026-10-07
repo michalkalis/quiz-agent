@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** **Tool decision REVISED 2026-10-07 — own first-party solution** (events in our Postgres, emitted mainly server-side; Sentry stays for crashes/health only). Supersedes the 2026-06-09 "reuse Sentry" call: Sentry has no funnels/retention/cohorts. Taxonomy (51.1/51.2) still valid. Tasks 51.3–51.5 rewritten below.
+**Status:** **2026-10-07: LIVE in prod** (backend v123 + migration 0008; iOS in next TF build). Open: 51.6 verify on real events. **Tool decision REVISED 2026-10-07 — own first-party solution** (events in our Postgres, emitted mainly server-side; Sentry stays for crashes/health only). Supersedes the 2026-06-09 "reuse Sentry" call: Sentry has no funnels/retention/cohorts. Taxonomy (51.1/51.2) still valid. Tasks 51.3–51.5 rewritten below.
 **Created:** 2026-06-09
 **Related:** `docs/product/launch-decisions-2026-06-08.md` (#11), `reference_sentry` memory, PRDs in `docs/product/INDEX.md`
 
@@ -84,10 +84,12 @@ Map the PRD metrics to concrete events with properties:
       *Original scope:* Append-only events table (name, subject id, session id, properties JSON, app version, timestamp) + migration; emit the backend-truth taxonomy events where they happen (answer evaluated w/ correctness + category + question type, quiz started/completed, quota hit, purchase from the RC webhook). Add purchase/paywall events to `docs/product/analytics-events.md` (taxonomy is otherwise approved). Retention: delete raw events after a fixed window; deletion on account delete.
       **Acceptance**: `pytest` green; each emit has a test asserting name + properties; no event outside the taxonomy; no transcript/answer text stored.
 
-- [ ] **51.4 iOS client-only events.** Small `AnalyticsClient` seam posting the client-only events (paywall viewed, quiz abandoned, transcription failed, answer retry) to a backend ingest endpoint, batched, fire-and-forget; hooked on existing `QuizViewModel` transitions (no parallel state source).
+- [x] **51.4 iOS client-only events.** **Done 2026-10-07** (PR #238): `AnalyticsClient` + batched sender, 10 app events, `X-App-Version` header. `quiz_minimized` dropped (mini-quiz removed in #230).
+      *Original scope:* Small `AnalyticsClient` seam posting the client-only events (paywall viewed, quiz abandoned, transcription failed, answer retry) to a backend ingest endpoint, batched, fire-and-forget; hooked on existing `QuizViewModel` transitions (no parallel state source).
       **Acceptance**: unit tests with a mocked client assert each event fires on its transition.
 
-- [ ] **51.5 Privacy label + manifest.** Update `PrivacyInfo.xcprivacy` and the App Store privacy label: Product Interaction (analytics, not linked to identity if we keep only the anonymous id, not tracking) **plus the already-missing Sentry declarations** (crash + performance data). Pre-launch blocker.
+- [x] **51.5 Privacy label + manifest.** **Manifest done 2026-10-07** (PR #238): Product Interaction = linked (events carry the subject id), not tracking; Sentry crash/performance/diagnostics added. **Open (founder):** mirror the same answers in App Store Connect → App Privacy before submission.
+      *Original scope:* Update `PrivacyInfo.xcprivacy` and the App Store privacy label: Product Interaction (analytics, not linked to identity if we keep only the anonymous id, not tracking) **plus the already-missing Sentry declarations** (crash + performance data). Pre-launch blocker.
 
 - [SESSION] **51.6 E2E verify + saved queries.** Drive the app, confirm events land; write saved SQL for completion rate, first-try voice capture rate, wrong-answer rate, DAU/retention so Claude can answer on demand. Dashboard deferred.
 

@@ -913,6 +913,7 @@ final class QuizViewModel: ObservableObject {
             taskBag: taskBag,
             attemptLedger: attemptLedger,
             settings: { [weak self] in self?.settings ?? .default },
+            currentSession: { [weak self] in self?.currentSession },
             setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
             setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
             // #173: the quiz mute is session-scoped — it must NOT write the
@@ -961,6 +962,7 @@ final class QuizViewModel: ObservableObject {
             attemptLedger: attemptLedger,
             clock: clock,
             settings: { [weak self] in self?.settings ?? .default },
+            currentSession: { [weak self] in self?.currentSession },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
             quizState: { [weak self] in self?.quizState ?? .idle },

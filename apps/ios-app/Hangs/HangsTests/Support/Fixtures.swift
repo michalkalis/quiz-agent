@@ -121,7 +121,8 @@ enum Fixtures {
     static func makeActiveSession(
         id: String = "test_session_123",
         phase: String = "asking",
-        maxQuestions: Int = 10
+        maxQuestions: Int = 10,
+        language: String = "en"
     ) -> QuizSession {
         QuizSession(
             id: id,
@@ -130,7 +131,7 @@ enum Fixtures {
             maxQuestions: maxQuestions,
             currentDifficulty: "medium",
             category: nil,
-            language: "en",
+            language: language,
             participants: [],
             expiresAt: Date().addingTimeInterval(30 * 60),
             createdAt: Date()

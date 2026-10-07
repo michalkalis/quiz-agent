@@ -52,10 +52,11 @@ struct ResultView: View {
                 HangsQuizProgressHeader(
                     category: (viewModel.resultQuestion ?? viewModel.currentQuestion)
                         .map { Config.categoryDisplayName(for: $0.category) } ?? "",
-                    // #79: 1-based index of the question just answered
-                    // (questionsAnswered is incremented before .showingResult),
-                    // so the count matches the question screen it came from.
-                    current: viewModel.questionsAnswered,
+                    // #79: 1-based index of the question just answered OR
+                    // skipped — the same number its question screen showed.
+                    // Old backends (no asked_count) fall back to the answered
+                    // count, which is incremented before .showingResult.
+                    current: viewModel.askedQuestionNumber ?? viewModel.questionsAnswered,
                     total: totalQuestions
                 )
                 .padding(.top, Theme.Hangs.Spacing.xs)

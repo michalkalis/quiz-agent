@@ -142,6 +142,17 @@ class SessionResponse(BaseModel):
     participants: List[Participant]
     expires_at: datetime
     created_at: datetime
+    asked_count: int = Field(
+        default=0,
+        description=(
+            "Questions served in this session so far, answered OR skipped — the "
+            "1-based number of the most recently served question. Drives the "
+            "client's 'question N of M' counter: a participant's answered_count "
+            "does not move on a skip, so a counter built on it fell back by one "
+            "after every skip. A response that grades a question AND serves the "
+            "next one already counts that next one."
+        ),
+    )
 
 
 class StartQuizRequest(BaseModel):
@@ -590,6 +601,7 @@ def session_to_response(session: QuizSession) -> SessionResponse:
         participants=session.participants,
         expires_at=session.expires_at,
         created_at=session.created_at,
+        asked_count=len(session.asked_question_ids),
     )
 
 

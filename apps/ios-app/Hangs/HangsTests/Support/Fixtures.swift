@@ -104,14 +104,16 @@ enum Fixtures {
         answered: Int = 0,
         correct: Int = 0,
         maxQuestions: Int = 10,
-        phase: String = "asking"
+        phase: String = "asking",
+        askedCount: Int? = nil
     ) -> QuizSession {
         QuizSession.preview(
             score: score,
             answered: answered,
             correct: correct,
             maxQuestions: maxQuestions,
-            phase: phase
+            phase: phase,
+            askedCount: askedCount
         )
     }
 

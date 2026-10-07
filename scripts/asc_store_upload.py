@@ -9,7 +9,7 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots [--build 66] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,beta-group [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -189,12 +189,38 @@ def step_screenshots(app_id: str) -> None:
                                                                          "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
 
 
+PUBLIC_GROUP = "Public beta"
+PUBLIC_LINK_LIMIT = 50  # founder 2026-10-07: public link with a tester limit
+
+
+def step_beta_group(app_id: str, build: str | None, submit: bool) -> None:
+    """External group with a capped public link; optionally add `build` and submit it to Beta App Review."""
+    print("beta-group")
+    groups = get(f"/apps/{app_id}/betaGroups", limit=50).get("data", [])
+    group = next((g for g in groups if g["attributes"]["name"] == PUBLIC_GROUP), None)
+    if not group:
+        res = send("POST", "/betaGroups", {"data": {"type": "betaGroups", "attributes": {
+            "name": PUBLIC_GROUP, "publicLinkEnabled": True, "publicLinkLimitEnabled": True,
+            "publicLinkLimit": PUBLIC_LINK_LIMIT, "feedbackEnabled": True},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+        group = res.get("data", {"id": "<new>", "attributes": {}})
+    print(f"  public link: {group['attributes'].get('publicLink')}")
+    if not build:
+        return
+    b = get("/builds", **{"filter[app]": app_id, "filter[version]": build})["data"][0]
+    send("POST", f"/betaGroups/{group['id']}/relationships/builds", {"data": [{"type": "builds", "id": b["id"]}]})
+    if submit:
+        send("POST", "/betaAppReviewSubmissions", {"data": {"type": "betaAppReviewSubmissions",
+                                                            "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
+
+
 def main() -> int:
     global APPLY
     ap = argparse.ArgumentParser()
     ap.add_argument("--steps", default="listing,review,testflight,iap")
     ap.add_argument("--build", help="build number that gets What to Test")
     ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--submit-beta-review", action="store_true", help="with beta-group + --build: submit the build to Beta App Review")
     args = ap.parse_args()
     APPLY = args.apply
     print("APPLY" if APPLY else "DRY RUN (pass --apply to write)")
@@ -211,6 +237,8 @@ def main() -> int:
         step_iap(app_id, copy)
     if "screenshots" in steps:
         step_screenshots(app_id)
+    if "beta-group" in steps:
+        step_beta_group(app_id, args.build, args.submit_beta_review)
     return 0
 
 

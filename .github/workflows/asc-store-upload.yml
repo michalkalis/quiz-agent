@@ -6,11 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "Comma list: listing,review,testflight,iap,screenshots"
+        description: "Comma list: listing,review,testflight,iap,screenshots,beta-group"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"
         default: ""
+      submit_beta_review:
+        description: "beta-group + build: submit the build to Beta App Review"
+        type: boolean
+        default: false
       apply:
         description: "Write to App Store Connect (unchecked = dry run)"
         type: boolean
@@ -35,4 +39,5 @@ jobs:
         run: |
           python scripts/asc_store_upload.py --steps "${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}" \
             ${{ inputs.build && format('--build {0}', inputs.build) || '' }} \
+            ${{ inputs.submit_beta_review && '--submit-beta-review' || '' }} \
             ${{ inputs.apply && '--apply' || '' }}

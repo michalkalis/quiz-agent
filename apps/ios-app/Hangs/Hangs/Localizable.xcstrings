@@ -661,7 +661,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "zbývá %lld sekund"
+                  "value" : "zbývá %lld sekundy"
                 }
               },
               "one" : {
@@ -709,7 +709,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "zostáva %lld sekúnd"
+                  "value" : "zostáva %lld sekundy"
                 }
               },
               "one" : {
@@ -6818,13 +6818,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ROLUJ"
+            "value" : "POSUŇ DOLŮ"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ROLUJ"
+            "value" : "POSUŇ NADOL"
           }
         }
       }

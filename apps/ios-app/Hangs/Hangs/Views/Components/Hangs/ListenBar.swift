@@ -512,7 +512,7 @@ struct ListenBar: View {
             VStack(alignment: .leading, spacing: 2) {
                 captionText
                     .font(.hangsBody(17, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .foregroundColor(statusTextColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if !chipWords.isEmpty {
@@ -539,13 +539,24 @@ struct ListenBar: View {
         }
     }
 
+    /// #188 G11 (founder review): the large state line carries the state's
+    /// colour where the founder asked for it — reading and think stay green
+    /// (teal text, readable in light mode); listening and in-flight keep ink,
+    /// as #185 F2 picked, with the capsule saying pink or grey.
+    private var statusTextColor: Color {
+        switch mode {
+        case .readingQuestion, .command, .readingAnswerBack: return Theme.Hangs.Colors.tealText
+        case .answer, .evaluating, .skipping: return Theme.Hangs.Colors.ink
+        }
+    }
+
     /// The countdown number — tabular so the bar does not jitter each tick, and
     /// never scaled away: it is the one part the driver cannot infer.
     private func secondsLabel(_ seconds: Int, font: Font) -> some View {
         Text(verbatim: "\(seconds) s")
             .font(font)
             .monospacedDigit()
-            .foregroundColor(Theme.Hangs.Colors.ink)
+            .foregroundColor(statusTextColor)
             .lineLimit(1)
             .fixedSize()
             .accessibilityIdentifier("listen-bar.seconds")

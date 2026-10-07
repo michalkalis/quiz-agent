@@ -50,6 +50,14 @@ struct QuestionView: View {
     @State private var optionsHeight: CGFloat = 0
     /// #188 G9: more options below the visible ones — the same cue the stem uses.
     @State private var showOptionsScrollCue = false
+    /// #188 G9: the MCQ stem's natural height — its floor grows to it (capped).
+    @State private var stemContentHeight: CGFloat = 0
+
+    private enum Metrics {
+        /// The most of the screen the MCQ question may claim before it scrolls:
+        /// under half, so the options always keep the larger share.
+        static let stemMaxShare: CGFloat = 0.45
+    }
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -92,7 +100,7 @@ struct QuestionView: View {
                         awaitingQuestionBody
                     } else if let question = viewModel.currentQuestion {
                         if question.isMultipleChoice {
-                            mcqBody(question: question, compact: compact)
+                            mcqBody(question: question, compact: compact, height: geo.size.height)
                         } else {
                             voiceBody(question: question, compact: compact)
                         }
@@ -394,11 +402,11 @@ struct QuestionView: View {
     /// see the options while thinking, so the grid renders from the first frame.
     /// The answer `ListenBar` is NOT part of that reversal — it still claims the
     /// mic is live, so it stays gated on `.recording`.
-    private func mcqBody(question: Question, compact: Bool) -> some View {
+    private func mcqBody(question: Question, compact: Bool, height: CGFloat) -> some View {
         VStack(spacing: 0) {
             // Merged top row (close + category + counter) lives in `topChrome`
             // now; the MCQ body starts at the stem.
-            mcqStem(question: question, compact: compact)
+            mcqStem(question: question, compact: compact, screenHeight: height)
 
             // #173 B1 (founder pick): the listening banner sits ABOVE the option
             // grid, directly under the stem — where the eye already is when the
@@ -564,8 +572,15 @@ struct QuestionView: View {
     /// made of the screen, which four 2–3 line options could not satisfy, so the
     /// footer went off the bottom instead. It is a floor for legibility now, low
     /// enough that the options and the skip chip always fit above it.
-    private func mcqStem(question: Question, compact: Bool) -> some View {
-        let floor: CGFloat = compact ? 160 : 200
+    ///
+    /// #188 G9 (founder review): at the raised text-size cap the question no
+    /// longer fit that floor and slid under the scroll cue while the options
+    /// took the screen. The floor now grows to the question's own height, up to
+    /// `Metrics.stemMaxShare` of the screen — the whole question stays in view,
+    /// and the options scroll behind their cue instead.
+    private func mcqStem(question: Question, compact: Bool, screenHeight: CGFloat) -> some View {
+        let baseFloor: CGFloat = compact ? 160 : 200
+        let floor = max(baseFloor, min(stemContentHeight, screenHeight * Metrics.stemMaxShare))
         // #179 finding 3: Anton 34 was oversized in the car mount — one step down
         // for both classes; `minimumScaleFactor` still handles the rest.
         let stemFont: Font = .hangsDisplay(compact ? 26 : 30)
@@ -606,6 +621,9 @@ struct QuestionView: View {
                         horizontalPadding: 28
                     )
                 }
+                // The stem's NATURAL height, measured before the min-height frame
+                // below — measuring after it would feed the floor back into itself.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemContentHeight = $0 }
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
             .scrollIndicators(.visible)

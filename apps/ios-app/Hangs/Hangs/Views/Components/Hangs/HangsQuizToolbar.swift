@@ -84,17 +84,17 @@ extension View {
 }
 
 /// #188 G9: how large Dynamic Type may make the quiz screens (question, answer
-/// sheet, result). The quiz is read at a glance from a car mount, and at the
-/// accessibility sizes the MCQ options alone covered the screen (founder audit
-/// D7–D11). `.xxxLarge` is the largest size that is not an accessibility size:
-/// every reader who enlarged text still gets more of it, and the layout keeps a
-/// screen to live on. Screens outside the quiz are not capped.
+/// sheet, result). At the largest accessibility sizes the MCQ options alone
+/// covered the screen (founder audit D7–D11). The founder found `.xxxLarge` too
+/// small (review 2026-10-07), so the cap is `.accessibility2`: the highest size
+/// at which the question stays visible, the options scroll behind their cue and
+/// no control text is cut. Screens outside the quiz are not capped.
 enum QuizTypeSize {
-    static let screenCap: DynamicTypeSize = .xxxLarge
+    static let screenCap: DynamicTypeSize = .accessibility2
     /// The question is display type (26–30 pt Anton) that already reads larger
-    /// than body text at the screen cap; past `.xLarge` it only pushed the stem
-    /// under the scroll cue and squeezed the options (D11).
-    static let questionCap: DynamicTypeSize = .xLarge
+    /// than body text; one step under the screen cap keeps the stem above the
+    /// options instead of under the scroll cue (D11).
+    static let questionCap: DynamicTypeSize = .accessibility1
 }
 
 /// #179 D2 (founder 2026-09-15, variant A): the two mid-question controls are

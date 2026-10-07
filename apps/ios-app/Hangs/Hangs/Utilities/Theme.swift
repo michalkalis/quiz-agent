@@ -31,6 +31,8 @@ private enum Palette {
     static let blue500 = "#0A84FF"
     static let blue700 = "#0A5DC2"
     static let teal500 = "#14B8A6"
+    static let teal400 = "#2DD4BF"
+    static let teal700 = "#0F766E"
 
     // Feedback
     static let green400 = "#4ADE80"
@@ -85,6 +87,10 @@ extension Theme.Hangs {
         /// 5.07:1 on the tinted background. Dark mode keeps the brand hues.
         static let pinkText = Color(light: Palette.pink700, dark: Palette.pink500)
         static let blueText = Color(light: Palette.blue700, dark: Palette.blue500)
+        /// #188 G11: teal TEXT for the listen bar's reading and think states.
+        /// teal-500 is an accent, not a text colour: on the light page it is
+        /// under 3:1. teal-700 light (≈5:1 on the bar) / teal-400 dark (≈10:1).
+        static let tealText = Color(light: Palette.teal700, dark: Palette.teal400)
 
         // MARK: Feedback
         static let greenCheck = Color(hex: Palette.green500) // accent-green

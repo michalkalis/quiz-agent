@@ -68,7 +68,10 @@ struct CommandEngineSwitchTests {
         }
     }
 
-    @Test("window start asks for the quiz language's engine BEFORE listening")
+    /// #192: the quiz language is the SESSION's — a custom pack is played in
+    /// its own language whatever Settings says, so the recognizer and the
+    /// hints must follow the session, or a Slovak pack hears English commands.
+    @Test("window start asks for the session language's engine BEFORE listening")
     func windowStartResolvesQuizLanguage() async {
         let silence = MockSilenceDetectionService()
         let vm = QuizViewModel(
@@ -78,10 +81,10 @@ struct CommandEngineSwitchTests {
             silenceDetectionService: silence,
             sttService: MockElevenLabsSTTService()
         )
-        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentSession = Fixtures.makeActiveSession(language: "cs")
         vm.currentQuestion = Fixtures.makeQuestion()
         vm.quizState = .askingQuestion
-        vm.settings.language = "cs"
+        vm.settings.language = "en"
 
         await vm.audioDeviceState.startSilenceDetectionListening()
 
@@ -90,10 +93,14 @@ struct CommandEngineSwitchTests {
         // Everything above the seam follows the same value: Czech hints.
         #expect(vm.commandLanguage == .czech)
 
-        // Switching the quiz language lands on the NEXT window, no restart.
-        vm.settings.language = "sk"
+        // The next session's language lands on the NEXT window, no restart.
+        vm.currentSession = Fixtures.makeActiveSession(language: "sk")
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(silence.commandEngineRequests.last == .dictationSlovak)
         #expect(vm.commandLanguage == .slovak)
+
+        // Outside a session (Home) the Settings language is the quiz language.
+        vm.currentSession = nil
+        #expect(vm.commandLanguage == .english)
     }
 }

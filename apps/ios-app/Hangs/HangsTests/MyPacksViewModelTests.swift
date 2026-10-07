@@ -62,8 +62,9 @@ struct PackOrderStatusLabelTests {
     @Test("every known wire status maps to its localized label — never the raw wire value")
     func knownStatusesLocalized() {
         let expected: [String: String] = [
-            "pending": String(localized: "Pending"),
-            "in_progress": String(localized: "In progress"),
+            // #188 G14: queued and generating are one state to the player.
+            "pending": String(localized: "Preparing"),
+            "in_progress": String(localized: "Preparing"),
             "delivered": String(localized: "Delivered"),
             "failed": String(localized: "Failed"),
             "refunded": String(localized: "Refunded"),

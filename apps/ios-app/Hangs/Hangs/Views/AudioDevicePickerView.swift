@@ -32,13 +32,11 @@ struct AudioDevicePickerView: View {
                             )
                         }
                     } header: {
-                        Text("Available Devices")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
+                        HangsSectionLabel(text: "Available Devices")
                     } footer: {
                         if viewModel.selectedAudioMode.id == "media" {
                             Text("Switch to Call Mode to use Bluetooth microphones. With a Bluetooth microphone the car treats the quiz as a phone call.")
-                                .font(.footnote)
+                                .font(.hangsBody(12))
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                         }
                     }
@@ -51,7 +49,7 @@ struct AudioDevicePickerView: View {
                             Image(systemName: "info.circle")
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                             Text("No external microphones detected. Connect Bluetooth or wired audio devices to see them here.")
-                                .font(.subheadline)
+                                .font(.hangsBody(14))
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                         }
                     }
@@ -64,7 +62,6 @@ struct AudioDevicePickerView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
                     .accessibilityIdentifier("micPicker.done")
                 }
             }
@@ -87,22 +84,22 @@ struct AudioDevicePickerView: View {
                 // Device icon
                 Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
                     .font(.title3)
-                    .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                    .foregroundColor(Theme.Hangs.Colors.muted)
                     .frame(width: Metrics.iconColumn)
 
                 // Device name and subtitle
                 VStack(alignment: .leading, spacing: 2) {
                     Text(device.name)
-                        .font(.body)
+                        .font(.hangsBody(16, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
 
                     if !device.isAutomatic {
                         Text(device.subtitle)
-                            .font(.footnote)
+                            .font(.hangsBody(12))
                             .foregroundColor(Theme.Hangs.Colors.muted)
                     } else {
                         Text("Let iOS choose the best microphone")
-                            .font(.footnote)
+                            .font(.hangsBody(12))
                             .foregroundColor(Theme.Hangs.Colors.muted)
                     }
                 }
@@ -112,7 +109,7 @@ struct AudioDevicePickerView: View {
                 // Checkmark for selected device
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
+                        .foregroundColor(Theme.Hangs.Colors.rowValue)
                         .fontWeight(.semibold)
                 }
             }

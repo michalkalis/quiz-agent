@@ -63,11 +63,10 @@ enum ResultVerdict {
         }
     }
 
-    /// A skip is neutral news, so its word is muted rather than full ink — the
-    /// only per-state difference in the band's typography.
-    var wordColor: Color {
-        self == .skipped ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.ink
-    }
+    /// Full ink for every verdict: a muted "SKIPPED" on the grey band was
+    /// near unreadable in light mode (#188 G14); the band wash already says
+    /// a skip is neutral news.
+    var wordColor: Color { Theme.Hangs.Colors.ink }
 
     /// Skipped's word is a longer token, so it drops a step to stay one line
     /// (the big-Anton single-line rule) without relying on scale-down alone.

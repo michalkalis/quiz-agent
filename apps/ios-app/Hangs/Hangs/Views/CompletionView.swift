@@ -24,7 +24,6 @@ struct CompletionView: View {
                 VStack(spacing: 0) {
                     HangsHeroBlock(
                         title: "COMPLETE",
-                        subtitle: "nice work — here's your run",
                         titleFont: .hangsDisplayMD
                     )
                     .padding(.horizontal, Theme.Hangs.Spacing.lg)
@@ -59,7 +58,7 @@ struct CompletionView: View {
     private var finalScoreCard: some View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20)) {
             VStack(spacing: 6) {
-                HangsSectionLabel(text: "final score", color: Theme.Hangs.Colors.pink)
+                HangsSectionLabel(text: "final score")
                 Text(summary.displayScore)
                     .font(.hangsNumberLG)
                     .tracking(-3)
@@ -85,7 +84,7 @@ struct CompletionView: View {
                 breakdownRow(
                     label: "Correct",
                     value: "\(summary.correctCount)",
-                    valueColor: Theme.Hangs.Colors.successText
+                    valueColor: countColor(summary.correctCount, Theme.Hangs.Colors.successText)
                 )
                 Rectangle()
                     .fill(Theme.Hangs.Colors.hairline)
@@ -93,7 +92,7 @@ struct CompletionView: View {
                 breakdownRow(
                     label: "Incorrect",
                     value: "\(summary.incorrectCount)",
-                    valueColor: Theme.Hangs.Colors.error
+                    valueColor: countColor(summary.incorrectCount, Theme.Hangs.Colors.error)
                 )
                 Rectangle()
                     .fill(Theme.Hangs.Colors.hairline)
@@ -106,6 +105,12 @@ struct CompletionView: View {
             }
         }
         .accessibilityIdentifier("completion.breakdown")
+    }
+
+    /// A zero is no news either way, so it stays neutral instead of a red
+    /// "Incorrect 0" (#188 G14).
+    private func countColor(_ count: Int, _ color: Color) -> Color {
+        count > 0 ? color : Theme.Hangs.Colors.muted
     }
 
     private func breakdownRow(label: LocalizedStringKey, value: String, valueColor: Color) -> some View {
@@ -198,6 +203,7 @@ struct CompletionView: View {
     }
 
     // MARK: - Derived
+
 
     /// Summary aggregated from viewModel state at .finished phase (52.6).
     var summary: QuizCompleteSummary {

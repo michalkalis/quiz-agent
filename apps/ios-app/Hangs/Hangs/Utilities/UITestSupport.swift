@@ -48,6 +48,7 @@
             let network = MockNetworkService()
             network.mockSession = QuizResponse.previewStartQuiz.session
             network.mockResponse = QuizResponse.previewStartQuiz
+            network.tracksSessionScore = true
 
             if CommandLine.arguments.contains("--ui-test-incorrect") {
                 network.mockTextInputResponse = QuizResponse.previewAnswerIncorrect

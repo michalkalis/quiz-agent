@@ -17,8 +17,10 @@ struct HangsBrandMark: View {
 
     var body: some View {
         HStack(spacing: 6) {
+            // Medium is the heaviest bundled IBM Plex Mono cut (#188 G13);
+            // asking for semibold silently fell back to Regular.
             Text(verbatim: "trubbo.")
-                .font(.hangsMono(size, weight: .semibold))
+                .font(.hangsMono(size, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.blue)
             if showDot {
                 Circle()

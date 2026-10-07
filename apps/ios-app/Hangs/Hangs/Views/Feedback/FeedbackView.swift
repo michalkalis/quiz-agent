@@ -85,7 +85,7 @@ struct FeedbackView: View {
 
     private func screenshotThumbnail(_ image: UIImage) -> some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            HangsSectionLabel(text: "screenshot", color: Theme.Hangs.Colors.blue)
+            HangsSectionLabel(text: "screenshot")
             ZStack(alignment: .topTrailing) {
                 Image(uiImage: image)
                     .resizable()
@@ -115,7 +115,7 @@ struct FeedbackView: View {
     private var messageEditor: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack {
-                HangsSectionLabel(text: "your feedback", color: Theme.Hangs.Colors.pink)
+                HangsSectionLabel(text: "your feedback")
                 Spacer()
                 if viewModel.voiceAvailable {
                     micButton

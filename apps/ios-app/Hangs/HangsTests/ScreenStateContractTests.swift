@@ -66,9 +66,8 @@ struct HomeViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
 
-            // Brand hero + tagline: the driver must land on a recognisable app.
+            // Brand wordmark: the driver must land on a recognisable app.
             #expect(throws: Never.self) { try tree.find(text: "trubbo.") }
-            #expect(throws: Never.self) { try tree.find(text: "voice-based trivia for the road") }
 
             // Session config card (its section label) — where difficulty /
             // language / categories are chosen before starting.

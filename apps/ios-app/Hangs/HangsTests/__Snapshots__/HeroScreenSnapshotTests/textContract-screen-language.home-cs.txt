@@ -1,6 +1,5 @@
 # texts
 trubbo.
-hlasový kvíz na cesty
 tvůj plán
 18
 z 30 otázek zdarma
@@ -12,10 +11,14 @@ Slovenčina
 Čeština
 Jazyk kvízu
 English
+Jazyk kvízu
+English
 Easy
 Medium
 Hard
 Random
+Obtížnost
+Medium
 Obtížnost
 Medium
 All Categories
@@ -26,6 +29,8 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
+Kategorie
+All Categories
 Kategorie
 All Categories
 Start

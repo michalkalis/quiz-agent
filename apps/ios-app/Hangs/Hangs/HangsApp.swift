@@ -66,6 +66,10 @@ struct HangsApp: App {
         WindowGroup {
             ContentView(appState: appState)
                 .environmentObject(appState)
+                // #188 G9: past accessibility3 a single word ("Slovenčina",
+                // "Automaticky") no longer fits a row even stacked and breaks
+                // mid-word. A screen may set a lower cap of its own.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .onOpenURL { url in
                     Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
                     #if DEBUG

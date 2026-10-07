@@ -17,11 +17,13 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             HangsBrandRow()
 
-            switch viewModel.page {
-            case .welcome: welcomePage
-            case .features: featuresPage
-            case .permission: permissionPage
-            case .permissionDenied: deniedPage
+            // #188 G9: at large Dynamic Type a page can outgrow the screen and
+            // push Continue off it. The page keeps its centred layout while it
+            // fits and scrolls above the pinned controls once it doesn't.
+            ViewThatFits(in: .vertical) {
+                page
+                ScrollView { page }
+                    .scrollBounceBehavior(.basedOnSize)
             }
 
             Spacer()
@@ -35,6 +37,16 @@ struct OnboardingView: View {
     }
 
     // MARK: - Pages
+
+    @ViewBuilder
+    private var page: some View {
+        switch viewModel.page {
+        case .welcome: welcomePage
+        case .features: featuresPage
+        case .permission: permissionPage
+        case .permissionDenied: deniedPage
+        }
+    }
 
     private var welcomePage: some View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
@@ -65,6 +77,7 @@ struct OnboardingView: View {
                     .font(.hangsDisplayMD)
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .multilineTextAlignment(.center)
+                    .hangsHeadlineFit()
                     .accessibilityAddTraits(.isHeader)
 
                 accentLine(color: Theme.Hangs.Colors.pink)
@@ -144,6 +157,7 @@ struct OnboardingView: View {
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
+                .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
             accentLine(color: accentColor)
         }

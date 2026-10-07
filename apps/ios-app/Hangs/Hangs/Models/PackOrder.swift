@@ -193,10 +193,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     /// to the raw value rather than hiding or crashing the row.
     var statusLabel: String {
         switch status {
-        case "pending":
-            String(localized: "Pending", comment: "Custom-pack order status: queued, generation not started yet")
-        case "in_progress":
-            String(localized: "In progress", comment: "Custom-pack order status: the pack is being generated")
+        // Queued and generating read the same to the player (#188 G14): one
+        // word on Home and in the pack list.
+        case "pending", "in_progress":
+            String(localized: "Preparing", comment: "Custom-pack order status: queued or being generated, not playable yet")
         case "delivered":
             String(localized: "Delivered", comment: "Custom-pack order status: pack generated and playable")
         case "failed":

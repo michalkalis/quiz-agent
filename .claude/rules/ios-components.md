@@ -28,10 +28,11 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 
 | Component | Use for |
 |---|---|
-| `HangsHeroBlock` | Big display title (+ subtitle) at the top of a screen. |
-| `HangsSectionLabel` | Mono uppercase label above a group. |
+| `HangsHeroBlock` | Big display title (+ subtitle) at the top of a screen. Any other Anton headline uses `.hangsHeadlineFit()` (one line, scales down). |
+| `HangsSectionLabel` | Mono uppercase label above a group, one colour app-wide (`sectionLabel`); a colour argument only for a verdict label. |
 | `HangsCard` | Any grouped surface; don't hand-roll a rounded rectangle. |
-| `HangsConfigRow` | Settings row with a value (and chevron when it opens something). |
+| `HangsConfigRow` | Settings row with a value (and chevron when it opens something). Value in `rowValue`; it moves under the title when both don't fit one line. |
+| `HangsConfigRowLabel` | The same row without a button, as a `Menu` label (Home pickers). |
 | `HangsToggleRow` | Settings on/off row. |
 | `HangsValueRow` | Read-only label + mono value (build info, stats). |
 | `HangsDivider` | Hairline between rows. |

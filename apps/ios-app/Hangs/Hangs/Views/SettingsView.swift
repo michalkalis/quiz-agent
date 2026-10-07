@@ -90,7 +90,6 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 HangsHeroBlock(
                     title: "SETTINGS",
-                    subtitle: "tune your experience",
                     titleFont: .hangsDisplayMD
                 )
                 .padding(.horizontal, Theme.Hangs.Spacing.lg)
@@ -200,7 +199,7 @@ struct SettingsView: View {
     // MARK: - Groups
 
     private var voiceGroup: some View {
-        groupSection(label: "voice", color: Theme.Hangs.Colors.pink) {
+        groupSection(label: "voice") {
             // Master command toggle (#96 P2, pen `gEPhB`). Governs the whole
             // screen-scoped command listener; default ON. Refreshes the window
             // immediately so flipping it off tears the listener down at once.
@@ -257,8 +256,7 @@ struct SettingsView: View {
 
             HangsConfigRow(
                 label: "Microphone",
-                value: viewModel.currentInputDeviceName,
-                valueColor: Theme.Hangs.Colors.blue
+                value: viewModel.currentInputDeviceName
             ) {
                 viewModel.showingMicrophonePicker = true
             }
@@ -287,7 +285,7 @@ struct SettingsView: View {
     }
 
     private var languageGroup: some View {
-        groupSection(label: "language", color: Theme.Hangs.Colors.blue) {
+        groupSection(label: "language") {
             Menu {
                 ForEach(Language.selectableLanguages) { language in
                     Button(language.nativeName) { viewModel.settings.language = language.id }
@@ -300,7 +298,6 @@ struct SettingsView: View {
                     label: "Quiz language",
                     value: Language.selectable(viewModel.settings.language).nativeName,
                     subtitle: "Questions, answers and voice",
-                    valueColor: Theme.Hangs.Colors.pink,
                     action: {}
                 )
                 .allowsHitTesting(false)
@@ -316,8 +313,7 @@ struct SettingsView: View {
             HangsConfigRow(
                 label: "App language",
                 value: Self.appLanguageDisplayName,
-                subtitle: "Buttons, labels and settings",
-                valueColor: Theme.Hangs.Colors.blue
+                subtitle: "Buttons, labels and settings"
             ) {
                 if let url = URL(string: "app-settings:") {
                     openURL(url)
@@ -340,7 +336,7 @@ struct SettingsView: View {
     // previously code-only. Design reference: Pencil NEW_Screen/Settings (Jjcs5).
 
     private var sessionGroup: some View {
-        groupSection(label: "session", color: Theme.Hangs.Colors.blue) {
+        groupSection(label: "session") {
             sessionMenuRow(
                 label: "Thinking time",
                 idPrefix: "settings.thinkingTime",
@@ -398,7 +394,6 @@ struct SettingsView: View {
                 HangsConfigRow(
                     label: "Answer reveal",
                     value: viewModel.settings.answerRevealMode.displayName,
-                    valueColor: Theme.Hangs.Colors.blue,
                     action: {}
                 )
                 .allowsHitTesting(false)
@@ -425,7 +420,6 @@ struct SettingsView: View {
             HangsConfigRow(
                 label: label,
                 value: display(selection.wrappedValue),
-                valueColor: Theme.Hangs.Colors.blue,
                 action: {}
             )
             .allowsHitTesting(false)
@@ -450,7 +444,7 @@ struct SettingsView: View {
     }
 
     private var audioFeedbackGroup: some View {
-        groupSection(label: "audio feedback", color: Theme.Hangs.Colors.pink) {
+        groupSection(label: "audio feedback") {
             HangsToggleRow(
                 label: "Speak scores aloud",
                 isOn: Binding(
@@ -486,7 +480,7 @@ struct SettingsView: View {
     }
 
     private var signedOutAccountGroup: some View {
-        groupSection(label: "account", color: Theme.Hangs.Colors.accentTeal) {
+        groupSection(label: "account") {
             VStack(spacing: Theme.Hangs.Spacing.md) {
                 Text("Sign in to keep your premium and history when you reinstall.")
                     .font(.hangsBody(14))
@@ -543,7 +537,7 @@ struct SettingsView: View {
     }
 
     private func signedInAccountGroup(tokens: AuthTokens) -> some View {
-        groupSection(label: "account", color: Theme.Hangs.Colors.accentTeal) {
+        groupSection(label: "account") {
             VStack(spacing: 0) {
                 if let name = tokens.accountName {
                     HangsValueRow(label: "Name", value: name)
@@ -673,11 +667,10 @@ struct SettingsView: View {
     // Reads viewModel.usageInfo (refreshed on Home appear); no extra network call.
 
     private var subscriptionGroup: some View {
-        groupSection(label: "subscription", color: Theme.Hangs.Colors.pink) {
+        groupSection(label: "subscription") {
             HangsConfigRow(
                 label: "Plan",
                 value: subscriptionPlanDisplay,
-                valueColor: Theme.Hangs.Colors.pink,
                 showsChevron: true
             ) {
                 viewModel.presentPaywall(source: .settings)
@@ -703,7 +696,7 @@ struct SettingsView: View {
     }
 
     private var aboutGroup: some View {
-        groupSection(label: "about", color: Theme.Hangs.Colors.blue) {
+        groupSection(label: "about") {
             HangsValueRow(label: "Version", value: appVersion)
 
             hairline
@@ -724,8 +717,7 @@ struct SettingsView: View {
             // error directs users here (#54 task 54.17 — row was dropped in 52.9).
             HangsConfigRow(
                 label: "Reset question history",
-                value: "\(viewModel.questionHistoryCount) / 500",
-                valueColor: Theme.Hangs.Colors.pink
+                value: "\(viewModel.questionHistoryCount) / 500"
             ) {
                 if viewModel.questionHistoryCount > 0 {
                     showResetConfirmation = true
@@ -778,7 +770,7 @@ struct SettingsView: View {
     // state before presenting.
 
     private var feedbackGroup: some View {
-        groupSection(label: "feedback", color: Theme.Hangs.Colors.accentTeal) {
+        groupSection(label: "feedback") {
             HangsConfigRow(
                 label: "Send feedback",
                 value: "",
@@ -808,7 +800,7 @@ struct SettingsView: View {
     // packs are a distinct concept from #93 credit packs.
 
     private var packsGroup: some View {
-        groupSection(label: "custom packs", color: Theme.Hangs.Colors.accentTeal) {
+        groupSection(label: "custom packs") {
             VStack(spacing: 0) {
                 #if DEBUG
                     HStack(spacing: 10) {
@@ -893,7 +885,7 @@ struct SettingsView: View {
     /// combinations without a rebuild. Recordings stay on the device until
     /// exported from here.
     private var voiceDiagnosticsGroup: some View {
-        groupSection(label: "voice diagnostics", color: Theme.Hangs.Colors.blue) {
+        groupSection(label: "voice diagnostics") {
             HangsToggleRow(
                 label: "Mic voice processing",
                 subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone, while sound plays from the iPhone or in Call Mode",
@@ -973,7 +965,7 @@ struct SettingsView: View {
             HangsConfigRow(
                 label: "Export recordings",
                 value: "\(savedRecordingCount)",
-                valueColor: savedRecordingCount > 0 ? Theme.Hangs.Colors.blue : Theme.Hangs.Colors.muted,
+                valueColor: savedRecordingCount > 0 ? Theme.Hangs.Colors.rowValue : Theme.Hangs.Colors.muted,
                 action: { exportAnswerRecordings() }
             )
             .accessibilityIdentifier("settings-export-recordings-row")
@@ -1039,7 +1031,7 @@ struct SettingsView: View {
 
     #if DEBUG
         private var developerGroup: some View {
-            groupSection(label: "developer", color: Theme.Hangs.Colors.blue) {
+            groupSection(label: "developer") {
                 NavigationLink(value: AppRoute.debugLog) {
                     HangsConfigRow(
                         label: "View Logs",
@@ -1057,12 +1049,11 @@ struct SettingsView: View {
 
     private func groupSection<Content: View>(
         label: LocalizedStringKey,
-        color: Color,
         @ViewBuilder content: () -> Content
     ) -> some View {
         let inner = content()
         return VStack(alignment: .leading, spacing: 10) {
-            HangsSectionLabel(text: label, color: color)
+            HangsSectionLabel(text: label)
                 .padding(.leading, Theme.Hangs.Spacing.xxs)
             HangsCard {
                 VStack(spacing: 0) {

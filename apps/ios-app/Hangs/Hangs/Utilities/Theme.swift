@@ -92,6 +92,14 @@ extension Theme.Hangs {
         /// under 3:1. teal-700 light (≈5:1 on the bar) / teal-400 dark (≈10:1).
         static let tealText = Color(light: Palette.teal700, dark: Palette.teal400)
 
+        // MARK: Rows and groups (#188 G12). One colour per role on every
+        // screen; pink stays reserved for the main action.
+        /// Mono caps label above a group of rows (Settings, Home, sheets).
+        static let sectionLabel = muted
+        /// The current value of a row (language, difficulty, plan). The darker
+        /// light-mode blue keeps 17pt row text above WCAG AA on white.
+        static let rowValue = blueText
+
         // MARK: Feedback
         static let greenCheck = Color(hex: Palette.green500) // accent-green
         static let greenCorrect = Color(hex: Palette.green600)
@@ -217,7 +225,7 @@ extension Font {
     static var hangsMonoLabel: Font { .hangsMono(11, weight: .medium) }
     static var hangsMonoMini: Font { .hangsMono(10, weight: .medium) }
     static var hangsMonoValue: Font { .hangsMono(14, weight: .medium) }
-    static var hangsBrand: Font { .hangsMono(17, weight: .semibold) }
+    static var hangsBrand: Font { .hangsMono(17, weight: .medium) }
     static var hangsButton: Font { .hangsBody(17, weight: .bold) }
     static var hangsBody: Font { .hangsBody(14) }
 }

@@ -85,7 +85,7 @@ struct QuestionRatingSheet: View {
 
     private var scoreGrid: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            HangsSectionLabel(text: "your rating", color: Theme.Hangs.Colors.pink)
+            HangsSectionLabel(text: "your rating")
             LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.xs) {
                 ForEach(Array(QuestionRatingViewModel.scoreRange), id: \.self) { score in
                     scoreButton(score)
@@ -119,7 +119,7 @@ struct QuestionRatingSheet: View {
     private var justificationEditor: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack {
-                HangsSectionLabel(text: "why? (optional)", color: Theme.Hangs.Colors.blue)
+                HangsSectionLabel(text: "why? (optional)")
                 Spacer()
                 if viewModel.voiceAvailable {
                     micButton

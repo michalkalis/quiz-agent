@@ -36,7 +36,9 @@ def txt(path: Path) -> str | None:
 
 
 def send(method: str, path: str, body: dict | None = None) -> dict:
-    print(f"  {method} {path} {json.dumps(body.get('data', {}).get('attributes', {}), ensure_ascii=False)[:160] if body else ''}")
+    data = (body or {}).get("data")
+    shown = data.get("attributes", {}) if isinstance(data, dict) else data  # relationship linkage is a list
+    print(f"  {method} {path} {json.dumps(shown, ensure_ascii=False)[:160] if body else ''}")
     if not APPLY:
         return {}
     r = requests.request(method, f"{BASE}{path}", headers={**HEADERS, "Content-Type": "application/json"}, json=body, timeout=60)

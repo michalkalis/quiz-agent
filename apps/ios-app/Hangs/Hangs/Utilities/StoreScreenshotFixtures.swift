@@ -66,7 +66,7 @@
                     openExplanation: "Jupiter sa otočí okolo svojej osi za necelých 10 hodín, rýchlejšie ako ktorákoľvek iná planéta. Rýchla rotácia ho dokonca na póloch mierne splošťuje.",
                     openSourceUrl: "https://sk.wikipedia.org/wiki/Jupiter_(planéta)",
                     mcqQuestion: "Ktorá krajina má najviac časových pásiem, ak rátame aj zámorské územia?",
-                    mcqOptions: ["Rusko", "Spojené štáty", "Francúzsko", "Čína"],
+                    mcqOptions: ["Spojené štáty", "Spojené kráľovstvo", "Francúzsko", "Austrália"],
                     mcqExplanation: "Francúzsko pokrýva 12 časových pásiem vďaka zámorským územiam, ako sú Francúzska Polynézia, Réunion či Nová Kaledónia.",
                     packTopic: "Vesmír pre deti: planéty, rakety a astronauti",
                     packRowLabel: "Vesmír pre deti"
@@ -78,7 +78,7 @@
                     openExplanation: "Jupiter se otočí kolem své osy za necelých 10 hodin, rychleji než kterákoli jiná planeta. Rychlá rotace ho dokonce na pólech mírně zplošťuje.",
                     openSourceUrl: "https://cs.wikipedia.org/wiki/Jupiter_(planeta)",
                     mcqQuestion: "Která země má nejvíce časových pásem, když počítáme i zámořská území?",
-                    mcqOptions: ["Rusko", "Spojené státy", "Francie", "Čína"],
+                    mcqOptions: ["Spojené státy", "Spojené království", "Francie", "Austrálie"],
                     mcqExplanation: "Francie pokrývá 12 časových pásem díky zámořským územím, jako jsou Francouzská Polynésie, Réunion nebo Nová Kaledonie.",
                     packTopic: "Vesmír pro děti: planety, rakety a astronauti",
                     packRowLabel: "Vesmír pro děti"
@@ -90,7 +90,7 @@
                     openExplanation: "Jupiter spins once in just under 10 hours, faster than any other planet. The quick spin even flattens it slightly at the poles.",
                     openSourceUrl: "https://en.wikipedia.org/wiki/Jupiter",
                     mcqQuestion: "Which country has the most time zones, counting its overseas territories?",
-                    mcqOptions: ["Russia", "United States", "France", "China"],
+                    mcqOptions: ["United States", "United Kingdom", "France", "Australia"],
                     mcqExplanation: "France covers 12 time zones thanks to overseas territories such as French Polynesia, Réunion and New Caledonia.",
                     packTopic: "Space for kids: planets, rockets and astronauts",
                     packRowLabel: "Space for kids"

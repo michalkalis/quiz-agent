@@ -31,6 +31,14 @@ struct StoreScreenshotFixturesTests {
         #expect(StoreScreenshotFixtures.openQuestion(content, language: language).category == "science-nature")
     }
 
+    @Test("No store screenshot mentions Russia (founder rule for the public listing)", arguments: ["en", "sk", "cs"])
+    func fixturesNeverMentionRussia(language: String) {
+        let c = StoreScreenshotFixtures.content(forQuizLanguage: language)
+        let all = ([c.mcqQuestion, c.mcqExplanation, c.openQuestion, c.openExplanation] + c.mcqOptions).joined(separator: " ")
+        #expect(!all.localizedCaseInsensitiveContains("Russia"))
+        #expect(!all.localizedCaseInsensitiveContains("Rusko"))
+    }
+
     @Test("sk and cs never fall back to English content")
     func localizedContentDiffersFromEnglish() {
         let en = StoreScreenshotFixtures.content(forQuizLanguage: "en")

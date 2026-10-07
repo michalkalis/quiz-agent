@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · ready-for-agent
 **Reversibility:** a
-**Status:** Tool chosen 2026-06-09 — **reuse Sentry** (founder: "anything free; sentry or firebase"). Sentry is already integrated, EU-aligned, free tier, and satisfies this issue's own "don't ship two analytics SDKs" guard; Firebase Analytics is the fallback if Sentry's funnel surface proves too thin post-launch. From launch decision #11 (`docs/product/launch-decisions-2026-06-08.md`). **2026-06-10: decomposed into tasks 51.1–51.5** (Ralph 51.1/51.3/51.4 via `scripts/ralph/launch-issue51.sh`; founder gate 51.2; laptop session 51.5).
+**Status:** **Tool decision REVISED 2026-10-07 — own first-party solution** (events in our Postgres, emitted mainly server-side; Sentry stays for crashes/health only). Supersedes the 2026-06-09 "reuse Sentry" call: Sentry has no funnels/retention/cohorts. Taxonomy (51.1/51.2) still valid. Tasks 51.3–51.5 rewritten below.
 **Created:** 2026-06-09
 **Related:** `docs/product/launch-decisions-2026-06-08.md` (#11), `reference_sentry` memory, PRDs in `docs/product/INDEX.md`
 
@@ -19,7 +19,18 @@ reliability** (how often an answer is captured/understood on first try), and **w
 Without instrumentation we launch blind — we can't tell whether the voice-first model actually works
 for users or where they drop off. Analytics is a stated launch need (#11).
 
-## Tool decision (resolved 2026-06-09)
+## Tool decision — revised 2026-10-07 (founder, in-chat)
+
+**Own solution: an append-only analytics events table in the quiz-agent Postgres.** Why:
+- Most taxonomy events already pass through the backend (quiz start, answer evaluation + correctness, quota hit, purchases via RevenueCat webhook) → emit there, no client SDK, nothing stored on device for analytics (cleanest ePrivacy Art. 5(3) / GDPR position, no consent UI).
+- The few client-only events (paywall viewed, quiz abandoned, transcription failed / retry) go to our own endpoint, not a third party.
+- Identity = existing anonymous subject id; `daily_usage` already gives DAU + retention.
+- Building it is cheap with agentic coding; data stays in one place; €0.
+- **Viewing:** for now ask Claude to query the DB on demand. A dashboard (Metabase or similar) is wanted later, not now.
+- Also turn on App Store Connect App Analytics (free: downloads, D1/7/28 retention, subscriptions; hides rows < 5 users).
+- Rejected: Firebase (US vendor, consent), PostHog/Mixpanel/Amplitude (overkill, consent), Sentry (no funnels/retention). Fallback if own solution proves too costly to maintain: TelemetryDeck (EU, free tier).
+
+## Tool decision (original, 2026-06-09 — superseded)
 
 **Reuse Sentry.** Founder constraint was "anything free; sentry or firebase." Of those:
 - **Sentry** — already integrated (org `missinghue` / project `carquiz`), EU-aligned, free tier, no
@@ -69,14 +80,15 @@ Map the PRD metrics to concrete events with properties:
 - [x] **51.2 Founder skim of the taxonomy** (~5 min). Confirm the event list + properties; check nothing conflicts with the privacy labels planned in #50. Edit inline, flip to `[x]`.
       **Done 2026-07-14**: founder-approved 2026-07-14 — 10 events incl. `quota_hit` (G2, interactive in-chat).
 
-- [ ] **51.3 Backend instrumentation.** *(Gated on 51.2.)* Emit the backend-truth events from the taxonomy (answer correctness with category + question type; transcription failures; quota hit) via the existing `sentry_sdk` init (`apps/quiz-agent/app/main.py:50`). Mock Sentry in tests.
-      **Acceptance**: `pytest tests/ -v` green; each emit covered by a unit test asserting event name + properties; zero events not in the taxonomy doc.
+- [ ] **51.3 Backend events store + emits.** Append-only events table (name, subject id, session id, properties JSON, app version, timestamp) + migration; emit the backend-truth taxonomy events where they happen (answer evaluated w/ correctness + category + question type, quiz started/completed, quota hit, purchase from the RC webhook). Add purchase/paywall events to `docs/product/analytics-events.md` (taxonomy is otherwise approved). Retention: delete raw events after a fixed window; deletion on account delete.
+      **Acceptance**: `pytest` green; each emit has a test asserting name + properties; no event outside the taxonomy; no transcript/answer text stored.
 
-- [ ] **51.4 iOS instrumentation — code + unit tests.** *(Gated on 51.2.)* Small `AnalyticsClient` seam (protocol + Sentry-backed impl, mock in tests); hook the existing `QuizViewModel` phase transitions per the taxonomy — no parallel state source (scope guard). Sentry SDK is already initialised in `HangsApp.swift`.
-      **Acceptance**: unit tests with the mocked client assert each iOS taxonomy event fires on its transition; iOS unit-test suite green on mba (Xcode 26.3).
+- [ ] **51.4 iOS client-only events.** Small `AnalyticsClient` seam posting the client-only events (paywall viewed, quiz abandoned, transcription failed, answer retry) to a backend ingest endpoint, batched, fire-and-forget; hooked on existing `QuizViewModel` transitions (no parallel state source).
+      **Acceptance**: unit tests with a mocked client assert each event fires on its transition.
 
-- [SESSION] **51.5 End-to-end verify + dashboard.** Laptop: drive the app in the simulator, confirm events arrive in Sentry (org `missinghue` / project `carquiz`); build the dashboard/queries for completion rate, first-try voice capture rate, wrong-answer rate. Record the dashboard URL here.
-      **Acceptance**: all three metrics visible on a live dashboard fed by real simulator events.
+- [ ] **51.5 Privacy label + manifest.** Update `PrivacyInfo.xcprivacy` and the App Store privacy label: Product Interaction (analytics, not linked to identity if we keep only the anonymous id, not tracking) **plus the already-missing Sentry declarations** (crash + performance data). Pre-launch blocker.
+
+- [SESSION] **51.6 E2E verify + saved queries.** Drive the app, confirm events land; write saved SQL for completion rate, first-try voice capture rate, wrong-answer rate, DAU/retention so Claude can answer on demand. Dashboard deferred.
 
 ## Success criteria
 
@@ -90,7 +102,8 @@ Map the PRD metrics to concrete events with properties:
 - [ ] An event taxonomy doc exists; each event traces to a PRD success metric, and each of the three target metrics (completion rate, first-try voice capture rate, wrong-answer rate) traces to ≥1 event.
 - [ ] `pytest tests/ -v` is green in `apps/quiz-agent`; every backend taxonomy event has a unit test asserting its name + required properties, and no event outside the taxonomy is emitted.
 - [ ] iOS unit tests pass on mba; each iOS taxonomy event is asserted to fire on its named `QuizViewModel` state transition via the mocked analytics client.
-- [ ] [HUMAN] A live Sentry dashboard shows completion rate, first-try voice capture rate, and wrong-answer rate fed by real (simulator) events; its URL is recorded in this issue. *(task 51.5 [SESSION] — out of the unattended loop's reach; tagged `[HUMAN]` so the goal-check treats it as out-of-loop — #57 57.14)*
+- [ ] [HUMAN] Saved queries return completion rate, first-try voice capture rate, wrong-answer rate and DAU/retention from real (simulator) events *(task 51.6)*.
+- [ ] Privacy manifest + App Store label declare analytics and Sentry data *(task 51.5)*.
 - [ ] No analytics key/credential is committed (lives in gitignored `.env`).
 
 ## Memory references

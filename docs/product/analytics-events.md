@@ -22,13 +22,12 @@
 | Event | When | Properties |
 |---|---|---|
 | `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
-| `onboarding_finished` | onboarding completed or skipped | `outcome`, `step` |
+| `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (mic_granted / mic_denied / mic_later / skipped), `step` |
 | `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point` |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
 | `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry` |
-| `voice_capture_failed` | on-device capture/recognition fails | `reason`, `question_id` |
+| `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
 | `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
-| `quiz_minimized` | quiz minimised | `phase` |
 | `paywall_viewed` | paywall shown | `source` (quota / home / settings / completion) |
 | `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending) |
 | `restore_result` | restore purchases ends | `outcome` |
@@ -46,7 +45,7 @@
 | Completion rate | sessions with `quiz_completed` (reason ≠ usage_limit) ÷ sessions with `quiz_started`, per day |
 | Abandon rate | `quiz_abandoned` sessions ÷ `quiz_started` sessions |
 | Wrong-answer rate | `answer_evaluated` result = incorrect ÷ all graded (exclude skipped), sliced by category / question_type / difficulty |
-| Voice first-try capture | `answer_submitted` (input_mode = voice, is_retry = false) ÷ (that + `voice_capture_failed` + `transcription_failed`) |
+| Voice first-try capture | per (session_id, question_id) with a voice attempt: first try succeeded = no `voice_capture_failed` / `transcription_failed` for that pair AND its `answer_submitted` voice row has is_retry = false. (A server-rejected upload also logs `answer_submitted`, so never use that event alone as the success count.) |
 | Skip rate | `answer_evaluated` result = skipped ÷ all |
 | DAU / retention | distinct `subject_id` per day on `app_opened` (D1/D7/D30 cohorts by first `app_opened`) |
 | Paywall conversion | `purchase_result` outcome = success ÷ `paywall_viewed`, by `source` |

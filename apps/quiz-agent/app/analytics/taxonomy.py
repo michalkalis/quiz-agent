@@ -44,7 +44,6 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "answer_submitted": frozenset({"input_mode", "question_id", "is_retry"}),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
-    "quiz_minimized": frozenset({"phase"}),
     "paywall_viewed": frozenset({"source"}),
     "purchase_result": frozenset({"product_id", "kind", "outcome"}),
     "restore_result": frozenset({"outcome"}),

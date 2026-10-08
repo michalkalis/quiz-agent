@@ -1,0 +1,14 @@
+# texts
+trubbo.
+JEJDA
+No internet connection
+Check your Wi-Fi or mobile data and try again.
+Zkus znovu
+Na úvod
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.retry
+error.home

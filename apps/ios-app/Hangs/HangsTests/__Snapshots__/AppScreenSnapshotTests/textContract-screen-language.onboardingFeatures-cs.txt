@@ -1,0 +1,31 @@
+# texts
+trubbo.
+BEZ RUKOU
+Ideální do auta, do kuchyně i na procházku.
+Řekni „start“
+Po otázce řekni „start“ nebo klepni na Start a začni odpovídat.
+Pět jednoduchých slov
+start · ok · next · repeat · skip. To je celá sada příkazů.
+Výchozí je angličtina
+Příkazy se ve výchozím nastavení říkají anglicky. Když v Nastavení změníš jazyk kvízu na češtinu, říkáš je česky.
+Tlačítka fungují vždy
+Každý příkaz má i tlačítko na obrazovce. Hlas je jen možnost.
+BEZ RUKOU
+Ideální do auta, do kuchyně i na procházku.
+Řekni „start“
+Po otázce řekni „start“ nebo klepni na Start a začni odpovídat.
+Pět jednoduchých slov
+start · ok · next · repeat · skip. To je celá sada příkazů.
+Výchozí je angličtina
+Příkazy se ve výchozím nastavení říkají anglicky. Když v Nastavení změníš jazyk kvízu na češtinu, říkáš je česky.
+Tlačítka fungují vždy
+Každý příkaz má i tlačítko na obrazovce. Hlas je jen možnost.
+Pokračuj
+Přeskoč
+# identifiers
+onboarding.root
+onboarding.features
+onboarding.features
+onboarding.pageIndicator
+onboarding.continue
+onboarding.skip

@@ -1,0 +1,10 @@
+# texts
+correct
+Your pack is ready to play
+5 of 30 questions ready. The rest keeps generating while you play.
+Start quiz
+Close
+# identifiers
+orderPack.readyCount
+orderProgress.startQuiz
+orderPack.closeButton

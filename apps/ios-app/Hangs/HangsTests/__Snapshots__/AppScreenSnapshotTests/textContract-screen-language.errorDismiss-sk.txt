@@ -1,0 +1,12 @@
+# texts
+trubbo.
+OJOJ
+Action cancelled
+Your submission was interrupted. Try answering again.
+Zavri
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.dismiss

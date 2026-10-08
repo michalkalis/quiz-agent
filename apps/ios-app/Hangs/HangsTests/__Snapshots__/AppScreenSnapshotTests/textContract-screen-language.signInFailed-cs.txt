@@ -1,0 +1,15 @@
+# texts
+ZACHOVEJ SI NÁKUP
+Přihlášením se Premium naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování.
+Přihlášení se nepodařilo. Zkontroluj připojení a zkus to znovu, tvůj nákup zůstává uložený v tomto zařízení.
+Později, přihlásím se v Nastavení
+Zachová tvé nákupy a pokrok na všech zařízeních. Nic jiného se nesdílí.
+# identifiers
+signInPrompt.root
+signInPrompt.badge
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.errorBanner
+signInPrompt.appleButton
+signInPrompt.later
+signInPrompt.privacyNote

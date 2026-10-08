@@ -1,0 +1,6 @@
+# texts
+PROCESSING
+Transcribing…
+Cancel
+# identifiers
+confirmation.cancel

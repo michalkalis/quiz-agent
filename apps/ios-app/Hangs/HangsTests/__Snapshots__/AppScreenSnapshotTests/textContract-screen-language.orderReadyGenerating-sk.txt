@@ -1,0 +1,10 @@
+# texts
+correct
+Tvoj balík je pripravený na hranie
+Pripravených otázok: 5 z 30. Zvyšok sa generuje, kým hráš.
+Spusti kvíz
+Zavri
+# identifiers
+orderPack.readyCount
+orderProgress.startQuiz
+orderPack.closeButton

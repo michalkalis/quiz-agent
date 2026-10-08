@@ -1,0 +1,20 @@
+# texts
+trubbo.
+COMPLETE
+final score
+7.5
+out of 10
+Correct
+7
+Incorrect
+3
+Accuracy
+70%
+Play Again
+Home
+# identifiers
+completion.close
+completion.score
+completion.breakdown
+completion.playAgain
+completion.home

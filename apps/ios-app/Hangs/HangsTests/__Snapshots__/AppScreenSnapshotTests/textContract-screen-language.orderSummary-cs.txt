@@ -1,0 +1,11 @@
+# texts
+Vlastní balíček · 30 otázek
+Famous bridges of the world and the engineers who built them
+Jazyk kvízu
+English
+Po zaplacení už objednávku nelze zrušit. Generování balíčku je prémiová placená služba a spustí se okamžitě.
+Zaplať a vytvoř balíček
+# identifiers
+orderPack.summaryPrompt
+orderPack.noCancelNotice
+orderPack.pay

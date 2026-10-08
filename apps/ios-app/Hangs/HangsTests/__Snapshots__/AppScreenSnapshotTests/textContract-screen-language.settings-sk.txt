@@ -1,0 +1,193 @@
+# texts
+NASTAVENIA
+hlas
+Hlasové príkazy
+Hlasové príkazy bez rúk
+
+Hlasové nápovedy
+Zobrazovať pod lištou počúvania slová, ktoré môžeš povedať
+
+Stav
+Ready
+Stav
+Ready
+Automaticky nahrávať odpovede
+
+Automaticky potvrdzovať odpovede
+
+Mikrofón
+Automatic
+Mikrofón
+Automatic
+Režim hovoru
+Používa Bluetooth mikrofón (v aute sa môže tváriť ako hovor)
+
+jazyk
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+English
+Jazyk kvízu
+English
+Otázky, odpovede a hlas
+Jazyk aplikácie
+English
+Jazyk aplikácie
+English
+Tlačidlá, popisy a nastavenia
+kvíz
+0s
+10s
+15s
+30s
+45s
+60s
+90s
+120s
+Čas na rozmyslenie
+10s
+Čas na rozmyslenie
+10s
+5 questions
+10 questions
+15 questions
+20 questions
+Počet otázok v kvíze
+10 questions
+Počet otázok v kvíze
+10 questions
+5s
+8s
+10s
+15s
+Automatický posun
+8s
+Automatický posun
+8s
+Off
+15s
+20s
+30s
+45s
+60s
+Časový limit na odpoveď
+30s
+Časový limit na odpoveď
+30s
+After each question
+At the end of the quiz
+Odhalenie odpovedí
+After each question
+Odhalenie odpovedí
+After each question
+zvuková odozva
+Oznamovať skóre nahlas
+
+Zvuky nahrávania
+
+účet
+Prihlás sa, aby ti po preinštalovaní zostalo Premium aj história.
+Exportuj moje údaje
+
+Exportuj moje údaje
+
+Vymaž moje údaje
+
+Vymaž moje údaje
+
+predplatné
+Plán
+Loading…
+Plán
+Loading…
+o aplikácii
+Verzia
+Verzia
+Zobraz úvod znova
+
+Zobraz úvod znova
+
+Vynuluj históriu otázok
+0 / 500
+Vynuluj históriu otázok
+0 / 500
+Zásady ochrany súkromia
+
+Zásady ochrany súkromia
+
+Podmienky používania
+
+Podmienky používania
+
+Otázky a vyhodnotenie odpovedí generuje umelá inteligencia a môžu obsahovať nepresnosti.
+spätná väzba
+Odošli spätnú väzbu
+
+Odošli spätnú väzbu
+
+vlastné balíky
+Admin kľúč
+Ulož
+Vytvor balík
+
+Vytvor balík
+
+# identifiers
+settings.voiceCommands
+settings.voiceHints
+settings-voice-commands-status
+settings.autoRecord
+settings.autoConfirm
+settings-microphone-row
+settings-call-mode-toggle
+settings-language-menu
+settings.language.en
+settings.language.sk
+settings.language.cs
+settings-app-language-row
+settings-thinking-time-menu
+settings.thinkingTime.0
+settings.thinkingTime.10
+settings.thinkingTime.15
+settings.thinkingTime.30
+settings.thinkingTime.45
+settings.thinkingTime.60
+settings.thinkingTime.90
+settings.thinkingTime.120
+settings-question-count-menu
+settings.questionCount.5
+settings.questionCount.10
+settings.questionCount.15
+settings.questionCount.20
+settings-auto-advance-menu
+settings.autoAdvance.5
+settings.autoAdvance.8
+settings.autoAdvance.10
+settings.autoAdvance.15
+settings-answer-limit-menu
+settings.answerLimit.0
+settings.answerLimit.15
+settings.answerLimit.20
+settings.answerLimit.30
+settings.answerLimit.45
+settings.answerLimit.60
+settings-answer-reveal-menu
+settings.answerReveal.per_question
+settings.answerReveal.end_of_set
+settings-speak-scores-toggle
+settings-recording-sounds-toggle
+account.signInWithApple
+account.exportData
+account.deleteMyData
+settings.subscription
+settings.replayOnboarding
+settings.resetHistory
+settings.privacyPolicy
+settings.termsOfUse
+settings.aiDisclosure
+settings.sendFeedback
+packs.adminKeyField
+packs.saveAdminKey
+packs.createPack
+packs.myPacks

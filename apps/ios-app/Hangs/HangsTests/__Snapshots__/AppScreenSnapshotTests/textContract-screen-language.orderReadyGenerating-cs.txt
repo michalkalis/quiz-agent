@@ -1,0 +1,10 @@
+# texts
+correct
+Tvůj balíček je připravený ke hraní
+Připravených otázek: 5 z 30. Zbytek se generuje, zatímco hraješ.
+Spusť kvíz
+Zavři
+# identifiers
+orderPack.readyCount
+orderProgress.startQuiz
+orderPack.closeButton

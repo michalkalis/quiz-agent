@@ -1,0 +1,20 @@
+# texts
+trubbo.
+HOTOVO
+konečné skóre
+7.5
+out of 10
+Správne
+7
+Nesprávne
+3
+Úspešnosť
+70%
+Hraj znova
+Úvod
+# identifiers
+completion.close
+completion.score
+completion.breakdown
+completion.playAgain
+completion.home

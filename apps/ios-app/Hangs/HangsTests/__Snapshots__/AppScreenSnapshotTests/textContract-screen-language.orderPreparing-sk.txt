@@ -1,0 +1,7 @@
+# texts
+Pripravujem tvoj balík…
+Zvyčajne to trvá pár minút. Prvá objednávka po dlhšej prestávke môže trvať o niečo dlhšie.
+Aplikáciu môžeš zavrieť. Hotový balík nájdeš v Mojich balíkoch.
+Rozumiem
+# identifiers
+orderPack.gotIt

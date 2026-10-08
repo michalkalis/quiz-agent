@@ -1,0 +1,24 @@
+# texts
+trubbo.
+COMPLETE
+final score
+7.5
+out of 10
+Correct
+7
+Incorrect
+3
+Accuracy
+70%
+Running low on free questions
+^[4 free questions](inflect: true) left this month.
+Go Unlimited
+Play Again
+Home
+# identifiers
+completion.close
+completion.score
+completion.breakdown
+completion.upsell
+completion.playAgain
+completion.home

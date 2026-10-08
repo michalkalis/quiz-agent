@@ -1,0 +1,12 @@
+# texts
+TVOJA ODPOVEĎ
+Paris, I think. Or maybe Lyon.
+Potvrď
+4s
+Znova
+# identifiers
+confirmation.edit
+confirmation.answer
+
+confirmation.confirm
+confirmation.reRecord

@@ -1,0 +1,15 @@
+# texts
+trubbo.
+MIC IS OFF
+Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers.
+MIC IS OFF
+Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers.
+Open Settings
+Type answers instead
+# identifiers
+onboarding.root
+onboarding.denied
+onboarding.denied
+onboarding.pageIndicator
+onboarding.openSettings
+onboarding.typeInstead

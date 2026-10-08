@@ -64,7 +64,9 @@ async def _job_heartbeat(session_factory: Any, job_id: uuid.UUID) -> None:
         try:
             async with session_factory() as session:
                 await session.execute(
-                    text("UPDATE generation_jobs SET updated_at = now() WHERE id = :id"),
+                    text(
+                        "UPDATE generation_jobs SET updated_at = now() WHERE id = :id"
+                    ),
                     {"id": job_id},
                 )
                 await session.commit()
@@ -91,8 +93,13 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     from app import feature_flags
 
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
+    generator = ctx["generator"]
+    if ctx.get("generator_alt") is not None and (
+        llm_factory.pick_generation_model() == llm_factory.GEN_ALT
+    ):
+        generator = ctx["generator_alt"]
     generation = GenerationStage(
-        ctx["generator"],
+        generator,
         ctx.get("answer_normalizer"),
         expiry_classifier=ctx.get("expiry_classifier"),
         topicality_classifier=ctx.get("topicality_classifier"),
@@ -174,7 +181,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
 
     logger.info(
         "process_order start order_id=%s attempt=%s",
-        order_id, ctx.get("job_try", 1),
+        order_id,
+        ctx.get("job_try", 1),
     )
 
     try:
@@ -200,11 +208,16 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             # at 'pending' before enqueueing, so no real attempt starts here.
             arq_job_id = ctx.get("job_id")
             if order.status in ("delivered", "failed", "refunded") or (
-                job is not None and arq_job_id and arq_job_id != attempt_job_id(order_uuid, job)
+                job is not None
+                and arq_job_id
+                and arq_job_id != attempt_job_id(order_uuid, job)
             ):
                 logger.warning(
                     "process_order skipped superseded attempt order_id=%s arq_job_id=%s "
-                    "order_status=%s", order_id, arq_job_id, order.status,
+                    "order_status=%s",
+                    order_id,
+                    arq_job_id,
+                    order.status,
                 )
                 return
             if job is not None:
@@ -266,7 +279,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             llm_factory.set_usage_handler(None)
             logger.info(
                 "process_order llm_usage order_id=%s usage=%s",
-                order_id, json.dumps(usage_recorder.summary()),
+                order_id,
+                json.dumps(usage_recorder.summary()),
             )
         if pack is None:
             raise RuntimeError("PackGenerator returned no pack — PersistStage missing")
@@ -280,7 +294,9 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
 
         search_cost_cents = tracker.search_cost_cents
         stage_cost_cents = generator.last_ctx.cost_cents if generator.last_ctx else 0
-        llm_cost_cents = int(round(llm_cost_usd * 100)) if llm_cost_usd is not None else 0
+        llm_cost_cents = (
+            int(round(llm_cost_usd * 100)) if llm_cost_usd is not None else 0
+        )
         cost_cents = stage_cost_cents + search_cost_cents + llm_cost_cents
 
         async with session_factory() as session:
@@ -306,7 +322,9 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         await sink.publish(done_event_id, "done", 100)
         logger.info(
             "process_order delivered order_id=%s pack_id=%s cost_cents=%s",
-            order_id, pack.id, cost_cents,
+            order_id,
+            pack.id,
+            cost_cents,
         )
 
     except asyncio.CancelledError:
@@ -366,7 +384,9 @@ async def _attempt_cost_cents(
     number we could not measure must not replace the real failure.
     """
     try:
-        stage_cost = generator.last_ctx.cost_cents if generator and generator.last_ctx else 0
+        stage_cost = (
+            generator.last_ctx.cost_cents if generator and generator.last_ctx else 0
+        )
         search_cost = tracker.search_cost_cents if tracker is not None else 0
         llm_cost = 0
         if fetch_usage and usage_before is not None:
@@ -381,8 +401,10 @@ async def _attempt_cost_cents(
 
 def _make_sink_factory(sink: DBProgressSink):
     """Return a sink_factory closure for PackGenerator."""
+
     def _factory(_order_id: str) -> DBProgressSink:
         return sink
+
     return _factory
 
 
@@ -432,7 +454,9 @@ async def _handle_failure(
             # Two ways an attempt is the last one: this arq sequence is out of
             # tries (terminal for the order today — it is what makes /retry
             # reachable), or the order has burned its whole lifetime budget.
-            is_final = job_try >= max_tries or effective_try >= order_budget.attempt_budget()
+            is_final = (
+                job_try >= max_tries or effective_try >= order_budget.attempt_budget()
+            )
             job.status = "failed"
             job.error = repr(exc)
             job.retry_count = effective_try
@@ -483,5 +507,6 @@ async def _handle_failure(
     except Exception as inner:
         logger.error(
             "process_order _handle_failure itself failed order_id=%s inner=%r",
-            order_id, inner,
+            order_id,
+            inner,
         )

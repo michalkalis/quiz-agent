@@ -1,0 +1,294 @@
+{
+  "input": [
+    "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent-wt-cmp2/docs/testing/runs/model-compare-2026-10-08b/opus55.json"
+  ],
+  "candidates": 29,
+  "env": {
+    "DEDUP_STRICTNESS_PER_CATEGORY": null,
+    "ANSWER_CAP": null,
+    "DEDUP_QA_EMBEDDING": null,
+    "DEDUP_GRAYZONE_JUDGE": null,
+    "GRAYZONE_JUDGE_MAX_CALLS": null
+  },
+  "info": {
+    "kept": 20,
+    "dropped": 9,
+    "fact_dropped": 0,
+    "answer_cap": 0,
+    "drop_reasons": {
+      "cosine": 9,
+      "cosine_qa": 0,
+      "grayzone_judge": 0,
+      "jaccard": 0,
+      "in_batch": 0,
+      "fact_key": 0,
+      "fact_content": 0,
+      "answer_cap": 0
+    },
+    "grayzone_judge_calls": 0,
+    "grayzone_judge_skipped": 0
+  },
+  "decisions": [
+    {
+      "id": "b5b178f9-db89-4d8b-ba5d-16d5254973da",
+      "question": "Early golf balls were completely smooth, but today every golf ball is covered in small dimples. Why?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "aee6b204-56ad-4bf3-b187-2fdafe3efb8d",
+      "question": "On which planet does a single rotation, one full day, take longer than an entire orbit of the Sun?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "09c1b50c-b8ee-4b1e-b61b-fc154f3354f2",
+      "question": "The Eiffel Tower is measurably taller on a hot summer day than in winter. What causes this growth?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "e64e1012-180a-490d-ba67-bd99d3fa8576",
+      "question": "Which is the only nation to have played at every men's FIFA World Cup finals tournament since 1930?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "611edf68-97bc-4c89-b6eb-66a6cd62cc91",
+      "question": "The 'Fosbury Flop', clearing the bar backwards and head-first, revolutionised which athletics event after the 1968 Olympics?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "f099d382-20bc-4a57-a9dd-833883a82e82",
+      "question": "Outside Japan, most of the green 'wasabi' served with sushi is actually mainly which other pungent root, dyed green?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "19e794a1-36ec-4798-be82-85bbe815fbae",
+      "question": "The world's most expensive spice by weight is hand-picked as three tiny red threads from the centre of which purple flower?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a956b266-8db3-4732-8289-a1dbdf373f1a",
+      "question": "Counting all its overseas territories, which country covers more time zones than any other, twelve in total?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "7fbeb6e5-ea41-421f-8830-70de76670253",
+      "question": "Which Siberian lake, the deepest on Earth, holds roughly a fifth of the planet's unfrozen surface fresh water?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "5ab1233f-eeb1-4a16-a9da-89fd822e0809",
+      "question": "After his defeat at Waterloo, Napoleon was exiled to which remote South Atlantic island, where he died in 1821?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "adb7b070-712b-4000-be71-61a1e57fd900",
+      "question": "In which year did Edmund Hillary and Tenzing Norgay first stand on the summit of Mount Everest?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "eb0420cb-9c75-43b4-b466-41f28951f0d8",
+      "question": "Who remains the only person ever to have won Nobel Prizes in two different sciences?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "662f7299-a32a-47b2-a7a8-26d10748567c",
+      "question": "How many hearts does an octopus have?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "cb8c177d-e9bd-4803-8c70-8b43cdb092ee",
+      "question": "True or false: bulls charge at a matador's cape because the colour red enrages them.",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "79030733-e4e7-41b6-a2b1-ec60eda23d96",
+      "question": "Roughly how far away is the Moon from Earth?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "e3640719-11ac-46bb-8da9-b0437f3fb47b",
+      "question": "Bananas are very slightly radioactive. Which element they are famously rich in is responsible?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "ae18abce-87e9-4fa3-a474-78c3c37b5786",
+      "question": "Three of these countries are landlocked. Which one has a sea coast?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "990b7182-b640-43fd-b0dc-259bee36a449",
+      "question": "The shoreline of which salt lake is the lowest point on dry land anywhere on Earth?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "4b4815bd-b8cb-48a0-8e05-18193da1aa9d",
+      "question": "Because Earth bulges at the equator, the point on land farthest from Earth's centre isn't Everest's summit but a volcano's peak in which country?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "90a1f919-702c-44a1-9463-3a5b7674f0dc",
+      "question": "True or false: Cleopatra lived closer in time to the first Moon landing than to the building of the Great Pyramid of Giza.",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "ab24963b-3fb6-4380-98b4-4500a4b15c71",
+      "question": "The Rosetta Stone repeats one decree in hieroglyphs, in Demotic script, and in which language scholars could already read, the key to cracking the code?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "2a93eb45-8212-4ba9-9d8e-3cd68e780135",
+      "question": "Despite its Roman-sounding name, the Caesar salad was invented in the 1920s in which Mexican city, just south of San Diego?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "df472a1a-8963-4f07-a60f-aed16c03217c",
+      "question": "With which song did ABBA win the Eurovision Song Contest in 1974?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "009f6698-78a9-4679-8c12-a0bd92350d19",
+      "question": "Released in 1995, what was the first feature-length film made entirely with computer animation?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "1d193b3c-0fe8-4e88-bd91-87cc76327099",
+      "question": "Queen frontman Freddie Mercury was born Farrokh Bulsara in 1946 on which island off the coast of East Africa?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a80da5fa-cfa7-4543-8d49-b6acf3397f93",
+      "question": "In the 1939 film 'The Wizard of Oz', Dorothy's magic slippers are ruby red. What colour were they in the original book?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "9935f182-700c-4edd-b5e7-2d4f05ebb968",
+      "question": "Before he was called Mario, Nintendo's famous hero made his debut in the 1981 arcade game 'Donkey Kong' under what name?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a6013d82-d3bf-4013-b13c-2937f7afada8",
+      "question": "The Rubik's Cube was invented in 1974 by an architecture professor in which country?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "388304d0-505b-492a-ba3a-f5ccbb2d99d2",
+      "question": "The marathon's oddly precise distance of 42.195 kilometres was set so the race at which city's Olympics could finish in front of the royal box?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    }
+  ]
+}

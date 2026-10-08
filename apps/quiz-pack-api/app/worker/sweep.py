@@ -103,12 +103,16 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
     if not stuck_ids:
         return
 
-    logger.info("sweep_stuck_orders found %d stuck order(s): %s", len(stuck_ids), stuck_ids)
+    logger.info(
+        "sweep_stuck_orders found %d stuck order(s): %s", len(stuck_ids), stuck_ids
+    )
     for order_id in stuck_ids:
         try:
             await _recover_stuck_order(ctx, order_id)
         except Exception:
-            logger.exception("sweep_stuck_orders failed to recover order_id=%s", order_id)
+            logger.exception(
+                "sweep_stuck_orders failed to recover order_id=%s", order_id
+            )
 
 
 async def _attempt_waiting_in_queue(
@@ -134,7 +138,9 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
 
     async with session_factory() as session:
         order_stmt = (
-            select(GenerationOrder).where(GenerationOrder.id == order_id).with_for_update()
+            select(GenerationOrder)
+            .where(GenerationOrder.id == order_id)
+            .with_for_update()
         )
         order = (await session.execute(order_stmt)).scalars().first()
         if order is None or order.status not in ("pending", "in_progress"):
@@ -149,7 +155,9 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
             return
 
         job_stmt = (
-            select(GenerationJob).where(GenerationJob.id == order.job_id).with_for_update()
+            select(GenerationJob)
+            .where(GenerationJob.id == order.job_id)
+            .with_for_update()
         )
         job = (await session.execute(job_stmt)).scalars().first()
         if job is None:

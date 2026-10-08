@@ -868,3 +868,31 @@ def test_worker_stages_use_default_170_parameters(
     assert dedup._strictness.profiles == {}
     assert topup._strictness.profiles == {}
     assert topup._strictness.answer_cap is False
+
+
+def test_build_stages_routes_an_order_to_the_alt_generator(monkeypatch):
+    """Founder 2026-10-08 model mix: an order picked for the Fable share must
+    really generate on the alt generator — otherwise every pack silently runs
+    on Opus and the long-run Opus-vs-Fable comparison has no Fable data."""
+    from app.orchestrator.stages import GenerationStage
+    from app.worker.tasks import _build_stages as build_worker_stages
+    from quiz_shared.llm import factory as llm_factory
+
+    main, alt = object(), object()
+    ctx = {
+        "generator": main,
+        "generator_alt": alt,
+        "fact_verifier": object(),
+        "scorer": object(),
+        "question_store": object(),
+        "fact_sourcer": object(),
+        "session_factory": object(),
+    }
+
+    def generator_of(stages):
+        return next(s for s in stages if isinstance(s, GenerationStage))._generator
+
+    monkeypatch.setattr(llm_factory, "pick_generation_model", lambda: llm_factory.GEN_ALT)
+    assert generator_of(build_worker_stages(ctx)) is alt
+    monkeypatch.setattr(llm_factory, "pick_generation_model", lambda: llm_factory.GEN)
+    assert generator_of(build_worker_stages(ctx)) is main

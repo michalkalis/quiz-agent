@@ -70,7 +70,7 @@ def test_role_constants_are_frontier_only():
     exceptions: EVAL (serve-time hot path, own cost model) and the #135
     founder carve-outs of 2026-08-03 — VERIFY (cheaper evidence arbiter, D9)
     and ANSWERABILITY (cheap round-trip checker is the point, D10)."""
-    assert factory.GEN == "claude-fable-5-1"
+    assert factory.GEN == "claude-opus-5-5"
     assert factory.CRITIQUE == "gpt-5.6-sol"
     assert factory.EVAL == "gpt-4o-mini"  # serve-time, decided separately
     assert factory.PARSE == "gpt-5.6-sol"
@@ -269,3 +269,17 @@ def test_usage_proxy_forwards_only_while_handler_registered():
         factory.set_usage_handler(None)
     proxy.on_llm_end("after-clear")
     assert seen == ["while-registered"]
+
+
+def test_generation_model_mix_keeps_a_fable_share(monkeypatch):
+    """Founder 2026-10-08: Opus 5.5 generates by default, but ~15 % keeps
+    running on Fable 5.1 so player ratings can later show which model is
+    really better. If the mix silently collapsed to one model, that
+    comparison would never have data."""
+    assert factory.GEN == "claude-opus-5-5"
+    assert factory.GEN_ALT == "claude-fable-5-1"
+    assert factory.GEN_ALT_SHARE == 0.15
+    assert factory.pick_generation_model(rand=lambda: 0.10) == "claude-fable-5-1"
+    assert factory.pick_generation_model(rand=lambda: 0.20) == "claude-opus-5-5"
+    monkeypatch.setattr(factory, "GEN_ALT_SHARE", 0.0)
+    assert factory.pick_generation_model(rand=lambda: 0.0) == "claude-opus-5-5"

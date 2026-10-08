@@ -82,6 +82,7 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.answer_normalizer import AnswerNormalizer
     from app.generation.expiry_classifier import ExpiryClassifier
+    from app.generation.topicality_classifier import TopicalityClassifier
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.verification.fact_verifier import FactVerifier
@@ -109,6 +110,11 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # no LLM call and leaves expiry unset exactly as before.
     ctx["expiry_classifier"] = (
         ExpiryClassifier() if feature_flags.expiry_classification() else None
+    )
+    # Issue #195 — fresh-question boost classifier, default ON (founder: runs
+    # on every generation); TOPICALITY_CLASSIFICATION=0 leaves it `None`.
+    ctx["topicality_classifier"] = (
+        TopicalityClassifier() if feature_flags.topicality_classification() else None
     )
     ctx["fact_verifier"] = FactVerifier()
     # 46.B6 — logical-consistency judge for lateral puzzles; fail-safe to

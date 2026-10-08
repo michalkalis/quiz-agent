@@ -24,6 +24,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 # so every mock misses → APIConnectionError / non-fail-safe verdicts. Forcing it
 # here keeps the suite hermetic and identical across machines.
 os.environ["LLM_GATEWAY"] = "direct"
+# #195: the topicality classifier defaults ON in prod (founder: every
+# generation), which would add an unmocked LLM call to every worker/CLI-built
+# pipeline — incl. the order-e2e gate. Pin it off suite-wide, same reason as
+# above; its own tests stub the classifier or set the flag explicitly.
+os.environ["TOPICALITY_CLASSIFICATION"] = "0"
 
 try:
     from dotenv import load_dotenv

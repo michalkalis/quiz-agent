@@ -126,3 +126,15 @@ def test_d21b_slimdown_rollback_levers(monkeypatch: pytest.MonkeyPatch) -> None:
     assert feature_flags.generation_prompt_version() == "v2_cot"
     assert feature_flags.best_of_n() is True
     assert feature_flags.judge_gate() is True
+
+
+def test_topicality_classification_defaults_on_with_rollback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#195: founder 2026-10-08 — the fresh-question boost classifier runs on
+    every generation, so an unset env must mean ON (unlike the dormant #76
+    expiry flag); an explicit falsy value is the rollback lever."""
+    monkeypatch.delenv("TOPICALITY_CLASSIFICATION", raising=False)
+    assert feature_flags.topicality_classification() is True
+    monkeypatch.setenv("TOPICALITY_CLASSIFICATION", "0")
+    assert feature_flags.topicality_classification() is False

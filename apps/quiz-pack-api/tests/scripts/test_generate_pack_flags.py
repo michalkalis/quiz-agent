@@ -178,6 +178,22 @@ class TestExpiryClassifierWiring:
         assert stage._expiry_classifier is not None
 
 
+class TestTopicalityClassifierWiring:
+    """#195: the founder's corpus generation runs through this CLI, so the
+    default-ON topicality classifier must be wired here exactly as in the
+    worker — otherwise a CLI batch would ship with no fresh-question boost."""
+
+    def test_default_on_wires_classifier(self, monkeypatch):
+        monkeypatch.delenv("TOPICALITY_CLASSIFICATION", raising=False)
+        stage = TestExpiryClassifierWiring._generation_stage(monkeypatch)
+        assert stage._topicality_classifier is not None
+
+    def test_flag_off_leaves_classifier_dormant(self, monkeypatch):
+        monkeypatch.setenv("TOPICALITY_CLASSIFICATION", "0")
+        stage = TestExpiryClassifierWiring._generation_stage(monkeypatch)
+        assert stage._topicality_classifier is None
+
+
 class TestTopUpWiring:
     """2026-07-27 live-run F-b — the CLI omitted `TopUpStage`, so every pack
     that lost questions downstream just delivered short (the plain 100-question

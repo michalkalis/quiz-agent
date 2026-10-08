@@ -325,6 +325,7 @@ def _build_stages(
     from app import feature_flags
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.expiry_classifier import ExpiryClassifier
+    from app.generation.topicality_classifier import TopicalityClassifier
     from app.scoring.multi_model_scorer import MultiModelScorer
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
@@ -357,6 +358,12 @@ def _build_stages(
         generator,
         expiry_classifier=(
             ExpiryClassifier() if feature_flags.expiry_classification() else None
+        ),
+        # Issue #195 — same wiring as the worker: default ON.
+        topicality_classifier=(
+            TopicalityClassifier()
+            if feature_flags.topicality_classification()
+            else None
         ),
         # #160 — answer-blind auditor of the logical_puzzle routing marker.
         shape_classifier=ShapeClassifier(),

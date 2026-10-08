@@ -38,5 +38,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Forward-only per R8.
-    pass
+    op.drop_column("questions", "boost_until")

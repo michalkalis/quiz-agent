@@ -47,12 +47,14 @@ from ...auth.account_service import (
     bootstrap_with_attestation,
     erase_account,
     erase_anonymous,
+    linked_anon_ids,
     resolve_account,
     resolve_anonymous,
     revoke_apple_grant,
     usage_history,
 )
 from ...auth.app_attest import AppAttestService
+from ...auth.data_export import export_trail
 from ...auth.apple import AppleIdentityVerifier, AppleVerificationError
 from ...auth.apple_oauth import AppleOAuthClient, AppleOAuthError
 from ...auth.apple_secrets import AppleTokenCipher
@@ -387,12 +389,15 @@ async def export_account(
     subject: AuthSubject = Depends(require_auth_or_grace),
     sessionmaker=Depends(get_auth_sessionmaker),
 ) -> AccountExportResponse:
-    """Return the caller's account data as JSON (GDPR Art. 20 portability).
+    """Return the caller's account data as JSON (GDPR Art. 15/20).
 
-    Profile + full per-day usage history + derived premium. Never includes the
+    Profile + full per-day usage history + derived premium, plus feedback,
+    analytics events and custom pack orders (``export_trail``) under every id the
+    person used: the account and its linked anonymous ids. Never includes the
     encrypted Apple refresh token or any other secret (the response model has no
-    field for one). An anonymous caller (the app offers "Export my data" before
-    sign-in) gets its own identity's data, with ``apple_sub`` null."""
+    field for one), nor attachment bytes. An anonymous caller (the app offers
+    "Export my data" before sign-in) gets its own identity's data, with
+    ``apple_sub`` null."""
     if sessionmaker is None:
         raise HTTPException(status_code=503, detail="Auth unavailable")
 
@@ -401,10 +406,16 @@ async def export_account(
         if anon is not None:
             apple_sub, created_at = None, anon.created_at
             rows = await usage_history(session, anon.anon_id)
+            subject_ids = [anon.anon_id]
         else:
             user = await resolve_account(subject, session)
             apple_sub, created_at = user.apple_sub, user.created_at
             rows = await usage_history(session, str(user.id))
+            subject_ids = [
+                str(user.id),
+                *await linked_anon_ids(session, str(user.id)),
+            ]
+        trail = await export_trail(session, subject_ids)
 
     today = datetime.now(timezone.utc).date()
     is_premium = any(row.is_premium for row in rows if row.usage_date == today)
@@ -420,4 +431,5 @@ async def export_account(
             )
             for row in rows
         ],
+        **trail,
     )

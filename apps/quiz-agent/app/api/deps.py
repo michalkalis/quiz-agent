@@ -1,6 +1,7 @@
 """Shared dependencies, models, and helpers for REST API routes."""
 
 import logging
+import uuid
 
 from typing import Literal, Optional, List, Any
 from pydantic import BaseModel, Field, field_validator
@@ -473,6 +474,54 @@ class AccountUsageRecord(BaseModel):
     is_premium: bool = Field(description="Whether premium was active that day")
 
 
+class AccountFeedbackAttachment(BaseModel):
+    """A binary attachment on a feedback entry, listed but never embedded."""
+
+    kind: Literal["screenshot", "audio"] = Field(description="Attachment type")
+    content_type: Optional[str] = Field(description="MIME type as uploaded")
+
+
+class AccountFeedbackRecord(BaseModel):
+    """One in-app feedback submission, for the GDPR export (#193)."""
+
+    id: uuid.UUID = Field(description="Feedback entry id")
+    created_at: datetime = Field(description="When it was submitted")
+    message: str = Field(description="The feedback text")
+    metadata: Optional[dict] = Field(description="Device/app context sent with it")
+    app_version: Optional[str] = Field(description="App version that sent it")
+    logs: Optional[str] = Field(description="Log tail attached to it")
+    attachments: List[AccountFeedbackAttachment] = Field(
+        description="Screenshot / dictation audio, listed by type (not embedded)"
+    )
+
+
+class AccountAnalyticsEventRecord(BaseModel):
+    """One product-analytics event, for the GDPR export (#193)."""
+
+    name: str = Field(description="Event name")
+    occurred_at: datetime = Field(description="When it happened")
+    session_id: Optional[str] = Field(description="Quiz session it belongs to")
+    source: str = Field(description='"server" or "ios"')
+    app_version: Optional[str] = Field(description="App version, when known")
+    properties: dict = Field(description="Event properties")
+
+
+class AccountPackOrderRecord(BaseModel):
+    """One custom quiz pack order, for the GDPR export (#193)."""
+
+    id: uuid.UUID = Field(description="Order id")
+    created_at: datetime = Field(description="When it was ordered")
+    product_id: str = Field(description="Store product bought")
+    prompt: str = Field(description="What the pack was asked to be about")
+    category: Optional[str] = Field(description="Chosen category")
+    theme: Optional[str] = Field(description="Chosen theme")
+    language: str = Field(description="Pack language")
+    target_count: int = Field(description="Questions ordered")
+    status: str = Field(description="Order status")
+    delivered_at: Optional[datetime] = Field(description="When it was delivered")
+    pack_id: Optional[uuid.UUID] = Field(description="The delivered pack's id")
+
+
 class AccountExportResponse(BaseModel):
     """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
     or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
@@ -492,6 +541,15 @@ class AccountExportResponse(BaseModel):
     )
     usage: List[AccountUsageRecord] = Field(
         description="Per-day usage history, oldest first"
+    )
+    feedback: List[AccountFeedbackRecord] = Field(
+        default_factory=list, description="In-app feedback, oldest first"
+    )
+    analytics_events: List[AccountAnalyticsEventRecord] = Field(
+        default_factory=list, description="Product-analytics events, oldest first"
+    )
+    pack_orders: List[AccountPackOrderRecord] = Field(
+        default_factory=list, description="Custom quiz pack orders, oldest first"
     )
 
 

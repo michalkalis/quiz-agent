@@ -65,17 +65,6 @@ struct QuestionView: View {
     /// question arrives, so a skip can never inherit the previous answer's echo.
     @State private var submittedAnswer = ""
 
-    /// #171 Track I: "A · Kocka" for the confirmation sheet when a spoken answer
-    /// resolved to an MCQ option. Derived from the same `mcqVoiceMatchedKey` the
-    /// option grid highlights, so the sheet can never disagree with the grid.
-    private var matchedVoiceOptionLabel: String? {
-        guard let key = viewModel.mcqVoiceMatchedKey,
-              let question = viewModel.currentQuestion,
-              let value = question.possibleAnswers?[key]
-        else { return nil }
-        return "\(question.optionLabel(for: key)) · \(value)"
-    }
-
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Hangs.Colors.bg.ignoresSafeArea()
@@ -118,7 +107,7 @@ struct QuestionView: View {
             // sheet read as more screen rather than a layer over one. Dim the quiz
             // ourselves and pass every touch straight through, so the toolbar
             // underneath keeps working.
-            if isConfirmationPresented {
+            if viewModel.isAnswerSheetPresented {
                 Color.black.opacity(0.45)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -175,15 +164,7 @@ struct QuestionView: View {
             viewModel.handleAnswerConfirmationDismissed()
         }) {
             AnswerConfirmationView(
-                // `!isEditingTranscript`: deleting the whole prefill while editing
-                // must not flip the sheet into the Transcribing spinner — the
-                // "dialog vanished" bug from TF build 53 feedback.
-                // `!noAnswerCaptured` (#171 Track B): the no-answer sheet is also
-                // `.processing` with an empty field, but nothing is in flight —
-                // showing the spinner there would hide the Confirm CTA that ends
-                // the question.
-                isProcessing: viewModel.quizState == .processing && viewModel.transcribedAnswer.isEmpty
-                    && !viewModel.isEditingTranscript && !viewModel.noAnswerCaptured,
+                isProcessing: viewModel.isAnswerSheetTranscribing,
                 transcribedAnswer: $viewModel.transcribedAnswer,
                 autoConfirmCountdown: viewModel.autoConfirmCountdown,
                 autoConfirmEnabled: viewModel.settings.autoConfirmEnabled,
@@ -198,7 +179,7 @@ struct QuestionView: View {
                 commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 recognizingWord: viewModel.recognizingWord,
-                matchedOption: matchedVoiceOptionLabel,
+                matchedOption: viewModel.matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
                 noAnswerCaptured: viewModel.noAnswerCaptured,
@@ -253,21 +234,13 @@ struct QuestionView: View {
         }
     }
 
-    /// #173 C2: `confirmAnswer()` clears `showAnswerConfirmation` synchronously —
-    /// that flag is its single-flight token and must keep doing that. The sheet's
-    /// PRESENTATION outlives it by one extra flag, so the driver keeps looking at
-    /// the button they pressed while the answer is graded.
+    /// Presentation follows `isAnswerSheetPresented`; a swipe-down only clears
+    /// `showAnswerConfirmation` (#173 C2).
     private var confirmationSheetBinding: Binding<Bool> {
         Binding(
-            get: { isConfirmationPresented },
+            get: { viewModel.isAnswerSheetPresented },
             set: { if !$0 { viewModel.showAnswerConfirmation = false } }
         )
-    }
-
-    /// The sheet is on screen — one predicate for both its presentation and the
-    /// #174 A1 dim, so the quiz can never be dimmed without the sheet or vice versa.
-    private var isConfirmationPresented: Bool {
-        viewModel.showAnswerConfirmation || viewModel.isEvaluatingAnswer
     }
 
     // MARK: - Top chrome (#173 variant A3)
@@ -279,8 +252,8 @@ struct QuestionView: View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
             HangsQuizProgressHeader(
                 category: question.map { Config.categoryDisplayName(for: $0.category) } ?? "",
-                current: currentQuestionNumber,
-                total: totalQuestions,
+                current: viewModel.questionScreenNumber,
+                total: viewModel.questionScreenTotal,
                 // #122: the fill flips teal for the duration of a matched glow.
                 tint: viewModel.voiceFeedbackPhase == .matched
                     ? Theme.Hangs.Colors.accentTeal : nil,
@@ -322,10 +295,6 @@ struct QuestionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("question.awaitingQuestion")
-    }
-
-    private var totalQuestions: Int {
-        viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
     }
 
     // MARK: - Error banner
@@ -430,7 +399,7 @@ struct QuestionView: View {
             }
 
             #if DEBUG
-                Text(quizStateName)
+                Text(viewModel.quizState.label)
                     .frame(width: 0, height: 0)
                     .accessibilityIdentifier("question.state")
             #endif
@@ -468,7 +437,7 @@ struct QuestionView: View {
                 externalSelectedKey: $viewModel.mcqVoiceMatchedKey,
                 compact: compact,
                 // #174: a tapped option evaluates IN the tile it was tapped on.
-                isSubmitting: isProcessing
+                isSubmitting: viewModel.isQuestionScreenBusy
             )
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -541,13 +510,13 @@ struct QuestionView: View {
                 .transition(.opacity)
         }
         if !listenBarDismissal.isHidden(questionId: question.id),
-           let phase = listenPhase(question: question)
+           let phase = viewModel.listenPhase(for: question)
         {
             QuestionListenBar(
                 phase: phase,
                 feedback: viewModel.voiceFeedbackPhase,
                 recognizingWord: viewModel.recognizingWord,
-                showsWords: showsCommandWords,
+                showsWords: viewModel.showsCommandWords,
                 // #131 Track F folded the old SE-class `compact` flag into the
                 // one size axis: a short container gets the slim bar.
                 size: compact ? .slim : .full,
@@ -566,7 +535,7 @@ struct QuestionView: View {
     /// #179 D3: the shared skip capsule — same shape, same word as the voice
     /// footer's. Disabled while an answer is being evaluated.
     private var mcqSkipChip: some View {
-        QuestionSkipButton(isSkipping: isSkipping, isDisabled: isProcessing) {
+        QuestionSkipButton(isSkipping: isSkipping, isDisabled: viewModel.isQuestionScreenBusy) {
             Task { await viewModel.skipQuestion() }
         }
     }
@@ -671,9 +640,9 @@ struct QuestionView: View {
     private func autoScrollStemIfNeeded() async {
         stemScroll.scrollTo(edge: .top)
         guard !reduceMotion else { return }
-        try? await Task.sleep(for: .seconds(3))
+        try? await Task.sleep(for: QuestionStemAutoScroll.readingBeat)
         guard !Task.isCancelled, stemOverflow > 0 else { return }
-        withAnimation(.linear(duration: max(2, Double(stemOverflow) / 28))) {
+        withAnimation(.linear(duration: QuestionStemAutoScroll.driftDuration(overflow: stemOverflow))) {
             stemScroll.scrollTo(edge: .bottom)
         }
     }
@@ -801,7 +770,7 @@ struct QuestionView: View {
             .padding(.bottom, Theme.Hangs.Spacing.md)
 
             #if DEBUG
-                Text(quizStateName)
+                Text(viewModel.quizState.label)
                     .frame(width: 0, height: 0)
                     .accessibilityIdentifier("question.state")
             #endif
@@ -811,59 +780,9 @@ struct QuestionView: View {
 
     // MARK: - Derived
 
-    /// #179 D1: the one state model, asked the same way by both question types.
-    private func listenPhase(question: Question) -> QuestionListenPhase? {
-        QuestionListenPhase.current(
-            quizState: viewModel.quizState,
-            answerWindowRemaining: viewModel.answerWindowRemaining,
-            answerWindowTotal: viewModel.answerWindowTotal,
-            answerKind: question.sortedAnswerOptions.count == 2
-                ? .trueFalse
-                : (question.usesLetterLabels ? .mcqLetters : .mcq)
-        )
-    }
-
-    /// A chip is a promise the word will be heard: it needs the Settings toggle
-    /// AND an armed listener (`commandListenerHint`), which is what the bar was
-    /// gated on wholesale before #179 D1 — the bar stays either way now.
-    private var showsCommandWords: Bool {
-        viewModel.showsVoiceHints && viewModel.commandListenerHint != nil
-    }
-
     private var isRecording: Bool { viewModel.quizState == .recording }
 
     private var isSkipping: Bool { viewModel.quizState == .skipping }
-
-    /// "Something is in flight and no sheet is covering this screen." The
-    /// confirmation sheet also lives in `.processing` (every voice answer passes
-    /// through it, and since #173 C2 it stays up — showing its own evaluating
-    /// state — until the result lands), so the controls underneath must not read
-    /// as busy while the driver is still being asked to confirm.
-    private var isProcessing: Bool {
-        guard !viewModel.showAnswerConfirmation, !viewModel.isEvaluatingAnswer else { return false }
-        return viewModel.quizState == .processing || viewModel.quizState == .skipping
-    }
-
-    private var currentQuestionNumber: Int {
-        let total = viewModel.currentSession?.maxQuestions ?? viewModel.settings.numberOfQuestions
-        let number = viewModel.askedQuestionNumber ?? viewModel.questionsAnswered + 1
-        return min(max(number, 1), max(total, 1))
-    }
-
-    private var quizStateName: String {
-        switch viewModel.quizState {
-        case .idle: return "idle"
-        case .startingQuiz: return "startingQuiz"
-        case .askingQuestion: return "askingQuestion"
-        case .awaitingQuestion: return "awaitingQuestion"
-        case .recording: return "recording"
-        case .processing: return "processing"
-        case .skipping: return "skipping"
-        case .showingResult: return "showingResult"
-        case .finished: return "finished"
-        case .error: return "error"
-        }
-    }
 }
 
 /// #188 G8: the tap-to-replay question block. Unlike `.plain`, it does NOT dim a

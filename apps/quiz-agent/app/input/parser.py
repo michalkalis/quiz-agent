@@ -10,6 +10,8 @@ from difflib import SequenceMatcher
 
 from quiz_shared.llm import factory as llm_factory
 
+from .. import hot_path_llm
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +41,7 @@ class InputParser:
             model: OpenAI model for intent classification
             temperature: Lower temperature for more deterministic parsing
         """
-        self.client = llm_factory.openai_client(async_=True)
+        self.client = hot_path_llm.client()
         self.model = llm_factory.resolve_model(model)
         self.temperature = temperature
 
@@ -142,7 +144,11 @@ class InputParser:
         # Use LLM for complex input
         prompt = self._create_classifier_prompt(user_input, current_question)
 
-        response = await self.client.chat.completions.create(
+        # #193 (193.11): bounded — a provider outage raises JudgeUnavailable
+        # in seconds instead of hanging the submit.
+        response = await hot_path_llm.complete(
+            self.client,
+            stage="parse",
             model=self.model,
             temperature=self.temperature,
             messages=[

@@ -11,6 +11,7 @@ from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
 
+from .. import hot_path_llm
 from .mcq_matcher import match_option
 from .voice_match import sounds_like_any
 
@@ -37,7 +38,7 @@ class AnswerEvaluator:
             model: OpenAI model for evaluation
             temperature: Lower temperature for deterministic evaluation
         """
-        self.client = llm_factory.openai_client(async_=True)
+        self.client = hot_path_llm.client()
         self.model = llm_factory.resolve_model(model)
         self.temperature = temperature
 
@@ -217,7 +218,11 @@ If they're in the right ballpark but not quite there, mark it partially_correct.
 
 Respond with EXACTLY one of these words: correct, partially_correct, partially_incorrect, incorrect"""
 
-        response = await self.client.chat.completions.create(
+        # #193 (193.11): bounded — a provider outage raises JudgeUnavailable
+        # in seconds; every deterministic path above has already run.
+        response = await hot_path_llm.complete(
+            self.client,
+            stage="evaluate",
             model=self.model,
             temperature=self.temperature,
             messages=[

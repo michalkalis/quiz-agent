@@ -312,6 +312,7 @@ async def submit_input(
                 e,
                 session_id=session_id,
                 fallback_detail="Failed to process your answer",
+                session=session,
             ) from e
 
         # Ghost-question guard (#66): a non-answer intent leaves the session

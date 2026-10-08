@@ -36,6 +36,8 @@ struct HangsBrandMark: View {
 /// Square 36pt nav button on the adaptive card surface with subtle drop shadow. Used for gear, close, back.
 struct HangsNavChip: View {
     let icon: String
+    /// Spoken name of the action. Icon-only chips must never fall back to the SF Symbol name.
+    let label: LocalizedStringKey
     var cornerRadius: CGFloat = Theme.Hangs.Radius.navSquare
     var action: () -> Void
 
@@ -53,7 +55,7 @@ struct HangsNavChip: View {
                 .hangsShadow(Theme.Hangs.Shadow.navChip)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(icon)
+        .accessibilityLabel(Text(label))
     }
 }
 
@@ -262,7 +264,7 @@ struct HangsSessionDot: View {
     #Preview {
         VStack(spacing: 0) {
             HangsBrandRow {
-                HangsNavChip(icon: "gearshape") {}
+                HangsNavChip(icon: "gearshape", label: "Settings") {}
             }
             HangsProgressBar(progress: 0.3)
             Spacer()

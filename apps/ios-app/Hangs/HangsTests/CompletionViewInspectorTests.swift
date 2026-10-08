@@ -125,6 +125,33 @@ struct CompletionViewBreakdownTests {
     }
 }
 
+// MARK: - Close button accessibility
+
+// Why this test matters: the icon-only close chip used to fall back to the SF Symbol
+// name, so VoiceOver read "xmark" instead of a localized "Close"/"Zavri".
+@MainActor
+@Suite("CompletionView — close button a11y label")
+struct CompletionViewCloseLabelTests {
+    @Test("close chip speaks 'Close', never the SF Symbol name")
+    func closeChipHasLocalizedLabel() async throws {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService()
+        )
+        vm.currentSession = Fixtures.session(score: 8, answered: 10)
+        vm.quizState = .finished
+        let view = CompletionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let close = try view.inspect().find(viewWithAccessibilityIdentifier: "completion.close")
+            let label = try close.find(ViewType.Button.self).accessibilityLabel().string()
+            #expect(label == "Close")
+            #expect(label != "xmark")
+        }
+    }
+}
+
 // MARK: - Soft upsell (#94 third paywall touchpoint)
 
 // Why these tests matter: the upsell must fire only at the "almost out" moment

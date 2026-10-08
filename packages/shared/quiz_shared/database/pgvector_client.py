@@ -136,6 +136,8 @@ questions_table = Table(
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("expires_at", DateTime(timezone=True), nullable=True),
     Column("freshness_tag", String(64), nullable=True),
+    # #195 — fresh-question selection boost window (NULL = never boosted).
+    Column("boost_until", DateTime(timezone=True), nullable=True),
     Column("explanation", Text, nullable=True),
     Column("media_url", Text, nullable=True),
     Column("image_subtype", String(32), nullable=True),
@@ -641,6 +643,7 @@ def _question_to_row_dict(
         "created_at": _ensure_utc(q.created_at) or datetime.now(timezone.utc),
         "expires_at": _ensure_utc(q.expires_at),
         "freshness_tag": q.freshness_tag,
+        "boost_until": _ensure_utc(q.boost_until),
         "explanation": q.explanation,
         "media_url": q.media_url,
         "image_subtype": q.image_subtype,
@@ -700,6 +703,8 @@ def _row_to_question(row: Any) -> Question:
         created_at=row["created_at"],
         expires_at=row["expires_at"],
         freshness_tag=row["freshness_tag"],
+        # `.get`, not `[...]`: legacy dict rows never carried the column (#195).
+        boost_until=row.get("boost_until") if hasattr(row, "get") else None,
         explanation=row["explanation"],
         media_url=row["media_url"],
         image_subtype=row["image_subtype"],

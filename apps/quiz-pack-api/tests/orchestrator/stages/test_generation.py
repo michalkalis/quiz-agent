@@ -36,6 +36,7 @@ from app.generation.expiry_classifier import (
     Classification,
     ExpiryClassifier,
 )
+from app.generation.topicality_classifier import Topicality
 from app.orchestrator import OrderContext
 from app.orchestrator.stages.generation import GenerationStage, _compute_prompt_seed
 from app.sourcing.models import Fact
@@ -973,6 +974,50 @@ async def test_classifier_failure_leaves_expiry_unset_and_warns(
     assert all(q.expires_at is None for q in ctx.questions)
     assert all(q.freshness_tag is None for q in ctx.questions)
     assert any("ExpiryClassifier" in r.message for r in caplog.records)
+
+
+class _FakeTopicalityClassifier:
+    """Batch-recording stand-in for `TopicalityClassifier` (#195)."""
+
+    def __init__(self, rules: dict[str, Topicality]) -> None:
+        self.rules = rules
+        self.calls: list[int] = []
+
+    async def classify(self, questions: Sequence[Question]) -> list[Optional[Topicality]]:
+        self.calls.append(len(questions))
+        return [
+            next((t for sub, t in self.rules.items() if sub in q.question), None)
+            for q in questions
+        ]
+
+
+@pytest.mark.asyncio
+async def test_stamps_boost_and_keeps_verdict_through_provenance_rewrite() -> None:
+    """#195: a topical question leaves the stage with `boost_until` set and its
+    tier/rationale in provenance — even on the fact-first path, where the
+    stage rewrites provenance (`pipeline="fact_first"`) and could drop it. A
+    `none` question stays unboosted, and the whole run costs ONE batched call.
+    """
+    oscar_q = _stub_question(0, question="who won best actress at the 2026 oscars")
+    plain_q = _stub_question(1, question="what is the capital of france")
+    gen = _FakeGenerator([oscar_q, plain_q])
+    oscar = Topicality("year", datetime.now(timezone.utc).date(), "Oscar result")
+    classifier = _FakeTopicalityClassifier(
+        {"oscars": oscar, "capital": Topicality("none", None, "geography")}
+    )
+    stage = GenerationStage(gen, topicality_classifier=classifier)  # type: ignore[arg-type]
+    ctx = _make_ctx(target_count=2, facts=[Fact(text="t", source_url="https://ex/1")])
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert classifier.calls == [2]
+    by_text = {q.question: q for q in ctx.questions}
+    boosted = by_text["who won best actress at the 2026 oscars"]
+    assert boosted.boost_until is not None
+    assert boosted.boost_until > datetime.now(timezone.utc)
+    assert boosted.generation_metadata.pipeline == "fact_first"
+    assert boosted.generation_metadata.extra["topicality"]["tier"] == "year"
+    assert by_text["what is the capital of france"].boost_until is None
 
 
 @pytest.mark.asyncio

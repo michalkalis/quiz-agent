@@ -260,6 +260,12 @@ class Question(BaseModel):
     # Time-sensitive question support
     expires_at: Optional[datetime] = None
     freshness_tag: Optional[str] = None  # e.g., "2024-news", "trending-feb-2024"
+    # #195 — fresh-question selection boost: until this instant the live
+    # retriever weighs the question higher in its final pick. `None` = never
+    # boosted; a far-future sentinel = permanently boosted. Unlike
+    # `expires_at` it never hides the question — after the window it simply
+    # behaves like an ordinary one.
+    boost_until: Optional[datetime] = None
 
     def is_expired(self) -> bool:
         """Check if this question has expired."""

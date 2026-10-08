@@ -8,7 +8,8 @@ Proper RAG Implementation:
 """
 
 import logging
-from typing import List, Optional, Sequence
+from datetime import datetime, timezone
+from typing import Callable, List, Optional, Sequence, TypeVar
 import random
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,33 @@ from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.utils.embeddings import generate_embedding_async, calculate_similarity
 
 from ..config import get_settings
+
+T = TypeVar("T")
+
+# #195 — fresh-question boost: a candidate whose `boost_until` is still in the
+# future weighs this much in the final random pick (ordinary = 1). Applied ONLY
+# at the final pick over the pool that retrieval already produced — boosted
+# questions are never injected into the pool, which would push the effective
+# boost far above 2×. Reads a column the row already carries: no extra LLM or
+# DB round trip on the hot path.
+BOOST_WEIGHT = 2.0
+
+
+def pick_weight(q: Question, now: datetime) -> float:
+    """`BOOST_WEIGHT` while `q.boost_until` is in the future, else 1."""
+    until = q.boost_until
+    if until is None:
+        return 1.0
+    if until.tzinfo is None:
+        until = until.replace(tzinfo=timezone.utc)
+    return BOOST_WEIGHT if until > now else 1.0
+
+
+def weighted_pick(items: Sequence[T], key: Callable[[T], Question] = lambda x: x) -> T:
+    """`random.choice`, but boosted questions weigh `BOOST_WEIGHT` (#195)."""
+    now = datetime.now(timezone.utc)
+    weights = [pick_weight(key(item), now) for item in items]
+    return random.choices(items, weights=weights, k=1)[0]
 
 
 class QuestionRetriever:
@@ -544,7 +572,7 @@ class QuestionRetriever:
 
         # If no questions asked yet, just pick randomly
         if not session.asked_question_ids:
-            return random.choice(candidates)
+            return weighted_pick(candidates)
 
         # Get recently asked questions for diversity comparison
         recent_questions = await self._get_recent_questions(session, limit=3)
@@ -566,7 +594,7 @@ class QuestionRetriever:
 
         # Select from top 5 most diverse to maintain some randomness
         top_diverse = scored_candidates[:5]
-        selected, score = random.choice(top_diverse)
+        selected, score = weighted_pick(top_diverse, key=lambda c: c[0])
 
         logger.debug("Selected question with diversity score %.3f", score)
         return selected
@@ -662,7 +690,7 @@ class QuestionRetriever:
             diverse_candidates = candidates
 
         # Randomly select from diverse candidates
-        return random.choice(diverse_candidates)
+        return weighted_pick(diverse_candidates)
 
     async def search_questions(
         self,

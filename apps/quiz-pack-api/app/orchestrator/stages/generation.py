@@ -28,6 +28,11 @@ from app.generation.expiry_classifier import (
     Classification,
     ExpiryClassifier,
 )
+from app.generation.topicality_classifier import (
+    Topicality,
+    TopicalityClassifier,
+    apply_topicality,
+)
 from app.generation import inline_options
 from app.generation.pattern_routing import (
     MCQ_EMPHASIS_MARKER,
@@ -172,6 +177,7 @@ class GenerationStage:
         generator: AdvancedQuestionGenerator,
         answer_normalizer: AnswerNormalizer | None = None,
         expiry_classifier: ExpiryClassifier | None = None,
+        topicality_classifier: TopicalityClassifier | None = None,
         open_fraction: float = OPEN_SHAPE_FRACTION,
         shape_classifier: ShapeClassifier | None = None,
         coverage_allocator: CoverageAllocator | None = None,
@@ -187,6 +193,10 @@ class GenerationStage:
         # present it classifies each question's temporal freshness so the
         # stamping loop below can set `expires_at`/`freshness_tag`.
         self._expiry_classifier = expiry_classifier
+        # Issue #195 — optional batched topicality classifier stamping the
+        # fresh-question boost (`boost_until`). `None` leaves every question
+        # unboosted (tests, and `TOPICALITY_CLASSIFICATION=0`).
+        self._topicality_classifier = topicality_classifier
         # Issue #46 task 46.B4c — fraction of `target_count` generated through
         # the open/lateral-puzzle prompt instead of the factual pipeline.
         self._open_fraction = open_fraction
@@ -320,6 +330,14 @@ class GenerationStage:
             expiry_by_question = {
                 id(q): c for q, c in zip(questions, classifications)
             }
+        # Issue #195 — one batched topicality call per run, same fail-safe
+        # contract as the expiry classifier (never raises, `None` = unboosted).
+        topicality_by_question: dict[int, Topicality | None] = {}
+        if self._topicality_classifier is not None:
+            topicalities = await self._topicality_classifier.classify(questions)
+            topicality_by_question = {
+                id(q): t for q, t in zip(questions, topicalities)
+            }
         now = datetime.now(timezone.utc)
 
         for q in questions:
@@ -355,6 +373,13 @@ class GenerationStage:
             if ctx.facts and provenance.pipeline != "logical_puzzle":
                 provenance = provenance.model_copy(update={"pipeline": "fact_first"})
             q.generation_metadata = provenance
+
+            # Issue #195 — fresh-question boost window + reviewable verdict
+            # (tier/event_date/rationale in provenance). After the provenance
+            # rewrite above so the verdict is not dropped.
+            topicality = topicality_by_question.get(id(q))
+            if topicality is not None:
+                apply_topicality(q, topicality, now)
 
             # #153 round-2: the old "pack_fallback" stamping (a sibling fact's
             # URL copied onto any question the generator couldn't attribute)

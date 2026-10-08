@@ -133,6 +133,17 @@ def expiry_classification() -> bool:
     return _truthy(os.getenv("EXPIRY_CLASSIFICATION"))
 
 
+def topicality_classification() -> bool:
+    """Issue #195: run the post-generation topicality classifier that stamps
+    the fresh-question selection boost (``boost_until``).
+
+    ``True`` by default — founder 2026-10-08: it runs on every generation
+    (one batched call per generation stage run). Set
+    ``TOPICALITY_CLASSIFICATION=0``/``false`` to leave every question unboosted.
+    """
+    return _default_on(os.getenv("TOPICALITY_CLASSIFICATION"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a

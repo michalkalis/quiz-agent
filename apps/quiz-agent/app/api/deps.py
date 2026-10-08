@@ -580,7 +580,7 @@ def get_tts_service(request: Request) -> TTSService:
 
 def get_usage_tracker(request: Request) -> Optional[UsageTracker]:
     # None when DATABASE_URL is unset (usage persistence disabled); callers guard.
-    return request.app.state.usage_tracker
+    return getattr(request.app.state, "usage_tracker", None)
 
 
 def get_token_service(request: Request) -> Optional[TokenService]:

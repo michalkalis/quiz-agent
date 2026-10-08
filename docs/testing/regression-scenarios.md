@@ -624,6 +624,36 @@ present; `paywall.purchaseError` absent. App alive.
 
 ---
 
+## RS-22: Forced update covers the app
+
+**Type:** XCUITest (`RSAppConfigTests`). #193 task 193.9.
+
+**Hypothesis:** Below the server's minimum version (`MIN_APP_VERSION_*`) the
+player lands on the update screen with a way to the store, and Home is not
+reachable behind it.
+
+**Steps:** launch with `--app-config-update-required` (DEBUG seed, no backend).
+
+**Asserts:** `update.message` and `update.open` present; `home.startQuiz` not
+hittable. App alive.
+
+---
+
+## RS-23: Notice dismisses; paused orders disable Create a pack
+
+**Type:** XCUITest (`RSAppConfigTests`). #193 task 193.9.
+
+**Hypothesis:** The server notice on Home can be closed, and
+`PACK_ORDERS_ENABLED=false` keeps "Create a pack" visible but disabled.
+
+**Steps:** launch with `--app-config-notice --app-config-orders-off`; tap
+`home.notice.dismiss`; open Settings.
+
+**Asserts:** `home.notice.text` present, then gone after dismiss;
+`packs.createPack` disabled. App alive.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

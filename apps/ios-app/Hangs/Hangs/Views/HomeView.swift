@@ -15,6 +15,9 @@ struct HomeView: View {
     /// packs. Nil (inspector tests / previews that don't exercise the packs
     /// section) renders Home without the section.
     var packOrderService: PackOrderServiceProtocol?
+    /// #193 task 193.9: source of the server notice. Nil in inspector tests and
+    /// previews, which then render Home without it.
+    var appConfig: AppConfigStore?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +32,11 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
+                    if let appConfig {
+                        AppNoticeBanner(store: appConfig)
+                            .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                    }
+
                     freePlanCard
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
 

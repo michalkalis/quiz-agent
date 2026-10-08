@@ -819,15 +819,8 @@ struct SettingsView: View {
                     hairline
                 #endif
 
-                // #138: a modal trigger, not a push — hence no chevron.
-                HangsConfigRow(
-                    label: "Create a pack",
-                    value: "",
-                    valueColor: Theme.Hangs.Colors.muted,
-                    showsChevron: false,
-                    action: presentCreatePack
-                )
-                .accessibilityIdentifier("packs.createPack")
+                CreatePackRow(appConfig: appState.appConfig, action: presentCreatePack)
+                    .accessibilityIdentifier("packs.createPack")
 
                 hairline
 

@@ -17,6 +17,7 @@ from .routes import (
     feedback,
     analytics,
     provider_balances,
+    app_config,
 )
 
 # Main router with /api/v1 prefix
@@ -33,3 +34,4 @@ router.include_router(entitlements.router)
 router.include_router(feedback.router)
 router.include_router(analytics.router)
 router.include_router(provider_balances.router)
+router.include_router(app_config.router)

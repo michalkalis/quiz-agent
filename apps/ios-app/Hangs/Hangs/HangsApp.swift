@@ -64,8 +64,11 @@ struct HangsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(appState: appState)
-                .environmentObject(appState)
+            // #193 task 193.9: a forced update covers the whole app.
+            AppUpdateGate(store: appState.appConfig) {
+                ContentView(appState: appState)
+                    .environmentObject(appState)
+            }
                 // #188 G9: past accessibility3 a single word ("Slovenčina",
                 // "Automaticky") no longer fits a row even stacked and breaks
                 // mid-word. A screen may set a lower cap of its own.
@@ -100,6 +103,12 @@ struct HangsApp: App {
                 // #51: `app_opened` + flushing queued analytics on background.
                 .onChange(of: scenePhase, initial: true) { _, newPhase in
                     appState.trackScenePhase(newPhase)
+                }
+                // #193 task 193.9: re-read the server switches on every launch
+                // and return to the foreground. Fails open.
+                .onChange(of: scenePhase, initial: true) { _, newPhase in
+                    guard newPhase == .active else { return }
+                    Task { await appState.appConfig.refresh() }
                 }
         }
     }

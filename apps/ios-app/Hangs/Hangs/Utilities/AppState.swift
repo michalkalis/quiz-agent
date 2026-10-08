@@ -29,6 +29,8 @@ final class AppState: ObservableObject {
     let questionRatingService: QuestionRatingServiceProtocol
     /// Product analytics (#51): live in the app, a no-op in UI tests and tests.
     let analytics: AnalyticsClient
+    /// Server-side switches: forced update, orders on/off, Home notice (#193 task 193.9).
+    let appConfig = AppConfigStore()
 
     /// The `app_opened` launch kind still to report: cold until the first
     /// activation, then foreground after every trip to the background.

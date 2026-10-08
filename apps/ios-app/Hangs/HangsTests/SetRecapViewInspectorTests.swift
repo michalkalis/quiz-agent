@@ -144,6 +144,18 @@ struct SetRecapViewInspectorTests {
             #expect(throws: Never.self) { try tree.find(text: "Play summary") }
         }
     }
+
+    @Test("close chip speaks 'Close', never the SF Symbol name")
+    func closeChipHasLocalizedLabel() async throws {
+        let vm = await makeRecapViewModel()
+        let view = SetRecapView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let close = try view.inspect().find(viewWithAccessibilityIdentifier: "recap.close")
+            let label = try close.find(ViewType.Button.self).accessibilityLabel().string()
+            #expect(label == "Close")
+            #expect(label != "xmark")
+        }
+    }
 }
 
 // MARK: - Row

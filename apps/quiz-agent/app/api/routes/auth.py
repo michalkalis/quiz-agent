@@ -351,7 +351,8 @@ async def delete_account(
     user_id: Optional[str] = None
     encrypted: Optional[bytes] = None
     async with sessionmaker() as session:
-        anon_id = await resolve_anonymous(subject, session)
+        anon = await resolve_anonymous(subject, session)
+        anon_id = anon.anon_id if anon is not None else None
         if anon_id is not None:
             await erase_anonymous(session, anon_id)
             erased_ids = [anon_id]
@@ -390,19 +391,26 @@ async def export_account(
 
     Profile + full per-day usage history + derived premium. Never includes the
     encrypted Apple refresh token or any other secret (the response model has no
-    field for one)."""
+    field for one). An anonymous caller (the app offers "Export my data" before
+    sign-in) gets its own identity's data, with ``apple_sub`` null."""
     if sessionmaker is None:
         raise HTTPException(status_code=503, detail="Auth unavailable")
 
     async with sessionmaker() as session:
-        user = await resolve_account(subject, session)
-        rows = await usage_history(session, str(user.id))
+        anon = await resolve_anonymous(subject, session)
+        if anon is not None:
+            apple_sub, created_at = None, anon.created_at
+            rows = await usage_history(session, anon.anon_id)
+        else:
+            user = await resolve_account(subject, session)
+            apple_sub, created_at = user.apple_sub, user.created_at
+            rows = await usage_history(session, str(user.id))
 
     today = datetime.now(timezone.utc).date()
     is_premium = any(row.is_premium for row in rows if row.usage_date == today)
     return AccountExportResponse(
-        apple_sub=user.apple_sub,
-        created_at=user.created_at,
+        apple_sub=apple_sub,
+        created_at=created_at,
         is_premium=is_premium,
         usage=[
             AccountUsageRecord(

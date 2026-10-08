@@ -474,14 +474,19 @@ class AccountUsageRecord(BaseModel):
 
 
 class AccountExportResponse(BaseModel):
-    """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5).
+    """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
+    or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
 
     Carries only the caller's own data — profile, full usage history, and derived
     premium. It deliberately has **no field** for the encrypted Apple refresh token
     or any other secret, so the export cannot leak one."""
 
-    apple_sub: str = Field(description="Apple's stable per-app subject id (anchor)")
-    created_at: datetime = Field(description="When the account was created")
+    apple_sub: Optional[str] = Field(
+        description="Apple's stable per-app subject id (anchor); null when anonymous"
+    )
+    created_at: datetime = Field(
+        description="When the account (or anonymous identity) was created"
+    )
     is_premium: bool = Field(
         description="Derived premium state as of today (F8: no plan tier)"
     )

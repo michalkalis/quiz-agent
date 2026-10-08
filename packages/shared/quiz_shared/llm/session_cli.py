@@ -62,12 +62,17 @@ _SCRUBBED_ENV = (
 
 
 def session_alias(model_id: str) -> str:
-    """``session:opus`` → ``opus``; rejects unknown aliases loudly."""
+    """``session:opus`` → ``opus``; rejects unknown aliases loudly.
+
+    A pinned Claude id (``session:claude-fable-5``) passes through too: the
+    bare aliases float to the newest model in their tier, so model
+    comparisons (founder 2026-10-08) need to pin an exact version.
+    """
     alias = model_id.removeprefix(SESSION_PREFIX)
-    if alias not in SESSION_ALIASES:
+    if alias not in SESSION_ALIASES and not alias.startswith("claude-"):
         raise ValueError(
             f"Unknown session model {model_id!r}; expected session:<"
-            f"{'|'.join(SESSION_ALIASES)}>"
+            f"{'|'.join(SESSION_ALIASES)}> or session:claude-<version>"
         )
     return alias
 

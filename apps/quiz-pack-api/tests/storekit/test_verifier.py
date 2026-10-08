@@ -80,6 +80,44 @@ def test_production_environment_matches_when_configured(test_chain, make_jws):
     assert tx.environment == "Production"
 
 
+def test_prod_deploy_accepts_both_production_and_sandbox(test_chain, make_jws):
+    """#193: prod serves real customers (Production) AND App Review/TestFlight
+    (always Sandbox). With a single allowed environment one of the two would
+    hit "environment mismatch" — a real App Store purchase would be charged
+    and then refused. Both must verify on one deploy."""
+    prod_verifier = AppleJWSVerifier(
+        root_cert=test_chain.root_cert,
+        app_bundle_id="com.missinghue.hangs",
+        environment=frozenset({"Production", "Sandbox"}),
+    )
+    for env in ("Production", "Sandbox"):
+        tx = prod_verifier.verify(make_jws(payload_overrides={"environment": env}))
+        assert tx.environment == env
+
+
+def test_environment_outside_allowed_set_is_rejected(test_chain, make_jws):
+    """Widening to a set must not turn the check into allow-all: a Sandbox-only
+    deploy (staging) still refuses a Production JWS."""
+    sandbox_only = AppleJWSVerifier(
+        root_cert=test_chain.root_cert,
+        app_bundle_id="com.missinghue.hangs",
+        environment=frozenset({"Sandbox"}),
+    )
+    with pytest.raises(JWSInvalid, match="environment mismatch"):
+        sandbox_only.verify(make_jws(payload_overrides={"environment": "Production"}))
+
+
+def test_empty_environment_set_fails_closed(test_chain, make_jws):
+    """An empty allowed set is as unconfigured as None — never allow-all."""
+    empty = AppleJWSVerifier(
+        root_cert=test_chain.root_cert,
+        app_bundle_id="com.missinghue.hangs",
+        environment=frozenset(),
+    )
+    with pytest.raises(JWSInvalid, match="STOREKIT_ENVIRONMENT not configured"):
+        empty.verify(make_jws())
+
+
 def test_unset_environment_refuses_all_verification(test_chain, make_jws):
     """STOREKIT_ENVIRONMENT unset (None) must fail closed, never verify.
 

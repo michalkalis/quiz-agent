@@ -42,13 +42,12 @@ class Settings(BaseSettings):
     # StoreKit (issue #33 Task 1.8). app_bundle_id matches iOS xcconfig
     # BUNDLE_ID_BASE. STOREKIT_ENVIRONMENT is a per-deploy Fly secret, never
     # in code: None (unset or invalid) fails closed — the JWS verifier refuses
-    # every purchase until the deploy declares which store environment it
-    # serves, mirroring quiz-agent's RC_ALLOWED_ENVIRONMENT. Deploy plan: prod
-    # gets an explicit Sandbox secret before this ships (founder keeps
-    # TestFlight/sandbox purchases on prod for now); flipping prod to
-    # Production is a GA launch step.
+    # every purchase until the deploy declares which store environment(s) it
+    # serves, mirroring quiz-agent's RC_ALLOWED_ENVIRONMENT. Comma-separated
+    # (#193): prod sets "Production,Sandbox" because App Review and TestFlight
+    # always buy in Sandbox while real customers buy in Production.
     app_bundle_id: str = "com.missinghue.hangs"
-    storekit_environment: Optional[str] = None
+    storekit_environment: Optional[frozenset[str]] = None
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
 
     # Queue routing (#172 — session worker: custom packy v bete cez subscription).
@@ -71,12 +70,19 @@ class Settings(BaseSettings):
 
     @field_validator("storekit_environment", mode="before")
     @classmethod
-    def _normalize_storekit_environment(cls, value: object) -> Optional[str]:
-        """Accept only Apple's two store environments, else fail closed (None)."""
+    def _normalize_storekit_environment(cls, value: object) -> Optional[frozenset[str]]:
+        """Accept only Apple's two store environments, else fail closed (None).
+
+        Any unrecognized token voids the whole value, so a typo can never
+        silently narrow the set to the half that happened to parse.
+        """
         if value is None:
             return None
-        normalized = str(value).strip().capitalize()
-        return normalized if normalized in {"Sandbox", "Production"} else None
+        raw = value.split(",") if isinstance(value, str) else value
+        tokens = {str(t).strip().capitalize() for t in raw if str(t).strip()}  # type: ignore[union-attr]
+        if not tokens or not tokens <= {"Sandbox", "Production"}:
+            return None
+        return frozenset(tokens)
 
     # Bearer identity (#95). Verify-only mirror of quiz-agent's JWT config —
     # AUTH_JWT_SECRET must be set to the SAME value as the quiz-agent Fly

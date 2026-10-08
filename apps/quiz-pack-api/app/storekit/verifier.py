@@ -16,8 +16,9 @@ Verification steps:
    signatures are raw `r||s` (64 bytes) — they must be re-encoded to DER for
    `cryptography`'s `verify`.
 6. Decode payload, parse into `SignedTransaction`.
-7. Cross-check `bundleId` and `environment` against the configured values.
-   Mismatches raise `JWSWrongBundle` or `JWSInvalid` respectively, so the
+7. Cross-check `bundleId` and `environment` against the configured values
+   (a deploy may allow several store environments; prod serves Production
+   and Sandbox, #193). Mismatches raise `JWSWrongBundle` or `JWSInvalid` respectively, so the
    error log distinguishes "JWS for a different app" (security signal) from
    "Sandbox JWS hit a Production deployment" (config drift).
 
@@ -34,6 +35,7 @@ from __future__ import annotations
 
 import base64
 import json
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
@@ -82,14 +84,19 @@ class AppleJWSVerifier:
         self,
         root_cert: x509.Certificate,
         app_bundle_id: str,
-        environment: Optional[str],
+        environment: Union[str, Iterable[str], None],
     ) -> None:
         self._root = root_cert
         self._root_der = root_cert.public_bytes(
             encoding=serialization.Encoding.DER
         )
         self._app_bundle_id = app_bundle_id
-        self._environment = environment
+        if isinstance(environment, str):
+            environment = (environment,)
+        # An empty set is as unconfigured as None: verify_payload fails closed.
+        self._environments: Optional[frozenset[str]] = (
+            frozenset(environment) if environment else None
+        )
 
     @property
     def app_bundle_id(self) -> str:
@@ -97,16 +104,16 @@ class AppleJWSVerifier:
         return self._app_bundle_id
 
     @property
-    def environment(self) -> Optional[str]:
-        """Configured store environment, or None when the deploy hasn't declared one."""
-        return self._environment
+    def environments(self) -> Optional[frozenset[str]]:
+        """Allowed store environments, or None when the deploy hasn't declared any."""
+        return self._environments
 
     @classmethod
     def from_path(
         cls,
         root_cert_path: Union[str, Path],
         app_bundle_id: str,
-        environment: Optional[str],
+        environment: Union[str, Iterable[str], None],
     ) -> "AppleJWSVerifier":
         path = Path(root_cert_path)
         if not path.is_file():
@@ -142,11 +149,11 @@ class AppleJWSVerifier:
         # Fail closed (backend arch review 2026-07-18): no configured store
         # environment means we cannot tell Sandbox from Production purchases,
         # so refuse everything — mirrors quiz-agent's RC_ALLOWED_ENVIRONMENT.
-        if self._environment is None:
+        if self._environments is None:
             raise JWSInvalid(
                 "STOREKIT_ENVIRONMENT not configured — refusing JWS "
-                "verification. Set the per-deploy Fly secret to Sandbox or "
-                "Production."
+                "verification. Set the per-deploy Fly secret to Sandbox, "
+                "Production, or Production,Sandbox."
             )
         if not isinstance(jws, str) or jws.count(".") != 2:
             raise JWSInvalid("JWS must be a string with two '.' separators")
@@ -190,10 +197,10 @@ class AppleJWSVerifier:
                 f"bundle mismatch: JWS bundleId={tx.bundle_id!r}, "
                 f"expected {self._app_bundle_id!r}"
             )
-        if tx.environment != self._environment:
+        if tx.environment not in self._environments:
             raise JWSInvalid(
                 f"environment mismatch: JWS environment={tx.environment!r}, "
-                f"expected {self._environment!r}"
+                f"expected one of {sorted(self._environments)!r}"
             )
         return tx
 

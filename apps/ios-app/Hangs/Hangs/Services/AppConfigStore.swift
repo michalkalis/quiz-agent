@@ -115,9 +115,9 @@ final class AppConfigStore: ObservableObject {
                 minVersionTestflight: update ? "999" : nil,
                 ordersEnabled: !ordersOff,
                 notice: notice ? RemoteAppConfig.Notice(
-                    sk: "Dnes od 22:00 prebieha údržba. Kvíz môže chvíľu nefungovať.",
-                    cs: "Dnes od 22:00 probíhá údržba. Kvíz může chvíli nefungovat.",
-                    en: "Maintenance tonight from 22:00. Quizzes may be unavailable for a while."
+                    sk: "Dnes od 22:00 prebieha údržba. Kvíz môže byť krátko nedostupný.",
+                    cs: "Dnes od 22:00 probíhá údržba. Kvíz může být krátce nedostupný.",
+                    en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable."
                 ) : nil
             )
         }

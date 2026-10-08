@@ -1,6 +1,6 @@
 # #190 — External TestFlight beta + App Store listing readiness
 
-**Triage:** in-progress · **Founder ask (2026-10-07):** everything ready for external beta via TestFlight / App Store Connect: all metadata, languages (en/sk/cs), screenshots, everything else needed.
+**Triage:** in-progress (store + TF info uploaded 2026-10-08; waiting on a new TF build) · **Founder ask (2026-10-07):** everything ready for external beta via TestFlight / App Store Connect: all metadata, languages (en/sk/cs), screenshots, everything else needed.
 
 ## Live state (ASC readiness audit 2026-10-07, `asc-audit` workflow, script `asc_readiness_audit`)
 
@@ -34,3 +34,12 @@
 
 - Review contact phone number + feedback email (founder).
 - Developer/seller identity for DSA (individual vs company).
+
+## Done 2026-10-08
+
+Uploaded via `asc-store-upload` (runs 37741248576 + 37741841762), verified by `asc-audit` readiness run 37742017949: listing in en-GB/en-US/sk/cs, review contact, TF Test Information (4 locales), IAP + subscription texts (annual untouched), 6 screenshots per locale (APP_IPHONE_67), external group "Public beta" with public link (limit 50). App Privacy published in the ASC web UI (12 data types, all linked, no tracking). DSA, Paid Apps, bank and tax already active.
+
+## Next
+
+1. New TF build (on founder request) → `asc-store-upload` with `steps=testflight,beta-group`, `build=N`, `submit_beta_review`.
+2. Before App Store submission: age rating questionnaire, IAP review screenshots for both packs, Small Business Program (founder).

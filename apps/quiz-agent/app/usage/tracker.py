@@ -206,6 +206,37 @@ class UsageTracker:
             await session.commit()
             return count
 
+    async def tts_chars_today(self, subject_id: str) -> int:
+        """Characters this subject has had billed to the TTS primary today (UTC)."""
+        async with self._sessionmaker() as session:
+            used = (
+                await session.execute(
+                    select(DailyUsage.tts_chars).where(
+                        DailyUsage.subject_id == subject_id,
+                        DailyUsage.usage_date == _today(self._now()),
+                    )
+                )
+            ).scalar_one_or_none()
+        return int(used or 0)
+
+    async def add_tts_chars(self, subject_id: str, chars: int) -> None:
+        """Atomically add billed TTS characters to today's row (#193.13)."""
+        async with self._sessionmaker() as session:
+            await session.execute(
+                pg_insert(DailyUsage)
+                .values(
+                    subject_id=subject_id,
+                    usage_date=_today(self._now()),
+                    questions_count=0,
+                    tts_chars=chars,
+                )
+                .on_conflict_do_update(
+                    index_elements=["subject_id", "usage_date"],
+                    set_={"tts_chars": DailyUsage.tts_chars + chars},
+                )
+            )
+            await session.commit()
+
     async def _debit_one_credit(self, session: AsyncSession, subject_id: str) -> None:
         """Serialized guarded credit debit on the CALLER's session — no commit.
 

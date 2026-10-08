@@ -154,11 +154,13 @@ async def merge_anonymous_identity(
                     subject_id=user_id,
                     usage_date=row.usage_date,
                     questions_count=row.questions_count,
+                    tts_chars=row.tts_chars,
                     is_premium=row.is_premium,
                 )
             )
         else:
             existing.questions_count += row.questions_count  # SUM (F3, not max)
+            existing.tts_chars += row.tts_chars
             existing.is_premium = existing.is_premium or row.is_premium  # OR (F3)
 
     await _fold_subscription(session, anon_id, user_id)

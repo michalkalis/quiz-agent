@@ -19,6 +19,12 @@ from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
 
 _BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootCA-G3.cer"
 
+# #193: how often an ARQ worker refreshes `<queue>:health-check` (TTL = interval + 1 s).
+# ARQ's 1 h default is too coarse to tell a dead worker from a live one; at 60 s the
+# key's presence IS the heartbeat that GET /api/v1/admin/worker/heartbeat reports to
+# the prod monitor (the beta's session worker on mba once lay dead for ~20 h unseen).
+WORKER_HEALTH_CHECK_INTERVAL_S = 60
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

@@ -16,8 +16,12 @@ from typing import Any, Dict
 from arq.connections import RedisSettings
 from arq.cron import cron
 from quiz_shared.paths import find_in_ancestors
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialBackoff
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
-from app.config import get_settings
+from app.config import WORKER_HEALTH_CHECK_INTERVAL_S, get_settings
 
 from .sweep import sweep_stuck_orders
 from .tasks import process_order
@@ -177,6 +181,23 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     )
 
 
+def _worker_redis_settings(dsn: str) -> RedisSettings:
+    """RedisSettings that ride out a dropped connection instead of dying on it.
+
+    #193: redis-py 5 retries nothing by default, and ARQ's poll loop has no
+    error handling of its own, so a single "Connection closed by server" (the
+    mba worker reaches Redis through a `fly proxy` tunnel) killed the worker
+    and every pack run in it. Reconnect with backoff (2+4+8+16+30+30 ≈ 90 s);
+    an outage longer than that still exits, loudly, and the supervisor
+    (launchd on mba, Fly on the Fly worker) restarts the process. WATCHed
+    transactions are never retried by redis-py, so job pickup stays atomic.
+    """
+    rs = RedisSettings.from_dsn(dsn)
+    rs.retry_on_error = [RedisConnectionError, RedisTimeoutError]
+    rs.retry = Retry(ExponentialBackoff(cap=30, base=1), retries=6)
+    return rs
+
+
 class WorkerSettings:
     """ARQ worker configuration.
 
@@ -191,7 +212,8 @@ class WorkerSettings:
     heartbeat in tasks.process_order, not from this timeout.
     """
 
-    redis_settings: RedisSettings = RedisSettings.from_dsn(get_settings().redis_url)
+    redis_settings: RedisSettings = _worker_redis_settings(get_settings().redis_url)
+    health_check_interval: int = WORKER_HEALTH_CHECK_INTERVAL_S
     functions = [process_order]
     # #103 F4 — periodic recovery for orders stuck in 'pending'/'in_progress'
     # (dead worker, Redis blip between commit and enqueue). `run_at_startup`

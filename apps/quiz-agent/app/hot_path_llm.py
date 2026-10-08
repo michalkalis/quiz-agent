@@ -14,17 +14,21 @@ request kwargs pass through untouched.
 Budget (iOS gives the whole submit 30 s, which also has to cover upload,
 transcription and the feedback TTS):
 
-- ``ATTEMPT_TIMEOUT`` 6 s read / 2 s connect per attempt. Normal calls take
-  0.5–1 s for the classifier (parser.py's fast-path comment) and 1–3 s for the
-  judge (the "1-3 s evaluation" noted on the iOS MCQ skip guard), so 6 s is
-  2× the slowest normal call.
+- ``ATTEMPT_TIMEOUT`` 8 s read / 2 s connect per attempt. Measured on
+  gpt-4o-mini (2026-10-08, 30 calls per type per gateway): the classifier runs
+  p50 1.5–2 s, p95 2.2–3.2 s, max 7.85 s (direct OpenAI); the judge peaks
+  around 2 s. 8 s clears the slowest classifier call seen.
 - ``MAX_RETRIES`` 1 (SDK default is 2): one quick retry covers a dropped
   connection or a one-off 5xx/429.
-- ``CALL_BUDGET_S`` 8 s hard cap on one call, retries included. The SDK can
+- ``CALL_BUDGET_S`` 12 s hard cap on one call, retries included. The SDK can
   sleep up to 60 s on a ``Retry-After`` header; this cap overrides that.
 
-Worst case per answer is two capped calls = 16 s of LLM time; during an
-outage the first failing call ends the submit, so usually 8 s.
+Normal worst case per answer: slowest classifier (~8 s) + slowest judge
+(~2 s) = ~10 s of LLM time, ~15 s with upload, transcription and TTS. During
+an outage the first failing call ends the submit, so at most 12 s of LLM time.
+Only a classifier that barely succeeds near the cap followed by a failing
+judge reaches 24 s; past iOS's 30 s the app shows its own "timed out, try
+again", still nothing graded.
 """
 
 from __future__ import annotations
@@ -43,9 +47,9 @@ from .quiz.errors import JudgeUnavailable
 
 logger = logging.getLogger(__name__)
 
-ATTEMPT_TIMEOUT = httpx.Timeout(6.0, connect=2.0)
+ATTEMPT_TIMEOUT = httpx.Timeout(8.0, connect=2.0)
 MAX_RETRIES = 1
-CALL_BUDGET_S = 8.0
+CALL_BUDGET_S = 12.0
 
 # One Sentry event per incident, not one per answer: every player answering
 # during an outage hits this, and each would otherwise be its own event.

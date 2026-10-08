@@ -76,11 +76,13 @@ def test_the_answer_path_client_cannot_outlast_the_app():
     llm = hot_path_llm.client()
 
     assert llm.max_retries == 1
-    assert llm.timeout.read == 6.0
+    # Measured classifier max is 7.85 s: a tighter attempt would time out
+    # normal calls and change nothing but latency for the worse.
+    assert llm.timeout.read == 8.0
     assert llm.timeout.connect == 2.0
-    # Two capped calls (classifier + judge) still fit iOS's 30 s submit budget
-    # with room for upload, transcription and the feedback TTS.
-    assert 2 * hot_path_llm.CALL_BUDGET_S <= 20
+    # One capped call (an outage ends the submit at the first failure) plus
+    # upload, transcription and TTS must stay well inside iOS's 30 s budget.
+    assert hot_path_llm.CALL_BUDGET_S == 12.0
 
 
 async def test_a_hanging_provider_fails_within_the_call_budget(monkeypatch):

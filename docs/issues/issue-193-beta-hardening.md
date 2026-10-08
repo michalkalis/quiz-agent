@@ -1,6 +1,6 @@
 # #193 — Spevnenie pred betou a pred reálnymi používateľmi
 
-**Triage:** chore · in-progress (všetko okrem 193.12 hotové 2026-10-08)
+**Triage:** chore · in-progress (všetky tasky hotové 2026-10-08; open = founder kroky)
 **Založené:** 2026-10-08 (founder: „čo nám ešte chýba pred betou — security, testy, čistota kódu, migrácie, staging, stabilita dát, robustnosť; bez veľkých zmien“)
 **Zdroj:** 5 read-only auditov nad `origin/main` bbc9e044 (bezpečnosť, testy, čistota kódu, pripravenosť na betu, prevádzka pri reálnych používateľoch)
 

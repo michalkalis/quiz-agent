@@ -18,9 +18,6 @@
 # iOS App
 /apps/ios-app/ @michalkalis
 
-# Web UI (when implemented)
-/apps/web-ui/ @michalkalis
-
 # CI/CD and DevOps
 /.github/ @michalkalis
 /.github/workflows/ @michalkalis

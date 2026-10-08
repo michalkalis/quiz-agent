@@ -123,7 +123,7 @@ logs/
 *.orig
 *~
 
-# Node.js (for web-ui)
+# Node.js
 node_modules/
 .next/
 .turbo/

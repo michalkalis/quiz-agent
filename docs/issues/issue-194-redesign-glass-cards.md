@@ -1,6 +1,6 @@
 # #194 — Redizajn „Sklo nad kartami“ (verzia 1.1)
 
-**Triage:** feature · planned (kód sa nezačína, kým founder nepovie)
+**Triage:** feature · planned
 **Založené:** 2026-10-08 (founder: post-launch design refresh, „menej generický dizajn, animácie“; vybraný smer Bg)
 **Návrhy:** plátno https://claude.ai/artifact/7F7N4oJSqyi4FZ3VVtcJpR (jediný zdroj návrhu pre tento redizajn)
 **Research:** nástroje a trendy, 2026-10-08 (zhrnutie v sekcii Kontext)
@@ -33,7 +33,7 @@
 ### A. Príprava (vzhľad appky sa nemení; smie ísť aj do bety)
 - [ ] A1 — logika von zo `SettingsView`, `QuestionView`, `PaywallView`, `ContentView` do view modelov alebo malých typov; testy na presunutú logiku.
 - [ ] A2 — pixel snímky chýbajúcich obrazoviek (zoznam v poistke 3), sk/cs/en a veľké písmo ako pri hero snímkach.
-- [ ] A3 — dokončiť plátno: tmavý režim (viď Otvorené), farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
+- [ ] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
 
 ### B. Základy (prvý kód redizajnu, po prepnutí bety)
 - [ ] B0 — prepnutie bety podľa `shared.md` (fast-forward, ruleset, `MARKETING_VERSION` 1.1).
@@ -67,7 +67,8 @@
 
 Plátno je návrh, kód je pravda. Founder komentuje priamo na plátne; agent pred každým PR fázy C prečíta komentáre k dotknutým obrazovkám. Rozdiel medzi plátnom a appkou rieši PR, nikdy ručná úprava katalógu.
 
-## Otvorené (pre foundera)
+## Rozhodnutia foundera, 2. kolo (2026-10-08)
 
-- **Tmavý režim:** appka ho dnes podporuje, Bg je nakreslený len svetlý. Doplniť tmavú verziu Bg (A3), alebo redizajn len svetlý?
-- **Farby kategórií:** priradenie farby ku každej kategórii (dnes ich je viac než 5 farieb palety).
+- **Tmavý režim áno:** Bg dostane tmavú verziu (kreslí sa na plátne po kontrole návrhov voči appke).
+- **Farby kategórií** (6 kategórií z taxonómie `CATEGORY_TAXONOMY`): geography-world kobaltová #2C45F5 (biely text), history mandarínková #FF6B2C (tmavý text), science-nature mätová #3FE0AE (tmavý), movies-music ružová #E8317F (biely), sports žltá #FFD23F (tmavý), food-everyday fialová #7A5CFF (biely); vlastné balíčky atrament #111216 (biely); mix / všetky = viacfarebný pruh.
+- **Kontrola návrhov voči appke** pred začiatkom kódu: každá obrazovka na plátne obsahuje všetko, čo appka dnes ukazuje, a nič vymyslené bez schválenia.

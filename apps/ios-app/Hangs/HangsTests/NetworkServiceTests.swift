@@ -655,6 +655,33 @@ struct NetworkServiceTests {
             }
         }
     }
+
+    // MARK: 19. #193 task 193.12 — the transport never retries a 5xx on its own
+
+    /// The deploy-restart retry is opt-in at idempotent call sites
+    /// (`TransientRetry`: question-scoped submits, skip, quiz start). A blanket
+    /// retry down here would re-send non-idempotent writes too — a second
+    /// feedback report, a second flag — so a 503 must surface after ONE request.
+    @Test("a 503 on a non-idempotent write is sent exactly once")
+    func transportDoesNotRetry503() async throws {
+        let service = makeService()
+        let requests = OSAllocatedUnfairLock<Int>(initialState: 0)
+        StubURLProtocol.handler = { _ in
+            requests.withLock { $0 += 1 }
+            return (.make(status: 503), Data(#"{"detail": "restarting"}"#.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            try await service.submitFeedback(message: "hi", metadataJSON: nil, appVersion: nil, screenshotPNG: nil, audioWAV: nil, logsText: nil)
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case let .serverError(code, _) = error, code == 503 else {
+                Issue.record("Expected .serverError(503, …), got \(error)"); return
+            }
+        }
+        #expect(requests.withLock { $0 } == 1, "the transport must not re-send a non-idempotent write")
+    }
 }
 
 // MARK: - StubAuthService

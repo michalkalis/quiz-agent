@@ -1256,8 +1256,9 @@ final class QuizViewModel: ObservableObject {
             // to zero, so the first request after idle hits a cold start and
             // used to fail straight to the error screen (a warm second attempt
             // succeeds). createSession is a POST — a retry after a timeout can
-            // theoretically orphan a session, but the retry stays tight (≤2
-            // extra attempts) and sessions expire, so the risk is accepted.
+            // theoretically orphan a session, but the retry stays bounded
+            // (`TransientRetry.retryWindow`) and sessions expire, so the risk is
+            // accepted.
             let session = try await withTransientStartRetry {
                 try await networkService.createSession(
                     maxQuestions: quizMaxQuestions,
@@ -1446,8 +1447,8 @@ final class QuizViewModel: ObservableObject {
         questionShortfall = nil
     }
 
-    /// Runs a start-quiz network step with a bounded retry (up to 2 extra
-    /// attempts, ~1s growing backoff) on transient cold-start failures only.
+    /// Runs a start-quiz network step with a bounded retry (`TransientRetry`:
+    /// 1 s, 2 s, then 3 s apart, within a 24 s window) on transient failures only.
     /// Prod Fly machines auto-stop to zero (`min_machines_running=0`), so the
     /// first request after idle hits a cold start; a warm second attempt
     /// succeeds. On non-transient errors (or after the attempts are exhausted)
@@ -1830,8 +1831,11 @@ final class QuizViewModel: ObservableObject {
         do {
             // #178: same bounded wait as the voice submit — without it a wedged
             // request left the option spinner up with no way out (TF 2026-09-13).
+            // #193 task 193.12: and the same transient retry, so a backend deploy
+            // (~18 s restart) mid-drive costs a pause, not the tapped answer. Safe:
+            // the submit is question-scoped idempotent (#133 1a).
             let audio = settings.audioMode != "off"
-            let response = try await withUserFacingTimeout(seconds: submitTimeoutSeconds, clock: clock) {
+            let response = try await withBoundedTransientRetry(label: "mcq answer submit") {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
                     input: value,

@@ -36,6 +36,14 @@ struct SubmitRetryTests {
         return (vm, network, clock)
     }
 
+    /// Lets `failures` attempts fail, advancing the test clock by the SHIPPED
+    /// backoff after each one so the next attempt can fire.
+    private func driveFailures(_ failures: Int, calls: @escaping @MainActor () -> Int, clock: TestClock<Duration>) async {
+        for attempt in 1 ... failures {
+            await pumpUntil({ calls() == attempt }, "attempt \(attempt) never fired")
+            await clock.advance(by: TransientRetry.delay(afterAttempt: attempt))
+        }
+    }
 
     // MARK: - Skip
 
@@ -55,24 +63,47 @@ struct SubmitRetryTests {
         }
     }
 
-    @Test("skip still fails loudly when the backend keeps returning 503")
-    func skipStopsAfterAttemptsExhausted() async throws {
+    /// #193 task 193.12: the retry is bounded by a time window, not a count —
+    /// and the window must end inside the 30 s user-facing submit bound, or the
+    /// driver waits longer than the screen tolerates. Attempts at 0, 1, 3, 6, 9,
+    /// 12, 15, 18, 21 and 24 s; the next would start at 27 s, past the window.
+    @Test("skip still fails loudly when the backend stays down past the retry window")
+    func skipStopsAfterRetryWindow() async throws {
         let (vm, network, clock) = makeViewModel()
         network.textInputFailuresBeforeSuccess = 99 // never recovers
 
         let submission = Task { await vm.skipQuestion() }
-        // Driving the two SHIPPED backoffs in turn also pins the schedule: the
-        // next attempt only exists once its own 1 s / 2 s wait has elapsed.
-        await pumpUntil { network.submitTextInputCallCount == 1 }
-        await clock.advance(by: .seconds(1))
-        await pumpUntil { network.submitTextInputCallCount == 2 }
-        await clock.advance(by: .seconds(2))
+        await driveFailures(9, calls: { network.submitTextInputCallCount }, clock: clock)
+        await pumpUntil { network.submitTextInputCallCount == 10 }
         await submission.value
 
-        #expect(network.submitTextInputCallCount == TransientRetry.maxAttempts,
-                "bounded: 3 attempts, then surface — never an unbounded loop")
+        #expect(network.submitTextInputCallCount == 10,
+                "bounded: 10 attempts within 24 s, then surface — never an unbounded loop")
         if case .error = vm.quizState {} else {
             Issue.record("a persistent backend failure must reach the user")
+        }
+    }
+
+    // MARK: - Deploy restart (#193 task 193.12)
+
+    /// Prod `quiz-agent-api` is a single machine: a deploy restarts it for ~18 s.
+    /// A tapped answer mid-drive must ride that out and land on the result — the
+    /// MCQ tap had no retry at all before this, so one 502 cost the answer.
+    @Test("an MCQ tap survives an ~18 s deploy restart — same question, no OOPS")
+    func mcqTapRidesOutDeployRestart() async throws {
+        let (vm, network, clock) = makeViewModel()
+        let questionId = vm.currentQuestion?.id
+        network.textInputFailuresBeforeSuccess = 7 // fails at 0…15 s, back at 18 s
+
+        let submission = Task { await vm.submitMCQAnswer(key: "a", value: "Bratislava") }
+        await driveFailures(7, calls: { network.submitTextInputCallCount }, clock: clock)
+        await submission.value
+
+        #expect(network.submitTextInputCallCount == 8, "7 failures during the restart + 1 success")
+        #expect(network.capturedTextInputQuestionId == questionId,
+                "every retry answers the SAME question — the server replays, never double-grades")
+        if case .error = vm.quizState {
+            Issue.record("an MCQ tap surfaced the OOPS screen during a deploy restart")
         }
     }
 
@@ -119,9 +150,13 @@ struct SubmitRetryTests {
     /// The retry must never fire on an error that proves the request DID reach
     /// application code — re-sending an answer that was already counted is worse
     /// than showing the failure.
-    @Test("only connection-level and 502/503 failures are retryable")
+    @Test("only connection-level and 502/503/504 failures are retryable")
     func onlyTransientErrorsRetry() {
         #expect(TransientRetry.isTransient(URLError(.cannotConnectToHost)))
+        // #193 task 193.12: a tunnel (no signal) and a proxy gateway timeout
+        // during a deploy are the same "never answered" class.
+        #expect(TransientRetry.isTransient(URLError(.notConnectedToInternet)))
+        #expect(TransientRetry.isTransient(NetworkError.serverError(statusCode: 504, message: "gateway")))
         #expect(TransientRetry.isTransient(NetworkError.serverError(statusCode: 503, message: "waking")))
         #expect(TransientRetry.isTransient(NetworkError.serverError(statusCode: 502, message: "proxy")))
         #expect(!TransientRetry.isTransient(NetworkError.serverError(statusCode: 500, message: "bug")))

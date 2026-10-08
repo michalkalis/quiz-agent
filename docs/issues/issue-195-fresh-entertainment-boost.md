@@ -1,6 +1,6 @@
 # #195 — Čerstvé otázky: časovo obmedzené 2× zvýhodnenie pri výbere
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · done (2026-10-08)
 **Založené:** 2026-10-08 (founder: čerstvé otázky, napr. novinky zo zábavy, majú chodiť ~2× častejšie, ale len kým sú aktuálne)
 **Vetva:** `feat/195-topicality-boost`
 
@@ -28,7 +28,14 @@ Aktuálna otázka sa pri výbere ďalšej otázky ťahá s dvojnásobnou váhou,
 1. quiz-pack-api (migrácia `e195b0057a11` cez `release_command`).
 2. Až potom quiz-agent — číta všetky stĺpce `questions`, bez migrácie by výber otázok padal.
 
+## Stav 2026-10-08
+
+- Kód: PR #279 (zvýhodnenie, migrácia) + PR #285 (`generate_pack --floor-fraction`: krátka korpusová dávka si nechá otázky, ktoré prešli bránami, namiesto zahodenia celej dávky). Nasadené: quiz-pack-api v75, quiz-agent v137.
+- Čerstvá zábava v prode (machine-approved): **en 40, sk 30, cs 33** (sk/cs ~polovica domáca scéna). Cieľ 50 nedosiahnutý: po vyradení duplikátov (generátor sa opakoval) a nepríjemných tém; founder: nahrať teraz, doplniť neskôr. Zvýhodnených teraz 33/103 (okno sa počíta od dátumu udalosti; founder potvrdil). Preklady EN: sk 34/40, cs 33/40 schválené.
+- Founder: v zábavných otázkach žiadna politika, vojna, kriminalita, choroby, úmrtia.
+- Domáce SK/CZ novinky 2026 často padali na bráne zodpovedateľnosti (slepý model ich nepozná): pre domáce dávky ju robí sonnet namiesto haiku (`LLM_SESSION_MAP`), zadanie len najväčšie veci, do briefu zoznam už pokrytých odpovedí. Záznam: `docs/testing/runs/fresh-entertainment-2026-10-08/`.
+
 ## Otvorené
 
-- [ ] Čerstvá dávka 50 otázok en/sk/cs: vygenerovať, `classify_topicality.py`, skontrolovať verdikty, importovať (samostatný krok).
+- [ ] Doplniť do 50 (en +10, sk +20, cs +17) — reuse `run_gen.sh`/`run_all.sh`, do briefu zoznam všetkých už nahratých odpovedí.
 - [ ] Neskôr: režim nad DB na preklasifikovanie celého korpusu.

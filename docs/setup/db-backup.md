@@ -38,18 +38,24 @@ Databáza beží v RAM kontajnera (tmpfs), po `docker stop` po nej nič nezostan
 
 ### B. Obnova do produkcie (DB stroj žije, dáta sú poškodené alebo zmazané)
 
-Obnovuje sa do novej databázy vedľa pôvodnej, prepne sa až po kontrole, takže pôvodné dáta ostanú pre prípad omylu.
+Obnovuje sa do novej databázy vedľa pôvodnej, prepne sa až po kontrole, takže pôvodné dáta ostanú pre prípad omylu. Zápisy od času zálohy sú potom len v `quiz_pack_broken`.
 
-1. Zastav zapisovateľov: `fly machine stop <id> -a quiz-agent-api` a `... -a quiz-pack-api` (id z `fly status -a <app>`), na mba `apps/quiz-pack-api/scripts/session_worker_local.sh stop`.
+Zapisovateľov nezastavuj cez `fly machine stop`: obe appky majú `auto_start_machines`, takže ich prvá požiadavka z iOS znova zobudí. A keďže sa pripájajú ako superuser, `REVOKE CONNECT` ich nezastaví. Spoľahlivé je zamknúť samotnú databázu (krok 4); appky medzitým vracajú chyby, to je pri obnove v poriadku.
+
+1. Na mba zastav session worker: `apps/quiz-pack-api/scripts/session_worker_local.sh stop`.
 2. V druhom termináli: `fly proxy 15432:5432 -a quiz-pack-db`
-3. Heslo: `export PGPASSWORD=$(fly ssh console -a quiz-pack-db -C 'printenv OPERATOR_PASSWORD' | tail -1 | tr -d '\r')`
-4. `docker run --rm -e PGPASSWORD postgres:17 psql -h host.docker.internal -p 15432 -U postgres -d postgres -c 'CREATE DATABASE quiz_pack_restore'`
-5. `openssl cms -decrypt -binary -inform DER -inkey key.pem -in <súbor>.dump.cms | docker run --rm -i -e PGPASSWORD postgres:17 pg_restore -h host.docker.internal -p 15432 -U postgres -d quiz_pack_restore --no-owner --no-privileges --exit-on-error`
-6. Over počty ako v A.6 (s `-h host.docker.internal -p 15432 -d quiz_pack_restore`).
-7. Prepni: `docker run --rm -e PGPASSWORD postgres:17 psql -h host.docker.internal -p 15432 -U postgres -d postgres -c 'ALTER DATABASE quiz_pack RENAME TO quiz_pack_broken' -c 'ALTER DATABASE quiz_pack_restore RENAME TO quiz_pack'`
-8. Naštartuj stroje z kroku 1 (`fly machine start ...`), skontroluj `/api/v1/health` a `/health`. `quiz_pack_broken` zmaž až keď je všetko v poriadku.
+3. Heslo a skratka:
+   `export PGPASSWORD=$(fly ssh console -a quiz-pack-db -C 'printenv OPERATOR_PASSWORD' | tail -1 | tr -d '\r')`
+   `PSQL="docker run --rm -i -e PGPASSWORD postgres:17 psql -h host.docker.internal -p 15432 -U postgres -d postgres"`
+4. Zamkni starú databázu a odpoj všetkých (aj spojenia držané proxy na porte 5432):
+   `$PSQL -c "ALTER DATABASE quiz_pack WITH ALLOW_CONNECTIONS false" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'quiz_pack'"`
+5. `$PSQL -c 'CREATE DATABASE quiz_pack_restore'`
+6. `openssl cms -decrypt -binary -inform DER -inkey key.pem -in <súbor>.dump.cms | docker run --rm -i -e PGPASSWORD postgres:17 pg_restore -h host.docker.internal -p 15432 -U postgres -d quiz_pack_restore --no-owner --no-privileges --exit-on-error`
+7. Over počty ako v A.6 (`docker run --rm -e PGPASSWORD postgres:17 psql -h host.docker.internal -p 15432 -U postgres -d quiz_pack_restore -Atc "select count(*) from questions"`).
+8. Prepni: `$PSQL -c 'ALTER DATABASE quiz_pack RENAME TO quiz_pack_broken' -c 'ALTER DATABASE quiz_pack_restore RENAME TO quiz_pack'`
+9. `fly apps restart quiz-agent-api` (drží mŕtve spojenia), `quiz-pack-api` sa zobudí sám pri prvej požiadavke. Skontroluj `https://quiz-agent-api.fly.dev/api/v1/health` a `https://quiz-pack-api.fly.dev/health`, potom znova spusti worker na mba. Do `quiz_pack_broken` sa dá nahliadnuť po `ALTER DATABASE quiz_pack_broken WITH ALLOW_CONNECTIONS true`; zmaž ju, až keď je všetko v poriadku.
 
-Ak zmizol celý DB stroj alebo volume: do 5 dní najprv skús Fly snapshot (`fly volumes snapshots list vol_vxm60y5nq10xpmw4 -a quiz-pack-db`, potom `fly volumes create pg_data --snapshot-id <id> -a quiz-pack-db`). Inak vytvor nový stroj z vlastného obrazu (`infra/quiz-pack-db/README.md`) a pokračuj krokmi B.2 až B.8 (krok 7 bez prvého `RENAME`, len premenuj `quiz_pack_restore` na `quiz_pack`).
+Ak zmizol celý DB stroj alebo volume: do 5 dní najprv skús Fly snapshot (`fly volumes snapshots list vol_vxm60y5nq10xpmw4 -a quiz-pack-db`, potom `fly volumes create pg_data --snapshot-id <id> -a quiz-pack-db`). Inak vytvor nový stroj z vlastného obrazu (`infra/quiz-pack-db/README.md`) a pokračuj krokmi 2, 3, 5 až 7, potom len `$PSQL -c 'ALTER DATABASE quiz_pack_restore RENAME TO quiz_pack'` a krok 9.
 
 ## Miesto na disku
 

@@ -19,10 +19,7 @@ struct ContentView: View {
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
     // #58 §9: contextual sign-in sheet after purchase/restore (decision 10).
-    @State private var showSignInPrompt = false
-    /// Set while the paywall is still up so the sign-in sheet presents only
-    /// after the paywall's dismissal completes (two sheets can't overlap).
-    @State private var signInPromptPending = false
+    @StateObject private var signInPrompt: SignInPromptCoordinator
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
     @State private var screenAwakeWriter = ScreenAwakeWriter()
@@ -38,14 +35,17 @@ struct ContentView: View {
             analytics: appState.analytics
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
+        var showsSignInPromptAtLaunch = false
         #if DEBUG
             // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
             // sheet directly — it is otherwise reachable only through a real
             // StoreKit purchase, which the sim can't perform.
-            if CommandLine.arguments.contains("--ui-test-signin-prompt") {
-                _showSignInPrompt = State(initialValue: true)
-            }
+            showsSignInPromptAtLaunch = CommandLine.arguments.contains("--ui-test-signin-prompt")
         #endif
+        _signInPrompt = StateObject(wrappedValue: SignInPromptCoordinator(
+            persistenceStore: appState.persistenceStore,
+            isPresented: showsSignInPromptAtLaunch
+        ))
     }
 
     var body: some View {
@@ -96,15 +96,7 @@ struct ContentView: View {
     /// shake gesture, which misfired constantly in a moving car.)
     private func presentFeedback() {
         guard feedbackPresentation == nil else { return }
-        let screenshot = ScreenshotCapture.captureKeyWindow()
-        feedbackPresentation = FeedbackPresentation(
-            viewModel: FeedbackViewModel(
-                networkService: appState.networkService,
-                context: FeedbackContext.capture(from: viewModel),
-                screenshot: screenshot,
-                voice: appState.makeFeedbackVoice(for: viewModel)
-            )
-        )
+        feedbackPresentation = appState.makeFeedbackPresentation(for: viewModel)
     }
 
     @ViewBuilder
@@ -113,50 +105,23 @@ struct ContentView: View {
             // Main navigation content
             NavigationStack(path: $navModel.path) {
                 Group {
-                    switch viewModel.quizState {
-                    // `.startingQuiz` stays on Home instead of mounting QuestionView
-                    // (founder batch 2026-07-12 previously mounted QuestionView here
-                    // immediately): with no `currentQuestion` yet, QuestionView rendered
-                    // only its top chrome + a centered spinner — perceived as an empty
-                    // "Quiz" screen. The Start Quiz button already reflects the loading
-                    // state itself (HomeView's cancellable start control).
-                    case .idle, .startingQuiz:
+                    switch viewModel.quizScreen {
+                    case .home:
                         HomeView(
                             viewModel: viewModel,
                             packOrderService: appState.packOrderService,
                             appConfig: appState.appConfig
                         )
-
-                    // #182: `.awaitingQuestion` stays on QuestionView — the header
-                    // and counter must keep standing while the pack catches up,
-                    // so the set visibly continues instead of looking over.
-                    case .askingQuestion, .awaitingQuestion, .recording, .processing, .skipping:
+                    case .question:
                         QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
-
-                    case .showingResult:
+                    case .result:
                         ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
-
-                    case .finished:
-                        // #132 E: deferred reveal ends on the recap (variant C);
-                        // the per-question flow keeps today's CompletionView.
-                        // The entries guard is defensive — an empty recap (e.g.
-                        // the setting flipped after a quota-cut set of zero
-                        // recorded questions) degrades to the score screen
-                        // rather than an empty list.
-                        if viewModel.endsOnRecap {
-                            SetRecapView(viewModel: viewModel)
-                        } else {
-                            CompletionView(viewModel: viewModel)
-                        }
-
-                    case let .error(_, context):
-                        // activeErrorModel is built by setError via AppErrorModel.from
-                        // (localised copy + context-correct CTA — 54.15); the context
-                        // fallback covers direct transitions that bypass setError.
-                        ErrorView(
-                            viewModel: viewModel,
-                            model: viewModel.activeErrorModel ?? AppErrorModel.from(context: context)
-                        )
+                    case .setRecap:
+                        SetRecapView(viewModel: viewModel)
+                    case .completion:
+                        CompletionView(viewModel: viewModel)
+                    case let .error(model):
+                        ErrorView(viewModel: viewModel, model: model)
                     }
                 }
                 .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
@@ -201,21 +166,16 @@ struct ContentView: View {
                     if complete { showOnboardingReplay = false }
                 }
         }
-        .sheet(isPresented: $viewModel.showPaywall, onDismiss: {
-            if signInPromptPending {
-                signInPromptPending = false
-                showSignInPrompt = true
-            }
-        }) {
+        .sheet(isPresented: $viewModel.showPaywall, onDismiss: signInPrompt.paywallDismissed) {
             PaywallView(
                 storeManager: appState.storeManager,
                 limitError: viewModel.quotaLimitError,
                 onDismiss: { viewModel.showPaywall = false }
             )
         }
-        .sheet(isPresented: $showSignInPrompt) {
+        .sheet(isPresented: $signInPrompt.isPresented) {
             ContextualSignInSheet(authService: appState.authService) {
-                showSignInPrompt = false
+                signInPrompt.isPresented = false
             }
             .presentationDetents([.height(520)])
             .presentationDragIndicator(.visible)
@@ -230,7 +190,7 @@ struct ContentView: View {
         // contextual sign-in prompt when Premium turns on.
         .onReceive(appState.storeManager.$isPurchased.removeDuplicates()) { isPurchased in
             guard isPurchased else { return }
-            maybeQueueSignInPrompt(afterPaywall: viewModel.showPaywall)
+            signInPrompt.premiumActivated(whilePaywallShown: viewModel.showPaywall)
         }
         // #111: the sole teardown path — entering `.startingQuiz` (from
         // `.idle`, or `.error` once #110's retry transition lands) clears the
@@ -285,141 +245,6 @@ struct ContentView: View {
             }
         }
         .environmentObject(navModel)
-    }
-
-    /// #58 §9: offer the contextual sign-in sheet when Premium turns on.
-    /// StoreManager re-checks entitlements on every launch, so this fires
-    /// both at the purchase moment and on later app opens — the gate's
-    /// shown-count cap (1 prompt + 1 reminder) is what bounds it.
-    private func maybeQueueSignInPrompt(afterPaywall: Bool) {
-        let isSignedIn = KeychainTokenStore().load()?.isSignedIn ?? false
-        guard SignInPromptGate.shouldPrompt(
-            isPurchased: true,
-            isSignedIn: isSignedIn,
-            shownCount: appState.persistenceStore.signInPromptShownCount
-        ) else { return }
-        appState.persistenceStore.incrementSignInPromptShownCount()
-        if afterPaywall {
-            signInPromptPending = true
-        } else {
-            showSignInPrompt = true
-        }
-    }
-}
-
-/// Error screen — Fwafe frame. Bound to AppErrorModel (52.7 mapping).
-/// Red icon circle + "OOPS" Anton hero + error-accent line + model title/description + CTA stack.
-struct ErrorView: View {
-    @ObservedObject var viewModel: QuizViewModel
-    let model: AppErrorModel
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HangsBrandRow()
-
-            Spacer(minLength: 40)
-
-            VStack(spacing: Theme.Hangs.Spacing.xl) {
-                errorIconCircle
-
-                heroBlock
-
-                Text(model.description)
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 28)
-                    .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
-                    .accessibilityIdentifier("error.description")
-
-                #if DEBUG
-                    if let detail = viewModel.lastErrorDebugInfo {
-                        DebugErrorDetailsView(detail: detail)
-                            .padding(.horizontal, 20)
-                    }
-                #endif
-            }
-
-            Spacer()
-
-            ctaStack
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .accessibilityIdentifier("error.root")
-    }
-
-    private var errorIconCircle: some View {
-        ZStack {
-            Circle()
-                .fill(Theme.Hangs.Colors.error.opacity(0.12))
-                .frame(width: 120, height: 120)
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundColor(Theme.Hangs.Colors.error)
-        }
-        .accessibilityHidden(true)
-        .accessibilityIdentifier("error.icon")
-    }
-
-    private var heroBlock: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
-            Text("OOPS")
-                .font(.hangsDisplayMD)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .multilineTextAlignment(.center)
-                .accessibilityAddTraits(.isHeader)
-
-            Capsule()
-                .fill(Theme.Hangs.Colors.error)
-                .frame(width: 40, height: 3)
-                .accessibilityHidden(true)
-
-            Text(model.title)
-                .font(.hangsBody(17, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .multilineTextAlignment(.center)
-                .accessibilityIdentifier("error.title")
-        }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-    }
-
-    @ViewBuilder
-    private var ctaStack: some View {
-        VStack(spacing: 10) {
-            switch model.retryAction {
-            case .retryOperation:
-                HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
-                    if viewModel.shouldRetryWithNewSession {
-                        viewModel.beginQuizStart()
-                    } else {
-                        Task { await viewModel.retryLastOperation() }
-                    }
-                }
-                .accessibilityIdentifier("error.retry")
-
-                HangsSecondaryButton(title: "Go Home", icon: "house.fill", height: 56) {
-                    viewModel.resetToHome()
-                }
-                .accessibilityIdentifier("error.home")
-
-            case .goHome:
-                HangsPrimaryButton(title: "Go Home", icon: "house.fill") {
-                    viewModel.resetToHome()
-                }
-                .accessibilityIdentifier("error.home")
-
-            case .dismiss:
-                HangsSecondaryButton(title: "Dismiss", icon: "xmark", height: 56) {
-                    viewModel.resetToHome()
-                }
-                .accessibilityIdentifier("error.dismiss")
-            }
-        }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-        .padding(.bottom, Theme.Hangs.Spacing.lg)
     }
 }
 

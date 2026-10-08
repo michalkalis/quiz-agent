@@ -79,6 +79,23 @@ extension AppState {
             languageCode: viewModel.currentSession?.language ?? viewModel.settings.language
         )
     }
+
+    /// A feedback sheet for the screen the user is on (#109): a snapshot of the
+    /// quiz state plus `screenshot`, which defaults to capturing the key window
+    /// NOW — before the sheet presents, so the shot shows the reported screen.
+    func makeFeedbackPresentation(
+        for viewModel: QuizViewModel,
+        screenshot: UIImage? = ScreenshotCapture.captureKeyWindow()
+    ) -> FeedbackPresentation {
+        FeedbackPresentation(
+            viewModel: FeedbackViewModel(
+                networkService: networkService,
+                context: FeedbackContext.capture(from: viewModel),
+                screenshot: screenshot,
+                voice: makeFeedbackVoice(for: viewModel)
+            )
+        )
+    }
 }
 
 /// Identifiable holder so a freshly-built `FeedbackViewModel` can drive a

@@ -1741,6 +1741,16 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
+    /// The error screen's Try Again: a failed start begins a fresh, tracked quiz
+    /// start (cancellable from Home); anything else retries the failed step.
+    @discardableResult
+    func retryFromErrorScreen() -> Task<Void, Never> {
+        if shouldRetryWithNewSession {
+            return beginQuizStart()
+        }
+        return Task { await retryLastOperation() }
+    }
+
     /// Rate the current question (1-5 stars)
     func rateQuestion(_ rating: Int) {
         guard let sessionId = currentSession?.id else { return }

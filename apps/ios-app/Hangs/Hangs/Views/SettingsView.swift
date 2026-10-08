@@ -674,15 +674,7 @@ struct SettingsView: View {
                 valueColor: Theme.Hangs.Colors.muted,
                 showsChevron: true
             ) {
-                let screenshot = ScreenshotCapture.captureKeyWindow()
-                feedbackPresentation = FeedbackPresentation(
-                    viewModel: FeedbackViewModel(
-                        networkService: appState.networkService,
-                        context: FeedbackContext.capture(from: viewModel),
-                        screenshot: screenshot,
-                        voice: appState.makeFeedbackVoice(for: viewModel)
-                    )
-                )
+                feedbackPresentation = appState.makeFeedbackPresentation(for: viewModel)
             }
             .accessibilityIdentifier("settings.sendFeedback")
         }

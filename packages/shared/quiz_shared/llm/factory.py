@@ -39,6 +39,7 @@ a smart player, not an oracle). Both stay env-overridable via
 
 import logging
 import os
+import random
 from typing import Any, Optional, Union
 
 import httpx
@@ -125,7 +126,14 @@ def _role(env_name: str, default: str) -> str:
 # Logical role -> canonical (direct-provider) model id. Frontier-only for the
 # generation pipeline (founder policy 2026-07-30, generation-review fix run);
 # verified against the live OpenRouter catalog the same day.
-GEN = _role("LLM_ROLE_GEN", "claude-fable-5-1")
+GEN = _role("LLM_ROLE_GEN", "claude-opus-5-5")
+# Founder 2026-10-08: Opus 5.5 everywhere (blind test ≈ Fable 5.1 at ~40 % of
+# the cost per new question), but a share of generation keeps running on
+# Fable 5.1 so ratings can show over time which model is really better.
+# Picked per order / per CLI run; provenance records the model on every
+# question. GEN_ALT_SHARE=0 turns the mix off.
+GEN_ALT = _role("LLM_ROLE_GEN_ALT", "claude-fable-5-1")
+GEN_ALT_SHARE = float(os.getenv("GEN_ALT_SHARE") or 0.15)
 CRITIQUE = _role("LLM_ROLE_CRITIQUE", "gpt-5.6-sol")
 # EVAL is the serve-time answer grader (voice hot path, per-answer cost model)
 # — deliberately NOT part of the 2026-07-30 frontier refresh; revisit
@@ -171,6 +179,12 @@ ANSWERABILITY = "deepseek-v4-flash"
 # generator. Session tier: sonnet (via the gpt-5-mini alias below).
 DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
 EMBED = "text-embedding-3-small"
+
+
+def pick_generation_model(rand=random.random) -> str:
+    """GEN, or GEN_ALT for a ``GEN_ALT_SHARE`` fraction of calls (see above)."""
+    return GEN_ALT if GEN_ALT and rand() < GEN_ALT_SHARE else GEN
+
 
 # Direct model id -> OpenRouter slug. Confirmed served via OpenRouter in the
 # Phase 0 spike (see docs/issues/issue-53-openrouter-llm-gateway.md). Audio and

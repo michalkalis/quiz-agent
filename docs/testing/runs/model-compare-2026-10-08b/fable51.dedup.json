@@ -1,0 +1,303 @@
+{
+  "input": [
+    "/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent-wt-cmp2/docs/testing/runs/model-compare-2026-10-08b/fable51.json"
+  ],
+  "candidates": 30,
+  "env": {
+    "DEDUP_STRICTNESS_PER_CATEGORY": null,
+    "ANSWER_CAP": null,
+    "DEDUP_QA_EMBEDDING": null,
+    "DEDUP_GRAYZONE_JUDGE": null,
+    "GRAYZONE_JUDGE_MAX_CALLS": null
+  },
+  "info": {
+    "kept": 24,
+    "dropped": 6,
+    "fact_dropped": 0,
+    "answer_cap": 0,
+    "drop_reasons": {
+      "cosine": 6,
+      "cosine_qa": 0,
+      "grayzone_judge": 0,
+      "jaccard": 0,
+      "in_batch": 0,
+      "fact_key": 0,
+      "fact_content": 0,
+      "answer_cap": 0
+    },
+    "grayzone_judge_calls": 0,
+    "grayzone_judge_skipped": 0
+  },
+  "decisions": [
+    {
+      "id": "8bed4f21-ad30-4255-8a8a-62a60cd2a7c7",
+      "question": "Which country spans more time zones than any other nation in the world?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "1898ba39-2bac-4590-b7ee-3c1be225b95a",
+      "question": "Which country has more islands than any other on Earth, with well over two hundred thousand of them?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "4d483791-605b-4908-8efc-b70d21c5de32",
+      "question": "Which country has more ancient pyramids than any other, beating even Egypt?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a7e9bf7c-3031-490e-b00f-145b292242d0",
+      "question": "Which is the only mammal capable of true, powered flight?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "b3396586-42c7-4cca-84c6-fb5db2647178",
+      "question": "The shortest war in recorded history was fought in 1896, lasted under an hour, and pitted Britain against which island sultanate?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "74a2a4a8-12b5-459b-863b-9b6321df5f1e",
+      "question": "Which country was the first in the world to give all adult women the right to vote, back in 1893?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "2b04d9df-b3dc-45fc-981f-26ec9951fcae",
+      "question": "Which West African country was the last in the world to abolish slavery, doing so only in 1981?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "11290dba-e84b-484a-9882-154394bb8ab7",
+      "question": "Who was the first person ever to win two Nobel Prizes?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "07c4fc92-9a74-482c-9b0a-b2fa3977795c",
+      "question": "Which is older: the University of Oxford or the Aztec Empire?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "8870d533-7db6-4b6a-8089-df0ab17b5947",
+      "question": "By mass, which chemical element makes up the largest share of the human body?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "4ccc3ba8-5f36-48c3-815e-c29c608381b7",
+      "question": "Roughly how many neurons, or nerve cells, are packed into an adult human brain?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "73c1f174-323c-413e-aca0-56b270467304",
+      "question": "True or false: sharks were swimming in the oceans before the first trees grew on land.",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "626eadf9-93e1-4218-8a94-5deff4b77ac3",
+      "question": "In summer the Eiffel Tower stands about 15 centimetres taller than it does in winter. What causes this?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "515a55c8-342c-4a31-bb24-4cb259c17687",
+      "question": "Apart from primates, which animal has fingerprints so similar to a human's that they could confuse a forensic examiner?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "9c5ea95c-5789-4973-ae69-e2773b170813",
+      "question": "Which land animal has the longest pregnancy of any mammal, lasting nearly two years?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "4b40d3aa-f5bb-4aba-8880-f0a90b28dabc",
+      "question": "The green paste served as wasabi in most sushi restaurants outside Japan is actually made mostly from which other root?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "48f07c91-2b34-48f6-96f7-d1a12eb1735a",
+      "question": "The croissant is a symbol of France, yet it descends from a crescent-shaped pastry invented in which other country?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "213eb207-4d8d-4c11-b39e-0b63f5e38f72",
+      "question": "Botanists have a strict definition of a berry. Which of these fruits is NOT a berry by that definition?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a3a582f7-779d-490b-8016-fe52d04b3dcf",
+      "question": "Which nut is the key ingredient in the chocolate spread Nutella?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "e5d14b98-4621-4ec0-85b8-4642107d1df9",
+      "question": "The Fosbury flop, a backwards technique first seen at the 1968 Olympics, revolutionised which athletics event?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "7e2cd67e-f257-4a12-bd39-02ae197c0635",
+      "question": "In snooker, which coloured ball is worth the most points?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "a8c10689-b577-4653-8fbf-1fea64e1c9c6",
+      "question": "Which country has hosted the Summer Olympic Games more times than any other?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "8711b4fd-6e41-411d-a017-5010c5381857",
+      "question": "Which country has won the men's Rugby World Cup the most times?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "709bb791-81ba-4aa8-a992-59f6d965856e",
+      "question": "Which video game is the best-selling of all time, with well over three hundred million copies sold?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "0ad2266b-313c-4bd2-ba38-3cda6dae0ac1",
+      "question": "Which film was the first in history to earn more than one billion US dollars at the worldwide box office?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "9f8d5915-385b-453c-bee2-ccd069455672",
+      "question": "Which album is the best-selling of all time?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "b0248f1c-b3db-4c28-a47d-fb3b9ec86bd2",
+      "question": "In which year was the very first text message, reading simply 'Merry Christmas', sent to a mobile phone?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "1232e5f3-1b0c-47ef-af91-aeb71d2aa2ea",
+      "question": "A modern Olympic gold medal contains only around six grams of actual gold. Which metal makes up almost all of the rest?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "841c1c1a-f0f8-415f-acd2-f05ef117b554",
+      "question": "In 2016 scientists dated the eye lenses of a large, slow-swimming Arctic fish and estimated one individual was nearly 400 years old, making its species the longest-lived vertebrate known. Which fish is it?",
+      "kept": false,
+      "reason": "cosine",
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    },
+    {
+      "id": "c2e9fcc6-f986-41e0-9a9c-f1378e69d2c5",
+      "question": "The two Diomede Islands in the Bering Strait sit less than four kilometres apart, yet when it is Monday morning on one, it is still Sunday on the other. What invisible line runs between them?",
+      "kept": true,
+      "reason": null,
+      "match_id": null,
+      "match_question": null,
+      "score": null
+    }
+  ]
+}

@@ -103,6 +103,15 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
         # #166 D21b: direct_v1 by default; GEN_PROMPT_VERSION=v2_cot rolls back.
         prompt_version=feature_flags.generation_prompt_version(),
     )
+    # Founder 2026-10-08 model mix: GEN_ALT_SHARE of orders run on GEN_ALT
+    # (picked per order in `_build_stages`). A GENERATION_MODEL override pins
+    # one model and turns the mix off.
+    if not feature_flags.generation_model() and llm_factory.GEN_ALT_SHARE > 0:
+        ctx["generator_alt"] = AdvancedQuestionGenerator(
+            generation_model=llm_factory.GEN_ALT,
+            critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
+            prompt_version=feature_flags.generation_prompt_version(),
+        )
     # 46.A2b — fail-safe to drop when GOOGLE_API_KEY is absent.
     ctx["answer_normalizer"] = AnswerNormalizer()
     # Issue #76 F-3b — post-generation expiry classifier, default OFF. Dormant

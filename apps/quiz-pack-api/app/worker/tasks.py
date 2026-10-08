@@ -91,8 +91,13 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     from app import feature_flags
 
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
+    generator = ctx["generator"]
+    if ctx.get("generator_alt") is not None and (
+        llm_factory.pick_generation_model() == llm_factory.GEN_ALT
+    ):
+        generator = ctx["generator_alt"]
     generation = GenerationStage(
-        ctx["generator"],
+        generator,
         ctx.get("answer_normalizer"),
         expiry_classifier=ctx.get("expiry_classifier"),
         topicality_classifier=ctx.get("topicality_classifier"),

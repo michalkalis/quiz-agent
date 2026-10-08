@@ -344,7 +344,8 @@ def _build_stages(
     # gpt-4o/gpt-4o-mini defaults (output unchanged). The Phase-6 validation run
     # goes through this path, so the model toggle MUST be honoured here.
     generator = AdvancedQuestionGenerator(
-        generation_model=feature_flags.generation_model() or llm_factory.GEN,
+        # Founder 2026-10-08 model mix: one pick per CLI run (= one batch).
+        generation_model=feature_flags.generation_model() or llm_factory.pick_generation_model(),
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
         # #169 prod parity: the worker (`worker.py on_startup`) and the API
         # path both pass this flag; without it the CLI silently fell back to

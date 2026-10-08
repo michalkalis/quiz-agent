@@ -55,7 +55,6 @@ struct UpdateRequiredView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        .accessibilityIdentifier("update.root")
     }
 
     private var iconCircle: some View {

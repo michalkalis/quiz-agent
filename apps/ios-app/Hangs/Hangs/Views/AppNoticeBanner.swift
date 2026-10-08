@@ -49,7 +49,6 @@ struct AppNoticeBanner: View {
                     .accessibilityIdentifier("home.notice.dismiss")
                 }
             }
-            .accessibilityIdentifier("home.notice")
         }
     }
 }

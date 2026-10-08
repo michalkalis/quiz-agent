@@ -295,6 +295,7 @@ def _build_stages(
     forced_topics: list[str] | None = None,
     facts_file: str | None = None,
     per_topic_cap: int | None = None,
+    floor_fraction: float | None = None,
     coverage_allocator=None,
     coverage_seed: int | None = None,
 ) -> list[Stage]:
@@ -314,6 +315,8 @@ def _build_stages(
     ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
     (#167); ``None`` keeps today's scaled default, so the worker/API path —
     which never sets it — stays byte-identical.
+    ``floor_fraction`` overrides TopUpStage's shortfall floor (#195); ``None``
+    keeps the 80% default the worker uses.
 
     #170 D5 — this is the ONLY place the four #170 constructor parameters get
     filled: ``coverage_allocator`` (170.13) plus the ``strictness`` /
@@ -429,6 +432,7 @@ def _build_stages(
             answerability_stage=answerability,
             composition_stage=composition,
             strictness=strictness,
+            **({} if floor_fraction is None else {"floor_fraction": floor_fraction}),
         ),
     ]
     if persist:
@@ -505,6 +509,7 @@ async def _run(args: argparse.Namespace) -> int:
         ),
         facts_file=args.facts_file,
         per_topic_cap=args.per_topic_cap,
+        floor_fraction=args.floor_fraction,
         coverage_allocator=_build_coverage_allocator(args.dedup_store),
         coverage_seed=args.coverage_seed,
     )
@@ -711,6 +716,19 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "server-side DIRECT_GENERATION default is on — sourcing runs (or "
             "--facts-file is joined) and the attribution gates (ungrounded "
             "drop + F8 source_url) stay armed."
+        ),
+    )
+    parser.add_argument(
+        "--floor-fraction",
+        type=float,
+        default=None,
+        metavar="F",
+        help=(
+            "#195: override TopUpStage's shortfall floor (default 0.8) for this "
+            "run. Below the floor the run raises and writes nothing — right for "
+            "a paid pack, wasteful for a corpus batch, where every question "
+            "that cleared all gates is worth keeping. `--floor-fraction 0` "
+            "keeps the survivors of a short batch; the gates are unchanged."
         ),
     )
     parser.add_argument(

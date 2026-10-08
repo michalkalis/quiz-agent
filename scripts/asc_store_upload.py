@@ -139,7 +139,8 @@ def step_iap(app_id: str, copy: dict) -> None:
         texts = iap.get(p["attributes"]["productId"])
         if not texts:
             continue
-        existing = get(f"/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
+        # Only the v2 path lists IAP localizations; the v1 path answers with an empty list.
+        existing = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
         for loc in LOCALES:
             name, desc = texts[loc]
             upsert("inAppPurchaseLocalizations", existing, loc, {"name": name, "description": desc}, ("inAppPurchaseV2", "inAppPurchases", p["id"]))

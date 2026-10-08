@@ -113,7 +113,7 @@ def main() -> int:
     for iap in iaps.get("data", []):
         row = attrs(iap)
         iid = iap["id"]
-        loc = get(f"/inAppPurchases/{iid}/inAppPurchaseLocalizations")
+        loc = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{iid}/inAppPurchaseLocalizations")
         row["localizations"] = [attrs(l) for l in loc.get("data", [])]
         sched = get(f"/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
         if "_error" not in sched and sched.get("data"):

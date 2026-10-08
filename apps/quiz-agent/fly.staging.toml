@@ -1,6 +1,7 @@
-# Fly.io configuration for Quiz Agent API — STAGING (issue #101 §3.2).
-# Separate app so a TestFlight sandbox purchase never touches prod entitlement
-# data. Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.staging.toml
+# Fly.io configuration for Quiz Agent API — STAGING (backend only; #193 task
+# 193.10). Pre-prod rehearsal of risky changes + migrations on a copy of prod
+# data. Runbook: docs/setup/staging.md. Deploy from the repo root:
+# fly deploy -c apps/quiz-agent/fly.staging.toml
 app = "quiz-agent-api-staging"
 primary_region = "cdg"
 
@@ -9,15 +10,14 @@ primary_region = "cdg"
   dockerfile = "Dockerfile"
   build_context = "../.."
 
+# Same as prod: migrate before rollout, so a migration is rehearsed here first.
+[deploy]
+  release_command = "alembic upgrade head"
+
 [env]
   # RC_ALLOWED_ENVIRONMENT=SANDBOX is set as a Fly secret alongside
   # DATABASE_URL/REVENUECAT_* (issue #101 §3.5) — not duplicated here since
   # those are per-deploy secrets, not build-time config.
-  # Secrets parity gap (backend arch review 2026-07-18): staging lacks the
-  # APPLE_SIGNIN_* / APPLE_TOKEN_ENC_KEY / CORS_ORIGINS secrets present on
-  # prod, so /auth/apple is gracefully disabled (503) here and the beta build
-  # cannot exercise SIWA. Mirror them per issue #101 §3.5 (SIWA rows + owed
-  # `fly secrets set` note) at the next staging secrets/deploy step.
   ENVIRONMENT = "staging"
   # Keep the TTS audio cache on the mounted volume — see fly.toml for why the
   # default path would silently re-buy the cache on every deploy.

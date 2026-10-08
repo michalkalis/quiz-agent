@@ -36,6 +36,8 @@ Databáza beží v RAM kontajnera (tmpfs), po `docker stop` po nej nič nezostan
 6. Kontrola: `docker exec qp-restore-test psql -U postgres -d quiz_pack -Atc "select count(*) from questions" -c "select version_num from alembic_version"` — počty porovnaj s produkciou.
 7. `docker stop qp-restore-test`, zmaž `key.pem` a stiahnutý súbor.
 
+Skúška obnovy do staging DB (stagingu sa potom dá aj nasadiť): `infra/quiz-pack-db/refresh-staging.sh backup`, pozri `docs/setup/staging.md`.
+
 ### B. Obnova do produkcie (DB stroj žije, dáta sú poškodené alebo zmazané)
 
 Obnovuje sa do novej databázy vedľa pôvodnej, prepne sa až po kontrole, takže pôvodné dáta ostanú pre prípad omylu. Zápisy od času zálohy sú potom len v `quiz_pack_broken`.

@@ -1,13 +1,19 @@
-# Fly.io configuration for quiz-pack-api — STAGING (issue #101 §3.2).
-# Needed because a TestFlight sandbox pack purchase fails JWS verification
-# against prod's storekit_environment=Production.
+# Fly.io configuration for quiz-pack-api — STAGING (backend only; #193 task
+# 193.10). Runbook: docs/setup/staging.md.
 # Deploy from repository root: `fly deploy -c apps/quiz-pack-api/fly.staging.toml`.
+# The worker group is kept at 0 machines (`fly scale count worker=0`): an idle
+# worker runs 24/7 (~$3/month) and its sweep would re-run copied prod orders
+# on paid LLM keys. Scale it to 1 only while rehearsing pack generation.
 app = "quiz-pack-api-staging"
 primary_region = "cdg"
 
 [build]
   dockerfile = "Dockerfile"
   build_context = "../.."
+
+# Same as prod: migrate before rollout, so a migration is rehearsed here first.
+[deploy]
+  release_command = "alembic upgrade head"
 
 [env]
   ENVIRONMENT = "staging"

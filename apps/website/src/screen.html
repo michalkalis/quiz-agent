@@ -1,0 +1,21 @@
+<div {{gen.screen.attrs}}>
+  <div class="prog"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="deck">
+    <div class="card f1 k-orange"><span class="cat">{{screen.cat1}}</span></div>
+    <div class="card f2 k-green"><span class="cat">{{screen.cat2}}</span></div>
+    <div class="card f3 k-purple"><span class="cat">{{screen.cat3}}</span></div>
+    <div class="card qc k-blue"><span class="cat">{{screen.q1.cat}}</span><span class="q">{{screen.q1.text}}</span></div>
+    <div class="card nx k-yellow"><span class="cat">{{screen.q2.cat}}</span><span class="q">{{screen.q2.text}}</span></div>
+    <div class="card rs"><span class="cat">{{screen.res.title}}</span><span class="score">{{screen.res.score}}</span>
+      <ul>
+        <li><b class="ok">&#10003;</b><span>{{screen.res.row1}}</span></li>
+        <li><b class="ok">&#10003;</b><span>{{screen.res.row2}}</span></li>
+        <li><b class="no">&#10005;</b><span>{{screen.res.row3}}</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="pill g p0"><span><b>{{screen.p0.title}}</b><small>{{screen.p0.sub}}</small></span></div>
+  <div class="pill g p1"><span class="wv"><i></i><i></i><i></i><i></i></span><span><b>{{screen.p1.title}}</b><small>{{screen.p1.sub}}</small></span></div>
+  <div class="pill g p2"><span class="wv"><i></i><i></i><i></i><i></i></span><span class="pt"><b>{{screen.p2.title}}</b><small>{{screen.p2.sub}}</small></span><span class="end">{{screen.p2.said}}</span></div>
+  <div class="pill g p3"><span class="check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>{{screen.p3.title}}</b><small>{{screen.p3.sub}}</small></span></div>
+</div>

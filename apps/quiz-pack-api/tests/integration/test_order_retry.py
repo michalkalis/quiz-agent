@@ -132,11 +132,18 @@ def arq_mock() -> MagicMock:
     return pool
 
 
+@pytest.fixture
+def app_settings() -> Settings:
+    """Settings the `client` app serves; a test may flip a field mid-test."""
+    return Settings(auth_jwt_secret=_JWT_SECRET)
+
+
 @pytest_asyncio.fixture
 async def client(
     db_session: AsyncSession,
     test_chain: TestChain,
     arq_mock: MagicMock,
+    app_settings: Settings,
 ) -> AsyncIterator[httpx.AsyncClient]:
     verifier = AppleJWSVerifier(
         test_chain.root_cert,
@@ -153,7 +160,7 @@ async def client(
     app.dependency_overrides[get_jws_verifier] = lambda: verifier
     app.dependency_overrides[get_arq_pool] = lambda: arq_mock
     app.dependency_overrides[get_redis_url] = lambda: _REDIS_URL
-    app.dependency_overrides[get_settings] = lambda: Settings(auth_jwt_secret=_JWT_SECRET)
+    app.dependency_overrides[get_settings] = lambda: app_settings
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
@@ -304,6 +311,27 @@ async def test_retry_failed_order_returns_202(
     # is written by `now()` on the DB server, whose clock runs ~60 ms ahead of
     # the app's inside Docker.
     assert order.enqueued_at >= before_retry
+
+
+@pytest.mark.integration
+async def test_retry_still_works_while_orders_are_paused(
+    client: httpx.AsyncClient,
+    engine: AsyncEngine,
+    db_session: AsyncSession,
+    make_jws: JWSFactory,
+    app_settings: Settings,
+) -> None:
+    """#193 task 193.9: PACK_ORDERS_ENABLED=false pauses NEW orders only. A
+    failed order was already paid for; refusing its retry would strand the
+    customer's money behind a switch meant to stop new purchases."""
+    tx_id = f"retry-paused-{uuid.uuid4().hex[:8]}"
+    order_id = await _post_order(client, make_jws, tx_id)
+    await _force_failed(engine, db_session, order_id, job_try=3)
+    app_settings.pack_orders_enabled = False
+
+    jws = make_jws(payload_overrides={"transactionId": tx_id, "productId": "pack_10"})
+    resp = await client.post(f"/v1/orders/{order_id}/retry", headers={"X-StoreKit-JWS": jws})
+    assert resp.status_code == 202, resp.text
 
 
 @pytest.mark.integration

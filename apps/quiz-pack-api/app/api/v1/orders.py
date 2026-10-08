@@ -262,6 +262,32 @@ def _idempotent_replay_response(existing: GenerationOrder) -> JSONResponse:
     )
 
 
+# Shipped iOS builds show a failed create's `detail` string verbatim, so the
+# paused message is localized here by Accept-Language. A paid user's StoreKit
+# proof stays pending on the device and is spent on the next attempt, hence
+# "your payment is saved" on the StoreKit path.
+_ORDERS_PAUSED = {
+    "sk": "Objednávanie je zatiaľ pozastavené. Skús to neskôr.",
+    "cs": "Objednávání je zatím pozastavené. Zkus to později.",
+    "en": "Ordering is paused for now. Try again later.",
+}
+_ORDERS_PAUSED_PAID = {
+    "sk": "Objednávanie je zatiaľ pozastavené. Platba ostáva uložená, skús to neskôr.",
+    "cs": "Objednávání je zatím pozastavené. Platba zůstává uložená, zkus to později.",
+    "en": "Ordering is paused for now. Your payment is saved, try again later.",
+}
+
+
+def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
+    """The paused-orders message in the first of sk/cs/en the client accepts."""
+    messages = _ORDERS_PAUSED_PAID if paid else _ORDERS_PAUSED
+    for part in (accept_language or "").split(","):
+        code = part.split(";")[0].strip().split("-")[0].lower()
+        if code in messages:
+            return messages[code]
+    return messages["en"]
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -359,6 +385,17 @@ async def create_order(
     existing = (await session.execute(stmt)).scalars().first()
     if existing is not None:
         return _idempotent_replay_response(existing)  # type: ignore[return-value]
+
+    # 5b. Orders paused (#193 task 193.9). After the idempotency check, so a
+    # replay of an order that already exists (and was paid for) still gets its
+    # 200. A refused verified purchase leaves the reconciliation trail; the
+    # device keeps the proof and spends it once ordering resumes.
+    if not settings.pack_orders_enabled:
+        detail = _orders_paused_detail(
+            request.headers.get("accept-language"), paid=verified_tx is not None
+        )
+        _report_verified_reject(verified_tx, "orders_paused", detail)
+        raise HTTPException(status_code=503, detail=detail)
 
     # 6. Insert order + job
     order = GenerationOrder(

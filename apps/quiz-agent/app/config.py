@@ -13,12 +13,18 @@ ingest, tests) rely on a fresh env read per call.
 
 from __future__ import annotations
 
+import logging
+import re
 from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
+
+logger = logging.getLogger(__name__)
+
+_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}")
 
 
 def _attest_environment(raw: str) -> str:
@@ -53,6 +59,21 @@ def _rc_environment(raw: Optional[str]) -> Optional[frozenset[str]]:
     if not tokens or not tokens <= {"PRODUCTION", "SANDBOX"}:
         return None
     return frozenset(tokens)
+
+
+def _min_app_version(raw: Optional[str]) -> Optional[str]:
+    """Normalize a ``MIN_APP_VERSION_*`` value; empty or malformed → ``None``.
+
+    Fails open on purpose: the client blocks play below this version, so a
+    typo must disable the gate, not lock every installed build out.
+    """
+    if raw is None or not raw.strip():
+        return None
+    value = raw.strip()
+    if not _VERSION_RE.fullmatch(value):
+        logger.error("Ignoring malformed minimum app version %r", value)
+        return None
+    return value
 
 
 class Settings(BaseSettings):
@@ -143,6 +164,17 @@ class Settings(BaseSettings):
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
     elevenlabs_critical_pct: float = 10.0
+    # Remote app switches (#193 task 193.9), served by `GET /api/v1/app-config`
+    # so they change with a Fly secret/env update, no code deploy. Defaults
+    # are permissive: no minimum version, orders on, no notice. A minimum is a
+    # dotted numeric marketing version ("1.2" / "1.2.3"); a malformed value is
+    # dropped (logged) rather than served, so a typo never locks every build out.
+    min_app_version_app_store: Optional[str] = None
+    min_app_version_testflight: Optional[str] = None
+    pack_orders_enabled: bool = True
+    app_notice_sk: Optional[str] = None
+    app_notice_cs: Optional[str] = None
+    app_notice_en: Optional[str] = None
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None
@@ -153,6 +185,19 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_attest_environment(cls, value: object) -> str:
         return _attest_environment(str(value))
+
+    @field_validator(
+        "min_app_version_app_store", "min_app_version_testflight", mode="before"
+    )
+    @classmethod
+    def _normalize_min_app_version(cls, value: object) -> Optional[str]:
+        return _min_app_version(None if value is None else str(value))
+
+    @field_validator("app_notice_sk", "app_notice_cs", "app_notice_en", mode="before")
+    @classmethod
+    def _normalize_app_notice(cls, value: object) -> Optional[str]:
+        text_value = None if value is None else str(value).strip()
+        return text_value or None
 
     @field_validator("rc_allowed_environment", mode="before")
     @classmethod

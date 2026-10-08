@@ -121,7 +121,11 @@ struct ContentView: View {
                     // "Quiz" screen. The Start Quiz button already reflects the loading
                     // state itself (HomeView's cancellable start control).
                     case .idle, .startingQuiz:
-                        HomeView(viewModel: viewModel, packOrderService: appState.packOrderService)
+                        HomeView(
+                            viewModel: viewModel,
+                            packOrderService: appState.packOrderService,
+                            appConfig: appState.appConfig
+                        )
 
                     // #182: `.awaitingQuestion` stays on QuestionView — the header
                     // and counter must keep standing while the pack catches up,

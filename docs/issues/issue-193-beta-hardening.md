@@ -1,6 +1,6 @@
 # #193 — Spevnenie pred betou a pred reálnymi používateľmi
 
-**Triage:** chore · in-progress
+**Triage:** chore · in-progress (všetky tasky hotové 2026-10-08; open = founder kroky)
 **Založené:** 2026-10-08 (founder: „čo nám ešte chýba pred betou — security, testy, čistota kódu, migrácie, staging, stabilita dát, robustnosť; bez veľkých zmien“)
 **Zdroj:** 5 read-only auditov nad `origin/main` bbc9e044 (bezpečnosť, testy, čistota kódu, pripravenosť na betu, prevádzka pri reálnych používateľoch)
 
@@ -21,29 +21,35 @@
 
 ## Vlna 1 — malé bezpečné opravy (bez rozhodnutia foundera)
 
-- [ ] 193.1 StoreKit pre custom packy prijíma Production **aj** Sandbox (dnes len Sandbox → reálny App Store nákup by zlyhal) — `apps/quiz-pack-api/app/config.py`, `storekit/verifier.py`
-- [ ] 193.2 Limity vstupov: dĺžka hlasovej odpovede pred STT, `max_length` písanej odpovede a `category`/`theme` objednávky, porovnanie tajomstiev cez bytes (500 pri non-ASCII), `/admin/health` za admin kľúčom, prepis odpovede v logoch len dĺžka
-- [ ] 193.3 Monitoring: health-check oboch služieb + upozornenie na zaseknuté objednávky (`in_progress` dlhšie ako N min — kritické, keď `mba` worker nebeží); overiť, či sweep beží aj v session workerovi
-- [ ] 193.4 Nočná záloha `quiz-pack-db` mimo Fly (šifrovaná) + auto-extend volume
-- [ ] 193.5 Pravidlo migrácií (len pridávať, mazať o verziu neskôr, `questions` tabuľka zdieľaná s quiz-agent) do `.claude/rules/backend.md` + rollback postup v deploy skille
-- [ ] 193.6 Upratanie odkazov na `apps/web-ui` (workflow, CODEOWNERS, CLAUDE.md, README, start-local skill) + zastarané TODO riadky
-- [ ] 193.7 iOS: `QuestionAvailability.Limiter` toleruje neznámu hodnotu (staré buildy nespadnú pri novej hodnote zo servera)
+- [x] 193.1 StoreKit pre custom packy prijíma Production **aj** Sandbox (dnes len Sandbox → reálny App Store nákup by zlyhal) — `apps/quiz-pack-api/app/config.py`, `storekit/verifier.py` — PR #266; prod `STOREKIT_ENVIRONMENT=Production,Sandbox` nastavené 2026-10-08
+- [x] 193.2 Limity vstupov: dĺžka hlasovej odpovede pred STT, `max_length` písanej odpovede a `category`/`theme` objednávky, porovnanie tajomstiev cez bytes (500 pri non-ASCII), `/admin/health` za admin kľúčom, prepis odpovede v logoch len dĺžka — PR #268; `/admin/health` ostáva bez kľúča (volá ho `/testflight` skill), len bez textu DB chyby
+- [x] 193.3 Monitoring: health-check oboch služieb + upozornenie na zaseknuté objednávky (`in_progress` dlhšie ako N min — kritické, keď `mba` worker nebeží); overiť, či sweep beží aj v session workerovi — PR #270 (`prod-monitor.yml` každých 30 min, e-mail z GitHubu pri zlyhaní) + PR #275 (fronta za dlhým balíčkom nepáli pokusy, žiadna dvojitá generácia) + PR #282 (kópia zlyhanej/refundovanej objednávky sa nespustí)
+- [x] 193.4 Nočná záloha `quiz-pack-db` mimo Fly (šifrovaná) + auto-extend volume — PR #269; nočná šifrovaná záloha do súkromného repa `quiz-agent-db-backups` (30 kusov), obnova overená; auto-extend Fly nemá, beh zlyhá pri ≥ 80 % disku
+- [x] 193.5 Pravidlo migrácií (len pridávať, mazať o verziu neskôr, `questions` tabuľka zdieľaná s quiz-agent) do `.claude/rules/backend.md` + rollback postup v deploy skille — PR #263
+- [x] 193.6 Upratanie odkazov na `apps/web-ui` (workflow, CODEOWNERS, CLAUDE.md, README, start-local skill) + zastarané TODO riadky — PR #264
+- [x] 193.7 iOS: `QuestionAvailability.Limiter` toleruje neznámu hodnotu (staré buildy nespadnú pri novej hodnote zo servera) — PR #265
 - [x] 193.8 Zmazanie účtu: overiť a doplniť mazanie dát z anonymného ID pred prihlásením (feedback, analytika); audity sa rozchádzajú, najprv overiť — potvrdené (pravdu mal bezpečnostný audit): zmazanie účtu teraz zmaže aj stopu prepojených anonymných ID a anonymný používateľ má funkčné „Delete my data“ (predtým 404)
 - [x] 193.15 Kredit providerov: `GET /api/v1/admin/provider-balances` (OpenRouter účet + limit kľúča, ElevenLabs znaky) + denná kontrola v quiz-agent → Sentry issue pri low/critical (jeden e-mail na provider+stav) — `apps/quiz-agent/app/monitoring/provider_balances.py`
 
 ## Vlna 2 — po rozhodnutí foundera
 
-- [ ] 193.9 Minimálna verzia + `/api/v1/config` (min verzia, objednávky on/off, oznam) na serveri; iOS obrazovka „Aktualizuj aplikáciu“ (sk/cs/en)
+- [x] 193.9 Minimálna verzia + `/api/v1/config` (min verzia, objednávky on/off, oznam) na serveri; iOS obrazovka „Aktualizuj aplikáciu“ (sk/cs/en) — PR #281; `GET /api/v1/app-config`, env `MIN_APP_VERSION_APP_STORE` / `MIN_APP_VERSION_TESTFLIGHT` / `PACK_ORDERS_ENABLED` / `APP_NOTICE_SK|CS|EN` (quiz-agent), `PACK_ORDERS_ENABLED` aj na quiz-pack-api (503 pri vypnutí); do appky príde s ďalším TF buildom
 
 ## Vlna 3 — pred reálnymi používateľmi
 
 - [x] 193.10 Staging: oživiť uspané staging appky (scale-to-zero), nahrať dump prodov → zároveň skúška obnovy zo zálohy — 2026-10-08 obe appky na main, worker 0 strojov, DB obnovená z nočnej zálohy (skúška obnovy OK), staging roly už nemajú práva na prod DB; postup `docs/setup/staging.md`; open = founder skopíruje generačné tajomstvá (príkaz v docu)
-- [x] 193.11 Výpadok LLM: parser + evaluator max 1 retry, ~10 s timeout, fallback „nepodarilo sa vyhodnotiť, skús znova“ — pokus 6 s, 1 retry, strop 8 s na volanie (`app/hot_path_llm.py`); výpadok = existujúca „povedz znova“ 400 (`no_answer`, `reason: judge_unavailable`), nič sa neboduje ani neúčtuje; Sentry 1× za 10 min
-- [x] 193.12 iOS: bezpečný retry pri 502/503/504/odpojení v 24 s okne (deploy = ~18 s výpadok); MCQ ťuk už tiež
-- [ ] 193.13 Cost abuse: denný limit znakov na `/tts/synthesize`, denný strop objednávok na používateľa
-- [ ] 193.14 Chýbajúce testy: prechod mesačného limitu cez hranicu mesiaca, sk/cs hodnotenie odpovedí, refund pri zlyhanom balíčku; nahradiť `sleep` v testoch zámkov eventom
+- [x] 193.11 Výpadok LLM: parser + evaluator max 1 retry, ~10 s timeout, fallback „nepodarilo sa vyhodnotiť, skús znova“ — pokus 8 s, 1 retry, strop 12 s na volanie (PR #280 + #283, podľa merania gpt-4o-mini) (`app/hot_path_llm.py`); výpadok = existujúca „povedz znova“ 400 (`no_answer`, `reason: judge_unavailable`), nič sa neboduje ani neúčtuje; Sentry 1× za 10 min
+- [x] 193.12 iOS: bezpečný retry pri 502/503/504/odpojení v 24 s okne (deploy = ~18 s výpadok); MCQ ťuk už tiež — PR #288
+- [x] 193.13 Cost abuse: denný limit znakov na `/tts/synthesize`, denný strop objednávok na používateľa — PR #287; 10 000 znakov ElevenLabs/používateľ/deň, potom záložný hlas OpenAI; strop objednávok zámerne nie (founder: balíčky cez mba)
+- [x] 193.14 Chýbajúce testy: prechod mesačného limitu cez hranicu mesiaca, sk/cs hodnotenie odpovedí, refund pri zlyhanom balíčku; nahradiť `sleep` v testoch zámkov eventom — PR #278; mesačný limit a refund už pokryté, pribudli sk/cs testy a `pg_locks` namiesto `sleep`
 
 ## Founder kroky
+
+- Kľúč k zálohám z `~/quiz-pack-db-backup-key/` do správcu hesiel, potom priečinok zmazať.
+- GitHub › Settings › Notifications › Actions: e-mail pri zlyhaní workflow zapnutý.
+- `mba` session worker reštartovať na main ≥ b5d8bf92 (prompt v session 2026-10-08).
+- Voliteľne: generačné tajomstvá do stagingu (`docs/setup/staging.md`).
+- OpenRouter dobiť (8,72 $ k 2026-10-08) + auto top-up; OpenAI/Anthropic auto recharge; prehľad kreditov: https://claude.ai/artifact/KRP28pQuWkFvatRXFaEbKH
 
 - Vekové hodnotenie v ASC; stropy výdavkov u OpenAI / ElevenLabs / OpenRouter / Anthropic.
 - `mba` session worker na aktuálnom main a zapnutý počas bety (inak objednávky visia).

@@ -33,9 +33,9 @@
 - [x] B0 — prepnutie bety podľa `shared.md` (2026-10-08, presunuté pred fázu A).
 
 ### A. Príprava (vzhľad appky sa nemení; len v `main`, nie v bete)
-- [ ] A1 — logika von zo `SettingsView`, `QuestionView`, `PaywallView`, `ContentView` do view modelov alebo malých typov; testy na presunutú logiku.
-- [ ] A2 — pixel snímky chýbajúcich obrazoviek (zoznam v poistke 3), sk/cs/en a veľké písmo ako pri hero snímkach.
-- [ ] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
+- [x] A1 (#293, #297, #300, #301) — logika von zo `SettingsView`, `QuestionView`, `PaywallView`, `ContentView` do view modelov alebo malých typov; testy na presunutú logiku.
+- [x] A2 (#295, len tmavé) — pixel snímky chýbajúcich obrazoviek (zoznam v poistke 3), sk/cs/en a veľké písmo ako pri hero snímkach.
+- [x] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
 
 ### B. Základy (prvý kód nového vzhľadu)
 - [ ] B1 — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
@@ -82,3 +82,14 @@ Plátno je návrh, kód je pravda. Founder komentuje priamo na plátne; agent pr
 - **Kritické miesta bety sa nesmú rozbiť:** záväzný zoznam [redesign-194-critical-spots.md](../design/redesign-194-critical-spots.md). Napr. na výsledku ostávajú obe pauzy (founder 2026-10-07).
 - **Kategórií je 7:** k šiestim pribúda Zábava (`entertainment`, reálna kategória s otázkami); `CATEGORY_TAXONOMY` v `admin.py` je zastaraná (6 id).
 - Referenčné obrazovky pre implementáciu = stránka „Finálny smer vs. beta“ na plátne (návrh vedľa snímky dnešnej bety).
+
+## Rozhodnutia foundera, 4. kolo (2026-10-08)
+
+- **Texty z bety sa nemenia** (sú vyladené); nový text len tam, kde nový prvok nemá v appke obdobu, a so schválením.
+- **Povely ukazovať všade, kde fungujú** (vypínajú sa v Nastaveniach), aj na konci kola („znova“, „domov“).
+- **Otázka ako v bete:** dole tri tlačidlá, hore pauza. **Výsledok ako v bete:** hore pauza, dole „Ďalej“ s odpočtom + „ZOSTAŇ“; pri nesprávnej odpovedi vidno **tvoju aj správnu** odpoveď.
+- **Koniec kola spája skóre a zoznam odpovedí** (dnes `CompletionView` + `SetRecapView`) do jednej obrazovky.
+- **Tlačidlo „Štart“ → „Odpovedz“** (cs „Odpověz“, en „Answer“) s ikonou mikrofónu; hlasový povel ostáva „štart“, „odpovedz“ ako synonymum až po teste v aute (všetky 3 jazyky naraz).
+- **Spodný panel (tab bar) teraz nie;** nápad na neskôr: kvíz cez celú obrazovku bez panela.
+- **Zábava = limetková #A3E635** (tmavý text).
+- Tmavé hodnoty (návrh, stránka „Tmavý režim“): pozadie #0F1014, karty #1C1D23, vnútorné prvky #2A2C35, text #F2F3F5 / #A3A7B2, hlavné tlačidlo svetlé #F2F3F5; kategórie mierne stmavené (napr. ružová #D42A72, fialová #7052F5), aby biely text mal ≥ 4,5 : 1. Ružová a fialová potrebujú stmaviť aj vo svetlom režime.

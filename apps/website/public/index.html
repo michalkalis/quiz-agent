@@ -10,6 +10,8 @@
 <link rel="alternate" hreflang="sk" href="https://trubbo.app/sk/">
 <link rel="alternate" hreflang="cs" href="https://trubbo.app/cs/">
 <link rel="alternate" hreflang="x-default" href="https://trubbo.app/">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E8EAEE">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1014">
@@ -87,8 +89,9 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .note{font-size:14px;color:var(--ink3)}
 
 /* story: sticky phone screen + steps in normal document flow */
-.story{display:grid;position:relative}
-@media (min-width:900px){.story{grid-template-columns:1fr 1fr;gap:64px;align-items:start}}
+/* block flow below 900px so the sticky screen's containing block is the whole story */
+.story{display:block;position:relative}
+@media (min-width:900px){.story{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}}
 .steps{list-style:none;margin:0;padding:0}
 .screen-col{position:sticky;top:0;z-index:5;padding:12px 0;background:linear-gradient(var(--bg) 88%,transparent)}
 @media (min-width:900px){.screen-col{top:40px;padding:0;background:none;order:2}}
@@ -423,14 +426,14 @@ footer address{font-style:normal;margin-top:12px}
     </div>
     <div class="box">
       <h3>Custom packs</h3>
-      <p>Order a pack of 30 questions on any topic you like. You pay once, it&#x27;s not a subscription.</p>
+      <p>Order a pack of 30 questions on a topic you choose, for €8.99. You pay once, it&#x27;s not a subscription.</p>
     </div>
     <div class="box">
       <h3>Pricing</h3>
       <ul>
         <li><b>Free</b> 30 questions a month</li>
         <li><b>€4.99 a month</b> unlimited questions</li>
-        <li><b>Custom pack</b> one-time purchase</li>
+        <li><b>€8.99</b> custom pack of 30 questions, paid once</li>
       </ul>
     </div>
   </div>
@@ -486,7 +489,8 @@ footer address{font-style:normal;margin-top:12px}
     if (code === here) return;
     if (S[code]) {
       var box = document.getElementById('suggest');
-      document.getElementById('suggest-text').textContent = S[code].text;
+      var text = document.getElementById('suggest-text');
+      text.textContent = S[code].text; text.lang = code;
       var go = document.getElementById('suggest-go');
       go.textContent = S[code].go; go.href = S[code].url; go.lang = code; go.hreflang = code;
       var remember = function () { try { localStorage.setItem('trubbo-lang-hint', '1'); } catch (e) {} };

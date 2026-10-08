@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the static trubbo.app site from src/ into public/ (what Netlify serves).
+"""Generate the static trubbo.app site from src/ into public/ (what GitHub Pages serves).
 
 Inputs: src/template.html, src/screen.html (the phone screen partial), src/strings/<lang>.json.
 Stdlib only. Run from anywhere: python3 apps/website/build.py
@@ -19,7 +19,7 @@ OUT = ROOT / "public"
 SITE = "https://trubbo.app"
 LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}  # en is the default at the root
 STEPS = 6  # story steps; each has a static copy of the screen for the stacked fallback
-STATIC = ["favicon.svg", "favicon.png", "apple-touch-icon.png", "og.png", "robots.txt"]
+STATIC = ["favicon.svg", "favicon.png", "apple-touch-icon.png", "og.png", "robots.txt", "404.html", "CNAME"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")

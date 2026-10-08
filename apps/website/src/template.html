@@ -7,6 +7,8 @@
 <meta name="description" content="{{meta.description}}">
 <link rel="canonical" href="{{gen.canonical}}">
 {{gen.alternates}}
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E8EAEE">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1014">
@@ -84,8 +86,9 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .note{font-size:14px;color:var(--ink3)}
 
 /* story: sticky phone screen + steps in normal document flow */
-.story{display:grid;position:relative}
-@media (min-width:900px){.story{grid-template-columns:1fr 1fr;gap:64px;align-items:start}}
+/* block flow below 900px so the sticky screen's containing block is the whole story */
+.story{display:block;position:relative}
+@media (min-width:900px){.story{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}}
 .steps{list-style:none;margin:0;padding:0}
 .screen-col{position:sticky;top:0;z-index:5;padding:12px 0;background:linear-gradient(var(--bg) 88%,transparent)}
 @media (min-width:900px){.screen-col{top:40px;padding:0;background:none;order:2}}
@@ -336,7 +339,8 @@ footer address{font-style:normal;margin-top:12px}
     if (code === here) return;
     if (S[code]) {
       var box = document.getElementById('suggest');
-      document.getElementById('suggest-text').textContent = S[code].text;
+      var text = document.getElementById('suggest-text');
+      text.textContent = S[code].text; text.lang = code;
       var go = document.getElementById('suggest-go');
       go.textContent = S[code].go; go.href = S[code].url; go.lang = code; go.hreflang = code;
       var remember = function () { try { localStorage.setItem('trubbo-lang-hint', '1'); } catch (e) {} };

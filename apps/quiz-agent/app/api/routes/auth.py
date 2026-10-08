@@ -46,7 +46,9 @@ from ...auth.account_service import (
     bootstrap_with_assertion,
     bootstrap_with_attestation,
     erase_account,
+    erase_anonymous,
     resolve_account,
+    resolve_anonymous,
     revoke_apple_grant,
     usage_history,
 )
@@ -336,7 +338,8 @@ async def delete_account(
     cipher: Optional[AppleTokenCipher] = Depends(get_apple_token_cipher),
 ) -> Response:
     """Delete the caller's account and all its data (GDPR Art. 17), then sever the
-    Apple grant.
+    Apple grant. An anonymous caller (no account yet) gets its own data erased
+    instead (``erase_anonymous``) — the app offers "Delete my data" before sign-in.
 
     The local erasure is one transaction (see ``erase_account``). F4: the Apple
     revoke runs *after* the local delete commits and is best-effort — a missing
@@ -345,11 +348,18 @@ async def delete_account(
     if sessionmaker is None:
         raise HTTPException(status_code=503, detail="Auth unavailable")
 
+    user_id: Optional[str] = None
+    encrypted: Optional[bytes] = None
     async with sessionmaker() as session:
-        user = await resolve_account(subject, session)
-        user_id = str(user.id)
-        encrypted = user.apple_refresh_token_encrypted
-        await erase_account(session, user)
+        anon_id = await resolve_anonymous(subject, session)
+        if anon_id is not None:
+            await erase_anonymous(session, anon_id)
+            erased_ids = [anon_id]
+        else:
+            user = await resolve_account(subject, session)
+            user_id = str(user.id)
+            encrypted = user.apple_refresh_token_encrypted
+            erased_ids = await erase_account(session, user)
         # Sessions + ratings live in the separate ratings store (its own engine),
         # so they cannot share this transaction. Unlink them *before* the commit:
         # if that fails, nothing is committed and the user can retry (after the
@@ -357,9 +367,13 @@ async def delete_account(
         # if the commit then fails.
         session_manager = getattr(request.app.state, "session_manager", None)
         if session_manager is not None:
-            session_manager.forget_user(user_id)
+            for subject_id in erased_ids:
+                session_manager.forget_user(subject_id)
         await session.commit()
 
+    if user_id is None:
+        logger.info("Anonymous identity %s erased (GDPR erasure).", anon_id)
+        return Response(status_code=204)
     await revoke_apple_grant(oauth_client, cipher, encrypted, user_id)
     logger.info("Account %s deleted (GDPR erasure).", user_id)
     return Response(status_code=204)

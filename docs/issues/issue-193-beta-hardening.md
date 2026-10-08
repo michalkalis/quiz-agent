@@ -28,7 +28,7 @@
 - [ ] 193.5 Pravidlo migrácií (len pridávať, mazať o verziu neskôr, `questions` tabuľka zdieľaná s quiz-agent) do `.claude/rules/backend.md` + rollback postup v deploy skille
 - [ ] 193.6 Upratanie odkazov na `apps/web-ui` (workflow, CODEOWNERS, CLAUDE.md, README, start-local skill) + zastarané TODO riadky
 - [ ] 193.7 iOS: `QuestionAvailability.Limiter` toleruje neznámu hodnotu (staré buildy nespadnú pri novej hodnote zo servera)
-- [ ] 193.8 Zmazanie účtu: overiť a doplniť mazanie dát z anonymného ID pred prihlásením (feedback, analytika); audity sa rozchádzajú, najprv overiť
+- [x] 193.8 Zmazanie účtu: overiť a doplniť mazanie dát z anonymného ID pred prihlásením (feedback, analytika); audity sa rozchádzajú, najprv overiť — potvrdené (pravdu mal bezpečnostný audit): zmazanie účtu teraz zmaže aj stopu prepojených anonymných ID a anonymný používateľ má funkčné „Delete my data“ (predtým 404)
 - [x] 193.15 Kredit providerov: `GET /api/v1/admin/provider-balances` (OpenRouter účet + limit kľúča, ElevenLabs znaky) + denná kontrola v quiz-agent → Sentry issue pri low/critical (jeden e-mail na provider+stav) — `apps/quiz-agent/app/monitoring/provider_balances.py`
 
 ## Vlna 2 — po rozhodnutí foundera

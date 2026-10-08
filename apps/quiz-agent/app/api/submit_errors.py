@@ -31,6 +31,7 @@ from ..client_capabilities import ANSWER_CODES, has_capability
 from ..quiz.errors import (
     AnswerUnmatched,
     InvalidSubmission,
+    JudgeUnavailable,
     QuestionMismatch,
     QuestionUnavailable,
 )
@@ -51,12 +52,13 @@ TRANSIENT_INFRA_ERRORS = (
 
 
 def submit_http_error(
-    exc: Exception, *, session_id: str, fallback_detail: str
+    exc: Exception, *, session_id: str, fallback_detail: str, session=None
 ) -> HTTPException:
     """The HTTP error a submit-path exception must become, on either route.
 
     ``fallback_detail`` is the route's own client-safe wording for a server
-    fault; the exception's own message is never leaked for a 5xx.
+    fault; the exception's own message is never leaked for a 5xx. ``session``
+    picks the coded or plain "say it again" shape (``retry_answer_error``).
     """
     if isinstance(exc, QuestionMismatch):
         # #133 1a: the client is a whole question out of step. Grading its text
@@ -80,6 +82,21 @@ def submit_http_error(
                 "message": "Could not tell which option you meant. Please say it again.",
                 "heard": exc.heard,
             },
+        )
+
+    if isinstance(exc, JudgeUnavailable):
+        # #193 (193.11): the LLM provider is down or too slow, so nobody judged
+        # the answer. Not a 500 (nothing is broken in this request) and not a
+        # 503 (iOS would silently re-send it three times, ~8 s each, past its
+        # 30 s budget): the "say it again" 400 that every shipped build turns
+        # into a spoken re-ask, then Again / Skip. `reason` lets a future build
+        # word it differently; today's builds ignore the extra key. Already
+        # logged and reported to Sentry (throttled) in `hot_path_llm`.
+        return retry_answer_error(
+            session,
+            "no_answer",
+            "Couldn't check your answer right now. Please try again.",
+            reason="judge_unavailable",
         )
 
     if isinstance(exc, InvalidSubmission):
@@ -106,14 +123,20 @@ def submit_http_error(
     return _server_fault(exc, session_id=session_id, detail=fallback_detail)
 
 
-def retry_answer_error(session, code: str, message: str) -> HTTPException:
+def retry_answer_error(
+    session, code: str, message: str, *, reason: str | None = None
+) -> HTTPException:
     """A "say it again" 400: coded for `answer-codes` sessions, legacy string otherwise.
 
     ``code`` is ``no_speech`` (nothing usable was heard) or ``no_answer`` (speech,
     but no answer in it). Nothing was graded or charged in either case.
+    ``reason`` is an optional finer cause next to ``code`` (``judge_unavailable``).
     """
     if has_capability(session, ANSWER_CODES):
-        return HTTPException(status_code=400, detail={"code": code, "message": message})
+        detail = {"code": code, "message": message}
+        if reason:
+            detail["reason"] = reason
+        return HTTPException(status_code=400, detail=detail)
     return HTTPException(status_code=400, detail=message)
 
 

@@ -282,5 +282,8 @@ async def transcribe_and_submit(
             # transient DB error now reaches iOS as the retryable 503 the text
             # route has answered with since #131 Track A.
             raise submit_http_error(
-                e, session_id=session_id, fallback_detail="Voice submission failed"
+                e,
+                session_id=session_id,
+                fallback_detail="Voice submission failed",
+                session=session,
             ) from e

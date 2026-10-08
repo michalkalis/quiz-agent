@@ -77,3 +77,19 @@ class AnswerUnmatched(QuizFlowError):
     def __init__(self, heard: str):
         super().__init__(f"MCQ answer matched no option (heard={heard!r})")
         self.heard = heard
+
+
+class JudgeUnavailable(QuizFlowError):
+    """The LLM that parses or grades the answer failed or timed out (#193 — 193.11).
+
+    Not the player's fault and not a verdict: nothing may be awarded or deducted
+    for an answer nobody judged. Raised before any mutation, so nothing is
+    graded, scored or charged and the retry is a fresh first submission (or, on
+    a re-grade, the verdict already given stands). The routes answer with the
+    existing "say it again" 400, which every shipped build already handles by
+    asking for the answer again. ``stage`` is ``parse`` or ``evaluate``.
+    """
+
+    def __init__(self, stage: str):
+        super().__init__(f"answer-path LLM unavailable (stage={stage})")
+        self.stage = stage

@@ -2,7 +2,7 @@
 
 Voice-first AI quiz platform for hands-free trivia while driving.
 
-Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/generation, issue #33) · `apps/web-ui` · `apps/ios-app` (SwiftUI) · `packages/shared` (Pydantic models).
+Layout: `apps/quiz-agent` (FastAPI backend) · `apps/quiz-pack-api` (order/generation, issue #33) · `apps/ios-app` (SwiftUI) · `packages/shared` (Pydantic models).
 Why split: `quiz-agent` serves the live quiz hot path (must stay fast/cheap); `quiz-pack-api` runs slow, LLM-heavy pack generation — separate deploys so generation load can never degrade gameplay.
 
 ## Tasks & Indices

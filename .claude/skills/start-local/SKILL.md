@@ -1,10 +1,10 @@
 ---
 name: start-local
-description: Start backend API, web UI, or question generator for local development
+description: Start backend API or question generator for local development
 model: haiku
 disable-model-invocation: true
 allowed-tools: Bash
-argument-hint: "[backend|web|questions|all]"
+argument-hint: "[backend|questions|all]"
 ---
 
 # Start Local Development
@@ -28,14 +28,6 @@ cd apps/quiz-agent && uv run uvicorn app.main:app --reload --port 8002
 
 Run in background. Verify with: `curl -s -o /dev/null -w '%{http_code}' http://localhost:8002/docs` (expect 200).
 
-## "web" or "ui"
-
-Port: **3000**
-
-```bash
-cd apps/web-ui && npm run dev
-```
-
 ## "questions" or "generator"
 
 Port: **8003**
@@ -48,7 +40,7 @@ Run in background. Verify with: `curl -s -o /dev/null -w '%{http_code}' http://l
 
 ## "all"
 
-Start backend (port 8002) in background, then question generator (port 8003) in background, then web UI. Run pre-flight checks for all ports before starting any service.
+Start backend (port 8002) in background, then question generator (port 8003) in background. Run pre-flight checks for all ports before starting any service.
 
 ## After starting
 

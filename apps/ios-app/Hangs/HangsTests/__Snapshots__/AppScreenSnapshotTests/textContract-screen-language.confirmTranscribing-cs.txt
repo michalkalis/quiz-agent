@@ -1,0 +1,6 @@
+# texts
+ZPRACOVÁNÍ
+Přepisuji…
+Zruš
+# identifiers
+confirmation.cancel

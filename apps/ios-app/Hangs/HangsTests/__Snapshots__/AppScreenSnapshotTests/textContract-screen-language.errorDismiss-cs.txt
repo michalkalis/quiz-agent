@@ -1,0 +1,12 @@
+# texts
+trubbo.
+JEJDA
+Action cancelled
+Your submission was interrupted. Try answering again.
+Zavři
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.dismiss

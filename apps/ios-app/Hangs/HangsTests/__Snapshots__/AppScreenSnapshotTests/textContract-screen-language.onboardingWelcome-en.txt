@@ -1,0 +1,15 @@
+# texts
+trubbo.
+ANSWER BY VOICE
+Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.
+ANSWER BY VOICE
+Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.
+Continue
+Skip
+# identifiers
+onboarding.root
+onboarding.welcome
+onboarding.welcome
+onboarding.pageIndicator
+onboarding.continue
+onboarding.skip

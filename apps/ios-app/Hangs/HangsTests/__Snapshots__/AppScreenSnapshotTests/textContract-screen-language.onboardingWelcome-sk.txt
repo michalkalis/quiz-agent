@@ -1,0 +1,15 @@
+# texts
+trubbo.
+ODPOVEDAJ HLASOM
+Trubbo číta otázky nahlas a počúva tvoje odpovede. Počas kvízu nemusíš nič klepať.
+ODPOVEDAJ HLASOM
+Trubbo číta otázky nahlas a počúva tvoje odpovede. Počas kvízu nemusíš nič klepať.
+Pokračuj
+Preskoč
+# identifiers
+onboarding.root
+onboarding.welcome
+onboarding.welcome
+onboarding.pageIndicator
+onboarding.continue
+onboarding.skip

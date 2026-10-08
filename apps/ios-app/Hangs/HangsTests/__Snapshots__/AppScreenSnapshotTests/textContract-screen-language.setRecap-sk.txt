@@ -1,0 +1,28 @@
+# texts
+trubbo.
+VÝSLEDOK KVÍZU · Geography & World
+1/3
+✓
+1 SPRÁVNE
+✗
+1 VEDĽA
+–
+1 PRESKOČENÁ
+What is the capital of France?
+Paris
+Which river flows through Budapest?
+Danube
+How many strings does a standard violin have?
+Four
+Prehraj súhrn
+Hraj znova
+Úvod
+# identifiers
+recap.close
+recap.hero
+recap.row.1
+recap.row.2
+recap.row.3
+recap.playSummary
+recap.playAgain
+recap.home

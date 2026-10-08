@@ -1,0 +1,15 @@
+# texts
+KEEP YOUR PURCHASE
+Signing in links Premium to your Apple account, so it stays with you on a new phone or after reinstalling.
+Sign-in didn't work. Check your connection and try again. Your purchase is still saved on this device.
+Later, I'll sign in from Settings
+Keeps your purchases and progress across devices. Nothing else is shared.
+# identifiers
+signInPrompt.root
+signInPrompt.badge
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.errorBanner
+signInPrompt.appleButton
+signInPrompt.later
+signInPrompt.privacyNote

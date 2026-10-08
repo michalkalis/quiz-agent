@@ -1,0 +1,17 @@
+# texts
+Téma kvízu
+Napr. vesmír pre deti, ťažké otázky z dejín Slovenska, hudba 90. rokov…
+60 / 1000
+Napíš, o čom má kvíz byť: téma, náročnosť, pre koho. Stačí pár slov.
+English
+Jazyk kvízu
+English
+Jazyk kvízu
+English
+Predvolený podľa jazyka kvízu v Nastaveniach.
+Pokračuj
+# identifiers
+orderPack.prompt
+orderPack.language
+orderPack.language.en
+orderPack.submit

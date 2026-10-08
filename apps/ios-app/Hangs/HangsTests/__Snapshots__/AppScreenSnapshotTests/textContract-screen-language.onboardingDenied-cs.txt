@@ -1,0 +1,15 @@
+# texts
+trubbo.
+MIKROFON VYPNUTÝ
+Hlasové odpovědi potřebují mikrofon. Zapni ho v Nastavení nebo hraj dál psaním.
+MIKROFON VYPNUTÝ
+Hlasové odpovědi potřebují mikrofon. Zapni ho v Nastavení nebo hraj dál psaním.
+Otevři Nastavení
+Raději piš odpovědi
+# identifiers
+onboarding.root
+onboarding.denied
+onboarding.denied
+onboarding.pageIndicator
+onboarding.openSettings
+onboarding.typeInstead

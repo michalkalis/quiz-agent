@@ -1,0 +1,31 @@
+# texts
+trubbo.
+HANDS-FREE
+Perfect for driving, cooking, or walking.
+Say "start"
+Say "start" after a question, or tap Start, to begin answering.
+Five simple words
+start · ok · next · repeat · skip. That's the whole command set.
+English by default
+Commands are spoken in English by default. Set your quiz language to Slovak or Czech in Settings to speak them in that language.
+Buttons always work
+Every command also has an on-screen button. Voice is optional.
+HANDS-FREE
+Perfect for driving, cooking, or walking.
+Say "start"
+Say "start" after a question, or tap Start, to begin answering.
+Five simple words
+start · ok · next · repeat · skip. That's the whole command set.
+English by default
+Commands are spoken in English by default. Set your quiz language to Slovak or Czech in Settings to speak them in that language.
+Buttons always work
+Every command also has an on-screen button. Voice is optional.
+Continue
+Skip
+# identifiers
+onboarding.root
+onboarding.features
+onboarding.features
+onboarding.pageIndicator
+onboarding.continue
+onboarding.skip

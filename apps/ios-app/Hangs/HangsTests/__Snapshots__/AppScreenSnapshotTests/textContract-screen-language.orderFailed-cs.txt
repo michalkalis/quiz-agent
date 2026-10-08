@@ -1,0 +1,7 @@
+# texts
+Pack generation failed. Please try again.
+Zkus znovu
+Zavři
+# identifiers
+orderPack.retry
+orderPack.closeButton

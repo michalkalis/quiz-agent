@@ -1,0 +1,14 @@
+# texts
+KEEP YOUR PURCHASE
+Signing in links Premium to your Apple account, so it stays with you on a new phone or after reinstalling.
+Signing in…
+Maybe later
+Keeps your purchases and progress across devices. Nothing else is shared.
+# identifiers
+signInPrompt.root
+signInPrompt.badge
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.signingIn
+signInPrompt.later
+signInPrompt.privacyNote

@@ -1,0 +1,8 @@
+# texts
+correct
+Tvoj balík je hotový
+Spusti kvíz
+Zavri
+# identifiers
+orderProgress.startQuiz
+orderPack.closeButton

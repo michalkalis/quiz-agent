@@ -1,0 +1,17 @@
+# texts
+Téma kvízu
+Např. vesmír pro děti, těžké otázky z českých dějin, hudba 90. let…
+60 / 1000
+Napiš, o čem má kvíz být: téma, obtížnost, pro koho. Stačí pár slov.
+English
+Jazyk kvízu
+English
+Jazyk kvízu
+English
+Předvybraný podle jazyka kvízu v Nastavení.
+Pokračuj
+# identifiers
+orderPack.prompt
+orderPack.language
+orderPack.language.en
+orderPack.submit

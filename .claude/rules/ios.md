@@ -50,6 +50,7 @@ The UI ships in sk/cs/en, so visible text is never a locator. `scripts/lint-a11y
 - **Never re-record to turn a red run green.** A diff is either a bug (fix the code) or an intentional UI change (a human looks at the new render, then re-records on purpose):
   `TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild test … -only-testing:HangsTests/HeroScreenSnapshotTests`, then run once more without the variable and commit the new files with the UI change.
 - **Determinism:** fixed fixtures, `TestClock`, `debugSurfaces: false`, pinned `.colorScheme`/`.dynamicTypeSize`/`.locale`, time-relative copy anchored 12½ days out. `String(localized:)` values built outside SwiftUI stay in the process language; only `Text` keys switch with `\.locale`.
+- `AppScreenSnapshotTests` (#194 A2) freezes the remaining screens the same way (Settings, Onboarding ×4, Completion ×2, set recap, answer confirmation ×2, order-pack flow ×6, sign-in sheet ×3, error ×3): add an `AppScreen` case. Not covered: the confirmation sheet's editing branch (its `@State` is only set by tapping the pencil) and Settings below the Subscription group (version row, host-dependent diagnostics).
 - Adding a hero-level screen = add a `HeroScreen` case; a new language = a `HeroLanguage` case; both re-record only their own files.
 
 ## Definition of done for an agent (#180 track H)

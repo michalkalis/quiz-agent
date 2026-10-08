@@ -1,0 +1,8 @@
+# texts
+correct
+Your pack is ready
+Start quiz
+Close
+# identifiers
+orderProgress.startQuiz
+orderPack.closeButton

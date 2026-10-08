@@ -1,0 +1,17 @@
+# texts
+Quiz topic
+E.g. space for kids, tough questions on Slovak history, 90s music…
+60 / 1000
+Tell us what the quiz should be about: topic, difficulty, audience. A few words are enough.
+English
+Quiz language
+English
+Quiz language
+English
+Preselected from your quiz language in Settings.
+Continue
+# identifiers
+orderPack.prompt
+orderPack.language
+orderPack.language.en
+orderPack.submit

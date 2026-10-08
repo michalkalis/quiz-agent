@@ -1,0 +1,24 @@
+# texts
+trubbo.
+HOTOVO
+konečné skóre
+7.5
+out of 10
+Správne
+7
+Nesprávne
+3
+Úspešnosť
+70%
+Míňajú sa ti otázky zadarmo
+Tento mesiac ti zostáva 4 otázok zadarmo.
+Hraj bez limitu
+Hraj znova
+Úvod
+# identifiers
+completion.close
+completion.score
+completion.breakdown
+completion.upsell
+completion.playAgain
+completion.home

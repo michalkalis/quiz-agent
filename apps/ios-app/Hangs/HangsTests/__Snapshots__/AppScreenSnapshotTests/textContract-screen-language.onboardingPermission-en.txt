@@ -1,0 +1,15 @@
+# texts
+trubbo.
+MIC ACCESS
+Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.
+MIC ACCESS
+Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.
+Allow Microphone
+Maybe later
+# identifiers
+onboarding.root
+onboarding.permission
+onboarding.permission
+onboarding.pageIndicator
+onboarding.allowMic
+onboarding.maybeLater

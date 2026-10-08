@@ -1,0 +1,15 @@
+# texts
+trubbo.
+MIKROFON
+Trubbo potřebuje přístup k mikrofonu, aby slyšel tvoje hlasové odpovědi. Odpovědi můžeš i psát.
+MIKROFON
+Trubbo potřebuje přístup k mikrofonu, aby slyšel tvoje hlasové odpovědi. Odpovědi můžeš i psát.
+Povol mikrofon
+Možná později
+# identifiers
+onboarding.root
+onboarding.permission
+onboarding.permission
+onboarding.pageIndicator
+onboarding.allowMic
+onboarding.maybeLater

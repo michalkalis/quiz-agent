@@ -1,0 +1,12 @@
+# texts
+trubbo.
+OJOJ
+Question history is full
+Reset your question history in Settings and start a new quiz.
+Na úvod
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.home

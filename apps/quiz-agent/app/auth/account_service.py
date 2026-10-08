@@ -181,7 +181,7 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     Returns every subject id erased (account + linked anons) for the route's
     ratings-store unlink."""
     user_id = str(user.id)
-    anon_ids = await _linked_anon_ids(session, user_id)
+    anon_ids = await linked_anon_ids(session, user_id)
     await _preserve_month_usage_on_anons(session, user_id, anon_ids)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
     subject_ids = [user_id, *anon_ids]
@@ -225,7 +225,7 @@ async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -
         await _unlink_pack_orders(session, subject_id)
 
 
-async def _linked_anon_ids(session: AsyncSession, user_id: str) -> list[str]:
+async def linked_anon_ids(session: AsyncSession, user_id: str) -> list[str]:
     return list(
         (
             await session.execute(

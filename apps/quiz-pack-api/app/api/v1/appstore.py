@@ -114,9 +114,9 @@ async def appstore_notifications(
         # retrying, and log which one.
         logger.warning(
             "App Store %s notification: inner transaction not usable by this "
-            "deploy (environment=%s): %s",
+            "deploy (environments=%s): %s",
             kind,
-            verifier.environment,
+            sorted(verifier.environments or ()),
             exc,
         )
         return _ack("ignored", notification_type=kind)

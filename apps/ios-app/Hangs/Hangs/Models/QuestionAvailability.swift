@@ -20,6 +20,18 @@ struct QuestionAvailability: Codable, Sendable, Equatable {
     enum Limiter: String, Codable, Sendable {
         case corpus
         case quota
+        /// Landing pad for a limiter a newer server adds later: handled as a
+        /// generic limit (no corpus-only "Reset seen questions" offer).
+        case unknown
+
+        /// Safe decoder — same fallback as `EvaluationResult`. Without it one
+        /// unrecognised value threw and failed the WHOLE availability response
+        /// on already-shipped builds.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Limiter(rawValue: rawValue) ?? .unknown
+        }
     }
 
     let available: Int

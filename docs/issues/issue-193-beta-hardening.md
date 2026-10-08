@@ -46,7 +46,7 @@
 
 - Vekové hodnotenie v ASC; stropy výdavkov u OpenAI / ElevenLabs / OpenRouter / Anthropic.
 - `mba` session worker na aktuálnom main a zapnutý počas bety (inak objednávky visia).
-- Popis v obchode stále tvrdí „balíčky len po anglicky“ → rieši session #190.
+- Popis v obchode stále tvrdí „balíčky len po anglicky“ → rieši session #190 — Externý TestFlight beta + App Store listing.
 
 ## Po bete
 

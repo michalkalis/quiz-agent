@@ -51,3 +51,7 @@ the tag is what humans read in `fly logs` and `fly status`.
 but adds ~2 minutes to every rebuild and pulls in `build-essential` +
 `postgresql-server-dev-17`, which we'd then have to clean up to keep the image
 slim. The apt route is simpler and the version cadence is fine for our needs.
+
+## Backups
+
+Nightly encrypted off-site dump: `backup.sh` here, restore procedure in `docs/setup/db-backup.md`.

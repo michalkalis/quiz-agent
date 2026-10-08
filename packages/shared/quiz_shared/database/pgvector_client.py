@@ -48,6 +48,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    and_,
     column,
     delete,
     func,
@@ -161,6 +162,13 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
     """Translate ChromaDB-style filter dict to SQLAlchemy WHERE clauses."""
     clauses: List[Any] = []
     for key, value in filters.items():
+        if key == "$or":
+            # Native sk/cs corpus (founder 2026-10-08): the language gate is a
+            # disjunction of two column groups (EN rows vs. native rows), which
+            # the flat per-column dict cannot express. Each branch is a
+            # filter dict of its own, ANDed internally.
+            clauses.append(or_(*(and_(*_build_where(branch)) for branch in value)))
+            continue
         col = questions_table.c.get(key)
         if col is None:
             # Fail loud (#168 DD2). This used to skip silently as a
@@ -183,6 +191,11 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
             )
         elif isinstance(value, dict) and "$in" in value:
             clauses.append(col.in_(value["$in"]))
+        elif isinstance(value, dict) and "$in_or_null" in value:
+            # Native sk/cs corpus (founder 2026-10-08): legacy rows have
+            # language NULL and are English, so a plain IN would drop them
+            # (SQL: NULL IN (...) is never true).
+            clauses.append(or_(col.in_(value["$in_or_null"]), col.is_(None)))
         elif isinstance(value, dict) and "$ne" in value:
             clauses.append(col != value["$ne"])
         elif value is not None and isinstance(col.type, PGUUID):

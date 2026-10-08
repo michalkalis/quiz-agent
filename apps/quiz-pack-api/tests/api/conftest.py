@@ -140,12 +140,23 @@ def arq_mock() -> MagicMock:
     return pool
 
 
+@pytest.fixture
+def app_settings(order_queue_name: str) -> Settings:
+    """Settings the `client` app serves. A test may flip a field mid-test,
+    e.g. `pack_orders_enabled` (#193 task 193.9)."""
+    return Settings(
+        admin_api_key=TEST_ADMIN_KEY,
+        auth_jwt_secret=TEST_JWT_SECRET,
+        order_queue_name=order_queue_name,
+    )
+
+
 @pytest_asyncio.fixture
 async def client(
     test_session: AsyncSession,
     test_chain: TestChain,
     arq_mock: MagicMock,
-    order_queue_name: str,
+    app_settings: Settings,
     _clean_orders: None,
 ) -> AsyncIterator[httpx.AsyncClient]:
     """Async HTTP client wired against a minimal test app."""
@@ -158,11 +169,7 @@ async def client(
     async def _override_session() -> AsyncIterator[AsyncSession]:
         yield test_session
 
-    test_settings = Settings(
-        admin_api_key=TEST_ADMIN_KEY,
-        auth_jwt_secret=TEST_JWT_SECRET,
-        order_queue_name=order_queue_name,
-    )
+    test_settings = app_settings
 
     test_app = FastAPI()
     test_app.include_router(orders_router)

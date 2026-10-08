@@ -286,6 +286,83 @@ async def test_admin_reject_is_not_reported_as_lost_purchase(
     assert sentry_messages == []
 
 
+# #193 task 193.9: PACK_ORDERS_ENABLED=false pauses NEW orders server-side,
+# also for builds that ignore the app-config switch. Shipped iOS builds show a
+# failed create's `detail` verbatim and keep the StoreKit proof for the next
+# attempt, so the refusal must be a readable, localized sentence (not a crash
+# or an opaque code) and must never touch an order that already exists.
+
+
+@pytest.mark.asyncio
+async def test_paused_orders_refuse_new_paid_order_with_readable_message(
+    client: httpx.AsyncClient,
+    app_settings,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    sentry_messages: list[str],
+) -> None:
+    app_settings.pack_orders_enabled = False
+    tx_id = "tx-paused-new"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id=tx_id),
+        headers={"X-StoreKit-JWS": jws, "Accept-Language": "sk-SK,sk;q=0.9,en;q=0.8", **BEARER},
+    )
+
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == (
+        "Objednávanie je zatiaľ pozastavené. Platba ostáva uložená, skús to neskôr."
+    )
+    # Nothing written or queued: no generation spend while paused.
+    rows = (await test_session.execute(select(GenerationOrder))).scalars().all()
+    assert rows == []
+    arq_mock.enqueue_job.assert_not_awaited()
+    # Apple already charged: the refusal leaves the reconciliation trail.
+    assert any("orders_paused" in m and tx_id in m for m in sentry_messages), sentry_messages
+
+
+@pytest.mark.asyncio
+async def test_paused_orders_message_falls_back_to_english(
+    client: httpx.AsyncClient,
+    app_settings,
+) -> None:
+    app_settings.pack_orders_enabled = False
+    resp = await client.post(
+        "/v1/orders",
+        json=_valid_body(tx_id="admin-paused"),
+        headers={"X-Admin-Key": TEST_ADMIN_KEY, "Accept-Language": "de-DE", **BEARER},
+    )
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == "Ordering is paused for now. Try again later."
+
+
+@pytest.mark.asyncio
+async def test_paused_orders_keep_serving_existing_paid_orders(
+    client: httpx.AsyncClient,
+    app_settings,
+    make_jws: JWSFactory,
+) -> None:
+    """An order created before the pause still replays (lost-response retry of
+    the same purchase) and still reports its status."""
+    tx_id = "tx-before-pause"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    headers = {"X-StoreKit-JWS": jws, **BEARER}
+    created = await client.post("/v1/orders", json=_valid_body(tx_id=tx_id), headers=headers)
+    assert created.status_code == 202, created.text
+    order_id = created.json()["order_id"]
+
+    app_settings.pack_orders_enabled = False
+
+    replay = await client.post("/v1/orders", json=_valid_body(tx_id=tx_id), headers=headers)
+    assert replay.status_code == 200, replay.text
+    assert replay.json()["order_id"] == order_id
+    status = await client.get(f"/v1/orders/{order_id}", headers={"X-Admin-Key": TEST_ADMIN_KEY})
+    assert status.status_code == 200, status.text
+
+
 @pytest.mark.asyncio
 async def test_create_order_language_de_accepted(
     client: httpx.AsyncClient,

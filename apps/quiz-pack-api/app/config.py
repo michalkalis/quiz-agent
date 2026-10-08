@@ -63,6 +63,13 @@ class Settings(BaseSettings):
     worker_max_jobs: int = 2
     worker_job_timeout_s: int = 3600
 
+    # Pause switch for NEW custom-pack orders (#193 task 193.9). Same name as
+    # quiz-agent's setting that disables the order entry in the app; this one
+    # enforces it server-side, also for builds that don't know the switch.
+    # Off refuses only order creation: status, stream, retry and the
+    # idempotent replay of an existing (already paid) order keep working.
+    pack_orders_enabled: bool = True
+
     # Sentry (backend arch review 2026-07-18). Per-deploy Fly secret; unset →
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate
     # processes, both init).

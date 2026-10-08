@@ -1,0 +1,73 @@
+# Prod monitor (#193 — beta hardening, task 193.3).
+#
+# Every 30 min: both APIs answer their health check, and no paid custom-pack
+# order is stuck or has just gone refund-eligible. Any failed check fails the
+# run, and GitHub emails a failed scheduled run to the user who last changed
+# this cron line (the founder) — that email IS the alert.
+#
+# Why here: the repo is public, so Actions minutes are free; nothing new to
+# sign up for. Why every 30 min: each run cold-starts quiz-pack-api (scales to
+# zero), which costs machine time; 30 min keeps that well under ~$1/month.
+# GitHub may delay scheduled runs at busy times, so worst-case detection is
+# roughly an hour — fine for a beta. Logs are public: print states, never
+# customer data (the endpoint returns none).
+name: prod-monitor
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: prod-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Retries ride out a deploy's ~20 s restart; a real outage still fails.
+      - name: quiz-agent-api is up
+        run: |
+          curl -fsS --retry 3 --retry-all-errors --retry-delay 15 --max-time 20 \
+            https://quiz-agent-api.fly.dev/api/v1/health -o /dev/null
+          echo "quiz-agent-api healthy"
+
+      - name: quiz-pack-api is up (cold start allowed)
+        if: always()
+        run: |
+          curl -fsS --retry 2 --retry-all-errors --retry-delay 15 --max-time 60 \
+            https://quiz-pack-api.fly.dev/health -o /dev/null
+          echo "quiz-pack-api healthy"
+
+      # Stuck = no sign of life for 30 min (the worker sweep itself acts at
+      # 3/15 min, so this only trips when no worker is running at all — e.g.
+      # the session worker on mba is off). Refund-eligible = flipped in the
+      # last 2 h; a stateless monitor re-reports it on the next ~3 runs.
+      - name: no custom-pack order needs attention
+        if: always()
+        env:
+          ADMIN_KEY: ${{ secrets.QUIZ_PACK_ADMIN_API_KEY }}
+        run: |
+          curl -fsS --retry 2 --retry-all-errors --retry-delay 15 --max-time 60 \
+            -H "X-Admin-Key: ${ADMIN_KEY}" \
+            "https://quiz-pack-api.fly.dev/api/v1/admin/orders/attention?stuck_minutes=30&refund_lookback_minutes=120" \
+            -o attention.json
+          python3 - <<'EOF'
+          import json, sys
+          body = json.load(open("attention.json"))
+          problems = 0
+          for kind in ("stuck", "refund_eligible"):
+              for o in body[kind]:
+                  problems += 1
+                  print(f"::error::{kind}: order {o['id'][:8]} status={o['status']} "
+                        f"job={o['job_status']} idle={o['idle_minutes']} min")
+          if problems:
+              print("Check the session worker on mba (docs/setup/session-worker-mba.md). "
+                    "Full order ids: GET /api/v1/admin/orders/attention with the admin key.")
+              sys.exit(1)
+          print("no orders need attention")
+          EOF

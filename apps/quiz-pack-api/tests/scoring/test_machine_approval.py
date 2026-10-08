@@ -60,11 +60,19 @@ def test_clean_english_row_is_machine_approvable() -> None:
     assert machine_approval_block_reason(_q()) is None
 
 
+@pytest.mark.parametrize("language", ["sk", "cs"])
+def test_native_sk_cs_row_is_machine_approvable(language: str) -> None:
+    """Founder 2026-10-08: native sk/cs corpus rows are approved automatically
+    "like English" once the same gates clear. If this blocked them, every native
+    batch would pile up in the human review queue."""
+    assert machine_approval_block_reason(_q(language=language)) is None
+
+
 @pytest.mark.parametrize(
     "overrides,expected_fragment",
     [
         ({"language": None}, "language="),
-        ({"language": "sk"}, "language="),
+        ({"language": "de"}, "language="),
         ({"pack_id": "f0e1d2c3"}, "pack_scoped"),
         ({"source_url": None}, "no_source_url"),
         ({"source_url": "   "}, "no_source_url"),

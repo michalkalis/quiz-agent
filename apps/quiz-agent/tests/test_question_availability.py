@@ -157,7 +157,11 @@ async def test_non_english_session_excludes_language_dependent_questions(client,
     await _ask(client, language="sk")
 
     filters = store.count.await_args.kwargs["filters"]
-    assert filters["language_dependent"] is False
+    # Native sk/cs corpus (2026-10-08): the #128 guard now lives in the English
+    # branch of the language gate — native Slovak wordplay stays countable.
+    english_rows, native_rows = filters["$or"]
+    assert english_rows["language_dependent"] is False
+    assert native_rows == {"language": "sk"}
 
 
 async def test_english_session_keeps_language_dependent_questions(client, store):
@@ -165,7 +169,8 @@ async def test_english_session_keeps_language_dependent_questions(client, store)
     an English count that applied it would under-report and alert needlessly."""
     await _ask(client, language="en")
 
-    assert "language_dependent" not in store.count.await_args.kwargs["filters"]
+    filters = store.count.await_args.kwargs["filters"]
+    assert "language_dependent" not in filters and "$or" not in filters
 
 
 async def test_category_selection_narrows_the_count(client, store):

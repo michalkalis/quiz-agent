@@ -39,6 +39,9 @@ from app.scoring import craft_guards
 # human one in SQL (`reviewed_by LIKE 'machine:%'`); humans stay `michal`.
 GATE_VERSION = "machine:gates-v1"
 
+# Languages whose corpus rows are generated natively through the gated pipeline.
+MACHINE_APPROVABLE_LANGUAGES = frozenset({"en", "sk", "cs"})
+
 # Shadow-flag keys written into `generation_metadata.extra` by ScoringStage
 # (#177 T1). Defined here — the predicate is the consumer that gives them
 # meaning — and imported by the stage so the two can never drift apart.
@@ -102,9 +105,10 @@ def machine_approval_block_reason(
     The returned string is a short, greppable reason (it lands in the
     importer's dry-run summary), not a sentence.
     """
-    if q.language != "en":
-        # Only the EN corpus went through the gates this predicate models; the
-        # sk/cs rows (#168) are translations and carry their own review track.
+    if q.language not in MACHINE_APPROVABLE_LANGUAGES:
+        # Native sk/cs corpus rows run the same pipeline gates as English
+        # (founder 2026-10-08: "automatically, like English"). Anything else
+        # never had these gates modelled for it, so it stays human-reviewed.
         return f"language={q.language!r}"
     if q.pack_id is not None:
         return "pack_scoped"

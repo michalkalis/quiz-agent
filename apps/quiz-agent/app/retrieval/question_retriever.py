@@ -341,9 +341,18 @@ class QuestionRetriever:
             "pack_id": None,
         }
 
-        # Exclude language-dependent questions for non-English sessions
+        # Native sk/cs corpus (founder 2026-10-08): a native row is written for
+        # its own country and has no English original, so it is served ONLY to
+        # sessions in its language. English/legacy rows (language 'en' or NULL)
+        # still reach every session — minus language-dependent ones (#128) in a
+        # non-English session, whose English wordplay breaks in translation. A
+        # native row's wordplay is in its own language, so that guard skips it.
+        english_rows = {"language": {"$in_or_null": ["en"]}}
         if session.language and session.language != "en":
-            filters["language_dependent"] = False
+            english_rows["language_dependent"] = False
+            filters["$or"] = [english_rows, {"language": session.language}]
+        else:
+            filters.update(english_rows)
 
         # Add category filter if specified
         if session.preferred_categories:

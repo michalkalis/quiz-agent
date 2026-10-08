@@ -311,8 +311,86 @@ async def test_fallback_keeps_pack_guard_category_and_language_constraints():
         filters = call.kwargs["filters"]
         assert "pack_id" in filters and filters["pack_id"] is None
         assert filters["category"] == {"$in": ["kids"]}
-        assert filters["language_dependent"] is False
+        assert filters["$or"] == primary["$or"]  # language + wordplay gate
         assert filters["review_status"] == "approved"
         difficulties.append(filters.get("difficulty"))
     # Difficulty is the only thing relaxed: the other levels, then no level at all.
     assert difficulties == ["medium", "easy", "hard", None]
+
+
+# --- native sk/cs corpus (founder 2026-10-08) ---------------------------------
+
+
+def _row_matches(filters: dict, row: dict) -> bool:
+    """Evaluate the store's filter dict against one row, mirroring
+    `pgvector_client._build_where` for the operators the language gate uses."""
+    for key, value in filters.items():
+        if key == "$or":
+            if not any(_row_matches(branch, row) for branch in value):
+                return False
+        elif isinstance(value, dict) and "$in_or_null" in value:
+            if row.get(key) is not None and row[key] not in value["$in_or_null"]:
+                return False
+        elif isinstance(value, dict) and "$in" in value:
+            if row.get(key) not in value["$in"]:
+                return False
+        elif row.get(key) != value:
+            return False
+    return True
+
+
+_BASE_ROW = {
+    "difficulty": "medium",
+    "type": "text",
+    "review_status": "approved",
+    "pack_id": None,
+}
+
+
+@pytest.mark.parametrize(
+    "row_language,row_wordplay,served_to",
+    [
+        # Legacy/English corpus: everyone, as before.
+        (None, False, {"en", "sk", "cs"}),
+        ("en", False, {"en", "sk", "cs"}),
+        # English wordplay breaks in translation (#128): English players only.
+        ("en", True, {"en"}),
+        # A Slovak-only question is about Slovakia and has no English original:
+        # an English or Czech player must never get it.
+        ("sk", False, {"sk"}),
+        ("cs", False, {"cs"}),
+        # Native wordplay works in its own language, so the #128 guard must not
+        # hide it from the very players it was written for.
+        ("sk", True, {"sk"}),
+        ("cs", True, {"cs"}),
+    ],
+)
+def test_native_rows_reach_only_their_own_language(
+    row_language, row_wordplay, served_to
+):
+    row = {**_BASE_ROW, "language": row_language, "language_dependent": row_wordplay}
+    for session_language in ("en", "sk", "cs"):
+        session = QuizSession(
+            session_id="sess_test",
+            current_difficulty="medium",
+            language=session_language,
+        )
+        filters = _retriever()._build_metadata_filters("medium", session)
+        assert _row_matches(filters, row) is (session_language in served_to), (
+            session_language
+        )
+
+
+def test_custom_pack_branch_has_no_language_filter():
+    # A pack session already runs in the pack's own language (#192); the
+    # native-corpus language constraint must not touch it.
+    session = QuizSession(
+        session_id="sess_test",
+        current_difficulty="medium",
+        language="sk",
+        pack_id="pack-1",
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert "language" not in filters and "$or" not in filters

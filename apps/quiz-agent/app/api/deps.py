@@ -167,7 +167,12 @@ class StartQuizRequest(BaseModel):
 class SubmitInputRequest(BaseModel):
     """Request to submit user input (AI-powered parsing)."""
 
-    input: str = Field(..., min_length=1, description="User's natural language input")
+    # #193: the text goes to the LLM parser/evaluator, so an unbounded body is
+    # unbounded spend. A real answer is a few words; 1000 chars leaves ample
+    # room for an on-device transcript of a full 15 s recording.
+    input: str = Field(
+        ..., min_length=1, max_length=1000, description="User's natural language input"
+    )
     participant_id: Optional[str] = Field(default=None, description="For multiplayer")
     question_id: Optional[str] = Field(
         default=None,

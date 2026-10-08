@@ -185,6 +185,21 @@ async def test_webhook_auth_rejects_bad_secret(client):
     assert resp.status_code == 401
 
 
+async def test_webhook_non_ascii_secret_is_401_not_500(client):
+    """#193: compare_digest raises TypeError on non-ASCII str and headers are
+    latin-1-decoded, so any sender could turn the webhook auth into a 500
+    (and Sentry noise) instead of a rejection. Must be a plain 401."""
+    resp = await client.post(
+        "/webhooks/revenuecat",
+        content=b"{}",
+        headers={
+            "Authorization": b"\xe9vil-secret",
+            "Content-Type": "application/json",
+        },
+    )
+    assert resp.status_code == 401
+
+
 async def test_webhook_secret_unconfigured_fails_closed(client, monkeypatch):
     """With no configured webhook secret the endpoint fails closed (503) rather
     than accepting an unauthenticated webhook."""

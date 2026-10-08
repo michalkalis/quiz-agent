@@ -205,7 +205,11 @@ def check_admin_key(request: Request, settings: Settings) -> None:
             detail="Admin API not configured",
         )
     presented = _extract_admin_key(request)
-    if presented is None or not secrets.compare_digest(presented, configured):
+    # Compare as bytes: compare_digest raises TypeError on non-ASCII str, and a
+    # header (or decoded Basic auth) can carry any character → would be a 500.
+    if presented is None or not secrets.compare_digest(
+        presented.encode(), configured.encode()
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing admin credentials",

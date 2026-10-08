@@ -282,3 +282,14 @@ async def test_voice_rejects_an_oversized_upload_with_a_400(make_client):
 
     assert resp.status_code == 400
     assert resp.json()["detail"] == "File too large: 30.0 MB. Maximum: 25.0 MB"
+
+
+async def test_typed_input_is_capped_before_it_reaches_the_llm():
+    """#193: /input text feeds the LLM parser + evaluator, so an unbounded body
+    is unbounded spend. 1000 chars is far above any answer (or an on-device
+    transcript of a full 15 s recording) and must still validate; beyond is a 422."""
+    from pydantic import ValidationError
+
+    assert deps.SubmitInputRequest(input="x" * 1000).input
+    with pytest.raises(ValidationError):
+        deps.SubmitInputRequest(input="x" * 1001)

@@ -39,7 +39,7 @@ from typing import Annotated, Optional
 import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -109,8 +109,12 @@ class CreateOrderRequest(BaseModel):
     prompt: str
     language: str
     target_count: int  # informational; server derives authoritative count from product_id
-    category: Optional[str] = None
-    theme: Optional[str] = None
+    # Capped at the DB column width (String(64)): a longer value used to pass
+    # validation and 500 on INSERT after the purchase was already verified.
+    # The iOS order form sends neither field today (#138), so nothing legit
+    # comes near the cap.
+    category: Optional[str] = Field(default=None, max_length=64)
+    theme: Optional[str] = Field(default=None, max_length=64)
 
 
 class OrderCreatedResponse(BaseModel):

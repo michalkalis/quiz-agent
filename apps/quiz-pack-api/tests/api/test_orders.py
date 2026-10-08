@@ -373,6 +373,42 @@ async def test_create_order_prompt_too_long_422(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["category", "theme"])
+async def test_create_order_category_theme_over_column_width_422(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    field: str,
+) -> None:
+    """#193: category/theme are String(64) columns. A longer value used to pass
+    validation and blow up on INSERT (500) after the purchase was verified;
+    it must be a clean 422 before any work is done."""
+    tx = f"tx-long-{field}"
+    jws = make_jws(payload_overrides={"transactionId": tx})
+    body = {**_valid_body(tx_id=tx), field: "x" * 65}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 422
+    assert field in str(resp.json()["detail"])
+
+
+def test_order_request_accepts_category_theme_at_column_width() -> None:
+    """The cap is the column width, not tighter: 64 chars still validates."""
+    from app.api.v1.orders import CreateOrderRequest
+
+    req = CreateOrderRequest(
+        transaction_id="t",
+        product_id="pack_20",
+        prompt="p",
+        language="en",
+        target_count=20,
+        category="c" * 64,
+        theme="t" * 64,
+    )
+    assert len(req.category) == 64 and len(req.theme) == 64
+
+
+@pytest.mark.asyncio
 async def test_create_order_missing_header_401(
     client: httpx.AsyncClient,
 ) -> None:

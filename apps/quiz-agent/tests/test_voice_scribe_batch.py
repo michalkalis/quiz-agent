@@ -139,6 +139,54 @@ async def test_trailing_trim_is_off_by_default_and_logs_what_it_would_cut(
     assert "('curling', -1.8)" in caplog.text
 
 
+async def test_transcript_text_is_not_logged_only_its_length(monkeypatch, key, caplog):
+    """#193: the INFO line used to carry the player's spoken words verbatim (and
+    INFO ships to Sentry Logs). Diagnostics need the length, not the content."""
+    payload = _scribe_payload(_words(("Bratislava", -0.05)), duration=1.0)
+    _mock_scribe(monkeypatch, payload=payload)
+
+    with caplog.at_level("INFO"):
+        result = await VoiceTranscriber().transcribe(io.BytesIO(b"x"), "answer.wav")
+
+    assert result.text == "Bratislava"
+    line = next(
+        r.getMessage()
+        for r in caplog.records
+        if "Transcribed provider=" in r.getMessage()
+    )
+    assert "Bratislava" not in line
+    assert "chars=10" in line
+
+
+async def test_oversized_audio_is_rejected_before_any_stt_call(monkeypatch, key):
+    """#193: STT bills per audio minute. An upload far beyond any real answer
+    (iOS hard-stops at 15 s) is refused as a client fault before Scribe or the
+    OpenAI fallback is ever called."""
+    from app.quiz.errors import InvalidSubmission
+
+    calls = _mock_scribe(monkeypatch)
+    t = VoiceTranscriber()
+    create = _openai_stub(t, text="x")
+
+    oversized = io.BytesIO(b"\0" * (VoiceTranscriber.MAX_FILE_SIZE + 1))
+    with pytest.raises(InvalidSubmission, match="File too large"):
+        await t.transcribe(oversized, "answer.wav")
+    assert calls == []
+    create.assert_not_awaited()
+
+
+async def test_longest_real_ios_answer_fits_under_the_cap(monkeypatch, key):
+    """The cap must never reject a legit answer: the iOS answer buffer holds at
+    most 20 s of 16-bit mono PCM; at a 48 kHz hardware rate that is ~1.9 MB WAV."""
+    calls = _mock_scribe(monkeypatch)
+    worst_case = io.BytesIO(b"\0" * (20 * 48_000 * 2 + 44))
+
+    result = await VoiceTranscriber().transcribe(worst_case, "answer.wav")
+
+    assert result.text == "Paris"
+    assert len(calls) == 1
+
+
 async def test_trimming_never_empties_the_transcript(monkeypatch, key):
     """If every word is low-confidence the audio was bad as a whole — that has to
     stay visible as a low avg_logprob rejection, not become 'empty transcription'."""

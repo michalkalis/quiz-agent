@@ -47,7 +47,9 @@ async def revenuecat_webhook(
         raise HTTPException(status_code=503, detail="RevenueCat webhook not configured")
 
     provided = request.headers.get("Authorization") or ""
-    if not hmac.compare_digest(provided, secret):
+    # Compare as bytes: compare_digest raises TypeError on non-ASCII str, and a
+    # header is latin-1-decoded, so any sender could otherwise force a 500.
+    if not hmac.compare_digest(provided.encode(), secret.encode()):
         # Rejected BEFORE any body parse — a bad secret 401s regardless of body.
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 

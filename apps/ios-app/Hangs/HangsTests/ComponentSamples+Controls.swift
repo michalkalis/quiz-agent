@@ -30,7 +30,7 @@ nonisolated extension ComponentSample {
             ComponentSample("skipButton.default") { QuestionSkipButton(isSkipping: false, isDisabled: false) {} },
             ComponentSample("skipButton.skipping") { QuestionSkipButton(isSkipping: true, isDisabled: false) {} },
             ComponentSample("skipButton.disabled") { QuestionSkipButton(isSkipping: false, isDisabled: true) {} },
-            ComponentSample("navChip.default") { HangsNavChip(icon: "xmark") {} },
+            ComponentSample("navChip.default") { HangsNavChip(icon: "xmark", label: "Close") {} },
             ComponentSample("sourceLink.default") { HangsSourceLink(domain: "en.wikipedia.org") {} },
         ]
     }

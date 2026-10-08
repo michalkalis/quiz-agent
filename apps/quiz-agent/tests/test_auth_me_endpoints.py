@@ -13,8 +13,9 @@ These pin the contract a deletion/export must honour:
   never blocks a GDPR erasure;
 - EXPORT returns the account's own data and **never leaks** the encrypted Apple
   refresh token or any secret;
-- both endpoints act only for a real account: an anonymous/legacy or
-  unauthenticated subject (not a ``users.id``) is rejected.
+- both endpoints act only for a known subject: an unauthenticated caller or a
+  bearer naming neither a ``users.id`` nor an anonymous identity is rejected
+  (anonymous erasure: ``test_auth_me_erase_anon_trail``).
 
 Apple's ``/auth/revoke`` is mocked with an ``httpx.MockTransport`` that records the
 call; the auth tables use the real test Postgres via ``db_sessionmaker``.
@@ -480,8 +481,9 @@ async def test_endpoints_reject_unauthenticated_caller(db_sessionmaker):
 
 
 async def test_endpoints_reject_authenticated_non_account_subject(db_sessionmaker):
-    """A valid bearer whose subject is an anon id (or a legacy ``dev_…`` id), not a
-    ``users.id``, has no account to act on → 404, and no revoke is attempted."""
+    """A valid bearer whose subject is neither a ``users.id`` nor a known anonymous
+    identity (random UUID, legacy ``dev_…`` id) has nothing to act on → 404, and
+    no revoke is attempted."""
     recorder = RevokeRecorder()
     app = _make_app(db_sessionmaker, recorder=recorder)
     anon_bearer = _token_service().create_access_token(str(uuid.uuid4()))

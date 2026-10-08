@@ -138,7 +138,25 @@ async def resolve_account(subject: AuthSubject, session: AsyncSession) -> User:
     return user
 
 
-async def erase_account(session: AsyncSession, user: User) -> None:
+async def resolve_anonymous(
+    subject: AuthSubject, session: AsyncSession
+) -> Optional[str]:
+    """The caller's anonymous identity id, or None when the bearer is not an anon.
+
+    Anonymous users have a server-side identity (and data) from first launch, so
+    GDPR erasure / App Store 5.1.1(v) deletion must work without signing in."""
+    if not subject.authenticated or not subject.subject_id:
+        return None
+    return (
+        await session.execute(
+            select(AnonymousIdentity.anon_id).where(
+                AnonymousIdentity.anon_id == subject.subject_id
+            )
+        )
+    ).scalar_one_or_none()
+
+
+async def erase_account(session: AsyncSession, user: User) -> list[str]:
     """Erase the account's local data in the caller's transaction (GDPR Art. 17).
 
     The ``users`` row, its ``daily_usage`` and ``analytics_events`` (keyed on ``subject_id`` == ``users.id``)
@@ -154,15 +172,19 @@ async def erase_account(session: AsyncSession, user: User) -> None:
     (``subscription``, ``credit_ledger``, ``revoked_transactions``) are kept
     untouched: accounting/refund law requires them. Quiz sessions and ratings
     live in the separate ratings store and are unlinked by the route
-    (``SessionManager.forget_user``). The caller commits."""
+    (``SessionManager.forget_user``). The caller commits.
+
+    Sign-in does not re-key feedback, analytics, orders or sessions, so what the
+    person produced *before* signing in still sits under the linked anon ids.
+    Those trails are erased the same way, or de-linking would leave them behind.
+    Returns every subject id erased (account + linked anons) for the route's
+    ratings-store unlink."""
     user_id = str(user.id)
-    await _preserve_month_usage_on_anons(session, user_id)
+    anon_ids = await _linked_anon_ids(session, user_id)
+    await _preserve_month_usage_on_anons(session, user_id, anon_ids)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
-    await session.execute(
-        delete(AnalyticsEvent).where(AnalyticsEvent.subject_id == user_id)
-    )
-    await session.execute(delete(Feedback).where(Feedback.user_id == user_id))
-    await _unlink_pack_orders(session, user_id)
+    subject_ids = [user_id, *anon_ids]
+    await _erase_personal_trail(session, subject_ids)
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))
     await session.execute(
         update(AnonymousIdentity)
@@ -170,6 +192,50 @@ async def erase_account(session: AsyncSession, user: User) -> None:
         .values(upgraded_to_user_id=None)
     )
     await session.execute(delete(User).where(User.id == user.id))
+    return subject_ids
+
+
+async def erase_anonymous(session: AsyncSession, anon_id: str) -> None:
+    """Erase an anonymous user's data in the caller's transaction (GDPR Art. 17).
+
+    Same trail as an account erasure (feedback, analytics, pack orders unlinked)
+    plus the anon's refresh tokens; the route unlinks sessions and ratings. The
+    ``anonymous_identities`` row and the *current month's* ``daily_usage`` stay,
+    for the reason ``_preserve_month_usage_on_anons`` gives: the device's App
+    Attest key stays bound to this anon, so dropping the counters would make
+    erase→re-bootstrap a free quota reset. Older usage rows go. Purchase
+    records stay (accounting). The caller commits."""
+    await _erase_personal_trail(session, [anon_id])
+    await session.execute(
+        delete(DailyUsage).where(
+            DailyUsage.subject_id == anon_id, DailyUsage.usage_date < _month_start()
+        )
+    )
+    await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == anon_id))
+
+
+async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -> None:
+    """Delete feedback and analytics events and unlink pack orders for each id."""
+    await session.execute(
+        delete(AnalyticsEvent).where(AnalyticsEvent.subject_id.in_(subject_ids))
+    )
+    await session.execute(delete(Feedback).where(Feedback.user_id.in_(subject_ids)))
+    for subject_id in subject_ids:
+        await _unlink_pack_orders(session, subject_id)
+
+
+async def _linked_anon_ids(session: AsyncSession, user_id: str) -> list[str]:
+    return list(
+        (
+            await session.execute(
+                select(AnonymousIdentity.anon_id).where(
+                    AnonymousIdentity.upgraded_to_user_id == user_id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
 
 
 async def _unlink_pack_orders(session: AsyncSession, user_id: str) -> None:
@@ -192,7 +258,9 @@ async def _unlink_pack_orders(session: AsyncSession, user_id: str) -> None:
     )
 
 
-async def _preserve_month_usage_on_anons(session: AsyncSession, user_id: str) -> None:
+async def _preserve_month_usage_on_anons(
+    session: AsyncSession, user_id: str, anon_ids: list[str]
+) -> None:
     """Carry the account's *current calendar month* question counts back onto its
     linked anonymous identities before the GDPR erasure drops its usage rows.
 
@@ -222,17 +290,6 @@ async def _preserve_month_usage_on_anons(session: AsyncSession, user_id: str) ->
     )
     if not month_rows:
         return
-    anon_ids = (
-        (
-            await session.execute(
-                select(AnonymousIdentity.anon_id).where(
-                    AnonymousIdentity.upgraded_to_user_id == user_id
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
     for anon_id in anon_ids:
         for row in month_rows:
             await session.execute(

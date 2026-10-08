@@ -402,6 +402,14 @@ final class QuizViewModel: ObservableObject {
     /// `VoiceCommandCoordinator.voiceFeedbackPhase` (glow/bar call sites).
     var voiceFeedbackPhase: VoiceFeedbackPhase { voiceCommandCoordinator.voiceFeedbackPhase }
 
+    /// #122 follow-up (TF 2026-10-07): the recognized-but-not-yet-fired command
+    /// as the listen-bar caption (command language, verbatim), or `nil`.
+    var recognizingWord: String? {
+        voiceCommandCoordinator.recognizingCommand.map {
+            VoiceCommandLexicon.recognizingCaption($0, language: commandLanguage)
+        }
+    }
+
     /// Fire-and-forget command-window sync for synchronous call sites
     /// (MAIN / +ScenePhase / SettingsView / HomeView; RecordingCoordinator
     /// reaches it via an injected closure) — see

@@ -159,6 +159,11 @@ struct ListenBar: View {
     /// #122 Variant C transient tint — overrides the mode accent while live.
     var feedback: VoiceFeedbackPhase = .idle
 
+    /// #122 follow-up (TF 2026-10-07): the recognized-but-not-yet-fired command
+    /// as a ready caption (`VoiceCommandLexicon.recognizingCaption`, command
+    /// language, verbatim). Shown with a spinner while `feedback == .recognizing`.
+    var recognizingWord: String? = nil
+
     /// The screen's concrete command words, already rendered by
     /// `VoiceCommandLexicon.hint(on:language:)` (the same string the caller gates
     /// the bar on). Command mode only; nil keeps the bar single-line.
@@ -236,6 +241,12 @@ struct ListenBar: View {
         }
     }
 
+    /// #122 follow-up: command modes only — answer mode and the busy states have
+    /// no armed command window, so hearing/recognizing say nothing there.
+    private var feedbackIsLive: Bool { isCommandMode && !isBusy }
+    private var isHearing: Bool { feedbackIsLive && feedback == .hearing }
+    private var isRecognizing: Bool { feedbackIsLive && feedback == .recognizing }
+
     /// Left-anchored drain fraction, nil when no window is running.
     private var thinkFillFraction: CGFloat? {
         guard let countdown = activeThinkCountdown, countdown.total > 0 else { return nil }
@@ -266,6 +277,7 @@ struct ListenBar: View {
         case .idle: return modeAccent
         case .matched: return teal
         case .unmatched: return amber
+        case .hearing, .recognizing: return modeAccent
         }
     }
 
@@ -276,7 +288,8 @@ struct ListenBar: View {
         switch feedback {
         case .matched: return teal.opacity(0.22)
         case .unmatched: return amber.opacity(0.12)
-        case .idle:
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.14)
+        case .idle, .hearing, .recognizing:
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.08)
             // #185 track F: a shade warmer once speech is heard (F2 "hot").
@@ -291,7 +304,8 @@ struct ListenBar: View {
         switch feedback {
         case .matched: return teal.opacity(0.75)
         case .unmatched: return amber.opacity(0.55)
-        case .idle:
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.5)
+        case .idle, .hearing, .recognizing:
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.35)
             case .answer: return pink
@@ -378,7 +392,7 @@ struct ListenBar: View {
         switch feedback {
         case .unmatched:
             return Text("Didn't catch that. \(commandHint)")
-        case .idle, .matched:
+        case .idle, .matched, .hearing, .recognizing:
             return Text(verbatim: commandHint)
         }
     }
@@ -395,6 +409,8 @@ struct ListenBar: View {
             if usesStatusLayout { return Text("Think") }
             return Text("THINK — LISTENING IN \(countdown.remaining) S")
         }
+        // #122 follow-up: a matched command waiting to fire names itself.
+        if isRecognizing, let recognizingWord { return Text(verbatim: recognizingWord) }
         switch mode {
         // #179 D1 state 1: during the read the bar was missing entirely on MCQ
         // (founder screenshot 9) — it now names what the app is doing.
@@ -571,14 +587,14 @@ struct ListenBar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         caption
-                        if showsDots { dots }
+                        trailingIndicator
                     }
                     words
                 }
             case .slim:
                 // One row: the short caption and the words share the 40pt bar.
                 caption
-                if showsDots { dots }
+                trailingIndicator
                 words
             }
 
@@ -710,14 +726,33 @@ struct ListenBar: View {
         }
     }
 
+    /// The live-mic dots, or — while a matched command waits to fire — a small
+    /// teal spinner in their place (#122 follow-up, TF 2026-10-07).
+    @ViewBuilder
+    private var trailingIndicator: some View {
+        if showsDots {
+            if isRecognizing, recognizingWord != nil {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(teal)
+                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("listen-bar.recognizing")
+            } else {
+                dots
+            }
+        }
+    }
+
     /// Three trailing dots fading back (opacity 1 · 0.55 · 0.3) — the "live mic"
     /// tell migrated from `CmdListenBar` when it was retired (#131 Track F).
     private var dots: some View {
         HStack(spacing: Theme.Hangs.Spacing.xxs) {
-            ForEach(Array([1.0, 0.55, 0.3].enumerated()), id: \.offset) { _, opacity in
+            // `.hearing`: the same dots, brighter and a touch larger — the mic
+            // is picking up speech right now.
+            ForEach(Array((isHearing ? [1.0, 0.85, 0.7] : [1.0, 0.55, 0.3]).enumerated()), id: \.offset) { _, opacity in
                 Circle()
                     .fill(accent)
-                    .frame(width: 5, height: 5)
+                    .frame(width: isHearing ? 6 : 5, height: isHearing ? 6 : 5)
                     .opacity(opacity)
             }
         }
@@ -801,6 +836,10 @@ struct ListenBarLevelGlow: View {
                       thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "skip""#)
             ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, feedback: .recognizing,
+                      recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip),
+                      commandHint: #"Say "start" or "skip""#)
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))

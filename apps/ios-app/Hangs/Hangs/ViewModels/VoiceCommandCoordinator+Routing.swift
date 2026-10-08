@@ -35,7 +35,12 @@ extension VoiceCommandCoordinator {
         // The final result IS the utterance boundary, whatever happens below
         // (window closed / unmatched / suppressed) — the latch must never
         // outlive the utterance it belongs to.
-        defer { if transcript.isFinal { endUtterance() } }
+        defer {
+            if transcript.isFinal {
+                endUtterance()
+                noteFinalProcessedForFeedback() // #122 follow-up: utterance over, cue stale
+            }
+        }
 
         // Release diagnostics: the command hot path was invisible in Sentry, so
         // "commands don't work" on-device could not be triaged remotely (only
@@ -172,6 +177,12 @@ extension VoiceCommandCoordinator {
             // final and the latency fix is a no-op. Every other reason is final.
             if suppression == .awaitingStable {
                 armVolatileSettle(command, text: normalized, heard: transcript.text, on: screen)
+            }
+            // #122 follow-up (TF 2026-10-07): a matched command still WAITING to
+            // fire shows as "recognizing". Cooldown / latch are repeats of a
+            // command that already fired — no cue for those.
+            if suppression == .awaitingStable || suppression == .awaitingFinal {
+                noteRecognizingForFeedback(command)
             }
             // NOT sampled, unlike the two drop exits above: reaching here already
             // required a hit on the seven-word vocabulary, and the latch + the

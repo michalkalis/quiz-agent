@@ -13,6 +13,7 @@ import SwiftUI
 
 struct ResultFooter: View {
     let feedbackPhase: VoiceFeedbackPhase
+    var recognizingWord: String? = nil
     /// False = the command window is not armed (or the recognizer is not ready)
     /// — the bar must not claim to be listening, so it is not rendered at all.
     var isListeningForCommands: Bool = false
@@ -39,7 +40,7 @@ struct ResultFooter: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.xxs)
 
             if isListeningForCommands {
-                ListenBar(mode: .command, feedback: feedbackPhase, commandHint: commandHint, language: commandLanguage)
+                ListenBar(mode: .command, feedback: feedbackPhase, recognizingWord: recognizingWord, commandHint: commandHint, language: commandLanguage)
                     .transition(.opacity)
             }
 

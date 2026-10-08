@@ -30,6 +30,7 @@ enum TaskKey: Hashable, Sendable {
     case volatileSettle
     case skipUndo
     case voiceFeedbackGlow
+    case commandSpeechEvents // #122 follow-up: VAD speechStarted feed for the "hearing" state
     case questionReplay
     case stallWatchdog // #179: bound on the .processing/.skipping pair
     case quizStart

@@ -108,6 +108,7 @@ extension SilenceDetectionService {
             // VAD speech-start to the first transcriber result.
             pendingFirstHypothesisSince = clock.now
             silenceChannel.yield(.speechStarted)
+            speechActivityChannel.yield(.speechStarted)
             Logger.voice.debug("🔇 Silence detection: speech started")
             // Sentry only inside an answer recording: the energy detector also
             // runs through every command window, where this would be a flood.
@@ -145,6 +146,7 @@ extension SilenceDetectionService {
             cancelSilenceCheck()
             state = .idle
             silenceChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
+            speechActivityChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
             if answerSession != nil {
                 SentryLog.info("vad speech ended", category: .voice, attributes: ["speechSecs": speechDuration])
             }

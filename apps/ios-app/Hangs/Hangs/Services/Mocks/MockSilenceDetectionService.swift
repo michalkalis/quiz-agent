@@ -16,12 +16,14 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     // voice-commands fix): every make*Stream() call mints a fresh stream, so
     // tests that re-arm consumers exercise the same lifecycle as production.
     private let silenceChannel = StreamChannel<SilenceEvent>()
+    private let speechActivityChannel = StreamChannel<SilenceEvent>()
     private let bargeInChannel = StreamChannel<Void>()
     private let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
     private let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
+    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
@@ -142,6 +144,7 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
 
     func simulateSilenceEvent(_ event: SilenceEvent) {
         silenceChannel.yield(event)
+        speechActivityChannel.yield(event) // the real service yields both
     }
 
     func simulateBargeIn() {

@@ -197,6 +197,7 @@ struct QuestionView: View {
                 commandHint: viewModel.sheetHintWords,
                 commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
+                recognizingWord: viewModel.recognizingWord,
                 matchedOption: matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
@@ -545,6 +546,7 @@ struct QuestionView: View {
             QuestionListenBar(
                 phase: phase,
                 feedback: viewModel.voiceFeedbackPhase,
+                recognizingWord: viewModel.recognizingWord,
                 showsWords: showsCommandWords,
                 // #131 Track F folded the old SE-class `compact` flag into the
                 // one size axis: a short container gets the slim bar.

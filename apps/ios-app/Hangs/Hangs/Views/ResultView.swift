@@ -90,6 +90,7 @@ struct ResultView: View {
 
                 ResultFooter(
                     feedbackPhase: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
                     isListeningForCommands: viewModel.commandListenerHint != nil,
                     commandHint: viewModel.voiceHintWords,
                     commandLanguage: viewModel.commandLanguage,

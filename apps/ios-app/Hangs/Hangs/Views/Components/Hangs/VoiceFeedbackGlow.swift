@@ -24,7 +24,7 @@ struct AmbientGlowWash: View {
 
     var body: some View {
         Group {
-            if phase != .idle {
+            if phase.litsGlow {
                 Rectangle()
                     .fill(EllipticalGradient(stops: stops, center: UnitPoint(x: 0.5, y: 1.0)))
                     .opacity(reduceMotion ? 0.85 : (pulsing ? 1.0 : 0.62))
@@ -109,7 +109,7 @@ struct GlowSweepLine: View {
             .clipped()
         }
         .frame(height: 4)
-        .opacity(phase == .idle ? 0 : 1)
+        .opacity(phase.litsGlow ? 1 : 0)
         .animation(.easeInOut(duration: 0.25), value: phase)
         .id(phase) // restart sweep/breath cleanly on phase change
         .allowsHitTesting(false)

@@ -60,6 +60,7 @@ struct HomeView: View {
                 ListenBar(
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
                     commandHint: viewModel.voiceHintWords,
                     size: .slim,
                     language: viewModel.commandLanguage

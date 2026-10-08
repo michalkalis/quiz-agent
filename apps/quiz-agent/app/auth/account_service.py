@@ -140,16 +140,17 @@ async def resolve_account(subject: AuthSubject, session: AsyncSession) -> User:
 
 async def resolve_anonymous(
     subject: AuthSubject, session: AsyncSession
-) -> Optional[str]:
-    """The caller's anonymous identity id, or None when the bearer is not an anon.
+) -> Optional[AnonymousIdentity]:
+    """The caller's anonymous identity, or None when the bearer is not an anon.
 
     Anonymous users have a server-side identity (and data) from first launch, so
-    GDPR erasure / App Store 5.1.1(v) deletion must work without signing in."""
+    GDPR erasure / App Store 5.1.1(v) deletion and the Art. 20 export must work
+    without signing in."""
     if not subject.authenticated or not subject.subject_id:
         return None
     return (
         await session.execute(
-            select(AnonymousIdentity.anon_id).where(
+            select(AnonymousIdentity).where(
                 AnonymousIdentity.anon_id == subject.subject_id
             )
         )
@@ -312,7 +313,11 @@ async def _preserve_month_usage_on_anons(
 
 
 async def usage_history(session: AsyncSession, subject_id: str) -> list[DailyUsage]:
-    """The account's full per-day usage rows, oldest first (GDPR Art. 20 export)."""
+    """The subject's full per-day usage rows, oldest first (GDPR Art. 20 export).
+
+    For an account this already covers its pre-sign-in usage: sign-in sums the
+    linked anon's rows into the account's (``merge_anonymous_identity``), so
+    adding the anon rows again would double-count."""
     return list(
         (
             await session.execute(

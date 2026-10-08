@@ -120,3 +120,14 @@ Health:     <HTTP status>
 Processes:  <started list>
 URL:        https://<Fly app>.fly.dev
 ```
+
+## Rollback
+
+Never `alembic downgrade` the prod DB; the boot check accepts a DB ahead of code, so redeploy the previous image instead (migrations are expand-only, see `.claude/rules/backend.md`).
+
+```bash
+fly releases --image -a <Fly app>          # find the last good release's image ref
+fly deploy --image <registry.fly.io/<Fly app>:deployment-...> -a <Fly app> --skip-release-command
+```
+
+`--skip-release-command` is required: if the bad release shipped a migration, the old image does not contain the DB's current revision, so `alembic upgrade head` fails (`Can't locate revision`) and aborts the deploy. The boot check's DB-ahead tolerance then carries the rollback. Afterwards rerun Post-deploy Verification.

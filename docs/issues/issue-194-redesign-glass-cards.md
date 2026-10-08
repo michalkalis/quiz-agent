@@ -73,3 +73,12 @@ Plátno je návrh, kód je pravda. Founder komentuje priamo na plátne; agent pr
 - **Tmavý režim áno:** Bg dostane tmavú verziu (kreslí sa na plátne po kontrole návrhov voči appke).
 - **Farby kategórií** (6 kategórií z taxonómie `CATEGORY_TAXONOMY`): geography-world kobaltová #2C45F5 (biely text), history mandarínková #FF6B2C (tmavý text), science-nature mätová #3FE0AE (tmavý), movies-music ružová #E8317F (biely), sports žltá #FFD23F (tmavý), food-everyday fialová #7A5CFF (biely); vlastné balíčky atrament #111216 (biely); mix / všetky = viacfarebný pruh.
 - **Kontrola návrhov voči appke** pred začiatkom kódu: každá obrazovka na plátne obsahuje všetko, čo appka dnes ukazuje, a nič vymyslené bez schválenia.
+
+## Rozhodnutia foundera, 3. kolo (2026-10-08)
+
+- **Obsah má prednosť** pred dekoráciou: obrazovka nikdy nedá obsahu menej miesta než dnešná beta (napr. MCQ možnosti kompaktné, odpovede sú krátke).
+- **Jednoduchšie a decentnejšie:** základ vzhľadu je verzia upravená skillmi jakubkrehel/skills (5 veľkostí písma, 3 hrúbky, jedna plná akcia na obrazovku, jemné obrysy namiesto tieňov, kontrast ≥ 4,5 : 1). Skilly better-colors a better-ui slúžia ako kontrolný zoznam pri každom PR fázy B a C.
+- **Menej animácií:** pohyb len tam, kde nesie význam (stav počúvania, odpočet, príchod karty), žiadne slučkové dekorácie.
+- **Kritické miesta bety sa nesmú rozbiť:** záväzný zoznam [redesign-194-critical-spots.md](../design/redesign-194-critical-spots.md). Napr. na výsledku ostávajú obe pauzy (founder 2026-10-07).
+- **Kategórií je 7:** k šiestim pribúda Zábava (`entertainment`, reálna kategória s otázkami); `CATEGORY_TAXONOMY` v `admin.py` je zastaraná (6 id).
+- Referenčné obrazovky pre implementáciu = stránka „Finálny smer vs. beta“ na plátne (návrh vedľa snímky dnešnej bety).

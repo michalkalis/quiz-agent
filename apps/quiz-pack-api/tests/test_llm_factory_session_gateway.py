@@ -189,3 +189,20 @@ def test_is_session_model_false_for_every_prod_id(model_id):
     """A prod id must never be mistaken for a session: id outside session
     mode — that would misroute a live call onto the subprocess transport."""
     assert factory.is_session_model(model_id) is False
+
+
+def test_session_pins_exact_claude_version(monkeypatch):
+    """Bare aliases float to the newest model in a tier (``fable`` became
+    Fable 5.1 without any code change), so a model comparison must be able
+    to pin an exact version — otherwise the "old model" arm silently runs
+    the new one and the comparison measures nothing. Typos still fail loud."""
+    from quiz_shared.llm.session_cli import session_alias, build_command
+
+    monkeypatch.setenv("LLM_GATEWAY", "session")
+    monkeypatch.setenv("LLM_SESSION_MAP", "claude-fable-5=claude-fable-5")
+    resolved = factory.resolve_model("claude-fable-5")
+    assert resolved == "session:claude-fable-5"
+    cmd = build_command(session_alias(resolved), max_turns=1)
+    assert cmd[cmd.index("--model") + 1] == "claude-fable-5"
+    with pytest.raises(ValueError, match="Unknown session model"):
+        session_alias("session:fabel")

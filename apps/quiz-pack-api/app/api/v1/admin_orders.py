@@ -16,16 +16,19 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+from arq.connections import ArqRedis
+from arq.constants import default_queue_name, health_check_key_suffix
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import WORKER_HEALTH_CHECK_INTERVAL_S, Settings, get_settings
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.session import get_session
 
-from ..deps import require_admin
+from ..deps import get_arq_pool, require_admin
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -114,4 +117,44 @@ async def orders_needing_attention(
     return OrdersAttentionResponse(
         stuck=[] if worker_alive else _rows(await session.execute(stuck_stmt)),
         refund_eligible=_rows(await session.execute(refund_stmt)),
+    )
+
+
+class WorkerHeartbeatResponse(BaseModel):
+    # The queue orders are routed to (ORDER_QUEUE_NAME).
+    queue_name: str
+    # True when that is a session queue (beta: the mba worker). Only then must a
+    # worker be alive: on ARQ's default queue the Fly worker serves orders, and
+    # while the session queue is in use that machine is stopped on purpose.
+    session_queue: bool
+    # Seconds since the queue's worker last wrote its heartbeat; None = no
+    # heartbeat (no worker consuming the queue for over a minute).
+    heartbeat_age_s: int | None
+
+
+@router.get("/worker/heartbeat", response_model=WorkerHeartbeatResponse)
+async def worker_heartbeat(
+    settings: Annotated[Settings, Depends(get_settings)],
+    redis: Annotated[ArqRedis, Depends(get_arq_pool)],
+) -> WorkerHeartbeatResponse:
+    """Liveness of the worker consuming the order queue (#193).
+
+    Orders alone cannot tell a dead worker apart from a quiet day: the mba
+    worker once lay dead ~20 h with nothing queued, so nobody was told. ARQ
+    rewrites `<queue>:health-check` every WORKER_HEALTH_CHECK_INTERVAL_S with a
+    TTL of interval + 1 s, so the remaining TTL dates the last write and a
+    missing key means no worker.
+    """
+    queue = settings.order_queue_name
+    ttl_ms = await redis.pttl(queue + health_check_key_suffix)
+    age: int | None = None
+    if ttl_ms >= 0:
+        # A worker still on ARQ's 1 h default (pre-#193 code) leaves a longer
+        # TTL: it was alive within the hour, so report it fresh; its key still
+        # expires within an hour of its death, so the alert comes, just later.
+        age = max(0, WORKER_HEALTH_CHECK_INTERVAL_S + 1 - ttl_ms // 1000)
+    return WorkerHeartbeatResponse(
+        queue_name=queue,
+        session_queue=queue != default_queue_name,
+        heartbeat_age_s=age,
     )

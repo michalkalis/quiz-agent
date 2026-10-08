@@ -30,6 +30,7 @@
 - [x] 193.7 iOS: `QuestionAvailability.Limiter` toleruje neznámu hodnotu (staré buildy nespadnú pri novej hodnote zo servera) — PR #265
 - [x] 193.8 Zmazanie účtu: overiť a doplniť mazanie dát z anonymného ID pred prihlásením (feedback, analytika); audity sa rozchádzajú, najprv overiť — potvrdené (pravdu mal bezpečnostný audit): zmazanie účtu teraz zmaže aj stopu prepojených anonymných ID a anonymný používateľ má funkčné „Delete my data“ (predtým 404)
 - [x] 193.15 Kredit providerov: `GET /api/v1/admin/provider-balances` (OpenRouter účet + limit kľúča, ElevenLabs znaky) + denná kontrola v quiz-agent → Sentry issue pri low/critical (jeden e-mail na provider+stav) — `apps/quiz-agent/app/monitoring/provider_balances.py`
+- [x] 193.16 Mŕtvy session worker (2026-10-08: pád na výpadku Redis tunela, ~20 h bez reštartu a bez upozornenia): worker prečká výpadok Redisu ~90 s (redis retry), heartbeat 60 s, na mba beží pod launchd (`session_worker_local.sh install-launchd`, KeepAlive), `GET /api/v1/admin/worker/heartbeat` + krok v `prod-monitor.yml` (e-mail aj bez objednávok)
 
 ## Vlna 2 — po rozhodnutí foundera
 
@@ -48,6 +49,7 @@
 - Kľúč k zálohám z `~/quiz-pack-db-backup-key/` do správcu hesiel, potom priečinok zmazať.
 - GitHub › Settings › Notifications › Actions: e-mail pri zlyhaní workflow zapnutý.
 - `mba` session worker reštartovať na main ≥ b5d8bf92 (prompt v session 2026-10-08).
+- `mba`: po merge 193.16 `git pull` + `session_worker_local.sh install-launchd` (worker pod launchd, heartbeat 60 s).
 - Voliteľne: generačné tajomstvá do stagingu (`docs/setup/staging.md`).
 - OpenRouter dobiť (8,72 $ k 2026-10-08) + auto top-up; OpenAI/Anthropic auto recharge; prehľad kreditov: https://claude.ai/artifact/KRP28pQuWkFvatRXFaEbKH
 

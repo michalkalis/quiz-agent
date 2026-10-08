@@ -133,7 +133,9 @@ class _StdoutSink:
     def __init__(self) -> None:
         self._next_id = 0
 
-    async def start_step(self, step: str, info: dict[str, Any] | None = None) -> int:
+    async def start_step(
+        self, step: str, info: dict[str, Any] | None = None
+    ) -> int:
         eid = self._next_id
         self._next_id += 1
         print(f"[{eid:02d}] start  {step}" + (f" {info}" if info else ""))
@@ -343,8 +345,7 @@ def _build_stages(
     # goes through this path, so the model toggle MUST be honoured here.
     generator = AdvancedQuestionGenerator(
         # Founder 2026-10-08 model mix: one pick per CLI run (= one batch).
-        generation_model=feature_flags.generation_model()
-        or llm_factory.pick_generation_model(),
+        generation_model=feature_flags.generation_model() or llm_factory.pick_generation_model(),
         critique_model=feature_flags.critique_model() or llm_factory.CRITIQUE,
         # #169 prod parity: the worker (`worker.py on_startup`) and the API
         # path both pass this flag; without it the CLI silently fell back to
@@ -478,9 +479,7 @@ def _print_usage_table(summary: dict) -> None:
             )
     print(f"  total known cost: {summary['total_cost_cents_known']:.2f}¢")
     if summary["unpriced_models"]:
-        print(
-            f"  unpriced models (cost omitted): {', '.join(summary['unpriced_models'])}"
-        )
+        print(f"  unpriced models (cost omitted): {', '.join(summary['unpriced_models'])}")
 
 
 # ---------------------------------------------------------------------------
@@ -784,9 +783,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def cli_main(argv: Sequence[str] | None = None) -> int:
     """Entrypoint — importable so tests can drive the CLI in-process."""
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s"
-    )
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = _parse_args(argv)
     if llm_factory.gateway() == llm_factory.SESSION:
         # #169: one-shot preflight — a logged-out CLI would otherwise surface

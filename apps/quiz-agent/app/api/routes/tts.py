@@ -9,6 +9,7 @@ from ..deps import (
     SynthesizeTTSRequest,
     get_session_manager,
     get_tts_service,
+    get_usage_tracker,
     get_question_retriever,
     get_translation_service,
     require_auth_or_grace,
@@ -20,7 +21,9 @@ from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...tts.number_normalization import normalize_numbers_for_tts
 from ...tts.spoken_text import spoken_question_text
-from ...tts.service import TTSService
+from ...config import get_settings
+from ...tts.service import TTSBilling, TTSBudgetExceeded, TTSService
+from ...usage.tracker import UsageTracker
 from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -33,19 +36,42 @@ async def synthesize_tts(
     request: Request,
     body: SynthesizeTTSRequest,
     tts_service: TTSService = Depends(get_tts_service),
-    _auth=Depends(require_auth_or_grace),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+    usage_tracker: Optional[UsageTracker] = Depends(get_usage_tracker),
 ):
-    """Generate speech audio from text (generic TTS)."""
+    """Generate speech audio from text (generic TTS).
+
+    #193.13: client text goes to a metered provider, so each user has a daily
+    character budget for the billed primary. Over it, the free-to-us fallback
+    speaks instead (cache hits cost nothing and are never counted).
+    """
+    budget = get_settings().tts_synthesize_daily_char_budget
+    metered = bool(budget and usage_tracker and subject.subject_id)
+    billing = TTSBilling()
     try:
+        if metered:
+            used = await usage_tracker.tts_chars_today(subject.subject_id)
+            billing.allow_primary = used < budget
         audio_data = await tts_service.synthesize(
-            text=body.text, voice=body.voice, use_cache=True
+            text=body.text, voice=body.voice, use_cache=True, billing=billing
         )
+        if metered and billing.billed_chars:
+            await usage_tracker.add_tts_chars(subject.subject_id, billing.billed_chars)
         return Response(
             content=audio_data,
             media_type=f"audio/{body.format}",
             headers={
                 "Content-Disposition": f'attachment; filename="speech.{body.format}"'
             },
+        )
+    except TTSBudgetExceeded:
+        logger.warning(
+            "TTS daily budget exhausted, no fallback: %s", subject.subject_id
+        )
+        raise HTTPException(
+            status_code=429,
+            detail="Daily TTS budget reached",
+            headers={"Retry-After": "3600"},
         )
     except ValueError as e:
         # Constructed validation text ("Text cannot be empty") — client-safe.

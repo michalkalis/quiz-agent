@@ -135,6 +135,12 @@ class Settings(BaseSettings):
     tts_fallback_provider: Optional[str] = "openai"
     tts_voice: Optional[str] = None
     tts_cache_dir: str = "./data/tts_cache"
+    # #193.13: per-user daily cap on characters sent to the BILLED primary by
+    # `POST /tts/synthesize` (ElevenLabs Starter = 30k chars/month, shared with
+    # STT). Heavy legit play: ~100 answer read-backs (~40 chars) + a few recaps
+    # is ~5-6k, so 10k never blocks it. Over budget -> OpenAI fallback, not an
+    # error. 0 disables the cap.
+    tts_synthesize_daily_char_budget: int = 10000
     elevenlabs_tts_model: str = "eleven_multilingual_v2"
     openai_tts_model: str = "tts-1"
     # Answer transcription (#184 — batch STT for car noise). Scribe v2 batch is

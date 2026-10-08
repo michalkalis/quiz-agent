@@ -9,6 +9,7 @@ import asyncio
 import io
 import logging
 import random
+from dataclasses import dataclass
 from typing import Optional
 
 from ..config import get_settings
@@ -93,6 +94,23 @@ def _resolve_provider(
     return build_provider(name, model=_model_for(name, settings), voice=voice)
 
 
+class TTSBudgetExceeded(Exception):
+    """Billed primary is over budget and there is no fallback provider."""
+
+
+@dataclass
+class TTSBilling:
+    """Per-request budget gate (#193.13), shared between route and service.
+
+    The route sets ``allow_primary`` from the caller's daily budget; the service
+    records in ``billed_chars`` what the metered primary was actually asked to
+    speak (cache hits and fallback audio stay 0), so only real spend is counted.
+    """
+
+    allow_primary: bool = True
+    billed_chars: int = 0
+
+
 class TTSService:
     """Text-to-Speech service with caching and concurrency control.
 
@@ -173,7 +191,11 @@ class TTSService:
         )
 
     async def synthesize(
-        self, text: str, voice: Optional[str] = None, use_cache: bool = True
+        self,
+        text: str,
+        voice: Optional[str] = None,
+        use_cache: bool = True,
+        billing: Optional[TTSBilling] = None,
     ) -> bytes:
         """Synthesize text to speech with caching, failing over to the backup.
 
@@ -197,14 +219,18 @@ class TTSService:
             raise ValueError("Text cannot be empty")
 
         primary_voice = voice or self.provider.default_voice
-        if not use_cache:
-            return await self._synthesize_failover(text, primary_voice, use_cache)
+        # A budget-blocked caller must not share a single-flight task with
+        # (or seed one for) callers who are allowed the primary voice.
+        if not use_cache or (billing and not billing.allow_primary):
+            return await self._synthesize_failover(
+                text, primary_voice, use_cache, billing
+            )
 
         key = (text, primary_voice)
         task = self._in_flight.get(key)
         if task is None:
             task = asyncio.create_task(
-                self._synthesize_failover(text, primary_voice, use_cache)
+                self._synthesize_failover(text, primary_voice, use_cache, billing)
             )
             self._in_flight[key] = task
             task.add_done_callback(self._forget_in_flight(key))
@@ -220,13 +246,28 @@ class TTSService:
         return _done
 
     async def _synthesize_failover(
-        self, text: str, primary_voice: str, use_cache: bool
+        self,
+        text: str,
+        primary_voice: str,
+        use_cache: bool,
+        billing: Optional[TTSBilling] = None,
     ) -> bytes:
         """Primary provider, then the fallback — one synthesis, no coalescing."""
         try:
+            if billing and not billing.allow_primary:
+                # Over budget: already-cached primary audio is free to serve,
+                # anything that would cost credits goes to the fallback.
+                cached = self.cache.get(text, primary_voice) if use_cache else None
+                if cached:
+                    return cached
+                if self.fallback is None:
+                    raise TTSBudgetExceeded()
+                raise RuntimeError("daily TTS budget exhausted")
             return await self._synthesize_with(
-                self.provider, text, primary_voice, use_cache
+                self.provider, text, primary_voice, use_cache, billing
             )
+        except TTSBudgetExceeded:
+            raise
         except Exception as primary_error:
             if self.fallback is None:
                 raise RuntimeError(f"TTS synthesis failed: {primary_error}")
@@ -252,7 +293,12 @@ class TTSService:
                 )
 
     async def _synthesize_with(
-        self, provider: TTSProvider, text: str, voice: str, use_cache: bool
+        self,
+        provider: TTSProvider,
+        text: str,
+        voice: str,
+        use_cache: bool,
+        billing: Optional[TTSBilling] = None,
     ) -> bytes:
         """Cache lookup → synthesis → volume boost → cache store, for one backend.
 
@@ -267,6 +313,8 @@ class TTSService:
 
         async with self._semaphore:
             audio_data = await provider.synthesize(text, voice)
+        if billing is not None and provider is self.provider:
+            billing.billed_chars = len(text)
 
         # Apply volume boost (normalize + extra boost for max loudness)
         audio_data = boost_volume(audio_data)

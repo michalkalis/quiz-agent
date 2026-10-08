@@ -71,13 +71,13 @@ class TranslationService:
 
         Args:
             model: direct-provider model id; defaults to TRANSLATION_MODEL env
-                var, then claude-opus-5
+                var, then claude-opus-5-5
             store_url: SQLAlchemy URL for the durable translation store; defaults to
                 TRANSLATION_CACHE_URL env var, then sqlite under ./data (→ /data in prod)
         """
         self.client = llm_factory.openai_client(async_=True)
         self.model = llm_factory.resolve_model(
-            model or os.getenv("TRANSLATION_MODEL", "claude-opus-5")
+            model or os.getenv("TRANSLATION_MODEL", "claude-opus-5-5")
         )
         # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
         # TranslationService is a process-wide singleton, so this survives every request/session.

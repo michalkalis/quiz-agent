@@ -293,6 +293,14 @@ class ChatClaudeSession(BaseChatModel):
             }
         )
 
+    def with_structured_output(
+        self, schema: Any, *, tool_choice: Any = None, **kwargs: Any
+    ):
+        """Accept the API path's ``tool_choice`` (``"auto"`` for models that
+        reject a forced tool, 2026-10-08) and drop it: ``--json-schema``
+        always enforces the schema, and langchain-core rejects unknown kwargs."""
+        return super().with_structured_output(schema, **kwargs)
+
     def _prepare(
         self, messages: list[BaseMessage], kwargs: dict[str, Any]
     ) -> tuple[list[str], str, str | None]:

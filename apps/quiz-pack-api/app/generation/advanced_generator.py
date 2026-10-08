@@ -1405,8 +1405,10 @@ class AdvancedQuestionGenerator:
         # with it (measured: 64/106 delivered, one batch collapsed to 4/16).
         # The raw tool-call args survive the failed parse, so we salvage
         # per-question below instead of hardening the prompt further.
+        # tool_choice="auto": Fable 5.1 / Opus 5.5 reject a forced tool choice
+        # (400); the format note above already tells the model to use the tool.
         structured_llm = self.generation_llm.with_structured_output(
-            MCQBatchOutput, method="function_calling", include_raw=True
+            MCQBatchOutput, method="function_calling", include_raw=True, tool_choice="auto"
         )
         result = await self._ainvoke_generation(structured_llm, [
             HumanMessage(content=self._prompt_message_content(prompt))

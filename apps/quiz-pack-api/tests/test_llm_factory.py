@@ -70,11 +70,11 @@ def test_role_constants_are_frontier_only():
     exceptions: EVAL (serve-time hot path, own cost model) and the #135
     founder carve-outs of 2026-08-03 — VERIFY (cheaper evidence arbiter, D9)
     and ANSWERABILITY (cheap round-trip checker is the point, D10)."""
-    assert factory.GEN == "claude-fable-5"
+    assert factory.GEN == "claude-fable-5-1"
     assert factory.CRITIQUE == "gpt-5.6-sol"
     assert factory.EVAL == "gpt-4o-mini"  # serve-time, decided separately
     assert factory.PARSE == "gpt-5.6-sol"
-    assert factory.TRANSLATE == "claude-opus-5"
+    assert factory.TRANSLATE == "claude-opus-5-5"
     # #135 D9 carve-out: cheap-frontier arbiter, family-disjoint from every
     # blind-test generation candidate.
     assert factory.VERIFY == "deepseek-v4-pro"

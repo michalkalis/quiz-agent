@@ -169,6 +169,28 @@ def test_structured_output_parses_into_model_with_one_tool_call(tmp_path, monkey
     assert record["argv"][record["argv"].index("--max-turns") + 1] == "2"
 
 
+def test_structured_output_accepts_auto_tool_choice(tmp_path, monkeypatch):
+    """The MCQ generator passes ``tool_choice="auto"`` because Fable 5.1 /
+    Opus 5.5 reject a forced tool on the API path. The session transport
+    must accept the same call, or every subscription generation run of MCQ
+    batches crashes on an unsupported-argument error."""
+    setup_fake_claude(
+        monkeypatch,
+        tmp_path,
+        control={
+            "response": default_response(
+                structured_output={"is_correct": False, "reason": "wrong year"}
+            )
+        },
+    )
+    structured_llm = ChatClaudeSession(alias="fable").with_structured_output(
+        _Verdict, method="function_calling", include_raw=True, tool_choice="auto"
+    )
+    result = structured_llm.invoke("check this claim")
+
+    assert result["parsed"] == _Verdict(is_correct=False, reason="wrong year")
+
+
 def test_structured_output_missing_envelope_field_parses_to_none(tmp_path, monkeypatch):
     """A session run that returns no ``structured_output`` (e.g. the model
     answered in prose instead of calling the tool) must degrade to

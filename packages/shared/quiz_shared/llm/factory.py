@@ -125,14 +125,14 @@ def _role(env_name: str, default: str) -> str:
 # Logical role -> canonical (direct-provider) model id. Frontier-only for the
 # generation pipeline (founder policy 2026-07-30, generation-review fix run);
 # verified against the live OpenRouter catalog the same day.
-GEN = _role("LLM_ROLE_GEN", "claude-fable-5")
+GEN = _role("LLM_ROLE_GEN", "claude-fable-5-1")
 CRITIQUE = _role("LLM_ROLE_CRITIQUE", "gpt-5.6-sol")
 # EVAL is the serve-time answer grader (voice hot path, per-answer cost model)
 # — deliberately NOT part of the 2026-07-30 frontier refresh; revisit
 # separately with the founder.
 EVAL = "gpt-4o-mini"
 PARSE = "gpt-5.6-sol"
-TRANSLATE = "claude-opus-5"
+TRANSLATE = "claude-opus-5-5"
 NORMALIZE = _role("LLM_ROLE_NORMALIZE", "gemini-3.1-pro-preview")
 # #135 D9 (founder carve-out, 2026-08-03): evidence arbitration reads Tavily
 # snippets against a claim — frontier-class comprehension at ~7% of the
@@ -185,6 +185,10 @@ _REMAP_OPENROUTER = {
     # 2026-07-30 generation-review refresh — frontier stack. Slugs verified
     # live against the OpenRouter catalog on 2026-07-30.
     "claude-fable-5": "anthropic/claude-fable-5",
+    # Founder 2026-10-08: successors (blind test picked Fable 5.1 for GEN;
+    # translation moves to Opus 5.5, ~20 % cheaper). Slugs verified live.
+    "claude-fable-5-1": "anthropic/claude-fable-5.1",
+    "claude-opus-5-5": "anthropic/claude-opus-5.5",
     "gpt-5.6-sol": "openai/gpt-5.6-sol",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
     # Serve-time question translation (quiz-agent TranslationService, 2026-07-30
@@ -251,7 +255,9 @@ def is_session_model(model_id: str) -> bool:
 # opus. ``LLM_SESSION_MAP="gpt-5-mini=haiku,..."`` overrides per id.
 _SESSION_ALIAS_FOR_ID = {
     "claude-fable-5": "fable",
+    "claude-fable-5-1": "fable",
     "claude-opus-5": "opus",
+    "claude-opus-5-5": "opus",
     "claude-sonnet-5": "sonnet",
     "gpt-5-mini": "sonnet",
     "deepseek-v4-flash": "haiku",

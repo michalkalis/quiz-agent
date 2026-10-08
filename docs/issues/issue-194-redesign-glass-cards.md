@@ -26,17 +26,18 @@
 3. **Snímky pred zmenou:** doplniť pixel snímky obrazoviek, ktoré ich nemajú (Settings, Onboarding, Completion, SetRecap, AnswerConfirmation, objednávka balíčka, prihlásenie, chyba), aby každé PR malo porovnanie pred a po.
 4. **Testovacie identifikátory sa nemenia** (`lint-a11y-ids.py`). ViewInspector testy sa upravujú len tam, kde sa zmenila stavba obrazovky, nie správanie.
 5. **Po každej fáze:** cielené testy dotknutých obrazoviek, seedované sekvencie stavov (#186 — stabilizácia stavov kvízu), RS sweep pred koncom fázy C. Nové pixel snímky sa nahrávajú len po schválení foundera (obrázky pred a po v PR).
-6. **Beta je oddelená:** kým sa nezačne kód redizajnu, `release/1.0` = `main`. Prepnutie (posledný fast-forward, ruleset pre `release/**`, verzia 1.1 v `main`) je prvý krok fázy B.
+6. **Beta je oddelená:** prepnutie urobené 2026-10-08 ešte pred fázou A (founder: redizajn nesmie zasiahnuť betu ani prípravou): `release/1.0` zmrazená na e691530c, ruleset pre `release/**`, verzia 1.1 v `main`.
 
 ## Fázy
 
-### A. Príprava (vzhľad appky sa nemení; smie ísť aj do bety)
+- [x] B0 — prepnutie bety podľa `shared.md` (2026-10-08, presunuté pred fázu A).
+
+### A. Príprava (vzhľad appky sa nemení; len v `main`, nie v bete)
 - [ ] A1 — logika von zo `SettingsView`, `QuestionView`, `PaywallView`, `ContentView` do view modelov alebo malých typov; testy na presunutú logiku.
 - [ ] A2 — pixel snímky chýbajúcich obrazoviek (zoznam v poistke 3), sk/cs/en a veľké písmo ako pri hero snímkach.
 - [ ] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
 
-### B. Základy (prvý kód redizajnu, po prepnutí bety)
-- [ ] B0 — prepnutie bety podľa `shared.md` (fast-forward, ruleset, `MARKETING_VERSION` 1.1).
+### B. Základy (prvý kód nového vzhľadu)
 - [ ] B1 — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
 - [ ] B2 — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
 - [ ] B3 — pohyb: rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.

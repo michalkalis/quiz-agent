@@ -31,6 +31,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
+from arq.jobs import Job, JobStatus
 from sqlalchemy import select
 
 from app import order_budget
@@ -110,6 +111,23 @@ async def sweep_stuck_orders(ctx: Dict[str, Any]) -> None:
             logger.exception("sweep_stuck_orders failed to recover order_id=%s", order_id)
 
 
+async def _attempt_waiting_in_queue(
+    arq_pool: Any, order_id: uuid.UUID, job: GenerationJob
+) -> bool:
+    """True while the order's current arq attempt sits in the queue, not yet picked up.
+
+    Anything else still means stuck: ``in_progress`` with a stale heartbeat is a
+    worker that died mid-run (arq keeps the marker until its timeout), and
+    ``not_found``/``complete`` is an attempt nothing will run again.
+    """
+    status = await Job(
+        attempt_job_id(order_id, job),
+        arq_pool,
+        _queue_name=get_settings().order_queue_name,
+    ).status()
+    return status in (JobStatus.queued, JobStatus.deferred)
+
+
 async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None:
     session_factory = ctx.get("session_factory") or AsyncSessionLocal
     arq_pool = ctx["redis"]
@@ -139,6 +157,14 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
             order.refund_eligible = True
             await fail_pack_in_session(session, order)
             await session.commit()
+            return
+
+        # #193: the session worker runs one pack at a time, for an hour or more,
+        # so an order queued behind it looks dead by `updated_at` alone. If its
+        # current attempt is still waiting in the arq queue, nothing died:
+        # recovering it would charge a paid attempt every tick (ending
+        # refund-eligible without ever running) and queue a second copy.
+        if await _attempt_waiting_in_queue(arq_pool, order_id, job):
             return
 
         # #145 — one shared gate, the same verdict POST /retry and the worker

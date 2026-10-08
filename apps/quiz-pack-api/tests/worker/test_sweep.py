@@ -187,8 +187,37 @@ async def _cleanup(session: AsyncSession, order_id: uuid.UUID) -> None:
     await session.commit()
 
 
+class _FakeArqTransaction:
+    """The three lookups `arq.jobs.Job.status()` pipelines: result, in-progress, queue."""
+
+    def __init__(self, pool: FakeArqPool) -> None:
+        self._pool = pool
+        self._ops: list[Any] = []
+
+    async def __aenter__(self) -> _FakeArqTransaction:  # noqa: PYI034
+        return self
+
+    async def __aexit__(self, *exc: object) -> None:
+        return None
+
+    def exists(self, key: str) -> None:
+        self._ops.append(1 if key in self._pool.redis_keys else 0)
+
+    def zscore(self, queue_name: str, job_id: str) -> None:
+        self._ops.append(self._pool.queued.get((queue_name, job_id)))
+
+    async def execute(self) -> list[Any]:
+        return self._ops
+
+
 class FakeArqPool:
-    """Captures `.enqueue_job` calls; can be told to fail once."""
+    """Captures `.enqueue_job` calls; can be told to fail once.
+
+    Also answers arq's job-status lookup. Empty by default = "arq knows nothing
+    about this attempt" (a dead worker's lost job), which every pre-#193 test
+    here models; `queue_attempt` / `mark_in_progress` model a job still waiting
+    in the queue / one a worker claimed.
+    """
 
     def __init__(self, *, fail: bool = False) -> None:
         self.calls: list[tuple[str, str]] = []
@@ -196,6 +225,17 @@ class FakeArqPool:
         self.queue_names: list[str | None] = []
         self._fail = fail
         self.enqueue_job = AsyncMock(side_effect=self._enqueue)
+        self.queued: dict[tuple[str, str], float] = {}
+        self.redis_keys: set[str] = set()
+
+    def queue_attempt(self, job_id: str, queue_name: str = "arq:queue") -> None:
+        self.queued[(queue_name, job_id)] = 1.0  # score in the past = runnable now
+
+    def mark_in_progress(self, job_id: str) -> None:
+        self.redis_keys.add(f"arq:in-progress:{job_id}")
+
+    def pipeline(self, transaction: bool = True) -> _FakeArqTransaction:
+        return _FakeArqTransaction(self)
 
     async def _enqueue(
         self,
@@ -753,5 +793,65 @@ async def test_sweep_force_fail_marks_pack_failed_when_order_has_no_job(
     assert refreshed_order.refund_eligible is True
     assert refreshed_pack.generation_status == "failed"
     assert refreshed_pack.generated_at is not None
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_leaves_an_order_waiting_behind_a_long_run_alone(
+    engine: AsyncEngine, session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#193: the beta session worker runs ONE pack at a time, often for over an
+    hour. A second customer's order waits in the arq queue meanwhile, its job
+    row untouched since the handoff — by `updated_at` alone it looks exactly
+    like a dead worker. Treating it as stuck charged it a paid attempt every
+    sweep tick (after ~6 it ended failed + refund_eligible without ever
+    running) and queued another copy of it each time (several paid pipelines
+    for one purchase once the worker got to them). While its current attempt is
+    still in the queue it must not be touched."""
+    monkeypatch.setattr(
+        sweep_module, "get_settings", lambda: Settings(order_queue_name="quiz-pack:session")
+    )
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT * 4
+    )
+    pool = FakeArqPool(fail=False)
+    pool.queue_attempt(f"process_order:{order_id}:0", queue_name="quiz-pack:session")
+    ctx: Dict[str, Any] = {"redis": pool, "session_factory": _session_factory(engine)}
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert _enqueued_for(pool, order_id) == []
+    assert order.status == "in_progress" and not order.refund_eligible
+    assert (job.retry_count, job.attempt_seq) == (0, 0)
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_sweep_still_recovers_when_the_worker_died_mid_run(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """The #193 queue check must not hide a real death: a worker killed mid-run
+    leaves arq's in-progress marker behind (it only expires after the job
+    timeout, hours on the session worker), so "claimed but no heartbeat for
+    15 min" is still a stuck order and gets its recovery attempt."""
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    pool = FakeArqPool(fail=False)
+    pool.queue_attempt(f"process_order:{order_id}:0")
+    pool.mark_in_progress(f"process_order:{order_id}:0")
+    ctx: Dict[str, Any] = {"redis": pool, "session_factory": _session_factory(engine)}
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    job = await session.get(GenerationJob, job_id)
+    assert _job_ids_for(pool, order_id) == [f"process_order:{order_id}:1"]
+    assert job.retry_count == 1
 
     await _cleanup(session, order_id)

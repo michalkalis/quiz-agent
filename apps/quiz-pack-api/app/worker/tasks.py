@@ -23,6 +23,7 @@ import sentry_sdk
 
 from app import cost_tracking, llm_usage, order_budget
 from app.db.models import GenerationJob, GenerationOrder
+from app.db.models.job import attempt_job_id
 from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
@@ -187,6 +188,20 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             # without this check the ceiling could be crossed by two more paid
             # attempts after the order had already been cut off.
             job = await session.get(GenerationJob, job_id) if job_id else None
+            # #193: arq re-runs a claimed job once its in-progress marker
+            # expires (a worker that died mid-run). By then the sweep has
+            # already re-enqueued the order under a newer attempt id, or the
+            # order was delivered — running this copy would generate (and pay
+            # for) the same pack twice.
+            arq_job_id = ctx.get("job_id")
+            if order.status == "delivered" or (
+                job is not None and arq_job_id and arq_job_id != attempt_job_id(order_uuid, job)
+            ):
+                logger.warning(
+                    "process_order skipped superseded attempt order_id=%s arq_job_id=%s "
+                    "order_status=%s", order_id, arq_job_id, order.status,
+                )
+                return
             if job is not None:
                 verdict = order_budget.evaluate(order, job)
                 if not verdict.ok:

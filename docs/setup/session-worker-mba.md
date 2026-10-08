@@ -28,7 +28,7 @@ Sudcovia sú v session režime vždy vypnutí, worker sa s nimi odmietne naštar
 
 8. V TestFlight appke kúp custom pack (sandbox).
 9. Sleduj log (`status`) alebo admin UI so stavom objednávky: `pending` prejde na `in_progress` a nakoniec `delivered`.
-10. Ak je worker offline alebo tunel spadne, job počká v Redise a sweep ho znova zaradí. Každé takéto zaradenie míňa jeden pokus z rozpočtu objednávky, po vyčerpaní stav skončí ako `failed` s `refund_eligible`.
+10. Ak je worker offline alebo tunel spadne, job počká v Redise a po štarte workera sa spracuje; čakanie vo fronte (aj za iným dlhým packom) nemíňa pokusy. Sweep znova zaradí len objednávku, ktorej worker zomrel uprostred behu (bez heartbeatu 15 min). Každé takéto zaradenie míňa jeden pokus z rozpočtu objednávky, po vyčerpaní stav skončí ako `failed` s `refund_eligible`.
 
 ## D. Rollback
 

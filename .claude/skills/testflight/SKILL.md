@@ -11,22 +11,17 @@ argument-hint: "[release notes — optional]"
 Triggers the `ios-release.yml` GitHub Actions workflow which:
 1. Runs on `xcode-27` (GitHub Xcode 27 image) with Xcode 27.0
 2. Uses fastlane `match` (read-only) to import the distribution cert from `carquiz-certs` repo into an isolated keychain
-3. Runs `fastlane ios beta` (staging) or `fastlane ios release` (production) — archives, exports IPA, uploads to TestFlight
+3. Runs `fastlane ios release` (production) — archives, exports IPA, uploads to TestFlight
 4. Auto-increments build number based on latest TestFlight build
 5. Uploads IPA + dSYM as workflow artifacts (14-day retention) for Sentry symbolication
 
 **Bundle ID:** `com.missinghue.hangs` · **App name in TestFlight:** `hangs`
 
-## Two environments, one TestFlight app (#101 env separation)
+## Production only
 
-| `environment` input | Lane | Scheme/config | APIs | Home-screen name |
-|---|---|---|---|---|
-| `staging` | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | **Trubbo Beta** |
-| `production` (default) | `release` | `Hangs-Prod` / `Release-Prod` | prod `*.fly.dev` | **Trubbo** |
+**Only production builds (founder, 2026-10-08).** Always `environment=production` (lane `release`, scheme `Hangs-Prod`, prod `*.fly.dev` APIs, home-screen name **Trubbo**). Staging builds are no longer made — never trigger one, never suggest one. The workflow's `staging` option is legacy.
 
-Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Build staging ONLY when the founder explicitly asks for it (e.g. to test the sandbox money path).
-
-⚠️ **Purchases:** TestFlight ALWAYS uses the StoreKit sandbox. Sandbox purchases route to the staging backend and are dropped by the prod gate — so the **money path is only testable on the staging build**. A production TF build validates the prod app surface (questions, voice, auth), not payments; attempting a purchase there will look odd by design (RC sandbox entitlement, no backend grant).
+**Purchases work on the prod build:** TestFlight always buys in the StoreKit sandbox, and prod accepts sandbox purchases (subscriptions via `RC_ALLOWED_ENVIRONMENT=PRODUCTION,SANDBOX`, custom packs via StoreKit sandbox) since 2026-09-10. The whole money path is testable on the prod TF build.
 
 ## Prerequisites (one-time, already done)
 
@@ -68,14 +63,9 @@ Common fix for empty DB: `CHROMA_PATH` Fly secret out of sync with `fly.toml` mo
 ### 3. Trigger the workflow
 
 ```bash
-# Production build (DEFAULT — prod APIs; money path NOT testable here — see warning above):
+# Production build (the only kind we make):
 gh workflow run ios-release.yml --ref main -f environment=production -f notes="<short release notes>"
-
-# Staging build (ONLY on explicit founder request — sandbox purchases land in staging):
-gh workflow run ios-release.yml --ref main -f environment=staging -f notes="<short release notes>"
 ```
-
-For staging builds, run the §2 health checks against the staging hosts instead (`https://quiz-agent-api-staging.fly.dev/...`); note staging machines auto-stop, so the first request may take a few seconds to wake them.
 
 Notes are optional. Keep them short — they show up in workflow run metadata, not in TestFlight itself.
 

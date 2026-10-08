@@ -88,6 +88,23 @@ async def test_generate_advanced_wrong_key(client: httpx.AsyncClient) -> None:
     assert resp.status_code == 401
 
 
+async def test_non_ascii_header_key_is_401_not_500(client: httpx.AsyncClient) -> None:
+    """#193: `compare_digest` raises TypeError on non-ASCII str. Starlette
+    latin-1-decodes headers, so anyone could turn the admin gate into a 500
+    (Sentry noise, an error path instead of a rejection). Must be a plain 401."""
+    resp = await client.get("/web/", headers={"X-Admin-Key": "kľúč".encode("latin-1", "replace")})
+    assert resp.status_code == 401
+    resp = await client.get("/web/", headers={"X-Admin-Key": b"\xe9t\xe9"})
+    assert resp.status_code == 401
+
+
+async def test_non_ascii_basic_auth_password_is_401_not_500(client: httpx.AsyncClient) -> None:
+    """Same crash via the browser carrier: Basic auth is UTF-8 decoded, so a
+    password like 'heslo-é' reached compare_digest as non-ASCII str."""
+    resp = await client.get("/web/", headers={"Authorization": _basic("admin", "heslo-é")})
+    assert resp.status_code == 401
+
+
 # --- positive: a valid key passes the gate (proven on /web/, no paid call) ---
 
 

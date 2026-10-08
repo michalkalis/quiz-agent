@@ -127,7 +127,10 @@ class VoiceTranscriber:
 
     SUPPORTED_FORMATS = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg"}
 
-    MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB (Whisper API limit)
+    # #193: cap well under Whisper's 25 MB so one upload can't buy minutes of
+    # STT. iOS hard-stops an answer at 15 s and sends 16-bit mono WAV; even
+    # its 20 s buffer at a 48 kHz hardware rate is ~1.9 MB (legacy m4a ~60 KB).
+    MAX_FILE_SIZE = 5 * 1024 * 1024
 
     def __init__(self, model: Optional[str] = None, language: Optional[str] = None):
         """Initialize voice transcriber.
@@ -212,8 +215,9 @@ class VoiceTranscriber:
                     settings=settings,
                 )
                 logger.info(
-                    "Transcribed provider=scribe text='%s' logprob=%.3f duration=%.2fs",
-                    result.text,
+                    # #193: length only — the player's words stay out of logs.
+                    "Transcribed provider=scribe chars=%d logprob=%.3f duration=%.2fs",
+                    len(result.text),
                     result.avg_logprob,
                     result.duration,
                 )
@@ -239,9 +243,9 @@ class VoiceTranscriber:
             raise RuntimeError(f"Transcription failed: {str(e)}")
 
         logger.info(
-            "Transcribed provider=openai:%s text='%s' no_speech=%.3f logprob=%.3f",
+            "Transcribed provider=openai:%s chars=%d no_speech=%.3f logprob=%.3f",
             self.model,
-            result.text,
+            len(result.text),
             result.no_speech_prob,
             result.avg_logprob,
         )

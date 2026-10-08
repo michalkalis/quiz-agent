@@ -213,6 +213,27 @@ async def test_inventory_at_the_threshold_is_not_critical(pg) -> None:
 
 
 @pytest.mark.asyncio
+async def test_query_failure_does_not_leak_db_error_text() -> None:
+    """#193: /api/v1/admin/health is unauthenticated (the /testflight pre-flight
+    curls it with no key), so a DB failure must still read CRITICAL but must not
+    echo the driver's error — it can carry the host, user, schema or SQL."""
+    leaky = 'connection to server at "db.internal" (10.0.0.5), user "quiz" failed'
+
+    class _Boom:
+        async def __aenter__(self):
+            raise RuntimeError(leaky)
+
+        async def __aexit__(self, *exc):
+            return False
+
+    status = await QuestionMonitor(session_factory=lambda: _Boom()).check_health()
+
+    assert status.level == "critical"
+    assert any("Failed to query questions table" in a for a in status.alerts)
+    assert not any("db.internal" in a or "quiz" in a for a in status.alerts)
+
+
+@pytest.mark.asyncio
 async def test_empty_table_reports_no_questions(pg) -> None:
     """An empty table is its own CRITICAL, reported before any threshold math.
 

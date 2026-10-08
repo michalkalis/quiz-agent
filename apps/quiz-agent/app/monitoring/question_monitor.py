@@ -5,6 +5,7 @@ Reads the canonical pgvector `questions` table (#41 D2); one aggregated
 GROUP BY query per health check.
 """
 
+import logging
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
@@ -12,6 +13,8 @@ from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from quiz_shared.database.pgvector_client import questions_table
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -85,8 +88,12 @@ class QuestionMonitor:
         try:
             async with self._session_factory() as session:
                 rows = (await session.execute(stmt)).all()
-        except Exception as e:
-            status.alerts.append(f"CRITICAL: Failed to query questions table: {e}")
+        except Exception:
+            # #193: this endpoint is unauthenticated (the /testflight pre-flight
+            # curls it without a key), so the raw DB error — host, schema, SQL —
+            # goes to the server log only; callers just see that it failed.
+            logger.exception("Question health check: questions table query failed")
+            status.alerts.append("CRITICAL: Failed to query questions table")
             return status
 
         if not rows:

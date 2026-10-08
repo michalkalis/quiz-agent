@@ -16,7 +16,13 @@ Tajomstvá v súkromnom repe:
 | `FLY_BACKUP_SSH_TOKEN` | secret | `fly tokens create ssh -a quiz-pack-db`, platí do 2026-10-08 + 1 rok (**2027-10-08**). Potom vytvoriť nový a prepísať: `fly tokens create ssh -a quiz-pack-db -x 8760h \| tr -d '\n' \| gh secret set FLY_BACKUP_SSH_TOKEN -R michalkalis/quiz-agent-db-backups` |
 | `BACKUP_CERT_B64` | variable | Verejný certifikát (base64 PEM), `CN=quiz-pack-db-backup`. Nie je tajný. |
 
-**Súkromný kľúč** (`backup-private-key.pem`) je len offline u foundera (správca hesiel). Bez neho sa žiadna záloha nedá obnoviť; kto má kľúč a prístup k repu, prečíta celú databázu.
+**Súkromný kľúč** (`backup-private-key.pem`) už nie je ako súbor na disku. Kópie:
+- macOS login Keychain, položka `quiz-pack-db backup key (base64 PEM)`. Obnova do súboru: `security find-generic-password -s 'quiz-pack-db backup key (base64 PEM)' -w | base64 -d > key.pem && chmod 600 key.pem` (po obnove `key.pem` zmazať).
+- GitHub secret `BACKUP_DECRYPT_KEY_PEM` (a `BACKUP_CERT_PEM`) v súkromnom repe, len na zápis. Použiteľný iba cez workflow v tom repe (verify workflow nižšie, alebo obnova spustená v Actions).
+
+Bez kľúča sa žiadna záloha nedá obnoviť; kto má kľúč a prístup k repu, prečíta celú databázu.
+
+**Týždenná kontrola** (workflow `quiz-pack-db backup verify`, pondelky 05:43 UTC + ručne): stiahne najnovšiu zálohu, dešifruje ju secretom `BACKUP_DECRYPT_KEY_PEM`, spustí `pg_restore --list` (postgres 17) a overí, že tabuľka `questions` je v dumpe. Vypisuje len počty. Zlyhanie = e-mail od GitHubu; znamená, že záloha alebo secret kópia kľúča je pokazená.
 
 SQLite súbory na volume `quiz-agent-api` (`/data/ratings.db`, `/data/translations.db`) sa nezálohujú: `ratings.db` obsahuje len rozohrané hlasové sessions s krátkou životnosťou (hodnotenia už bývajú v Postgrese) a `translations.db` je cache preložených textov, ktorú prekladač znova doplní. Volume má aj tak denné Fly snapshoty.
 

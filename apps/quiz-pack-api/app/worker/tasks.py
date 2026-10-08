@@ -192,9 +192,13 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             # expires (a worker that died mid-run). By then the sweep has
             # already re-enqueued the order under a newer attempt id, or the
             # order was delivered — running this copy would generate (and pay
-            # for) the same pack twice.
+            # for) the same pack twice. Same for a copy of an order already
+            # closed as failed (e.g. create_order's enqueue raised after Redis
+            # took the job) or refunded: spending on it is pure loss. Every
+            # legitimate start (create, /retry, sweep recovery) parks the order
+            # at 'pending' before enqueueing, so no real attempt starts here.
             arq_job_id = ctx.get("job_id")
-            if order.status == "delivered" or (
+            if order.status in ("delivered", "failed", "refunded") or (
                 job is not None and arq_job_id and arq_job_id != attempt_job_id(order_uuid, job)
             ):
                 logger.warning(

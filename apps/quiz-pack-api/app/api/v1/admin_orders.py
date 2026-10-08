@@ -84,6 +84,22 @@ async def orders_needing_attention(
         last_alive >= now - timedelta(minutes=refund_lookback_minutes),
     )
 
+    # #193: the beta's one session worker runs one pack at a time, for an hour
+    # or more, and the orders queued behind it show no life of their own. They
+    # only need a human when nothing is alive to get to them: a worker that
+    # touched a job (heartbeat, step) after that job's queue handoff within the
+    # window is alive. The API's own writes (create, /retry) land together with
+    # the handoff stamp, so they never count as a worker.
+    worker_alive = await session.scalar(
+        select(GenerationJob.id)
+        .join(GenerationOrder, GenerationOrder.job_id == GenerationJob.id)
+        .where(
+            GenerationJob.updated_at >= now - timedelta(minutes=stuck_minutes),
+            GenerationJob.updated_at > GenerationOrder.enqueued_at + timedelta(seconds=30),
+        )
+        .limit(1)
+    )
+
     def _rows(result) -> list[AttentionOrder]:
         return [
             AttentionOrder(
@@ -96,6 +112,6 @@ async def orders_needing_attention(
         ]
 
     return OrdersAttentionResponse(
-        stuck=_rows(await session.execute(stuck_stmt)),
+        stuck=[] if worker_alive else _rows(await session.execute(stuck_stmt)),
         refund_eligible=_rows(await session.execute(refund_stmt)),
     )

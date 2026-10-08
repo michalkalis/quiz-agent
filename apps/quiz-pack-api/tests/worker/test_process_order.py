@@ -683,6 +683,47 @@ async def test_attempt_past_the_ceiling_is_refused_before_spending(
 
 
 @pytest.mark.asyncio
+async def test_superseded_attempt_never_runs_a_second_pipeline(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#193: when a worker dies mid-run, the sweep re-enqueues the order under
+    a new attempt id — but arq still holds the old copy and re-runs it once its
+    in-progress marker expires (hours later on the session worker). That copy,
+    or any copy of an already-delivered order, must exit untouched: running it
+    generates and pays for the same purchase twice."""
+    from app.worker.tasks import process_order
+
+    stale_id, stale_job = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text("UPDATE generation_jobs SET attempt_seq = 1 WHERE id = :id"), {"id": stale_job}
+    )
+    delivered_id, delivered_job = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text("UPDATE generation_orders SET status = 'delivered' WHERE id = :id"),
+        {"id": delivered_id},
+    )
+    await session.commit()
+
+    await process_order({**worker_ctx, "job_id": f"process_order:{stale_id}:0"}, str(stale_id))
+    await process_order(
+        {**worker_ctx, "job_id": f"process_order:{delivered_id}:0"}, str(delivered_id)
+    )
+
+    session.expire_all()
+    for order_id, job_id, status in (
+        (stale_id, stale_job, "in_progress"),
+        (delivered_id, delivered_job, "delivered"),
+    ):
+        order = await session.get(GenerationOrder, order_id)
+        job = await session.get(GenerationJob, job_id)
+        assert order.status == status
+        assert job.step_log == [], "a superseded attempt must not run a single stage"
+        await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
 async def test_heartbeat_keeps_job_fresh_during_long_stage(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],

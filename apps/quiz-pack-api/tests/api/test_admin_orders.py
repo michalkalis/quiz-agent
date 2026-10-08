@@ -56,8 +56,13 @@ async def _order(
     job_status: str,
     idle: timedelta,
     refund_eligible: bool = False,
+    enqueued: timedelta | None = None,
 ) -> uuid.UUID:
-    """Insert an order whose last sign of life (handoff + job heartbeat) was `idle` ago."""
+    """Insert an order whose last sign of life (handoff + job heartbeat) was `idle` ago.
+
+    `enqueued` backdates the queue handoff separately: an older handoff than the
+    last job write = a worker picked the order up and is beating on it.
+    """
     order = GenerationOrder(
         transaction_id=f"attention-{uuid.uuid4().hex}",
         product_id="pack_10",
@@ -76,10 +81,11 @@ async def _order(
     order.job_id = job.id
     await session.commit()
     ts = datetime.now(UTC) - idle
+    handoff = datetime.now(UTC) - enqueued if enqueued is not None else ts
     # Raw UPDATEs: the ORM's `onupdate` would stamp updated_at back to now().
     await session.execute(
         text("UPDATE generation_orders SET created_at = :ts, enqueued_at = :ts WHERE id = :id"),
-        {"ts": ts, "id": order.id},
+        {"ts": handoff, "id": order.id},
     )
     await session.execute(
         text("UPDATE generation_jobs SET updated_at = :ts WHERE id = :id"),
@@ -121,6 +127,27 @@ async def test_silent_for_alive_or_finished_orders(
     body = (await admin_client.get(URL, headers=ADMIN)).json()
 
     assert body == {"stuck": [], "refund_eligible": []}
+
+
+async def test_silent_for_orders_queued_behind_a_live_run(
+    admin_client: httpx.AsyncClient, test_session: AsyncSession
+) -> None:
+    # #193: the one session worker runs one pack at a time, so two testers
+    # ordering close together means the second waits an hour or more. Nothing
+    # is broken and the founder can do nothing about it; alerting would be
+    # noise. The run it waits behind was picked up 2 h ago and still beats.
+    await _order(
+        test_session,
+        status="in_progress",
+        job_status="queued",
+        idle=timedelta(minutes=1),
+        enqueued=timedelta(hours=2),
+    )
+    await _order(test_session, status="in_progress", job_status="queued", idle=timedelta(minutes=40))
+
+    body = (await admin_client.get(URL, headers=ADMIN)).json()
+
+    assert body["stuck"] == []
 
 
 async def test_refund_eligible_reported_once_within_window(

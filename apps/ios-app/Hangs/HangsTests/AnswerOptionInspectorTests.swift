@@ -49,11 +49,14 @@ struct AnswerOptionInspectorTests {
         #expect(view.statusIconColor == .white)
     }
 
-    @Test("Incorrect state: pink border + badge + xmark circle (white icon on pink fill)")
+    /// #194 B1: a wrong answer reads neutral (no red/pink verdict), on a fill
+    /// dark enough in both modes that the white glyph stays readable — the
+    /// action colour flips to near-white in dark mode and would swallow it.
+    @Test("Incorrect state: neutral wrong border + badge + xmark circle (white icon on the wrong fill)")
     func incorrectStateColors() {
         let view = AnswerOption(key: "d", value: "Neptune", state: .incorrect)
-        #expect(view.borderColor == Theme.Hangs.Colors.pink)
-        #expect(view.badgeFill == Theme.Hangs.Colors.pink)
+        #expect(view.borderColor == Theme.Hangs.Colors.wrong)
+        #expect(view.badgeFill == Theme.Hangs.Colors.wrong)
         #expect(view.letterColor == .white)
         #expect(view.statusSymbol == "xmark")
         #expect(view.statusIconColor == .white)
@@ -146,7 +149,7 @@ struct AnswerTileInspectorTests {
         #expect(AnswerOption.State.correct.borderColor == Theme.Hangs.Colors.greenCheck)
         #expect(AnswerOption.State.correct.statusSymbol == "checkmark")
 
-        #expect(AnswerOption.State.incorrect.borderColor == Theme.Hangs.Colors.pink)
+        #expect(AnswerOption.State.incorrect.borderColor == Theme.Hangs.Colors.wrong)
         #expect(AnswerOption.State.incorrect.statusSymbol == "xmark")
     }
 

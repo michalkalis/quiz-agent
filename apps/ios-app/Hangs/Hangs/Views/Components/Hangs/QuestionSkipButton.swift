@@ -58,8 +58,8 @@ struct QuestionSkipButton: View {
             .foregroundColor(Theme.Hangs.Colors.ink)
             .frame(height: height)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            // #194 B2: secondary controls are Liquid Glass.
+            .glassEffect(.regular.interactive(), in: Capsule())
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)

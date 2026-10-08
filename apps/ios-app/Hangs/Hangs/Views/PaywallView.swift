@@ -176,10 +176,10 @@ struct PaywallView: View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
             ZStack {
                 Circle()
-                    .fill(Theme.Hangs.Colors.pinkSoft)
+                    .fill(Theme.Hangs.Colors.actionSoft)
                     .frame(width: 104, height: 104)
                 ProgressView()
-                    .tint(Theme.Hangs.Colors.pink)
+                    .tint(Theme.Hangs.Colors.action)
                     .scaleEffect(1.4)
             }
             .accessibilityHidden(true)
@@ -193,7 +193,7 @@ struct PaywallView: View {
                     .accessibilityIdentifier("paywall.activating.headline")
 
                 Capsule()
-                    .fill(Theme.Hangs.Colors.pink)
+                    .fill(Theme.Hangs.Colors.action)
                     .frame(width: 40, height: 3)
                     .accessibilityHidden(true)
 
@@ -209,11 +209,11 @@ struct PaywallView: View {
     private var paywallIconCircle: some View {
         ZStack {
             Circle()
-                .fill(Theme.Hangs.Colors.pinkSoft)
+                .fill(Theme.Hangs.Colors.actionSoft)
                 .frame(width: 104, height: 104)
             Image(systemName: "infinity")
                 .font(.system(size: 44, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.pink)
+                .foregroundColor(Theme.Hangs.Colors.action)
         }
         .accessibilityHidden(true)
         .accessibilityIdentifier("paywall.icon")
@@ -232,7 +232,7 @@ struct PaywallView: View {
                 .accessibilityIdentifier("paywall.headline")
 
             Capsule()
-                .fill(Theme.Hangs.Colors.pink)
+                .fill(Theme.Hangs.Colors.action)
                 .frame(width: 40, height: 3)
                 .accessibilityHidden(true)
 
@@ -334,7 +334,7 @@ struct PaywallView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
                     .strokeBorder(
-                        isSelected ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.subtleBorder,
+                        isSelected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.subtleBorder,
                         lineWidth: isSelected ? 2 : 1.5
                     )
             )
@@ -352,18 +352,18 @@ struct PaywallView: View {
             switch style {
             case .solid:
                 Circle()
-                    .fill(Theme.Hangs.Colors.pink)
+                    .fill(Theme.Hangs.Colors.action)
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+                    .foregroundColor(Theme.Hangs.Colors.textOnAction)
             case .hollow:
                 // Demoted: pink outline + pink check, still readable as "this is
                 // what you'd buy next" without competing with the busy product.
                 Circle()
-                    .strokeBorder(Theme.Hangs.Colors.pink, lineWidth: 1.5)
+                    .strokeBorder(Theme.Hangs.Colors.action, lineWidth: 1.5)
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .foregroundColor(Theme.Hangs.Colors.action)
             case .none:
                 Circle()
                     .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1.5)
@@ -425,7 +425,7 @@ struct PaywallView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
                     .strokeBorder(
-                        isSelected ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.subtleBorder,
+                        isSelected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.subtleBorder,
                         lineWidth: isSelected ? 2 : 1.5
                     )
             )

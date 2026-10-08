@@ -132,7 +132,7 @@ struct HangsToggleRow: View {
             // a11y-id: call-site — the identifier belongs to the screen that places this component
             Toggle("", isOn: $isOn)
                 .labelsHidden()
-                .tint(Theme.Hangs.Colors.pink)
+                .tint(Theme.Hangs.Colors.action)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 14)

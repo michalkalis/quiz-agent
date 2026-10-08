@@ -17,14 +17,13 @@ struct HangsBrandMark: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            // Medium is the heaviest bundled IBM Plex Mono cut (#188 G13);
-            // asking for semibold silently fell back to Regular.
+            // #194: placeholder wordmark until the logo lands (phase D2).
             Text(verbatim: "trubbo.")
                 .font(.hangsMono(size, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.blue)
             if showDot {
                 Circle()
-                    .fill(Theme.Hangs.Colors.pink)
+                    .fill(Theme.Hangs.Colors.action)
                     .frame(width: size * 0.35, height: size * 0.35)
             }
         }
@@ -33,10 +32,10 @@ struct HangsBrandMark: View {
 
 // MARK: - Nav chip button
 
-/// Square 36pt nav button on the adaptive card surface with subtle drop shadow. Used for gear, close, back.
+/// 44pt Liquid Glass nav button (#194 B2: glass is the control layer). Used for gear, close, back.
 struct HangsNavChip: View {
     let icon: String
-    var cornerRadius: CGFloat = Theme.Hangs.Radius.navSquare
+    var cornerRadius: CGFloat = Theme.Hangs.Radius.navRound
     var action: () -> Void
 
     var body: some View {
@@ -45,12 +44,8 @@ struct HangsNavChip: View {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .frame(width: 36, height: 36)
-                .background(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(Theme.Hangs.Colors.bgCard)
-                )
-                .hangsShadow(Theme.Hangs.Shadow.navChip)
+                .frame(width: 44, height: 44)
+                .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(icon)
@@ -94,7 +89,7 @@ struct HangsProgressBar: View {
                 Capsule()
                     .fill(Theme.Hangs.Colors.mutedBorder)
                 Capsule()
-                    .fill(tint ?? Theme.Hangs.Colors.pink)
+                    .fill(tint ?? Theme.Hangs.Colors.action)
                     .frame(width: max(0, min(1, progress)) * proxy.size.width)
             }
         }
@@ -152,7 +147,7 @@ struct HangsStatusBar: View {
     let leading: String
     let trailing: String
     var leadingColor: Color = Theme.Hangs.Colors.blue
-    var trailingDotColor: Color = Theme.Hangs.Colors.pink
+    var trailingDotColor: Color = Theme.Hangs.Colors.action
     var backgroundColor: Color = Theme.Hangs.Colors.bg
 
     var body: some View {
@@ -188,17 +183,17 @@ struct HangsRecordingBar: View {
         HStack {
             HStack(spacing: Theme.Hangs.Spacing.xs) {
                 Circle()
-                    .fill(Theme.Hangs.Colors.pink)
+                    .fill(Theme.Hangs.Colors.action)
                     .frame(width: 8, height: 8)
                 Text(liveLabel)
                     .font(.hangsMono(11, weight: .semibold))
                     .tracking(1.5)
-                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .foregroundColor(Theme.Hangs.Colors.action)
             }
             Spacer()
             Text(timeLabel)
                 .font(.hangsMono(13, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.pink)
+                .foregroundColor(Theme.Hangs.Colors.action)
         }
         .padding(.horizontal, Theme.Hangs.Spacing.lg)
         .padding(.vertical, 10)
@@ -210,7 +205,7 @@ struct HangsRecordingBar: View {
 struct HangsFooterBar: View {
     let leading: String
     let trailing: String
-    var leadingDotColor: Color = Theme.Hangs.Colors.pink
+    var leadingDotColor: Color = Theme.Hangs.Colors.action
 
     var body: some View {
         HStack {
@@ -247,7 +242,7 @@ struct HangsTerminalLabel: View {
 
 struct HangsSessionDot: View {
     let text: String
-    var dotColor: Color = Theme.Hangs.Colors.pink
+    var dotColor: Color = Theme.Hangs.Colors.action
     var textColor: Color = Theme.Hangs.Colors.muted
 
     var body: some View {

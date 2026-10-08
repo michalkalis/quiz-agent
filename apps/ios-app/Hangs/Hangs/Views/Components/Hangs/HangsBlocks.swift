@@ -28,7 +28,7 @@ struct HangsHeroBlock: View {
                 .multilineTextAlignment(alignment == .center ? .center : .leading)
                 .hangsHeadlineFit()
             Rectangle()
-                .fill(Theme.Hangs.Colors.pink)
+                .fill(Theme.Hangs.Colors.action)
                 .frame(width: underlineWidth, height: 2)
             if let subtitle {
                 Text(subtitle)
@@ -100,7 +100,7 @@ struct HangsCard<Content: View>: View {
 struct HangsStatBox: View {
     let label: LocalizedStringKey
     let value: String
-    var labelColor: Color = Theme.Hangs.Colors.pink
+    var labelColor: Color = Theme.Hangs.Colors.action
     var valueColor: Color = Theme.Hangs.Colors.blue
     var suffix: String? = nil
     /// When true, renders the number + suffix baseline-aligned on one row.
@@ -157,11 +157,17 @@ enum HangsResultKind {
     var label: String { self == .correct ? String(localized: "correct", comment: "Result banner label when the answer is correct") : String(localized: "not quite", comment: "Result banner label when the answer is incorrect") }
     var icon: String { self == .correct ? "checkmark" : "xmark" }
     var color: Color {
-        self == .correct ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.pink
+        self == .correct ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.action
     }
 
     var softBg: Color {
-        self == .correct ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.pinkSoft
+        self == .correct ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.actionSoft
+    }
+
+    /// Badge fill under a white glyph — `color` is a text colour and flips to
+    /// near-white in dark mode, which would swallow the glyph (#194 B1).
+    var fill: Color {
+        self == .correct ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.wrong
     }
 }
 
@@ -196,7 +202,7 @@ struct HangsInlineBadge: View {
             .font(.system(size: size * 0.5, weight: .bold))
             .foregroundColor(Theme.Hangs.Colors.textOnAccent)
             .frame(width: size, height: size)
-            .background(Circle().fill(kind.color))
+            .background(Circle().fill(kind.fill))
     }
 }
 
@@ -249,7 +255,7 @@ struct HangsVerdictCard: View {
                 Spacer()
                 Text(pointsDelta)
                     .font(.hangsDisplay(28, weight: .black))
-                    .foregroundColor(isCorrect ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.pink)
+                    .foregroundColor(isCorrect ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.action)
             }
         }
     }
@@ -286,7 +292,7 @@ struct HangsAnswerRow: View {
                     HangsStatBox(label: "streak", value: "47")
                     HangsStatBox(label: "best", value: "9.5",
                                  labelColor: Theme.Hangs.Colors.blue,
-                                 valueColor: Theme.Hangs.Colors.pink)
+                                 valueColor: Theme.Hangs.Colors.action)
                 }
                 HangsCard {
                     VStack(spacing: 0) {

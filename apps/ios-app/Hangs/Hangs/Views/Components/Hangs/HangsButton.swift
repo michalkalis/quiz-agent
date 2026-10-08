@@ -2,16 +2,16 @@
 //  HangsButton.swift
 //  Hangs
 //
-//  Primary / secondary / ghost buttons matching the Pencil redesign.
-//  Primary = pink pill with soft shadow; Secondary = white w/ subtle border;
-//  Ghost = inline text link.
+//  Primary / secondary / ghost buttons.
+//  #194 B2: Primary = ink capsule (the one solid action per screen);
+//  Secondary = Liquid Glass capsule; Ghost = inline text link.
 //
 
 import SwiftUI
 
-/// Primary CTA — pink filled pill. Label + optional leading / trailing SF symbol.
-/// #108B: optional Waze-like countdown — bright pink = remaining time draining
-/// right→left over a darker base, plus a mono "Ns" chip (pen annotation `sYSN7`).
+/// Primary CTA — ink filled capsule. Label + optional leading / trailing SF symbol.
+/// #108B: optional Waze-like countdown — a lighter layer = remaining time
+/// draining right→left over the action fill, plus an "Ns" chip.
 ///
 /// #188 G9 (D10): a title never ends in "…". At the default text size it stays
 /// one line and scales down; once the reader has asked for larger text it may
@@ -38,7 +38,7 @@ struct HangsPrimaryButton: View {
     var showsSpinner: Bool = false
     var loadingStyle: LoadingStyle = .spinnerAndTitle
     /// Minimum height; a two-line title at large text grows past it.
-    var height: CGFloat = 64
+    var height: CGFloat = 56
     /// Seconds left on an active countdown; nil = plain button.
     var countdownSecondsRemaining: Int? = nil
     /// Full countdown duration the fill fraction is computed against.
@@ -51,9 +51,8 @@ struct HangsPrimaryButton: View {
     /// `.disabled(isLoading)` below never turns a loading button grey.
     @Environment(\.isEnabled) private var isEnabled
 
-    /// #188 G14 (M9): a disabled button used to be the pink capsule at half
-    /// opacity — white on pale pink, near invisible in light mode. Now it is a
-    /// neutral fill with muted text, readable in both modes, no CTA shadow.
+    /// #188 G14 (M9): a disabled button is a neutral fill with muted text,
+    /// readable in both modes, no CTA shadow — never the action fill faded.
     private var looksDisabled: Bool { !isEnabled && !isLoading }
 
     private var isCountingDown: Bool {
@@ -63,8 +62,7 @@ struct HangsPrimaryButton: View {
     private static let noShadow = Theme.Hangs.ShadowSpec(color: .clear, radius: 0, y: 0)
 
     private var fill: Color {
-        if looksDisabled { return Theme.Hangs.Colors.mutedBorder }
-        return isCountingDown ? Theme.Hangs.Colors.pinkDeep : Theme.Hangs.Colors.pink
+        looksDisabled ? Theme.Hangs.Colors.mutedBorder : Theme.Hangs.Colors.action
     }
 
     private var countdownFraction: CGFloat {
@@ -77,10 +75,10 @@ struct HangsPrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 if isLoading {
-                    ProgressView().tint(Theme.Hangs.Colors.textOnAccent)
+                    ProgressView().tint(Theme.Hangs.Colors.textOnAction)
                 } else {
                     if showsSpinner {
-                        ProgressView().tint(Theme.Hangs.Colors.textOnAccent)
+                        ProgressView().tint(Theme.Hangs.Colors.textOnAction)
                     }
                     if let icon {
                         Image(systemName: icon)
@@ -106,7 +104,7 @@ struct HangsPrimaryButton: View {
                         .padding(.horizontal, Theme.Hangs.Spacing.xs)
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.black.opacity(0.22))
+                                .fill(Theme.Hangs.Colors.textOnAction.opacity(0.18))
                         )
                         // #171 Track C3 safety: in a narrow row the title must
                         // shrink (it already has minimumScaleFactor) and the
@@ -117,17 +115,20 @@ struct HangsPrimaryButton: View {
                         .accessibilityHidden(true)
                 }
             }
-            .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.textOnAccent)
+            .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.textOnAction)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, Theme.Hangs.Spacing.xs)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(
                 ZStack(alignment: .leading) {
+                    // Lift on the capsule only, never on the title (#194 B2).
+                    // A grey capsule with the lift would still read as the CTA.
                     Capsule().fill(fill)
+                        .hangsShadow(looksDisabled ? Self.noShadow : Theme.Hangs.Shadow.cta)
                     if isCountingDown {
                         GeometryReader { geo in
                             Rectangle()
-                                .fill(Theme.Hangs.Colors.pink)
+                                .fill(Theme.Hangs.Colors.textOnAction.opacity(0.16))
                                 .frame(width: geo.size.width * countdownFraction)
                         }
                         .clipShape(Capsule())
@@ -135,8 +136,6 @@ struct HangsPrimaryButton: View {
                     }
                 }
             )
-            // A grey capsule casting a pink glow would still read as the CTA.
-            .hangsShadow(looksDisabled ? Self.noShadow : Theme.Hangs.Shadow.cta)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isLoading ? Text("Loading", comment: "Accessibility label for a button while in its loading state") : Text(title))
@@ -144,13 +143,14 @@ struct HangsPrimaryButton: View {
     }
 }
 
-/// Secondary CTA — card-surface pill with hairline border and ink text + optional icon.
+/// Secondary CTA — Liquid Glass capsule with ink text + optional icon (#194 B2:
+/// glass is the control layer; content stays on opaque cards).
 /// Same title rule as the primary (D10): one scaled line, two at large text.
 struct HangsSecondaryButton: View {
     let title: LocalizedStringKey
     var icon: String? = nil
     /// Minimum height; a two-line title at large text grows past it.
-    var height: CGFloat = 52
+    var height: CGFloat = 56
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -171,12 +171,7 @@ struct HangsSecondaryButton: View {
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, Theme.Hangs.Spacing.xs)
             .frame(maxWidth: .infinity, minHeight: height)
-            .background(
-                Capsule().fill(Theme.Hangs.Colors.bgCard)
-            )
-            .overlay(
-                Capsule().stroke(Theme.Hangs.Colors.subtleBorder, lineWidth: 1)
-            )
+            .glassEffect(.regular.interactive(), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)

@@ -35,7 +35,7 @@ struct MyPacksView: View {
             VStack(spacing: Theme.Hangs.Spacing.md) {
                 if viewModel.isLoading {
                     ProgressView()
-                        .tint(Theme.Hangs.Colors.pink)
+                        .tint(Theme.Hangs.Colors.action)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 } else if viewModel.orders.isEmpty {

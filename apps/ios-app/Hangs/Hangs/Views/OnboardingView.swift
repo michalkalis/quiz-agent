@@ -54,11 +54,11 @@ struct OnboardingView: View {
 
             iconCircle(
                 systemName: "mic.fill",
-                bgColor: Theme.Hangs.Colors.pinkSoft,
-                iconColor: Theme.Hangs.Colors.pink
+                bgColor: Theme.Hangs.Colors.actionSoft,
+                iconColor: Theme.Hangs.Colors.action
             )
 
-            headlineBlock(title: "ANSWER BY VOICE", accentColor: Theme.Hangs.Colors.pink)
+            headlineBlock(title: "ANSWER BY VOICE", accentColor: Theme.Hangs.Colors.action)
 
             subtitle("Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.")
 
@@ -80,7 +80,7 @@ struct OnboardingView: View {
                     .hangsHeadlineFit()
                     .accessibilityAddTraits(.isHeader)
 
-                accentLine(color: Theme.Hangs.Colors.pink)
+                accentLine(color: Theme.Hangs.Colors.action)
 
                 subtitle("Perfect for driving, cooking, or walking.")
             }
@@ -103,11 +103,11 @@ struct OnboardingView: View {
 
             iconCircle(
                 systemName: "mic",
-                bgColor: Theme.Hangs.Colors.pinkSoft,
-                iconColor: Theme.Hangs.Colors.pink
+                bgColor: Theme.Hangs.Colors.actionSoft,
+                iconColor: Theme.Hangs.Colors.action
             )
 
-            headlineBlock(title: "MIC ACCESS", accentColor: Theme.Hangs.Colors.pink)
+            headlineBlock(title: "MIC ACCESS", accentColor: Theme.Hangs.Colors.action)
 
             subtitle("Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.")
 
@@ -200,11 +200,11 @@ struct OnboardingView: View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Theme.Hangs.Colors.pinkSoft)
+                    .fill(Theme.Hangs.Colors.actionSoft)
                     .frame(width: 40, height: 40)
                 Image(systemName: feature.icon)
                     .font(.system(size: 18))
-                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .foregroundColor(Theme.Hangs.Colors.action)
             }
             .accessibilityHidden(true)
 
@@ -233,7 +233,7 @@ struct OnboardingView: View {
                 currentPage: viewModel.pageIndex,
                 activeColor: viewModel.page == .permissionDenied
                     ? Theme.Hangs.Colors.warning
-                    : Theme.Hangs.Colors.pink
+                    : Theme.Hangs.Colors.action
             )
             .accessibilityIdentifier("onboarding.pageIndicator")
 

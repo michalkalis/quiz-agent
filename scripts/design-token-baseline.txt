@@ -51,7 +51,6 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.paddi
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	.padding(.vertical, 6)	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	spacing	spacing: 6	2
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	font	.hangsBody(14	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	font	.hangsBody(16	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsButton.swift	font	.hangsMono(12	1

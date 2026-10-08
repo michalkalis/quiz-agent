@@ -49,7 +49,7 @@ struct HangsQuizProgressHeader: View {
                 // drawn differently, not a different progress indicator.
                 HangsProgressBar(
                     progress: Self.linearProgress(current: current, total: total),
-                    tint: tint ?? Theme.Hangs.Colors.accentTeal
+                    tint: tint ?? Theme.Hangs.Colors.ink
                 )
             }
 
@@ -63,7 +63,7 @@ struct HangsQuizProgressHeader: View {
                 Spacer(minLength: 12)
 
                 Text(verbatim: Self.counterText(current: current, total: total))
-                    .foregroundColor(isRecording ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.muted)
+                    .foregroundColor(isRecording ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.muted)
                     .accessibilityIdentifier("question.counter")
             }
             // A3: smaller than the 11pt row it replaces — the header is a
@@ -102,8 +102,8 @@ struct HangsSegmentedProgress: View {
             ForEach(0 ..< max(total, 0), id: \.self) { index in
                 Capsule()
                     .fill(isFilled(index)
-                        ? (tint ?? Theme.Hangs.Colors.accentTeal)
-                        : Theme.Hangs.Colors.mutedBorder)
+                        ? (tint ?? Theme.Hangs.Colors.ink)
+                        : Theme.Hangs.Colors.track)
                     .frame(height: 4)
             }
         }

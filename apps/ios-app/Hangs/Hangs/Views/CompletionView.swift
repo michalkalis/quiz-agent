@@ -159,10 +159,10 @@ struct CompletionView: View {
                     Spacer()
                     Text("Go Unlimited")
                         .font(.hangsBody(13, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+                        .foregroundColor(Theme.Hangs.Colors.textOnAction)
                         .padding(.horizontal, Theme.Hangs.Spacing.sm)
                         .padding(.vertical, Theme.Hangs.Spacing.xs)
-                        .background(Capsule().fill(Theme.Hangs.Colors.pink))
+                        .background(Capsule().fill(Theme.Hangs.Colors.action))
                 }
             }
         }

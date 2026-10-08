@@ -706,7 +706,7 @@ struct SettingsView: View {
                             adminKeyInput = ""
                         }
                         .font(.hangsBody(15, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.pink)
+                        .foregroundColor(Theme.Hangs.Colors.action)
                         .accessibilityIdentifier("packs.saveAdminKey")
                     }
                     .padding(.horizontal, 18)

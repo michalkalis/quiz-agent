@@ -60,9 +60,9 @@ struct UpdateRequiredView: View {
     private var iconCircle: some View {
         Image(systemName: "arrow.down.app")
             .font(.system(size: Metrics.iconSize))
-            .foregroundStyle(Theme.Hangs.Colors.pink)
+            .foregroundStyle(Theme.Hangs.Colors.action)
             .frame(width: Metrics.iconCircle, height: Metrics.iconCircle)
-            .background(Circle().fill(Theme.Hangs.Colors.pinkSoft))
+            .background(Circle().fill(Theme.Hangs.Colors.actionSoft))
             .accessibilityHidden(true)
     }
 

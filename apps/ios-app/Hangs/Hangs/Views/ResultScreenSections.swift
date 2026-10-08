@@ -58,7 +58,7 @@ enum ResultVerdict {
     var fieldFill: Color {
         switch self {
         case .correct: return Theme.Hangs.Colors.greenSoft
-        case .incorrect: return Theme.Hangs.Colors.pinkSoft
+        case .incorrect: return Theme.Hangs.Colors.actionSoft
         case .neutral, .skipped: return Theme.Hangs.Colors.neutralSoft
         }
     }

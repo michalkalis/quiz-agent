@@ -50,6 +50,13 @@ nonisolated extension ComponentSample {
             ComponentSample("listenBar.commandMatched") {
                 ListenBar(mode: .command, feedback: .matched, commandWords: ["skip", "repeat", "pause"])
             },
+            ComponentSample("listenBar.commandHearing") {
+                ListenBar(mode: .command, feedback: .hearing, commandWords: ["skip", "repeat", "pause"])
+            },
+            ComponentSample("listenBar.commandRecognizing") {
+                ListenBar(mode: .command, feedback: .recognizing, recognizingWord: "„preskoč“…",
+                          commandWords: ["skip", "repeat", "pause"])
+            },
             ComponentSample("listenBar.answerOpen") { ListenBar(mode: .answer(.open)) },
             ComponentSample("listenBar.slimSlovak") {
                 ListenBar(mode: .command, size: .slim, shortCaption: true, language: .slovak)

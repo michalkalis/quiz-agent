@@ -288,7 +288,7 @@ struct ListenBar: View {
         switch feedback {
         case .matched: return teal.opacity(0.22)
         case .unmatched: return amber.opacity(0.12)
-        case .hearing, .recognizing where feedbackIsLive: return teal.opacity(0.14)
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.14)
         case .idle, .hearing, .recognizing:
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.08)
@@ -304,7 +304,7 @@ struct ListenBar: View {
         switch feedback {
         case .matched: return teal.opacity(0.75)
         case .unmatched: return amber.opacity(0.55)
-        case .hearing, .recognizing where feedbackIsLive: return teal.opacity(0.5)
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.5)
         case .idle, .hearing, .recognizing:
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.35)

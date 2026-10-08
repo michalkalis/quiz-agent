@@ -39,7 +39,7 @@
 
 - [ ] 193.10 Staging: oživiť uspané staging appky (scale-to-zero), nahrať dump prodov → zároveň skúška obnovy zo zálohy
 - [x] 193.11 Výpadok LLM: parser + evaluator max 1 retry, ~10 s timeout, fallback „nepodarilo sa vyhodnotiť, skús znova“ — pokus 6 s, 1 retry, strop 8 s na volanie (`app/hot_path_llm.py`); výpadok = existujúca „povedz znova“ 400 (`no_answer`, `reason: judge_unavailable`), nič sa neboduje ani neúčtuje; Sentry 1× za 10 min
-- [ ] 193.12 iOS: 1 bezpečný retry pri 502/503/odpojení (deploy = ~18 s výpadok)
+- [x] 193.12 iOS: bezpečný retry pri 502/503/504/odpojení v 24 s okne (deploy = ~18 s výpadok); MCQ ťuk už tiež
 - [ ] 193.13 Cost abuse: denný limit znakov na `/tts/synthesize`, denný strop objednávok na používateľa
 - [ ] 193.14 Chýbajúce testy: prechod mesačného limitu cez hranicu mesiaca, sk/cs hodnotenie odpovedí, refund pri zlyhanom balíčku; nahradiť `sleep` v testoch zámkov eventom
 

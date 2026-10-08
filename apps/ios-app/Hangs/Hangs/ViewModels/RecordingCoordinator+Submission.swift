@@ -176,9 +176,10 @@ extension RecordingCoordinator {
                 Logger.network.info("🎤 Submitting voice answer: \(audioData.count, privacy: .public) bytes")
 
                 // Race the network call against a 30-second timeout. #131 Track A:
-                // the bounded cold-wake retry sits INSIDE the timeout, so all three
-                // attempts plus their 1s/2s backoff still land within the one
-                // user-facing 30s budget — a staging machine waking up costs a
+                // the bounded cold-wake retry sits INSIDE the timeout, so every
+                // attempt plus its backoff (#193 task 193.12: up to a 24 s window,
+                // sized for a deploy restart) still lands within the one
+                // user-facing 30s budget — a machine waking or restarting costs a
                 // pause, never an OOPS screen.
                 let clock = self.clock
                 let response = try await withUserFacingTimeout(seconds: 30, clock: clock) {

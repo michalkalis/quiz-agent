@@ -29,6 +29,7 @@
 - [ ] 193.6 Upratanie odkazov na `apps/web-ui` (workflow, CODEOWNERS, CLAUDE.md, README, start-local skill) + zastarané TODO riadky
 - [ ] 193.7 iOS: `QuestionAvailability.Limiter` toleruje neznámu hodnotu (staré buildy nespadnú pri novej hodnote zo servera)
 - [ ] 193.8 Zmazanie účtu: overiť a doplniť mazanie dát z anonymného ID pred prihlásením (feedback, analytika); audity sa rozchádzajú, najprv overiť
+- [x] 193.15 Kredit providerov: `GET /api/v1/admin/provider-balances` (OpenRouter účet + limit kľúča, ElevenLabs znaky) + denná kontrola v quiz-agent → Sentry issue pri low/critical (jeden e-mail na provider+stav) — `apps/quiz-agent/app/monitoring/provider_balances.py`
 
 ## Vlna 2 — po rozhodnutí foundera
 

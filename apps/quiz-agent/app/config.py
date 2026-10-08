@@ -133,6 +133,16 @@ class Settings(BaseSettings):
     elevenlabs_stt_model: str = "scribe_v2"
     stt_trailing_logprob_cutoff: float = -1.0
     stt_trim_trailing_low_confidence: bool = False
+    # Provider credit balances (#193 — beta hardening). The daily background
+    # check is opt-in (on in fly.toml) so tests and local dev make no outbound
+    # calls; the admin endpoint works regardless. Thresholds: OpenRouter in USD
+    # left, ElevenLabs in percent of the character quota left.
+    provider_balance_check_enabled: bool = False
+    provider_balance_initial_delay_s: float = 120.0
+    openrouter_low_usd: float = 10.0
+    openrouter_critical_usd: float = 3.0
+    elevenlabs_low_pct: float = 25.0
+    elevenlabs_critical_pct: float = 10.0
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
     apple_signin_team_id: Optional[str] = None

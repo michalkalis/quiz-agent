@@ -15,6 +15,7 @@ Features:
 Run with: uvicorn app.main:app --reload --port 8002
 """
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -364,6 +365,12 @@ async def lifespan(app: FastAPI):
     # Start background tasks
     await session_manager.start_cleanup()
     logger.info("Background cleanup started")
+    # #193: daily provider credit check → Sentry alert when one runs low.
+    balance_task = None
+    if settings.provider_balance_check_enabled:
+        from .monitoring.provider_balances import run_daily_balance_check
+
+        balance_task = asyncio.create_task(run_daily_balance_check(settings))
 
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
@@ -372,6 +379,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
+    if balance_task is not None:
+        balance_task.cancel()
     await drain_pending()
     logger.info("Cleanup stopped")
 

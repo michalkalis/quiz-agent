@@ -724,6 +724,42 @@ async def test_superseded_attempt_never_runs_a_second_pipeline(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("closed_status", ["failed", "refunded"])
+async def test_copy_of_a_closed_order_never_runs_the_pipeline(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+    closed_status: str,
+) -> None:
+    """#193: a queue copy can outlive its order — create_order marks the order
+    failed + refund_eligible when the enqueue call raises, even if Redis took
+    the job; a refund can land while the order still waits in the queue. That
+    copy carries the CURRENT attempt id and its budget is untouched, so only
+    the order status can stop it: running it pays for a pack the customer is
+    being refunded for. (A real retry always moves the order to 'pending'
+    before enqueueing, so this never blocks one.)"""
+    from app.worker.tasks import process_order
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    await session.execute(
+        text(
+            "UPDATE generation_orders SET status = :s, refund_eligible = true WHERE id = :id"
+        ),
+        {"s": closed_status, "id": order_id},
+    )
+    await session.commit()
+
+    await process_order({**worker_ctx, "job_id": f"process_order:{order_id}:0"}, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    job = await session.get(GenerationJob, job_id)
+    assert order.status == closed_status
+    assert job.step_log == [], "a closed order must not run a single stage"
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
 async def test_heartbeat_keeps_job_fresh_during_long_stage(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],

@@ -1,5 +1,5 @@
 """#195 — merge the 2026-10-08 fresh entertainment batches into one import file per language,
-dropping cross-batch duplicates and off-tone rows (founder: no politics/war/unpleasant topics).
+dropping cross-batch duplicates and off-tone rows (founder 2026-10-08: only CURRENT politics and CURRENT wars are off-limits).
 Drops are keyed by question-id prefix. Usage: python3 merge.py → merged-{en,sk,cs}.json"""
 
 import json
@@ -9,8 +9,7 @@ RUN = Path(__file__).parent
 DROPS = {
     "8bdb3722": "Eurovision 'why Austria hosted' — weak, same fact as the Vienna question",
     "b53bab43": "KPop Demon Hunters / Golden — reverse of the Best Original Song question",
-    "a1124e40": "Wonder Man — stem hinges on a fake terrorist persona (off-tone)",
-    "6fd32896": "Alien: Earth — terminally ill children (off-tone)",
+    "a1124e40": "Wonder Man / Trevor Slattery — same fact already in the prod corpus",
     "9a70faab": "Michael B. Jordan twins — duplicate of en-01 #1",
     "cdac896d": "Bad Bunny Super Bowl — covered by the Grammys + Super Bowl question",
     "ec120f05": "Jessie Buckley / Shakespeare — duplicate of en-01 #9",
@@ -46,7 +45,6 @@ DROPS = {
     "e03b2de9": "Nepela film — stem gives away native-sk c614e844 (1972)",
     "7f8c77fc": "Moloch MCQ — obscure, over MCQ cap",
     # sk world: off-tone / repeats an en fact / dup
-    "e03bb006": "Adolescence — series about a child murder (off-tone)",
     "b7a36d71": "Zootopia 2 five-day opening — same as en 8e24ff80",
     "e7e9ff70": "Stranger Things finale in cinemas — same as en e8f6fe3a",
     "0c9acf23": "Stranger Things finale on NYE — stated in en e8f6fe3a",
@@ -59,7 +57,6 @@ DROPS = {
     "84ebe20c": "HUNTR/X name — stated in en 2008b006",
     "ab87fad1": "Oasis reunion — stated in en 8a8b8cfc",
     # cs domestic: off-tone / duplicates / MCQ cap
-    "d4683b67": "Sbormistr — choirmaster abuse drama (off-tone)",
     "f60126f2": "Zrádci show name — stated in a708a05b stem",
     "d418c795": "most-visited 2025 film domestic T/F — implied by 76e2e8f8; MCQ cap",
     "51636cc1": "CZ cinema admissions 2025 — dup of 3ae58406",
@@ -72,8 +69,6 @@ DROPS = {
     "2fc8475f": "Dustin Hoffman KVIFF — dup of 61480634",
     "1c155fc5": "Mišík Síň slávy — dup of b8dd5f56",
     # cs world: off-tone / repeats an en fact
-    "d22b3c73": "Weapons — children vanish (off-tone)",
-    "82785fa8": "Peaky Blinders gang boss (crime, off-tone)",
     "441927ae": "Noah Wyle Globe / ER — same as en c5e8bfc2",
     "f1b1407f": "Stranger Things finale NYE — stated in en e8f6fe3a",
     "a286da58": "Hawkins — same as en e8f6fe3a",
@@ -87,10 +82,6 @@ DROPS = {
     "e4caf77f": "Nolan's Odyssey — stated in en b187f1a6",
     "e7ecd5fd": "Kendrick luther — stated in en b5ca5627",
     "6fc6a081": "Switch 2 sales — same as en f7c93aa0; MCQ cap",
-    # Lead review 2026-10-08: off-tone context despite neutral wording (founder: keep it light).
-    "08bf682a": "GTA VI — crime franchise",
-    "7ae587c5": "Mungiu — stem names his abortion drama",
-    "c13fd31e": "pigeons documentary — film about family alcoholism",
 }
 TARGET = 50
 for lang in ("en", "sk", "cs"):

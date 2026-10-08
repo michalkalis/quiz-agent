@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # #195 — classify topicality, import the curated fresh batch into prod, translate the EN rows to sk/cs.
-# Usage: run_import.sh classify | import --dry-run|--execute | translate <plan|submit|ingest|verify> <sk|cs> [job-id]
+# Usage: run_import.sh classify | import --dry-run|--execute [file] | translate <plan|submit|ingest|verify> <sk|cs> [job-id]
 set -u
 RUN=${0:A:h}; WT=/Users/michalkalis/Documents/personal/ai-developer-course/code/quiz-agent-wt-fresh-code
 PY=$WT/.venv/bin/python; APP=$WT/apps/quiz-pack-api
@@ -13,7 +13,7 @@ case $1 in
   classify)  # subscription only, no DB
     $PY scripts/classify_topicality.py --json-path $RUN/merged-en.json --json-path $RUN/merged-sk.json --json-path $RUN/merged-cs.json --out $RUN/boosted.json ;;
   import)
-    tunnel; $PY scripts/import_questions_json.py --json-path $RUN/boosted.json --database-url "$DB" $2 2>&1 | grep -v "Pydantic\|BaseModel" ;;
+    tunnel; $PY scripts/import_questions_json.py --json-path $RUN/${3:-boosted.json} --database-url "$DB" $2 2>&1 | grep -v "Pydantic\|BaseModel" ;;
   translate)
     tunnel; step=$2; lang=$3
     case $step in

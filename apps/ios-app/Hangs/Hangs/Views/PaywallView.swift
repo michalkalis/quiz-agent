@@ -257,68 +257,17 @@ struct PaywallView: View {
 
     // MARK: - Plan picker
 
-    /// Pack selection is resilient to a dropped offering: if the pack product
-    /// goes missing mid-session, fall back to monthly rather than leaving the
-    /// CTA pointed at a product that is gone.
-    var effectivePlan: PaywallPlan {
-        switch selectedPlan {
-        case .monthly:
-            return .monthly
-        case .pack:
-            // The pack card only renders when the pack exists, but an offering
-            // refresh could drop it under the selection — never leave the CTA
-            // pointing at a product that is gone.
-            guard storeManager.offerings?.pack != nil else { return .monthly }
-            return .pack
-        }
+    private var picker: PaywallPickerState {
+        PaywallPickerState(
+            selectedPlan: selectedPlan,
+            offerings: storeManager.offerings,
+            purchaseState: storeManager.purchaseState
+        )
     }
 
-    private var selectedProduct: PurchasableProduct? {
-        switch effectivePlan {
-        case .monthly: return storeManager.offerings?.monthly
-        case .pack: return storeManager.offerings?.pack
-        }
-    }
+    var effectivePlan: PaywallPlan { picker.effectivePlan }
 
-    // MARK: - In-flight activity
-
-    /// What the store is doing right now, derived from `purchaseState` — the
-    /// single source the whole in-flight paywall renders from. During any of
-    /// these the CTA spins and every purchase trigger dims + disables (no
-    /// second purchase can start).
-    private enum PaywallActivity: Equatable {
-        case idle
-        case purchasing(productID: String)
-        case restoring
-    }
-
-    private var activity: PaywallActivity {
-        switch storeManager.purchaseState {
-        case let .purchasing(id): return .purchasing(productID: id)
-        case .restoring: return .restoring
-        default: return .idle
-        }
-    }
-
-    /// True while any store operation is in flight — gates dimming + disabling.
-    private var isBusy: Bool { activity != .idle }
-
-    private func productID(for plan: PaywallPlan) -> String {
-        switch plan {
-        case .monthly: return StoreProduct.monthlySubId
-        case .pack: return StoreProduct.packId
-        }
-    }
-
-    /// The card whose product is the exact one being purchased (stays bright
-    /// with a full check — the highlight is correct here).
-    private func isPurchasing(_ plan: PaywallPlan) -> Bool {
-        activity == .purchasing(productID: productID(for: plan))
-    }
-
-    /// A control recedes to 24% when the store is busy and it is not the subject
-    /// of the current operation.
-    private func dimmed(_ isSubject: Bool) -> Bool { isBusy && !isSubject }
+    private var isBusy: Bool { picker.isBusy }
 
     private static let dimmedOpacity: Double = 0.24
     private static let restoreFadedOpacity: Double = 0.35
@@ -351,10 +300,6 @@ struct PaywallView: View {
         }
     }
 
-    /// The pink selection radio, demoted (#129 decision 2) to a hollow outline
-    /// when the card stays selected while a *different* product is in flight.
-    private enum PlanCheck { case none, solid, hollow }
-
     private func planCard(
         title: LocalizedStringKey,
         price: LocalizedStringKey,
@@ -364,9 +309,8 @@ struct PaywallView: View {
     ) -> some View {
         // Bright only when idle or when this plan's subscription is the exact
         // product being bought; otherwise recede to 24% (#129).
-        let isSubject = isPurchasing(plan)
-        let isDimmed = dimmed(isSubject)
-        let check: PlanCheck = isSelected ? (isDimmed ? .hollow : .solid) : .none
+        let isDimmed = picker.isDimmed(plan)
+        let check = picker.check(for: plan)
         // a11y-id: call-site — the identifier belongs to the screen that places this component
         return Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
@@ -403,7 +347,7 @@ struct PaywallView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private func planRadio(_ style: PlanCheck) -> some View {
+    private func planRadio(_ style: PaywallPickerState.Check) -> some View {
         ZStack {
             switch style {
             case .solid:
@@ -437,9 +381,9 @@ struct PaywallView: View {
     /// price pill) so it reads as the secondary path it is.
     private func packCard(_ pack: PurchasableProduct) -> some View {
         let isSelected = effectivePlan == .pack
-        let isSource = isPurchasing(.pack)
-        let isDimmed = dimmed(isSource)
-        let check: PlanCheck = isSelected ? (isDimmed ? .hollow : .solid) : .none
+        let isSource = picker.isPurchasing(.pack)
+        let isDimmed = picker.isDimmed(.pack)
+        let check = picker.check(for: .pack)
         return Button {
             selectedPlan = .pack
         } label: {
@@ -505,7 +449,7 @@ struct PaywallView: View {
     /// also disables it for the whole in-flight window.
     @ViewBuilder
     private var ctaButton: some View {
-        if let product = selectedProduct {
+        if let product = picker.selectedProduct {
             // #56: the title param is LocalizedStringKey, so the interpolated
             // literal extracts as "Subscribe — %@ / month" (the displayPrice is
             // a runtime placeholder, not translatable).
@@ -669,7 +613,6 @@ struct PaywallView: View {
 private struct CountdownPill: View {
     let resetDate: Date
     @State private var timeRemaining: String = ""
-    @State private var timer: Timer?
 
     var body: some View {
         Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
@@ -680,43 +623,18 @@ private struct CountdownPill: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .background(Capsule().fill(Theme.Hangs.Colors.ink))
-            .onAppear { startTimer() }
-            .onDisappear { timer?.invalidate() }
+            .onAppear(perform: updateCountdown)
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: ResetCountdown.refreshInterval)
+                    guard !Task.isCancelled else { return }
+                    updateCountdown()
+                }
+            }
             .accessibilityIdentifier("paywall.countdownPill")
     }
 
-    private func startTimer() {
-        updateCountdown()
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
-            updateCountdown()
-        }
-    }
-
     private func updateCountdown() {
-        let remaining = resetDate.timeIntervalSince(Date())
-        guard remaining > 0 else {
-            timeRemaining = String(localized: "now", comment: "Countdown pill value when free questions reset imminently")
-            return
-        }
-        let days = Int(remaining) / 86400
-        let hours = (Int(remaining) % 86400) / 3600
-        let minutes = (Int(remaining) % 3600) / 60
-        if days > 0 {
-            timeRemaining = String(localized: "\(days)d \(hours)h", comment: "Compact time remaining: days and hours (e.g. 12d 4h)")
-        } else if hours > 0 {
-            timeRemaining = String(localized: "\(hours)h \(minutes)m", comment: "Compact time remaining: hours and minutes (e.g. 3h 5m)")
-        } else {
-            timeRemaining = String(localized: "\(minutes)m", comment: "Compact time remaining: minutes only (e.g. 5m)")
-        }
-    }
-}
-
-// MARK: - Helper extension
-
-private extension QuotaLimitError {
-    var resetDate: Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: resetsAt) ?? ISO8601DateFormatter().date(from: resetsAt)
+        timeRemaining = ResetCountdown.text(until: resetDate, now: .now)
     }
 }

@@ -878,6 +878,8 @@ def test_build_stages_routes_an_order_to_the_alt_generator(monkeypatch):
     from app.worker.tasks import _build_stages as build_worker_stages
     from quiz_shared.llm import factory as llm_factory
 
+    # Flat legacy stage list — the only shape this test can inspect by type.
+    monkeypatch.setenv("PACK_BATCH_SCHEDULE", "0")
     main, alt = object(), object()
     ctx = {
         "generator": main,

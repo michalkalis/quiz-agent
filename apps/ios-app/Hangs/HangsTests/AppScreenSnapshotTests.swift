@@ -71,7 +71,10 @@ private func buildTextContract(of screen: AppScreen, in language: HeroLanguage) 
             // Settings: the voice-diagnostics group and everything below it is
             // built from the host's audio route and file system (and the Debug-only
             // developer group), so it is not part of the stable, shipped screen.
-            if screen == .settings, value == "voice diagnostics" { break }
+            // The sentinel is the English source key, so test it in English — the
+            // label is translated in sk/cs.
+            if screen == .settings,
+               (try? text.string(locale: HeroLanguage.en.locale)) == "voice diagnostics" { break }
             lines.append(value)
         }
         lines.append("# identifiers")

@@ -133,34 +133,6 @@ Vytvoř balíček
 
 Vytvoř balíček
 
-hlasová diagnostika
-Zpracování hlasu z mikrofonu
-Potlačení ozvěny, šumu a vyrovnání hlasitosti mikrofonu od Apple, když zvuk hraje z iPhonu nebo v režimu hovoru
-
-Zpracování hlasu i při zvuku v autě
-I při výstupu přes Bluetooth, CarPlay, AirPlay nebo kabel. iOS pak přesune zvuk do reproduktoru iPhonu
-
-Zvuková trasa
-Speaker · MicrophoneBuiltIn · Default · VP on
-Vyčistit odesílané odpovědi
-Horní propust a vyrovnání hlasitosti zvuku, který jde na přepis. Uložené nahrávky zůstávají nezpracované
-
-Přepis v reálném čase
-ElevenLabs Realtime s ukončením řeči na serveru místo detekce ticha v telefonu a odeslání nahrávky
-
-Ukládat nahrávky odpovědí
-Každou mluvenou odpověď uloží v tomto telefonu pro porovnání rozpoznávání
-
-Exportuj nahrávky
-0
-Exportuj nahrávky
-0
-Smaž nahrávky
-
-Smaž nahrávky
-
-vývojář
-NASTAVENÍ
 # identifiers
 settings.voiceCommands
 settings.voiceHints

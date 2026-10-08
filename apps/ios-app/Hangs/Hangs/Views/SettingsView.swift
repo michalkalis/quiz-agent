@@ -13,7 +13,6 @@
 import AuthenticationServices
 import AVFoundation
 import Combine
-import os
 import SwiftUI
 
 struct SettingsView: View {
@@ -38,32 +37,14 @@ struct SettingsView: View {
 
     @State private var showResetConfirmation = false
     @State private var showDeleteConfirmation = false
-    @State private var isSigningIn = false
-    @State private var isDeletingAccount = false
-    @State private var accountErrorMessage: String? = nil
-    /// Ephemeral raw nonce generated at sign-in tap time; held across the
-    /// `SignInWithAppleButton` onRequest → onCompletion lifecycle.
-    @State private var pendingRawNonce: String = ""
-
-    // Reflects the current Keychain state; refreshed on appear + after auth events.
-    @State private var currentTokens: AuthTokens? = nil
+    @StateObject private var account = AccountSettingsModel()
 
     // Custom packs (#95/#140): entry is open to all users; the admin-key field
     // is the Debug-only internal door.
     @State private var adminKeyInput: String = ""
 
-    /// #184 voice-pipeline diagnostics (TestFlight/debug only). Mirrors of the
-    /// UserDefaults-backed `VoicePipelineFlags`, kept in view state so the rows
-    /// re-render on toggle.
-    @State private var voiceProcessingEnabled = VoicePipelineFlags.voiceProcessingEnabled
-    @State private var voiceProcessingOnExternalOutput = VoicePipelineFlags.voiceProcessingOnExternalOutput
-    /// #185 track C: the live route line (output · input · session mode · the
-    /// voice-processing mode a mic engine would get now).
-    @State private var audioRouteSummary = VoiceProcessingPolicy.routeSummary()
-    @State private var conditionAnswerUpload = VoicePipelineFlags.conditionAnswerUpload
-    @State private var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
-    @State private var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
-    @State private var savedRecordingCount = AnswerRecordingStore.recordingCount()
+    /// #184 voice-pipeline diagnostics (TestFlight/debug only).
+    @StateObject private var diagnostics = VoiceDiagnosticsSettingsModel()
 
     // #138/#146: the order flow's view model is owned by AppState, not by this
     // view — closing "Preparing" must not cancel a paid order, and neither must
@@ -138,13 +119,12 @@ struct SettingsView: View {
             }
         }
         .task {
-            // Load auth state from Keychain on appear.
-            currentTokens = KeychainTokenStore().load()
+            account.reloadTokens()
         }
         .onReceive(NotificationCenter.default.publisher(for: .authSignedInSessionDropped)) { _ in
             // A signed-in session was dropped out-of-band (refresh 401) — reload so the
             // account section reflects the fresh anon identity (I7).
-            currentTokens = KeychainTokenStore().load()
+            account.reloadTokens()
         }
         .alert("Reset Question History?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -155,7 +135,7 @@ struct SettingsView: View {
         .alert("Delete account?", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
-                Task { await performDeleteAccount() }
+                account.deleteAccount(auth: appState.authService)
             }
         } message: {
             Text("This permanently removes your data, history, and premium access. This can't be undone.")
@@ -163,12 +143,12 @@ struct SettingsView: View {
         .alert(
             "Something went wrong",
             isPresented: Binding(
-                get: { accountErrorMessage != nil },
-                set: { if !$0 { accountErrorMessage = nil } }
+                get: { account.errorMessage != nil },
+                set: { if !$0 { account.errorMessage = nil } }
             ),
-            presenting: accountErrorMessage
+            presenting: account.errorMessage
         ) { _ in
-            Button("OK", role: .cancel) { accountErrorMessage = nil }
+            Button("OK", role: .cancel) { account.errorMessage = nil }
         } message: { message in
             Text(message)
         }
@@ -472,7 +452,7 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var accountGroup: some View {
-        if let tokens = currentTokens, tokens.isSignedIn {
+        if let tokens = account.currentTokens, tokens.isSignedIn {
             signedInAccountGroup(tokens: tokens)
         } else {
             signedOutAccountGroup
@@ -491,18 +471,15 @@ struct SettingsView: View {
                     .padding(.top, Theme.Hangs.Spacing.md)
 
                 SignInWithAppleButton(.signIn) { request in
-                    let rawNonce = appState.authService.generateRawNonce()
-                    pendingRawNonce = rawNonce
-                    request.requestedScopes = []
-                    request.nonce = appState.authService.hashedNonce(for: rawNonce)
+                    account.prepareSignInRequest(request, auth: appState.authService)
                 } onCompletion: { result in
-                    handleAppleSignInResult(result)
+                    account.handleSignInResult(result, auth: appState.authService)
                 }
                 .signInWithAppleButtonStyle(.black)
                 .frame(height: 50)
                 .padding(.horizontal, 18)
                 .padding(.bottom, Theme.Hangs.Spacing.md)
-                .disabled(isSigningIn)
+                .disabled(account.isSigningIn)
                 .accessibilityIdentifier("account.signInWithApple")
 
                 hairline
@@ -517,7 +494,7 @@ struct SettingsView: View {
                     valueColor: Theme.Hangs.Colors.muted,
                     showsChevron: true
                 ) {
-                    Task { await performExportData() }
+                    account.exportData(auth: appState.authService)
                 }
                 .accessibilityIdentifier("account.exportData")
 
@@ -531,7 +508,7 @@ struct SettingsView: View {
                     showDeleteConfirmation = true
                 }
                 .accessibilityIdentifier("account.deleteMyData")
-                .disabled(isDeletingAccount)
+                .disabled(account.isDeletingAccount)
             }
         }
     }
@@ -548,7 +525,7 @@ struct SettingsView: View {
                     valueColor: Theme.Hangs.Colors.muted,
                     showsChevron: true
                 ) {
-                    Task { await performExportData() }
+                    account.exportData(auth: appState.authService)
                 }
                 .accessibilityIdentifier("account.exportData")
 
@@ -559,7 +536,7 @@ struct SettingsView: View {
                     value: "",
                     valueColor: Theme.Hangs.Colors.muted
                 ) {
-                    Task { await performSignOut() }
+                    account.signOut(auth: appState.authService)
                 }
                 .accessibilityIdentifier("account.signOut")
 
@@ -573,81 +550,8 @@ struct SettingsView: View {
                     showDeleteConfirmation = true
                 }
                 .accessibilityIdentifier("account.deleteAccount")
-                .disabled(isDeletingAccount)
+                .disabled(account.isDeletingAccount)
             }
-        }
-    }
-
-    // MARK: Account actions
-
-    private func handleAppleSignInResult(
-        _ result: Result<ASAuthorization, Error>
-    ) {
-        switch result {
-        case let .success(auth):
-            guard let payload = AppleSignInPayload(authorization: auth) else {
-                Logger.network.warning("🔐 Apple sign-in: missing identity_token or authorization_code")
-                return
-            }
-            let rawNonce = pendingRawNonce
-
-            isSigningIn = true
-            Task {
-                let newTokens = await appState.authService.completeAppleSignIn(
-                    identityToken: payload.identityToken,
-                    authorizationCode: payload.authorizationCode,
-                    rawNonce: rawNonce,
-                    user: payload.user,
-                    fullName: payload.fullName,
-                    email: payload.email
-                )
-                isSigningIn = false
-                if newTokens != nil {
-                    currentTokens = KeychainTokenStore().load()
-                }
-            }
-        case let .failure(error):
-            // User cancelled or system error — not an app error; ASAuthorizationError.canceled is common.
-            Logger.network.info("🔐 Apple sign-in cancelled/failed: \(error.localizedDescription, privacy: .public)")
-        }
-    }
-
-    private func performSignOut() async {
-        await appState.authService.signOut()
-        currentTokens = KeychainTokenStore().load()
-    }
-
-    private func performDeleteAccount() async {
-        isDeletingAccount = true
-        do {
-            try await appState.authService.deleteAccount()
-            currentTokens = KeychainTokenStore().load()
-        } catch {
-            accountErrorMessage = error.localizedDescription
-        }
-        isDeletingAccount = false
-    }
-
-    private func performExportData() async {
-        do {
-            let data = try await appState.authService.exportData()
-            // Present the export data as a share sheet.
-            let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("my-data-export.json")
-            try data.write(to: tempURL)
-            await MainActor.run {
-                let activityVC = UIActivityViewController(
-                    activityItems: [tempURL],
-                    applicationActivities: nil
-                )
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let root = windowScene.windows.first?.rootViewController
-                {
-                    root.present(activityVC, animated: true)
-                }
-            }
-        } catch {
-            Logger.network.warning("🔐 Export data failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -876,12 +780,8 @@ struct SettingsView: View {
                 label: "Mic voice processing",
                 subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone, while sound plays from the iPhone or in Call Mode",
                 isOn: Binding(
-                    get: { voiceProcessingEnabled },
-                    set: {
-                        voiceProcessingEnabled = $0
-                        VoicePipelineFlags.voiceProcessingEnabled = $0
-                        audioRouteSummary = VoiceProcessingPolicy.routeSummary()
-                    }
+                    get: { diagnostics.voiceProcessingEnabled },
+                    set: diagnostics.setVoiceProcessingEnabled
                 )
             )
             .accessibilityIdentifier("settings-voice-processing-toggle")
@@ -893,15 +793,11 @@ struct SettingsView: View {
                 label: "Voice processing on car audio",
                 subtitle: "Also on Bluetooth, CarPlay, AirPlay or wired output. iOS then moves the sound to the iPhone speaker",
                 isOn: Binding(
-                    get: { voiceProcessingOnExternalOutput },
-                    set: {
-                        voiceProcessingOnExternalOutput = $0
-                        VoicePipelineFlags.voiceProcessingOnExternalOutput = $0
-                        audioRouteSummary = VoiceProcessingPolicy.routeSummary()
-                    }
+                    get: { diagnostics.voiceProcessingOnExternalOutput },
+                    set: diagnostics.setVoiceProcessingOnExternalOutput
                 )
             )
-            .disabled(!voiceProcessingEnabled)
+            .disabled(!diagnostics.voiceProcessingEnabled)
             .accessibilityIdentifier("settings.voiceProcessingExternalOutputToggle")
 
             hairline
@@ -916,8 +812,8 @@ struct SettingsView: View {
                 label: "Clean up uploaded answers",
                 subtitle: "High-pass filter and level normalization on the audio sent for transcription. Saved recordings stay unprocessed",
                 isOn: Binding(
-                    get: { conditionAnswerUpload },
-                    set: { conditionAnswerUpload = $0; VoicePipelineFlags.conditionAnswerUpload = $0 }
+                    get: { diagnostics.conditionAnswerUpload },
+                    set: diagnostics.setConditionAnswerUpload
                 )
             )
             .accessibilityIdentifier("settings.conditionAnswerUploadToggle")
@@ -928,8 +824,8 @@ struct SettingsView: View {
                 label: "Realtime transcription",
                 subtitle: "ElevenLabs Realtime with server-side end-of-speech instead of on-device silence detection and batch upload",
                 isOn: Binding(
-                    get: { realtimeSTTEnabled },
-                    set: { realtimeSTTEnabled = $0; VoicePipelineFlags.realtimeSTTEnabled = $0 }
+                    get: { diagnostics.realtimeSTTEnabled },
+                    set: diagnostics.setRealtimeSTTEnabled
                 )
             )
             .accessibilityIdentifier("settings-realtime-stt-toggle")
@@ -940,8 +836,8 @@ struct SettingsView: View {
                 label: "Save answer recordings",
                 subtitle: "Keeps each spoken answer on this device for the recognition comparison",
                 isOn: Binding(
-                    get: { saveAnswerRecordings },
-                    set: { saveAnswerRecordings = $0; VoicePipelineFlags.saveAnswerRecordings = $0 }
+                    get: { diagnostics.saveAnswerRecordings },
+                    set: diagnostics.setSaveAnswerRecordings
                 )
             )
             .accessibilityIdentifier("settings-save-recordings-toggle")
@@ -950,9 +846,9 @@ struct SettingsView: View {
 
             HangsConfigRow(
                 label: "Export recordings",
-                value: "\(savedRecordingCount)",
-                valueColor: savedRecordingCount > 0 ? Theme.Hangs.Colors.rowValue : Theme.Hangs.Colors.muted,
-                action: { exportAnswerRecordings() }
+                value: "\(diagnostics.savedRecordingCount)",
+                valueColor: diagnostics.savedRecordingCount > 0 ? Theme.Hangs.Colors.rowValue : Theme.Hangs.Colors.muted,
+                action: diagnostics.exportRecordings
             )
             .accessibilityIdentifier("settings-export-recordings-row")
 
@@ -963,22 +859,16 @@ struct SettingsView: View {
                 value: "",
                 valueColor: Theme.Hangs.Colors.muted,
                 showsChevron: false,
-                action: {
-                    AnswerRecordingStore.deleteAll()
-                    savedRecordingCount = AnswerRecordingStore.recordingCount()
-                }
+                action: diagnostics.deleteRecordings
             )
             .accessibilityIdentifier("settings-delete-recordings-row")
         }
-        .onAppear {
-            savedRecordingCount = AnswerRecordingStore.recordingCount()
-            audioRouteSummary = VoiceProcessingPolicy.routeSummary()
-        }
+        .onAppear(perform: diagnostics.refresh)
         .onReceive(
             NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
                 .receive(on: RunLoop.main)
         ) { _ in
-            audioRouteSummary = VoiceProcessingPolicy.routeSummary()
+            diagnostics.refreshRoute()
         }
     }
 
@@ -990,7 +880,7 @@ struct SettingsView: View {
             Text("Audio route")
                 .font(.hangsBody(16, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
-            Text(verbatim: audioRouteSummary)
+            Text(verbatim: diagnostics.audioRouteSummary)
                 .font(.hangsMono(12, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1000,19 +890,6 @@ struct SettingsView: View {
         .padding(.vertical, 14)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("settings.audioRoute")
-    }
-
-    /// Share sheet over every saved WAV + sidecar (same presentation path as
-    /// `performExportData`).
-    private func exportAnswerRecordings() {
-        let files = AnswerRecordingStore.files()
-        guard !files.isEmpty else { return }
-        let activityVC = UIActivityViewController(activityItems: files, applicationActivities: nil)
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = windowScene.windows.first?.rootViewController
-        {
-            root.present(activityVC, animated: true)
-        }
     }
 
     #if DEBUG

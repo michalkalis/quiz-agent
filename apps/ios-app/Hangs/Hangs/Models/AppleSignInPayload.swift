@@ -16,6 +16,14 @@ struct AppleSignInPayload {
     let fullName: String?
     let email: String?
 
+    init(identityToken: String, authorizationCode: String, user: String, fullName: String?, email: String?) {
+        self.identityToken = identityToken
+        self.authorizationCode = authorizationCode
+        self.user = user
+        self.fullName = fullName
+        self.email = email
+    }
+
     /// Fails when the credential is not an Apple ID credential or the
     /// identity token / authorization code are missing — callers treat
     /// that as a failed sign-in, never a crash.

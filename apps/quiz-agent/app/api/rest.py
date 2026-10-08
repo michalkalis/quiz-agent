@@ -16,6 +16,7 @@ from .routes import (
     entitlements,
     feedback,
     analytics,
+    provider_balances,
 )
 
 # Main router with /api/v1 prefix
@@ -31,3 +32,4 @@ router.include_router(misc.router)
 router.include_router(entitlements.router)
 router.include_router(feedback.router)
 router.include_router(analytics.router)
+router.include_router(provider_balances.router)

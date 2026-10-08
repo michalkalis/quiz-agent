@@ -19,6 +19,9 @@ primary_region = "cdg"
   # warnings (warn_if_insecure_production) — without it prod boots as
   # "development" and every prod-only check is silently skipped (#65).
   ENVIRONMENT = "production"
+  # #193: daily provider credit check (OpenRouter, ElevenLabs) → Sentry alert
+  # when a balance runs low. Off by default so tests/dev make no calls.
+  PROVIDER_BALANCE_CHECK_ENABLED = "true"
   # Park the TTS audio cache on the mounted volume. The default
   # (`./data/tts_cache`) resolves against WORKDIR /app, i.e. container-local
   # storage — so every deploy would re-buy the whole cache from ElevenLabs,

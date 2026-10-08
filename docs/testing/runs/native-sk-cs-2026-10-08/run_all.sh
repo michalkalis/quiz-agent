@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+# Stream of batches for one language; stops on a subscription-limit error.
+set -u
+RUN=${0:A:h}; lang=$1; shift
+for spec in "$@"; do
+  id=${spec%%|*}; rest=${spec#*|}; n=${rest%%|*}; theme=${rest#*|}
+  $RUN/run_gen.sh $lang $id $n "$theme"
+  if grep -q -i -E "session limit|hit your|limit reached|usage limit|quota|rate.?limit| 429| 529" $RUN/$lang-$id.log; then
+    echo "QUOTA on $lang-$id → stop" >> $RUN/run.log; break
+  fi
+done
+echo "DONE $lang $(date '+%H:%M:%S')" >> $RUN/run.log

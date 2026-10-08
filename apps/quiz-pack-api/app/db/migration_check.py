@@ -1,10 +1,10 @@
 """Boot-time migration head check (backend arch review 2026-07-18).
 
 Same semantics as quiz-agent's ``startup_checks.assert_migrations_at_head``:
-migrations stay MANUAL (founder policy — no ``release_command``); the
-discipline is migrate-before-deploy, and this check makes a forgotten
-``alembic upgrade head`` fail loud at boot instead of surfacing as runtime
-errors on an unmigrated schema. A raise during startup crashes the machine
+``release_command = "alembic upgrade head"`` migrates before rollout; this
+check is the safety net that makes a missed or failed migration fail loud at
+boot instead of surfacing as runtime errors on an unmigrated schema. A DB
+ahead of the code is accepted, so rollback = redeploy the previous image. A raise during startup crashes the machine
 inside Fly's health-check grace period, so the deploy rolls back cleanly.
 
 Wired into both ``app/main.py`` (API lifespan) and ``app/worker/worker.py``

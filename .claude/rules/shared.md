@@ -15,6 +15,16 @@ Granularity: one PR per coherent change — roughly what was previously one push
 
 Destructive ops (force-push, reset --hard, amend, history rewrites) still require a heads-up. Force-push to your own un-merged PR branch after a rebase is fine.
 
+### Beta line vs redesign (founder, 2026-10-08)
+
+The public TestFlight beta (1.0) must never pick up redesign work (#194 — redesign "Sklo nad kartami"). `release/1.0` is the beta line, `main` carries the next release.
+
+- **Until the first redesign code PR**, `main` is still beta-safe: `release/1.0` is kept equal to `main` by fast-forward (`git push origin origin/main:release/1.0`). Work keeps targeting `main` as usual.
+- **Switch moment** (right before the first redesign code PR merges): fast-forward `release/1.0` one last time, add `release/**` to the `main-pr-flow` ruleset, bump `MARKETING_VERSION` on `main` to 1.1. From then on:
+  - **Beta TestFlight builds** run from the beta line only: `gh workflow run ios-release.yml --ref release/1.0`. A build from `main` is a redesign build, internal testers only, on founder request.
+  - **Beta fixes** (iOS): PR into `release/1.0`, then in the same task a second PR cherry-picking the squash commit onto `main`, so the fix is never lost. Never merge `main` into `release/1.0`.
+  - **Backend** stays single-line (deploys from `main`) and must keep the 1.0 app working: no breaking API changes while 1.0 is live.
+
 ### Commit Messages
 Follow Conventional Commits: `<type>(<scope>): <subject>`
 

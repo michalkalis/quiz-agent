@@ -131,6 +131,10 @@ async def test_refund_eligible_reported_once_within_window(
     fresh = await _order(test_session, status="failed", job_status="failed", idle=timedelta(minutes=10), refund_eligible=True)
     await _order(test_session, status="failed", job_status="failed", idle=timedelta(hours=5), refund_eligible=True)
     await _order(test_session, status="refunded", job_status="failed", idle=timedelta(minutes=10), refund_eligible=True)
+    # The flag is never cleared: after POST /retry the order is re-run (fresh
+    # job writes) or delivered, and is owed nothing — it must not alert.
+    await _order(test_session, status="in_progress", job_status="generating", idle=timedelta(minutes=1), refund_eligible=True)
+    await _order(test_session, status="delivered", job_status="done", idle=timedelta(minutes=5), refund_eligible=True)
 
     body = (await admin_client.get(URL, headers=ADMIN)).json()
 

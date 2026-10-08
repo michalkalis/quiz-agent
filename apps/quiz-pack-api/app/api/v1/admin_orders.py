@@ -59,9 +59,11 @@ async def orders_needing_attention(
     thresholds (3 / 15 min): anything still stuck by then means the sweep did
     not run, i.e. no worker is alive.
 
-    Refund-eligible is a window, not a flag, because the monitor is stateless:
-    every terminal write that sets `refund_eligible` also touches the job, so
-    its `updated_at` dates the transition.
+    Refund-eligible is a window, not a flag, because the monitor is stateless.
+    Only still-'failed' orders count: `refund_eligible` is never cleared, so a
+    retried (or retried-and-delivered) order would otherwise keep alerting.
+    A failed order's job is terminal and no longer written, so its
+    `updated_at` dates the failure that set the flag.
     """
     now = datetime.now(UTC)
     # Postgres GREATEST skips NULLs, so an order without a job falls back to
@@ -78,7 +80,7 @@ async def orders_needing_attention(
     )
     refund_stmt = base.where(
         GenerationOrder.refund_eligible.is_(True),
-        GenerationOrder.status != "refunded",
+        GenerationOrder.status == "failed",
         last_alive >= now - timedelta(minutes=refund_lookback_minutes),
     )
 

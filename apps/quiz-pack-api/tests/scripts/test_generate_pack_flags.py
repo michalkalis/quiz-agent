@@ -273,6 +273,28 @@ class TestPerTopicCapFlag:
         topup = next(s for s in built if isinstance(s, TopUpStage))
         assert topup._composition_stage._per_topic_cap == 5
 
+    def test_floor_fraction_reaches_the_topup_stage(self, monkeypatch):
+        """#195: a short corpus batch must keep its gate-clean survivors instead
+        of raising and writing nothing; absent flag keeps the 80% pack floor."""
+        from app.orchestrator.stages import TopUpStage
+        from app.orchestrator.stages.topup import FLOOR_FRACTION
+
+        monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-placeholder")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
+        args = generate_pack._parse_args(
+            ["--prompt", "pop culture", "--floor-fraction", "0", "--dry-run"]
+        )
+        assert args.floor_fraction == 0.0
+
+        def topup(**levers):
+            built = generate_pack._build_stages(
+                persist=False, dedup_store=generate_pack._NoopQuestionStore(), **levers
+            )
+            return next(s for s in built if isinstance(s, TopUpStage))
+
+        assert topup(floor_fraction=args.floor_fraction)._floor_fraction == 0.0
+        assert topup()._floor_fraction == FLOOR_FRACTION
+
     def test_app_path_composition_stage_is_unchanged(self):
         """The lever is CLI-only. A paid customer order must never inherit a
         loosened composition cap from an operator experiment, so the worker's

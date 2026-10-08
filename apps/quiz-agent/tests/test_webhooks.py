@@ -42,6 +42,7 @@ from app.db.base import utcnow
 from app.db.models import CreditLedger, Product, Subscription
 from app.usage import rc_service
 from app.usage.entitlement import account_is_entitled
+from tests._pg_locks import wait_until_blocked_or_done
 
 pytestmark = pytest.mark.asyncio
 
@@ -555,7 +556,8 @@ async def test_refund_guard_atomic_under_concurrent_product_change(
             await rc_service.handle_webhook_event(db_sessionmaker, refund)
 
         task_b = asyncio.create_task(_b_refund())
-        await asyncio.sleep(0.3)  # let B block on the lock (fix) or decide (bug)
+        # B observably blocked on the lock (fix) or already decided (bug).
+        await wait_until_blocked_or_done(db_sessionmaker, task_b)
 
         # (3) A commits the upgrade, releasing the lock so B re-evaluates.
         await sa.commit()

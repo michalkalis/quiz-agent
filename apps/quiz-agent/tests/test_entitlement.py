@@ -45,6 +45,7 @@ from app.usage.entitlement import (
     account_is_entitled,
 )
 from app.usage.tracker import FREE_MONTHLY_LIMIT, UsageTracker, _month_start
+from tests._pg_locks import wait_until_blocked_or_done
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
@@ -284,8 +285,9 @@ async def test_no_double_spend_concurrent(db_sessionmaker):
             await sb.commit()
 
         task_b = asyncio.create_task(_b_debit())
-        # Give B time to either block on the lock (fix) or double-spend (bug).
-        await asyncio.sleep(0.3)
+        # Wait until B is observably blocked on the lock (fix) or has already
+        # finished (double-spend, bug) — then the assertions below discriminate.
+        await wait_until_blocked_or_done(db_sessionmaker, task_b)
 
         # (3) A commits, releasing the lock so B can re-evaluate its guard.
         await sa.commit()

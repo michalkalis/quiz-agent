@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trubbo · Variant C</title>
+<meta name="description" content="Trubbo is a trivia game for iPhone. It reads each question aloud and you answer out loud.">
+<!--
+  Variant C: compact. One screen holds the whole pitch on a glass sheet laid over a table of question cards;
+  short reference sections and an FAQ follow.
+  i18n: every visible string carries data-i18n="<key>". English inline is the source; sk/cs map the same keys.
+-->
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#E8EAEE;--ink:#111216;--ink2:#3F4350;--ink3:#5A5E69;--surf:#FFFFFF;--line:rgba(17,18,22,.1);--link:#1A2FC4;
+  --c-blue:#2C45F5;--c-orange:#FF6B2C;--c-green:#3FE0AE;--c-pink:#D42A72;--c-yellow:#FFD23F;--c-purple:#7052F5;
+  --l1:#2C45F5;--l2:#16B386;--l3:#F5B800;--l4:#FF6B2C;--l5:#E8317F;
+  --g-bg:rgba(255,255,255,.52);--g-edge:rgba(255,255,255,.75);--g-hi:rgba(255,255,255,.95);
+  --g-sh:0 10px 30px rgba(17,18,22,.14),0 1px 2px rgba(17,18,22,.08);--sheen:rgba(255,255,255,.7);
+  --cta-bg:rgba(17,18,22,.9);--cta-ink:#FFFFFF;--card-sh:0 22px 44px rgba(17,18,22,.18);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1014;--ink:#F2F3F5;--ink2:#C3C6CF;--ink3:#9A9EA9;--surf:#1C1D23;--line:rgba(255,255,255,.1);--link:#8C9BFF;
+  --c-blue:#3A52FF;--c-orange:#F0662C;--c-green:#2FC99B;--c-pink:#D42A72;--c-yellow:#EBBF35;--c-purple:#7052F5;
+  --l1:#5B73FF;--l2:#3FE0AE;--l3:#FFD23F;--l4:#FF8A5C;--l5:#FF4F98;
+  --g-bg:rgba(30,32,40,.6);--g-edge:rgba(255,255,255,.14);--g-hi:rgba(255,255,255,.22);
+  --g-sh:0 10px 30px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4);--sheen:rgba(255,255,255,.1);
+  --cta-bg:rgba(242,243,245,.94);--cta-ink:#111216;--card-sh:0 22px 44px rgba(0,0,0,.55);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;line-height:1.45}
+a{color:var(--link)}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+@media (min-width:720px){.wrap{padding:0 32px}}
+.g{background:var(--g-bg);-webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);border:1px solid var(--g-edge);box-shadow:inset 0 1.5px 0 var(--g-hi),var(--g-sh);position:relative;overflow:hidden;isolation:isolate}
+.g::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(115deg,transparent 30%,var(--sheen) 45%,transparent 60%);transform:translateX(-130%);animation:sheen 8s ease-in-out infinite}
+@keyframes sheen{0%,75%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.mark .k1{fill:var(--l1)}.mark .k2{fill:var(--l2)}.mark .k3{fill:var(--l3)}.mark .k4{fill:var(--l4)}.mark .k5{fill:var(--l5)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 26px;border-radius:28px;font:inherit;font-size:18px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,.18);background:var(--cta-bg);color:var(--cta-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 30px rgba(17,18,22,.25)}
+
+/* first screen: cards on the table, glass on top */
+.first{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:hidden}
+.table{position:absolute;inset:0;pointer-events:none}
+.tc{position:absolute;width:190px;height:240px;border-radius:28px;padding:18px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--card-sh);animation:drift 14s ease-in-out infinite alternate}
+.tc span{font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase}
+.tc b{font-size:21px;line-height:1.05;font-weight:900;letter-spacing:-.5px}
+@keyframes drift{from{translate:0 0}to{translate:10px -16px}}
+.k-blue{background:var(--c-blue);color:#fff}.k-orange{background:var(--c-orange);color:#111216}.k-green{background:var(--c-green);color:#111216}
+.k-pink{background:var(--c-pink);color:#fff}.k-yellow{background:var(--c-yellow);color:#111216}.k-purple{background:var(--c-purple);color:#fff}
+
+.sheet{position:relative;z-index:2;width:100%;max-width:620px;border-radius:40px;padding:28px 22px;display:flex;flex-direction:column;gap:18px}
+@media (min-width:720px){.sheet{padding:44px}}
+.sheet .brand{display:flex;align-items:center;gap:8px}
+.sheet .brand span{font-size:30px;font-weight:800;letter-spacing:-1.2px}
+.sheet h1{font-size:clamp(38px,7vw,62px);line-height:.98;font-weight:900;letter-spacing:-2px}
+.sheet .lead{font-size:18px;color:var(--ink2)}
+.sheet .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.note{font-size:14px;color:var(--ink3)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:18px}
+.facts div{display:flex;flex-direction:column;gap:2px}
+.facts b{white-space:nowrap;font-size:clamp(17px,4.6vw,22px);font-weight:900;letter-spacing:-.6px;line-height:1.1}
+.facts small{font-size:13px;color:var(--ink3);font-weight:600}
+.scroll{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:2;height:40px;padding:0 18px;border-radius:20px;display:inline-flex;align-items:center;font-size:14px;font-weight:700;color:var(--ink);text-decoration:none}
+
+/* reference sections */
+.ref{padding-top:64px;padding-bottom:24px;display:grid;gap:44px}
+.blk{display:grid;gap:16px}
+@media (min-width:860px){.blk{grid-template-columns:260px 1fr;gap:40px}}
+.blk h2{font-size:28px;line-height:1.05;font-weight:900;letter-spacing:-.8px}
+.list{display:grid;gap:10px}
+@media (min-width:600px){.list.two{grid-template-columns:1fr 1fr}}
+.item{background:var(--surf);border-radius:22px;padding:18px 20px;display:flex;gap:14px;align-items:flex-start}
+.item .dot{flex-shrink:0;width:12px;height:30px;border-radius:4px;margin-top:2px}
+.item h3{font-size:17px;font-weight:800}
+.item p{font-size:15px;color:var(--ink2);margin-top:2px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{height:44px;padding:0 18px;border-radius:22px;display:inline-flex;align-items:center;font-weight:700;font-size:15px;background:var(--surf)}
+.price{background:var(--surf);border-radius:22px;overflow:hidden}
+.price div{display:flex;justify-content:space-between;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}
+.price div:first-child{border-top:0}
+.price b{font-weight:800}
+.price span{color:var(--ink2);text-align:right}
+details{background:var(--surf);border-radius:22px;padding:0 20px}
+details+details{margin-top:10px}
+summary{cursor:pointer;list-style:none;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;font-size:17px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:24px;font-weight:500;color:var(--ink3)}
+details[open] summary::after{content:"−"}
+details p{padding:0 0 18px;color:var(--ink2)}
+
+.end{margin:48px 0 0;border-radius:34px;padding:28px 22px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:var(--surf)}
+.end h2{font-size:26px;font-weight:900;letter-spacing:-.7px}
+.end p{color:var(--ink2);margin-top:4px}
+footer{padding:40px 0 48px;color:var(--ink3);font-size:14px}
+footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:24px}
+footer nav{display:flex;flex-wrap:wrap;gap:16px}
+footer a{color:var(--ink2)}
+footer address{font-style:normal;margin-top:12px}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <section class="first">
+    <div class="table" aria-hidden="true">
+      <div class="tc k-orange" style="left:-40px;top:6%;rotate:-14deg"><span>History</span><b>Which ancient wonder stood at the harbour of Rhodes?</b></div>
+      <div class="tc k-green" style="right:-30px;top:4%;rotate:11deg;animation-delay:-3s"><span>Science &amp; Nature</span><b>How many hearts does an octopus have?</b></div>
+      <div class="tc k-blue" style="left:14%;bottom:-60px;rotate:8deg;animation-delay:-6s"><span>Geography &amp; World</span><b>Which city is the capital of Australia?</b></div>
+      <div class="tc k-yellow" style="right:10%;bottom:-40px;rotate:-9deg;animation-delay:-9s"><span>Sports</span><b>How many players does a volleyball team have on court?</b></div>
+      <div class="tc k-pink" style="left:30%;top:-90px;rotate:4deg;animation-delay:-5s"><span>Film &amp; Music</span><b>How many keys does a standard piano have?</b></div>
+      <div class="tc k-purple" style="right:30%;top:42%;rotate:-5deg;animation-delay:-11s"><span>Food &amp; Everyday Life</span><b>Which country does paella come from?</b></div>
+    </div>
+
+    <div class="sheet g">
+      <div class="brand">
+        <svg class="mark" width="32" height="38" viewBox="16 10 68 80" aria-hidden="true"><g transform="rotate(-6 26 50)"><rect class="k1" x="21" y="37" width="10" height="26" rx="4"/></g><g transform="rotate(4 38 50)"><rect class="k2" x="33" y="26" width="10" height="48" rx="4"/></g><g transform="rotate(-3 50 50)"><rect class="k3" x="45" y="17" width="10" height="66" rx="4"/></g><g transform="rotate(5 62 50)"><rect class="k4" x="57" y="28" width="10" height="44" rx="4"/></g><g transform="rotate(-5 74 50)"><rect class="k5" x="69" y="36" width="10" height="28" rx="4"/></g></svg>
+        <span>trubbo</span>
+      </div>
+      <h1 data-i18n="hero.title">Trivia for iPhone, played by voice.</h1>
+      <p class="lead" data-i18n="hero.lead">Trubbo reads each question aloud and listens for your answer. Every question has a source and is fact-checked. Tapping works too.</p>
+      <div class="row">
+        <a class="btn" href="https://testflight.apple.com/join/qvbqMh1k" data-i18n="cta.beta">Join the public beta</a>
+        <span class="note" data-i18n="cta.beta.note">Free on iPhone, through TestFlight</span>
+      </div>
+      <div class="facts">
+        <div><b data-i18n="facts.free">30 free</b><small data-i18n="facts.free.d">questions a month</small></div>
+        <div><b>€4.99</b><small data-i18n="facts.sub.d">a month, unlimited</small></div>
+        <div><b>EN · SK · CS</b><small data-i18n="facts.lang.d">languages</small></div>
+      </div>
+    </div>
+    <a class="scroll g" href="#more" data-i18n="first.more">More below</a>
+  </section>
+
+  <div class="wrap ref" id="more">
+    <div class="blk">
+      <h2 data-i18n="play.title">How it plays</h2>
+      <div class="list">
+        <div class="item"><span class="dot k-blue"></span><div><h3 data-i18n="play.1.t">The question is read aloud</h3><p data-i18n="play.1.d">Everyone hears it at once. Nobody holds the phone or reads cards out.</p></div></div>
+        <div class="item"><span class="dot k-pink"></span><div><h3 data-i18n="play.2.t">You answer out loud, or tap</h3><p data-i18n="play.2.d">Use your voice when your hands are busy, tap when it's quieter.</p></div></div>
+        <div class="item"><span class="dot k-green"></span><div><h3 data-i18n="play.3.t">AI checks the answer</h3><p data-i18n="play.3.d">It judges what you meant, so you don't need the exact wording.</p></div></div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h2 data-i18n="q.title">The questions</h2>
+      <div class="list two">
+        <div class="item"><span class="dot k-yellow"></span><div><h3 data-i18n="q.1.t">Sourced and fact-checked</h3><p data-i18n="q.1.d">Questions are prepared in advance. Each has a source and is checked before it goes in.</p></div></div>
+        <div class="item"><span class="dot k-orange"></span><div><h3 data-i18n="q.2.t">Categories you pick</h3><p data-i18n="q.2.d">History, science, geography, sports, film and music, food and more.</p></div></div>
+        <div class="item"><span class="dot k-purple"></span><div><h3 data-i18n="q.3.t">Suitable for kids</h3><p data-i18n="q.3.d">Content stays appropriate for the age of the players.</p></div></div>
+        <div class="item"><span class="dot k-blue"></span><div><h3 data-i18n="q.4.t">Packs and custom packs</h3><p data-i18n="q.4.d">Theme packs, or a custom pack on any topic you pick.</p></div></div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h2 data-i18n="where.title">Where it fits</h2>
+      <div class="tags">
+        <span class="tag" data-i18n="where.road">Road trips</span>
+        <span class="tag" data-i18n="where.party">Parties</span>
+        <span class="tag" data-i18n="where.cabin">Cabin evenings</span>
+        <span class="tag" data-i18n="where.family">Families with kids</span>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h2 data-i18n="price.title">Pricing</h2>
+      <div class="price">
+        <div><b data-i18n="price.free">Free</b><span data-i18n="price.free.d">30 questions a month</span></div>
+        <div><b data-i18n="price.sub">Unlimited</b><span data-i18n="price.sub.d">€4.99 a month</span></div>
+        <div><b data-i18n="price.packs">Packs</b><span data-i18n="price.packs.d">one-time purchase</span></div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h2 data-i18n="faq.title">Questions</h2>
+      <div>
+        <details>
+          <summary data-i18n="faq.1.q">Do I have to talk?</summary>
+          <p data-i18n="faq.1.a">No. Voice is the main way to play, but you can also answer by tapping.</p>
+        </details>
+        <details>
+          <summary data-i18n="faq.2.q">What if I say the answer a bit differently?</summary>
+          <p data-i18n="faq.2.a">That's fine. AI checks whether your answer means the right thing instead of matching exact words.</p>
+        </details>
+        <details>
+          <summary data-i18n="faq.3.q">Where do the questions come from?</summary>
+          <p data-i18n="faq.3.a">They are prepared in advance. Every question has a source and is fact-checked before it is added.</p>
+        </details>
+        <details>
+          <summary data-i18n="faq.4.q">How do I get the beta?</summary>
+          <p data-i18n="faq.4.a">Install Apple's TestFlight app on your iPhone, then open the beta link on this page. The beta is open to anyone.</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="end">
+      <div>
+        <h2 data-i18n="end.title">Try it on your iPhone.</h2>
+        <p data-i18n="end.body">Feedback and questions: <a href="mailto:hi@trubbo.app">hi@trubbo.app</a></p>
+      </div>
+      <a class="btn" href="https://testflight.apple.com/join/qvbqMh1k" data-i18n="cta.beta">Join the public beta</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© missinghue s.r.o.</span>
+      <nav aria-label="Legal">
+        <a href="https://quiz-agent-api.fly.dev/legal/privacy" data-i18n="footer.privacy">Privacy</a>
+        <a href="https://quiz-agent-api.fly.dev/legal/terms" data-i18n="footer.terms">Terms</a>
+        <a href="https://quiz-agent-api.fly.dev/legal/support" data-i18n="footer.support">Support</a>
+        <a href="mailto:hi@trubbo.app">hi@trubbo.app</a>
+      </nav>
+    </div>
+    <address>Kotěrova 1588/2a, Praha 6 · IČO 07288093</address>
+  </div>
+</footer>
+</body>
+</html>

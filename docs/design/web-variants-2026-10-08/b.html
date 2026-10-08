@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trubbo · Variant B</title>
+<meta name="description" content="Trubbo is a trivia game for iPhone. It reads each question aloud and you answer out loud.">
+<!--
+  Variant B: one scrolling story, "how a round goes". A sticky game screen changes state as the steps scroll past.
+  i18n: every visible string carries data-i18n="<key>". English inline is the source; sk/cs map the same keys.
+-->
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#E8EAEE;--ink:#111216;--ink2:#3F4350;--ink3:#5A5E69;--surf:#FFFFFF;--line:rgba(17,18,22,.1);--link:#1A2FC4;
+  --c-blue:#2C45F5;--c-orange:#FF6B2C;--c-green:#3FE0AE;--c-pink:#D42A72;--c-yellow:#FFD23F;--c-purple:#7052F5;
+  --l1:#2C45F5;--l2:#16B386;--l3:#F5B800;--l4:#FF6B2C;--l5:#E8317F;
+  --g-bg:rgba(255,255,255,.52);--g-edge:rgba(255,255,255,.75);--g-hi:rgba(255,255,255,.95);
+  --g-sh:0 10px 30px rgba(17,18,22,.14),0 1px 2px rgba(17,18,22,.08);--sheen:rgba(255,255,255,.7);
+  --cta-bg:rgba(17,18,22,.9);--cta-ink:#FFFFFF;--card-sh:0 22px 44px rgba(17,18,22,.18);--live:#D42A72;--ok:#0E8A66;--okbg:rgba(63,224,174,.22);
+  --screen:#E8EAEE;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1014;--ink:#F2F3F5;--ink2:#C3C6CF;--ink3:#9A9EA9;--surf:#1C1D23;--line:rgba(255,255,255,.1);--link:#8C9BFF;
+  --c-blue:#3A52FF;--c-orange:#F0662C;--c-green:#2FC99B;--c-pink:#D42A72;--c-yellow:#EBBF35;--c-purple:#7052F5;
+  --l1:#5B73FF;--l2:#3FE0AE;--l3:#FFD23F;--l4:#FF8A5C;--l5:#FF4F98;
+  --g-bg:rgba(44,46,56,.58);--g-edge:rgba(255,255,255,.14);--g-hi:rgba(255,255,255,.22);
+  --g-sh:0 10px 30px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4);--sheen:rgba(255,255,255,.1);
+  --cta-bg:rgba(242,243,245,.94);--cta-ink:#111216;--card-sh:0 22px 44px rgba(0,0,0,.55);--live:#FF4F98;--ok:#5EEBC0;--okbg:rgba(47,201,155,.2);
+  --screen:#16171C;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;line-height:1.45}
+a{color:var(--link)}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+@media (min-width:720px){.wrap{padding:0 32px}}
+
+.g{background:var(--g-bg);-webkit-backdrop-filter:blur(20px) saturate(190%);backdrop-filter:blur(20px) saturate(190%);border:1px solid var(--g-edge);box-shadow:inset 0 1.5px 0 var(--g-hi),var(--g-sh);position:relative;overflow:hidden;isolation:isolate}
+.g::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(115deg,transparent 30%,var(--sheen) 45%,transparent 60%);transform:translateX(-130%);animation:sheen 7s ease-in-out infinite}
+@keyframes sheen{0%,72%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.mark .k1{fill:var(--l1)}.mark .k2{fill:var(--l2)}.mark .k3{fill:var(--l3)}.mark .k4{fill:var(--l4)}.mark .k5{fill:var(--l5)}
+.brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
+.brand span{font-size:26px;font-weight:800;letter-spacing:-1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 26px;border-radius:28px;font:inherit;font-size:18px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,.18);background:var(--cta-bg);color:var(--cta-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 30px rgba(17,18,22,.25)}
+.btn-s{height:44px;padding:0 18px;border-radius:22px;font-size:15px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+
+.intro{padding:40px 0 24px;max-width:760px}
+.intro h1{font-size:clamp(42px,7.5vw,84px);line-height:.96;font-weight:900;letter-spacing:-2.6px}
+.intro p{margin-top:18px;font-size:19px;color:var(--ink2);max-width:32em}
+.intro .ctas{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.note{font-size:14px;color:var(--ink3)}
+
+/* story */
+.story{display:grid;gap:0;position:relative}
+@media (min-width:900px){.story{grid-template-columns:1fr 1fr;gap:64px;align-items:start}}
+.screen-col{position:sticky;top:0;z-index:5;padding:12px 0;background:linear-gradient(var(--bg) 85%,transparent)}
+@media (min-width:900px){.screen-col{top:40px;padding:0;background:none;order:2}}
+.screen{position:relative;margin:0 auto;width:100%;max-width:360px;height:40vh;min-height:290px;max-height:350px;border-radius:40px;background:var(--screen);overflow:hidden;box-shadow:0 0 0 1px var(--line),0 30px 60px rgba(17,18,22,.18)}
+@media (min-width:900px){.screen{height:640px;max-height:none;max-width:380px}}
+
+.prog{position:absolute;left:20px;right:20px;top:20px;display:flex;gap:4px;align-items:center}
+.prog i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.prog i.on{background:var(--ink)}
+
+.deck{position:absolute;left:0;right:0;top:56px;bottom:84px}
+.card{position:absolute;inset:0 22px;border-radius:30px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--card-sh);transition:transform .6s cubic-bezier(.3,1.3,.5,1),opacity .4s}
+.card .cat{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}
+.card .q{font-size:clamp(22px,6.4vw,32px);line-height:1.04;font-weight:900;letter-spacing:-.8px}
+@media (min-width:900px){.card .q{font-size:36px}}
+.k-orange{background:var(--c-orange);color:#111216}
+.k-green{background:var(--c-green);color:#111216}
+.k-yellow{background:var(--c-yellow);color:#111216}
+.k-blue{background:var(--c-blue);color:#fff}
+.k-purple{background:var(--c-purple);color:#fff}
+.k-pink{background:var(--c-pink);color:#fff}
+
+/* step 0: fanned category cards; later steps stack them behind the question */
+.f1{transform:rotate(-14deg) translate(-40px,10px) scale(.78)}
+.f2{transform:rotate(12deg) translate(40px,10px) scale(.78)}
+.f3{transform:rotate(-3deg) translateY(-10px) scale(.82)}
+.qc{transform:translateY(120%) rotate(6deg);opacity:0}
+.nx{transform:translateY(120%) rotate(-6deg);opacity:0}
+[data-step="1"] .f1,[data-step="2"] .f1,[data-step="3"] .f1,[data-step="4"] .f1{transform:translate(0,14px) scale(.9);opacity:.5}
+[data-step="1"] .f2,[data-step="2"] .f2,[data-step="3"] .f2,[data-step="4"] .f2{transform:translate(0,7px) scale(.95);opacity:.75}
+[data-step="1"] .f3,[data-step="2"] .f3,[data-step="3"] .f3,[data-step="4"] .f3{opacity:0}
+[data-step="1"] .qc,[data-step="2"] .qc,[data-step="3"] .qc{transform:none;opacity:1}
+[data-step="4"] .qc{transform:translateX(-130%) rotate(-12deg);opacity:0}
+[data-step="4"] .nx{transform:none;opacity:1}
+
+.pill{position:absolute;left:16px;right:16px;bottom:18px;height:54px;border-radius:27px;display:flex;align-items:center;gap:12px;padding:0 18px;opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.pill b{font-size:16px;font-weight:800;white-space:nowrap}
+.pill small{display:block;white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink3)}
+.pill .end{margin-left:auto;font-weight:700;color:var(--ink2);white-space:nowrap;font-size:14px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.p0{opacity:1;transform:none}
+[data-step="1"] .p0,[data-step="2"] .p0,[data-step="3"] .p0,[data-step="4"] .p0{opacity:0}
+[data-step="1"] .p1,[data-step="2"] .p2,[data-step="3"] .p3,[data-step="4"] .p1{opacity:1;transform:none}
+.p2{border-color:var(--live)}
+.p2 small{color:var(--live)}
+.p3{background:var(--okbg);border-color:var(--ok)}
+.p3 small{color:var(--ok)}
+.wv{display:flex;gap:2px;align-items:center;height:20px}
+.wv i{width:3px;height:6px;border-radius:2px;background:currentColor;animation:wv .9s ease-in-out infinite}
+.wv i:nth-child(2){animation-delay:.2s}.wv i:nth-child(3){animation-delay:.4s}.wv i:nth-child(4){animation-delay:.1s}
+@keyframes wv{0%,100%{height:5px}50%{height:18px}}
+.check{width:26px;height:26px;border-radius:13px;background:var(--ok);color:var(--screen);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.steps{counter-reset:s}
+.step{min-height:72vh;scroll-margin-top:380px;display:flex;flex-direction:column;justify-content:center;padding:32px 0;max-width:30em}
+@media (min-width:900px){.step{min-height:86vh}}
+.step .n{font-size:13px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink3)}
+.step h2{font-size:clamp(30px,4.6vw,46px);line-height:1.02;font-weight:900;letter-spacing:-1.3px;margin-top:10px}
+.step p{margin-top:14px;font-size:18px;color:var(--ink2)}
+.step .src{align-self:flex-start;margin-top:16px;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:600;color:var(--ink2)}
+
+/* after the story */
+.after{padding:64px 0 24px;display:grid;gap:14px}
+@media (min-width:800px){.after{grid-template-columns:repeat(3,1fr)}}
+.box{border-radius:28px;padding:24px;background:var(--surf)}
+.box h3{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.box p,.box li{color:var(--ink2);font-size:16px}
+.box p{margin-top:8px}
+.box ul{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.box li b{color:var(--ink);font-size:18px}
+.close{margin:40px 0 0;border-radius:34px;padding:36px 24px;text-align:center}
+.close h2{font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-1.5px;line-height:1.02}
+.close p{margin:12px auto 24px;color:var(--ink2);font-size:17px;max-width:30em}
+
+footer{padding:40px 0 48px;color:var(--ink3);font-size:14px}
+footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:24px}
+footer nav{display:flex;flex-wrap:wrap;gap:16px}
+footer a{color:var(--ink2)}
+footer address{font-style:normal;margin-top:12px}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#" aria-label="Trubbo">
+      <svg class="mark" width="28" height="32" viewBox="16 10 68 80" aria-hidden="true"><g transform="rotate(-6 26 50)"><rect class="k1" x="21" y="37" width="10" height="26" rx="4"/></g><g transform="rotate(4 38 50)"><rect class="k2" x="33" y="26" width="10" height="48" rx="4"/></g><g transform="rotate(-3 50 50)"><rect class="k3" x="45" y="17" width="10" height="66" rx="4"/></g><g transform="rotate(5 62 50)"><rect class="k4" x="57" y="28" width="10" height="44" rx="4"/></g><g transform="rotate(-5 74 50)"><rect class="k5" x="69" y="36" width="10" height="28" rx="4"/></g></svg>
+      <span>trubbo</span>
+    </a>
+    <a class="btn btn-s" href="https://testflight.apple.com/join/qvbqMh1k" data-i18n="cta.beta.short">Join the beta</a>
+  </header>
+
+  <section class="intro">
+    <h1 data-i18n="hero.title">A trivia game nobody has to read out.</h1>
+    <p data-i18n="hero.lead">Trubbo reads the questions aloud and listens for the answers. Here is how one round goes.</p>
+    <div class="ctas">
+      <a class="btn" href="https://testflight.apple.com/join/qvbqMh1k" data-i18n="cta.beta">Join the public beta</a>
+      <span class="note" data-i18n="cta.beta.note">Free on iPhone, through TestFlight</span>
+    </div>
+  </section>
+
+  <div class="story">
+    <div class="screen-col" aria-hidden="true">
+      <div class="screen" id="screen" data-step="0">
+        <div class="prog"><i class="on"></i><i id="pg2"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="deck">
+          <div class="card f1 k-orange"><span class="cat">History</span></div>
+          <div class="card f2 k-green"><span class="cat">Science &amp; Nature</span></div>
+          <div class="card f3 k-purple"><span class="cat">Food &amp; Everyday Life</span></div>
+          <div class="card qc k-blue"><span class="cat">Geography &amp; World</span><span class="q">Which city is the capital of Australia?</span></div>
+          <div class="card nx k-yellow"><span class="cat">Sports</span><span class="q">How many players does a volleyball team have on court?</span></div>
+        </div>
+        <div class="pill g p0"><span><b>3 categories</b><small>English · 10 questions</small></span></div>
+        <div class="pill g p1"><span class="wv"><i></i><i></i><i></i><i></i></span><span><b>Reading the question</b><small>Trubbo is speaking</small></span></div>
+        <div class="pill g p2" style="color:var(--live)"><span class="wv"><i></i><i></i><i></i><i></i></span><span style="color:var(--ink)"><b>Listening</b><small>Say your answer</small></span><span class="end">“I think it's Canberra”</span></div>
+        <div class="pill g p3"><span class="check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>Correct</b><small>Canberra</small></span></div>
+      </div>
+    </div>
+
+    <ol class="steps" style="list-style:none;margin:0;padding:0">
+      <li class="step" data-s="0">
+        <span class="n" data-i18n="story.s0.n">Before you start</span>
+        <h2 data-i18n="story.s0.title">Pick the categories and the language.</h2>
+        <p data-i18n="story.s0.body">Choose from categories like history, science, sports or food. Play in English, Slovak or Czech. Content stays suitable for the age of the players, so kids can play along.</p>
+      </li>
+      <li class="step" data-s="1">
+        <span class="n" data-i18n="story.s1.n">Step 1</span>
+        <h2 data-i18n="story.s1.title">Trubbo reads the question aloud.</h2>
+        <p data-i18n="story.s1.body">Everyone hears it at the same time, including whoever is driving or cooking. Nobody needs to look at the phone.</p>
+      </li>
+      <li class="step" data-s="2">
+        <span class="n" data-i18n="story.s2.n">Step 2</span>
+        <h2 data-i18n="story.s2.title">You answer out loud.</h2>
+        <p data-i18n="story.s2.body">Just say it. If talking isn't an option, tap the answer instead.</p>
+      </li>
+      <li class="step" data-s="3">
+        <span class="n" data-i18n="story.s3.n">Step 3</span>
+        <h2 data-i18n="story.s3.title">AI checks what you meant.</h2>
+        <p data-i18n="story.s3.body">“I think it's Canberra” counts. The answer is judged by meaning, not by exact match. Every question has a source and was fact-checked before it got into the game.</p>
+        <span class="src g" data-i18n="story.s3.src">Every question has a source</span>
+      </li>
+      <li class="step" data-s="4">
+        <span class="n" data-i18n="story.s4.n">Step 4</span>
+        <h2 data-i18n="story.s4.title">Then the next question.</h2>
+        <p data-i18n="story.s4.body">At the end of the round you see how you did and can go back over the answers. Road trip, party or an evening at the cabin, it works wherever people have time together.</p>
+      </li>
+    </ol>
+  </div>
+
+  <div class="after">
+    <div class="box">
+      <h3 data-i18n="after.where.title">Where people play it</h3>
+      <ul>
+        <li data-i18n="after.where.1">Road trips</li>
+        <li data-i18n="after.where.2">Parties</li>
+        <li data-i18n="after.where.3">Cabin evenings</li>
+        <li data-i18n="after.where.4">Families with kids</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 data-i18n="after.packs.title">Packs</h3>
+      <p data-i18n="after.packs.body">Add a question pack on a theme, or order a custom pack on any topic you pick. Packs are a one-time purchase.</p>
+    </div>
+    <div class="box">
+      <h3 data-i18n="after.price.title">Pricing</h3>
+      <ul>
+        <li><b data-i18n="after.price.free">Free</b> <span data-i18n="after.price.free.d">30 questions a month</span></li>
+        <li><b data-i18n="after.price.sub">€4.99 a month</b> <span data-i18n="after.price.sub.d">unlimited questions</span></li>
+        <li><b data-i18n="after.price.packs">Packs</b> <span data-i18n="after.price.packs.d">one-time purchase</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="close g">
+    <h2 data-i18n="close.title">Try a round.</h2>
+    <p data-i18n="close.body">The beta is public. Install TestFlight on your iPhone, then join with the link below. Questions or feedback: <a href="mailto:hi@trubbo.app">hi@trubbo.app</a></p>
+    <a class="btn" href="https://testflight.apple.com/join/qvbqMh1k" data-i18n="cta.beta">Join the public beta</a>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© missinghue s.r.o.</span>
+      <nav aria-label="Legal">
+        <a href="https://quiz-agent-api.fly.dev/legal/privacy" data-i18n="footer.privacy">Privacy</a>
+        <a href="https://quiz-agent-api.fly.dev/legal/terms" data-i18n="footer.terms">Terms</a>
+        <a href="https://quiz-agent-api.fly.dev/legal/support" data-i18n="footer.support">Support</a>
+        <a href="mailto:hi@trubbo.app">hi@trubbo.app</a>
+      </nav>
+    </div>
+    <address>Kotěrova 1588/2a, Praha 6 · IČO 07288093</address>
+  </div>
+</footer>
+
+<script>
+const screen = document.getElementById('screen');
+const pg2 = document.getElementById('pg2');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const s = e.target.dataset.s;
+    screen.dataset.step = s;
+    pg2.classList.toggle('on', s === '4');
+  });
+}, {rootMargin: '-55% 0px -40% 0px'});
+document.querySelectorAll('.step').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

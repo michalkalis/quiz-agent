@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trubbo web variants</title>
+<style>
+:root{--bg:#E8EAEE;--ink:#111216;--ink2:#5A5E69;--surf:#FFFFFF;--line:rgba(17,18,22,.12);--font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1014;--ink:#F2F3F5;--ink2:#9A9EA9;--surf:#1C1D23;--line:rgba(255,255,255,.12)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);padding:24px 16px 48px}
+h1{margin:0 0 4px;font-size:28px;letter-spacing:-.6px}
+.sub{color:var(--ink2);margin:0 0 24px}
+.v{margin-bottom:48px}
+.v h2{margin:0;font-size:22px}
+.v p{margin:4px 0 14px;color:var(--ink2);max-width:60em}
+.v a{color:inherit}
+.frames{display:flex;gap:20px;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+.desk{flex:0 0 auto;width:min(1280px,calc(100% - 410px));min-width:300px;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 12px 30px rgba(0,0,0,.12);background:var(--surf)}
+.desk .box{width:1280px;height:800px;transform-origin:0 0}
+.phone{flex:0 0 390px;width:390px;height:844px;border-radius:44px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 12px 30px rgba(0,0,0,.12)}
+iframe{border:0;display:block;width:100%;height:100%}
+.desk iframe{width:1280px;height:800px}
+</style>
+</head>
+<body>
+<h1>Trubbo landing page, 3 variants</h1>
+<p class="sub">Bg style: glass over cards, system font, logo 2. Desktop frame scaled to fit, phone frame at 390 px. Both frames scroll.</p>
+
+<section class="v">
+  <h2><a href="a.html">A · Live card stack</a></h2>
+  <p>Classic landing. Hero with a fanned deck of category cards; the top card cycles real questions and a glass "Listening" pill shows the spoken answer. Then a colored tile grid of facts, places, pricing and an open beta panel.</p>
+  <div class="frames"><div class="desk"><div class="box"><iframe src="a.html" title="Variant A desktop"></iframe></div></div><div class="phone"><iframe src="a.html" title="Variant A phone"></iframe></div></div>
+</section>
+
+<section class="v">
+  <h2><a href="b.html">B · One round, step by step</a></h2>
+  <p>A single scrolling story. A sticky game screen walks through a round as you scroll: pick categories, question read aloud, you answer, AI checks the meaning, next question. Pricing and packs come after in three short boxes.</p>
+  <div class="frames"><div class="desk"><div class="box"><iframe src="b.html" title="Variant B desktop"></iframe></div></div><div class="phone"><iframe src="b.html" title="Variant B phone"></iframe></div></div>
+</section>
+
+<section class="v">
+  <h2><a href="c.html">C · Everything on one glass sheet</a></h2>
+  <p>Compact. The first screen is one glass sheet over a table of drifting question cards, holding the pitch, the beta button, price and languages. Below it, short reference blocks (how it plays, the questions, pricing) and an FAQ.</p>
+  <div class="frames"><div class="desk"><div class="box"><iframe src="c.html" title="Variant C desktop"></iframe></div></div><div class="phone"><iframe src="c.html" title="Variant C phone"></iframe></div></div>
+</section>
+
+<script>
+// scale the 1280 px desktop frames down to the available width
+function fit(){document.querySelectorAll('.desk').forEach(d=>{const s=Math.min(1,d.clientWidth/1280);const b=d.querySelector('.box');b.style.transform='scale('+s+')';d.style.height=(800*s)+'px'})}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

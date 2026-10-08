@@ -87,7 +87,7 @@ def submit_http_error(
     if isinstance(exc, JudgeUnavailable):
         # #193 (193.11): the LLM provider is down or too slow, so nobody judged
         # the answer. Not a 500 (nothing is broken in this request) and not a
-        # 503 (iOS would silently re-send it three times, ~8 s each, past its
+        # 503 (iOS would silently re-send it three times, ~12 s each, past its
         # 30 s budget): the "say it again" 400 that every shipped build turns
         # into a spoken re-ask, then Again / Skip. `reason` lets a future build
         # word it differently; today's builds ignore the extra key. Already

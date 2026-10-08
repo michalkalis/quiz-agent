@@ -127,7 +127,7 @@ Never `alembic downgrade` the prod DB; the boot check accepts a DB ahead of code
 
 ```bash
 fly releases --image -a <Fly app>          # find the last good release's image ref
-fly deploy --image <registry.fly.io/<Fly app>:deployment-...> -a <Fly app>
+fly deploy --image <registry.fly.io/<Fly app>:deployment-...> -a <Fly app> --skip-release-command
 ```
 
-Then rerun Post-deploy Verification. `release_command` re-runs `alembic upgrade head` against an already-migrated DB, a no-op.
+`--skip-release-command` is required: if the bad release shipped a migration, the old image does not contain the DB's current revision, so `alembic upgrade head` fails (`Can't locate revision`) and aborts the deploy. The boot check's DB-ahead tolerance then carries the rollback. Afterwards rerun Post-deploy Verification.

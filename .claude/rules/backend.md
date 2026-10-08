@@ -66,4 +66,4 @@ Known Fly.io pitfalls (Dockerfile dep drift, CHROMA_PATH/mount mismatch): see `d
 - Migrations only add (expand). Drops/renames ship one release later (contract), after no running code reads the old column/table.
 - The `questions` table is owned by quiz-pack-api but read by quiz-agent (`apps/quiz-agent/alembic/env.py`). Any change to it needs the matching quiz-agent change deployed first.
 - `release_command = "alembic upgrade head"` (both apps' `fly.toml`) runs before rollout.
-- Never downgrade the prod DB. Roll back by redeploying the previous image (see `/deploy` skill, Rollback); the boot check `apps/quiz-pack-api/app/db/migration_check.py` accepts a DB ahead of code.
+- Never downgrade the prod DB. Roll back by redeploying the previous image (see `/deploy` skill, Rollback; it skips `release_command`, which would fail on the unknown revision); the boot check `apps/quiz-pack-api/app/db/migration_check.py` accepts a DB ahead of code.

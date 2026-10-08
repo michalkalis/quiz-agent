@@ -61,4 +61,11 @@ nonisolated struct QuotaLimitError: Codable, Sendable {
         case resetsAt = "resets_at"
         case upgradeAvailable = "upgrade_available"
     }
+
+    /// Parsed reset time — the same parsing as `UsageInfo.resetDate`.
+    var resetDate: Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: resetsAt) ?? ISO8601DateFormatter().date(from: resetsAt)
+    }
 }

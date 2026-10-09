@@ -1,6 +1,6 @@
 # #196 — AI volania čo najviac na priame Anthropic API (Max kredit)
 
-**Triage:** enhancement · waiting-on-founder (API kľúč)
+**Triage:** enhancement · ready (kľúč `ANTHROPIC_API_KEY` už je v root `.env` aj Fly secrets `quiz-pack-api`; chýba v `quiz-agent-api`)
 **Založené:** 2026-10-09 (founder: „presmerovanie čo najviac volaní na Anthropic API… aj OpenAI a Google volania, nech nie sú zbytočné ďalšie výdavky“)
 **Vetva:** `feat/196-anthropic-direct`
 
@@ -27,7 +27,7 @@ Smerovanie: `packages/shared/quiz_shared/llm/factory.py` — `LLM_GATEWAY=direct
 
 ## Tracky
 
-- [ ] **196.1 — priamy Anthropic chat v factory:** prefix/route `anthropic:` (alebo `LLM_GATEWAY=anthropic` pre `claude-*` id) → `ChatAnthropic`, usage callback + `llm_usage.py` ceny (Sonnet 5 je dnes $2/$10, tabuľka má $3/$15); kľúč `ANTHROPIC_API_KEY` z org s Max kreditom do `.env` + Fly secrets oboch appiek. Hotovo = unit testy routingu + jedna reálna generácia na prode čerpá kredit.
+- [ ] **196.1 — priamy Anthropic chat v factory:** prefix/route `anthropic:` (alebo `LLM_GATEWAY=anthropic` pre `claude-*` id) → `ChatAnthropic`, usage callback + `llm_usage.py` ceny (Sonnet 5 je dnes $2/$10, tabuľka má $3/$15); kľúč `ANTHROPIC_API_KEY` doplniť do Fly secrets `quiz-agent-api` (pack-api a `.env` ho majú). Hotovo = unit testy routingu + jedna reálna generácia na prode čerpá kredit.
 - [ ] **196.2 — skupina A** prepnúť (env), deploy, overiť v Console usage.
 - [ ] **196.3 — skupina B hot path:** eval Haiku 5.5 vs `gpt-4o-mini` (presnosť hodnotenia sk/cs/en, latencia) → founder schváli → prepnúť.
 - [ ] **196.4 — skupina B offline:** prepnúť po malom porovnaní výstupov.

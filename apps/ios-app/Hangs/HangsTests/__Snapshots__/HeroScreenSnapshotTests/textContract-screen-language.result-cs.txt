@@ -1,6 +1,6 @@
 # texts
-adults
 0/10
+ADULTS
 MÁŠ TO.
 tvoje odpověď
 Paris
@@ -13,8 +13,8 @@ ZŮSTAŇ
 Nastavení
 # identifiers
 question.progress
-question.category
 question.counter
+question.category
 result.heroBanner
 result.verdict
 result.hearIt

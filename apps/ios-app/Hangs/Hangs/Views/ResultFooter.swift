@@ -54,7 +54,6 @@ struct ResultFooter: View {
                     title: "Next",
                     icon: nil,
                     trailingIcon: "arrow.right",
-                    height: 64,
                     countdownSecondsRemaining: autoAdvanceActive ? countdownRemaining : nil,
                     countdownTotal: countdownTotal,
                     action: onNext
@@ -66,34 +65,34 @@ struct ResultFooter: View {
                 stayPill
             }
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
-        .padding(.bottom, 28)
+        // #194 canvas: the screen's 16pt edge.
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.bottom, Theme.Hangs.Spacing.md)
     }
 
     /// Pause glyph + STAY while the countdown runs (tap pauses); play glyph +
     /// RESUME once paused (tap resumes). Same 76pt slot — never a stacked button.
+    private enum Metrics {
+        /// R-Result: the pause pill beside the 56pt CTA.
+        static let stayWidth: CGFloat = 76
+        static let height: CGFloat = 56
+        static let glyph: CGFloat = 16
+    }
+
     private var stayPill: some View {
         Button(action: isPaused ? onResume : onStay) {
             VStack(spacing: 3) {
                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsBody(Metrics.glyph, weight: .semibold))
                 Text(isPaused ? "RESUME" : "STAY")
-                    .font(.hangsMono(10, weight: .medium))
-                    .tracking(1.4)
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsCaption.weight(.semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            .frame(width: 76, height: 64)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cta, style: .continuous)
-                    .fill(Theme.Hangs.Colors.bgCard)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cta, style: .continuous)
-                    .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1)
-            )
+            .foregroundColor(Theme.Hangs.Colors.ink)
+            .frame(width: Metrics.stayWidth, height: Metrics.height)
+            // #194 R-Result: the second control is Liquid Glass beside the ink CTA.
+            .glassEffect(.regular.interactive(), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("result.stayHere")

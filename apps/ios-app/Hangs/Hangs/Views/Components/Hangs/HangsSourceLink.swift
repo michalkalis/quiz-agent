@@ -9,7 +9,7 @@
 
 import SwiftUI
 
-/// Tappable source link — the 10pt mono "source" label plus a chevron, in the
+/// Tappable source link — the "source" caption plus a chevron, in the
 /// faintest grey. The label deliberately drops the domain (the result screen's
 /// meta row has no width budget for it); the domain survives as the
 /// accessibility label, where there is none to spend.
@@ -19,6 +19,8 @@ import SwiftUI
 struct HangsSourceLink: View {
     /// Host of the source URL ("nasa.gov") — what VoiceOver reads out.
     let domain: String
+    /// #194: on a result card the link takes the card's text colour.
+    var color: Color = Theme.Hangs.Colors.mutedFaint
     let action: () -> Void
 
     var body: some View {
@@ -26,14 +28,15 @@ struct HangsSourceLink: View {
         Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.xxs) {
                 Text("source")
-                    .font(.hangsMono(10, weight: .medium))
-                    .tracking(1.2)
+                    // #194 canvas: a 13pt semibold caption, not mono micro-caps.
+                    .font(.hangsCaption.weight(.semibold))
                     .lineLimit(1)
                     .fixedSize()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(.hangsCaption.weight(.semibold))
             }
-            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+            .foregroundColor(color)
+            .frame(minHeight: Theme.Hangs.Spacing.xxl)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

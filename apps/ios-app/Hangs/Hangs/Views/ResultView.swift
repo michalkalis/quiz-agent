@@ -33,6 +33,10 @@ struct ResultView: View {
     var debugSurfaces: Bool = BuildChannel.debugSurfacesEnabled()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.hangsCardMotion) private var cardMotion
+    /// #194 B3: bumped once on appear to deal the result card in. At rest on
+    /// the first frame, so snapshots and Reduce Motion show it in place.
+    @State private var cardReveal = 0
     // Flipped in .onAppear purely to fire the result haptic once — no longer
     // gates any content (Variant C never hides the answer behind an appear).
     @State private var didAppear = false
@@ -49,9 +53,8 @@ struct ResultView: View {
             // NO ScrollView at the screen level — the zones are laid out in a
             // fixed VStack, so nothing can clip under the nav (issue #127).
             VStack(spacing: 0) {
+                // #194: one-row header; the category is printed on the card chip.
                 HangsQuizProgressHeader(
-                    category: (viewModel.resultQuestion ?? viewModel.currentQuestion)
-                        .map { Config.categoryDisplayName(for: $0.category) } ?? "",
                     // #79: 1-based index of the question just answered OR
                     // skipped — the same number its question screen showed.
                     // Old backends (no asked_count) fall back to the answered
@@ -60,33 +63,14 @@ struct ResultView: View {
                     total: totalQuestions
                 )
                 .padding(.top, Theme.Hangs.Spacing.xs)
-                .padding(.bottom, Theme.Hangs.Spacing.sm)
 
-                // Rank 1 — the verdict, edge to edge (Variant A).
-                ResultVerdictBand(verdict: verdict)
-
-                // Rank 2 — the answer + why, filling whatever is left.
-                ResultAnswerPanel(
-                    answerLabel: answerLabel,
-                    answerText: answerText,
-                    isRecap: isRecap,
-                    explanation: explanationText,
-                    onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.horizontal, Theme.Hangs.Spacing.xl)
-                .padding(.top, 10)
-
-                // Rank 3 — everything else, in one quiet line.
-                ResultMetaRow(
-                    userAnswer: metaUserAnswer,
-                    sourceDomain: sourceDomain,
-                    reviewBadge: reviewBadge,
-                    reviewNote: reviewNote,
-                    onOpenSource: { showSourceWebView = true }
-                )
-                .padding(.horizontal, Theme.Hangs.Spacing.xl)
-                .padding(.top, Theme.Hangs.Spacing.xs)
+                // #194 R-Result / R-Wrong: verdict, answer, why and source on
+                // ONE card in the question's category colour.
+                resultCard
+                    .padding(.horizontal, Theme.Hangs.Spacing.md)
+                    .padding(.top, Theme.Hangs.Spacing.sm)
+                    .padding(.bottom, Theme.Hangs.Spacing.xs)
+                    .frame(maxHeight: .infinity)
 
                 ResultFooter(
                     feedbackPhase: viewModel.voiceFeedbackPhase,
@@ -137,6 +121,10 @@ struct ResultView: View {
         )
         .sensoryFeedback(resultHaptic, trigger: didAppear)
         .onAppear { didAppear = true }
+        .task {
+            guard cardMotion, !reduceMotion else { return }
+            cardReveal += 1
+        }
         .sheet(isPresented: $showSourceWebView) {
             if let sourceUrl = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl {
                 SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
@@ -153,6 +141,48 @@ struct ResultView: View {
 
     /// The #155 gate: TestFlight/Debug only, and only with a question to rate —
     /// `resultQuestion` first so an advanced quiz can't re-target the rating.
+    private var resultQuestionModel: Question? { viewModel.resultQuestion ?? viewModel.currentQuestion }
+
+    private var cardStyle: Theme.Hangs.Category.Style {
+        Theme.Hangs.Category.style(for: resultQuestionModel?.category)
+    }
+
+    private var resultCard: some View {
+        HangsDeckCard(
+            categoryId: resultQuestionModel?.category,
+            categoryName: resultQuestionModel.map { Config.categoryDisplayName(for: $0.category) } ?? "",
+            categoryIdentifier: "question.category"
+        ) {
+            ResultVerdictBadge(verdict: verdict, style: cardStyle)
+        } content: {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+                // Rank 1 — the verdict, one line.
+                if let word = verdict.word {
+                    ResultVerdictWord(word: word)
+                }
+                // Rank 2 — the answer (and on a miss, what was said) + why.
+                ResultAnswerPanel(
+                    answerLabel: answerLabel,
+                    answerText: answerText,
+                    isRecap: isRecap,
+                    explanation: explanationText,
+                    userAnswer: metaUserAnswer,
+                    style: cardStyle,
+                    onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
+                )
+                // Rank 3 — the source, small, last.
+                ResultMetaRow(
+                    sourceDomain: sourceDomain,
+                    reviewBadge: reviewBadge,
+                    reviewNote: reviewNote,
+                    tint: cardStyle.text,
+                    onOpenSource: { showSourceWebView = true }
+                )
+            }
+        }
+        .hangsCardArrival(trigger: cardReveal)
+    }
+
     private var rateQuestionAction: (() -> Void)? {
         guard let ratingEntry, ratingEntry.isEnabled,
               let questionId = (viewModel.resultQuestion ?? viewModel.currentQuestion)?.id
@@ -210,7 +240,7 @@ struct ResultView: View {
         return question.labelledAnswer(raw)
     }
 
-    /// "you said" belongs in the meta row only when the driver actually said
+    /// "you said" (under the answer since #194) appears only when the driver actually said
     /// something that was wrong — never on a correct answer (it is already the
     /// headline answer) and never on a skip (#131 Track D: nothing was said).
     private var metaUserAnswer: String? {

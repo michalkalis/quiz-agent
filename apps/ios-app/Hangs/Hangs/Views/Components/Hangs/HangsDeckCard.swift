@@ -137,14 +137,20 @@ struct HangsAnswerSticker: View {
     var body: some View {
         Text(text)
             .font(.hangsTitle)
-            .foregroundStyle(Theme.Hangs.Colors.ink)
+            // R-Result: ink on white in both modes, like the category chip —
+            // the one plate that reads on every category fill.
+            .foregroundStyle(Theme.Hangs.Category.chipText)
             .multilineTextAlignment(.leading)
+            // A long answer shrinks before it takes a third line: the card
+            // keeps its room for "why" (the screen never scrolls).
+            .lineLimit(2)
+            .minimumScaleFactor(0.5)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
             .padding(.vertical, Theme.Hangs.Spacing.xxs)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Hangs.Radius.chip, style: .continuous)
-                    .fill(Theme.Hangs.Colors.bgCard)
+                    .fill(Theme.Hangs.Category.chipFill)
             )
     }
 }

@@ -1,5 +1,5 @@
 # texts
-correct
+5
 Tvoj balík je pripravený na hranie
 Pripravených otázok: 5 z 30. Zvyšok sa generuje, kým hráš.
 Spusti kvíz

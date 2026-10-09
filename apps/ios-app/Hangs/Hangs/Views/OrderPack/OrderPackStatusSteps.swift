@@ -21,31 +21,37 @@ struct OrderPackPreparingStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
-            HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
-                VStack(spacing: Theme.Hangs.Spacing.md) {
-                    ProgressView()
-                        .tint(Theme.Hangs.Colors.action)
-                    Text("Building your pack…")
-                        .font(.hangsBody(17, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                        .multilineTextAlignment(.center)
-                    Text("Usually takes a few minutes. The first order after a longer break can take a bit extra.")
-                        .font(.hangsBody(13))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("You can close the app — your finished pack will be waiting in My packs.")
-                        .font(.hangsBody(13))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let progress {
-                        ProgressView(value: progress)
-                            .tint(Theme.Hangs.Colors.blue)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+            // #194 C8: the pack being dealt — the ink deck, a spinner on it.
+            ZStack {
+                PackMiniDeck(label: "", size: .hero)
+                ProgressView()
+                    .tint(Theme.Hangs.Category.style(for: nil).text)
             }
+            .padding(.top, Theme.Hangs.Spacing.lg)
+
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
+                Text("Building your pack…")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Usually takes a few minutes. The first order after a longer break can take a bit extra.")
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("You can close the app — your finished pack will be waiting in My packs.")
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let progress {
+                    ProgressView(value: progress)
+                        .tint(Theme.Hangs.Colors.accentPrimary)
+                        .padding(.top, Theme.Hangs.Spacing.xs)
+                }
+            }
+            .frame(maxWidth: .infinity)
 
             HangsPrimaryButton(title: "Got it", action: onDismiss)
                 .accessibilityIdentifier("orderPack.gotIt")
@@ -69,23 +75,33 @@ struct OrderPackReadyStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
-            HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
-                VStack(spacing: Theme.Hangs.Spacing.sm) {
-                    HangsResultBanner(kind: .correct)
-                    Text(isStillGenerating ? "Your pack is ready to play" : "Your pack is ready")
-                        .font(.hangsBody(18, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                    if isStillGenerating {
-                        Text("\(readyCount) of \(targetCount) questions ready. The rest keeps generating while you play.")
-                            .font(.hangsBody(13))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("orderPack.readyCount")
-                    }
+            // #194 C8 (canvas Bg-PackGenerating): the dealt deck with the
+            // playable count, a check, the headline, one segment per question.
+            PackMiniDeck(label: "\(isStillGenerating ? readyCount : targetCount)", size: .hero)
+                .padding(.top, Theme.Hangs.Spacing.lg)
+
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.live)
+                    .accessibilityHidden(true)
+                Text(isStillGenerating ? "Your pack is ready to play" : "Your pack is ready")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+                if isStillGenerating {
+                    Text("\(readyCount) of \(targetCount) questions ready. The rest keeps generating while you play.")
+                        .font(.hangsBodyLG)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("orderPack.readyCount")
+                    PackReadySegments(ready: readyCount, total: targetCount)
+                        .padding(.top, Theme.Hangs.Spacing.xs)
                 }
-                .frame(maxWidth: .infinity)
             }
+            .frame(maxWidth: .infinity)
 
             if let packId {
                 HangsPrimaryButton(title: "Start quiz", icon: "play.fill") {
@@ -118,11 +134,11 @@ struct OrderPackFailedStep: View {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
                 VStack(spacing: Theme.Hangs.Spacing.sm) {
                     Image(systemName: isRetryable ? "exclamationmark.triangle" : "clock.badge.checkmark")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(isRetryable ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.blue)
+                        .font(.hangsTitle)
+                        .foregroundStyle(isRetryable ? Theme.Hangs.Colors.error : Theme.Hangs.Colors.blueText)
                     Text(verbatim: message)
-                        .font(.hangsBody(16))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .font(.hangsBodyLG)
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)

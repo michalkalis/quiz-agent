@@ -1,5 +1,5 @@
 # texts
-correct
+30
 Tvoj balík je hotový
 Spusti kvíz
 Zavri

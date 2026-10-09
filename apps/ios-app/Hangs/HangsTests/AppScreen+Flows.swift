@@ -27,6 +27,8 @@ extension AppScreen {
             await makeOrder()
         case .paywallPack, .paywallOffline:
             await makePaywall()
+        case .myPacks:
+            await makePacks()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

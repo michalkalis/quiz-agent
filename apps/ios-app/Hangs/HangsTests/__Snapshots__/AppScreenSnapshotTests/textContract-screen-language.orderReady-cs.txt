@@ -1,5 +1,5 @@
 # texts
-correct
+30
 Tvůj balíček je hotový
 Spusť kvíz
 Zavři

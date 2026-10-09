@@ -52,33 +52,33 @@ struct HangsConfigRowLabel: View {
     var showsChevron: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs / 2) {
             HangsLabelValueLine {
                 Text(label)
-                    .font(.hangsBody(17, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(HangsRowStyle.labelFont)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
             } value: {
-                HStack(spacing: 6) {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
                     Text(value)
-                        .font(.hangsBody(17, weight: .semibold))
-                        .foregroundColor(valueColor)
+                        .font(.hangsBodyLG)
+                        .foregroundStyle(valueColor)
                     if showsChevron {
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(valueColor)
+                            .font(.hangsCaption.weight(.semibold))
+                            .foregroundStyle(Theme.Hangs.Colors.mutedFaint)
                     }
                 }
             }
             if let subtitle {
                 Text(subtitle)
-                    .font(.hangsBody(12))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, Theme.Hangs.Spacing.md)
-        .contentShape(Rectangle())
+        .padding(HangsRowStyle.padding)
+        .frame(minHeight: HangsRowStyle.minHeight)
+        .contentShape(.rect)
     }
 }
 
@@ -117,25 +117,26 @@ struct HangsToggleRow: View {
 
     var body: some View {
         HStack(spacing: Theme.Hangs.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs / 2) {
                 Text(label)
-                    .font(.hangsBody(16, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(HangsRowStyle.labelFont)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
             // a11y-id: call-site — the identifier belongs to the screen that places this component
             Toggle("", isOn: $isOn)
                 .labelsHidden()
-                .tint(Theme.Hangs.Colors.action)
+                // #194 C8: "on" is the live green, as in the canvas.
+                .tint(Theme.Hangs.Colors.liveAccent)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(HangsRowStyle.padding)
+        .frame(minHeight: HangsRowStyle.minHeight)
     }
 }
 
@@ -145,19 +146,27 @@ struct HangsToggleRow: View {
 struct HangsValueRow: View {
     let label: LocalizedStringKey
     let value: String
-    var valueFont: Font = .hangsMono(14, weight: .medium)
+    var valueFont: Font = .hangsBodyLG.monospacedDigit()
 
     var body: some View {
         HangsLabelValueLine {
             Text(label)
-                .font(.hangsBody(16, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(HangsRowStyle.labelFont)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
         } value: {
             Text(value)
                 .font(valueFont)
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(HangsRowStyle.padding)
+        .frame(minHeight: HangsRowStyle.minHeight)
     }
+}
+
+/// #194 C8 (canvas Bg-Settings): one row metric set — 17pt medium label,
+/// 52pt minimum row, 16pt side inset (the card's concentric inset).
+enum HangsRowStyle {
+    static let labelFont: Font = .hangsBodyLG.weight(.medium)
+    static let padding = EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
+    static let minHeight: CGFloat = 52
 }

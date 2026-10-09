@@ -48,12 +48,14 @@ struct ContextualSignInSheet: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        // #194 C7 (canvas Bg-SignIn): left-aligned sheet, cobalt badge, capsule
+        // Apple button, glass "Maybe later".
+        VStack(alignment: .leading, spacing: 0) {
             badge
-                .padding(.top, 28)
+                .padding(.top, Theme.Hangs.Spacing.xl)
 
             heroBlock
-                .padding(.top, Theme.Hangs.Spacing.lg)
+                .padding(.top, Theme.Hangs.Spacing.md)
 
             if phase == .failed {
                 errorBanner
@@ -61,70 +63,67 @@ struct ContextualSignInSheet: View {
             }
 
             actionStack
-                .padding(.top, phase == .failed ? 16 : 28)
+                .padding(.top, Theme.Hangs.Spacing.lg)
 
-            Spacer(minLength: 0)
+            Spacer(minLength: Theme.Hangs.Spacing.md)
 
             privacyNote
                 .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
-        .padding(.horizontal, 28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.Hangs.Colors.bgCard.ignoresSafeArea())
+        .padding(.horizontal, Theme.Hangs.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.Hangs.Colors.bgSheet.ignoresSafeArea())
         .accessibilityIdentifier("signInPrompt.root")
     }
 
     // MARK: - Blocks
 
     private var badge: some View {
-        ZStack {
-            Circle()
-                .fill(Theme.Hangs.Colors.accentPrimarySoft)
-                .frame(width: 64, height: 64)
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 30, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-        }
-        .accessibilityHidden(true)
-        .accessibilityIdentifier("signInPrompt.badge")
+        Image(systemName: "checkmark.seal.fill")
+            .font(.hangsHeading)
+            .foregroundStyle(Theme.Hangs.Colors.textOnAccent)
+            .frame(width: Metrics.badge, height: Metrics.badge)
+            .background(Circle().fill(Theme.Hangs.Colors.accentPrimary))
+            .accessibilityHidden(true)
+            .accessibilityIdentifier("signInPrompt.badge")
     }
 
     private var heroBlock: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             Text("KEEP YOUR PURCHASE")
-                .font(.hangsDisplaySM)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .multilineTextAlignment(.center)
+                .font(.hangsTitle)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("signInPrompt.title")
 
             Text("Signing in links Premium to your Apple account — it stays with you on a new phone or after reinstalling.")
-                .font(.hangsBody(15))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
+                .font(.hangsBodyLG)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("signInPrompt.subtitle")
         }
     }
 
     private var errorBanner: some View {
-        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 14))
-                .foregroundColor(Theme.Hangs.Colors.error)
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: "exclamationmark")
+                .font(.hangsCaption.weight(.bold))
+                .foregroundStyle(Theme.Hangs.Category.style(for: "sports").text)
+                .frame(width: Metrics.errorDisc, height: Metrics.errorDisc)
+                .background(Circle().fill(Theme.Hangs.Category.style(for: "sports").fill))
                 .accessibilityHidden(true)
             Text("Sign-in didn't work. Check your connection and try again — your purchase is still saved on this device.")
-                .font(.hangsBody(13))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Theme.Hangs.Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Theme.Hangs.Colors.errorSoft)
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(Theme.Hangs.Colors.bgCard)
+                .strokeBorder(Theme.Hangs.Colors.subtleBorder)
         )
         .accessibilityIdentifier("signInPrompt.errorBanner")
     }
@@ -137,16 +136,14 @@ struct ContextualSignInSheet: View {
                 appleButton
             }
 
-            HangsGhostButton(
+            HangsSecondaryButton(
                 title: phase == .failed
                     ? "Later — I'll sign in from Settings"
                     : "Maybe later",
-                color: Theme.Hangs.Colors.muted,
-                font: .hangsBody(15, weight: .medium)
+                height: Metrics.buttonHeight
             ) {
                 onDismiss()
             }
-            .frame(height: 44)
             .disabled(phase == .signingIn)
             .accessibilityIdentifier("signInPrompt.later")
         }
@@ -162,39 +159,48 @@ struct ContextualSignInSheet: View {
             handleAppleSignInResult(result)
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(height: 54)
+        .frame(height: Metrics.buttonHeight)
+        .clipShape(Capsule())
         .accessibilityIdentifier("signInPrompt.appleButton")
     }
 
     /// Mirrors the SIWA button's footprint while completeAppleSignIn runs,
     /// so the sheet doesn't jump between states.
     private var signingInIndicator: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             ProgressView()
                 .tint(Theme.Hangs.Colors.textOnAccent)
             Text("Signing in…")
-                .font(.hangsBody(17, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+                .font(.hangsLabel)
+                .foregroundStyle(Theme.Hangs.Colors.textOnAccent)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 54)
+        .frame(height: Metrics.buttonHeight)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            Capsule()
                 .fill(Color.black) // design-token: mirrors Apple's black Sign in with Apple button
         )
         .accessibilityIdentifier("signInPrompt.signingIn")
     }
 
     private var privacyNote: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "lock")
-                .font(.system(size: 11))
-                .accessibilityHidden(true)
+        Label {
             Text("Keeps your purchases and progress across devices. Nothing else is shared.")
-                .font(.hangsBody(12))
+                .font(.hangsCaption)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "lock")
+                .font(.hangsCaption)
+                .accessibilityHidden(true)
         }
-        .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+        .foregroundStyle(Theme.Hangs.Colors.muted)
         .accessibilityIdentifier("signInPrompt.privacyNote")
+    }
+
+    private enum Metrics {
+        static let badge: CGFloat = 60
+        static let errorDisc: CGFloat = 30
+        static let buttonHeight: CGFloat = 56
     }
 
     // MARK: - Sign-in handling

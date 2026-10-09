@@ -310,6 +310,11 @@ extension Font {
     // #194 B1 — canvas type scale (caption 13 · body 17 · heading 22 · title 28 · display 40).
     static var hangsOverline: Font { .hangsMono(13, weight: .semibold) }
     static var hangsTitle: Font { .hangsDisplay(28) }
+    // #194 C — the rest of the canvas scale for the app screens.
+    static var hangsCaption: Font { .hangsBody(13) }
+    static var hangsBodyLG: Font { .hangsBody(17) }
+    static var hangsLabel: Font { .hangsBody(17, weight: .semibold) }
+    static var hangsHeading: Font { .hangsDisplay(22) }
 }
 
 // MARK: - View helpers

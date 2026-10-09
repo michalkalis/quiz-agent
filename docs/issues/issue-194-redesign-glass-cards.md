@@ -38,11 +38,16 @@
 - [x] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
 
 ### B. Základy (prvý kód nového vzhľadu)
-- [~] B1 — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
-- [~] B2 — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
-  - 2026-10-08 (PR B1+B2, čaká na schválenie foundera): paleta Bg svetlá aj tmavá, farby 7 kategórií + vlastné balíčky, SF cez iOS textové štýly (Dynamic Type ostáva; display 28/40/52), hlavné tlačidlo atrament s odpočtom, sklo na ovládačoch (koliesko, ✕, Písať, Preskoč, lišta Počúvam), pilulky postupu atrament, nesprávna odpoveď neutrálna; nové `HangsDeckCard` + `HangsAnswerSticker` (do obrazoviek vo fáze C). Svetlé snímky obrazoviek pribudli. Sklo sa v testových snímkach nevykreslí, overené na simulátore.
-- [ ] B3 — pohyb: rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
-- [ ] B4 — katalóg (#188) pregenerovaný z nových tokenov a komponentov.
+- [x] B1 (#306) — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
+- [x] B2 (#306) — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
+  - Zlúčené 2026-10-09: paleta Bg svetlá aj tmavá, farby 7 kategórií + vlastné balíčky, SF cez iOS textové štýly (Dynamic Type ostáva; display 28/40/52), hlavné tlačidlo atrament s odpočtom, sklo na ovládačoch (koliesko, ✕, Písať, Preskoč, lišta Počúvam), pilulky postupu atrament, nesprávna odpoveď neutrálna; nové `HangsDeckCard` + `HangsAnswerSticker` (do obrazoviek vo fáze C). Svetlé snímky obrazoviek pribudli. Sklo sa v testových snímkach nevykreslí, overené na simulátore.
+- [ ] B3 — pohyb (robí sa priamo v C2–C4): rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
+- [~] B4 — katalóg (#188) pregenerovaný z nových tokenov a komponentov (generátor už pozná nové názvy tokenov, #306; republikovanie po fáze C).
+
+### Postup od 2026-10-09
+- **Founder 2026-10-09:** medzivýsledky neschvaľuje, chce vidieť až finálnu verziu. PR redizajnu sa zlučujú po nezávislom review + zelenom CI; na konci jedna stránka pred/po (svetlý aj tmavý) celej appky. Produktové otázky sa kladú počas práce.
+- Fáza C beží v dvoch paralelných linkách (jedno PR na skupinu): kvíz C2 → C3 → C4 → C5 (+ B3 pohyb) na simulátore iPhone 18 Pro; ostatné C1, C6, C7, C8, C9 na iPhone 17e. Kvízová linka vlastní zdieľané kvízové komponenty a tlačidlá, druhá linka len svoje obrazovky.
+- Po fáze C: D2 logo v appke, B4 republikovanie katalógu, E1 plná sada testov + RS-01 až RS-21, potom finálne pred/po pre foundera.
 
 ### C. Obrazovky (jedno PR na skupinu, obrázky pred a po na schválenie)
 - [ ] C1 — Domov: plán vo všetkých 5 variantoch, moje balíčky, rozohrané kolo ako doplnok panela.
@@ -56,7 +61,7 @@
 - [ ] C9 — Chybová obrazovka a offline.
 
 ### D. Značka
-- [ ] D1 — ikona appky z loga 2 cez Icon Composer (Default, Dark, Tinted, Clear), vektory ako PDF.
+- [x] D1 (#309) — ikona appky z loga 2 cez Icon Composer (Default, Dark, Tinted, Clear); vrstvy SVG, lebo actool PDF vrstvy z ikony vypustí (pravidlo PDF platí pre `.xcassets`).
 - [ ] D2 — logo a nápis v appke (úvod, hlavička domova).
 
 ### E. Overenie

@@ -176,6 +176,7 @@ CATEGORY_TAXONOMY = (
     "movies-music",
     "sports",
     "food-everyday",
+    "entertainment",
 )
 
 
@@ -190,6 +191,7 @@ class CategoryAssignment(BaseModel):
         "movies-music",
         "sports",
         "food-everyday",
+        "entertainment",
     ]
 
 

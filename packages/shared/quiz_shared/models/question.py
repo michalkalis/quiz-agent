@@ -121,7 +121,8 @@ class Question(BaseModel):
         ...,
         description=(
             "Interest category the app's picker filters on (science-nature, "
-            "history, geography-world, movies-music, sports, food-everyday — "
+            "history, geography-world, movies-music, sports, food-everyday, "
+            "entertainment — "
             "see CATEGORY_TAXONOMY in the quiz-agent admin API); custom packs "
             "may carry free-form categories, reached via pack selection."
         ),

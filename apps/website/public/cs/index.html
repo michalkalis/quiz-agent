@@ -10,7 +10,7 @@
 <link rel="alternate" hreflang="sk" href="https://trubbo.app/sk/">
 <link rel="alternate" hreflang="cs" href="https://trubbo.app/cs/">
 <link rel="alternate" hreflang="x-default" href="https://trubbo.app/">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E8EAEE">
@@ -26,6 +26,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Trubbo">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/rethink-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -35,6 +36,8 @@
   only transform/opacity animate, backdrop-filter only on small pills, no endless animation offscreen.
 -->
 <style>
+@font-face{font-family:"Rethink Sans";font-style:normal;font-weight:400 800;font-display:swap;src:url(/rethink-sans-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Rethink Sans";font-style:normal;font-weight:400 800;font-display:swap;src:url(/rethink-sans-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   color-scheme:light dark;
   --bg:#E8EAEE;--ink:#111216;--ink2:#3F4350;--ink3:#5A5E69;--surf:#FFFFFF;--line:rgba(17,18,22,.1);--link:#1A2FC4;
@@ -44,7 +47,8 @@
   --g-sh:0 10px 30px rgba(17,18,22,.14),0 1px 2px rgba(17,18,22,.08);
   --cta-bg:rgba(17,18,22,.9);--cta-ink:#FFFFFF;--card-sh:0 22px 44px rgba(17,18,22,.18);--live:#D42A72;--ok:#0E8A66;--okbg:rgba(63,224,174,.22);--no:#C4325A;
   --screen:#E8EAEE;
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --font:"Rethink Sans",var(--ui);
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0F1014;--ink:#F2F3F5;--ink2:#C3C6CF;--ink3:#9A9EA9;--surf:#1C1D23;--line:rgba(255,255,255,.1);--link:#8C9BFF;
@@ -73,17 +77,17 @@ h1,h2,h3,p{margin:0}
 .mark .k1{fill:var(--l1)}.mark .k2{fill:var(--l2)}.mark .k3{fill:var(--l3)}.mark .k4{fill:var(--l4)}.mark .k5{fill:var(--l5)}
 .brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
 .brand span{font-size:26px;font-weight:800;letter-spacing:-1px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 26px;border-radius:28px;font:inherit;font-size:18px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,.18);background:var(--cta-bg);color:var(--cta-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 30px rgba(17,18,22,.25)}
+.btn{font-family:var(--ui);display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 26px;border-radius:28px;font-size:18px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,.18);background:var(--cta-bg);color:var(--cta-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 30px rgba(17,18,22,.25)}
 .btn-s{min-height:44px;padding:0 18px;border-radius:22px;font-size:15px}
 
 header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
-.lang{margin-left:auto;display:flex;gap:2px;font-size:14px;font-weight:700}
+.lang{font-family:var(--ui);margin-left:auto;display:flex;gap:2px;font-size:14px;font-weight:700}
 .lang a{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:20px;color:var(--ink3);text-decoration:none}
 .lang a[aria-current]{color:var(--ink);background:var(--surf)}
 @media (max-width:459px){header.top .btn-s{display:none}}
 
 .intro{padding:40px 0 24px;max-width:760px}
-.intro h1{font-size:clamp(40px,7.5vw,84px);line-height:.98;font-weight:900;letter-spacing:-.03em;text-wrap:balance}
+.intro h1{font-size:clamp(40px,7.5vw,84px);line-height:.98;font-weight:900;letter-spacing:-.015em;text-wrap:balance}
 .intro p{margin-top:18px;font-size:19px;color:var(--ink2);max-width:32em}
 .ctas{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 .note{font-size:14px;color:var(--ink3)}
@@ -107,7 +111,7 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .deck{position:absolute;left:0;right:0;top:52px;bottom:84px}
 .card{position:absolute;inset:0 22px;border-radius:30px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--card-sh);transition:transform .6s cubic-bezier(.3,1.3,.5,1),opacity .4s}
 .card .cat{font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
-.card .q{font-size:21px;line-height:1.1;font-weight:900;letter-spacing:-.02em}
+.card .q{font-size:21px;line-height:1.1;font-weight:900;letter-spacing:-.01em}
 @media (min-width:900px){.card .q{font-size:34px}}
 .k-orange{background:var(--c-orange);color:#111216}
 .k-green{background:var(--c-green);color:#111216}
@@ -122,7 +126,7 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .qc{transform:translateY(120%) rotate(6deg);opacity:0}
 .nx{transform:translateY(120%) rotate(-6deg);opacity:0}
 .rs{background:var(--surf);color:var(--ink);justify-content:flex-start;gap:6px;transform:translateY(120%);opacity:0;bottom:-64px}
-.rs .score{font-size:44px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.rs .score{font-size:44px;font-weight:900;letter-spacing:-.015em;line-height:1}
 .rs ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;font-size:14px;font-weight:600;color:var(--ink2)}
 .rs li{display:flex;gap:8px;align-items:baseline;min-width:0}
 .rs li b{flex:0 0 14px;text-align:center}
@@ -162,7 +166,7 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .step{min-height:72vh;min-height:72svh;display:flex;flex-direction:column;justify-content:center;padding:32px 0;max-width:30em}
 @media (min-width:900px){.step{min-height:86vh}}
 .step .n{font-size:13px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink3)}
-.step h2{font-size:clamp(30px,4.6vw,46px);line-height:1.04;font-weight:900;letter-spacing:-.03em;margin-top:10px;text-wrap:balance}
+.step h2{font-size:clamp(30px,4.6vw,46px);line-height:1.04;font-weight:900;letter-spacing:-.015em;margin-top:10px;text-wrap:balance}
 .step p{margin-top:14px;font-size:18px;color:var(--ink2)}
 .mini{display:none}
 
@@ -180,13 +184,13 @@ header.top{display:flex;align-items:center;gap:12px;padding:18px 0}
 .after{padding:64px 0 24px;display:grid;gap:14px}
 @media (min-width:800px){.after{grid-template-columns:repeat(3,1fr)}}
 .box{border-radius:28px;padding:24px;background:var(--surf)}
-.box h3{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.box h3{font-size:22px;font-weight:800;letter-spacing:-.01em}
 .box p,.box li{color:var(--ink2);font-size:16px}
 .box p{margin-top:8px}
 .box ul{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
 .box li b{color:var(--ink);font-size:18px}
 .close{margin:40px 0 0;border-radius:34px;padding:36px 24px;text-align:center}
-.close h2{font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1.04}
+.close h2{font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-.015em;line-height:1.04}
 .close p{margin:12px auto 24px;color:var(--ink2);font-size:17px;max-width:30em}
 
 footer{padding:40px 0 48px;color:var(--ink3);font-size:14px}
@@ -207,7 +211,7 @@ footer address{font-style:normal;margin-top:12px}
 <div class="wrap">
   <header class="top">
     <a class="brand" href="./" aria-label="Trubbo">
-      <svg class="mark" width="28" height="32" viewBox="16 10 68 80" aria-hidden="true"><g transform="rotate(-6 26 50)"><rect class="k1" x="21" y="37" width="10" height="26" rx="4"/></g><g transform="rotate(4 38 50)"><rect class="k2" x="33" y="26" width="10" height="48" rx="4"/></g><g transform="rotate(-3 50 50)"><rect class="k3" x="45" y="17" width="10" height="66" rx="4"/></g><g transform="rotate(5 62 50)"><rect class="k4" x="57" y="28" width="10" height="44" rx="4"/></g><g transform="rotate(-5 74 50)"><rect class="k5" x="69" y="36" width="10" height="28" rx="4"/></g></svg>
+      <svg class="mark" width="20" height="33" viewBox="27 8 46 79" aria-hidden="true"><path d="M34 30 A16 16 0 1 1 62.3 40.3 Q50 46 50 55" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/><g transform="rotate(-6 36.5 76)"><rect class="k2" x="33.5" y="70" width="6" height="12" rx="3"/></g><g transform="rotate(4 45.5 76)"><rect class="k3" x="42.5" y="66" width="6" height="20" rx="3"/></g><g transform="rotate(-3 54.5 76)"><rect class="k4" x="51.5" y="69" width="6" height="14" rx="3"/></g><g transform="rotate(5 63.5 76)"><rect class="k5" x="60.5" y="71.5" width="6" height="9" rx="3"/></g></svg>
       <span>trubbo</span>
     </a>
     <nav class="lang" aria-label="Jazyk"><a href="/" hreflang="en" lang="en">EN</a><a href="/sk/" hreflang="sk" lang="sk">SK</a><a href="/cs/" hreflang="cs" lang="cs" aria-current="page">CS</a></nav>

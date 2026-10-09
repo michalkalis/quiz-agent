@@ -1,7 +1,7 @@
 # trubbo.app website
 
 Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`.
-No framework, no web fonts, no external requests. Each page is one self-contained HTML file (about 8 KB gzipped).
+No framework, no external requests. One self-hosted web font: Rethink Sans (content and headings, SIL OFL, license next to the files); buttons and the language switch use the system font, like the app. Each page is one self-contained HTML file (about 8 KB gzipped).
 
 ## Layout
 

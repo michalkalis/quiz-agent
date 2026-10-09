@@ -28,7 +28,7 @@ struct SetRecapView: View {
     var body: some View {
         VStack(spacing: 0) {
             HangsBrandRow {
-                HangsNavChip(icon: "xmark") { viewModel.resetToHome() }
+                HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
                     .accessibilityIdentifier("recap.close")
             }
 

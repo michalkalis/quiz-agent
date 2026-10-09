@@ -40,7 +40,7 @@ struct HangsBrandRowInspectorTests {
 
     @Test("Right accessory view renders when provided")
     func rightAccessoryRendersWhenProvided() async throws {
-        let view = HangsBrandRow { HangsNavChip(icon: "gearshape") {} }
+        let view = HangsBrandRow { HangsNavChip(icon: "gearshape", label: "Settings") {} }
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {

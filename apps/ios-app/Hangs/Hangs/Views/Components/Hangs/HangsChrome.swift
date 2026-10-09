@@ -35,6 +35,8 @@ struct HangsBrandMark: View {
 /// 44pt Liquid Glass nav button (#194 B2: glass is the control layer). Used for gear, close, back.
 struct HangsNavChip: View {
     let icon: String
+    /// Spoken name of the action. Icon-only chips must never fall back to the SF Symbol name.
+    let label: LocalizedStringKey
     var cornerRadius: CGFloat = Theme.Hangs.Radius.navRound
     var action: () -> Void
 
@@ -48,7 +50,7 @@ struct HangsNavChip: View {
                 .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(icon)
+        .accessibilityLabel(Text(label))
     }
 }
 
@@ -257,7 +259,7 @@ struct HangsSessionDot: View {
     #Preview {
         VStack(spacing: 0) {
             HangsBrandRow {
-                HangsNavChip(icon: "gearshape") {}
+                HangsNavChip(icon: "gearshape", label: "Settings") {}
             }
             HangsProgressBar(progress: 0.3)
             Spacer()

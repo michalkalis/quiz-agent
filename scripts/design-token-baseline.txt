@@ -135,11 +135,6 @@ apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	.padding(.hor
 apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	.padding(.top, 28)	1
 apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	spacing: 10	2
 apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	spacing: 6	1
-apps/ios-app/Hangs/Hangs/Views/ErrorView.swift	font	.hangsBody(15	1
-apps/ios-app/Hangs/Hangs/Views/ErrorView.swift	font	.hangsBody(17	1
-apps/ios-app/Hangs/Hangs/Views/ErrorView.swift	font	.system(size: 48	1
-apps/ios-app/Hangs/Hangs/Views/ErrorView.swift	spacing	.padding(.horizontal, 28)	1
-apps/ios-app/Hangs/Hangs/Views/ErrorView.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	color	.foregroundStyle(.white	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	font	.hangsBody(12	1

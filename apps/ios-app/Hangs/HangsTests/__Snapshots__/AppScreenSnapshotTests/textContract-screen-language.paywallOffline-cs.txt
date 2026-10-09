@@ -1,0 +1,12 @@
+# texts
+trubbo.
+OBCHOD
+NEDOSTUPNÝ
+Nabídku se teď nepodařilo načíst. Zkontroluj připojení a zkus to znovu.
+Zkus znovu
+# identifiers
+paywall-close-x-button
+paywall.offline.icon
+paywall.offline.headline
+paywall.offline.subtitle
+paywall-offline-retry-button

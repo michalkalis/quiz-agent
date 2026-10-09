@@ -190,23 +190,6 @@ apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackSummaryStep.swift	font	.hangsB
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackSummaryStep.swift	font	.hangsBody(16	1
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackSummaryStep.swift	font	.system(size: 15	1
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackSummaryStep.swift	spacing	spacing: 14	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(11	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(12	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(13	5
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(14	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(15	4
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsBody(16	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.hangsMono(10	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.system(size: 12	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.system(size: 17	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	font	.system(size: 44	3
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	.padding(.horizontal, 14)	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	.padding(.top, 2)	3
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	.padding(.vertical, 14)	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	.padding(.vertical, 6)	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	spacing: 10	1
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	spacing: 3	2
-apps/ios-app/Hangs/Hangs/Views/PaywallView.swift	spacing	spacing: 6	1
 apps/ios-app/Hangs/Hangs/Views/QuestionView.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/QuestionView.swift	font	.hangsBody(13	1
 apps/ios-app/Hangs/Hangs/Views/QuestionView.swift	font	.hangsBody(16	1

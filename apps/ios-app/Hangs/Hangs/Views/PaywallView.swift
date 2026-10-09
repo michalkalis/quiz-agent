@@ -9,6 +9,10 @@
 //    PouwN — offline paywall ("CAN'T REACH THE STORE") shown when the offering
 //            is unavailable after a completed load attempt.
 //
+//  #194 C6: restyled to "Sklo nad kartami" — glass ✕, a small card stack,
+//  cobalt for the chosen plan, one ink CTA (spinner while buying) at the
+//  bottom. Behaviour and copy are the beta's.
+//
 //  Prices always come from RC `displayPrice` (locale-formatted) — never
 //  hardcoded (founder decision 2026-07-11). "Restore purchases" is
 //  subscription-only — the consumable pack has no StoreKit restore; its
@@ -51,14 +55,13 @@ struct PaywallView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // #179 finding 9: the offline variant lost "Maybe tomorrow" too,
+            // so it needs the ✕ — otherwise "Try Again" is the only control
+            // on screen and the user is stuck behind an unreachable store.
+            HangsBrandRow { closeButton }
             if isOffline {
-                // #179 finding 9: the offline variant lost "Maybe tomorrow" too,
-                // so it needs the ✕ — otherwise "Try Again" is the only control
-                // on screen and the user is stuck behind an unreachable store.
-                HangsBrandRow { closeButton }
                 offlineBody
             } else {
-                HangsBrandRow { closeButton }
                 paywallBody
             }
         }
@@ -67,51 +70,60 @@ struct PaywallView: View {
     }
 
     private var closeButton: some View {
-        Button(action: onDismiss) {
-            Image(systemName: "xmark")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.muted)
-                .frame(width: 32, height: 32)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "Close", comment: "Accessibility label for the paywall close (X) button"))
-        .accessibilityIdentifier("paywall-close-x-button")
+        HangsNavChip(icon: "xmark", label: "Close", action: onDismiss)
+            .accessibilityIdentifier("paywall-close-x-button")
     }
 
     // MARK: - z8TS6 — Subscription paywall (plan picker)
 
     private var paywallBody: some View {
-        ScrollView {
-            VStack(spacing: Theme.Hangs.Spacing.xl) {
-                if case let .success(productID) = storeManager.purchaseState {
-                    purchaseSuccessBlock(productID: productID)
-                        .padding(.top, Theme.Hangs.Spacing.xxl)
-                } else if case .activating = storeManager.purchaseState {
+        // The CTA stack sits at the bottom while everything fits and follows
+        // the content when it doesn't (large text); the reader is outside the
+        // scroll view, so measuring never feeds its own layout.
+        GeometryReader { viewport in
+            ScrollView {
+                paywallContent
+                    .padding(.horizontal, Theme.Hangs.Spacing.md)
+                    .padding(.bottom, Theme.Hangs.Spacing.md)
+                    .frame(minHeight: viewport.size.height, alignment: .top)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
                     // #102 finding 4: RC confirmed the purchase but the server
                     // `/usage` mirror hasn't caught up yet — show "finishing
                     // activation" instead of claiming the entitlement is fully
                     // live. Does not auto-dismiss (unlike `.success` below);
                     // the user can close manually, and later reconcile passes
                     // (launch/foreground, next paywall open) catch it up.
-                    activatingBlock
-                        .padding(.top, Theme.Hangs.Spacing.xxl)
-                } else {
-                    paywallIconCircle
-                        .padding(.top, Theme.Hangs.Spacing.lg)
+    }
 
-                    paywallHeroBlock
+    @ViewBuilder
+    private var paywallContent: some View {
+        VStack(spacing: Theme.Hangs.Spacing.md) {
+            if case let .success(productID) = storeManager.purchaseState {
+                Spacer(minLength: Theme.Hangs.Spacing.xxl)
+                purchaseSuccessBlock(productID: productID)
+                Spacer(minLength: Theme.Hangs.Spacing.xxl)
+            } else if case .activating = storeManager.purchaseState {
+                Spacer(minLength: Theme.Hangs.Spacing.xxl)
+                activatingBlock
+                Spacer(minLength: Theme.Hangs.Spacing.xxl)
+            } else {
+                paywallIconCircle
 
-                    if let resetDate = limitError?.resetDate {
-                        CountdownPill(resetDate: resetDate)
-                    }
+                paywallHeroBlock
 
-                    planPicker
-
-                    paywallCTAStack
+                if let resetDate = limitError?.resetDate {
+                    CountdownPill(resetDate: resetDate)
                 }
+
+                planPicker
+                    .padding(.top, Theme.Hangs.Spacing.xs)
+
+                Spacer(minLength: Theme.Hangs.Spacing.sm)
+
+                paywallCTAStack
             }
-            .padding(.horizontal, Theme.Hangs.Spacing.lg)
-            .padding(.bottom, Theme.Hangs.Spacing.xl)
         }
         .onAppear { storeManager.resetPurchaseState() }
         // Show the confirmation beat, then close — the paywall owns its own
@@ -133,34 +145,25 @@ struct PaywallView: View {
     /// core complaint): distinct copy per product class, auto-dismisses.
     private func purchaseSuccessBlock(productID: String?) -> some View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
-            ZStack {
-                Circle()
-                    .fill(Theme.Hangs.Colors.greenSoft)
-                    .frame(width: 104, height: 104)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.greenCheck)
+            PaywallHeroDeck(fills: Self.deckFills) {
+                PaywallBadge(tint: Theme.Hangs.Colors.live) {
+                    Image(systemName: "checkmark")
+                }
             }
-            .accessibilityHidden(true)
 
-            VStack(spacing: Theme.Hangs.Spacing.xs) {
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
                 Text(productID == StoreProduct.packId ? "PACK ADDED" : "YOU'RE ALL SET")
-                    .font(.hangsDisplayMD)
+                    .font(.hangsDisplaySM)
                     .hangsHeadlineFit()
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("paywall.success.headline")
-
-                Capsule()
-                    .fill(Theme.Hangs.Colors.greenCheck)
-                    .frame(width: 40, height: 3)
-                    .accessibilityHidden(true)
 
                 Text(productID == StoreProduct.packId
                     ? "100 questions were added to your account."
                     : "Unlimited questions are now active.")
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.success.subtitle")
             }
@@ -174,48 +177,40 @@ struct PaywallView: View {
     /// the server gate would actually allow it.
     private var activatingBlock: some View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
-            ZStack {
-                Circle()
-                    .fill(Theme.Hangs.Colors.actionSoft)
-                    .frame(width: 104, height: 104)
-                ProgressView()
-                    .tint(Theme.Hangs.Colors.action)
-                    .scaleEffect(1.4)
+            PaywallHeroDeck(fills: Self.deckFills) {
+                PaywallBadge(tint: Theme.Hangs.Colors.ink) {
+                    ProgressView().tint(Theme.Hangs.Colors.ink)
+                }
             }
-            .accessibilityHidden(true)
 
-            VStack(spacing: Theme.Hangs.Spacing.xs) {
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
                 Text("FINISHING UP")
-                    .font(.hangsDisplayMD)
+                    .font(.hangsDisplaySM)
                     .hangsHeadlineFit()
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("paywall.activating.headline")
 
-                Capsule()
-                    .fill(Theme.Hangs.Colors.action)
-                    .frame(width: 40, height: 3)
-                    .accessibilityHidden(true)
-
                 Text("Your purchase went through. We're confirming it now, which can take a few seconds.")
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.activating.subtitle")
             }
         }
     }
 
+    /// Category cards behind the paywall glyphs (canvas: mandarin, green, cobalt).
+    private static var deckFills: [Color] {
+        ["history", "science-nature", "geography-world"].map { Theme.Hangs.Category.style(for: $0).fill }
+    }
+
     private var paywallIconCircle: some View {
-        ZStack {
-            Circle()
-                .fill(Theme.Hangs.Colors.actionSoft)
-                .frame(width: 104, height: 104)
+        PaywallHeroDeck(fills: Self.deckFills) {
             Image(systemName: "infinity")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.action)
+                .font(.hangsHeading)
+                .foregroundStyle(Theme.Hangs.Category.style(for: "geography-world").text)
         }
-        .accessibilityHidden(true)
         .accessibilityIdentifier("paywall.icon")
     }
 
@@ -224,21 +219,16 @@ struct PaywallView: View {
             // #96 P3 (founder no-wrap): single line, never the old "GO\nUNLIMITED"
             // two-line break — scales down before it would wrap.
             Text("GO UNLIMITED")
-                .font(.hangsDisplayMD)
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsDisplaySM)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("paywall.headline")
 
-            Capsule()
-                .fill(Theme.Hangs.Colors.action)
-                .frame(width: 40, height: 3)
-                .accessibilityHidden(true)
-
             Text(limitMessage)
-                .font(.hangsBody(15))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsBodyLG)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("paywall.subtitle")
@@ -273,7 +263,7 @@ struct PaywallView: View {
     private static let restoreFadedOpacity: Double = 0.35
 
     private var planPicker: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             if let monthly = storeManager.offerings?.monthly {
                 planCard(
                     title: "Monthly",
@@ -288,9 +278,9 @@ struct PaywallView: View {
 
             if let pack = storeManager.offerings?.pack {
                 Text("or top up without subscribing")
-                    .font(.hangsBody(12, weight: .medium))
-                    .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                    .padding(.top, 2)
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
                     // Recedes while any purchase/restore is in flight — the pack
                     // is no longer the offered path while something is buying.
                     .opacity(isBusy ? Self.dimmedOpacity : 1)
@@ -298,6 +288,14 @@ struct PaywallView: View {
                 packCard(pack)
             }
         }
+    }
+
+    /// #194 C6: the chosen plan is a cobalt card with white type (the
+    /// selection colour app-wide); the other one stays a white card.
+    private func planSurface(isSelected: Bool) -> some View {
+        RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+            .fill(isSelected ? Theme.Hangs.Colors.accentPrimary : Theme.Hangs.Colors.bgCard)
+            .strokeBorder(isSelected ? Color.clear : Theme.Hangs.Colors.hairline)
     }
 
     private func planCard(
@@ -314,30 +312,22 @@ struct PaywallView: View {
         // a11y-id: call-site — the identifier belongs to the screen that places this component
         return Button(action: action) {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs / 2) {
                     Text(title)
-                        .font(.hangsBody(16, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .font(.hangsHeading)
                     Text(price)
-                        .font(.hangsBody(13))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .font(.hangsLabel)
+                        .opacity(isSelected ? 0.85 : 1)
                 }
-                Spacer()
-                planRadio(check)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                planRadio(check, onCobalt: isSelected)
             }
+            .foregroundStyle(isSelected ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.ink)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                    .fill(Theme.Hangs.Colors.bgCard)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.subtleBorder,
-                        lineWidth: isSelected ? 2 : 1.5
-                    )
-            )
+            .padding(.vertical, Theme.Hangs.Spacing.md)
+            .frame(minHeight: Metrics.planMinHeight)
+            .background(planSurface(isSelected: isSelected))
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .opacity(isDimmed ? Self.dimmedOpacity : 1)
@@ -347,29 +337,29 @@ struct PaywallView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private func planRadio(_ style: PaywallPickerState.Check) -> some View {
+    private func planRadio(_ style: PaywallPickerState.Check, onCobalt: Bool) -> some View {
         ZStack {
             switch style {
             case .solid:
                 Circle()
-                    .fill(Theme.Hangs.Colors.action)
+                    .fill(Theme.Hangs.Colors.textOnAccent)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.textOnAction)
+                    .font(.hangsCaption.weight(.bold))
+                    .foregroundStyle(Theme.Hangs.Colors.accentPrimary)
             case .hollow:
-                // Demoted: pink outline + pink check, still readable as "this is
-                // what you'd buy next" without competing with the busy product.
+                // Demoted: an outline + check, still readable as "this is what
+                // you'd buy next" without competing with the busy product.
                 Circle()
-                    .strokeBorder(Theme.Hangs.Colors.action, lineWidth: 1.5)
+                    .strokeBorder(onCobalt ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.accentPrimary, lineWidth: Metrics.ringWidth)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Theme.Hangs.Colors.action)
+                    .font(.hangsCaption.weight(.bold))
+                    .foregroundStyle(onCobalt ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.accentPrimary)
             case .none:
                 Circle()
-                    .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1.5)
+                    .strokeBorder(Theme.Hangs.Colors.track, lineWidth: Metrics.ringWidth)
             }
         }
-        .frame(width: 24, height: 24)
+        .frame(width: Metrics.radio, height: Metrics.radio)
         .accessibilityHidden(true)
     }
 
@@ -377,8 +367,8 @@ struct PaywallView: View {
     /// purchase outright — a card sitting in a picker, next to two cards that
     /// only select, that charged you instead. It SELECTS now, like the plan
     /// cards, and the bottom CTA is the only thing that buys. Still drawn
-    /// lighter than the plan cards (smaller title, tighter padding, smaller
-    /// price pill) so it reads as the secondary path it is.
+    /// lighter than the plan card (smaller title, price pill) so it reads as
+    /// the secondary path it is.
     private func packCard(_ pack: PurchasableProduct) -> some View {
         let isSelected = effectivePlan == .pack
         let isSource = picker.isPurchasing(.pack)
@@ -390,45 +380,39 @@ struct PaywallView: View {
             HStack(spacing: Theme.Hangs.Spacing.sm) {
                 if isSource {
                     Circle()
-                        .fill(Theme.Hangs.Colors.accentPrimary)
-                        .frame(width: 6, height: 6)
+                        .fill(Theme.Hangs.Colors.textOnAccent)
+                        .frame(width: Metrics.sourceDot, height: Metrics.sourceDot)
                         .accessibilityHidden(true)
                 }
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs / 2) {
                     Text("100 Question Pack")
-                        .font(.hangsBody(14, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .font(.hangsLabel)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text("One-time purchase · never expires")
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .font(.hangsCaption)
+                        .opacity(0.8)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Text(verbatim: pack.displayPrice)
-                    .font(.hangsBody(13, weight: .bold))
-                    .foregroundColor(isSource ? .white : Theme.Hangs.Colors.accentPrimary)
+                    .font(.hangsLabel)
+                    .foregroundStyle(isSelected ? Theme.Hangs.Colors.accentPrimary : Theme.Hangs.Colors.blueText)
                     .padding(.horizontal, Theme.Hangs.Spacing.sm)
-                    .padding(.vertical, 6)
-                    .frame(minHeight: 30)
+                    .frame(minHeight: Metrics.pricePillHeight)
                     .background(
                         Capsule().fill(
-                            isSource ? Theme.Hangs.Colors.accentPrimary : Theme.Hangs.Colors.accentPrimarySoft
+                            isSelected ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.accentPrimarySoft
                         )
                     )
-                planRadio(check)
+                    .fixedSize()
+                planRadio(check, onCobalt: isSelected)
             }
+            .foregroundStyle(isSelected ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.ink)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, Theme.Hangs.Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                    .fill(Theme.Hangs.Colors.bgCard)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.subtleBorder,
-                        lineWidth: isSelected ? 2 : 1.5
-                    )
-            )
+            .frame(minHeight: Metrics.packMinHeight)
+            .background(planSurface(isSelected: isSelected))
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .opacity(isDimmed ? Self.dimmedOpacity : 1)
@@ -437,6 +421,16 @@ struct PaywallView: View {
         .disabled(isBusy)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier("paywall-plan-pack")
+    }
+
+    private enum Metrics {
+        static let planMinHeight: CGFloat = 80
+        static let packMinHeight: CGFloat = 72
+        static let pricePillHeight: CGFloat = 30
+        static let radio: CGFloat = 28
+        static let ringWidth: CGFloat = 2
+        static let sourceDot: CGFloat = 6
+        static let offlineDisc: CGFloat = 48
     }
 
     // MARK: - CTA stack
@@ -461,13 +455,13 @@ struct PaywallView: View {
             }
         } else {
             // Offerings not yet loaded — the load placeholder.
-            HangsPrimaryButton(title: "Subscribe", isLoading: true, height: 52) {}
+            HangsPrimaryButton(title: "Subscribe", isLoading: true) {}
                 .accessibilityIdentifier("paywall-purchase-button")
         }
     }
 
     private func purchaseCTA(title: LocalizedStringKey, product: PurchasableProduct) -> some View {
-        HangsPrimaryButton(title: title, isLoading: isBusy, height: 52) {
+        HangsPrimaryButton(title: title, isLoading: isBusy) {
             Task { await storeManager.purchase(productID: product.id) }
         }
         .accessibilityIdentifier("paywall-purchase-button")
@@ -479,8 +473,8 @@ struct PaywallView: View {
 
             HangsGhostButton(
                 title: "Restore purchases",
-                color: Theme.Hangs.Colors.blue,
-                font: .hangsBody(14, weight: .semibold)
+                color: Theme.Hangs.Colors.blueText,
+                font: .hangsLabel
             ) {
                 Task { await storeManager.restorePurchases() }
             }
@@ -496,116 +490,128 @@ struct PaywallView: View {
 
             if let error = storeManager.purchaseError {
                 Text(error)
-                    .font(.hangsBody(13))
-                    .foregroundColor(Theme.Hangs.Colors.error)
+                    .font(.hangsCaption.weight(.semibold))
+                    .foregroundStyle(Theme.Hangs.Colors.error)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.purchaseError")
             }
 
             if storeManager.purchaseState == .pending {
                 Text("Purchase is awaiting approval. You'll get access as soon as it's approved.")
-                    .font(.hangsBody(13))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsCaption.weight(.semibold))
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.pendingNotice")
             }
 
             if storeManager.purchaseState == .nothingToRestore {
                 Text("No previous purchase found for this Apple Account.")
-                    .font(.hangsBody(13))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsCaption.weight(.semibold))
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.nothingToRestore")
             }
 
             // App Store review requirement: auto-renew disclosure (z8TS6 legal).
             Text("Auto-renews until cancelled. Cancel anytime in Settings.")
-                .font(.hangsBody(11))
-                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
-                .padding(.top, 2)
+                .padding(.top, Theme.Hangs.Spacing.xxs)
                 .accessibilityIdentifier("paywall.legal")
 
             // App Store review requirement (3.1.2): auto-renew subscriptions
             // must link the privacy policy and terms of use from the paywall.
-            HStack(spacing: 6) {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
                 Link("Privacy Policy", destination: Config.privacyPolicyURL)
                     .accessibilityIdentifier("paywall.privacyPolicy")
                 Text(verbatim: "·")
                 Link("Terms of Use", destination: Config.termsOfUseURL)
                     .accessibilityIdentifier("paywall.termsOfUse")
             }
-            .font(.hangsBody(11))
-            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-            .padding(.top, 2)
+            .font(.hangsCaption.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.muted)
         }
     }
 
     // MARK: - PouwN — Can't Reach The Store
 
     private var offlineBody: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xl) {
-            Spacer(minLength: Theme.Hangs.Spacing.xxl)
-
-            offlineIconCircle
-
-            offlineHeroBlock
-
-            Spacer()
-
-            offlineCTAStack
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.bottom, Theme.Hangs.Spacing.xl)
+        GeometryReader { viewport in
+            ScrollView {
+                VStack(spacing: Theme.Hangs.Spacing.xl) {
+                    Spacer(minLength: Theme.Hangs.Spacing.xl)
+                    offlineIconCircle
+                    offlineHeroBlock
+                    Spacer(minLength: Theme.Hangs.Spacing.xl)
+                    offlineCTAStack
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.bottom, Theme.Hangs.Spacing.md)
+                .frame(minHeight: viewport.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
         }
     }
 
     private var offlineIconCircle: some View {
-        ZStack {
-            Circle()
-                .fill(Theme.Hangs.Colors.warning.opacity(0.12))
-                .frame(width: 120, height: 120)
+        // Canvas Bg-PaywallOffline: blank cards behind a warning card, the
+        // no-connection glyph on an ink disc.
+        PaywallHeroDeck(fills: [Theme.Hangs.Colors.bgCard, Theme.Hangs.Colors.bgCard, Theme.Hangs.Colors.warning]) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.warning)
+                .font(.hangsLabel)
+                .foregroundStyle(Theme.Hangs.Colors.textOnAction)
+                .frame(width: Metrics.offlineDisc, height: Metrics.offlineDisc)
+                .background(Circle().fill(Theme.Hangs.Colors.action))
         }
-        .accessibilityHidden(true)
         .accessibilityIdentifier("paywall.offline.icon")
     }
 
     private var offlineHeroBlock: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             Text("CAN'T REACH\nTHE STORE")
-                .font(.hangsDisplayMD)
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsDisplaySM)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
                 .hangsHeadlineFit(lines: 2)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("paywall.offline.headline")
 
-            Capsule()
-                .fill(Theme.Hangs.Colors.warning)
-                .frame(width: 40, height: 3)
-                .accessibilityHidden(true)
-
             Text("We couldn't load the upgrade right now. Check your connection and try again.")
-                .font(.hangsBody(15))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsBodyLG)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Theme.Hangs.Spacing.xs)
                 .accessibilityIdentifier("paywall.offline.subtitle")
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
     }
 
     private var offlineCTAStack: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
-            HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
-                Task { await storeManager.loadOfferings() }
-            }
-            .accessibilityIdentifier("paywall-offline-retry-button")
+        HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
+            Task { await storeManager.loadOfferings() }
         }
+        .accessibilityIdentifier("paywall-offline-retry-button")
     }
+}
+
+/// Glass disc over the success / activating card stack (canvas Bg-PaywallDone).
+private struct PaywallBadge<Glyph: View>: View {
+    let tint: Color
+    @ViewBuilder var glyph: () -> Glyph
+
+    var body: some View {
+        glyph()
+            .font(.hangsHeading)
+            .foregroundStyle(tint)
+            .frame(width: PaywallBadgeMetrics.size, height: PaywallBadgeMetrics.size)
+            .background(Circle().fill(Theme.Hangs.Colors.bgCard))
+            .glassEffect(.regular, in: Circle())
+    }
+}
+
+private enum PaywallBadgeMetrics {
+    static let size: CGFloat = 72
 }
 
 // MARK: - Countdown Pill
@@ -615,14 +621,19 @@ private struct CountdownPill: View {
     @State private var timeRemaining: String = ""
 
     var body: some View {
-        Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
-            .font(.hangsMono(10, weight: .medium))
-            .kerning(1)
-            .textCase(.uppercase)
-            .foregroundColor(Theme.Hangs.Colors.bg)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(Theme.Hangs.Colors.ink))
+        Label {
+            Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
+                .font(.hangsCaption.weight(.semibold).monospacedDigit())
+                .multilineTextAlignment(.center)
+        } icon: {
+            Image(systemName: "clock")
+                .font(.hangsCaption.weight(.semibold))
+                .accessibilityHidden(true)
+        }
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.xs)
+            .glassEffect(.regular, in: Capsule())
             .onAppear(perform: updateCountdown)
             .task {
                 while !Task.isCancelled {

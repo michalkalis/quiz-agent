@@ -25,6 +25,8 @@ extension AppScreen {
         case .signInFailed: Self.signIn(.failed)
         case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed:
             await makeOrder()
+        case .paywallPack, .paywallOffline:
+            await makePaywall()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

@@ -40,6 +40,7 @@ enum AppScreen: String, CaseIterable {
     case orderForm, orderSummary, orderPreparing, orderReadyGenerating, orderReady, orderFailed
     case signInIdle, signInSigningIn, signInFailed
     case errorRetry, errorGoHome, errorDismiss
+    case paywallPack, paywallOffline
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

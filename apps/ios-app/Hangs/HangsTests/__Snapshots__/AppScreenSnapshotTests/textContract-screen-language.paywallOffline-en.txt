@@ -1,0 +1,12 @@
+# texts
+trubbo.
+CAN'T REACH
+THE STORE
+We couldn't load the upgrade right now. Check your connection and try again.
+Try Again
+# identifiers
+paywall-close-x-button
+paywall.offline.icon
+paywall.offline.headline
+paywall.offline.subtitle
+paywall-offline-retry-button

@@ -1,0 +1,28 @@
+# texts
+trubbo.
+BEZ LIMITU
+Unlimited questions, no monthly cap.
+Mesačne
+€4.99 / mesiac
+alebo doplň bez predplatného
+Balík 100 otázok
+Jednorazový nákup · nikdy nevyprší
+€2.99
+Kúp balík 100 otázok za €2.99
+Obnov nákupy
+Obnovuje sa automaticky, kým ho nezrušíš. Zrušiť môžeš kedykoľvek v Nastaveniach.
+Zásady ochrany súkromia
+·
+Podmienky používania
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall-plan-monthly
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.legal
+paywall.privacyPolicy
+paywall.termsOfUse

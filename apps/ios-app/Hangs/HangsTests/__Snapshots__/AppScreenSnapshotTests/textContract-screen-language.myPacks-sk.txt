@@ -15,8 +15,10 @@ EN
 Failed
 EN
 Skús znova
+Vytvor balík
 # identifiers
 myPacks.startQuiz
 myPacks.readyCount
 myPacks.startQuiz
 myPacks.retry
+myPacks.createPack

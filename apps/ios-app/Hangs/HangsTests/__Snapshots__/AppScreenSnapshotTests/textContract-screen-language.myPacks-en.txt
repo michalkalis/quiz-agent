@@ -15,8 +15,10 @@ EN
 Failed
 EN
 Try again
+Create a pack
 # identifiers
 myPacks.startQuiz
 myPacks.readyCount
 myPacks.startQuiz
 myPacks.retry
+myPacks.createPack

@@ -1,9 +1,7 @@
 # Pre-#188 hardcoded design values (file, rule, value, count). Only ever shrinks.
-apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.hangsBody(15	3
+apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.hangsBody(15	1
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.hangsDisplay(28	1
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.hangsDisplay(32	3
-apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.hangsMono(12	1
-apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	font	.system(size: 14	2
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	radius	cornerRadius: 2	2
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	.padding(.bottom, 10)	1
 apps/ios-app/Hangs/Hangs/Views/AnswerConfirmationView.swift	spacing	.padding(.bottom, 14)	1
@@ -42,7 +40,7 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDis
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDisplay(28	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsDisplay(36	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(10	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(11	2
+apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(11	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.hangsMono(14	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.system(size: 11	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsBlocks.swift	font	.system(size: 12	1

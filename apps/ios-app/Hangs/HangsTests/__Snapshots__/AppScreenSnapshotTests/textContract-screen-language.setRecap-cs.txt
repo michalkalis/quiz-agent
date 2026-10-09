@@ -1,28 +1,36 @@
 # texts
 trubbo.
+HOTOVO
+konečné skóre
+0
+z 10
+Správně
+1
+Nesprávně
+1
+Úspěšnost
+10%
 VÝSLEDEK KVÍZU · Geography & World
-1/3
-✓
-1 SPRÁVNĚ
-✗
-1 VEDLE
-–
-1 PŘESKOČENÁ
+Přehraj souhrn
 What is the capital of France?
 Paris
 Which river flows through Budapest?
 Danube
 How many strings does a standard violin have?
 Four
-Přehraj souhrn
+Hraj znovu
+Úvod
 Hraj znovu
 Úvod
 # identifiers
 recap.close
 recap.hero
+completion.breakdown
+recap.playSummary
 recap.row.1
 recap.row.2
 recap.row.3
-recap.playSummary
+recap.playAgain
+recap.home
 recap.playAgain
 recap.home

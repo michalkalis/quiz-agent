@@ -67,6 +67,10 @@ COPY --from=builder /build/app /app
 # fails the build instead of shipping degraded prompts.
 COPY data/examples /app/data/examples
 
+# StoreKit trust anchor: without it every paid order 500s at receipt
+# verification. Fail the build rather than ship a pack service that can't sell.
+RUN test -f /app/app/storekit/certs/AppleRootCA-G3.cer
+
 EXPOSE 8003
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

@@ -10,9 +10,9 @@ Settings
 # identifiers
 question.progress
 question.counter
-question.replay
 question.category
 question.replayGlyph
+question.replay
 question.text
 listen-bar
 question.record

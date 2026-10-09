@@ -396,19 +396,31 @@ struct QuestionView: View {
     // MARK: - Question card (#194 "Sklo nad kartami")
 
     /// The question printed on its category card (R-Question / R-MCQ): the chip
-    /// names the category, the replay glyph sits top-right, and the WHOLE card
-    /// is the tap-to-replay target, as the question block was before.
+    /// names the category, the replay glyph sits top-right. The question block
+    /// inside the card's scroll region is the tap-to-replay target (it fills
+    /// the region), and the glyph replays too.
+    ///
+    /// The replay button lives INSIDE the scroll view, never around it: a
+    /// scroll view inside a button label drops its content from the
+    /// accessibility tree, and `question.text` vanished for XCUITest and
+    /// VoiceOver alike (#316 CI).
     private func questionCard(_ question: Question, @ViewBuilder content: @escaping () -> some View) -> some View {
-        questionReplayTapTarget {
-            HangsDeckCard(
-                categoryId: question.category,
-                categoryName: Config.categoryDisplayName(for: question.category),
-                categoryIdentifier: "question.category"
-            ) {
+        HangsDeckCard(
+            categoryId: question.category,
+            categoryName: Config.categoryDisplayName(for: question.category),
+            categoryIdentifier: "question.category"
+        ) {
+            // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
+            Button {
+                Task { await viewModel.replayQuestionAudio() }
+            } label: {
                 replayGlyph
-            } content: {
-                content()
             }
+            .buttonStyle(QuestionReplayButtonStyle())
+            .disabled(!viewModel.canReplayAudio)
+            .accessibilityHidden(true)
+        } content: {
+            content()
         }
         .hangsCardArrival(trigger: cardArrival)
         // #194 B3: a new question deals a new card. `.task` runs after the first
@@ -416,6 +428,26 @@ struct QuestionView: View {
         .task(id: question.id) {
             guard cardMotion, !reduceMotion else { return }
             cardArrival += 1
+        }
+    }
+
+    /// The tap-to-replay block: (image +) question text. A container keeps the
+    /// text its own accessibility element inside the button — a label that
+    /// resolves to one element is folded into the button, identifier and all.
+    /// `minHeight` lets the block fill the card's scroll region, so a tap
+    /// anywhere on the card body replays; a short question sits at its bottom.
+    private func replayableQuestion(_ question: Question, minHeight: CGFloat = 0) -> some View {
+        questionReplayTapTarget {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
+                // #68: image-type question — image above the text, scrolls with
+                // it. Text/TTS stays the driving-mode fallback.
+                if question.hasImage {
+                    ImageQuestionView(question: question)
+                }
+                questionText(question)
+            }
+            .accessibilityElement(children: .contain)
+            .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .bottomLeading)
         }
     }
 
@@ -654,12 +686,7 @@ struct QuestionView: View {
         return questionCard(question) {
             GeometryReader { geo in
                 ScrollView(.vertical) {
-                    questionText(question)
-                        // Keep the stem its OWN a11y element inside the replay
-                        // button. A button label that resolves to a single
-                        // element gets folded into the button, taking the stem's
-                        // identifier with it.
-                        .accessibilityElement(children: .contain)
+                    replayableQuestion(question)
                         // The stem's NATURAL height, measured before the
                         // min-height frame below — measuring after it would feed
                         // the floor back into itself.
@@ -764,19 +791,7 @@ struct QuestionView: View {
             questionCard(question) {
                 GeometryReader { geo in
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
-                            // #68: image-type question — image above the text,
-                            // scrolls with it. Text/TTS below stays the
-                            // driving-mode fallback.
-                            if question.hasImage {
-                                ImageQuestionView(question: question)
-                            }
-                            questionText(question)
-                        }
-                        // Keep the text its own a11y element inside the replay button.
-                        .accessibilityElement(children: .contain)
-                        // Canvas: a short question sits at the bottom of its card.
-                        .frame(minHeight: geo.size.height, alignment: .bottomLeading)
+                        replayableQuestion(question, minHeight: geo.size.height)
                     }
                     .scrollPosition($stemScroll)
                     .onScrollGeometryChange(for: CGFloat.self) { g in

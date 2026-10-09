@@ -38,8 +38,8 @@ PEN_ONLY = {
 LEGACY = {
     "bg-page": "bg", "bg-card": "bgCard", "bg-elevated": "bgSheet",
     "text-primary": "ink", "text-secondary": "muted", "text-tertiary": "mutedFaint",
-    "text-on-accent": "textOnAccent", "accent-pink": "pink", "accent-primary": "accentPrimary",
-    "accent-primary-soft": "accentPrimarySoft", "accent-teal": "accentTeal", "accent-blue": "blue",
+    "text-on-accent": "textOnAccent", "accent-pink": "action", "accent-primary": "accentPrimary",
+    "accent-primary-soft": "accentPrimarySoft", "accent-teal": "liveAccent", "accent-blue": "blue",
     "border-standard": "subtleBorder", "border-subtle": "hairline", "success-text": "successText",
     "success": "greenCheck", "accent-green": "greenCheck", "accent-red": "error", "accent-amber": "warning",
 }

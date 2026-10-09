@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-USED = ("pink", "ink", "blue", "accentTeal", "accentPrimary", "bg", "muted", "radius-cta", "radius-card")
+USED = ("action", "ink", "blue", "liveAccent", "accentPrimary", "bg", "muted", "radius-cta", "radius-card")
 
 
 def cover_html(tokens: dict) -> str:
@@ -20,8 +20,8 @@ def cover_html(tokens: dict) -> str:
 <style>
 .cover{{position:relative;width:960px;height:288px;background:var(--bg);overflow:hidden}}
 .cover svg{{position:absolute;inset:0}}
-.cover .pink{{fill:var(--pink)}} .cover .ink{{fill:var(--ink)}} .cover .blue{{fill:var(--blue)}}
-.cover .teal{{fill:var(--accentTeal)}} .cover .violet{{fill:var(--accentPrimary)}} .cover .ground{{fill:var(--bg)}}
+.cover .pink{{fill:var(--action)}} .cover .ink{{fill:var(--ink)}} .cover .blue{{fill:var(--blue)}}
+.cover .teal{{fill:var(--liveAccent)}} .cover .violet{{fill:var(--accentPrimary)}} .cover .ground{{fill:var(--bg)}}
 .cover .r-cta{{rx:var(--radius-cta)}} .cover .r-card{{rx:var(--radius-card)}}
 .cover .name{{position:absolute;left:48px;bottom:56px;max-width:440px;margin:0;font-family:var(--font-display);font-size:120px;line-height:.92;color:var(--ink);font-weight:400}}
 .cover .tag{{position:absolute;left:50px;bottom:28px;max-width:440px;margin:0;font-family:var(--font-body);font-size:14px;color:var(--muted)}}

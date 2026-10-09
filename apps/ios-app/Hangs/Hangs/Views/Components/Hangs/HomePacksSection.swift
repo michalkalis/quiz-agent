@@ -14,6 +14,7 @@
 import SwiftUI
 
 struct HomePacksSection: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var viewModel: MyPacksViewModel
     /// Play a delivered pack by its packId (same path as MyPacksView).
     let onPlayPack: (String) -> Void
@@ -42,20 +43,21 @@ struct HomePacksSection: View {
     var body: some View {
         let visible = Self.visibleOrders(viewModel.orders)
         if !visible.isEmpty {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                HangsSectionLabel(text: "my packs")
-                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                    .padding(.top, Theme.Hangs.Spacing.xs)
-                HangsCard {
-                    VStack(spacing: 0) {
-                        ForEach(visible) { order in
-                            packRow(order)
-                            HangsDivider()
-                        }
-                        showAllRow
+            // #194 C1: the packs as small ink cards (custom packs = ink, like
+            // their question cards), two per row; one per row at accessibility
+            // text so a title never truncates.
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+                HStack(alignment: .firstTextBaseline) {
+                    HangsSectionLabel(text: "my packs")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    showAllLink
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.xxs)
+                LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
+                    ForEach(visible) { order in
+                        HomePackCard(order: order, onPlay: onPlayPack)
                     }
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
             }
             .accessibilityIdentifier("home.myPacksSection")
         }
@@ -68,78 +70,130 @@ struct HomePacksSection: View {
             .task { await viewModel.start() }
     }
 
-    private func packRow(_ order: OrderSnapshot) -> some View {
-        // #182: playable from the first persisted batch, not only when delivered.
-        let playable = order.isPlayable
-        return HStack(spacing: Theme.Hangs.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(verbatim: order.category ?? order.language.uppercased())
-                    .font(.hangsBody(15, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+    private var columns: [GridItem] {
+        let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.sm, alignment: .top), count: count)
+    }
+
+    private var showAllLink: some View {
+        NavigationLink(value: AppRoute.myPacks) {
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
+                Text("Show all")
+                    .font(.hangsLabel)
                     .lineLimit(1)
-                if order.isStillGenerating {
-                    // Honest count: what can be played right now, out of what
-                    // was ordered (#182).
-                    Text("\(order.readyCount) of \(order.targetCount) ready")
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-                        .accessibilityIdentifier("home.myPacks.readyCount")
-                } else if playable {
-                    Text("\(order.targetCount) questions")
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
-                } else {
-                    // Same wording as the pack list (#188 G14): one source.
-                    Text(verbatim: order.statusLabel)
-                        .font(.hangsBody(12))
-                        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.hangsCaption.weight(.bold))
+                    .accessibilityHidden(true)
             }
-            Spacer()
-            if playable, let packId = order.packId {
-                Button {
-                    onPlayPack(packId)
-                } label: {
-                    playIcon(active: true)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
-                .accessibilityIdentifier("home.myPacks.play")
-            } else {
-                playIcon(active: false)
+            .foregroundStyle(Theme.Hangs.Colors.actionText)
+            .frame(minHeight: HomePackCard.Metrics.minTapTarget)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home.myPacks.showAll")
+    }
+}
+
+/// One custom pack on Home: ink card, play control top-right, title and its
+/// honest count (#182: playable from the first persisted batch).
+private struct HomePackCard: View {
+    enum Metrics {
+        static let minHeight: CGFloat = 120
+        static let playSize: CGFloat = 36
+        static let minTapTarget: CGFloat = 44
+        static let barHeight: CGFloat = 4
+    }
+
+    let order: OrderSnapshot
+    let onPlay: (String) -> Void
+
+    private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(for: nil) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+            playControl
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Spacer(minLength: Theme.Hangs.Spacing.xs)
+            Text(verbatim: order.category ?? order.language.uppercased())
+                .font(.hangsLabel)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            subtitle
+            if order.isStillGenerating {
+                readyBar
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, Theme.Hangs.Spacing.sm)
+        .foregroundStyle(style.text)
+        .padding(EdgeInsets(top: Theme.Hangs.Spacing.sm, leading: Theme.Hangs.Spacing.md, bottom: Theme.Hangs.Spacing.md, trailing: Theme.Hangs.Spacing.sm))
+        .frame(maxWidth: .infinity, minHeight: Metrics.minHeight, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(style.fill)
+        )
+    }
+
+    @ViewBuilder private var subtitle: some View {
+        Group {
+            if order.isStillGenerating {
+                // Honest count: what can be played right now, out of what
+                // was ordered (#182).
+                Text("\(order.readyCount) of \(order.targetCount) ready")
+                    .accessibilityIdentifier("home.myPacks.readyCount")
+            } else if order.isPlayable {
+                Text("\(order.targetCount) questions")
+            } else {
+                // Same wording as the pack list (#188 G14): one source.
+                Text(verbatim: order.statusLabel)
+            }
+        }
+        .font(.hangsCaption)
+        .foregroundStyle(style.text.opacity(0.72))
+    }
+
+    private var readyBar: some View {
+        let fraction = order.targetCount > 0 ? Double(order.readyCount) / Double(order.targetCount) : 0
+        return Capsule()
+            .fill(style.text.opacity(0.2))
+            .frame(height: Metrics.barHeight)
+            .overlay(alignment: .leading) {
+                // In an overlay, so measuring the bar never feeds its layout.
+                GeometryReader { proxy in
+                    Capsule()
+                        .fill(style.text)
+                        .frame(width: proxy.size.width * min(1, max(0, fraction)))
+                }
+            }
+            .padding(.top, Theme.Hangs.Spacing.xxs)
+            .accessibilityHidden(true)
+    }
+
+    @ViewBuilder private var playControl: some View {
+        if order.isPlayable, let packId = order.packId {
+            Button {
+                onPlay(packId)
+            } label: {
+                playIcon(active: true)
+                    .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
+            .accessibilityIdentifier("home.myPacks.play")
+        } else {
+            playIcon(active: false)
+                .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
+                .accessibilityHidden(true)
+        }
     }
 
     private func playIcon(active: Bool) -> some View {
         Image(systemName: "play.fill")
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundColor(active ? Theme.Hangs.Colors.textOnAction : Theme.Hangs.Colors.mutedFaint)
-            .frame(width: 34, height: 34)
+            .font(.hangsCaption.weight(.semibold))
+            .foregroundStyle(active ? Theme.Hangs.Category.chipText : style.text.opacity(0.5))
+            .frame(width: Metrics.playSize, height: Metrics.playSize)
             .background(
-                Circle().fill(active ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.hairline)
+                Circle().fill(active ? Theme.Hangs.Category.chipFill : style.text.opacity(0.14))
             )
-            .accessibilityHidden(!active)
-    }
-
-    private var showAllRow: some View {
-        NavigationLink(value: AppRoute.myPacks) {
-            HStack(spacing: Theme.Hangs.Spacing.xxs) {
-                Text("Show all")
-                    .font(.hangsBody(13, weight: .semibold))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .accessibilityHidden(true)
-            }
-            .foregroundColor(Theme.Hangs.Colors.actionText)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Theme.Hangs.Spacing.sm)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home.myPacks.showAll")
     }
 }
 

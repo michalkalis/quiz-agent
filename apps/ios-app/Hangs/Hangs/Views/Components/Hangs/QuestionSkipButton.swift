@@ -26,9 +26,16 @@ struct QuestionSkipButton: View {
     /// The caller owns the rule: MCQ dies on an answer in flight, the voice
     /// footer also while the mic is live.
     let isDisabled: Bool
-    /// The voice footer sits beside the 48pt Record button and matches it; the
-    /// MCQ footer's capsule stands alone and stays compact.
-    var height: CGFloat = 40
+    /// The voice footer sits beside the main action and matches its height; the
+    /// MCQ footer's capsule stands alone.
+    var height: CGFloat = Self.chipHeight
+
+    /// #194 R-Question: the voice footer row (answer · type · skip).
+    static let rowHeight: CGFloat = 56
+    /// The same row in a short container, and the lone MCQ capsule (R-MCQ).
+    static let compactRowHeight: CGFloat = 48
+    /// The lone MCQ capsule in a short container.
+    static let chipHeight: CGFloat = 40
     let action: () -> Void
 
     var body: some View {

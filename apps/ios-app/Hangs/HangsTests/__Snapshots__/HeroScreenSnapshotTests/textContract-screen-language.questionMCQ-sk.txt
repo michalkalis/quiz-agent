@@ -1,6 +1,6 @@
 # texts
-adults
 1/10
+ADULTS
 Which statement about how the human body grows is correct?
 PREMÝŠĽAJ, POČÚVAM O 27 S
 A
@@ -16,11 +16,11 @@ Preskoč
 Nastavenia
 # identifiers
 question.progress
-question.category
 question.counter
 question.replay
-question.text
+question.category
 question.replayGlyph
+question.text
 listen-bar
 listen-bar.dismiss
 mcq.option.a

@@ -15,6 +15,8 @@ import SwiftUI
 struct HangsDeckCard<Accessory: View, Content: View>: View {
     let categoryId: String?
     let categoryName: String
+    /// The screen's identifier for the category chip (`question.category`).
+    var categoryIdentifier: String?
     @ViewBuilder var accessory: () -> Accessory
     @ViewBuilder var content: () -> Content
 
@@ -23,7 +25,7 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DeckCardMetrics.headerGap) {
             HStack(alignment: .center) {
-                HangsCategoryChip(name: categoryName)
+                HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
                 accessory()
             }
@@ -42,28 +44,87 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
 }
 
 private enum DeckCardMetrics {
+    static let chipHeight: CGFloat = 28
+    /// Canvas `card-in`: 28pt from the trailing side over 420 ms.
+    static let arrivalOffset: CGFloat = 28
+    static let arrivalDuration = 0.42
     static let headerGap: CGFloat = 10
     static let padding = EdgeInsets(top: 16, leading: 20, bottom: 18, trailing: 20)
 }
 
 extension HangsDeckCard where Accessory == EmptyView {
-    init(categoryId: String?, categoryName: String, @ViewBuilder content: @escaping () -> Content) {
-        self.init(categoryId: categoryId, categoryName: categoryName, accessory: { EmptyView() }, content: content)
+    init(
+        categoryId: String?,
+        categoryName: String,
+        categoryIdentifier: String? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.init(
+            categoryId: categoryId,
+            categoryName: categoryName,
+            categoryIdentifier: categoryIdentifier,
+            accessory: { EmptyView() },
+            content: content
+        )
+    }
+}
+
+/// #194 B3: a card being dealt — it slides in from the trailing side and fades
+/// up each time `trigger` changes. It is at rest on the first render, so a
+/// snapshot shows the card in place, and a caller under Reduce Motion simply
+/// never changes the trigger.
+private struct HangsCardArrival: ViewModifier {
+    let trigger: Int
+
+    func body(content: Content) -> some View {
+        content.keyframeAnimator(initialValue: 1.0, trigger: trigger) { view, progress in
+            view
+                .opacity(progress)
+                .offset(x: (1 - progress) * DeckCardMetrics.arrivalOffset)
+        } keyframes: { _ in
+            KeyframeTrack {
+                MoveKeyframe(0.0)
+                SpringKeyframe(1.0, duration: DeckCardMetrics.arrivalDuration, spring: .smooth)
+            }
+        }
+    }
+}
+
+extension EnvironmentValues {
+    /// #194 B3: whether cards are dealt with motion at all. Snapshot tests turn
+    /// it off — a frozen frame must show the card at rest, not mid-arrival.
+    /// (Reduce Motion is checked by the caller as well.)
+    @Entry var hangsCardMotion = true
+}
+
+extension View {
+    /// Plays the card arrival whenever `trigger` changes (see `HangsCardArrival`).
+    func hangsCardArrival(trigger: Int) -> some View {
+        modifier(HangsCardArrival(trigger: trigger))
     }
 }
 
 /// White capsule with the category name in caps — readable on every category fill.
 struct HangsCategoryChip: View {
     let name: String
+    var identifier: String?
 
     var body: some View {
+        if let identifier {
+            chip.accessibilityIdentifier(identifier)
+        } else {
+            chip
+        }
+    }
+
+    private var chip: some View {
         Text(name.uppercased())
             .font(.hangsOverline)
             .tracking(0.6)
             .lineLimit(1)
             .foregroundStyle(Theme.Hangs.Category.chipText)
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
-            .frame(minHeight: 28)
+            .frame(minHeight: DeckCardMetrics.chipHeight)
             .background(Capsule().fill(Theme.Hangs.Category.chipFill))
     }
 }

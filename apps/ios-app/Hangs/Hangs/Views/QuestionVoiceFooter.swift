@@ -53,6 +53,17 @@ struct QuestionVoiceFooter: View {
     var isTextFieldFocused: FocusState<Bool>.Binding
     var compact: Bool = false
 
+    /// #194 canvas: the footer shares the screen's 16pt edge.
+    private static let gutter = Theme.Hangs.Spacing.md
+    /// Glyph size of the icon-only controls (keyboard, send).
+    private static let glyphSize: CGFloat = 17
+    /// Bg-Typed: the typed answer reads larger than body text.
+    private static let typedAnswerSize: CGFloat = 20
+
+    /// #194 R-Question: the row is 56pt tall; a short container keeps the
+    /// older 48pt so the question keeps its room.
+    private var rowHeight: CGFloat { compact ? QuestionSkipButton.compactRowHeight : QuestionSkipButton.rowHeight }
+
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             if showTextInput {
@@ -62,12 +73,12 @@ struct QuestionVoiceFooter: View {
             // #122: light sweep strip — reserved in every phase so the stack
             // below never shifts; glows only during feedback.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Self.gutter)
 
             // #185 track B: the retry line, next to the mic it explains.
             if viewModel.showsEmptyAnswerRetryHint {
                 EmptyAnswerRetryHint()
-                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                    .padding(.horizontal, Self.gutter)
                     .transition(.opacity)
             }
 
@@ -89,19 +100,19 @@ struct QuestionVoiceFooter: View {
                     // #188 G11: the recording window, moved out of the Stop button.
                     answerRemaining: viewModel.answerWindowRemaining
                 )
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Self.gutter)
                 .transition(.opacity)
             }
 
             actionRow
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Self.gutter)
         }
     }
 
     // MARK: - Action row (Record · Type · Skip)
 
     private var actionRow: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
             recordButton
             typeButton
             skipButton
@@ -119,18 +130,17 @@ struct QuestionVoiceFooter: View {
     /// "Processing…"; this button says only its action.
     private var recordButton: some View {
         HangsPrimaryButton(
-            // #174 (founder 2026-09-09): "Start" — the title IS the voice command
-            // that opens the mic, on Home and here alike.
-            title: isRecording ? "Stop" : "Start",
-            icon: isRecording ? "stop.fill" : "play.fill",
+            // #194 (founder 2026-10-08): "Answer" with a mic says what the
+            // button does; the voice command that opens the mic stays "start"
+            // and the listen bar's chips keep teaching it.
+            title: isRecording ? "Stop" : "Answer",
+            icon: isRecording ? "stop.fill" : "mic.fill",
             // #174: the typed-answer path never opens the confirmation sheet, so
             // this button IS its evaluating state — a spinner alone (G11), the
             // word "Processing…" is the bar's. `isLoading` also disables it.
             isLoading: isEvaluating,
             loadingStyle: .spinnerOnly,
-            // G1 (#83): action buttons deliberately modest so long question text
-            // keeps as much room as possible.
-            height: 48
+            height: rowHeight
         ) {
             Task { await viewModel.toggleRecording() }
         }
@@ -161,7 +171,7 @@ struct QuestionVoiceFooter: View {
             showTextInput = true
             isTextFieldFocused.wrappedValue = true
         } label: {
-            iconChip("keyboard", size: 17)
+            iconChip("keyboard")
         }
         .buttonStyle(.plain)
         .disabled(!canInteract || showTextInput)
@@ -182,7 +192,7 @@ struct QuestionVoiceFooter: View {
         QuestionSkipButton(
             isSkipping: isSkipping,
             isDisabled: isRecording || isProcessing,
-            height: 48
+            height: rowHeight
         ) {
             Task { await viewModel.skipQuestion() }
         }
@@ -191,45 +201,48 @@ struct QuestionVoiceFooter: View {
     /// The surface of the icon-only Type control: a circle as tall as the Record
     /// button beside it, so the row still reads as one strip. (#179 D3 moved the
     /// skip capsule out to `QuestionSkipButton`, which now owns its own chrome.)
-    private func iconChip(_ systemName: String, size: CGFloat) -> some View {
+    private func iconChip(_ systemName: String) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: size, weight: .semibold))
+            .font(.hangsBody(Self.glyphSize, weight: .semibold))
             .foregroundColor(Theme.Hangs.Colors.ink)
             .tint(Theme.Hangs.Colors.ink)
-            .frame(width: 48, height: 48)
+            .frame(width: rowHeight, height: rowHeight)
             // #194 B2: secondary controls are Liquid Glass.
             .glassEffect(.regular.interactive(), in: Capsule())
     }
 
     // MARK: - Typed answer
 
+    /// #194 Bg-Typed: a white capsule field with the ink send button beside it,
+    /// above the listen bar (the countdown keeps running while typing, 2a).
     private var textInputRow: some View {
-        HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8)) {
-            HStack(spacing: Theme.Hangs.Spacing.xs) {
-                TextField("Type your answer…", text: $textAnswer)
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
-                    .frame(height: 40)
-                    .focused(isTextFieldFocused)
-                    .accessibilityIdentifier("question.textField")
-                    .submitLabel(.send)
-                    .onSubmit(submitTypedAnswer)
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
+            TextField("Type your answer…", text: $textAnswer)
+                .font(.hangsBody(Self.typedAnswerSize, weight: .semibold))
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .focused(isTextFieldFocused)
+                .accessibilityIdentifier("question.textField")
+                .submitLabel(.send)
+                .onSubmit(submitTypedAnswer)
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .frame(maxWidth: .infinity, minHeight: rowHeight)
+                .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+                .overlay(Capsule().strokeBorder(Theme.Hangs.Colors.ink, lineWidth: 1.5))
 
-                Button(action: submitTypedAnswer) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textOnAction)
-                        .frame(width: 40, height: 40)
-                        .background(
-                            Circle()
-                                .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.action)
-                        )
-                }
-                .disabled(textAnswer.isEmpty)
-                .accessibilityIdentifier("question.textSubmit")
+            Button(action: submitTypedAnswer) {
+                Image(systemName: "arrow.up")
+                    .font(.hangsBody(Self.glyphSize, weight: .bold))
+                    .foregroundColor(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.textOnAction)
+                    .frame(width: QuestionSkipButton.compactRowHeight, height: QuestionSkipButton.compactRowHeight)
+                    .background(
+                        Circle()
+                            .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.mutedBorder : Theme.Hangs.Colors.action)
+                    )
             }
+            .disabled(textAnswer.isEmpty)
+            .accessibilityIdentifier("question.textSubmit")
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
+        .padding(.horizontal, Self.gutter)
     }
 
     private func submitTypedAnswer() {

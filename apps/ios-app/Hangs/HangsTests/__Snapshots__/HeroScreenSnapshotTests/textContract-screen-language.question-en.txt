@@ -1,19 +1,19 @@
 # texts
-adults
 1/10
+ADULTS
 What is the capital of France?
 Reading the question
-Start
+Answer
 Skip
 askingQuestion
 Settings
 # identifiers
 question.progress
-question.category
 question.counter
 question.replay
-question.text
+question.category
 question.replayGlyph
+question.text
 listen-bar
 question.record
 question.textInputToggle

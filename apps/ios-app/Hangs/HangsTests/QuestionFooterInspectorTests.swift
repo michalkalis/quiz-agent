@@ -169,14 +169,18 @@ struct QuestionFooterInspectorTests {
     /// the row, which is why #171's icon-only Skip could come back as a word).
     /// Type is not a voice command and stays icon-only, with its word kept for
     /// VoiceOver.
-    @Test("Start and Skip show their command words; Type stays icon-only")
+    ///
+    /// #194 (founder 2026-10-08) changes the primary title to "Answer" with a
+    /// mic: the button says what it does, while the "start" command keeps being
+    /// taught by the listen bar's chips.
+    @Test("Answer and Skip show their words; Type stays icon-only")
     func commandButtonsShowTheirWords() async throws {
         let vm = makeVoiceViewModel()
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
-            #expect(visible.contains("Start"), "the primary button's title is the voice command")
+            #expect(visible.contains("Answer"), "the primary button says it opens the mic to answer")
             #expect(visible.contains("Skip"), "Skip is a voice command — the word is the hint")
             #expect(!visible.contains("Record"), "'Record' is not a word the driver can say")
             #expect(!visible.contains("Type"), "Type is a tap, not a command — icon-only")

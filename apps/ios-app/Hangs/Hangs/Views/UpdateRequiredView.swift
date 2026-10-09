@@ -32,14 +32,16 @@ struct UpdateRequiredView: View {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
                 iconCircle
 
-                HangsHeroBlock(
-                    title: "Update Trubbo",
-                    titleFont: .hangsDisplaySM,
-                    alignment: .center
-                )
+                // #194 C9: plain title, no accent rule (as the error screen).
+                Text("Update Trubbo")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.center)
+                    .hangsHeadlineFit()
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("This version is no longer supported. Install the new one to keep playing.")
-                    .font(.hangsBody)
+                    .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -50,19 +52,24 @@ struct UpdateRequiredView: View {
             Spacer()
 
             updateButton
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.bottom, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
     }
 
     private var iconCircle: some View {
+        // #194 C9: the glyph on an ink card, like the error screen.
         Image(systemName: "arrow.down.app")
             .font(.system(size: Metrics.iconSize))
-            .foregroundStyle(Theme.Hangs.Colors.action)
+            .foregroundStyle(Theme.Hangs.Category.style(for: nil).text)
             .frame(width: Metrics.iconCircle, height: Metrics.iconCircle)
-            .background(Circle().fill(Theme.Hangs.Colors.actionSoft))
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+                    .fill(Theme.Hangs.Category.style(for: nil).fill)
+                    .hangsShadow(Theme.Hangs.Shadow.raised)
+            )
             .accessibilityHidden(true)
     }
 

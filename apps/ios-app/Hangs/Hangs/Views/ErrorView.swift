@@ -8,7 +8,8 @@
 import SwiftUI
 
 /// Error screen — Fwafe frame. Bound to AppErrorModel (52.7 mapping).
-/// Red icon circle + "OOPS" Anton hero + error-accent line + model title/description + CTA stack.
+/// #194 C9: ink card with the warning glyph, "OOPS" overline, the model's
+/// title as headline, its description, and the CTA stack for its action.
 struct ErrorView: View {
     @ObservedObject var viewModel: QuizViewModel
     let model: AppErrorModel
@@ -17,32 +18,28 @@ struct ErrorView: View {
         VStack(spacing: 0) {
             HangsBrandRow()
 
-            Spacer(minLength: 40)
+            // #194 C9 (canvas Bg-Offline): a face-down ink card carries the
+            // glyph; the error's own title is the headline. Scrolls once large
+            // text outgrows the screen, buttons stay pinned.
+            ScrollView {
+                VStack(spacing: Theme.Hangs.Spacing.xl) {
+                    Spacer(minLength: Theme.Hangs.Spacing.md)
 
-            VStack(spacing: Theme.Hangs.Spacing.xl) {
-                errorIconCircle
+                    errorIconCircle
 
-                heroBlock
+                    heroBlock
 
-                Text(model.description)
-                    .font(.hangsBody(15))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 28)
-                    .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
-                    .accessibilityIdentifier("error.description")
-
-                #if DEBUG
-                    if let detail = viewModel.lastErrorDebugInfo {
-                        DebugErrorDetailsView(detail: detail)
-                            .padding(.horizontal, 20)
-                    }
-                #endif
+                    #if DEBUG
+                        if let detail = viewModel.lastErrorDebugInfo {
+                            DebugErrorDetailsView(detail: detail)
+                                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        }
+                    #endif
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
             }
-
-            Spacer()
+            .scrollBounceBehavior(.basedOnSize)
+            .defaultScrollAnchor(.center)
 
             ctaStack
         }
@@ -52,43 +49,62 @@ struct ErrorView: View {
     }
 
     private var errorIconCircle: some View {
-        ZStack {
-            Circle()
-                .fill(Theme.Hangs.Colors.error.opacity(0.12))
-                .frame(width: 120, height: 120)
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundColor(Theme.Hangs.Colors.error)
-        }
-        .accessibilityHidden(true)
-        .accessibilityIdentifier("error.icon")
+        let style = Theme.Hangs.Category.style(for: nil)
+        return RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+            .fill(style.text.opacity(0.08))
+            .padding(Theme.Hangs.Spacing.sm)
+            .overlay {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.hangsTitle)
+                    .foregroundStyle(style.text)
+                    .frame(width: Metrics.disc, height: Metrics.disc)
+                    .background(Circle().fill(style.fill))
+                    .overlay(Circle().strokeBorder(style.text.opacity(0.2)))
+            }
+            .frame(width: Metrics.card.width, height: Metrics.card.height)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+                    .fill(style.fill)
+                    .hangsShadow(Theme.Hangs.Shadow.raised)
+            )
+            .accessibilityHidden(true)
+            .accessibilityIdentifier("error.icon")
     }
 
     private var heroBlock: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             Text("OOPS")
-                .font(.hangsDisplayMD)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .multilineTextAlignment(.center)
+                .font(.hangsOverline)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .accessibilityAddTraits(.isHeader)
 
-            Capsule()
-                .fill(Theme.Hangs.Colors.error)
-                .frame(width: 40, height: 3)
-                .accessibilityHidden(true)
-
             Text(model.title)
-                .font(.hangsBody(17, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsTitle)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("error.title")
+
+            Text(model.description)
+                .font(.hangsBodyLG)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Theme.Hangs.Spacing.sm)
+                .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
+                .accessibilityIdentifier("error.description")
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+    }
+
+    private enum Metrics {
+        /// Canvas card (200 × 268) and the glyph disc on it.
+        static let card = CGSize(width: 160, height: 214)
+        static let disc: CGFloat = 76
     }
 
     @ViewBuilder
     private var ctaStack: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             switch model.retryAction {
             case .retryOperation:
                 HangsPrimaryButton(title: "Try Again", icon: "arrow.clockwise") {
@@ -114,7 +130,8 @@ struct ErrorView: View {
                 .accessibilityIdentifier("error.dismiss")
             }
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-        .padding(.bottom, Theme.Hangs.Spacing.lg)
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.top, Theme.Hangs.Spacing.sm)
+        .padding(.bottom, Theme.Hangs.Spacing.sm)
     }
 }

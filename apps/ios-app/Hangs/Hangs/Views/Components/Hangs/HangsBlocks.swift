@@ -10,13 +10,13 @@ import SwiftUI
 
 // MARK: - Hero title block
 
-/// Editorial hero: big Anton-style headline + short pink rule + muted sub.
+/// Hero: big display headline + muted sub. #194: no accent rule under the
+/// headline — the canvas keeps colour for the one main action.
 struct HangsHeroBlock: View {
     let title: LocalizedStringKey
     var subtitle: LocalizedStringKey? = nil
     var titleFont: Font = .hangsBlock
     var alignment: HorizontalAlignment = .leading
-    var underlineWidth: CGFloat = 40
     var textColor: Color = Theme.Hangs.Colors.ink
 
     var body: some View {
@@ -27,9 +27,6 @@ struct HangsHeroBlock: View {
                 .foregroundColor(textColor)
                 .multilineTextAlignment(alignment == .center ? .center : .leading)
                 .hangsHeadlineFit()
-            Rectangle()
-                .fill(Theme.Hangs.Colors.action)
-                .frame(width: underlineWidth, height: 2)
             if let subtitle {
                 Text(subtitle)
                     .font(.hangsBody(14))
@@ -57,7 +54,7 @@ extension View {
     }
 }
 
-// MARK: - Section label (mono micro-caps)
+// MARK: - Section label (caps overline)
 
 /// Label above a group of rows. One colour everywhere (#188 G12); pass
 /// `color` only when the label itself carries a verdict (correct / wrong).
@@ -68,8 +65,9 @@ struct HangsSectionLabel: View {
     var body: some View {
         Text(text)
             .textCase(.uppercase)
-            .font(.hangsMono(11, weight: .medium))
-            .tracking(2)
+            // #194 canvas `.t-overline`: 13 semibold caps, light tracking.
+            .font(.hangsOverline)
+            .tracking(0.6)
             .foregroundColor(color)
     }
 }

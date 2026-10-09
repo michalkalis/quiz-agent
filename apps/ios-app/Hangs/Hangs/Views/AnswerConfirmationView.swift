@@ -116,6 +116,15 @@ struct AnswerConfirmationView: View {
     /// drift apart — and so the "distinct from `bg`" rule is assertable.
     static let surface = Theme.Hangs.Colors.bgSheet
 
+    /// #194 R-Confirm design inputs.
+    private enum Metrics {
+        /// Edit / cancel-edit chip: a 40pt plate (with the hit area of its row).
+        static let chip: CGFloat = 40
+        static let glyphSize: CGFloat = 15
+        /// The neutral rule beside the answer.
+        static let rule: CGFloat = 4
+    }
+
     var body: some View {
         ZStack {
             Self.surface.ignoresSafeArea()
@@ -164,11 +173,12 @@ struct AnswerConfirmationView: View {
     private var transcriptBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 10) {
-                HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.action)
+                // #194 R-Confirm: a quiet caption; the answer below is the content.
+                HangsSectionLabel(text: "YOU SAID")
                 if isPaused {
                     // Named, not merely implied by a missing countdown: a
                     // vanished chip reads as "auto-confirm off", not "paused".
-                    HangsSectionLabel(text: "PAUSED", color: Theme.Hangs.Colors.blue)
+                    HangsSectionLabel(text: "PAUSED", color: Theme.Hangs.Colors.ink)
                         .padding(.horizontal, 10)
                         .padding(.vertical, Theme.Hangs.Spacing.xxs)
                         .background(Capsule().fill(Theme.Hangs.Colors.neutralSoft))
@@ -180,12 +190,10 @@ struct AnswerConfirmationView: View {
                         cancelEditing()
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.action)
-                            .padding(Theme.Hangs.Spacing.xs)
-                            .background(
-                                Circle().fill(Theme.Hangs.Colors.actionSoft)
-                            )
+                            .font(.hangsBody(Metrics.glyphSize, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .frame(width: Metrics.chip, height: Metrics.chip)
+                            .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
                     .accessibilityLabel(String(localized: "Cancel editing", comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.editCancel")
@@ -194,12 +202,10 @@ struct AnswerConfirmationView: View {
                         beginEditing()
                     } label: {
                         Image(systemName: "pencil")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.action)
-                            .padding(Theme.Hangs.Spacing.xs)
-                            .background(
-                                Circle().fill(Theme.Hangs.Colors.actionSoft)
-                            )
+                            .font(.hangsBody(Metrics.glyphSize, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .frame(width: Metrics.chip, height: Metrics.chip)
+                            .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
                     .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.edit")
@@ -211,9 +217,8 @@ struct AnswerConfirmationView: View {
 
             if let matchedOption, !isEditing {
                 Text(verbatim: matchedOption)
-                    .font(.hangsMono(12, weight: .medium))
-                    .tracking(1.5)
-                    .foregroundColor(Theme.Hangs.Colors.blue)
+                    .font(.hangsButton)
+                    .foregroundColor(Theme.Hangs.Colors.muted)
                     .accessibilityIdentifier("confirmation.matchedOption")
                     .padding(.bottom, 10)
             }
@@ -228,7 +233,7 @@ struct AnswerConfirmationView: View {
                     // words. Confirm here submits "no answer".
                     HangsQuestionPrompt(
                         text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
-                        barColor: Theme.Hangs.Colors.action,
+                        barColor: Theme.Hangs.Colors.track,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.muted,
                         minimumScaleFactor: 0.6
@@ -237,7 +242,7 @@ struct AnswerConfirmationView: View {
                 } else {
                     HangsQuestionPrompt(
                         text: displayedAnswer,
-                        barColor: Theme.Hangs.Colors.action,
+                        barColor: Theme.Hangs.Colors.track,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
@@ -280,7 +285,6 @@ struct AnswerConfirmationView: View {
                         title: isEvaluating ? "Processing…" : "Confirm",
                         icon: isEvaluating ? nil : "checkmark",
                         isLoading: isEvaluating,
-                        height: 54,
                         countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
                             ? autoConfirmCountdown : nil,
                         countdownTotal: autoConfirmTotal
@@ -306,12 +310,12 @@ struct AnswerConfirmationView: View {
                         title: "Again",
                         icon: "arrow.counterclockwise",
                         color: Theme.Hangs.Colors.muted,
-                        font: .hangsBody(15, weight: .semibold)
+                        font: .hangsButton
                     ) {
                         editFocused = false
                         onReRecord()
                     }
-                    .frame(height: 40)
+                    .frame(minHeight: Metrics.chip + Theme.Hangs.Spacing.xxs)
                     .accessibilityIdentifier("confirmation.reRecord")
                     .disabled(isReRecordLocked || isEvaluating)
                     // C2: 45 % is the mock's "this is not yours right now" tone.
@@ -336,7 +340,7 @@ struct AnswerConfirmationView: View {
     /// no countdown on either: this sheet never resolves itself.
     private var noAnswerChoice: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", height: 54) {
+            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise") {
                 editFocused = false
                 onReRecord()
             }
@@ -346,12 +350,12 @@ struct AnswerConfirmationView: View {
                 title: "Skip",
                 icon: "chevron.right.2",
                 color: Theme.Hangs.Colors.muted,
-                font: .hangsBody(15, weight: .semibold)
+                font: .hangsButton
             ) {
                 editFocused = false
                 onConfirm()
             }
-            .frame(height: 40)
+            .frame(minHeight: Metrics.chip + Theme.Hangs.Spacing.xxs)
             .accessibilityIdentifier("confirmation.skip")
         }
     }
@@ -375,8 +379,8 @@ struct AnswerConfirmationView: View {
     private var editableTranscript: some View {
         HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(Theme.Hangs.Colors.action)
-                .frame(width: 3)
+                .fill(Theme.Hangs.Colors.track)
+                .frame(width: Metrics.rule)
                 .frame(maxHeight: .infinity, alignment: .top)
             TextField("", text: $transcribedAnswer, axis: .vertical)
                 .font(.hangsDisplay(32, weight: .black))
@@ -420,16 +424,16 @@ struct AnswerConfirmationView: View {
 
     private var processingBody: some View {
         VStack(alignment: .leading, spacing: 18) {
-            HangsSectionLabel(text: "PROCESSING", color: Theme.Hangs.Colors.blue)
+            HangsSectionLabel(text: "PROCESSING")
 
             HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(Theme.Hangs.Colors.blue)
-                    .frame(width: 3, height: 56)
+                    .fill(Theme.Hangs.Colors.track)
+                    .frame(width: Metrics.rule, height: 56)
                 HStack(spacing: 14) {
                     ProgressView()
                         .scaleEffect(1.2)
-                        .tint(Theme.Hangs.Colors.action)
+                        .tint(Theme.Hangs.Colors.ink)
                         .accessibilityHidden(true)
                     Text("Transcribing…")
                         .font(.hangsDisplay(28, weight: .black))
@@ -442,7 +446,7 @@ struct AnswerConfirmationView: View {
             Spacer(minLength: 0)
 
             if let onCancel {
-                HangsSecondaryButton(title: "voice.cancel", icon: "xmark", height: 54) {
+                HangsSecondaryButton(title: "voice.cancel", icon: "xmark") {
                     onCancel()
                 }
                 .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))

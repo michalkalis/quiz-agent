@@ -47,7 +47,9 @@ struct HomePacksSection: View {
             // their question cards), two per row; one per row at accessibility
             // text so a title never truncates.
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                HStack(alignment: .firstTextBaseline) {
+                // At accessibility text the label and "Show all" stack: side by
+                // side the link was cut to "Zobraz v…" (no "…" in controls).
+                headerLayout {
                     HangsSectionLabel(text: "my packs")
                         .frame(maxWidth: .infinity, alignment: .leading)
                     showAllLink
@@ -70,6 +72,12 @@ struct HomePacksSection: View {
             .task { await viewModel.start() }
     }
 
+    private var headerLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+    }
+
     private var columns: [GridItem] {
         let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
         return Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.sm, alignment: .top), count: count)
@@ -80,7 +88,7 @@ struct HomePacksSection: View {
             HStack(spacing: Theme.Hangs.Spacing.xxs) {
                 Text("Show all")
                     .font(.hangsLabel)
-                    .lineLimit(1)
+                    .fixedSize()
                 Image(systemName: "chevron.right")
                     .font(.hangsCaption.weight(.bold))
                     .accessibilityHidden(true)

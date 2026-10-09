@@ -17,6 +17,16 @@ extension AppScreen {
         await vm.refresh()
         // No NavigationStack: its bar height differs per device and would tie
         // the baseline to the simulator model.
-        return AnyView(MyPacksView(viewModel: vm, onPlayPack: { _ in }))
+        let appState = AppState(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore()
+        )
+        let createPack = MyPacksCreatePack(
+            orderViewModel: appState.orderPackViewModel,
+            appConfig: appState.appConfig,
+            defaultLanguage: "en"
+        )
+        return AnyView(MyPacksView(viewModel: vm, onPlayPack: { _ in }, createPack: createPack))
     }
 }

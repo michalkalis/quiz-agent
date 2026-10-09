@@ -2367,6 +2367,23 @@
         }
       }
     },
+    "Custom pack" : {
+      "comment" : "Label on the order form's preview card of the pack being ordered (shown in caps)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastní balíček"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastný balík"
+          }
+        }
+      }
+    },
     "Custom pack · 30 questions" : {
       "comment" : "Label of the custom-pack order summary card",
       "localizations" : {

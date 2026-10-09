@@ -132,7 +132,15 @@ struct ContentView: View {
                     case .settings:
                         SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
                     case .myPacks:
-                        MyPacksView(service: appState.packOrderService, onPlayPack: playPack)
+                        MyPacksView(
+                            service: appState.packOrderService,
+                            onPlayPack: playPack,
+                            createPack: MyPacksCreatePack(
+                                orderViewModel: appState.orderPackViewModel,
+                                appConfig: appState.appConfig,
+                                defaultLanguage: viewModel.settings.language
+                            )
+                        )
                     #if DEBUG
                         case .debugLog:
                             DebugLogView()

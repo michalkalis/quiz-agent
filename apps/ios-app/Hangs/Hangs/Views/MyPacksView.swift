@@ -15,19 +15,24 @@ import SwiftUI
 
 struct MyPacksView: View {
     @StateObject private var viewModel: MyPacksViewModel
+    @State private var showingOrderFlow = false
     /// Play a delivered pack by its packId.
     let onPlayPack: (String) -> Void
+    /// #194 C8: the "Create a pack" entry at the bottom of the list (canvas
+    /// Bg-MyPacks). Nil in tests and previews, which render the list alone.
+    let createPack: MyPacksCreatePack?
 
-    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void) {
-        self.init(viewModel: MyPacksViewModel(service: service), onPlayPack: onPlayPack)
+    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void, createPack: MyPacksCreatePack? = nil) {
+        self.init(viewModel: MyPacksViewModel(service: service), onPlayPack: onPlayPack, createPack: createPack)
     }
 
     /// Adopt an already-built list model. Used by previews and by the row
     /// structure tests, which need the list in a known loaded state rather than
     /// racing the `.task` that fetches it.
-    init(viewModel: MyPacksViewModel, onPlayPack: @escaping (String) -> Void) {
+    init(viewModel: MyPacksViewModel, onPlayPack: @escaping (String) -> Void, createPack: MyPacksCreatePack? = nil) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.onPlayPack = onPlayPack
+        self.createPack = createPack
     }
 
     var body: some View {
@@ -48,6 +53,25 @@ struct MyPacksView: View {
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, Theme.Hangs.Spacing.lg)
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let createPack {
+                MyPacksCreateButton(appConfig: createPack.appConfig, action: presentOrderFlow)
+                    .padding(.horizontal, Theme.Hangs.Spacing.md)
+                    .padding(.bottom, Theme.Hangs.Spacing.xs)
+            }
+        }
+        // The list's own sheet (not the Settings one): My packs is also
+        // reached from Home, where Settings is not on the stack. The order
+        // view model lives on AppState, so a running order survives closing.
+        .sheet(isPresented: $showingOrderFlow) {
+            if let createPack {
+                OrderPackFlowView(
+                    viewModel: createPack.orderViewModel,
+                    onPlayPack: onPlayPack,
+                    onClose: { showingOrderFlow = false }
+                )
+            }
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationTitle("My packs")
@@ -181,10 +205,72 @@ struct MyPacksView: View {
         .padding(.top, 40)
     }
 
+    /// Same entry as Settings › Create a pack: a fresh form, or the order
+    /// still running from last time (`prepareForPresentation`).
+    private func presentOrderFlow() {
+        guard let createPack else { return }
+        createPack.orderViewModel.prepareForPresentation(defaultLanguage: createPack.defaultLanguage)
+        showingOrderFlow = true
+    }
+
     private func statusColor(_ order: OrderSnapshot) -> Color {
         if order.isDelivered { return Theme.Hangs.Colors.live }
         if order.isFailure { return Theme.Hangs.Colors.error }
         return Theme.Hangs.Colors.blueText
+    }
+}
+
+/// What My packs needs to open the order flow (#194 C8).
+struct MyPacksCreatePack {
+    let orderViewModel: OrderPackViewModel
+    let appConfig: AppConfigStore
+    /// The quiz language the form preselects (as in Settings).
+    let defaultLanguage: String
+}
+
+/// Glass "Create a pack" bar at the bottom of My packs (canvas Bg-MyPacks).
+/// Disabled with the reason while ordering is paused on the server, like the
+/// Settings row (#193 task 193.9).
+private struct MyPacksCreateButton: View {
+    @ObservedObject var appConfig: AppConfigStore
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xxs) {
+            Button(action: action) {
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    Image(systemName: "plus")
+                        .font(.hangsBody.weight(.bold))
+                        .foregroundStyle(Theme.Hangs.Colors.textOnAction)
+                        .frame(width: Metrics.badge, height: Metrics.badge)
+                        .background(Circle().fill(Theme.Hangs.Colors.action))
+                        .accessibilityHidden(true)
+                    Text("Create a pack")
+                        .font(.hangsLabel)
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .frame(maxWidth: .infinity, minHeight: Metrics.height)
+                .glassEffect(.regular.interactive(), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(!appConfig.ordersEnabled)
+            .opacity(appConfig.ordersEnabled ? 1 : 0.5)
+            .accessibilityIdentifier("myPacks.createPack")
+
+            if !appConfig.ordersEnabled {
+                Text("Ordering is paused for now.")
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+            }
+        }
+    }
+
+    private enum Metrics {
+        static let height: CGFloat = 60
+        static let badge: CGFloat = 30
     }
 }
 

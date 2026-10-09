@@ -1,0 +1,46 @@
+# texts
+trubbo.
+your plan
+Unlimited
+renewal failed
+Fix payment
+Update your payment method
+History
+Science & Nature
+Geography & World
+10 questions
+All Categories
+English
+Slovenčina
+Čeština
+Quiz language
+English
+Easy
+Medium
+Hard
+Random
+Difficulty
+Medium
+Categories
+All Categories
+Start
+# identifiers
+home.moreSettings
+home.planManageButton
+home.freePlanCard
+home.planLabel
+home.freePlanUnlimited
+home.planStatusPill
+home.planManageCTA
+home.planMeta
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.startQuiz

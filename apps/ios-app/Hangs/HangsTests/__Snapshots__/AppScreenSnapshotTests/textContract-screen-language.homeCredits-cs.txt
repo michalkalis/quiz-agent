@@ -1,0 +1,49 @@
+# texts
+trubbo.
+tvůj plán
+118
+otázek k dispozici
+Více
+18 měsíčně zdarma
+100 kreditů z balíčku
+resets in 13 days · credits never expire
+History
+Science & Nature
+Geography & World
+10 otázek
+All Categories
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+English
+Easy
+Medium
+Hard
+Random
+Obtížnost
+Medium
+Kategorie
+All Categories
+Start
+# identifiers
+home.moreSettings
+home.freePlanUpgradeButton
+home.freePlanCard
+home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planLegend
+home.freePlanReset
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.startQuiz

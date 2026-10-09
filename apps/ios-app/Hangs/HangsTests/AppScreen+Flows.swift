@@ -27,6 +27,8 @@ extension AppScreen {
             await makeOrder()
         case .paywallPack, .paywallOffline:
             await makePaywall()
+        case .homeCredits, .homeSubscriber, .homeGrace, .homeExpired, .homePacks, .homeCategories:
+            await makeHome()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

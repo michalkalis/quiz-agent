@@ -2,14 +2,17 @@
 //  HomeView.swift
 //  Hangs
 //
-//  Hangs redesign home screen — cream editorial aesthetic.
-//  See docs/design/hangs-redesign-spec.md section "1. Home".
+//  Home — #194 C1 "Sklo nad kartami" (canvas R-Home): plan card, my packs,
+//  the category deck, three glass setting pills, then the slim command bar
+//  and Start pinned at the bottom.
 //
 
 import SwiftUI
 import UIKit
 
 struct HomeView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var showingCategoryPicker = false
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
     /// packs. Nil (inspector tests / previews that don't exercise the packs
@@ -30,34 +33,51 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.moreSettings")
             }
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-                    if let appConfig {
-                        AppNoticeBanner(store: appConfig)
-                            .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                    }
+            // The deck takes whatever height the content leaves; when the
+            // content outgrows the screen (packs, notice, large text) the page
+            // scrolls and the deck keeps only its floor. The reader sits
+            // outside the scroll view, so measuring never feeds its own layout.
+            GeometryReader { viewport in
+                ScrollView {
+                    VStack(spacing: Theme.Hangs.Spacing.md) {
+                        if let appConfig {
+                            AppNoticeBanner(store: appConfig)
+                        }
 
-                    freePlanCard
-                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                        freePlanCard
 
-                    // #141: pick-and-play entry for owned custom packs
-                    // (variant B — founder 2026-08-05). Renders nothing for
-                    // accounts without pack orders.
-                    if let packOrderService {
-                        HomePacksSection(service: packOrderService) { packId in
-                            viewModel.beginQuizStart(packId: packId)
+                        // #141: pick-and-play entry for owned custom packs
+                        // (variant B — founder 2026-08-05). Renders nothing for
+                        // accounts without pack orders.
+                        if let packOrderService {
+                            HomePacksSection(service: packOrderService) { packId in
+                                viewModel.beginQuizStart(packId: packId)
+                            }
+                        }
+
+                        if !dynamicTypeSize.isAccessibilitySize {
+                            HomeCategoryDeck(
+                                selectedCategories: viewModel.settings.categories,
+                                title: viewModel.settings.categoryDisplayName(),
+                                questionCount: viewModel.settings.numberOfQuestions
+                            )
+                            .frame(minHeight: Metrics.deckFloor, maxHeight: .infinity)
+                        }
+
+                        settingPills
+
+                        // #96 P3: the "Image questions" toggle is hidden until
+                        // image content ships (founder, 2026-07-12). Wiring
+                        // stays; only the UI is gated behind a Config flag.
+                        if Config.imageQuestionsToggleVisible {
+                            HangsCard { imageQuestionsRow }
                         }
                     }
-
-                    HangsSectionLabel(text: "session")
-                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                        .padding(.top, Theme.Hangs.Spacing.xs)
-
-                    configCard
-                        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                    .padding(.horizontal, Theme.Hangs.Spacing.md)
+                    .padding(.vertical, Theme.Hangs.Spacing.sm)
+                    .frame(minHeight: viewport.size.height, alignment: .top)
                 }
-                .padding(.top, Theme.Hangs.Spacing.xs)
-                .padding(.bottom, Theme.Hangs.Spacing.xl)
+                .scrollBounceBehavior(.basedOnSize)
             }
 
             // #77/#96 P2: listening indicator above the primary action — visible
@@ -73,14 +93,15 @@ struct HomeView: View {
                     size: .slim,
                     language: viewModel.commandLanguage
                 )
-                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                    .padding(.bottom, 10)
-                    .transition(.opacity)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.top, Theme.Hangs.Spacing.xxs)
+                .transition(.opacity)
             }
 
             startQuizButton
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.bottom, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.top, Theme.Hangs.Spacing.sm)
+                .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
@@ -96,6 +117,14 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showingCategoryPicker) {
+            HomeCategoryPicker(categories: $viewModel.settings.categories)
+        }
+    }
+
+    private enum Metrics {
+        /// Below this the fanned cards stop reading as a deck.
+        static let deckFloor: CGFloat = 160
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)
@@ -180,32 +209,31 @@ struct HomeView: View {
 
     // Shown only while /usage's launch/foreground fetch is still in flight and
     // nothing is cached yet (#123 Track A). Holds the loaded card's full
-    // scaffold — the "your plan" label, a headline-height spinner row, an empty
-    // track and a skeleton meta line — so the slot doesn't jump when /usage
+    // scaffold — the "your plan" label, a number-height spinner row, an empty
+    // meter and a skeleton meta line — so the slot doesn't jump when /usage
     // resolves into the loaded (or failed) state.
     private var freePlanCardLoading: some View {
-        HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-                Text("your plan")
-                    .font(.hangsMono(11, weight: .medium))
-                    .tracking(1)
-                    .foregroundColor(Theme.Hangs.Colors.blueText)
-                    .accessibilityIdentifier("home.planLabel")
-                HStack(spacing: 6) {
-                    ProgressView()
-                        .tint(Theme.Hangs.Colors.muted)
+        HangsCard(padding: HomePlanCardMetrics.padding) {
+            VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
+                HomePlanCardLabel()
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
+                    Text(verbatim: "00")
+                        .font(.hangsTitle)
+                        .hidden()
+                        .overlay(alignment: .leading) {
+                            ProgressView().tint(Theme.Hangs.Colors.muted)
+                        }
                     Text("Loading your plan…")
-                        .font(.hangsBody(13, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                    Spacer()
+                        .font(.hangsBodyLG)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
                 }
-                .frame(height: 40)
-                Capsule()
-                    .fill(Theme.Hangs.Colors.subtleBorder)
-                    .frame(height: 4)
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(Theme.Hangs.Colors.subtleBorder)
-                    .frame(width: 96, height: 11)
+                HomePlanMeter(segments: [])
+                Text(verbatim: "resets in 13 days")
+                    .font(.hangsCaption)
+                    .hidden()
+                    .overlay(alignment: .leading) {
+                        Capsule().fill(Theme.Hangs.Colors.track)
+                    }
                     .accessibilityIdentifier("home.planLoadingSkeleton")
             }
         }
@@ -213,29 +241,30 @@ struct HomeView: View {
     }
 
     // Shown only when /usage failed to load and there is nothing cached — a
-    // tap re-fetches. Reuses the free-plan card styling; no new design system.
+    // tap re-fetches. Reuses the plan card surface; no new design system.
     private var freePlanCardUnavailable: some View {
         Button {
             Task { await viewModel.refreshUsage() }
         } label: {
-            HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-                HStack(spacing: 6) {
+            HangsCard(padding: HomePlanCardMetrics.padding) {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
                     Image(systemName: "bolt.slash")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .font(.hangsCaption.weight(.semibold))
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
                         .accessibilityHidden(true)
                     Text("Couldn't load your plan")
-                        .font(.hangsBody(13, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
-                    Spacer()
+                        .font(.hangsBodyLG)
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     HStack(spacing: Theme.Hangs.Spacing.xxs) {
                         Text("Retry")
-                            .font(.hangsBody(13, weight: .semibold))
+                            .font(.hangsLabel)
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.hangsCaption.weight(.bold))
                             .accessibilityHidden(true)
                     }
-                    .foregroundColor(Theme.Hangs.Colors.action)
+                    .foregroundStyle(Theme.Hangs.Colors.actionText)
+                    .fixedSize()
                 }
             }
         }
@@ -269,32 +298,27 @@ struct HomeView: View {
         return String(localized: "resets in \(hours) hours", comment: "Home quota card: hours until the free-question reset")
     }
 
-    // MARK: - Config card
-
-    private var configCard: some View {
-        HangsCard {
-            VStack(spacing: 0) {
-                languageRow
-                HangsDivider()
-                difficultyRow
-                HangsDivider()
-                categoriesRow
-                // #96 P3: the "Image questions" toggle is hidden until image
-                // content ships (founder, 2026-07-12). Wiring stays; only the UI
-                // is gated behind a Config flag, so re-enabling is a one-line flip.
-                if Config.imageQuestionsToggleVisible {
-                    HangsDivider()
-                    imageQuestionsRow
-                }
-            }
-        }
-    }
+    // MARK: - Setting pills (#194 C1, was the config card)
 
     // #82 item 4 (decision 7): every picker marks the active choice with a
-    // checkmark; categories are multi-select (toggle membership, "All
-    // Categories" clears the selection).
+    // checkmark; categories are multi-select (the picker sheet toggles
+    // membership, "All Categories" clears the selection).
 
-    private var languageRow: some View {
+    /// Three pills side by side; stacked once the text is too large for a
+    /// third of the width to hold "Slovenčina" on one line.
+    private var settingPills: some View {
+        let layout = dynamicTypeSize >= .xxLarge
+            ? AnyLayout(VStackLayout(spacing: Theme.Hangs.Spacing.xs))
+            : AnyLayout(HStackLayout(spacing: Theme.Hangs.Spacing.xs))
+        return layout {
+            languageMenu
+            difficultyMenu
+            categoriesButton
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var languageMenu: some View {
         Menu {
             ForEach(Language.selectableLanguages) { language in
                 Button {
@@ -309,17 +333,17 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.language.\(language.id)")
             }
         } label: {
-            HangsConfigRowLabel(
-                // #130: same scope wording as Settings — this picks the quiz
-                // content language, not the interface language.
-                label: "Quiz language",
+            // #130: same scope wording as Settings — this picks the quiz
+            // content language, not the interface language.
+            HomeSettingPill(
+                caption: "Quiz language",
                 value: Language.selectable(viewModel.settings.language).nativeName
             )
         }
         .accessibilityIdentifier("home-language-menu")
     }
 
-    private var difficultyRow: some View {
+    private var difficultyMenu: some View {
         Menu {
             ForEach(Config.difficultyOptions, id: \.0) { id, display in
                 Button {
@@ -334,52 +358,26 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.difficulty.\(id)")
             }
         } label: {
-            HangsConfigRowLabel(
-                label: "Difficulty",
+            HomeSettingPill(
+                caption: "Difficulty",
                 value: viewModel.settings.difficultyDisplayName()
             )
         }
         .accessibilityIdentifier("home-difficulty-menu")
     }
 
-    private var categoriesRow: some View {
-        Menu {
-            ForEach(Config.categoryOptions, id: \.id) { option in
-                Button {
-                    toggleCategory(option.id)
-                } label: {
-                    if isCategorySelected(option.id) {
-                        Label(option.display, systemImage: "checkmark")
-                    } else {
-                        Text(option.display)
-                    }
-                }
-                .accessibilityIdentifier("home.category.\(option.id ?? "all")")
-            }
+    private var categoriesButton: some View {
+        Button {
+            showingCategoryPicker = true
         } label: {
-            HangsConfigRowLabel(
-                label: "Categories",
-                value: viewModel.settings.categoryDisplayName()
+            HomeSettingPill(
+                caption: "Categories",
+                value: viewModel.settings.categoryDisplayName(),
+                valueLineLimit: 2
             )
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier("home-categories-menu")
-    }
-
-    private func isCategorySelected(_ id: String?) -> Bool {
-        guard let id else { return viewModel.settings.categories.isEmpty }
-        return viewModel.settings.categories.contains(id)
-    }
-
-    private func toggleCategory(_ id: String?) {
-        guard let id else {
-            viewModel.settings.categories = []
-            return
-        }
-        if let index = viewModel.settings.categories.firstIndex(of: id) {
-            viewModel.settings.categories.remove(at: index)
-        } else {
-            viewModel.settings.categories.append(id)
-        }
     }
 
     // #68: image questions are fun but unsuitable while driving — user-selectable
@@ -397,7 +395,7 @@ struct HomeView: View {
     private func navChipVisual(icon: String) -> some View {
         Image(systemName: icon)
             .font(.system(size: 16, weight: .semibold))
-            .foregroundColor(Theme.Hangs.Colors.ink)
+            .foregroundStyle(Theme.Hangs.Colors.ink)
             .frame(width: 44, height: 44)
             // #194 B2: same glass circle as `HangsNavChip`.
             .glassEffect(.regular.interactive(), in: Circle())

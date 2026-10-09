@@ -1,0 +1,46 @@
+# texts
+trubbo.
+tvoj plán
+Bez limitu
+obnova zlyhala
+Oprav platbu
+Aktualizuj spôsob platby
+History
+Science & Nature
+Geography & World
+10 otázok
+All Categories
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+English
+Easy
+Medium
+Hard
+Random
+Náročnosť
+Medium
+Kategórie
+All Categories
+Štart
+# identifiers
+home.moreSettings
+home.planManageButton
+home.freePlanCard
+home.planLabel
+home.freePlanUnlimited
+home.planStatusPill
+home.planManageCTA
+home.planMeta
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.startQuiz

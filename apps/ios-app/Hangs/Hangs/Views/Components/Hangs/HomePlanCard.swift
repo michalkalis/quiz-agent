@@ -67,9 +67,12 @@ struct HomePlanCard: View {
     // MARK: - Body
 
     var body: some View {
-        HangsCard(padding: .init(top: 12, leading: 16, bottom: 12, trailing: 16)) {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-                planLabel
+        // #194 C1: the R-Home plan card — sentence-case label, title-size
+        // number, one ink meter. Same structure in every state, so the card
+        // never jumps when /usage resolves (`HomePlanCardScaffold` mirrors it).
+        HangsCard(padding: HomePlanCardMetrics.padding) {
+            VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
+                HomePlanCardLabel()
                 switch state {
                 case .subscriber, .subscriberWithCredits, .grace:
                     subscriberBody
@@ -81,16 +84,6 @@ struct HomePlanCard: View {
         .accessibilityIdentifier("home.freePlanCard")
     }
 
-    // MARK: - Shared header
-
-    private var planLabel: some View {
-        Text("your plan")
-            .font(.hangsMono(11, weight: .medium))
-            .tracking(1)
-            .foregroundColor(Theme.Hangs.Colors.blueText)
-            .accessibilityIdentifier("home.planLabel")
-    }
-
     // MARK: - Family A: free / free+credits / expired
 
     private var freeFamilyBody: some View {
@@ -100,38 +93,35 @@ struct HomePlanCard: View {
         let showLegend = remaining > 0 && credits > 0
         let primary = hasCredits ? Self.combinedTotal(usage) : remaining
 
-        return VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
+        return VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                 Text(verbatim: "\(primary)")
-                    .font(.hangsDisplay(40))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsTitle.monospacedDigit())
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .fixedSize()
                     .accessibilityIdentifier("home.planPrimary")
                 planCaption(hasCredits: hasCredits)
-                Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 if state == .expired {
-                    planPill(text: "ended", color: Theme.Hangs.Colors.actionText, icon: nil)
+                    planPill(text: "ended", color: Theme.Hangs.Colors.muted, icon: nil)
                 }
+                freeLink
             }
             if showLegend {
                 legendRow(free: remaining, credits: credits)
             }
-            planTrack(segments: freeTrackSegments(remaining: remaining, credits: credits))
-            HStack {
-                Text(freeMetaText(hasCredits: hasCredits))
-                    .font(.hangsBody(12))
-                    .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                    .accessibilityIdentifier("home.freePlanReset")
-                Spacer()
-                freeLink
-            }
+            HomePlanMeter(segments: freeTrackSegments(remaining: remaining, credits: credits))
+            Text(freeMetaText(hasCredits: hasCredits))
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .accessibilityIdentifier("home.freePlanReset")
         }
     }
 
-    /// The muted caption beside the Anton headline. Split out so each branch is
-    /// a direct string literal — a ternary inside `Text(_:)` would resolve to
-    /// the verbatim `String` initializer and pre-render the interpolation,
+    /// The caption beside the number. Split out so each branch is a direct
+    /// string literal — a ternary inside `Text(_:)` would resolve to the
+    /// verbatim `String` initializer and pre-render the interpolation,
     /// dropping the "%lld" from the localization catalog (#56).
     @ViewBuilder
     private func planCaption(hasCredits: Bool) -> some View {
@@ -144,24 +134,24 @@ struct HomePlanCard: View {
                     .accessibilityIdentifier("home.planCaption")
             }
         }
-        .font(.hangsBody(13, weight: .semibold))
-        .foregroundColor(Theme.Hangs.Colors.muted)
+        .font(.hangsBodyLG)
+        .foregroundStyle(Theme.Hangs.Colors.muted)
     }
 
-    private func freeTrackSegments(remaining: Int, credits: Int) -> [(Color, Double)] {
+    private func freeTrackSegments(remaining: Int, credits: Int) -> [HomePlanMeter.Segment] {
         if credits > 0 {
             let total = Double(remaining + credits)
             guard total > 0 else { return [] }
-            // Free burns first: blue segment drawn left, purple right, widths
-            // proportional to the two balances (they fill the full track).
+            // Free burns first: ink drawn left, cobalt credits right, widths
+            // proportional to the two balances (they fill the full meter).
             return [
-                (Theme.Hangs.Colors.blue, Double(remaining) / total),
-                (Theme.Hangs.Colors.accentPrimary, Double(credits) / total),
+                .init(color: Theme.Hangs.Colors.ink, fraction: Double(remaining) / total),
+                .init(color: Theme.Hangs.Colors.accentPrimary, fraction: Double(credits) / total),
             ]
         }
-        // Free-only (or expired collapsed to free): a partial blue meter of the
+        // Free-only (or expired collapsed to free): a partial meter of the
         // monthly quota that is left.
-        return [(Theme.Hangs.Colors.blue, HomeView.quotaFraction(usage))]
+        return [.init(color: Theme.Hangs.Colors.ink, fraction: HomeView.quotaFraction(usage))]
     }
 
     /// "resets in 3 days" — and, when pack credits coexist, that they don't
@@ -179,64 +169,61 @@ struct HomePlanCard: View {
     @ViewBuilder private var freeLink: some View {
         switch state {
         case .expired:
-            linkLabel("Resubscribe", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
+            linkLabel("Resubscribe", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
         case .freeWithCredits:
-            linkLabel("More", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
+            linkLabel("More", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
         default:
-            linkLabel("Upgrade", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
+            linkLabel("Upgrade", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
         }
     }
 
     // MARK: - Family B: subscriber / subscriber+credits / grace
 
     private var subscriberBody: some View {
-        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                 Text("Unlimited")
-                    .font(.hangsDisplay(32))
-                    .textCase(.uppercase)
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .minimumScaleFactor(0.6)
                     .accessibilityIdentifier("home.freePlanUnlimited")
                 statusPill
-                Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                subscriberLink
             }
             if state == .subscriberWithCredits {
                 creditChip
             }
-            planTrack(segments: [(subscriberTrackColor, 1.0)])
-            HStack {
-                subscriberMeta
-                Spacer()
-                subscriberLink
-            }
+            HomePlanMeter(segments: [.init(color: subscriberTrackColor, fraction: 1)])
+            subscriberMeta
         }
     }
 
     private var subscriberTrackColor: Color {
-        state == .grace ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.action
+        state == .grace ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.ink
     }
 
     @ViewBuilder private var statusPill: some View {
         if state == .grace {
             planPill(text: "renewal failed", color: Theme.Hangs.Colors.warning, icon: "exclamationmark.triangle")
         } else {
-            planPill(text: "active", color: Theme.Hangs.Colors.successText, icon: "checkmark")
+            planPill(text: "active", color: Theme.Hangs.Colors.live, icon: "checkmark")
         }
     }
 
     private var creditChip: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "shippingbox")
-                .font(.system(size: 10, weight: .semibold))
-                .accessibilityHidden(true)
+        Label {
             Text("\(usage.creditBalance) pack credits kept for later")
-                .font(.hangsBody(12, weight: .medium))
+                .font(.hangsCaption)
+        } icon: {
+            Image(systemName: "shippingbox")
+                .font(.hangsCaption)
         }
-        .foregroundColor(Theme.Hangs.Colors.accentPrimary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .labelStyle(HomePlanCompactLabelStyle())
+        .foregroundStyle(Theme.Hangs.Colors.accentPrimary)
+        .padding(.horizontal, Theme.Hangs.Spacing.sm)
+        .padding(.vertical, Theme.Hangs.Spacing.xxs)
         .background(Capsule().fill(Theme.Hangs.Colors.accentPrimarySoft))
         .accessibilityIdentifier("home.planCreditChip")
     }
@@ -251,8 +238,8 @@ struct HomePlanCard: View {
                 Text("Subscription active")
             }
         }
-        .font(.hangsBody(12))
-        .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+        .font(.hangsCaption)
+        .foregroundStyle(Theme.Hangs.Colors.muted)
         .accessibilityIdentifier("home.planMeta")
     }
 
@@ -260,77 +247,120 @@ struct HomePlanCard: View {
         if state == .grace {
             linkLabel("Fix payment", color: Theme.Hangs.Colors.warning, id: "home.planManageCTA")
         } else {
-            linkLabel("Manage", color: Theme.Hangs.Colors.action, id: "home.planManageCTA")
+            linkLabel("Manage", color: Theme.Hangs.Colors.actionText, id: "home.planManageCTA")
         }
     }
 
     // MARK: - Shared pieces
 
     private func legendRow(free: Int, credits: Int) -> some View {
-        HStack(spacing: 14) {
-            legendItem(color: Theme.Hangs.Colors.blue, text: "\(free) monthly free")
+        HStack(spacing: Theme.Hangs.Spacing.md) {
+            legendItem(color: Theme.Hangs.Colors.ink, text: "\(free) monthly free")
             legendItem(color: Theme.Hangs.Colors.accentPrimary, text: "\(credits) pack credits")
         }
         .accessibilityIdentifier("home.planLegend")
     }
 
     private func legendItem(color: Color, text: LocalizedStringKey) -> some View {
-        HStack(spacing: 5) {
-            Circle().fill(color).frame(width: 6, height: 6)
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
+            Circle().fill(color).frame(width: HomePlanCardMetrics.legendDot, height: HomePlanCardMetrics.legendDot)
             Text(text)
-                .font(.hangsBody(11, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
         }
-    }
-
-    /// A capsule spend meter. One or more coloured segments drawn left→right
-    /// over the subtle track; any remainder shows the empty track behind them.
-    private func planTrack(segments: [(Color, Double)]) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.Hangs.Colors.subtleBorder)
-                HStack(spacing: 0) {
-                    ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                        Rectangle()
-                            .fill(segment.0)
-                            .frame(width: max(0, geo.size.width * min(1, segment.1)))
-                    }
-                }
-                .clipShape(Capsule())
-            }
-        }
-        .frame(height: 4)
-        .accessibilityHidden(true)
     }
 
     private func planPill(text: LocalizedStringKey, color: Color, icon: String?) -> some View {
-        HStack(spacing: Theme.Hangs.Spacing.xxs) {
+        Label {
+            Text(text)
+                .font(.hangsCaption.weight(.semibold))
+                .lineLimit(1)
+                .accessibilityIdentifier("home.planStatusPill")
+        } icon: {
             if let icon {
                 Image(systemName: icon)
-                    .font(.system(size: 9, weight: .bold))
-                    .accessibilityHidden(true)
+                    .font(.hangsCaption.weight(.semibold))
             }
-            Text(text)
-                .font(.hangsBody(11, weight: .semibold))
-                .accessibilityIdentifier("home.planStatusPill")
         }
-        .foregroundColor(color)
+        .labelStyle(HomePlanCompactLabelStyle())
+        .foregroundStyle(color)
         .padding(.horizontal, Theme.Hangs.Spacing.xs)
-        .padding(.vertical, 3)
-        .background(Capsule().fill(color.opacity(0.14)))
+        .padding(.vertical, Theme.Hangs.Spacing.xxs / 2)
+        .background(Capsule().fill(color.opacity(0.12)))
+        .fixedSize()
     }
 
     private func linkLabel(_ title: LocalizedStringKey, color: Color, id: String) -> some View {
         HStack(spacing: Theme.Hangs.Spacing.xxs) {
             Text(title)
-                .font(.hangsBody(13, weight: .semibold))
+                .font(.hangsLabel)
+                .lineLimit(1)
                 .accessibilityIdentifier(id)
             Image(systemName: "chevron.right")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.hangsCaption.weight(.bold))
                 .accessibilityHidden(true)
         }
-        .foregroundColor(color)
+        .foregroundStyle(color)
+        .fixedSize()
     }
+}
+
+/// "your plan" — the label every plan-card state (and its loading/failed
+/// placeholders) opens with.
+struct HomePlanCardLabel: View {
+    var body: some View {
+        Text("your plan")
+            .font(.hangsOverline)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
+            .accessibilityIdentifier("home.planLabel")
+    }
+}
+
+/// The 6pt spend meter: coloured segments drawn left→right over the track;
+/// any remainder shows the empty track behind them.
+struct HomePlanMeter: View {
+    struct Segment {
+        let color: Color
+        let fraction: Double
+    }
+
+    let segments: [Segment]
+
+    var body: some View {
+        Capsule()
+            .fill(Theme.Hangs.Colors.track)
+            .frame(height: HomePlanCardMetrics.meterHeight)
+            .overlay(alignment: .leading) {
+                // In an overlay, so measuring the track never feeds its layout.
+                GeometryReader { proxy in
+                    HStack(spacing: 0) {
+                        ForEach(segments.indices, id: \.self) { index in
+                            segments[index].color
+                                .frame(width: proxy.size.width * min(1, max(0, segments[index].fraction)))
+                        }
+                    }
+                }
+                .clipShape(Capsule())
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Icon and title tight together (pills and chips on the plan card).
+private struct HomePlanCompactLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
+            configuration.icon.accessibilityHidden(true)
+            configuration.title
+        }
+    }
+}
+
+enum HomePlanCardMetrics {
+    static let padding = EdgeInsets(top: 12, leading: 16, bottom: 14, trailing: 16)
+    static let rowGap: CGFloat = 6
+    static let meterHeight: CGFloat = 6
+    static let legendDot: CGFloat = 6
 }
 
 #if DEBUG

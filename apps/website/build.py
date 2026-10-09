@@ -19,7 +19,7 @@ OUT = ROOT / "public"
 SITE = "https://trubbo.app"
 LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}  # en is the default at the root
 STEPS = 6  # story steps; each has a static copy of the screen for the stacked fallback
-STATIC = ["favicon.svg", "favicon.png", "apple-touch-icon.png", "og.png", "robots.txt", "404.html", "CNAME"]
+STATIC = ["rethink-sans-latin.woff2", "rethink-sans-latin-ext.woff2", "rethink-sans-OFL.txt", "favicon.svg", "favicon.png", "apple-touch-icon.png", "og.png", "robots.txt", "404.html", "CNAME"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")

@@ -58,8 +58,8 @@ struct OrderPackFlowView: View {
                         )
                     }
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.vertical, Theme.Hangs.Spacing.xl)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.vertical, Theme.Hangs.Spacing.lg)
             }
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle(navigationTitle)

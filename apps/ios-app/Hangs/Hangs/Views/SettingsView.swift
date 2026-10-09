@@ -69,13 +69,16 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                HangsHeroBlock(
-                    title: "SETTINGS",
-                    titleFont: .hangsDisplayMD
-                )
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.top, Theme.Hangs.Spacing.md)
-                .padding(.bottom, Theme.Hangs.Spacing.xl)
+                // #194 C8 (canvas Bg-Settings): a plain large title, no accent rule.
+                Text("SETTINGS")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .hangsHeadlineFit()
+                    .accessibilityAddTraits(.isHeader)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                    .padding(.top, Theme.Hangs.Spacing.xs)
+                    .padding(.bottom, Theme.Hangs.Spacing.lg)
 
                 VStack(spacing: Theme.Hangs.Spacing.lg) {
                     voiceGroup
@@ -94,8 +97,8 @@ struct SettingsView: View {
                         developerGroup
                     #endif
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.bottom, 40)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.bottom, Theme.Hangs.Spacing.xxl)
             }
         }
         .onScrollGeometryChange(for: Bool.self) { geometry in
@@ -461,26 +464,28 @@ struct SettingsView: View {
 
     private var signedOutAccountGroup: some View {
         groupSection(label: "account") {
-            VStack(spacing: Theme.Hangs.Spacing.md) {
-                Text("Sign in to keep your premium and history when you reinstall.")
-                    .font(.hangsBody(14))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 18)
-                    .padding(.top, Theme.Hangs.Spacing.md)
+            VStack(spacing: 0) {
+                // #194 C8: the gap belongs between the intro and the button only;
+                // the rows below sit flush like every other group.
+                VStack(spacing: Theme.Hangs.Spacing.sm) {
+                    Text("Sign in to keep your premium and history when you reinstall.")
+                        .font(.hangsBody)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                SignInWithAppleButton(.signIn) { request in
-                    account.prepareSignInRequest(request, auth: appState.authService)
-                } onCompletion: { result in
-                    account.handleSignInResult(result, auth: appState.authService)
+                    SignInWithAppleButton(.signIn) { request in
+                        account.prepareSignInRequest(request, auth: appState.authService)
+                    } onCompletion: { result in
+                        account.handleSignInResult(result, auth: appState.authService)
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .clipShape(Capsule())
+                    .disabled(account.isSigningIn)
+                    .accessibilityIdentifier("account.signInWithApple")
                 }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 50)
-                .padding(.horizontal, 18)
-                .padding(.bottom, Theme.Hangs.Spacing.md)
-                .disabled(account.isSigningIn)
-                .accessibilityIdentifier("account.signInWithApple")
+                .padding(Theme.Hangs.Spacing.md)
 
                 hairline
 
@@ -907,9 +912,9 @@ struct SettingsView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         let inner = content()
-        return VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HangsSectionLabel(text: label)
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
             HangsCard {
                 VStack(spacing: 0) {
                     inner
@@ -922,7 +927,7 @@ struct SettingsView: View {
         Rectangle()
             .fill(Theme.Hangs.Colors.hairline)
             .frame(height: 1)
-            .padding(.leading, 18)
+            .padding(.leading, Theme.Hangs.Spacing.md)
     }
 
     private var appVersion: String {

@@ -31,7 +31,7 @@ struct OrderPackFormStep: View {
     private var topicGroup: some View {
         VStack(alignment: .leading, spacing: 10) {
             HangsSectionLabel(text: "Quiz topic")
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
             HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                     TextField(
@@ -40,21 +40,21 @@ struct OrderPackFormStep: View {
                         axis: .vertical
                     )
                     .lineLimit(3 ... 8)
-                    .font(.hangsBody(16))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
-                        .font(.hangsMono(12, weight: .medium))
-                        .foregroundColor(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.action)
+                        .font(.hangsCaption.monospacedDigit())
+                        .foregroundStyle(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             Text("Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough.")
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
         }
     }
 
@@ -78,10 +78,10 @@ struct OrderPackFormStep: View {
                 .accessibilityIdentifier("orderPack.language")
             }
             Text("Preselected from your quiz language in Settings.")
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
         }
     }
 }

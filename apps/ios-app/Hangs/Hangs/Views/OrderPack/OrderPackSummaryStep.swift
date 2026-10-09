@@ -23,19 +23,19 @@ struct OrderPackSummaryStep: View {
                     HangsSectionLabel(text: "Custom pack · 30 questions")
 
                     Text(verbatim: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
-                        .font(.hangsBody(16))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+                        .font(.hangsHeading)
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("orderPack.summaryPrompt")
 
                     HStack(spacing: Theme.Hangs.Spacing.xs) {
                         Text("Quiz language")
-                            .font(.hangsBody(13))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
                         Text(verbatim: Language.forCode(viewModel.language)?.nativeName
                             ?? Language.default.nativeName)
-                            .font(.hangsBody(13, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.action)
+                            .font(.hangsBody.weight(.semibold))
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
                     }
                 }
             }
@@ -52,17 +52,17 @@ struct OrderPackSummaryStep: View {
     private var noticeBox: some View {
         HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(Theme.Hangs.Colors.warning)
+                .font(.hangsBody.weight(.semibold))
+                .foregroundStyle(Theme.Hangs.Colors.warning)
             Text("Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.")
-                .font(.hangsBody(13))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Theme.Hangs.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
                 .fill(Theme.Hangs.Colors.warning.opacity(0.12))
         )
         .accessibilityIdentifier("orderPack.noCancelNotice")

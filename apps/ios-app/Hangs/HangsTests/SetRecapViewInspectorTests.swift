@@ -94,8 +94,11 @@ private func makeRecapViewModel() async -> QuizViewModel {
 @Suite("SetRecapView — hero, rows, exits (#132 E)")
 @MainActor
 struct SetRecapViewInspectorTests {
-    @Test("hero shows the correct-count score and the three buckets")
-    func heroScoreAndChips() async throws {
+    /// #194 C5 (founder round 4): the recap and the score screen are ONE end
+    /// of round — the recap route shows the same final-score card with the
+    /// round's breakdown (accuracy of the whole round) above its answer list.
+    @Test("the recap shows the merged score card above the answer list")
+    func heroScoreAndBreakdown() async throws {
         let vm = await makeRecapViewModel()
         let view = SetRecapView(viewModel: vm)
         try await ViewHosting.host(view) {
@@ -103,10 +106,12 @@ struct SetRecapViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "recap.hero")
             }
-            #expect(throws: Never.self) { try tree.find(text: "1/3") }
-            #expect(throws: Never.self) { try tree.find(text: "1 CORRECT") }
-            #expect(throws: Never.self) { try tree.find(text: "1 MISSED") }
-            #expect(throws: Never.self) { try tree.find(text: "1 SKIPPED") }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "completion.breakdown")
+            }
+            for label in ["final score", "Correct", "Incorrect", "Accuracy"] {
+                #expect(throws: Never.self, "\(label) missing") { try tree.find(text: label) }
+            }
         }
     }
 

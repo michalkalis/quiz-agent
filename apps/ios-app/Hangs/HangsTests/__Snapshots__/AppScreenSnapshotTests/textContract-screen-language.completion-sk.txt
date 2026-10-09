@@ -3,7 +3,7 @@ trubbo.
 HOTOVO
 konečné skóre
 7.5
-out of 10
+z 10
 Správne
 7
 Nesprávne
@@ -12,9 +12,13 @@ Nesprávne
 70%
 Hraj znova
 Úvod
+Hraj znova
+Úvod
 # identifiers
 completion.close
 completion.score
 completion.breakdown
+completion.playAgain
+completion.home
 completion.playAgain
 completion.home

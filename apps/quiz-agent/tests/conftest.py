@@ -19,6 +19,13 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+# #196: with ANTHROPIC_API_KEY set, Claude ids (the TRANSLATION_MODEL default)
+# route to the native Anthropic SDK instead of the OpenAI-compatible client the
+# translation tests mock. Blank it BEFORE .env loads (load_dotenv never
+# overrides an existing var) so a developer's real key can never turn a unit
+# test into a paid API call; Anthropic-route tests set a placeholder explicitly.
+os.environ["ANTHROPIC_API_KEY"] = ""
+
 try:
     from dotenv import load_dotenv
 

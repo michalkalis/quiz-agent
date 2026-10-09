@@ -45,6 +45,8 @@ from typing import Any, Optional, Union
 import httpx
 from openai import AsyncOpenAI, OpenAI
 
+from . import anthropic_route
+
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 logger = logging.getLogger(__name__)
@@ -242,6 +244,9 @@ _NO_SAMPLING_PARAMS_PREFIXES = (
     "claude-fable-5",
     "claude-opus-5",
     "claude-sonnet-5",
+    # Claude Haiku 5.5 rejects non-default sampling values too (claude-api
+    # reference, 2026-10-06).
+    "claude-haiku-5",
     "gpt-5",
 )
 
@@ -550,6 +555,14 @@ def chat_openai(model: str, **kwargs):
         return _chat_bedrock(model, **kwargs)
     if is_session_model(model):
         return _chat_session(model, **kwargs)
+    # #196: Claude ids go straight to the Anthropic API (Max credit) when a key
+    # is set; without one they keep the OpenAI-compatible route below.
+    if anthropic_route.routes_to_anthropic(model):
+        return anthropic_route.chat_anthropic(
+            model, default_timeout=GENERATION_TIMEOUT.read, **kwargs
+        )
+    if anthropic_route.is_claude_model(model):
+        anthropic_route.log_route(model, f"{gateway()} (ANTHROPIC_API_KEY unset)")
 
     from langchain_openai import ChatOpenAI
 

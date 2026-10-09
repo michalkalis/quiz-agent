@@ -1082,7 +1082,7 @@ class AdvancedQuestionGenerator:
 
         # Parse response
         questions = self._parse_response(
-            response.content,
+            llm_factory.message_text(response),
             default_difficulty=difficulty or "medium",
             default_category=categories[0] if categories else "general"
         )
@@ -1887,7 +1887,7 @@ Respond in JSON only:
             except Exception as exc:  # noqa: BLE001 — judge call boundary
                 print(f"Pairwise judge call failed (pair skipped): {exc!r}")
                 return None
-            winner = self._parse_pairwise_winner(response.content)
+            winner = self._parse_pairwise_winner(llm_factory.message_text(response))
             if winner is None:
                 print("Pairwise judge verdict unparseable (pair skipped)")
                 return None
@@ -1945,7 +1945,7 @@ Respond in JSON only:
                 response = await self.critique_llm.ainvoke([
                     HumanMessage(content=critique_prompt)
                 ])
-                critique_content = self._strip_markdown_fences(response.content)
+                critique_content = self._strip_markdown_fences(llm_factory.message_text(response))
                 start = critique_content.find('{')
                 end = critique_content.rfind('}') + 1
                 if start == -1 or end <= start:

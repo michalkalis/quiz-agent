@@ -121,7 +121,9 @@ def test_structured_output_never_forces_tool_on_models_that_reject_it():
         _Out, method="function_calling", include_raw=True, tool_choice="auto"
     )
     rendered = repr(bound)
-    assert "'tool_choice': {'type': 'auto'}" in rendered
+    # langchain-anthropic renders an auto choice as {'type': 'auto'} in older
+    # releases and omits it (= auto) in newer ones; either way nothing forced.
+    assert "'type': 'tool'" not in rendered and "'type': 'any'" not in rendered
 
     older = factory.chat_model("claude-opus-5").with_structured_output(_Out)
     assert "'type': 'tool'" in repr(older)  # forced choice still allowed there

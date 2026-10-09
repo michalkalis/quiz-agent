@@ -103,9 +103,9 @@ This catalog is generated from the iOS code at `{ref}`: `Utilities/Theme.swift` 
 
 - Page {tok("bg")}, cards {tok("bgCard")}, sheets {tok("bgSheet")}; a sheet never uses the page color.
 - Text {tok("ink")}; secondary text {tok("muted")}; struck-through answers {tok("mutedFaint")}; text and icons on a colored fill {tok("textOnAccent")}.
-- The one primary action of a screen and the brand: {tok("pink")}. Secondary accent {tok("blue")}. Multiple-choice selection {tok("accentPrimary")}. Listening for voice commands {tok("accentTeal")}.
-- Verdicts: correct {tok("greenCheck", "greenCorrect")} with text {tok("successText")}; wrong {tok("error")}; warnings {tok("warning")}. Soft fills behind them {tok("pinkSoft", "greenSoft", "errorSoft", "neutralSoft")}.
-- Small text on a tinted chip uses {tok("pinkText", "blueText")}, which keep 4.5:1 contrast in light mode.
+- The one primary action of a screen: {tok("action")} with {tok("textOnAction")} (ink in light mode, paper in dark). Links and row values {tok("blue")}. The chosen option {tok("accentPrimary")}. Listening, reading, thinking {tok("live", "liveAccent")}.
+- Verdicts: correct {tok("greenCheck", "greenCorrect")} with text {tok("successText")}; a wrong answer reads neutral {tok("wrong")}; failures {tok("error")}; warnings {tok("warning")}. Soft fills behind them {tok("actionSoft", "greenSoft", "errorSoft", "neutralSoft")}.
+- Small text on a tinted chip uses {tok("actionText", "blueText")}, which keep 4.5:1 contrast in light mode.
 - Lines {tok("hairline", "subtleBorder")}.
 - `palette-*` entries are the base values the tokens above are built from. Views never use them directly.
 

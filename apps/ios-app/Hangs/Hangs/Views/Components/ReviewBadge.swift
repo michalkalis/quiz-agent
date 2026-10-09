@@ -48,11 +48,11 @@ struct ReviewBadgeStyle {
             label = "Translation · check"
             isUnknown = false
         case "translation_machine":
-            tint = Theme.Hangs.Colors.accentTeal
+            tint = Theme.Hangs.Colors.liveAccent
             label = "Translation · machine"
             isUnknown = false
         case "translation_live":
-            tint = Theme.Hangs.Colors.accentTeal
+            tint = Theme.Hangs.Colors.liveAccent
             label = "Translation · live"
             isUnknown = false
         case "translation_critical":

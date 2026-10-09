@@ -35,7 +35,7 @@ struct OrderPackSummaryStep: View {
                         Text(verbatim: Language.forCode(viewModel.language)?.nativeName
                             ?? Language.default.nativeName)
                             .font(.hangsBody(13, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .foregroundColor(Theme.Hangs.Colors.action)
                     }
                 }
             }

@@ -48,7 +48,7 @@ struct ImageQuestionView: View {
                 case .empty:
                     placeholder {
                         ProgressView()
-                            .tint(Theme.Hangs.Colors.pink)
+                            .tint(Theme.Hangs.Colors.action)
                     }
                     .accessibilityLabel(String(localized: "Loading image", comment: "Accessibility label shown while a question image is loading"))
                 @unknown default:

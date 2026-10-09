@@ -129,5 +129,26 @@ struct AppScreenSnapshotTests {
             as: strategy,
             named: "\(screen.rawValue)-\(language.rawValue)-xl"
         )
+        // #194 B: the redesign is light-first, so the default size is frozen in
+        // light too (the dark pair above stays; layout does not depend on it).
+        let light = await screen.make()
+            .environment(\.locale, language.locale)
+            .environment(\.layoutDirection, .leftToRight)
+            .environment(\.colorScheme, .light)
+            .preferredColorScheme(.light)
+        assertSnapshot(
+            of: AnyView(light.dynamicTypeSize(.large)),
+            as: .image(
+                precision: 0.99,
+                perceptualPrecision: 0.98,
+                layout: .fixed(width: SnapshotBaseline.width, height: screen.height),
+                traits: UITraitCollection(traitsFrom: [
+                    UITraitCollection(displayScale: 1),
+                    UITraitCollection(userInterfaceStyle: .light),
+                    UITraitCollection(preferredContentSizeCategory: .large),
+                ])
+            ),
+            named: "\(screen.rawValue)-\(language.rawValue)-light"
+        )
     }
 }

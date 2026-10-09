@@ -95,7 +95,7 @@ struct QuestionView: View {
                         }
                     } else {
                         Spacer()
-                        ProgressView().tint(Theme.Hangs.Colors.pink)
+                        ProgressView().tint(Theme.Hangs.Colors.action)
                         Spacer()
                     }
                 }
@@ -256,7 +256,7 @@ struct QuestionView: View {
                 total: viewModel.questionScreenTotal,
                 // #122: the fill flips teal for the duration of a matched glow.
                 tint: viewModel.voiceFeedbackPhase == .matched
-                    ? Theme.Hangs.Colors.accentTeal : nil,
+                    ? Theme.Hangs.Colors.liveAccent : nil,
                 isRecording: isRecording
             )
             .padding(.top, Theme.Hangs.Spacing.xs)
@@ -278,7 +278,7 @@ struct QuestionView: View {
             Spacer()
             ProgressView()
                 .controlSize(.large)
-                .tint(Theme.Hangs.Colors.pink)
+                .tint(Theme.Hangs.Colors.action)
             Text("Preparing the next question…")
                 .font(.hangsBody(28, weight: .bold))
                 .foregroundColor(Theme.Hangs.Colors.ink)

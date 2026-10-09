@@ -235,7 +235,7 @@ struct HomeView: View {
                             .font(.system(size: 11, weight: .semibold))
                             .accessibilityHidden(true)
                     }
-                    .foregroundColor(Theme.Hangs.Colors.pink)
+                    .foregroundColor(Theme.Hangs.Colors.action)
                 }
             }
         }
@@ -398,12 +398,9 @@ struct HomeView: View {
         Image(systemName: icon)
             .font(.system(size: 16, weight: .semibold))
             .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(width: 36, height: 36)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.navSquare)
-                    .fill(Theme.Hangs.Colors.bgCard)
-            )
-            .hangsShadow(Theme.Hangs.Shadow.navChip)
+            .frame(width: 44, height: 44)
+            // #194 B2: same glass circle as `HangsNavChip`.
+            .glassEffect(.regular.interactive(), in: Circle())
     }
 }
 

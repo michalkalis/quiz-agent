@@ -116,10 +116,10 @@ struct HomePacksSection: View {
     private func playIcon(active: Bool) -> some View {
         Image(systemName: "play.fill")
             .font(.system(size: 13, weight: .semibold))
-            .foregroundColor(active ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.mutedFaint)
+            .foregroundColor(active ? Theme.Hangs.Colors.textOnAction : Theme.Hangs.Colors.mutedFaint)
             .frame(width: 34, height: 34)
             .background(
-                Circle().fill(active ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.hairline)
+                Circle().fill(active ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.hairline)
             )
             .accessibilityHidden(!active)
     }
@@ -133,7 +133,7 @@ struct HomePacksSection: View {
                     .font(.system(size: 11, weight: .semibold))
                     .accessibilityHidden(true)
             }
-            .foregroundColor(Theme.Hangs.Colors.pinkText)
+            .foregroundColor(Theme.Hangs.Colors.actionText)
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Hangs.Spacing.sm)
             .contentShape(Rectangle())

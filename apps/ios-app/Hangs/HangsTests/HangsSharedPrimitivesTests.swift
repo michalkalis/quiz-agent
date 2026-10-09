@@ -209,10 +209,10 @@ struct HangsPageIndicatorTests {
         let indicator = HangsPageIndicator(
             pageCount: 2,
             currentPage: 0,
-            activeColor: Theme.Hangs.Colors.pink,
+            activeColor: Theme.Hangs.Colors.action,
             inactiveColor: Theme.Hangs.Colors.muted
         )
-        #expect(indicator.dotColor(at: 0) == Theme.Hangs.Colors.pink)
+        #expect(indicator.dotColor(at: 0) == Theme.Hangs.Colors.action)
         #expect(indicator.dotColor(at: 1) == Theme.Hangs.Colors.muted)
     }
 

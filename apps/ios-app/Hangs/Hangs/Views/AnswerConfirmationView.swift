@@ -164,7 +164,7 @@ struct AnswerConfirmationView: View {
     private var transcriptBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 10) {
-                HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.pink)
+                HangsSectionLabel(text: "YOU SAID", color: Theme.Hangs.Colors.action)
                 if isPaused {
                     // Named, not merely implied by a missing countdown: a
                     // vanished chip reads as "auto-confirm off", not "paused".
@@ -181,10 +181,10 @@ struct AnswerConfirmationView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .foregroundColor(Theme.Hangs.Colors.action)
                             .padding(Theme.Hangs.Spacing.xs)
                             .background(
-                                Circle().fill(Theme.Hangs.Colors.pinkSoft)
+                                Circle().fill(Theme.Hangs.Colors.actionSoft)
                             )
                     }
                     .accessibilityLabel(String(localized: "Cancel editing", comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
@@ -195,10 +195,10 @@ struct AnswerConfirmationView: View {
                     } label: {
                         Image(systemName: "pencil")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .foregroundColor(Theme.Hangs.Colors.action)
                             .padding(Theme.Hangs.Spacing.xs)
                             .background(
-                                Circle().fill(Theme.Hangs.Colors.pinkSoft)
+                                Circle().fill(Theme.Hangs.Colors.actionSoft)
                             )
                     }
                     .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
@@ -228,7 +228,7 @@ struct AnswerConfirmationView: View {
                     // words. Confirm here submits "no answer".
                     HangsQuestionPrompt(
                         text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
-                        barColor: Theme.Hangs.Colors.pink,
+                        barColor: Theme.Hangs.Colors.action,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.muted,
                         minimumScaleFactor: 0.6
@@ -237,7 +237,7 @@ struct AnswerConfirmationView: View {
                 } else {
                     HangsQuestionPrompt(
                         text: displayedAnswer,
-                        barColor: Theme.Hangs.Colors.pink,
+                        barColor: Theme.Hangs.Colors.action,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
@@ -375,14 +375,14 @@ struct AnswerConfirmationView: View {
     private var editableTranscript: some View {
         HStack(alignment: .top, spacing: Theme.Hangs.Spacing.xs) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(Theme.Hangs.Colors.pink)
+                .fill(Theme.Hangs.Colors.action)
                 .frame(width: 3)
                 .frame(maxHeight: .infinity, alignment: .top)
             TextField("", text: $transcribedAnswer, axis: .vertical)
                 .font(.hangsDisplay(32, weight: .black))
                 .tracking(-1)
                 .foregroundColor(Theme.Hangs.Colors.ink)
-                .tint(Theme.Hangs.Colors.pink)
+                .tint(Theme.Hangs.Colors.action)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .focused($editFocused)
@@ -393,7 +393,7 @@ struct AnswerConfirmationView: View {
                         Spacer()
                         Button("Done") { editFocused = false }
                             .font(.hangsBody(15, weight: .semibold))
-                            .foregroundColor(Theme.Hangs.Colors.pink)
+                            .foregroundColor(Theme.Hangs.Colors.action)
                             .accessibilityIdentifier("confirmation.keyboardDone")
                     }
                 }
@@ -429,7 +429,7 @@ struct AnswerConfirmationView: View {
                 HStack(spacing: 14) {
                     ProgressView()
                         .scaleEffect(1.2)
-                        .tint(Theme.Hangs.Colors.pink)
+                        .tint(Theme.Hangs.Colors.action)
                         .accessibilityHidden(true)
                     Text("Transcribing…")
                         .font(.hangsDisplay(28, weight: .black))

@@ -24,7 +24,7 @@ struct OrderPackPreparingStep: View {
             HangsCard(padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20)) {
                 VStack(spacing: Theme.Hangs.Spacing.md) {
                     ProgressView()
-                        .tint(Theme.Hangs.Colors.pink)
+                        .tint(Theme.Hangs.Colors.action)
                     Text("Building your pack…")
                         .font(.hangsBody(17, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)

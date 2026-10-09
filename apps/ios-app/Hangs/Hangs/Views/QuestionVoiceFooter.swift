@@ -144,7 +144,7 @@ struct QuestionVoiceFooter: View {
             if viewModel.voiceFeedbackPhase == .matched {
                 Capsule()
                     .inset(by: -2)
-                    .stroke(Theme.Hangs.Colors.accentTeal.opacity(0.30), lineWidth: 4)
+                    .stroke(Theme.Hangs.Colors.liveAccent.opacity(0.30), lineWidth: 4)
             }
         }
         .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
@@ -197,8 +197,8 @@ struct QuestionVoiceFooter: View {
             .foregroundColor(Theme.Hangs.Colors.ink)
             .tint(Theme.Hangs.Colors.ink)
             .frame(width: 48, height: 48)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
-            .overlay(Capsule().stroke(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            // #194 B2: secondary controls are Liquid Glass.
+            .glassEffect(.regular.interactive(), in: Capsule())
     }
 
     // MARK: - Typed answer
@@ -218,11 +218,11 @@ struct QuestionVoiceFooter: View {
                 Button(action: submitTypedAnswer) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(Theme.Hangs.Colors.textOnAccent)
+                        .foregroundColor(Theme.Hangs.Colors.textOnAction)
                         .frame(width: 40, height: 40)
                         .background(
                             Circle()
-                                .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.pink)
+                                .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.action)
                         )
                 }
                 .disabled(textAnswer.isEmpty)

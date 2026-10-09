@@ -46,7 +46,7 @@ struct OrderPackFormStep: View {
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
                         .font(.hangsMono(12, weight: .medium))
-                        .foregroundColor(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.pink)
+                        .foregroundColor(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.action)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }

@@ -135,7 +135,7 @@ extension AnswerOption.State {
         case .default: return Theme.Hangs.Colors.subtleBorder
         case .selected: return Theme.Hangs.Colors.accentPrimary
         case .correct: return Theme.Hangs.Colors.greenCheck
-        case .incorrect: return Theme.Hangs.Colors.pink
+        case .incorrect: return Theme.Hangs.Colors.wrong
         }
     }
 
@@ -144,7 +144,7 @@ extension AnswerOption.State {
         case .default: return Theme.Hangs.Colors.accentPrimarySoft
         case .selected: return Theme.Hangs.Colors.accentPrimary
         case .correct: return Theme.Hangs.Colors.greenCheck
-        case .incorrect: return Theme.Hangs.Colors.pink
+        case .incorrect: return Theme.Hangs.Colors.wrong
         }
     }
 

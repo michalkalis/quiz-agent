@@ -26,6 +26,26 @@ nonisolated extension ComponentSample {
             ComponentSample("questionPrompt.longText") {
                 HangsQuestionPrompt(text: "Ktorý európsky štát má najdlhšie pobrežie, ak nerátame zámorské územia a ostrovy?")
             },
+            // #194 B2: the category card — one sample per text colour rule
+            // (white on cobalt, ink on yellow, white on the custom-pack ink card).
+            ComponentSample("deckCard.question") {
+                HangsDeckCard(categoryId: "geography-world", categoryName: "Geografia a svet") {
+                    Text(verbatim: "Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
+                }
+                .frame(height: 260)
+            },
+            ComponentSample("deckCard.resultSticker") {
+                HangsDeckCard(categoryId: "sports", categoryName: "Šport") {
+                    HangsAnswerSticker(text: "Jedenásť")
+                }
+                .frame(height: 180)
+            },
+            ComponentSample("deckCard.customPack") {
+                HangsDeckCard(categoryId: nil, categoryName: "Slovenské hrady") {
+                    Text(verbatim: "Na ktorom hrade sa natáčal Nosferatu?").font(.hangsDisplay(28))
+                }
+                .frame(height: 200)
+            },
             ComponentSample("controlPill.default") {
                 QuizControlPill(isMuted: false, isPaused: false, isPauseEnabled: true, onMute: {}, onPause: {})
             },

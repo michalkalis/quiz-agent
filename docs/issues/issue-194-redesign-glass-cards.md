@@ -38,8 +38,9 @@
 - [x] A3 — dokončiť plátno: kontrola voči appke, tmavý režim, farby kategórií, stavy, ktoré na plátne chýbajú (thinking n/total, prepis na potvrdení, MCQ výsledok, varianty plánu: grace, expired, freeWithCredits).
 
 ### B. Základy (prvý kód nového vzhľadu)
-- [ ] B1 — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
-- [ ] B2 — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
+- [~] B1 — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
+- [~] B2 — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
+  - 2026-10-08 (PR B1+B2, čaká na schválenie foundera): paleta Bg svetlá aj tmavá, farby 7 kategórií + vlastné balíčky, SF cez iOS textové štýly (Dynamic Type ostáva; display 28/40/52), hlavné tlačidlo atrament s odpočtom, sklo na ovládačoch (koliesko, ✕, Písať, Preskoč, lišta Počúvam), pilulky postupu atrament, nesprávna odpoveď neutrálna; nové `HangsDeckCard` + `HangsAnswerSticker` (do obrazoviek vo fáze C). Svetlé snímky obrazoviek pribudli. Sklo sa v testových snímkach nevykreslí, overené na simulátore.
 - [ ] B3 — pohyb: rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
 - [ ] B4 — katalóg (#188) pregenerovaný z nových tokenov a komponentov.
 

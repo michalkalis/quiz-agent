@@ -108,7 +108,7 @@ struct QuestionRatingSheet: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                        .fill(selected ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.bgCard)
+                        .fill(selected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.bgCard)
                 )
         }
         .buttonStyle(.plain)

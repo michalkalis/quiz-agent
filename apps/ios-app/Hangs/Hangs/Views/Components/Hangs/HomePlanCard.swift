@@ -111,7 +111,7 @@ struct HomePlanCard: View {
                 planCaption(hasCredits: hasCredits)
                 Spacer(minLength: 0)
                 if state == .expired {
-                    planPill(text: "ended", color: Theme.Hangs.Colors.pinkText, icon: nil)
+                    planPill(text: "ended", color: Theme.Hangs.Colors.actionText, icon: nil)
                 }
             }
             if showLegend {
@@ -179,11 +179,11 @@ struct HomePlanCard: View {
     @ViewBuilder private var freeLink: some View {
         switch state {
         case .expired:
-            linkLabel("Resubscribe", color: Theme.Hangs.Colors.pink, id: "home.freePlanUpgrade")
+            linkLabel("Resubscribe", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
         case .freeWithCredits:
-            linkLabel("More", color: Theme.Hangs.Colors.pink, id: "home.freePlanUpgrade")
+            linkLabel("More", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
         default:
-            linkLabel("Upgrade", color: Theme.Hangs.Colors.pink, id: "home.freePlanUpgrade")
+            linkLabel("Upgrade", color: Theme.Hangs.Colors.action, id: "home.freePlanUpgrade")
         }
     }
 
@@ -215,7 +215,7 @@ struct HomePlanCard: View {
     }
 
     private var subscriberTrackColor: Color {
-        state == .grace ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.pink
+        state == .grace ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.action
     }
 
     @ViewBuilder private var statusPill: some View {
@@ -260,7 +260,7 @@ struct HomePlanCard: View {
         if state == .grace {
             linkLabel("Fix payment", color: Theme.Hangs.Colors.warning, id: "home.planManageCTA")
         } else {
-            linkLabel("Manage", color: Theme.Hangs.Colors.pink, id: "home.planManageCTA")
+            linkLabel("Manage", color: Theme.Hangs.Colors.action, id: "home.planManageCTA")
         }
     }
 

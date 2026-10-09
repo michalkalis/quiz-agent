@@ -91,8 +91,8 @@ struct SetRecapView: View {
                      fill: correctCount > 0 ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.neutralSoft)
                 // A zero is no news either way: neutral, not a red "0 missed" (#188 G14).
                 chip(glyph: "✗", Text("\(missedCount) MISSED"),
-                     color: missedCount > 0 ? Theme.Hangs.Colors.pinkText : Theme.Hangs.Colors.muted,
-                     fill: missedCount > 0 ? Theme.Hangs.Colors.pinkSoft : Theme.Hangs.Colors.neutralSoft)
+                     color: missedCount > 0 ? Theme.Hangs.Colors.actionText : Theme.Hangs.Colors.muted,
+                     fill: missedCount > 0 ? Theme.Hangs.Colors.actionSoft : Theme.Hangs.Colors.neutralSoft)
                 chip(glyph: "–", Text("\(skippedCount) SKIPPED"),
                      color: Theme.Hangs.Colors.muted,
                      fill: Theme.Hangs.Colors.neutralSoft)
@@ -297,12 +297,12 @@ struct SetRecapRow: View {
 
     private var badgeColor: Color {
         if entry.wasSkipped { return Theme.Hangs.Colors.muted }
-        return entry.isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.pinkText
+        return entry.isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.actionText
     }
 
     private var badgeFill: Color {
         if entry.wasSkipped { return Theme.Hangs.Colors.neutralSoft }
-        return entry.isCorrect ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.pinkSoft
+        return entry.isCorrect ? Theme.Hangs.Colors.greenSoft : Theme.Hangs.Colors.actionSoft
     }
 
     private var expandedSection: some View {

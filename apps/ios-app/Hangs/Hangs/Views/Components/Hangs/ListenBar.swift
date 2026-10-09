@@ -8,12 +8,12 @@
 //  text/accent swaps by mode — the app only ever listens for EITHER commands OR
 //  an answer, never both (founder, 2026-07-28):
 //
-//   - `.command`  — teal, "LISTENING FOR COMMANDS" in the COMMAND language (#120),
+//   - `.command`  — live, "LISTENING FOR COMMANDS" in the COMMAND language (#120),
 //                    shown while a command window is armed.
-//   - `.answer`   — pink, "LISTENING — SAY A–D / TRUE OR FALSE / YOUR ANSWER",
+//   - `.answer`   — action, "LISTENING — SAY A–D / TRUE OR FALSE / YOUR ANSWER",
 //                    app-locale localized, shown while answering.
 //
-//  Match/no-match feedback follows #122 Variant C (teal sweep / amber breath) in
+//  Match/no-match feedback follows #122 Variant C (live sweep / amber breath) in
 //  both modes and re-tints the bar (lit / lit-miss).
 //
 //  #131 Track F, Option B "full + slim" (founder pick 2026-07-29): this is now
@@ -36,7 +36,7 @@
 //
 //  #132 Track B, variant A "odpočet v lište" (founder pick 2026-07-29): the MCQ
 //  think-phase countdown lives IN this bar — command mode gains an optional
-//  `thinkCountdown`: a teal fill anchored left drains leftwards as the window
+//  `thinkCountdown`: a live fill anchored left drains leftwards as the window
 //  empties and the caption counts the seconds down. At zero the call site swaps
 //  the mode to `.answer`, so one element carries both states (nothing appears or
 //  disappears). The command-word sub-line stays exactly as every other command
@@ -71,10 +71,10 @@
 //
 //  #188 G11 (founder audit D13 + M8): on the QUESTION screen every state now
 //  speaks in the F2 status layout. "Reading the question" and the think state
-//  were a tiny teal mono caption while only "Listening…" read at a glance; and
+//  were a tiny live mono caption while only "Listening…" read at a glance; and
 //  the countdown showed twice (here and in the Start button). Now the state is
 //  the large line in every state, the capsule colour says which state it is
-//  (teal reading/think, pink listening, grey in flight), and the seconds left —
+//  (live reading/think, action listening, grey in flight), and the seconds left —
 //  think window or recording window — are a large number at the trailing edge,
 //  the ONE place the quiz counts down. The slim bar and the other screens'
 //  command bars (Home, confirmation, result) are unchanged.
@@ -119,13 +119,13 @@ struct ListenBar: View {
     /// speaks in the two states where it is listening for nothing at all, rather
     /// than leaving the slot empty.
     enum Mode {
-        case command // listening for hands-free commands (teal)
-        case readingQuestion // #179 D1 state 1: the TTS is reading; commands armed (teal)
+        case command // listening for hands-free commands (live)
+        case readingQuestion // #179 D1 state 1: the TTS is reading; commands armed (live)
         /// #189: the confirmation/no-answer sheet's own state while the answer
         /// read-back plays or the listener has not yet reported live afterwards
-        /// (teal, like `.command` — the words below are the same).
+        /// (live, like `.command` — the words below are the same).
         case readingAnswerBack
-        case answer(AnswerKind) // listening for an answer (pink)
+        case answer(AnswerKind) // listening for an answer (action)
         case evaluating // #179 D1 state 4: the answer is being graded; nothing is heard (grey)
         case skipping // #181: the question is being skipped; nothing is heard (grey)
     }
@@ -255,15 +255,15 @@ struct ListenBar: View {
 
     // MARK: - Tint tokens
 
-    private var teal: Color { Theme.Hangs.Colors.accentTeal }
+    private var live: Color { Theme.Hangs.Colors.live }
     private var amber: Color { Theme.Hangs.Colors.warning }
-    private var pink: Color { Theme.Hangs.Colors.pink }
+    private var action: Color { Theme.Hangs.Colors.action }
 
     /// The bar's resting accent before any feedback tint applies.
     private var modeAccent: Color {
         switch mode {
-        case .command, .readingQuestion, .readingAnswerBack: return teal
-        case .answer: return pink
+        case .command, .readingQuestion, .readingAnswerBack: return live
+        case .answer: return action
         case .evaluating, .skipping: return Theme.Hangs.Colors.muted
         }
     }
@@ -275,7 +275,7 @@ struct ListenBar: View {
         if isBusy { return modeAccent }
         switch feedback {
         case .idle: return modeAccent
-        case .matched: return teal
+        case .matched: return live
         case .unmatched: return amber
         case .hearing, .recognizing: return modeAccent
         }
@@ -286,14 +286,14 @@ struct ListenBar: View {
     private var fill: Color {
         if isBusy { return Theme.Hangs.Colors.muted.opacity(0.10) }
         switch feedback {
-        case .matched: return teal.opacity(0.22)
+        case .matched: return live.opacity(0.22)
         case .unmatched: return amber.opacity(0.12)
-        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.14)
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return live.opacity(0.14)
         case .idle, .hearing, .recognizing:
             switch mode {
-            case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.08)
+            case .command, .readingQuestion, .readingAnswerBack: return live.opacity(0.08)
             // #185 track F: a shade warmer once speech is heard (F2 "hot").
-            case .answer: return speechHeard ? pink.opacity(0.18) : Theme.Hangs.Colors.pinkSoft
+            case .answer: return speechHeard ? action.opacity(0.18) : Theme.Hangs.Colors.actionSoft
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.10)
             }
         }
@@ -302,13 +302,13 @@ struct ListenBar: View {
     private var border: Color {
         if isBusy { return Theme.Hangs.Colors.muted.opacity(0.35) }
         switch feedback {
-        case .matched: return teal.opacity(0.75)
+        case .matched: return live.opacity(0.75)
         case .unmatched: return amber.opacity(0.55)
-        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return teal.opacity(0.5)
+        case .hearing where feedbackIsLive, .recognizing where feedbackIsLive: return live.opacity(0.5)
         case .idle, .hearing, .recognizing:
             switch mode {
-            case .command, .readingQuestion, .readingAnswerBack: return teal.opacity(0.35)
-            case .answer: return pink
+            case .command, .readingQuestion, .readingAnswerBack: return live.opacity(0.35)
+            case .answer: return action
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.35)
             }
         }
@@ -484,7 +484,7 @@ struct ListenBar: View {
                     if let fraction = thinkFillFraction {
                         GeometryReader { geo in
                             Rectangle()
-                                .fill(teal.opacity(0.14))
+                                .fill(live.opacity(0.14))
                                 .frame(width: geo.size.width * fraction)
                                 .animation(.linear(duration: 1), value: fraction)
                         }
@@ -493,6 +493,9 @@ struct ListenBar: View {
                 }
             )
             .overlay(Capsule().strokeBorder(border, lineWidth: 1))
+            // #194 B2: the bar is part of the glass control layer — its state
+            // tint and drain sit on Liquid Glass, not on an opaque capsule.
+            .glassEffect(.regular, in: Capsule())
             // #185 track F: the breathing glow sits OUTSIDE the capsule, so it
             // never changes the bar's own colours or its layout slot.
             .background {
@@ -557,11 +560,11 @@ struct ListenBar: View {
 
     /// #188 G11 (founder review): the large state line carries the state's
     /// colour where the founder asked for it — reading and think stay green
-    /// (teal text, readable in light mode); listening and in-flight keep ink,
-    /// as #185 F2 picked, with the capsule saying pink or grey.
+    /// (live text, readable in light mode); listening and in-flight keep ink,
+    /// as #185 F2 picked, with the capsule saying action or grey.
     private var statusTextColor: Color {
         switch mode {
-        case .readingQuestion, .command, .readingAnswerBack: return Theme.Hangs.Colors.tealText
+        case .readingQuestion, .command, .readingAnswerBack: return Theme.Hangs.Colors.live
         case .answer, .evaluating, .skipping: return Theme.Hangs.Colors.ink
         }
     }
@@ -727,14 +730,14 @@ struct ListenBar: View {
     }
 
     /// The live-mic dots, or — while a matched command waits to fire — a small
-    /// teal spinner in their place (#122 follow-up, TF 2026-10-07).
+    /// live spinner in their place (#122 follow-up, TF 2026-10-07).
     @ViewBuilder
     private var trailingIndicator: some View {
         if showsDots {
             if isRecognizing, recognizingWord != nil {
                 ProgressView()
                     .controlSize(.mini)
-                    .tint(teal)
+                    .tint(live)
                     .accessibilityHidden(true)
                     .accessibilityIdentifier("listen-bar.recognizing")
             } else {

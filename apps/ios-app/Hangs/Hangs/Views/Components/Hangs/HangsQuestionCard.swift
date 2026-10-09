@@ -63,7 +63,7 @@ struct HangsAnswerComparisonCard: View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    HangsSectionLabel(text: primaryLabel, color: primaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.pink)
+                    HangsSectionLabel(text: primaryLabel, color: primaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.action)
                     Spacer()
                     HangsInlineBadge(kind: primaryBadge, size: 24)
                 }
@@ -74,7 +74,7 @@ struct HangsAnswerComparisonCard: View {
                 Rectangle().fill(Theme.Hangs.Colors.hairline).frame(height: 1)
                 HStack {
                     HangsSectionLabel(text: secondaryLabel,
-                                      color: secondaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.pink)
+                                      color: secondaryBadge == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.action)
                     if let secondaryBadge {
                         Spacer()
                         HangsInlineBadge(kind: secondaryBadge, size: 20)

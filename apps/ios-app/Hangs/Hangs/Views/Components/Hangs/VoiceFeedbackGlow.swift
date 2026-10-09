@@ -45,7 +45,7 @@ struct AmbientGlowWash: View {
 
     // Teal wash on a match, amber on a miss (never red — nothing failed).
     private var stops: [Gradient.Stop] {
-        let tint = phase == .unmatched ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.accentTeal
+        let tint = phase == .unmatched ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.liveAccent
         let (peak, mid): (Double, Double) = phase == .unmatched ? (0.30, 0.10) : (0.42, 0.16)
         return [
             .init(color: tint.opacity(peak), location: 0),
@@ -69,7 +69,7 @@ struct GlowSweepLine: View {
     @State private var sweeping = false
     @State private var breathing = false
 
-    private var teal: Color { Theme.Hangs.Colors.accentTeal }
+    private var teal: Color { Theme.Hangs.Colors.liveAccent }
     private var amber: Color { Theme.Hangs.Colors.warning }
 
     var body: some View {

@@ -153,7 +153,7 @@ struct QuizMuteToolbarButton: View {
         Button(action: action) {
             Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2")
         }
-        .tint(isMuted ? Theme.Hangs.Colors.pink : Theme.Hangs.Colors.ink)
+        .tint(isMuted ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.ink)
         .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
         .accessibilityIdentifier("question.mute")
     }

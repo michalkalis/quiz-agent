@@ -45,6 +45,8 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 |---|---|
 | `HangsQuizProgressHeader`, `HangsProgressBar` | Quiz top chrome under `.quizToolbar`: category + counter + segmented progress (recording tint); the thin bar is its long-set fallback. |
 | `HangsQuestionPrompt` | The question text with its accent bar; scales down, never wraps off screen. |
+| `HangsDeckCard` | #194: the opaque category-colour card a question or result sits on (category chip + optional accessory); glass stays on the controls around it. |
+| `HangsAnswerSticker` | #194: the answer on its own plate inside a result card, so it reads first on any category colour. |
 | `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
 | `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |

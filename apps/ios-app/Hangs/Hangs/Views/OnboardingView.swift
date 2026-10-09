@@ -4,7 +4,8 @@
 //
 //  Onboarding flow bound to OnboardingViewModel (52.5 state machine).
 //  Pages: Welcome (gkeCn) · Features (hTdkE) · Mic Access (haWJM) · Denied (COHnz).
-//  #52 task 52.13.
+//  #52 task 52.13. #194 C7: "Sklo nad kartami" restyle (canvas Bg-Onboarding,
+//  Bg-Features, Bg-Mic, Bg-MicDenied).
 //
 
 import SwiftUI
@@ -25,8 +26,7 @@ struct OnboardingView: View {
                 ScrollView { page }
                     .scrollBounceBehavior(.basedOnSize)
             }
-
-            Spacer()
+            .frame(maxHeight: .infinity)
 
             bottomControls
         }
@@ -48,192 +48,197 @@ struct OnboardingView: View {
         }
     }
 
+    // #194 C7: each page is one category-colour card with the page's glyph
+    // (canvas Bg-Onboarding / Bg-Mic / Bg-MicDenied), then a left-aligned
+    // title and text. Static: the illustration does not loop.
     private var welcomePage: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xl) {
-            Spacer()
-
-            iconCircle(
-                systemName: "mic.fill",
-                bgColor: Theme.Hangs.Colors.actionSoft,
-                iconColor: Theme.Hangs.Colors.action
-            )
-
-            headlineBlock(title: "ANSWER BY VOICE", accentColor: Theme.Hangs.Colors.action)
-
-            subtitle("Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.")
-
-            Spacer()
-            Spacer()
+        illustratedPage(
+            title: "ANSWER BY VOICE",
+            text: "Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz."
+        ) {
+            illustrationCard(categoryId: "geography-world") { style in
+                VStack(spacing: Theme.Hangs.Spacing.xl) {
+                    glyphDisc(systemName: "mic.fill", glyph: style.text, disc: style.text.opacity(0.18))
+                    soundBars(color: style.text)
+                }
+            }
         }
         .accessibilityIdentifier("onboarding.welcome")
     }
 
     private var featuresPage: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 32)
-
-            VStack(spacing: 10) {
-                Text("HANDS-FREE")
-                    .font(.hangsDisplayMD)
-                    .foregroundColor(Theme.Hangs.Colors.ink)
-                    .multilineTextAlignment(.center)
-                    .hangsHeadlineFit()
-                    .accessibilityAddTraits(.isHeader)
-
-                accentLine(color: Theme.Hangs.Colors.action)
-
-                subtitle("Perfect for driving, cooking, or walking.")
-            }
-            .padding(.horizontal, Theme.Hangs.Spacing.lg)
-
-            Spacer(minLength: 20)
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
+            textBlock(title: "HANDS-FREE", text: "Perfect for driving, cooking, or walking.")
+                .padding(.top, Theme.Hangs.Spacing.md)
 
             featuresCard
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
-            Spacer()
-            Spacer()
+            Spacer(minLength: 0)
         }
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
         .accessibilityIdentifier("onboarding.features")
     }
 
     private var permissionPage: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xl) {
-            Spacer()
-
-            iconCircle(
-                systemName: "mic",
-                bgColor: Theme.Hangs.Colors.actionSoft,
-                iconColor: Theme.Hangs.Colors.action
-            )
-
-            headlineBlock(title: "MIC ACCESS", accentColor: Theme.Hangs.Colors.action)
-
-            subtitle("Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.")
-
-            Spacer()
-            Spacer()
+        illustratedPage(
+            title: "MIC ACCESS",
+            text: "Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback."
+        ) {
+            illustrationCard(categoryId: "movies-music") { style in
+                glyphDisc(systemName: "mic.fill", glyph: style.fill, disc: Theme.Hangs.Category.chipFill)
+            }
         }
         .accessibilityIdentifier("onboarding.permission")
     }
 
     private var deniedPage: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xl) {
-            Spacer()
-
-            iconCircle(
-                systemName: "mic.slash",
-                bgColor: Theme.Hangs.Colors.warning.opacity(0.15),
-                iconColor: Theme.Hangs.Colors.warning
-            )
-
-            headlineBlock(title: "MIC IS OFF", accentColor: Theme.Hangs.Colors.warning)
-
-            subtitle("Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers.")
-
-            Spacer()
-            Spacer()
+        illustratedPage(
+            title: "MIC IS OFF",
+            text: "Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers."
+        ) {
+            illustrationCard(categoryId: "sports") { style in
+                glyphDisc(systemName: "mic.slash.fill", glyph: style.fill, disc: style.text)
+            }
         }
         .accessibilityIdentifier("onboarding.denied")
     }
 
     // MARK: - Shared helpers
 
-    private func iconCircle(systemName: String, bgColor: Color, iconColor: Color) -> some View {
-        ZStack {
-            Circle()
-                .fill(bgColor)
-                .frame(width: 120, height: 120)
-            Image(systemName: systemName)
-                .font(.system(size: 48))
-                .foregroundColor(iconColor)
+    private func illustratedPage(
+        title: LocalizedStringKey,
+        text: LocalizedStringKey,
+        @ViewBuilder illustration: () -> some View
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: Theme.Hangs.Spacing.md)
+            illustration()
+                .frame(maxWidth: .infinity)
+            Spacer(minLength: Theme.Hangs.Spacing.xl)
+            textBlock(title: title, text: text)
+                .padding(.horizontal, Theme.Hangs.Spacing.sm)
+            Spacer(minLength: Theme.Hangs.Spacing.md)
         }
-        .accessibilityHidden(true)
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
     }
 
-    private func headlineBlock(title: LocalizedStringKey, accentColor: Color) -> some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
+    private func illustrationCard(
+        categoryId: String,
+        @ViewBuilder content: (Theme.Hangs.Category.Style) -> some View
+    ) -> some View {
+        let style = Theme.Hangs.Category.style(for: categoryId)
+        return content(style)
+            .frame(maxWidth: Metrics.cardSize.width)
+            .frame(maxWidth: .infinity)
+            .frame(height: Metrics.cardSize.height)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+                    .fill(style.fill)
+                    .frame(maxWidth: Metrics.cardSize.width)
+                    .hangsShadow(Theme.Hangs.Shadow.raised)
+            )
+            .accessibilityHidden(true)
+    }
+
+    private func glyphDisc(systemName: String, glyph: Color, disc: Color) -> some View {
+        Image(systemName: systemName)
+            .font(.hangsDisplaySM)
+            .foregroundStyle(glyph)
+            .frame(width: Metrics.disc, height: Metrics.disc)
+            .background(Circle().fill(disc))
+    }
+
+    /// Five static bars: the "it listens" mark under the welcome mic.
+    private func soundBars(color: Color) -> some View {
+        HStack(spacing: Theme.Hangs.Spacing.xxs) {
+            ForEach(Metrics.bars.indices, id: \.self) { index in
+                Capsule()
+                    .fill(color)
+                    .frame(width: Metrics.barWidth, height: Metrics.bars[index])
+            }
+        }
+    }
+
+    private func textBlock(title: LocalizedStringKey, text: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
             Text(title)
-                .font(.hangsDisplayMD)
-                .foregroundColor(Theme.Hangs.Colors.ink)
-                .multilineTextAlignment(.center)
+                .font(.hangsDisplaySM)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
-            accentLine(color: accentColor)
+            Text(text)
+                .font(.hangsBodyLG)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-    }
-
-    private func accentLine(color: Color) -> some View {
-        Capsule()
-            .fill(color)
-            .frame(width: 40, height: 3)
-    }
-
-    private func subtitle(_ text: LocalizedStringKey) -> some View {
-        Text(text)
-            .font(.hangsBody(15))
-            .foregroundColor(Theme.Hangs.Colors.muted)
-            .multilineTextAlignment(.center)
-            .lineSpacing(4)
-            .padding(.horizontal, 28)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Features card
 
+    /// #194 C7 (canvas Bg-Features): the four command tips as cards in
+    /// category colours, the last one plain — the buttons that always work.
     private var featuresCard: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(OnboardingFeature.all.enumerated()), id: \.offset) { index, feature in
-                if index > 0 { HangsDivider() }
-                featureRow(feature)
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
+            ForEach(OnboardingFeature.all.indices, id: \.self) { index in
+                featureRow(OnboardingFeature.all[index])
             }
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Theme.Hangs.Colors.bgCard)
-                .hangsShadow(Theme.Hangs.Shadow.card)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func featureRow(_ feature: OnboardingFeature) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Theme.Hangs.Colors.actionSoft)
-                    .frame(width: 40, height: 40)
-                Image(systemName: feature.icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(Theme.Hangs.Colors.action)
-            }
-            .accessibilityHidden(true)
+        let style = feature.categoryId.map { Theme.Hangs.Category.style(for: $0) }
+        let text = style?.text ?? Theme.Hangs.Colors.ink
+        return HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: feature.icon)
+                .font(.hangsLabel)
+                .frame(width: Metrics.featureIcon, height: Metrics.featureIcon)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.chip, style: .continuous)
+                        .fill(text.opacity(0.14))
+                )
+                .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
                 Text(feature.title)
-                    .font(.hangsBody(15, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsLabel)
                 Text(feature.description)
-                    .font(.hangsBody(13))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsBody)
+                    .opacity(0.9)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .foregroundStyle(text)
         .padding(Theme.Hangs.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(style?.fill ?? Theme.Hangs.Colors.bgCard)
+                .strokeBorder(style == nil ? Theme.Hangs.Colors.hairline : Color.clear)
+        )
         .accessibilityElement(children: .combine)
+    }
+
+    private enum Metrics {
+        /// Canvas illustration card (294 × 276) and the glyph disc on it.
+        static let cardSize = CGSize(width: 294, height: 276)
+        static let disc: CGFloat = 120
+        static let barWidth: CGFloat = 5
+        static let bars: [CGFloat] = [12, 22, 30, 22, 12]
+        static let featureIcon: CGFloat = 40
     }
 
     // MARK: - Bottom controls
 
     private var bottomControls: some View {
-        VStack(spacing: Theme.Hangs.Spacing.md) {
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
             HangsPageIndicator(
                 pageCount: viewModel.pageCount,
                 currentPage: viewModel.pageIndex,
                 activeColor: viewModel.page == .permissionDenied
                     ? Theme.Hangs.Colors.warning
-                    : Theme.Hangs.Colors.action
+                    : Theme.Hangs.Colors.ink,
+                inactiveColor: Theme.Hangs.Colors.track
             )
             .accessibilityIdentifier("onboarding.pageIndicator")
 
@@ -241,8 +246,8 @@ struct OnboardingView: View {
 
             secondaryButton
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
-        .padding(.bottom, 28)
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.bottom, Theme.Hangs.Spacing.sm)
     }
 
     @ViewBuilder
@@ -274,13 +279,13 @@ struct OnboardingView: View {
     private var secondaryButton: some View {
         switch viewModel.page {
         case .welcome, .features:
-            HangsGhostButton(title: "Skip", color: Theme.Hangs.Colors.muted) {
+            HangsSecondaryButton(title: "Skip") {
                 viewModel.continueWithoutMic()
             }
             .accessibilityIdentifier("onboarding.skip")
 
         case .permission:
-            HangsGhostButton(title: "Maybe later", color: Theme.Hangs.Colors.muted) {
+            HangsSecondaryButton(title: "Maybe later") {
                 viewModel.continueWithoutMic()
             }
             .accessibilityIdentifier("onboarding.maybeLater")
@@ -298,6 +303,8 @@ struct OnboardingView: View {
 
 private struct OnboardingFeature {
     let icon: String
+    /// Card colour (#194 C7); nil = the plain white card.
+    let categoryId: String?
     let title: LocalizedStringKey
     let description: LocalizedStringKey
 
@@ -305,10 +312,10 @@ private struct OnboardingFeature {
     // onboarding-2 content that teaches the English-only, screen-scoped command
     // grammar — the founder's discoverability gap. Buttons remain the fallback.
     static let all: [OnboardingFeature] = [
-        .init(icon: "mic.fill", title: #"Say "start""#, description: #"Say "start" after a question, or tap Start, to begin answering."#),
-        .init(icon: "checklist", title: "Five simple words", description: "start · ok · next · repeat · skip. That's the whole command set."),
-        .init(icon: "globe", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
-        .init(icon: "hand.tap.fill", title: "Buttons always work", description: "Every command also has an on-screen button. Voice is optional."),
+        .init(icon: "mic.fill", categoryId: "geography-world", title: #"Say "start""#, description: #"Say "start" after a question, or tap Start, to begin answering."#),
+        .init(icon: "checklist", categoryId: "science-nature", title: "Five simple words", description: "start · ok · next · repeat · skip. That's the whole command set."),
+        .init(icon: "globe", categoryId: "sports", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
+        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work", description: "Every command also has an on-screen button. Voice is optional."),
     ]
 }
 

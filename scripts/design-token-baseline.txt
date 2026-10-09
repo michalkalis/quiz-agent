@@ -120,19 +120,6 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/QuestionSkipButton.swift	spacing
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	font	.system(size: 11	1
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	spacing	spacing: 5	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.hangsBody(12	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.hangsBody(13	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.hangsBody(15	2
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.hangsBody(17	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.system(size: 11	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.system(size: 14	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	font	.system(size: 30	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	radius	cornerRadius: 12	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	radius	cornerRadius: 8	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	.padding(.horizontal, 28)	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	.padding(.top, 28)	1
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	spacing: 10	2
-apps/ios-app/Hangs/Hangs/Views/ContextualSignInSheet.swift	spacing	spacing: 6	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	color	.foregroundStyle(.white	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	font	.hangsBody(12	1
@@ -157,17 +144,6 @@ apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.hangsMono(11	1
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	font	.system(size: 32	1
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	spacing	.padding(.top, 40)	2
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	spacing	spacing: 10	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	font	.hangsBody(13	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	font	.hangsBody(15	2
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	font	.system(size: 18	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	font	.system(size: 48	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	radius	cornerRadius: 10	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	radius	cornerRadius: 16	2
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	spacing	.padding(.bottom, 28)	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	spacing	.padding(.horizontal, 28)	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	spacing	spacing: 10	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	spacing	spacing: 14	1
-apps/ios-app/Hangs/Hangs/Views/OnboardingView.swift	spacing	spacing: 2	1
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackFlowView.swift	font	.system(size: 15	1
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackFlowView.swift	font	.system(size: 16	1
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackFormStep.swift	font	.hangsBody(12	2

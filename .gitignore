@@ -48,6 +48,8 @@ DerivedData/
 *.p8
 *.mobileprovision
 *.cer
+# ...except Apple's public StoreKit root (trust anchor, not a signing secret)
+!apps/quiz-pack-api/app/storekit/certs/AppleRootCA-G3.cer
 *.certSigningRequest
 
 # fastlane

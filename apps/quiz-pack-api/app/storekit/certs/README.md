@@ -1,8 +1,9 @@
 # Apple StoreKit Trust Anchor
 
 `AppleRootCA-G3.cer` is the trust anchor for offline StoreKit V2 JWS
-verification (`app/storekit/verifier.py`). It is **not** checked into git —
-download it once into this directory:
+verification (`app/storekit/verifier.py`). It is checked into git (public cert, ~600 bytes) so every
+build — including deploys from a clean `origin/main` worktree — carries it.
+To refresh it:
 
 ```sh
 curl -fsSL -o AppleRootCA-G3.cer \
@@ -32,9 +33,9 @@ test (`tests/storekit/test_verifier.py::test_bundled_root_validity_runway`)
 fails if the bundled cert is less than 90 days from expiry. Refresh the file
 from the same URL when that alarm goes off.
 
-## Why not check it in?
+## Why it is checked in
 
-The cert is public, ~600 bytes, and would simplify CI — but checking it in
-makes "is the bundled cert current?" a code-review question instead of a
-build-time check. The download is a one-liner; CI should run the same curl
-during job setup (Task 1.12 will wire that step into `backend-ci`).
+It used to be gitignored and downloaded by hand. Deploys from a clean checkout
+then shipped an image without it, and every paid custom-pack order failed with
+`FileNotFoundError` at receipt verification (2026-10-09). The Dockerfile now
+fails the build if the file is missing.

@@ -160,3 +160,15 @@ async def test_wrong_admin_key_cannot_recategorize(client, store):
 
     assert response.status_code == 401
     assert store.category_of(_QID) == "general"
+
+
+async def test_entertainment_is_a_valid_taxonomy_category(client, store):
+    """The app's picker offers Zábava (entertainment) and the corpus holds
+    entertainment questions (#167, #195): curation must be able to move a
+    question there, or the admin taxonomy drifts from what players can pick."""
+    response = await _post(
+        client, {"assignments": [{"id": _QID, "category": "entertainment"}]}
+    )
+
+    assert response.status_code == 200
+    assert store.category_of(_QID) == "entertainment"

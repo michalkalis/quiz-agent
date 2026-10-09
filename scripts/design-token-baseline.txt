@@ -69,8 +69,6 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuestionCard.swift	radius	c
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuestionCard.swift	spacing	spacing: 10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuizProgressHeader.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsQuizProgressHeader.swift	spacing	spacing: 6	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsSourceLink.swift	font	.hangsMono(10	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/HangsSourceLink.swift	font	.system(size: 9	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	font	.hangsBody(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	font	.hangsBody(11	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	font	.hangsBody(17	1
@@ -109,21 +107,8 @@ apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	font	.hangsBody(
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	font	.hangsMono(16	1
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	spacing	.padding(.horizontal, 5)	1
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	spacing	.padding(.vertical, 10)	1
-apps/ios-app/Hangs/Hangs/Views/ResultAnswerPanel.swift	font	.hangsBody(12	1
-apps/ios-app/Hangs/Hangs/Views/ResultAnswerPanel.swift	font	.hangsBody(15	1
-apps/ios-app/Hangs/Hangs/Views/ResultAnswerPanel.swift	font	.system(size: 11	1
-apps/ios-app/Hangs/Hangs/Views/ResultAnswerPanel.swift	spacing	.padding(.top, 6)	2
-apps/ios-app/Hangs/Hangs/Views/ResultAnswerPanel.swift	spacing	spacing: 5	1
-apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	font	.hangsMono(10	1
-apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	font	.system(size: 16	1
-apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	.padding(.bottom, 28)	1
 apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 10	2
 apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 3	1
-apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	font	.hangsMono(10	3
-apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	font	.system(size: 11	1
-apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	spacing	spacing: 10	1
-apps/ios-app/Hangs/Hangs/Views/ResultScreenSections.swift	spacing	spacing: 5	1
-apps/ios-app/Hangs/Hangs/Views/ResultView.swift	spacing	.padding(.top, 10)	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	font	.hangsBody(13	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	font	.hangsBody(13.5	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	font	.hangsBody(15	1

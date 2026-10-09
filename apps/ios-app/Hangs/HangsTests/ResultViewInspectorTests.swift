@@ -575,8 +575,9 @@ struct ResultViewInspectorTests {
                     _ = try tree.find(text: banned)
                 }
             }
-            let meta = try tree.find(viewWithAccessibilityIdentifier: "result.metaRow")
-            #expect(throws: Never.self) { try meta.find(text: "you said") }
+            // #194 R-Wrong: "you said" moved from the meta row up under the
+            // answer on the card — the driver sees both answers together.
+            #expect(throws: Never.self) { try tree.find(text: "you said") }
         }
     }
 

@@ -54,15 +54,19 @@ struct HomeViewInspectorTests {
         }
     }
 
-    @Test("Home still renders the session section and Start Quiz CTA")
+    // #194 C1: the session settings moved from a config card to three pills;
+    // the driver must still reach all three pickers and the Start CTA.
+    @Test("Home still renders the session settings and Start Quiz CTA")
     func homeKeepsSessionConfigAndCta() async throws {
         let view = HomeView(viewModel: makeViewModel())
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
 
-            #expect(throws: Never.self) {
-                try tree.find(text: "quiz")
+            for id in ["home-language-menu", "home-difficulty-menu", "home-categories-menu"] {
+                #expect(throws: Never.self) {
+                    try tree.find(viewWithAccessibilityIdentifier: id)
+                }
             }
             #expect(throws: Never.self) {
                 try tree.find(button: "Start")

@@ -3,14 +3,16 @@ trubbo.
 tvoj plán
 18
 z 30 otázok zadarmo
-resets in 13 days
 Vylepši
-kvíz
+resets in 13 days
+History
+Science & Nature
+Geography & World
+10 otázok
+All Categories
 English
 Slovenčina
 Čeština
-Jazyk kvízu
-English
 Jazyk kvízu
 English
 Easy
@@ -19,18 +21,6 @@ Hard
 Random
 Náročnosť
 Medium
-Náročnosť
-Medium
-All Categories
-Science & Nature
-History
-Geography & World
-Movies & Music
-Sports
-Food & Everyday Life
-Entertainment
-Kategórie
-All Categories
 Kategórie
 All Categories
 Štart
@@ -41,8 +31,8 @@ home.freePlanCard
 home.planLabel
 home.planPrimary
 home.planCaption
-home.freePlanReset
 home.freePlanUpgrade
+home.freePlanReset
 home-language-menu
 home.language.en
 home.language.sk
@@ -53,12 +43,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.category.all
-home.category.science-nature
-home.category.history
-home.category.geography-world
-home.category.movies-music
-home.category.sports
-home.category.food-everyday
-home.category.entertainment
 home.startQuiz

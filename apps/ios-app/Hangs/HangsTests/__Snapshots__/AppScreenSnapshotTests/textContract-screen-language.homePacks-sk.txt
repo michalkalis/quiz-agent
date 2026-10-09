@@ -1,0 +1,14 @@
+# texts
+moje balíky
+history
+30 otázok
+history
+5 z 30 pripravených
+EN
+Preparing
+# identifiers
+home.myPacksSection
+home.myPacks.showAll
+home.myPacks.play
+home.myPacks.play
+home.myPacks.readyCount

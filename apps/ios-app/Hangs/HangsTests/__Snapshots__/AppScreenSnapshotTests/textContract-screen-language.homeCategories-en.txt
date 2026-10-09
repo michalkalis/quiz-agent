@@ -1,0 +1,22 @@
+# texts
+Categories
+All Categories
+Science & Nature
+History
+Geography & World
+Movies & Music
+Sports
+Food & Everyday Life
+Entertainment
+3 selected
+Done
+# identifiers
+home.category.all
+home.category.science-nature
+home.category.history
+home.category.geography-world
+home.category.movies-music
+home.category.sports
+home.category.food-everyday
+home.category.entertainment
+home.categories.done

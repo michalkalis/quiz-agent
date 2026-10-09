@@ -57,7 +57,7 @@ struct HomeViewStateContractTests {
     /// The plan card is intentionally NOT asserted: `HomeView.onAppear` fires
     /// `refreshUsage()`, so which branch mounts (`home.freePlanLoading` vs
     /// `home.freePlanCard`) races the hosting. `HomeFreePlanCardTests` owns it.
-    @Test("Idle Home renders wordmark, session config card and a tappable Start Quiz CTA")
+    @Test("Idle Home renders wordmark, the session settings and a tappable Start Quiz CTA")
     func idleHomeContract() async throws {
         let vm = Fixtures.makeViewModel()
         #expect(vm.quizState == .idle, "precondition: Home is the idle screen")
@@ -69,9 +69,11 @@ struct HomeViewStateContractTests {
             // Brand wordmark: the driver must land on a recognisable app.
             #expect(throws: Never.self) { try tree.find(text: "trubbo.") }
 
-            // Session config card (its section label) — where difficulty /
-            // language / categories are chosen before starting.
-            #expect(throws: Never.self) { try tree.find(text: "quiz") }
+            // Session settings — where difficulty / language / categories are
+            // chosen before starting (#194 C1: three pills, was a config card).
+            for id in ["home-language-menu", "home-difficulty-menu", "home-categories-menu"] {
+                #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: id) }
+            }
 
             // The one CTA that must exist on Home, and it must be usable.
             let start = try tree.find(viewWithAccessibilityIdentifier: "home.startQuiz").button()

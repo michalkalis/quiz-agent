@@ -9,6 +9,7 @@ import os
 from typing import Any, Dict, Optional
 
 import sentry_sdk
+from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 
 from app.translation.duplication import find_duplicated_word
@@ -54,16 +55,26 @@ TRANSLATION_PROMPT_VERSION = "3"
 TRANSLATION_MAX_ATTEMPTS = 3
 
 
+def _strip_code_fence(text: str) -> str:
+    """``{...}`` from a reply wrapped in a Markdown ```json fence (else unchanged)."""
+    stripped = text.strip()
+    if stripped.startswith("```") and stripped.endswith("```"):
+        stripped = stripped[3:-3]
+        if stripped.lower().startswith("json"):
+            stripped = stripped[4:]
+    return stripped.strip()
+
+
 class TranslationService:
     """Service for translating quiz content to different languages.
 
     Translation quality IS the product in non-English sessions (every question
     the player hears is this service's output), and each translation is made
     once and cached durably — so a frontier model is the right cost/quality
-    trade (2026-07-30 review). Default claude-opus-5 requires
-    LLM_GATEWAY=openrouter; in direct mode the call fails and the serving path
-    falls back to English (#132 pattern), so override TRANSLATION_MODEL to an
-    OpenAI model for direct-mode setups.
+    trade (2026-07-30 review). The Claude default goes to the Anthropic API
+    when ANTHROPIC_API_KEY is set (#196); without it, it needs
+    LLM_GATEWAY=openrouter — in plain direct mode the call fails and the
+    serving path falls back to English (#132 pattern).
     """
 
     def __init__(self, model: str | None = None, store_url: str | None = None):
@@ -75,10 +86,22 @@ class TranslationService:
             store_url: SQLAlchemy URL for the durable translation store; defaults to
                 TRANSLATION_CACHE_URL env var, then sqlite under ./data (→ /data in prod)
         """
-        self.client = llm_factory.openai_client(async_=True)
-        self.model = llm_factory.resolve_model(
-            model or os.getenv("TRANSLATION_MODEL", "claude-opus-5-5")
-        )
+        model_id = model or os.getenv("TRANSLATION_MODEL", "claude-opus-5-5")
+        # #196: a Claude TRANSLATION_MODEL goes straight to the Anthropic API
+        # (Max credit) when ANTHROPIC_API_KEY is set; otherwise the
+        # OpenAI-compatible gateway route, exactly as before.
+        self._anthropic = None
+        if anthropic_route.routes_to_anthropic(model_id):
+            # Same hot-path bound as openai_client()'s DEFAULT_TIMEOUT (#139).
+            self._anthropic = llm_factory.anthropic_client(
+                timeout=llm_factory.DEFAULT_TIMEOUT.read
+            )
+            self.client = None
+            self.model = anthropic_route.anthropic_model_id(model_id)
+            anthropic_route.log_route(model_id, f"anthropic:{self.model}")
+        else:
+            self.client = llm_factory.openai_client(async_=True)
+            self.model = llm_factory.resolve_model(model_id)
         # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
         # TranslationService is a process-wide singleton, so this survives every request/session.
         self._cache: dict[tuple[str, str, str], str] = {}
@@ -100,6 +123,40 @@ class TranslationService:
             )
             self._store = None
             self._cache = {}
+
+    async def _complete(
+        self, system: str, user: str, *, max_tokens: int, json_mode: bool = False
+    ) -> str:
+        """One translation completion -> reply text, on the route __init__ chose.
+
+        No temperature on either route: Claude 5-class rejects sampling params
+        (400). ``json_mode`` asks the OpenAI-compatible route for a JSON object;
+        the Anthropic API has no such switch (the system prompt already demands
+        JSON only), so there a stray Markdown code fence is stripped instead.
+        """
+        if self._anthropic is not None:
+            response = await self._anthropic.messages.create(
+                model=self.model,
+                system=system,
+                messages=[{"role": "user", "content": user}],
+                max_tokens=max_tokens,
+            )
+            text = anthropic_route.message_text(response.content)
+            return _strip_code_fence(text) if json_mode else text
+
+        extra: dict[str, Any] = (
+            {"response_format": {"type": "json_object"}} if json_mode else {}
+        )
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            max_tokens=max_tokens,
+            **extra,
+        )
+        return response.choices[0].message.content
 
     def _maybe_store(self, key: tuple[str, str, str], value: str) -> None:
         """Cache a validated translation, bounded by CACHE_MAX_ENTRIES.
@@ -214,24 +271,14 @@ class TranslationService:
         last_failure: dict[str, object] = {}
         for attempt in range(TRANSLATION_MAX_ATTEMPTS):
             try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Titles of works (films, series, songs, albums, books, games) get their official {target_lang_name} release title ONLY if you are certain of it; when unsure, keep the original title verbatim — never invent or calque a translated title. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Translate this quiz question to {target_lang_name}:\n\n{question}",
-                        },
-                    ],
-                    # No temperature: claude-opus-5 rejects sampling params (400).
+                raw = await self._complete(
+                    f"You are a professional translator. Translate quiz questions to {target_lang_name}. Preserve the meaning and difficulty. Titles of works (films, series, songs, albums, books, games) get their official {target_lang_name} release title ONLY if you are certain of it; when unsure, keep the original title verbatim — never invent or calque a translated title. Return ONLY the translated question, nothing else. The output must be a complete question sentence. Do NOT answer the question, only translate it.",
+                    f"Translate this quiz question to {target_lang_name}:\n\n{question}",
                     # max_tokens covers thinking + output on reasoning models.
                     max_tokens=1500,
                 )
 
-                translated = response.choices[0].message.content.strip()
+                translated = raw.strip()
 
                 # Remove quotes if LLM added them
                 if translated.startswith('"') and translated.endswith('"'):
@@ -429,21 +476,13 @@ class TranslationService:
         last_failure: dict[str, object] = {}
         for attempt in range(TRANSLATION_MAX_ATTEMPTS):
             try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {
-                            "role": "user",
-                            "content": json.dumps(payload, ensure_ascii=False),
-                        },
-                    ],
-                    # No temperature: claude-opus-5 rejects sampling params (400).
+                raw = await self._complete(
+                    system_prompt,
+                    json.dumps(payload, ensure_ascii=False),
                     # max_tokens covers thinking + output on reasoning models.
                     max_tokens=2500,
-                    response_format={"type": "json_object"},
+                    json_mode=True,
                 )
-                raw = response.choices[0].message.content
                 try:
                     parsed = json.loads(raw)
                 except (TypeError, json.JSONDecodeError):
@@ -530,24 +569,14 @@ class TranslationService:
         last_failure: dict[str, object] = {}
         for attempt in range(TRANSLATION_MAX_ATTEMPTS):
             try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": f"You are a professional translator. Translate short feedback messages to {target_lang_name}. Return ONLY the translation, nothing else. Do NOT answer, explain or expand the text, only translate it.",
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Translate to {target_lang_name}: {feedback}",
-                        },
-                    ],
-                    # No temperature: claude-opus-5 rejects sampling params (400).
+                raw = await self._complete(
+                    f"You are a professional translator. Translate short feedback messages to {target_lang_name}. Return ONLY the translation, nothing else. Do NOT answer, explain or expand the text, only translate it.",
+                    f"Translate to {target_lang_name}: {feedback}",
                     # max_tokens covers thinking + output on reasoning models.
                     max_tokens=500,
                 )
 
-                translated = response.choices[0].message.content.strip()
+                translated = raw.strip()
 
                 # Remove quotes if added
                 if translated.startswith('"') and translated.endswith('"'):

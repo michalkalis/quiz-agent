@@ -201,8 +201,8 @@ async def test_cost_covers_tokens_and_web_searches() -> None:
 
     result = await verifier.verify("Q?", "A")
 
-    # 1M input tokens at $3/1M = 300¢, plus 3 searches at 1¢.
-    assert result.cost_cents == pytest.approx(303.0)
+    # 1M input tokens at Sonnet 5's $2/1M = 200¢, plus 3 searches at 1¢.
+    assert result.cost_cents == pytest.approx(203.0)
 
 
 # --- pause_turn: server-side tool loop resume ------------------------------

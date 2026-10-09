@@ -25,6 +25,8 @@ dependencies = [
     "pyattest>=1.0.4",
     "cbor2>=5.6.0",
     "num2words>=0.5.14",
+    # #196 — serve-time translation calls Claude on the Anthropic API directly.
+    "anthropic>=0.42.0",
 ]
 
 [tool.uv.sources]

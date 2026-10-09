@@ -90,12 +90,25 @@ _PRICE_TABLE_USD_PER_1M: dict[str, dict[str, float]] = {
     # (quiz_shared.llm.factory.ANSWERABILITY = "deepseek-v4-flash" ->
     # OpenRouter slug "deepseek/deepseek-v4-flash").
     "deepseek-v4-flash": {"input": 0.15, "output": 0.60},
-    # #166 increment 2 — FACTCHECK role on the direct Anthropic API (list
-    # price; the 2026 intro discount is lower, so this over- rather than
-    # under-states cost). Token cost only: the server-side web_search tool's
-    # $10/1k-searches fee is billed per request, not per token, and is not
-    # counted here.
-    "claude-sonnet-5": {"input": 3.00, "output": 15.00},
+    # Anthropic API list prices (claude-api reference, cached 2026-10-06;
+    # #196 — Claude calls now run on the direct API). Token cost only: the
+    # server-side web_search tool's $10/1k-searches fee is billed per request
+    # and is not counted here. Dashed keys match what the Anthropic API
+    # reports; dotted keys match OpenRouter slugs. Longest-key-first matching
+    # keeps "claude-opus-5-5" from falling through to "claude-opus-5".
+    "claude-fable-5-1": {"input": 10.00, "output": 50.00},
+    "claude-fable-5.1": {"input": 10.00, "output": 50.00},
+    "claude-fable-5": {"input": 10.00, "output": 50.00},
+    "claude-opus-5-5": {"input": 4.00, "output": 20.00},
+    "claude-opus-5.5": {"input": 4.00, "output": 20.00},
+    "claude-opus-5": {"input": 5.00, "output": 25.00},
+    "claude-sonnet-5-5": {"input": 2.00, "output": 10.00},
+    "claude-sonnet-5.5": {"input": 2.00, "output": 10.00},
+    "claude-sonnet-5": {"input": 2.00, "output": 10.00},
+    # Prompts up to 100k tokens; $0.50/$2.50 beyond (not modelled — this
+    # table is per-model, not per-request-size).
+    "claude-haiku-5-5": {"input": 0.10, "output": 0.50},
+    "claude-haiku-5.5": {"input": 0.10, "output": 0.50},
     # #166 provider swap (2026-08-26) — FACTCHECK role on the direct OpenAI
     # Responses API (list price, verified developers.openai.com/api/docs/
     # pricing 2026-08-26). Token cost only: the web_search tool's $10/1k-calls

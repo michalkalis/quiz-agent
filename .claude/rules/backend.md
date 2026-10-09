@@ -22,6 +22,8 @@ All LLM calls go through `quiz_shared.llm.factory`. Call sites ask it for a clie
 - `LLM_GATEWAY=openrouter` — chat + embeddings + Gemini verification + Claude scoring all route through OpenRouter on one key/balance.
 - `LLM_GATEWAY=session` — **dev-only (#169 — session gateway)**: every chat role runs on the Claude Code subscription via `claude -p` (`session:<fable|opus|sonnet|haiku>` ids, `quiz_shared/llm/session_cli.py`); non-Claude ids map to a Claude tier by class (table in `factory.session_model_for`, override `LLM_SESSION_MAP`). Embeddings/audio/image stay on OpenAI. Transport only — prompts, parsers, guards and feature flags are unchanged, so the API pipeline remains the source of truth. Never set on Fly. Requires `claude auth status` = claude.ai login; API-key auth is refused.
 
+- **Claude ids (#196 — AI calls to the direct Anthropic API):** any `claude-*` / `anthropic/claude-…` chat id goes straight to the Anthropic API (`ChatAnthropic`; `quiz_shared/llm/anthropic_route.py`) whenever `ANTHROPIC_API_KEY` is set and the gateway isn't `session` — under either gateway. No key → the gateway route above. `bedrock:`/`session:` ids keep their routes.
+
 Use `factory.openai_client(async_=…)` (native OpenAI SDK) or `factory.chat_openai(model, …)` (LangChain). **Audio (TTS/Whisper) and image (gpt-image-1) pass `direct=True`** — OpenRouter does not serve them, so they stay on canonical OpenAI under either gateway. When adding a new model, add its OpenRouter slug to `_REMAP_OPENROUTER` in the factory, not at the call site.
 
 Direct-mode degradation: without `GOOGLE_API_KEY`, Gemini verification falls back to heuristic; without `ANTHROPIC_API_KEY`, the second scorer drops. `openrouter` mode needs neither.

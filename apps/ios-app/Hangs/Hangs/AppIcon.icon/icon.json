@@ -1,6 +1,6 @@
 {
   "fill": {
-    "solid": "srgb:0.06667,0.07059,0.08627,1.00000"
+    "solid": "srgb:0.17255,0.27059,0.96078,1.00000"
   },
   "groups": [
     {
@@ -8,8 +8,8 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "bar5.svg",
-          "name": "bar5",
+          "image-name": "question.svg",
+          "name": "question",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -22,8 +22,8 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "bar4.svg",
-          "name": "bar4",
+          "image-name": "card4.svg",
+          "name": "card4",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -36,8 +36,8 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "bar3.svg",
-          "name": "bar3",
+          "image-name": "card3.svg",
+          "name": "card3",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -50,8 +50,8 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "bar2.svg",
-          "name": "bar2",
+          "image-name": "card2.svg",
+          "name": "card2",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -64,8 +64,8 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "bar1.svg",
-          "name": "bar1",
+          "image-name": "card1.svg",
+          "name": "card1",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -81,7 +81,7 @@
         "opacity": 0.5
       },
       "translucency": {
-        "enabled": true,
+        "enabled": false,
         "value": 0.4
       }
     }

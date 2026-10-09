@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 196 | [AI volania čo najviac na priame Anthropic API (Max kredit)](issue-196-anthropic-consolidation.md) | enhancement · ready | `[ ]` #196 | Založené 2026-10-09; skupiny A–D, kontroly kvality len s porovnaním; kľúč už je |
 | 195 | [Čerstvé otázky: časovo obmedzené 2× zvýhodnenie pri výbere](issue-195-fresh-entertainment-boost.md) | enhancement · in-progress | `[~]` #195 | Založené 2026-10-08; LLM určí okno aktuálnosti (týždeň → natrvalo), výber v quiz-agent váži 2×; nasadenie quiz-pack-api (migrácia `e195b0057a11`) → quiz-agent; open = čerstvá dávka 50 en/sk/cs |
 | 194 | [Redizajn „Sklo nad kartami“ (verzia 1.1)](issue-194-redesign-glass-cards.md) | feature · planned | `[ ]` #194 | Založené 2026-10-08; smer Bg, systémové písmo, logo 2; nový release mimo bety (`release/1.0`); fázy A–E, ~15–20 PR; tmavý režim áno, farby kategórií schválené |
 | 193 | [Spevnenie pred betou a pred reálnymi používateľmi](issue-193-beta-hardening.md) | chore · in-progress | `[~]` #193 | Založené 2026-10-08 z 5 auditov; vlna 1 malé opravy, vlna 2 vynútená aktualizácia, vlna 3 staging + odolnosť |

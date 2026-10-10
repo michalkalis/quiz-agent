@@ -1528,10 +1528,15 @@ final class QuizViewModel: ObservableObject {
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
-            let entitlementConfirmed = await entitlementReconciler.resyncBeforePaywallIfLocallyEntitled()
+            // `upgrade_available: false` means the server already knows the user
+            // holds the only plan and spent its allowance: a resync cannot change
+            // that, and "subscription just synced, try again" would loop forever.
+            let entitlementConfirmed = limitError.upgradeAvailable
+                ? await entitlementReconciler.resyncBeforePaywallIfLocallyEntitled()
+                : false
             // #188 G2: the paywall used to end the quiz without a word — it
             // read as a crash at the wheel. One line first, then the sheet.
-            if !entitlementConfirmed { await announceQuotaReached() }
+            if !entitlementConfirmed { await announceQuotaReached(upgradeAvailable: limitError.upgradeAvailable) }
             audioService.deactivateSession()
             if entitlementConfirmed {
                 // #102 review follow-up: skip the paywall when the resync just

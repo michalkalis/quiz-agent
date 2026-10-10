@@ -1,7 +1,7 @@
 # texts
 trubbo
 your plan
-Unlimited
+Trubbo Plus
 renewal failed
 Fix payment
 Update your payment method
@@ -29,7 +29,7 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
-home.freePlanUnlimited
+home.planName
 home.planStatusPill
 home.planManageCTA
 home.planMeta

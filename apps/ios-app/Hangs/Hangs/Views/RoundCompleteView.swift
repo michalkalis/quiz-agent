@@ -176,7 +176,7 @@ struct RoundCompleteView: View {
                             .foregroundStyle(Theme.Hangs.Colors.muted)
                     }
                     Spacer(minLength: Theme.Hangs.Spacing.xs)
-                    Text("Go Unlimited")
+                    Text("Get Trubbo Plus")
                         .font(.hangsCaption.weight(.semibold))
                         .foregroundStyle(Theme.Hangs.Colors.ink)
                         .padding(.horizontal, Theme.Hangs.Spacing.sm)

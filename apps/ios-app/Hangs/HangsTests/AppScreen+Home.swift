@@ -76,8 +76,8 @@ extension AppScreen {
             userId: "snapshot-subject",
             isPremium: premium,
             questionsUsed: 12,
-            questionsLimit: premium ? nil : 30,
-            remaining: premium ? nil : remaining,
+            questionsLimit: premium ? 1000 : 30,
+            remaining: premium ? 870 : remaining,
             // 12½ days out, so the countdown reads the same on every run.
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400 + 12 * 3600)),
             subscriptionStatus: status,

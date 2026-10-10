@@ -40,7 +40,7 @@ enum AppScreen: String, CaseIterable {
     case orderForm, orderSummary, orderPreparing, orderReadyGenerating, orderReady, orderFailed
     case signInIdle, signInSigningIn, signInFailed
     case errorRetry, errorGoHome, errorDismiss
-    case paywallPack, paywallOffline
+    case paywallPack, paywallAllowanceSpent, paywallOffline
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
     case myPacks
 

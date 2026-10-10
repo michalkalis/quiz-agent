@@ -63,7 +63,7 @@ private func makeLimitError(questionsLimit: Int = 10) -> QuotaLimitError {
 /// The full offering (monthly + pack) with distinct prices.
 private func makeFullOfferings() -> PurchasableOfferings {
     PurchasableOfferings(
-        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"),
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "€1.99", displayName: "100 Question Pack")
     )
 }
@@ -116,14 +116,15 @@ struct PaywallViewOfflineStateTests {
 @MainActor
 @Suite("PaywallView — normal paywall structure (z8TS6)")
 struct PaywallViewNormalStructureTests {
-    @Test("'GO UNLIMITED' headline renders in both quota-hit and proactive modes")
+    @Test("The 'Trubbo Plus' headline renders in both quota-hit and proactive modes")
     func headlineRendersInBothModes() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         for limitError in [makeLimitError(), nil] {
             let view = PaywallView(storeManager: manager, limitError: limitError, onDismiss: {})
             try await ViewHosting.host(view) {
                 let tree = try view.inspect()
-                #expect(throws: Never.self) { try tree.find(text: "GO UNLIMITED") }
+                let headline = try tree.find(viewWithAccessibilityIdentifier: "paywall.headline").text()
+                #expect(try headline.string() == "Trubbo Plus")
             }
         }
     }
@@ -138,7 +139,7 @@ struct PaywallViewNormalStructureTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Unlimited questions, no monthly cap.")
+                try tree.find(text: "1,000 questions a month")
             }
             #expect(!treeHasText(tree, containing: ["free questions this month"]),
                     "quota copy must not show on proactive entry")
@@ -173,13 +174,15 @@ struct PaywallViewNormalStructureTests {
 @MainActor
 @Suite("PaywallView — plan picker (z8TS6)")
 struct PaywallViewPlanPickerTests {
-    @Test("Monthly plan card renders, no annual badge")
+    @Test("Trubbo Plus plan card states the monthly allowance and price, no annual badge")
     func planCardsRender() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Monthly") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
+            #expect(treeHasText(tree, containing: ["1,000 questions a month for", "4.99"]),
+                    "the card must say what Trubbo Plus gives and what it costs")
             #expect(throws: (any Error).self, "annual is gone for v1 — no SAVE 50% badge") {
                 try tree.find(text: "SAVE 50%")
             }
@@ -193,7 +196,7 @@ struct PaywallViewPlanPickerTests {
         #expect(view.effectivePlan == .monthly, "monthly is the only subscription plan for v1")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]),
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]),
                     "default CTA must sell the monthly plan")
             #expect(!treeHasText(tree, containing: ["/ year"]), "annual billing suffix must never show")
         }
@@ -220,6 +223,83 @@ struct PaywallViewPlanPickerTests {
             #expect(throws: Never.self) {
                 try tree.find(text: "Auto-renews until cancelled. Cancel anytime in Settings.")
             }
+        }
+    }
+}
+
+// MARK: - Subscriber who spent the month's allowance (#199)
+
+@MainActor
+@Suite("PaywallView — Trubbo Plus allowance spent (upgrade_available false, #199)")
+struct PaywallViewAllowanceSpentTests {
+    private func spentLimitError() -> QuotaLimitError {
+        QuotaLimitError(
+            error: "quota_limit_reached",
+            questionsUsed: 1000,
+            questionsLimit: 1000,
+            resetsAt: "2099-01-01T08:00:00.000Z",
+            upgradeAvailable: false
+        )
+    }
+
+    // WHY: a subscriber already owns the only plan. Pitching it again is a
+    // dead end (a second purchase of what they have), so the one thing to
+    // offer is the pack, plus when the month resets.
+    @Test("never offers the subscription: no plan card, no subscribe CTA, no auto-renew line; the pack is selected and buyable")
+    func offersOnlyThePack() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        #expect(!view.subscriptionOffered)
+        #expect(view.effectivePlan == .pack, "the CTA must never point at the plan they already hold")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack") }
+            #expect(!treeHasText(tree, containing: ["Get Trubbo Plus for"]))
+            #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]))
+            #expect(throws: (any Error).self, "the auto-renew line belongs to a subscription offer") {
+                try tree.find(viewWithAccessibilityIdentifier: "paywall.legal")
+            }
+            #expect(throws: (any Error).self, "'without subscribing' makes no sense to a subscriber") {
+                try tree.find(text: "or top up without subscribing")
+            }
+            #expect(try !ctaButton(tree).isDisabled())
+        }
+    }
+
+    @Test("says the Trubbo Plus questions are used up and counts down to the reset, without the word free")
+    func subtitleAndCountdownTalkAboutThePlan() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let subtitle = try tree.find(viewWithAccessibilityIdentifier: "paywall.subtitle").text().string()
+            #expect(subtitle.contains("Trubbo Plus questions this month"), "got: \(subtitle)")
+            #expect(!subtitle.localizedCaseInsensitiveContains("free"))
+            #expect(treeHasText(tree, containing: ["Questions reset in"]))
+            #expect(!treeHasText(tree, containing: ["Free questions reset"]))
+        }
+    }
+
+    @Test("a free user who hit the wall (upgrade_available true) still gets the subscription pitch")
+    func freeUserStillSeesTheSubscription() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: makeLimitError(), onDismiss: {})
+        #expect(view.subscriptionOffered)
+        #expect(view.effectivePlan == .monthly)
+    }
+
+    @Test("with no pack on offer the CTA slot stays empty rather than selling the subscription")
+    func neverFallsBackToTheSubscription() async throws {
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"),
+            pack: nil
+        )
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-button") }
         }
     }
 }
@@ -304,7 +384,7 @@ struct PaywallViewInFlightTests {
             let tree = try view.inspect()
             // The CTA still names what is being bought — the same button, now
             // spinning, rather than a second button with different copy.
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]))
             let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
             let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
             #expect(try monthly.opacity() == 1, "the plan being bought stays full-strength")
@@ -338,7 +418,7 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]))
             #expect(!treeHasText(tree, containing: ["Buying"]), "no narrating CTA while idle")
             #expect(!treeHasText(tree, containing: ["Restoring"]), "no restore CTA while idle")
             #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled()),
@@ -423,7 +503,7 @@ struct PaywallPackSelectionTests {
             let tree = try view.inspect()
             #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]),
                     "the CTA must name the pack and its price")
-            #expect(!treeHasText(tree, containing: ["Subscribe for"]),
+            #expect(!treeHasText(tree, containing: ["Get Trubbo Plus for"]),
                     "the CTA must stop selling a subscription while the pack is selected")
         }
     }
@@ -457,7 +537,7 @@ struct PaywallPackSelectionTests {
         let (manager, mock) = await makeManagerWithMock(gate: gate)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
         try await ViewHosting.host(view) {
-            #expect(try treeHasText(view.inspect(), containing: ["Subscribe for", "/ month"]))
+            #expect(try treeHasText(view.inspect(), containing: ["Get Trubbo Plus for", "/ month"]))
             try view.inspect()
                 .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
                 .button().tap()
@@ -518,13 +598,13 @@ struct PaywallViewOfflineStructureTests {
         }
     }
 
-    @Test("'GO UNLIMITED' headline absent in offline variant")
+    @Test("The Trubbo Plus headline is absent in the offline variant")
     func paywallHeadlineAbsentWhenOffline() async throws {
         let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "GO UNLIMITED") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall.headline") }
         }
     }
 
@@ -534,7 +614,7 @@ struct PaywallViewOfflineStructureTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "Monthly") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
             #expect(throws: (any Error).self) { try tree.find(text: "100 Question Pack") }
         }
     }

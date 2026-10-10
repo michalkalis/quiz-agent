@@ -4,9 +4,10 @@
 //
 //  #87 (directive G2): Home shows the free-plan quota — remaining monthly
 //  questions + reset countdown — so free users can see the meter before it
-//  bites; premium users see an Unlimited row in the same slot. These tests
-//  pin the three card states (free / premium / not-loaded) and the countdown
-//  wording, because the card is the only pre-paywall surface of the quota.
+//  bites; Trubbo Plus subscribers see the plan name and what is left of the
+//  month's 1,000 questions in the same slot (#199). These tests pin the three
+//  card states (free / premium / not-loaded) and the countdown wording,
+//  because the card is the only pre-paywall surface of the quota.
 //
 
 import Clocks
@@ -50,20 +51,24 @@ struct HomeFreePlanCardTests {
         )
     }
 
+    /// A subscriber defaults to Trubbo Plus's real shape (870 of 1,000 left);
+    /// a free user to 70 of 100.
     private func usage(
         premium: Bool = false,
-        remaining: Int? = 70,
-        limit: Int? = 100,
+        remaining: Int? = nil,
+        limit: Int? = nil,
         resetsIn: TimeInterval = 12 * 86400,
         credits: Int = 0,
         status: String? = nil
     ) -> UsageInfo {
-        UsageInfo(
+        let remaining = remaining ?? (premium ? 870 : 70)
+        let limit = limit ?? (premium ? 1000 : 100)
+        return UsageInfo(
             userId: "test-subject",
             isPremium: premium,
-            questionsUsed: premium ? 0 : (limit ?? 0) - (remaining ?? 0),
-            questionsLimit: premium ? nil : limit,
-            remaining: premium ? nil : remaining,
+            questionsUsed: limit - remaining,
+            questionsLimit: limit,
+            remaining: remaining,
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(resetsIn)),
             subscriptionStatus: status ?? (premium ? "active" : "none"),
             creditBalance: credits
@@ -90,34 +95,36 @@ struct HomeFreePlanCardTests {
             #expect(try reset.string() == "resets in 12 days")
 
             // A plain free user (no credits) gets no two-currency legend and no
-            // subscriber word.
+            // plan name.
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planLegend")
             }
             #expect(throws: (any Error).self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planName")
             }
         }
     }
 
-    @Test("Subscriber sees the UNLIMITED word + active pill, no numeric headline, no reset countdown")
-    func premiumStateShowsUnlimited() async throws {
+    @Test("Subscriber sees the Trubbo Plus name, active pill and what is left of the month's 1,000 questions (#199)")
+    func premiumStateShowsPlanAndAllowance() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
         let view = HomeView(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
-            }
-            // "active" status pill and subscriber meta line render for a subscriber.
+            let name = try tree.find(viewWithAccessibilityIdentifier: "home.planName").text()
+            #expect(try name.string() == "Trubbo Plus")
+            // "active" status pill and the remaining-allowance meta line.
             let pill = try tree.find(viewWithAccessibilityIdentifier: "home.planStatusPill").text()
             #expect(try pill.string() == "active")
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.planMeta")
-            }
-            // A subscriber has no spendable-quota number and no free-reset line.
+            // The identifier sits on the Group around the meta, so reach its Text.
+            let meta = try tree.find(viewWithAccessibilityIdentifier: "home.planMeta").find(ViewType.Text.self)
+            #expect(try meta.string(locale: Locale(identifier: "en")) == "870 of 1,000 left · resets in 12 days")
+            #expect(try meta.string(locale: Locale(identifier: "sk")) == "Zostáva 870 z 1\u{00A0}000 · resets in 12 days",
+                    "sk/cs thousands carry a non-breaking space")
+            // The plan name carries the card, so no numeric headline and no
+            // free-reset line.
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary")
             }
@@ -128,6 +135,24 @@ struct HomeFreePlanCardTests {
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planCreditChip")
             }
+        }
+    }
+
+    @Test("Subscriber payload without a limit (older backend) still reads as an active subscription, never a made-up count")
+    func subscriberWithoutLimitFallsBackToStatus() async throws {
+        let vm = makeViewModel()
+        vm.usageInfo = UsageInfo(
+            userId: "test-subject", isPremium: true, questionsUsed: 0,
+            questionsLimit: nil, remaining: nil,
+            resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400)),
+            subscriptionStatus: "active", creditBalance: 0
+        )
+        let view = HomeView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let meta = try tree.find(viewWithAccessibilityIdentifier: "home.planMeta").find(ViewType.Text.self)
+            #expect(try meta.string() == "Subscription active")
         }
     }
 
@@ -323,7 +348,7 @@ struct HomeFreePlanCardTests {
         }
     }
 
-    @Test("Subscriber + credits: UNLIMITED plus a purple credit chip, credits stated not counted")
+    @Test("Subscriber + credits: Trubbo Plus plus a purple credit chip, credits stated not counted")
     func subscriberWithCreditsShowsCreditChip() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true, credits: 100)
@@ -332,10 +357,10 @@ struct HomeFreePlanCardTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planName")
             }
             // The credits a subscriber holds are kept for later, not spent down
-            // against the unlimited plan — surfaced as a chip, not the headline.
+            // before the plan's monthly allowance — surfaced as a chip, not the headline.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planCreditChip")
             }
@@ -436,10 +461,30 @@ struct HomeFreePlanCardTests {
         #expect(text(-60) == "resets soon")
     }
 
+    // WHY (#199): a Trubbo Plus subscriber now has a real monthly limit, so
+    // spending it must read as "limit reached" like the free tier does; a
+    // payload without a limit (older backend) never claims a limit was hit.
+    @Test("A subscriber who spent the month's allowance has reached the limit; one with no limit data has not")
+    func subscriberLimitReached() {
+        #expect(usage(premium: true, remaining: 0, limit: 1000).isLimitReached)
+        #expect(!usage(premium: true, remaining: 870, limit: 1000).isLimitReached)
+        let noLimit = UsageInfo(
+            userId: "t", isPremium: true, questionsUsed: 0, questionsLimit: nil, remaining: nil,
+            resetsAt: "", subscriptionStatus: "active", creditBalance: 0
+        )
+        #expect(!noLimit.isLimitReached)
+    }
+
     @Test("Track fraction follows remaining/limit and clamps")
     func quotaFraction() {
         #expect(HomeView.quotaFraction(usage(remaining: 70, limit: 100)) == 0.7)
         #expect(HomeView.quotaFraction(usage(remaining: 0, limit: 100)) == 0)
-        #expect(HomeView.quotaFraction(usage(remaining: nil, limit: nil)) == 0)
+        #expect(HomeView.quotaFraction(usage(premium: true, remaining: 870, limit: 1000)) == 0.87)
+        let noLimit = UsageInfo(
+            userId: "t", isPremium: false, questionsUsed: 0,
+            questionsLimit: nil, remaining: nil,
+            resetsAt: "", subscriptionStatus: "none", creditBalance: 0
+        )
+        #expect(HomeView.quotaFraction(noLimit) == 0)
     }
 }

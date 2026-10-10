@@ -38,6 +38,25 @@ struct PaywallPickerStateTests {
         #expect(noOfferings.selectedProduct == nil)
     }
 
+    // #199: a Trubbo Plus subscriber who spent the month's allowance already owns
+    // the only plan, so the CTA must never be able to sell it again.
+    @Test("with the subscription not offered the CTA buys the pack, and nothing at all if the pack is gone")
+    func subscriptionNotOffered() {
+        let monthlySelected = PaywallPickerState(
+            selectedPlan: .monthly, offerings: full, purchaseState: .idle, monthlyOffered: false
+        )
+        #expect(monthlySelected.effectivePlan == .pack)
+        #expect(monthlySelected.selectedProduct == pack)
+
+        let noPack = PaywallPickerState(
+            selectedPlan: .monthly,
+            offerings: PurchasableOfferings(monthly: monthly, pack: nil),
+            purchaseState: .idle,
+            monthlyOffered: false
+        )
+        #expect(noPack.selectedProduct == nil, "never fall back to selling the plan they already hold")
+    }
+
     @Test("purchasing and restoring make the store busy; outcomes do not")
     func busyStates() {
         func busy(_ state: PurchaseState) -> Bool {

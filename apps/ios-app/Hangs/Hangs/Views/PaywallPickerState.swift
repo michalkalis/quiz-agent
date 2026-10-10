@@ -28,6 +28,10 @@ struct PaywallPickerState {
     let selectedPlan: PaywallPlan
     let offerings: PurchasableOfferings?
     let purchaseState: PurchaseState
+    /// False when the server says the user already holds the only plan (a
+    /// subscriber who spent the month's allowance, `upgrade_available: false`):
+    /// the subscription is never offered, the pack is the one thing to buy.
+    var monthlyOffered = true
 
     /// The plan the CTA buys. The pack card only renders when the pack exists,
     /// but an offering refresh could drop it under the selection — never leave
@@ -35,16 +39,18 @@ struct PaywallPickerState {
     var effectivePlan: PaywallPlan {
         switch selectedPlan {
         case .monthly:
-            return .monthly
+            return monthlyOffered || offerings?.pack == nil ? .monthly : .pack
         case .pack:
             guard offerings?.pack != nil else { return .monthly }
             return .pack
         }
     }
 
+    /// Nil for the subscription when it is not on offer, so no CTA can ever
+    /// sell a plan to someone who already has it.
     var selectedProduct: PurchasableProduct? {
         switch effectivePlan {
-        case .monthly: return offerings?.monthly
+        case .monthly: return monthlyOffered ? offerings?.monthly : nil
         case .pack: return offerings?.pack
         }
     }

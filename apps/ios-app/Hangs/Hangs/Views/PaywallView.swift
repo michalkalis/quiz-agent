@@ -53,6 +53,13 @@ struct PaywallView: View {
         storeManager.hasAttemptedOfferingsLoad && storeManager.offerings == nil
     }
 
+    /// False only when the server's 429 says the user already holds the only
+    /// plan (Trubbo Plus, month's allowance spent): the subscription is never
+    /// pitched to them, only the pack and the reset countdown.
+    var subscriptionOffered: Bool {
+        limitError?.upgradeAvailable ?? true
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // #179 finding 9: the offline variant lost "Maybe tomorrow" too,
@@ -115,7 +122,7 @@ struct PaywallView: View {
                 paywallHeroBlock
 
                 if let resetDate = limitError?.resetDate {
-                    CountdownPill(resetDate: resetDate)
+                    CountdownPill(resetDate: resetDate, isSubscriber: !subscriptionOffered)
                 }
 
                 planPicker
@@ -162,7 +169,7 @@ struct PaywallView: View {
 
                 Text(productID == StoreProduct.packId
                     ? "100 questions were added to your account."
-                    : "Unlimited questions are now active.")
+                    : "Trubbo Plus is now active.")
                     .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
@@ -174,8 +181,8 @@ struct PaywallView: View {
     // MARK: - Finishing activation (#102 finding 4)
 
     /// Shown when RC confirmed the purchase but the server usage mirror
-    /// hasn't yet — never claims "unlimited questions are now active" before
-    /// the server gate would actually allow it.
+    /// hasn't yet — never claims "Trubbo Plus is now active" before the server
+    /// gate would actually allow it.
     private var activatingBlock: some View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
             PaywallHeroDeck(fills: Self.deckFills) {
@@ -208,7 +215,7 @@ struct PaywallView: View {
 
     private var paywallIconCircle: some View {
         PaywallHeroDeck(fills: Self.deckFills) {
-            Image(systemName: "infinity")
+            Image(systemName: "plus")
                 .font(.hangsHeading)
                 .foregroundStyle(Theme.Hangs.Category.style(for: "geography-world").text)
         }
@@ -217,9 +224,10 @@ struct PaywallView: View {
 
     private var paywallHeroBlock: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            // #96 P3 (founder no-wrap): single line, never the old "GO\nUNLIMITED"
-            // two-line break — scales down before it would wrap.
-            Text("GO UNLIMITED")
+            // #96 P3 (founder no-wrap): single line — scales down before it
+            // would wrap.
+            Text("Trubbo Plus")
+                .textCase(.uppercase)
                 .font(.hangsDisplaySM)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
@@ -241,9 +249,12 @@ struct PaywallView: View {
     // pitch the upgrade instead of claiming they ran out.
     private var limitMessage: String {
         if let limit = limitError {
+            if !limit.upgradeAvailable {
+                return String(localized: "You've used all 1,000 Trubbo Plus questions this month.", comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+            }
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "Unlimited questions, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
+        return String(localized: "1,000 questions a month", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
     }
 
     // MARK: - Plan picker
@@ -252,7 +263,8 @@ struct PaywallView: View {
         PaywallPickerState(
             selectedPlan: selectedPlan,
             offerings: storeManager.offerings,
-            purchaseState: storeManager.purchaseState
+            purchaseState: storeManager.purchaseState,
+            monthlyOffered: subscriptionOffered
         )
     }
 
@@ -265,10 +277,10 @@ struct PaywallView: View {
 
     private var planPicker: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            if let monthly = storeManager.offerings?.monthly {
+            if subscriptionOffered, let monthly = storeManager.offerings?.monthly {
                 planCard(
-                    title: "Monthly",
-                    price: "\(monthly.displayPrice) / month",
+                    title: "Trubbo Plus",
+                    price: "1,000 questions a month for \(monthly.displayPrice)",
                     plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {
@@ -278,13 +290,15 @@ struct PaywallView: View {
             }
 
             if let pack = storeManager.offerings?.pack {
-                Text("or top up without subscribing")
-                    .font(.hangsCaption)
-                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                    .multilineTextAlignment(.center)
-                    // Recedes while any purchase/restore is in flight — the pack
-                    // is no longer the offered path while something is buying.
-                    .opacity(isBusy ? Self.dimmedOpacity : 1)
+                if subscriptionOffered {
+                    Text("or top up without subscribing")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .multilineTextAlignment(.center)
+                        // Recedes while any purchase/restore is in flight — the pack
+                        // is no longer the offered path while something is buying.
+                        .opacity(isBusy ? Self.dimmedOpacity : 1)
+                }
 
                 packCard(pack)
             }
@@ -446,15 +460,15 @@ struct PaywallView: View {
     private var ctaButton: some View {
         if let product = picker.selectedProduct {
             // #56: the title param is LocalizedStringKey, so the interpolated
-            // literal extracts as "Subscribe — %@ / month" (the displayPrice is
-            // a runtime placeholder, not translatable).
+            // literal extracts as "Get Trubbo Plus for %@ / month" (the
+            // displayPrice is a runtime placeholder, not translatable).
             switch effectivePlan {
             case .monthly:
-                purchaseCTA(title: "Subscribe — \(product.displayPrice) / month", product: product)
+                purchaseCTA(title: "Get Trubbo Plus for \(product.displayPrice) / month", product: product)
             case .pack:
                 purchaseCTA(title: "Buy 100 Question Pack — \(product.displayPrice)", product: product)
             }
-        } else {
+        } else if subscriptionOffered || storeManager.offerings == nil {
             // Offerings not yet loaded — the load placeholder.
             HangsPrimaryButton(title: "Subscribe", isLoading: true) {}
                 .accessibilityIdentifier("paywall-purchase-button")
@@ -514,12 +528,15 @@ struct PaywallView: View {
             }
 
             // App Store review requirement: auto-renew disclosure (z8TS6 legal).
-            Text("Auto-renews until cancelled. Cancel anytime in Settings.")
-                .font(.hangsCaption)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
-                .multilineTextAlignment(.center)
-                .padding(.top, Theme.Hangs.Spacing.xxs)
-                .accessibilityIdentifier("paywall.legal")
+            // Only while a subscription is on offer.
+            if subscriptionOffered {
+                Text("Auto-renews until cancelled. Cancel anytime in Settings.")
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, Theme.Hangs.Spacing.xxs)
+                    .accessibilityIdentifier("paywall.legal")
+            }
 
             // App Store review requirement (3.1.2): auto-renew subscriptions
             // must link the privacy policy and terms of use from the paywall.
@@ -619,11 +636,12 @@ private enum PaywallBadgeMetrics {
 
 private struct CountdownPill: View {
     let resetDate: Date
+    var isSubscriber = false
     @State private var timeRemaining: String = ""
 
     var body: some View {
         Label {
-            Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
+            Text(text)
                 .font(.hangsCaption.weight(.semibold).monospacedDigit())
                 .multilineTextAlignment(.center)
         } icon: {
@@ -644,6 +662,12 @@ private struct CountdownPill: View {
                 }
             }
             .accessibilityIdentifier("paywall.countdownPill")
+    }
+
+    private var text: String {
+        isSubscriber
+            ? String(localized: "Questions reset in \(timeRemaining)", comment: "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets")
+            : String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset")
     }
 
     private func updateCountdown() {

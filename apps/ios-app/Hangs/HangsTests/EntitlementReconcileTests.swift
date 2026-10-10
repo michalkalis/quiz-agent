@@ -60,8 +60,8 @@ private func makeUsage(remaining: Int, premium: Bool = false) -> UsageInfo {
     )
 }
 
-private func makeQuotaLimitError() -> QuotaLimitError {
-    QuotaLimitError(error: "quota_exceeded", questionsUsed: 100, questionsLimit: 100, resetsAt: "", upgradeAvailable: true)
+private func makeQuotaLimitError(upgradeAvailable: Bool = true) -> QuotaLimitError {
+    QuotaLimitError(error: "quota_exceeded", questionsUsed: 100, questionsLimit: 100, resetsAt: "", upgradeAvailable: upgradeAvailable)
 }
 
 /// One-shot async gate: `wait()` suspends until `open()` is called. Lets a
@@ -230,6 +230,28 @@ struct EntitlementReconcileTests {
         } else {
             Issue.record("expected an .error state prompting retry, got \(vm.quizState)")
         }
+    }
+
+    // #199: a Trubbo Plus subscriber who spent the month's 1,000 questions is
+    // locally entitled AND premium on the server, so the "entitlement just
+    // synced, try again" path would send them round in circles (retry → 429 →
+    // "try again"). The server's `upgrade_available: false` says there is
+    // nothing to sync: they must reach the paywall that offers the pack.
+    @Test("429 with upgrade_available false shows the paywall even when RC says entitled and the server says premium")
+    func paywall429ForSubscriberWhoSpentTheAllowance() async {
+        let mock = Fixtures.makeFullMockNetwork()
+        let vm = makeVM(network: mock, isLocallyEntitled: { true })
+
+        await pumpUntil({ vm.usageInfo != nil }, "launch reconcile never settled")
+        let countBefore429 = mock.syncEntitlementsCallCount
+
+        mock.stubbedUsage = makeUsage(remaining: 0, premium: true)
+        mock.createSessionError = NetworkError.quotaLimitReached(makeQuotaLimitError(upgradeAvailable: false))
+        await vm.startNewQuiz()
+
+        #expect(vm.showPaywall == true, "a spent subscriber must see the paywall, not a retry loop")
+        #expect(vm.quotaLimitError?.upgradeAvailable == false, "the paywall needs the flag to stop pitching the plan they hold")
+        #expect(mock.syncEntitlementsCallCount == countBefore429, "nothing to sync: the server already knows they hold the plan")
     }
 
     // MARK: - Usage-load resilience (#FIX2 — Home quota card must not silently vanish)

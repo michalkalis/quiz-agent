@@ -1,0 +1,23 @@
+# texts
+Trubbo Plus
+You've used all 1,000 Trubbo Plus questions this month.
+Questions reset in 
+Balíček 100 otázek
+Jednorázový nákup · nikdy nevyprší
+€2.99
+Kup balíček 100 otázek za €2.99
+Obnov nákupy
+Zásady ochrany soukromí
+·
+Podmínky používání
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall.countdownPill
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.privacyPolicy
+paywall.termsOfUse

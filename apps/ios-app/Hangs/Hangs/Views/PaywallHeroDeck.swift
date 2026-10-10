@@ -66,7 +66,7 @@ private extension Int {
             Theme.Hangs.Category.style(for: "science-nature").fill,
             Theme.Hangs.Category.style(for: "geography-world").fill,
         ]) {
-            Image(systemName: "infinity").font(.hangsHeading).foregroundStyle(.white)
+            Image(systemName: "plus").font(.hangsHeading).foregroundStyle(.white)
         }
         .padding(40)
         .background(Theme.Hangs.Colors.bg)

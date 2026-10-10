@@ -197,8 +197,15 @@ class QuestionRetriever:
             >>> retriever = QuestionRetriever()
             >>> question = retriever.get_next_question(session)
         """
-        # Step 1: Build rich semantic query from session context
-        semantic_query = self._build_semantic_query(session)
+        # Step 1: Build rich semantic query from session context.
+        # A custom pack is a closed set with nothing to rank, and its rows are
+        # persisted WITHOUT an embedding (quiz-pack-api PersistStage), while a
+        # query text makes the store order by cosine distance and skip
+        # embedding-less rows — so a pack session queries without one, or it
+        # would see none of its own questions (prod incident 2026-10-10).
+        semantic_query = (
+            None if session.pack_id else self._build_semantic_query(session)
+        )
         logger.debug("Semantic query: '%s'", semantic_query)
 
         # Step 2: Determine difficulty (handle "random")
@@ -390,7 +397,7 @@ class QuestionRetriever:
 
     async def _retrieve_candidates_semantic(
         self,
-        semantic_query: str,
+        semantic_query: Optional[str],
         filters: dict,
         n_candidates: int,
         excluded_ids: List[str],
@@ -573,6 +580,12 @@ class QuestionRetriever:
         # If no questions asked yet, just pick randomly
         if not session.asked_question_ids:
             return weighted_pick(candidates)
+
+        # Pack rows carry no embedding (see get_next_question), and embedding
+        # every candidate on the fly would put one OpenAI call per pack
+        # question on the hot path — topic diversity is enough for ≤ 50 rows.
+        if session.pack_id:
+            return self._select_diverse_by_topic(candidates, session)
 
         # Get recently asked questions for diversity comparison
         recent_questions = await self._get_recent_questions(session, limit=3)

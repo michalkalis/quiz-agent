@@ -36,7 +36,8 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsToggleRow` | Settings on/off row. |
 | `HangsValueRow` | Read-only label + mono value (build info, stats). |
 | `HangsDivider` | Hairline between rows. |
-| `HangsBrandRow` | Brand row (logo `TrubboMark` + "trubbo" wordmark) at the top of the root and onboarding screens. |
+| `HangsBrandRow` | Brand row (logo `TrubboMark` + "trubbo" wordmark) at the top of Home and Onboarding only (#198). |
+| `HangsTopBar` | Logo-less top row for every other screen (end of round, paywall): its controls on the trailing side at the brand row's height (#198). |
 | `HangsPageIndicator` | Page dots under a horizontal pager (onboarding). |
 
 ## Quiz

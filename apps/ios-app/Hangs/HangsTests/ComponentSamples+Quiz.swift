@@ -16,6 +16,10 @@ nonisolated extension ComponentSample {
     private static var chrome: [ComponentSample] {
         [
             ComponentSample("brandRow.default") { HangsBrandRow() },
+            // #198: the logo-less row of the screens past Home.
+            ComponentSample("topBar.close") {
+                HangsTopBar { HangsNavChip(icon: "xmark", label: "Close") {} }
+            },
             ComponentSample("progressHeader.default") { HangsQuizProgressHeader(category: "Geography", current: 3, total: 10) },
             // #194 C2: the question screen prints the category on its card chip,
             // so its header is one row — segments + counter.

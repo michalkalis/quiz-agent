@@ -132,7 +132,9 @@ extension RecordingCoordinator {
                     sessionId: currentSession()?.id,
                     questionType: question.map { $0.isMultipleChoice ? "mcq" : "open" },
                     questionText: question?.question,
-                    options: question?.possibleAnswers
+                    options: question?.possibleAnswers,
+                    firstSpeechMs: detection.firstSpeechMs,
+                    lastSpeechEndMs: detection.lastSpeechEndMs
                 )
             )
             await submitVoiceAnswer(audioData: upload.wav, fileName: "answer.wav", owner: attempt)

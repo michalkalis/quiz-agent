@@ -3,7 +3,7 @@ trubbo.
 BEZ RÚK
 Ideálne do auta, do kuchyne aj na prechádzku.
 Povedz „start“
-Po otázke povedz „start“ alebo klepni na Štart a začni odpovedať.
+Po otázke povedz „start“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
 Päť jednoduchých slov
 start · ok · next · repeat · skip. To je celá sada príkazov.
 Predvolene po anglicky
@@ -13,7 +13,7 @@ Každý príkaz má aj tlačidlo na obrazovke. Hlas je len možnosť.
 BEZ RÚK
 Ideálne do auta, do kuchyne aj na prechádzku.
 Povedz „start“
-Po otázke povedz „start“ alebo klepni na Štart a začni odpovedať.
+Po otázke povedz „start“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
 Päť jednoduchých slov
 start · ok · next · repeat · skip. To je celá sada príkazov.
 Predvolene po anglicky

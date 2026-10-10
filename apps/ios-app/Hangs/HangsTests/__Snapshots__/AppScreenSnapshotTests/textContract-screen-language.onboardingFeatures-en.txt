@@ -3,7 +3,7 @@ trubbo.
 HANDS-FREE
 Perfect for driving, cooking, or walking.
 Say "start"
-Say "start" after a question, or tap Start, to begin answering.
+Say "start" after a question, or tap Answer, to begin answering.
 Five simple words
 start · ok · next · repeat · skip. That's the whole command set.
 English by default
@@ -13,7 +13,7 @@ Every command also has an on-screen button. Voice is optional.
 HANDS-FREE
 Perfect for driving, cooking, or walking.
 Say "start"
-Say "start" after a question, or tap Start, to begin answering.
+Say "start" after a question, or tap Answer, to begin answering.
 Five simple words
 start · ok · next · repeat · skip. That's the whole command set.
 English by default

@@ -357,7 +357,8 @@ class VoiceSample(Base):
     """One answer recording from the car, kept for replay tests (issue #197).
 
     Only the TestFlight/debug "Save answer recordings" switch sends these, and
-    only for subjects on the ``VOICE_SAMPLE_UPLOAD_USER_IDS`` allowlist. The
+    only for allowlisted subjects or, in consented mode, beta testers who said
+    yes to the one-time consent question (see ``api/routes/voice_samples``). The
     audio lives in a private R2 bucket (``r2_key``); this row is what the
     replay script and the labeling page read. ``sidecar`` is the app's JSON as
     sent (route, voice processing, transcript, the app's decision, the

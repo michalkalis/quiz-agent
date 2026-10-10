@@ -826,8 +826,8 @@ struct SettingsView: View {
             hairline
 
             HangsToggleRow(
-                label: "Save answer recordings",
-                subtitle: "Sends each spoken answer to our server for recognition tests and keeps it on this phone until it is sent",
+                label: "Send answer recordings",
+                subtitle: "Sends your spoken answers to the developer to improve speech recognition",
                 isOn: Binding(
                     get: { diagnostics.saveAnswerRecordings },
                     set: diagnostics.setSaveAnswerRecordings

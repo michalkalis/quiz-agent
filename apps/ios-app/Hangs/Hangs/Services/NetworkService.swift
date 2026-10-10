@@ -638,8 +638,11 @@ actor NetworkService: NetworkServiceProtocol {
     // MARK: - Voice samples (#197)
 
     /// One saved answer recording + its sidecar to `POST /voice-samples`.
-    /// Only allowlisted (founder) accounts are accepted; anything else is a
-    /// 403 the uploader treats like any failure — the files stay on device.
+    /// Only called while the switch is on, which is the tester's consent (the
+    /// one-time question or the Settings switch), so every upload declares it.
+    /// The server takes allowlisted accounts, or consenting testers once its
+    /// consented mode is on; a 403 or another permanent 4xx makes the uploader
+    /// drop that recording.
     func uploadVoiceSample(stamp: String, wav: Data, sidecarJSON: Data) async throws {
         let endpoint = baseURL.appendingPathComponent("/api/v1/voice-samples")
         let boundary = UUID().uuidString
@@ -654,6 +657,7 @@ actor NetworkService: NetworkServiceProtocol {
             body.append(value)
             body.append(Data("\r\n".utf8))
         }
+        appendField("consent", Data("true".utf8))
         appendField("stamp", Data(stamp.utf8))
         appendField("sidecar", sidecarJSON)
         body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"audio\"; filename=\"\(stamp).wav\"\r\n".utf8))

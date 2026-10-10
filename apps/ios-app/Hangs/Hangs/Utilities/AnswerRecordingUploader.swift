@@ -8,7 +8,9 @@
 //  the quiz only ever *kicks* it (`requestUpload`), never awaits it, so a slow
 //  or failing upload can't delay an answer. A recording's local files are
 //  deleted only after a 2xx; anything else stays for the next kick (the next
-//  answer, or the next app start).
+//  answer, or the next app start). A permanent refusal (403 consent not
+//  accepted, 413 too large, 415…) drops that recording instead, so a phone
+//  never piles up files the server will never take.
 //
 
 import Foundation
@@ -74,11 +76,22 @@ actor AnswerRecordingUploader: AnswerRecordingUploading {
                 try await transport.uploadVoiceSample(stamp: stamp, wav: wav, sidecarJSON: sidecar)
                 AnswerRecordingStore.delete(stamp: stamp, directory: directory)
             } catch {
-                // One failure (offline, 403 for a non-allowlisted account)
-                // means the rest would fail the same way — stop until the next kick.
-                Logger.network.info("🎙️ Voice sample upload deferred: \(error.localizedDescription, privacy: .public)")
+                if Self.isPermanentRefusal(error) {
+                    AnswerRecordingStore.delete(stamp: stamp, directory: directory)
+                    Logger.network.info("🎙️ Voice sample refused for good, dropped: \(error.localizedDescription, privacy: .public)")
+                } else {
+                    Logger.network.info("🎙️ Voice sample upload deferred: \(error.localizedDescription, privacy: .public)")
+                }
+                // One failure means the rest would fail the same way: stop until the next kick.
                 return
             }
         }
+    }
+
+    /// A 4xx the same request will always get again. 401 (token refresh),
+    /// 408 (timeout) and 429 (daily cap) can pass later, so those keep the file.
+    static func isPermanentRefusal(_ error: Error) -> Bool {
+        guard case let NetworkError.serverError(statusCode, _) = error else { return false }
+        return (400 ..< 500).contains(statusCode) && ![401, 408, 429].contains(statusCode)
     }
 }

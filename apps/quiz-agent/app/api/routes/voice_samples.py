@@ -1,10 +1,19 @@
 """Car answer recordings for replay tests (issue #197, track 197.2).
 
-``POST /voice-samples`` — the founder's TestFlight build sends every answer
-recording (raw 16 kHz WAV) plus its sidecar JSON while the diagnostics switch
-"Save answer recordings" is on. Not a product feature: only bearer-verified
-subjects on the ``VOICE_SAMPLE_UPLOAD_USER_IDS`` allowlist may upload; everyone
-else gets 403 before anything is validated or stored.
+``POST /voice-samples`` — a TestFlight/debug build sends every answer
+recording (raw 16 kHz WAV) plus its sidecar JSON while the "Save answer
+recordings" switch is on. Not a product feature. Who may upload depends on
+``VOICE_SAMPLE_UPLOAD_MODE``:
+
+- ``allowlist`` (default): only bearer-verified subjects on the
+  ``VOICE_SAMPLE_UPLOAD_USER_IDS`` allowlist (the founder).
+- ``consented`` (founder decision 2026-10-10): additionally any bearer-verified
+  subject (account or anonymous device identity) whose app declares that the
+  tester said yes to the one-time beta consent question (``consent=true``).
+
+Everyone else gets 403 before anything is validated or stored. Every uploader
+is capped at ``VOICE_SAMPLE_DAILY_CAP`` recordings per rolling 24 h (429), so a
+buggy client cannot flood the bucket.
 
 ``GET /voice-samples`` — admin-key gated list with presigned audio URLs, read
 by ``scripts/voice_replay.py`` (and later the labeling page, track 197.3).
@@ -19,12 +28,13 @@ import logging
 import os
 import re
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from ...auth.identity import AuthSubject
@@ -42,6 +52,11 @@ from ..deps import get_auth_sessionmaker, require_auth_or_grace
 logger = logging.getLogger(__name__)
 
 ALLOWLIST_ENV = "VOICE_SAMPLE_UPLOAD_USER_IDS"
+MODE_ENV = "VOICE_SAMPLE_UPLOAD_MODE"
+DAILY_CAP_ENV = "VOICE_SAMPLE_DAILY_CAP"
+# A beta tester answers well under 100 questions a day; 300 only stops a client
+# stuck in an upload loop.
+DEFAULT_DAILY_CAP = 300
 # The app caps a capture at the dead-air cap (~15 s ≈ 0.5 MB at 16 kHz mono);
 # 5 MB leaves room for a long answer and nothing more.
 AUDIO_MAX_BYTES = 5 * 1024 * 1024
@@ -89,12 +104,28 @@ def upload_allowlist() -> set[str]:
     return {part.strip() for part in raw.split(",") if part.strip()}
 
 
+def consented_mode() -> bool:
+    """True only for the exact value ``consented``; anything else (unset, a
+    typo) keeps the founder-only allowlist, so a bad secret fails closed."""
+    return os.getenv(MODE_ENV, "").strip().lower() == "consented"
+
+
+def daily_cap() -> int:
+    raw = os.getenv(DAILY_CAP_ENV, "").strip()
+    return int(raw) if raw.isdigit() else DEFAULT_DAILY_CAP
+
+
 def require_sample_uploader(
     subject: AuthSubject = Depends(require_auth_or_grace),
+    consent: bool = Form(False),
 ) -> AuthSubject:
-    """Only a verified bearer whose subject is allowlisted. The legacy grace
-    pass-through (``authenticated=False``) never qualifies."""
-    if not subject.authenticated or subject.subject_id not in upload_allowlist():
+    """A verified bearer that is allowlisted, or (consented mode) one whose app
+    declares the tester's consent. The legacy grace pass-through
+    (``authenticated=False``) never qualifies."""
+    allowed = subject.authenticated and (
+        subject.subject_id in upload_allowlist() or (consented_mode() and consent)
+    )
+    if not allowed:
         # The subject id in the log is how the founder finds his own id to add
         # to the allowlist; it is an opaque anon/account id, not personal data.
         logger.info(
@@ -199,6 +230,11 @@ async def upload_voice_sample(
     if existing is not None:
         return VoiceSampleUploadResponse(id=str(existing), duplicate=True)
 
+    # Checked after the duplicate lookup: a retry of a stored recording is
+    # still answered as a duplicate, so the app can delete its copy.
+    if await _uploads_last_day(sessionmaker, subject.subject_id) >= daily_cap():
+        raise HTTPException(status_code=429, detail="Daily voice sample limit reached")
+
     row = VoiceSample(
         id=uuid.uuid4(),
         user_id=subject.subject_id,
@@ -244,6 +280,18 @@ async def _existing_id(sessionmaker, key: str):
                 select(VoiceSample.id).where(VoiceSample.r2_key == key)
             )
         ).scalar_one_or_none()
+
+
+async def _uploads_last_day(sessionmaker, user_id: str) -> int:
+    since = datetime.now(timezone.utc) - timedelta(days=1)
+    async with sessionmaker() as session:
+        return (
+            await session.execute(
+                select(func.count())
+                .select_from(VoiceSample)
+                .where(VoiceSample.user_id == user_id, VoiceSample.created_at >= since)
+            )
+        ).scalar_one()
 
 
 async def _remove_orphan(storage: VoiceSampleStorage, key: str) -> None:

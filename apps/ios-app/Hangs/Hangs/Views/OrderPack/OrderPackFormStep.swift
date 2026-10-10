@@ -114,7 +114,9 @@ struct OrderPackFormStep: View {
 
     private func toggleDictation() {
         Task {
-            await dictation.toggle(languageCode: viewModel.language) { segment in
+            // Capture the view model, not this struct: the struct holds
+            // `dictation`, which stores the closure — a retain cycle.
+            await dictation.toggle(languageCode: viewModel.language) { [viewModel] segment in
                 viewModel.prompt = TextDictation.appending(segment, to: viewModel.prompt)
             }
         }

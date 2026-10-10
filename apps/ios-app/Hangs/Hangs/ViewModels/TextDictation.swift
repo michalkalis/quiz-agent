@@ -183,7 +183,7 @@ final class TextDictation: ObservableObject {
         let deadline = Date().addingTimeInterval(1.0)
         while Date() < deadline {
             if partialTranscript.isEmpty { return }
-            try? await Task.sleep(nanoseconds: 20_000_000)
+            try? await Task.sleep(for: .milliseconds(20))
         }
     }
 
@@ -192,7 +192,7 @@ final class TextDictation: ObservableObject {
         capTask = Task { [weak self] in
             guard let self else { return }
             let seconds = self.maxDictationSeconds
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled, self.micState == .dictating else { return }
             self.didHitDictationCap = true
             await self.stop()

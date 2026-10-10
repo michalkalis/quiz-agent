@@ -37,9 +37,11 @@ docs/testing/runs/haiku-eval-2026-10-10 — wrong "incorrect" verdicts 9 → 1 o
 rollback is one Fly secret (``=gpt-4o-mini``). The Claude call is fail-safe:
 no key, an error, a timeout or an unusable reply sends that one call to
 ``FALLBACK_MODEL`` on the path above, unchanged — so the switch can never cost
-a player a verdict. The Claude attempt gets one ``CLAUDE_TIMEOUT_S`` try (no
-retry) before falling back: 8 s + the 12 s fallback budget = 20 s, still inside
-iOS's 30 s.
+a player a verdict. The Claude attempt and its fallback share ONE
+``CALL_BUDGET_S`` deadline per call: Claude gets one try of at most
+``CLAUDE_TIMEOUT_S`` (6 s, no retry; Haiku p90 was 1.2–1.8 s), the fallback
+gets whatever is left (≥ 6 s, enough for gpt-4o-mini's p95 of 2.2–3.2 s). So a
+call still never exceeds 12 s and the two-call worst case above stays 24 s.
 """
 
 from __future__ import annotations
@@ -76,7 +78,8 @@ FALLBACK_MODEL = "gpt-4o-mini"
 CLAUDE_EFFORT = "low"
 # Room for adaptive thinking plus the parser's JSON (~160 tokens at low).
 CLAUDE_MAX_TOKENS = 2048
-CLAUDE_TIMEOUT_S = 8.0
+# Must leave the fallback enough of CALL_BUDGET_S to answer (see docstring).
+CLAUDE_TIMEOUT_S = 6.0
 
 _anthropic_llm: Any = None
 _fallback_warned: set[str] = set()
@@ -94,24 +97,31 @@ def client() -> openai.AsyncOpenAI:
     )
 
 
-async def complete(llm: Any, *, stage: str, **request: Any) -> Any:
+async def complete(
+    llm: Any, *, stage: str, claude_llm: Any = None, **request: Any
+) -> Any:
     """``llm.chat.completions.create(**request)`` within ``CALL_BUDGET_S``.
 
     Raises ``JudgeUnavailable`` when the provider errors or does not answer in
     time, so the submit flow can ask the player again instead of failing.
 
-    A Claude ``model`` goes to the Anthropic API first (#196); if that does not
-    produce a reply, the same request runs on ``FALLBACK_MODEL`` through
-    ``llm`` exactly as before the switch.
+    A Claude ``model`` goes to the Anthropic API first (#196) — through
+    ``claude_llm`` when given (an injected Anthropic-SDK-shaped client, e.g.
+    the eval harness's recorder), else the shared direct client. If that does
+    not produce a reply, the same request runs on ``FALLBACK_MODEL`` through
+    ``llm`` exactly as before the switch, in whatever is left of the one
+    ``CALL_BUDGET_S`` deadline.
     """
+    deadline = time.monotonic() + CALL_BUDGET_S
     if anthropic_route.is_claude_model(request.get("model") or ""):
-        reply = await _complete_claude(stage, request)
+        reply = await _complete_claude(stage, request, claude_llm)
         if reply is not None:
             return reply
         request = {**request, "model": llm_factory.resolve_model(FALLBACK_MODEL)}
     try:
         return await asyncio.wait_for(
-            llm.chat.completions.create(**request), timeout=CALL_BUDGET_S
+            llm.chat.completions.create(**request),
+            timeout=max(0.0, deadline - time.monotonic()),
         )
     except (TimeoutError, openai.APIError) as exc:
         _report(stage, request.get("model"), exc)
@@ -127,7 +137,9 @@ def _anthropic() -> Any:
     return _anthropic_llm
 
 
-async def _complete_claude(stage: str, request: dict[str, Any]) -> Any | None:
+async def _complete_claude(
+    stage: str, request: dict[str, Any], claude_llm: Any
+) -> Any | None:
     """The request on the Anthropic API, shaped like an OpenAI response, or
     ``None`` when the caller must fall back. Haiku 5.5 rejects ``temperature``
     (400), so it is never sent; the prompts go out unchanged."""
@@ -138,7 +150,7 @@ async def _complete_claude(stage: str, request: dict[str, Any]) -> Any | None:
     messages = request["messages"]
     try:
         reply = await asyncio.wait_for(
-            _anthropic().messages.create(
+            (claude_llm or _anthropic()).messages.create(
                 model=anthropic_route.anthropic_model_id(model),
                 max_tokens=CLAUDE_MAX_TOKENS,
                 system="\n".join(

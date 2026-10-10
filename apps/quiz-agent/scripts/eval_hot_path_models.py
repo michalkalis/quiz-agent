@@ -6,11 +6,13 @@ Only the client + model id are swapped:
 
 - ``gpt-4o-mini``  — prod today: OpenAI SDK client via the active gateway
   (run with ``LLM_GATEWAY=openrouter`` for prod parity), temperature 0.3.
-- ``claude-haiku-5-5`` — direct Anthropic API (``AsyncAnthropic``) behind a thin
-  adapter exposing ``chat.completions.create`` so ``hot_path_llm.complete`` and
-  the response parsing stay untouched. Haiku 5.5 rejects non-default
-  ``temperature`` (400), so the adapter drops it — the one request change needed
-  for the call to work at all. ``@low`` variants add ``output_config.effort=low``.
+- ``claude-haiku-5-5`` — the production Claude path of ``hot_path_llm.complete``
+  (#196: direct Anthropic API, no ``temperature``, effort ``low``). The arm's
+  recorder is injected as the roles' ``claude_client``, so it records exactly
+  the request prod sends. ``@medium`` / ``@low`` override ``output_config``
+  effort; no suffix = prod's request untouched. A Claude failure surfaces as
+  an error for that case — the gpt-4o-mini fallback is disabled in the eval so
+  it can never pass off a fallback verdict as Claude's.
 
 Cases the deterministic layers decide (exact/alternative/sound-alike match,
 MCQ option matcher, parser fast paths) never reach a model; a stub-client dry
@@ -18,7 +20,7 @@ run finds them and they are reported as excluded, not scored.
 
 Usage (from apps/quiz-agent, env loaded):
     LLM_GATEWAY=openrouter python scripts/eval_hot_path_models.py CASES.jsonl OUT_DIR \
-        --env-file ../../.env [--arms gpt-4o-mini,claude-haiku-5-5]
+        --env-file ../../.env [--arms gpt-4o-mini,claude-haiku-5-5@medium,claude-haiku-5-5@low]
 """
 
 from __future__ import annotations
@@ -68,75 +70,87 @@ def _question(case) -> Question:
 
 
 class Recorder:
-    """Wraps a ``chat.completions.create`` callable, logging latency + usage."""
+    """Records latency + token usage of every model call one arm makes.
 
-    def __init__(self, create, base_model: str):
-        self._create = create
+    OpenAI arms wrap ``chat.completions.create`` (injected as the roles'
+    ``client``). Claude arms wrap the Anthropic ``messages.create`` that the
+    production hot path calls (injected as the roles' ``claude_client``), with
+    the same per-attempt timeout and no retry as prod.
+    """
+
+    def __init__(self, base_model: str, effort: str | None = None):
+        from app import hot_path_llm
+
         self.base_model = base_model
+        self.effort = effort
         self.calls: list[dict] = []
-        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._timed))
+        self.is_claude = base_model.startswith("claude-")
+        if self.is_claude:
+            from anthropic import AsyncAnthropic
 
-    async def _timed(self, **request):
+            self._anthropic = AsyncAnthropic(
+                timeout=hot_path_llm.CLAUDE_TIMEOUT_S, max_retries=0
+            )
+            self.messages = SimpleNamespace(create=self._claude)
+        else:
+            self._openai = hot_path_llm.client()
+            self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._gpt))
+
+    async def _claude(self, **request):
+        if self.effort:
+            request = {**request, "output_config": {"effort": self.effort}}
         t0 = time.perf_counter()
-        resp = await self._create(**request)
-        dt = time.perf_counter() - t0
+        msg = await self._anthropic.messages.create(**request)
+        text = "".join(b.text for b in msg.content if b.type == "text")
+        self._record(t0, msg.usage.input_tokens, msg.usage.output_tokens, text)
+        return msg
+
+    async def _gpt(self, **request):
+        t0 = time.perf_counter()
+        resp = await self._openai.chat.completions.create(**request)
         u = resp.usage
-        self.calls.append(
-            {
-                "latency_s": dt,
-                "in": u.prompt_tokens,
-                "out": u.completion_tokens,
-                "raw": resp.choices[0].message.content,
-            }
+        self._record(
+            t0, u.prompt_tokens, u.completion_tokens, resp.choices[0].message.content
         )
         return resp
+
+    def _record(self, t0: float, tokens_in: int, tokens_out: int, raw: str) -> None:
+        self.calls.append(
+            {
+                "latency_s": time.perf_counter() - t0,
+                "in": tokens_in,
+                "out": tokens_out,
+                "raw": raw,
+            }
+        )
 
     def spend(self) -> float:
         pin, pout = PRICES[self.base_model]
         return sum(c["in"] * pin + c["out"] * pout for c in self.calls) / 1e6
 
 
-class AnthropicAdapter:
-    """``chat.completions.create`` → Anthropic Messages API (direct)."""
+async def _no_fallback(**request):
+    raise RuntimeError("Claude call failed; eval does not fall back to gpt-4o-mini")
 
-    def __init__(self, effort: str | None):
-        from anthropic import AsyncAnthropic
 
-        # Mirror hot_path_llm: 8 s per attempt, 1 retry.
-        self._client = AsyncAnthropic(timeout=8.0, max_retries=1)
-        self._effort = effort
-
-    async def create(self, *, model, messages, temperature=None, **_):
-        system = "\n".join(m["content"] for m in messages if m["role"] == "system")
-        kwargs = {}
-        if self._effort:
-            kwargs["output_config"] = {"effort": self._effort}
-        from quiz_shared.llm.anthropic_route import anthropic_model_id
-
-        msg = await self._client.messages.create(
-            model=anthropic_model_id(model),
-            max_tokens=4096,
-            system=system,
-            messages=[m for m in messages if m["role"] != "system"],
-            **kwargs,
-        )
-        text = "".join(b.text for b in msg.content if b.type == "text")
-        return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content=text))],
-            usage=SimpleNamespace(
-                prompt_tokens=msg.usage.input_tokens,
-                completion_tokens=msg.usage.output_tokens,
-            ),
-        )
+NO_FALLBACK = SimpleNamespace(
+    chat=SimpleNamespace(completions=SimpleNamespace(create=_no_fallback))
+)
 
 
 def make_recorder(arm: str) -> Recorder:
     base, _, effort = arm.partition("@")
-    if base.startswith("claude-"):
-        return Recorder(AnthropicAdapter(effort or None).create, base)
-    from app import hot_path_llm
+    return Recorder(base, effort or None)
 
-    return Recorder(hot_path_llm.client().chat.completions.create, base)
+
+def attach(rec: Recorder, *roles) -> None:
+    """Point each role at the arm's recorder (see ``Recorder``)."""
+    for role in roles:
+        if rec.is_claude:
+            role.claude_client = rec
+            role.client = NO_FALLBACK
+        else:
+            role.client = rec
 
 
 class StubCreate:
@@ -204,7 +218,8 @@ async def dry_run(cases) -> set[str]:
     reach = set()
     for case in cases:
         stub = StubCreate()
-        ev, pa = AnswerEvaluator(), InputParser()
+        # Non-Claude model id: the stub must be the only client ever called.
+        ev, pa = AnswerEvaluator(model="gpt-4o-mini"), InputParser(model="gpt-4o-mini")
         ev.client = pa.client = SimpleNamespace(
             chat=SimpleNamespace(completions=SimpleNamespace(create=stub))
         )
@@ -225,7 +240,7 @@ async def run_arm(arm: str, cases, concurrency: int) -> list[dict]:
             if rec.spend() > SPEND_CAP_USD:
                 raise SystemExit(f"spend cap hit on {arm}")
             ev, pa = AnswerEvaluator(model=base), InputParser(model=base)
-            ev.client = pa.client = rec
+            attach(rec, ev, pa)
             n0 = len(rec.calls)
             try:
                 res = await run_case(case, ev, pa)

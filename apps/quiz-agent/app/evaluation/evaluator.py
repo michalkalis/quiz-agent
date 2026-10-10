@@ -5,7 +5,7 @@ Ported from graph.py:445-518
 
 import logging
 import re
-from typing import Tuple
+from typing import Tuple, Any
 
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
@@ -39,6 +39,9 @@ class AnswerEvaluator:
             temperature: Lower temperature for deterministic evaluation
         """
         self.client = hot_path_llm.client()
+        # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
+        # client. Injected by the eval harness to record real Claude calls.
+        self.claude_client: Any = None
         self.model = llm_factory.resolve_model(
             model or hot_path_llm.role_model("EVAL_MODEL")
         )
@@ -224,6 +227,7 @@ Respond with EXACTLY one of these words: correct, partially_correct, partially_i
         # in seconds; every deterministic path above has already run.
         response = await hot_path_llm.complete(
             self.client,
+            claude_llm=self.claude_client,
             stage="evaluate",
             model=self.model,
             temperature=self.temperature,

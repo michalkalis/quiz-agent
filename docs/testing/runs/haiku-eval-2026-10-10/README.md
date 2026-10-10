@@ -52,7 +52,9 @@ Reproduce (from `apps/quiz-agent`):
 LLM_GATEWAY=openrouter python scripts/eval_hot_path_models.py \
   ../../docs/testing/runs/haiku-eval-2026-10-10/cases.jsonl \
   ../../docs/testing/runs/haiku-eval-2026-10-10 \
-  --arms gpt-4o-mini,claude-haiku-5-5,claude-haiku-5-5@low --env-file ../../.env
+  --arms gpt-4o-mini,claude-haiku-5-5@medium,claude-haiku-5-5@low --env-file ../../.env
 ```
+
+The 2026-10-10 run named the medium arm plain `claude-haiku-5-5`; since the switch (#196) the unsuffixed arm sends prod's request (effort low), so `@medium` reproduces it.
 
 Spend: $0.103 total (gpt-4o-mini $0.030, Haiku $0.039, Haiku low $0.034), cap was $1.

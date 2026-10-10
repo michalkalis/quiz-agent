@@ -26,6 +26,7 @@ import pytest
 from app import hot_path_llm
 from app.evaluation.evaluator import AnswerEvaluator
 from app.input.parser import InputParser
+from app.quiz.errors import JudgeUnavailable
 from quiz_shared.models.question import Question
 
 pytestmark = pytest.mark.asyncio
@@ -248,3 +249,135 @@ async def test_env_rolls_a_role_back_to_gpt_4o_mini(monkeypatch):
     )
     assert claude.sent == []
     assert InputParser().model == "claude-haiku-5-5"  # roles switch independently
+
+
+# ── One deadline per call (review on #331) ───────────────────────────────────
+
+
+async def test_claude_try_leaves_the_fallback_room_inside_one_call_budget():
+    """The module's invariant: one call ≤ CALL_BUDGET_S, so parse + evaluate
+    stays ≤ 24 s, inside iOS's 30 s submit timeout. The Claude try must leave
+    the fallback enough of that budget to answer (gpt-4o-mini p95 ≈ 3 s)."""
+    assert 2 * hot_path_llm.CALL_BUDGET_S <= 24
+    assert hot_path_llm.CALL_BUDGET_S - hot_path_llm.CLAUDE_TIMEOUT_S >= 5
+
+
+def _openai_create(create):
+    return SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))
+    )
+
+
+async def _hang_openai(**kwargs):
+    await asyncio.sleep(30)
+
+
+async def test_claude_and_fallback_share_one_deadline(monkeypatch):
+    """Claude hangs, then the fallback hangs: the call still ends at
+    CALL_BUDGET_S, not CLAUDE_TIMEOUT_S + CALL_BUDGET_S."""
+    monkeypatch.setattr(hot_path_llm, "CALL_BUDGET_S", 0.3)
+    monkeypatch.setattr(hot_path_llm, "CLAUDE_TIMEOUT_S", 0.2)
+    _with_claude(monkeypatch, _hang)
+    evaluator = AnswerEvaluator()
+    evaluator.client = _openai_create(_hang_openai)
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+
+    with pytest.raises(JudgeUnavailable):
+        await evaluator.evaluate("Kolumbia", _question("Venezuela", "sk"))
+
+    assert loop.time() - started < 0.4
+
+
+async def test_two_call_submit_worst_case_is_two_call_budgets(monkeypatch):
+    """The documented worst case, scaled down: a classifier whose Claude try
+    times out and whose fallback answers just before the deadline, then a
+    judge that is down on both providers — ≤ 2 × CALL_BUDGET_S in total
+    (24 s at full scale), never Claude + fallback per call (40 s)."""
+    budget = 0.3
+    monkeypatch.setattr(hot_path_llm, "CALL_BUDGET_S", budget)
+    monkeypatch.setattr(hot_path_llm, "CLAUDE_TIMEOUT_S", 0.2)
+    _with_claude(monkeypatch, _hang)
+
+    async def _late_answer(**kwargs):
+        await asyncio.sleep(0.08)
+        content = (
+            '{"intents": [{"intent_type": "answer", '
+            '"extracted_data": {"answer": "Kolumbia"}}]}'
+        )
+        message = SimpleNamespace(content=content)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    parser, evaluator = InputParser(), AnswerEvaluator()
+    parser.client = _openai_create(_late_answer)
+    evaluator.client = _openai_create(_hang_openai)
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+
+    intents = await parser.parse("hmm asi to bude Kolumbia", "Ktorá krajina?", "asking")
+    with pytest.raises(JudgeUnavailable):
+        await evaluator.evaluate(
+            intents[0]["extracted_data"]["answer"], _question("Venezuela", "sk")
+        )
+
+    assert loop.time() - started < 2 * budget + 0.1
+
+
+# ── Injected Claude client (eval harness seam, review on #331) ───────────────
+
+
+async def test_an_injected_claude_client_is_the_one_called(monkeypatch):
+    """The eval harness measures real Claude latency/cost by injecting its
+    recorder; the shared client must not bypass it."""
+    shared = _with_claude(monkeypatch, _replying("incorrect"))
+    injected = FakeAnthropic(_replying("correct"))
+    evaluator = AnswerEvaluator()
+    evaluator.client = FakeOpenAI("incorrect")
+    evaluator.claude_client = injected
+
+    result = await evaluator.evaluate("Venecuela", _question("Venezuela", "sk"))
+
+    assert result == ("correct", 1.0)
+    assert len(injected.sent) == 1
+    assert shared.sent == []
+
+
+async def test_eval_harness_records_claude_calls_per_effort_arm(monkeypatch):
+    """scripts/eval_hot_path_models.py: a Claude arm must see every Claude
+    call (latency, tokens → spend cap) and its effort suffix must reach the
+    request, otherwise @medium and @low silently measure the same thing."""
+    import importlib.util
+
+    import anthropic
+
+    class _FakeAsyncAnthropic:
+        def __init__(self, **kwargs):
+            self.sent: list[dict] = []
+            self.messages = SimpleNamespace(create=self._create)
+
+        async def _create(self, **request):
+            self.sent.append(request)
+            reply = _claude_reply("correct")
+            reply.usage = SimpleNamespace(input_tokens=1000, output_tokens=20)
+            return reply
+
+    monkeypatch.setattr(anthropic, "AsyncAnthropic", _FakeAsyncAnthropic)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    path = os.path.join(
+        os.path.dirname(__file__), "..", "scripts", "eval_hot_path_models.py"
+    )
+    spec = importlib.util.spec_from_file_location("eval_hot_path_models", path)
+    harness = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(harness)
+
+    for effort in ("medium", "low"):
+        rec = harness.make_recorder(f"claude-haiku-5-5@{effort}")
+        evaluator = AnswerEvaluator(model="claude-haiku-5-5")
+        harness.attach(rec, evaluator)
+
+        result = await evaluator.evaluate("Venecuela", _question("Venezuela", "sk"))
+
+        assert result == ("correct", 1.0)
+        assert len(rec.calls) == 1
+        assert rec._anthropic.sent[0]["output_config"] == {"effort": effort}
+        assert rec.spend() > 0

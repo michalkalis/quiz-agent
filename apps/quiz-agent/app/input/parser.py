@@ -42,6 +42,9 @@ class InputParser:
             temperature: Lower temperature for more deterministic parsing
         """
         self.client = hot_path_llm.client()
+        # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
+        # client. Injected by the eval harness to record real Claude calls.
+        self.claude_client: Any = None
         self.model = llm_factory.resolve_model(
             model or hot_path_llm.role_model("PARSE_MODEL")
         )
@@ -150,6 +153,7 @@ class InputParser:
         # in seconds instead of hanging the submit.
         response = await hot_path_llm.complete(
             self.client,
+            claude_llm=self.claude_client,
             stage="parse",
             model=self.model,
             temperature=self.temperature,

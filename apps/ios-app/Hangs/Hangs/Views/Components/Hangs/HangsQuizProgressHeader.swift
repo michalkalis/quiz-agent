@@ -26,7 +26,9 @@ import SwiftUI
 
 struct HangsQuizProgressHeader: View {
     /// Display category, rendered lowercase (A3) — already localized by the caller.
-    let category: String
+    /// #194: nil when the screen prints the category on its card chip; the
+    /// header is then one row, progress + counter.
+    var category: String?
     /// 1-based index of the question ON SCREEN.
     let current: Int
     /// Questions in the set.
@@ -41,37 +43,58 @@ struct HangsQuizProgressHeader: View {
     static let maxSegments = 15
 
     var body: some View {
-        VStack(spacing: 6) {
-            if total > 0, total <= Self.maxSegments {
-                HangsSegmentedProgress(current: current, total: total, tint: tint)
-            } else {
-                // Same teal as the segments — the fallback is the same header,
-                // drawn differently, not a different progress indicator.
-                HangsProgressBar(
-                    progress: Self.linearProgress(current: current, total: total),
-                    tint: tint ?? Theme.Hangs.Colors.ink
-                )
-            }
+        if let category {
+            VStack(spacing: 6) {
+                progress
+                    .padding(.horizontal, Theme.Hangs.Spacing.xl)
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    Text(verbatim: category.lowercased())
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .accessibilityIdentifier("question.category")
 
+                    Spacer(minLength: 12)
+
+                    counter
+                }
+                // A3: smaller than the 11pt row it replaces — the header is a
+                // reference, not a headline.
+                .font(.hangsMono(10, weight: .medium))
+                .tracking(1.4)
+                .padding(.horizontal, Theme.Hangs.Spacing.xl)
+            }
+        } else {
+            // #194 R-Question: segments and the counter share one row.
             HStack(spacing: Theme.Hangs.Spacing.sm) {
-                Text(verbatim: category.lowercased())
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .accessibilityIdentifier("question.category")
-
-                Spacer(minLength: 12)
-
-                Text(verbatim: Self.counterText(current: current, total: total))
-                    .foregroundColor(isRecording ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.muted)
-                    .accessibilityIdentifier("question.counter")
+                progress
+                counter
+                    .font(.hangsOverline)
             }
-            // A3: smaller than the 11pt row it replaces — the header is a
-            // reference, not a headline.
-            .font(.hangsMono(10, weight: .medium))
-            .tracking(1.4)
-            .padding(.horizontal, Theme.Hangs.Spacing.xl)
+            .padding(.horizontal, Theme.Hangs.Spacing.lg)
         }
+    }
+
+    @ViewBuilder
+    private var progress: some View {
+        if total > 0, total <= Self.maxSegments {
+            HangsSegmentedProgress(current: current, total: total, tint: tint)
+        } else {
+            // Same teal as the segments — the fallback is the same header,
+            // drawn differently, not a different progress indicator.
+            HangsProgressBar(
+                progress: Self.linearProgress(current: current, total: total),
+                tint: tint ?? Theme.Hangs.Colors.ink
+            )
+        }
+    }
+
+    private var counter: some View {
+        Text(verbatim: Self.counterText(current: current, total: total))
+            .foregroundColor(isRecording || category == nil ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.muted)
+            .lineLimit(1)
+            .fixedSize()
+            .accessibilityIdentifier("question.counter")
     }
 
     /// 1-based fill for the linear fallback: question 1 of 10 is already 1/10
@@ -93,7 +116,6 @@ struct HangsSegmentedProgress: View {
     let current: Int
     let total: Int
     var tint: Color?
-
     /// Is the segment at this 0-based position lit? Question 1 lights segment 0.
     func isFilled(_ index: Int) -> Bool { index < current }
 
@@ -107,7 +129,6 @@ struct HangsSegmentedProgress: View {
                     .frame(height: 4)
             }
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .animation(.easeInOut(duration: 0.25), value: current)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Question \(current) of \(total)"))
@@ -121,6 +142,7 @@ struct HangsSegmentedProgress: View {
             HangsQuizProgressHeader(category: "Food and everyday life", current: 1, total: 10)
             HangsQuizProgressHeader(category: "Geography", current: 10, total: 10, isRecording: true)
             HangsQuizProgressHeader(category: "Long set", current: 7, total: 30)
+            HangsQuizProgressHeader(current: 4, total: 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.top, 40)

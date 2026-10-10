@@ -130,7 +130,8 @@ struct MCQOptionPicker: View {
     private var optionRows: some View {
         // #174 C2: this path now carries four rows, not just the T/F pair — a
         // short container tightens the gaps so they still fit above the fold.
-        VStack(spacing: compact ? Theme.Hangs.Spacing.xs : Theme.Hangs.Spacing.sm) {
+        // #194 R-MCQ: one 8pt gap for rows and tiles alike — content first.
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
             ForEach(options, id: \.key) { option in
                 AnswerOption(
                     key: option.key,
@@ -155,7 +156,7 @@ struct MCQOptionPicker: View {
         }
     }
 
-    private var gridGap: CGFloat { compact ? 10 : 12 }
+    private var gridGap: CGFloat { Theme.Hangs.Spacing.xs }
 
     private var optionGrid: some View {
         LazyVGrid(

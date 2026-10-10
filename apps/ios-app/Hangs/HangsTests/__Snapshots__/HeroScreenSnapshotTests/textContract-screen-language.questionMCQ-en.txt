@@ -1,6 +1,6 @@
 # texts
-adults
 1/10
+ADULTS
 Which statement about how the human body grows is correct?
 THINK. LISTENING IN 27 S
 A
@@ -16,11 +16,11 @@ Skip
 Settings
 # identifiers
 question.progress
-question.category
 question.counter
+question.category
+question.replayGlyph
 question.replay
 question.text
-question.replayGlyph
 listen-bar
 listen-bar.dismiss
 mcq.option.a

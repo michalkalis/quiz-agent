@@ -19,22 +19,26 @@ import ViewInspector
 struct AnswerOptionInspectorTests {
     // MARK: - State → color mapping (why: each state must read as its design role)
 
-    @Test("Default state: subtle border, soft-purple badge (accentPrimarySoft token), purple letter")
+    /// #194 R-MCQ: an option at rest is calm — ink letter on a page-grey plate;
+    /// colour is kept for the one main action of the screen.
+    @Test("Default state: subtle border, page-grey badge (bgInset token), ink letter")
     func defaultStateColors() {
         let view = AnswerOption(key: "a", value: "Mars", state: .default)
         #expect(view.borderColor == Theme.Hangs.Colors.subtleBorder)
-        #expect(view.badgeFill == Theme.Hangs.Colors.accentPrimarySoft)
-        #expect(view.letterColor == Theme.Hangs.Colors.accentPrimary)
+        #expect(view.badgeFill == Theme.Hangs.Colors.bgInset)
+        #expect(view.letterColor == Theme.Hangs.Colors.ink)
         #expect(view.statusSymbol == nil)
         #expect(view.statusIconColor == nil)
     }
 
-    @Test("Selected state: purple border + solid purple badge + white letter, no status badge")
+    /// #194: a chosen option turns ink (the action colour), and its letter takes
+    /// the on-action colour so it stays readable when ink flips light in dark mode.
+    @Test("Selected state: ink border + solid ink badge + on-action letter, no status badge")
     func selectedStateColors() {
         let view = AnswerOption(key: "b", value: "Jupiter", state: .selected)
-        #expect(view.borderColor == Theme.Hangs.Colors.accentPrimary)
-        #expect(view.badgeFill == Theme.Hangs.Colors.accentPrimary)
-        #expect(view.letterColor == .white)
+        #expect(view.borderColor == Theme.Hangs.Colors.action)
+        #expect(view.badgeFill == Theme.Hangs.Colors.action)
+        #expect(view.letterColor == Theme.Hangs.Colors.textOnAction)
         #expect(view.statusSymbol == nil)
         #expect(view.statusIconColor == nil)
     }
@@ -138,13 +142,13 @@ struct AnswerTileInspectorTests {
     @Test("Shared state → color mapping (single source of truth)")
     func sharedStateMapping() {
         #expect(AnswerOption.State.default.borderColor == Theme.Hangs.Colors.subtleBorder)
-        #expect(AnswerOption.State.default.badgeFill == Theme.Hangs.Colors.accentPrimarySoft)
-        #expect(AnswerOption.State.default.letterColor == Theme.Hangs.Colors.accentPrimary)
+        #expect(AnswerOption.State.default.badgeFill == Theme.Hangs.Colors.bgInset)
+        #expect(AnswerOption.State.default.letterColor == Theme.Hangs.Colors.ink)
         #expect(AnswerOption.State.default.statusSymbol == nil)
 
-        #expect(AnswerOption.State.selected.borderColor == Theme.Hangs.Colors.accentPrimary)
-        #expect(AnswerOption.State.selected.badgeFill == Theme.Hangs.Colors.accentPrimary)
-        #expect(AnswerOption.State.selected.letterColor == .white)
+        #expect(AnswerOption.State.selected.borderColor == Theme.Hangs.Colors.action)
+        #expect(AnswerOption.State.selected.badgeFill == Theme.Hangs.Colors.action)
+        #expect(AnswerOption.State.selected.letterColor == Theme.Hangs.Colors.textOnAction)
 
         #expect(AnswerOption.State.correct.borderColor == Theme.Hangs.Colors.greenCheck)
         #expect(AnswerOption.State.correct.statusSymbol == "checkmark")

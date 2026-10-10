@@ -218,6 +218,7 @@ struct HeroScreenSnapshotTests {
         // Pinned, not inherited: the app ships dark-first and the CI simulator
         // boots in light mode with whatever text size the image left behind.
         let view = await screen.make()
+            .environment(\.hangsCardMotion, false)
             .environment(\.locale, language.locale)
             .environment(\.layoutDirection, .leftToRight)
             .environment(\.colorScheme, .dark)
@@ -245,6 +246,7 @@ struct HeroScreenSnapshotTests {
         // #194 B: the redesign is light-first, so the default size is frozen in
         // light too (the dark pair above stays; layout does not depend on it).
         let light = await screen.make()
+            .environment(\.hangsCardMotion, false)
             .environment(\.locale, language.locale)
             .environment(\.layoutDirection, .leftToRight)
             .environment(\.colorScheme, .light)

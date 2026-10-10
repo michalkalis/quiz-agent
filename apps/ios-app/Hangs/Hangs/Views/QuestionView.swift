@@ -25,6 +25,7 @@ struct QuestionView: View {
     var debugSurfaces: Bool = BuildChannel.debugSurfacesEnabled()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.hangsCardMotion) private var cardMotion
     @State private var showEndQuizConfirmation = false
     @State private var showQuizSettings = false
     /// #173: the ⋯ menu's "Rate question" row presents the #155 panel from here
@@ -52,11 +53,31 @@ struct QuestionView: View {
     @State private var showOptionsScrollCue = false
     /// #188 G9: the MCQ stem's natural height — its floor grows to it (capped).
     @State private var stemContentHeight: CGFloat = 0
+    /// #194: what the card adds around the question (chip row + insets),
+    /// measured — it grows with the text size, so it cannot be a constant.
+    @State private var stemCardHeight: CGFloat = 0
+    @State private var stemRegionHeight: CGFloat = 0
+    /// #194 B3: bumped once per question to play the card arrival. Starts at
+    /// rest, so a first render (and every snapshot) shows the card in place.
+    @State private var cardArrival = 0
 
     private enum Metrics {
         /// The most of the screen the MCQ question may claim before it scrolls:
         /// under half, so the options always keep the larger share.
         static let stemMaxShare: CGFloat = 0.45
+        /// #194 canvas: card, bar, options and buttons share one screen edge.
+        static let gutter = Theme.Hangs.Spacing.md
+        /// #194 canvas: the gap between the stacked blocks of the screen.
+        static let blockGap = Theme.Hangs.Spacing.sm
+        /// #194 canvas `.ghost`: the empty slot the next card will land in.
+        static let ghostDash = StrokeStyle(lineWidth: 1.5, dash: [6, 6])
+        /// The canvas question type has a slightly tighter tracking than SF's default.
+        static let questionTracking: CGFloat = -0.4
+        /// Canvas: the replay glyph is a 28pt plate, as tall as the category chip.
+        static let replayGlyph: CGFloat = 28
+        /// Canvas type steps used on this screen: body 17, small label 15.
+        static let bodySize: CGFloat = 17
+        static let captionSize: CGFloat = 15
     }
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
@@ -83,7 +104,7 @@ struct QuestionView: View {
             GeometryReader { geo in
                 let compact = geo.size.height <= 700
                 VStack(spacing: 0) {
-                    topChrome(question: viewModel.currentQuestion)
+                    topChrome
 
                     if viewModel.quizState == .awaitingQuestion {
                         awaitingQuestionBody
@@ -248,10 +269,11 @@ struct QuestionView: View {
     /// Under the toolbar: segmented 1-based progress over one small mono meta
     /// row. Replaces BOTH the merged MCQ row and the voice `metaRow` — one
     /// header, every question type.
-    private func topChrome(question: Question?) -> some View {
+    private var topChrome: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
+            // #194: the category is printed on the card chip, so the header is
+            // the one-row progress + counter of the canvas.
             HangsQuizProgressHeader(
-                category: question.map { Config.categoryDisplayName(for: $0.category) } ?? "",
                 current: viewModel.questionScreenNumber,
                 total: viewModel.questionScreenTotal,
                 // #122: the fill flips teal for the duration of a matched glow.
@@ -274,25 +296,31 @@ struct QuestionView: View {
     /// set continues on its own. No controls: there is nothing to do but wait,
     /// and the toolbar still offers the way out.
     private var awaitingQuestionBody: some View {
-        VStack(spacing: Theme.Hangs.Spacing.lg) {
-            Spacer()
+        VStack(spacing: Theme.Hangs.Spacing.md) {
             ProgressView()
                 .controlSize(.large)
-                .tint(Theme.Hangs.Colors.action)
+                .tint(Theme.Hangs.Colors.ink)
             Text("Preparing the next question…")
-                .font(.hangsBody(28, weight: .bold))
-                .foregroundColor(Theme.Hangs.Colors.ink)
+                .font(.hangsTitle)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Your pack is still being written. The quiz continues by itself the moment it lands.")
-                .font(.hangsBody(16))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsBody(Metrics.bodySize))
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer()
         }
-        .padding(.horizontal, 28)
+        .padding(Theme.Hangs.Spacing.xl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // #194 Bg-Awaiting: a dashed slot where the next card will land — the
+        // set visibly goes on, it is not over.
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+                .strokeBorder(Theme.Hangs.Colors.track, style: Metrics.ghostDash)
+        )
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.vertical, Metrics.blockGap)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("question.awaitingQuestion")
     }
@@ -300,25 +328,23 @@ struct QuestionView: View {
     // MARK: - Error banner
 
     private func errorBanner(_ error: String) -> some View {
-        HStack(spacing: Theme.Hangs.Spacing.xs) {
-            Image(systemName: "exclamationmark.triangle")
-            Text(error).font(.hangsBody(13))
-        }
-        .foregroundColor(Theme.Hangs.Colors.error)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Theme.Hangs.Colors.bgCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
-        )
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
-        .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
-        .accessibilityIdentifier("question.errorBanner")
+        Label(error, systemImage: "exclamationmark.triangle")
+            .font(.hangsBody(Metrics.captionSize, weight: .semibold))
+            .foregroundStyle(Theme.Hangs.Colors.error)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .fill(Theme.Hangs.Colors.bgCard)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
+                    .strokeBorder(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
+            )
+            .padding(.horizontal, Metrics.gutter)
+            .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
+            .accessibilityIdentifier("question.errorBanner")
     }
 
     // MARK: - Tap-to-replay question block
@@ -358,11 +384,86 @@ struct QuestionView: View {
     /// space", which left the driver with no sign the stem was tappable at all.
     private var replayGlyph: some View {
         Image(systemName: "arrow.counterclockwise")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(Theme.Hangs.Colors.muted)
+            .font(.hangsBody(Metrics.captionSize, weight: .semibold))
+            .foregroundStyle(Theme.Hangs.Category.chipText)
+            .frame(width: Metrics.replayGlyph, height: Metrics.replayGlyph)
+            .background(Circle().fill(Theme.Hangs.Category.chipFill))
             .opacity(viewModel.canReplayAudio ? 1 : 0.4)
             .accessibilityHidden(true)
             .accessibilityIdentifier("question.replayGlyph")
+    }
+
+    // MARK: - Question card (#194 "Sklo nad kartami")
+
+    /// The question printed on its category card (R-Question / R-MCQ): the chip
+    /// names the category, the replay glyph sits top-right. The question block
+    /// inside the card's scroll region is the tap-to-replay target (it fills
+    /// the region), and the glyph replays too.
+    ///
+    /// The replay button lives INSIDE the scroll view, never around it: a
+    /// scroll view inside a button label drops its content from the
+    /// accessibility tree, and `question.text` vanished for XCUITest and
+    /// VoiceOver alike (#316 CI).
+    private func questionCard(_ question: Question, @ViewBuilder content: @escaping () -> some View) -> some View {
+        HangsDeckCard(
+            categoryId: question.category,
+            categoryName: Config.categoryDisplayName(for: question.category),
+            categoryIdentifier: "question.category"
+        ) {
+            // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
+            Button {
+                Task { await viewModel.replayQuestionAudio() }
+            } label: {
+                replayGlyph
+            }
+            .buttonStyle(QuestionReplayButtonStyle())
+            .disabled(!viewModel.canReplayAudio)
+            .accessibilityHidden(true)
+        } content: {
+            content()
+        }
+        .hangsCardArrival(trigger: cardArrival)
+        // #194 B3: a new question deals a new card. `.task` runs after the first
+        // frame, so the card is drawn in place first (snapshots, Reduce Motion).
+        .task(id: question.id) {
+            guard cardMotion, !reduceMotion else { return }
+            cardArrival += 1
+        }
+    }
+
+    /// The tap-to-replay block: (image +) question text. A container keeps the
+    /// text its own accessibility element inside the button — a label that
+    /// resolves to one element is folded into the button, identifier and all.
+    /// `minHeight` lets the block fill the card's scroll region, so a tap
+    /// anywhere on the card body replays; a short question sits at its bottom.
+    private func replayableQuestion(_ question: Question, minHeight: CGFloat = 0) -> some View {
+        questionReplayTapTarget {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
+                // #68: image-type question — image above the text, scrolls with
+                // it. Text/TTS stays the driving-mode fallback.
+                if question.hasImage {
+                    ImageQuestionView(question: question)
+                }
+                questionText(question)
+            }
+            .accessibilityElement(children: .contain)
+            .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .bottomLeading)
+        }
+    }
+
+    /// The question in the card's type: the canvas title size, bold, in the
+    /// card's own text colour (set by `HangsDeckCard`).
+    private func questionText(_ question: Question) -> some View {
+        Text(question.question)
+            .font(.hangsTitle)
+            .tracking(Metrics.questionTracking)
+            .minimumScaleFactor(0.7)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // #188 G9 (D11): display type is already large; past this size it
+            // only pushed the question under the scroll cue and starved the options.
+            .dynamicTypeSize(...QuizTypeSize.questionCap)
+            .accessibilityIdentifier("question.text")
     }
 
     // MARK: - MCQ body (#125 Variant A "Answer Grid")
@@ -378,6 +479,13 @@ struct QuestionView: View {
             // now; the MCQ body starts at the stem.
             mcqStem(question: question, compact: compact, screenHeight: height)
 
+            // #176: model · language · review badge, TF/Debug only, under the card.
+            QuestionProvenanceRow(
+                question: question,
+                isEnabled: debugSurfaces,
+                horizontalPadding: Metrics.gutter
+            )
+
             // #173 B1 (founder pick): the listening banner sits ABOVE the option
             // grid, directly under the stem — where the eye already is when the
             // countdown starts. Below the grid it was reliably missed (the
@@ -391,6 +499,8 @@ struct QuestionView: View {
             // never sits on option text; the list edge keeps only the fade.
             if showOptionsScrollCue {
                 scrollCueLabel
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .padding(.trailing, Metrics.gutter)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.top, Theme.Hangs.Spacing.xxs)
                     .allowsHitTesting(false)
@@ -459,11 +569,11 @@ struct QuestionView: View {
         }
         .overlay(alignment: .bottom) {
             if showOptionsScrollCue {
-                scrollFade
+                scrollFade(Theme.Hangs.Colors.bg)
             }
         }
         .frame(maxHeight: optionsHeight > 0 ? optionsHeight : nil)
-        .padding(.top, compact ? 10 : 14)
+        .padding(.top, Metrics.blockGap)
         // Outermost on purpose: VStack reads the priority of its direct child.
         .layoutPriority(1)
     }
@@ -474,7 +584,7 @@ struct QuestionView: View {
             // #122: light sweep strip — always reserves its 4 pt so the chip
             // below never shifts; glows only during a feedback phase.
             GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
+                .padding(.horizontal, Metrics.gutter)
                 .padding(.top, Theme.Hangs.Spacing.xs)
 
             // Founder 2026-08-03: skip is a secondary escape hatch, not the
@@ -482,7 +592,7 @@ struct QuestionView: View {
             // styling), no longer a full-width bar competing with the options.
             // #174: it STAYS on screen while evaluating (disabled) — the chip is
             // where a skip in flight shows its own spinner now.
-            mcqSkipChip
+            mcqSkipChip(compact: compact)
                 .padding(.top, compact ? 8 : 12)
                 .padding(.bottom, compact ? 10 : 16)
         }
@@ -505,8 +615,8 @@ struct QuestionView: View {
         // a dismissed bar must not hide why the mic opened again).
         if let prompt = viewModel.emptyAnswerRetryHintPrompt {
             EmptyAnswerRetryHint(prompt: prompt)
-                .padding(.horizontal, Theme.Hangs.Spacing.lg)
-                .padding(.top, 10)
+                .padding(.horizontal, Metrics.gutter)
+                .padding(.top, Metrics.blockGap)
                 .transition(.opacity)
         }
         if !listenBarDismissal.isHidden(questionId: question.id),
@@ -526,16 +636,21 @@ struct QuestionView: View {
                 answerRemaining: viewModel.answerWindowRemaining,
                 onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
             )
-            .padding(.horizontal, Theme.Hangs.Spacing.lg)
-            .padding(.top, 10)
+            .padding(.horizontal, Metrics.gutter)
+            .padding(.top, Metrics.blockGap)
             .transition(.opacity)
         }
     }
 
     /// #179 D3: the shared skip capsule — same shape, same word as the voice
     /// footer's. Disabled while an answer is being evaluated.
-    private var mcqSkipChip: some View {
-        QuestionSkipButton(isSkipping: isSkipping, isDisabled: viewModel.isQuestionScreenBusy) {
+    private func mcqSkipChip(compact: Bool) -> some View {
+        // #194 R-MCQ: the lone skip capsule is as tall as the voice row's.
+        QuestionSkipButton(
+            isSkipping: isSkipping,
+            isDisabled: viewModel.isQuestionScreenBusy,
+            height: compact ? QuestionSkipButton.chipHeight : QuestionSkipButton.compactRowHeight
+        ) {
             Task { await viewModel.skipQuestion() }
         }
     }
@@ -562,76 +677,54 @@ struct QuestionView: View {
     /// and the options scroll behind their cue instead.
     private func mcqStem(question: Question, compact: Bool, screenHeight: CGFloat) -> some View {
         let baseFloor: CGFloat = compact ? 160 : 200
-        let floor = max(baseFloor, min(stemContentHeight, screenHeight * Metrics.stemMaxShare))
-        // #179 finding 3: Anton 34 was oversized in the car mount — one step down
-        // for both classes; `minimumScaleFactor` still handles the rest.
-        let stemFont: Font = .hangsDisplay(compact ? 26 : 30)
-        return GeometryReader { geo in
-            ScrollView(.vertical) {
-                VStack(spacing: 0) {
-                    questionReplayTapTarget {
-                        // #173 finding 6: the replay glyph is BACK on MCQ. #132
-                        // dropped it for vertical space, and the founder read the
-                        // stem as untappable — a 12pt glyph is a cheaper price
-                        // than an undiscoverable replay.
-                        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-                            HangsQuestionPrompt(
-                                text: question.question,
-                                barColor: Theme.Hangs.Colors.blue,
-                                textFont: stemFont,
-                                textIdentifier: "question.text"
-                            )
-                            // #188 G9 (D11): display type is already large; past
-                            // this size it only pushed the stem under the
-                            // scroll cue and starved the options.
-                            .dynamicTypeSize(...QuizTypeSize.questionCap)
-                            // Keep the stem its OWN a11y element inside the
-                            // replay button. A button label that resolves to a
-                            // single element gets folded into the button, taking
-                            // the stem's identifier with it.
-                            .accessibilityElement(children: .contain)
-                            replayGlyph
-                        }
-                        .padding(.horizontal, 28)
-                        .padding(.vertical, Theme.Hangs.Spacing.sm)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        // #194: the floor is the CARD's, so it counts the card's own chrome
+        // (chip row + insets) on top of the question it has to show.
+        let chrome = max(0, stemCardHeight - stemRegionHeight)
+        let natural = stemContentHeight + chrome
+        let floor = max(baseFloor, min(natural, screenHeight * Metrics.stemMaxShare))
+        let fill = Theme.Hangs.Category.style(for: question.category)
+        return questionCard(question) {
+            GeometryReader { geo in
+                ScrollView(.vertical) {
+                    replayableQuestion(question)
+                        // The stem's NATURAL height, measured before the
+                        // min-height frame below — measuring after it would feed
+                        // the floor back into itself.
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemContentHeight = $0 }
+                        // Canvas: a short question sits at the bottom of its card.
+                        .frame(minHeight: geo.size.height, alignment: .bottomLeading)
+                }
+                .scrollIndicators(.visible)
+                .scrollPosition($stemScroll)
+                .onScrollGeometryChange(for: Bool.self) { g in
+                    // Is there more stem below the fold? (taller than the
+                    // viewport AND not scrolled to the end.)
+                    g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
+                } action: { _, more in
+                    showScrollCue = more
+                }
+                .onScrollGeometryChange(for: CGFloat.self) { g in
+                    max(0, g.contentSize.height - g.containerSize.height)
+                } action: { _, overflow in
+                    stemOverflow = overflow
+                }
+                .task(id: question.id) {
+                    await autoScrollStemIfNeeded()
+                }
+                .overlay(alignment: .bottom) {
+                    if showScrollCue {
+                        stemOverflowCue(on: fill)
                     }
-                    // #176: model · language · review badge, TF/Debug only.
-                    QuestionProvenanceRow(
-                        question: question,
-                        isEnabled: debugSurfaces,
-                        horizontalPadding: 28
-                    )
-                }
-                // The stem's NATURAL height, measured before the min-height frame
-                // below — measuring after it would feed the floor back into itself.
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemContentHeight = $0 }
-                .frame(minHeight: geo.size.height, alignment: .top)
-            }
-            .scrollIndicators(.visible)
-            .scrollPosition($stemScroll)
-            .onScrollGeometryChange(for: Bool.self) { g in
-                // Is there more stem below the fold? (taller than the viewport
-                // AND not scrolled to the end.)
-                g.contentOffset.y + g.containerSize.height < g.contentSize.height - 1
-            } action: { _, more in
-                showScrollCue = more
-            }
-            .onScrollGeometryChange(for: CGFloat.self) { g in
-                max(0, g.contentSize.height - g.containerSize.height)
-            } action: { _, overflow in
-                stemOverflow = overflow
-            }
-            .task(id: question.id) {
-                await autoScrollStemIfNeeded()
-            }
-            .overlay(alignment: .bottom) {
-                if showScrollCue {
-                    stemOverflowCue
                 }
             }
+            // The region's height only depends on the card's, never on the
+            // question, so card − region is the chrome and cannot loop.
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemRegionHeight = $0 }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stemCardHeight = $0 }
         .frame(minHeight: floor)
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.top, Metrics.blockGap)
     }
 
     /// Drift a too-tall stem to its end at reading pace after a short beat
@@ -650,21 +743,22 @@ struct QuestionView: View {
     /// Bottom fade + a small mono "SCROLL ↓" cue — the visible overflow
     /// affordance of the stem, and since #188 G9 of the options too.
     /// a11y-hidden (peripheral cue), never blocks taps.
-    private var stemOverflowCue: some View {
+    private func stemOverflowCue(on style: Theme.Hangs.Category.Style) -> some View {
         ZStack(alignment: .bottomTrailing) {
-            scrollFade
+            scrollFade(style.fill)
             scrollCueLabel
-                .padding(.bottom, Theme.Hangs.Spacing.xs)
+                .foregroundStyle(style.text)
+                .padding(.bottom, Theme.Hangs.Spacing.xxs)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .transition(.opacity)
     }
 
-    /// The bottom fade of a region with more content below.
-    private var scrollFade: some View {
+    /// The bottom fade of a region with more content below, into `color`.
+    private func scrollFade(_ color: Color) -> some View {
         LinearGradient(
-            colors: [Theme.Hangs.Colors.bg.opacity(0), Theme.Hangs.Colors.bg],
+            colors: [color.opacity(0), color],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -674,7 +768,7 @@ struct QuestionView: View {
         .accessibilityHidden(true)
     }
 
-    /// "SCROLL ↓" in the app language.
+    /// "SCROLL ↓" in the app language; the caller sets its colour.
     private var scrollCueLabel: some View {
         HStack(spacing: 5) {
             Text("SCROLL")
@@ -684,72 +778,45 @@ struct QuestionView: View {
             Image(systemName: "arrow.down")
                 .font(.system(size: 10, weight: .semibold))
         }
-        .foregroundColor(Theme.Hangs.Colors.muted)
-        .padding(.trailing, 22)
     }
 
     // MARK: - Voice body (frames f9csl / uGhZg)
 
     private func voiceBody(question: Question, compact: Bool) -> some View {
         VStack(spacing: 0) {
-            // #173: the category/counter row moved into the shared header under
-            // the toolbar — one meta row for every question type.
-
-            // Scroll region holds only the question, so a long Slovak question
-            // can scroll without pushing the pinned controls off-screen (54.2).
-            // minHeight keeps short questions top-aligned, not centered.
-            GeometryReader { geo in
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: Theme.Hangs.Spacing.md) {
-                        // #68: image-type question — image above the text, scrolls
-                        // with it. Text/TTS below stays the driving-mode fallback.
-                        if question.hasImage {
-                            ImageQuestionView(question: question)
-                                .padding(.horizontal, Theme.Hangs.Spacing.xl)
-                        }
-
-                        // Question: Anton display, no left bar. The whole block is
-                        // the tap-to-replay target (see questionReplayTapTarget).
-                        questionReplayTapTarget {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(question.question)
-                                    // #179 finding 3: one step down, like the MCQ
-                                    // stem — 28 read as oversized in the car.
-                                    .font(.hangsDisplay(26))
-                                    .foregroundColor(Theme.Hangs.Colors.ink)
-                                    .minimumScaleFactor(0.7)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    // #188 G9: same ceiling as the MCQ stem.
-                                    .dynamicTypeSize(...QuizTypeSize.questionCap)
-                                    .accessibilityIdentifier("question.text")
-                                replayGlyph
-                            }
-                            .padding(.horizontal, Theme.Hangs.Spacing.xl)
-                        }
-                        // #176: model · language · review badge, TF/Debug only.
-                        QuestionProvenanceRow(
-                            question: question,
-                            isEnabled: debugSurfaces,
-                            horizontalPadding: 24
-                        )
+            // #194 R-Question: the question is printed on its category card,
+            // which takes every point the pinned controls leave. Only the card's
+            // content scrolls, so a long Slovak question can never push the
+            // controls off-screen (54.2).
+            questionCard(question) {
+                GeometryReader { geo in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        replayableQuestion(question, minHeight: geo.size.height)
                     }
-                    .frame(minHeight: geo.size.height, alignment: .top)
-                }
-                .scrollPosition($stemScroll)
-                .onScrollGeometryChange(for: CGFloat.self) { g in
-                    max(0, g.contentSize.height - g.containerSize.height)
-                } action: { _, overflow in
-                    stemOverflow = overflow
-                }
-                .task(id: question.id) {
-                    await autoScrollStemIfNeeded()
+                    .scrollPosition($stemScroll)
+                    .onScrollGeometryChange(for: CGFloat.self) { g in
+                        max(0, g.contentSize.height - g.containerSize.height)
+                    } action: { _, overflow in
+                        stemOverflow = overflow
+                    }
+                    .task(id: question.id) {
+                        await autoScrollStemIfNeeded()
+                    }
                 }
             }
+            .padding(.horizontal, Metrics.gutter)
+            .padding(.top, Metrics.blockGap)
 
-            // Pinned controls below the scroll region — mute strip (G1: audio
-            // controls at the bottom), then the #131 footer.
-            VStack(spacing: Theme.Hangs.Spacing.sm) {
+            // #176: model · language · review badge, TF/Debug only. Under the
+            // card, not on it: its dev colours are not made for a category fill.
+            QuestionProvenanceRow(
+                question: question,
+                isEnabled: debugSurfaces,
+                horizontalPadding: Metrics.gutter
+            )
+
+            // Pinned controls below the card — the #131 footer.
+            VStack(spacing: Metrics.blockGap) {
                 // #131 Track B: the voice countdown lives in the Record/Stop
                 // button. #173: the mute strip is gone — mute is a toolbar
                 // control now, on one fixed spot in every state.
@@ -765,8 +832,7 @@ struct QuestionView: View {
                     compact: compact
                 )
             }
-            // #96 P3 (founder): tighter side padding + lower footprint so the
-            // action row doesn't sit needlessly high (was h24 / bottom 28).
+            .padding(.top, Metrics.blockGap)
             .padding(.bottom, Theme.Hangs.Spacing.md)
 
             #if DEBUG

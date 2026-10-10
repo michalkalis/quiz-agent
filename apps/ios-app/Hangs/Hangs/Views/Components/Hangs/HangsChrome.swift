@@ -96,7 +96,6 @@ struct HangsProgressBar: View {
             }
         }
         .frame(height: 3)
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
         .animation(.easeInOut(duration: 0.25), value: tint)
     }
 }

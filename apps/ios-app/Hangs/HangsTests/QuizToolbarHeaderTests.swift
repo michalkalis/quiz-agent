@@ -656,15 +656,17 @@ struct QuestionReplayGlyphTests {
     /// as untappable. Both modes carry it again — and it is
     /// `arrow.counterclockwise`, not a speaker: a speaker glyph sitting next to a
     /// speaker-glyph mute toggle means two opposite things at once.
-    @Test("both modes show the replay glyph inside the replay tap target",
+    /// #194: the glyph moved to the card's top-right corner (its own twin
+    /// replay button, hidden from VoiceOver); the question block stays the
+    /// main replay target.
+    @Test("both modes show the replay glyph on the question card",
           arguments: [Question.previewMCQ, Question.preview])
     func replayGlyphPresentInBothModes(question: Question) async throws {
         let vm = makeQuestionViewModel(question: question)
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let replay = try tree.find(viewWithAccessibilityIdentifier: "question.replay")
-            let glyph = try replay.find(viewWithAccessibilityIdentifier: "question.replayGlyph")
+            let glyph = try tree.find(viewWithAccessibilityIdentifier: "question.replayGlyph")
             #expect(try glyph.image().actualImage().name() == "arrow.counterclockwise")
         }
     }

@@ -107,6 +107,7 @@ struct AppScreenSnapshotTests {
     func pixels(screen: AppScreen, language: HeroLanguage) async {
         // Pinned, not inherited — same as the hero suite (dark, 1x, fixed locale).
         let view = await screen.make()
+            .environment(\.hangsCardMotion, false)
             .environment(\.locale, language.locale)
             .environment(\.layoutDirection, .leftToRight)
             .environment(\.colorScheme, .dark)
@@ -134,6 +135,7 @@ struct AppScreenSnapshotTests {
         // #194 B: the redesign is light-first, so the default size is frozen in
         // light too (the dark pair above stays; layout does not depend on it).
         let light = await screen.make()
+            .environment(\.hangsCardMotion, false)
             .environment(\.locale, language.locale)
             .environment(\.layoutDirection, .leftToRight)
             .environment(\.colorScheme, .light)

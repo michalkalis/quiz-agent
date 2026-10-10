@@ -41,18 +41,20 @@ struct QuestionViewMCQInspectorTests {
         return vm
     }
 
-    /// #173 A3 replaced the merged "CATEGORY · Qn" row with the shared header:
-    /// lowercase category on the left, a compact 1-based "1/10" on the right,
+    /// #173 A3 replaced the merged "CATEGORY · Qn" row with the shared header,
     /// identical in MCQ and voice. The merged row is what collided with the
     /// TestFlight chips, so its absence is part of the contract.
-    @Test("MCQ renders the shared A3 meta row, not the old merged Qn label")
+    /// #194: the category moved onto the question card's chip (caps), the
+    /// compact 1-based "1/10" stays in the header — still one layout for both.
+    @Test("MCQ renders the shared category + counter, not the old merged Qn label")
     func mcqHeaderRendersSharedMetaRow() async throws {
         let vm = makeMCQViewModel()
         // questionsAnswered = 0 → question 1
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "adults") }
+            let category = try tree.find(viewWithAccessibilityIdentifier: "question.category")
+            #expect(try category.text().string() == "ADULTS")
             #expect(throws: Never.self) { try tree.find(text: "1/10") }
             #expect(throws: (any Error).self, "the merged #125 row is gone") {
                 try tree.find(text: "adults · Q1")
@@ -568,7 +570,8 @@ struct QuestionViewReplayProcessingInspectorTests {
             #expect(try replay.isDisabled(), "nothing to replay is still nothing to replay")
             #expect(try replay.buttonStyle() is QuestionReplayButtonStyle,
                     "`.plain` is the style that halves a disabled label's contrast")
-            let glyph = try replay.find(viewWithAccessibilityIdentifier: "question.replayGlyph")
+            // #194: the glyph sits in the card corner, outside the scroll region.
+            let glyph = try tree.find(viewWithAccessibilityIdentifier: "question.replayGlyph")
             #expect(try glyph.opacity() < 1, "the glyph alone says replay is unavailable")
         }
         // The style itself never fades the label at rest.

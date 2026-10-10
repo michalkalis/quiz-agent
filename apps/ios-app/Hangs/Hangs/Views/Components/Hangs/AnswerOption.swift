@@ -66,7 +66,7 @@ struct AnswerOption: View {
     }
 
     private var row: some View {
-        HStack(spacing: Theme.Hangs.Spacing.md) {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
             ZStack {
                 Circle().fill(badgeFill)
                 if isLoading {
@@ -76,14 +76,14 @@ struct AnswerOption: View {
                         .accessibilityIdentifier("question.processingIndicator")
                 } else {
                     Text(verbatim: badgeText)
-                        .font(.hangsBody(17, weight: .bold))
+                        .font(.hangsBody(AnswerOptionMetrics.letterSize, weight: .bold))
                         .foregroundColor(letterColor)
                 }
             }
-            .frame(width: 40, height: 40)
+            .frame(width: AnswerOptionMetrics.badge, height: AnswerOptionMetrics.badge)
 
             Text(value)
-                .font(.hangsBody(16, weight: .medium))
+                .font(.hangsBody(16, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 // #174 C2: this row is the layout long options fall back to, so
                 // it must never be the thing that truncates them: the row grows.
@@ -109,17 +109,12 @@ struct AnswerOption: View {
                 .frame(width: 32, height: 32)
             }
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        .padding(.horizontal, Theme.Hangs.Spacing.sm)
         // #188 G9: a wrapped option keeps air above and below it inside its
         // border (the 64pt floor used to provide it while text was one line).
         .padding(.vertical, Theme.Hangs.Spacing.sm)
         .frame(maxWidth: .infinity, minHeight: minHeight)
-        .background(
-            RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16).stroke(borderColor, lineWidth: 1.5)
-        )
+        .answerPlate(state)
     }
 }
 
@@ -133,7 +128,7 @@ extension AnswerOption.State {
     var borderColor: Color {
         switch self {
         case .default: return Theme.Hangs.Colors.subtleBorder
-        case .selected: return Theme.Hangs.Colors.accentPrimary
+        case .selected: return Theme.Hangs.Colors.action
         case .correct: return Theme.Hangs.Colors.greenCheck
         case .incorrect: return Theme.Hangs.Colors.wrong
         }
@@ -141,8 +136,10 @@ extension AnswerOption.State {
 
     var badgeFill: Color {
         switch self {
-        case .default: return Theme.Hangs.Colors.accentPrimarySoft
-        case .selected: return Theme.Hangs.Colors.accentPrimary
+        // #194 R-MCQ: the letter sits on a page-grey plate; the colour accent
+        // is kept for the one main action, so a chosen option turns ink.
+        case .default: return Theme.Hangs.Colors.bgInset
+        case .selected: return Theme.Hangs.Colors.action
         case .correct: return Theme.Hangs.Colors.greenCheck
         case .incorrect: return Theme.Hangs.Colors.wrong
         }
@@ -150,8 +147,9 @@ extension AnswerOption.State {
 
     var letterColor: Color {
         switch self {
-        case .default: return Theme.Hangs.Colors.accentPrimary
-        case .selected, .correct, .incorrect: return .white
+        case .default: return Theme.Hangs.Colors.ink
+        case .selected: return Theme.Hangs.Colors.textOnAction
+        case .correct, .incorrect: return .white
         }
     }
 
@@ -168,6 +166,29 @@ extension AnswerOption.State {
         case .correct, .incorrect: return .white
         case .default, .selected: return nil
         }
+    }
+}
+
+private enum AnswerOptionMetrics {
+    /// R-MCQ letter plate, as tall as one line of option text.
+    static let badge: CGFloat = 28
+    static let letterSize: CGFloat = 14
+    /// R-MCQ option plate corners.
+    static let radius: CGFloat = 20
+}
+
+private extension View {
+    /// The white option plate with its state outline: a hairline at rest, a
+    /// firmer line once the option is chosen or revealed.
+    func answerPlate(_ state: AnswerOption.State) -> some View {
+        background(
+            RoundedRectangle(cornerRadius: AnswerOptionMetrics.radius, style: .continuous)
+                .fill(Theme.Hangs.Colors.bgCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AnswerOptionMetrics.radius, style: .continuous)
+                .strokeBorder(state.borderColor, lineWidth: state == .default ? 1 : 2)
+        )
     }
 }
 
@@ -222,14 +243,15 @@ struct AnswerTile: View {
                         .accessibilityIdentifier("question.processingIndicator")
                 } else {
                     Text(verbatim: badgeText)
-                        .font(.hangsBody(14, weight: .bold))
+                        .font(.hangsBody(AnswerOptionMetrics.letterSize, weight: .bold))
                         .foregroundColor(state.letterColor)
                 }
             }
-            .frame(width: 28, height: 28)
+            .frame(width: AnswerOptionMetrics.badge, height: AnswerOptionMetrics.badge)
 
             Text(value)
-                .font(.hangsBody(16, weight: .semibold))
+                // #194 R-MCQ: a short option in the 2×2 grid reads a step larger.
+                .font(.hangsBody(17, weight: .semibold))
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 // Slovak option texts run long; 2 lines truncated real answers
                 // mid-word (TF build 53 feedback). The grid row grows instead.
@@ -241,12 +263,7 @@ struct AnswerTile: View {
         .padding(.horizontal, Theme.Hangs.Spacing.sm)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, minHeight: compact ? 54 : 60, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16).fill(Theme.Hangs.Colors.bgCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16).stroke(state.borderColor, lineWidth: 1.5)
-        )
+        .answerPlate(state)
     }
 }
 

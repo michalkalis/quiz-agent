@@ -152,9 +152,10 @@ struct ResultView: View {
     }
 
     /// #198 (canvas Bg-Result / R-Result): a correct answer turns the whole
-    /// card mint; a miss or a skip keeps the question's own colour.
+    /// card mint; a miss or a skip keeps the question's own colour — never mint
+    /// (a science miss takes the canvas' yellow, #198 round 2).
     private var cardStyle: Theme.Hangs.Category.Style {
-        verdict == .correct ? Theme.Hangs.Category.correct : deckIdentity.style
+        verdict == .correct ? Theme.Hangs.Category.correct : deckIdentity.notCorrectStyle
     }
 
     private var resultCard: some View {

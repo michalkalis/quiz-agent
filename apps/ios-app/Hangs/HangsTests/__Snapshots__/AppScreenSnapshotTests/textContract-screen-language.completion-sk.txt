@@ -9,6 +9,27 @@ Nesprávne
 3
 Úspešnosť
 70%
+VÝSLEDOK KVÍZU · Geography & World
+Question 1 of the round?
+Answer 1
+Question 2 of the round?
+Answer 2
+Question 3 of the round?
+Answer 3
+Question 4 of the round?
+Answer 4
+Question 5 of the round?
+Answer 5
+Question 6 of the round?
+Answer 6
+Question 7 of the round?
+Answer 7
+Question 8 of the round?
+Answer 8
+Question 9 of the round?
+Answer 9
+Question 10 of the round?
+Answer 10
 Hraj znova
 Úvod
 Hraj znova
@@ -17,6 +38,16 @@ Hraj znova
 completion.close
 completion.score
 completion.breakdown
+recap.row.1
+recap.row.2
+recap.row.3
+recap.row.4
+recap.row.5
+recap.row.6
+recap.row.7
+recap.row.8
+recap.row.9
+recap.row.10
 completion.playAgain
 completion.home
 completion.playAgain

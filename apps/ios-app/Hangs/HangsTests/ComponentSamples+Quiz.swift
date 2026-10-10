@@ -17,6 +17,9 @@ nonisolated extension ComponentSample {
         [
             ComponentSample("brandRow.default") { HangsBrandRow() },
             ComponentSample("progressHeader.default") { HangsQuizProgressHeader(category: "Geography", current: 3, total: 10) },
+            // #194 C2: the question screen prints the category on its card chip,
+            // so its header is one row — segments + counter.
+            ComponentSample("progressHeader.noCategory") { HangsQuizProgressHeader(current: 3, total: 10) },
             ComponentSample("progressHeader.recording") {
                 HangsQuizProgressHeader(category: "Geography", current: 3, total: 10, isRecording: true)
             },

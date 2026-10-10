@@ -372,7 +372,7 @@ final class AppState: ObservableObject {
             if CommandLine.arguments.contains("--ui-test-error") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .askingQuestion
-                viewModel.errorMessage = "Connection lost. Tap Start to try again."
+                viewModel.errorMessage = "Connection lost. Tap Answer to try again."
             }
             // `--ui-test-voice`: land on a voice QuestionView in the resting (Ready)
             // state so the rewritten voiceBody layout can be screenshot-verified.

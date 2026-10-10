@@ -2112,19 +2112,19 @@
         }
       }
     },
-    "Connection lost. Tap Start to try again." : {
+    "Connection lost. Tap Answer to try again." : {
       "comment" : "Inline error when the streaming connection drops mid-recording",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spojení se přerušilo. Klepni na Start a zkus to znovu."
+            "value" : "Spojení se přerušilo. Klepni na tlačítko Odpověz a zkus to znovu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spojenie sa prerušilo. Klepni na Štart a skús to znova."
+            "value" : "Spojenie sa prerušilo. Klepni na tlačidlo Odpovedz a skús to znova."
           }
         }
       }
@@ -7125,18 +7125,18 @@
         }
       }
     },
-    "Say \"start\" after a question, or tap Start, to begin answering." : {
+    "Say \"start\" after a question, or tap Answer, to begin answering." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po otázce řekni „start“ nebo klepni na Start a začni odpovídat."
+            "value" : "Po otázce řekni „start“ nebo klepni na tlačítko Odpověz a začni odpovídat."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po otázke povedz „start“ alebo klepni na Štart a začni odpovedať."
+            "value" : "Po otázke povedz „start“ alebo klepni na tlačidlo Odpovedz a začni odpovedať."
           }
         }
       }

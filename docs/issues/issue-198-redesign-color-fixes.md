@@ -18,11 +18,11 @@
 
 ## Tracky
 
-- [ ] **198.1 — kategórie v dátach:** prod otázky `general` / `kids` / `football` / `sports-mix` (approved + pending_review) zatriediť do 7 platných kategórií (`set-category` endpoint, zoznam zmien uložiť do `docs/testing/runs/`); obsah otázok sa nemení. DEBUG fixtúry na platné kategórie. Neznáma kategória v appke → kobalt (`accentPrimary`) namiesto ink, čip → zobrazovací názov alebo nič.
-- [ ] **198.2 — farby z plátna do kvízu a výsledkov:** správna = mätová karta, zlá = karta vo farbe kategórie, počúvanie ružové, koniec kola + prehľad odpovedí farebné podľa plátna, plán na domove kobaltový, prihlásenie s farebným vejárom, chybová obrazovka bez čiernej karty. Svetlý aj tmavý režim; nerozbiť obsahové rozloženia z bety (MCQ, jednoriadkové texty).
-- [ ] **198.3 — logo a vejár:** hlavička s logom len domov + sprievodca; vejár len domov, sprievodca, predplatné, prihlásenie.
-- [ ] **198.4 — farba balíčka:** vlastný balíček dostane farbu z palety podľa id → karta otázky, `PackMiniDeck`, karty v Moje balíčky a stav objednávky.
-- [ ] **198.5 — pred/po:** jedna stránka pred/po (svetlý + tmavý) s reálnymi kategóriami v snímkach → founder.
+- [x] **198.1 — HOTOVÉ 2026-10-10 (PR #350 dáta 342 riadkov, PR #351 appka) — kategórie v dátach:** prod otázky `general` / `kids` / `football` / `sports-mix` (approved + pending_review) zatriediť do 7 platných kategórií (`set-category` endpoint, zoznam zmien uložiť do `docs/testing/runs/`); obsah otázok sa nemení. DEBUG fixtúry na platné kategórie. Neznáma kategória v appke → kobalt (`accentPrimary`) namiesto ink, čip → zobrazovací názov alebo nič.
+- [x] **198.2 — HOTOVÉ 2026-10-10 (PR #353) — farby z plátna do kvízu a výsledkov:** správna = mätová karta, zlá = karta vo farbe kategórie, počúvanie ružové, koniec kola + prehľad odpovedí farebné podľa plátna, plán na domove kobaltový, prihlásenie s farebným vejárom, chybová obrazovka bez čiernej karty. Svetlý aj tmavý režim; nerozbiť obsahové rozloženia z bety (MCQ, jednoriadkové texty).
+- [x] **198.3 — HOTOVÉ 2026-10-10 (PR #353) — logo a vejár:** hlavička s logom len domov + sprievodca; vejár len domov, sprievodca, predplatné, prihlásenie.
+- [x] **198.4 — HOTOVÉ 2026-10-10 (PR #351) — farba balíčka:** vlastný balíček dostane farbu z palety podľa id → karta otázky, `PackMiniDeck`, karty v Moje balíčky a stav objednávky.
+- [~] **198.5 — pred/po:** stránka https://claude.ai/artifact/9LiXESfZkrxfZSy7ykypCo čaká na foundera; otvorené: koniec kola stále takmer bez farby, zlá odpoveď vo Vede = mätová ako správna. jedna stránka pred/po (svetlý + tmavý) s reálnymi kategóriami v snímkach → founder.
 
 ## Hotovo, keď
 

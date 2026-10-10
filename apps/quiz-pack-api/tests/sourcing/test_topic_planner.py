@@ -34,14 +34,9 @@ from app.sourcing.topic_planner import TopicPlanner
 
 
 def _fake_client(content: str) -> SimpleNamespace:
-    """Minimal stand-in for the lazy ``openai_client`` the planner builds."""
-    resp = SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
-    )
+    """Minimal stand-in for the lazy ``chat_model`` the planner builds."""
     return SimpleNamespace(
-        chat=SimpleNamespace(
-            completions=SimpleNamespace(create=AsyncMock(return_value=resp))
-        )
+        ainvoke=AsyncMock(return_value=SimpleNamespace(content=content))
     )
 
 
@@ -64,11 +59,7 @@ async def test_client_exception_returns_none(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     planner = TopicPlanner()
     planner._client = SimpleNamespace(
-        chat=SimpleNamespace(
-            completions=SimpleNamespace(
-                create=AsyncMock(side_effect=RuntimeError("boom"))
-            )
-        )
+        ainvoke=AsyncMock(side_effect=RuntimeError("boom"))
     )
 
     assert await planner.propose() is None

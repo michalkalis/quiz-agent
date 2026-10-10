@@ -181,6 +181,18 @@ ANSWERABILITY = "deepseek-v4-flash"
 # generator. Session tier: sonnet (via the gpt-5-mini alias below).
 DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
 EMBED = "text-embedding-3-small"
+# #196 track 196.4 — offline quiz-pack-api helper roles. Each has its own env
+# override so one secret rolls a single role back (topic planner + expiry used
+# to borrow CRITIQUE; the rest were hardcoded OpenAI ids). Defaults are the
+# winners of docs/testing/runs/offline-roles-eval-2026-10-10/ (Claude where it
+# won or tied; rollback = set the env var to the previous id in the comment).
+SOURCING = _role("LLM_ROLE_SOURCING", "claude-sonnet-5-5")  # was gpt-5-mini
+TOPIC_PLAN = _role("LLM_ROLE_TOPIC_PLAN", CRITIQUE)  # kept: Claude less varied
+EXPIRY = _role("LLM_ROLE_EXPIRY", "claude-sonnet-5-5")  # was CRITIQUE
+OTDB_REWRITE = _role("LLM_ROLE_OTDB_REWRITE", "claude-haiku-5-5")  # was gpt-4o-mini
+HINT_QUESTION = _role("LLM_ROLE_HINT_QUESTION", "gpt-4o")  # kept: Claude over-clues
+SILHOUETTE_QUESTION = _role("LLM_ROLE_SILHOUETTE_QUESTION", "gpt-4o")  # kept: 2x longer
+HINT_VALIDATE = _role("LLM_ROLE_HINT_VALIDATE", "claude-haiku-5-5")  # was gpt-4o-mini
 
 
 def pick_generation_model(rand=random.random) -> str:
@@ -205,6 +217,10 @@ _REMAP_OPENROUTER = {
     # translation moves to Opus 5.5, ~20 % cheaper). Slugs verified live.
     "claude-fable-5-1": "anthropic/claude-fable-5.1",
     "claude-opus-5-5": "anthropic/claude-opus-5.5",
+    # #196 track 196.4 offline helper roles (only reached without
+    # ANTHROPIC_API_KEY; with it, Claude ids go to the Anthropic API).
+    "claude-sonnet-5-5": "anthropic/claude-sonnet-5.5",
+    "claude-haiku-5-5": "anthropic/claude-haiku-5.5",
     "gpt-5.6-sol": "openai/gpt-5.6-sol",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
     # Serve-time question translation (quiz-agent TranslationService, 2026-07-30
@@ -326,6 +342,22 @@ def session_model_for(model_id: str) -> str:
                 model_id,
             )
     return SESSION_PREFIX + alias
+
+
+def chat_available(model_id: str) -> bool:
+    """Whether ``chat_model(model_id)`` can reach its provider right now.
+
+    Mirrors ``chat_openai``'s routing: ``bedrock:``/``session:`` ids and the
+    session gateway need no provider key here; a Claude id with
+    ``ANTHROPIC_API_KEY`` goes direct; everything else needs the active
+    gateway's key. Lets fail-safe call sites skip a call they cannot make
+    instead of logging a provider error per item.
+    """
+    if is_bedrock_model(model_id) or is_session_model(model_id) or gateway() == SESSION:
+        return True
+    if anthropic_route.routes_to_anthropic(model_id):
+        return True
+    return bool(_base_url_and_key(direct=False)[1])
 
 
 def supports_sampling_params(model_id: str) -> bool:

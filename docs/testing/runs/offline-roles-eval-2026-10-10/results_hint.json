@@ -1,0 +1,361 @@
+{
+ "seeds": [
+  {
+   "topic": "Literature",
+   "correct_answer": "The Great Gatsby",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Science",
+   "correct_answer": "DNA",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "History",
+   "correct_answer": "The Moon Landing",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Music",
+   "correct_answer": "Beethoven",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Art",
+   "correct_answer": "The Mona Lisa",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Geography",
+   "correct_answer": "Venice",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Music",
+   "correct_answer": "The Beatles",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Film",
+   "correct_answer": "Titanic",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Science",
+   "correct_answer": "Photosynthesis",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "History",
+   "correct_answer": "The Fall of the Berlin Wall",
+   "difficulty": "hard"
+  }
+ ],
+ "outputs": {
+  "gpt-4o": [
+   {
+    "question": "This atmospheric painting hints at a classic piece of 20th-century American literature. What is it?",
+    "image_prompt": "Oil painting of a vintage 1920s car parked in front of a grand mansion with a wide river or bay in the background, illuminated by a green light. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Gatsby"
+    ],
+    "tags": [
+     "literature",
+     "hint-image"
+    ],
+    "explanation": "The image shows a 1920s car and a grand mansion, symbolizing the opulence and extravagance of Jay Gatsby. The green light across the water represents Gatsby's longing and the unattainable American Dream."
+   },
+   {
+    "question": "This atmospheric painting hints at the blueprint of life. What is it?",
+    "image_prompt": "Oil painting of a double helix shaped ladder intertwined with a microscope on a lab table. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "genetic code"
+    ],
+    "tags": [
+     "science",
+     "hint-image"
+    ],
+    "explanation": "The image shows a double helix shaped ladder and a microscope. The double helix is a key visual metaphor for DNA, and the microscope suggests scientific study, both pointing to the concept of DNA as the blueprint of life."
+   },
+   {
+    "question": "This atmospheric painting hints at a pivotal event in space exploration. What is it?",
+    "image_prompt": "Oil painting of an astronaut's boot print on a dusty surface, an American flag waving in a barren landscape, and the Earth visible in a dark sky. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Apollo 11"
+    ],
+    "tags": [
+     "history",
+     "hint-image"
+    ],
+    "explanation": "The image shows the iconic boot print and American flag associated with the first human Moon landing, while the distant Earth emphasizes the event's significance in space exploration."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous composer known for his symphonies. What is it?",
+    "image_prompt": "Oil painting of a European concert hall interior with dim lighting and a grand piano under a spotlight, with a stormy sky visible through a large window. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Ludwig van Beethoven"
+    ],
+    "tags": [
+     "music",
+     "hint-image"
+    ],
+    "explanation": "The image shows a concert hall with a grand piano and a stormy sky, symbolizing Beethoven's dramatic compositions and the 'Storm' references often associated with his works."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous piece of art. What is it?",
+    "image_prompt": "Oil painting of a serene Italian landscape with a winding road and a solitary bridge, alongside a smiling woman's silhouette. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "La Gioconda"
+    ],
+    "tags": [
+     "art",
+     "hint-image"
+    ],
+    "explanation": "The image shows an Italian landscape and a smiling woman's silhouette, representing the background and subject of the Mona Lisa."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous city known for its canals and gondolas. What is it?",
+    "image_prompt": "Oil painting of a gondolier navigating a narrow canal with ornate bridges and colorful historic buildings lining the waterway. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "La Serenissima"
+    ],
+    "tags": [
+     "geography",
+     "hint-image"
+    ],
+    "explanation": "The image shows a gondolier, canals, and characteristic architecture, all of which are iconic elements associated with Venice."
+   },
+   {
+    "question": "This atmospheric painting hints at a legendary music group. What is it?",
+    "image_prompt": "Oil painting of a yellow submarine floating in a tranquil sea and a crosswalk with four pairs of shoes walking across it. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "The Fab Four"
+    ],
+    "tags": [
+     "music",
+     "hint-image"
+    ],
+    "explanation": "The image shows a yellow submarine and a crosswalk, referencing The Beatles' song 'Yellow Submarine' and the famous Abbey Road album cover, where the band crossed a street in London."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous disaster romance film. What is it?",
+    "image_prompt": "Oil painting of a large iceberg floating in the ocean and a vintage pocket watch. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [],
+    "tags": [
+     "film",
+     "hint-image"
+    ],
+    "explanation": "The image shows an iceberg, which is famously associated with the sinking of the Titanic, and a pocket watch, symbolizing the period setting of the film 'Titanic'."
+   },
+   {
+    "question": "This atmospheric painting hints at a crucial biological process. What is it?",
+    "image_prompt": "Oil painting of a lush forest with sunlight streaming through the canopy, a close-up of vibrant green leaves, and a scene of a small pond with water lilies. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [],
+    "tags": [
+     "science",
+     "hint-image"
+    ],
+    "explanation": "The image shows sunlight interacting with green leaves, which is a direct reference to the process of photosynthesis where plants convert light energy into chemical energy. The lush forest and pond suggest a thriving ecosystem supported by this process."
+   },
+   {
+    "question": "This atmospheric painting hints at a significant historical event from the late 20th century. What is it?",
+    "image_prompt": "Oil painting of a crowd of people celebrating with fireworks in the night sky, and a section of colorful graffiti on a wall in the foreground. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "The Collapse of the Berlin Wall"
+    ],
+    "tags": [
+     "history",
+     "hint-image"
+    ],
+    "explanation": "The image shows a celebration with fireworks, representing the joy and freedom experienced by many during the Fall of the Berlin Wall, along with graffiti on a wall, which symbolizes the wall itself, famously covered in art and messages before its collapse."
+   }
+  ],
+  "claude-sonnet-5-5": [
+   {
+    "question": "This atmospheric painting hints at a famous American novel about wealth, longing, and illusion in the Jazz Age. What is it?",
+    "image_prompt": "Oil painting of a lone figure in a pale suit standing at the edge of a dark lawn at night, one arm stretched out toward a small green light glowing at the end of a distant dock across the water. Behind him, a lavish mansion blazes with golden light and shimmering party lanterns, with faint silhouettes of dancers in flapper dresses at the windows. Moody blues and emerald greens, dreamy Jazz Age atmosphere. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Gatsby",
+     "Great Gatsby",
+     "The Great Gatsby by F. Scott Fitzgerald"
+    ],
+    "tags": [
+     "literature",
+     "american-literature",
+     "hint-image"
+    ],
+    "explanation": "The image shows a man in a pale suit reaching toward a green light across the water, the famous symbol of Gatsby's yearning for Daisy Buchanan. The glittering mansion with flapper-clad partygoers evokes his lavish parties on Long Island in the 1920s. Together these clues point to F. Scott Fitzgerald's 1925 novel The Great Gatsby."
+   },
+   {
+    "question": "This atmospheric painting hints at the molecule that carries the genetic instructions for all living things. What is it?",
+    "image_prompt": "Oil painting of a dimly lit nineteenth-century laboratory where a vintage microscope sits on a wooden desk beside a glass beaker. Nearby, a young child with curly hair and a man with the same curly hair stand side by side, their features strikingly alike, bathed in warm amber lamplight. On the wall behind them hangs a framed family portrait showing several generations with matching curls and eyes. Rich chiaroscuro, painterly brushstrokes, moody and contemplative atmosphere. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Deoxyribonucleic acid",
+     "Genetic code",
+     "Double helix"
+    ],
+    "tags": [
+     "science",
+     "biology",
+     "genetics",
+     "hint-image"
+    ],
+    "explanation": "The image shows a laboratory with a microscope and beaker, representing molecular biology research, alongside a child and parent who share the same curly hair and a wall of generations of family portraits with matching features. Together they point to inherited traits passed down through generations, which are encoded in DNA."
+   },
+   {
+    "question": "This atmospheric painting hints at a landmark event of the twentieth century, one that people around the world watched on flickering black-and-white television sets. What is it?",
+    "image_prompt": "Oil painting in a dramatic, atmospheric style of a family in a 1960s living room gathered around an old cathode-ray television set, their faces lit by its silvery glow. On the screen, a blurry white-suited figure with a gold reflective visor bounces across a barren gray landscape. Through the window behind them, a luminous full moon hangs in the night sky. Warm lamplight, rich textured brushstrokes, nostalgic mood. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Apollo 11",
+     "Apollo 11 Moon Landing",
+     "First Moon Landing",
+     "Moon Landing of 1969",
+     "Neil Armstrong's Moon Walk",
+     "One Small Step"
+    ],
+    "tags": [
+     "history",
+     "space-exploration",
+     "20th-century",
+     "hint-image"
+    ],
+    "explanation": "The image shows a 1960s family watching a vintage television, a nod to the roughly 600 million people who followed the event live in July 1969. On the screen, a figure in a white suit with a reflective gold visor walks on a barren gray surface, evoking an astronaut on the lunar landscape, while the full moon in the window reinforces the setting. Together these clues point to the Apollo 11 Moon Landing, when Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous composer whose music continued even as his world fell silent. Who is this composer?",
+    "image_prompt": "Oil painting of a dimly lit 19th-century Viennese study at dusk: an old wooden-framed grand piano with its lid propped open, and resting on its strings a long wooden rod pressed against the soundboard, as if someone were feeling vibrations through it. Beside the piano, a small cluster of tattered, ink-smudged sheets of handwritten musical manuscript lie scattered, with a quill and a dark inkwell. Through the window, a stormy sky with a bolt of lightning illuminates a rugged, wild-haired shadow silhouette. Dramatic chiaroscuro, rich browns and deep blues, Romantic-era mood. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Ludwig van Beethoven",
+     "Ludwig Beethoven"
+    ],
+    "tags": [
+     "music",
+     "classical-music",
+     "composers",
+     "hint-image"
+    ],
+    "explanation": "The image shows a piano with a rod pressed to the soundboard, evoking how Beethoven reportedly used a wooden rod to feel vibrations as his deafness progressed. The scattered, ink-blotted manuscript pages reflect his famously messy handwriting and the storm and wild-haired silhouette evoke his turbulent, Romantic personality and dramatic music. Together these point to Ludwig van Beethoven."
+   },
+   {
+    "question": "This atmospheric painting hints at one of the most famous artworks in the world, a portrait housed in a grand Parisian museum. What is it?",
+    "image_prompt": "Oil painting of a vast crowd of tourists in a grand gallery, all holding up smartphones toward an empty ornate golden frame on a wall protected by a glass barrier, a winding misty river valley landscape visible through the empty frame, a Renaissance-era wooden easel with a poplar panel and a folded pair of delicate hands resting on a carved armchair beside it, warm sfumato glowing light. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Mona Lisa",
+     "La Gioconda",
+     "La Joconde",
+     "Portrait of Lisa Gherardini"
+    ],
+    "tags": [
+     "art",
+     "famous-paintings",
+     "renaissance",
+     "hint-image"
+    ],
+    "explanation": "The image shows crowds of tourists photographing a protected frame in a grand gallery (the Louvre in Paris), a hazy winding landscape in soft sfumato style (Leonardo da Vinci's technique), a poplar wood panel, and folded hands resting on an armchair, all of which point to Leonardo da Vinci's Mona Lisa."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous Italian city built on a lagoon. What is it?",
+    "image_prompt": "Oil painting of a dusk scene with a long, slender black wooden boat with a curved ornamental prow gliding through a narrow green canal, a gondolier in a striped shirt standing at the stern with a long oar, weathered pastel-colored palazzos with pointed Gothic arched windows rising directly out of the water on both sides, and a warm golden sunset reflecting on the rippling surface. Rich impressionistic brushwork, romantic and atmospheric mood. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Venezia",
+     "Venice, Italy",
+     "The Floating City",
+     "La Serenissima"
+    ],
+    "tags": [
+     "geography",
+     "hint-image",
+     "italy",
+     "cities"
+    ],
+    "explanation": "The image shows a gondola, a gondolier with his oar, and old palaces rising straight from a narrow canal. These are the best-known symbols of Venice, the Italian city built on a lagoon and famous for having canals instead of streets."
+   },
+   {
+    "question": "This atmospheric painting hints at a legendary musical group from the 1960s. Which band is it?",
+    "image_prompt": "Oil painting of a zebra crossing on a quiet tree-lined London street, with four silhouetted figures in dark suits walking single file across it in soft morning light, and in the background a vivid yellow submarine floating in a calm harbor beneath a hazy sky. Warm, nostalgic palette with rich brushstrokes. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Beatles",
+     "The Fab Four",
+     "Fab Four"
+    ],
+    "tags": [
+     "music",
+     "bands",
+     "1960s",
+     "hint-image"
+    ],
+    "explanation": "The image shows four men walking across a zebra crossing, a nod to the Abbey Road album artwork, and a yellow submarine, a reference to the band's song and animated film of the same name. Together these clues point to The Beatles, the Liverpool band known as the Fab Four."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous romantic disaster film from 1997. What is it?",
+    "image_prompt": "Oil painting of a dramatic scene at dusk: a young couple standing at the bow of a vast ocean liner with arms outstretched, wind in their hair, while in the dark water far behind them a jagged iceberg glints under a starry sky. A glittering blue diamond necklace in the shape of a heart rests on a velvet cushion in the foreground. Moody blues and warm golden sunset tones, painterly brushstrokes, cinematic composition. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Titanic (1997)",
+     "James Cameron's Titanic",
+     "RMS Titanic film"
+    ],
+    "tags": [
+     "film",
+     "hint-image",
+     "romance",
+     "1990s"
+    ],
+    "explanation": "The image shows a couple at the bow of a great ocean liner with outstretched arms, an iceberg in the distance, and a heart-shaped blue diamond necklace. These are iconic elements of James Cameron's 1997 film Titanic: the famous 'flying' pose of Jack and Rose, the iceberg that sinks the ship, and the 'Heart of the Ocean' necklace."
+   },
+   {
+    "question": "This atmospheric painting hints at a vital biological process. Sunlight pours through a forest canopy onto broad green leaves, while a gentle stream of invisible gas seems to drift between the foliage and the sky, and a ripe fruit hangs nearby. What is this process?",
+    "image_prompt": "Oil painting of a sunlit forest canopy where golden shafts of light fall onto broad, glossy green leaves with delicate visible veins, a close-up of a single leaf in the foreground with tiny droplets of water resting on its surface and faint shimmering bubbles rising from its edge into the bright air, a ripe apple hanging from a branch in the background, rich warm greens and golden yellows, impressionist brushwork, atmospheric and serene mood. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Carbon fixation",
+     "Calvin cycle",
+     "Light-dependent reactions",
+     "Plant energy production"
+    ],
+    "tags": [
+     "science",
+     "biology",
+     "hint-image"
+    ],
+    "explanation": "The image shows sunlight streaming onto green leaves, water droplets, and bubbles of gas rising from a leaf, with fruit in the background. Sunlight, water, and the exchange of gases with the air are the key ingredients and products of photosynthesis, the process by which plants convert light energy, water, and carbon dioxide into sugar and oxygen."
+   },
+   {
+    "question": "This atmospheric painting hints at a pivotal late-20th-century event in European history. What is it?",
+    "image_prompt": "Oil painting at night of a weathered gray concrete slab with chipped fragments and rusted rebar, a small hammer and a chisel resting on the ground beside it, while in the soft blurred background a crowd of jubilant silhouettes under floodlights climbs onto a long stretch of concrete barrier, a brightly lit old stone gate with a chariot statue glowing in the distance. Cold blue and amber tones, dramatic chiaroscuro, painterly brushwork, melancholic yet hopeful mood. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Fall of the Berlin Wall",
+     "The Berlin Wall Falls",
+     "Opening of the Berlin Wall",
+     "November 9, 1989 in Berlin",
+     "Fall of the Wall"
+    ],
+    "tags": [
+     "history",
+     "cold-war",
+     "germany",
+     "20th-century",
+     "hint-image"
+    ],
+    "explanation": "The image shows broken concrete fragments with a hammer and chisel, a celebrating crowd standing atop a long concrete barrier at night, and a floodlit neoclassical gate crowned with a chariot statue in the distance, which evokes the Brandenburg Gate. Together these point to the night of November 9, 1989, when the Berlin Wall was breached and then torn down, symbolizing the end of the Cold War division of Germany."
+   }
+  ]
+ },
+ "summary": {
+  "gpt-4o": {
+   "valid_json": 10,
+   "n": 10,
+   "answer_in_image_prompt": 1,
+   "answer_in_question": 0,
+   "trigger_word_in_prompt": 0,
+   "missing_required_ending": 0
+  },
+  "claude-sonnet-5-5": {
+   "valid_json": 10,
+   "n": 10,
+   "answer_in_image_prompt": 1,
+   "answer_in_question": 0,
+   "trigger_word_in_prompt": 0,
+   "missing_required_ending": 0
+  }
+ },
+ "metered_cost_cents": 7.587
+}

@@ -25,6 +25,13 @@ Two properties this source must keep:
   ``_trusted_urls``). A bare-JSON reply carries no annotations at all
   (measured, 2026-08-31), so annotations alone dropped 100 % of candidates.
 
+#196 track 196.4: the model is the factory ``SOURCING`` role
+(``LLM_ROLE_SOURCING``). A ``claude-*`` id runs the same prompt on the
+Anthropic Messages API with its server-side ``web_search`` tool (the
+``FactVerifier`` pattern); any other id keeps the OpenAI Responses path.
+Same integrity rule on both: a fact ships only with a URL the search tool
+really returned.
+
 Cost is *not* recorded into the order-level signals: this source is the CLI
 pilot path (``scripts/source_facts.py``), which has no order to bill. If it
 is ever promoted into the order pipeline, wire the #153 usage recorder the
@@ -44,10 +51,14 @@ from .web_search_source import _extract_domain, classify_credibility
 
 logger = logging.getLogger(__name__)
 
-# Founder-approved model for web-search-backed calls (#166 provider research,
-# 2026-08-26): 7/7 error recall at ~4-5 ¢/call vs 5/7 at ~18 ¢ for the
-# previous Sonnet 5 path. Model swaps need eval data + approval.
-SOURCING_MODEL = "gpt-5-mini"
+# Model swaps need eval data + approval: the factory role's default comes
+# from docs/testing/runs/offline-roles-eval-2026-10-10/ (#196 track 196.4).
+SOURCING_MODEL = llm_factory.SOURCING
+
+# Anthropic path: searches per topic (each $10/1k) and pause_turn resumes,
+# mirroring FactVerifier's bounds so one topic cannot run away.
+_MAX_WEB_SEARCHES = 5
+_MAX_PAUSE_RESUMES = 2
 
 # Reply budget (reasoning + the JSON array). The fact-check path's 4096 was
 # copied here and proved far too small: sourcing spends ~3k tokens on
@@ -77,23 +88,29 @@ Reply with ONLY a JSON array, no prose and no code fence:
 
 
 class OpenAIWebSearchSource:
-    """Source facts via the OpenAI Responses API's ``web_search`` tool."""
+    """Source facts via a provider's server-side ``web_search`` tool
+    (OpenAI Responses, or Anthropic Messages for a ``claude-*`` model)."""
 
     def __init__(self, model: Optional[str] = None):
+        self.model = model or SOURCING_MODEL
+        self._anthropic = self.model.startswith("claude")
         # Fail loud at construction, exactly like WebSearchSource does for
         # TAVILY_API_KEY — a keyless source would otherwise degrade into a
         # silent zero-fact leg (the #167 Wikipedia 403 failure mode).
-        if not os.getenv("OPENAI_API_KEY"):
-            raise ValueError("OPENAI_API_KEY not set")
-        self.model = model or SOURCING_MODEL
-        # Contract #53: SDK clients come from the factory. `direct=True`
-        # because no OpenAI-compatible gateway serves the server-side
-        # web_search tool (same carve-out as the fact-check role).
-        self.client = llm_factory.openai_client(
-            async_=True,
-            direct=True,
-            timeout=llm_factory.GENERATION_TIMEOUT,
-        )
+        key = "ANTHROPIC_API_KEY" if self._anthropic else "OPENAI_API_KEY"
+        if not os.getenv(key):
+            raise ValueError(f"{key} not set")
+        # Contract #53: SDK clients come from the factory. Both are
+        # direct-provider: no gateway serves either server-side search tool
+        # (same carve-out as the fact-check role).
+        if self._anthropic:
+            self.client = llm_factory.anthropic_client()
+        else:
+            self.client = llm_factory.openai_client(
+                async_=True,
+                direct=True,
+                timeout=llm_factory.GENERATION_TIMEOUT,
+            )
 
     async def get_facts(
         self, count: int = 10, topics: Optional[list[str]] = None
@@ -114,6 +131,11 @@ class OpenAIWebSearchSource:
             facts: list[Fact] = []
             per_topic_facts.append(facts)
             try:
+                if self._anthropic:
+                    facts.extend(
+                        await self._anthropic_facts(topic, per_topic_count)
+                    )
+                    continue
                 response = await self.client.responses.create(
                     model=self.model,
                     tools=[{"type": "web_search"}],
@@ -143,9 +165,49 @@ class OpenAIWebSearchSource:
 
         return interleave_by_topic(per_topic_facts)[:count]
 
+    async def _anthropic_facts(self, topic: str, count: int) -> list[Fact]:
+        """One Messages turn with ``web_search`` (pause_turn resumed, like
+        ``FactVerifier._call_anthropic``); any non-final stop → no facts."""
+        prompt = _PROMPT_TEMPLATE.format(count=count, topic=topic)
+        tools = [
+            {
+                "type": "web_search_20260209",
+                "name": "web_search",
+                "max_uses": _MAX_WEB_SEARCHES,
+            }
+        ]
+        messages = [{"role": "user", "content": prompt}]
+        response = None
+        for _ in range(1 + _MAX_PAUSE_RESUMES):
+            response = await self.client.messages.create(
+                model=self.model,
+                max_tokens=_MAX_OUTPUT_TOKENS,
+                tools=tools,
+                messages=messages,
+            )
+            if response.stop_reason != "pause_turn":
+                break
+            messages = [
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": response.content},
+            ]
+        if response is None or response.stop_reason not in ("end_turn", "stop_sequence"):
+            logger.warning(
+                "Anthropic web search for %r ended %r — no facts taken",
+                topic,
+                getattr(response, "stop_reason", None),
+            )
+            return []
+        text, urls = _anthropic_text_and_urls(response.content)
+        return self._facts_from_text(text, urls, topic)
+
     def _facts_from_response(self, response, topic: str) -> list[Fact]:
         text, citations = _text_and_citations(response)
-        citations = _trusted_urls(response, citations)
+        return self._facts_from_text(text, _trusted_urls(response, citations), topic)
+
+    def _facts_from_text(
+        self, text: str, citations: list[str], topic: str
+    ) -> list[Fact]:
         facts: list[Fact] = []
 
         for item in _parse_fact_array(text):
@@ -197,6 +259,35 @@ def _text_and_citations(response) -> tuple[str, list[str]]:
                 url = getattr(annotation, "url", "") or ""
                 if url and url not in urls:
                     urls.append(url)
+    return "".join(text_parts), urls
+
+
+def _anthropic_text_and_urls(content) -> tuple[str, list[str]]:
+    """Reply text plus every URL the Anthropic ``web_search`` tool returned.
+
+    The trusted set is the ``web_search_tool_result`` hits (pages the search
+    really returned) plus any ``web_search_result_location`` citations on the
+    text — the Anthropic analogue of ``_trusted_urls``. A tool error result
+    is an object, not a list, and contributes nothing.
+    """
+    text_parts: list[str] = []
+    urls: list[str] = []
+
+    def _add(url) -> None:
+        if url and url not in urls:
+            urls.append(url)
+
+    for block in content or []:
+        kind = getattr(block, "type", None)
+        if kind == "text":
+            text_parts.append(getattr(block, "text", "") or "")
+            for citation in getattr(block, "citations", None) or []:
+                _add(getattr(citation, "url", None))
+        elif kind == "web_search_tool_result":
+            results = getattr(block, "content", None)
+            if isinstance(results, list):
+                for result in results:
+                    _add(getattr(result, "url", None))
     return "".join(text_parts), urls
 
 

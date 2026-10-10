@@ -14,18 +14,28 @@ from quiz_shared.llm import factory as llm_factory
 
 # Parameterized image model — verify at implementation time
 IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-1")
-VALIDATION_MODEL = "gpt-4o-mini"
-QUESTION_MODEL = "gpt-4o"
+# Chat roles of this pipeline (#196 track 196.4): factory roles, each with its
+# own env override (LLM_ROLE_HINT_VALIDATE / LLM_ROLE_HINT_QUESTION). Only the
+# image model itself stays pinned to canonical OpenAI.
+VALIDATION_MODEL = llm_factory.HINT_VALIDATE
+QUESTION_MODEL = llm_factory.HINT_QUESTION
 
 MAX_RETRIES = 3
 
 
 def _get_openai_client():
     # Image generation is direct-only: OpenRouter does not serve gpt-image-1
-    # (issue #53). The chat prompt-drafting + vision-validation calls in this
-    # pipeline share the same direct client to keep the pipeline on one provider.
-    # Offline generation pipeline — needs longer than the voice-path default.
+    # (issue #53). Offline generation pipeline — needs longer than the
+    # voice-path default.
     return llm_factory.openai_client(direct=True, timeout=llm_factory.GENERATION_TIMEOUT)
+
+
+def _chat_text(model: str, messages: list, **kwargs) -> str:
+    """One chat turn on ``model`` via the factory: a Claude id goes to the
+    Anthropic API (#196), anything else through the active gateway. Sampling
+    params the model rejects are dropped by the factory."""
+    response = llm_factory.chat_model(model, **kwargs).invoke(messages)
+    return llm_factory.message_text(response)
 
 
 def generate_hint_image_prompt(
@@ -37,8 +47,6 @@ def generate_hint_image_prompt(
 
     Returns dict with: question, image_prompt, alternative_answers, tags, explanation.
     """
-    client = _get_openai_client()
-
     system_prompt = """You are generating a visual riddle quiz question. The player will see an AI-generated image and must guess what it represents.
 
 RULES:
@@ -66,17 +74,11 @@ Return a JSON object with these fields:
 
 Return ONLY the JSON object."""
 
-    response = client.chat.completions.create(
-        model=QUESTION_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
+    text = _chat_text(
+        QUESTION_MODEL,
+        [("system", system_prompt), ("human", user_prompt)],
         temperature=0.8,
-        max_tokens=1024,
     )
-
-    text = response.choices[0].message.content
     start = text.find("{")
     end = text.rfind("}") + 1
     if start == -1 or end == 0:
@@ -110,17 +112,15 @@ def generate_image(image_prompt: str) -> bytes:
 
 
 def validate_image(image_bytes: bytes, correct_answer: str) -> dict:
-    """Stage 3: Validate image with GPT-4o-mini vision.
+    """Stage 3: Validate image with the HINT_VALIDATE vision model.
 
     Returns dict with: has_text (bool), quality_score (1-10), too_obvious (bool), feedback (str).
     """
-    client = _get_openai_client()
-
     b64 = base64.b64encode(image_bytes).decode("utf-8")
 
-    response = client.chat.completions.create(
-        model=VALIDATION_MODEL,
-        messages=[
+    text = _chat_text(
+        VALIDATION_MODEL,
+        [
             {
                 "role": "user",
                 "content": [
@@ -148,10 +148,7 @@ Return ONLY the JSON object.""",
             }
         ],
         temperature=0.3,
-        max_tokens=512,
     )
-
-    text = response.choices[0].message.content
     start = text.find("{")
     end = text.rfind("}") + 1
     return json.loads(text[start:end])

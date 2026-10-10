@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional, Sequence
 
+from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 
@@ -46,8 +47,9 @@ CONTENT_CLASS_TTL: dict[str, Optional[timedelta]] = {
 # PARSE default). Resolved through the factory so the OpenRouter remap applies
 # under ``LLM_GATEWAY=openrouter``; direct mode leaves it unchanged.
 # 2026-07-30 frontier refresh (founder: no mini-class models anywhere in the
-# generation pipeline) — reuse the factory CRITIQUE role.
-_CLASSIFIER_MODEL = llm_factory.CRITIQUE
+# generation pipeline). Own factory EXPIRY role since #196 track 196.4 (it
+# used to borrow CRITIQUE); ``LLM_ROLE_EXPIRY`` is the one-secret rollback.
+_CLASSIFIER_MODEL = llm_factory.EXPIRY
 
 _PROMPT_HEADER = """You classify trivia questions by how quickly their correct \
 answer goes out of date. You read only the question and its correct answer.
@@ -100,6 +102,8 @@ class ExpiryClassifier:
     def _available(self) -> bool:
         """Whether the LLM is reachable under the active gateway."""
         if llm_factory.is_bedrock_model(_CLASSIFIER_MODEL):
+            return True
+        if anthropic_route.routes_to_anthropic(_CLASSIFIER_MODEL):
             return True
         if llm_factory.gateway() == llm_factory.OPENROUTER:
             return bool(os.getenv("OPENROUTER_API_KEY"))

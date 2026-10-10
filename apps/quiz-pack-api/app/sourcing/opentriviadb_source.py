@@ -1,7 +1,6 @@
 """Open Trivia Database source — extracts underlying facts from trivia questions."""
 
 import html
-import os
 from typing import Optional
 
 import httpx
@@ -77,34 +76,27 @@ class OpenTriviaFactRewriter:
     through the #53 factory — never instantiates an SDK client directly.
     """
 
-    def __init__(self, model: str = "gpt-4o-mini") -> None:
-        self._model = model
+    def __init__(self, model: Optional[str] = None) -> None:
+        # Factory OTDB_REWRITE role (#196 track 196.4), env-overridable.
+        self._model = model or llm_factory.OTDB_REWRITE
         self._client = None
 
     def _available(self) -> bool:
-        """Whether the cheap model is reachable (see AnswerNormalizer)."""
-        return bool(os.getenv("OPENAI_API_KEY")) or llm_factory.gateway() == llm_factory.OPENROUTER
+        """Whether the rewrite model is reachable under the active routing."""
+        return llm_factory.chat_available(self._model)
 
     async def rewrite(self, question: str, answer: str) -> Optional[str]:
         """Return a bare declarative fact, or ``None`` to drop the seed."""
         if not self._available():
             return None
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model(self._model),
-                messages=[
-                    {
-                        "role": "user",
-                        "content": _REWRITE_PROMPT.format(question=question, answer=answer),
-                    }
-                ],
+            if self._client is None:
+                # chat_model: Claude id -> Anthropic API (#196), else the gateway.
+                self._client = llm_factory.chat_model(self._model)
+            response = await self._client.ainvoke(
+                _REWRITE_PROMPT.format(question=question, answer=answer)
             )
-            text = (response.choices[0].message.content or "").strip().strip('"').strip()
+            text = llm_factory.message_text(response).strip().strip('"').strip()
             return text or None
         except Exception:
             return None

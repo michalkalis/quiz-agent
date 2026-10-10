@@ -61,7 +61,9 @@ extension RecordingCoordinator {
             // takes in the field decides whether it needs one.
             let synthesisStartedAt = ContinuousClock.now
             do {
-                let audio = try await networkService.synthesizeSpeech(text: spoken)
+                let audio = try await networkService.synthesizeSpeech(
+                    text: spoken, language: currentSession()?.language ?? settings().language
+                )
                 SentryLog.info("answer read-back synthesized", category: .audio, attributes: [
                     "synthMs": Int((ContinuousClock.now - synthesisStartedAt) / .milliseconds(1)),
                     "bytes": audio.count,

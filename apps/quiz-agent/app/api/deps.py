@@ -274,6 +274,13 @@ class SynthesizeTTSRequest(BaseModel):
     format: Optional[str] = Field(
         default="opus", description="Audio format (opus, mp3, aac)"
     )
+    # TF 2026-10-10: a read-back of a bare "366" in a Slovak quiz came out in
+    # English — with no surrounding words the voice cannot tell the language.
+    # The quiz language lets the route spell digits out, as question audio does.
+    language: Optional[str] = Field(
+        default=None,
+        description="Quiz language (e.g. 'sk'); digits are spelled out in it",
+    )
 
 
 class ElevenLabsTokenResponse(BaseModel):

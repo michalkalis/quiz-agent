@@ -356,7 +356,7 @@ import os
 
         /// #132 E recap narration: records each chunk so tests can assert what
         /// would have been spoken (and that nothing is spoken in per-question mode).
-        func synthesizeSpeech(text: String) async throws -> Data {
+        func synthesizeSpeech(text: String, language _: String?) async throws -> Data {
             synthesizedTexts.append(text)
             if shouldFail {
                 throw NetworkError.invalidResponse

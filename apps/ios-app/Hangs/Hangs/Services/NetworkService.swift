@@ -631,6 +631,45 @@ actor NetworkService: NetworkServiceProtocol {
         }
     }
 
+    // MARK: - Voice samples (#197)
+
+    /// One saved answer recording + its sidecar to `POST /voice-samples`.
+    /// Only allowlisted (founder) accounts are accepted; anything else is a
+    /// 403 the uploader treats like any failure — the files stay on device.
+    func uploadVoiceSample(stamp: String, wav: Data, sidecarJSON: Data) async throws {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/voice-samples")
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60
+
+        var body = Data()
+        func appendField(_ name: String, _ value: Data) {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n".utf8))
+            body.append(value)
+            body.append(Data("\r\n".utf8))
+        }
+        appendField("stamp", Data(stamp.utf8))
+        appendField("sidecar", sidecarJSON)
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"audio\"; filename=\"\(stamp).wav\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/wav\r\n\r\n".utf8))
+        body.append(wav)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        request.httpBody = body
+
+        let endpointPath = "/api/v1/voice-samples"
+        breadcrumbRequest(method: "POST", endpoint: endpointPath)
+        let (data, response) = try await sendAuthorized(request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        breadcrumbResponse(endpoint: endpointPath, status: httpResponse.statusCode, bytes: data.count)
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
+            throw NetworkError.serverError(statusCode: httpResponse.statusCode, message: "voice sample upload failed")
+        }
+    }
+
     // MARK: - Audio Download
 
     func downloadAudio(from urlString: String) async throws -> Data {

@@ -31,6 +31,8 @@ final class AppState: ObservableObject {
     let analytics: AnalyticsClient
     /// Server-side switches: forced update, orders on/off, Home notice (#193 task 193.9).
     let appConfig = AppConfigStore()
+    /// #197: car answer recordings → backend (production only; nil in UI tests).
+    private var answerRecordingUploader: AnswerRecordingUploader?
 
     /// The `app_opened` launch kind still to report: cold until the first
     /// activation, then foreground after every trip to the background.
@@ -126,6 +128,10 @@ final class AppState: ObservableObject {
         self.authService = authService
         let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.networkService = networkService
+        // #197: recordings a previous run could not send go out now.
+        let uploader = AnswerRecordingUploader(transport: networkService)
+        answerRecordingUploader = uploader
+        uploader.requestUpload()
         let analytics = LiveAnalyticsClient(networkService: networkService)
         self.analytics = analytics
         audioService = AudioService()
@@ -352,7 +358,8 @@ final class AppState: ObservableObject {
                 #endif
                 return VoicePipelineFlags.realtimeSTTEnabled
             },
-            analytics: analytics
+            analytics: analytics,
+            answerRecordingUploader: answerRecordingUploader
         )
 
         #if DEBUG

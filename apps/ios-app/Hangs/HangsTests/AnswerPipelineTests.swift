@@ -122,13 +122,13 @@ struct AnswerRecordingStoreTests {
         #expect(AnswerRecordingStore.recordingCount(directory: dir) == 1)
         #expect(AnswerRecordingStore.files(directory: dir).map(\.pathExtension) == ["json", "wav"])
 
-        AnswerRecordingStore.attachTranscript("Bratislava", provider: "scribe", to: stamp!, directory: dir)
+        AnswerRecordingStore.recordOutcome(.init(decision: "correct", transcript: "Bratislava"), to: stamp!, directory: dir)
         let json = try Data(contentsOf: dir.appendingPathComponent("\(stamp!).json"))
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let decoded = try decoder.decode(AnswerRecordingStore.Sidecar.self, from: json)
         #expect(decoded.transcript == "Bratislava")
-        #expect(decoded.provider == "scribe")
+        #expect(decoded.appDecision == "correct")
         #expect(decoded.language == "sk")
         #expect(decoded.voiceProcessing == true)
 

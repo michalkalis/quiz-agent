@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 CAN'T REACH
 THE STORE
 We couldn't load the upgrade right now. Check your connection and try again.

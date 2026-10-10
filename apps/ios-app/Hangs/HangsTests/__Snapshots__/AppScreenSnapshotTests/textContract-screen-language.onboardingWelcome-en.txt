@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 ANSWER BY VOICE
 Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.
 ANSWER BY VOICE

@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 ODPOVĚZ HLASEM
 Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Během kvízu nemusíš na nic klepat.
 ODPOVĚZ HLASEM

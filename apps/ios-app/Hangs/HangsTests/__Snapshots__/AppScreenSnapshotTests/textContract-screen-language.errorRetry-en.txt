@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 OOPS
 No internet connection
 Check your Wi-Fi or mobile data and try again.

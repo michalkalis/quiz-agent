@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 MIKROFON
 Trubbo potřebuje přístup k mikrofonu, aby slyšel tvoje hlasové odpovědi. Odpovědi můžeš i psát.
 MIKROFON

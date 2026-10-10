@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 OBCHOD
 NEDOSTUPNÝ
 Ponuku sa teraz nepodarilo načítať. Skontroluj pripojenie a skús to znova.

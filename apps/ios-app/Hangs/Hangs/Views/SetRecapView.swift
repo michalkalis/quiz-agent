@@ -105,7 +105,8 @@ struct SetRecapRow: View {
                     .multilineTextAlignment(.leading)
 
                 Text(entry.correctAnswerDisplay)
-                    .font(.hangsLabel)
+                    // #194: answers are content — Rethink Sans.
+                    .font(.hangsContent)
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .multilineTextAlignment(.leading)
             }
@@ -162,7 +163,7 @@ struct SetRecapRow: View {
                     HangsSectionLabel(text: "you said")
                     Text(said)
                         .strikethrough()
-                        .font(.hangsLabel)
+                        .font(.hangsContent)
                         .foregroundColor(Theme.Hangs.Colors.muted)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)

@@ -1,0 +1,1372 @@
+{
+ "assignments": [
+  {
+   "id": "7c3c3453-44d5-4a16-b3a9-8b82b7a2facd",
+   "category": "movies-music"
+  },
+  {
+   "id": "1936da1a-dae7-498e-92fb-91a57f781436",
+   "category": "movies-music"
+  },
+  {
+   "id": "5026b5d7-eb00-42f0-b8ac-9a4cd6831a8a",
+   "category": "movies-music"
+  },
+  {
+   "id": "6802c547-ece1-4646-9bf3-1ba7f25dcfc5",
+   "category": "history"
+  },
+  {
+   "id": "0f71b58c-4f74-4447-804c-6d7a7d442322",
+   "category": "history"
+  },
+  {
+   "id": "06b74a86-c42d-4ef9-bd7c-1e390a9f3b3d",
+   "category": "history"
+  },
+  {
+   "id": "4a84509b-6243-4ce2-83ba-8f4f5dd46dd9",
+   "category": "history"
+  },
+  {
+   "id": "5384aed3-a712-4d73-99be-2e585afc7619",
+   "category": "history"
+  },
+  {
+   "id": "57ca5b6e-a915-4e70-acba-aa7deec04131",
+   "category": "history"
+  },
+  {
+   "id": "734a7f0b-c4fb-4d6d-a8e1-5ad5967750a3",
+   "category": "history"
+  },
+  {
+   "id": "81936e04-183f-4a4a-810c-e2227842ac54",
+   "category": "history"
+  },
+  {
+   "id": "9782e8e8-9112-4e1c-aecd-d16475c5339f",
+   "category": "history"
+  },
+  {
+   "id": "9d9bfdea-ca20-4d96-9ff9-03c405e4c3eb",
+   "category": "history"
+  },
+  {
+   "id": "3a73db5c-0f23-4182-b053-f9d6f3e80037",
+   "category": "science-nature"
+  },
+  {
+   "id": "bd144ab4-e968-4816-9e3f-79b5a02d3c9a",
+   "category": "science-nature"
+  },
+  {
+   "id": "006a0bc5-613f-4486-844b-9e76274bac2d",
+   "category": "science-nature"
+  },
+  {
+   "id": "1c868920-3ff3-4b21-bb37-7c77044f59b9",
+   "category": "science-nature"
+  },
+  {
+   "id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+   "category": "science-nature"
+  },
+  {
+   "id": "24a23cc4-9456-4836-b68e-8b8de461b9a7",
+   "category": "science-nature"
+  },
+  {
+   "id": "24f62e7b-60af-4f74-b326-4a2d52add897",
+   "category": "science-nature"
+  },
+  {
+   "id": "55b27da9-edca-40d5-aa8f-fe52eb218abf",
+   "category": "science-nature"
+  },
+  {
+   "id": "6fa83da7-962f-4b09-bd22-0f271a8efa7f",
+   "category": "science-nature"
+  },
+  {
+   "id": "720f7057-b39a-4de1-8bb2-de45f59cf103",
+   "category": "science-nature"
+  },
+  {
+   "id": "80d3216d-9c48-44da-8d3c-b8b1a3bb71b9",
+   "category": "science-nature"
+  },
+  {
+   "id": "940a5b77-b6ac-46ca-b793-99579f9716ea",
+   "category": "science-nature"
+  },
+  {
+   "id": "97bd90ee-ba4b-4274-b28a-0f8fb9c9654a",
+   "category": "science-nature"
+  },
+  {
+   "id": "a0c5f601-9f91-4cd7-88a9-0e87922b691f",
+   "category": "science-nature"
+  },
+  {
+   "id": "a11f3f3e-5de8-48a9-bc1f-69192c1b1f86",
+   "category": "science-nature"
+  },
+  {
+   "id": "a3e88337-c04d-4525-82cc-f9d05d5ee57e",
+   "category": "science-nature"
+  },
+  {
+   "id": "b1f55130-37a9-4ca5-92e7-f3a92893af9e",
+   "category": "science-nature"
+  },
+  {
+   "id": "b5ba099b-da60-4111-8330-47e91b92a693",
+   "category": "science-nature"
+  },
+  {
+   "id": "ca6ec16c-ef0f-4176-a857-36a266daa13a",
+   "category": "science-nature"
+  },
+  {
+   "id": "d0954b75-32f3-4e25-bf39-dae8f3f4ac3f",
+   "category": "science-nature"
+  },
+  {
+   "id": "e2faa65c-f805-475e-9154-66f96fbfc916",
+   "category": "science-nature"
+  },
+  {
+   "id": "eac3f074-49d2-4c5c-be4e-a303554ca7eb",
+   "category": "science-nature"
+  },
+  {
+   "id": "ef1d8e7a-7c33-41b2-905b-90e371552013",
+   "category": "science-nature"
+  },
+  {
+   "id": "f2205df2-a2da-4370-9d96-3521e6c7d6ef",
+   "category": "science-nature"
+  },
+  {
+   "id": "f6d11e83-aaed-45e9-8524-78c60b78c6df",
+   "category": "science-nature"
+  },
+  {
+   "id": "fb43ed4b-59c3-453a-b754-cefc8f39a566",
+   "category": "science-nature"
+  },
+  {
+   "id": "28a03d09-565f-4d09-9d84-6aea7ddfb1fa",
+   "category": "geography-world"
+  },
+  {
+   "id": "8322d6d6-a1fc-404e-83be-bf7363d9bbc8",
+   "category": "geography-world"
+  },
+  {
+   "id": "9aebc229-5e4e-495a-a8ba-e87616d69c10",
+   "category": "geography-world"
+  },
+  {
+   "id": "da0bf20b-7113-46eb-b984-8ba40dc632f9",
+   "category": "geography-world"
+  },
+  {
+   "id": "e3c510e1-426d-45a1-9623-3245de81f1b7",
+   "category": "geography-world"
+  },
+  {
+   "id": "0e3fbb91-5e9a-4072-b926-45654353ced9",
+   "category": "movies-music"
+  },
+  {
+   "id": "3ecc8bd3-09da-4ec9-b274-289eb32d925d",
+   "category": "movies-music"
+  },
+  {
+   "id": "6ca3bc44-2af1-4ad1-9491-00e2c9dee5be",
+   "category": "movies-music"
+  },
+  {
+   "id": "9d7b418e-9991-472a-8c42-7d6b856574c4",
+   "category": "movies-music"
+  },
+  {
+   "id": "befb2a11-65ad-471c-ab6f-b4bcdf1d4f18",
+   "category": "movies-music"
+  },
+  {
+   "id": "c050c6c1-c5c7-48fd-a1f8-548684ab2c41",
+   "category": "movies-music"
+  },
+  {
+   "id": "a927b2a4-45ce-4ea4-a62b-473b5285ad56",
+   "category": "movies-music"
+  },
+  {
+   "id": "27bca867-319e-4961-825d-451ffaf836f5",
+   "category": "science-nature"
+  },
+  {
+   "id": "55c03cf7-73a5-4a4c-bda2-73a14649c318",
+   "category": "geography-world"
+  },
+  {
+   "id": "8a76cab1-4ed7-417b-a5d8-f8db6cb6c937",
+   "category": "geography-world"
+  },
+  {
+   "id": "0db4ce83-49f3-41c4-a245-c20db39c8e95",
+   "category": "science-nature"
+  },
+  {
+   "id": "573f4062-a490-4af0-8358-737eebdba343",
+   "category": "science-nature"
+  },
+  {
+   "id": "5e83339e-dfb0-4a30-a451-590f322ee4bb",
+   "category": "food-everyday"
+  },
+  {
+   "id": "605a6d21-53e1-4869-af9f-7460a5460588",
+   "category": "history"
+  },
+  {
+   "id": "3f6ebbed-126e-4bb8-9e5f-2a41071dc265",
+   "category": "science-nature"
+  },
+  {
+   "id": "67c4e7ec-0bbf-4529-ac68-eb71ec19943d",
+   "category": "food-everyday"
+  },
+  {
+   "id": "d0c1a81f-ee07-4e5c-a208-680b34e6380f",
+   "category": "history"
+  },
+  {
+   "id": "d112e4be-8373-4f82-af30-e00240c7987a",
+   "category": "food-everyday"
+  },
+  {
+   "id": "16e3745b-9177-4360-a30d-ed56dbeea80b",
+   "category": "geography-world"
+  },
+  {
+   "id": "20bea9f9-dd29-434a-955e-c6115c25af96",
+   "category": "geography-world"
+  },
+  {
+   "id": "2fdd2bb2-6e75-41b6-89ae-8d20643f5aba",
+   "category": "geography-world"
+  },
+  {
+   "id": "8f896121-4858-40d0-8e25-52f84a1d0784",
+   "category": "geography-world"
+  },
+  {
+   "id": "bbd55cbc-8285-42e6-acde-013aa6d76b15",
+   "category": "geography-world"
+  },
+  {
+   "id": "dc21f9da-c44e-46d2-89d7-ac9d7400a1ee",
+   "category": "geography-world"
+  },
+  {
+   "id": "20b44240-10a3-4144-b8de-75595fb45ddd",
+   "category": "geography-world"
+  },
+  {
+   "id": "fc343127-42b0-4638-a2ee-02626021d54b",
+   "category": "history"
+  },
+  {
+   "id": "fe978a48-dc74-42c4-bd07-5b5c54c65a32",
+   "category": "food-everyday"
+  },
+  {
+   "id": "e80155a7-92b6-43fb-822e-84c49078e43f",
+   "category": "geography-world"
+  },
+  {
+   "id": "9015951b-446e-4752-8b33-e22f747a3f12",
+   "category": "history"
+  },
+  {
+   "id": "fb7d1cf3-ed18-4dde-9ff5-9c05574fe8b7",
+   "category": "food-everyday"
+  },
+  {
+   "id": "050aef91-d3af-4f57-add9-18c6816ffa7e",
+   "category": "movies-music"
+  },
+  {
+   "id": "0658aada-cab7-4c38-b073-c2cc7f7ccc5f",
+   "category": "movies-music"
+  },
+  {
+   "id": "234fcf1b-cce5-4910-807a-208accf5a98f",
+   "category": "movies-music"
+  },
+  {
+   "id": "580715c2-43c5-4f69-8d62-461a92b1a0d2",
+   "category": "movies-music"
+  },
+  {
+   "id": "69c25535-4c93-40e9-b0d2-74cedd12fbfb",
+   "category": "movies-music"
+  },
+  {
+   "id": "6c9b4c31-1502-4473-bba5-b2e46602983e",
+   "category": "movies-music"
+  },
+  {
+   "id": "71947ab8-0f67-45e1-9b89-e1e12bb1627f",
+   "category": "movies-music"
+  },
+  {
+   "id": "9524a702-e1ba-475b-badd-61b8da77614c",
+   "category": "movies-music"
+  },
+  {
+   "id": "ab930a7f-f13c-4d72-99f8-1f7349efb7a2",
+   "category": "movies-music"
+  },
+  {
+   "id": "b9f31080-de46-436f-abf1-38bfabbb076d",
+   "category": "movies-music"
+  },
+  {
+   "id": "00c3079a-5fca-435f-b612-a2bb7761a547",
+   "category": "history"
+  },
+  {
+   "id": "8e83b929-aa70-4987-99ba-56813bde8bf0",
+   "category": "history"
+  },
+  {
+   "id": "e3116191-1047-45c1-84b5-07ae89267474",
+   "category": "food-everyday"
+  },
+  {
+   "id": "287a83b3-edc1-4838-94ab-bf270ae21e3c",
+   "category": "geography-world"
+  },
+  {
+   "id": "f625d35f-f218-4ea8-92f9-e67d7f0c81b4",
+   "category": "food-everyday"
+  },
+  {
+   "id": "19a01d7c-1d5b-45fb-9872-89d18cecbf52",
+   "category": "food-everyday"
+  },
+  {
+   "id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+   "category": "food-everyday"
+  },
+  {
+   "id": "41381afb-6d58-4f7e-a479-1a808e6cddf5",
+   "category": "food-everyday"
+  },
+  {
+   "id": "43520f30-d790-4d3e-be5b-2df27afa9e90",
+   "category": "food-everyday"
+  },
+  {
+   "id": "64e45936-baac-4e48-866e-9b09398f9791",
+   "category": "food-everyday"
+  },
+  {
+   "id": "72e2d072-14b6-4569-966f-6814063b35c4",
+   "category": "food-everyday"
+  },
+  {
+   "id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+   "category": "food-everyday"
+  },
+  {
+   "id": "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471",
+   "category": "food-everyday"
+  },
+  {
+   "id": "d5fe5faf-f768-4623-98af-c88966aaec34",
+   "category": "food-everyday"
+  },
+  {
+   "id": "f1a6ebdf-d4c2-4ef6-971e-be965d5532fa",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+   "category": "food-everyday"
+  },
+  {
+   "id": "1134f16b-b2c6-4ea0-b109-67ef8a4dd382",
+   "category": "food-everyday"
+  },
+  {
+   "id": "36473869-173e-4d62-be01-bd427cde8ecc",
+   "category": "food-everyday"
+  },
+  {
+   "id": "3befd125-2465-45c8-87b9-9bf61c5516a0",
+   "category": "food-everyday"
+  },
+  {
+   "id": "6f2d36ce-2800-4c09-863a-b0817b627ceb",
+   "category": "food-everyday"
+  },
+  {
+   "id": "81fd9220-d556-4ee9-a0f9-84a0c920ccab",
+   "category": "food-everyday"
+  },
+  {
+   "id": "a33e9975-01e6-490f-8a88-5f89dbc7377c",
+   "category": "food-everyday"
+  },
+  {
+   "id": "b388a69e-91a6-4f87-8b09-1bceca1a5fd2",
+   "category": "food-everyday"
+  },
+  {
+   "id": "bd8beb8d-0c86-42b8-b13b-2561fdb7062a",
+   "category": "food-everyday"
+  },
+  {
+   "id": "d94b0f97-cdd4-490d-8787-db66d0633dc5",
+   "category": "food-everyday"
+  },
+  {
+   "id": "db7f4401-7b5a-4f7d-b098-93462ee27e4b",
+   "category": "food-everyday"
+  },
+  {
+   "id": "dbd0a4df-29d0-4804-bcf3-604b3b37646c",
+   "category": "food-everyday"
+  },
+  {
+   "id": "a4d351ed-8c2d-48cc-9f01-7e48c3486082",
+   "category": "science-nature"
+  },
+  {
+   "id": "8fc9b176-c3b3-4b03-bf6e-c56ad2d86ff2",
+   "category": "geography-world"
+  },
+  {
+   "id": "9eeb7aff-5b5c-487f-b59f-0023a3f475d7",
+   "category": "geography-world"
+  },
+  {
+   "id": "c2f3ddab-3442-4477-985e-5b17b46d239d",
+   "category": "geography-world"
+  },
+  {
+   "id": "c4ce7e28-27da-4b19-a864-5acbeb606dff",
+   "category": "geography-world"
+  },
+  {
+   "id": "f4df4398-a302-4fd4-9f68-6356ce3cbcff",
+   "category": "geography-world"
+  },
+  {
+   "id": "2b3ba69e-02fc-4768-a4a2-f1eee16cce97",
+   "category": "geography-world"
+  },
+  {
+   "id": "05ccc8c8-568e-4f1b-9ea5-16574253baf6",
+   "category": "geography-world"
+  },
+  {
+   "id": "0ec6c0d0-e6cf-433c-bb91-fa8b8de90031",
+   "category": "geography-world"
+  },
+  {
+   "id": "1264b939-b97d-4d92-a1ad-322e7be0c62e",
+   "category": "geography-world"
+  },
+  {
+   "id": "277c9c09-282a-418d-902f-a78bfdb1212a",
+   "category": "geography-world"
+  },
+  {
+   "id": "6814cb24-9027-42f3-8aaa-112adc3bed6f",
+   "category": "science-nature"
+  },
+  {
+   "id": "6bfc5679-0b64-4df4-a124-ee173948614f",
+   "category": "geography-world"
+  },
+  {
+   "id": "85cad3c7-59ac-4e56-8718-bb7df65b5901",
+   "category": "geography-world"
+  },
+  {
+   "id": "913dd84f-e408-4441-85b4-7f57bd2b08ad",
+   "category": "geography-world"
+  },
+  {
+   "id": "959b9b2b-ac48-4bff-a667-ec1189035d8d",
+   "category": "geography-world"
+  },
+  {
+   "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+   "category": "geography-world"
+  },
+  {
+   "id": "b73f315c-895e-490c-a32b-3bedb2145efc",
+   "category": "geography-world"
+  },
+  {
+   "id": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+   "category": "geography-world"
+  },
+  {
+   "id": "c3d2348b-ad2d-40e5-b781-edb030d429da",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0a539a89-4048-472f-8e7c-e536439a4258",
+   "category": "history"
+  },
+  {
+   "id": "25854186-392a-4ab7-880a-4aa1a7e8bed9",
+   "category": "history"
+  },
+  {
+   "id": "d42ef820-45f3-4594-8ee8-fb4e127dc027",
+   "category": "history"
+  },
+  {
+   "id": "f66ef57e-1d49-4f7a-93c6-3615c1bf9dc7",
+   "category": "history"
+  },
+  {
+   "id": "0fc222b2-5985-4675-8945-ee627f6a92e5",
+   "category": "history"
+  },
+  {
+   "id": "1bbc9d29-bc08-4e1f-ac17-79abe8c7ffaf",
+   "category": "history"
+  },
+  {
+   "id": "2ef7ff3a-9bb7-492b-93a3-761ad8a2da61",
+   "category": "history"
+  },
+  {
+   "id": "3e8a8e41-4719-4b6d-8675-ba843ab8c066",
+   "category": "history"
+  },
+  {
+   "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
+   "category": "history"
+  },
+  {
+   "id": "42a10e74-2914-44d5-8d35-edc5e8ab759d",
+   "category": "history"
+  },
+  {
+   "id": "496b3405-50aa-4315-bbca-8d3e85dada58",
+   "category": "history"
+  },
+  {
+   "id": "6ec076b9-e941-4c87-8b1a-49e2ab0db828",
+   "category": "history"
+  },
+  {
+   "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+   "category": "history"
+  },
+  {
+   "id": "7fe55067-9ad3-4e08-83e7-459de5b8118f",
+   "category": "history"
+  },
+  {
+   "id": "a885e8ff-b08a-4d97-9ad3-4572bcd454a7",
+   "category": "history"
+  },
+  {
+   "id": "cb0b2955-edbe-4705-8b74-00207b246159",
+   "category": "history"
+  },
+  {
+   "id": "dfd6295c-2c27-4def-85b4-73b914bd183f",
+   "category": "history"
+  },
+  {
+   "id": "efb5b47b-2744-46a4-8c35-fc554aaf519f",
+   "category": "history"
+  },
+  {
+   "id": "f5896162-f589-4127-aee4-15afe65a4926",
+   "category": "history"
+  },
+  {
+   "id": "c2e3d05c-6e26-4630-95bf-c6f06915f313",
+   "category": "history"
+  },
+  {
+   "id": "71abc5e2-e23c-4cf8-a17e-899e8f578560",
+   "category": "food-everyday"
+  },
+  {
+   "id": "89f8ed27-4f93-4f20-8567-d0d8f0d5ed8c",
+   "category": "food-everyday"
+  },
+  {
+   "id": "cc76f82d-8207-4874-a5af-06a4be2f5fc9",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0098aebd-c7d9-4a79-8770-d930b58984c1",
+   "category": "science-nature"
+  },
+  {
+   "id": "0cde91bd-bc32-40be-97d0-4fadf8a55c2a",
+   "category": "science-nature"
+  },
+  {
+   "id": "58c69ecf-ae5a-40fe-8435-e7bb22a05ad3",
+   "category": "science-nature"
+  },
+  {
+   "id": "5ef64574-5b54-4a64-8bf3-f8ebb1c74eac",
+   "category": "science-nature"
+  },
+  {
+   "id": "870796c2-423f-4b1c-81f2-7ba7ffe1242e",
+   "category": "science-nature"
+  },
+  {
+   "id": "e8905437-f159-4a1a-8e4f-fde3ea49bf5b",
+   "category": "science-nature"
+  },
+  {
+   "id": "fbb72067-c26c-4ee4-bd53-31f7d44c455d",
+   "category": "science-nature"
+  },
+  {
+   "id": "a4a5fdc7-7234-458b-8500-b6792021433f",
+   "category": "science-nature"
+  },
+  {
+   "id": "1d005c8a-efd7-4f01-9907-64a31572f0d1",
+   "category": "food-everyday"
+  },
+  {
+   "id": "1d760f3c-6191-4c8c-a073-5eef3da16948",
+   "category": "food-everyday"
+  },
+  {
+   "id": "91ad26c0-d9b8-4e0b-829d-76532f188370",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0cebd37e-85a1-4ab6-9899-4137f95f6edb",
+   "category": "food-everyday"
+  },
+  {
+   "id": "1f57ec27-358f-4300-bf63-9a6b84e9daa5",
+   "category": "food-everyday"
+  },
+  {
+   "id": "35ddda4b-d4c2-4e64-b030-c1a2e1a1e340",
+   "category": "food-everyday"
+  },
+  {
+   "id": "66c84553-031a-4486-a040-39df485b447a",
+   "category": "food-everyday"
+  },
+  {
+   "id": "76c2e512-af68-418f-8315-32a47b112991",
+   "category": "food-everyday"
+  },
+  {
+   "id": "7d191d32-8ce1-4905-8908-551ee5104c3e",
+   "category": "food-everyday"
+  },
+  {
+   "id": "7ee6f43d-66f1-4764-83fe-b3b03bea7f54",
+   "category": "food-everyday"
+  },
+  {
+   "id": "8aff34d0-a045-4856-8e53-f2f18af215d6",
+   "category": "food-everyday"
+  },
+  {
+   "id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+   "category": "food-everyday"
+  },
+  {
+   "id": "ba1fcc8b-43aa-4a30-ae72-6a6e31373db2",
+   "category": "food-everyday"
+  },
+  {
+   "id": "ba3936a6-cdb5-446d-b87b-2ab2c76bdf69",
+   "category": "food-everyday"
+  },
+  {
+   "id": "bd766dcb-c42b-4a4c-b82f-e6add853fbad",
+   "category": "food-everyday"
+  },
+  {
+   "id": "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55",
+   "category": "food-everyday"
+  },
+  {
+   "id": "bff6c28b-e35b-44a9-9a84-53721e99e877",
+   "category": "food-everyday"
+  },
+  {
+   "id": "c049da61-480f-44d4-9df1-8f1df5bc3914",
+   "category": "food-everyday"
+  },
+  {
+   "id": "c5ad6b00-e4c1-485e-9174-07d5e8832e11",
+   "category": "food-everyday"
+  },
+  {
+   "id": "cafc353a-6f79-4148-a7d0-2531e976af31",
+   "category": "food-everyday"
+  },
+  {
+   "id": "d29c8548-8f63-4ad6-9f58-59a050deece2",
+   "category": "history"
+  },
+  {
+   "id": "db895ff5-fa37-40dc-9c3a-1fb1dc9adccc",
+   "category": "food-everyday"
+  },
+  {
+   "id": "e276fad1-4afd-4acf-b5d0-ac1f0df4025f",
+   "category": "food-everyday"
+  },
+  {
+   "id": "e485cc9f-2539-4639-9517-9742aa68c61f",
+   "category": "food-everyday"
+  },
+  {
+   "id": "e85a05da-240f-40e3-90b6-5b147893e2a8",
+   "category": "food-everyday"
+  },
+  {
+   "id": "020a24fd-5434-4b17-89d8-1f827c78d98c",
+   "category": "geography-world"
+  },
+  {
+   "id": "20ec889d-2671-4d31-8a92-ad1614ce16ab",
+   "category": "geography-world"
+  },
+  {
+   "id": "b1189f8e-4c7b-49cf-8823-0d3874a80460",
+   "category": "geography-world"
+  },
+  {
+   "id": "ce303d8a-11c9-4b6c-bb0c-0204b34d5992",
+   "category": "geography-world"
+  },
+  {
+   "id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+   "category": "geography-world"
+  },
+  {
+   "id": "664ca7cb-2b35-4770-aa81-ad846372bcf8",
+   "category": "geography-world"
+  },
+  {
+   "id": "748948f7-69d1-40cf-aed7-ee34a1f10ccf",
+   "category": "geography-world"
+  },
+  {
+   "id": "7a294780-d23a-4a8f-8069-fe98d897a06d",
+   "category": "geography-world"
+  },
+  {
+   "id": "923d2bb1-100b-4590-af34-083e7f6f2d01",
+   "category": "geography-world"
+  },
+  {
+   "id": "97778415-6767-4ca6-bde9-c743fc410bbb",
+   "category": "geography-world"
+  },
+  {
+   "id": "ba6f8853-64f4-436f-87ba-f008839b9fa3",
+   "category": "history"
+  },
+  {
+   "id": "e0fd4c81-e3d6-444b-ba83-1e1a2fcd32c9",
+   "category": "geography-world"
+  },
+  {
+   "id": "ee76e3be-ace2-4457-a9a2-50c92811c027",
+   "category": "geography-world"
+  },
+  {
+   "id": "f2d04b18-7db0-4f6f-a9bb-45cce0cc6cdb",
+   "category": "geography-world"
+  },
+  {
+   "id": "586a8cad-a6cd-48d5-8b94-e21993d8a2c0",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0f135908-4cff-4ad0-9bcb-4c23237ad353",
+   "category": "movies-music"
+  },
+  {
+   "id": "3c242e6e-4ba9-4f4b-a725-6584497e4ff9",
+   "category": "movies-music"
+  },
+  {
+   "id": "fc282e13-7fea-4053-960a-bd2b82566b86",
+   "category": "movies-music"
+  },
+  {
+   "id": "7c9141d0-b7f1-4ba4-b4dc-d7f61636d450",
+   "category": "science-nature"
+  },
+  {
+   "id": "83866287-1c7a-40d4-a9f1-dacb1dbc40a9",
+   "category": "science-nature"
+  },
+  {
+   "id": "c2e78b06-eddf-4b46-8eb0-b86cf6ecb5c0",
+   "category": "science-nature"
+  },
+  {
+   "id": "c4e85ec8-9a21-4586-8ed3-3c38e6d2276c",
+   "category": "science-nature"
+  },
+  {
+   "id": "7e9cf519-3881-4411-9a08-e208b698d1ca",
+   "category": "science-nature"
+  },
+  {
+   "id": "009d43c0-469a-49c8-9070-f70edbde93d8",
+   "category": "science-nature"
+  },
+  {
+   "id": "0289b089-98b3-41e6-890c-b047e4654a14",
+   "category": "science-nature"
+  },
+  {
+   "id": "0b651b9c-4c92-41d7-854f-f7eaa4be2bce",
+   "category": "science-nature"
+  },
+  {
+   "id": "19fecd02-da3c-4b50-aa1f-7a5ded55a54d",
+   "category": "science-nature"
+  },
+  {
+   "id": "2faba0df-893f-4828-8ee9-9cbc88137d00",
+   "category": "science-nature"
+  },
+  {
+   "id": "307e65d7-9f6b-4e07-aca7-f7bedfa55fa6",
+   "category": "science-nature"
+  },
+  {
+   "id": "32ded2e5-3a72-4450-b228-3eb5510dd9ce",
+   "category": "science-nature"
+  },
+  {
+   "id": "7030981c-c0ce-444f-abd2-39960034f185",
+   "category": "science-nature"
+  },
+  {
+   "id": "7f489598-3f5e-44a2-bf38-dc371c875f9a",
+   "category": "science-nature"
+  },
+  {
+   "id": "8323bc2a-7c15-430e-9a25-fec5309a1b50",
+   "category": "science-nature"
+  },
+  {
+   "id": "8a07c6ff-af65-4cce-b890-3935e524f158",
+   "category": "science-nature"
+  },
+  {
+   "id": "9cb0ac4b-5a72-4392-b5ee-9a61fda9ac58",
+   "category": "science-nature"
+  },
+  {
+   "id": "ab9c5975-1c54-482a-ab62-8dcdb194812c",
+   "category": "science-nature"
+  },
+  {
+   "id": "dca6f3c8-0f95-4c4e-8094-945ee3636bc6",
+   "category": "science-nature"
+  },
+  {
+   "id": "fb5b0efb-ec6b-4e86-af28-31d55309ec41",
+   "category": "science-nature"
+  },
+  {
+   "id": "99ae8290-4e41-470b-a404-3949c69bc8cc",
+   "category": "science-nature"
+  },
+  {
+   "id": "09cd6605-30cf-4ca5-9cb5-428717fb4cff",
+   "category": "history"
+  },
+  {
+   "id": "ccf69e83-8da0-453c-9012-057e87dd203a",
+   "category": "history"
+  },
+  {
+   "id": "2a2be47a-49b1-4ee9-aff3-2f03a52fe7d5",
+   "category": "food-everyday"
+  },
+  {
+   "id": "62f78ce7-d91a-4e43-af83-4abc3894ead9",
+   "category": "food-everyday"
+  },
+  {
+   "id": "aee96ee5-e92f-4a31-a24b-dafa20047d3c",
+   "category": "history"
+  },
+  {
+   "id": "d9e057f6-094e-4c3e-89ee-ff2bdba7e7f3",
+   "category": "geography-world"
+  },
+  {
+   "id": "f4bc50b9-32fb-4d59-9c9e-548780951164",
+   "category": "geography-world"
+  },
+  {
+   "id": "10f09d50-9690-4bf6-bea3-af36e9dd5f61",
+   "category": "history"
+  },
+  {
+   "id": "1cdae4ba-06e0-4370-9a50-3ee6bff86aa3",
+   "category": "history"
+  },
+  {
+   "id": "46d4245e-b850-42fe-9338-3071fb478f45",
+   "category": "history"
+  },
+  {
+   "id": "7736bf71-da83-4974-9c23-df43bd616dd4",
+   "category": "history"
+  },
+  {
+   "id": "85fb8d32-8218-4920-a4cd-0f9390cd2f17",
+   "category": "history"
+  },
+  {
+   "id": "a1131ce4-c9da-4dc9-840a-cefc21263ca5",
+   "category": "history"
+  },
+  {
+   "id": "b8e4ee67-f259-4ce2-85b0-cf63e019f970",
+   "category": "history"
+  },
+  {
+   "id": "c3c00f77-c142-4c65-b5f4-771add22e140",
+   "category": "history"
+  },
+  {
+   "id": "cb09955f-3126-4812-9451-4dede507a37c",
+   "category": "history"
+  },
+  {
+   "id": "d107d527-0d31-4fc9-b4dc-fd9c797c4539",
+   "category": "history"
+  },
+  {
+   "id": "d3723da1-31c3-4118-b5f0-8fa13c414c0b",
+   "category": "history"
+  },
+  {
+   "id": "e319b863-4fd3-40ea-b437-00ff2de0a9e4",
+   "category": "history"
+  },
+  {
+   "id": "d5665844-99ab-4e5d-b4f1-fbabc065191b",
+   "category": "science-nature"
+  },
+  {
+   "id": "afd1453e-02a9-4d9e-9cf6-f191e808e288",
+   "category": "food-everyday"
+  },
+  {
+   "id": "0830cc7d-95d2-4a74-963f-590dc93e8d33",
+   "category": "sports"
+  },
+  {
+   "id": "b489971a-124d-4f48-8d7f-f23b1f490eab",
+   "category": "science-nature"
+  },
+  {
+   "id": "0f1ce099-82ae-4efe-a53a-082ba8144a5d",
+   "category": "food-everyday"
+  },
+  {
+   "id": "fa6d75c2-0d33-4033-a4b6-81a52f355cbd",
+   "category": "science-nature"
+  },
+  {
+   "id": "4ef8e0dd-cef1-47c9-ae45-e5feb58181be",
+   "category": "food-everyday"
+  },
+  {
+   "id": "f855283d-3757-4637-ae76-6f3195c0916d",
+   "category": "food-everyday"
+  },
+  {
+   "id": "3c5f3786-887e-4f10-bced-217a83ca3755",
+   "category": "science-nature"
+  },
+  {
+   "id": "81ab065c-212e-4dfd-a335-491977f869dc",
+   "category": "science-nature"
+  },
+  {
+   "id": "f7edbcc8-062d-4038-a3bb-80a9a2219fa2",
+   "category": "science-nature"
+  },
+  {
+   "id": "3682081e-b709-4632-9a33-92a81d1d49c5",
+   "category": "geography-world"
+  },
+  {
+   "id": "0e749807-09b4-4401-a97d-6c6a49b51622",
+   "category": "science-nature"
+  },
+  {
+   "id": "19ca17f1-ec7c-45d4-be0e-53f122677079",
+   "category": "science-nature"
+  },
+  {
+   "id": "580e1b0d-8895-45fd-81cb-52ec01aa9680",
+   "category": "science-nature"
+  },
+  {
+   "id": "aa3f9d45-f03b-46c3-8898-11800a94d9f8",
+   "category": "science-nature"
+  },
+  {
+   "id": "b42dbae2-90f5-42c3-b53a-c09d697b3ffb",
+   "category": "science-nature"
+  },
+  {
+   "id": "d6ae2464-80b1-4933-b0c2-daa831429d4c",
+   "category": "science-nature"
+  },
+  {
+   "id": "e0ec67f1-0094-4f7b-bc44-de5c47603923",
+   "category": "science-nature"
+  },
+  {
+   "id": "008a8939-4ffe-4f1a-b0da-c60ae5e54325",
+   "category": "sports"
+  },
+  {
+   "id": "035077c2-f271-4f2a-846c-1459ef636270",
+   "category": "food-everyday"
+  },
+  {
+   "id": "086b4a11-d609-4d21-b63d-d73f3331e748",
+   "category": "sports"
+  },
+  {
+   "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+   "category": "sports"
+  },
+  {
+   "id": "1696975f-e6c4-4d5c-b43d-7ebae366548f",
+   "category": "sports"
+  },
+  {
+   "id": "2bf4ce47-a244-4e16-a04d-996478c64a11",
+   "category": "science-nature"
+  },
+  {
+   "id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+   "category": "sports"
+  },
+  {
+   "id": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+   "category": "sports"
+  },
+  {
+   "id": "5fb8f5a4-c4ac-458b-b966-bb5fde7da28d",
+   "category": "sports"
+  },
+  {
+   "id": "6bc8edd0-d43e-4afc-828d-b28658112e30",
+   "category": "sports"
+  },
+  {
+   "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+   "category": "food-everyday"
+  },
+  {
+   "id": "6e4237a4-b83e-410c-a39e-9d2157811f28",
+   "category": "sports"
+  },
+  {
+   "id": "acab5d4e-49cd-408e-a04d-d6079d583abb",
+   "category": "sports"
+  },
+  {
+   "id": "e159eaf3-f943-47dd-8db3-2f3eb9656f45",
+   "category": "sports"
+  },
+  {
+   "id": "f546fa14-0865-4350-a2c9-e972e1dcd345",
+   "category": "sports"
+  },
+  {
+   "id": "2b2843b4-00d2-43a1-93ef-02a5b7de23a7",
+   "category": "science-nature"
+  },
+  {
+   "id": "313f989a-cdc3-479b-8f1a-6df04fad04e5",
+   "category": "science-nature"
+  },
+  {
+   "id": "645b4a39-5eca-4ac2-b523-fe4eadf1b3f6",
+   "category": "science-nature"
+  },
+  {
+   "id": "6b3104b9-bd1a-4524-8f68-e156cc3a45b7",
+   "category": "science-nature"
+  },
+  {
+   "id": "a87d8c9a-ce21-4970-bcc0-c20333b008b9",
+   "category": "science-nature"
+  },
+  {
+   "id": "f82f9706-c1c1-4bb8-a2b8-ffb5d1f5c724",
+   "category": "science-nature"
+  },
+  {
+   "id": "a0771413-ed2a-4ef8-a1f2-a4cdeb385d93",
+   "category": "geography-world"
+  },
+  {
+   "id": "aad4c5d4-8723-4e73-b475-5bdf097ae59d",
+   "category": "food-everyday"
+  },
+  {
+   "id": "c54c7bb7-f931-4b63-92a5-1089b6a2ad49",
+   "category": "food-everyday"
+  },
+  {
+   "id": "e918bae7-f96f-4f25-a64a-b7adbdb880be",
+   "category": "food-everyday"
+  },
+  {
+   "id": "2f1cc8d1-fe47-4038-bc32-b4db418f95b6",
+   "category": "science-nature"
+  },
+  {
+   "id": "bb911548-8518-443c-b38c-db241819a023",
+   "category": "history"
+  },
+  {
+   "id": "a6c681e2-202b-4486-9bb9-a3a7e0b7188c",
+   "category": "history"
+  },
+  {
+   "id": "0fb1a48c-12f2-454f-a5de-33938007bb22",
+   "category": "science-nature"
+  },
+  {
+   "id": "7512e937-eb99-410e-992c-d3134e77e260",
+   "category": "science-nature"
+  },
+  {
+   "id": "d027a40d-669f-49de-8403-3d86cebbd63c",
+   "category": "history"
+  },
+  {
+   "id": "4e54defd-19a4-4762-aaab-b70965ac24ed",
+   "category": "history"
+  },
+  {
+   "id": "d17fb33b-cde9-4b4a-835e-49821a9bfec5",
+   "category": "geography-world"
+  },
+  {
+   "id": "3365f6d5-a3b5-423a-81ff-264cba3e2b3f",
+   "category": "history"
+  },
+  {
+   "id": "72cae03b-1399-434a-a1f7-0b512a5d5fef",
+   "category": "science-nature"
+  },
+  {
+   "id": "92fb80ea-58cc-4a7c-81ed-839577026197",
+   "category": "history"
+  },
+  {
+   "id": "dc8df9c6-28e1-4f72-8ef6-dbee67dc71fe",
+   "category": "geography-world"
+  },
+  {
+   "id": "193eb192-0310-4d77-a837-365b65c05f8c",
+   "category": "science-nature"
+  },
+  {
+   "id": "2a2ff0aa-17ca-4a5f-a952-f9ebf560908a",
+   "category": "science-nature"
+  },
+  {
+   "id": "2f977694-a9d5-4ccf-ad56-13bccc1d1653",
+   "category": "science-nature"
+  },
+  {
+   "id": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "category": "science-nature"
+  },
+  {
+   "id": "6d3e5a61-f775-4667-a04c-042824d46fde",
+   "category": "science-nature"
+  },
+  {
+   "id": "80f48da1-4340-4563-a9ea-389c434ba634",
+   "category": "science-nature"
+  },
+  {
+   "id": "82a083b8-1f40-4d29-9542-5cc5b3572559",
+   "category": "science-nature"
+  },
+  {
+   "id": "fac9520e-e5c6-4712-be4a-593ae393db26",
+   "category": "science-nature"
+  },
+  {
+   "id": "fba6833d-9ac2-4727-a169-24ee06493f80",
+   "category": "science-nature"
+  },
+  {
+   "id": "3417458a-ac4b-4fc3-8d88-938921f0c798",
+   "category": "geography-world"
+  },
+  {
+   "id": "7481a4a3-1e73-488f-a49e-2c41a5f83a82",
+   "category": "geography-world"
+  },
+  {
+   "id": "7912ba33-fff0-41cd-9fe3-58e9236250e0",
+   "category": "geography-world"
+  },
+  {
+   "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+   "category": "geography-world"
+  },
+  {
+   "id": "7bf73851-8058-4a04-a767-9b014a86fb7e",
+   "category": "geography-world"
+  },
+  {
+   "id": "aedfcaff-e1cb-4905-9531-2c36f042e4f9",
+   "category": "geography-world"
+  },
+  {
+   "id": "010542e1-27ef-4244-85e1-24cecefcd215",
+   "category": "movies-music"
+  },
+  {
+   "id": "02357d97-6d14-416c-b0b3-16aef0662d41",
+   "category": "movies-music"
+  },
+  {
+   "id": "112dbbda-25f6-4199-a69f-47f4d37de447",
+   "category": "movies-music"
+  },
+  {
+   "id": "11661a39-f3a2-4c0e-b9f9-32371690c7ee",
+   "category": "movies-music"
+  },
+  {
+   "id": "29bb5b9a-e149-4746-b243-7f4af832c041",
+   "category": "movies-music"
+  },
+  {
+   "id": "2e05db38-a9cc-47cf-968c-0878006c3f05",
+   "category": "movies-music"
+  },
+  {
+   "id": "4805a39c-3738-46b5-b076-62d9bc855d20",
+   "category": "movies-music"
+  },
+  {
+   "id": "5202c0c3-8e7e-4b91-9c45-d51a8c4e1c81",
+   "category": "movies-music"
+  },
+  {
+   "id": "54712945-0a4c-4f25-a4a5-dbbec6ce6a43",
+   "category": "movies-music"
+  },
+  {
+   "id": "57c958cb-384c-40a0-9897-746215e9f7a2",
+   "category": "movies-music"
+  },
+  {
+   "id": "63e25f6d-62d4-47b3-adb4-5391199f7f81",
+   "category": "movies-music"
+  },
+  {
+   "id": "69cfb067-b0c7-414f-9321-bf4f9eba4d47",
+   "category": "movies-music"
+  },
+  {
+   "id": "79667ced-216c-41e0-bd2d-d167e8ec8c9d",
+   "category": "movies-music"
+  },
+  {
+   "id": "8a6a4730-d9a7-44b8-8a82-fcc435510771",
+   "category": "movies-music"
+  },
+  {
+   "id": "8f50dbd9-2d4d-4898-940e-eba46d859654",
+   "category": "movies-music"
+  },
+  {
+   "id": "963f1552-8f69-465b-8b1f-61f2e05fb7e7",
+   "category": "movies-music"
+  },
+  {
+   "id": "9a86ec72-0f33-4c29-be22-56a722200308",
+   "category": "movies-music"
+  },
+  {
+   "id": "a2a1c0ee-36b3-4b6e-ae93-5f9e239094c9",
+   "category": "movies-music"
+  },
+  {
+   "id": "d2cf05b1-63a0-4a25-9227-5450d81a1834",
+   "category": "movies-music"
+  },
+  {
+   "id": "e0403973-93c8-4c60-a3ff-184a470a3a97",
+   "category": "movies-music"
+  },
+  {
+   "id": "ef79fd8b-10b1-4f43-88fd-9c8edc03eb0c",
+   "category": "movies-music"
+  },
+  {
+   "id": "8441d500-0630-4f82-a49a-ac335b78a8da",
+   "category": "movies-music"
+  },
+  {
+   "id": "dc095252-35a4-4024-bbea-2ef136663d4e",
+   "category": "movies-music"
+  },
+  {
+   "id": "8c684d10-213f-46d2-aa7d-de1337ba5c58",
+   "category": "geography-world"
+  },
+  {
+   "id": "9b975b88-9e9d-4afb-afc0-29e14de1d362",
+   "category": "movies-music"
+  },
+  {
+   "id": "dad01b14-d16c-420f-bc32-c104289c8c00",
+   "category": "geography-world"
+  }
+ ]
+}

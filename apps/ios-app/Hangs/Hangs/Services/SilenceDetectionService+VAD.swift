@@ -30,6 +30,11 @@ struct AnswerDetectionSession {
     var speechDetectorHeardSpeech = false
     var levelBuffers = 0
     var speechSecs: TimeInterval = 0
+    /// Audio time (sum of buffer durations, not wall clock) elapsed so far,
+    /// and the energy detector's first onset / latest release on that clock.
+    var audioSecs: TimeInterval = 0
+    var firstSpeechSecs: TimeInterval?
+    var lastSpeechEndSecs: TimeInterval?
     /// #189 telemetry: non-empty results the on-device transcriber delivered
     /// during the recording (see `logDeafAnalyzerIfNeeded`).
     var transcriberResults = 0
@@ -42,10 +47,19 @@ extension SilenceDetectionService {
     func handleInputLevel(_ sample: InputLevelSample) {
         lastLevelAt = clock.now
         let wasSpeaking = energySpeaking || speechDetectorSpeaking
+        let wasEnergySpeaking = energySpeaking
         energySpeaking = energyVAD.process(sample)
         inputLevelChannel.yield(InputLevel(db: sample.db, noiseFloorDb: energyVAD.noiseFloorDb))
         if var session = answerSession {
             session.levelBuffers += 1
+            // Timing for #197.6: onset is stamped when the buffer that
+            // declared it ends; a release at the START of the buffer whose
+            // level fell below the margin — not after the silence hangover.
+            if energySpeaking && !wasEnergySpeaking && session.firstSpeechSecs == nil {
+                session.firstSpeechSecs = session.audioSecs + sample.duration
+            }
+            if !energySpeaking && wasEnergySpeaking { session.lastSpeechEndSecs = session.audioSecs }
+            session.audioSecs += sample.duration
             if energySpeaking { session.energyHeardSpeech = true }
             if energySpeaking || speechDetectorSpeaking { session.speechSecs += sample.duration }
             answerSession = session
@@ -202,6 +216,8 @@ extension SilenceDetectionService {
         defer { answerSession = nil }
         guard let session = answerSession else { return .empty }
         logDeafAnalyzerIfNeeded(session)
+        // Still speaking when the recording ended (e.g. the cap): speech ran to the end.
+        let lastSpeechEndSecs = energySpeaking ? session.audioSecs : session.lastSpeechEndSecs
         return AnswerDetectionReport(
             energyHeardSpeech: session.energyHeardSpeech,
             speechDetectorHeardSpeech: session.speechDetectorHeardSpeech,
@@ -211,7 +227,9 @@ extension SilenceDetectionService {
             peakDb: energyVAD.peakDb,
             speechMs: Int((session.speechSecs * 1000).rounded()),
             ambiguousMs: Int((energyVAD.ambiguousSecs * 1000).rounded()),
-            minSpeechMs: Int((session.minSpeechDuration * 1000).rounded())
+            minSpeechMs: Int((session.minSpeechDuration * 1000).rounded()),
+            firstSpeechMs: session.firstSpeechSecs.map { Int(($0 * 1000).rounded()) },
+            lastSpeechEndMs: lastSpeechEndSecs.map { Int(($0 * 1000).rounded()) }
         )
     }
 

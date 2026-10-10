@@ -50,6 +50,10 @@ nonisolated enum AnswerRecordingStore {
         var headlineAnswer: String?
         /// What the app decided for this recording — see `Outcome.decision`.
         var appDecision: String?
+        /// #197.6: audio time (ms) the energy VAD heard speech start / the
+        /// last speech end — lets the replay tell a late start from a late stop.
+        var firstSpeechMs: Int?
+        var lastSpeechEndMs: Int?
     }
 
     /// #197: what the app decided for one recording. `decision` is the

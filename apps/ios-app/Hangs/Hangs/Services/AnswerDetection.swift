@@ -82,6 +82,13 @@ nonisolated struct AnswerDetectionReport: Sendable, Equatable {
     var ambiguousMs = 0
     /// The blip bar this recording used (lower for multiple choice).
     var minSpeechMs = 0
+    /// #197.6: audio time (ms from recording start) where the energy detector
+    /// declared speech onset; `nil` when it never did. With `lastSpeechEndMs`
+    /// it tells a late start from a late stop when a recording runs to the cap.
+    var firstSpeechMs: Int?
+    /// Audio time where the LAST speech segment ended (level fell below the
+    /// release margin, before the silence hangover); `nil` when no speech.
+    var lastSpeechEndMs: Int?
 
     static let empty = AnswerDetectionReport()
 
@@ -104,6 +111,8 @@ nonisolated struct AnswerDetectionReport: Sendable, Equatable {
             "ambiguousMs": ambiguousMs,
             "minSpeechMs": minSpeechMs,
         ]
+        if let firstSpeechMs { attributes["firstSpeechMs"] = firstSpeechMs }
+        if let lastSpeechEndMs { attributes["lastSpeechEndMs"] = lastSpeechEndMs }
         if let noiseFloorDb { attributes["noiseFloorDb"] = Self.rounded(noiseFloorDb) }
         if let peakDb { attributes["peakDb"] = Self.rounded(peakDb) }
         return attributes

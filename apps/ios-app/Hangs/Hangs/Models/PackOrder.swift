@@ -131,8 +131,25 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     /// already-playable pack, `complete`/`failed` once it stops, nil when there
     /// is no pack yet. Kept raw — an unknown future value must never crash a row.
     let packGenerationStatus: String?
+    /// The topic the buyer typed. Optional because servers before it was
+    /// added don't send it; a `var` with a default so the mocks' memberwise
+    /// inits stay as they are.
+    var prompt: String? = nil
 
     var id: String { orderId }
+
+    /// The buyer's topic, trimmed; nil when absent or blank.
+    var topic: String? {
+        guard let trimmed = prompt?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
+        return trimmed
+    }
+
+    /// What a pack card is titled by: the buyer's topic, so packs can be told
+    /// apart (TestFlight 2026-10-10: every card read "EN"); the previous
+    /// category / language-code title when an older server sends no prompt.
+    var displayTitle: String {
+        topic ?? category ?? language.uppercased()
+    }
 
     enum CodingKeys: String, CodingKey {
         case orderId = "order_id"
@@ -150,6 +167,7 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         case job
         case actualCount = "actual_count"
         case packGenerationStatus = "pack_generation_status"
+        case prompt
     }
 
     /// The order finished successfully and `packId` is populated.

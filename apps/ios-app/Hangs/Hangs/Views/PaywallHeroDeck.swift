@@ -41,14 +41,14 @@ private enum PaywallHeroDeckMetrics {
     static let height: CGFloat = 104
     static let glyphLift: CGFloat = -4
     /// Back cards fan out to either side; the front card leans slightly.
-    /// A fourth card (#198 sign-in, canvas Bg-SignIn) tucks in behind the rest.
+    /// A fourth card (#198 sign-in, canvas Bg-SignIn) fans out furthest right.
     static func angle(_ index: Int, of count: Int) -> Angle {
-        let fan: [Double] = [6, -14, 12, -3]
+        let fan: [Double] = [24, -14, 12, -3]
         return .degrees(fan[(fan.count - count + index).clamped(to: 0 ... fan.count - 1)])
     }
 
     static func offset(_ index: Int, of count: Int) -> CGFloat {
-        let shift: [CGFloat] = [10, -22, 22, 0]
+        let shift: [CGFloat] = [38, -22, 22, 0]
         return shift[(shift.count - count + index).clamped(to: 0 ... shift.count - 1)]
     }
 }

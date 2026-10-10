@@ -6,7 +6,11 @@ founder's own replay corpus only, so the contract is (1) nobody outside the
 unauthenticated grace caller, not a valid bearer of another user; (2) only a
 real WAV under the size cap is accepted, so the bucket can't be used as free
 file hosting; (3) a retried upload (lost response, app restart) never stores
-the same recording twice, otherwise the replay accuracy would double-count it.
+the same recording twice, otherwise the replay accuracy would double-count it;
+(4) in ``consented`` mode (founder 2026-10-10: all beta testers, one-time
+consent question) a verified bearer only gets in with the app's consent
+declaration, the default mode stays founder-only, and a per-user daily cap
+stops a looping client from flooding the bucket.
 
 No Postgres needed: an in-memory sessionmaker stands in for the table and a
 fake storage for R2, so these run on every machine.
@@ -17,7 +21,7 @@ from __future__ import annotations
 import json
 import struct
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import pytest_asyncio
@@ -63,6 +67,9 @@ class _Result:
     def scalar_one_or_none(self):
         return self._value
 
+    def scalar_one(self):
+        return self._value
+
     def scalars(self):
         return self
 
@@ -102,6 +109,17 @@ class _FakeDB:
         self.pending = []
 
     async def execute(self, stmt):
+        if "count(" in str(stmt).lower():  # the daily cap
+            user_clause, since_clause = stmt.whereclause.clauses
+            user_id, since = user_clause.right.value, since_clause.right.value
+            now = datetime.now(timezone.utc)
+            return _Result(
+                sum(
+                    1
+                    for r in self.rows
+                    if r.user_id == user_id and (r.created_at or now) >= since
+                )
+            )
         if stmt.whereclause is None:  # the admin list
             for row in self.rows:
                 row.created_at = row.created_at or datetime.now(timezone.utc)
@@ -139,6 +157,8 @@ class _FakeStorage:
 async def env(monkeypatch):
     monkeypatch.setenv("LEGACY_USER_ID_GRACE", "on")
     monkeypatch.setenv(routes.ALLOWLIST_ENV, f" {_FOUNDER} , someone-else ")
+    monkeypatch.delenv(routes.MODE_ENV, raising=False)
+    monkeypatch.delenv(routes.DAILY_CAP_ENV, raising=False)
     limiter.reset()
     app = FastAPI()
     app.state.limiter = limiter
@@ -162,11 +182,14 @@ def _post(
     content_type="audio/wav",
     sidecar=None,
     stamp="20261010-101500-123",
+    consent=None,
 ):
+    extra = {} if consent is None else {"consent": consent}
     return client.post(
         "/api/v1/voice-samples",
         headers=headers,
         data={
+            **extra,
             "stamp": stamp,
             "sidecar": json.dumps(
                 sidecar
@@ -379,3 +402,99 @@ async def test_concurrent_duplicate_is_answered_as_duplicate_not_500(env):
     assert resp.status_code == 201
     assert resp.json() == {"id": str(winner.id), "duplicate": True}
     assert db.rows == [winner]
+
+
+# ── beta consent mode + daily cap (founder 2026-10-10) ──────────────────────
+
+
+async def test_default_mode_ignores_consent_so_deploy_changes_nothing(env):
+    """The mode secret flips separately from the deploy: until it does, a tester
+    whose app already declares consent is still refused."""
+    client, db, storage = env
+    resp = await _post(client, _bearer("beta-tester"), consent="true")
+    assert resp.status_code == 403
+    assert db.rows == [] and storage.objects == {}
+
+
+async def test_unknown_mode_value_fails_closed_to_the_allowlist(env, monkeypatch):
+    client, _db, storage = env
+    monkeypatch.setenv(routes.MODE_ENV, "consent")  # typo of "consented"
+    resp = await _post(client, _bearer("beta-tester"), consent="true")
+    assert resp.status_code == 403
+    assert storage.objects == {}
+
+
+async def test_consented_mode_stores_a_testers_upload_that_declares_consent(
+    env, monkeypatch
+):
+    client, db, storage = env
+    monkeypatch.setenv(routes.MODE_ENV, "consented")
+    resp = await _post(client, _bearer("anon-device-1"), consent="true")
+    assert resp.status_code == 201, resp.text
+    assert [r.user_id for r in db.rows] == ["anon-device-1"]
+    assert len(storage.objects) == 1
+
+
+async def test_consented_mode_refuses_a_tester_without_the_consent_declaration(
+    env, monkeypatch
+):
+    """A tester who answered No never sends, but the server must not rely on
+    that alone: no declaration, no storage."""
+    client, db, storage = env
+    monkeypatch.setenv(routes.MODE_ENV, "consented")
+    for consent in (None, "false"):
+        resp = await _post(client, _bearer("anon-device-1"), consent=consent)
+        assert resp.status_code == 403
+    assert db.rows == [] and storage.objects == {}
+
+
+async def test_consented_mode_never_opens_to_unauthenticated_callers(env, monkeypatch):
+    client, _db, storage = env
+    monkeypatch.setenv(routes.MODE_ENV, "consented")
+    resp = await _post(client, {}, consent="true")
+    assert resp.status_code == 403
+    assert storage.objects == {}
+
+
+async def test_consented_mode_keeps_the_allowlisted_founder_working(env, monkeypatch):
+    client, db, _ = env
+    monkeypatch.setenv(routes.MODE_ENV, "consented")
+    resp = await _post(client, _bearer(_FOUNDER))
+    assert resp.status_code == 201
+    assert len(db.rows) == 1
+
+
+async def test_daily_cap_refuses_further_uploads_with_429(env, monkeypatch):
+    """A client stuck in a loop must hit a wall, not fill R2."""
+    client, db, storage = env
+    monkeypatch.setenv(routes.MODE_ENV, "consented")
+    monkeypatch.setenv(routes.DAILY_CAP_ENV, "2")
+    headers = _bearer("anon-device-1")
+    for stamp in ("20261010-101500-001", "20261010-101500-002"):
+        resp = await _post(client, headers, consent="true", stamp=stamp)
+        assert resp.status_code == 201
+    over = await _post(client, headers, consent="true", stamp="20261010-101500-003")
+    assert over.status_code == 429
+    assert len(db.rows) == 2 and len(storage.objects) == 2
+    # The cap is per user: another tester is unaffected.
+    other = await _post(client, _bearer("anon-device-2"), consent="true")
+    assert other.status_code == 201
+
+
+async def test_daily_cap_is_a_rolling_day_and_still_answers_duplicates(
+    env, monkeypatch
+):
+    client, db, _ = env
+    monkeypatch.setenv(routes.DAILY_CAP_ENV, "1")
+    headers = _bearer(_FOUNDER)
+    first = await _post(client, headers, stamp="20261010-101500-001")
+    assert first.status_code == 201
+    # A lost-response retry at the cap is still a duplicate, so the app deletes its copy.
+    retry = await _post(client, headers, stamp="20261010-101500-001")
+    assert retry.status_code == 201 and retry.json()["duplicate"] is True
+    blocked = await _post(client, headers, stamp="20261010-101500-002")
+    assert blocked.status_code == 429
+    # Yesterday's uploads no longer count.
+    db.rows[0].created_at = datetime.now(timezone.utc) - timedelta(days=1, minutes=1)
+    later = await _post(client, headers, stamp="20261010-101500-002")
+    assert later.status_code == 201

@@ -273,6 +273,8 @@ struct ContentView: View {
                 Text("Only \(shortfall.available) new questions left for you in \(shortfall.categoryName) (you asked for \(shortfall.requested)).")
             }
         }
+        // #197: the one-time beta question about sending answer recordings.
+        .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.path.isEmpty))
         .environmentObject(navModel)
     }
 }

@@ -25,6 +25,10 @@ from app.main import app
                 "07288093",
                 "hello@missinghue.com",
                 "uoou.gov.cz",
+                # #197: beta testers' answer recordings are disclosed in all three languages.
+                "Nahrávky odpovedí v testovacej verzii",
+                "Nahrávky odpovědí v testovací verzi",
+                "Answer recordings in the test version",
             ],
         ),
         (

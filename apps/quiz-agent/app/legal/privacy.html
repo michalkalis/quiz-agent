@@ -18,7 +18,7 @@
 
 <section id="sk">
 <h1>Zásady ochrany súkromia · Trubbo</h1>
-<p class="meta">Účinné od: 7. októbra 2026</p>
+<p class="meta">Účinné od: 10. októbra 2026</p>
 
 <h2>Kto sme</h2>
 <p>Aplikáciu Trubbo (hlasový vedomostný kvíz) prevádzkuje spoločnosť missinghue s.r.o., IČO 07288093, so sídlom Kotěrova 1588/2a, Dejvice, 160 00 Praha 6, Česká republika (ďalej „my“). Sme prevádzkovateľom vašich osobných údajov. Kontakt: <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>.</p>
@@ -26,7 +26,7 @@
 <h2>Aké údaje spracúvame</h2>
 <ul>
 <li><strong>Účet a identifikátory:</strong> anonymný identifikátor zariadenia a prihlasovacie tokeny vytvorené pri prvom spustení. Ak sa dobrovoľne prihlásite cez Apple, spracúvame aj stabilný identifikátor, ktorý nám Apple pridelí; meno ani e-mail od Apple nežiadame.</li>
-<li><strong>Hlas:</strong> nahrávky vašich odpovedí a hlasových príkazov sa spracúvajú výlučne na prevod reči na text. Nahrávky odpovedí trvalo neukladáme; ukladáme text odpovede ako súčasť histórie kvízu. Ak nám pošlete hlasovú spätnú väzbu, jej nahrávku uchovávame, kým ju nevybavíme.</li>
+<li><strong>Hlas:</strong> nahrávky vašich odpovedí a hlasových príkazov sa spracúvajú výlučne na prevod reči na text. Nahrávky odpovedí trvalo neukladáme (výnimka: testovacia verzia so súhlasom, pozri nižšie); ukladáme text odpovede ako súčasť histórie kvízu. Ak nám pošlete hlasovú spätnú väzbu, jej nahrávku uchovávame, kým ju nevybavíme.</li>
 <li><strong>Herná aktivita:</strong> odpovede, skóre, počty využitých otázok (kvôli mesačnému limitu), hodnotenia otázok.</li>
 <li><strong>Nákupy:</strong> stav predplatného a balíčkov. Platby spracúva výhradne Apple; k číslu vašej karty nemáme prístup.</li>
 <li><strong>Diagnostika:</strong> záznamy o pádoch a chybách aplikácie (Sentry), aby sme vedeli opravovať problémy.</li>
@@ -35,6 +35,17 @@
 </ul>
 <p>Nezobrazujeme reklamu a nesledujeme vás naprieč aplikáciami iných spoločností.</p>
 
+<h2>Nahrávky odpovedí v testovacej verzii</h2>
+<p>Týka sa len testovacej verzie aplikácie (TestFlight). Verzia z App Store sa na to nepýta a nahrávky neposiela.</p>
+<ul>
+<li><strong>Len so súhlasom:</strong> pred prvým kvízom sa vás raz opýtame, či nám chcete posielať nahrávky svojich odpovedí. Bez vášho „Áno“ sa nič neposiela.</li>
+<li><strong>Účel:</strong> zlepšovanie rozpoznávania reči a vyhodnocovania odpovedí. Nahrávky používame na automatické testy, nie na nič iné, a nikomu ich nepredávame.</li>
+<li><strong>Čo posielame:</strong> zvukovú nahrávku hovorenej odpovede a technické údaje k nej (jazyk, otázka, rozpoznaný text, výsledok vyhodnotenia, typ mikrofónu), spojené s anonymným identifikátorom zariadenia alebo s vaším účtom.</li>
+<li><strong>Uloženie:</strong> v neverejnom úložisku Cloudflare R2, prístupnom len vývojárovi.</li>
+<li><strong>Uchovávanie:</strong> najviac 12 mesiacov od nahratia, potom ich vymažeme. Pri vymazaní údajov alebo účtu sa vymažú hneď.</li>
+<li><strong>Odvolanie súhlasu:</strong> kedykoľvek v Nastaveniach vypnite prepínač „Posielať nahrávky odpovedí“. Už odoslané nahrávky vymažete cez „Vymaž moje údaje“ alebo e-mailom.</li>
+</ul>
+
 <h2>Umelá inteligencia</h2>
 <p>Trubbo je aplikácia postavená na umelej inteligencii: kvízové otázky sú generované AI a vaše hovorené odpovede vyhodnocuje AI. Obsah preto môže obsahovať nepresnosti. Komunikujete s automatizovaným systémom, nie s človekom.</p>
 
@@ -42,11 +53,11 @@
 <ul>
 <li><strong>Plnenie zmluvy:</strong> poskytovanie kvízu, vyhodnocovanie odpovedí, správa predplatného a limitov.</li>
 <li><strong>Oprávnený záujem:</strong> diagnostika chýb, štatistika používania, bezpečnosť a ochrana pred zneužitím služby.</li>
-<li><strong>Súhlas:</strong> prístup k mikrofónu (udeľujete ho v systémovom dialógu iOS a môžete ho kedykoľvek odvolať v Nastaveniach).</li>
+<li><strong>Súhlas:</strong> prístup k mikrofónu (udeľujete ho v systémovom dialógu iOS a môžete ho kedykoľvek odvolať v Nastaveniach) a posielanie nahrávok odpovedí v testovacej verzii.</li>
 </ul>
 
 <h2>Príjemcovia údajov (sprostredkovatelia)</h2>
-<p>Na poskytovanie služby využívame týchto poskytovateľov: Apple (distribúcia, platby, prihlásenie), RevenueCat (správa predplatného), ElevenLabs (prevod reči na text), OpenAI a Anthropic/OpenRouter (spracovanie textu odpovedí, generovanie a vyhodnocovanie kvízového obsahu, syntéza hlasu), Sentry (diagnostika chýb), Fly.io (hosting; servery v EÚ, Paríž). Údaje im odovzdávame len v rozsahu nevyhnutnom na daný účel.</p>
+<p>Na poskytovanie služby využívame týchto poskytovateľov: Apple (distribúcia, platby, prihlásenie), RevenueCat (správa predplatného), ElevenLabs (prevod reči na text), OpenAI a Anthropic/OpenRouter (spracovanie textu odpovedí, generovanie a vyhodnocovanie kvízového obsahu, syntéza hlasu), Sentry (diagnostika chýb), Cloudflare (úložisko nahrávok odpovedí v testovacej verzii), Fly.io (hosting; servery v EÚ, Paríž). Údaje im odovzdávame len v rozsahu nevyhnutnom na daný účel.</p>
 
 <h2>Uchovávanie a vymazanie</h2>
 <p>Údaje účtu a hernú históriu uchovávame, kým používate aplikáciu. Svoje údaje môžete kedykoľvek vymazať priamo v aplikácii (Nastavenia → Vymazať moje údaje) alebo e-mailom. Po vymazaní účtu sa vaše osobné údaje odstránia bez zbytočného odkladu. Záznamy o nákupoch uchovávame, kým to vyžadujú účtovné predpisy a vybavovanie refundácií. Vaše odpovede a hodnotenia otázok si ponecháme len v anonymizovanej podobe pre štatistiky a objednávky balíčkov bez prepojenia s vaším účtom.</p>
@@ -65,7 +76,7 @@
 
 <section id="cs">
 <h1>Zásady ochrany soukromí · Trubbo</h1>
-<p class="meta">Účinné od: 7. října 2026</p>
+<p class="meta">Účinné od: 10. října 2026</p>
 
 <h2>Kdo jsme</h2>
 <p>Aplikaci Trubbo (hlasový vědomostní kvíz) provozuje společnost missinghue s.r.o., IČO 07288093, se sídlem Kotěrova 1588/2a, Dejvice, 160 00 Praha 6, Česká republika (dále „my“). Jsme správcem vašich osobních údajů. Kontakt: <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>.</p>
@@ -73,7 +84,7 @@
 <h2>Jaké údaje zpracováváme</h2>
 <ul>
 <li><strong>Účet a identifikátory:</strong> anonymní identifikátor zařízení a přihlašovací tokeny vytvořené při prvním spuštění. Pokud se dobrovolně přihlásíte přes Apple, zpracováváme také stabilní identifikátor, který nám Apple přidělí; jméno ani e-mail od Apple nežádáme.</li>
-<li><strong>Hlas:</strong> nahrávky vašich odpovědí a hlasových příkazů se zpracovávají výhradně pro převod řeči na text. Nahrávky odpovědí trvale neukládáme; ukládáme text odpovědi jako součást historie kvízu. Pokud nám pošlete hlasovou zpětnou vazbu, její nahrávku uchováváme, dokud ji nevyřídíme.</li>
+<li><strong>Hlas:</strong> nahrávky vašich odpovědí a hlasových příkazů se zpracovávají výhradně pro převod řeči na text. Nahrávky odpovědí trvale neukládáme (výjimka: testovací verze se souhlasem, viz níže); ukládáme text odpovědi jako součást historie kvízu. Pokud nám pošlete hlasovou zpětnou vazbu, její nahrávku uchováváme, dokud ji nevyřídíme.</li>
 <li><strong>Herní aktivita:</strong> odpovědi, skóre, počty využitých otázek (kvůli měsíčnímu limitu), hodnocení otázek.</li>
 <li><strong>Nákupy:</strong> stav předplatného a balíčků. Platby zpracovává výhradně Apple; k číslu vaší karty nemáme přístup.</li>
 <li><strong>Diagnostika:</strong> záznamy o pádech a chybách aplikace (Sentry), abychom mohli opravovat problémy.</li>
@@ -82,6 +93,17 @@
 </ul>
 <p>Nezobrazujeme reklamu a nesledujeme vás napříč aplikacemi jiných společností.</p>
 
+<h2>Nahrávky odpovědí v testovací verzi</h2>
+<p>Týká se jen testovací verze aplikace (TestFlight). Verze z App Store se na to neptá a nahrávky neposílá.</p>
+<ul>
+<li><strong>Jen se souhlasem:</strong> před prvním kvízem se vás jednou zeptáme, zda nám chcete posílat nahrávky svých odpovědí. Bez vašeho „Ano“ se nic neposílá.</li>
+<li><strong>Účel:</strong> zlepšování rozpoznávání řeči a vyhodnocování odpovědí. Nahrávky používáme pro automatické testy, k ničemu jinému, a nikomu je neprodáváme.</li>
+<li><strong>Co posíláme:</strong> zvukovou nahrávku mluvené odpovědi a technické údaje k ní (jazyk, otázka, rozpoznaný text, výsledek vyhodnocení, typ mikrofonu), spojené s anonymním identifikátorem zařízení nebo s vaším účtem.</li>
+<li><strong>Uložení:</strong> v neveřejném úložišti Cloudflare R2, přístupném jen vývojáři.</li>
+<li><strong>Uchovávání:</strong> nejvýše 12 měsíců od nahrání, poté je smažeme. Při smazání údajů nebo účtu se smažou hned.</li>
+<li><strong>Odvolání souhlasu:</strong> kdykoli v Nastavení vypněte přepínač „Posílat nahrávky odpovědí“. Již odeslané nahrávky smažete přes „Smaž moje údaje“ nebo e-mailem.</li>
+</ul>
+
 <h2>Umělá inteligence</h2>
 <p>Trubbo je aplikace postavená na umělé inteligenci: kvízové otázky generuje AI a vaše mluvené odpovědi vyhodnocuje AI. Obsah proto může obsahovat nepřesnosti. Komunikujete s automatizovaným systémem, nikoli s člověkem.</p>
 
@@ -89,11 +111,11 @@
 <ul>
 <li><strong>Plnění smlouvy:</strong> poskytování kvízu, vyhodnocování odpovědí, správa předplatného a limitů.</li>
 <li><strong>Oprávněný zájem:</strong> diagnostika chyb, statistiky používání, bezpečnost a ochrana před zneužitím služby.</li>
-<li><strong>Souhlas:</strong> přístup k mikrofonu (udělujete jej v systémovém dialogu iOS a můžete jej kdykoli odvolat v Nastavení).</li>
+<li><strong>Souhlas:</strong> přístup k mikrofonu (udělujete jej v systémovém dialogu iOS a můžete jej kdykoli odvolat v Nastavení) a posílání nahrávek odpovědí v testovací verzi.</li>
 </ul>
 
 <h2>Příjemci údajů (zpracovatelé)</h2>
-<p>K poskytování služby využíváme tyto poskytovatele: Apple (distribuce, platby, přihlášení), RevenueCat (správa předplatného), ElevenLabs (převod řeči na text), OpenAI a Anthropic/OpenRouter (zpracování textu odpovědí, generování a vyhodnocování kvízového obsahu, syntéza hlasu), Sentry (diagnostika chyb), Fly.io (hosting; servery v EU, Paříž). Údaje jim předáváme jen v rozsahu nezbytném pro daný účel.</p>
+<p>K poskytování služby využíváme tyto poskytovatele: Apple (distribuce, platby, přihlášení), RevenueCat (správa předplatného), ElevenLabs (převod řeči na text), OpenAI a Anthropic/OpenRouter (zpracování textu odpovědí, generování a vyhodnocování kvízového obsahu, syntéza hlasu), Sentry (diagnostika chyb), Cloudflare (úložiště nahrávek odpovědí v testovací verzi), Fly.io (hosting; servery v EU, Paříž). Údaje jim předáváme jen v rozsahu nezbytném pro daný účel.</p>
 
 <h2>Uchovávání a výmaz</h2>
 <p>Údaje o účtu a herní historii uchováváme, dokud aplikaci používáte. Své údaje můžete kdykoli smazat přímo v aplikaci (Nastavení → Smazat moje údaje) nebo e-mailem. Po smazání účtu budou vaše osobní údaje odstraněny bez zbytečného odkladu. Záznamy o nákupech uchováváme, dokud to vyžadují účetní předpisy a vyřizování refundací. Vaše odpovědi a hodnocení otázek si ponecháme jen v anonymizované podobě pro statistiky a objednávky balíčků bez propojení s vaším účtem.</p>
@@ -112,7 +134,7 @@
 
 <section id="en">
 <h1>Privacy Policy · Trubbo</h1>
-<p class="meta">Effective: October 7, 2026</p>
+<p class="meta">Effective: October 10, 2026</p>
 
 <h2>Who we are</h2>
 <p>Trubbo (a voice-first trivia quiz app) is operated by missinghue s.r.o., company ID (IČO) 07288093, with its registered office at Kotěrova 1588/2a, Dejvice, 160 00 Prague 6, Czech Republic ("we"). We are the controller of your personal data. Contact: <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>.</p>
@@ -120,7 +142,7 @@
 <h2>What we process</h2>
 <ul>
 <li><strong>Account &amp; identifiers:</strong> an anonymous device identifier and sign-in tokens created on first launch. If you optionally sign in with Apple, we also process the stable identifier Apple assigns to you; we do not request your name or e-mail from Apple.</li>
-<li><strong>Voice:</strong> recordings of your answers and voice commands are processed solely to convert speech to text. Answer recordings are not stored permanently; we store the text of your answer as part of your quiz history. If you submit voice feedback, we keep that recording until the feedback is handled.</li>
+<li><strong>Voice:</strong> recordings of your answers and voice commands are processed solely to convert speech to text. Answer recordings are not stored permanently (exception: the test version with your consent, see below); we store the text of your answer as part of your quiz history. If you submit voice feedback, we keep that recording until the feedback is handled.</li>
 <li><strong>Quiz activity:</strong> answers, scores, monthly usage counts (for the free-tier limit), question ratings.</li>
 <li><strong>Purchases:</strong> subscription and pack status. Payments are handled entirely by Apple; we never see your card details.</li>
 <li><strong>Diagnostics:</strong> crash and error reports (Sentry) so we can fix problems.</li>
@@ -129,6 +151,17 @@
 </ul>
 <p>We show no ads and do not track you across other companies' apps.</p>
 
+<h2>Answer recordings in the test version</h2>
+<p>This applies only to the test version of the app (TestFlight). The App Store version never asks and never sends recordings.</p>
+<ul>
+<li><strong>Only with consent:</strong> before your first quiz we ask you once whether you want to send us recordings of your answers. Nothing is sent unless you say “Yes”.</li>
+<li><strong>Purpose:</strong> improving speech recognition and answer grading. We use the recordings for automated tests, for nothing else, and never sell them.</li>
+<li><strong>What is sent:</strong> the audio of your spoken answer and technical details about it (language, question, recognized text, grading result, microphone type), linked to your anonymous device identifier or your account.</li>
+<li><strong>Storage:</strong> a private Cloudflare R2 storage bucket that only the developer can access.</li>
+<li><strong>Retention:</strong> at most 12 months from recording, then deleted. Deleting your data or account deletes them immediately.</li>
+<li><strong>Withdrawing consent:</strong> turn off the “Send answer recordings” switch in Settings at any time. Recordings already sent are deleted via “Delete my data” or by email.</li>
+</ul>
+
 <h2>Artificial intelligence</h2>
 <p>Trubbo is an AI-powered app: quiz questions are AI-generated and your spoken answers are evaluated by AI. Content may therefore contain inaccuracies. You are interacting with an automated system, not a human.</p>
 
@@ -136,11 +169,11 @@
 <ul>
 <li><strong>Contract:</strong> providing the quiz, evaluating answers, managing subscriptions and limits.</li>
 <li><strong>Legitimate interest:</strong> diagnostics, usage statistics, security, abuse prevention.</li>
-<li><strong>Consent:</strong> microphone access (granted via the iOS system dialog, revocable any time in Settings).</li>
+<li><strong>Consent:</strong> microphone access (granted via the iOS system dialog, revocable any time in Settings) and sending answer recordings in the test version.</li>
 </ul>
 
 <h2>Recipients (processors)</h2>
-<p>We rely on these providers: Apple (distribution, payments, sign-in), RevenueCat (subscription management), ElevenLabs (speech-to-text), OpenAI and Anthropic/OpenRouter (processing answer text, generating and evaluating quiz content, speech synthesis), Sentry (error diagnostics), Fly.io (hosting; EU servers in Paris). Data is shared only to the extent necessary for each purpose.</p>
+<p>We rely on these providers: Apple (distribution, payments, sign-in), RevenueCat (subscription management), ElevenLabs (speech-to-text), OpenAI and Anthropic/OpenRouter (processing answer text, generating and evaluating quiz content, speech synthesis), Sentry (error diagnostics), Cloudflare (storage of answer recordings in the test version), Fly.io (hosting; EU servers in Paris). Data is shared only to the extent necessary for each purpose.</p>
 
 <h2>Retention and deletion</h2>
 <p>Account data and quiz history are kept while you use the app. You can delete your data at any time directly in the app (Settings → Delete my data) or by e-mail. After deletion, your personal data is removed without undue delay. Purchase records are kept for as long as accounting rules and refund handling require. Your answers and question ratings are kept only in anonymised form for statistics, and pack orders are kept without the link to your account.</p>

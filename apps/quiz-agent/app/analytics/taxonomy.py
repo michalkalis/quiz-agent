@@ -28,7 +28,7 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
         }
     ),
     "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),
-    "quota_hit": frozenset({"stage", "questions_used", "questions_limit"}),
+    "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
     "transcription_failed": frozenset({"reason", "question_id"}),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}

@@ -9,10 +9,12 @@ implicit — a new month simply sums no prior rows. No scan, no cron, and the
 per-day granularity is kept (no migration from the daily model).
 
 Public method names are unchanged from the in-memory version, but they are now
-``async`` (they do DB I/O). Issue #93 layered entitlement on top: the gate now
-resolves subscription → free allotment → pack credits → deny (see
-``check_limit`` / ``record_question``); the legacy ``daily_usage.is_premium``
-column is no longer read by the gate (Design §5), only surfaced by ``get_usage``.
+``async`` (they do DB I/O). Issue #93 layered entitlement on top; #199 made the
+subscription a capped plan (Trubbo Plus, 1,000 questions a month) instead of an
+unlimited bypass: the gate resolves the monthly allowance (subscriber or free
+limit, one shared counter) → pack credits → deny (see ``check_limit`` /
+``record_question``); the legacy ``daily_usage.is_premium`` column is no longer
+read by the gate (Design §5), only surfaced by ``get_usage``.
 """
 
 from __future__ import annotations
@@ -38,6 +40,8 @@ from .entitlement import (
 logger = logging.getLogger(__name__)
 
 FREE_MONTHLY_LIMIT = int(os.getenv("FREE_MONTHLY_LIMIT", "30"))
+# #199: Trubbo Plus (the monthly subscription) is a fixed allowance, not unlimited.
+SUBSCRIBER_MONTHLY_LIMIT = int(os.getenv("SUBSCRIBER_MONTHLY_LIMIT", "1000"))
 
 
 def _utcnow() -> datetime:
@@ -68,9 +72,11 @@ class UsageTracker:
         sessionmaker: async_sessionmaker[AsyncSession],
         monthly_limit: int = FREE_MONTHLY_LIMIT,
         now: Callable[[], datetime] | None = None,
+        subscriber_monthly_limit: int = SUBSCRIBER_MONTHLY_LIMIT,
     ) -> None:
         self._sessionmaker = sessionmaker
         self.monthly_limit = monthly_limit
+        self.subscriber_monthly_limit = subscriber_monthly_limit
         # #180 track C: the ONE time source for the quota gate. Each public call
         # reads it once and threads that instant through the month window, the
         # subscription expiry check and ``resets_at`` — so a request straddling
@@ -81,6 +87,12 @@ class UsageTracker:
 
     def _now(self) -> datetime:
         return self._injected_now() if self._injected_now else _utcnow()
+
+    def _limit_for(self, entitled: bool) -> int:
+        """The monthly allowance that applies right now. There is ONE counter
+        per account, so a subscription lapsing mid-month swaps the 1,000 limit
+        for the free 30 against the same count (intended, #199)."""
+        return self.subscriber_monthly_limit if entitled else self.monthly_limit
 
     async def _read_month(
         self, session: AsyncSession, subject_id: str, now: datetime
@@ -112,27 +124,26 @@ class UsageTracker:
     async def check_limit(self, subject_id: str) -> tuple[bool, int, datetime]:
         """Check whether ``subject_id`` may ask another question — NON-MUTATING.
 
-        Resolves the serving path in strict order (Design §3, issue #93) and
-        performs **no writes**:
+        Resolves the serving path in strict order (Design §3, issue #93; #199)
+        and performs **no writes**:
 
-        1. Entitled subscription (``status ∈ {active, grace} AND expires_at>now``)
-           → allow, unlimited (``-1``). Grace = Apple's billing-retry window
-           (flaw fix 2); it must not fall through to the free allotment.
-        2. Free allotment: monthly count < ``monthly_limit`` → allow, free
+        1. Monthly allowance: monthly count < the applicable limit → allow,
+           allowance remaining. The limit is ``subscriber_monthly_limit`` for an
+           entitled account (``status ∈ {active, grace} AND expires_at>now``;
+           grace = Apple's billing-retry window, flaw fix 2) else
+           ``monthly_limit``. Both draw on the same monthly counter.
+        2. Pack credits: ``SUM(credit_ledger.delta) > 0`` → allow, balance as
            remaining.
-        3. Pack credits: ``SUM(credit_ledger.delta) > 0`` → allow, balance as
-           remaining.
-        4. Else deny.
+        3. Else deny.
 
         Returns ``(allowed, remaining, resets_at)`` (unchanged signature).
         ``daily_usage.is_premium`` is no longer read — entitlement comes solely
         from the ``subscription`` table (default-deny on a null account)."""
         now = self._now()
         async with self._sessionmaker() as session:
-            if await account_is_entitled(session, subject_id, now=now):
-                return True, -1, _next_reset(now)
+            entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
-            remaining = max(0, self.monthly_limit - count)
+            remaining = max(0, self._limit_for(entitled) - count)
             if remaining > 0:
                 return True, remaining, _next_reset(now)
             balance = await account_credit_balance(session, subject_id)
@@ -142,15 +153,14 @@ class UsageTracker:
 
     async def record_question(self, subject_id: str) -> int:
         """Record one *served* question for ``subject_id`` — the single consume
-        point (MUTATING). Returns the monthly free count after the effect.
+        point (MUTATING). Returns the monthly count after the effect.
 
         Re-derives the same order as :meth:`check_limit` independently (so a
         check→record race can't double-spend — #90 TOCTOU) and applies EXACTLY
         ONE effect (Design §3):
 
-        * Entitled → insert the visible daily row only, no counter increment,
-          no debit (unlimited).
-        * Free (count < limit) → the atomic monthly-counter upsert (unchanged).
+        * Under the applicable monthly limit (subscriber limit if entitled, else
+          the free limit) → the atomic monthly-counter upsert.
         * Else → a single guarded credit debit
           (``INSERT … SELECT … WHERE (SELECT SUM(delta)…) > 0``), so a fully-spent
           balance debits nothing.
@@ -159,24 +169,10 @@ class UsageTracker:
         a pre-record 500 (question retrieval, ``quiz.py:96``) debits nothing."""
         now = self._now()
         async with self._sessionmaker() as session:
-            if await account_is_entitled(session, subject_id, now=now):
-                count, _ = await self._read_month(session, subject_id, now)
-                # Keep a visible row for today, but don't increment or debit.
-                await session.execute(
-                    pg_insert(DailyUsage)
-                    .values(
-                        subject_id=subject_id,
-                        usage_date=_today(now),
-                        questions_count=0,
-                        is_premium=False,
-                    )
-                    .on_conflict_do_nothing(index_elements=["subject_id", "usage_date"])
-                )
-                await session.commit()
-                return count
-
+            entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
-            if count < self.monthly_limit:
+            limit = self._limit_for(entitled)
+            if count < limit:
                 stmt = (
                     pg_insert(DailyUsage)
                     .values(
@@ -197,7 +193,7 @@ class UsageTracker:
                     "Usage: subject=%s questions_this_month=%d limit=%d",
                     subject_id,
                     new_count,
-                    self.monthly_limit,
+                    limit,
                 )
                 return new_count
 
@@ -284,10 +280,11 @@ class UsageTracker:
 
         Additive per issue #93: adds ``subscription_status`` (raw stored status
         or ``"none"``) and ``credit_balance`` (``SUM(delta)``); the legacy fields
-        are unchanged. "Unlimited" display now follows real entitlement (an
-        active/grace subscription) OR the legacy ``is_premium`` column, so a real
-        subscriber shows unlimited even though the gate no longer reads the
-        column."""
+        are unchanged. #199: an entitled account (Trubbo Plus) reports its real
+        monthly limit and remaining, like the free tier does; ``plan`` is
+        ``"plus"`` for it, else ``"free"`` (the 429 / analytics sites read it).
+        Only the legacy ``is_premium`` flag on a NON-entitled account still
+        reports unlimited (``None``), as before."""
         now = self._now()
         async with self._sessionmaker() as session:
             count, premium = await self._read_month(session, subject_id, now)
@@ -295,7 +292,8 @@ class UsageTracker:
             credit_balance = await account_credit_balance(session, subject_id)
             subscription_status = await account_subscription_status(session, subject_id)
         resets_at = _next_reset(now)
-        if premium or entitled:
+        plan = "plus" if entitled else "free"
+        if premium and not entitled:
             return {
                 "user_id": subject_id,
                 "is_premium": premium,
@@ -305,16 +303,19 @@ class UsageTracker:
                 "resets_at": resets_at.isoformat(),
                 "subscription_status": subscription_status,
                 "credit_balance": credit_balance,
+                "plan": plan,
             }
+        limit = self._limit_for(entitled)
         return {
             "user_id": subject_id,
-            "is_premium": False,
+            "is_premium": premium,
             "questions_used": count,
-            "questions_limit": self.monthly_limit,
-            "remaining": max(0, self.monthly_limit - count),
+            "questions_limit": limit,
+            "remaining": max(0, limit - count),
             "resets_at": resets_at.isoformat(),
             "subscription_status": subscription_status,
             "credit_balance": credit_balance,
+            "plan": plan,
         }
 
     async def set_premium(self, subject_id: str, is_premium: bool = True) -> None:

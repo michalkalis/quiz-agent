@@ -191,9 +191,11 @@ async def get_question_availability(
 
     # #180 track C (a): the free quota bounds the set the same way the corpus
     # does. A free user with 5 questions left who asks for 10 is offered 5 up
-    # front (founder 2026-09-21) instead of hitting the wall mid-quiz. Entitled
-    # subscribers are unbounded; pack credits extend the free count because
-    # ``record_question`` spends the free allowance first, then credits.
+    # front (founder 2026-09-21) instead of hitting the wall mid-quiz. Trubbo
+    # Plus subscribers are bounded the same way by their 1,000 a month (#199);
+    # only the legacy ``is_premium`` flag reports no limit. Pack credits extend
+    # the count because ``record_question`` spends the monthly allowance first,
+    # then credits.
     # Custom packs never reach this probe (the client skips it for ``pack_id``).
     if usage_tracker is not None and subject.subject_id:
         usage = await usage_tracker.get_usage(subject.subject_id)

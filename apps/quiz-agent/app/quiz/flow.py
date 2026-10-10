@@ -298,6 +298,7 @@ class QuizFlowService:
                         "stage": "mid_quiz",
                         "questions_used": usage["questions_used"],
                         "questions_limit": usage["questions_limit"],
+                        "plan": usage["plan"],
                     },
                 )
                 self._emit_completed(session, "usage_limit")
@@ -306,7 +307,9 @@ class QuizFlowService:
                     "questions_used": usage["questions_used"],
                     "questions_limit": usage["questions_limit"],
                     "resets_at": usage["resets_at"],
-                    "upgrade_available": True,
+                    # Trubbo Plus is the only plan: a subscriber at the wall
+                    # has nothing to upgrade to (packs are the way on).
+                    "upgrade_available": usage["plan"] == "free",
                     # Dumped to the wire shape: this rides inside an
                     # HTTPException detail, which is JSON-encoded as-is.
                     "evaluation": result.evaluation.model_dump(),

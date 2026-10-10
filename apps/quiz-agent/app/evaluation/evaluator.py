@@ -5,7 +5,7 @@ Ported from graph.py:445-518
 
 import logging
 import re
-from typing import Tuple
+from typing import Tuple, Any
 
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
@@ -31,15 +31,20 @@ class AnswerEvaluator:
     2. LLM path: Nuanced evaluation for partial credit
     """
 
-    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
+    def __init__(self, model: str | None = None, temperature: float = 0.3):
         """Initialize answer evaluator.
 
         Args:
-            model: OpenAI model for evaluation
+            model: Model id; default EVAL_MODEL env, else Claude Haiku 5.5 (#196)
             temperature: Lower temperature for deterministic evaluation
         """
         self.client = hot_path_llm.client()
-        self.model = llm_factory.resolve_model(model)
+        # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
+        # client. Injected by the eval harness to record real Claude calls.
+        self.claude_client: Any = None
+        self.model = llm_factory.resolve_model(
+            model or hot_path_llm.role_model("EVAL_MODEL")
+        )
         self.temperature = temperature
 
     async def evaluate(
@@ -222,6 +227,7 @@ Respond with EXACTLY one of these words: correct, partially_correct, partially_i
         # in seconds; every deterministic path above has already run.
         response = await hot_path_llm.complete(
             self.client,
+            claude_llm=self.claude_client,
             stage="evaluate",
             model=self.model,
             temperature=self.temperature,

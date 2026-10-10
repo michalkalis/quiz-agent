@@ -29,18 +29,34 @@ an outage the first failing call ends the submit, so at most 12 s of LLM time.
 Only a classifier that barely succeeds near the cap followed by a failing
 judge reaches 24 s; past iOS's 30 s the app shows its own "timed out, try
 again", still nothing graded.
+
+#196 (track 196.3, founder 2026-10-10): both roles run on Claude Haiku 5.5 at
+effort ``low`` on the direct Anthropic API (eval:
+docs/testing/runs/haiku-eval-2026-10-10 — wrong "incorrect" verdicts 9 → 1 of
+190, same or better p90). ``EVAL_MODEL`` / ``PARSE_MODEL`` pick the model, so
+rollback is one Fly secret (``=gpt-4o-mini``). The Claude call is fail-safe:
+no key, an error, a timeout or an unusable reply sends that one call to
+``FALLBACK_MODEL`` on the path above, unchanged — so the switch can never cost
+a player a verdict. The Claude attempt and its fallback share ONE
+``CALL_BUDGET_S`` deadline per call: Claude gets one try of at most
+``CLAUDE_TIMEOUT_S`` (6 s, no retry; Haiku p90 was 1.2–1.8 s), the fallback
+gets whatever is left (≥ 6 s, enough for gpt-4o-mini's p95 of 2.2–3.2 s). So a
+call still never exceeds 12 s and the two-call worst case above stays 24 s.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
 import openai
 import sentry_sdk
+from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 
 from .quiz.errors import JudgeUnavailable
@@ -56,6 +72,23 @@ CALL_BUDGET_S = 12.0
 SENTRY_REPORT_INTERVAL_S = 600.0
 _last_reported_at: float | None = None
 
+DEFAULT_MODEL = "claude-haiku-5-5"
+FALLBACK_MODEL = "gpt-4o-mini"
+# Eval: effort low matched medium on wrong "incorrect" verdicts at a lower p90.
+CLAUDE_EFFORT = "low"
+# Room for adaptive thinking plus the parser's JSON (~160 tokens at low).
+CLAUDE_MAX_TOKENS = 2048
+# Must leave the fallback enough of CALL_BUDGET_S to answer (see docstring).
+CLAUDE_TIMEOUT_S = 6.0
+
+_anthropic_llm: Any = None
+_fallback_warned: set[str] = set()
+
+
+def role_model(env_name: str) -> str:
+    """Model id for an answer-path role: ``env_name`` if set, else Haiku 5.5."""
+    return (os.getenv(env_name) or "").strip() or DEFAULT_MODEL
+
 
 def client() -> openai.AsyncOpenAI:
     """The async OpenAI-SDK client the answer path uses (active gateway)."""
@@ -64,19 +97,99 @@ def client() -> openai.AsyncOpenAI:
     )
 
 
-async def complete(llm: Any, *, stage: str, **request: Any) -> Any:
+async def complete(
+    llm: Any, *, stage: str, claude_llm: Any = None, **request: Any
+) -> Any:
     """``llm.chat.completions.create(**request)`` within ``CALL_BUDGET_S``.
 
     Raises ``JudgeUnavailable`` when the provider errors or does not answer in
     time, so the submit flow can ask the player again instead of failing.
+
+    A Claude ``model`` goes to the Anthropic API first (#196) — through
+    ``claude_llm`` when given (an injected Anthropic-SDK-shaped client, e.g.
+    the eval harness's recorder), else the shared direct client. If that does
+    not produce a reply, the same request runs on ``FALLBACK_MODEL`` through
+    ``llm`` exactly as before the switch, in whatever is left of the one
+    ``CALL_BUDGET_S`` deadline.
     """
+    deadline = time.monotonic() + CALL_BUDGET_S
+    if anthropic_route.is_claude_model(request.get("model") or ""):
+        reply = await _complete_claude(stage, request, claude_llm)
+        if reply is not None:
+            return reply
+        request = {**request, "model": llm_factory.resolve_model(FALLBACK_MODEL)}
     try:
         return await asyncio.wait_for(
-            llm.chat.completions.create(**request), timeout=CALL_BUDGET_S
+            llm.chat.completions.create(**request),
+            timeout=max(0.0, deadline - time.monotonic()),
         )
     except (TimeoutError, openai.APIError) as exc:
         _report(stage, request.get("model"), exc)
         raise JudgeUnavailable(stage) from exc
+
+
+def _anthropic() -> Any:
+    global _anthropic_llm
+    if _anthropic_llm is None:
+        _anthropic_llm = llm_factory.anthropic_client(
+            timeout=CLAUDE_TIMEOUT_S
+        ).with_options(max_retries=0)
+    return _anthropic_llm
+
+
+async def _complete_claude(
+    stage: str, request: dict[str, Any], claude_llm: Any
+) -> Any | None:
+    """The request on the Anthropic API, shaped like an OpenAI response, or
+    ``None`` when the caller must fall back. Haiku 5.5 rejects ``temperature``
+    (400), so it is never sent; the prompts go out unchanged."""
+    model = request["model"]
+    if not anthropic_route.routes_to_anthropic(model):
+        _note_fallback(stage, model, "anthropic route unavailable (no key?)")
+        return None
+    messages = request["messages"]
+    try:
+        reply = await asyncio.wait_for(
+            (claude_llm or _anthropic()).messages.create(
+                model=anthropic_route.anthropic_model_id(model),
+                max_tokens=CLAUDE_MAX_TOKENS,
+                system="\n".join(
+                    m["content"] for m in messages if m["role"] == "system"
+                ),
+                messages=[m for m in messages if m["role"] != "system"],
+                output_config={"effort": CLAUDE_EFFORT},
+            ),
+            timeout=CLAUDE_TIMEOUT_S,
+        )
+    except Exception as exc:  # noqa: BLE001 — any failure means: use the fallback
+        _note_fallback(stage, model, type(exc).__name__)
+        return None
+    text = anthropic_route.message_text(reply.content).strip()
+    if reply.stop_reason != "end_turn" or not text:
+        _note_fallback(stage, model, f"stop_reason={reply.stop_reason}")
+        return None
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=text))]
+    )
+
+
+def _note_fallback(stage: str, model: str, reason: str) -> None:
+    # WARNING once per process per reason (not per answer); a breadcrumb on
+    # every fallback so a later Sentry event shows the fallback model judged.
+    if reason not in _fallback_warned:
+        _fallback_warned.add(reason)
+        logger.warning(
+            "Answer-path %s: %s unavailable (%s), using %s",
+            stage,
+            model,
+            reason,
+            FALLBACK_MODEL,
+        )
+    sentry_sdk.add_breadcrumb(
+        category="llm",
+        level="warning",
+        message=f"{stage}: {model} -> {FALLBACK_MODEL} ({reason})",
+    )
 
 
 def _report(stage: str, model: str | None, exc: BaseException) -> None:

@@ -140,7 +140,10 @@ struct QuestionVoiceFooter: View {
             // word "Processing…" is the bar's. `isLoading` also disables it.
             isLoading: isEvaluating,
             loadingStyle: .spinnerOnly,
-            height: rowHeight
+            height: rowHeight,
+            // #198 (canvas Bg-Question): Stop is pink while the mic is open,
+            // matching the answer bar; "Answer" stays the ink action.
+            tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil
         ) {
             Task { await viewModel.toggleRecording() }
         }

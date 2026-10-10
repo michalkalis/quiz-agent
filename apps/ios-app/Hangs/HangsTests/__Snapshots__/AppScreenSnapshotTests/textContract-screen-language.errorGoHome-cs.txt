@@ -1,5 +1,4 @@
 # texts
-trubbo
 JEJDA
 Question history is full
 Reset your question history in Settings and start a new quiz.

@@ -257,13 +257,13 @@ struct ListenBar: View {
 
     private var live: Color { Theme.Hangs.Colors.live }
     private var amber: Color { Theme.Hangs.Colors.warning }
-    private var action: Color { Theme.Hangs.Colors.action }
 
     /// The bar's resting accent before any feedback tint applies.
     private var modeAccent: Color {
         switch mode {
         case .command, .readingQuestion, .readingAnswerBack: return live
-        case .answer: return action
+        // #198 (canvas Bg-Question): the open answer mic is pink.
+        case .answer: return Theme.Hangs.Colors.listenText
         case .evaluating, .skipping: return Theme.Hangs.Colors.muted
         }
     }
@@ -293,7 +293,8 @@ struct ListenBar: View {
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return live.opacity(0.08)
             // #185 track F: a shade warmer once speech is heard (F2 "hot").
-            case .answer: return speechHeard ? action.opacity(0.18) : Theme.Hangs.Colors.actionSoft
+            // The pink wash stays light enough for the pink caption on it (4.5:1).
+            case .answer: return Theme.Hangs.Colors.listen.opacity(speechHeard ? 0.12 : 0.08)
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.10)
             }
         }
@@ -308,7 +309,7 @@ struct ListenBar: View {
         case .idle, .hearing, .recognizing:
             switch mode {
             case .command, .readingQuestion, .readingAnswerBack: return live.opacity(0.35)
-            case .answer: return action
+            case .answer: return Theme.Hangs.Colors.listen
             case .evaluating, .skipping: return Theme.Hangs.Colors.muted.opacity(0.35)
             }
         }

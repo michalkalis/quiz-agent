@@ -58,7 +58,8 @@ struct PaywallView: View {
             // #179 finding 9: the offline variant lost "Maybe tomorrow" too,
             // so it needs the ✕ — otherwise "Try Again" is the only control
             // on screen and the user is stuck behind an unreachable store.
-            HangsBrandRow { closeButton }
+            // #198: no logo past Home — the deck below carries the brand.
+            HangsTopBar { closeButton }
             if isOffline {
                 offlineBody
             } else {

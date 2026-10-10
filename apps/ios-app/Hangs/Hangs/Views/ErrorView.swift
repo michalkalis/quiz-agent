@@ -8,19 +8,18 @@
 import SwiftUI
 
 /// Error screen — Fwafe frame. Bound to AppErrorModel (52.7 mapping).
-/// #194 C9: ink card with the warning glyph, "OOPS" overline, the model's
-/// title as headline, its description, and the CTA stack for its action.
+/// #194 C9: a face-down card with the warning glyph, "OOPS" overline, the
+/// model's title as headline, its description, and the CTA stack for its action.
 struct ErrorView: View {
     @ObservedObject var viewModel: QuizViewModel
     let model: AppErrorModel
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsBrandRow()
-
-            // #194 C9 (canvas Bg-Offline): a face-down ink card carries the
-            // glyph; the error's own title is the headline. Scrolls once large
-            // text outgrows the screen, buttons stay pinned.
+            // #194 C9 (canvas Bg-Offline): a face-down card carries the glyph;
+            // the error's own title is the headline. Scrolls once large text
+            // outgrows the screen, buttons stay pinned. #198: no logo past Home,
+            // and the card is striped cobalt (retry) or mandarin, never ink.
             ScrollView {
                 VStack(spacing: Theme.Hangs.Spacing.xl) {
                     Spacer(minLength: Theme.Hangs.Spacing.md)
@@ -48,18 +47,21 @@ struct ErrorView: View {
         .accessibilityIdentifier("error.root")
     }
 
+    private var isRetry: Bool { model.retryAction == .retryOperation }
+
     private var errorIconCircle: some View {
-        let style = Theme.Hangs.Category.style(for: nil)
-        return RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-            .fill(style.text.opacity(0.08))
+        let category = Theme.Hangs.Category.self
+        let style = isRetry ? category.errorOffline : category.errorOther
+        let stripe = isRetry ? category.errorOfflineStripe : category.errorOtherStripe
+        return ErrorCardStripes(stripe: stripe)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous))
             .padding(Theme.Hangs.Spacing.sm)
             .overlay {
-                Image(systemName: "exclamationmark.triangle")
+                Image(systemName: isRetry ? "wifi.slash" : "exclamationmark.triangle")
                     .font(.hangsTitle)
-                    .foregroundStyle(style.text)
+                    .foregroundStyle(Theme.Hangs.Category.chipText)
                     .frame(width: Metrics.disc, height: Metrics.disc)
-                    .background(Circle().fill(style.fill))
-                    .overlay(Circle().strokeBorder(style.text.opacity(0.2)))
+                    .background(Circle().fill(Theme.Hangs.Category.chipFill))
             }
             .frame(width: Metrics.card.width, height: Metrics.card.height)
             .background(
@@ -133,5 +135,27 @@ struct ErrorView: View {
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.top, Theme.Hangs.Spacing.sm)
         .padding(.bottom, Theme.Hangs.Spacing.sm)
+    }
+}
+
+/// Diagonal stripes of the error card's inner panel (canvas Bg-Offline).
+private struct ErrorCardStripes: View {
+    let stripe: Color
+
+    private enum Metrics {
+        static let width: CGFloat = 10
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            var path = Path()
+            var x = -size.height
+            while x < size.width {
+                path.move(to: CGPoint(x: x, y: size.height))
+                path.addLine(to: CGPoint(x: x + size.height, y: 0))
+                x += Metrics.width * 2
+            }
+            context.stroke(path, with: .color(stripe), lineWidth: Metrics.width / 1.4)
+        }
     }
 }

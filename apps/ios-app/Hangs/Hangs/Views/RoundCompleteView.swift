@@ -48,14 +48,20 @@ struct RoundCompleteView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsBrandRow {
+            // #198: the logo stays on Home and Onboarding only.
+            HangsTopBar {
                 HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
                     .accessibilityIdentifier("\(route.idPrefix).close")
             }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                    HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
+                    HStack(alignment: .bottom, spacing: Theme.Hangs.Spacing.sm) {
+                        HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
+                        if !viewModel.recapEntries.isEmpty {
+                            RoundCardRow(outcomes: cardOutcomes)
+                        }
+                    }
 
                     scoreCard
 
@@ -125,7 +131,7 @@ struct RoundCompleteView: View {
                     breakdownRow("Correct", value: "\(summary.correctCount)",
                                  color: summary.correctCount > 0 ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
                     breakdownRow("Incorrect", value: "\(summary.incorrectCount)",
-                                 color: summary.incorrectCount > 0 ? Theme.Hangs.Colors.wrong : Theme.Hangs.Colors.muted)
+                                 color: summary.incorrectCount > 0 ? Theme.Hangs.Colors.missText : Theme.Hangs.Colors.muted)
                     breakdownRow("Accuracy", value: "\(Int(summary.sessionAccuracyPercent))%",
                                  color: Theme.Hangs.Colors.ink)
                 }
@@ -202,6 +208,15 @@ struct RoundCompleteView: View {
         }
     }
 
+    /// #198: one small card per answered question, a right one in its card's colour.
+    private var cardOutcomes: [RoundCardRow.Outcome] {
+        viewModel.recapEntries.map { entry in
+            if entry.wasSkipped { return .skipped }
+            guard entry.isCorrect else { return .incorrect }
+            return .correct(DeckIdentity(category: entry.category, packId: viewModel.activePackId).style)
+        }
+    }
+
     /// #198: nil for a category outside the taxonomy — the label then names no category.
     private var categoryName: String? {
         viewModel.recapEntries.first.flatMap { Config.categoryDisplayName(for: $0.category) }
@@ -214,7 +229,8 @@ struct RoundCompleteView: View {
         } label: {
             Label(summaryTitle, systemImage: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2")
             .font(.hangsCaption.weight(.semibold))
-            .foregroundStyle(Theme.Hangs.Colors.ink)
+            // #198: the cobalt accent of the round summary (canvas Bg-Recap).
+            .foregroundStyle(Theme.Hangs.Colors.blue)
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
             .frame(minHeight: Theme.Hangs.Spacing.xxl)
             .glassEffect(.regular.interactive(), in: Capsule())

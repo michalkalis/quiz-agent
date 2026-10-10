@@ -43,6 +43,9 @@ struct HangsPrimaryButton: View {
     var countdownSecondsRemaining: Int? = nil
     /// Full countdown duration the fill fraction is computed against.
     var countdownTotal: Int = 0
+    /// #198: a fill other than the ink action, under white text — only the
+    /// question screen's Stop (`Colors.listenStrong`, canvas Bg-Question).
+    var tint: Color? = nil
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -62,7 +65,11 @@ struct HangsPrimaryButton: View {
     private static let noShadow = Theme.Hangs.ShadowSpec(color: .clear, radius: 0, y: 0)
 
     private var fill: Color {
-        looksDisabled ? Theme.Hangs.Colors.mutedBorder : Theme.Hangs.Colors.action
+        looksDisabled ? Theme.Hangs.Colors.mutedBorder : tint ?? Theme.Hangs.Colors.action
+    }
+
+    private var label: Color {
+        tint == nil ? Theme.Hangs.Colors.textOnAction : Theme.Hangs.Colors.textOnAccent
     }
 
     private var countdownFraction: CGFloat {
@@ -75,10 +82,10 @@ struct HangsPrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 if isLoading {
-                    ProgressView().tint(Theme.Hangs.Colors.textOnAction)
+                    ProgressView().tint(label)
                 } else {
                     if showsSpinner {
-                        ProgressView().tint(Theme.Hangs.Colors.textOnAction)
+                        ProgressView().tint(label)
                     }
                     if let icon {
                         Image(systemName: icon)
@@ -104,7 +111,7 @@ struct HangsPrimaryButton: View {
                         .padding(.horizontal, Theme.Hangs.Spacing.xs)
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Theme.Hangs.Colors.textOnAction.opacity(0.18))
+                                .fill(label.opacity(0.18))
                         )
                         // #171 Track C3 safety: in a narrow row the title must
                         // shrink (it already has minimumScaleFactor) and the
@@ -115,7 +122,7 @@ struct HangsPrimaryButton: View {
                         .accessibilityHidden(true)
                 }
             }
-            .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.textOnAction)
+            .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : label)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.vertical, Theme.Hangs.Spacing.xs)
             .frame(maxWidth: .infinity, minHeight: height)

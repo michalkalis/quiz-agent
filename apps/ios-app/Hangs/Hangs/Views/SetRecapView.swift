@@ -136,16 +136,16 @@ struct SetRecapRow: View {
         return entry.isCorrect ? "checkmark" : "xmark"
     }
 
-    /// #194 R-Complete: a solid green plate for a right answer; a wrong one
-    /// stays neutral (B1), a skip is the quietest.
+    /// #194 R-Complete: a solid green plate for a right answer; #198 (canvas
+    /// Bg-Recap): a miss is a pink glyph on its pink wash; a skip is the quietest.
     private var badgeColor: Color {
         if entry.wasSkipped { return Theme.Hangs.Colors.muted }
-        return entry.isCorrect ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.wrong
+        return entry.isCorrect ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.missText
     }
 
     private var badgeFill: Color {
         if entry.wasSkipped { return Theme.Hangs.Colors.track }
-        return entry.isCorrect ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.neutralSoft
+        return entry.isCorrect ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.missSoft
     }
 
     private var expandedSection: some View {

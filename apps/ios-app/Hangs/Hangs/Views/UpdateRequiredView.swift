@@ -24,9 +24,8 @@ struct UpdateRequiredView: View {
     let isTestFlight: Bool
 
     var body: some View {
+        // #198: no logo past Home and Onboarding.
         VStack(spacing: 0) {
-            HangsBrandRow()
-
             Spacer(minLength: Theme.Hangs.Spacing.xxl)
 
             VStack(spacing: Theme.Hangs.Spacing.xl) {
@@ -60,7 +59,7 @@ struct UpdateRequiredView: View {
     }
 
     private var iconCircle: some View {
-        // #194 C9: the glyph on an ink card, like the error screen.
+        // #194 C9: the glyph on a card (#198: cobalt, not ink), like the error screen.
         Image(systemName: "arrow.down.app")
             .font(.system(size: Metrics.iconSize))
             .foregroundStyle(Theme.Hangs.Category.style(for: nil).text)

@@ -151,7 +151,11 @@ struct ResultView: View {
         )
     }
 
-    private var cardStyle: Theme.Hangs.Category.Style { deckIdentity.style }
+    /// #198 (canvas Bg-Result / R-Result): a correct answer turns the whole
+    /// card mint; a miss or a skip keeps the question's own colour.
+    private var cardStyle: Theme.Hangs.Category.Style {
+        verdict == .correct ? Theme.Hangs.Category.correct : deckIdentity.style
+    }
 
     private var resultCard: some View {
         HangsDeckCard(

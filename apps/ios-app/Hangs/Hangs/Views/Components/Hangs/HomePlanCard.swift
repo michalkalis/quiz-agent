@@ -142,16 +142,17 @@ struct HomePlanCard: View {
         if credits > 0 {
             let total = Double(remaining + credits)
             guard total > 0 else { return [] }
-            // Free burns first: ink drawn left, cobalt credits right, widths
+            // Free burns first: cobalt drawn left, mint credits right, widths
             // proportional to the two balances (they fill the full meter).
             return [
-                .init(color: Theme.Hangs.Colors.ink, fraction: Double(remaining) / total),
-                .init(color: Theme.Hangs.Colors.accentPrimary, fraction: Double(credits) / total),
+                .init(color: Theme.Hangs.Colors.accentPrimary, fraction: Double(remaining) / total),
+                .init(color: Theme.Hangs.Colors.credits, fraction: Double(credits) / total),
             ]
         }
         // Free-only (or expired collapsed to free): a partial meter of the
         // monthly quota that is left.
-        return [.init(color: Theme.Hangs.Colors.ink, fraction: HomeView.quotaFraction(usage))]
+        // #198 (canvas Bg-Home): the free meter is cobalt.
+        return [.init(color: Theme.Hangs.Colors.accentPrimary, fraction: HomeView.quotaFraction(usage))]
     }
 
     /// "resets in 3 days" — and, when pack credits coexist, that they don't
@@ -169,11 +170,12 @@ struct HomePlanCard: View {
     @ViewBuilder private var freeLink: some View {
         switch state {
         case .expired:
-            linkLabel("Resubscribe", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
+            linkLabel("Resubscribe", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
         case .freeWithCredits:
-            linkLabel("More", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
+            linkLabel("More", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
         default:
-            linkLabel("Upgrade", color: Theme.Hangs.Colors.actionText, id: "home.freePlanUpgrade")
+            // #198 (canvas Bg-Home): the plan's links are blue.
+            linkLabel("Upgrade", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
         }
     }
 
@@ -247,7 +249,7 @@ struct HomePlanCard: View {
         if state == .grace {
             linkLabel("Fix payment", color: Theme.Hangs.Colors.warning, id: "home.planManageCTA")
         } else {
-            linkLabel("Manage", color: Theme.Hangs.Colors.actionText, id: "home.planManageCTA")
+            linkLabel("Manage", color: Theme.Hangs.Colors.blue, id: "home.planManageCTA")
         }
     }
 
@@ -255,8 +257,8 @@ struct HomePlanCard: View {
 
     private func legendRow(free: Int, credits: Int) -> some View {
         HStack(spacing: Theme.Hangs.Spacing.md) {
-            legendItem(color: Theme.Hangs.Colors.ink, text: "\(free) monthly free")
-            legendItem(color: Theme.Hangs.Colors.accentPrimary, text: "\(credits) pack credits")
+            legendItem(color: Theme.Hangs.Colors.accentPrimary, text: "\(free) monthly free")
+            legendItem(color: Theme.Hangs.Colors.credits, text: "\(credits) pack credits")
         }
         .accessibilityIdentifier("home.planLegend")
     }
@@ -311,7 +313,8 @@ struct HomePlanCardLabel: View {
     var body: some View {
         Text("your plan")
             .font(.hangsOverline)
-            .foregroundStyle(Theme.Hangs.Colors.muted)
+            // #198 (canvas Bg-Home): "tvoj plán" in the link blue.
+            .foregroundStyle(Theme.Hangs.Colors.blue)
             .accessibilityIdentifier("home.planLabel")
     }
 }

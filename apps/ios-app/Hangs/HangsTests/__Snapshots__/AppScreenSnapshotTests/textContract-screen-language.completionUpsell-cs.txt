@@ -3,7 +3,7 @@ trubbo.
 HOTOVO
 konečné skóre
 7.5
-out of 10
+z 10
 Správně
 7
 Nesprávně
@@ -15,10 +15,14 @@ Tento měsíc ti zbývá 4 otázek zdarma.
 Hraj bez limitu
 Hraj znovu
 Úvod
+Hraj znovu
+Úvod
 # identifiers
 completion.close
 completion.score
 completion.breakdown
 completion.upsell
+completion.playAgain
+completion.home
 completion.playAgain
 completion.home

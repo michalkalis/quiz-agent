@@ -15,10 +15,14 @@ Running low on free questions
 Go Unlimited
 Play Again
 Home
+Play Again
+Home
 # identifiers
 completion.close
 completion.score
 completion.breakdown
 completion.upsell
+completion.playAgain
+completion.home
 completion.playAgain
 completion.home

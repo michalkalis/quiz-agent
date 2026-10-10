@@ -12,9 +12,13 @@ Accuracy
 70%
 Play Again
 Home
+Play Again
+Home
 # identifiers
 completion.close
 completion.score
 completion.breakdown
+completion.playAgain
+completion.home
 completion.playAgain
 completion.home

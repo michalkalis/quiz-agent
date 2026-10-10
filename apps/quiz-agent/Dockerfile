@@ -45,7 +45,8 @@ RUN pip install --no-cache-dir \
     pyattest>=1.0.4 \
     cbor2>=5.6.0 \
     num2words>=0.5.14 \
-    anthropic>=0.42.0
+    anthropic>=0.42.0 \
+    boto3>=1.34.0
 
 # Production stage
 FROM python:3.11-slim

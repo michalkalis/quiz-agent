@@ -351,3 +351,33 @@ class AnalyticsEvent(Base):
     source: Mapped[str] = mapped_column(Text, nullable=False)
     app_version: Mapped[str | None] = mapped_column(Text, nullable=True)
     properties: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class VoiceSample(Base):
+    """One answer recording from the car, kept for replay tests (issue #197).
+
+    Only the TestFlight/debug "Save answer recordings" switch sends these, and
+    only for subjects on the ``VOICE_SAMPLE_UPLOAD_USER_IDS`` allowlist. The
+    audio lives in a private R2 bucket (``r2_key``); this row is what the
+    replay script and the labeling page read. ``sidecar`` is the app's JSON as
+    sent (route, voice processing, transcript, the app's decision, the
+    question as served). ``label`` stays null until the founder corrects a
+    case the app got wrong (track 197.3).
+    """
+
+    __tablename__ = "voice_samples"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    question_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    language: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sidecar: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    r2_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    audio_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    label: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False, index=True
+    )

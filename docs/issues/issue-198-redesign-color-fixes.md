@@ -22,7 +22,7 @@
 - [x] **198.2 — HOTOVÉ 2026-10-10 (PR #353) — farby z plátna do kvízu a výsledkov:** správna = mätová karta, zlá = karta vo farbe kategórie, počúvanie ružové, koniec kola + prehľad odpovedí farebné podľa plátna, plán na domove kobaltový, prihlásenie s farebným vejárom, chybová obrazovka bez čiernej karty. Svetlý aj tmavý režim; nerozbiť obsahové rozloženia z bety (MCQ, jednoriadkové texty).
 - [x] **198.3 — HOTOVÉ 2026-10-10 (PR #353) — logo a vejár:** hlavička s logom len domov + sprievodca; vejár len domov, sprievodca, predplatné, prihlásenie.
 - [x] **198.4 — HOTOVÉ 2026-10-10 (PR #351) — farba balíčka:** vlastný balíček dostane farbu z palety podľa id → karta otázky, `PackMiniDeck`, karty v Moje balíčky a stav objednávky.
-- [~] **198.5 — pred/po:** stránka https://claude.ai/artifact/9LiXESfZkrxfZSy7ykypCo čaká na foundera; otvorené: koniec kola stále takmer bez farby, zlá odpoveď vo Vede = mätová ako správna. jedna stránka pred/po (svetlý + tmavý) s reálnymi kategóriami v snímkach → founder.
+- [~] **198.5 — pred/po:** stránka https://claude.ai/artifact/9LiXESfZkrxfZSy7ykypCo čaká na foundera; otvorené: koniec kola stále takmer bez farby, zlá odpoveď vo Vede = mätová ako správna. jedna stránka pred/po (svetlý + tmavý) s reálnymi kategóriami v snímkach → founder. kolo 2 HOTOVÉ 2026-10-11 (PR #360 koniec kola s farebnými kartami, chyba nikdy mätová; PR #356 An-225 archivovaná); founder: „lepšie o dosť“.
 
 ## Hotovo, keď
 

@@ -85,4 +85,15 @@ struct DeckIdentityTests {
         let used = Set(ids.map { Theme.Hangs.Category.stableIndex(of: $0, count: count) })
         #expect(used.count == count)
     }
+
+    @Test("The end-of-round label names the category in the screen's own language, and nothing for an unknown one")
+    func categoryNameFollowsTheViewLocale() {
+        // The label sits next to a Slovak "VÝSLEDOK KVÍZU"; an English name
+        // beside it is the mixed header the founder saw.
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "sk")) == "Geografia a svet")
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "cs")) == "Zeměpis a svět")
+        for raw in ["general", "adults", ""] {
+            #expect(Config.categoryDisplayName(for: raw, locale: Locale(identifier: "sk")) == nil)
+        }
+    }
 }

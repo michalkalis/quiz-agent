@@ -121,7 +121,7 @@ struct HomeFreePlanCardTests {
             // The identifier sits on the Group around the meta, so reach its Text.
             let meta = try tree.find(viewWithAccessibilityIdentifier: "home.planMeta").find(ViewType.Text.self)
             #expect(try meta.string(locale: Locale(identifier: "en")) == "870 of 1,000 left · resets in 12 days")
-            #expect(try meta.string(locale: Locale(identifier: "sk")) == "Zostáva 870 z 1\u{00A0}000 · resets in 12 days",
+            #expect(try meta.string(locale: Locale(identifier: "sk")) == "Ešte 870 z 1\u{00A0}000 · resets in 12 days",
                     "sk/cs thousands carry a non-breaking space")
             // The plan name carries the card, so no numeric headline and no
             // free-reset line.

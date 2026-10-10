@@ -44,7 +44,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zbývá %1$@ z %2$@ · %3$@"
+            "value" : "Ještě %1$@ z %2$@ · %3$@"
           }
         },
         "en" : {
@@ -56,7 +56,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zostáva %1$@ z %2$@ · %3$@"
+            "value" : "Ešte %1$@ z %2$@ · %3$@"
           }
         }
       }
@@ -362,7 +362,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zbývá %1$lld z %2$lld otázek zdarma"
+            "value" : "Ještě %1$lld z %2$lld otázek zdarma"
           }
         },
         "en" : {
@@ -374,7 +374,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zostáva %1$lld z %2$lld otázok zadarmo"
+            "value" : "Ešte %1$lld z %2$lld otázok zadarmo"
           }
         }
       }
@@ -3561,7 +3561,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zdarma · zbývá %1$lld z %2$lld"
+            "value" : "Zdarma · ještě %1$lld z %2$lld"
           }
         },
         "en" : {
@@ -3573,7 +3573,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zadarmo · zostáva %1$lld z %2$lld"
+            "value" : "Zadarmo · ešte %1$lld z %2$lld"
           }
         }
       }
@@ -9292,13 +9292,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo Plus · zbývá %1$lld z %2$lld"
+            "value" : "Trubbo Plus · ještě %1$lld z %2$lld"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo Plus · zostáva %1$lld z %2$lld"
+            "value" : "Trubbo Plus · ešte %1$lld z %2$lld"
           }
         }
       }

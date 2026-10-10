@@ -22,8 +22,9 @@ import os
 
 /// `GET /api/v1/languages` → `{"quiz": [...], "pack_order": [...]}`.
 /// Mirrors `LanguagesResponse` in `apps/quiz-pack-api/app/api/v1/languages.py`.
-/// Two lists because they differ: quiz sessions serve any language with an
-/// approved corpus, while custom packs are still generated in English (DD15).
+/// Two lists because they can differ: quiz sessions serve any language with an
+/// approved corpus, while custom packs are offered only in the languages pack
+/// generation writes natively (#192: en, sk, cs).
 nonisolated struct ServableLanguages: Codable, Sendable, Equatable {
     let quiz: [String]
     let packOrder: [String]
@@ -46,10 +47,14 @@ nonisolated final class LanguageAvailability: @unchecked Sendable {
     /// The process-wide instance the pickers read.
     static let shared = LanguageAvailability()
 
-    /// Compiled fallback — the servable set as of #168, used until the first
-    /// successful fetch lands (fresh install, offline first launch).
+    /// Compiled fallback, used until the first successful fetch lands (fresh
+    /// install, offline first launch). Must mirror the server defaults in
+    /// `quiz_shared/languages.py`: the launch fetch hits quiz-pack-api, which is
+    /// often cold, so this list is what most first launches actually see. A
+    /// stale `["en"]` here coerced a Slovak quiz language to an English pack
+    /// order long after #192 made packs natively sk/cs.
     static let fallbackQuizCodes = ["en", "sk", "cs"]
-    static let fallbackPackOrderCodes = ["en"]
+    static let fallbackPackOrderCodes = ["en", "sk", "cs"]
 
     private static let quizKey = "servableQuizLanguages"
     private static let packOrderKey = "servablePackOrderLanguages"

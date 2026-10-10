@@ -84,6 +84,12 @@ final class OrderPackViewModel: ObservableObject {
 
     @Published private(set) var state: OrderState = .editing
 
+    /// Localized App Store price of the pack product (`Product.displayPrice`),
+    /// shown on the payment summary. Nil until it loads — and it stays nil
+    /// (row hidden) when StoreKit can't answer, because a guessed price is
+    /// worse than none.
+    @Published private(set) var packPrice: String?
+
     private let service: PackOrderServiceProtocol
     private let purchaseService: PackPurchaseServiceProtocol
     /// Whether the Debug admin door is open (a key is stored). Injected so unit
@@ -109,6 +115,10 @@ final class OrderPackViewModel: ObservableObject {
     /// stops `prepareForPresentation` from stomping the choice on reopen.
     private var hasChosenLanguage = false
 
+    /// The quiz language the sheet was last opened with, so a language-list
+    /// refresh that lands after opening can redo the preselection.
+    private var defaultLanguage: String?
+
     /// The intent behind the order currently being submitted (or last failed).
     /// Kept alive across a retry of the SAME form content so `createOrder`
     /// reuses the same idempotency key rather than minting a new one on every
@@ -121,6 +131,11 @@ final class OrderPackViewModel: ObservableObject {
     /// launch — and so a test can pin a list without touching global defaults.
     private let orderLanguages: () -> [Language]
 
+    /// Re-fetches the servable language lists (best-effort). The launch fetch
+    /// often hits a cold quiz-pack-api and gives up, so the form retries when
+    /// it opens rather than living with the compiled fallback all session.
+    private let refreshLanguages: () async -> Void
+
     /// #51: the outcome of each App Store payment sheet this flow runs.
     private let analytics: AnalyticsClient
 
@@ -129,6 +144,7 @@ final class OrderPackViewModel: ObservableObject {
         purchaseService: PackPurchaseServiceProtocol = StoreKitPackPurchaseService(),
         adminKeyAvailable: @escaping () -> Bool = { AdminKeyStore().load() != nil },
         orderLanguages: @escaping () -> [Language] = { Language.packOrderLanguages },
+        refreshLanguages: @escaping () async -> Void = { await LanguageAvailability.shared.refresh() },
         clock: AnyClock<Duration> = .continuous,
         analytics: AnalyticsClient = NoopAnalyticsClient()
     ) {
@@ -136,6 +152,7 @@ final class OrderPackViewModel: ObservableObject {
         self.purchaseService = purchaseService
         self.adminKeyAvailable = adminKeyAvailable
         self.orderLanguages = orderLanguages
+        self.refreshLanguages = refreshLanguages
         self.clock = clock
         self.analytics = analytics
     }
@@ -197,6 +214,7 @@ final class OrderPackViewModel: ObservableObject {
     /// completes dismiss ≠ cancel — the pack keeps coming, and the sheet catches
     /// up with wherever it got to (delivered, or a real retryable failure).
     func prepareForPresentation(defaultLanguage: String) {
+        self.defaultLanguage = defaultLanguage
         switch state {
         case .delivered:
             resetForNewOrder(defaultLanguage: defaultLanguage)
@@ -217,6 +235,29 @@ final class OrderPackViewModel: ObservableObject {
         case .confirming, .submitting, .polling:
             break
         }
+    }
+
+    /// Form opened: re-fetch the orderable languages, then redo the
+    /// preselection if the user hasn't picked by hand — a refreshed list can
+    /// make the quiz language orderable after the sheet already showed a
+    /// fallback. The menu reads the list live, so it is re-rendered either way.
+    func refreshOrderLanguages() async {
+        await refreshLanguages()
+        objectWillChange.send()
+        guard state == .editing, !hasChosenLanguage, let defaultLanguage else { return }
+        language = supportedLanguage(defaultLanguage)
+    }
+
+    /// The languages the form's menu offers right now.
+    var availableLanguages: [Language] {
+        orderLanguages()
+    }
+
+    /// Load the pack price for the summary. Kept once loaded; a failed load
+    /// leaves it nil so the next summary visit tries again.
+    func loadPrice() async {
+        guard packPrice == nil else { return }
+        packPrice = await purchaseService.displayPrice()
     }
 
     /// Explicit user language pick (form menu).
@@ -314,9 +355,8 @@ final class OrderPackViewModel: ObservableObject {
 
     /// Maps a quiz-language code onto the order languages we currently offer,
     /// falling back to English rather than sending the server a code it will
-    /// reject. #168 DD15: packs are generated in English and only stamped with
-    /// the code, so this list is narrower than the quiz one — a Slovak quiz
-    /// language must not silently become a Slovak pack order.
+    /// reject. The orderable list is server-owned (#192: en, sk, cs) and may be
+    /// narrower than the quiz one.
     private func supportedLanguage(_ code: String) -> String {
         Language.selectable(code, in: orderLanguages()).id
     }

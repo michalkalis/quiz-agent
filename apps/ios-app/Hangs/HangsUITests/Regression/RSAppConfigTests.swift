@@ -34,7 +34,7 @@ final nonisolated class RSAppConfigTests: XCTestCase {
         RSFlow.assertAlive(app, "RS-22")
     }
 
-    // MARK: RS-23 — Notice dismisses; paused orders disable Create a pack
+    // MARK: RS-23 — Notice dismisses; paused orders disable Create a pack (Home + Settings)
 
     // Regression guarded: the Home notice must be closable (it must never
     // become a permanent banner over the start button), and pausing orders on
@@ -47,6 +47,10 @@ final nonisolated class RSAppConfigTests: XCTestCase {
         XCTAssertTrue(notice.waitForExistence(timeout: 10), "RS-23: Home notice missing")
         app.buttons["home.notice.dismiss"].tap()
         XCTAssertTrue(notice.waitForNonExistence(timeout: 5), "RS-23: notice still shown after dismiss")
+
+        let homeCreatePack = HomePage(app: app).createPackButton
+        XCTAssertTrue(homeCreatePack.waitForExistence(timeout: 5), "RS-23: Home create-pack card hidden while orders are paused")
+        XCTAssertFalse(homeCreatePack.isEnabled, "RS-23: Home create-pack card is enabled while orders are paused")
 
         let settings = SettingsPage(app: app)
         settings.openSettings()

@@ -2365,6 +2365,23 @@
         }
       }
     },
+    "Create your own pack" : {
+      "comment" : "Home card that opens the custom-pack order sheet",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvoř si vlastní balíček"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvor si vlastný balík"
+          }
+        }
+      }
+    },
     "Current language" : {
       "comment" : "Label for the current language setting.",
       "extractionState" : "stale",
@@ -4660,7 +4677,7 @@
       }
     },
     "Microphone access is off — you can still type. Enable it in Settings to dictate." : {
-      "comment" : "Feedback sheet: mic disabled because permission was denied\nRating panel: mic disabled because permission was denied",
+      "comment" : "Feedback sheet: mic disabled because permission was denied\nOrder form: mic disabled because permission was denied\nRating panel: mic disabled because permission was denied",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -5849,6 +5866,23 @@
         }
       }
     },
+    "Price" : {
+      "comment" : "Order summary: label of the pack's App Store price",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cena"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cena"
+          }
+        }
+      }
+    },
     "Privacy Policy" : {
       "localizations" : {
         "cs" : {
@@ -6350,7 +6384,7 @@
       }
     },
     "Reached the 2-minute dictation limit. Tap Dictate to add more." : {
-      "comment" : "Feedback sheet: dictation auto-stopped at the 120-second cap\nRating panel: dictation auto-stopped at the 120-second cap",
+      "comment" : "Feedback sheet: dictation auto-stopped at the 120-second cap\nOrder form: dictation auto-stopped at the 120-second cap\nRating panel: dictation auto-stopped at the 120-second cap",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -9508,19 +9542,19 @@
         }
       }
     },
-    "Usually takes a few minutes. The first order after a longer break can take a bit extra." : {
+    "Usually takes a few minutes." : {
       "comment" : "ETA copy while a custom pack is being generated",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obvykle to trvá pár minut. První objednávka po delší pauze může trvat o něco déle."
+            "value" : "Obvykle to trvá pár minut."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zvyčajne to trvá pár minút. Prvá objednávka po dlhšej prestávke môže trvať o niečo dlhšie."
+            "value" : "Zvyčajne to trvá pár minút."
           }
         }
       }

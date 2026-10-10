@@ -31,7 +31,11 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     /// Poll this to know the handler has reached (and is parked at) disconnect().
     var isSuspendedInDisconnect: Bool { !disconnectContinuations.isEmpty }
 
+    /// The language the last `connect` asked for.
+    private(set) var lastConnectLanguageCode: String?
+
     func connect(token: String, languageCode: String) async throws {
+        lastConnectLanguageCode = languageCode
         if shouldFail {
             throw ElevenLabsSTTError.notConnected
         }

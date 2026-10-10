@@ -7,6 +7,8 @@ Např. vesmír pro děti, těžké otázky z českých dějin, hudba 90. let…
 60 / 1000
 Napiš, o čem má kvíz být: téma, obtížnost, pro koho. Stačí pár slov.
 English
+Slovenčina
+Čeština
 Jazyk kvízu
 English
 Jazyk kvízu
@@ -17,4 +19,6 @@ Pokračuj
 orderPack.prompt
 orderPack.language
 orderPack.language.en
+orderPack.language.sk
+orderPack.language.cs
 orderPack.submit

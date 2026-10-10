@@ -35,7 +35,7 @@ struct OrderPackPreparingStep: View {
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.isHeader)
-                Text("Usually takes a few minutes. The first order after a longer break can take a bit extra.")
+                Text("Usually takes a few minutes.")
                     .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)

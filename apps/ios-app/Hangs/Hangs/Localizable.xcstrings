@@ -3882,13 +3882,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Až ztichneš, sám skončím"
+            "value" : "Až domluvíš, sám skončím"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keď stíchneš, sám skončím"
+            "value" : "Keď dohovoríš, sám skončím"
           }
         }
       }

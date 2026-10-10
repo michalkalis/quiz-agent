@@ -69,7 +69,9 @@ extension QuizViewModel {
         for chunk in chunks {
             guard !Task.isCancelled else { return }
             do {
-                let audio = try await networkService.synthesizeSpeech(text: chunk)
+                let audio = try await networkService.synthesizeSpeech(
+                    text: chunk, language: currentSession?.language ?? settings.language
+                )
                 guard !Task.isCancelled else { return }
                 _ = try await audioService.playOpusAudio(audio)
             } catch is CancellationError {

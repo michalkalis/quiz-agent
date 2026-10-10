@@ -146,6 +146,20 @@ async def test_over_budget_without_fallback_is_429(env):
     assert resp.headers["retry-after"]
 
 
+async def test_quiz_language_spells_digits_out(env):
+    """TF 2026-10-10: the read-back of a bare "366" in a Slovak quiz was spoken
+    in English — a lone number gives the voice no language cue. With the quiz
+    language the voice gets Slovak words; without one the text is untouched."""
+    client, primary, _, _, _ = env
+    await client.post(
+        "/api/v1/tts/synthesize",
+        json={"text": "366", "language": "sk"},
+        headers=_bearer("u1"),
+    )
+    await _say(client, "u1", "42")
+    assert primary.calls == ["tristošesťdesiatšesť", "42"]
+
+
 async def test_tracker_counts_per_subject_per_day(db_sessionmaker):
     """The counter is the durable half: it accumulates and is isolated per subject."""
     t = UsageTracker(db_sessionmaker)

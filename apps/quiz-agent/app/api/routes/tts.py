@@ -52,8 +52,13 @@ async def synthesize_tts(
         if metered:
             used = await usage_tracker.tts_chars_today(subject.subject_id)
             billing.allow_primary = used < budget
+        text = (
+            normalize_numbers_for_tts(body.text, body.language)
+            if body.language
+            else body.text
+        )
         audio_data = await tts_service.synthesize(
-            text=body.text, voice=body.voice, use_cache=True, billing=billing
+            text=text, voice=body.voice, use_cache=True, billing=billing
         )
         if metered and billing.billed_chars:
             await usage_tracker.add_tts_chars(subject.subject_id, billing.billed_chars)

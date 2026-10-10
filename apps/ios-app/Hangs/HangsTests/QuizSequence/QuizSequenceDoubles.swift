@@ -308,7 +308,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
         return Data(urlString.utf8)
     }
 
-    func synthesizeSpeech(text: String) async throws -> Data {
+    func synthesizeSpeech(text: String, language _: String?) async throws -> Data {
         calls += 1
         return Data("tts:\(text)".utf8)
     }

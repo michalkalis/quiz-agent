@@ -43,7 +43,9 @@ protocol NetworkServiceProtocol: Sendable {
     /// #132 E: generic TTS (`POST /tts/synthesize`) for the recap narration —
     /// speaks arbitrary already-translated text. The server caps `text` at
     /// 1000 chars per call; callers chunk longer narrations.
-    func synthesizeSpeech(text: String) async throws -> Data
+    /// `language` = the quiz language: the backend spells digits out in it, so a
+    /// bare "366" read back in a Slovak quiz is not spoken in English.
+    func synthesizeSpeech(text: String, language: String?) async throws -> Data
     func endSession(sessionId: String) async throws
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
@@ -425,13 +427,15 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Generic TTS (#132 E recap narration)
 
-    func synthesizeSpeech(text: String) async throws -> Data {
+    func synthesizeSpeech(text: String, language: String?) async throws -> Data {
         let endpoint = baseURL.appendingPathComponent("/api/v1/tts/synthesize")
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["text": text])
+        var body = ["text": text]
+        body["language"] = language
+        request.httpBody = try JSONEncoder().encode(body)
 
         Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (tts, \(text.count, privacy: .public) chars)")
 

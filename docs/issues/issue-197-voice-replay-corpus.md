@@ -24,6 +24,7 @@ Každá zmena rozpoznávania reči (STT), vyhodnocovania odpovedí alebo povelov
 - [ ] **197.3 — označovanie:** malá stránka (vzor: rating web) so zoznamom nahrávok, kde appka verdikt pravdepodobne pokazila (STT ≠ správna odpoveď, „zle“ pri vysokej podobnosti…); founder klikne správny výsledok / prepis. Ostatné sa berú ako správne podľa appky.
 - [x] **197.4 — HOTOVÉ 2026-10-10 (PR #334, quiz-agent nasadený, migrácia `0011_voice_samples`) — replay testy:** skript (rozšírenie `stt_compare.py`) prehrá označené nahrávky celou cestou s aktuálnym kódom/modelmi → presnosť STT, verdiktu a povelov, chyby „správne označené ako zle“; výstup markdown do `docs/testing/runs/`. Spúšťať pri každej zmene STT/grader/parser modelu (#196 kroky 3–5).
 - [ ] **197.5 — TF build na požiadanie foundera** → jazda s prepínačom ON → prvý replay report.
+- [ ] **197.6 — detekcia ticha na dátach:** founder 2026-10-10: „príliš citlivá, nerozpozná, kedy som prestal hovoriť“. Sentry: 7/40 odpovedí na 15 s strope, hluk počítaný ako reč. (a) log zastavenia + čas začiatku/konca reči, (b) diagnostická nahrávka +3 s po zastavení, (c) replay detektora na nahrávkach + porovnanie alternatív (prahy, modelový VAD); zmena len s dátami. Rešerš: `docs/research/stt-eval-harness-2026-10-10.md`.
 
 **Stav 2026-10-10:** allowlist `VOICE_SAMPLE_UPLOAD_USER_IDS` nastavený; chýba privátny R2 bucket `trubbo-voice-samples` + token (founder, Cloudflare) → secrets `R2_*` + `VOICE_SAMPLES_R2_BUCKET` na quiz-agent-api; bez nich upload vracia 503. Bezpečnostný review: 4 nálezy opravené.
 

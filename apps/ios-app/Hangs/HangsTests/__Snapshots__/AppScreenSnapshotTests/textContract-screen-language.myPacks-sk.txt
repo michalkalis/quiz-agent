@@ -1,0 +1,24 @@
+# texts
+30
+Delivered
+history
+Spusti kvíz
+5
+Preparing
+history
+Pripravených otázok: 5 z 30. Zvyšok sa generuje, kým hráš.
+Spusti kvíz
+0
+Preparing
+EN
+!
+Failed
+EN
+Skús znova
+Vytvor balík
+# identifiers
+myPacks.startQuiz
+myPacks.readyCount
+myPacks.startQuiz
+myPacks.retry
+myPacks.createPack

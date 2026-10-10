@@ -126,8 +126,10 @@ extension Theme.Hangs {
         // screen; the action colour stays reserved for the main action.
         /// Caps label above a group of rows (Settings, Home, sheets).
         static let sectionLabel = muted
-        /// The current value of a row (language, difficulty, plan).
-        static let rowValue = blueText
+        /// The current value of a row (language, difficulty, plan). #194 C8:
+        /// secondary text, as in iOS Settings (canvas Bg-Settings) — blue read
+        /// as a link on every row.
+        static let rowValue = muted
 
         // MARK: Feedback
         static let greenCheck = Color(hex: Palette.liveFill) // correct fill (white glyph)

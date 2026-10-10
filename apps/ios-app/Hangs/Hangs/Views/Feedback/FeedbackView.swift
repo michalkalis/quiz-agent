@@ -28,8 +28,8 @@ struct FeedbackView: View {
 
                     if let error = viewModel.errorMessage {
                         Text(error)
-                            .font(.hangsBody(14))
-                            .foregroundColor(Theme.Hangs.Colors.error)
+                            .font(.hangsBody.weight(.semibold))
+                            .foregroundStyle(Theme.Hangs.Colors.error)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("feedback.error")
                     }
@@ -44,7 +44,7 @@ struct FeedbackView: View {
                     .disabled(!viewModel.canSend || viewModel.sendState == .success)
                     .accessibilityIdentifier("feedback.send")
                 }
-                .padding(Theme.Hangs.Spacing.lg)
+                .padding(Theme.Hangs.Spacing.md)
             }
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle("Send feedback")
@@ -121,10 +121,10 @@ struct FeedbackView: View {
                     micButton
                 }
             }
-            HangsCard(padding: EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)) {
+            HangsCard(padding: EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)) {
                 TextEditor(text: $viewModel.message)
-                    .font(.hangsBody(16))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .frame(minHeight: 140)
                     .scrollContentBackground(.hidden)
                     .disabled(viewModel.isSending)
@@ -132,8 +132,8 @@ struct FeedbackView: View {
                     .overlay(alignment: .topLeading) {
                         if viewModel.message.isEmpty {
                             Text("What went well or wrong? Say it or type it.")
-                                .font(.hangsBody(16))
-                                .foregroundColor(Theme.Hangs.Colors.muted)
+                                .font(.hangsBodyLG)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 10)
                                 .allowsHitTesting(false)
@@ -143,8 +143,8 @@ struct FeedbackView: View {
 
             if !viewModel.partialTranscript.isEmpty {
                 Text(viewModel.partialTranscript)
-                    .font(.hangsBody(14))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsBody)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .italic()
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("feedback.partialTranscript")
@@ -152,8 +152,8 @@ struct FeedbackView: View {
 
             if let hint = micHint {
                 Text(hint)
-                    .font(.hangsBody(12))
-                    .foregroundColor(Theme.Hangs.Colors.muted)
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("feedback.micHint")
             }
@@ -165,16 +165,22 @@ struct FeedbackView: View {
         Button {
             Task { await viewModel.toggleDictation() }
         } label: {
-            if viewModel.isDictating {
-                Label("Stop", systemImage: "stop.circle.fill")
-                    .font(.hangsBody(14, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.error)
-            } else {
-                Label("Dictate", systemImage: "mic.fill")
-                    .font(.hangsBody(14, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.blue)
+            // #194 C8: a glass pill; live green while it listens.
+            Group {
+                if viewModel.isDictating {
+                    Label("Stop", systemImage: "stop.circle.fill")
+                        .foregroundStyle(Theme.Hangs.Colors.live)
+                } else {
+                    Label("Dictate", systemImage: "mic.fill")
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
+                }
             }
+            .font(.hangsBody.weight(.semibold))
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .frame(minHeight: Theme.Hangs.Radius.navRound * 2)
+            .glassEffect(.regular.interactive(), in: Capsule())
         }
+        .buttonStyle(.plain)
         .disabled(viewModel.micButtonDisabled)
         .opacity(viewModel.micButtonDisabled ? 0.4 : 1)
         .accessibilityIdentifier("feedback.mic")
@@ -196,8 +202,8 @@ struct FeedbackView: View {
 
     private var whatGetsSentCaption: some View {
         Text("Sent with your note: a screenshot, recent app logs, your voice recording, and device info.")
-            .font(.hangsBody(13))
-            .foregroundColor(Theme.Hangs.Colors.muted)
+            .font(.hangsCaption)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityIdentifier("feedback.whatGetsSent")
     }

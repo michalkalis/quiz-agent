@@ -16,6 +16,7 @@ struct OrderPackFormStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
+            PackPreviewCard(topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
             topicGroup
             languageGroup
 
@@ -31,7 +32,7 @@ struct OrderPackFormStep: View {
     private var topicGroup: some View {
         VStack(alignment: .leading, spacing: 10) {
             HangsSectionLabel(text: "Quiz topic")
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
             HangsCard(padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
                     TextField(
@@ -40,21 +41,21 @@ struct OrderPackFormStep: View {
                         axis: .vertical
                     )
                     .lineLimit(3 ... 8)
-                    .font(.hangsBody(16))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
-                        .font(.hangsMono(12, weight: .medium))
-                        .foregroundColor(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.action)
+                        .font(.hangsCaption.monospacedDigit())
+                        .foregroundStyle(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             Text("Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough.")
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
         }
     }
 
@@ -78,11 +79,66 @@ struct OrderPackFormStep: View {
                 .accessibilityIdentifier("orderPack.language")
             }
             Text("Preselected from your quiz language in Settings.")
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.muted)
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, Theme.Hangs.Spacing.xxs)
+                .padding(.leading, Theme.Hangs.Spacing.md)
         }
+    }
+}
+
+/// #194 C8 (canvas Bg-OrderPack): the pack as it will look — an ink card on
+/// top of the deck, printing the topic while it is typed. Decoration only;
+/// the text field below is the input.
+private struct PackPreviewCard: View {
+    let topic: String
+
+    var body: some View {
+        let style = Theme.Hangs.Category.style(for: nil)
+        ZStack {
+            card(style.fill.opacity(0.65))
+                .rotationEffect(.degrees(-9))
+                .offset(x: -Metrics.card.width / 13)
+            card(style.fill.opacity(0.8))
+                .rotationEffect(.degrees(6))
+                .offset(x: Metrics.card.width / 16)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Custom pack")
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: Theme.Hangs.Spacing.xxs)
+                    Text(verbatim: "\(Metrics.packSize)")
+                }
+                .font(.hangsMonoMini)
+                Spacer(minLength: Theme.Hangs.Spacing.xs)
+                Text(verbatim: topic)
+                    .font(.hangsLabel)
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.7)
+            }
+            .foregroundStyle(style.text)
+            .padding(Theme.Hangs.Spacing.sm)
+            .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
+            .background(card(style.fill).hangsShadow(Theme.Hangs.Shadow.raised))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.Hangs.Spacing.xxs)
+        .accessibilityHidden(true)
+    }
+
+    private func card(_ fill: Color) -> some View {
+        RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+            .fill(fill)
+            .frame(width: Metrics.card.width, height: Metrics.card.height)
+    }
+
+    private enum Metrics {
+        static let card = CGSize(width: 132, height: 164)
+        /// Questions per custom pack, as in the summary copy ("Custom pack · 30
+        /// questions") and `PackOrderService.targetCount`.
+        static let packSize = 30
     }
 }
 

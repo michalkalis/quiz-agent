@@ -1,5 +1,5 @@
 # texts
-correct
+30
 Your pack is ready
 Start quiz
 Close

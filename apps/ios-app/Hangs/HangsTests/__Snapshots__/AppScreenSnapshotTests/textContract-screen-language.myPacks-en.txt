@@ -1,0 +1,24 @@
+# texts
+30
+Delivered
+history
+Start quiz
+5
+Preparing
+history
+5 of 30 questions ready. The rest keeps generating while you play.
+Start quiz
+0
+Preparing
+EN
+!
+Failed
+EN
+Try again
+Create a pack
+# identifiers
+myPacks.startQuiz
+myPacks.readyCount
+myPacks.startQuiz
+myPacks.retry
+myPacks.createPack

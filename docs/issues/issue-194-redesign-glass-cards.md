@@ -8,8 +8,8 @@
 ## Rozhodnutia foundera (2026-10-08)
 
 - Smer **Bg „Sklo nad kartami“** (svetlý): otázka je nepriehľadná karta vo farbe témy, Liquid Glass len na ovládacej vrstve (horná lišta, plávajúci spodný panel, ovládač „Počúvam“ ako doplnok panela, tlačidlá, sheety).
-- **Písmo: systémové** (SF Pro). Anton, Inter a IBM Plex Mono z appky odchádzajú.
-- **Logo: návrh 2 „Zvuková vlna z kariet“** (päť naklonených kariet vo farbách tém tvorí zvukovú vlnu).
+- **Písmo** (zmena 2026-10-09): obsah (text otázky, odpovede, verdikty, skóre) = **Rethink Sans** (OFL), ovládače (tlačidlá, labely, captiony, čipy) = systémové SF Pro. Anton, Inter a IBM Plex Mono z appky odchádzajú.
+- **Logo** (zmena 2026-10-09): biely otáznik, ktorého bodka je vlna 4 naklonených kariet, na kobaltovej #2C45F5 (plátno „Kolo 5: logo“). Logo 2 (5 pruhov) vyradené pre podobnosť s ikonou Google Podcasts. Maskot sa zatiaľ nepoužíva.
 - **Pen sa pri tomto redizajne nepoužíva.** Tok je plátno → kód. Pen ani jeho súbor sa nemažú ani nearchivujú; o Pen founder rozhodne až po overení nového toku.
 - **Redizajn je nový release (1.1) a nesmie zasiahnuť betu 1.0.** Beta žije na vetve `release/1.0`, postup v `.claude/rules/shared.md` › „Beta line vs redesign“.
 
@@ -41,7 +41,7 @@
 - [x] B1 (#306) — tokeny: paleta Bg (sivý podklad #E8EAEE, atrament #111216, farby kategórií), systémové písmo a typografická stupnica, rohy (sústredné), tiene; lint tokenov ostáva.
 - [x] B2 (#306) — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
   - Zlúčené 2026-10-09: paleta Bg svetlá aj tmavá, farby 7 kategórií + vlastné balíčky, SF cez iOS textové štýly (Dynamic Type ostáva; display 28/40/52), hlavné tlačidlo atrament s odpočtom, sklo na ovládačoch (koliesko, ✕, Písať, Preskoč, lišta Počúvam), pilulky postupu atrament, nesprávna odpoveď neutrálna; nové `HangsDeckCard` + `HangsAnswerSticker` (do obrazoviek vo fáze C). Svetlé snímky obrazoviek pribudli. Sklo sa v testových snímkach nevykreslí, overené na simulátore.
-- [ ] B3 — pohyb (robí sa priamo v C2–C4): rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
+- [x] B3 (#316, #322) — pohyb: rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
 - [~] B4 — katalóg (#188) pregenerovaný z nových tokenov a komponentov (generátor už pozná nové názvy tokenov, #306; republikovanie po fáze C).
 
 ### Postup od 2026-10-09
@@ -50,19 +50,19 @@
 - Po fáze C: D2 logo v appke, B4 republikovanie katalógu, E1 plná sada testov + RS-01 až RS-21, potom finálne pred/po pre foundera.
 
 ### C. Obrazovky (jedno PR na skupinu, obrázky pred a po na schválenie)
-- [ ] C1 — Domov: plán vo všetkých 5 variantoch, moje balíčky, rozohrané kolo ako doplnok panela.
-- [ ] C2 — Otázka: všetky fázy počúvania, MCQ, písaná odpoveď, čakanie na otázku z balíčka, chybový banner, obrázková otázka.
-- [ ] C3 — Potvrdenie odpovede (sklenený sheet, tri vetvy).
-- [ ] C4 — Výsledok: správne, nesprávne, preskočené, neurčité; hodnotenie otázky.
-- [ ] C5 — Koniec kola a prehľad odpovedí.
-- [ ] C6 — Predplatné: online, offline, nákup, úspech, odpočet obnovy.
-- [ ] C7 — Úvod (4 strany), mikrofón, zamietnutý mikrofón, prihlásenie.
-- [ ] C8 — Nastavenia, moje balíčky, objednávka balíčka (všetky stavy), spätná väzba.
-- [ ] C9 — Chybová obrazovka a offline.
+- [x] C1 (#310) — Domov: plán vo všetkých 5 variantoch, moje balíčky (rozohrané kolo vynechané z 1.1, founder 2026-10-09).
+- [x] C2 (#316, #329) — Otázka: všetky fázy počúvania, MCQ, písaná odpoveď, čakanie na otázku z balíčka, chybový banner, obrázková otázka.
+- [x] C3 (#317) — Potvrdenie odpovede (sklenený sheet, tri vetvy).
+- [x] C4 (#322) — Výsledok: správne, nesprávne, preskočené, neurčité; hodnotenie otázky.
+- [x] C5 (#333) — Koniec kola a prehľad odpovedí na jednej obrazovke; hlavné „Hraj znova“, „Prehraj súhrn“ pri zozname (founder 2026-10-10).
+- [x] C6 (#311) — Predplatné: online, offline, nákup, úspech, odpočet obnovy.
+- [x] C7 (#312) — Úvod (4 strany), mikrofón, zamietnutý mikrofón, prihlásenie.
+- [x] C8 (#314) — Nastavenia, moje balíčky (+ „Vytvor balík“), objednávka balíčka (+ náhľad témy), spätná väzba.
+- [x] C9 (#315) — Chybová obrazovka a offline.
 
 ### D. Značka
 - [x] D1 (#309) — ikona appky z loga 2 cez Icon Composer (Default, Dark, Tinted, Clear); vrstvy SVG, lebo actool PDF vrstvy z ikony vypustí (pravidlo PDF platí pre `.xcassets`).
-- [ ] D2 — logo a nápis v appke (úvod, hlavička domova).
+- [x] D2 — logo (otáznik s vlnou kariet) a nápis „trubbo“ v Rethink Sans ExtraBold v appke; ikonu appky prerobil #319.
 
 ### E. Overenie
 - [ ] E1 — plná sada `HangsTests` + RS-01 až RS-21 na simulátore iOS 27.

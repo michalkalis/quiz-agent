@@ -145,6 +145,7 @@ class QuestionRetriever:
         self,
         session: QuizSession,
         client_excluded_ids: Optional[List[str]] = None,
+        extra_filters: Optional[dict] = None,
     ) -> int:
         """How many unseen questions this session could still be served.
 
@@ -157,9 +158,21 @@ class QuestionRetriever:
         exactly that key before giving up, so a question of another difficulty
         IS served rather than ending the quiz. Counting with difficulty pinned
         would under-report and stop a quiz that could have continued.
+
+        ``extra_filters`` narrows the count further (e.g. a ``boost_until``
+        window, #199). It may only ADD keys: overriding a serve constraint
+        would make the count disagree with what the serve path delivers, so a
+        clash raises instead of silently winning.
         """
         filters = self._build_metadata_filters(session.current_difficulty, session)
         filters.pop("difficulty", None)
+        if extra_filters:
+            clash = sorted(set(extra_filters) & set(filters))
+            if clash:
+                raise ValueError(
+                    f"extra_filters would override serve constraints: {clash}"
+                )
+            filters.update(extra_filters)
 
         excluded_ids = list(
             set(

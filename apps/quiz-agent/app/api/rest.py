@@ -17,6 +17,7 @@ from .routes import (
     feedback,
     analytics,
     provider_balances,
+    question_stock,
     app_config,
     voice_samples,
 )
@@ -35,5 +36,6 @@ router.include_router(entitlements.router)
 router.include_router(feedback.router)
 router.include_router(analytics.router)
 router.include_router(provider_balances.router)
+router.include_router(question_stock.router)
 router.include_router(app_config.router)
 router.include_router(voice_samples.router)

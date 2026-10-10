@@ -182,6 +182,29 @@ struct HomePacksSectionRenderingTests {
         }
     }
 
+    // TestFlight 2026-10-10: tapping a pack's play gave no feedback while the
+    // session started, unlike Home's Start button — the founder tapped again.
+    // The tapped pack must spin, and no play control may start a second quiz
+    // while one is starting.
+    @Test("while a pack's quiz starts, its play control spins and play is disabled")
+    func startingPackSpinsAndBlocksPlay() async throws {
+        let vm = await loadedViewModel([order(status: "delivered", orderId: "d1", packId: "pack-xyz")])
+        var played: [String] = []
+        let starting = HomePacksSection(
+            viewModel: vm,
+            quizStart: .init(isInFlight: true, packId: "pack-xyz")
+        ) { played.append($0) }
+
+        let play = try starting.inspect().find(viewWithAccessibilityIdentifier: "home.myPacks.play")
+        _ = try play.find(ViewType.ProgressView.self)
+        #expect(throws: (any Error).self) { try play.button().tap() }
+        #expect(played.isEmpty, "a start in flight must not trigger another")
+
+        let idle = HomePacksSection(viewModel: vm) { _ in }
+        let idlePlay = try idle.inspect().find(viewWithAccessibilityIdentifier: "home.myPacks.play")
+        #expect(throws: (any Error).self) { try idlePlay.find(ViewType.ProgressView.self) }
+    }
+
     // TestFlight 2026-10-09: ordering a pack was reachable only from Settings.
     // The Home entry must exist for an account with NO packs yet — that is
     // exactly who needs it — and must open the order sheet.

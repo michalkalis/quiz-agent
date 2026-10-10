@@ -13,6 +13,9 @@ import UIKit
 struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showingCategoryPicker = false
+    /// The pack the user just tapped play on, so its card can spin while the
+    /// quiz starts. Cleared as soon as the start resolves either way.
+    @State private var startingPackId: String?
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
     /// packs. Nil (inspector tests / previews that don't exercise the packs
@@ -53,7 +56,12 @@ struct HomeView: View {
                         // (variant B — founder 2026-08-05), plus the always-on
                         // "Create your own pack" card.
                         if let packOrderService {
-                            HomePacksSection(service: packOrderService, createPack: createPackEntry) { packId in
+                            HomePacksSection(
+                                service: packOrderService,
+                                createPack: createPackEntry,
+                                quizStart: packQuizStart
+                            ) { packId in
+                                startingPackId = packId
                                 viewModel.beginQuizStart(packId: packId)
                             }
                         }
@@ -107,6 +115,11 @@ struct HomeView: View {
                 .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        // A start that ends (quiz began, failed, cancelled) must not leave a
+        // pack id behind for the next, unrelated start (voice "start", Start).
+        .onChange(of: viewModel.quizState) { _, state in
+            if state != .startingQuiz { startingPackId = nil }
+        }
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -123,6 +136,13 @@ struct HomeView: View {
         .sheet(isPresented: $showingCategoryPicker) {
             HomeCategoryPicker(categories: $viewModel.settings.categories)
         }
+    }
+
+    private var packQuizStart: HomePacksSection.QuizStart {
+        HomePacksSection.QuizStart(
+            isInFlight: viewModel.quizState == .startingQuiz,
+            packId: startingPackId
+        )
     }
 
     private var createPackEntry: HomePacksSection.CreatePackEntry? {

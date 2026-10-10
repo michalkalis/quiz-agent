@@ -1,0 +1,374 @@
+{
+ "topics": [
+  "the history of the printing press",
+  "2026 Oscars",
+  "volcanic islands of Iceland",
+  "the history of chocolate"
+ ],
+ "facts": {
+  "gpt-5-mini": [
+   {
+    "topic": "the history of the printing press",
+    "fact": "It was printed in 1377 in what is now the city of Cheongju (Republic of Korea), 78 years before the Gutenberg Bible.",
+    "excerpt": "It was printed in 1377 in what is now the city of Cheongju (Republic of Korea), 78 years before the Gutenberg Bible.",
+    "url": "https://www.bnf.fr/en/jikji-treasure-world-printing",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "Gutenberg integrated these four technologies into a single working system and added a number of innovations of his own, including a hand mold for casting type and an oil-based ink suited to metal type.",
+    "excerpt": "Gutenberg integrated these four technologies into a single working system and added a number of innovations of his own, including a hand mold for casting type and an oil-based ink suited to metal type.",
+    "url": "https://en.wikipedia.org/wiki/Printing_press",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "Johann Fust and Peter Schöffer carried on a partnership after Fust sued and won a case against Johann Gutenberg in 1455 for the right to take back his loans that he offered Gutenberg years earlier.",
+    "excerpt": "Johann Fust and Peter Schöffer carried on a partnership after Fust sued and won a case against Johann Gutenberg in 1455 for the right to take back his loans that he offered Gutenberg years earlier.",
+    "url": "https://en.wikipedia.org/wiki/Johann_Fust",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "By 1500, printing presses throughout Western Europe had produced over 20 million copies.",
+    "excerpt": "By 1500, printing presses throughout Western Europe had produced over 20 million copies.",
+    "url": "https://en.wikipedia.org/wiki/Printing_press",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "In the Americas, Juan Pablos established the first press in Mexico City in 1539, working on behalf of the Seville-based publisher Juan Cromberger, while British colonists established another press at Cambridge, Massachusetts, in 1638.",
+    "excerpt": "In the Americas, Juan Pablos established the first press in Mexico City in 1539, working on behalf of the Seville-based publisher Juan Cromberger, while British colonists established another press at Cambridge, Massachusetts, in 1638.",
+    "url": "https://en.wikipedia.org/wiki/Printing_press",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Sinners received a record sixteen nominations, the most in Oscar history.",
+    "excerpt": "Sinners led with sixteen nominations, the most in Oscar history; One Battle After Another came in second with thirteen.",
+    "url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "One Battle After Another won the inaugural Academy Award for Best Casting.",
+    "excerpt": "One Battle After Another won the most awards with six, including Best Picture and the inaugural award for Best Casting.",
+    "url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Michael B. Jordan became the second actor to win an Oscar for a dual role, after Lee Marvin in 1965.",
+    "excerpt": "Michael B. Jordan became the second actor to win an Oscar for a dual role after Lee Marvin for Cat Ballou (1965).",
+    "url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "The telecast drew 17.86 million viewers in the United States.",
+    "excerpt": "The telecast drew 17.86 million viewers in the United States.",
+    "url": "https://en.wikipedia.org/wiki/98th_Academy_Awards",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "Surtsey is a new island formed by volcanic eruptions in 1963-67.",
+    "excerpt": "Surtsey is a new island formed by volcanic eruptions in 1963-67.",
+    "url": "https://whc.unesco.org/en/list/1267",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "In 2008, UNESCO declared the island a World Heritage Site, in recognition of its great scientific value.",
+    "excerpt": "In 2008, UNESCO declared the island a World Heritage Site, in recognition of its great scientific value.",
+    "url": "https://en.wikipedia.org/wiki/Surtsey",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "An operation to cool the advancing lava with sea water saved the harbour.",
+    "excerpt": "An operation to cool the advancing lava with sea water saved the harbour.",
+    "url": "https://en.wikipedia.org/wiki/Heimaey",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "Its sheer cliffs are home to large numbers of birds, including one of the largest northern gannet colonies in the world, with around 16,000 pairs.",
+    "excerpt": "Its sheer cliffs are home to large numbers of birds, including one of the largest northern gannet colonies in the world, with around 16,000 pairs.",
+    "url": "https://en.wikipedia.org/wiki/Eldey",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "A basalt landform, devoid of vegetation, Kolbeinsey is subject to rapid wave erosion and is expected to disappear in the near future.",
+    "excerpt": "A basalt landform, devoid of vegetation, Kolbeinsey is subject to rapid wave erosion and is expected to disappear in the near future.",
+    "url": "https://en.wikipedia.org/wiki/Kolbeinsey",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "Pre-Columbian Mesoamerican societies used cacao beans as a form of currency.",
+    "excerpt": "For several centuries in pre-modern Latin America, cacao beans were considered valuable enough to use as currency.",
+    "url": "https://www.smithsonianmag.com/arts-culture/a-brief-history-of-chocolate-21860917/",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "Carl Linnaeus named the cacao tree Theobroma cacao, which means \"food of the gods\".",
+    "excerpt": "The Latin name for the cacao tree, Theobroma cacao, means \"food of the gods.\"",
+    "url": "https://www.smithsonianmag.com/arts-culture/a-brief-history-of-chocolate-21860917/",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "Swiss chocolatier Daniel Peter invented milk chocolate in 1875.",
+    "excerpt": "Swiss chocolatier Daniel Peter invented milk chocolate in 1875.",
+    "url": "https://www.valrhona.com/en/l-ecole-valrhona/discover-l-ecole-valrhona/chocolate-terminology/milk-chocolate",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "Van Houten's machine — a hydraulic press — reduced the cocoa butter content of cocoa liquor by nearly half.",
+    "excerpt": "Van Houten's machine – a hydraulic press – reduced the cocoa butter content of cocoa liquor by nearly half.",
+    "url": "https://en.wikipedia.org/wiki/Coenraad_Johannes_van_Houten",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "People in South America were consuming products of the cacao tree more than 5,000 years ago.",
+    "excerpt": "People in South America were consuming products of the cacao tree — the source of chocolate — more than 5,000 years ago, according to analysis of prehistoric artefacts.",
+    "url": "https://www.nature.com/articles/d41586-018-07226-y",
+    "credibility": "high",
+    "grounded": "yes"
+   }
+  ],
+  "claude-sonnet-5-5": [
+   {
+    "topic": "the history of the printing press",
+    "fact": "The Diamond Sutra, dated to 11 May 868 CE, is the first known creative work with an explicit public-domain-style dedication, because its colophon says it was made \"for universal free distribution\".",
+    "excerpt": "The book of the Diamond Sūtra is also the first known creative work with an explicit public domain dedication, as its colophon at the end states that it was created \"for universal free distribution\".",
+    "url": "https://en.wikipedia.org/wiki/Diamond_Sutra",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "Jikji, printed with movable metal type in Cheongju, Korea, in 1377, predates the Gutenberg Bible by 78 years.",
+    "excerpt": "It was printed in 1377 in what is now the city of Cheongju (Republic of Korea), 78 years before the Gutenberg Bible.",
+    "url": "https://www.bnf.fr/en/jikji-treasure-world-printing",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "Jikji was not displayed again until the 1972 International Book Year, when the West recognised it as the oldest existing book printed with movable metal type.",
+    "excerpt": "It was not until 1972 that it was once again put on display during the “International Book Year”, when it was recognised in the West as the oldest existing book printed with movable metal type.",
+    "url": "https://www.bnf.fr/en/jikji-treasure-world-printing",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "Of the 158 or 180 Gutenberg Bibles originally printed, only 49 survive in at least substantial portion, and just 21 of those are complete.",
+    "excerpt": "Out of either 158 or 180 copies that were originally printed, 49 survive in at least substantial portion, 21 of them in entirety; of these, the copy with the earliest visible print date is marked as 15 August 1456.",
+    "url": "https://en.wikipedia.org/wiki/Gutenberg_Bible",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of the printing press",
+    "fact": "In March 1455, the future Pope Pius II wrote that he had seen pages from the Gutenberg Bible displayed in Frankfurt to promote the edition.",
+    "excerpt": "In March 1455, the future Pope Pius II wrote that he had seen pages from the Gutenberg Bible, displayed in Frankfurt to promote the edition.",
+    "url": "https://en.wikipedia.org/wiki/Gutenberg_Bible",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Sinners received 16 nominations at the 2026 Oscars, breaking the previous single-film record of 14 held by All About Eve, Titanic and La La Land.",
+    "excerpt": "Sinners was a record-breaker Thursday morning with a stunning 16 Oscar nominations, shattering the previous record of 14 held by All About Eve (1950), Titanic (1997) and La La Land (2016).",
+    "url": "https://deadline.com/lists/2026-oscar-nominations-list/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Four non-English-language performances were nominated for acting Oscars in 2026, which beat the previous record of three set in 1976.",
+    "excerpt": "A record four non-English language performances are nominated this year (Inga Ibsdotter Lilleaas, Wagner Moura, Renate Reinsve and Stellan Skarsgård). The previous record of three was set in 1976 (Marie-Christine Barrault, Giancarlo Giannini and Liv Ullmann).",
+    "url": "https://deadline.com/lists/2026-oscar-nominations-list/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Steven Spielberg's 14th Best Picture nomination, for Hamnet, is a record for an individual producer.",
+    "excerpt": "Steven Spielberg (Hamnet) received his 14th nomination for Best Picture, a record for an individual producer (since 1951, when producers were first named as nominees).",
+    "url": "https://deadline.com/lists/2026-oscar-nominations-list/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Cassandra Kulukundis won the first Oscar ever awarded for best casting, for One Battle After Another.",
+    "excerpt": "“One Battle After Another” added more wins during the ceremony, including best casting for Cassandra Kulukundis, the first time the category has been awarded, and best supporting actor for Sean Penn, who did not attend the ceremony.",
+    "url": "https://www.nbcnewyork.com/entertainment/entertainment-news/oscars-2026-full-list-of-winners/6476746/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "2026 Oscars",
+    "fact": "Autumn Durald Arkapaw became the first woman to win the Oscar for best cinematography, for Sinners, in the Academy's 98-year history.",
+    "excerpt": "The ceremony featured several milestone moments, including a historic win for “Sinners” cinematographer Autumn Durald Arkapaw, who became the first woman to win the Oscar for best cinematography in the Academy’s 98-year history.",
+    "url": "https://www.nbcnewyork.com/entertainment/entertainment-news/oscars-2026-full-list-of-winners/6476746/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "The explosive style of shallow-water volcanic eruption known as 'Surtseyan volcanism' is named after Iceland's Surtsey, whose 1963–67 eruption became the type example of that activity.",
+    "excerpt": "The growth of new islands during the eruption was intensively chronicled in a near-continuous sample and observation record that helped it become the type example of pyroclastic activity that is now referred to as Surtseyan Volcanism.",
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4481646/",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "Surtsey reached a peak size of about 2.7 square kilometres during its 1963–67 eruption and has since eroded to roughly 1.3 square kilometres.",
+    "excerpt": "Eruption lasted 3.5 years (Nov 1963 - Jun 1967); peak island size 2.7 km², now eroded to ~1.3 km²",
+    "url": "https://www.iceland.org/volcanoes/surtsey",
+    "credibility": "medium",
+    "grounded": "no"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "The 1973 Eldfell eruption on Heimaey was, until recently, the only eruption in an urban environment in Iceland since the country's early settlement.",
+    "excerpt": "The Eldfell 1973 eruption was, until recently, the only eruption in an urban environment in Iceland since the early settlement of the country.",
+    "url": "https://link.springer.com/article/10.1186/s13617-026-00159-6",
+    "credibility": "medium",
+    "grounded": "no"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "Lava flows from the 1973 Heimaey eruption enlarged the island's land area by 2.24 square kilometres and created the new Eldfell cone.",
+    "excerpt": "Approximately 400 buildings were destroyed or buried by lava flows and ashfall during the eruption, and the island's land area increased by 2.24 square kilometers (0.86 square miles) due to the lava flows.",
+    "url": "https://www.visiticeland.com/article/the-heimaey-eruption/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "volcanic islands of Iceland",
+    "fact": "Most of Heimaey's residents left by boat during the 1973 Eldfell eruption, and no one died.",
+    "excerpt": "Most of Heimaey's residents left by boat, and fortunately, there were no deaths.",
+    "url": "https://perlan.is/articles/eldfell-iceland-eruption-1973",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "The cacao tree was first domesticated more than 5,000 years ago in present-day Ecuador, well before it reached Mesoamerica.",
+    "excerpt": "The history of chocolate dates back more than 5,000 years, when the cacao tree was first domesticated in present-day Ecuador.",
+    "url": "https://en.wikipedia.org/wiki/History_of_chocolate",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "In Mesoamerica, cacao was regarded as a gift from the gods and was used as currency, medicine, and in ceremonies.",
+    "excerpt": "Cacao was considered a gift from the gods and was used as currency, medicine, and in ceremonies.",
+    "url": "https://en.wikipedia.org/wiki/History_of_chocolate",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "In 1519 Hernán Cortés reported that the Aztec ruler Moctezuma II drank 50 cups of chocolate a day.",
+    "excerpt": "In 1519, Spanish explorer Hernán Cortés reported that Aztec ruler Moctezuma II drank 50 cups a day.",
+    "url": "https://kids.nationalgeographic.com/history/article/the-secret-history-of-chocolate",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "The first American chocolate house is thought to have opened in Boston in 1682.",
+    "excerpt": "Chocolate arrived in Florida on a Spanish ship in 1641, and it's thought the first American chocolate house opened in Boston in 1682.",
+    "url": "https://www.history.com/articles/history-of-chocolate",
+    "credibility": "high",
+    "grounded": "no"
+   },
+   {
+    "topic": "the history of chocolate",
+    "fact": "The first molded chocolate bar was made in 1847 by the British firm J.S. Fry and Sons from a paste of sugar, chocolate liquor and cocoa butter.",
+    "excerpt": "In 1847, British chocolatier J.S. Fry and Sons created the first chocolate bar molded from a paste made of sugar, chocolate liquor and cocoa butter.",
+    "url": "https://www.history.com/articles/history-of-chocolate",
+    "credibility": "high",
+    "grounded": "no"
+   }
+  ]
+ },
+ "summary": {
+  "gpt-5-mini": {
+   "facts": 19,
+   "topics_with_facts": 4,
+   "topics": 4,
+   "grounded_yes": 19,
+   "grounded_no": 0,
+   "unfetchable": 0,
+   "credibility_high": 16,
+   "seconds_per_topic": [
+    47.5,
+    41.2,
+    58.3,
+    87.4
+   ],
+   "meter": {
+    "in": 222113,
+    "out": 24349,
+    "searches": 43,
+    "calls": 4
+   },
+   "cost_cents": 53.42
+  },
+  "claude-sonnet-5-5": {
+   "facts": 20,
+   "topics_with_facts": 4,
+   "topics": 4,
+   "grounded_yes": 16,
+   "grounded_no": 4,
+   "unfetchable": 0,
+   "credibility_high": 9,
+   "seconds_per_topic": [
+    46.1,
+    31.8,
+    32.8,
+    33.9
+   ],
+   "meter": {
+    "in": 248716,
+    "out": 9061,
+    "searches": 20,
+    "calls": 4
+   },
+   "cost_cents": 78.8
+  }
+ },
+ "cost_cents": 132.23,
+ "metered_cost_cents": 132.23
+}

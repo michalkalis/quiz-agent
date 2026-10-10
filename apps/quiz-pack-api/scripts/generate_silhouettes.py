@@ -70,8 +70,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4o",
-        help="OpenAI model for question text generation",
+        default=None,
+        help="Chat model for question text (default: factory SILHOUETTE_QUESTION role)",
     )
     args = parser.parse_args()
 

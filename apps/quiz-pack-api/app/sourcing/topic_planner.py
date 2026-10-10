@@ -19,7 +19,6 @@ an SDK client directly.
 from __future__ import annotations
 
 import json
-import os
 import re
 from typing import Optional
 
@@ -53,9 +52,9 @@ class TopicPlanner:
 
     def __init__(
         self,
-        # 2026-07-30 frontier refresh — factory CRITIQUE role (no mini-class
-        # models anywhere in the generation pipeline, founder policy).
-        model: str = llm_factory.CRITIQUE,
+        # Own factory role since #196 track 196.4 (was CRITIQUE); frontier-
+        # class per the 2026-07-30 "no mini-class models" founder policy.
+        model: str = llm_factory.TOPIC_PLAN,
         topic_count: int = DEFAULT_TOPIC_COUNT,
     ) -> None:
         self._model = model
@@ -63,11 +62,8 @@ class TopicPlanner:
         self._client = None
 
     def _available(self) -> bool:
-        """Whether the cheap model is reachable (see OpenTriviaFactRewriter)."""
-        return (
-            bool(os.getenv("OPENAI_API_KEY"))
-            or llm_factory.gateway() == llm_factory.OPENROUTER
-        )
+        """Whether the planner model is reachable under the active routing."""
+        return llm_factory.chat_available(self._model)
 
     async def propose(self) -> Optional[list[str]]:
         """Return a diverse concrete topic list, or ``None`` on any failure.
@@ -78,22 +74,16 @@ class TopicPlanner:
         """
         if not self._available():
             return None
-        if self._client is None:
-            # Offline generation pipeline — needs longer than the voice-path default.
-            self._client = llm_factory.openai_client(
-                async_=True, timeout=llm_factory.GENERATION_TIMEOUT
-            )
         try:
-            response = await self._client.chat.completions.create(
-                model=llm_factory.resolve_model(self._model),
-                messages=[
-                    {
-                        "role": "user",
-                        "content": _PLANNER_PROMPT.format(count=self._topic_count),
-                    }
-                ],
+            if self._client is None:
+                # chat_model routes a Claude id to the Anthropic API (#196) and
+                # anything else through the active gateway; offline pipeline,
+                # so it keeps the factory's generation timeout.
+                self._client = llm_factory.chat_model(self._model)
+            response = await self._client.ainvoke(
+                _PLANNER_PROMPT.format(count=self._topic_count)
             )
-            text = response.choices[0].message.content or ""
+            text = llm_factory.message_text(response)
         except Exception:
             return None
         return self._parse(text)

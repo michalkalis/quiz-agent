@@ -1,0 +1,109 @@
+{
+ "topics": [
+  "deep-sea bioluminescence"
+ ],
+ "facts": {
+  "gpt-5-mini": [
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "While most marine bioluminescence is green to blue, some deep sea barbeled dragonfishes in the genera Aristostomias, Pachystomias and Malacosteus emit a red glow.",
+    "excerpt": "While most marine bioluminescence is green to blue, some deep sea barbeled dragonfishes in the genera Aristostomias, Pachystomias and Malacosteus emit a red glow.",
+    "url": "https://en.wikipedia.org/wiki/Bioluminescence",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "Many cephalopods, including at least 70 genera of squid, are bioluminescent.",
+    "excerpt": "Many cephalopods, including at least 70 genera of squid, are bioluminescent.",
+    "url": "https://en.wikipedia.org/wiki/Bioluminescence",
+    "credibility": "high",
+    "grounded": "yes"
+   }
+  ],
+  "claude-sonnet-5-5": [
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "In Monterey Bay, 99.7 percent of siphonophores can create their own light, according to a 2017 MBARI study.",
+    "excerpt": "A recent paper shows that 99.7 percent of siphonophores in Monterey Bay can create their own light.",
+    "url": "https://www.mbari.org/news/new-study-shows-that-three-quarters-of-deep-sea-animals-make-their-own-light/",
+    "credibility": "medium",
+    "grounded": "yes"
+   },
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "Bioluminescence has evolved independently at least 94 times, first appearing in octocorals about 540 million years ago.",
+    "excerpt": "Bioluminescence has evolved independently at least 94 times, first emerging in octocorals some 540 million years ago.",
+    "url": "https://en.wikipedia.org/wiki/Bioluminescence",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "The light-producing molecule coelenterazine is found in 11 different animal phyla.",
+    "excerpt": "In evolution, luciferins vary little: one in particular, coelenterazine, is found in 11 different animal phyla, though in some of these, the animals obtain",
+    "url": "https://en.wikipedia.org/wiki/Bioluminescence",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "The glowing bacteria in deep-sea anglerfish lures have genomes about 50% smaller than those of their free-living relatives.",
+    "excerpt": "Deep-sea anglerfish symbiont genomes are reduced in size by about 50% compared to free-living relatives.",
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6020299/",
+    "credibility": "high",
+    "grounded": "yes"
+   },
+   {
+    "topic": "deep-sea bioluminescence",
+    "fact": "The cookiecutter shark uses bioluminescence for camouflage but leaves a small dark patch on its underbelly that looks like a small fish to large predators such as tuna and mackerel swimming below.",
+    "excerpt": "The cookiecutter shark uses bioluminescence for camouflage, but a small patch on its underbelly remains dark and appears as a small fish to large predatory fish like tuna and mackerel swimming beneath it.",
+    "url": "https://simple.wikipedia.org/wiki/Bioluminescence",
+    "credibility": "high",
+    "grounded": "yes"
+   }
+  ]
+ },
+ "summary": {
+  "gpt-5-mini": {
+   "facts": 2,
+   "topics_with_facts": 1,
+   "topics": 1,
+   "grounded_yes": 2,
+   "grounded_no": 0,
+   "unfetchable": 0,
+   "credibility_high": 2,
+   "seconds_per_topic": [
+    67.2
+   ],
+   "meter": {
+    "in": 48407,
+    "out": 7350,
+    "searches": 9,
+    "calls": 1
+   },
+   "cost_cents": 11.68
+  },
+  "claude-sonnet-5-5": {
+   "facts": 5,
+   "topics_with_facts": 1,
+   "topics": 1,
+   "grounded_yes": 5,
+   "grounded_no": 0,
+   "unfetchable": 0,
+   "credibility_high": 4,
+   "seconds_per_topic": [
+    26.8
+   ],
+   "meter": {
+    "in": 53374,
+    "out": 1790,
+    "searches": 5,
+    "calls": 1
+   },
+   "cost_cents": 17.46
+  }
+ },
+ "cost_cents": 29.14,
+ "metered_cost_cents": 29.14
+}

@@ -14,35 +14,31 @@ PROMPT_PATH = (
 def generate_silhouette_question_text(
     country_name: str,
     difficulty: str,
-    model: str = "gpt-4o",
+    model: Optional[str] = None,
 ) -> dict:
     """Generate verbal question text and metadata for a silhouette question.
 
     Args:
         country_name: Name of the country.
         difficulty: easy | medium | hard.
-        model: OpenAI model to use.
+        model: Chat model id; default = factory SILHOUETTE_QUESTION role
+            (#196 track 196.4, ``LLM_ROLE_SILHOUETTE_QUESTION`` override).
 
     Returns:
         Dict with keys: question, alternative_answers, tags, explanation.
     """
-    # Part of the image-generation pipeline — stays on canonical OpenAI (issue #53).
-    # Offline generation pipeline — needs longer than the voice-path default.
-    client = llm_factory.openai_client(direct=True, timeout=llm_factory.GENERATION_TIMEOUT)
-
     prompt_template = PROMPT_PATH.read_text()
     prompt = prompt_template.format(
         country_name=country_name,
         difficulty=difficulty,
     )
 
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}],
+    # chat_model: a Claude id goes to the Anthropic API (#196), anything else
+    # through the active gateway (the silhouette image itself is local).
+    response = llm_factory.chat_model(model or llm_factory.SILHOUETTE_QUESTION).invoke(
+        prompt
     )
-
-    text = response.choices[0].message.content
+    text = llm_factory.message_text(response)
     # Extract JSON from response
     start = text.find("{")
     end = text.rfind("}") + 1
@@ -58,7 +54,7 @@ def build_silhouette_question(
     media_url: str,
     reveal_url: Optional[str] = None,
     llm_data: Optional[dict] = None,
-    model: str = "gpt-4o",
+    model: Optional[str] = None,
 ) -> dict:
     """Build a complete question dict ready for import.
 
@@ -68,7 +64,7 @@ def build_silhouette_question(
         media_url: Public URL of the silhouette image.
         reveal_url: Public URL of the labeled silhouette (for reveal).
         llm_data: Pre-generated LLM data (if None, calls the LLM).
-        model: OpenAI model for question text generation.
+        model: Chat model for question text (default SILHOUETTE_QUESTION).
 
     Returns:
         Dict matching the Question model schema.

@@ -1,0 +1,171 @@
+{
+ "items": [
+  {
+   "q": "In \"The Sims\" series, the most members in a household you can have is 8.",
+   "a": "True",
+   "type": "boolean"
+  },
+  {
+   "q": "Which greek god/goddess tossed a golden apple with the words \"for the fairest\" into the middle of the feast of the gods?",
+   "a": "Eris",
+   "type": "multiple"
+  },
+  {
+   "q": "The sum of all the numbers on a roulette wheel is 666.",
+   "a": "True",
+   "type": "boolean"
+  },
+  {
+   "q": "Which one of these actors is said to be cut from the film 'E.T. the Extra-Terrestrial'?",
+   "a": "Harrison Ford",
+   "type": "multiple"
+  },
+  {
+   "q": "The HBO series \"Game of Thrones\" is based on which series of books?",
+   "a": "A Song of Ice and Fire",
+   "type": "multiple"
+  },
+  {
+   "q": "Chartreuse is a color between yellow and what?",
+   "a": "Green",
+   "type": "multiple"
+  },
+  {
+   "q": "In the video game Undertale, what Fun Value is required to obtain the Fake Hallway?",
+   "a": "66",
+   "type": "multiple"
+  },
+  {
+   "q": "What was the first monster to appear alongside Godzilla?",
+   "a": "Anguirus",
+   "type": "multiple"
+  },
+  {
+   "q": "What year was the RoboSapien toy robot released?",
+   "a": "2004",
+   "type": "multiple"
+  },
+  {
+   "q": "Which of these was the name of a bug found in April 2014 in the publicly available OpenSSL cryptography library?",
+   "a": "Heartbleed",
+   "type": "multiple"
+  },
+  {
+   "q": "In which year was Nelson Mandela released from prison",
+   "a": "1990",
+   "type": "multiple"
+  },
+  {
+   "q": "What is the name of the very first video uploaded to YouTube?",
+   "a": "Me at the zoo",
+   "type": "multiple"
+  },
+  {
+   "q": "In which Shakespearean play will you find the suicide of Ophelia?",
+   "a": "Hamlet",
+   "type": "multiple"
+  },
+  {
+   "q": "Which of these games was NOT a Nintendo Switch launch title in the United States? ",
+   "a": "Voez",
+   "type": "multiple"
+  },
+  {
+   "q": "In the game \"Undertale\", who was Mettaton's creator?",
+   "a": "Alphys",
+   "type": "multiple"
+  },
+  {
+   "q": "What is Russia's second-largest city?",
+   "a": "Saint Petersburg",
+   "type": "multiple"
+  },
+  {
+   "q": "In the Disgaea series, any character can equip any weapon.",
+   "a": "False",
+   "type": "boolean"
+  },
+  {
+   "q": "Which country developed the AK-47 assault rifle?",
+   "a": "Soviet Union",
+   "type": "multiple"
+  },
+  {
+   "q": "Who was South Africa's first Black President?",
+   "a": "Nelson Mandela",
+   "type": "multiple"
+  },
+  {
+   "q": "Which of these characters in \"Stranger Things\" has the power of Telekinesis?",
+   "a": "Eleven",
+   "type": "multiple"
+  }
+ ],
+ "outputs": {
+  "gpt-4o-mini": [
+   "In \"The Sims\" series, a household can contain a maximum of 8 members.",
+   "Eris tossed a golden apple inscribed with \"for the fairest\" into the feast of the gods.",
+   "The sum of all the numbers on a roulette wheel equals 666.",
+   "Harrison Ford is said to have been cut from the film 'E.T. the Extra-Terrestrial'.",
+   "The HBO series \"Game of Thrones\" is based on the book series titled \"A Song of Ice and Fire.",
+   "Chartreuse is a color located between yellow and green on the color spectrum.",
+   "The Fun Value required to obtain the Fake Hallway in Undertale is 66.",
+   "Anguirus was the first monster to appear alongside Godzilla.",
+   "The RoboSapien toy robot was released in 2004.",
+   "Heartbleed was a significant bug discovered in April 2014 in the publicly available OpenSSL cryptography library.",
+   "Nelson Mandela was released from prison in 1990.",
+   "The very first video uploaded to YouTube is titled \"Me at the zoo.",
+   "Ophelia commits suicide in Shakespeare's play \"Hamlet.",
+   "Voez was not a launch title for the Nintendo Switch in the United States.",
+   "Alphys is the creator of Mettaton in the game \"Undertale.",
+   "Saint Petersburg is the second-largest city in Russia.",
+   "In the Disgaea series, not all characters can equip every weapon.",
+   "The AK-47 assault rifle was developed by the Soviet Union.",
+   "Nelson Mandela was the first Black President of South Africa.",
+   "Eleven possesses the power of telekinesis in \"Stranger Things."
+  ],
+  "claude-haiku-5-5": [
+   "A household in The Sims series can contain at most eight Sims.",
+   "Eris, the Greek goddess of discord, threw a golden apple inscribed \"for the fairest\" into the wedding feast of the gods, sparking the Judgment of Paris.",
+   "The numbers 0 through 36 on a standard European roulette wheel add up to 666.",
+   "Harrison Ford is said to have been cut from the film E.T. the Extra-Terrestrial.",
+   "Game of Thrones, the HBO series, is adapted from George R. R. Martin's book series A Song of Ice and Fire.",
+   "Chartreuse is a yellowish-green color that lies between yellow and green on the color spectrum.",
+   "A Fun Value of 66 is required to reach the Fake Hallway in Undertale.",
+   "Anguirus, a spiked quadruped, became Godzilla's first co-starring monster rival in the 1955 film *Godzilla Raids Again*.",
+   "The RoboSapien toy robot, made by WowWee, was released to the public in 2004.",
+   "The April 2014 bug in the publicly available OpenSSL cryptography library was named Heartbleed.",
+   "Nelson Mandela was released from prison in 1990 after nearly 27 years of incarceration.",
+   "The first video uploaded to YouTube was titled \"Me at the zoo,\" posted on April 23, 2005, by co-founder Jawed Karim.",
+   "Ophelia's suicide occurs in Shakespeare's tragedy Hamlet, in which she drowns after Hamlet kills her father, Polonius.",
+   "Voez was not one of the Nintendo Switch launch titles released in the United States.",
+   "Alphys, the Royal Scientist in Undertale, built the robot celebrity Mettaton.",
+   "Saint Petersburg is the second-largest city in Russia, after Moscow.",
+   "Equipment in the Disgaea series is restricted by character class, so each character can use only certain weapon types.",
+   "The AK-47 assault rifle was developed in the Soviet Union.",
+   "Nelson Mandela served as South Africa's first Black president, taking office in 1994 after the country's first democratic elections.",
+   "Eleven, the young test subject in the series \"Stranger Things,\" possesses telekinetic abilities."
+  ]
+ },
+ "summary": {
+  "gpt-4o-mini": {
+   "returned": 20,
+   "n": 20,
+   "over_25_words": 0,
+   "echoes_question": 0,
+   "says_the_answer_is": 0,
+   "answer_present_mc": 17,
+   "mc_items": 17
+  },
+  "claude-haiku-5-5": {
+   "returned": 20,
+   "n": 20,
+   "over_25_words": 1,
+   "echoes_question": 0,
+   "says_the_answer_is": 0,
+   "answer_present_mc": 17,
+   "mc_items": 17
+  }
+ },
+ "metered_cost_cents": 0.227
+}

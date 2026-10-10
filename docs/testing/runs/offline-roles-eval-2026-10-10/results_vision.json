@@ -1,0 +1,413 @@
+{
+ "items": [
+  {
+   "id": "hint/beethoven",
+   "answer": "Beethoven",
+   "has_text": false
+  },
+  {
+   "id": "hint/beethoven+caption",
+   "answer": "Beethoven",
+   "has_text": true
+  },
+  {
+   "id": "hint/dna",
+   "answer": "DNA",
+   "has_text": false
+  },
+  {
+   "id": "hint/dna+caption",
+   "answer": "DNA",
+   "has_text": true
+  },
+  {
+   "id": "hint/the_great_gatsby",
+   "answer": "The Great Gatsby",
+   "has_text": false
+  },
+  {
+   "id": "hint/the_great_gatsby+caption",
+   "answer": "The Great Gatsby",
+   "has_text": true
+  },
+  {
+   "id": "hint/the_mona_lisa",
+   "answer": "The Mona Lisa",
+   "has_text": false
+  },
+  {
+   "id": "hint/the_mona_lisa+caption",
+   "answer": "The Mona Lisa",
+   "has_text": true
+  },
+  {
+   "id": "hint/the_moon_landing",
+   "answer": "The Moon Landing",
+   "has_text": false
+  },
+  {
+   "id": "hint/the_moon_landing+caption",
+   "answer": "The Moon Landing",
+   "has_text": true
+  },
+  {
+   "id": "sil/italy",
+   "answer": "Italy",
+   "has_text": false
+  },
+  {
+   "id": "sil/italy_labeled",
+   "answer": "Italy",
+   "has_text": true
+  },
+  {
+   "id": "sil/japan",
+   "answer": "Japan",
+   "has_text": false
+  },
+  {
+   "id": "sil/japan_labeled",
+   "answer": "Japan",
+   "has_text": true
+  },
+  {
+   "id": "sil/chile",
+   "answer": "Chile",
+   "has_text": false
+  },
+  {
+   "id": "sil/chile_labeled",
+   "answer": "Chile",
+   "has_text": true
+  },
+  {
+   "id": "sil/norway",
+   "answer": "Norway",
+   "has_text": false
+  },
+  {
+   "id": "sil/norway_labeled",
+   "answer": "Norway",
+   "has_text": true
+  },
+  {
+   "id": "sil/greece",
+   "answer": "Greece",
+   "has_text": false
+  },
+  {
+   "id": "sil/greece_labeled",
+   "answer": "Greece",
+   "has_text": true
+  }
+ ],
+ "outputs": {
+  "gpt-4o-mini": [
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image features a grand piano and a quill, which are strong visual clues related to music and composition, hinting at Beethoven. The overall quality is high due to the artistic style and composition, making it visually appealing. The answer is not immediately obvious, requiring some thought, and there are enough clues to make a reasonable guess."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image features a piano and a quill, which are relevant to Beethoven's musical legacy. However, the text at the bottom detracts from the visual riddle aspect. The overall quality is good, but the presence of text makes it less effective as a riddle."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively represents the concept of DNA through the spiral structure and related scientific elements. It is visually appealing and well-composed, providing enough clues without being immediately obvious."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image features a prominent DNA double helix, which makes the answer quite obvious. However, the artistic style and additional elements like microscopes add visual interest. The presence of text at the bottom detracts from the riddle aspect."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image captures a lavish party scene reminiscent of the Jazz Age, which aligns well with the themes of 'The Great Gatsby'. The quality is high, with good composition and atmosphere. While it provides enough clues to suggest the answer, it is not immediately obvious, requiring some thought."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image depicts a social gathering reminiscent of the Jazz Age, which aligns with the themes of 'The Great Gatsby.' However, the presence of visible text makes it less suitable for a riddle quiz. The overall quality is high due to the artistic style and composition."
+   },
+   {
+    "has_text": false,
+    "quality_score": 7,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image is visually appealing with a serene landscape and a mysterious figure, but it doesn't directly reference 'The Mona Lisa.' The clues are subtle, making it a reasonable challenge without being too obscure."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains visible text that directly indicates a museum context, making the answer too obvious. The quality is decent, but the presence of text detracts from the visual riddle aspect."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively captures elements associated with the moon landing, such as the American flag and the lunar surface. The composition is strong, with a clear focus on the flag and the Earth in the background. While it provides sufficient clues, it requires some thought to connect all elements to the moon landing."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image clearly depicts elements associated with the Moon landing, such as the American flag and the lunar surface. However, the presence of visible text makes the answer too obvious. The overall quality is good, but the text detracts from the visual riddle aspect."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image is a clear silhouette of Italy, which is recognizable but not immediately obvious as the answer. It has good composition and visual appeal, making it suitable for a visual riddle."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image clearly depicts the shape of Italy, making the answer immediately obvious. The quality is good, but the presence of the text 'Italy' further confirms the answer."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively represents Japan through its recognizable shape, providing a good balance of clues without being immediately obvious. The quality is high, with clear outlines and a minimalist style."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image clearly depicts the shape of Japan, making the answer quite obvious. The quality is decent, but the presence of the text 'Japan' further confirms the answer."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively represents the shape of Chile, making it recognizable but not immediately obvious. The quality is good, with a clear outline and minimal distractions."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively represents the shape of Chile, making it recognizable without being too obvious. The quality is good, with a clear silhouette and minimal distractions. The presence of the word 'Chile' adds clarity but does not make the answer immediately obvious, as it requires some thought."
+   },
+   {
+    "has_text": false,
+    "quality_score": 7,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image effectively represents the shape of Norway, making it recognizable but not immediately obvious. The quality is decent, though the lack of detail may leave some ambiguity for viewers unfamiliar with the country's outline."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains the name 'Norway' which makes the answer immediately obvious. The silhouette is recognizable but the text diminishes the challenge. Overall, the composition is simple and visually appealing."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image creatively represents the shape of Greece, which is recognizable but not immediately obvious. The quality is good, with a clear silhouette that provides enough clues without being too vague."
+   },
+   {
+    "has_text": true,
+    "quality_score": 6,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains the name 'Greece,' making the answer immediately obvious. The silhouette is recognizable but lacks additional context or artistic elements to enhance visual appeal."
+   }
+  ],
+  "claude-haiku-5-5": [
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The painterly image has no visible text. A black grand piano, a quill, and blank sheet music under a stormy sky clearly point to a composer, but not to a specific one, so the answer requires some thought. The stormy mood fits Beethoven's dramatic style, giving a fair clue without naming him. The dramatic lighting and composition are strong."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image has a visible text banner reading 'VISIT OUR MUSEUM TODAY' at the bottom, which should be cropped or removed for a riddle quiz. The painterly style is dramatic and well composed, with a stormy sky, a black grand piano, a gold quill, and sheet music. The clues point toward a composer without naming one directly, so the answer is not immediately obvious, though a piano and quill are fairly generic. There are enough clues to reason toward a classical composer."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image has no visible text. Its painterly style, symmetrical composition, and rich teal and gold palette are visually appealing. However, the central double helix is a direct, iconic depiction of DNA, so the answer is immediately obvious. The microscopes and molecular chains reinforce it. Making the riddle harder would require removing or obscuring the helix."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains visible text: 'VISIT OUR MUSEUM TODAY' in the bottom banner, so it fails the no-text requirement. The painterly style, warm golden helix, and microscopes give it strong composition and visual appeal. The DNA double helix is immediately recognizable, so the answer is too obvious. There are enough clues to reason toward the answer, so it is not too vague."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The painting has no visible text. It shows a 1920s lakeside mansion party with couples in tuxedos and flapper dresses, vintage cars, and a streak of green light across the night sky. The green light is a clear but not immediately obvious nod to the answer, so solvers must connect the clues. The painterly style is rich, with strong lighting, warm window glow against a dark sky, and a balanced composition. There are enough clues to reason toward the answer without giving it away."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains visible text: the banner reads 'VISIT OUR MUSEUM TODAY'. The painting is well composed and atmospheric, with dancing couples in 1920s attire, a grand mansion, vintage cars, and a warm/cool lighting contrast. The glowing green light over the water is a very recognizable motif tied to the answer, so the answer is likely guessable immediately. There are enough clues to avoid vagueness."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": false,
+    "too_vague": true,
+    "feedback": "The painting has a strong atmospheric style, with a well-composed rustic bridge, a distant castle, and a figure in a dark hood and red dress. The answer 'The Mona Lisa' is not clearly signaled, though. The woman's pose, hood, and setting differ from the iconic portrait, and the only loose link is the bridge and winding landscape in the background, which many paintings share. Solvers would have little to connect to the answer, so the riddle is too vague as written."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image contains visible text, 'VISIT OUR MUSEUM TODAY', in a banner at the bottom, which is a problem for a visual riddle. The painterly style is attractive, with a misty landscape, a wooden arched bridge, a distant castle, and a hooded woman. The composition is balanced, though the figure is not clearly a Mona Lisa reference, so the answer is not immediately obvious. The landscape hints at Renaissance-style backgrounds, so the clues are sufficient for a reasonable guess."
+   },
+   {
+    "has_text": false,
+    "quality_score": 8,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The impressionistic oil-paint style is strong, with rich textures, a clear foreground-to-background composition, and a striking contrast between the dark sky and the lunar surface. There is no visible text. The answer is very easy to spot: the American flag, the boot print in the regolith, and Earth hanging in the sky make a moon landing immediately recognizable. Making it less obvious would require removing or obscuring one or more of these iconic elements."
+   },
+   {
+    "has_text": true,
+    "quality_score": 8,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains visible text ('VISIT OUR MUSEUM TODAY') in the bottom banner, which is likely unwanted for a riddle image. The painterly, textured style and composition are strong. The answer is too obvious: the American flag, the Earth hanging in the black sky, and the boot print in lunar dust point directly to a moon landing."
+   },
+   {
+    "has_text": false,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image is a clean, high-contrast black silhouette with no text. The boot shape of the peninsula, plus the islands of Sicily and Sardinia, makes Italy immediately recognizable. The polygonal edges are simplified but clear, and the composition is well balanced on a white background. The answer is likely too obvious for a riddle, since the shape is iconic."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image contains the visible word 'Italy' beneath the silhouette, which gives away the answer. Even without the label, the boot-shaped peninsula with Sicily and Sardinia is highly recognizable, so the answer is immediately obvious. The clean, solid silhouette on a white background is visually clear and well composed, though it is simple."
+   },
+   {
+    "has_text": false,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "A clean, high-contrast black silhouette with a clear, recognizable shape: Hokkaido is separated from Honshu, Kyushu and Shikoku are visible at lower left, and the archipelago is tilted diagonally. The polygonal edges are somewhat crude, but the composition is simple and readable. Japan's outline is iconic, so many players may identify it at a glance, which weakens the riddle's challenge."
+   },
+   {
+    "has_text": true,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image includes the word 'Japan' printed beneath the silhouette, which gives away the answer directly. The map shape is also instantly recognizable as the Japanese archipelago. The clean, high-contrast silhouette on a plain white background is visually effective, but the label and the iconic shape make the riddle trivial. Remove the text and consider a less iconic or more abstracted view to make it a real challenge."
+   },
+   {
+    "has_text": false,
+    "quality_score": 7,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image is a clean black silhouette on a white background with no text. Chile's long, narrow shape and southern tip are distinctive, so many people would recognize it immediately. The outline is somewhat angular and rough in places, though the shape remains clearly readable."
+   },
+   {
+    "has_text": true,
+    "quality_score": 6,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image shows a clean, recognizable silhouette of Chile's long, narrow shape, but the label 'Chile' is printed at the bottom, which gives away the answer. The outline is also somewhat jagged and crude in places, which lowers the visual polish."
+   },
+   {
+    "has_text": false,
+    "quality_score": 6,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image is a plain black silhouette with no text. The elongated, curving shape with a wide southern end and a narrow northern tail is distinctive enough to suggest Norway, but it requires some geographic recognition, so it is not immediately obvious. The outline is somewhat crude and angular, with simplified coastlines, which lowers the visual polish, though it is clear and centered."
+   },
+   {
+    "has_text": true,
+    "quality_score": 6,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image includes the label 'Norway' at the bottom, which gives away the answer directly. The silhouette map of Norway is clean and recognizable with good contrast on a plain background, but the composition is simple and the visual appeal is modest. The shape itself would be a fair clue without the label, so the text should be removed for the riddle."
+   },
+   {
+    "has_text": false,
+    "quality_score": 6,
+    "too_obvious": false,
+    "too_vague": false,
+    "feedback": "The image is a clean, high-contrast black silhouette on a white background with no text. The main landmass and the separate elongated island below it suggest a map outline, and the answer requires recognizing the country's shape, so it isn't immediately obvious. The silhouette has enough distinctive features, such as the jagged coastline and the detached island, to make a reasoned guess possible. The composition is simple and centered, though the flat, unshaded style gives it limited visual interest."
+   },
+   {
+    "has_text": true,
+    "quality_score": 6,
+    "too_obvious": true,
+    "too_vague": false,
+    "feedback": "The image includes the label 'Greece' at the bottom, which gives away the answer immediately. The silhouette is a clean, simple, high-contrast shape with good negative space, but the visible text makes it unsuitable as a riddle. The shape alone has enough detail to be identifiable, so it would work once the label is removed."
+   }
+  ]
+ },
+ "summary": {
+  "gpt-4o-mini": {
+   "valid_json": 20,
+   "n": 20,
+   "has_text_correct": 20,
+   "missed_text": 0,
+   "false_text": 0,
+   "labeled_silhouette_flagged_too_obvious": 4,
+   "would_pass_gate": 10,
+   "would_pass_gate_on_text_images": 0
+  },
+  "claude-haiku-5-5": {
+   "valid_json": 20,
+   "n": 20,
+   "has_text_correct": 20,
+   "missed_text": 0,
+   "false_text": 0,
+   "labeled_silhouette_flagged_too_obvious": 5,
+   "would_pass_gate": 3,
+   "would_pass_gate_on_text_images": 0
+  }
+ },
+ "metered_cost_cents": 7.698
+}

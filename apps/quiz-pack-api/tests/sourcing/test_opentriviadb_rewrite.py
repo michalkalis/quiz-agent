@@ -142,14 +142,8 @@ async def test_rewriter_unavailable_returns_none(monkeypatch: pytest.MonkeyPatch
 @pytest.mark.asyncio
 async def test_rewriter_strips_wrapping_quotes(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    resp = SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content='  "Paris is the capital of France."  '))]
-    )
-    rewriter = OpenTriviaFactRewriter()
-    rewriter._client = SimpleNamespace(
-        chat=SimpleNamespace(
-            completions=SimpleNamespace(create=AsyncMock(return_value=resp))
-        )
-    )
+    resp = SimpleNamespace(content='  "Paris is the capital of France."  ')
+    rewriter = OpenTriviaFactRewriter(model="gpt-4o-mini")
+    rewriter._client = SimpleNamespace(ainvoke=AsyncMock(return_value=resp))
 
     assert await rewriter.rewrite(_QUESTION, "Paris") == "Paris is the capital of France."

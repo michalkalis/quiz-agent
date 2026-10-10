@@ -1,0 +1,142 @@
+{
+ "runs": {
+  "gpt-5.6-sol": [
+   [
+    "Monarch butterfly migration",
+    "Graffiti of ancient Pompeii",
+    "Weather on hot Jupiters",
+    "Traditional Georgian polyphonic singing",
+    "Cheese rolling at Cooper's Hill"
+   ],
+   [
+    "animal architects of Australia",
+    "the Antikythera mechanism",
+    "fermented foods of Korea",
+    "whistled languages of the world",
+    "discontinued Olympic sports"
+   ],
+   [
+    "bioluminescent fungi of Japan",
+    "Victorian pneumatic mail networks",
+    "Roquefort cheese cave traditions",
+    "unusual Olympic marathon records",
+    "musical instruments in medieval paintings"
+   ],
+   [
+    "octopus camouflage and cognition",
+    "the invention of barcodes",
+    "cheese caves of Roquefort",
+    "hidden symbols in Renaissance paintings",
+    "weather on Venus"
+   ],
+   [
+    "octopus camouflage and intelligence",
+    "the invention of barcodes",
+    "fermented foods around the world",
+    "hidden symbols in Renaissance paintings",
+    "moons of the outer planets"
+   ]
+  ],
+  "claude-sonnet-5-5": [
+   [
+    "Octopus intelligence and biology",
+    "History of the Tour de France",
+    "Fermentation in traditional cheesemaking",
+    "Saturn's moons and rings",
+    "Origins of musical notation"
+   ],
+   [
+    "Octopus intelligence and biology",
+    "History of the Silk Road",
+    "Origins of jazz in New Orleans",
+    "Fermentation in traditional cheesemaking",
+    "Moons of Jupiter and Saturn"
+   ],
+   [
+    "Octopus intelligence and biology",
+    "History of the Silk Road",
+    "Origins of Italian pasta shapes",
+    "Pulsars and neutron stars",
+    "Evolution of the electric guitar"
+   ],
+   [
+    "Octopus intelligence and camouflage",
+    "The Silk Road spice trade",
+    "Mechanical watch complications",
+    "Fermentation in Korean cuisine",
+    "Moons of Saturn"
+   ],
+   [
+    "Octopus intelligence and camouflage",
+    "The invention of the Stradivarius violin",
+    "Fermentation in Japanese cuisine",
+    "Pulsars and neutron stars",
+    "The history of the Tour de France"
+   ]
+  ],
+  "claude-opus-5-5": [
+   [
+    "octopus camouflage and intelligence",
+    "history of the Rosetta Stone",
+    "origins of chocolate in Mesoamerica",
+    "Saturn's rings and moons",
+    "invention of the Olympic marathon"
+   ],
+   [
+    "tardigrade survival abilities",
+    "history of the Rosetta Stone",
+    "Saturn's moon Enceladus",
+    "origins of Japanese ramen",
+    "invention of the theremin"
+   ],
+   [
+    "tardigrade survival in extreme environments",
+    "the Voynich manuscript mystery",
+    "history of the Tour de France",
+    "fermentation of Korean kimchi",
+    "Saturn's rings and moons"
+   ],
+   [
+    "tardigrade survival in extreme environments",
+    "the Great Molasses Flood of 1919",
+    "origins of the Fibonacci sequence",
+    "history of the Tour de France",
+    "fermentation of Korean kimchi"
+   ],
+   [
+    "tardigrade survival in extreme environments",
+    "the Great Molasses Flood of 1919",
+    "origins of the Scrabble board game",
+    "Saturn's moon Enceladus geysers",
+    "history of saffron cultivation"
+   ]
+  ]
+ },
+ "summary": {
+  "gpt-5.6-sol": {
+   "parsed_runs": 5,
+   "topics": 25,
+   "unique_across_runs": 23,
+   "broad_or_generic": 0,
+   "military": 0,
+   "word_count_out_of_2_6": 0
+  },
+  "claude-sonnet-5-5": {
+   "parsed_runs": 5,
+   "topics": 25,
+   "unique_across_runs": 19,
+   "broad_or_generic": 0,
+   "military": 0,
+   "word_count_out_of_2_6": 1
+  },
+  "claude-opus-5-5": {
+   "parsed_runs": 5,
+   "topics": 25,
+   "unique_across_runs": 18,
+   "broad_or_generic": 0,
+   "military": 0,
+   "word_count_out_of_2_6": 0
+  }
+ },
+ "metered_cost_cents": 5.686
+}

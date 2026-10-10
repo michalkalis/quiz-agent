@@ -55,8 +55,10 @@ def _response(items: list[dict], citations: list[str], status: str = "completed"
 
 
 def _source(monkeypatch: pytest.MonkeyPatch, response) -> OpenAIWebSearchSource:
+    # The OpenAI Responses branch stays the one-secret rollback
+    # (LLM_ROLE_SOURCING=gpt-5-mini) since the #196 switch to Claude.
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    source = OpenAIWebSearchSource()
+    source = OpenAIWebSearchSource(model="gpt-5-mini")
     source.client = SimpleNamespace(
         responses=SimpleNamespace(create=AsyncMock(return_value=response))
     )
@@ -218,7 +220,19 @@ def test_missing_key_fails_at_construction(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     with pytest.raises(ValueError, match="OPENAI_API_KEY"):
-        OpenAIWebSearchSource()
+        OpenAIWebSearchSource(model="gpt-5-mini")
+
+
+def test_missing_anthropic_key_fails_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Same fail-loud rule on the Claude branch: the key that matters is the
+    # one the chosen model's provider needs.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+    with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
+        OpenAIWebSearchSource(model="claude-sonnet-5-5")
 
 
 class TestProviderSwitch:
@@ -234,7 +248,8 @@ class TestProviderSwitch:
     def test_openai_provider_selects_the_openai_source(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        # Default SOURCING model is Claude (#196), so its key is what counts.
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
 
         sourcer = FactSourcer(
             enable_wikipedia=False,

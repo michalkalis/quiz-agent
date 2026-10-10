@@ -1,0 +1,225 @@
+{
+ "seeds": [
+  {
+   "topic": "Literature",
+   "correct_answer": "The Great Gatsby",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Science",
+   "correct_answer": "DNA",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "History",
+   "correct_answer": "The Moon Landing",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Music",
+   "correct_answer": "Beethoven",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Art",
+   "correct_answer": "The Mona Lisa",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Geography",
+   "correct_answer": "Venice",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Music",
+   "correct_answer": "The Beatles",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "Film",
+   "correct_answer": "Titanic",
+   "difficulty": "easy"
+  },
+  {
+   "topic": "Science",
+   "correct_answer": "Photosynthesis",
+   "difficulty": "medium"
+  },
+  {
+   "topic": "History",
+   "correct_answer": "The Fall of the Berlin Wall",
+   "difficulty": "hard"
+  }
+ ],
+ "outputs": {
+  "claude-opus-5-5": [
+   {
+    "question": "This atmospheric painting hints at a classic American novel set during the Jazz Age, full of longing, wealth, and a glowing light across the water. What is it?",
+    "image_prompt": "Oil painting of a moonlit bay at night, viewed from a marble balustrade where a half-empty coupe glass of champagne rests beside a man's straw boater hat. Across the dark rippling water, a small solitary green light glows at the end of a distant wooden dock. Behind the viewer, a lavish 1920s mansion spills warm golden party light and faint silhouettes of dancers in flapper dresses onto the lawn, with a gleaming yellow vintage roadster parked in the driveway. Rich, moody palette of deep blues, gold, and emerald, with soft romantic brushwork. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Great Gatsby",
+     "Gatsby"
+    ],
+    "tags": [
+     "literature",
+     "hint-image"
+    ],
+    "explanation": "The image shows the famous green light at the end of Daisy's dock across the bay, which Jay Gatsby gazes at longingly. The lavish mansion party with flappers and champagne evokes Gatsby's extravagant Jazz Age gatherings, and the yellow roadster recalls Gatsby's car that plays a fatal role in the story. Together these point to F. Scott Fitzgerald's novel The Great Gatsby."
+   },
+   {
+    "question": "This atmospheric painting hints at the twisted molecule that carries the genetic instructions of every living thing, passed from parents to children and used to identify suspects at crime scenes. What is it?",
+    "image_prompt": "Oil painting in warm, moody tones of a candlelit study. In the center, a wooden rope ladder twists gracefully into a spiral as it rises toward the ceiling, its rungs glowing in soft colors. On a desk in the foreground sits a magnifying glass resting over a single strand of hair beside a sealed glass vial holding a cotton swab. On the wall behind hangs a pair of framed portraits of a father and his young son who share strikingly identical features: the same eyes, nose, and curly red hair. Rich brushstrokes, dramatic chiaroscuro lighting. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Deoxyribonucleic acid",
+     "Genetic code",
+     "Double helix",
+     "Genes"
+    ],
+    "tags": [
+     "science",
+     "biology",
+     "genetics",
+     "hint-image"
+    ],
+    "explanation": "The image shows a rope ladder twisting into a spiral, which evokes the famous double helix shape of DNA, often described as a twisted ladder. The hair strand under a magnifying glass and the cotton swab in a vial reference forensic DNA sampling used to identify people. The father and son portraits with matching features represent heredity, since DNA carries the traits passed from parents to children."
+   },
+   {
+    "question": "This atmospheric painting hints at a historic 1969 event watched by hundreds of millions on television, when humans first set foot somewhere far beyond Earth. What is it?",
+    "image_prompt": "Oil painting with dramatic chiaroscuro lighting: in the foreground, a single deep ridged bootprint pressed into fine powdery grey dust. Behind it, a red-white-and-blue striped banner on a pole, held stiffly outstretched by a horizontal rod, stands motionless on the barren grey plain. Above the stark horizon, a small luminous blue-and-white Earth hangs in a pitch-black starless sky. Muted greys contrast with the vivid blue planet, in rich textured brushstrokes. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Apollo 11",
+     "Moon Landing",
+     "First Moon Landing",
+     "Apollo 11 Moon Landing",
+     "Lunar Landing",
+     "1969 Moon Landing"
+    ],
+    "tags": [
+     "history",
+     "space-exploration",
+     "20th-century",
+     "hint-image"
+    ],
+    "explanation": "The image shows three clues to the Apollo 11 Moon landing of July 20, 1969. The bootprint in grey dust recalls Neil Armstrong's first step. The American flag is held out by a horizontal rod because there is no wind on the Moon. The Earth hangs in a black sky above a barren landscape, which is how astronauts saw it from the lunar surface."
+   },
+   {
+    "question": "This atmospheric painting hints at a famous composer who kept writing masterpieces even after losing his hearing. Who is it?",
+    "image_prompt": "Oil painting of a dim nineteenth-century Viennese study at night. An old brass ear trumpet rests on the closed lid of a dark wooden fortepiano. Through a tall open window, a full moon casts a silver path across a calm lake. A candle has burned low beside a goose quill, an inkwell and a few crumpled blank sheets of paper scattered on the floor. Moody chiaroscuro lighting, rich deep blues and warm amber tones, romantic-era atmosphere. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Ludwig van Beethoven",
+     "Ludwig Beethoven",
+     "Van Beethoven"
+    ],
+    "tags": [
+     "music",
+     "classical-music",
+     "composers",
+     "hint-image"
+    ],
+    "explanation": "The image shows an ear trumpet resting on a fortepiano, a nod to Beethoven's famous deafness and the hearing aids he used. The moonlight shimmering over a lake evokes his 'Moonlight' Sonata, whose nickname came from a critic comparing it to moonlight on Lake Lucerne. The Viennese study, quill and crumpled papers suggest the restless, tireless composer who wrote in Vienna."
+   },
+   {
+    "question": "This atmospheric painting hints at the world's most famous portrait, painted by Leonardo da Vinci, known for its mysterious smile and housed in the Louvre in Paris. What is it?",
+    "image_prompt": "Oil painting of a crowded, softly lit museum gallery seen from behind a dense throng of tourists who are all raising smartphones toward a small gilded frame mounted behind thick protective glass on a distant wall, the frame's contents obscured by glare and raised arms. Through a tall arched window, a glass pyramid glows in a Parisian courtyard at dusk. In the foreground on a wooden bench rests a small wooden model of a Renaissance ornithopter flying machine with linen wings. Warm, hazy sfumato atmosphere with muted earthy tones. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Mona Lisa",
+     "La Gioconda",
+     "La Joconde",
+     "Portrait of Lisa Gherardini"
+    ],
+    "tags": [
+     "art",
+     "hint-image"
+    ],
+    "explanation": "The image shows a dense crowd of tourists photographing a small painting behind bulletproof glass, the famous scene in the Louvre's Salle des États where the Mona Lisa hangs. The glass pyramid identifies the Louvre in Paris. The ornithopter model points to Leonardo da Vinci, the inventor-artist who painted it. The hazy sfumato atmosphere echoes the soft blending technique the painting is famous for."
+   },
+   {
+    "question": "This atmospheric painting hints at an Italian city built on a lagoon, famous for its canals, gondoliers, and masked carnival. What is it?",
+    "image_prompt": "Oil painting of a sleek black gondola gliding along a narrow green canal at golden hour, a gondolier in a striped shirt and straw boater hat rowing with a long oar, red-and-white striped wooden mooring poles rising from the water beside weathered pastel palazzos, and an ornate gold-and-white carnival mask resting on a velvet cushion on the gondola's seat. Warm, hazy light reflecting off the rippling water, rich impressionistic brushstrokes. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Venezia",
+     "Venise",
+     "Venedig"
+    ],
+    "tags": [
+     "geography",
+     "cities",
+     "italy",
+     "hint-image"
+    ],
+    "explanation": "The image shows a gondola rowed by a gondolier in his traditional striped shirt and boater hat, striped mooring poles along a canal lined with old palazzos, and an ornate carnival mask. These are iconic symbols of Venice, the Italian city built on a lagoon and known for its canals, gondolas, and its famous Carnival."
+   },
+   {
+    "question": "This atmospheric painting hints at a four-piece band whose fans' frenzy in the 1960s became known as a 'mania.' Which band is it?",
+    "image_prompt": "Oil painting of a quiet tree-lined London street on a bright summer morning, with four men in single file striding across a black-and-white striped zebra crossing, the first in a white suit and the third barefoot, painted from a low, symmetrical viewpoint. Above the rooftops a whimsical bright yellow submarine floats among soft clouds like a dream. Rich impasto brushwork, warm nostalgic 1960s color palette, editorial surrealist atmosphere. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Beatles",
+     "The Fab Four",
+     "Fab Four"
+    ],
+    "tags": [
+     "music",
+     "hint-image"
+    ],
+    "explanation": "The image shows four men crossing a zebra crossing on a London street, recreating the famous 'Abbey Road' album photo, complete with a white suit and a barefoot member. The yellow submarine floating in the sky refers to their song and animated film 'Yellow Submarine.' Together these clues point to The Beatles, whose 1960s fan frenzy was called Beatlemania."
+   },
+   {
+    "question": "This atmospheric painting hints at a 1997 blockbuster romance about a doomed maiden voyage, directed by James Cameron. What film is it?",
+    "image_prompt": "Moody oil painting of a moonlit, icy North Atlantic at night. In the foreground a large blue heart-shaped diamond pendant on a delicate chain rests on a polished wooden ship's railing, glinting in cold moonlight. In the dark distance a massive jagged iceberg looms out of the mist. A lone wooden door panel floats on the calm black water nearby, with frost on its edges. Deep blues and silvery highlights, romantic and melancholic, visible brushstrokes. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Titanic (1997)",
+     "The Titanic"
+    ],
+    "tags": [
+     "film",
+     "hint-image"
+    ],
+    "explanation": "The image shows the blue heart-shaped diamond (the 'Heart of the Ocean' necklace), the iceberg that sank the ship, and the floating door from the film's famous final scene, all pointing to James Cameron's 1997 film Titanic."
+   },
+   {
+    "question": "This atmospheric painting hints at a vital natural process that turns light, water, and air into food and releases the oxygen we breathe. What is it?",
+    "image_prompt": "Oil painting of a lush green leaf glowing as golden sunbeams stream down onto it through a forest canopy, a single droplet of water clinging to its surface, and tiny shimmering bubbles rising from a submerged aquatic plant in a clear glass jar nearby, warm luminous light, rich naturalistic brushwork. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Photosynthesis process",
+     "Plant photosynthesis"
+    ],
+    "tags": [
+     "science",
+     "biology",
+     "hint-image"
+    ],
+    "explanation": "The image shows sunlight falling on a green leaf, a water droplet, and oxygen bubbles rising from an underwater plant. Together these represent the inputs of photosynthesis (light and water, captured by chlorophyll) and its visible output (oxygen). This is the process plants use to make glucose from carbon dioxide and water."
+   },
+   {
+    "question": "This atmospheric painting hints at a pivotal night in late 1989 when a long-divided city suddenly opened its streets to itself. What historic event is it?",
+    "image_prompt": "Atmospheric oil painting of a chilly autumn night scene lit by sodium streetlamps and drifting mist. In the foreground, a worn hammer and steel chisel rest atop a jagged chunk of broken concrete splashed with vivid spray-painted colors. In the middle ground, a small boxy pale-blue East German Trabant car with glowing headlights rolls past a red-and-white striped border barrier arm raised fully open, beside an empty guard booth with a lone military cap left on its ledge. Loose impressionistic brushwork, moody blues and ambers, a sense of quiet jubilation in the air. No text, no words, no letters, no writing anywhere in the image.",
+    "alternative_answers": [
+     "Fall of the Berlin Wall",
+     "Berlin Wall falling",
+     "The Berlin Wall coming down",
+     "Opening of the Berlin Wall",
+     "Mauerfall",
+     "November 9, 1989"
+    ],
+    "tags": [
+     "history",
+     "cold-war",
+     "germany",
+     "hint-image"
+    ],
+    "explanation": "The image shows three clues. The hammer and chisel on a graffiti-painted concrete chunk recall the 'Mauerspechte' (wall woodpeckers) who chipped souvenirs from the Berlin Wall. The Trabant is the iconic East German car that streamed west when the border opened. The raised border barrier beside an abandoned guard booth evokes checkpoints like Bornholmer Strasse and Checkpoint Charlie, which opened on the night of November 9, 1989. Together they point to the Fall of the Berlin Wall."
+   }
+  ]
+ },
+ "summary": {
+  "claude-opus-5-5": {
+   "valid_json": 10,
+   "n": 10,
+   "answer_in_image_prompt": 0,
+   "answer_in_question": 0,
+   "trigger_word_in_prompt": 0,
+   "missing_required_ending": 0
+  }
+ },
+ "metered_cost_cents": 16.057
+}

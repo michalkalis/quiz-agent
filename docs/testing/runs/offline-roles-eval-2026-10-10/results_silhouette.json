@@ -1,0 +1,353 @@
+{
+ "countries": [
+  [
+   "Italy",
+   "easy"
+  ],
+  [
+   "Japan",
+   "easy"
+  ],
+  [
+   "Chile",
+   "medium"
+  ],
+  [
+   "Norway",
+   "medium"
+  ],
+  [
+   "New Zealand",
+   "medium"
+  ],
+  [
+   "Greece",
+   "hard"
+  ],
+  [
+   "Cuba",
+   "medium"
+  ],
+  [
+   "India",
+   "easy"
+  ],
+  [
+   "United Kingdom",
+   "medium"
+  ],
+  [
+   "Australia",
+   "easy"
+  ]
+ ],
+ "outputs": {
+  "gpt-4o": [
+   {
+    "question": "Which country is famously shaped like a high-heeled boot stepping into the waters of the Mediterranean, with a distinctive island acting like a ball being kicked?",
+    "alternative_answers": [
+     "Italian Republic"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe"
+    ],
+    "explanation": "Italy's recognizable boot shape makes it easy to identify, with Sicily as the 'ball' being kicked into the sea."
+   },
+   {
+    "question": "Which country has a shape reminiscent of a dragon slithering across the sea, with a string of pearls trailing behind it, set amidst the vast expanse of the Pacific Ocean?",
+    "alternative_answers": [
+     "Nihon",
+     "Nippon"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "asia"
+    ],
+    "explanation": "Japan's main islands form a shape that is often likened to a mythical dragon, with its numerous smaller islands creating a dotted path across the Pacific."
+   },
+   {
+    "question": "Which country resembles a narrow strip of ribbon draped elegantly against the backdrop of the vast Pacific Ocean, stretching down the western edge of South America like the spine of the continent itself?",
+    "alternative_answers": [
+     "Republic of Chile"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "south america"
+    ],
+    "explanation": "Chile's long and slender shape is iconic, bordered by the Pacific Ocean to the west and forming a lengthy stretch down South America's coast."
+   },
+   {
+    "question": "Which country has a long, slender silhouette that looks like a jagged serpent slithering between the North Sea and the Nordic countries, often stretching its form alongside dramatic coastlines and fjords?",
+    "alternative_answers": [
+     "Kingdom of Norway"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "scandinavia"
+    ],
+    "explanation": "Norway's coastline is renowned for its fjords, and its elongated shape runs from the southern tip adjacent to the North Sea all the way up to the Arctic Circle, bordering Sweden and Finland."
+   },
+   {
+    "question": "Which country has a shape reminiscent of a pair of lanky boots, straddling the vast stretch of ocean like a sentry guarding the southern edge of Australasia? Picture two islands, one slightly rugged and stout, the other more slender and serpentine, both nestled in the Pacific's embrace.",
+    "alternative_answers": [
+     "Aotearoa"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "oceania"
+    ],
+    "explanation": "New Zealand consists of two main landmasses—commonly referred to as the North Island and the South Island—and they resemble a pair of boots. It is located in the southwestern Pacific Ocean and forms part of Oceania."
+   },
+   {
+    "question": "Imagine a jagged piece of a puzzle that twists and turns like an abstract splash along the deep blue, peppered with island fragments, stretching into ancient mythology.",
+    "alternative_answers": [
+     "Hellenic Republic"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe"
+    ],
+    "explanation": "Greece's silhouette is intricate and fragmented, largely due to its many islands and peninsulas stretching into the Aegean Sea. Its shape is unlike any other European country, reminiscent of its deep connection with the sea and mythology."
+   },
+   {
+    "question": "Imagine a slender alligator, stretched out long and narrow as if lounging lazily in the sun. This island country curves gently like a lazy river meandering through the Caribbean Sea, near the southeastern coast of the United States. Which country is this?",
+    "alternative_answers": [
+     "Republic of Cuba"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "caribbean"
+    ],
+    "explanation": "Cuba's shape is elongated and curved, much like an alligator or crocodile. It is situated in the Caribbean Sea, making it a prominent island nation south of the United States."
+   },
+   {
+    "question": "Which country has an iconic shape that resembles a large, striking peninsula pointing downwards towards the Indian Ocean, almost like a kite tail fluttering in the wind, with the vast Himalayas framing its northern border?",
+    "alternative_answers": [
+     "Bharat",
+     "Republic of India"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "asia"
+    ],
+    "explanation": "India's silhouette is well-known due to its large subcontinental presence extending into the Indian Ocean, framed by the towering Himalayas to the north."
+   },
+   {
+    "question": "Which country features a silhouette that resembles a playful dragon with its snout extending towards the North Sea? Its body seems to shield a group of three smaller isles, often associated with foggy weather and old castles.",
+    "alternative_answers": [
+     "Great Britain"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe"
+    ],
+    "explanation": "The United Kingdom's shape can be visualized as a dragon with its head pointing towards the North Sea. Great Britain is the largest of the islands, and the smaller isles include treasures like the Isle of Wight and the Isle of Skye. Known for its iconic landmarks and storied history, it is also frequently wrapped in misty and cloudy weather, adding to its enchanting allure."
+   },
+   {
+    "question": "Imagine a giant, skewed teddy bear lying lazily in the ocean, its rounded ears slightly tilted. This vast landmass is an island continent, surrounded by the expansive waters of both the Indian and Pacific Oceans. Its unique creatures like kangaroos and koalas are as iconic as its shape.",
+    "alternative_answers": [
+     "Commonwealth of Australia"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "oceania"
+    ],
+    "explanation": "Australia's silhouette is recognizable due to its large, distinct landmass resembling a bear shape, and it's the only country that is also a continent."
+   }
+  ],
+  "claude-sonnet-5-5": [
+   {
+    "question": "Picture a black silhouette shaped like a tall, slender boot with a pointed toe and a stylish heel. It strides southward out of the Alps into the Mediterranean Sea, and looks ready to kick a triangular stone-like island off its toe. Two more large islands sit nearby, one off the toe and another to the west. Which country has this unmistakable boot-shaped outline?",
+    "alternative_answers": [
+     "Italian Republic",
+     "Repubblica Italiana"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe",
+     "mediterranean"
+    ],
+    "explanation": "Italy's boot shape is one of the most recognizable country outlines in the world. The 'ball' being kicked is Sicily, and the heel is the region of Puglia. Sardinia sits to the west. The boot's top is attached to the rest of Europe along the Alps."
+   },
+   {
+    "question": "Which country has this silhouette: a long, curved string of islands that looks like a sea horse or a crescent-shaped dragon arching along the eastern edge of Asia? Four main islands make up most of it, with a big central one shaped like a bent banana. It sits in the Pacific Ocean, east of Korea and China, and is known as the Land of the Rising Sun.",
+    "alternative_answers": [
+     "Nippon",
+     "Nihon",
+     "Nippon-koku",
+     "Nihon-koku"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "asia",
+     "islands"
+    ],
+    "explanation": "Japan is an island nation made up of about 6,800 islands, with four main ones: Honshu, Hokkaido, Kyushu, and Shikoku. Together they form a long, curved arc in the Pacific Ocean off the east coast of Asia. Its name in Japanese, Nihon or Nippon, means 'origin of the sun', which is why it is called the Land of the Rising Sun."
+   },
+   {
+    "question": "Which country has this silhouette that looks like a long, thin ribbon, or a strip of dried spaghetti, laid down vertically along the edge of a continent? It is hundreds of times longer than it is wide, squeezed between a towering mountain range on one side and the Pacific Ocean on the other. At its southern tip, the ribbon frays into a scatter of islands.",
+    "alternative_answers": [
+     "Republic of Chile",
+     "Chile"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "south america"
+    ],
+    "explanation": "Chile is one of the most distinctive countries on the map: about 4,300 km (2,700 miles) from north to south but, on average, only around 180 km (110 miles) wide. It is pinned between the Andes and the Pacific Ocean, and its southern end breaks into the fjords and islands of Patagonia and Tierra del Fuego."
+   },
+   {
+    "question": "Which country has this silhouette that looks like a long, ragged spoon or a lopsided hourglass? Its wide, chunky southern end narrows to a thin waist, then stretches into a long tail that curls over the top of Europe like a cap. Its western coast is shredded into thousands of deep, icy inlets carved by glaciers, and it faces the North Atlantic and the Arctic Ocean.",
+    "alternative_answers": [
+     "Kingdom of Norway",
+     "Norge",
+     "Noreg"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe",
+     "scandinavia"
+    ],
+    "explanation": "Norway's outline is long and narrow, with a wide southern part, a thin middle, and a northern tip that curls over Sweden and Finland toward Russia. Its extremely jagged western coastline is lined with fjords, which make its coast one of the longest in the world relative to its size."
+   },
+   {
+    "question": "Which country has this silhouette: two long, skinny, jagged landmasses stacked on top of each other, like a pair of crooked stepping stones, with a tiny third speck tucked at the bottom? The northern piece looks like a mitten or a fish with a thumb-like peninsula pointing up and to the left, while the larger southern piece is a long diagonal slab with a spiky, fjord-carved edge. Together they float alone in the South Pacific, hundreds of miles southeast of Australia.",
+    "alternative_answers": [
+     "Aotearoa",
+     "NZ"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "oceania",
+     "islands"
+    ],
+    "explanation": "New Zealand is made up of two main islands, the North Island and the South Island, with smaller Stewart Island to the south. They sit isolated in the South Pacific, about 1,500 km southeast of Australia. The South Island is known for its fjords and the Southern Alps, while the North Island has the Northland peninsula pointing up and to the northwest."
+   },
+   {
+    "question": "Which country has this ragged silhouette? Picture a mainland whose northern edge looks like a rumpled, torn blanket. From its southern end, a thick, three-fingered hand reaches down into the sea, with the middle finger thin and the outer two trailing off like the prongs of a trident. A large, long island lies below the hand, like a stone it just dropped. Scattered around the mainland are hundreds of crumbs: tiny islands spilling across the sea on both sides, like confetti thrown off a ship.",
+    "alternative_answers": [
+     "Hellenic Republic",
+     "Hellas",
+     "Ellada"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe",
+     "mediterranean"
+    ],
+    "explanation": "Greece has a jagged mainland that ends in the Peloponnese, a hand-like peninsula joined to the rest of the country by the narrow Isthmus of Corinth. Crete is the large island below it. Hundreds of islands in the Aegean and Ionian Seas surround the mainland, which makes the silhouette easy to recognize once you notice the shattered coastline."
+   },
+   {
+    "question": "Which country has this silhouette that looks like a long, slightly curved crocodile, or a lizard, stretched out lazily from northwest to southeast, with a big bulge at its eastern head and a narrow tail in the west? It is the largest island in the Caribbean, sitting just south of Florida, and is surrounded by many tiny islets, like crumbs scattered around it.",
+    "alternative_answers": [
+     "Republic of Cuba",
+     "Republica de Cuba"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "caribbean",
+     "north america",
+     "island"
+    ],
+    "explanation": "Cuba is the largest island in the Caribbean. Its long, narrow shape is often compared to a crocodile or an alligator, and it lies about 150 km south of Florida's Key West. The main island is surrounded by more than 4,000 small cays and islets."
+   },
+   {
+    "question": "Which country has this shape that looks like a giant inverted triangle, or a kite with a long tail, hanging down from the towering Himalayan mountains into the warm Indian Ocean? Its broad top is crowned by a mountainous northern tip, a narrow neck of land curls off to the far east around Bangladesh, and the whole southern peninsula tapers to a point like the tip of an ice cream cone, with the Arabian Sea on one side and the Bay of Bengal on the other.",
+    "alternative_answers": [
+     "Republic of India",
+     "Bharat"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "asia",
+     "south asia"
+    ],
+    "explanation": "India's outline is a broad northern body beneath the Himalayas that tapers into a triangular peninsula pointing south into the Indian Ocean, flanked by the Arabian Sea to the west and the Bay of Bengal to the east. The narrow 'chicken neck' corridor in the northeast connects the main body of the country to its far-eastern states."
+   },
+   {
+    "question": "Which country has this silhouette: a lumpy, ragged island that looks like a seated figure with a pointed hat leaning against a smaller island to its left? The big island's southwest tip trails off like a bony foot into the Atlantic, while its top half, up north, is jagged and fringed with hundreds of tiny islands. In the far corner of the smaller island, a short land border cuts across it. This island nation sits just off the northwest coast of mainland Europe, across a narrow channel.",
+    "alternative_answers": [
+     "UK",
+     "U.K.",
+     "Great Britain",
+     "Britain",
+     "United Kingdom of Great Britain and Northern Ireland",
+     "The United Kingdom"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "europe"
+    ],
+    "explanation": "The United Kingdom is made up of the island of Great Britain plus the northeastern part of Ireland (Northern Ireland). Great Britain's outline is often likened to a seated figure or witch, with Scotland as the head and hat, and Cornwall as the trailing foot. The English Channel separates it from France."
+   },
+   {
+    "question": "Which country has this silhouette: a giant, chunky, sun-baked slab of land, like a massive rounded rectangle with a big bite taken out of the top by a wide gulf, a small teardrop-shaped island hanging off the bottom right corner like an earring, and a long, jagged eastern coastline? It's the only nation that fills an entire continent, surrounded by the Indian and Pacific Oceans.",
+    "alternative_answers": [
+     "Commonwealth of Australia",
+     "Oz"
+    ],
+    "tags": [
+     "geography",
+     "countries",
+     "silhouettes",
+     "oceania"
+    ],
+    "explanation": "Australia is the only country that occupies an entire continent. Its outline is a broad, blocky landmass with the Gulf of Carpentaria notched into the north and Tasmania hanging off the southeast like an earring."
+   }
+  ]
+ },
+ "summary": {
+  "gpt-4o": {
+   "valid_json": 10,
+   "n": 10,
+   "names_country_in_question": 1,
+   "has_alternative_answers": 10
+  },
+  "claude-sonnet-5-5": {
+   "valid_json": 10,
+   "n": 10,
+   "names_country_in_question": 1,
+   "has_alternative_answers": 10
+  }
+ },
+ "metered_cost_cents": 6.516
+}

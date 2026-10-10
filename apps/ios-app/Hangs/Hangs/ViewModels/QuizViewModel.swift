@@ -133,6 +133,10 @@ final class QuizViewModel: ObservableObject {
     }
 
     @Published var currentSession: QuizSession?
+    /// #198.4: the custom pack this set plays, nil for the shared library. The
+    /// session response does not echo it, so it is kept from the start call;
+    /// the quiz cards take the pack's colour from it.
+    @Published private(set) var activePackId: String?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -1278,6 +1282,7 @@ final class QuizViewModel: ObservableObject {
             }
 
             currentSession = session
+            activePackId = packId
             persistenceStore.saveSession(id: session.id)
             prefetchErrorPrompt()
 

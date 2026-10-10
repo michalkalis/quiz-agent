@@ -95,12 +95,12 @@ struct MyPacksView: View {
     // MARK: - Rows
 
     /// #194 C8 (canvas Dec-Now-Packs): each order as a white card with its
-    /// pack drawn as a small ink deck (the count on the front card), status
+    /// pack drawn as a small deck in its colour (the count on the front card), status
     /// caps, title, and the one action the order allows.
     private func orderRow(_ order: OrderSnapshot) -> some View {
         HangsCard(padding: EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 16)) {
             HStack(alignment: .top, spacing: Theme.Hangs.Spacing.md) {
-                PackMiniDeck(label: deckLabel(order))
+                PackMiniDeck(label: deckLabel(order), style: Theme.Hangs.Category.style(forPack: order.colorKey))
                     .opacity(order.isFailure ? 0.4 : 1)
 
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {

@@ -13,22 +13,25 @@ import SwiftUI
 /// top-right (replay, verdict badge). Fills the space it is given; content
 /// below the header is the caller's (question text, verdict, answer sticker).
 struct HangsDeckCard<Accessory: View, Content: View>: View {
-    let categoryId: String?
-    let categoryName: String
+    let style: Theme.Hangs.Category.Style
+    /// The chip's text; nil hides the chip (a category outside the taxonomy).
+    let categoryName: String?
     /// The screen's identifier for the category chip (`question.category`).
     var categoryIdentifier: String?
     @ViewBuilder var accessory: () -> Accessory
     @ViewBuilder var content: () -> Content
 
-    private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(for: categoryId) }
-
     var body: some View {
         VStack(alignment: .leading, spacing: DeckCardMetrics.headerGap) {
             HStack(alignment: .center) {
-                HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+                if let categoryName {
+                    HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+                }
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
                 accessory()
             }
+            // Keeps the header row's height when there is neither chip nor accessory.
+            .frame(minHeight: DeckCardMetrics.chipHeight)
             content()
         }
         .foregroundStyle(style.text)
@@ -54,18 +57,37 @@ private enum DeckCardMetrics {
 
 extension HangsDeckCard where Accessory == EmptyView {
     init(
-        categoryId: String?,
-        categoryName: String,
+        style: Theme.Hangs.Category.Style,
+        categoryName: String?,
         categoryIdentifier: String? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.init(
-            categoryId: categoryId,
+            style: style,
             categoryName: categoryName,
             categoryIdentifier: categoryIdentifier,
             accessory: { EmptyView() },
             content: content
         )
+    }
+}
+
+/// #198: what a quiz card shows for a question — its fill and chip. A custom
+/// pack's question wears the pack's own colour and says "Custom pack"; any
+/// other takes its category's colour and name, and a category outside the
+/// taxonomy gets the cobalt fallback and no chip (never a raw id).
+struct DeckIdentity {
+    let style: Theme.Hangs.Category.Style
+    let chipName: String?
+
+    init(category: String?, packId: String?) {
+        if let packId {
+            style = Theme.Hangs.Category.style(forPack: packId)
+            chipName = String(localized: "Custom pack", comment: "Chip on a question card dealt from the player's own pack")
+        } else {
+            style = Theme.Hangs.Category.style(for: category)
+            chipName = category.flatMap(Config.categoryDisplayName(for:))
+        }
     }
 }
 
@@ -158,10 +180,10 @@ struct HangsAnswerSticker: View {
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            HangsDeckCard(categoryId: "geography-world", categoryName: "Geografia a svet") {
+            HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Geografia a svet") {
                 Text("Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
             }
-            HangsDeckCard(categoryId: "sports", categoryName: "Šport") {
+            HangsDeckCard(style: Theme.Hangs.Category.style(for: "sports"), categoryName: "Šport") {
                 HangsAnswerSticker(text: "Jedenásť")
             }
         }

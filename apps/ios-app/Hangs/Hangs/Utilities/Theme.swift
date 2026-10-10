@@ -187,8 +187,28 @@ extension Theme.Hangs {
             case "sports": return Style(fill: Color(light: Palette.yellow, dark: Palette.yellowDark), text: inkText)
             case "food-everyday": return Style(fill: Color(light: Palette.violet, dark: Palette.violetDark), text: .white)
             case "entertainment": return Style(fill: Color(light: Palette.lime, dark: Palette.limeDark), text: inkText)
-            default: return Style(fill: Color(light: Palette.ink, dark: Palette.nightInset), text: .white) // custom packs, mixed
+            // #198: an unknown or missing category is cobalt, never ink — a
+            // black card read as "broken" (founder, 2026-10-10).
+            default: return Style(fill: Color(light: Palette.cobalt, dark: Palette.cobaltDark), text: .white)
             }
+        }
+
+        /// #198.4: a custom pack takes one colour of the category palette,
+        /// picked from its id so the same pack is the same colour on every
+        /// screen and every launch (no backend field). nil → the fallback.
+        static func style(forPack key: String?) -> Style {
+            guard let key else { return style(for: nil) }
+            return style(for: taxonomy[stableIndex(of: key, count: taxonomy.count)])
+        }
+
+        /// FNV-1a over the UTF-8 bytes. `hashValue` is reseeded per launch,
+        /// so it cannot pick a colour that must stay put.
+        static func stableIndex(of key: String, count: Int) -> Int {
+            var hash: UInt32 = 2_166_136_261
+            for byte in key.utf8 {
+                hash = (hash ^ UInt32(byte)) &* 16_777_619
+            }
+            return Int(hash % UInt32(count))
         }
 
         /// Ids in display order — the multi-colour "all categories" strip.

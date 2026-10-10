@@ -2,9 +2,10 @@
 //  PackMiniDeck.swift
 //  Hangs
 //
-//  #194 C8 — a custom pack drawn as a small deck: two cards behind an ink
-//  front card that carries a count (canvas Dec-Now-Packs, Bg-PackGenerating).
-//  Custom packs are ink, like their question cards. Decoration only.
+//  #194 C8 — a custom pack drawn as a small deck: two cards behind a front
+//  card that carries a count (canvas Dec-Now-Packs, Bg-PackGenerating).
+//  #198.4: each pack wears its own palette colour, like its question cards.
+//  Decoration only.
 //
 
 import SwiftUI
@@ -29,10 +30,11 @@ struct PackMiniDeck: View {
     }
 
     let label: String
+    /// The pack's colour (`Category.style(forPack:)`).
+    let style: Theme.Hangs.Category.Style
     var size: Size = .row
 
     var body: some View {
-        let style = Theme.Hangs.Category.style(for: nil)
         ZStack(alignment: .bottomLeading) {
             card(style.fill.opacity(0.55))
                 .rotationEffect(.degrees(-8))

@@ -162,7 +162,7 @@ struct OrderPackFormStep: View {
     }
 }
 
-/// #194 C8 (canvas Bg-OrderPack): the pack as it will look — an ink card on
+/// #194 C8 (canvas Bg-OrderPack): the pack as it will look — a card on
 /// top of the deck, printing the topic while it is typed. Decoration only;
 /// the text field below is the input.
 private struct PackPreviewCard: View {

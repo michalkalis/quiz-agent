@@ -85,7 +85,7 @@ struct HomeCategoryPicker: View {
                 checkMark(isOn: isOn, style: style)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer(minLength: 0)
-                Text(verbatim: Config.categoryDisplayName(for: id))
+                Text(verbatim: Config.categoryDisplayName(for: id) ?? "")
                     .font(.hangsLabel)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)

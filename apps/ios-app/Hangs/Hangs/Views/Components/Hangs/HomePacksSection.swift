@@ -76,7 +76,7 @@ struct HomePacksSection: View {
     var body: some View {
         let visible = Self.visibleOrders(viewModel.orders)
         if !visible.isEmpty {
-            // #194 C1: the packs as small ink cards (custom packs = ink, like
+            // #194 C1: the packs as small cards (#198.4: each in its own colour, like
             // their question cards), two per row; one per row at accessibility
             // text so a title never truncates.
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
@@ -143,7 +143,7 @@ struct HomePacksSection: View {
     }
 }
 
-/// One custom pack on Home: ink card, play control top-right, title and its
+/// One custom pack on Home: a card in the pack's colour, play control top-right, title and its
 /// honest count (#182: playable from the first persisted batch).
 private struct HomePackCard: View {
     enum Metrics {
@@ -158,7 +158,8 @@ private struct HomePackCard: View {
     let isPlayDisabled: Bool
     let onPlay: (String) -> Void
 
-    private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(for: nil) }
+    /// #198.4: the pack's own palette colour, the same on its question cards.
+    private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(forPack: order.colorKey) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {

@@ -6954,6 +6954,29 @@
         }
       }
     },
+    "SET RESULT" : {
+      "comment" : "Recap hero label when the set has no named category (#198)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VÝSLEDEK KVÍZU"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VÝSLEDOK KVÍZU"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QUIZ RESULT"
+          }
+        }
+      }
+    },
     "SET RESULT · %@" : {
       "comment" : "Recap hero label; placeholder is the category (#132 E)",
       "localizations" : {

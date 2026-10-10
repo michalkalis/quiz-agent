@@ -187,8 +187,14 @@ struct RoundCompleteView: View {
 
     private var listHeader: some View {
         HStack(alignment: .center, spacing: Theme.Hangs.Spacing.xs) {
-            HangsSectionLabel(text: "SET RESULT · \(categoryName)")
-                .lineLimit(2)
+            Group {
+                if let categoryName {
+                    HangsSectionLabel(text: "SET RESULT · \(categoryName)")
+                } else {
+                    HangsSectionLabel(text: "SET RESULT")
+                }
+            }
+            .lineLimit(2)
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             if route == .recap {
                 summaryControl
@@ -196,8 +202,9 @@ struct RoundCompleteView: View {
         }
     }
 
-    private var categoryName: String {
-        viewModel.recapEntries.first.map { Config.categoryDisplayName(for: $0.category) } ?? ""
+    /// #198: nil for a category outside the taxonomy — the label then names no category.
+    private var categoryName: String? {
+        viewModel.recapEntries.first.flatMap { Config.categoryDisplayName(for: $0.category) }
     }
 
     /// End-of-set route: the spoken summary (it starts by itself hands-free).

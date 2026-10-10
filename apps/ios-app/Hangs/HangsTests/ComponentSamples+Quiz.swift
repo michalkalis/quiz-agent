@@ -30,21 +30,23 @@ nonisolated extension ComponentSample {
                 HangsQuestionPrompt(text: "Ktorý európsky štát má najdlhšie pobrežie, ak nerátame zámorské územia a ostrovy?")
             },
             // #194 B2: the category card — one sample per text colour rule
-            // (white on cobalt, ink on yellow, white on the custom-pack ink card).
+            // (white on cobalt, ink on yellow); #198.4: a custom pack in its own
+            // palette colour with the "Custom pack" chip.
             ComponentSample("deckCard.question") {
-                HangsDeckCard(categoryId: "geography-world", categoryName: "Geografia a svet") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Geografia a svet") {
                     Text(verbatim: "Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
                 }
                 .frame(height: 260)
             },
             ComponentSample("deckCard.resultSticker") {
-                HangsDeckCard(categoryId: "sports", categoryName: "Šport") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "sports"), categoryName: "Šport") {
                     HangsAnswerSticker(text: "Jedenásť")
                 }
                 .frame(height: 180)
             },
             ComponentSample("deckCard.customPack") {
-                HangsDeckCard(categoryId: nil, categoryName: "Slovenské hrady") {
+                let pack = DeckIdentity(category: "general", packId: "pack-slovak-castles")
+                HangsDeckCard(style: pack.style, categoryName: pack.chipName) {
                     Text(verbatim: "Na ktorom hrade sa natáčal Nosferatu?").font(.hangsDisplay(28))
                 }
                 .frame(height: 200)

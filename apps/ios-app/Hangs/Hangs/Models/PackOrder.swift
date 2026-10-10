@@ -170,6 +170,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         case prompt
     }
 
+    /// #198.4: the pack's colour key — its pack id once one exists, the order
+    /// id before that, so every order row has a colour of its own.
+    var colorKey: String { packId ?? orderId }
+
     /// The order finished successfully and `packId` is populated.
     var isDelivered: Bool { status == "delivered" }
 

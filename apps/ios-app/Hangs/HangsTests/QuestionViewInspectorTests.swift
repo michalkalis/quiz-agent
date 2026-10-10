@@ -54,7 +54,7 @@ struct QuestionViewMCQInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let category = try tree.find(viewWithAccessibilityIdentifier: "question.category")
-            #expect(try category.text().string() == "ADULTS")
+            #expect(try category.text().string() == Config.categoryDisplayName(for: "science-nature")?.uppercased())
             #expect(throws: Never.self) { try tree.find(text: "1/10") }
             #expect(throws: (any Error).self, "the merged #125 row is gone") {
                 try tree.find(text: "adults · Q1")
@@ -292,7 +292,7 @@ struct QuestionViewVoiceInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            // category is "adults" — lowercased
+            // category is "geography-world" — a taxonomy id, so the chip shows
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "question.category")
             }

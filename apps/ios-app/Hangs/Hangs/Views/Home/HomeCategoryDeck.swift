@@ -48,7 +48,7 @@ struct HomeCategoryDeck: View {
 
     private func backCard(_ id: String) -> some View {
         let style = Theme.Hangs.Category.style(for: id)
-        return Text(verbatim: Config.categoryDisplayName(for: id))
+        return Text(verbatim: Config.categoryDisplayName(for: id) ?? "")
             .textCase(.uppercase)
             .font(.hangsOverline)
             .lineLimit(1)

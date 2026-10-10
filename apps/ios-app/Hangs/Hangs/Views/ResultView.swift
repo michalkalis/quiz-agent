@@ -143,14 +143,20 @@ struct ResultView: View {
     /// `resultQuestion` first so an advanced quiz can't re-target the rating.
     private var resultQuestionModel: Question? { viewModel.resultQuestion ?? viewModel.currentQuestion }
 
-    private var cardStyle: Theme.Hangs.Category.Style {
-        Theme.Hangs.Category.style(for: resultQuestionModel?.category)
+    /// #198: the playing pack's colour, else the question's category.
+    private var deckIdentity: DeckIdentity {
+        DeckIdentity(
+            category: resultQuestionModel?.category,
+            packId: viewModel.activePackId ?? resultQuestionModel?.packId
+        )
     }
+
+    private var cardStyle: Theme.Hangs.Category.Style { deckIdentity.style }
 
     private var resultCard: some View {
         HangsDeckCard(
-            categoryId: resultQuestionModel?.category,
-            categoryName: resultQuestionModel.map { Config.categoryDisplayName(for: $0.category) } ?? "",
+            style: cardStyle,
+            categoryName: deckIdentity.chipName,
             categoryIdentifier: "question.category"
         ) {
             ResultVerdictBadge(verdict: verdict, style: cardStyle)

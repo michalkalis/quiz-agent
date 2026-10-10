@@ -395,6 +395,11 @@ struct QuestionView: View {
 
     // MARK: - Question card (#194 "Sklo nad kartami")
 
+    /// #198: the card's colour and chip — the playing pack's own colour, else the category's.
+    private func deckIdentity(_ question: Question) -> DeckIdentity {
+        DeckIdentity(category: question.category, packId: viewModel.activePackId ?? question.packId)
+    }
+
     /// The question printed on its category card (R-Question / R-MCQ): the chip
     /// names the category, the replay glyph sits top-right. The question block
     /// inside the card's scroll region is the tap-to-replay target (it fills
@@ -405,9 +410,10 @@ struct QuestionView: View {
     /// accessibility tree, and `question.text` vanished for XCUITest and
     /// VoiceOver alike (#316 CI).
     private func questionCard(_ question: Question, @ViewBuilder content: @escaping () -> some View) -> some View {
-        HangsDeckCard(
-            categoryId: question.category,
-            categoryName: Config.categoryDisplayName(for: question.category),
+        let identity = deckIdentity(question)
+        return HangsDeckCard(
+            style: identity.style,
+            categoryName: identity.chipName,
             categoryIdentifier: "question.category"
         ) {
             // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
@@ -682,7 +688,7 @@ struct QuestionView: View {
         let chrome = max(0, stemCardHeight - stemRegionHeight)
         let natural = stemContentHeight + chrome
         let floor = max(baseFloor, min(natural, screenHeight * Metrics.stemMaxShare))
-        let fill = Theme.Hangs.Category.style(for: question.category)
+        let fill = deckIdentity(question).style
         return questionCard(question) {
             GeometryReader { geo in
                 ScrollView(.vertical) {

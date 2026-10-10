@@ -107,10 +107,11 @@ nonisolated enum Config {
         ("entertainment", String(localized: "Entertainment", comment: "Quiz category option")),
     ]
 
-    /// Human-readable (localized) name for a category id: taxonomy ids map
-    /// through `categoryOptions`; free-form pack categories display as-is.
-    static func categoryDisplayName(for id: String) -> String {
-        categoryOptions.first { $0.id == id }?.display ?? id
+    /// Human-readable (localized) name for a taxonomy category id; nil for
+    /// anything else (#198: a raw id like "general" or "adults" must never
+    /// reach the screen — the caller shows nothing instead).
+    static func categoryDisplayName(for id: String) -> String? {
+        categoryOptions.first { $0.id == id }?.display
     }
 
     /// Available age-appropriate filter options (nil = no filter / show all)

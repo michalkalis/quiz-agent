@@ -21,11 +21,11 @@ struct OrderPackPreparingStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
-            // #194 C8: the pack being dealt — the ink deck, a spinner on it.
+            // #194 C8: the pack being dealt — the deck, a spinner on it.
             ZStack {
-                PackMiniDeck(label: "", size: .hero)
+                PackMiniDeck(label: "", style: Theme.Hangs.Category.style(forPack: nil), size: .hero)
                 ProgressView()
-                    .tint(Theme.Hangs.Category.style(for: nil).text)
+                    .tint(Theme.Hangs.Category.style(forPack: nil).text)
             }
             .padding(.top, Theme.Hangs.Spacing.lg)
 
@@ -77,7 +77,11 @@ struct OrderPackReadyStep: View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
             // #194 C8 (canvas Bg-PackGenerating): the dealt deck with the
             // playable count, a check, the headline, one segment per question.
-            PackMiniDeck(label: "\(isStillGenerating ? readyCount : targetCount)", size: .hero)
+            PackMiniDeck(
+                label: "\(isStillGenerating ? readyCount : targetCount)",
+                style: Theme.Hangs.Category.style(forPack: packId),
+                size: .hero
+            )
                 .padding(.top, Theme.Hangs.Spacing.lg)
 
             VStack(spacing: Theme.Hangs.Spacing.sm) {

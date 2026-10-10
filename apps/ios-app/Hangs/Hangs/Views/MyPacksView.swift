@@ -108,10 +108,17 @@ struct MyPacksView: View {
                         .font(.hangsOverline)
                         .textCase(.uppercase)
                         .foregroundStyle(statusColor(order))
-                    Text(verbatim: order.category ?? order.language.uppercased())
+                    Text(verbatim: order.displayTitle)
                         .font(.hangsHeading)
                         .foregroundStyle(Theme.Hangs.Colors.ink)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    if order.topic != nil {
+                        Text(verbatim: Language.forCode(order.language)?.nativeName ?? order.language.uppercased())
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .accessibilityIdentifier("myPacks.language")
+                    }
 
                     // #182: a pack is playable from its FIRST persisted batch, so an
                     // order still `in_progress` with a packId plays now and keeps

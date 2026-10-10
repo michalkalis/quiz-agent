@@ -241,6 +241,43 @@ struct PackOrderCodableTests {
         #expect(!order.isStillGenerating)
     }
 
+    // TestFlight 2026-10-10: every pack card read just "EN". The server now
+    // sends the buyer's prompt and the card is titled by it; an older server
+    // (no key) must still decode and fall back to the previous title.
+    @Test("the prompt titles the card; without it the old category / language title stays")
+    func promptTitlesTheCard() throws {
+        func order(_ extra: String) throws -> OrderSnapshot {
+            try decode(OrderSnapshot.self, """
+            {
+              "order_id": "44444444-4444-4444-4444-444444444444",
+              "status": "delivered",
+              "product_id": "pack_30",
+              "target_count": 30,
+              "language": "sk",
+              "category": null,
+              "theme": null,
+              "created_at": "2026-07-13T09:50:00Z",
+              "delivered_at": null,
+              "pack_id": null,
+              "llm_cost_usd": null,
+              "search_cost_cents": 0,
+              "job": null\(extra)
+            }
+            """)
+        }
+        let withPrompt = try order(#", "prompt": "  Slovak castles  ""#)
+        #expect(withPrompt.prompt == "  Slovak castles  ")
+        #expect(withPrompt.displayTitle == "Slovak castles")
+
+        let oldServer = try order("")
+        #expect(oldServer.prompt == nil)
+        #expect(oldServer.displayTitle == "SK")
+
+        let blank = try order(#", "prompt": "   ""#)
+        #expect(blank.topic == nil, "a blank prompt must not title the card with nothing")
+        #expect(blank.displayTitle == "SK")
+    }
+
     @Test("an unknown pack_generation_status decodes and still plays — never crash on a future enum")
     func decodesUnknownGenerationStatus() throws {
         let json = """

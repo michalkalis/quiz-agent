@@ -165,10 +165,17 @@ private struct HomePackCard: View {
             playControl
                 .frame(maxWidth: .infinity, alignment: .trailing)
             Spacer(minLength: Theme.Hangs.Spacing.xs)
-            Text(verbatim: order.category ?? order.language.uppercased())
+            Text(verbatim: order.displayTitle)
                 .font(.hangsLabel)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            if order.topic != nil {
+                Text(verbatim: Language.forCode(order.language)?.nativeName ?? order.language.uppercased())
+                    .font(.hangsCaption)
+                    .foregroundStyle(style.text.opacity(0.72))
+                    .lineLimit(1)
+                    .accessibilityIdentifier("home.myPacks.language")
+            }
             subtitle
             if order.isStillGenerating {
                 readyBar

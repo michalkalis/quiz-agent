@@ -180,7 +180,9 @@ extension OrderSnapshot {
             updatedAt: "2026-07-13T10:05:00Z"
         ),
         actualCount: 30,
-        packGenerationStatus: "complete"
+        packGenerationStatus: "complete",
+        // Long on purpose: the card title is one line and must truncate.
+        prompt: "Famous bridges of the world and the engineers who built them"
     )
 
     /// #182: playable but still growing — the first batches are persisted while

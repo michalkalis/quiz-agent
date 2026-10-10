@@ -1,7 +1,8 @@
 # texts
 30
 Delivered
-history
+Famous bridges of the world and the engineers who built them
+English
 Spusti kvíz
 5
 Preparing
@@ -17,6 +18,7 @@ EN
 Skús znova
 Vytvor balík
 # identifiers
+myPacks.language
 myPacks.startQuiz
 myPacks.readyCount
 myPacks.startQuiz

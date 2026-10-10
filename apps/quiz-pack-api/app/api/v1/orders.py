@@ -147,6 +147,11 @@ class OrderSnapshotResponse(BaseModel):
     language: str
     category: Optional[str]
     theme: Optional[str]
+    # The topic the buyer typed — the only thing that tells two packs apart
+    # on Home / My packs (TestFlight 2026-10-10: cards read just "EN").
+    # Additive and nullable so older clients keep decoding. Only ever served
+    # to the order's owner (or the admin key), like the rest of the snapshot.
+    prompt: Optional[str] = None
     created_at: datetime
     delivered_at: Optional[datetime]
     pack_id: Optional[uuid.UUID]
@@ -518,6 +523,7 @@ def _order_snapshot(
         language=order.language,
         category=order.category,
         theme=order.theme,
+        prompt=order.prompt,
         created_at=order.created_at,
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,

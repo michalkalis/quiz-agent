@@ -205,3 +205,30 @@ async def test_list_orders_empty_for_unknown_account(
     resp = await client.get("/v1/orders", headers=_bearer("nobody"))
     assert resp.status_code == 200
     assert resp.json()["orders"] == []
+
+
+@pytest.mark.asyncio
+async def test_list_and_get_return_the_owners_prompt(client: httpx.AsyncClient) -> None:
+    """The pack card on Home / My packs is titled by the buyer's own topic —
+    without it every card read just the language code ("EN") and the founder
+    couldn't tell packs apart. The prompt is the owner's own text, so it is
+    served on the same owner-only reads as the rest of the snapshot, and a
+    stranger still gets nothing."""
+    body = _admin_body("prompt-1")
+    body["prompt"] = "Famous bridges of Slovakia"
+    resp = await client.post(
+        "/v1/orders", json=body, headers={**ADMIN, **_bearer("prompt-owner")}
+    )
+    assert resp.status_code == 202, resp.text
+    order_id = resp.json()["order_id"]
+
+    listed = (await client.get("/v1/orders", headers=_bearer("prompt-owner"))).json()["orders"]
+    assert [o["prompt"] for o in listed] == ["Famous bridges of Slovakia"]
+
+    got = await client.get(f"/v1/orders/{order_id}", headers=_bearer("prompt-owner"))
+    assert got.status_code == 200
+    assert got.json()["prompt"] == "Famous bridges of Slovakia"
+
+    stranger = await client.get(f"/v1/orders/{order_id}", headers=_bearer("someone-else"))
+    assert stranger.status_code == 403
+    assert "Famous bridges" not in stranger.text

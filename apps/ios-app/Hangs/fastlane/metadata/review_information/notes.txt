@@ -3,7 +3,7 @@ Trubbo is a voice-first trivia quiz. No account or sign-in is required: an anony
 How to test: allow the microphone when asked, tap Start, listen to the question being read aloud and answer out loud in your own words. AI evaluates the spoken answer. Every answer can also be typed (Type answer instead), so the app can be reviewed without speaking.
 
 In-app purchases:
-• Trubbo Unlimited (monthly auto-renewable subscription) and the 100 Question Pack: on the paywall, shown when the 30 free monthly questions run out, and under Settings › Subscription. The paywall shows price, period, Restore purchases, Privacy Policy and Terms of Use.
+• Trubbo Plus (monthly auto-renewable subscription, 1,000 questions a month) and the 100 Question Pack: on the paywall, shown when the 30 free monthly questions run out, and under Settings › Subscription. The paywall shows price, period, Restore purchases, Privacy Policy and Terms of Use.
 • Custom Pack, 30 Questions (consumable): Settings › Create a pack, type any topic, pay, and the pack is generated on our server within a few minutes. It then appears under My packs and on the home screen.
 
 Data: Settings › Export my data and Delete my data work without sign-in. The app is meant for hands-free use, including in the car; the Terms of Use contain a driving safety notice.

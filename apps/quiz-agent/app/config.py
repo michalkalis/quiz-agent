@@ -170,6 +170,15 @@ class Settings(BaseSettings):
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
     elevenlabs_critical_pct: float = 10.0
+    # Question stock early warning (#199): the daily check counts playable
+    # questions per (language × category) and fresh entertainment questions per
+    # language, and raises a Sentry issue when one runs low so generation can
+    # start ahead of time. Opt-in like the balance check (on in fly.toml).
+    question_stock_check_enabled: bool = False
+    question_stock_initial_delay_s: float = 180.0
+    question_stock_min_per_cell: int = 50
+    question_stock_min_fresh: int = 15
+    question_stock_fresh_horizon_days: int = 14
     # Remote app switches (#193 task 193.9), served by `GET /api/v1/app-config`
     # so they change with a Fly secret/env update, no code deploy. Defaults
     # are permissive: no minimum version, orders on, no notice. A minimum is a

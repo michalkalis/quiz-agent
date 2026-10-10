@@ -371,6 +371,15 @@ async def lifespan(app: FastAPI):
         from .monitoring.provider_balances import run_daily_balance_check
 
         balance_task = asyncio.create_task(run_daily_balance_check(settings))
+    # #199: daily question-stock check → Sentry alert before a (language ×
+    # category) or the fresh entertainment stock runs out.
+    stock_task = None
+    if settings.question_stock_check_enabled:
+        from .monitoring.question_stock import run_daily_stock_check
+
+        stock_task = asyncio.create_task(
+            run_daily_stock_check(settings, question_retriever)
+        )
 
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
@@ -381,6 +390,8 @@ async def lifespan(app: FastAPI):
     await session_manager.stop_cleanup()
     if balance_task is not None:
         balance_task.cancel()
+    if stock_task is not None:
+        stock_task.cancel()
     await drain_pending()
     logger.info("Cleanup stopped")
 

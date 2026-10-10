@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 199 | [Stráženie zásoby otázok + Trubbo Plus s mesačným limitom](issue-199-question-stock-fair-use.md) | enhancement · in-progress | `[~]` #199 | Založené 2026-10-10; 199.1 denná kontrola zásoby (Sentry + admin endpoint) kód hotový, ďalej 199.2 limit 1 000/mesiac + podmienky, 199.3 appka, 199.4 obchod + web |
 | 197 | [Nahrávky odpovedí z auta → automatické testy celej hlasovej cesty](issue-197-voice-replay-corpus.md) | enhancement · ready | `[ ]` #197 | Založené 2026-10-10; upload nahrávok s kontextom na server (len TF, len founder), označovanie chýb, replay skript; iOS zmena → TF build na požiadanie |
 | 196 | [AI volania čo najviac na priame Anthropic API (Max kredit)](issue-196-anthropic-consolidation.md) | enhancement · in-progress | `[~]` #196 | Založené 2026-10-09; 196.1+196.2 hotové a nasadené (PR #323); ďalej Haiku 5.5 eval |
 | 195 | [Čerstvé otázky: časovo obmedzené 2× zvýhodnenie pri výbere](issue-195-fresh-entertainment-boost.md) | enhancement · in-progress | `[~]` #195 | Založené 2026-10-08; LLM určí okno aktuálnosti (týždeň → natrvalo), výber v quiz-agent váži 2×; nasadenie quiz-pack-api (migrácia `e195b0057a11`) → quiz-agent; open = čerstvá dávka 50 en/sk/cs |

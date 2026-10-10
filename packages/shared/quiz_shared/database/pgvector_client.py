@@ -200,6 +200,21 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
             clauses.append(or_(col.in_(value["$in_or_null"]), col.is_(None)))
         elif isinstance(value, dict) and "$ne" in value:
             clauses.append(col != value["$ne"])
+        elif isinstance(value, dict) and ("$gt" in value or "$lt" in value):
+            # Open range on one column (#199 — "boosted past a horizon but not
+            # forever"): both bounds may sit in the same dict. Anything else
+            # beside them is a typo; fail loud like an unknown filter key,
+            # since a dropped bound silently widens the count.
+            extra = set(value) - {"$gt", "$lt"}
+            if extra:
+                raise ValueError(
+                    f"Unsupported operators {sorted(extra)} beside $gt/$lt on "
+                    f"{key!r} — a range dict takes only $gt and $lt."
+                )
+            if "$gt" in value:
+                clauses.append(col > value["$gt"])
+            if "$lt" in value:
+                clauses.append(col < value["$lt"])
         elif value is not None and isinstance(col.type, PGUUID):
             # UUID columns (pack_id, #95): asyncpg binds a uuid.UUID, not a raw
             # str — coerce like every other UUID-column touch point (delete/

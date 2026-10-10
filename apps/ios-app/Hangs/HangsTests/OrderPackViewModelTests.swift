@@ -236,22 +236,73 @@ struct OrderPackViewModelTests {
         #expect(vm.state == .editing)
         #expect(vm.orderId == nil, "a fresh form must not still point at the finished order")
         #expect(!vm.prompt.isEmpty, "the typed topic is kept — retyping it is pure friction")
-        // #168 DD15: packs are generated in English and only stamped with the
-        // code, so the order language degrades to the one orderable language
-        // rather than inheriting a quiz language the server would reject.
-        #expect(vm.language == "en", "a fresh order follows the current orderable language")
+        // A fresh order follows the quiz language again (packs are sk/cs native
+        // since #192), not whatever the finished order used.
+        #expect(vm.language == "sk", "a fresh order follows the current quiz language")
     }
 
     // MARK: - Language preselection
 
     @Test("a quiz language packs cannot be ordered in degrades instead of reaching the server")
     func languageDegradesToAnOrderableCode() {
-        // #168 DD15: the order picker offers `pack_order` (English-only today),
-        // not the quiz list — preselecting Slovak here would send the server a
-        // language it cannot generate a pack in.
-        let vm = makeOrderPackViewModel()
+        // The order picker offers the server's `pack_order` list, which can be
+        // narrower than the quiz one — preselecting a code outside it would
+        // send the server a language it cannot generate a pack in.
+        let vm = makeOrderPackViewModel(orderLanguageCodes: ["en"])
         vm.prepareForPresentation(defaultLanguage: "sk")
         #expect(vm.language == "en")
+    }
+
+    // WHY (TestFlight 2026-10-09): with the quiz in Slovak the form showed
+    // English, because the launch language fetch met a cold pack API and the
+    // compiled fallback was ["en"]. Slovak must preselect without any fetch.
+    @Test("a Slovak quiz language preselects a Slovak pack even before any language fetch")
+    func slovakQuizPreselectsSlovakPackOnFallback() {
+        let vm = makeOrderPackViewModel()
+        vm.prepareForPresentation(defaultLanguage: "sk")
+        #expect(vm.language == "sk")
+    }
+
+    // WHY: a stale cached list (e.g. an older ["en"]) must not stick for the
+    // session — opening the form re-fetches and fixes the preselection, but
+    // never overrides a language the user picked by hand.
+    @Test("opening the form re-fetches languages and redoes the preselection")
+    func refreshRedoesPreselection() async {
+        var codes = ["en"]
+        let vm = OrderPackViewModel(
+            service: MockPackOrderService(),
+            purchaseService: MockPackPurchaseService(),
+            adminKeyAvailable: { true },
+            orderLanguages: { Language.selectableLanguages(in: codes) },
+            refreshLanguages: { codes = ["en", "sk", "cs"] },
+            clock: AnyClock(ImmediateClock())
+        )
+        vm.prepareForPresentation(defaultLanguage: "sk")
+        #expect(vm.language == "en", "the stale list can't offer Slovak yet")
+
+        await vm.refreshOrderLanguages()
+        #expect(vm.language == "sk")
+        #expect(vm.availableLanguages.map(\.id) == ["en", "sk", "cs"])
+
+        vm.selectLanguage("en")
+        await vm.refreshOrderLanguages()
+        #expect(vm.language == "en", "an explicit pick survives a refresh")
+    }
+
+    // MARK: - Price
+
+    // WHY: the founder couldn't see what the pack costs before paying. The
+    // summary shows StoreKit's localized price, and nothing — never a guessed
+    // number — when StoreKit can't answer.
+    @Test("the summary price comes from StoreKit, and is absent when it can't load")
+    func priceLoadsFromPurchaseService() async {
+        let priced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"))
+        await priced.loadPrice()
+        #expect(priced.packPrice == "8,99 €")
+
+        let unpriced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: nil))
+        await unpriced.loadPrice()
+        #expect(unpriced.packPrice == nil)
     }
 
     @Test("the form preselects the quiz language, and an explicit pick survives reopen")

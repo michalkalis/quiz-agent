@@ -3,9 +3,12 @@ Custom pack · 30 questions
 Famous bridges of the world and the engineers who built them
 Quiz language
 English
+Price
+8,99 €
 Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.
 Pay & create pack
 # identifiers
 orderPack.summaryPrompt
+orderPack.price
 orderPack.noCancelNotice
 orderPack.pay

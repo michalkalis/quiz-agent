@@ -49,7 +49,11 @@ extension AppScreen {
         // the baseline to the simulator model.
         return AnyView(
             VStack {
-                HomePacksSection(viewModel: vm, onPlayPack: { _ in })
+                HomePacksSection(
+                    viewModel: vm,
+                    createPack: .init(appConfig: AppConfigStore(fetch: { .permissive }), action: {}),
+                    onPlayPack: { _ in }
+                )
                 Spacer()
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)

@@ -3,9 +3,12 @@ Vlastní balíček · 30 otázek
 Famous bridges of the world and the engineers who built them
 Jazyk kvízu
 English
+Cena
+8,99 €
 Po zaplacení už objednávku nelze zrušit. Generování balíčku je prémiová placená služba a spustí se okamžitě.
 Zaplať a vytvoř balíček
 # identifiers
 orderPack.summaryPrompt
+orderPack.price
 orderPack.noCancelNotice
 orderPack.pay

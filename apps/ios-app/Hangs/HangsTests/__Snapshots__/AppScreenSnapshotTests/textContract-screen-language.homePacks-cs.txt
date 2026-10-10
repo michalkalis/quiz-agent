@@ -6,9 +6,11 @@ history
 5 z 30 připravených
 EN
 Preparing
+Vytvoř si vlastní balíček
 # identifiers
 home.myPacksSection
 home.myPacks.showAll
 home.myPacks.play
 home.myPacks.play
 home.myPacks.readyCount
+home.createPack

@@ -7,8 +7,9 @@
 //  "Pay & create pack" tap is the point of no return, because generation starts
 //  immediately and costs real money on the first call.
 //
-//  No price row yet: StoreKit wiring for the pack product is #140, and inventing
-//  a number here would be worse than showing none.
+//  The price row shows the App Store's localized price for the pack product;
+//  when StoreKit can't return it the row is hidden — inventing a number would
+//  be worse than showing none.
 //
 
 import SwiftUI
@@ -37,6 +38,19 @@ struct OrderPackSummaryStep: View {
                             .font(.hangsBody.weight(.semibold))
                             .foregroundStyle(Theme.Hangs.Colors.ink)
                     }
+
+                    if let price = viewModel.packPrice {
+                        HStack(spacing: Theme.Hangs.Spacing.xs) {
+                            Text("Price")
+                                .font(.hangsBody)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                            Text(verbatim: price)
+                                .font(.hangsBody.weight(.semibold))
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("orderPack.price")
+                    }
                 }
             }
 
@@ -47,6 +61,7 @@ struct OrderPackSummaryStep: View {
             }
             .accessibilityIdentifier("orderPack.pay")
         }
+        .task { await viewModel.loadPrice() }
     }
 
     private var noticeBox: some View {

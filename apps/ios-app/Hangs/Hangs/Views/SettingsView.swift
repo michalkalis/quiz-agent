@@ -161,13 +161,7 @@ struct SettingsView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
-        .sheet(isPresented: $navModel.orderFlowPresented) {
-            OrderPackFlowView(
-                viewModel: appState.orderPackViewModel,
-                onPlayPack: { packId in viewModel.beginQuizStart(packId: packId) },
-                onClose: { navModel.orderFlowPresented = false }
-            )
-        }
+        // The order sheet itself is presented by ContentView, shared with Home.
     }
 
     /// Open the create-pack modal (#138). The view model lives on AppState
@@ -539,7 +533,9 @@ struct SettingsView: View {
                 HangsConfigRow(
                     label: "Sign out",
                     value: "",
-                    valueColor: Theme.Hangs.Colors.muted
+                    valueColor: Theme.Hangs.Colors.error,
+                    showsChevron: false,
+                    labelColor: Theme.Hangs.Colors.error
                 ) {
                     account.signOut(auth: appState.authService)
                 }

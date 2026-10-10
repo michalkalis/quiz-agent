@@ -7,8 +7,9 @@
 //  tap, an in-progress pack shows "Preparing" so a fresh buyer sees their
 //  order exists (founder pick: visible even before the first delivery).
 //  Failed/refunded orders never surface here — Home is a play entry, not an
-//  order-status surface; MyPacksView owns failure comms. Hidden entirely for
-//  signed-out users and empty accounts.
+//  order-status surface; MyPacksView owns failure comms. The pack cards are
+//  hidden for signed-out users and empty accounts; the "Create your own pack"
+//  card under them is always there when the presenter wires it.
 //
 
 import SwiftUI
@@ -18,17 +19,34 @@ struct HomePacksSection: View {
     @StateObject private var viewModel: MyPacksViewModel
     /// Play a delivered pack by its packId (same path as MyPacksView).
     let onPlayPack: (String) -> Void
+    /// The "Create your own pack" card. Nil (inspector tests, previews) hides it.
+    let createPack: CreatePackEntry?
 
-    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void) {
+    struct CreatePackEntry {
+        let appConfig: AppConfigStore
+        let action: () -> Void
+    }
+
+    init(
+        service: PackOrderServiceProtocol,
+        createPack: CreatePackEntry? = nil,
+        onPlayPack: @escaping (String) -> Void
+    ) {
         _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
+        self.createPack = createPack
         self.onPlayPack = onPlayPack
     }
 
     #if DEBUG
         /// Test seam: inject a pre-populated view model so inspector tests can
         /// assert the rendered rows without waiting on the async `.task` load.
-        init(viewModel: MyPacksViewModel, onPlayPack: @escaping (String) -> Void) {
+        init(
+            viewModel: MyPacksViewModel,
+            createPack: CreatePackEntry? = nil,
+            onPlayPack: @escaping (String) -> Void
+        ) {
             _viewModel = StateObject(wrappedValue: viewModel)
+            self.createPack = createPack
             self.onPlayPack = onPlayPack
         }
     #endif
@@ -62,6 +80,9 @@ struct HomePacksSection: View {
                 }
             }
             .accessibilityIdentifier("home.myPacksSection")
+        }
+        if let createPack {
+            HomeCreatePackCard(appConfig: createPack.appConfig, action: createPack.action)
         }
         // Invisible anchor keeps the keep-fresh loop alive even while the
         // section itself renders nothing (first load, or an account whose only

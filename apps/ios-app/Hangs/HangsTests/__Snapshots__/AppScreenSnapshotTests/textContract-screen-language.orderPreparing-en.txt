@@ -1,7 +1,7 @@
 # texts
 
 Building your pack…
-Usually takes a few minutes. The first order after a longer break can take a bit extra.
+Usually takes a few minutes.
 You can close the app. Your finished pack will be waiting in My packs.
 Got it
 # identifiers

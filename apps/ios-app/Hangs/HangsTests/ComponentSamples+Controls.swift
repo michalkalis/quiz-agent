@@ -49,6 +49,15 @@ nonisolated extension ComponentSample {
                 HangsConfigRow(label: "Questions", value: "10", subtitle: "Per quiz", showsChevron: false)
             },
             ComponentSample("configRow.longText") { HangsConfigRow(label: LocalizedStringKey(longSlovak), value: "Zapnuté") {} },
+            ComponentSample("configRow.destructive") {
+                HangsConfigRow(
+                    label: "Sign out",
+                    value: "",
+                    valueColor: Theme.Hangs.Colors.error,
+                    showsChevron: false,
+                    labelColor: Theme.Hangs.Colors.error
+                ) {}
+            },
             ComponentSample("toggleRow.on") { HangsToggleRow(label: "Read questions aloud", isOn: .constant(true)) },
             ComponentSample("toggleRow.off") {
                 HangsToggleRow(label: "Read questions aloud", subtitle: "Uses the car speakers", isOn: .constant(false))

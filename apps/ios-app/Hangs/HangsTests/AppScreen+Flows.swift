@@ -85,8 +85,12 @@ extension AppScreen {
         let service = MockPackOrderService(getResult: .success(orderSnapshot))
         let vm = OrderPackViewModel(
             service: service,
-            purchaseService: MockPackPurchaseService(),
+            purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"),
             adminKeyAvailable: { true },
+            // Pinned to the server default, and no live fetch: the menu must not
+            // depend on what the test host happens to have cached.
+            orderLanguages: { Language.selectableLanguages(in: LanguageAvailability.fallbackPackOrderCodes) },
+            refreshLanguages: {},
             clock: AnyClock(clock)
         )
         vm.prompt = "Famous bridges of the world and the engineers who built them"
@@ -95,6 +99,8 @@ extension AppScreen {
             break
         case .orderSummary:
             vm.advanceToSummary()
+            // Loaded up front: the summary's own `.task` load isn't awaited by a snapshot.
+            await vm.loadPrice()
         default:
             vm.advanceToSummary()
             // Fire-and-forget: `submit()` only returns once the order is terminal,

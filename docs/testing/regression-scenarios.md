@@ -644,13 +644,14 @@ hittable. App alive.
 **Type:** XCUITest (`RSAppConfigTests`). #193 task 193.9.
 
 **Hypothesis:** The server notice on Home can be closed, and
-`PACK_ORDERS_ENABLED=false` keeps "Create a pack" visible but disabled.
+`PACK_ORDERS_ENABLED=false` keeps both create-pack entries (Home card and
+Settings row) visible but disabled.
 
 **Steps:** launch with `--app-config-notice --app-config-orders-off`; tap
-`home.notice.dismiss`; open Settings.
+`home.notice.dismiss`; check the Home card; open Settings.
 
 **Asserts:** `home.notice.text` present, then gone after dismiss;
-`packs.createPack` disabled. App alive.
+`home.createPack` present and disabled; `packs.createPack` disabled. App alive.
 
 ---
 

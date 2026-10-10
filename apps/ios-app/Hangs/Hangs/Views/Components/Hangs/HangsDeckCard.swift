@@ -79,15 +79,24 @@ extension HangsDeckCard where Accessory == EmptyView {
 struct DeckIdentity {
     let style: Theme.Hangs.Category.Style
     let chipName: String?
+    /// The taxonomy id the colour comes from; nil for the cobalt fallback.
+    let paletteId: String?
 
     init(category: String?, packId: String?) {
         if let packId {
-            style = Theme.Hangs.Category.style(forPack: packId)
+            paletteId = Theme.Hangs.Category.paletteId(forPack: packId)
             chipName = String(localized: "Custom pack", comment: "Chip on a question card dealt from the player's own pack")
         } else {
-            style = Theme.Hangs.Category.style(for: category)
+            paletteId = category.flatMap { Theme.Hangs.Category.taxonomy.contains($0) ? $0 : nil }
             chipName = category.flatMap(Config.categoryDisplayName(for:))
         }
+        style = Theme.Hangs.Category.style(for: paletteId)
+    }
+
+    /// #198 round 2: the card for a result that is not a right answer — its
+    /// own colour, unless that is the correct-answer mint.
+    var notCorrectStyle: Theme.Hangs.Category.Style {
+        paletteId == Theme.Hangs.Category.correctId ? Theme.Hangs.Category.notCorrect : style
     }
 }
 

@@ -56,11 +56,11 @@ struct RoundCompleteView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                    HStack(alignment: .bottom, spacing: Theme.Hangs.Spacing.sm) {
-                        HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
-                        if !viewModel.recapEntries.isEmpty {
-                            RoundCardRow(outcomes: cardOutcomes)
-                        }
+                    HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
+
+                    // #198 (canvas Bg-Complete): the round's cards, one per question.
+                    if !viewModel.recapEntries.isEmpty {
+                        RoundCardRow(outcomes: cardOutcomes)
                     }
 
                     scoreCard
@@ -108,7 +108,9 @@ struct RoundCompleteView: View {
                     HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xxs) {
                         Text(verbatim: summary.displayScore)
                             .font(.hangsDisplay(Metrics.figure))
-                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                            // #198: the screen's cobalt accent (link blue keeps
+                            // its contrast on the dark card, cobalt would not).
+                            .foregroundStyle(Theme.Hangs.Colors.blue)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                         Text("out of \(summary.totalQuestions)")

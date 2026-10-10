@@ -14,9 +14,9 @@ import SwiftUI
 extension AppScreen {
     func make() async -> AnyView {
         switch self {
-        case .completion: Self.completion(remaining: 18)
+        case .completion: await Self.completion(remaining: 18)
         // Four left is inside the upsell threshold (`upsellRemaining` <= 5).
-        case .completionUpsell: Self.completion(remaining: 4)
+        case .completionUpsell: await Self.completion(remaining: 4)
         case .setRecap: await Self.setRecap()
         case .confirmTranscribing: Self.confirmation(isProcessing: true, transcript: "", onCancel: {})
         case .confirmTranscript: Self.confirmation(isProcessing: false, transcript: "Paris, I think. Or maybe Lyon.")
@@ -29,8 +29,17 @@ extension AppScreen {
 
     // MARK: Completion
 
-    private static func completion(remaining: Int) -> AnyView {
+    /// #198: a real round of ten — seven right across the categories, three
+    /// missed — so the round's cards and the answer list show as in the app.
+    private static func completion(remaining: Int) async -> AnyView {
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
+        let taxonomy = Theme.Hangs.Category.taxonomy
+        await fillLedger(vm, rounds: (1 ... 10).map { number -> Round in
+            let missed = number % 3 == 0
+            return (number, "Question \(number) of the round?", "Answer \(number)",
+                    missed ? .incorrect : .correct, missed ? "Something else" : "Answer \(number)",
+                    taxonomy[(number - 1) % taxonomy.count])
+        })
         vm.currentSession = Fixtures.session(score: 7.5, answered: 10)
         vm.sessionCorrectCount = 7
         vm.sessionIncorrectCount = 3
@@ -57,15 +66,30 @@ extension AppScreen {
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.settings.answerRevealMode = .endOfSet
         vm.settings.autoRecordEnabled = false // the recap must not narrate in a snapshot
-        vm.currentSession = Fixtures.makeQuizSession()
+        await fillLedger(vm, rounds: [
+            (1, "What is the capital of France?", "Paris", .correct, "Paris", "geography-world"),
+            (2, "Which river flows through Budapest?", "Danube", .incorrect, "The Vltava", "geography-world"),
+            (3, "How many strings does a standard violin have?", "Four", .skipped, "", "movies-music"),
+        ])
+        vm.quizState = .finished
+        vm.taskBag.cancelAll()
+        return AnyView(SetRecapView(viewModel: vm))
+    }
 
-        let rounds: [(number: Int, text: String, answer: String, result: Evaluation.EvaluationResult, said: String)] = [
-            (1, "What is the capital of France?", "Paris", .correct, "Paris"),
-            (2, "Which river flows through Budapest?", "Danube", .incorrect, "The Vltava"),
-            (3, "How many strings does a standard violin have?", "Four", .skipped, ""),
-        ]
+    private typealias Round = (
+        number: Int, text: String, answer: String,
+        result: Evaluation.EvaluationResult, said: String, category: String
+    )
+
+    /// Fills the recap ledger through the real capture path (`handleQuizResponse`).
+    private static func fillLedger(_ vm: QuizViewModel, rounds: [Round]) async {
+        let reveal = vm.settings.answerRevealMode
+        let autoRecord = vm.settings.autoRecordEnabled
+        vm.settings.answerRevealMode = .endOfSet
+        vm.settings.autoRecordEnabled = false
+        vm.currentSession = Fixtures.makeQuizSession()
         for round in rounds {
-            let question = recapQuestion(round.number, round.text, answer: round.answer)
+            let question = recapQuestion(round.number, round.text, answer: round.answer, category: round.category)
             vm.currentQuestion = question
             vm.quizState = round.result == .skipped ? .skipping : .processing
             await vm.handleQuizResponse(QuizResponse(
@@ -88,12 +112,12 @@ extension AppScreen {
             // The deferred reveal advance would walk on to the next question.
             vm.taskBag.cancel(.deferredAdvance)
         }
-        vm.quizState = .finished
         vm.taskBag.cancelAll()
-        return AnyView(SetRecapView(viewModel: vm))
+        vm.settings.answerRevealMode = reveal
+        vm.settings.autoRecordEnabled = autoRecord
     }
 
-    private static func recapQuestion(_ number: Int, _ text: String, answer: String) -> Question {
+    private static func recapQuestion(_ number: Int, _ text: String, answer: String, category: String) -> Question {
         Question(
             id: "recap_\(number)",
             question: text,
@@ -101,7 +125,7 @@ extension AppScreen {
             possibleAnswers: nil,
             difficulty: "easy",
             topic: "General",
-            category: "geography-world",
+            category: category,
             sourceUrl: "https://en.wikipedia.org/wiki/Question_\(number)",
             sourceExcerpt: answer,
             mediaUrl: nil,

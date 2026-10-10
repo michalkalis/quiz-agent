@@ -115,6 +115,7 @@ extension RecordingCoordinator {
             let upload = AnswerAudioConditioning.uploadWAV(
                 raw: capture.wav, sampleRate: capture.sampleRate, enabled: conditionUpload
             )
+            let question = currentQuestion()
             savedRecordingStamp = AnswerRecordingStore.save(
                 wav: capture.wav,
                 sidecar: AnswerRecordingStore.Sidecar(
@@ -127,7 +128,11 @@ extension RecordingCoordinator {
                     uploadConditioning: upload.label,
                     sampleRate: capture.sampleRate,
                     durationMs: capture.durationMs,
-                    questionId: currentQuestion()?.id
+                    questionId: question?.id,
+                    sessionId: currentSession()?.id,
+                    questionType: question.map { $0.isMultipleChoice ? "mcq" : "open" },
+                    questionText: question?.question,
+                    options: question?.possibleAnswers
                 )
             )
             await submitVoiceAnswer(audioData: upload.wav, fileName: "answer.wav", owner: attempt)
@@ -159,6 +164,9 @@ extension RecordingCoordinator {
         // against THAT question instead of grading the next, unseen one.
         let answeredQuestionId = currentQuestion()?.id
         trackVoiceAnswerSubmitted(questionId: answeredQuestionId)
+        // #197: the saved car sample this upload answers, if any.
+        let recordingStamp = savedRecordingStamp
+        savedRecordingStamp = nil
 
         // #185 5.1: a new answer spoken on the confirmation sheet is uploaded
         // from `.processing` already, and `.processing → .processing` is not a
@@ -171,6 +179,10 @@ extension RecordingCoordinator {
         // Create a task that can be cancelled via cancelProcessing()
         let task = Task { [weak self] in
             guard let self else { return }
+            // #197: whatever the server decided lands on the saved sample once
+            // this attempt is over — after the UI has already moved on.
+            var outcome = AnswerRecordingStore.Outcome.error
+            defer { self.finishSavedRecording(recordingStamp, outcome: outcome) }
 
             do {
                 Logger.network.info("🎤 Submitting voice answer: \(audioData.count, privacy: .public) bytes")
@@ -195,6 +207,8 @@ extension RecordingCoordinator {
                         )
                     }
                 }
+
+                outcome = AnswerRecordingStore.Outcome(response: response)
 
                 // Check for cancellation before updating UI
                 try Task.checkCancellation()
@@ -235,10 +249,6 @@ extension RecordingCoordinator {
                     // to be a command word the on-device recognizer missed.
                     if self.resolveSpokenReplacement(evaluation.userAnswer) { return }
                     self.pendingResponse = response
-                    if let stamp = self.savedRecordingStamp {
-                        AnswerRecordingStore.attachTranscript(evaluation.userAnswer, provider: nil, to: stamp)
-                        self.savedRecordingStamp = nil
-                    }
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.
                     self.presentVoiceTranscript(evaluation.userAnswer, owner: owner)
@@ -247,6 +257,7 @@ extension RecordingCoordinator {
                 // Don't call handleQuizResponse yet - wait for user confirmation
 
             } catch is CancellationError {
+                outcome = AnswerRecordingStore.Outcome(decision: "cancelled")
                 // User cancelled - state already cleaned up by cancelProcessing()
                 Logger.network.debug("🚫 Voice submission task was cancelled")
             } catch let error as URLError where error.code == .cancelled {
@@ -255,6 +266,7 @@ extension RecordingCoordinator {
                 // mid-request, and the rejected submission must vanish silently —
                 // routing it to `setError` would raise an "Action cancelled" screen
                 // over the recording the driver just started (#133 V14).
+                outcome = AnswerRecordingStore.Outcome(decision: "cancelled")
                 Logger.network.debug("🚫 Voice submission cancelled mid-request")
             } catch let error as URLError where error.code == .timedOut {
                 // #131 Track A: pass the error through. Without it `setError` fell
@@ -281,7 +293,9 @@ extension RecordingCoordinator {
 
                 // #185 track G: the server's coded "say it again" — nothing was
                 // graded. An MCQ answer that named no option gets its own line.
-                if case let .answerNotCaptured(code, _) = error {
+                if case let .answerNotCaptured(code, heard) = error {
+                    outcome = .notCaptured(code.rawValue)
+                    outcome.transcript = heard
                     await MainActor.run {
                         self.attemptLedger.record(.network, "voiceSubmit.400", code.rawValue)
                         self.handleTranscriptionFailure(
@@ -306,6 +320,7 @@ extension RecordingCoordinator {
                 // loop — the empty confirmation sheet, where the driver can type
                 // or re-record before it counts as no answer.
                 if case let .serverError(statusCode, _) = error, statusCode == 400 {
+                    outcome = .notCaptured(nil)
                     await MainActor.run {
                         self.attemptLedger.record(.network, "voiceSubmit.400")
                         self.handleTranscriptionFailure(owner: owner)

@@ -9,9 +9,11 @@
 //  policy mode, what was uploaded, duration, and the backend transcript once
 //  it lands) under Documents/AnswerRecordings. The offline comparison script
 //  feeds those WAVs to Scribe batch / Azure / today's realtime path against a
-//  hand transcript. Recordings never leave the device
-//  unless the founder exports them from Settings (share sheet). Nothing here
-//  runs on the quiz hot path unless the switch is on.
+//  hand transcript. #197: once the answer is decided the sidecar also carries
+//  the session/question context and the app's decision, and
+//  `AnswerRecordingUploader` sends the pair to our backend for the replay
+//  tests (deleting the local copy only after a 2xx). Nothing here runs on the
+//  quiz hot path unless the switch is on.
 //
 
 import Foundation
@@ -37,6 +39,37 @@ nonisolated enum AnswerRecordingStore {
         var questionId: String?
         var transcript: String?
         var provider: String?
+        /// #197 (track 197.1): the context the replay needs to grade the
+        /// recording again — the question as the app showed it (translated
+        /// text and options) and, once graded, the served correct answer.
+        var sessionId: String?
+        var questionType: String?
+        var questionText: String?
+        var options: [String: String]?
+        var correctAnswer: String?
+        var headlineAnswer: String?
+        /// What the app decided for this recording — see `Outcome.decision`.
+        var appDecision: String?
+    }
+
+    /// #197: what the app decided for one recording. `decision` is the
+    /// backend verdict (`correct`, `incorrect`, `partially_correct`,
+    /// `partially_incorrect`, `skipped`), `not_captured:<code>` when the
+    /// server asked to say it again (`no_speech`, `no_answer`,
+    /// `mcq_unmatched`; `empty` when the transcript came back empty; bare
+    /// `not_captured` for an uncoded 400), `cancelled` or `error`.
+    /// `scripts/voice_replay.py` speaks the same vocabulary.
+    struct Outcome: Sendable, Equatable {
+        var decision: String
+        var transcript: String?
+        var correctAnswer: String?
+        var headlineAnswer: String?
+
+        static let error = Outcome(decision: "error")
+
+        static func notCaptured(_ code: String?) -> Outcome {
+            Outcome(decision: code.map { "not_captured:\($0)" } ?? "not_captured")
+        }
     }
 
     static let folderName = "AnswerRecordings"
@@ -62,15 +95,42 @@ nonisolated enum AnswerRecordingStore {
         }
     }
 
-    /// Attach the transcript (and which STT provider produced it) to a saved
-    /// recording's sidecar. No-op when the stamp is unknown.
-    static func attachTranscript(_ transcript: String, provider: String?, to stamp: String, directory: URL? = directory()) {
+    /// #197: record what the app decided (and heard) for a saved recording.
+    /// No-op when the stamp is unknown.
+    static func recordOutcome(_ outcome: Outcome, to stamp: String, directory: URL? = directory()) {
+        updateSidecar(stamp: stamp, directory: directory) { sidecar in
+            sidecar.appDecision = outcome.decision
+            if let transcript = outcome.transcript { sidecar.transcript = transcript }
+            if let correct = outcome.correctAnswer { sidecar.correctAnswer = correct }
+            if let headline = outcome.headlineAnswer { sidecar.headlineAnswer = headline }
+        }
+    }
+
+    /// #197: stamps with both the WAV and the sidecar on disk, oldest first —
+    /// what the uploader sends.
+    static func completeStamps(directory: URL? = directory()) -> [String] {
+        let names = Set(files(directory: directory).map(\.lastPathComponent))
+        return names
+            .filter { $0.hasSuffix(".wav") }
+            .map { String($0.dropLast(4)) }
+            .filter { names.contains("\($0).json") }
+            .sorted()
+    }
+
+    /// #197: drop one recording (after the server has it).
+    static func delete(stamp: String, directory: URL? = directory()) {
+        guard let directory else { return }
+        for ext in ["wav", "json"] {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent("\(stamp).\(ext)"))
+        }
+    }
+
+    private static func updateSidecar(stamp: String, directory: URL?, _ change: (inout Sidecar) -> Void) {
         guard let directory else { return }
         let url = directory.appendingPathComponent("\(stamp).json")
         guard let data = try? Data(contentsOf: url),
               var sidecar = try? decoder.decode(Sidecar.self, from: data) else { return }
-        sidecar.transcript = transcript
-        sidecar.provider = provider
+        change(&sidecar)
         try? writeSidecar(sidecar, stamp: stamp, directory: directory)
     }
 

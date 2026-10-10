@@ -194,8 +194,9 @@ final class RecordingCoordinator: ObservableObject {
     /// stop it again — otherwise the command window owns the engine's lifetime.
     var startedListenerForAnswer = false
 
-    /// Stamp of the saved car sample for this recording, so the transcript can
-    /// be attached to its sidecar once the backend answers. `nil` = not saved.
+    /// Stamp of the saved car sample for this recording, so the transcript and
+    /// the app's decision (#197) can be attached to its sidecar once the
+    /// backend answers. `nil` = not saved.
     var savedRecordingStamp: String?
 
     /// #184 track D: a read-back of the recognised answer is playing on the
@@ -299,6 +300,9 @@ final class RecordingCoordinator: ObservableObject {
     let stopQuestionReadOut: @MainActor () async -> Void
     /// #51 product analytics — the façade attaches the session id.
     let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
+    /// #197: a saved car recording got its decision — kick the uploader.
+    /// Must return at once; the upload runs on its own task.
+    let answerRecordingDecided: @MainActor () -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -344,7 +348,8 @@ final class RecordingCoordinator: ObservableObject {
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
         stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
-        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in }
+        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
+        answerRecordingDecided: @escaping @MainActor () -> Void = {}
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -390,6 +395,7 @@ final class RecordingCoordinator: ObservableObject {
         self.stopQuestionReadOut = stopQuestionReadOut
         self.realtimeSTTEnabled = realtimeSTTEnabled
         self.trackAnalytics = trackAnalytics
+        self.answerRecordingDecided = answerRecordingDecided
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

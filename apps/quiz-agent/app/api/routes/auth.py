@@ -64,6 +64,8 @@ from ...auth.refresh import RefreshError, RefreshTokenStore
 from ...auth.tokens import TokenError, TokenService
 from ...config import get_settings
 from ...rate_limit import fly_client_ip, limiter
+from ...voice.sample_erasure import VoiceSampleErasureFailed, erase_voice_samples
+from ...voice.sample_storage import VoiceSampleStorage, get_voice_sample_storage
 from ...usage.account_merge import (
     merge_anonymous_identity,
     precheck_merge_conflict,
@@ -338,6 +340,7 @@ async def delete_account(
     sessionmaker=Depends(get_auth_sessionmaker),
     oauth_client: Optional[AppleOAuthClient] = Depends(get_apple_oauth_client),
     cipher: Optional[AppleTokenCipher] = Depends(get_apple_token_cipher),
+    voice_storage: VoiceSampleStorage = Depends(get_voice_sample_storage),
 ) -> Response:
     """Delete the caller's account and all its data (GDPR Art. 17), then sever the
     Apple grant. An anonymous caller (no account yet) gets its own data erased
@@ -363,6 +366,15 @@ async def delete_account(
             user_id = str(user.id)
             encrypted = user.apple_refresh_token_encrypted
             erased_ids = await erase_account(session, user)
+        # #197: car answer recordings live in R2 as well — same before-commit
+        # rule as the ratings store below (see ``erase_voice_samples``).
+        try:
+            await erase_voice_samples(session, erased_ids, voice_storage)
+        except VoiceSampleErasureFailed:
+            raise HTTPException(
+                status_code=503,
+                detail="Could not delete your voice recordings, please try again",
+            )
         # Sessions + ratings live in the separate ratings store (its own engine),
         # so they cannot share this transaction. Unlink them *before* the commit:
         # if that fails, nothing is committed and the user can retry (after the

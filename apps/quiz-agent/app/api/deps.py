@@ -529,6 +529,28 @@ class AccountPackOrderRecord(BaseModel):
     pack_id: Optional[uuid.UUID] = Field(description="The delivered pack's id")
 
 
+class AccountVoiceSampleAudio(BaseModel):
+    """The stored recording, described but not embedded (private storage)."""
+
+    content_type: str = Field(description="MIME type of the stored audio")
+    bytes: int = Field(description="Size of the stored audio")
+
+
+class AccountVoiceSampleRecord(BaseModel):
+    """One answer recording from voice diagnostics, for the GDPR export (#197)."""
+
+    id: uuid.UUID = Field(description="Recording id")
+    created_at: datetime = Field(description="When it was received")
+    session_id: Optional[str] = Field(description="Quiz session it was answered in")
+    question_id: Optional[str] = Field(description="Question it answered")
+    language: Optional[str] = Field(description="Quiz language")
+    sidecar: dict = Field(
+        description="Recording context sent by the app, incl. the transcript"
+    )
+    label: Optional[dict] = Field(description="Correction added for replay tests")
+    audio: AccountVoiceSampleAudio = Field(description="The stored audio, listed")
+
+
 class AccountExportResponse(BaseModel):
     """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
     or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
@@ -557,6 +579,10 @@ class AccountExportResponse(BaseModel):
     )
     pack_orders: List[AccountPackOrderRecord] = Field(
         default_factory=list, description="Custom quiz pack orders, oldest first"
+    )
+    voice_samples: List[AccountVoiceSampleRecord] = Field(
+        default_factory=list,
+        description="Answer recordings sent from voice diagnostics, oldest first",
     )
 
 

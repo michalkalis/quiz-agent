@@ -56,6 +56,32 @@ logger = logging.getLogger(__name__)
 _prefetch_tasks: "set[asyncio.Task]" = set()
 
 
+async def parse_answer_intents(
+    answer_text: str,
+    display_question: Question,
+    phase: str,
+    input_parser: InputParser,
+) -> List[Dict[str, Any]]:
+    """Turn a (transcribed) answer into intents — the step before grading.
+
+    Module-level so ``scripts/voice_replay.py`` (#197) replays recordings
+    through exactly this path instead of a copy that could drift.
+    """
+    # Fast-path for literal "skip"
+    if answer_text.strip().lower() == "skip":
+        return [{"intent_type": "skip", "extracted_data": {}}]
+    if match_option(answer_text, display_question.possible_answers):
+        # #185 G: an utterance that names one option IS the answer — no LLM
+        # classifier needed, and it keeps a one-character "C" / "3" away from
+        # the parser's empty-input rule, which would turn it into a skip.
+        return [{"intent_type": "answer", "extracted_data": {"answer": answer_text}}]
+    return await input_parser.parse(
+        user_input=answer_text,
+        current_question=display_question.question,
+        phase=phase,
+    )
+
+
 def prefetch_question_audio(
     tts_service: Optional[TTSService], question_text: str, language: str
 ) -> None:
@@ -473,22 +499,9 @@ class QuizFlowService:
         # translation that fell back) → the original English question, unchanged.
         display_question = translated_question_view(question, translation)
 
-        # Parse intents (fast-path for literal "skip")
-        if answer_text.strip().lower() == "skip":
-            intents = [{"intent_type": "skip", "extracted_data": {}}]
-        elif match_option(answer_text, display_question.possible_answers):
-            # #185 G: an utterance that names one option IS the answer — no LLM
-            # classifier needed, and it keeps a one-character "C" / "3" away from
-            # the parser's empty-input rule, which would turn it into a skip.
-            intents = [
-                {"intent_type": "answer", "extracted_data": {"answer": answer_text}}
-            ]
-        else:
-            intents = await self.input_parser.parse(
-                user_input=answer_text,
-                current_question=display_question.question,
-                phase=session.phase,
-            )
+        intents = await parse_answer_intents(
+            answer_text, display_question, session.phase, self.input_parser
+        )
 
         outcome = IntentOutcome()
 

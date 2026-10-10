@@ -44,12 +44,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "packages" / "shared"))
 sys.path.insert(0, str(ROOT / "apps" / "quiz-agent"))
 
-from dotenv import load_dotenv
-
-load_dotenv(ROOT / ".env")
-
-from app.voice.scribe import ScribeBatchTranscriber
-from app.voice.transcriber import VoiceTranscriber
 
 
 def normalize(text: str) -> list[str]:
@@ -75,6 +69,11 @@ def wer(reference: str, hypothesis: str) -> float:
 async def run_provider(
     provider: str, wav: bytes, name: str, language: str | None
 ) -> str:
+    # Imported here so `wer` stays importable without the backend env
+    # (scripts/voice_replay.py and its tests reuse it).
+    from app.voice.scribe import ScribeBatchTranscriber
+    from app.voice.transcriber import VoiceTranscriber
+
     if provider == "scribe":
         result = await ScribeBatchTranscriber().transcribe(
             wav, name, language=language, keyterms=[]
@@ -170,6 +169,9 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env")
     if not os.environ.get("ELEVENLABS_API_KEY"):
         print(
             "warning: ELEVENLABS_API_KEY not set — scribe will report an error per file",

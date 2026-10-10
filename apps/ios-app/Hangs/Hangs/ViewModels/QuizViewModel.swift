@@ -743,6 +743,9 @@ final class QuizViewModel: ObservableObject {
     /// Product analytics (#51) — see `QuizViewModel+Analytics`.
     let analytics: AnalyticsClient
 
+    /// #197: sends saved car recordings to the backend; kicked, never awaited.
+    let answerRecordingUploader: AnswerRecordingUploading?
+
     private var cancellables = Set<AnyCancellable>()
 
     /// Entitlement/usage/paywall slice owner (#113 T1). The façade owns the
@@ -835,10 +838,12 @@ final class QuizViewModel: ObservableObject {
         realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
         clock: AnyClock<Duration> = .continuous,
         flightRecorder: QuizFlightRecorder = .shared,
-        analytics: AnalyticsClient = NoopAnalyticsClient()
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
+        answerRecordingUploader: AnswerRecordingUploading? = nil
     ) {
         self.networkService = networkService
         self.analytics = analytics
+        self.answerRecordingUploader = answerRecordingUploader
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
@@ -1099,7 +1104,8 @@ final class QuizViewModel: ObservableObject {
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
             realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false },
-            trackAnalytics: { [weak self] in self?.trackAnalytics($0) }
+            trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
+            answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() }
         )
     }
 

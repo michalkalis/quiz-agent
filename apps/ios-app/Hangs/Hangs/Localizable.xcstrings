@@ -4136,22 +4136,6 @@
         }
       }
     },
-    "Keeps each spoken answer on this device for the recognition comparison" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Každou mluvenou odpověď uloží v tomto telefonu pro porovnání rozpoznávání"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Každú hovorenú odpoveď uloží v tomto telefóne na porovnanie rozpoznávania"
-          }
-        }
-      }
-    },
     "Keeps your purchases and progress across devices. Nothing else is shared." : {
       "comment" : "Sign-in sheet privacy note under the Sign in with Apple button",
       "localizations" : {
@@ -7315,6 +7299,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odošli do Sentry"
+          }
+        }
+      }
+    },
+    "Sends each spoken answer to our server for recognition tests and keeps it on this phone until it is sent" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každou mluvenou odpověď pošle na náš server pro testy rozpoznávání a do odeslání ji ponechá v tomto telefonu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každú hovorenú odpoveď pošle na náš server na testy rozpoznávania a do odoslania ju ponechá v tomto telefóne"
           }
         }
       }

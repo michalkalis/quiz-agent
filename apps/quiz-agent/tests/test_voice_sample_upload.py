@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import struct
+import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -25,6 +26,7 @@ from app.auth.tokens import TokenService
 from app.db.models import VoiceSample
 from app.rate_limit import limiter
 from app.voice.sample_storage import R2VoiceSampleStorage
+from sqlalchemy.exc import IntegrityError
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from slowapi import _rate_limit_exceeded_handler
@@ -69,10 +71,15 @@ class _Result:
 
 
 class _FakeDB:
-    """Just enough of an AsyncSession for the route: a key lookup + insert."""
+    """Just enough of an AsyncSession for the route: a key lookup and a
+    transactional insert (``rows`` = committed; uncommitted rows vanish when
+    the session closes, like a rollback)."""
 
     def __init__(self) -> None:
         self.rows: list[VoiceSample] = []
+        self.pending: list[VoiceSample] = []
+        self.fail_commit = False
+        self.concurrent_winner: VoiceSample | None = None
 
     def __call__(self):
         return self
@@ -81,7 +88,18 @@ class _FakeDB:
         return self
 
     async def __aexit__(self, *exc):
+        self.pending = []
         return False
+
+    async def flush(self):
+        if self.concurrent_winner is not None:
+            # Another request committed the same r2_key between our check and insert.
+            self.rows.append(self.concurrent_winner)
+            self.concurrent_winner = None
+            raise IntegrityError("INSERT", {}, Exception("duplicate r2_key"))
+
+    async def rollback(self):
+        self.pending = []
 
     async def execute(self, stmt):
         if stmt.whereclause is None:  # the admin list
@@ -93,10 +111,13 @@ class _FakeDB:
         return _Result(match)
 
     def add(self, row):
-        self.rows.append(row)
+        self.pending.append(row)
 
     async def commit(self):
-        return None
+        if self.fail_commit:
+            raise OSError("connection reset during commit")
+        self.rows.extend(self.pending)
+        self.pending = []
 
 
 class _FakeStorage:
@@ -105,6 +126,10 @@ class _FakeStorage:
 
     def put(self, key, data, content_type):
         self.objects[key] = data
+
+    def delete(self, keys):
+        for key in keys:
+            self.objects.pop(key, None)
 
     def presigned_url(self, key, expires_seconds=3600):
         return f"https://r2.test/{key}"
@@ -293,3 +318,64 @@ async def test_admin_list_hands_out_presigned_audio_only_with_the_admin_key(
     assert item["audio_url"].startswith("https://r2.test/voice-samples/")
     assert item["sidecar"]["appDecision"] == "correct"
     assert item["label"] is None
+
+
+# ── security review fixes ───────────────────────────────────────────────────
+
+
+async def test_oversized_body_is_refused_from_headers_before_auth_or_parsing(env):
+    """FastAPI parses multipart (to temp disk) before any dependency, so an
+    anonymous caller could otherwise stream gigabytes. The declared length is
+    checked first — no bearer, no body read, 413."""
+    client, db, storage = env
+    resp = await client.post(
+        "/api/v1/voice-samples",
+        content=b"x",
+        headers={
+            "Content-Length": str(routes.BODY_MAX_BYTES + 1),
+            "Content-Type": "multipart/form-data; boundary=b",
+        },
+    )
+    assert resp.status_code == 413
+    assert storage.objects == {}
+
+
+async def test_body_without_declared_length_is_refused(env):
+    """A chunked body has no length to check up front — refuse it (411)."""
+    client, _db, _ = env
+
+    async def chunks():
+        yield b"--b\r\n"
+
+    resp = await client.post(
+        "/api/v1/voice-samples",
+        content=chunks(),
+        headers={"Content-Type": "multipart/form-data; boundary=b"},
+    )
+    assert resp.status_code == 411
+
+
+async def test_failed_commit_removes_the_audio_so_nothing_is_orphaned(env):
+    """A WAV in R2 without its row is invisible to account erasure — if the
+    row can't be committed, the object must go too."""
+    client, db, storage = env
+    db.fail_commit = True
+    resp = await _post(client, _bearer(_FOUNDER))
+    assert resp.status_code == 503
+    assert db.rows == []
+    assert storage.objects == {}, "R2 object left without a DB row"
+
+
+async def test_concurrent_duplicate_is_answered_as_duplicate_not_500(env):
+    """Two retries of one recording can pass the existence check together; the
+    loser hits the unique r2_key and must get the winner's id, so the app
+    deletes its local copy instead of retrying forever."""
+    client, db, _ = env
+    winner = VoiceSample(
+        id=uuid.uuid4(), r2_key=routes.sample_key(_FOUNDER, "20261010-101500-123")
+    )
+    db.concurrent_winner = winner
+    resp = await _post(client, _bearer(_FOUNDER))
+    assert resp.status_code == 201
+    assert resp.json() == {"id": str(winner.id), "duplicate": True}
+    assert db.rows == [winner]

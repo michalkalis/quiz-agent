@@ -21,8 +21,11 @@ import re
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from ...auth.identity import AuthSubject
 from ...db.models import VoiceSample
@@ -37,13 +40,43 @@ from ..admin import verify_admin_key
 from ..deps import get_auth_sessionmaker, require_auth_or_grace
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
 
 ALLOWLIST_ENV = "VOICE_SAMPLE_UPLOAD_USER_IDS"
 # The app caps a capture at the dead-air cap (~15 s ≈ 0.5 MB at 16 kHz mono);
 # 5 MB leaves room for a long answer and nothing more.
 AUDIO_MAX_BYTES = 5 * 1024 * 1024
 SIDECAR_MAX_BYTES = 64 * 1024
+# Whole multipart body: audio + sidecar + stamp + part headers.
+BODY_MAX_BYTES = AUDIO_MAX_BYTES + SIDECAR_MAX_BYTES + 64 * 1024
+
+
+class _BodyCapRoute(APIRoute):
+    """FastAPI parses the multipart body (spooling parts to temp disk) BEFORE
+    any dependency runs, so the allowlist cannot stop an anonymous caller
+    from streaming a huge part. This check runs first, on the headers alone:
+    a POST must declare its length and stay under the cap. The ASGI server
+    never reads past a declared Content-Length."""
+
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+
+        async def capped(request: Request):
+            if request.method == "POST":
+                declared = request.headers.get("content-length")
+                if declared is None or not declared.isdigit():
+                    return JSONResponse(
+                        {"detail": "Content-Length required"}, status_code=411
+                    )
+                if int(declared) > BODY_MAX_BYTES:
+                    return JSONResponse(
+                        {"detail": "request body too large"}, status_code=413
+                    )
+            return await handler(request)
+
+        return capped
+
+
+router = APIRouter(route_class=_BodyCapRoute)
 WAV_CONTENT_TYPES = {"audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave"}
 STAMP_PATTERN = re.compile(r"^\d{8}-\d{6}-\d{3}$")
 _READ_CHUNK_BYTES = 64 * 1024
@@ -162,22 +195,9 @@ async def upload_voice_sample(
         raise HTTPException(status_code=503, detail="Voice sample storage unavailable")
 
     key = sample_key(subject.subject_id, stamp)
-    async with sessionmaker() as session:
-        existing = (
-            await session.execute(
-                select(VoiceSample.id).where(VoiceSample.r2_key == key)
-            )
-        ).scalar_one_or_none()
+    existing = await _existing_id(sessionmaker, key)
     if existing is not None:
         return VoiceSampleUploadResponse(id=str(existing), duplicate=True)
-
-    try:
-        await asyncio.to_thread(storage.put, key, audio_bytes, "audio/wav")
-    except StorageNotConfigured as exc:
-        logger.error("voice sample upload: %s", exc)
-        raise HTTPException(
-            status_code=503, detail="Voice sample storage not configured"
-        )
 
     row = VoiceSample(
         id=uuid.uuid4(),
@@ -189,10 +209,50 @@ async def upload_voice_sample(
         r2_key=key,
         audio_bytes=len(audio_bytes),
     )
+    # Row first (flushed, uncommitted), then the audio, then the commit: a
+    # recording is never in R2 without a row the erasure can find. If the
+    # commit fails after the put, the object is removed again.
     async with sessionmaker() as session:
         session.add(row)
-        await session.commit()
+        try:
+            await session.flush()
+        except IntegrityError:
+            # A concurrent retry of the same recording won the unique r2_key.
+            await session.rollback()
+            existing = await _existing_id(sessionmaker, key)
+            return VoiceSampleUploadResponse(id=str(existing), duplicate=True)
+        try:
+            await asyncio.to_thread(storage.put, key, audio_bytes, "audio/wav")
+        except StorageNotConfigured as exc:
+            logger.error("voice sample upload: %s", exc)
+            raise HTTPException(
+                status_code=503, detail="Voice sample storage not configured"
+            )
+        try:
+            await session.commit()
+        except Exception:
+            logger.exception("voice sample row commit failed; removing %s from R2", key)
+            await _remove_orphan(storage, key)
+            raise HTTPException(status_code=503, detail="Voice sample not stored")
     return VoiceSampleUploadResponse(id=str(row.id))
+
+
+async def _existing_id(sessionmaker, key: str):
+    async with sessionmaker() as session:
+        return (
+            await session.execute(
+                select(VoiceSample.id).where(VoiceSample.r2_key == key)
+            )
+        ).scalar_one_or_none()
+
+
+async def _remove_orphan(storage: VoiceSampleStorage, key: str) -> None:
+    try:
+        await asyncio.to_thread(storage.delete, [key])
+    except Exception:
+        # Loud: this object now exists without a row, so account erasure
+        # cannot reach it. Fix by hand (key in the log line).
+        logger.exception("ORPHANED voice sample in R2 (no DB row): %s", key)
 
 
 @router.get("/voice-samples", response_model=VoiceSampleListResponse)

@@ -207,9 +207,22 @@ def load_folder(folder: Path) -> list[Sample]:
     return samples
 
 
+def check_server_url(server: str) -> None:
+    """The admin key travels in a header — only over TLS, or to this machine."""
+    from urllib.parse import urlparse
+
+    url = urlparse(server)
+    local = url.hostname in {"localhost", "127.0.0.1", "::1"}
+    if url.scheme != "https" and not (url.scheme == "http" and local):
+        raise SystemExit(
+            f"refusing {server!r}: --server must be https:// (http only for localhost)"
+        )
+
+
 def pull_from_server(server: str, cache: Path) -> None:
     import httpx
 
+    check_server_url(server)
     key = os.environ.get("ADMIN_API_KEY")
     if not key:
         raise SystemExit("ADMIN_API_KEY is required for --server")

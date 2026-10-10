@@ -126,3 +126,23 @@ async def test_unusable_transcript_maps_to_the_apps_no_speech_decision():
 
 def test_sidecar_without_question_context_is_not_replayable():
     assert voice_replay.question_from_sidecar({"language": "sk"}) is None
+
+
+@pytest.mark.parametrize(
+    "url,ok",
+    [
+        ("https://quiz-agent-api.fly.dev", True),
+        ("http://localhost:8002", True),
+        ("http://127.0.0.1:8002", True),
+        ("http://quiz-agent-api.fly.dev", False),
+        ("ftp://example.com", False),
+    ],
+)
+def test_replay_never_sends_the_admin_key_over_plain_http(url, ok):
+    """--server sends ADMIN_API_KEY in a header; over plain http to a remote
+    host anyone on the path would read the key that unlocks every recording."""
+    if ok:
+        voice_replay.check_server_url(url)
+    else:
+        with pytest.raises(SystemExit):
+            voice_replay.check_server_url(url)

@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 MIC ACCESS
 Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.
 MIC ACCESS

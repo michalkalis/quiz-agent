@@ -235,18 +235,44 @@ extension Theme.Hangs {
 // MARK: - Fonts
 
 extension Theme.Hangs {
-    /// #194 B1: system type (SF Pro) replaces Anton / Inter / IBM Plex Mono.
-    /// Sizes snap to iOS text styles so every label follows Dynamic Type —
-    /// `Font.system(size:)` would freeze it. Display heroes use the canvas
-    /// scale (28 / 40 / 52, bold); above 34pt they are fixed, one line, scaled
-    /// down to fit (they already outsize the largest text style).
+    /// #194: two families. Controls (buttons, labels, captions, overlines,
+    /// chips) are SF via iOS text styles, so every label follows Dynamic Type —
+    /// `Font.system(size:)` would freeze it. Content (`display`, `content`) is
+    /// Rethink Sans on the canvas scale 22 / 28 / 40 / 52.
     enum Fonts {
+        /// #194 (founder 2026-10-09): content type — question text, answers,
+        /// verdicts, scores — is Rethink Sans; controls stay SF (`body`, `mono`).
+        /// Static instances of the OFL variable font (600/700/800), bundled in
+        /// `Fonts/`. `relativeTo:` keeps every size on Dynamic Type, heroes
+        /// included; they stay one line and scale down to fit.
         static func display(_ size: CGFloat) -> Font {
             switch size {
-            case ..<25: return .system(.title2, weight: .bold)
-            case ..<32: return .system(.title, weight: .bold)
-            case ..<48: return .system(size: 40, weight: .bold)
-            default: return .system(size: 52, weight: .bold)
+            case ..<25: return content(22, weight: .bold, relativeTo: .title2)
+            case ..<32: return content(28, weight: .bold, relativeTo: .title)
+            case ..<48: return content(40, weight: .bold, relativeTo: .largeTitle)
+            default: return content(52, weight: .bold, relativeTo: .largeTitle)
+            }
+        }
+
+        /// Rethink Sans at a body size (MCQ options, recap answers).
+        static func content(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
+            content(size, weight: weight, relativeTo: textStyle(for: size))
+        }
+
+        private static func content(_ size: CGFloat, weight: Font.Weight, relativeTo style: Font.TextStyle) -> Font {
+            .custom(RethinkSans.name(for: weight), size: size, relativeTo: style)
+        }
+
+        /// PostScript names of the bundled cuts; any weight maps to the nearest.
+        nonisolated enum RethinkSans {
+            static let all = ["RethinkSans-SemiBold", "RethinkSans-Bold", "RethinkSans-ExtraBold"]
+
+            static func name(for weight: Font.Weight) -> String {
+                switch weight {
+                case .heavy, .black: return "RethinkSans-ExtraBold"
+                case .bold: return "RethinkSans-Bold"
+                default: return "RethinkSans-SemiBold"
+                }
             }
         }
 
@@ -317,6 +343,11 @@ extension Font {
     static var hangsBodyLG: Font { .hangsBody(17) }
     static var hangsLabel: Font { .hangsBody(17, weight: .semibold) }
     static var hangsHeading: Font { .hangsDisplay(22) }
+    // #194 — content at body size (Rethink Sans) and the "trubbo" wordmark.
+    static var hangsContent: Font { Theme.Hangs.Fonts.content(17) }
+    /// Long answers in the one-column MCQ list.
+    static var hangsContentCompact: Font { Theme.Hangs.Fonts.content(16) }
+    static var hangsWordmark: Font { Theme.Hangs.Fonts.content(28, weight: .heavy) }
 }
 
 // MARK: - View helpers

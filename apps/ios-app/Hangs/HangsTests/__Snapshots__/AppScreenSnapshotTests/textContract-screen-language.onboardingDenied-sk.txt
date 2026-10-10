@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 MIKROFÓN VYPNUTÝ
 Hlasové odpovede potrebujú mikrofón. Zapni ho v Nastaveniach alebo hraj ďalej písaním.
 MIKROFÓN VYPNUTÝ

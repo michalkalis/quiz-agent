@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 OJOJ
 Action cancelled
 Your submission was interrupted. Try answering again.

@@ -1,5 +1,5 @@
 # texts
-trubbo.
+trubbo
 MIC IS OFF
 Voice answers need the mic. Turn it on in Settings, or keep playing by typing your answers.
 MIC IS OFF

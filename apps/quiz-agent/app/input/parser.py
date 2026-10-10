@@ -34,15 +34,17 @@ class InputParser:
             [answer: "Paris", rating: 1]
     """
 
-    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
+    def __init__(self, model: str | None = None, temperature: float = 0.3):
         """Initialize input parser.
 
         Args:
-            model: OpenAI model for intent classification
+            model: Model id; default PARSE_MODEL env, else Claude Haiku 5.5 (#196)
             temperature: Lower temperature for more deterministic parsing
         """
         self.client = hot_path_llm.client()
-        self.model = llm_factory.resolve_model(model)
+        self.model = llm_factory.resolve_model(
+            model or hot_path_llm.role_model("PARSE_MODEL")
+        )
         self.temperature = temperature
 
     async def parse(

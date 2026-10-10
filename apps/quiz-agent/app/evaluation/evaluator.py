@@ -31,15 +31,17 @@ class AnswerEvaluator:
     2. LLM path: Nuanced evaluation for partial credit
     """
 
-    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
+    def __init__(self, model: str | None = None, temperature: float = 0.3):
         """Initialize answer evaluator.
 
         Args:
-            model: OpenAI model for evaluation
+            model: Model id; default EVAL_MODEL env, else Claude Haiku 5.5 (#196)
             temperature: Lower temperature for deterministic evaluation
         """
         self.client = hot_path_llm.client()
-        self.model = llm_factory.resolve_model(model)
+        self.model = llm_factory.resolve_model(
+            model or hot_path_llm.role_model("EVAL_MODEL")
+        )
         self.temperature = temperature
 
     async def evaluate(

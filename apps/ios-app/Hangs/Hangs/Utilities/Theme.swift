@@ -72,6 +72,13 @@ private enum Palette {
     static let amber = "#B45309"
     static let amberDark = "#F59E0B"
     static let wrongDark = "#5A5E6B"
+
+    // #198: the canvas' miss pink (text on the page / white, 6.1:1) and the
+    // deeper shades the error card's stripes use.
+    static let missText = "#B8235F"
+    static let missTextDark = "#FF7AAE"
+    static let cobaltDeep = "#23379E"
+    static let mandarinDeep = "#D9531C"
 }
 
 // MARK: - Semantic tokens
@@ -114,6 +121,8 @@ extension Theme.Hangs {
         /// mode keeps 17pt text above WCAG AA on white and on the page.
         static let blue = Color(light: Palette.linkBlue, dark: Palette.linkBlueDark)
         static let blueText = blue
+        /// #198: pack credits on the plan meter, beside the cobalt free share.
+        static let credits = Color(light: Palette.mint, dark: Palette.mintDark)
 
         // MARK: Live — listening, reading, thinking (#194 B1, was teal)
         /// Text and icons in the live state: 6.4:1 on the light page, 11:1 dark.
@@ -121,6 +130,16 @@ extension Theme.Hangs {
         /// Dots, glows and progress fills in the live state (non-text).
         static let liveAccent = Color(hex: Palette.liveFill)
         static let liveSoft = Color(hex: Palette.liveFill).opacity(0.12)
+
+        // MARK: Listening for an answer — #198 (canvas Bg-Question): the open
+        // mic is pink, so it never reads as the green "listening for commands".
+        /// Border and wash of the answer bar.
+        static let listen = Color(light: Palette.rose, dark: Palette.roseDark)
+        /// The Stop button's fill under white text: the deeper rose in both
+        /// modes keeps white text at 4.8:1 (#E8317F would be 4.0:1).
+        static let listenStrong = Color(hex: Palette.roseDark)
+        /// Pink text and glyphs on the page or the bar's wash (6.1:1 / 7:1).
+        static let listenText = Color(light: Palette.missText, dark: Palette.missTextDark)
 
         // MARK: Rows and groups (#188 G12). One colour per role on every
         // screen; the action colour stays reserved for the main action.
@@ -138,6 +157,12 @@ extension Theme.Hangs {
         /// #194 B1: a wrong answer reads neutral (canvas: no red verdicts) —
         /// a dark fill that keeps a white glyph readable in both modes.
         static let wrong = Color(light: Palette.ink, dark: Palette.wrongDark)
+        /// #198 (canvas Bg-Complete / Bg-Recap): a miss in a round summary —
+        /// pink text, and its soft wash behind a glyph.
+        static let missText = Color(light: Palette.missText, dark: Palette.missTextDark)
+        static let missSoft = Color(hex: Palette.missText).opacity(0.14)
+        /// #198 (canvas Bg-Recap): the correct wash behind a glyph.
+        static let correctSoft = Color(hex: Palette.liveFill).opacity(0.16)
         static let error = Color(light: Palette.red, dark: Palette.redDark) // failures, not wrong answers
         static let warning = Color(light: Palette.amber, dark: Palette.amberDark)
 
@@ -210,6 +235,16 @@ extension Theme.Hangs {
             }
             return Int(hash % UInt32(count))
         }
+
+        /// #198 (canvas Bg-Result): the card of a correct answer, whatever its category.
+        static var correct: Style { style(for: "science-nature") }
+
+        /// #198 (canvas Bg-Offline): the error card — cobalt when offline,
+        /// mandarin for anything else — with its deeper stripe shade.
+        static let errorOffline = Style(fill: Color(hex: Palette.cobalt), text: .white)
+        static let errorOfflineStripe = Color(hex: Palette.cobaltDeep)
+        static let errorOther = Style(fill: Color(hex: Palette.mandarin), text: inkText)
+        static let errorOtherStripe = Color(hex: Palette.mandarinDeep)
 
         /// Ids in display order — the multi-colour "all categories" strip.
         static let taxonomy = ["geography-world", "history", "science-nature", "movies-music", "sports", "food-everyday", "entertainment"]

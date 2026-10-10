@@ -48,8 +48,9 @@ struct ContextualSignInSheet: View {
     }
 
     var body: some View {
-        // #194 C7 (canvas Bg-SignIn): left-aligned sheet, cobalt badge, capsule
-        // Apple button, glass "Maybe later".
+        // #194 C7 (canvas Bg-SignIn): left-aligned sheet, a fan of four
+        // category cards with the seal (#198), capsule Apple button, glass
+        // "Maybe later".
         VStack(alignment: .leading, spacing: 0) {
             badge
                 .padding(.top, Theme.Hangs.Spacing.xl)
@@ -78,14 +79,18 @@ struct ContextualSignInSheet: View {
 
     // MARK: - Blocks
 
+    /// #198 (canvas Bg-SignIn): four tilted category cards, the seal on the
+    /// cobalt front one.
     private var badge: some View {
-        Image(systemName: "checkmark.seal.fill")
-            .font(.hangsHeading)
-            .foregroundStyle(Theme.Hangs.Colors.textOnAccent)
-            .frame(width: Metrics.badge, height: Metrics.badge)
-            .background(Circle().fill(Theme.Hangs.Colors.accentPrimary))
-            .accessibilityHidden(true)
-            .accessibilityIdentifier("signInPrompt.badge")
+        PaywallHeroDeck(fills: ["history", "science-nature", "movies-music", "geography-world"].map {
+            Theme.Hangs.Category.style(for: $0).fill
+        }) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.hangsHeading)
+                .foregroundStyle(Theme.Hangs.Category.style(for: "geography-world").text)
+        }
+        .padding(.leading, Metrics.fanInset)
+        .accessibilityIdentifier("signInPrompt.badge")
     }
 
     private var heroBlock: some View {
@@ -198,7 +203,8 @@ struct ContextualSignInSheet: View {
     }
 
     private enum Metrics {
-        static let badge: CGFloat = 60
+        /// The fan reaches ~22pt past its front card; keep it inside the text column.
+        static let fanInset: CGFloat = 26
         static let errorDisc: CGFloat = 30
         static let buttonHeight: CGFloat = 56
     }

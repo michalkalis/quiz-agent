@@ -112,3 +112,30 @@ struct ErrorViewCTATests {
         }
     }
 }
+
+// MARK: - #198 logo placement
+
+/// Founder 2026-10-10: the logo header belongs to Home and Onboarding only —
+/// repeated on every screen, the 34pt mark read as a black question mark.
+@MainActor
+@Suite("Logo placement (#198)")
+struct LogoPlacementTests {
+    @Test("Error screen shows no logo", arguments: [AppErrorRetryAction.retryOperation, .goHome, .dismiss])
+    func errorScreenHasNoLogo(action: AppErrorRetryAction) async throws {
+        let view = makeErrorView(retryAction: action)
+        try await ViewHosting.host(view) {
+            #expect(throws: (any Error).self) { try view.inspect().find(text: "trubbo") }
+        }
+    }
+
+    @Test("End of round shows no logo")
+    func roundCompleteHasNoLogo() async throws {
+        let vm = Fixtures.makeViewModel()
+        vm.quizState = .finished
+        let view = CompletionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            #expect(throws: Never.self) { try view.inspect().find(viewWithAccessibilityIdentifier: "completion.close") }
+            #expect(throws: (any Error).self) { try view.inspect().find(text: "trubbo") }
+        }
+    }
+}

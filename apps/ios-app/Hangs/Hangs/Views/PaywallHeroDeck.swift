@@ -4,7 +4,8 @@
 //
 //  #194 C6 — the paywall's small fanned card stack (canvas Bg-Paywall,
 //  Bg-PaywallDone, Bg-PaywallOffline): two cards behind a front card that
-//  carries the state's glyph. Static decoration, hidden from VoiceOver.
+//  carries the state's glyph; #198: the sign-in sheet's four (Bg-SignIn).
+//  Static decoration, hidden from VoiceOver.
 //
 
 import SwiftUI
@@ -40,13 +41,14 @@ private enum PaywallHeroDeckMetrics {
     static let height: CGFloat = 104
     static let glyphLift: CGFloat = -4
     /// Back cards fan out to either side; the front card leans slightly.
+    /// A fourth card (#198 sign-in, canvas Bg-SignIn) fans out furthest right.
     static func angle(_ index: Int, of count: Int) -> Angle {
-        let fan: [Double] = [-14, 12, -3]
+        let fan: [Double] = [24, -14, 12, -3]
         return .degrees(fan[(fan.count - count + index).clamped(to: 0 ... fan.count - 1)])
     }
 
     static func offset(_ index: Int, of count: Int) -> CGFloat {
-        let shift: [CGFloat] = [-22, 22, 0]
+        let shift: [CGFloat] = [38, -22, 22, 0]
         return shift[(shift.count - count + index).clamped(to: 0 ... shift.count - 1)]
     }
 }

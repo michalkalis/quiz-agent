@@ -77,6 +77,22 @@ extension HangsBrandRow where Right == EmptyView {
     init() { self.init { EmptyView() } }
 }
 
+/// #198: the top row of a screen past Home — no logo (founder 2026-10-10:
+/// the mark lives on Home and Onboarding only), its controls on the trailing
+/// side at the brand row's height.
+struct HangsTopBar<Right: View>: View {
+    @ViewBuilder var right: () -> Right
+
+    var body: some View {
+        HStack {
+            Spacer()
+            right()
+        }
+        .padding(.horizontal, Theme.Hangs.Spacing.lg)
+        .padding(.vertical, Theme.Hangs.Spacing.xs)
+    }
+}
+
 // MARK: - Progress bar
 
 /// 3pt progress bar — the long-set fallback of `HangsQuizProgressHeader`.

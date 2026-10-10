@@ -1,6 +1,6 @@
 # #194 — Redizajn „Sklo nad kartami“ (verzia 1.1)
 
-**Triage:** feature · planned
+**Triage:** feature · done (2026-10-10; zostáva len E2 — TestFlight na požiadanie foundera)
 **Založené:** 2026-10-08 (founder: post-launch design refresh, „menej generický dizajn, animácie“; vybraný smer Bg)
 **Návrhy:** plátno https://claude.ai/artifact/7F7N4oJSqyi4FZ3VVtcJpR (jediný zdroj návrhu pre tento redizajn)
 **Research:** nástroje a trendy, 2026-10-08 (zhrnutie v sekcii Kontext)
@@ -42,7 +42,7 @@
 - [x] B2 (#306) — komponenty: karta otázky, sklenený spodný panel s doplnkom „Počúvam“, sklenené tlačidlá a sheet, hlavné tlačidlo s odpočtom, pilulky postupu, nálepka odpovede.
   - Zlúčené 2026-10-09: paleta Bg svetlá aj tmavá, farby 7 kategórií + vlastné balíčky, SF cez iOS textové štýly (Dynamic Type ostáva; display 28/40/52), hlavné tlačidlo atrament s odpočtom, sklo na ovládačoch (koliesko, ✕, Písať, Preskoč, lišta Počúvam), pilulky postupu atrament, nesprávna odpoveď neutrálna; nové `HangsDeckCard` + `HangsAnswerSticker` (do obrazoviek vo fáze C). Svetlé snímky obrazoviek pribudli. Sklo sa v testových snímkach nevykreslí, overené na simulátore.
 - [x] B3 (#316, #322) — pohyb: rozdanie, otočenie, vejár, posun karty, lesk skla; haptika ku kľúčovým momentom; všetko vypnuté pri „Obmedziť pohyb“.
-- [~] B4 — katalóg (#188) pregenerovaný z nových tokenov a komponentov (generátor už pozná nové názvy tokenov, #306; republikovanie po fáze C).
+- [x] B4 (2026-10-10) — katalóg (#188) https://claude.ai/artifact/RibRqy3ag5avMkoSNQkhkH republikovaný z `main` 9d8667a2 (37 komponentov, 79 stavov, 230 nových snímok; Pen podľa rozhodnutia vynechaný).
 
 ### Postup od 2026-10-09
 - **Founder 2026-10-09:** medzivýsledky neschvaľuje, chce vidieť až finálnu verziu. PR redizajnu sa zlučujú po nezávislom review + zelenom CI; na konci jedna stránka pred/po (svetlý aj tmavý) celej appky. Produktové otázky sa kladú počas práce.
@@ -65,7 +65,7 @@
 - [x] D2 — logo (otáznik s vlnou kariet) a nápis „trubbo“ v Rethink Sans ExtraBold v appke; ikonu appky prerobil #319.
 
 ### E. Overenie
-- [ ] E1 — plná sada `HangsTests` + RS-01 až RS-21 na simulátore iOS 27.
+- [x] E1 (2026-10-10) — plná sada `HangsTests` 1580/1580 + všetky automatické RS (RS-01…RS-23; RS-11/14/18 sú podľa návrhu len jednotkové) zelené na iPhone 18 Pro iOS 27.0 (CI #342). Finálne pred/po pre foundera: https://claude.ai/artifact/V1deKfQWGM9V4MHTStFQFP
 - [ ] E2 — interný TestFlight build z `main` na požiadanie foundera, test v aute.
 
 **Rozsah:** približne 15 až 20 PR (A ~3, B ~4, C 9, D 1–2, E 1).

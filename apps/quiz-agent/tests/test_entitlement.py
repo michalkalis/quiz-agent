@@ -1,12 +1,13 @@
 """Entitlement/quota gate tests for issue #93 (subscription IAP + packs).
 
-Pins the Design §3 serving order **subscription → free-30 → pack credits → deny**
+Pins the Design §3 serving order **monthly allowance → pack credits → deny**
 enforced by ``UsageTracker.check_limit`` (non-mutating) and the single consume
 point ``record_question`` (mutating). The load-bearing invariants:
 
 * the free cap is **30** (down from 100);
-* an ``active`` OR ``grace`` subscription (``expires_at > now``) is unlimited and
-  is neither counted nor debited;
+* an ``active`` OR ``grace`` subscription (``expires_at > now``) is entitled to
+  the Trubbo Plus allowance (1,000 a month, #199) instead of the free 30, drawn
+  from the same monthly counter (the cap itself is tested in ``test_plus_limit``);
 * one served question on the credit path = exactly one ``-1`` debit, and a
   fully-spent balance debits nothing (no double-spend / #90 TOCTOU);
 * a **pre-record 500** (question retrieval fails between ``check_limit`` and
@@ -44,7 +45,12 @@ from app.usage.entitlement import (
     account_credit_balance,
     account_is_entitled,
 )
-from app.usage.tracker import FREE_MONTHLY_LIMIT, UsageTracker, _month_start
+from app.usage.tracker import (
+    FREE_MONTHLY_LIMIT,
+    SUBSCRIBER_MONTHLY_LIMIT,
+    UsageTracker,
+    _month_start,
+)
 from tests._pg_locks import wait_until_blocked_or_done
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
@@ -165,9 +171,11 @@ async def test_free_cap_is_30(db_sessionmaker):
 # --- subscription entitlement ------------------------------------------------
 
 
-async def test_active_sub_unlimited(db_sessionmaker):
-    """An active sub (expires in the future) is unlimited: check returns -1 and
-    record neither increments the free counter nor debits credits."""
+async def test_active_sub_gets_plus_allowance_not_free_cap(db_sessionmaker):
+    """An active sub (expires in the future) is entitled to the Trubbo Plus
+    allowance (#199), not an unlimited bypass: check returns the real
+    remaining, record counts against the monthly counter, and pack credits are
+    left alone while the allowance lasts."""
     await _seed_subscription(
         db_sessionmaker, "active", expires_at=utcnow() + timedelta(days=30)
     )
@@ -175,31 +183,32 @@ async def test_active_sub_unlimited(db_sessionmaker):
     t = _tracker(db_sessionmaker)
 
     allowed, remaining, _ = await t.check_limit(SUBJECT)
-    assert allowed and remaining == -1
+    assert allowed and remaining == SUBSCRIBER_MONTHLY_LIMIT
 
-    # Recording is a no-op for the quota: counter stays 0, balance stays 5.
-    assert await t.record_question(SUBJECT) == 0
-    assert await t.record_question(SUBJECT) == 0
+    # Recording counts toward the subscriber limit; the balance stays 5.
+    assert await t.record_question(SUBJECT) == 1
+    assert await t.record_question(SUBJECT) == 2
     usage = await t.get_usage(SUBJECT)
-    assert usage["questions_used"] == 0
-    assert usage["questions_limit"] is None
+    assert usage["questions_used"] == 2
+    assert usage["questions_limit"] == SUBSCRIBER_MONTHLY_LIMIT
+    assert usage["remaining"] == SUBSCRIBER_MONTHLY_LIMIT - 2
     assert usage["subscription_status"] == "active"
     assert usage["credit_balance"] == 5
     assert await _ledger_balance(db_sessionmaker) == 5
 
 
-async def test_grace_sub_unlimited(db_sessionmaker):
+async def test_grace_sub_still_gets_plus_allowance(db_sessionmaker):
     """A grace sub (Apple billing-retry window, expires_at in the future) still
-    counts as entitled — it must not fall through to the free allotment."""
+    counts as entitled — it must not fall through to the free 30. With the free
+    allotment already used up, only the subscriber limit can allow here."""
     await _seed_subscription(
         db_sessionmaker, "grace", expires_at=utcnow() + timedelta(days=3)
     )
-    # Free allotment already exhausted: only entitlement can allow here.
     await _seed_daily(db_sessionmaker, FREE_MONTHLY_LIMIT)
     t = _tracker(db_sessionmaker)
 
     allowed, remaining, _ = await t.check_limit(SUBJECT)
-    assert allowed and remaining == -1
+    assert allowed and remaining == SUBSCRIBER_MONTHLY_LIMIT - FREE_MONTHLY_LIMIT
 
 
 async def test_expired_sub_not_entitled(db_sessionmaker):

@@ -91,6 +91,7 @@ async def start_quiz(
                         "stage": "start",
                         "questions_used": usage["questions_used"],
                         "questions_limit": usage["questions_limit"],
+                        "plan": usage["plan"],
                     },
                 )
                 raise HTTPException(
@@ -100,7 +101,9 @@ async def start_quiz(
                         "questions_used": usage["questions_used"],
                         "questions_limit": usage["questions_limit"],
                         "resets_at": usage["resets_at"],
-                        "upgrade_available": True,
+                        # Trubbo Plus is the only plan: a subscriber at the wall
+                        # has nothing to upgrade to (packs are the way on).
+                        "upgrade_available": usage["plan"] == "free",
                     },
                 )
 

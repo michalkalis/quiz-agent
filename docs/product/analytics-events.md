@@ -13,7 +13,7 @@
 | `quiz_started` | first question served (`routes/quiz.py` start_quiz) | `category`, `language`, `difficulty`, `mode`, `is_pack`, `max_questions` |
 | `answer_evaluated` | first grade of a question (`quiz/flow.py` process_answer) | `question_id`, `result` (correct / incorrect / partially_correct / skipped …), `category`, `question_type`, `difficulty`, `route` (voice / text), `is_regrade`, `question_index` |
 | `quiz_completed` | session → finished | `reason` (max_questions / usage_limit / no_more_questions), `questions_asked`, `score`, `is_pack` |
-| `quota_hit` | free limit blocks a start or the next question | `stage` (start / mid_quiz), `questions_used`, `questions_limit` |
+| `quota_hit` | the monthly limit (free 30 or Trubbo Plus 1,000) blocks a start or the next question | `stage` (start / mid_quiz), `questions_used`, `questions_limit`, `plan` (plus / free) |
 | `transcription_failed` | server rejects a voice upload as no speech | `reason`, `question_id` |
 | `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 

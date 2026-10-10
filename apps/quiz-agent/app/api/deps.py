@@ -297,8 +297,9 @@ class UsageResponse(BaseModel):
     Additive over the pre-#93 raw dict: ``subscription_status`` + ``credit_balance``
     are new; the legacy fields are unchanged so an un-updated iOS client keeps
     working (it just sees the 30-question cap and no pack UI). ``questions_limit``
-    / ``remaining`` are ``None`` when the account is unlimited (entitled sub or
-    the legacy premium flag)."""
+    / ``remaining`` are the monthly allowance (free 30, or 1,000 for an entitled
+    Trubbo Plus sub, #199); ``None`` only for the legacy premium flag on a
+    non-entitled account."""
 
     user_id: str
     is_premium: bool = Field(
@@ -306,10 +307,10 @@ class UsageResponse(BaseModel):
     )
     questions_used: int
     questions_limit: Optional[int] = Field(
-        description="Free monthly cap, or null when unlimited"
+        description="Monthly cap (free or Plus), or null for the legacy premium flag"
     )
     remaining: Optional[int] = Field(
-        description="Free questions left this month, or null when unlimited"
+        description="Questions left in the monthly allowance, or null for the legacy premium flag"
     )
     resets_at: str = Field(description="ISO-8601 UTC start of next month")
     subscription_status: str = Field(

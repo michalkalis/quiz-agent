@@ -262,7 +262,12 @@ def _flow(spy, *, allowed=True, next_question=None) -> QuizFlowService:
     usage = MagicMock()
     usage.check_limit = AsyncMock(return_value=(allowed, 0, None))
     usage.get_usage = AsyncMock(
-        return_value={"questions_used": 30, "questions_limit": 30, "resets_at": "x"}
+        return_value={
+            "questions_used": 30,
+            "questions_limit": 30,
+            "resets_at": "x",
+            "plan": "free",
+        }
     )
     usage.record_question = AsyncMock()
     return QuizFlowService(
@@ -314,7 +319,12 @@ async def test_running_out_of_free_questions_mid_quiz_emits_quota_hit():
     await _flow(spy, allowed=False).process_answer(_session(10), "Mars", route="text")
 
     assert spy.named("quota_hit") == [
-        {"stage": "mid_quiz", "questions_used": 30, "questions_limit": 30}
+        {
+            "stage": "mid_quiz",
+            "questions_used": 30,
+            "questions_limit": 30,
+            "plan": "free",
+        }
     ]
     assert spy.named("quiz_completed")[0]["reason"] == "usage_limit"
     assert spy.named("answer_evaluated")[0]["result"] == "incorrect"

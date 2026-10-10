@@ -1,22 +1,22 @@
 # texts
-adults
 0/10
+ADULTS
 MISSED IT.
 the answer
 Paris
+you said
+Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
 hear it
 Paris has been the capital of France since the 10th century.
-you said
-Somewhere on the Rhône, I think Lyon or maybe Marseille
 source
 Next
 STAY
 Settings
 # identifiers
 question.progress
-question.category
 question.counter
+question.category
 result.heroBanner
 result.verdict
 result.hearIt

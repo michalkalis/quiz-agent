@@ -1,6 +1,6 @@
 # texts
-adults
 0/10
+ADULTS
 NAILED IT.
 your answer
 Paris
@@ -13,8 +13,8 @@ STAY
 Settings
 # identifiers
 question.progress
-question.category
 question.counter
+question.category
 result.heroBanner
 result.verdict
 result.hearIt

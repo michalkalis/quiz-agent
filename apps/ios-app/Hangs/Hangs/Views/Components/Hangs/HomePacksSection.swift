@@ -21,6 +21,17 @@ struct HomePacksSection: View {
     let onPlayPack: (String) -> Void
     /// The "Create your own pack" card. Nil (inspector tests, previews) hides it.
     let createPack: CreatePackEntry?
+    /// The pack whose quiz is starting right now: its play control spins, like
+    /// Home's Start button does (TestFlight 2026-10-10: a pack tap gave no
+    /// feedback). Any start in flight disables every play control.
+    let quizStart: QuizStart
+
+    struct QuizStart: Equatable {
+        var isInFlight = false
+        var packId: String?
+
+        static let idle = QuizStart()
+    }
 
     struct CreatePackEntry {
         let appConfig: AppConfigStore
@@ -30,10 +41,12 @@ struct HomePacksSection: View {
     init(
         service: PackOrderServiceProtocol,
         createPack: CreatePackEntry? = nil,
+        quizStart: QuizStart = .idle,
         onPlayPack: @escaping (String) -> Void
     ) {
         _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
         self.createPack = createPack
+        self.quizStart = quizStart
         self.onPlayPack = onPlayPack
     }
 
@@ -43,10 +56,12 @@ struct HomePacksSection: View {
         init(
             viewModel: MyPacksViewModel,
             createPack: CreatePackEntry? = nil,
+            quizStart: QuizStart = .idle,
             onPlayPack: @escaping (String) -> Void
         ) {
             _viewModel = StateObject(wrappedValue: viewModel)
             self.createPack = createPack
+            self.quizStart = quizStart
             self.onPlayPack = onPlayPack
         }
     #endif
@@ -75,7 +90,12 @@ struct HomePacksSection: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.xxs)
                 LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
                     ForEach(visible) { order in
-                        HomePackCard(order: order, onPlay: onPlayPack)
+                        HomePackCard(
+                            order: order,
+                            isStarting: quizStart.isInFlight && quizStart.packId == order.packId,
+                            isPlayDisabled: quizStart.isInFlight,
+                            onPlay: onPlayPack
+                        )
                     }
                 }
             }
@@ -134,6 +154,8 @@ private struct HomePackCard: View {
     }
 
     let order: OrderSnapshot
+    let isStarting: Bool
+    let isPlayDisabled: Bool
     let onPlay: (String) -> Void
 
     private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(for: nil) }
@@ -201,18 +223,36 @@ private struct HomePackCard: View {
             Button {
                 onPlay(packId)
             } label: {
-                playIcon(active: true)
-                    .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
-                    .contentShape(.rect)
+                Group {
+                    if isStarting {
+                        startingIndicator
+                    } else {
+                        playIcon(active: true)
+                    }
+                }
+                .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
+            .disabled(isPlayDisabled)
+            .accessibilityLabel(isStarting
+                ? String(localized: "Loading", comment: "Accessibility label: the custom pack's quiz is starting")
+                : String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
             .accessibilityIdentifier("home.myPacks.play")
         } else {
             playIcon(active: false)
                 .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                 .accessibilityHidden(true)
         }
+    }
+
+    /// The play chip with a spinner in place of the triangle while this
+    /// pack's quiz starts — the same feedback Home's Start button gives.
+    private var startingIndicator: some View {
+        ProgressView()
+            .tint(Theme.Hangs.Category.chipText)
+            .frame(width: Metrics.playSize, height: Metrics.playSize)
+            .background(Circle().fill(Theme.Hangs.Category.chipFill))
     }
 
     private func playIcon(active: Bool) -> some View {

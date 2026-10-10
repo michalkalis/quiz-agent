@@ -29,6 +29,7 @@ struct RoundCompleteView: View {
     }
 
     @ObservedObject var viewModel: QuizViewModel
+    @Environment(\.locale) private var locale
     let route: Route
     let summary: QuizCompleteSummary
     /// Free questions left when the upsell applies (score route only).
@@ -221,7 +222,7 @@ struct RoundCompleteView: View {
 
     /// #198: nil for a category outside the taxonomy — the label then names no category.
     private var categoryName: String? {
-        viewModel.recapEntries.first.flatMap { Config.categoryDisplayName(for: $0.category) }
+        viewModel.recapEntries.first.flatMap { Config.categoryDisplayName(for: $0.category, locale: locale) }
     }
 
     /// End-of-set route: the spoken summary (it starts by itself hands-free).

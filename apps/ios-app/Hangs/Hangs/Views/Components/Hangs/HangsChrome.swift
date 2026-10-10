@@ -12,21 +12,23 @@ import SwiftUI
 
 /// `trubbo.` brand wordmark — blue mono text + pink dot. Inline-sized.
 struct HangsBrandMark: View {
-    var size: CGFloat = 17
-    var showDot: Bool = true
+    /// Wordmark size; the mark is drawn a little taller than the cap height.
+    var size: CGFloat = 28
 
     var body: some View {
+        // #194 D2: logo = question mark with a card-wave dot + "trubbo" in
+        // Rethink Sans ExtraBold (founder 2026-10-09).
         HStack(spacing: 6) {
-            // #194: placeholder wordmark until the logo lands (phase D2).
-            Text(verbatim: "trubbo.")
-                .font(.hangsMono(size, weight: .medium))
-                .foregroundColor(Theme.Hangs.Colors.blue)
-            if showDot {
-                Circle()
-                    .fill(Theme.Hangs.Colors.action)
-                    .frame(width: size * 0.35, height: size * 0.35)
-            }
+            TrubboMark(height: size * 1.15)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+            Text(verbatim: "trubbo")
+                .font(Theme.Hangs.Fonts.content(size, weight: .heavy))
+                .tracking(-size * 0.03)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .lineLimit(1)
+                .fixedSize()
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

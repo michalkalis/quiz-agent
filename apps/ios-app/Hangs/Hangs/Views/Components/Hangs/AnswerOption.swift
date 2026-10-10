@@ -83,7 +83,8 @@ struct AnswerOption: View {
             .frame(width: AnswerOptionMetrics.badge, height: AnswerOptionMetrics.badge)
 
             Text(value)
-                .font(.hangsBody(16, weight: .semibold))
+                // #194: answer text is content — Rethink Sans.
+                .font(.hangsContentCompact)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 // #174 C2: this row is the layout long options fall back to, so
                 // it must never be the thing that truncates them: the row grows.
@@ -251,7 +252,7 @@ struct AnswerTile: View {
 
             Text(value)
                 // #194 R-MCQ: a short option in the 2×2 grid reads a step larger.
-                .font(.hangsBody(17, weight: .semibold))
+                .font(.hangsContent)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 // Slovak option texts run long; 2 lines truncated real answers
                 // mid-word (TF build 53 feedback). The grid row grows instead.

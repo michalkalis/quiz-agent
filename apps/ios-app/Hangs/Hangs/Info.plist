@@ -61,6 +61,12 @@
 	<string>Trubbo uses the microphone to hear your spoken quiz answers and voice commands.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Voice commands let you control the quiz hands-free. Recognition happens on your device.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>RethinkSans-SemiBold.ttf</string>
+		<string>RethinkSans-Bold.ttf</string>
+		<string>RethinkSans-ExtraBold.ttf</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>API_BASE_URL</key>

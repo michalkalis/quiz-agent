@@ -29,9 +29,9 @@ from ...db.models import VoiceSample
 from ...rate_limit import limiter
 from ...voice.sample_storage import (
     KEY_PREFIX,
-    R2VoiceSampleStorage,
     StorageNotConfigured,
     VoiceSampleStorage,
+    get_voice_sample_storage,
 )
 from ..admin import verify_admin_key
 from ..deps import get_auth_sessionmaker, require_auth_or_grace
@@ -47,13 +47,6 @@ SIDECAR_MAX_BYTES = 64 * 1024
 WAV_CONTENT_TYPES = {"audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave"}
 STAMP_PATTERN = re.compile(r"^\d{8}-\d{6}-\d{3}$")
 _READ_CHUNK_BYTES = 64 * 1024
-
-_default_storage = R2VoiceSampleStorage()
-
-
-def get_voice_sample_storage(request: Request) -> VoiceSampleStorage:
-    """The app-state override (tests) or the shared R2 storage."""
-    return getattr(request.app.state, "voice_sample_storage", None) or _default_storage
 
 
 def upload_allowlist() -> set[str]:

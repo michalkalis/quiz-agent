@@ -18,7 +18,7 @@ from __future__ import annotations
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db.models import AnalyticsEvent, Feedback
+from ..db.models import AnalyticsEvent, Feedback, VoiceSample
 
 
 async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
@@ -26,7 +26,37 @@ async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
         "feedback": await _feedback(session, subject_ids),
         "analytics_events": await _analytics_events(session, subject_ids),
         "pack_orders": await _pack_orders(session, subject_ids),
+        "voice_samples": await _voice_samples(session, subject_ids),
     }
+
+
+async def _voice_samples(session: AsyncSession, subject_ids: list[str]) -> list[dict]:
+    """#197 car answer recordings: metadata + sidecar (incl. what was heard);
+    the audio is listed, not embedded — it sits in private storage."""
+    rows = (
+        (
+            await session.execute(
+                select(VoiceSample)
+                .where(VoiceSample.user_id.in_(subject_ids))
+                .order_by(VoiceSample.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "created_at": r.created_at,
+            "session_id": r.session_id,
+            "question_id": r.question_id,
+            "language": r.language,
+            "sidecar": r.sidecar,
+            "label": r.label,
+            "audio": {"content_type": "audio/wav", "bytes": r.audio_bytes},
+        }
+        for r in rows
+    ]
 
 
 async def _feedback(session: AsyncSession, subject_ids: list[str]) -> list[dict]:

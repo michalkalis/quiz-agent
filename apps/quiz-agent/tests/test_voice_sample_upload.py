@@ -24,6 +24,7 @@ from app.api.routes import voice_samples as routes
 from app.auth.tokens import TokenService
 from app.db.models import VoiceSample
 from app.rate_limit import limiter
+from app.voice.sample_storage import R2VoiceSampleStorage
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from slowapi import _rate_limit_exceeded_handler
@@ -264,7 +265,7 @@ async def test_missing_r2_config_fails_loud_at_call_time(env, monkeypatch):
         "VOICE_SAMPLES_R2_BUCKET",
     ):
         monkeypatch.delenv(name, raising=False)
-    client._transport.app.state.voice_sample_storage = routes.R2VoiceSampleStorage()
+    client._transport.app.state.voice_sample_storage = R2VoiceSampleStorage()
     resp = await _post(client, _bearer(_FOUNDER))
     assert resp.status_code == 503
     assert "not configured" in resp.json()["detail"]

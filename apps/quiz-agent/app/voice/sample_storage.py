@@ -22,6 +22,8 @@ from __future__ import annotations
 import os
 from typing import Protocol
 
+from fastapi import Request
+
 REQUIRED_ENV = (
     "R2_ENDPOINT",
     "R2_ACCESS_KEY_ID",
@@ -39,6 +41,12 @@ class VoiceSampleStorage(Protocol):
     def put(self, key: str, data: bytes, content_type: str) -> None: ...
 
     def presigned_url(self, key: str, expires_seconds: int = 3600) -> str: ...
+
+    def delete(self, keys: list[str]) -> None:
+        """Remove objects; raises if any key could not be deleted. A key that
+        is already gone counts as deleted (S3/R2 semantics), so a retried
+        erasure is safe."""
+        ...
 
 
 class R2VoiceSampleStorage:
@@ -84,3 +92,26 @@ class R2VoiceSampleStorage:
             Params={"Bucket": self._bucket, "Key": key},
             ExpiresIn=expires_seconds,
         )
+
+    def delete(self, keys: list[str]) -> None:
+        client = self._ensure()
+        for start in range(0, len(keys), 1000):  # DeleteObjects takes ≤1000 keys
+            batch = keys[start : start + 1000]
+            response = client.delete_objects(
+                Bucket=self._bucket,
+                Delete={"Objects": [{"Key": k} for k in batch], "Quiet": True},
+            )
+            errors = response.get("Errors") or []
+            if errors:
+                raise RuntimeError(
+                    f"R2 refused to delete {len(errors)} voice sample(s): "
+                    + ", ".join(e.get("Key", "?") for e in errors[:5])
+                )
+
+
+_default_storage = R2VoiceSampleStorage()
+
+
+def get_voice_sample_storage(request: Request) -> VoiceSampleStorage:
+    """FastAPI dependency: the app-state override (tests) or the shared R2 storage."""
+    return getattr(request.app.state, "voice_sample_storage", None) or _default_storage

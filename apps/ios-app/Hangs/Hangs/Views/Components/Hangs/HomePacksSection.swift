@@ -135,7 +135,7 @@ struct HomePacksSection: View {
                 } else {
                     // Same wording as the pack list (#188 G14): one source.
                     Text(verbatim: order.statusLabel)
-                        .font(.hangsBody(12))
+                        .font(.hangsBody)
                         .foregroundColor(Theme.Hangs.Colors.accentPrimary)
                 }
             }

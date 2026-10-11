@@ -42,10 +42,10 @@ struct OrderPackSummaryStep: View {
                     if let price = viewModel.packPrice {
                         HStack(spacing: Theme.Hangs.Spacing.xs) {
                             Text("Price")
-                                .font(.hangsBody(15))
+                                .font(.hangsBody)
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                             Text(verbatim: price)
-                                .font(.hangsBody(15, weight: .semibold))
+                                .font(.hangsBody.weight(.semibold))
                                 .foregroundColor(Theme.Hangs.Colors.ink)
                         }
                         .accessibilityElement(children: .combine)

@@ -195,6 +195,9 @@ final class TextDictation: ObservableObject {
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled, self.micState == .dictating else { return }
             self.didHitDictationCap = true
+            // Detach first: stop() cancels capTask, and cancelling the task that
+            // is running stop() would turn its final drain into a busy spin.
+            self.capTask = nil
             await self.stop()
         }
     }

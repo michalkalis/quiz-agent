@@ -19,16 +19,16 @@ struct HomeCreatePackCard: View {
             HangsCard(padding: EdgeInsets(top: 14, leading: 18, bottom: 14, trailing: 18)) {
                 HStack(spacing: Theme.Hangs.Spacing.sm) {
                     Image(systemName: "plus")
-                        .font(.hangsBody(15, weight: .semibold))
+                        .font(.hangsBody.weight(.semibold))
                         .foregroundColor(appConfig.ordersEnabled ? Theme.Hangs.Colors.ink : Theme.Hangs.Colors.muted)
                         .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
                         Text("Create your own pack")
-                            .font(.hangsBody(15, weight: .semibold))
+                            .font(.hangsBody.weight(.semibold))
                             .foregroundColor(Theme.Hangs.Colors.ink)
                         if !appConfig.ordersEnabled {
                             Text("Ordering is paused for now.")
-                                .font(.hangsBody(12))
+                                .font(.hangsBody)
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }

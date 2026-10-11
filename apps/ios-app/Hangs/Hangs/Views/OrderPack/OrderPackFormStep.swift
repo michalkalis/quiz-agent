@@ -73,7 +73,7 @@ struct OrderPackFormStep: View {
                 .padding(.leading, Theme.Hangs.Spacing.xxs)
             if let micHint {
                 Text(micHint)
-                    .font(.hangsBody(12))
+                    .font(.hangsBody)
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.leading, Theme.Hangs.Spacing.xxs)
@@ -86,11 +86,11 @@ struct OrderPackFormStep: View {
         Button(action: toggleDictation) {
             if dictation.isDictating {
                 Label("Stop", systemImage: "stop.circle.fill")
-                    .font(.hangsBody(14, weight: .semibold))
+                    .font(.hangsBody.weight(.semibold))
                     .foregroundColor(Theme.Hangs.Colors.pink)
             } else {
                 Label("Dictate", systemImage: "mic.fill")
-                    .font(.hangsBody(14, weight: .semibold))
+                    .font(.hangsBody.weight(.semibold))
                     .foregroundColor(Theme.Hangs.Colors.blue)
             }
         }
@@ -153,7 +153,7 @@ struct OrderPackFormStep: View {
                 .accessibilityIdentifier("orderPack.language")
             }
             Text("Preselected from your quiz language in Settings.")
-                .font(.hangsBody(12))
+                .font(.hangsBody)
                 .foregroundColor(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.leading, Theme.Hangs.Spacing.xxs)

@@ -49,13 +49,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ještě %1$@ z %2$@ · %3$@"
+            "value" : "Zbývá %1$@ z %2$@ · %3$@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ešte %1$@ z %2$@ · %3$@"
+            "value" : "Zostáva %1$@ z %2$@ · %3$@"
           }
         }
       }
@@ -9129,13 +9129,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo Plus · ještě %1$lld z %2$lld"
+            "value" : "Trubbo Plus · zbývá %1$lld z %2$lld"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo Plus · ešte %1$lld z %2$lld"
+            "value" : "Trubbo Plus · zostáva %1$lld z %2$lld"
           }
         }
       }

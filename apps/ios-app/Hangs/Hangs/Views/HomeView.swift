@@ -18,6 +18,9 @@ struct HomeView: View {
     /// #193 task 193.9: source of the server notice. Nil in inspector tests and
     /// previews, which then render Home without it.
     var appConfig: AppConfigStore?
+    /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
+    /// which then render Home without the create card.
+    var onCreatePack: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,10 +44,10 @@ struct HomeView: View {
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
                     // #141: pick-and-play entry for owned custom packs
-                    // (variant B — founder 2026-08-05). Renders nothing for
-                    // accounts without pack orders.
+                    // (variant B — founder 2026-08-05), plus the always-on
+                    // "Create your own pack" card.
                     if let packOrderService {
-                        HomePacksSection(service: packOrderService) { packId in
+                        HomePacksSection(service: packOrderService, createPack: createPackEntry) { packId in
                             viewModel.beginQuizStart(packId: packId)
                         }
                     }
@@ -96,6 +99,11 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
+    }
+
+    private var createPackEntry: HomePacksSection.CreatePackEntry? {
+        guard let appConfig, let onCreatePack else { return nil }
+        return HomePacksSection.CreatePackEntry(appConfig: appConfig, action: onCreatePack)
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)

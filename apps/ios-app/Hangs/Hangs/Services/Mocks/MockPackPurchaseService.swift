@@ -21,6 +21,7 @@ final class MockPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
     )
 
     private let purchaseResult: Result<PackPaymentProof, PackPurchaseError>
+    private let price: String?
     private let state: OSAllocatedUnfairLock<State>
 
     private struct State {
@@ -30,9 +31,11 @@ final class MockPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
 
     init(
         purchaseResult: Result<PackPaymentProof, PackPurchaseError> = .success(MockPackPurchaseService.mockProof),
-        pending: PackPaymentProof? = nil
+        pending: PackPaymentProof? = nil,
+        displayPrice: String? = nil
     ) {
         self.purchaseResult = purchaseResult
+        self.price = displayPrice
         self.state = OSAllocatedUnfairLock(initialState: State(pending: pending))
     }
 
@@ -55,5 +58,9 @@ final class MockPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
 
     func clearPendingProof() {
         state.withLock { $0.pending = nil }
+    }
+
+    func displayPrice() async -> String? {
+        price
     }
 }

@@ -73,12 +73,22 @@ struct LanguagePickerTests {
         #expect(restored.numberOfQuestions == stored.numberOfQuestions)
     }
 
-    @Test("A quiz language packs cannot be generated in degrades on the order form")
-    func testPackOrderLanguageNarrowerThanQuiz() {
-        // DD15: packs are generated in English and only stamped with the code,
-        // so a Slovak quiz language must not become a Slovak pack order.
+    @Test("Before any fetch lands, a Slovak quiz language still orders a Slovak pack")
+    func testPackOrderFallbackKeepsSlovak() {
+        // TestFlight 2026-10-09: the launch fetch often meets a cold pack API,
+        // so the compiled fallback is what the order form sees. Since #192
+        // packs are generated natively in sk/cs — a fallback of ["en"] turned
+        // every Slovak order into an English one.
         let packOrder = Language.selectableLanguages(in: LanguageAvailability.fallbackPackOrderCodes)
-        #expect(packOrder.map(\.id) == ["en"])
+        #expect(Language.selectable("sk", in: packOrder).id == "sk")
+        #expect(Language.selectable("cs", in: packOrder).id == "cs")
+    }
+
+    @Test("A quiz language the server can't generate packs in degrades on the order form")
+    func testPackOrderLanguageNarrowerThanQuiz() {
+        // The server list may be narrower than the quiz one (an env flip);
+        // the form must never send a code the server would reject.
+        let packOrder = Language.selectableLanguages(in: ["en"])
         #expect(Language.selectable("sk", in: packOrder).id == "en")
     }
 
@@ -88,7 +98,8 @@ struct LanguagePickerTests {
     func testFallbackWhenNothingCached() throws {
         let store = try makeIsolatedStore()
         #expect(store.quizCodes == ["en", "sk", "cs"])
-        #expect(store.packOrderCodes == ["en"])
+        // Mirrors the server default (quiz_shared/languages.py, #192).
+        #expect(store.packOrderCodes == ["en", "sk", "cs"])
     }
 
     @Test("A fetched list is cached, so an offline launch keeps the server's menu")

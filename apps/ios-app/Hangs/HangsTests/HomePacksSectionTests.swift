@@ -181,4 +181,24 @@ struct HomePacksSectionRenderingTests {
             try view.inspect().find(viewWithAccessibilityIdentifier: "home.myPacksSection")
         }
     }
+
+    // TestFlight 2026-10-09: ordering a pack was reachable only from Settings.
+    // The Home entry must exist for an account with NO packs yet — that is
+    // exactly who needs it — and must open the order sheet.
+    @Test("the create card shows with zero packs and opens the order flow")
+    func createCardWithoutPacks() async throws {
+        let vm = await loadedViewModel([])
+        var opened = 0
+        let view = HomePacksSection(
+            viewModel: vm,
+            createPack: .init(appConfig: AppConfigStore(fetch: { .permissive }), action: { opened += 1 })
+        ) { _ in }
+
+        let tree = try view.inspect()
+        #expect(throws: (any Error).self) {
+            try tree.find(viewWithAccessibilityIdentifier: "home.myPacksSection")
+        }
+        try tree.find(viewWithAccessibilityIdentifier: "home.createPack").button().tap()
+        #expect(opened == 1)
+    }
 }

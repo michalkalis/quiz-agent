@@ -45,6 +45,10 @@ protocol PackPurchaseServiceProtocol: Sendable {
     func pendingProof() -> PackPaymentProof?
     /// Forget the persisted proof after the backend accepted the order.
     func clearPendingProof()
+    /// The pack product's localized App Store price (`Product.displayPrice`),
+    /// or nil when StoreKit can't return the product — callers hide the price
+    /// rather than show a guess.
+    func displayPrice() async -> String?
 }
 
 enum PackPurchaseError: LocalizedError, Equatable {
@@ -216,5 +220,14 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
 
     func clearPendingProof() {
         store.clear()
+    }
+
+    func displayPrice() async -> String? {
+        do {
+            return try await Product.products(for: [Self.productId]).first?.displayPrice
+        } catch {
+            Logger.quiz.info("pack price unavailable: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 }

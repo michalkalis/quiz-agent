@@ -107,6 +107,14 @@ struct ContentView: View {
         )
     }
 
+    /// Open the create-pack sheet from Home (Settings does the same). The view
+    /// model lives on AppState (#146); `prepareForPresentation` decides whether
+    /// this is a fresh form or the still-running order from last time.
+    private func presentOrderFlow() {
+        appState.orderPackViewModel.prepareForPresentation(defaultLanguage: viewModel.settings.language)
+        navModel.orderFlowPresented = true
+    }
+
     @ViewBuilder
     private var mainContent: some View {
         ZStack {
@@ -124,7 +132,8 @@ struct ContentView: View {
                         HomeView(
                             viewModel: viewModel,
                             packOrderService: appState.packOrderService,
-                            appConfig: appState.appConfig
+                            appConfig: appState.appConfig,
+                            onCreatePack: presentOrderFlow
                         )
 
                     // #182: `.awaitingQuestion` stays on QuestionView — the header
@@ -211,6 +220,18 @@ struct ContentView: View {
                 storeManager: appState.storeManager,
                 limitError: viewModel.quotaLimitError,
                 onDismiss: { viewModel.showPaywall = false }
+            )
+        }
+        // #138 create-pack sheet, opened from Home or Settings. Presented here at
+        // the root (not inside a pushed screen) so both entries share one
+        // presentation; quiz-start teardown clears the flag via `navModel`.
+        .sheet(isPresented: $navModel.orderFlowPresented) {
+            OrderPackFlowView(
+                viewModel: appState.orderPackViewModel,
+                voice: appState.makeFeedbackVoice(for: viewModel),
+                networkService: appState.networkService,
+                onPlayPack: playPack,
+                onClose: { navModel.orderFlowPresented = false }
             )
         }
         .sheet(isPresented: $showSignInPrompt) {

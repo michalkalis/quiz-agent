@@ -29,7 +29,7 @@ struct OrderPackPreparingStep: View {
                         .font(.hangsBody(17, weight: .semibold))
                         .foregroundColor(Theme.Hangs.Colors.ink)
                         .multilineTextAlignment(.center)
-                    Text("Usually takes a few minutes. The first order after a longer break can take a bit extra.")
+                    Text("Usually takes a few minutes.")
                         .font(.hangsBody(13))
                         .foregroundColor(Theme.Hangs.Colors.muted)
                         .multilineTextAlignment(.center)

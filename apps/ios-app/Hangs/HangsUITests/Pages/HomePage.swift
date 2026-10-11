@@ -14,6 +14,11 @@ struct HomePage {
         app.buttons["home.startQuiz"]
     }
 
+    /// "Create your own pack" — opens the same order sheet as Settings.
+    var createPackButton: XCUIElement {
+        app.buttons["home.createPack"]
+    }
+
     /// Tap the Start Quiz button and return immediately (caller waits for destination).
     func tapStartQuiz() {
         startQuizButton.tap()

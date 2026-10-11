@@ -20,6 +20,17 @@ struct HomePacksSection: View {
     let onPlayPack: (String) -> Void
     /// The "Create your own pack" card. Nil (inspector tests, previews) hides it.
     let createPack: CreatePackEntry?
+    /// The pack whose quiz is starting right now: its play control spins, like
+    /// Home's Start button does (TestFlight 2026-10-10: a pack tap gave no
+    /// feedback). Any start in flight disables every play control.
+    let quizStart: QuizStart
+
+    struct QuizStart: Equatable {
+        var isInFlight = false
+        var packId: String?
+
+        static let idle = QuizStart()
+    }
 
     struct CreatePackEntry {
         let appConfig: AppConfigStore
@@ -29,10 +40,12 @@ struct HomePacksSection: View {
     init(
         service: PackOrderServiceProtocol,
         createPack: CreatePackEntry? = nil,
+        quizStart: QuizStart = .idle,
         onPlayPack: @escaping (String) -> Void
     ) {
         _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
         self.createPack = createPack
+        self.quizStart = quizStart
         self.onPlayPack = onPlayPack
     }
 
@@ -42,10 +55,12 @@ struct HomePacksSection: View {
         init(
             viewModel: MyPacksViewModel,
             createPack: CreatePackEntry? = nil,
+            quizStart: QuizStart = .idle,
             onPlayPack: @escaping (String) -> Void
         ) {
             _viewModel = StateObject(wrappedValue: viewModel)
             self.createPack = createPack
+            self.quizStart = quizStart
             self.onPlayPack = onPlayPack
         }
     #endif
@@ -118,13 +133,21 @@ struct HomePacksSection: View {
             }
             Spacer()
             if playable, let packId = order.packId {
+                let isStarting = quizStart.isInFlight && quizStart.packId == packId
                 Button {
                     onPlayPack(packId)
                 } label: {
-                    playIcon(active: true)
+                    if isStarting {
+                        startingIndicator
+                    } else {
+                        playIcon(active: true)
+                    }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
+                .disabled(quizStart.isInFlight)
+                .accessibilityLabel(isStarting
+                    ? String(localized: "Loading", comment: "Accessibility label: the custom pack's quiz is starting")
+                    : String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
                 .accessibilityIdentifier("home.myPacks.play")
             } else {
                 playIcon(active: false)
@@ -132,6 +155,24 @@ struct HomePacksSection: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, Theme.Hangs.Spacing.sm)
+    }
+
+    /// The play chip with a spinner in place of the triangle while this
+    /// pack's quiz starts — the same feedback Home's Start button gives.
+    private var startingIndicator: some View {
+        ProgressView()
+            .tint(Theme.Hangs.Category.chipText)
+            .frame(width: Metrics.playSize, height: Metrics.playSize)
+            .background(Circle().fill(Theme.Hangs.Category.chipFill))
+    }
+
+    /// The play chip with a spinner in place of the triangle while this
+    /// pack's quiz starts — the same feedback Home's Start button gives.
+    private var startingIndicator: some View {
+        ProgressView()
+            .tint(Theme.Hangs.Colors.textOnAccent)
+            .frame(width: 34, height: 34)
+            .background(Circle().fill(Theme.Hangs.Colors.pink))
     }
 
     private func playIcon(active: Bool) -> some View {

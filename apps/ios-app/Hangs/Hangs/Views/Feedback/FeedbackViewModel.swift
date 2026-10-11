@@ -450,6 +450,9 @@ final class FeedbackViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             guard !Task.isCancelled, self.micState == .dictating else { return }
             self.didHitDictationCap = true
+            // Detach first: stop() cancels capTask, and cancelling the task that
+            // is running it would turn the final drain into a busy spin.
+            self.capTask = nil
             await self.stopDictation()
             Logger.stt.info("🎙️ Feedback dictation hit the \(Int(seconds), privacy: .public)s cap")
         }

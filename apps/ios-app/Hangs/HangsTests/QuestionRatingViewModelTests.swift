@@ -174,6 +174,36 @@ struct QuestionRatingDictationTests {
         }
     }
 
+    // WHY: the cap fires mid-sentence (partial transcript pending). The cap task
+    // runs the stop; if the stop cancels that same task, its final drain busy-spins
+    // on the main actor and the forced-commit words never land.
+    @Test("the cap stops rating dictation mid-sentence without losing the last words")
+    func capKeepsTheLastWords_rating() async {
+        await withMainSerialExecutor {
+            let stt = MockElevenLabsSTTService()
+            // The forced commit answers late, as ElevenLabs does: only a drain
+            // that really suspends lets the listener deliver it.
+            await stt.setCommitEmitsNothing(true)
+            let (vm, _, _) = makeRatingVM(stt: stt)
+            vm.maxDictationSeconds = 0.02
+            await vm.startDictation()
+            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
+            await stt.injectEvent(.partialTranscript("and the pla"))
+            await pumpUntil({ vm.partialTranscript == "and the pla" }, turns: 2000, "partial never arrived")
+
+            Task {
+                try? await Task.sleep(for: .milliseconds(300))
+                await stt.injectEvent(.committedTranscript("and the planets"))
+            }
+            try? await Task.sleep(for: .milliseconds(150))
+            await pumpUntil({ vm.micState == .idle }, turns: 4000, "cap never stopped dictation")
+
+            #expect(vm.didHitDictationCap)
+            #expect(await !stt.commitRanCancelled, "stopping must not cancel the cap task that is running it")
+            #expect(vm.justification == "and the planets", "the forced-commit words must survive the cap stop")
+        }
+    }
+
     @Test("committed segments append to the editable justification")
     func committedSegmentsAppend() async {
         await withMainSerialExecutor {

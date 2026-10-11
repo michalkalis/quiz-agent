@@ -66,7 +66,7 @@ struct SettingsSubscriptionPlanTests {
 
     private func usage(remaining: Int?, limit: Int?) -> UsageInfo {
         UsageInfo(
-            userId: "test-subject", isPremium: true, questionsUsed: 130,
+            userId: "test-subject", isPremium: false, questionsUsed: 130,
             questionsLimit: limit, remaining: remaining,
             resetsAt: "", subscriptionStatus: "active", creditBalance: 0
         )

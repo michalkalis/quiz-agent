@@ -267,7 +267,7 @@ struct ContentView: View {
             }
             Button("Cancel", role: .cancel) { viewModel.dismissQuestionShortfall() }
         } message: { shortfall in
-            if shortfall.reason == .quota, viewModel.usageInfo?.isPremium == true {
+            if shortfall.reason == .quota, viewModel.usageInfo?.isPlus == true {
                 Text("Only \(shortfall.available) Trubbo Plus questions left this month (you asked for \(shortfall.requested)).")
             } else if shortfall.reason == .quota {
                 Text("Only \(shortfall.available) free questions left this month (you asked for \(shortfall.requested)).")

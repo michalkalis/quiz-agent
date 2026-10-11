@@ -236,7 +236,7 @@ final class AppState: ObservableObject {
             } else {
                 try? await self.networkService.syncEntitlements()
                 let usage = try? await self.networkService.getUsage()
-                return (usage?.isPremium ?? false) || (usage?.creditBalance ?? 0) > 0
+                return (usage?.isPlus ?? false) || (usage?.creditBalance ?? 0) > 0
             }
         }
 

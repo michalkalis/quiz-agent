@@ -232,7 +232,7 @@ final class EntitlementReconciler: ObservableObject {
         // from a fetch issued after the sync above, never from a launch/onAppear
         // fetch that was already in flight (#133 audit 1d).
         await refreshUsage(force: true)
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+        return (usageInfo?.isPlus ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 
     /// Re-syncs entitlements (bounded retry+backoff) then refreshes usage —
@@ -318,6 +318,6 @@ final class EntitlementReconciler: ObservableObject {
         // must reflect the resync above and not a fetch that predates it
         // (#133 audit 1d).
         await refreshUsage(force: true)
-        return (usageInfo?.isPremium ?? false) || (usageInfo?.creditBalance ?? 0) > 0
+        return (usageInfo?.isPlus ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 }

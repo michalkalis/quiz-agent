@@ -161,15 +161,17 @@ struct CompletionViewCloseLabelTests {
 @MainActor
 @Suite("CompletionView — free-quota upsell (#94)")
 struct CompletionViewUpsellTests {
-    private func makeUsage(isPremium: Bool, remaining: Int?) -> UsageInfo {
+    // `isPremium` stays false for a subscriber: that is what the server sends
+    // (the legacy flag has no writer); Plus is carried by the status alone.
+    private func makeUsage(subscriber: Bool, remaining: Int?) -> UsageInfo {
         UsageInfo(
             userId: "test-user",
-            isPremium: isPremium,
+            isPremium: false,
             questionsUsed: 25,
-            questionsLimit: 30,
+            questionsLimit: subscriber ? 1000 : 30,
             remaining: remaining,
             resetsAt: "2099-01-01T08:00:00.000Z",
-            subscriptionStatus: isPremium ? "active" : "none",
+            subscriptionStatus: subscriber ? "active" : "none",
             creditBalance: 0
         )
     }
@@ -191,22 +193,22 @@ struct CompletionViewUpsellTests {
     @Test("Upsell shows for a free user at 5 or fewer remaining questions")
     func upsellVisibleAtThreshold() {
         for remaining in [5, 3, 0] {
-            let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: remaining)))
+            let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: false, remaining: remaining)))
             #expect(view.upsellRemaining == remaining, "remaining=\(remaining) must show the upsell")
         }
     }
 
-    @Test("Upsell hidden above the threshold, for premium, and without quota data")
+    @Test("Upsell hidden above the threshold, for Trubbo Plus (it would sell them their own plan), and without quota data")
     func upsellHiddenOutsideThreshold() {
-        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 6))).upsellRemaining == nil)
-        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: true, remaining: 2))).upsellRemaining == nil)
-        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: nil))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: false, remaining: 6))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: true, remaining: 2))).upsellRemaining == nil)
+        #expect(CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: false, remaining: nil))).upsellRemaining == nil)
         #expect(CompletionView(viewModel: makeViewModel(usage: nil)).upsellRemaining == nil)
     }
 
     @Test("Upsell card renders 'Get Trubbo Plus' in the hosted tree")
     func upsellCardRenders() async throws {
-        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 3)))
+        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: false, remaining: 3)))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "Get Trubbo Plus") }
@@ -216,7 +218,7 @@ struct CompletionViewUpsellTests {
 
     @Test("Upsell card absent from the hosted tree when quota is healthy")
     func upsellCardAbsentWhenHealthy() async throws {
-        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 25)))
+        let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(subscriber: false, remaining: 25)))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: (any Error).self) { try tree.find(text: "Get Trubbo Plus") }

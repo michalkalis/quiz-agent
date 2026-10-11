@@ -584,7 +584,7 @@ struct SettingsView: View {
             // a (possibly wrong) answer.
             return String(localized: "Loading…", comment: "Settings subscription row value before usage has loaded")
         }
-        if usage.isPremium {
+        if usage.isPlus {
             guard let remaining = usage.remaining, let limit = usage.questionsLimit else {
                 return "Trubbo Plus"
             }

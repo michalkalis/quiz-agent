@@ -51,7 +51,7 @@ struct HomePlanCard: View {
         case "expired": return .expired
         default: break
         }
-        if usage.isPremium || usage.subscriptionStatus == "active" {
+        if usage.isPlus {
             return usage.creditBalance > 0 ? .subscriberWithCredits : .subscriber
         }
         return usage.creditBalance > 0 ? .freeWithCredits : .free

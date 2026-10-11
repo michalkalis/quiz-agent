@@ -475,6 +475,24 @@ struct HomeFreePlanCardTests {
         #expect(!noLimit.isLimitReached)
     }
 
+    // WHY (#199 review): the server never sets the legacy `is_premium` flag for
+    // a real subscriber, it reports Plus through the subscription status. Reading
+    // the flag alone told a paying subscriber they were on the free plan and
+    // offered them their own subscription again.
+    @Test("Trubbo Plus is read from the subscription status (active or grace), not the legacy premium flag")
+    func plusFollowsSubscriptionStatus() {
+        func payload(_ status: String) -> UsageInfo {
+            UsageInfo(
+                userId: "t", isPremium: false, questionsUsed: 130, questionsLimit: 1000, remaining: 870,
+                resetsAt: "", subscriptionStatus: status, creditBalance: 0
+            )
+        }
+        #expect(payload("active").isPlus)
+        #expect(payload("grace").isPlus)
+        #expect(!payload("expired").isPlus)
+        #expect(!payload("none").isPlus)
+    }
+
     @Test("Track fraction follows remaining/limit and clamps")
     func quotaFraction() {
         #expect(HomeView.quotaFraction(usage(remaining: 70, limit: 100)) == 0.7)

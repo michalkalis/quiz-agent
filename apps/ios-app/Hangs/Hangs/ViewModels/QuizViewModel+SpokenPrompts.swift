@@ -49,8 +49,9 @@ extension QuizViewModel {
     func prefetchErrorPrompt() {
         let text = errorPromptText(canRetry: true)
         guard prefetchedPromptAudio[text] == nil else { return }
+        let language = currentSession?.language ?? settings.language
         Task { [weak self, networkService] in
-            guard let audio = try? await networkService.synthesizeSpeech(text: text) else { return }
+            guard let audio = try? await networkService.synthesizeSpeech(text: text, language: language) else { return }
             self?.prefetchedPromptAudio[text] = audio
         }
     }
@@ -126,7 +127,9 @@ extension QuizViewModel {
         taskBag.add(Task { [weak self] in
             guard let self else { return }
             for chunk in Self.splitForTTS(explanation) {
-                guard let audio = try? await networkService.synthesizeSpeech(text: chunk),
+                guard let audio = try? await networkService.synthesizeSpeech(
+                    text: chunk, language: currentSession?.language ?? settings.language
+                ),
                       !Task.isCancelled, quizState.isShowingResult else { break }
                 await audioDeviceState.playAppSpeech(audio)
             }
@@ -139,9 +142,10 @@ extension QuizViewModel {
 
     private func promptAudio(_ text: String) async -> Data? {
         if let cached = prefetchedPromptAudio[text] { return cached }
+        let language = currentSession?.language ?? settings.language
         do {
             return try await withUserFacingTimeout(seconds: Self.promptFetchTimeoutSeconds, clock: clock) {
-                try await self.networkService.synthesizeSpeech(text: text)
+                try await self.networkService.synthesizeSpeech(text: text, language: language)
             }
         } catch {
             Logger.audio.warning("🔈 Spoken prompt fetch failed: \(error, privacy: .public)")

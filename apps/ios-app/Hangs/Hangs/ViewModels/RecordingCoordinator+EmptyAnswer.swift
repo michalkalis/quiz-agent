@@ -144,8 +144,9 @@ extension RecordingCoordinator {
         do {
             // Bounded: the driver waits in silence with the mic closed until
             // this returns, so a slow TTS round trip skips the line, not the retry.
+            let language = currentSession()?.language ?? settings().language
             let audio = try await withUserFacingTimeout(seconds: 3, clock: clock) {
-                try await self.networkService.synthesizeSpeech(text: text)
+                try await self.networkService.synthesizeSpeech(text: text, language: language)
             }
             try Task.checkCancellation()
             _ = try await audioService.playOpusAudio(audio)

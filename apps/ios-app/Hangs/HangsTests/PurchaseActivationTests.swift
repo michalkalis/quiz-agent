@@ -108,8 +108,8 @@ struct PurchaseActivationTests {
 
         mock.syncEntitlementsFailuresBeforeSuccess = 2 // fails twice, succeeds on the 3rd bounded attempt
         mock.stubbedUsage = UsageInfo(
-            userId: "mock-subject", isPremium: true, questionsUsed: 0,
-            questionsLimit: nil, remaining: nil,
+            userId: "mock-subject", isPremium: false, questionsUsed: 0,
+            questionsLimit: 1000, remaining: 1000,
             resetsAt: "", subscriptionStatus: "active", creditBalance: 0
         )
 

@@ -54,14 +54,14 @@
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Unlimited quiz questions",
-              "displayName" : "Unlimited (Monthly)",
+              "description" : "1,000 quiz questions a month",
+              "displayName" : "Trubbo Plus (Monthly)",
               "locale" : "en_US"
             }
           ],
           "productID" : "com.carquiz.unlimited.monthly",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Unlimited Monthly",
+          "referenceName" : "Trubbo Plus Monthly",
           "subscriptionGroupID" : "21532888",
           "type" : "RecurringSubscription",
           "winbackOffers" : []

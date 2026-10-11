@@ -135,6 +135,24 @@ struct QuizEndVoiceTests {
         #expect(rig.vm.quizState == .idle)
     }
 
+    /// WHY (#199): a Trubbo Plus subscriber who spent the month's allowance must
+    /// not be told their "free" questions ran out; the line names what ran out.
+    @Test("G2: a subscriber who spent the allowance hears about Trubbo Plus questions, not free ones")
+    func quotaSpeaksAboutThePlanForSubscribers() async {
+        let rig = makeRig()
+        let limit = QuotaLimitError(
+            error: "quota_limit_reached", questionsUsed: 1000, questionsLimit: 1000,
+            resetsAt: "2099-01-01T00:00:00Z", upgradeAvailable: false
+        )
+        await rig.vm.handleError(NetworkError.quotaLimitReached(limit), context: .submission, fallbackMessage: "x")
+
+        let line = SpokenPrompt.quotaReachedLine(language: rig.language, upgradeAvailable: false)
+        #expect(rig.network.synthesizedTexts == [line])
+        #expect(line.contains("Trubbo Plus"))
+        #expect(!line.localizedCaseInsensitiveContains("free"))
+        #expect(rig.vm.showPaywall)
+    }
+
     // MARK: - G3
 
     /// WHY (D3): in the per-question flow the set ended in silence; the driver

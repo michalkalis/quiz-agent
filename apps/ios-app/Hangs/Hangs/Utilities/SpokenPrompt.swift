@@ -54,8 +54,18 @@ enum SpokenPrompt: String, Sendable {
 
     /// #188 G2 (founder 2026-10-06): the free questions ran out mid-quiz. Said
     /// once, before the paywall opens, so the stop is not a silent "crash".
-    static func quotaReachedLine(language: CommandLanguage) -> String {
-        switch language {
+    ///
+    /// `upgradeAvailable == false`: a Trubbo Plus subscriber spent the month's
+    /// allowance, so the questions that ran out are not "free" ones.
+    static func quotaReachedLine(language: CommandLanguage, upgradeAvailable: Bool = true) -> String {
+        guard upgradeAvailable else {
+            return switch language {
+            case .slovak: "Otázky Trubbo Plus na tento mesiac sa minuli. Ako pokračovať, uvidíš na obrazovke."
+            case .czech: "Otázky Trubbo Plus na tento měsíc došly. Jak pokračovat, uvidíš na obrazovce."
+            case .english: "You've used up this month's Trubbo Plus questions. The screen shows how to continue."
+            }
+        }
+        return switch language {
         case .slovak: "Otázky zadarmo na tento mesiac sa minuli. Ako pokračovať, uvidíš na obrazovke."
         case .czech: "Otázky zdarma na tento měsíc došly. Jak pokračovat, uvidíš na obrazovce."
         case .english: "You've used up this month's free questions. The screen shows how to continue."

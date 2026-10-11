@@ -25,7 +25,7 @@ extension AppScreen {
         case .signInFailed: Self.signIn(.failed)
         case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed:
             await makeOrder()
-        case .paywallPack, .paywallOffline:
+        case .paywallPack, .paywallAllowanceSpent, .paywallOffline:
             await makePaywall()
         case .homeCredits, .homeSubscriber, .homeGrace, .homeExpired, .homePacks, .homeCategories:
             await makeHome()

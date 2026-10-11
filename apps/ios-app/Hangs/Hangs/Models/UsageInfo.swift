@@ -38,9 +38,19 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
         return formatter.date(from: resetsAt) ?? ISO8601DateFormatter().date(from: resetsAt)
     }
 
-    /// Whether the free limit has been reached
+    /// Whether the account holds Trubbo Plus. The server grants it from the
+    /// stored subscription status (`active` or `grace`); the legacy
+    /// `is_premium` flag has no production writer, so it can never be the
+    /// only signal (#199 review). Every "is this a subscriber?" check reads
+    /// this one property so Home, Settings, the paywall touchpoints and the
+    /// purchase verdict cannot disagree on the same payload.
+    var isPlus: Bool {
+        isPremium || subscriptionStatus == "active" || subscriptionStatus == "grace"
+    }
+
+    /// Whether the monthly allowance (free tier or Trubbo Plus) has been
+    /// reached. Nil `remaining` (no limit known) never counts as reached.
     var isLimitReached: Bool {
-        guard !isPremium else { return false }
         guard let remaining else { return false }
         return remaining <= 0
     }

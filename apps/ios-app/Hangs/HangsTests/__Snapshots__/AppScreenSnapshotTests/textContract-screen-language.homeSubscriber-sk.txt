@@ -1,11 +1,11 @@
 # texts
 trubbo
 tvoj plán
-Bez limitu
+Trubbo Plus
 aktívne
 Spravuj
 100 kreditov z balíka uchovaných na neskôr
-Predplatné je aktívne
+Ešte 870 z 1 000 · resets in 13 days
 History
 Science & Nature
 Geography & World
@@ -30,7 +30,7 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
-home.freePlanUnlimited
+home.planName
 home.planStatusPill
 home.planManageCTA
 home.planCreditChip

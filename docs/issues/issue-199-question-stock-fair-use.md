@@ -2,7 +2,7 @@
 
 **Triage:** enhancement · in-progress
 **Založené:** 2026-10-10 (founder: aktívna kontrola stavu otázok, aby sa napr. čerstvé otázky zo zábavy generovali vopred; predplatné „bez limitu“ sa dá zneužiť nonstop hraním)
-**Vetvy:** `feat/199-question-stock` (plán + 199.1), ďalšie tracky vlastné vetvy
+**PR:** #358 (199.1 + plán), #359 (199.2), #357 (199.4), iOS 199.3 `feat/199-plus-ios`
 
 ## Cieľ
 
@@ -31,7 +31,7 @@
 
 ## Tracky
 
-### 199.1 Denná kontrola zásoby (backend quiz-agent) — `[~]` kód + testy hotové 2026-10-10 (open = review PR, nasadenie, čísla z produ do PR)
+### 199.1 Denná kontrola zásoby (backend quiz-agent) — `[x]` nasadené 2026-10-10 (quiz-agent v149). Prvé čísla z produ: hrateľných otázok je v každom jazyku a kategórii 84 až 350 (najmenej šport), všetko nad 50. Čerstvej zábavy je en 10 / sk 19 / cs 23, takže **en je pod prahom 15** a prvé upozornenie odišlo.
 - Nový modul `app/monitoring/question_stock.py`, vzorom je `provider_balances.py`. Pre každý obsluhovaný jazyk × kategóriu z `CATEGORY_TAXONOMY` vytvorí skúšobnú session a spočíta otázky cez `count_available` (iba schválené, teda to, čo vidí App Store). K tomu pre každý jazyk spočíta čerstvé otázky zo zábavy, ktorým zvýhodnenie platí ešte o 14 dní. Trvalé zvýhodnenie (9999-01-01) sa nepočíta, lebo nikdy nevyprší.
 - Zdieľaný `_build_where` dostane operátory `$gt` / `$lt`. `count_available` dostane voliteľné `extra_filters`.
 - Prahy idú cez env `QUESTION_STOCK_MIN_PER_CELL=50`, `QUESTION_STOCK_MIN_FRESH=15` a `QUESTION_STOCK_FRESH_HORIZON_DAYS=14`. Zapína sa cez `QUESTION_STOCK_CHECK_ENABLED` (v `fly.toml` true).
@@ -40,20 +40,20 @@
 - **Hotovo keď:** testy pokrývajú výpočet aj fingerprinty, nasadené, endpoint v prode vráti tabuľku a jej čísla sú v PR.
 - Implementácia: `app/monitoring/question_stock.py`, `app/api/routes/question_stock.py`, testy `tests/test_question_stock.py` + `tests/db/test_question_stock_counts.py` + `packages/shared/tests/test_where_gt_lt.py`. Navyše `QUESTION_STOCK_INITIAL_DELAY_S` (default 180 s, ako pri kontrole kreditov); prázdna bunka (0) ide do Sentry ako `error`, nízka ako `warning`.
 
-### 199.2 Trubbo Plus limit + podmienky (backend quiz-agent) — `[ ]`
+### 199.2 Trubbo Plus limit + podmienky (backend quiz-agent) — `[x]` nasadené 2026-10-10 (v149), podmienky naživo
 - `UsageTracker`: limit pre predplatiteľa je `SUBSCRIBER_MONTHLY_LIMIT` (default 1000), pre ostatných `FREE_MONTHLY_LIMIT`. Ostatok sa nemení: jedno mesačné počítadlo na účet a po limite idú kúpené balíčky. Ak predplatné skončí uprostred mesiaca, platí limit 30 voči tomu istému počítadlu.
 - `get_usage` vráti predplatiteľovi skutočné čísla `questions_limit` a `remaining`. Starý `is_premium` bez predplatného ostáva bez zmeny.
 - 429 `quota_limit_reached` pošle predplatiteľovi `upgrade_available: false` (quiz.py aj flow.py).
 - Podmienky §4 (sk/cs/en): Trubbo Plus má 1 000 otázok za mesiac, k tomu nová časť o férovom používaní podľa rozhodnutí vyššie. Nový dátum účinnosti.
 - **Hotovo keď:** testy pokrývajú limit predplatiteľa, prechod do balíčkov po limite, skončenie predplatného uprostred mesiaca a `upgrade_available`. Zmena je nasadená.
 
-### 199.3 Appka: Trubbo Plus namiesto „bez limitu“ (iOS) — `[ ]`
+### 199.3 Appka: Trubbo Plus namiesto „bez limitu“ (iOS) — `[x]` kód v PR; po zlúčení `/design-sync` (zmenené snapshoty karty plánu); TF build len na požiadanie
 - Texty sk/cs/en: paywall, nastavenia, karta na domovskej obrazovke, výsledková obrazovka a hláška po kúpe. Predplatiteľ vidí zostatok otázok rovnako ako pri bezplatnom pláne.
 - Paywall pri `upgrade_available == false` ponúkne len balíček a odpočet, predplatné nie.
 - `Hangs.storekit` so zobrazovanými názvami. Snapshot testy treba aktualizovať.
 - TestFlight build sa nerobí, len na požiadanie foundera.
 
-### 199.4 Obchod + web — `[ ]`
+### 199.4 Obchod + web — `[x]` texty v PR #357; **open = nahranie do App Store Connect až s TF buildom, ktorý má nové texty** (súhlas foundera)
 - `fastlane/metadata/{en-US,en-GB,sk,cs}/description.txt`, `store_copy.json` (názov skupiny aj produktu), `review_information/notes.txt`, web `apps/website/src/strings/*.json`, potom `build.py`.
 - Nahranie do App Store Connect je externý krok. Robí sa so súhlasom foundera.
 

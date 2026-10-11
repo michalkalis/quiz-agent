@@ -25,11 +25,11 @@ struct CompletionView: View {
     }
 
     /// #94 third paywall touchpoint: soft upsell at the highest-intent moment
-    /// when the free quota is nearly exhausted. Hidden for premium users and
+    /// when the free quota is nearly exhausted. Hidden for Trubbo Plus and
     /// whenever quota data is missing. Internal so tests pin the rule directly.
     var upsellRemaining: Int? {
         guard let usage = viewModel.usageInfo,
-              !usage.isPremium,
+              !usage.isPlus,
               let remaining = usage.remaining,
               remaining <= 5 else { return nil }
         return remaining

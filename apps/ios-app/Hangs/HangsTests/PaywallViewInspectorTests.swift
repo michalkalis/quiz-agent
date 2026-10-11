@@ -539,3 +539,80 @@ struct PaywallViewOfflineStructureTests {
         }
     }
 }
+
+// MARK: - Subscriber who spent the month's allowance (#199)
+
+@MainActor
+@Suite("PaywallView — Trubbo Plus allowance spent (upgrade_available false, #199)")
+struct PaywallViewAllowanceSpentTests {
+    private func spentLimitError() -> QuotaLimitError {
+        QuotaLimitError(
+            error: "quota_limit_reached",
+            questionsUsed: 1000,
+            questionsLimit: 1000,
+            resetsAt: "2099-01-01T08:00:00.000Z",
+            upgradeAvailable: false
+        )
+    }
+
+    // WHY: a subscriber already owns the only plan. Pitching it again is a
+    // dead end (a second purchase of what they have), so the one thing to
+    // offer is the pack, plus when the month resets.
+    @Test("never offers the subscription: no plan card, no subscribe CTA, no auto-renew line; the pack is selected and buyable")
+    func offersOnlyThePack() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        #expect(!view.subscriptionOffered)
+        #expect(view.effectivePlan == .pack, "the CTA must never point at the plan they already hold")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack") }
+            #expect(!treeHasText(tree, containing: ["Get Trubbo Plus for"]))
+            #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]))
+            #expect(throws: (any Error).self, "the auto-renew line belongs to a subscription offer") {
+                try tree.find(viewWithAccessibilityIdentifier: "paywall.legal")
+            }
+            #expect(throws: (any Error).self, "'without subscribing' makes no sense to a subscriber") {
+                try tree.find(text: "or top up without subscribing")
+            }
+            #expect(try !ctaButton(tree).isDisabled())
+        }
+    }
+
+    @Test("says the Trubbo Plus questions are used up and counts down to the reset, without the word free")
+    func subtitleAndCountdownTalkAboutThePlan() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let subtitle = try tree.find(viewWithAccessibilityIdentifier: "paywall.subtitle").text().string()
+            #expect(subtitle.contains("Trubbo Plus questions this month"), "got: \(subtitle)")
+            #expect(!subtitle.localizedCaseInsensitiveContains("free"))
+            #expect(treeHasText(tree, containing: ["Questions reset in"]))
+            #expect(!treeHasText(tree, containing: ["Free questions reset"]))
+        }
+    }
+
+    @Test("a free user who hit the wall (upgrade_available true) still gets the subscription pitch")
+    func freeUserStillSeesTheSubscription() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: makeLimitError(), onDismiss: {})
+        #expect(view.subscriptionOffered)
+        #expect(view.effectivePlan == .monthly)
+    }
+
+    @Test("with no pack on offer the CTA slot stays empty rather than selling the subscription")
+    func neverFallsBackToTheSubscription() async throws {
+        let offerings = PurchasableOfferings(
+            monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"),
+            pack: nil
+        )
+        let manager = await makeStoreManager(offerings: offerings, hasAttemptedLoad: true)
+        let view = PaywallView(storeManager: manager, limitError: spentLimitError(), onDismiss: {})
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-purchase-button") }
+        }
+    }
+}

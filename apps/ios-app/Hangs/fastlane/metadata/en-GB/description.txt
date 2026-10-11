@@ -25,5 +25,5 @@ If you play in the car, the driver should use voice only. Never operate your pho
 GOOD TO KNOW
 Questions and answer evaluation are created with the help of AI and can contain mistakes. You can export or delete your data anytime in Settings.
 
-Privacy Policy: https://quiz-agent-api.fly.dev/legal/privacy
-Terms of Use: https://quiz-agent-api.fly.dev/legal/terms
+Privacy Policy: https://trubbo.app/privacy
+Terms of Use: https://trubbo.app/terms

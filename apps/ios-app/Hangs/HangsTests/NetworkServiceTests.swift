@@ -40,6 +40,20 @@ private nonisolated enum Stubs {
     }
     """#
 
+    /// #199 — a Trubbo Plus subscriber who spent the month: the server says the
+    /// plan they hold is the only one, so there is no upgrade to offer.
+    static let allowanceSpentJSON = #"""
+    {
+      "detail": {
+        "error": "quota_limit_reached",
+        "questions_used": 1000,
+        "questions_limit": 1000,
+        "resets_at": "2026-11-01T00:00:00Z",
+        "upgrade_available": false
+      }
+    }
+    """#
+
     static let rateLimitJSON = #"""
     {
       "error": "Rate limit exceeded: 10 per 1 minute"
@@ -104,6 +118,27 @@ struct NetworkServiceTests {
             } else {
                 Issue.record("Expected .quotaLimitReached, got \(error)")
             }
+        }
+    }
+
+    @Test("429 for a subscriber who spent the allowance carries upgrade_available false to the paywall (#199)")
+    func quotaLimitReachedForSubscriberCarriesNoUpgrade() async throws {
+        let service = makeService()
+        StubURLProtocol.handler = { _ in
+            (.make(status: 429), Data(Stubs.allowanceSpentJSON.utf8))
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        do {
+            _ = try await service.submitTextInput(sessionId: "s1", input: "Paris", audio: false)
+            Issue.record("Expected throw, got success")
+        } catch let error as NetworkError {
+            guard case let .quotaLimitReached(detail) = error else {
+                Issue.record("Expected .quotaLimitReached, got \(error)")
+                return
+            }
+            #expect(detail.questionsLimit == 1000)
+            #expect(detail.upgradeAvailable == false, "the paywall stops pitching the plan they already hold only if this flag survives decoding")
         }
     }
 

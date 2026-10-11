@@ -5422,6 +5422,41 @@
         }
       }
     },
+    "Only %lld Trubbo Plus questions left this month (you asked for %lld)." : {
+      "comment" : "Alert message: how many Trubbo Plus questions remain this month vs how many were requested",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky Trubbo Plus do konce měsíce: %1$lld. Požadovaný počet: %2$lld."
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only %1$lld Trubbo Plus question left this month (you asked for %2$lld)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only %1$lld Trubbo Plus questions left this month (you asked for %2$lld)."
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky Trubbo Plus do konca mesiaca: %1$lld. Požadovaný počet: %2$lld."
+          }
+        }
+      }
+    },
     "Only %lld free questions left this month (you asked for %lld)." : {
       "comment" : "Alert message: how many free questions remain this month vs how many were requested (#180 track C)",
       "localizations" : {
@@ -6247,6 +6282,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Questions per quiz"
+          }
+        }
+      }
+    },
+    "Questions reset in %@" : {
+      "comment" : "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky se obnoví za %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky sa obnovia o %@"
           }
         }
       }
@@ -9911,6 +9963,23 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "You've used all 1,000 Trubbo Plus questions this month." : {
+      "comment" : "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento měsíc už máš za sebou všech 1 000 otázek Trubbo Plus."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento mesiac už máš za sebou všetkých 1 000 otázok Trubbo Plus."
           }
         }
       }

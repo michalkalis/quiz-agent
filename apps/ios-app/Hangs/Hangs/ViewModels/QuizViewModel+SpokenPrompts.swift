@@ -87,9 +87,9 @@ extension QuizViewModel {
 
     /// One line before the paywall opens. The 429 itself proves the server
     /// is reachable, so no prefetch.
-    func announceQuotaReached() async {
+    func announceQuotaReached(upgradeAvailable: Bool = true) async {
         guard !isAudioMuted,
-              let audio = await promptAudio(SpokenPrompt.quotaReachedLine(language: promptLanguage))
+              let audio = await promptAudio(SpokenPrompt.quotaReachedLine(language: promptLanguage, upgradeAvailable: upgradeAvailable))
         else { return }
         await audioDeviceState.playAppSpeech(audio)
     }

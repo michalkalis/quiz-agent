@@ -136,7 +136,7 @@ struct CompletionView: View {
     /// pin the visibility rule directly.
     var upsellRemaining: Int? {
         guard let usage = viewModel.usageInfo,
-              !usage.isPremium,
+              !usage.isPlus,
               let remaining = usage.remaining,
               remaining <= 5 else { return nil }
         return remaining

@@ -49,6 +49,13 @@ struct PaywallView: View {
         storeManager.hasAttemptedOfferingsLoad && storeManager.offerings == nil
     }
 
+    /// False only when the server's 429 says the user already holds the only
+    /// plan (Trubbo Plus, month's allowance spent): the subscription is never
+    /// pitched to them, only the pack and the reset countdown.
+    var subscriptionOffered: Bool {
+        limitError?.upgradeAvailable ?? true
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if isOffline {
@@ -102,7 +109,7 @@ struct PaywallView: View {
                     paywallHeroBlock
 
                     if let resetDate = limitError?.resetDate {
-                        CountdownPill(resetDate: resetDate)
+                        CountdownPill(resetDate: resetDate, isSubscriber: !subscriptionOffered)
                     }
 
                     planPicker
@@ -251,6 +258,9 @@ struct PaywallView: View {
     // pitch the upgrade instead of claiming they ran out.
     private var limitMessage: String {
         if let limit = limitError {
+            if !limit.upgradeAvailable {
+                return String(localized: "You've used all 1,000 Trubbo Plus questions this month.", comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+            }
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
         return String(localized: "1,000 questions a month", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
@@ -264,7 +274,7 @@ struct PaywallView: View {
     var effectivePlan: PaywallPlan {
         switch selectedPlan {
         case .monthly:
-            return .monthly
+            return subscriptionOffered || storeManager.offerings?.pack == nil ? .monthly : .pack
         case .pack:
             // The pack card only renders when the pack exists, but an offering
             // refresh could drop it under the selection — never leave the CTA
@@ -276,7 +286,7 @@ struct PaywallView: View {
 
     private var selectedProduct: PurchasableProduct? {
         switch effectivePlan {
-        case .monthly: return storeManager.offerings?.monthly
+        case .monthly: return subscriptionOffered ? storeManager.offerings?.monthly : nil
         case .pack: return storeManager.offerings?.pack
         }
     }
@@ -326,7 +336,7 @@ struct PaywallView: View {
 
     private var planPicker: some View {
         VStack(spacing: 10) {
-            if let monthly = storeManager.offerings?.monthly {
+            if subscriptionOffered, let monthly = storeManager.offerings?.monthly {
                 planCard(
                     title: "Trubbo Plus",
                     price: "1,000 questions a month for \(monthly.displayPrice)",
@@ -339,13 +349,15 @@ struct PaywallView: View {
             }
 
             if let pack = storeManager.offerings?.pack {
-                Text("or top up without subscribing")
-                    .font(.hangsBody(12, weight: .medium))
-                    .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                    .padding(.top, 2)
-                    // Recedes while any purchase/restore is in flight — the pack
-                    // is no longer the offered path while something is buying.
-                    .opacity(isBusy ? Self.dimmedOpacity : 1)
+                if subscriptionOffered {
+                    Text("or top up without subscribing")
+                        .font(.hangsBody(12, weight: .medium))
+                        .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                        .padding(.top, 2)
+                        // Recedes while any purchase/restore is in flight — the pack
+                        // is no longer the offered path while something is buying.
+                        .opacity(isBusy ? Self.dimmedOpacity : 1)
+                }
 
                 packCard(pack)
             }
@@ -516,7 +528,7 @@ struct PaywallView: View {
             case .pack:
                 purchaseCTA(title: "Buy 100 Question Pack — \(product.displayPrice)", product: product)
             }
-        } else {
+        } else if subscriptionOffered || storeManager.offerings == nil {
             // Offerings not yet loaded — the load placeholder.
             HangsPrimaryButton(title: "Get Trubbo Plus", isLoading: true, height: 52) {}
                 .accessibilityIdentifier("paywall-purchase-button")
@@ -576,12 +588,15 @@ struct PaywallView: View {
             }
 
             // App Store review requirement: auto-renew disclosure (z8TS6 legal).
-            Text("Auto-renews until cancelled. Cancel anytime in Settings.")
-                .font(.hangsBody(11))
-                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                .multilineTextAlignment(.center)
-                .padding(.top, 2)
-                .accessibilityIdentifier("paywall.legal")
+            // Only while a subscription is on offer.
+            if subscriptionOffered {
+                Text("Auto-renews until cancelled. Cancel anytime in Settings.")
+                    .font(.hangsBody(11))
+                    .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("paywall.legal")
+            }
 
             // App Store review requirement (3.1.2): auto-renew subscriptions
             // must link the privacy policy and terms of use from the paywall.
@@ -669,11 +684,12 @@ struct PaywallView: View {
 
 private struct CountdownPill: View {
     let resetDate: Date
+    var isSubscriber = false
     @State private var timeRemaining: String = ""
     @State private var timer: Timer?
 
     var body: some View {
-        Text(String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset"))
+        Text(text)
             .font(.hangsMono(10, weight: .medium))
             .kerning(1)
             .textCase(.uppercase)
@@ -691,6 +707,12 @@ private struct CountdownPill: View {
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
             updateCountdown()
         }
+    }
+
+    private var text: String {
+        isSubscriber
+            ? String(localized: "Questions reset in \(timeRemaining)", comment: "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets")
+            : String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset")
     }
 
     private func updateCountdown() {

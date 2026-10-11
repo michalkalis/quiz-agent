@@ -1,1 +1,1 @@
-https://quiz-agent-api.fly.dev/legal/privacy
+https://trubbo.app/privacy

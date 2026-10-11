@@ -2,7 +2,7 @@
  "_comment": "TestFlight Test Information, What to Test and in-app purchase texts (issue #190). Uploaded by scripts/asc_store_upload.py. Limits: IAP name 30, IAP description 45, beta description and What to Test 4000.",
  "testflight": {
   "feedback_email": "hello@missinghue.com",
-  "privacy_policy_url": "https://quiz-agent-api.fly.dev/legal/privacy",
+  "privacy_policy_url": "https://trubbo.app/privacy",
   "beta_description": {
    "en-GB": "Trubbo is a trivia quiz you play with your voice: it reads each question aloud and you answer out loud in your own words. Thanks for testing! We especially want to hear where your spoken answer was misunderstood, which questions are wrong or unclear, and anything that confused you. Purchases in TestFlight are test purchases and are not charged.",
    "en-US": "Trubbo is a trivia quiz you play with your voice: it reads each question aloud and you answer out loud in your own words. Thanks for testing! We especially want to hear where your spoken answer was misunderstood, which questions are wrong or unclear, and anything that confused you. Purchases in TestFlight are test purchases and are not charged.",

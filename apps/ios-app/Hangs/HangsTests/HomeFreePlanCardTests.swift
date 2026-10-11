@@ -52,18 +52,22 @@ struct HomeFreePlanCardTests {
 
     private func usage(
         premium: Bool = false,
-        remaining: Int? = 70,
-        limit: Int? = 100,
+        remaining: Int? = nil,
+        limit: Int? = nil,
         resetsIn: TimeInterval = 12 * 86400,
         credits: Int = 0,
         status: String? = nil
     ) -> UsageInfo {
-        UsageInfo(
+        // A subscriber defaults to Trubbo Plus's real shape (870 of 1,000 left);
+        // a free user to 70 of 100.
+        let remaining = remaining ?? (premium ? 870 : 70)
+        let limit = limit ?? (premium ? 1000 : 100)
+        return UsageInfo(
             userId: "test-subject",
             isPremium: premium,
-            questionsUsed: premium ? 0 : (limit ?? 0) - (remaining ?? 0),
-            questionsLimit: premium ? nil : limit,
-            remaining: premium ? nil : remaining,
+            questionsUsed: limit - remaining,
+            questionsLimit: limit,
+            remaining: remaining,
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(resetsIn)),
             subscriptionStatus: status ?? (premium ? "active" : "none"),
             creditBalance: credits
@@ -95,12 +99,12 @@ struct HomeFreePlanCardTests {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planLegend")
             }
             #expect(throws: (any Error).self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planName")
             }
         }
     }
 
-    @Test("Subscriber sees the UNLIMITED word + active pill, no numeric headline, no reset countdown")
+    @Test("Subscriber sees the Trubbo Plus name + active pill, no numeric headline, no reset countdown")
     func premiumStateShowsUnlimited() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
@@ -109,14 +113,13 @@ struct HomeFreePlanCardTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planName")
             }
             // "active" status pill and subscriber meta line render for a subscriber.
             let pill = try tree.find(viewWithAccessibilityIdentifier: "home.planStatusPill").text()
             #expect(try pill.string() == "active")
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.planMeta")
-            }
+            let meta = try tree.find(viewWithAccessibilityIdentifier: "home.planMeta").find(ViewType.Text.self)
+            #expect(try meta.string(locale: Locale(identifier: "en")) == "870 of 1,000 left · resets in 12 days")
             // A subscriber has no spendable-quota number and no free-reset line.
             #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planPrimary")
@@ -323,7 +326,7 @@ struct HomeFreePlanCardTests {
         }
     }
 
-    @Test("Subscriber + credits: UNLIMITED plus a purple credit chip, credits stated not counted")
+    @Test("Subscriber + credits: Trubbo Plus plus a purple credit chip, credits stated not counted")
     func subscriberWithCreditsShowsCreditChip() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true, credits: 100)
@@ -332,7 +335,7 @@ struct HomeFreePlanCardTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUnlimited")
+                try tree.find(viewWithAccessibilityIdentifier: "home.planName")
             }
             // The credits a subscriber holds are kept for later, not spent down
             // against the unlimited plan — surfaced as a chip, not the headline.
@@ -440,6 +443,12 @@ struct HomeFreePlanCardTests {
     func quotaFraction() {
         #expect(HomeView.quotaFraction(usage(remaining: 70, limit: 100)) == 0.7)
         #expect(HomeView.quotaFraction(usage(remaining: 0, limit: 100)) == 0)
-        #expect(HomeView.quotaFraction(usage(remaining: nil, limit: nil)) == 0)
+        #expect(HomeView.quotaFraction(usage(premium: true, remaining: 870, limit: 1000)) == 0.87)
+        let noLimit = UsageInfo(
+            userId: "t", isPremium: false, questionsUsed: 0,
+            questionsLimit: nil, remaining: nil,
+            resetsAt: "", subscriptionStatus: "none", creditBalance: 0
+        )
+        #expect(HomeView.quotaFraction(noLimit) == 0)
     }
 }

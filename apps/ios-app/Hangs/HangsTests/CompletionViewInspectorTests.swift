@@ -204,12 +204,12 @@ struct CompletionViewUpsellTests {
         #expect(CompletionView(viewModel: makeViewModel(usage: nil)).upsellRemaining == nil)
     }
 
-    @Test("Upsell card renders 'Go Unlimited' in the hosted tree")
+    @Test("Upsell card renders 'Get Trubbo Plus' in the hosted tree")
     func upsellCardRenders() async throws {
         let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 3)))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Go Unlimited") }
+            #expect(throws: Never.self) { try tree.find(text: "Get Trubbo Plus") }
             #expect(throws: Never.self) { try tree.find(text: "Running low on free questions") }
         }
     }
@@ -219,7 +219,7 @@ struct CompletionViewUpsellTests {
         let view = CompletionView(viewModel: makeViewModel(usage: makeUsage(isPremium: false, remaining: 25)))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "Go Unlimited") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Get Trubbo Plus") }
         }
     }
 }

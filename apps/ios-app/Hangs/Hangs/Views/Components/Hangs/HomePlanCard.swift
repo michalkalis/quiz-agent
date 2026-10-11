@@ -192,26 +192,34 @@ struct HomePlanCard: View {
     private var subscriberBody: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HStack(spacing: 10) {
-                Text("Unlimited")
+                Text("Trubbo Plus")
                     .font(.hangsDisplay(32))
                     .textCase(.uppercase)
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                    .accessibilityIdentifier("home.freePlanUnlimited")
+                    .accessibilityIdentifier("home.planName")
                 statusPill
                 Spacer(minLength: 0)
             }
             if state == .subscriberWithCredits {
                 creditChip
             }
-            planTrack(segments: [(subscriberTrackColor, 1.0)])
+            planTrack(segments: [(subscriberTrackColor, subscriberTrackFraction)])
             HStack {
                 subscriberMeta
                 Spacer()
                 subscriberLink
             }
         }
+    }
+
+    /// The month's allowance still left; a full bar while grace (the plan is
+    /// intact, the payment is what needs attention) or when the backend sent
+    /// no limit.
+    private var subscriberTrackFraction: Double {
+        guard state != .grace, usage.questionsLimit != nil else { return 1 }
+        return HomeView.quotaFraction(usage)
     }
 
     private var subscriberTrackColor: Color {
@@ -245,6 +253,8 @@ struct HomePlanCard: View {
         Group {
             if state == .grace {
                 Text("Update your payment method")
+            } else if let remaining = usage.remaining, let limit = usage.questionsLimit {
+                allowanceMeta(remaining: remaining, limit: limit)
             } else {
                 // No renewal date in the /usage payload (#123): the model can't
                 // say "renews 12 Aug", so state the status honestly instead.
@@ -254,6 +264,16 @@ struct HomePlanCard: View {
         .font(.hangsBody(12))
         .foregroundColor(Theme.Hangs.Colors.mutedFaint)
         .accessibilityIdentifier("home.planMeta")
+    }
+
+    /// "870 of 1,000 left · resets in 3 days" — the same reset wording as the
+    /// free card, after what is left of the month's allowance. Counts are
+    /// grouped by the view's own locale (a plain Int interpolation never
+    /// groups: "1000").
+    private func allowanceMeta(remaining: Int, limit: Int) -> Text {
+        let reset = HomeView.resetCountdown(usage)
+            ?? String(localized: "resets soon", comment: "Home plan card: free questions reset in under an hour")
+        return Text("\(remaining, format: .number) of \(limit, format: .number) left · \(reset)")
     }
 
     @ViewBuilder private var subscriberLink: some View {
@@ -343,7 +363,7 @@ struct HomePlanCard: View {
     ) -> UsageInfo {
         UsageInfo(
             userId: "preview", isPremium: premium, questionsUsed: 18,
-            questionsLimit: premium ? nil : limit, remaining: premium ? nil : remaining,
+            questionsLimit: limit, remaining: remaining,
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(3 * 86400)),
             subscriptionStatus: status, creditBalance: credits
         )
@@ -354,9 +374,9 @@ struct HomePlanCard: View {
             VStack(spacing: 16) {
                 HomePlanCard(usage: previewUsage())
                 HomePlanCard(usage: previewUsage(credits: 100))
-                HomePlanCard(usage: previewUsage(premium: true, status: "active"))
-                HomePlanCard(usage: previewUsage(premium: true, status: "active", credits: 100))
-                HomePlanCard(usage: previewUsage(premium: true, status: "grace"))
+                HomePlanCard(usage: previewUsage(premium: true, remaining: 870, limit: 1000, status: "active"))
+                HomePlanCard(usage: previewUsage(premium: true, remaining: 870, limit: 1000, status: "active", credits: 100))
+                HomePlanCard(usage: previewUsage(premium: true, remaining: 870, limit: 1000, status: "grace"))
                 HomePlanCard(usage: previewUsage(remaining: 30, limit: 30, status: "expired"))
             }
             .padding(20)

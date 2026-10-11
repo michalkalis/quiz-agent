@@ -36,7 +36,7 @@ import ConcurrencyExtras
 
 private extension PurchasableOfferings {
     static let sample = PurchasableOfferings(
-        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Hangs Unlimited (Monthly)"),
+        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "$4.99", displayName: "Trubbo Plus (Monthly)"),
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "$1.99", displayName: "+100 Questions")
     )
 }

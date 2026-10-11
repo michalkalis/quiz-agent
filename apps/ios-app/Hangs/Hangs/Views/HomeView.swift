@@ -99,11 +99,6 @@ struct HomeView: View {
         .onChange(of: viewModel.quizState) { _, state in
             if state != .startingQuiz { startingPackId = nil }
         }
-        // A start that ends (quiz began, failed, cancelled) must not leave a
-        // pack id behind for the next, unrelated start (voice "start", Start).
-        .onChange(of: viewModel.quizState) { _, state in
-            if state != .startingQuiz { startingPackId = nil }
-        }
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -117,13 +112,6 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
-    }
-
-    private var packQuizStart: HomePacksSection.QuizStart {
-        HomePacksSection.QuizStart(
-            isInFlight: viewModel.quizState == .startingQuiz,
-            packId: startingPackId
-        )
     }
 
     private var packQuizStart: HomePacksSection.QuizStart {

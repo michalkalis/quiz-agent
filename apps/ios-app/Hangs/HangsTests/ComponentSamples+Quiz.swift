@@ -103,8 +103,8 @@ nonisolated extension ComponentSample {
             userId: "snapshot-subject",
             isPremium: premium,
             questionsUsed: 12,
-            questionsLimit: premium ? nil : 30,
-            remaining: premium ? nil : 18,
+            questionsLimit: premium ? 1000 : 30,
+            remaining: premium ? 870 : 18,
             resetsAt: ISO8601DateFormatter().string(from: resetsAt),
             subscriptionStatus: status,
             creditBalance: credits

@@ -158,7 +158,7 @@ struct PaywallView: View {
 
                 Text(productID == StoreProduct.packId
                     ? "100 questions were added to your account."
-                    : "Unlimited questions are now active.")
+                    : "Trubbo Plus is now active.")
                     .font(.hangsBody(15))
                     .foregroundColor(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)
@@ -170,8 +170,8 @@ struct PaywallView: View {
     // MARK: - Finishing activation (#102 finding 4)
 
     /// Shown when RC confirmed the purchase but the server usage mirror
-    /// hasn't yet — never claims "unlimited questions are now active" before
-    /// the server gate would actually allow it.
+    /// hasn't yet — never claims "Trubbo Plus is now active" before the server
+    /// gate would actually allow it.
     private var activatingBlock: some View {
         VStack(spacing: Theme.Hangs.Spacing.xl) {
             ZStack {
@@ -211,7 +211,7 @@ struct PaywallView: View {
             Circle()
                 .fill(Theme.Hangs.Colors.pinkSoft)
                 .frame(width: 104, height: 104)
-            Image(systemName: "infinity")
+            Image(systemName: "plus")
                 .font(.system(size: 44, weight: .medium))
                 .foregroundColor(Theme.Hangs.Colors.pink)
         }
@@ -221,9 +221,10 @@ struct PaywallView: View {
 
     private var paywallHeroBlock: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
-            // #96 P3 (founder no-wrap): single line, never the old "GO\nUNLIMITED"
-            // two-line break — scales down before it would wrap.
-            Text("GO UNLIMITED")
+            // #96 P3 (founder no-wrap): single line — scales down before it
+            // would wrap.
+            Text("Trubbo Plus")
+                .textCase(.uppercase)
                 .font(.hangsDisplayMD)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
@@ -252,7 +253,7 @@ struct PaywallView: View {
         if let limit = limitError {
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "Unlimited questions, no monthly cap.", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit)")
+        return String(localized: "1,000 questions a month", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
     }
 
     // MARK: - Plan picker
@@ -327,8 +328,8 @@ struct PaywallView: View {
         VStack(spacing: 10) {
             if let monthly = storeManager.offerings?.monthly {
                 planCard(
-                    title: "Monthly",
-                    price: "\(monthly.displayPrice) / month",
+                    title: "Trubbo Plus",
+                    price: "1,000 questions a month for \(monthly.displayPrice)",
                     plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {
@@ -507,17 +508,17 @@ struct PaywallView: View {
     private var ctaButton: some View {
         if let product = selectedProduct {
             // #56: the title param is LocalizedStringKey, so the interpolated
-            // literal extracts as "Subscribe — %@ / month" (the displayPrice is
+            // literal extracts as "Get Trubbo Plus for %@ / month" (the displayPrice is
             // a runtime placeholder, not translatable).
             switch effectivePlan {
             case .monthly:
-                purchaseCTA(title: "Subscribe — \(product.displayPrice) / month", product: product)
+                purchaseCTA(title: "Get Trubbo Plus for \(product.displayPrice) / month", product: product)
             case .pack:
                 purchaseCTA(title: "Buy 100 Question Pack — \(product.displayPrice)", product: product)
             }
         } else {
             // Offerings not yet loaded — the load placeholder.
-            HangsPrimaryButton(title: "Subscribe", isLoading: true, height: 52) {}
+            HangsPrimaryButton(title: "Get Trubbo Plus", isLoading: true, height: 52) {}
                 .accessibilityIdentifier("paywall-purchase-button")
         }
     }

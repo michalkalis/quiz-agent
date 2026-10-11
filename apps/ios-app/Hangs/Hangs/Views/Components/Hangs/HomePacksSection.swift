@@ -169,15 +169,6 @@ struct HomePacksSection: View {
     /// pack's quiz starts — the same feedback Home's Start button gives.
     private var startingIndicator: some View {
         ProgressView()
-            .tint(Theme.Hangs.Category.chipText)
-            .frame(width: Metrics.playSize, height: Metrics.playSize)
-            .background(Circle().fill(Theme.Hangs.Category.chipFill))
-    }
-
-    /// The play chip with a spinner in place of the triangle while this
-    /// pack's quiz starts — the same feedback Home's Start button gives.
-    private var startingIndicator: some View {
-        ProgressView()
             .tint(Theme.Hangs.Colors.textOnAccent)
             .frame(width: 34, height: 34)
             .background(Circle().fill(Theme.Hangs.Colors.pink))

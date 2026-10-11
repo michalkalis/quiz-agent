@@ -63,7 +63,7 @@ private func makeLimitError(questionsLimit: Int = 10) -> QuotaLimitError {
 /// The full offering (monthly + pack) with distinct prices.
 private func makeFullOfferings() -> PurchasableOfferings {
     PurchasableOfferings(
-        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+        monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"),
         pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "€1.99", displayName: "100 Question Pack")
     )
 }
@@ -116,14 +116,14 @@ struct PaywallViewOfflineStateTests {
 @MainActor
 @Suite("PaywallView — normal paywall structure (z8TS6)")
 struct PaywallViewNormalStructureTests {
-    @Test("'GO UNLIMITED' headline renders in both quota-hit and proactive modes")
+    @Test("'Trubbo Plus' headline renders in both quota-hit and proactive modes")
     func headlineRendersInBothModes() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
         for limitError in [makeLimitError(), nil] {
             let view = PaywallView(storeManager: manager, limitError: limitError, onDismiss: {})
             try await ViewHosting.host(view) {
                 let tree = try view.inspect()
-                #expect(throws: Never.self) { try tree.find(text: "GO UNLIMITED") }
+                #expect(throws: Never.self) { try tree.find(text: "Trubbo Plus") }
             }
         }
     }
@@ -138,7 +138,7 @@ struct PaywallViewNormalStructureTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Unlimited questions, no monthly cap.")
+                try tree.find(text: "1,000 questions a month")
             }
             #expect(!treeHasText(tree, containing: ["free questions this month"]),
                     "quota copy must not show on proactive entry")
@@ -179,7 +179,7 @@ struct PaywallViewPlanPickerTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Monthly") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
             #expect(throws: (any Error).self, "annual is gone for v1 — no SAVE 50% badge") {
                 try tree.find(text: "SAVE 50%")
             }
@@ -193,7 +193,7 @@ struct PaywallViewPlanPickerTests {
         #expect(view.effectivePlan == .monthly, "monthly is the only subscription plan for v1")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]),
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]),
                     "default CTA must sell the monthly plan")
             #expect(!treeHasText(tree, containing: ["/ year"]), "annual billing suffix must never show")
         }
@@ -304,7 +304,7 @@ struct PaywallViewInFlightTests {
             let tree = try view.inspect()
             // The CTA still names what is being bought — the same button, now
             // spinning, rather than a second button with different copy.
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]))
             let monthly = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly")
             let pack = try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack")
             #expect(try monthly.opacity() == 1, "the plan being bought stays full-strength")
@@ -338,7 +338,7 @@ struct PaywallViewInFlightTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(treeHasText(tree, containing: ["Subscribe for", "/ month"]))
+            #expect(treeHasText(tree, containing: ["Get Trubbo Plus for", "/ month"]))
             #expect(!treeHasText(tree, containing: ["Buying"]), "no narrating CTA while idle")
             #expect(!treeHasText(tree, containing: ["Restoring"]), "no restore CTA while idle")
             #expect(try !(tree.find(viewWithAccessibilityIdentifier: "paywall-plan-pack").isDisabled()),
@@ -423,7 +423,7 @@ struct PaywallPackSelectionTests {
             let tree = try view.inspect()
             #expect(treeHasText(tree, containing: ["Buy 100 Question Pack", "€1.99"]),
                     "the CTA must name the pack and its price")
-            #expect(!treeHasText(tree, containing: ["Subscribe for"]),
+            #expect(!treeHasText(tree, containing: ["Get Trubbo Plus for"]),
                     "the CTA must stop selling a subscription while the pack is selected")
         }
     }
@@ -457,7 +457,7 @@ struct PaywallPackSelectionTests {
         let (manager, mock) = await makeManagerWithMock(gate: gate)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {}, initialPlan: .monthly)
         try await ViewHosting.host(view) {
-            #expect(try treeHasText(view.inspect(), containing: ["Subscribe for", "/ month"]))
+            #expect(try treeHasText(view.inspect(), containing: ["Get Trubbo Plus for", "/ month"]))
             try view.inspect()
                 .find(viewWithAccessibilityIdentifier: "paywall-purchase-button")
                 .button().tap()
@@ -518,13 +518,13 @@ struct PaywallViewOfflineStructureTests {
         }
     }
 
-    @Test("'GO UNLIMITED' headline absent in offline variant")
+    @Test("'Trubbo Plus' headline absent in offline variant")
     func paywallHeadlineAbsentWhenOffline() async throws {
         let manager = await makeStoreManager(offerings: nil, hasAttemptedLoad: true)
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "GO UNLIMITED") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Trubbo Plus") }
         }
     }
 
@@ -534,7 +534,7 @@ struct PaywallViewOfflineStructureTests {
         let view = PaywallView(storeManager: manager, limitError: nil, onDismiss: {})
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "Monthly") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "paywall-plan-monthly") }
             #expect(throws: (any Error).self) { try tree.find(text: "100 Question Pack") }
         }
     }

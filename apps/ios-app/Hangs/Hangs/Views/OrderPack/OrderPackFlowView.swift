@@ -16,11 +16,27 @@ import SwiftUI
 
 struct OrderPackFlowView: View {
     @ObservedObject var viewModel: OrderPackViewModel
+    /// Voice input for the topic prompt, on the app's shared audio + STT.
+    @StateObject private var dictation: TextDictation
     /// Play the delivered pack by its packId (ContentView.playPack).
     let onPlayPack: (String) -> Void
     /// Close the sheet. Owned by the presenter so quiz-start teardown and the
     /// X button flip exactly the same flag.
     let onClose: () -> Void
+
+    /// `voice`/`networkService` nil (previews, snapshots) hides the mic.
+    init(
+        viewModel: OrderPackViewModel,
+        voice: FeedbackVoiceServices? = nil,
+        networkService: NetworkServiceProtocol? = nil,
+        onPlayPack: @escaping (String) -> Void,
+        onClose: @escaping () -> Void
+    ) {
+        self.viewModel = viewModel
+        _dictation = StateObject(wrappedValue: TextDictation(voice: voice, networkService: networkService))
+        self.onPlayPack = onPlayPack
+        self.onClose = onClose
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,7 +44,7 @@ struct OrderPackFlowView: View {
                 VStack(spacing: Theme.Hangs.Spacing.lg) {
                     switch viewModel.state {
                     case .editing:
-                        OrderPackFormStep(viewModel: viewModel)
+                        OrderPackFormStep(viewModel: viewModel, dictation: dictation)
                     case .confirming:
                         OrderPackSummaryStep(viewModel: viewModel)
                     case .submitting:
@@ -96,6 +112,11 @@ struct OrderPackFlowView: View {
         // Only the in-flight purchase blocks the swipe — dismissing mid-payment
         // would leave the user unsure whether they were charged.
         .interactiveDismissDisabled(!viewModel.allowsInteractiveDismiss)
+        // The launch fetch often meets a cold pack API; retry when the sheet
+        // opens so a stale language list doesn't stick for the session.
+        .task { await viewModel.refreshOrderLanguages() }
+        // Every dismissal path releases the shared mic. No-op when idle.
+        .onDisappear { Task { await dictation.stop() } }
     }
 
     /// The ready screen, shared by a delivered pack and a still-generating one

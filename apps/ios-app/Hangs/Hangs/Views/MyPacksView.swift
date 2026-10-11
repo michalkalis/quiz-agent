@@ -74,9 +74,19 @@ struct MyPacksView: View {
         HangsCard(padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
-                    Text(verbatim: order.category ?? order.language.uppercased())
-                        .font(.hangsBody(16, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+                        Text(verbatim: order.displayTitle)
+                            .font(.hangsBody(16, weight: .semibold))
+                            .foregroundColor(Theme.Hangs.Colors.ink)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        if order.topic != nil {
+                            Text(verbatim: Language.forCode(order.language)?.nativeName ?? order.language.uppercased())
+                                .font(.hangsBody)
+                                .foregroundColor(Theme.Hangs.Colors.muted)
+                                .accessibilityIdentifier("myPacks.language")
+                        }
+                    }
                     Spacer()
                     Text(verbatim: order.statusLabel)
                         .font(.hangsMono(11, weight: .semibold))

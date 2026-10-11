@@ -127,7 +127,7 @@ enum HeroScreen: String, CaseIterable {
         case .paywall:
             let purchases = MockPurchaseService()
             purchases.stubbedOfferings = PurchasableOfferings(
-                monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"),
+                monthly: PurchasableProduct(id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"),
                 pack: PurchasableProduct(id: StoreProduct.packId, displayPrice: "€2.99", displayName: "100 Question Pack")
             )
             purchases.stubbedIsEntitled = false

@@ -81,8 +81,8 @@
             }
             if CommandLine.arguments.contains("--ui-test-plan-subscriber") {
                 network.stubbedUsage = UsageInfo(
-                    userId: "mock-subject", isPremium: true, questionsUsed: 0,
-                    questionsLimit: nil, remaining: nil,
+                    userId: "mock-subject", isPremium: true, questionsUsed: 130,
+                    questionsLimit: 1000, remaining: 870,
                     resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30 * 86400)),
                     subscriptionStatus: "active", creditBalance: 0
                 )

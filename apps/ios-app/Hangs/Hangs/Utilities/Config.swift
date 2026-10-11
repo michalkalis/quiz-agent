@@ -135,7 +135,11 @@ nonisolated enum Config {
     /// VAD (1.5 s of silence), not here — which is why it can stay this long
     /// (raised from 4 s to 15 s for Phase 2 silence detection so a long spoken
     /// answer is never cut off mid-sentence).
-    static let autoRecordingDuration: TimeInterval = 15.0
+    /// Lowered 15 → 8 s (founder 2026-10-10): in car noise the energy VAD
+    /// takes road noise for speech and never ends, so 7 of 40 answers sat out
+    /// the full 15 s while a real answer is ≤ 3 s of speech. Proper fix =
+    /// #197.6 (silence detection tuned on recorded data).
+    static let autoRecordingDuration: TimeInterval = 8.0
 
     /// VISIBLE "time to start speaking" countdown (seconds) — founder
     /// 2026-09-07 (#173). Showing the 15 s cap made the screen look frozen: the

@@ -178,13 +178,7 @@ struct SettingsView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
-        .sheet(isPresented: $navModel.orderFlowPresented) {
-            OrderPackFlowView(
-                viewModel: appState.orderPackViewModel,
-                onPlayPack: { packId in viewModel.beginQuizStart(packId: packId) },
-                onClose: { navModel.orderFlowPresented = false }
-            )
-        }
+        // The order sheet itself is presented by ContentView, shared with Home.
     }
 
     /// Open the create-pack modal (#138). The view model lives on AppState
@@ -557,7 +551,9 @@ struct SettingsView: View {
                 HangsConfigRow(
                     label: "Sign out",
                     value: "",
-                    valueColor: Theme.Hangs.Colors.muted
+                    valueColor: Theme.Hangs.Colors.error,
+                    showsChevron: false,
+                    labelColor: Theme.Hangs.Colors.error
                 ) {
                     Task { await performSignOut() }
                 }
@@ -675,12 +671,15 @@ struct SettingsView: View {
     private var subscriptionPlanDisplay: String {
         guard let usage = viewModel.usageInfo else {
             // #123 Track A: previously the literal "Free" — briefly told an
-            // unlimited subscriber they were on the free plan. Read as
-            // loading, not as a (possibly wrong) answer.
+            // subscriber they were on the free plan. Read as loading, not as
+            // a (possibly wrong) answer.
             return String(localized: "Loading…", comment: "Settings subscription row value before usage has loaded")
         }
         if usage.isPremium {
-            return String(localized: "Unlimited", comment: "Settings subscription row value for premium users")
+            guard let remaining = usage.remaining, let limit = usage.questionsLimit else {
+                return "Trubbo Plus"
+            }
+            return String(localized: "Trubbo Plus · \(remaining) of \(limit) left", comment: "Settings subscription row value: Trubbo Plus with remaining monthly questions")
         }
         if usage.creditBalance > 0 {
             return String(localized: "Free · \(usage.creditBalance) credits", comment: "Settings subscription row value: free plan with pack credits remaining")

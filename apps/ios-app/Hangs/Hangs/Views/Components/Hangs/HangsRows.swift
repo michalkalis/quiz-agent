@@ -50,13 +50,15 @@ struct HangsConfigRowLabel: View {
     /// a row that is an action (muted chevron) or destructive (error).
     var valueColor: Color = Theme.Hangs.Colors.rowValue
     var showsChevron: Bool = true
+    /// Ink for every row; `error` only for a destructive action (Sign out).
+    var labelColor: Color = Theme.Hangs.Colors.ink
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HangsLabelValueLine {
                 Text(label)
                     .font(.hangsBody(17, weight: .semibold))
-                    .foregroundColor(Theme.Hangs.Colors.ink)
+                    .foregroundColor(labelColor)
             } value: {
                 HStack(spacing: 6) {
                     Text(value)
@@ -88,6 +90,7 @@ struct HangsConfigRow: View {
     var subtitle: LocalizedStringKey? = nil
     var valueColor: Color = Theme.Hangs.Colors.rowValue
     var showsChevron: Bool = true
+    var labelColor: Color = Theme.Hangs.Colors.ink
     var action: (() -> Void)? = nil
 
     var body: some View {
@@ -98,7 +101,8 @@ struct HangsConfigRow: View {
                 value: value,
                 subtitle: subtitle,
                 valueColor: valueColor,
-                showsChevron: showsChevron
+                showsChevron: showsChevron,
+                labelColor: labelColor
             )
         }
         .buttonStyle(.plain)

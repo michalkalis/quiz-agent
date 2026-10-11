@@ -10,6 +10,9 @@ import SwiftUI
 import UIKit
 
 struct HomeView: View {
+    /// The pack the user just tapped play on, so its card can spin while the
+    /// quiz starts. Cleared as soon as the start resolves either way.
+    @State private var startingPackId: String?
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
     /// packs. Nil (inspector tests / previews that don't exercise the packs
@@ -18,6 +21,9 @@ struct HomeView: View {
     /// #193 task 193.9: source of the server notice. Nil in inspector tests and
     /// previews, which then render Home without it.
     var appConfig: AppConfigStore?
+    /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
+    /// which then render Home without the create card.
+    var onCreatePack: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,10 +47,15 @@ struct HomeView: View {
                         .padding(.horizontal, Theme.Hangs.Spacing.lg)
 
                     // #141: pick-and-play entry for owned custom packs
-                    // (variant B — founder 2026-08-05). Renders nothing for
-                    // accounts without pack orders.
+                    // (variant B — founder 2026-08-05), plus the always-on
+                    // "Create your own pack" card.
                     if let packOrderService {
-                        HomePacksSection(service: packOrderService) { packId in
+                        HomePacksSection(
+                            service: packOrderService,
+                            createPack: createPackEntry,
+                            quizStart: packQuizStart
+                        ) { packId in
+                            startingPackId = packId
                             viewModel.beginQuizStart(packId: packId)
                         }
                     }
@@ -83,6 +94,11 @@ struct HomeView: View {
                 .padding(.bottom, Theme.Hangs.Spacing.lg)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        // A start that ends (quiz began, failed, cancelled) must not leave a
+        // pack id behind for the next, unrelated start (voice "start", Start).
+        .onChange(of: viewModel.quizState) { _, state in
+            if state != .startingQuiz { startingPackId = nil }
+        }
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -96,6 +112,18 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
+    }
+
+    private var packQuizStart: HomePacksSection.QuizStart {
+        HomePacksSection.QuizStart(
+            isInFlight: viewModel.quizState == .startingQuiz,
+            packId: startingPackId
+        )
+    }
+
+    private var createPackEntry: HomePacksSection.CreatePackEntry? {
+        guard let appConfig, let onCreatePack else { return nil }
+        return HomePacksSection.CreatePackEntry(appConfig: appConfig, action: onCreatePack)
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)

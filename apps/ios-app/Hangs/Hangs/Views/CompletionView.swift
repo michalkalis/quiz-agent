@@ -157,7 +157,7 @@ struct CompletionView: View {
                             .foregroundColor(Theme.Hangs.Colors.muted)
                     }
                     Spacer()
-                    Text("Go Unlimited")
+                    Text("Get Trubbo Plus")
                         .font(.hangsBody(13, weight: .bold))
                         .foregroundColor(Theme.Hangs.Colors.textOnAccent)
                         .padding(.horizontal, Theme.Hangs.Spacing.sm)

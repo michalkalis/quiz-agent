@@ -31,7 +31,11 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
     /// Poll this to know the handler has reached (and is parked at) disconnect().
     var isSuspendedInDisconnect: Bool { !disconnectContinuations.isEmpty }
 
+    /// The language the last `connect` asked for.
+    private(set) var lastConnectLanguageCode: String?
+
     func connect(token: String, languageCode: String) async throws {
+        lastConnectLanguageCode = languageCode
         if shouldFail {
             throw ElevenLabsSTTError.notConnected
         }
@@ -43,7 +47,12 @@ actor MockElevenLabsSTTService: ElevenLabsSTTServiceProtocol {
         eventChannel.yield(.partialTranscript("Par..."))
     }
 
+    /// Test seam: whether the forced commit ran inside an already-cancelled task
+    /// (a stop() that cancelled its own caller).
+    private(set) var commitRanCancelled = false
+
     func commitAndClose() async throws {
+        commitRanCancelled = Task.isCancelled
         guard !commitEmitsNothing else { return }
         eventChannel.yield(.committedTranscript(mockCommittedText))
     }

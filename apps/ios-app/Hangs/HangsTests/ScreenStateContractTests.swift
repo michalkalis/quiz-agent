@@ -325,7 +325,7 @@ struct PaywallViewStateContractTests {
     func limitErrorWithProductContract() async throws {
         let offerings = PurchasableOfferings(
             monthly: PurchasableProduct(
-                id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Hangs Unlimited"
+                id: StoreProduct.monthlySubId, displayPrice: "€4.99", displayName: "Trubbo Plus"
             ),
             pack: nil
         )
@@ -343,7 +343,7 @@ struct PaywallViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall.headline") }
-            #expect(throws: Never.self) { try tree.find(text: "GO UNLIMITED") }
+            #expect(throws: Never.self) { try tree.find(text: "Trubbo Plus") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall.countdownPill") }
             #expect(treeHasText(tree, containing: ["4.99"]), "the CTA must state what it costs")
             // The `.disabled` lives on the Button inside HangsPrimaryButton, one
@@ -377,7 +377,7 @@ struct PaywallViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "paywall.headline") }
-            #expect(throws: Never.self) { try tree.find(text: "GO UNLIMITED") }
+            #expect(throws: Never.self) { try tree.find(text: "Trubbo Plus") }
             #expect(throws: (any Error).self, "no quota error → nothing to count down to") {
                 try tree.find(viewWithAccessibilityIdentifier: "paywall.countdownPill")
             }

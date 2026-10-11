@@ -109,10 +109,18 @@ struct HomePacksSection: View {
         let playable = order.isPlayable
         return HStack(spacing: Theme.Hangs.Spacing.sm) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(verbatim: order.category ?? order.language.uppercased())
+                Text(verbatim: order.displayTitle)
                     .font(.hangsBody(15, weight: .semibold))
                     .foregroundColor(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                if order.topic != nil {
+                    Text(verbatim: Language.forCode(order.language)?.nativeName ?? order.language.uppercased())
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                        .lineLimit(1)
+                        .accessibilityIdentifier("home.myPacks.language")
+                }
                 if order.isStillGenerating {
                     // Honest count: what can be played right now, out of what
                     // was ordered (#182).

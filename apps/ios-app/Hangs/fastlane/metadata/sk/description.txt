@@ -25,5 +25,5 @@ Ak hráš v aute, vodič by mal hrať iba hlasom. Počas jazdy nikdy neobsluhuj 
 DOBRÉ VEDIEŤ
 Otázky a vyhodnotenie odpovedí vznikajú s pomocou umelej inteligencie a môžu obsahovať chyby. Svoje údaje môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
 
-Zásady ochrany súkromia: https://quiz-agent-api.fly.dev/legal/privacy
-Podmienky používania: https://quiz-agent-api.fly.dev/legal/terms
+Zásady ochrany súkromia: https://trubbo.app/sk/privacy
+Podmienky používania: https://trubbo.app/sk/terms

@@ -27,15 +27,23 @@ nonisolated enum Config {
         return url
     }
 
-    /// Public legal pages served by the quiz-agent backend. The same URLs are
-    /// printed into the App Store listing — paths must stay in sync with
-    /// apps/quiz-agent/app/api/routes/legal.py.
+    /// Public legal pages on the brand site (apps/website, `LEGAL` in build.py),
+    /// in the app's UI language: trubbo.app/privacy (en), /sk/privacy, /cs/privacy.
+    /// The same URLs are printed into the App Store listing (fastlane/metadata).
     static var privacyPolicyURL: URL {
-        URL(string: apiBaseURL + "/legal/privacy")!
+        legalPageURL("privacy")
     }
 
     static var termsOfUseURL: URL {
-        URL(string: apiBaseURL + "/legal/terms")!
+        legalPageURL("terms")
+    }
+
+    static func legalPageURL(
+        _ page: String,
+        languageCode: String = Bundle.main.preferredLocalizations.first ?? "en"
+    ) -> URL {
+        let prefix = ["sk", "cs"].contains(languageCode) ? "/\(languageCode)" : ""
+        return URL(string: "https://trubbo.app\(prefix)/\(page)")!
     }
 
     /// API version prefix

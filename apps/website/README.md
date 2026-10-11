@@ -1,6 +1,6 @@
 # trubbo.app website
 
-Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`.
+Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`. Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…` variants; the iOS app and the App Store listing link to these URLs.
 No framework, no external requests. One self-hosted web font: Rethink Sans (content and headings, SIL OFL, license next to the files); buttons and the language switch use the system font, like the app. Each page is one self-contained HTML file (about 8 KB gzipped).
 
 ## Layout
@@ -9,7 +9,9 @@ No framework, no external requests. One self-hosted web font: Rethink Sans (cont
 |------|------------|
 | `src/template.html` | Page markup, CSS and the small inline script. Text is `{{key}}` placeholders. |
 | `src/screen.html` | The phone screen partial (used once as the sticky screen, and once per step for the stacked fallback). |
+| `src/footer.html` | Footer partial shared by the landing page and the legal pages. |
 | `src/strings/en.json`, `sk.json`, `cs.json` | All visible text, one file per language, same keys. |
+| `src/legal.html`, `src/legal/<page>.<lang>.html` | Legal page shell and the legal texts (privacy, terms, support), one file per page and language. Written as plain HTML; the `<h1>` becomes the page title. Built to `public/<page>.html`, which GitHub Pages serves at `/<page>`. |
 | `src/*.png`, `src/favicon.svg`, `src/robots.txt` | Static files copied as is. |
 | `build.py` | Generator (Python stdlib only). |
 | `public/` | Generated output. This is what GitHub Pages serves. Committed, never edited by hand. |
@@ -32,6 +34,8 @@ Copy rules: `docs/design/copy-style.md` (informal „ty“, „kvíz“ for one 
 python3 apps/website/build.py
 python3 -m http.server 8080 --directory apps/website/public
 ```
+
+The local server needs the extension for legal pages (`/sk/privacy.html`); GitHub Pages serves them without it (`/sk/privacy`).
 
 ## Performance rules (keep them when editing)
 

@@ -25,5 +25,5 @@ Když hraješ v autě, řidič by měl hrát jen hlasem. Za jízdy nikdy neovlá
 DOBRÉ VĚDĚT
 Otázky a vyhodnocení odpovědí vznikají s pomocí umělé inteligence a mohou obsahovat chyby. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
 
-Zásady ochrany soukromí: https://quiz-agent-api.fly.dev/legal/privacy
-Podmínky použití: https://quiz-agent-api.fly.dev/legal/terms
+Zásady ochrany soukromí: https://trubbo.app/cs/privacy
+Podmínky použití: https://trubbo.app/cs/terms

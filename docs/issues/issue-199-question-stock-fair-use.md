@@ -27,7 +27,7 @@
 - Sk/cs session vidí natívne riadky aj anglické riadky s `language_dependent = False` (preložené). Počet sa preto musí brať cez rovnaké pravidlo, aké používa výber otázok: `QuestionRetriever.count_available`.
 - Vzor pre denné upozornenie je `app/monitoring/provider_balances.py`: denná slučka v procese, Sentry issue so stabilným fingerprintom a Sentry pošle e-mail. Rovnako sa správajú pomalé metriky, preto ho preberáme (a nie `prod-monitor.yml`, ktorý by pri trvalom nedostatku posielal e-mail každých 30 min).
 - Predplatiteľom sa otázky dnes nepočítajú: `record_question` pri vetve s predplatným zapíše `questions_count = 0` a `get_usage` vracia `questions_limit = None`.
-- „Unlimited“ sa vyskytuje v 9 kľúčoch v `Localizable.xcstrings`, v `PaywallView` / `SettingsView` / `HomePlanCard` / `RoundCompleteView`, v `Hangs.storekit`, `fastlane/store_copy.json`, `fastlane/metadata/*/description.txt` (4 jazyky), `review_information/notes.txt`, na webe `apps/website/src/strings/*.json` a v podmienkach `apps/quiz-agent/app/legal/terms.html` §4.
+- „Unlimited“ sa vyskytuje v 9 kľúčoch v `Localizable.xcstrings`, v `PaywallView` / `SettingsView` / `HomePlanCard` / `RoundCompleteView`, v `Hangs.storekit`, `fastlane/store_copy.json`, `fastlane/metadata/*/description.txt` (4 jazyky), `review_information/notes.txt`, na webe `apps/website/src/strings/*.json` a v podmienkach `apps/website/src/legal/terms.*.html` §4.
 
 ## Tracky
 

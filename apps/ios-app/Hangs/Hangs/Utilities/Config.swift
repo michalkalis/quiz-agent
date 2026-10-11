@@ -114,6 +114,28 @@ nonisolated enum Config {
         categoryOptions.first { $0.id == id }?.display
     }
 
+    /// Same names as `categoryOptions`, as resources so a screen can resolve
+    /// them in the locale it is rendered in. `categoryOptions` freezes the
+    /// process language at first access; a view that pins its own locale
+    /// (the end-of-round label, snapshot hosts) would then mix two languages.
+    private static let categoryResources: [String: LocalizedStringResource] = [
+        "science-nature": "Science & Nature",
+        "history": "History",
+        "geography-world": "Geography & World",
+        "movies-music": "Movies & Music",
+        "sports": "Sports",
+        "food-everyday": "Food & Everyday Life",
+        "entertainment": "Entertainment",
+    ]
+
+    /// `categoryDisplayName(for:)` resolved in `locale` (the view's environment
+    /// locale). nil for anything outside the taxonomy, as above.
+    static func categoryDisplayName(for id: String, locale: Locale) -> String? {
+        guard var resource = categoryResources[id] else { return nil }
+        resource.locale = locale
+        return String(localized: resource)
+    }
+
     /// Available age-appropriate filter options (nil = no filter / show all)
     /// Values match `Question.age_appropriate` on the backend.
     static let ageAppropriateOptions: [(id: String?, display: String)] = [

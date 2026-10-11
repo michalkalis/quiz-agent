@@ -60,11 +60,40 @@ struct DeckIdentityTests {
         #expect(Theme.Hangs.Category.stableIndex(of: "66666666-6666-6666-6666-666666666666", count: count) == 3)
     }
 
+    /// Founder 2026-10-10: a right answer is the mint card, so a miss on a
+    /// science question (mint by category) read as a hit.
+    @Test("A result that is not a right answer is never the correct-answer mint")
+    func notCorrectIsNeverMint() {
+        let science = DeckIdentity(category: "science-nature", packId: nil)
+        #expect(!sameFill(science.notCorrectStyle, Theme.Hangs.Category.correct))
+        #expect(sameFill(science.notCorrectStyle, Theme.Hangs.Category.notCorrect))
+        // Every other category keeps its own colour on a miss.
+        for id in Theme.Hangs.Category.taxonomy where id != Theme.Hangs.Category.correctId {
+            let identity = DeckIdentity(category: id, packId: nil)
+            #expect(sameFill(identity.notCorrectStyle, identity.style))
+            #expect(!sameFill(identity.notCorrectStyle, Theme.Hangs.Category.correct))
+        }
+        // A pack that hashes to the mint takes the miss colour too.
+        let mintPack = "22222222-2222-2222-2222-222222222222"
+        #expect(!sameFill(DeckIdentity(category: nil, packId: mintPack).notCorrectStyle, Theme.Hangs.Category.correct))
+    }
+
     @Test("Different packs spread over the palette instead of sharing one colour")
     func packsSpreadOverPalette() {
         let count = Theme.Hangs.Category.taxonomy.count
         let ids = (0 ..< 50).map { "pack-\($0)" }
         let used = Set(ids.map { Theme.Hangs.Category.stableIndex(of: $0, count: count) })
         #expect(used.count == count)
+    }
+
+    @Test("The end-of-round label names the category in the screen's own language, and nothing for an unknown one")
+    func categoryNameFollowsTheViewLocale() {
+        // The label sits next to a Slovak "VÝSLEDOK KVÍZU"; an English name
+        // beside it is the mixed header the founder saw.
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "sk")) == "Geografia a svet")
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "cs")) == "Zeměpis a svět")
+        for raw in ["general", "adults", ""] {
+            #expect(Config.categoryDisplayName(for: raw, locale: Locale(identifier: "sk")) == nil)
+        }
     }
 }

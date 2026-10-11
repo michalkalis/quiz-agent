@@ -18,27 +18,27 @@
  },
  "in_app_purchases": {
   "subscription_group": {
-   "en-GB": "Trubbo Unlimited",
-   "en-US": "Trubbo Unlimited",
-   "sk": "Trubbo bez limitu",
-   "cs": "Trubbo bez limitu"
+   "en-GB": "Trubbo Plus",
+   "en-US": "Trubbo Plus",
+   "sk": "Trubbo Plus",
+   "cs": "Trubbo Plus"
   },
   "com.carquiz.unlimited.monthly": {
    "en-GB": [
-    "Trubbo Unlimited",
-    "Unlimited questions, no monthly cap"
+    "Trubbo Plus",
+    "1,000 questions a month"
    ],
    "en-US": [
-    "Trubbo Unlimited",
-    "Unlimited questions, no monthly cap"
+    "Trubbo Plus",
+    "1,000 questions a month"
    ],
    "sk": [
-    "Trubbo bez limitu",
-    "Neobmedzené otázky bez mesačného limitu"
+    "Trubbo Plus",
+    "1 000 otázok mesačne"
    ],
    "cs": [
-    "Trubbo bez limitu",
-    "Neomezené otázky bez měsíčního limitu"
+    "Trubbo Plus",
+    "1 000 otázek měsíčně"
    ]
   },
   "com.carquiz.pack.questions100": {

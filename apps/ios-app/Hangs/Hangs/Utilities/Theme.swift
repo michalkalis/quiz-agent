@@ -222,8 +222,12 @@ extension Theme.Hangs {
         /// picked from its id so the same pack is the same colour on every
         /// screen and every launch (no backend field). nil → the fallback.
         static func style(forPack key: String?) -> Style {
-            guard let key else { return style(for: nil) }
-            return style(for: taxonomy[stableIndex(of: key, count: taxonomy.count)])
+            style(for: paletteId(forPack: key))
+        }
+
+        /// The taxonomy id whose colour a pack wears; nil → the fallback.
+        static func paletteId(forPack key: String?) -> String? {
+            key.map { taxonomy[stableIndex(of: $0, count: taxonomy.count)] }
         }
 
         /// FNV-1a over the UTF-8 bytes. `hashValue` is reseeded per launch,
@@ -237,7 +241,13 @@ extension Theme.Hangs {
         }
 
         /// #198 (canvas Bg-Result): the card of a correct answer, whatever its category.
-        static var correct: Style { style(for: "science-nature") }
+        static var correct: Style { style(for: correctId) }
+        static let correctId = "science-nature"
+        /// #198 round 2 (founder 2026-10-10): a card that is not a right answer
+        /// is never mint, or a science miss would read as a hit. Such a card
+        /// takes the canvas' miss colour instead (Bg-Wrong / R-Wrong / Dk-Wrong:
+        /// yellow with ink text). Every other category keeps its own colour.
+        static var notCorrect: Style { style(for: "sports") }
 
         /// #198 (canvas Bg-Offline): the error card — cobalt when offline,
         /// mandarin for anything else — with its deeper stripe shade.

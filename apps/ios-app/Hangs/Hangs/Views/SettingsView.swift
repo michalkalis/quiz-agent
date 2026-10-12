@@ -595,8 +595,8 @@ struct SettingsView: View {
 
             hairline
 
-            // Recovery path for the 500-question history cap: the at-capacity
-            // error directs users here (#54 task 54.17 — row was dropped in 52.9).
+            // The played-question history no longer blocks play (#376); this row
+            // is how a player brings played questions back.
             HangsConfigRow(
                 label: "Reset question history",
                 value: "\(viewModel.questionHistoryCount)",

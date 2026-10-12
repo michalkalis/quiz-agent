@@ -50,7 +50,7 @@
 
 ### 199.3 Appka: Trubbo Plus namiesto „bez limitu“ (iOS) — `[x]` v main 2026-10-11 (PR #361), katalóg dizajnu znovu vygenerovaný (verzia 19); TF build len na požiadanie
 - Review našlo, že appka spoznávala predplatiteľa podľa starého príznaku `is_premium`, ktorý server nenastavuje. Opravené jednou vlastnosťou `UsageInfo.isPlus` (stav predplatného `active` alebo `grace`), čo opravilo aj potvrdenie kúpy predplatného (predtým ostalo na „aktivuje sa“).
-- Sk/cs zostatok znie „Ešte / Ještě X z Y“ (platí pre každé číslo; „Zostáva 3“ je zle). Ostáva starý kľúč „Tento mesiac ti zostáva 4 otázok zadarmo“ s chybou v pluráli.
+- Sk/cs zostatok znie „Ešte / Ještě X z Y“ (platí pre každé číslo; „Zostáva 3“ je zle). „Tento mesiac ti zostáva 4 otázok zadarmo“ v textovom zázname testov nie je chyba appky: vykreslená obrazovka má správne „zostávajú 4 otázky“, len čítač textov v testoch (ViewInspector) vyberá plurál podľa angličtiny (overené 2026-10-12 na pixelovej snímke). Karta plánu na domove sa zmestí v každom jazyku aj pri najväčšom písme (predtým sk/cs „obnova zlyhala“ pretekala aj pri bežnom písme) — PR #380.
 - Texty sk/cs/en: paywall, nastavenia, karta na domovskej obrazovke, výsledková obrazovka a hláška po kúpe. Predplatiteľ vidí zostatok otázok rovnako ako pri bezplatnom pláne.
 - Paywall pri `upgrade_available == false` ponúkne len balíček a odpočet, predplatné nie.
 - `Hangs.storekit` so zobrazovanými názvami. Snapshot testy treba aktualizovať.

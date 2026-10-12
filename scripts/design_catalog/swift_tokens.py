@@ -13,9 +13,18 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+from .swift_type import (
+    APP,
+    FONT_WEIGHTS,
+    GROUPS,
+    SYSTEM_FAMILY,
+    SYSTEM_STACK,
+    FontResolver,
+    _block,
+    _num,
+)
+
 THEME = Path("apps/ios-app/Hangs/Hangs/Utilities/Theme.swift")
-APP = Path("apps/ios-app/Hangs/Hangs")
-FONT_WEIGHTS = {"regular": 400, "medium": 500, "semibold": 600, "bold": 700, "black": 900}
 
 
 @dataclass
@@ -36,18 +45,6 @@ class Rgba:
 def _hex(h: str) -> Rgba:
     h = h.lstrip("#")
     return Rgba(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
-
-
-def _block(src: str, header: str) -> str:
-    """Body of the first `<header> {` block, braces balanced."""
-    start = src.index(header)
-    i = src.index("{", start) + 1
-    depth = 1
-    j = i
-    while depth:
-        depth += {"{": 1, "}": -1}.get(src[j], 0)
-        j += 1
-    return src[i : j - 1]
 
 
 def _statements(body: str) -> list[tuple[str, str, str]]:
@@ -212,45 +209,69 @@ def build_tokens(root: Path) -> dict:
 
 
 def build_type(root: Path, src: str) -> dict:
-    fonts_block = _block(src, "enum Fonts")
-    files = sorted(set(re.findall(r'\.custom\("([\w-]+)"', fonts_block)))
-    family_of = {"Anton": "Anton", "Inter": "Inter", "IBMPlexMono": "IBM Plex Mono"}
-    weight_of = {"Regular": "400", "Medium": "500", "SemiBold": "600", "Bold": "700"}
-    fonts = []
-    for f in files:
-        stem, _, weight = f.partition("-")
-        if not (root / APP / "Fonts" / f"{f}.ttf").exists():
-            raise FileNotFoundError(f"font file for {f} missing")
-        fonts.append({"family": family_of[stem], "file": f"fonts/{f}.ttf", "weight": weight_of[weight], "style": "normal"})
-
-    families = {
-        "display": '"Anton", "Impact", sans-serif',
-        "body": '"Inter", system-ui, sans-serif',
-        "mono": '"IBM Plex Mono", ui-monospace, monospace',
+    """Type styles as the app renders them: every `Font.hangs*` preset resolved
+    through Theme.Hangs.Fonts, grouped by the function it ends in."""
+    fonts = FontResolver(root, src)
+    font_ext = _block(src, "extension Font {")
+    wrappers = {
+        name: (fn, default if passes and not ignored else None, bool(passes and not ignored))
+        for name, ignored, default, fn, passes in re.findall(
+            r"static func hangs(\w+)\(_ size: CGFloat, weight( _)?: Font\.Weight = \.(\w+)\) -> Font \{\s*"
+            r"Theme\.Hangs\.Fonts\.(\w+)\(size(, weight: weight)?\)\s*\}", font_ext)
     }
-    groups: dict[str, list[dict]] = {"display": [], "mono": [], "body": []}
-    presets = re.findall(r"static var hangs(\w+): Font \{ \.hangs(Display|Mono|Body)\(([\d.]+)(?:, weight: \.(\w+))?\) \}", src)
-    defaults = {"Display": "regular", "Mono": "medium", "Body": "regular"}
-    bundled = {fam: {int(f["weight"]) for f in fonts if f["family"] == name} for fam, name in (("Display", "Anton"), ("Body", "Inter"), ("Mono", "IBM Plex Mono"))}
-    for name, role, size, weight in presets:
-        asked = FONT_WEIGHTS[weight or defaults[role]] if role != "Display" else 400
-        # Theme.Hangs.Fonts falls back to Regular for a weight with no bundled
-        # face; publish what the app renders and name the mismatch.
-        w = asked if asked in bundled[role] else 400
-        note = f" Asks for weight {asked}, which is not bundled, so it renders at 400." if w != asked else ""
-        style = name[0].lower() + name[1:]
+    declared = re.findall(r"static var hangs(\w+): Font \{", font_ext)
+    presets = re.findall(
+        r"static var hangs(\w+): Font \{ (\.hangs(\w+)|Theme\.Hangs\.Fonts\.(\w+))\(([\d.]+)(?:, weight: \.(\w+))?\) \}", font_ext)
+    unread = sorted(set(declared) - {p[0] for p in presets})
+    if not presets or unread:
+        raise ValueError(f"Font.hangs* presets the catalog cannot read: {unread or 'none found'}")
+
+    groups: dict[str, list[dict]] = {fn: [] for fn in GROUPS}
+    group_family: dict[str, str] = {}
+    for name, call, wrapper, direct, size, asked_weight in presets:
+        if wrapper and wrapper not in wrappers:
+            raise ValueError(f"Font.hangs{name} calls .hangs{wrapper}, which is not a Theme.Hangs.Fonts wrapper")
+        fn, default, passes = wrappers[wrapper] if wrapper else (direct, None, True)
+        weight = (asked_weight or default) if passes else None
+        r = fonts.resolve(fn, _num(size), weight)
+        source = f"{call}({size}" + (f", weight: .{asked_weight}" if asked_weight else "") + ")"
+        rendered = f"{r.family} {r.weight} at {r.size} pt" + (" with tabular digits" if r.tabular else "")
+        asks = [f"asks for {_num(size)}"] if r.size != _num(size) else []
+        if asked_weight and passes and FONT_WEIGHTS[asked_weight] != r.weight:
+            asks.append(f"asks for {asked_weight}")
         used = call_sites(root, f".hangs{name}")
-        groups[role.lower()].append(
-            {"name": style, "fontSize": f"{size}px", "fontWeight": w, "usage": f"Font.hangs{name}; used in {used} place{'s' * (used != 1)}.{note}"}
-        )
-    if not presets:
-        raise ValueError("no Font.hangs* presets found")
+        usage = f"Font.hangs{name} = `{source}`: {rendered}, scaling with .{r.text_style}"
+        usage += (f" ({'; '.join(asks)})" if asks else "") + f". Used in {used} place{'s' * (used != 1)}."
+        group_family[r.fn] = r.family
+        groups[r.fn].append({"name": name[0].lower() + name[1:], "fontSize": f"{r.size}px", "fontWeight": r.weight, "usage": usage})
+
+    families = {fam for fam, _ in fonts.fonts.values()}
+    if len(families) != 1:
+        raise ValueError(f"the bundled cuts are not one family: {sorted(families)}")
+    face = families.pop()
+    weights = {fn: sorted({s["fontWeight"] for s in styles}) for fn, styles in groups.items()}
+    scale = " / ".join(str(s) for _, s, _, _ in fonts.display)
+    notes = {
+        "display": f"`Theme.Hangs.Fonts.display` snaps every size to the canvas scale {scale} pt, {face} {_w(weights['display'])}; "
+                   "each step scales with an iOS text style (Dynamic Type).",
+        "content": f"`Theme.Hangs.Fonts.content`: {face} at the size asked (answers, recaps, the wordmark), "
+                   f"{fonts.content_default} unless a preset asks heavier, scaling with the nearest iOS text style.",
+        "body": f"Controls in {SYSTEM_FAMILY}, the iOS system font, through text styles: a size snaps to the nearest style and follows "
+                f"Dynamic Type. {SYSTEM_FAMILY} is not bundled, so previews here use your device's system UI font "
+                "(SF on Apple devices, a fallback elsewhere).",
+        "mono": f"Caps labels and counters in {SYSTEM_FAMILY} {_w(weights['mono'])}"
+                f"{' with tabular digits, so counters do not jitter' if fonts.mono_tabular else ''}. Not bundled: previews use "
+                "your device's system UI font" + (" and proportional digits." if fonts.mono_tabular else "."),
+    }
     return {
-        "fonts": fonts,
-        "families": families,
+        "fonts": [{"family": fam, "file": f"fonts/{name}.ttf", "weight": str(w), "style": "normal"} for name, (fam, w) in fonts.fonts.items()],
+        "families": {"display": f'"{face}", system-ui, sans-serif', "body": SYSTEM_STACK, "mono": SYSTEM_STACK},
         "groups": [
-            {"name": "Display (Anton)", "family": "display", "styles": groups["display"]},
-            {"name": "Body (Inter)", "family": "body", "styles": groups["body"]},
-            {"name": "Mono (IBM Plex Mono)", "family": "mono", "styles": groups["mono"]},
+            {"name": f"{fn.capitalize()} ({group_family[fn]})", "family": GROUPS[fn], "note": notes[fn], "styles": styles}
+            for fn, styles in groups.items() if styles
         ],
     }
+
+
+def _w(weights: list[int]) -> str:
+    return " and ".join(map(str, weights))

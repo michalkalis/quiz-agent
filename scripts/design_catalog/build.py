@@ -25,7 +25,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .components import GUIDE, collect, write_component
-from .cover import cover_html
+from .cover import Brand, cover_html, read_brand
+from .pen import _family
 from .swift_tokens import APP, build_tokens
 
 REPO = "michalkalis/quiz-agent"
@@ -81,7 +82,7 @@ def pending_section(rows: list[dict], open_comments: int) -> str:
     return "\n".join(lines + [""])
 
 
-def readme(tokens: dict, components: list, root: Path, ref: str) -> str:
+def readme(tokens: dict, components: list, root: Path, ref: str, brand: Brand, licenses: list[str]) -> str:
     names = {t["name"] for fam in ("color", "spacing", "radius", "shadow") for t in tokens[fam]["tokens"]}
     styles = {s["name"] for g in tokens["type"]["groups"] for s in g["styles"]}
 
@@ -95,7 +96,13 @@ def readme(tokens: dict, components: list, root: Path, ref: str) -> str:
     guide = (root / GUIDE).read_text(encoding="utf-8")
     unused = len(re.findall(r"`(\w+)`", guide.split("## Unused", 1)[1])) if "## Unused" in guide else 0
     frozen = sum(len(c.states) for c in components)
-    return f"""Trubbo is hands-free voice trivia for the car, and for any group that plays out loud. Every screen is read at a glance, every action also works by voice, and the app ships dark-first.
+    t = tokens["type"]
+    groups = {g["name"].partition(" (")[0]: g for g in t["groups"]}
+    face, system = _family(groups["Display"]["name"]), _family(groups["Body"]["name"])
+    weights = ", ".join(str(w) for w in sorted({int(f["weight"]) for f in t["fonts"] if f["family"] == face}))
+    scale = " / ".join(f"{v:g}" for v in sorted({float(st["fontSize"].removesuffix("px")) for st in groups["Display"]["styles"]}))
+    license_note = f" {face} ships under the SIL Open Font License ({', '.join(f'`{n}`' for n in licenses)})." if licenses else ""
+    return f"""Trubbo is hands-free voice trivia for the car, and for any group that plays out loud. Every screen is read at a glance, every action also works by voice, and the app follows the phone's light or dark appearance.
 
 This catalog is generated from the iOS code at `{ref}`: `Utilities/Theme.swift` (tokens), the component sources and their frozen snapshots. **The code is the source of truth.** A comment or an edited value here is a proposal: it is a pending change until it lands in the app through a pull request, after which this catalog is generated again.
 
@@ -111,7 +118,9 @@ This catalog is generated from the iOS code at `{ref}`: `Utilities/Theme.swift` 
 
 ## Type
 
-Three bundled faces: Anton for display text and numbers, Inter for body and buttons, IBM Plex Mono for labels and counters. Use the named styles, `Font.hangs*` in code ({tok("displayMD", "button", "monoLabel")} and the rest); a raw font size in a view is a lint finding.
+Two families. {face} is the content face (question text, answers, verdicts, scores), bundled at weights {weights}: display styles snap to the canvas scale {scale} pt, content at body size keeps the size asked, and the wordmark is {face} {brand.font_weight}. {system}, the iOS system font, sets the controls (buttons, labels, captions, overlines, counters) through iOS text styles, so every label follows Dynamic Type; counters use tabular digits. {system} is not bundled, so its previews here use your device's system UI font.{license_note}
+
+Use the named styles, `Font.hangs*` in code ({tok("displaySM", "content", "button", "monoLabel")} and the rest); a raw font size in a view is a lint finding.
 
 ## Spacing, radius, shadow
 
@@ -125,7 +134,7 @@ Three bundled faces: Anton for display text and numbers, Inter for body and butt
 
 ## Iconography
 
-SF Symbols (Apple system icons) throughout; there is no custom icon set. The brand mark is set in type.
+SF Symbols (Apple system icons) throughout; there is no custom icon set. The logo is a question mark whose dot is a wave of tilted category cards (`TrubboMark`, the app icon's artwork), set beside the wordmark \u201c{brand.word}\u201d in {face} {brand.font_weight} (`HangsBrandMark`). The cover shows both.
 
 ## Known gaps
 
@@ -176,6 +185,8 @@ def main() -> None:
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     tokens = build_tokens(root)
+    brand = read_brand(root)
+    cover_page = cover_html(tokens, brand)
     rows = json.loads(args.pending.read_text())["rows"] if args.pending else []
     kept = keep_proposals(tokens, rows)
     tokens["meta"] = {
@@ -187,10 +198,12 @@ def main() -> None:
     }
     components = collect(root)
 
+    # The font licences travel with the font files (SIL OFL: every copy carries the licence).
+    licenses = sorted((root / APP / "Fonts").glob("*.txt"))
     files = [project / "tokens.json"]
     (project / "tokens.json").write_text(json.dumps(tokens, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     (project / "README.md").write_text(
-        readme(tokens, components, root, f"{branch}@{sha}") + "\n" + pending_section(rows, args.open_comments), encoding="utf-8"
+        readme(tokens, components, root, f"{branch}@{sha}", brand, [f"licenses/{p.name}" for p in licenses]) + "\n" + pending_section(rows, args.open_comments), encoding="utf-8"
     )
     (project / "copy.md").write_text(copy_section(root), encoding="utf-8")
     files += [project / "README.md", project / "copy.md"]
@@ -200,6 +213,11 @@ def main() -> None:
         if not dst.exists():
             shutil.copyfile(root / APP / "Fonts" / Path(font["file"]).name, dst)
             files.append(dst)
+    if licenses:
+        (project / "licenses").mkdir()
+    for lic in licenses:
+        shutil.copyfile(lic, project / "licenses" / lic.name)
+        files.append(project / "licenses" / lic.name)
     missing: dict[str, Path] = {}
     if (out / "uploads").exists():
         shutil.rmtree(out / "uploads")
@@ -228,7 +246,7 @@ def main() -> None:
     files.append(project / "components/bundle.js")
     cover = project / "components/Cover/preview.html"
     cover.parent.mkdir(parents=True)
-    cover.write_text(cover_html(tokens), encoding="utf-8")
+    cover.write_text(cover_page, encoding="utf-8")
     files.append(cover)
 
     index = json.loads(args.index_from.read_text()) if args.index_from else {

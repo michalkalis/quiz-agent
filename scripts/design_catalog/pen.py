@@ -51,7 +51,7 @@ def _px(value: str) -> int | float:
 
 
 def _family(group_name: str) -> str:
-    """'Display (Anton)' -> 'Anton'."""
+    """'Display (Rethink Sans)' -> 'Rethink Sans'."""
     return group_name.partition("(")[2].rstrip(")").strip()
 
 

@@ -29,6 +29,7 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -51,7 +52,11 @@ def flatten(tokens: dict) -> dict[str, object]:
 
 
 def base_tokens(root: Path, ref: str) -> dict | None:
-    """Tokens generated at the commit the catalog was built from, or None if unreachable."""
+    """Tokens generated at the commit the catalog was built from, or None if unreachable.
+
+    Built with the generator *of that commit*, which is what produced the catalog:
+    a generator fix since then must read as a code change, never as a value the
+    founder edited in the catalog."""
     sha = ref.rsplit("@", 1)[-1]
     if not re.fullmatch(r"[0-9a-f]{7,40}", sha):
         return None
@@ -61,9 +66,9 @@ def base_tokens(root: Path, ref: str) -> dict | None:
         wt = Path(tmp) / "base"
         subprocess.run(["git", "-C", str(root), "worktree", "add", "--detach", "-q", str(wt), sha], check=True)
         try:
-            return build_tokens(wt)
-        except (ValueError, FileNotFoundError):
-            return None  # a commit whose Theme.swift predates the generator
+            code = "import json, pathlib; from scripts.design_catalog.swift_tokens import build_tokens; print(json.dumps(build_tokens(pathlib.Path('.'))))"
+            run = subprocess.run([sys.executable, "-c", code], cwd=wt, capture_output=True, text=True, check=False)
+            return json.loads(run.stdout) if run.returncode == 0 else None  # nonzero: a commit that predates the generator
         finally:
             subprocess.run(["git", "-C", str(root), "worktree", "remove", "--force", str(wt)], check=True)
 

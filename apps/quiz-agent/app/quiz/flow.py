@@ -652,7 +652,11 @@ class QuizFlowService:
             feedback_text = get_correct_answer_message(
                 result=result, answer=correct_answer, language=language
             )
-            return await self.tts_service.synthesize(text=feedback_text, use_cache=True)
+            # #200: the answer is spoken like the question — digits spelled out
+            # in the session language ("tisícdeväťstoosemnásť", "prvého mája"),
+            # or the fallback voice reads "1918" in English inside Slovak text.
+            tts_text = normalize_numbers_for_tts(feedback_text, language)
+            return await self.tts_service.synthesize(text=tts_text, use_cache=True)
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None

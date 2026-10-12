@@ -234,6 +234,16 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.sessionFinished
         }
 
+        // #200: a pack start found nothing this phone has not played yet. An
+        // expected end of the pack, not a fault: the start offers it again.
+        if httpResponse.statusCode == 409,
+           let coded = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data),
+           coded.detail.code == "pack_exhausted"
+        {
+            logHTTPError(endpoint: endpointPath, status: 409, code: coded.detail.code)
+            throw NetworkError.packExhausted
+        }
+
         guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
@@ -911,6 +921,9 @@ enum NetworkError: LocalizedError {
     /// (its last answer was graded before the driver confirmed it), so there
     /// is nothing left to answer or skip. Not a failure — end into the results.
     case sessionFinished
+    /// HTTP 409 `pack_exhausted` (#200): every question of the pack is in the
+    /// start's exclusions. Not a failure — the pack can start over.
+    case packExhausted
 
     var errorDescription: String? {
         switch self {
@@ -933,6 +946,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
         case .sessionFinished:
             return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+        case .packExhausted:
+            return String(localized: "You've played every question in this pack.", comment: "A custom pack has nothing left this phone has not played")
         }
     }
 }

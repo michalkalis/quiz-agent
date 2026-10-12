@@ -72,6 +72,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-19 | `RSPaywallTests.testRS19…` | free wall shows monthly + pack + Restore (real StoreKit Testing products) |
 | RS-20 | `RSPaywallTests.testRS20…` | Restore with nothing → `paywall.nothingToRestore` |
 | RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
+| RS-24 | `RSPackTests.testRS24…` (+ unit `PackProgressTests`) | alert buttons matched by label (system alert) |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -652,6 +653,24 @@ Settings row) visible but disabled.
 
 **Asserts:** `home.notice.text` present, then gone after dismiss;
 `home.createPack` present and disabled; `packs.createPack` disabled. App alive.
+
+---
+
+## RS-24: A played-through pack asks before it starts over
+
+**Type:** XCUITest (`RSPackTests`). #200 (founder TF test 2026-10-12).
+
+**Hypothesis:** A custom pack remembers what this phone played: its Home card
+shows the played count, and starting a pack played through asks "Play this
+pack again from the start?" instead of failing with a raw server error.
+
+**Steps:** launch with `--ui-test-pack-played-through` (every question of the
+mock's delivered pack marked played); tap `home.myPacks.play`; tap
+"Start over" in the alert.
+
+**Asserts:** `home.myPacks.progress` present; the alert appears and no
+question is on screen behind it; after "Start over" `question.text` appears.
+App alive.
 
 ---
 

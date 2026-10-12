@@ -21,7 +21,7 @@ extension AppScreen {
         case .confirmTranscribing: Self.confirmation(isProcessing: true, transcript: "", onCancel: {})
         case .confirmTranscript: Self.confirmation(isProcessing: false, transcript: "Paris, I think. Or maybe Lyon.")
         case .errorRetry: Self.error(.from(URLError(.notConnectedToInternet)))
-        case .errorGoHome: Self.error(.historyAtCapacity)
+        case .errorGoHome: Self.error(.from(NetworkError.sessionNotFound))
         case .errorDismiss: Self.error(.from(CancellationError()))
         default: await makeFlow()
         }

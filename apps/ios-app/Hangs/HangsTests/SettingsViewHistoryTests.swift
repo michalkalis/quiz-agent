@@ -5,15 +5,12 @@
 //  #54 task 54.17 — restored "Reset question history" recovery path.
 //
 //  Why these tests matter:
-//  - The at-capacity startup guard (QuizViewModel.startNewQuiz) tells the user to
-//    reset their history in Settings. The 52.9 redesign silently dropped that row,
-//    leaving a user at the 500-question cap permanently locked out. The structural
-//    test ensures the row can't be dropped again without a test going red.
-//  - The error-model test pins the recovery CTA: retrying at capacity fails
-//    identically, so the ErrorView must offer Go Home (→ Settings → reset), not
-//    a misleading "Try Again" with connectivity copy.
+//  - The reset row is how a player gets seen questions back. The 52.9 redesign
+//    silently dropped it once; the structural test keeps it from going again.
+//  - #200: a long history never blocks a start (the old 500 cap did).
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -58,22 +55,32 @@ struct SettingsViewHistoryTests {
     }
 }
 
-// MARK: - VM: at-capacity error offers a reachable recovery action
+// MARK: - VM: a long history never blocks a start (#200)
 
 @MainActor
-@Suite("QuizViewModel — history at capacity recovery")
-struct QuizViewModelHistoryCapacityTests {
-    @Test("at-capacity start surfaces historyAtCapacity model with Go Home CTA")
-    func atCapacityErrorIsRecoverable() async {
-        let (vm, store) = Fixtures.makeViewModelWithPersistence()
-        store.askedQuestionIds = (0 ..< 500).map { "q\($0)" }
+@Suite("QuizViewModel — long history never blocks")
+struct QuizViewModelHistoryWindowTests {
+    /// WHY (#200, founder 2026-10-12): at 500 seen questions the app refused
+    /// every quiz with "history is full". The history is only an exclusion
+    /// list now; when questions truly run out the #174 shortfall offers the
+    /// reset, so a long history alone must start the quiz like any other.
+    @Test("a history far past the old 500 cap starts the quiz")
+    func longHistoryStarts() async {
+        let network = Fixtures.makeFullMockNetwork()
+        let store = MockPersistenceStore()
+        store.askedQuestionIds = (0 ..< PersistenceStore.historyWindow).map { "q\($0)" }
+        let vm = QuizViewModel(
+            networkService: network,
+            audioService: MockAudioService(),
+            persistenceStore: store,
+            silenceDetectionService: MockSilenceDetectionService(),
+            clock: AnyClock(TestClock())
+        )
 
         await vm.startNewQuiz()
 
-        #expect(vm.activeErrorModel == .historyAtCapacity)
-        #expect(
-            vm.activeErrorModel?.retryAction == .goHome,
-            "Retry at capacity fails identically — the CTA must route Home, where Settings → reset is reachable"
-        )
+        #expect(vm.activeErrorModel == nil)
+        #expect(vm.quizState == .askingQuestion)
+        #expect(network.capturedStartQuizExcludedIds?.count == PersistenceStore.historyWindow)
     }
 }

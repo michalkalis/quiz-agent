@@ -133,10 +133,20 @@ final class QuizViewModel: ObservableObject {
     }
 
     @Published var currentSession: QuizSession?
-    /// #198.4: the custom pack this set plays, nil for the shared library. The
-    /// session response does not echo it, so it is kept from the start call;
-    /// the quiz cards take the pack's colour from it.
-    @Published private(set) var activePackId: String?
+    /// #200: the custom pack the latest start asked for, nil for the shared
+    /// library. Kept from the start request, not the created session, so a
+    /// start that failed before its session existed still retries the same
+    /// pack, and every "again" path (Play Again, Try Again, spoken "znova")
+    /// replays it. Home's pack card spins on it while the start runs.
+    @Published private(set) var activePack: PackPlay?
+    /// #198.4: the quiz cards take the pack's colour from it; the session
+    /// response does not echo it.
+    var activePackId: String? { activePack?.packId }
+    /// #200: set instead of starting when the phone has already played every
+    /// question of the pack. Non-nil drives the "play it again from the start?"
+    /// alert; the quiz has NOT started while it is set. Written only by
+    /// `QuizViewModel+PackProgress`.
+    @Published var packRestartOffer: PackPlay?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -1018,6 +1028,7 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
+            playAgain: { [weak self] in _ = self?.playAgain() },
             goHome: { [weak self] in self?.resetToHome() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) }
         )
@@ -1134,11 +1145,11 @@ final class QuizViewModel: ObservableObject {
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil,
+        pack: PackPlay? = nil,
         skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, packId: packId, skipAvailabilityCheck: skipAvailabilityCheck)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1159,7 +1170,7 @@ final class QuizViewModel: ObservableObject {
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
-        packId: String? = nil,
+        pack: PackPlay? = nil,
         skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
@@ -1168,11 +1179,14 @@ final class QuizViewModel: ObservableObject {
         // rejected transition, then hold isStarting for the whole flow via defer,
         // mirroring isSubmittingAnswer (#79).
         guard !isStarting else { return }
+        if let pack, offerRestartIfPlayedThrough(pack) { return }
         isStarting = true
         defer { isStarting = false }
 
-        let entryPoint = QuizEntryPoint(packId: packId, startedFrom: quizState)
+        let entryPoint = QuizEntryPoint(packId: pack?.packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
+        activePack = pack
+        packRestartOffer = nil
         errorMessage = nil
         #if DEBUG
             lastErrorDebugInfo = nil
@@ -1186,22 +1200,12 @@ final class QuizViewModel: ObservableObject {
         // servable degrades to the default rather than 422-ing the start call.
         let quizLanguage = Language.selectable(language ?? settings.language).id
 
-        // Check if question history is at capacity
-        if persistenceStore.isAtCapacity {
-            setError(
-                message: String(localized: "Question history is full. Please reset your history in Settings to continue.", comment: "Shown when saved-question history hit its cap; user must reset history"),
-                context: .initialization,
-                model: .historyAtCapacity
-            )
-            return
-        }
-
         // #174: ask BEFORE promising a length. A set of 10 that ends after 3
         // (the corpus ran out of unseen questions and the backend quietly
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if packId == nil, !skipAvailabilityCheck,
+        if pack == nil, !skipAvailabilityCheck,
            let shortfall = await probeQuestionShortfall(
                requestedCount: quizMaxQuestions,
                difficulty: quizDifficulty,
@@ -1218,8 +1222,11 @@ final class QuizViewModel: ObservableObject {
         do {
             Logger.quiz.info("🎮 Starting new quiz: \(quizMaxQuestions, privacy: .public) questions, difficulty: \(quizDifficulty, privacy: .public), language: \(quizLanguage, privacy: .public)")
 
-            // Get excluded question IDs from history
-            let excludedIds = persistenceStore.getExclusionList()
+            // #200: a pack excludes only what this phone played of it, so each
+            // play continues with the next unplayed questions; the library
+            // excludes the global history.
+            let excludedIds = pack.map { persistenceStore.playedPackQuestionIds(packId: $0.packId) }
+                ?? persistenceStore.getExclusionList()
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
 
@@ -1277,12 +1284,11 @@ final class QuizViewModel: ObservableObject {
                     categories: settings.categories,
                     userId: persistenceStore.deviceId,
                     includeImages: settings.includeImageQuestions,
-                    packId: packId
+                    packId: pack?.packId
                 )
             }
 
             currentSession = session
-            activePackId = packId
             persistenceStore.saveSession(id: session.id)
             prefetchErrorPrompt()
 
@@ -1320,17 +1326,8 @@ final class QuizViewModel: ObservableObject {
 
             transition(to: .askingQuestion)
 
-            // Save question ID to history
-            if let questionId = response.currentQuestion?.id {
-                do {
-                    try persistenceStore.addQuestionId(questionId)
-                } catch QuestionHistoryError.capacityReached {
-                    // Should not happen (checked before quiz start)
-                    Logger.quiz.warning("⚠️ Question history reached capacity mid-quiz")
-                } catch {
-                    Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
-                }
-            }
+            recordServedLibraryQuestion(response.currentQuestion)
+            markPackQuestionShown(response.currentQuestion)
 
             // Play question audio if available
             // (silence detection starts inside playQuestionAudio, after TTS finishes,
@@ -1358,6 +1355,10 @@ final class QuizViewModel: ObservableObject {
             // single-flight guard on this exit.
             if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 transition(to: .idle)
+                return
+            }
+
+            if let pack, case .packExhausted? = error as? NetworkError, offerRestartAfterServerRanOut(pack) {
                 return
             }
 
@@ -1752,8 +1753,8 @@ final class QuizViewModel: ObservableObject {
             transition(to: .askingQuestion)
             errorMessage = nil
         default:
-            // Fallback to starting new quiz
-            await startNewQuiz()
+            // Fallback to starting new quiz — the same pack, if it was one (#200).
+            await startNewQuiz(pack: activePack)
         }
     }
 
@@ -1762,7 +1763,7 @@ final class QuizViewModel: ObservableObject {
     @discardableResult
     func retryFromErrorScreen() -> Task<Void, Never> {
         if shouldRetryWithNewSession {
-            return beginQuizStart()
+            return playAgain()
         }
         return Task { await retryLastOperation() }
     }
@@ -2325,17 +2326,8 @@ final class QuizViewModel: ObservableObject {
         // generated. The advance path reads this to wait instead of ending.
         awaitingNextQuestion = response.awaitingQuestion
 
-        // Save question ID to history
-        if let questionId = response.currentQuestion?.id {
-            do {
-                try persistenceStore.addQuestionId(questionId)
-            } catch QuestionHistoryError.capacityReached {
-                // Should not happen (checked before quiz start)
-                Logger.quiz.warning("⚠️ Question history reached capacity mid-quiz")
-            } catch {
-                Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
-            }
-        }
+        // A pack question waits until it is on screen (#200).
+        recordServedLibraryQuestion(response.currentQuestion)
 
         // #132 Track E: freeze this result for the end-of-set recap — in BOTH
         // reveal modes, so flipping the setting mid-set still yields a full list.
@@ -2463,6 +2455,7 @@ final class QuizViewModel: ObservableObject {
             // This ensures the next question only appears AFTER showing results
             currentQuestion = nextQuestion
             nextQuestion = nil // Clear after use
+            markPackQuestionShown(currentQuestion)
 
             // Transition to asking question state
             transition(to: .askingQuestion)
@@ -2606,11 +2599,8 @@ final class QuizViewModel: ObservableObject {
         if let question = response.currentQuestion {
             currentQuestion = question
             nextQuestion = nil
-            do {
-                try persistenceStore.addQuestionId(question.id)
-            } catch {
-                Logger.quiz.warning("⚠️ Failed to save question to history: \(error, privacy: .public)")
-            }
+            recordServedLibraryQuestion(question)
+            markPackQuestionShown(question)
             guard transition(to: .askingQuestion) else { return true }
             Logger.quiz.info("❓ Pack question arrived after wait: \(question.id, privacy: .public)")
             // Same path a served question normally takes: TTS if we have it,

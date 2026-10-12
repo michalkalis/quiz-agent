@@ -31,7 +31,8 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     // Question history state
     var askedQuestionIds: [String] = []
-    private let maxCapacity = 500
+    /// #200: per-pack played ids, keyed by pack id.
+    var playedPackQuestions: [String: [String]] = [:]
 
     // MARK: - Session
 
@@ -56,28 +57,12 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     // MARK: - Question History
 
-    var isAtCapacity: Bool {
-        return askedQuestionIds.count >= maxCapacity
-    }
-
-    func addQuestionId(_ id: String) throws {
+    func addQuestionId(_ id: String) {
         guard !askedQuestionIds.contains(id) else { return }
-
-        if askedQuestionIds.count >= maxCapacity {
-            throw QuestionHistoryError.capacityReached
-        }
-
         askedQuestionIds.append(id)
-    }
-
-    func addQuestionIds(_ ids: [String]) throws {
-        let newIds = ids.filter { !askedQuestionIds.contains($0) }
-
-        if askedQuestionIds.count + newIds.count > maxCapacity {
-            throw QuestionHistoryError.capacityReached
+        if askedQuestionIds.count > PersistenceStore.historyWindow {
+            askedQuestionIds.removeFirst(askedQuestionIds.count - PersistenceStore.historyWindow)
         }
-
-        askedQuestionIds.append(contentsOf: newIds)
     }
 
     func clearHistory() {
@@ -86,6 +71,21 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     func getExclusionList() -> [String] {
         return askedQuestionIds
+    }
+
+    // MARK: - Pack progress (#200)
+
+    func playedPackQuestionIds(packId: String) -> [String] {
+        playedPackQuestions[packId] ?? []
+    }
+
+    func markPackQuestionPlayed(_ questionId: String, packId: String) {
+        guard !playedPackQuestionIds(packId: packId).contains(questionId) else { return }
+        playedPackQuestions[packId, default: []].append(questionId)
+    }
+
+    func clearPackProgress(packId: String) {
+        playedPackQuestions[packId] = nil
     }
 
     // MARK: - Quiz Stats

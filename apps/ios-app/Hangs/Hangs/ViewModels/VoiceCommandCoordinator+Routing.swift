@@ -336,9 +336,9 @@ extension VoiceCommandCoordinator {
             Task { [weak self] in await self?.retryFromError() }
 
         // #188 G3: the set-end score screen — play again (the Play Again
-        // button's path), or go Home.
+        // button's path, the same pack since #200), or go Home.
         case (.setEnd, .again):
-            Task { [weak self] in await self?.startNewQuiz() }
+            playAgain()
 
         case (.error, .stop), (.setEnd, .home):
             goHome()

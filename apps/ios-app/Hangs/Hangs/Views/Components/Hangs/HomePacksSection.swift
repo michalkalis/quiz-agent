@@ -7,9 +7,13 @@
 //  tap, an in-progress pack shows "Preparing" so a fresh buyer sees their
 //  order exists (founder pick: visible even before the first delivery).
 //  Failed/refunded orders never surface here — Home is a play entry, not an
-//  order-status surface; MyPacksView owns failure comms. The pack cards are
-//  hidden for signed-out users and empty accounts; the "Create your own pack"
-//  card under them is always there when the presenter wires it.
+//  order-status surface; MyPacksView owns failure comms. The "Create your own
+//  pack" card under them is always there when the presenter wires it.
+//
+//  #200 (TF 2026-10-12: the section "sometimes disappeared"): the title always
+//  shows, with what is known under it: loading, no pack yet, the list failed
+//  to load (with Retry), or the cards. A card shows how much of the pack this
+//  phone has played.
 //
 
 import SwiftUI
@@ -17,8 +21,8 @@ import SwiftUI
 struct HomePacksSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var viewModel: MyPacksViewModel
-    /// Play a delivered pack by its packId (same path as MyPacksView).
-    let onPlayPack: (String) -> Void
+    /// Play a delivered pack (same path as MyPacksView).
+    let onPlayPack: (PackPlay) -> Void
     /// The "Create your own pack" card. Nil (inspector tests, previews) hides it.
     let createPack: CreatePackEntry?
     /// The pack whose quiz is starting right now: its play control spins, like
@@ -40,11 +44,12 @@ struct HomePacksSection: View {
 
     init(
         service: PackOrderServiceProtocol,
+        playedCount: @escaping (String) -> Int = { _ in 0 },
         createPack: CreatePackEntry? = nil,
         quizStart: QuizStart = .idle,
-        onPlayPack: @escaping (String) -> Void
+        onPlayPack: @escaping (PackPlay) -> Void
     ) {
-        _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service))
+        _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service, playedCount: playedCount))
         self.createPack = createPack
         self.quizStart = quizStart
         self.onPlayPack = onPlayPack
@@ -57,7 +62,7 @@ struct HomePacksSection: View {
             viewModel: MyPacksViewModel,
             createPack: CreatePackEntry? = nil,
             quizStart: QuizStart = .idle,
-            onPlayPack: @escaping (String) -> Void
+            onPlayPack: @escaping (PackPlay) -> Void
         ) {
             _viewModel = StateObject(wrappedValue: viewModel)
             self.createPack = createPack
@@ -73,44 +78,93 @@ struct HomePacksSection: View {
         Array(orders.filter { $0.isPlayable || !$0.isTerminal }.prefix(3))
     }
 
+    /// What sits under the section title (#200). A list already loaded wins
+    /// over a later failure; an account whose only orders failed shows no
+    /// cards, just "Show all" to the list that explains them.
+    enum ListState: Equatable {
+        case loading
+        case failed
+        case empty
+        case packs([OrderSnapshot])
+    }
+
+    static func listState(orders: [OrderSnapshot], isLoading: Bool, loadFailed: Bool) -> ListState {
+        if !orders.isEmpty { return .packs(visibleOrders(orders)) }
+        if isLoading { return .loading }
+        return loadFailed ? .failed : .empty
+    }
+
     var body: some View {
-        let visible = Self.visibleOrders(viewModel.orders)
-        if !visible.isEmpty {
-            // #194 C1: the packs as small cards (#198.4: each in its own colour, like
-            // their question cards), two per row; one per row at accessibility
-            // text so a title never truncates.
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                // At accessibility text the label and "Show all" stack: side by
-                // side the link was cut to "Zobraz v…" (no "…" in controls).
-                headerLayout {
-                    HangsSectionLabel(text: "my packs")
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+            // At accessibility text the label and "Show all" stack: side by
+            // side the link was cut to "Zobraz v…" (no "…" in controls).
+            headerLayout {
+                HangsSectionLabel(text: "my packs")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !viewModel.orders.isEmpty {
                     showAllLink
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.xxs)
-                LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
-                    ForEach(visible) { order in
-                        HomePackCard(
-                            order: order,
-                            isStarting: quizStart.isInFlight && quizStart.packId == order.packId,
-                            isPlayDisabled: quizStart.isInFlight,
-                            onPlay: onPlayPack
-                        )
-                    }
-                }
             }
-            .accessibilityIdentifier("home.myPacksSection")
+            .padding(.horizontal, Theme.Hangs.Spacing.xxs)
+            listContent
         }
+        .accessibilityIdentifier("home.myPacksSection")
+        .task { await viewModel.start() }
         if let createPack {
             HomeCreatePackCard(appConfig: createPack.appConfig, action: createPack.action)
         }
-        // Invisible anchor keeps the keep-fresh loop alive even while the
-        // section itself renders nothing (first load, or an account whose only
-        // order is terminal-failed) — the `.task` must live on a view that is
-        // always mounted.
-        Color.clear
-            .frame(height: 0)
-            .task { await viewModel.start() }
+    }
+
+    @ViewBuilder private var listContent: some View {
+        switch Self.listState(orders: viewModel.orders, isLoading: viewModel.isLoading, loadFailed: viewModel.loadFailed) {
+        case .loading:
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
+                ProgressView()
+                    .tint(Theme.Hangs.Colors.muted)
+                Text("Loading your packs…")
+            }
+            .modifier(SectionStatusLine())
+            .accessibilityIdentifier("home.myPacks.loading")
+        case .failed:
+            Button(action: retryLoad) {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
+                    Text("Couldn't load your packs")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    HStack(spacing: Theme.Hangs.Spacing.xxs) {
+                        Text("Retry")
+                            .font(.hangsLabel)
+                        Image(systemName: "arrow.clockwise")
+                            .font(.hangsCaption.weight(.bold))
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundStyle(Theme.Hangs.Colors.actionText)
+                    .fixedSize()
+                }
+                .modifier(SectionStatusLine())
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home.myPacks.retry")
+        case .empty:
+            Text("No packs yet")
+                .modifier(SectionStatusLine())
+                .accessibilityIdentifier("home.myPacks.empty")
+        case let .packs(visible):
+            // #194 C1: the packs as small cards (#198.4: each in its own colour, like
+            // their question cards), two per row; one per row at accessibility
+            // text so a title never truncates.
+            LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
+                ForEach(visible) { order in
+                    HomePackCard(
+                        order: order,
+                        progress: viewModel.progress(of: order),
+                        isStarting: quizStart.isInFlight && quizStart.packId == order.packId,
+                        isPlayDisabled: quizStart.isInFlight,
+                        onPlay: onPlayPack
+                    )
+                }
+            }
+        }
     }
 
     private var headerLayout: AnyLayout {
@@ -122,6 +176,10 @@ struct HomePacksSection: View {
     private var columns: [GridItem] {
         let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
         return Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.sm, alignment: .top), count: count)
+    }
+
+    private func retryLoad() {
+        Task { await viewModel.retryLoad() }
     }
 
     private var showAllLink: some View {
@@ -143,6 +201,18 @@ struct HomePacksSection: View {
     }
 }
 
+/// #200: the one-line state under the section title (loading, failed, no
+/// pack yet), at the label's inset and a full tap target's height.
+private struct SectionStatusLine: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.hangsBody)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
+            .frame(maxWidth: .infinity, minHeight: HomePackCard.Metrics.minTapTarget, alignment: .leading)
+            .padding(.horizontal, Theme.Hangs.Spacing.xxs)
+    }
+}
+
 /// One custom pack on Home: a card in the pack's colour, play control top-right, title and its
 /// honest count (#182: playable from the first persisted batch).
 private struct HomePackCard: View {
@@ -154,9 +224,11 @@ private struct HomePackCard: View {
     }
 
     let order: OrderSnapshot
+    /// #200: how much of the pack this phone has played; nil before the first question.
+    let progress: PackProgress?
     let isStarting: Bool
     let isPlayDisabled: Bool
-    let onPlay: (String) -> Void
+    let onPlay: (PackPlay) -> Void
 
     /// #198.4: the pack's own palette colour, the same on its question cards.
     private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(forPack: order.colorKey) }
@@ -198,6 +270,9 @@ private struct HomePackCard: View {
                 // was ordered (#182).
                 Text("\(order.readyCount) of \(order.targetCount) ready")
                     .accessibilityIdentifier("home.myPacks.readyCount")
+            } else if let progress {
+                Text("Played \(progress.played) / \(progress.total)")
+                    .accessibilityIdentifier("home.myPacks.progress")
             } else if order.isPlayable {
                 Text("\(order.targetCount) questions")
             } else {
@@ -227,9 +302,9 @@ private struct HomePackCard: View {
     }
 
     @ViewBuilder private var playControl: some View {
-        if order.isPlayable, let packId = order.packId {
+        if order.isPlayable, let pack = order.packPlay {
             Button {
-                onPlay(packId)
+                onPlay(pack)
             } label: {
                 Group {
                     if isStarting {

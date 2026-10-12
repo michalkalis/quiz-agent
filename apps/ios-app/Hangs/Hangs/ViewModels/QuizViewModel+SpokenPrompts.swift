@@ -77,7 +77,7 @@ extension QuizViewModel {
     func retryFromErrorByVoice() async {
         guard activeErrorModel?.retryAction == .retryOperation else { return }
         if shouldRetryWithNewSession {
-            beginQuizStart()
+            playAgain()
         } else {
             await retryLastOperation()
         }

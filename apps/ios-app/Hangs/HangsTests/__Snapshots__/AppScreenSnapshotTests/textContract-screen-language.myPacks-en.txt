@@ -3,10 +3,12 @@
 Delivered
 Famous bridges of the world and the engineers who built them
 English
+Played 4 / 30
 Start quiz
 5
 Preparing
 history
+Played 4 / 30
 5 of 30 questions ready. The rest keeps generating while you play.
 Start quiz
 0
@@ -19,7 +21,9 @@ Try again
 Create a pack
 # identifiers
 myPacks.language
+myPacks.progress
 myPacks.startQuiz
+myPacks.progress
 myPacks.readyCount
 myPacks.startQuiz
 myPacks.retry

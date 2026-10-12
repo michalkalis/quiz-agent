@@ -17,8 +17,8 @@ import SwiftUI
 
 struct RoundCompleteView: View {
     /// Which route landed here. It decides the identifiers (the RS suite and
-    /// the inspector tests address each route by its own), the play-again path
-    /// and whether the spoken summary control is offered.
+    /// the inspector tests address each route by its own) and whether the
+    /// spoken summary control is offered.
     enum Route {
         /// Per-question reveal: the driver has already heard every verdict.
         case score
@@ -315,10 +315,7 @@ struct RoundCompleteView: View {
 
     private var playAgainButton: some View {
         HangsPrimaryButton(title: "Play Again", icon: "arrow.counterclockwise") {
-            switch route {
-            case .score: viewModel.beginQuizStart()
-            case .recap: Task { await viewModel.startNewQuiz() }
-            }
+            viewModel.playAgain()
         }
         .accessibilityIdentifier("\(route.idPrefix).playAgain")
     }

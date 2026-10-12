@@ -3,10 +3,12 @@
 Delivered
 Famous bridges of the world and the engineers who built them
 English
+Odehráno 4 / 30
 Spusť kvíz
 5
 Preparing
 history
+Odehráno 4 / 30
 Připravených otázek: 5 z 30. Zbytek se generuje, zatímco hraješ.
 Spusť kvíz
 0
@@ -19,7 +21,9 @@ Zkus znovu
 Vytvoř balíček
 # identifiers
 myPacks.language
+myPacks.progress
 myPacks.startQuiz
+myPacks.progress
 myPacks.readyCount
 myPacks.startQuiz
 myPacks.retry

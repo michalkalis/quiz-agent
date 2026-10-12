@@ -126,7 +126,7 @@ struct QuizAnalyticsTests {
             ))
         }
 
-        await vm.startNewQuiz(packId: "pack-1")
+        await vm.startNewQuiz(pack: PackPlay(packId: "pack-1", questionCount: nil))
 
         #expect(vm.showPaywall)
         #expect(analytics.events(named: "paywall_viewed") == [.paywallViewed(source: .quota)])
@@ -139,7 +139,7 @@ struct QuizAnalyticsTests {
         let (vm, _) = makeQuizViewModel(analytics: analytics)
         vm.settings.voiceCommandsEnabled = false
 
-        await vm.startNewQuiz(packId: "pack-1")
+        await vm.startNewQuiz(pack: PackPlay(packId: "pack-1", questionCount: nil))
 
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }

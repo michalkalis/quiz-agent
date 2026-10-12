@@ -27,15 +27,6 @@ struct AppErrorModel: Equatable, Sendable {
     let description: String
     let retryAction: AppErrorRetryAction
 
-    /// Question history hit the 500-question cap. Retrying restarts the same
-    /// guard and fails identically, so the CTA is Go Home — the recovery path
-    /// is Settings → "Reset question history" (#54 task 54.17).
-    static let historyAtCapacity = AppErrorModel(
-        title: String(localized: "Question history is full", comment: "Error title: saved-question history reached its cap"),
-        description: String(localized: "Clear your question history in Settings (Reset question history) and start a new game.", comment: "Error body: how to recover from a full question history"),
-        retryAction: .goHome
-    )
-
     /// Map a thrown error and its quiz context to the Error screen display model.
     static func from(_ error: Error, context: ErrorContext = .general) -> AppErrorModel {
         // Cancellation: not a network failure — a retry CTA is misleading,

@@ -165,6 +165,15 @@
                 seededSettings.answerTimeLimit = 0
             }
             persistence.savedSettings = seededSettings
+            // #200 RS-24: the Home pack (the mock's delivered one) already played
+            // through on this phone, so its play control asks before starting over.
+            if CommandLine.arguments.contains("--ui-test-pack-played-through"),
+               let packId = OrderSnapshot.mockDelivered.packId
+            {
+                for index in 0 ..< OrderSnapshot.mockDelivered.targetCount {
+                    persistence.markPackQuestionPlayed("played_\(index)", packId: packId)
+                }
+            }
 
             let stt = MockElevenLabsSTTService()
             mockSTT = stt

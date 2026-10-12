@@ -217,7 +217,7 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        try store.addQuestionId("q_001")
+        store.addQuestionId("q_001")
 
         #expect(store.askedQuestionIds == ["q_001"])
     }
@@ -227,8 +227,8 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        try store.addQuestionId("q_001")
-        try store.addQuestionId("q_001")
+        store.addQuestionId("q_001")
+        store.addQuestionId("q_001")
 
         #expect(store.askedQuestionIds == ["q_001"])
     }
@@ -238,8 +238,8 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        try store.addQuestionId("q_001")
-        try store.addQuestionId("q_002")
+        store.addQuestionId("q_001")
+        store.addQuestionId("q_002")
         store.clearHistory()
 
         #expect(store.askedQuestionIds.isEmpty)
@@ -250,8 +250,8 @@ struct PersistenceStoreQuestionHistoryTests {
         let (store, isolated) = makeStore()
         _ = isolated
 
-        try store.addQuestionId("q_001")
-        try store.addQuestionId("q_002")
+        store.addQuestionId("q_001")
+        store.addQuestionId("q_002")
 
         #expect(store.getExclusionList() == store.askedQuestionIds)
     }
@@ -265,64 +265,72 @@ struct PersistenceStoreQuestionHistoryTests {
         #expect(store.getExclusionList() == [])
     }
 
-    // MARK: - Capacity
+    // MARK: - Window (#200)
 
-    @Test("isAtCapacity returns true at 500 questions")
-    func isAtCapacityAt500() throws {
+    /// WHY (#200, founder 2026-10-12): at 500 ids the old cap refused every
+    /// quiz start. The history is only an exclusion list, so past the window
+    /// the oldest ids drop off silently and a new question is always taken.
+    @Test("past the window the oldest ids drop off and the newest is kept")
+    func windowDropsOldest() {
         let (store, isolated) = makeStore()
-        _ = isolated
+        let window = PersistenceStore.historyWindow
+        // A full history as an earlier build left it on disk.
+        isolated.defaults.set((0 ..< window).map { "q_\($0)" }, forKey: "asked_question_history")
+        #expect(store.askedQuestionIds.count == window)
 
-        for i in 0 ..< 500 {
-            try store.addQuestionId("q_\(i)")
-        }
+        store.addQuestionId("q_new")
 
-        #expect(store.isAtCapacity == true)
+        #expect(store.askedQuestionIds.count == window, "the history must stay at the window")
+        #expect(store.askedQuestionIds.first == "q_1", "the oldest id drops off first")
+        #expect(store.askedQuestionIds.last == "q_new", "a new question is never refused")
+    }
+}
+
+// MARK: - Pack progress (#200)
+
+@Suite("PersistenceStore pack progress")
+@MainActor
+struct PersistenceStorePackProgressTests {
+    private func makeStore() -> (PersistenceStore, IsolatedDefaults) {
+        let isolated = IsolatedDefaults()
+        return (isolated.makeStore(), isolated)
     }
 
-    @Test("addQuestionId throws capacityReached at limit")
-    func addQuestionIdThrowsAtCapacity() throws {
-        let (store, isolated) = makeStore()
-        _ = isolated
+    /// WHY: each pack continues where this phone left it, so its ledger must
+    /// survive the app (a fresh store over the same defaults), stay per pack,
+    /// and count a question once however often it is shown.
+    @Test("a pack's played questions persist per pack, without duplicates")
+    func ledgerPersistsPerPack() {
+        let isolated = IsolatedDefaults()
+        let store = isolated.makeStore()
 
-        for i in 0 ..< 500 {
-            try store.addQuestionId("q_\(i)")
-        }
+        store.markPackQuestionPlayed("p1_q1", packId: "pack-1")
+        store.markPackQuestionPlayed("p1_q2", packId: "pack-1")
+        store.markPackQuestionPlayed("p1_q1", packId: "pack-1")
+        store.markPackQuestionPlayed("p2_q1", packId: "pack-2")
 
-        #expect(throws: QuestionHistoryError.capacityReached) {
-            try store.addQuestionId("q_overflow")
-        }
-        // Count should remain at 500
-        #expect(store.askedQuestionIds.count == 500)
+        let relaunched = isolated.makeStore()
+        #expect(relaunched.playedPackQuestionIds(packId: "pack-1") == ["p1_q1", "p1_q2"])
+        #expect(relaunched.playedPackQuestionIds(packId: "pack-2") == ["p2_q1"])
+        #expect(relaunched.playedPackQuestionIds(packId: "pack-3").isEmpty)
     }
 
-    // MARK: - Batch Operations
-
-    @Test("addQuestionIds batch-adds with deduplication")
-    func batchAddWithDedup() throws {
+    /// WHY (founder 2026-10-12): resetting the question history must not
+    /// rewind a pack, and starting one pack over must not touch another.
+    @Test("history reset keeps pack progress; clearing one pack keeps the others")
+    func resetsAreIndependent() {
         let (store, isolated) = makeStore()
         _ = isolated
+        store.addQuestionId("lib_q1")
+        store.markPackQuestionPlayed("p1_q1", packId: "pack-1")
+        store.markPackQuestionPlayed("p2_q1", packId: "pack-2")
 
-        try store.addQuestionId("q_001")
-        try store.addQuestionIds(["q_001", "q_002", "q_003"])
+        store.clearHistory()
+        #expect(store.askedQuestionIds.isEmpty)
+        #expect(store.playedPackQuestionIds(packId: "pack-1") == ["p1_q1"])
 
-        #expect(store.askedQuestionIds == ["q_001", "q_002", "q_003"])
-    }
-
-    @Test("addQuestionIds throws when batch would exceed capacity")
-    func batchAddThrowsWhenExceedingCapacity() throws {
-        let (store, isolated) = makeStore()
-        _ = isolated
-
-        // Fill to 499
-        for i in 0 ..< 499 {
-            try store.addQuestionId("q_\(i)")
-        }
-
-        // Adding 2 new IDs (dedup-aware) would push to 501
-        #expect(throws: QuestionHistoryError.capacityReached) {
-            try store.addQuestionIds(["q_new_1", "q_new_2"])
-        }
-        // Count should remain at 499 (batch is all-or-nothing)
-        #expect(store.askedQuestionIds.count == 499)
+        store.clearPackProgress(packId: "pack-1")
+        #expect(store.playedPackQuestionIds(packId: "pack-1").isEmpty)
+        #expect(store.playedPackQuestionIds(packId: "pack-2") == ["p2_q1"])
     }
 }

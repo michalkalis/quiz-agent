@@ -1,7 +1,7 @@
 # texts
 JEJDA
-Question history is full
-Reset your question history in Settings and start a new quiz.
+Quiz ended
+This quiz is no longer active. Start a new quiz.
 Na úvod
 # identifiers
 error.root

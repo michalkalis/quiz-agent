@@ -56,8 +56,12 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// retry of a paid order must never fall through to a second `createOrder`.
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
     private let retryCalls = OSAllocatedUnfairLock(initialState: 0)
+    private let listCalls = OSAllocatedUnfairLock(initialState: 0)
 
     var createOrderCallCount: Int { createCalls.withLock { $0 } }
+    /// #200: how often the list was fetched — proves a failed load is retried
+    /// on its schedule, not hammered.
+    var listOrdersCallCount: Int { listCalls.withLock { $0 } }
     var retryOrderCallCount: Int { retryCalls.withLock { $0 } }
     var capturedRetryProofs: [PackPaymentProof?] { retryProofs.withLock { $0 } }
     /// Proof passed to each `retryOrder` call — a retry of a PAID order must
@@ -119,6 +123,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     }
 
     func listOrders() async throws -> [OrderSnapshot] {
+        listCalls.withLock { $0 += 1 }
         guard !listResults.isEmpty else { return try listResult.get() }
         return try listCallIndex.withLock { index in
             let result = listResults[min(index, listResults.count - 1)]

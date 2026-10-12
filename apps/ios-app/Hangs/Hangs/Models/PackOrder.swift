@@ -194,6 +194,18 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         isPlayable && (packGenerationStatus == "generating" || !isTerminal)
     }
 
+    /// #200: the questions the pack holds once generation is over: what was
+    /// persisted (`actual_count`), the ordered count when the server did not
+    /// say. Nil while it still grows, so it can never count as played through.
+    var playableQuestionCount: Int? {
+        isStillGenerating ? nil : (actualCount ?? targetCount)
+    }
+
+    /// #200: what a play control hands the quiz start; nil without a pack.
+    var packPlay: PackPlay? {
+        packId.map { PackPlay(packId: $0, questionCount: playableQuestionCount) }
+    }
+
     /// The poll loop should stop: delivered, failed, or refunded.
     var isTerminal: Bool {
         status == "delivered" || status == "failed" || status == "refunded"

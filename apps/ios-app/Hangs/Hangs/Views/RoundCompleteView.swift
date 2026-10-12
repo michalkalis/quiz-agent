@@ -8,7 +8,7 @@
 //  routes stay (the view model still picks one), and both now draw this.
 //
 //  Critical spots kept: the hero is one line with no sentence under it, the
-//  accuracy is the whole round's, the list groups each answer under its
+//  breakdown counts the whole round, the list groups each answer under its
 //  question and a row expands to the full question + source. The voice
 //  commands that work here ("znova", "domov") are named in the listen bar.
 //
@@ -62,6 +62,7 @@ struct RoundCompleteView: View {
                     // #198 (canvas Bg-Complete): the round's cards, one per question.
                     if !viewModel.recapEntries.isEmpty {
                         RoundCardRow(outcomes: cardOutcomes)
+                            .accessibilityIdentifier("\(route.idPrefix).cards")
                     }
 
                     scoreCard
@@ -131,12 +132,11 @@ struct RoundCompleteView: View {
                     .frame(width: 1)
 
                 VStack(spacing: Theme.Hangs.Spacing.xxs) {
-                    breakdownRow("Correct", value: "\(summary.correctCount)",
-                                 color: summary.correctCount > 0 ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
-                    breakdownRow("Incorrect", value: "\(summary.incorrectCount)",
-                                 color: summary.incorrectCount > 0 ? Theme.Hangs.Colors.missText : Theme.Hangs.Colors.muted)
-                    breakdownRow("Accuracy", value: "\(Int(summary.sessionAccuracyPercent))%",
-                                 color: Theme.Hangs.Colors.ink)
+                    breakdownRow("Correct", value: "\(correctCount)",
+                                 color: correctCount > 0 ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
+                    breakdownRow("Incorrect", value: "\(incorrectCount)",
+                                 color: incorrectCount > 0 ? Theme.Hangs.Colors.missText : Theme.Hangs.Colors.muted)
+                    breakdownRow("Skipped", value: "\(skippedCount)", color: Theme.Hangs.Colors.muted)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("completion.breakdown")
@@ -144,6 +144,12 @@ struct RoundCompleteView: View {
             .fixedSize(horizontal: false, vertical: true)
         }
     }
+
+    private var correctCount: Int { viewModel.recapEntries.count(where: \.isCorrect) }
+    private var skippedCount: Int { viewModel.recapEntries.count(where: \.wasSkipped) }
+    /// Every question that is neither right nor skipped, a partly right answer
+    /// included: the beta's recap counted it the same way.
+    private var incorrectCount: Int { viewModel.recapEntries.count - correctCount - skippedCount }
 
     private func breakdownRow(_ label: LocalizedStringKey, value: String, color: Color) -> some View {
         HStack {

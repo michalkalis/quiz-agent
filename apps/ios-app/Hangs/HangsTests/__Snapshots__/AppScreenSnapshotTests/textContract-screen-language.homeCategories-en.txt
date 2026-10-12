@@ -8,7 +8,6 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
-3 selected
 Done
 # identifiers
 home.category.all

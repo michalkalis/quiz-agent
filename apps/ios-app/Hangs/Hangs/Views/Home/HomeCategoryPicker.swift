@@ -36,7 +36,7 @@ struct HomeCategoryPicker: View {
             .padding(.top, Theme.Hangs.Spacing.xl)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .safeAreaInset(edge: .bottom) { doneBar }
+        .safeAreaBar(edge: .bottom) { doneButton }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .presentationDragIndicator(.hidden)
     }
@@ -132,33 +132,13 @@ struct HomeCategoryPicker: View {
             .strokeBorder(Theme.Hangs.Colors.hairline)
     }
 
-    // MARK: - Done bar
+    // MARK: - Done
 
-    private var doneBar: some View {
-        HStack(spacing: Theme.Hangs.Spacing.sm) {
-            Group {
-                if !categories.isEmpty {
-                    Text("\(categories.count) selected")
-                }
-            }
-            .font(.hangsLabel)
-            .foregroundStyle(Theme.Hangs.Colors.muted)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Button("Done") { dismiss() }
-                .font(.hangsLabel)
-                .foregroundStyle(Theme.Hangs.Colors.textOnAction)
-                .padding(.horizontal, Theme.Hangs.Spacing.xl)
-                .frame(minHeight: Metrics.doneHeight)
-                .background(Capsule().fill(Theme.Hangs.Colors.action))
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home.categories.done")
-        }
-        .padding(.leading, Theme.Hangs.Spacing.lg)
-        .padding(.trailing, Theme.Hangs.Spacing.xs)
-        .padding(.vertical, Theme.Hangs.Spacing.xs)
-        .glassEffect(.regular, in: Capsule())
-        .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .padding(.bottom, Theme.Hangs.Spacing.xs)
+    private var doneButton: some View {
+        HangsPrimaryButton(title: "Done") { dismiss() }
+            .accessibilityIdentifier("home.categories.done")
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.bottom, Theme.Hangs.Spacing.xs)
     }
 
     // MARK: - Actions
@@ -182,7 +162,6 @@ struct HomeCategoryPicker: View {
         static let ringWidth: CGFloat = 2
         static let stripWidth: CGFloat = 42
         static let stripHeight: CGFloat = 12
-        static let doneHeight: CGFloat = 52
     }
 }
 

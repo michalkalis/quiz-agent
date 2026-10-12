@@ -87,9 +87,9 @@ struct SettingsView: View {
                     audioFeedbackGroup
                     accountGroup
                     subscriptionGroup
+                    packsGroup
                     aboutGroup
                     feedbackGroup
-                    packsGroup
                     if BuildChannel.debugSurfacesEnabled() {
                         voiceDiagnosticsGroup
                     }
@@ -182,7 +182,7 @@ struct SettingsView: View {
             // immediately so flipping it off tears the listener down at once.
             HangsToggleRow(
                 label: "Voice commands",
-                subtitle: "Hands-free voice commands",
+                subtitle: "Control the quiz by voice, without tapping",
                 isOn: $viewModel.settings.voiceCommandsEnabled
             )
             .accessibilityIdentifier("settings.voiceCommands")
@@ -197,7 +197,7 @@ struct SettingsView: View {
             // still needed them). The row reads the effective state.
             HangsToggleRow(
                 label: "Voice hints",
-                subtitle: "Show the words to say under the listening bar",
+                subtitle: "Show the voice commands you can say",
                 isOn: Binding(
                     get: { viewModel.showsVoiceHints },
                     set: { viewModel.settings.voiceHintsEnabled = $0 }
@@ -210,13 +210,14 @@ struct SettingsView: View {
             // Release-visible recognizer diagnostics (#96 P2): asset state + the
             // last command heard, so the founder can confirm on-device that
             // recognition is armed and firing. Full failure reason → Sentry.
-            HangsValueRow(label: "Status", value: voiceCommandsDiagnostic)
+            HangsValueRow(label: "Speech recognition", value: voiceCommandsDiagnostic)
                 .accessibilityIdentifier("settings-voice-commands-status")
 
             hairline
 
             HangsToggleRow(
                 label: "Auto-confirm answers",
+                subtitle: "Your answer is sent by itself after \(Config.autoConfirmDelaySecs) seconds unless you change it",
                 isOn: $viewModel.settings.autoConfirmEnabled
             )
             .accessibilityIdentifier("settings.autoConfirm")
@@ -308,6 +309,7 @@ struct SettingsView: View {
         groupSection(label: "session") {
             sessionMenuRow(
                 label: "Thinking time",
+                subtitle: "Pause before the microphone turns on",
                 idPrefix: "settings.thinkingTime",
                 options: QuizSettings.thinkingTimeOptions,
                 selection: $viewModel.settings.thinkingTime,
@@ -330,6 +332,7 @@ struct SettingsView: View {
 
             sessionMenuRow(
                 label: "Auto-advance delay",
+                subtitle: "Pause on the result before the next question",
                 idPrefix: "settings.autoAdvance",
                 options: QuizSettings.autoAdvanceDelayOptions,
                 selection: $viewModel.settings.autoAdvanceDelay,
@@ -362,6 +365,7 @@ struct SettingsView: View {
 
     private func sessionMenuRow(
         label: LocalizedStringKey,
+        subtitle: LocalizedStringKey? = nil,
         idPrefix: String,
         options: [Int],
         selection: Binding<Int>,
@@ -378,6 +382,7 @@ struct SettingsView: View {
             HangsConfigRow(
                 label: label,
                 value: display(selection.wrappedValue),
+                subtitle: subtitle,
                 action: {}
             )
             .allowsHitTesting(false)
@@ -397,7 +402,8 @@ struct SettingsView: View {
     private var audioFeedbackGroup: some View {
         groupSection(label: "audio feedback") {
             HangsToggleRow(
-                label: "Speak scores aloud",
+                label: "Read aloud",
+                subtitle: "Questions, results and scores",
                 isOn: Binding(
                     get: { !viewModel.settings.isMuted },
                     set: { viewModel.settings.isMuted = !$0 }
@@ -409,6 +415,7 @@ struct SettingsView: View {
 
             HangsToggleRow(
                 label: "Recording sounds",
+                subtitle: "A short tone when the microphone turns on. The vibration stays.",
                 isOn: $viewModel.settings.recordingSoundsEnabled
             )
             .accessibilityIdentifier("settings-recording-sounds-toggle")
@@ -592,7 +599,8 @@ struct SettingsView: View {
             // error directs users here (#54 task 54.17 — row was dropped in 52.9).
             HangsConfigRow(
                 label: "Reset question history",
-                value: "\(viewModel.questionHistoryCount) / 500"
+                value: "\(viewModel.questionHistoryCount)",
+                subtitle: "Played questions don't repeat. Resetting brings them back."
             ) {
                 if viewModel.questionHistoryCount > 0 {
                     showResetConfirmation = true

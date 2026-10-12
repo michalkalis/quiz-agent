@@ -7,8 +7,8 @@ Correct
 7
 Incorrect
 3
-Accuracy
-70%
+Skipped
+0
 Running low on free questions
 ^[4 free questions](inflect: true) left this month.
 Get Trubbo Plus
@@ -39,6 +39,7 @@ Play Again
 Home
 # identifiers
 completion.close
+completion.cards
 completion.score
 completion.breakdown
 completion.upsell

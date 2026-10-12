@@ -111,7 +111,7 @@ struct HangsConfigRow: View {
 
 // MARK: - Toggle row
 
-/// Toggle row for settings (Voice commands, Speak scores aloud). An optional
+/// Toggle row for settings (Voice commands, Read aloud). An optional
 /// subtitle renders muted under the label for toggles whose effect isn't
 /// self-evident (Call Mode — founder batch 2026-07-12, pen Jjcs5 `arow3`).
 struct HangsToggleRow: View {

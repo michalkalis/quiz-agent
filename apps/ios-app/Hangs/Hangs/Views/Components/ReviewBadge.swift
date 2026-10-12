@@ -156,6 +156,7 @@ struct QuestionProvenanceRow: View {
             .minimumScaleFactor(0.6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, horizontalPadding)
+            .padding(.top, Theme.Hangs.Spacing.xs)
             // Dev metadata, not driving copy: kept out of VoiceOver exactly as
             // the model caption was, while staying addressable for tests.
             .accessibilityHidden(true)

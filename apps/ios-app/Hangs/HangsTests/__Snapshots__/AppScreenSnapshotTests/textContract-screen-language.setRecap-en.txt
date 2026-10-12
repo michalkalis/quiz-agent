@@ -7,8 +7,8 @@ Correct
 1
 Incorrect
 1
-Accuracy
-10%
+Skipped
+1
 QUIZ RESULT · Geography & World
 Play summary
 What is the capital of France?
@@ -23,6 +23,7 @@ Play Again
 Home
 # identifiers
 recap.close
+recap.cards
 recap.hero
 completion.breakdown
 recap.playSummary

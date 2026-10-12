@@ -1,0 +1,1946 @@
+[
+ {
+  "id": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který hrdina českých večerníčků se v roce 2011 podíval do vesmíru na palubě amerického raketoplánu Endeavour?",
+  "correct_answer": "Krtek",
+  "boost_until": null,
+  "created_at": "2026-10-08T10:03:01.035344+00:00"
+ },
+ {
+  "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Jaký dvouslovný nápis se skví nad jevištěm Národního divadla v Praze?",
+  "correct_answer": "Národ sobě",
+  "boost_until": null,
+  "created_at": "2026-10-08T10:07:02.047607+00:00"
+ },
+ {
+  "id": "a708a05b-8839-4f41-8f02-2e03be13da98",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Druhou řadu show Zrádci na Primě, kterou v závěru roku 2025 moderoval Vojtěch Kotek, vyhrála vrchní inspektorka Mia. Proč bylo její vítězství pro ostatní hráče tak hořkou lekcí?",
+  "correct_answer": "Byla od začátku zrádkyně",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:57:30.546897+00:00"
+ },
+ {
+  "id": "c13fd31e-8a23-4bf0-a769-ee7803c069cb",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Český dokument Kdyby se holubi proměnili ve zlato vyhrál v únoru 2026 na Berlinale cenu za nejlepší dokumentární film. Na jaké zařízení ho režisér Pepa Lubojacki celý natočil?",
+  "correct_answer": "Na mobilní telefon",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:52.453702+00:00"
+ },
+ {
+  "id": "d85c3cf1-f2c1-4a9f-a183-c0b997bd4a82",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Která zpěvačka si na galavečeru Český slavík 2025 odnesla titul Absolutní slavík?",
+  "correct_answer": "Ewa Farna",
+  "boost_until": "2026-11-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:59:52.453750+00:00"
+ },
+ {
+  "id": "afe252c2-c05e-4c89-b012-4be1a3a717e7",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Taneční show StarDance vyrazila v roce 2025 poprvé na turné po halách. Ve které pražské hale natočila Česká televize její silvestrovský speciál?",
+  "correct_answer": "O2 arena",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:52.453762+00:00"
+ },
+ {
+  "id": "1b88a6b7-8312-4929-8736-1e2a6f1dec58",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Kdo reprezentoval Česko na Eurovizi 2026 ve Vídni s anglicky zpívanou písní Crossroads a probojoval se ze semifinále až do finále?",
+  "correct_answer": "Daniel Žižka",
+  "boost_until": "2027-05-16T00:00:00+00:00",
+  "created_at": "2026-10-08T11:59:52.453799+00:00"
+ },
+ {
+  "id": "98e2fc22-954b-498d-b15b-1eed6f2407fe",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Pěvecká soutěž SuperStar se v září 2026 po pauze vrátila na obrazovky Novy a Markízy s novou porotou. Kdo ji moderoval?",
+  "correct_answer": "Leoš Mareš",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:03:21.695870+00:00"
+ },
+ {
+  "id": "c7813a15-919b-490e-bf6f-6f76f8c26fc7",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Film Spider-Man: Brand New Day z roku 2026 začíná tím, že Peter Parker je stále Spider-Man, ale nikdo na světě, ani jeho nejbližší, netuší, kdo to je. Co se stalo v předchozím filmu, že na něj všichni zapomněli?",
+  "correct_answer": "Doctor Strange seslal kouzlo zapomnění",
+  "boost_until": "2026-10-29T00:00:00+00:00",
+  "created_at": "2026-10-08T12:06:23.288304+00:00"
+ },
+ {
+  "id": "f6ddbedf-3ef4-4fd1-b319-b45626b19c69",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který herec, který už měl Oscary za filmy Tajemná řeka a Milk, získal na Oscarech 2026 svou třetí sošku za vedlejší roli ve filmu Jedna bitva za druhou (One Battle After Another)?",
+  "correct_answer": "Sean Penn",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T12:09:54.283145+00:00"
+ },
+ {
+  "id": "d22b3c73-e4f4-413e-9e9d-c155fa3a8695",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který horor z roku 2025 od režiséra Zacha Creggera vypráví o městečku, kde jedné noci přesně ve 2:17 vyběhnou ze svých domovů a beze stopy zmizí všechny děti z jedné školní třídy až na jediného chlapce?",
+  "correct_answer": "Weapons",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:09:54.283272+00:00"
+ },
+ {
+  "id": "d3a71fa4-cf31-4af2-aaf3-fe2196b6111a",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Ze které země pochází snímek Sentimentální hodnota (Sentimental Value) režiséra Joachima Triera, který získal Oscara 2026 za nejlepší mezinárodní film?",
+  "correct_answer": "Norsko",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T12:09:54.283304+00:00"
+ },
+ {
+  "id": "4bb6ad9a-2775-4bad-abcf-3bd6ff38f50d",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který jihokorejský režisér, autor filmů Oldboy a Komorná, předsedal hlavní porotě filmového festivalu v Cannes v roce 2026?",
+  "correct_answer": "Park Chan-wook",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:09:54.283406+00:00"
+ },
+ {
+  "id": "068319e4-1e8d-4074-ae59-a54c041a752e",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "V animovaném filmu Toy Story 5 z roku 2026 už hračky nesoupeří o pozornost malé Bonnie jen mezi sebou. Jaké elektronické zařízení ve tvaru žáby se stane jejich novým sokem?",
+  "correct_answer": "Tablet",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:13:52.479137+00:00"
+ },
+ {
+  "id": "cc6c3a6a-007f-4b2f-87f1-b23458ae796f",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Ve filmu Ďábel nosí Pradu 2 z roku 2026 se Meryl Streep po dvaceti letech vrátila do role obávané šéfredaktorky módního časopisu Runway. Jak se tato postava jmenuje?",
+  "correct_answer": "Miranda Priestly",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:13:52.479246+00:00"
+ },
+ {
+  "id": "a27dc2cf-39d0-4f17-9ad1-dd5725690f37",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Ve sci-fi Project Hail Mary z roku 2026 se astronaut Ryland Grace v podání Ryana Goslinga na palubě vesmírné lodi spřátelí s mimozemšťanem, jehož tělo připomíná kámen. Jaké jméno mu dá?",
+  "correct_answer": "Rocky",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:13:52.479284+00:00"
+ },
+ {
+  "id": "13d6026d-1283-4e44-ae99-11298ae32066",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Guillermo del Toro natočil pro Netflix v roce 2025 svého Frankensteina s Oscarem Isaacem v roli Viktora. Který australský herec, známý ze seriálu Euforie a filmu Saltburn, ztvárnil jeho Stvůru?",
+  "correct_answer": "Jacob Elordi",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:13:52.479310+00:00"
+ },
+ {
+  "id": "a21e46e2-fd9f-4793-9830-0acd3729762b",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Podle statistik za rok 2025 přišlo do českých kin asi o 3 procenta méně diváků než o rok dříve, přesto kina za rok utržila více peněz. Jak je to možné?",
+  "correct_answer": "Vstupenky zdražily",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:30:46.090235+00:00"
+ },
+ {
+  "id": "1d1dcdb4-af3c-4309-9f48-cdc1a8ae6ac7",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Na Českém lvu 2026 získal cenu pro nejlepšího herce izraelský herec Idan Weiss za titulní roli ve filmu Agnieszky Hollandové. Kterého slavného pražského spisovatele v něm ztvárnil?",
+  "correct_answer": "Franz Kafka",
+  "boost_until": "2027-03-07T00:00:00+00:00",
+  "created_at": "2026-10-08T12:33:42.777037+00:00"
+ },
+ {
+  "id": "52e0d26f-4ba8-415b-aa02-2672ddd7233d",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Seriálové kategorie Českého lva 2026 ovládla streamovací platforma televize Nova, která vznikla v roce 2025 spojením služby Voyo s O2 TV. Jak se jmenuje?",
+  "correct_answer": "Oneplay",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:33:42.777240+00:00"
+ },
+ {
+  "id": "3ae58406-795b-49e3-8218-8710000d12cd",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Kolik diváků přibližně přišlo za celý rok 2025 do českých kin?",
+  "correct_answer": "zhruba 12 milionů",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:33:42.777284+00:00"
+ },
+ {
+  "id": "76e2e8f8-d76c-4d6d-83fc-e5a0e35f7f1d",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který film byl za celý rok 2025 nejnavštěvovanějším filmem v českých kinech?",
+  "correct_answer": "Minecraft film",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:36:58.563293+00:00"
+ },
+ {
+  "id": "e6262a0b-5953-418b-b11a-823ad3eb8da3",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Která rocková kapela z Teplic získala na Českém slavíkovi 2025 cenu pro Skupinu roku?",
+  "correct_answer": "Kabát",
+  "boost_until": "2026-12-06T00:00:00+00:00",
+  "created_at": "2026-10-08T12:41:11.819907+00:00"
+ },
+ {
+  "id": "61480634-3024-4d54-bf67-ecdc802aa8a4",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který hollywoodský herec, hvězda filmů Absolvent a Rain Man, převzal na jubilejním 60. ročníku festivalu v Karlových Varech v roce 2026 Křišťálový glóbus za mimořádný přínos světové kinematografii?",
+  "correct_answer": "Dustin Hoffman",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:41:11.820004+00:00"
+ },
+ {
+  "id": "5e0f31f4-b198-4303-91d5-298f69af2e45",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "SuperStar se v září 2026 vrátila na obrazovky TV Nova. Který raper doplnil v porotě Pavola Haberu, Ewu Farnou a Jakuba Prachaře?",
+  "correct_answer": "Calin",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:41:11.820019+00:00"
+ },
+ {
+  "id": "9871a103-9479-4ac4-8928-fb7870125a61",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který zpěvák, který s kapelou Framus Five natočil album Ostraka, získal na cenách Anděl v dubnu 2026 ocenění za Album roku i za Sólového interpreta roku?",
+  "correct_answer": "Michal Prokop",
+  "boost_until": "2027-04-18T00:00:00+00:00",
+  "created_at": "2026-10-08T12:46:34.836517+00:00"
+ },
+ {
+  "id": "d4683b67-7b03-4575-9b42-934913b727d6",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Mladá herečka Kateřina Falbrová získala Českého lva 2026 za nejlepší ženský herecký výkon za roli zpěvačky v dívčím pěveckém sboru. Jak se jmenuje tento film režiséra Ondřeje Provazníka?",
+  "correct_answer": "Sbormistr",
+  "boost_until": "2027-03-07T00:00:00+00:00",
+  "created_at": "2026-10-08T12:51:40.378063+00:00"
+ },
+ {
+  "id": "b8dd5f56-e5b4-4a0a-a44f-0ed6be880cf9",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který zpěvák a písničkář, legenda českého bigbítu a frontman kapely Etc..., byl na Českém slavíku 2025 uveden do Síně slávy?",
+  "correct_answer": "Vladimír Mišík",
+  "boost_until": "2026-12-06T00:00:00+00:00",
+  "created_at": "2026-10-08T12:51:40.378097+00:00"
+ },
+ {
+  "id": "d397f03e-943a-44ec-8ec5-0ccc89566325",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Který muzikálový zpěvák, jenž v roce 2015 reprezentoval Česko na Eurovizi v duetu s Martou Jandovou, vyhrál na Českém slavíku 2025 poprvé v kariéře kategorii Zpěvák roku?",
+  "correct_answer": "Václav Noid Bárta",
+  "boost_until": "2026-12-06T00:00:00+00:00",
+  "created_at": "2026-10-08T12:54:36.359480+00:00"
+ },
+ {
+  "id": "b2e00414-c343-49a6-83c4-6abae8c55d20",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "V komedii Bardotky z roku 2026 ztvárnily Dagmar Havlová a Eva Holubová dvě ze tří kamarádek. Která světoznámá modelka českého původu, hvězda americké módní scény, si zahrála tu třetí?",
+  "correct_answer": "Pavlína Pořízková",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:54:36.359495+00:00"
+ },
+ {
+  "id": "f58b5137-b5a0-4390-b233-50941e7c0d0c",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Pokračování komedie o svérázném fotbalistovi Lavim se v roce 2025 stalo nejnavštěvovanějším českým filmem v tuzemských kinech. Jak se tento film jmenuje?",
+  "correct_answer": "Vyšehrad: Dvje",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:56:37.094690+00:00"
+ },
+ {
+  "id": "4ae43292-1dff-4353-8486-9145f19356fe",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Finále fotbalového mistrovství světa 2026 mělo jako vůbec první v historii velkou poločasovou show, ve které vystoupili BTS i Madonna. Proč zrovna tento ročník zavedl tradici, kterou fotbalová finále nikdy předtím neměla?",
+  "correct_answer": "Hrálo se v USA, po vzoru Super Bowlu",
+  "boost_until": "2027-07-19T00:00:00+00:00",
+  "created_at": "2026-10-08T12:58:03.278017+00:00"
+ },
+ {
+  "id": "f0caa373-5ce1-499d-a23b-7b7927ca5fb5",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Hra Resident Evil Requiem vyšla v únoru 2026. Kolikátým dílem hlavní číslované série Resident Evil je?",
+  "correct_answer": "Devátým",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:00:13.171444+00:00"
+ },
+ {
+  "id": "fa149a6d-494f-4c78-8237-8fd78c3f5ec3",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Ve hře Pokémon Pokopia pro Switch 2 z roku 2026 hraje hráč za postavu, která vypadá jako člověk, ale ve skutečnosti je to pokémon, jenž na sebe vzal lidskou podobu. O kterého pokémona, známého právě schopností proměny, jde?",
+  "correct_answer": "Ditto",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:00:13.171453+00:00"
+ },
+ {
+  "id": "93643585-6fa8-4996-ae8e-c5d286f1bcbc",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Které španělské zpěvačce vyšlo v listopadu 2025 album Lux, na kterém zpívá ve třinácti různých jazycích?",
+  "correct_answer": "Rosalía",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:03:29.808426+00:00"
+ },
+ {
+  "id": "dad5cc85-3ab1-43f6-a34b-d49a7ef93a04",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Která americká komička moderovala slavnostní vyhlášení Zlatých glóbů v lednu 2026, a to už podruhé za sebou?",
+  "correct_answer": "Nikki Glaser",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:03:29.808458+00:00"
+ },
+ {
+  "id": "83ec1eea-280a-4e27-a214-bf76b07a0e0c",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Která země vyhrála v květnu 2026 Eurovizi ve Vídni s písní „Bangaranga“ a dočkala se tak svého vůbec prvního vítězství v soutěži?",
+  "correct_answer": "Bulharsko",
+  "boost_until": "2027-05-16T00:00:00+00:00",
+  "created_at": "2026-10-08T13:09:05.070969+00:00"
+ },
+ {
+  "id": "0315373c-3003-4e9d-81d0-fc0e9b057b4a",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Která japonská herní společnost vydala v únoru 2026 horor Resident Evil Requiem, nejrychleji se prodávající díl celé série?",
+  "correct_answer": "Capcom",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:09:05.070980+00:00"
+ },
+ {
+  "id": "82785fa8-4c9d-48e8-9c14-8aafec860d47",
+  "language": "cs",
+  "review_status": "approved",
+  "question": "Seriál Gangy z Birminghamu (Peaky Blinders) se v březnu 2026 vrátil na Netflix celovečerním filmem The Immortal Man. Jak se jmenuje hlava rodinného gangu, kterou v něm opět hraje Cillian Murphy?",
+  "correct_answer": "Tommy Shelby",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:13:08.837520+00:00"
+ },
+ {
+  "id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?",
+  "correct_answer": "Sinners",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487810+00:00"
+ },
+ {
+  "id": "c61342e2-106a-4fcc-8664-5e972859829e",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which film had the bigger opening weekend in the United States and Canada: Avengers: Endgame in 2019, or Spider-Man: Brand New Day in 2026?",
+  "correct_answer": "Spider-Man: Brand New Day",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487835+00:00"
+ },
+ {
+  "id": "207ba422-848b-486f-8b5b-801e8190705b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which famous British music festival skipped 2026 entirely to give its farmland a rest, a so-called fallow year?",
+  "correct_answer": "Glastonbury",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487852+00:00"
+ },
+ {
+  "id": "c640e4c6-c6d9-4daf-b12a-67b7116a64ed",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Netflix's biggest title of the first half of 2026, War Machine, drew roughly how many views in those six months?",
+  "correct_answer": "Well over one hundred million",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487879+00:00"
+ },
+ {
+  "id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?",
+  "correct_answer": "Super Mario",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487936+00:00"
+ },
+ {
+  "id": "8a79020d-adbd-4051-a97d-eb44f78e441a",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Tomorrowland, the giant electronic music festival that runs over two weekends every July, takes place in which country?",
+  "correct_answer": "Belgium",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.487955+00:00"
+ },
+ {
+  "id": "e5e1cfa6-3708-41e7-a615-f1d4a8f95af7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "True or false: at the 2026 Academy Awards, a woman won the Oscar for Best Cinematography for the first time in history.",
+  "correct_answer": "True",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488010+00:00"
+ },
+ {
+  "id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 Disney Plus series Star Wars: Shadow Lord is built around which classic villain?",
+  "correct_answer": "Darth Maul",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488023+00:00"
+ },
+ {
+  "id": "a8290869-57c6-4d6e-bb1d-914828225559",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?",
+  "correct_answer": "Drake",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488049+00:00"
+ },
+ {
+  "id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?",
+  "correct_answer": "Under one million dollars",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488075+00:00"
+ },
+ {
+  "id": "967f25c3-e0dd-4fd0-81a3-a067d49a1e31",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Shakira's 2026 World Cup anthem Dai Dai, the first official World Cup song ever to top Billboard's global chart, paired her with which Afrobeats superstar?",
+  "correct_answer": "Burna Boy",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488087+00:00"
+ },
+ {
+  "id": "04a17a4a-1ff9-40ae-b781-76a2df8555d0",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which Californian desert festival sold out for 2026 less than a week after announcing its lineup?",
+  "correct_answer": "Coachella",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:16:09.488577+00:00"
+ },
+ {
+  "id": "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which city hosted the seventieth Eurovision Song Contest in May 2026?",
+  "correct_answer": "Vienna",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298388+00:00"
+ },
+ {
+  "id": "932f7686-ee1e-4bfa-aecf-86a1212e5aac",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which former One Direction member scored two global number-one singles in 2026 with 'Aperture' and 'American Girls'?",
+  "correct_answer": "Harry Styles",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298468+00:00"
+ },
+ {
+  "id": "6ac73d97-28fe-4841-b20a-1a2114860aef",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which rapper, also famous as Rihanna's partner, ended an eight-year album drought in 2026 with 'Don't Be Dumb'?",
+  "correct_answer": "A$AP Rocky",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298506+00:00"
+ },
+ {
+  "id": "c05166c7-1bfb-42d7-bdeb-052e277ab2c9",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The most-nominated Black woman in Oscar history, with five nominations by 2026, works behind the camera in which craft category?",
+  "correct_answer": "Costume Design",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298514+00:00"
+ },
+ {
+  "id": "d5ee198f-5fa2-4b18-985d-73e74458756f",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which thrash metal band, founded by a guitarist fired from Metallica, released a self-titled farewell album in January 2026?",
+  "correct_answer": "Megadeth",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298529+00:00"
+ },
+ {
+  "id": "7d8f5670-87e8-4b6f-b088-736148b704c6",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 Disney+ series Wonder Man pairs its hero with which washed-up actor from Iron Man 3, who once posed as a supervillain?",
+  "correct_answer": "Trevor Slattery",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:23:12.298595+00:00"
+ },
+ {
+  "id": "4634fc00-9e53-485e-8234-e5e2d570a886",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?",
+  "correct_answer": "Hundreds of thousands",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:25:40.945882+00:00"
+ },
+ {
+  "id": "32a211d7-3153-4fff-b9cc-b07f877c2d12",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Glastonbury Festival went ahead as usual in the summer of 2026. True or false?",
+  "correct_answer": "False",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:36:55.924365+00:00"
+ },
+ {
+  "id": "327750d6-0e22-4a97-b6f1-a58752c14f2b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "At the 2026 Oscars, which craft category crowned its first-ever female winner, nearly a century after the first ceremony?",
+  "correct_answer": "Cinematography",
+  "boost_until": null,
+  "created_at": "2026-09-02T21:36:55.924471+00:00"
+ },
+ {
+  "id": "c875bed5-0416-4e74-9900-4553bc90b61a",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The colourful twisting cube puzzle that became a worldwide craze in the 1980s was invented by a professor of architecture from which country?",
+  "correct_answer": "Hungary",
+  "boost_until": null,
+  "created_at": "2026-09-17T10:45:57.760730+00:00"
+ },
+ {
+  "id": "7b8e1fd1-9f78-4549-9147-5e100d1dbda7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In chess, how many different legal moves can White choose from for the very first move of the game?",
+  "correct_answer": "20",
+  "boost_until": null,
+  "created_at": "2026-10-01T04:00:06.253764+00:00"
+ },
+ {
+  "id": "f97efbe1-615f-4bde-9d44-fd0bc895361c",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The street names on the original American Monopoly board, such as Boardwalk and Park Place, come from which seaside city?",
+  "correct_answer": "Atlantic City",
+  "boost_until": null,
+  "created_at": "2026-10-01T04:00:06.253789+00:00"
+ },
+ {
+  "id": "ec7f5e93-0416-4e53-9e7e-6575675e652b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Tetris was created in 1984 by a programmer working at a state academy of sciences in which country?",
+  "correct_answer": "The Soviet Union",
+  "boost_until": null,
+  "created_at": "2026-10-01T04:17:00.603416+00:00"
+ },
+ {
+  "id": "95bac449-c3aa-402f-bff4-51a9a64a4a6d",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Pac-Man's designer said the character's shape came to him while looking at what food?",
+  "correct_answer": "A pizza",
+  "boost_until": null,
+  "created_at": "2026-10-01T04:17:00.603479+00:00"
+ },
+ {
+  "id": "95f231cb-1193-4419-851b-7ffaf8c9ddce",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The catch-them-all idea behind Pokémon came straight from the childhood hobby of its creator, Satoshi Tajiri, in the fields outside Tokyo. What did young Tajiri collect?",
+  "correct_answer": "Insects",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:18:46.108577+00:00"
+ },
+ {
+  "id": "5919233a-0751-4777-82f2-d24b6a81ccab",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The name of Tetris, created in Moscow in 1984, fuses the Greek word for four with the name of its inventor's favourite sport. Which sport?",
+  "correct_answer": "Tennis",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:18:46.108608+00:00"
+ },
+ {
+  "id": "3da9409e-b46d-40c7-b3a7-f68f8f21f124",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Doctor Who first aired on the BBC on 23 November 1963, overshadowed by news of which event the day before?",
+  "correct_answer": "JFK's assassination",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.865967+00:00"
+ },
+ {
+  "id": "ebf94c6b-d4ca-4548-9fb9-e134ad343bbe",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The Sopranos ended in 2007 with a sudden cut to black while which Journey song played on the diner jukebox?",
+  "correct_answer": "Don't Stop Believin'",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866036+00:00"
+ },
+ {
+  "id": "c934a810-ff4c-4535-843b-0034e42246c0",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In The Simpsons, which male member of the central family is voiced by a woman?",
+  "correct_answer": "Bart",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866065+00:00"
+ },
+ {
+  "id": "0cb61c0b-2c2e-4822-84ce-e0831fa6e543",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Over its six seasons, how many different actresses played Queen Elizabeth II in The Crown?",
+  "correct_answer": "Three",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866088+00:00"
+ },
+ {
+  "id": "ae5770f5-5911-423e-98e7-2ca2190efec5",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The reality format Big Brother, named after Orwell's all-seeing ruler, was first broadcast in 1999 in which country?",
+  "correct_answer": "The Netherlands",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866119+00:00"
+ },
+ {
+  "id": "6b91bfc0-d562-4a09-8d23-490690b89199",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which walled Croatian city stood in for King's Landing in Game of Thrones?",
+  "correct_answer": "Dubrovnik",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866147+00:00"
+ },
+ {
+  "id": "eb7cb7a3-bc7b-463d-9600-65588ae23a5b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "John Cleese's Fawlty Towers is regularly voted the best British sitcom ever. How many episodes were made in total?",
+  "correct_answer": "Twelve",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866175+00:00"
+ },
+ {
+  "id": "3d0d139a-42ca-4a6c-887f-cde74397b0c7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In Seinfeld, Jerry's neighbour Kramer is almost always called by his surname. What is his first name?",
+  "correct_answer": "Cosmo",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866219+00:00"
+ },
+ {
+  "id": "ad1a50d1-d8c6-40c4-a516-d7ac561d27fa",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In which year was the very first Eurovision Song Contest broadcast?",
+  "correct_answer": "1956",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866264+00:00"
+ },
+ {
+  "id": "36ee395a-e29c-4017-a662-4779f7239cb7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which country produced Squid Game, the most-watched series in Netflix's history?",
+  "correct_answer": "South Korea",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866303+00:00"
+ },
+ {
+  "id": "4c610971-9ca7-4ec9-a42f-1bc9bb36e7b8",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Psychiatrist Frasier Crane got his own hit sitcom in 1993, but he first appeared as a bar regular in which earlier series?",
+  "correct_answer": "Cheers",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866332+00:00"
+ },
+ {
+  "id": "5c5f2895-1df2-4417-9867-bd5070529b66",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 1980 the whole world was asking 'Who shot J.R.?'. Which TV series was it about?",
+  "correct_answer": "Dallas",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:44:42.866357+00:00"
+ },
+ {
+  "id": "482e212e-122d-4f32-9f2c-be2f6fdd7c96",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which animated family made their TV debut in 1987 as short filler cartoons on a comedian's sketch show, two years before getting their own series?",
+  "correct_answer": "The Simpsons",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:47:06.104225+00:00"
+ },
+ {
+  "id": "d003abf7-258f-40d8-bbdd-f59dd0b2fb51",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Rowan Atkinson's Mr. Bean has been rerun around the world for more than three decades. Roughly how many original episodes of the live-action TV series were actually made?",
+  "correct_answer": "Fewer than 20",
+  "boost_until": null,
+  "created_at": "2026-10-01T05:47:06.104291+00:00"
+ },
+ {
+  "id": "bda9f4d6-1f53-4e8a-ab50-081e891e4810",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Bran Castle in Transylvania draws hundreds of thousands of visitors a year because of its link to which fictional character?",
+  "correct_answer": "Dracula",
+  "boost_until": null,
+  "created_at": "2026-10-01T06:40:19.877494+00:00"
+ },
+ {
+  "id": "0292fbca-b247-42e0-bc59-3ac0e03d846d",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The original arcade Pac-Man was designed to run forever with no ending, yet on level 256 the right half of the maze turns into a jumble of letters and symbols and the game becomes impossible to finish. What goes wrong?",
+  "correct_answer": "The 8-bit level counter overflows",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:06:04.422066+00:00"
+ },
+ {
+  "id": "7a8e6598-6e9e-42f9-ba65-d4150e107ccb",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Sony's first PlayStation started life as a CD add-on being developed for which rival company's console?",
+  "correct_answer": "Nintendo",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863820+00:00"
+ },
+ {
+  "id": "9d9c6f8f-605f-4b2e-8d9e-fd338105ce0b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In his 1981 arcade debut in Donkey Kong, what was Mario's profession?",
+  "correct_answer": "Carpenter",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863830+00:00"
+ },
+ {
+  "id": "10497ef3-9d4e-4bbd-a4c8-e72b155b6ddf",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2014 Microsoft bought Mojang, the small Swedish studio behind Minecraft. Roughly how many US dollars did it pay?",
+  "correct_answer": "Billions",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863852+00:00"
+ },
+ {
+  "id": "8db2e1c4-150d-4c1d-abf1-b411db3a6ce1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "True or false: in The Legend of Zelda games, the green-clad hero you control is named Zelda.",
+  "correct_answer": "False",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863860+00:00"
+ },
+ {
+  "id": "2f2ef628-1163-45fb-acaf-a5dcca067b15",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Atari's table-tennis game Pong, the first arcade hit, was released in which year?",
+  "correct_answer": "1972",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863872+00:00"
+ },
+ {
+  "id": "a56750bf-9e8a-4607-b2e5-27acf51914ae",
+  "language": "en",
+  "review_status": "approved",
+  "question": "What was the name of the last home console Sega ever released before it stopped making hardware?",
+  "correct_answer": "Dreamcast",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863888+00:00"
+ },
+ {
+  "id": "cf60002f-e270-4429-be6c-f332c817c5a0",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The Grand Theft Auto series, famous for its American cities, was originally created by a studio in which country?",
+  "correct_answer": "Scotland",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863900+00:00"
+ },
+ {
+  "id": "a7c70ce6-ffa5-4dc9-9e73-a91714f21a6b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The mobile hit Angry Birds was created by a studio from which Nordic country?",
+  "correct_answer": "Finland",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863910+00:00"
+ },
+ {
+  "id": "2a9118b6-875b-489e-ab9b-444cecf1b510",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2014 excavators dug up thousands of Atari cartridges, including the infamous E.T. game, from a desert landfill in which US state?",
+  "correct_answer": "New Mexico",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863921+00:00"
+ },
+ {
+  "id": "f87424a4-a776-4419-8728-17aa792dd5b4",
+  "language": "en",
+  "review_status": "approved",
+  "question": "How many ghosts chase Pac-Man around the maze in the original arcade game?",
+  "correct_answer": "Four",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863931+00:00"
+ },
+ {
+  "id": "ad9804a4-e8f6-4e8e-8152-0341f726e1ae",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The Witcher games, starring the monster-hunter Geralt, are based on novels by an author from which country?",
+  "correct_answer": "Poland",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:07:33.863945+00:00"
+ },
+ {
+  "id": "1ed12fac-8582-4681-b88f-6a24d3d15186",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Mickey Mouse, Bugs Bunny and many other classic cartoon characters wear white gloves, even though they are animals. What practical problem did those gloves solve for early animators?",
+  "correct_answer": "Hands stayed visible against black bodies",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:09:32.029715+00:00"
+ },
+ {
+  "id": "9431bc0e-11d4-4a5d-99dd-19ade310aa78",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In his very first comics in 1938, Superman could not fly. How did he get over tall buildings instead?",
+  "correct_answer": "He jumped",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196312+00:00"
+ },
+ {
+  "id": "75d2d238-7e7c-47ff-8961-b4db74d323c4",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The letters 'DC' in the publisher name DC Comics are an abbreviation of which of the company's own comic-book titles?",
+  "correct_answer": "Detective Comics",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196377+00:00"
+ },
+ {
+  "id": "4e950aa7-9a93-4ae7-8bc2-4e24e04049b3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Wonder Woman's creator, William Moulton Marston, was a psychologist who helped develop which machine, a fitting origin for a heroine with a Lasso of Truth?",
+  "correct_answer": "The lie detector",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196394+00:00"
+ },
+ {
+  "id": "0d751421-ec55-43c4-9488-584f2e038ede",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In his 1962 debut issue, the Incredible Hulk was not green. What colour was he?",
+  "correct_answer": "Grey",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196410+00:00"
+ },
+ {
+  "id": "e5861f16-3b6e-4d58-8ae5-c1966cb3eb81",
+  "language": "en",
+  "review_status": "approved",
+  "question": "True or false: Simpsons creator Matt Groening named Homer Simpson after his own father.",
+  "correct_answer": "True",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196430+00:00"
+ },
+ {
+  "id": "b146535f-7bb2-4106-9843-fd5d289b3775",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 1965 France became the third country to launch its own satellite. The satellite was named after which comic-book character?",
+  "correct_answer": "Astérix",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196439+00:00"
+ },
+ {
+  "id": "b216608a-0f4e-42a9-bddb-ecfd7a1c08b3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Tintin walked on the Moon in Hergé's album published in 1954. How many years later did Neil Armstrong do it for real?",
+  "correct_answer": "Fifteen years",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196453+00:00"
+ },
+ {
+  "id": "21fc4e18-9c24-4e3b-9957-9d9ad90daf5c",
+  "language": "en",
+  "review_status": "approved",
+  "question": "On the 1969 Apollo 10 mission, the command module was nicknamed Charlie Brown. Which comic-strip character lent his name to the lunar module?",
+  "correct_answer": "Snoopy",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196489+00:00"
+ },
+ {
+  "id": "1ceeed1e-cbf8-4a5a-b157-28655c7bf712",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Eiichiro Oda's pirate manga One Piece holds the world record for copies of a single comic series by one author. Roughly how many copies are in circulation?",
+  "correct_answer": "Hundreds of millions",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196499+00:00"
+ },
+ {
+  "id": "d846f9b3-4aff-4059-8444-ef9f1f46f9fe",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Wolverine did not debut in an X-Men comic. In 1974 he was introduced as a Canadian government agent sent to fight which Marvel giant?",
+  "correct_answer": "The Hulk",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196507+00:00"
+ },
+ {
+  "id": "0438adb4-89eb-4b48-9fe8-3b3ec013769d",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The cartoon dog Scooby-Doo was named after a scat phrase Frank Sinatra sings at the end of which of his 1966 hit songs?",
+  "correct_answer": "Strangers in the Night",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:11:56.196516+00:00"
+ },
+ {
+  "id": "131c2811-ecd1-4c38-b836-ba69a5d7e453",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Tintin, the Smurfs and the cowboy Lucky Luke were all created by cartoonists from which European country?",
+  "correct_answer": "Belgium",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:13:51.907436+00:00"
+ },
+ {
+  "id": "7d305348-0a93-42fa-b74b-8dae0c876d8a",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Snoopy, Charlie Brown's dog in the Peanuts comic strip, belongs to which breed?",
+  "correct_answer": "Beagle",
+  "boost_until": null,
+  "created_at": "2026-10-01T07:32:46.308164+00:00"
+ },
+ {
+  "id": "b4d726a2-ce00-4b0c-9fbc-fc17e90b92e8",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2011, an IBM computer called Watson beat two human champions on which American TV quiz show?",
+  "correct_answer": "Jeopardy!",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:27:14.072339+00:00"
+ },
+ {
+  "id": "14346f3f-e589-4e71-9233-d2a67e8d1a22",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In many theatres it is considered bad luck to whistle backstage, and the rule has a very practical origin, not a magical one. What was the original danger behind this superstition?",
+  "correct_answer": "Whistles were cues for lowering scenery",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:38:17.010848+00:00"
+ },
+ {
+  "id": "26a1266a-cb31-4a4f-b6eb-0e3cd7c25717",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which crime writer's whodunnit has been playing in London's West End since 1952, making it the longest-running play in the world?",
+  "correct_answer": "Agatha Christie",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782029+00:00"
+ },
+ {
+  "id": "7ce58190-36a2-459b-97d0-753e6b17eb42",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Cirque du Soleil, now a global touring empire, was founded in 1984 by a troupe of street performers in which country?",
+  "correct_answer": "Canada",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782102+00:00"
+ },
+ {
+  "id": "4eaba2c2-c5d6-4f97-840f-0f53f91f358c",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The Moulin Rouge cabaret opened in Paris in 1889, the same year the city unveiled which landmark built for its World's Fair?",
+  "correct_answer": "The Eiffel Tower",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782119+00:00"
+ },
+ {
+  "id": "56066116-789c-44a6-ad82-e291113842df",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Riverdance was born as a seven-minute interval act during the 1994 edition of which televised contest, hosted that year in Dublin?",
+  "correct_answer": "Eurovision Song Contest",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782131+00:00"
+ },
+ {
+  "id": "8a2f6a66-a4fd-4c4d-97ce-f108ea91f791",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The name of Moscow's Bolshoi Theatre is simply the Russian word for what?",
+  "correct_answer": "Big",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782153+00:00"
+ },
+ {
+  "id": "0a672468-862d-4890-bd64-a7693bec5dcd",
+  "language": "en",
+  "review_status": "approved",
+  "question": "True or false: Kabuki, the Japanese theatre form in which every role is played by a man, was founded by a woman.",
+  "correct_answer": "True",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782162+00:00"
+ },
+ {
+  "id": "2938ffa0-e87b-4ec5-86cb-22701d244ec8",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2009, UNESCO added the tango to its cultural heritage list after a joint bid by Argentina and which neighbouring country?",
+  "correct_answer": "Uruguay",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:40:49.782173+00:00"
+ },
+ {
+  "id": "57a62629-78d7-426f-ab55-ab2754b8702e",
+  "language": "en",
+  "review_status": "approved",
+  "question": "True or false: the line 'Elementary, my dear Watson' appears in Arthur Conan Doyle's original Sherlock Holmes stories.",
+  "correct_answer": "False",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:45:06.331341+00:00"
+ },
+ {
+  "id": "905e35a6-b287-4d1a-a433-bb8b1cf02cb2",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In Agatha Christie's most famous railway mystery, a snowdrift traps the Orient Express and its passengers overnight. In which country, as it was then called, does the train come to a halt?",
+  "correct_answer": "Yugoslavia",
+  "boost_until": null,
+  "created_at": "2026-10-01T08:57:55.055304+00:00"
+ },
+ {
+  "id": "5b681597-6424-43b8-9555-7890adafb16d",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In which casino card game is the best possible hand an ace plus a ten-value card, dealt as your first two cards?",
+  "correct_answer": "Blackjack",
+  "boost_until": null,
+  "created_at": "2026-10-01T09:04:02.760002+00:00"
+ },
+ {
+  "id": "88a4da16-35a1-48f6-bc3f-e604be70c4f1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The board game Trivial Pursuit was invented in 1979 by two journalists from which country?",
+  "correct_answer": "Canada",
+  "boost_until": null,
+  "created_at": "2026-10-01T09:04:02.760082+00:00"
+ },
+ {
+  "id": "697fc1f3-10ab-4eb6-9578-4b29f51c2b5b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Colonel Mustard, Miss Scarlett and Professor Plum are suspects in which classic murder-mystery board game?",
+  "correct_answer": "Cluedo",
+  "boost_until": null,
+  "created_at": "2026-10-01T09:04:02.760116+00:00"
+ },
+ {
+  "id": "2a727c01-bc60-490c-8b14-f644b2ad750c",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In which hugely popular 1995 board game do players build settlements on hexagonal tiles while trading wood, brick, sheep, wheat and ore?",
+  "correct_answer": "Catan",
+  "boost_until": null,
+  "created_at": "2026-10-01T09:04:02.760162+00:00"
+ },
+ {
+  "id": "ceb57041-2ad8-4dec-90f9-936ae2b1b889",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The American psychologist who pioneered the blood-pressure lie-detector test in the early 20th century later created which comic-book superhero, famous for a golden lasso that compels anyone caught in it to tell the truth?",
+  "correct_answer": "Wonder Woman",
+  "boost_until": null,
+  "created_at": "2026-10-01T09:20:27.060511+00:00"
+ },
+ {
+  "id": "db7868be-acdc-4576-ba97-63407a1fde65",
+  "language": "en",
+  "review_status": "approved",
+  "question": "On April Fools' Day in 1957, a BBC news programme showed a Swiss family harvesting which food from trees?",
+  "correct_answer": "Spaghetti",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:02:34.381330+00:00"
+ },
+ {
+  "id": "b6a8dee6-2427-4946-804b-f079d0a6259f",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Bran Castle in Transylvania draws hundreds of thousands of visitors a year as the supposed home of which fictional character?",
+  "correct_answer": "Dracula",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:07:13.023512+00:00"
+ },
+ {
+  "id": "4259f63c-aced-40aa-9520-de5456ada907",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The magician David Copperfield borrowed his stage name from a novel by which author?",
+  "correct_answer": "Charles Dickens",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.263966+00:00"
+ },
+ {
+  "id": "540eedd2-dd66-4f52-9c63-3c37f54855d4",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Penn Jillette's famously silent stage partner legally changed his name to a single word. What is it?",
+  "correct_answer": "Teller",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264171+00:00"
+ },
+ {
+  "id": "5c94ae41-554a-488f-b4b5-7abc88fef689",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The founder of which circus company paid for a seat on a Soyuz rocket and visited the International Space Station in 2009?",
+  "correct_answer": "Cirque du Soleil",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264190+00:00"
+ },
+ {
+  "id": "f85b495f-aee7-4f3b-bba1-1600a9406221",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2003 David Blaine spent 44 days without food in a transparent box hanging above a riverbank in which city?",
+  "correct_answer": "London",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264214+00:00"
+ },
+ {
+  "id": "8fdc110c-d51d-487b-90b0-36181854e2fc",
+  "language": "en",
+  "review_status": "approved",
+  "question": "After 146 years, the Ringling Bros. and Barnum and Bailey Circus gave what was announced as its final performance in which year?",
+  "correct_answer": "2017",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264246+00:00"
+ },
+ {
+  "id": "ff8f89fe-89da-4005-bc0b-7cb2d7cac4d5",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which of these magicians performed under the name that was on his birth certificate?",
+  "correct_answer": "Penn Jillette",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264282+00:00"
+ },
+ {
+  "id": "3355cef7-134c-4903-bc6f-695c5845ea4b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The magician Chung Ling Soo died on a London stage in 1918 when which notoriously dangerous trick went wrong?",
+  "correct_answer": "The bullet catch",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:32:38.264367+00:00"
+ },
+ {
+  "id": "9811b816-8afb-41b2-8eae-f6c88ad17b70",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 1983, David Copperfield stunned a TV audience by making which world-famous monument disappear?",
+  "correct_answer": "The Statue of Liberty",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:34:57.589282+00:00"
+ },
+ {
+  "id": "18b5e0db-fd71-4615-acae-e7cc047113ce",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Harry Houdini built his stage name on the surname of an earlier conjuror known as the father of modern magic. From which country did that magician come?",
+  "correct_answer": "France",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:34:57.589355+00:00"
+ },
+ {
+  "id": "26ffe6ef-146f-4378-9ac2-6200cf4b69c6",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Harry Houdini was born Erik Weisz in Budapest. The stage name that made him world-famous was a tribute to a 19th-century magician from which country?",
+  "correct_answer": "France",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:35:46.508907+00:00"
+ },
+ {
+  "id": "8e287b74-5e5c-43dc-970c-04ad29c72823",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 1973 the Himalayan kingdom of Bhutan issued stamps that could be played on which household device?",
+  "correct_answer": "A record player",
+  "boost_until": null,
+  "created_at": "2026-10-01T10:48:50.781416+00:00"
+ },
+ {
+  "id": "59df8356-998f-4ea0-8d87-c0d2e56675d7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "At the 2026 Oscars, Michael B. Jordan won Best Actor for the film Sinners, and commentators immediately compared his win to Lee Marvin's 1966 Oscar for Cat Ballou. What did the two award-winning performances have in common?",
+  "correct_answer": "Both actors played two characters (twins)",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T11:02:14.738544+00:00"
+ },
+ {
+  "id": "076fdcd5-ef78-4e28-b8c0-66b7de53ef1f",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which 2025 film, directed by Paul Thomas Anderson and starring Leonardo DiCaprio, won Best Picture at the 2026 Oscars?",
+  "correct_answer": "One Battle After Another",
+  "boost_until": "9999-01-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:04:22.110774+00:00"
+ },
+ {
+  "id": "aaef6548-e3d8-4c99-84b8-c1e7b05181ed",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which song from the animated film KPop Demon Hunters won Best Original Song at the 2026 Oscars?",
+  "correct_answer": "Golden",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T11:04:22.110939+00:00"
+ },
+ {
+  "id": "37c9d7d0-4004-4805-8777-3e0b46ab9dc8",
+  "language": "en",
+  "review_status": "approved",
+  "question": "At the 2026 Grammys, which Puerto Rican star's album became the first entirely Spanish-language record to win Album of the Year?",
+  "correct_answer": "Bad Bunny",
+  "boost_until": "9999-01-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:04:22.110964+00:00"
+ },
+ {
+  "id": "49fc3574-2c89-414b-b93d-eac05433f0e1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In January 2026, Zootopia 2 overtook which 2024 Pixar sequel to become the highest-grossing Hollywood animated film ever?",
+  "correct_answer": "Inside Out 2",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:04:22.111015+00:00"
+ },
+ {
+  "id": "b187f1a6-07d9-459a-ada6-02fac9a960e0",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Christopher Nolan's 2026 epic The Odyssey opened to his biggest worldwide weekend ever. Which actor plays Odysseus in it?",
+  "correct_answer": "Matt Damon",
+  "boost_until": "2026-10-15T00:00:00+00:00",
+  "created_at": "2026-10-08T11:04:22.111022+00:00"
+ },
+ {
+  "id": "a7d2a02d-68f5-4302-9fe5-a6374f05aba1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Who plays the title role in the 2026 biopic Michael, an actor who is Michael Jackson's real-life nephew?",
+  "correct_answer": "Jaafar Jackson",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:04:22.111180+00:00"
+ },
+ {
+  "id": "0731abc4-6bbe-4b02-badc-e4bb1898826c",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which late-night comedian hosted the Academy Awards ceremony in March 2026, returning after hosting the year before?",
+  "correct_answer": "Conan O'Brien",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:06:48.158222+00:00"
+ },
+ {
+  "id": "e49c1c8b-2ab9-4fd8-9598-96834d189c23",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Jessie Buckley won the 2026 Best Actress Oscar for Hamnet, playing the wife of which famous playwright?",
+  "correct_answer": "William Shakespeare",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T11:06:48.158404+00:00"
+ },
+ {
+  "id": "eb26e388-3849-4eff-a627-103a7dbdb05b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Timothée Chalamet won the 2026 Golden Globe for Best Actor in a Musical or Comedy for Marty Supreme, playing a hustling champion of which sport?",
+  "correct_answer": "Table tennis",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:06:48.158423+00:00"
+ },
+ {
+  "id": "7ae587c5-98c0-469f-b76d-c44647c9f0ac",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 Palme d'Or at Cannes went to a film called Fjord, directed by Cristian Mungiu, who had already won the prize in 2007 for 4 Months, 3 Weeks and 2 Days. Despite the Nordic title, Mungiu comes from which country?",
+  "correct_answer": "Romania",
+  "boost_until": "2027-05-23T00:00:00+00:00",
+  "created_at": "2026-10-08T11:10:11.837156+00:00"
+ },
+ {
+  "id": "b5ca5627-aaa3-40d8-8ab0-085942f260fe",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Kendrick Lamar and SZA's Record of the Year winner at the 2026 Grammys takes its title from the first name of which soul singer, whose 1982 duet is sampled throughout the track?",
+  "correct_answer": "Luther Vandross",
+  "boost_until": "2027-02-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:13:47.280904+00:00"
+ },
+ {
+  "id": "5de176f7-6920-4a5e-becd-bb98bc18eabc",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which comedian hosted the Grammy Awards in 2026 for the sixth consecutive year?",
+  "correct_answer": "Trevor Noah",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:13:47.280921+00:00"
+ },
+ {
+  "id": "3b833c76-724b-4594-a465-1bfcd2b27fc7",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The 2026 Brit Awards were staged outside London for the first time in the ceremony's history. Which city hosted them?",
+  "correct_answer": "Manchester",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:13:47.280945+00:00"
+ },
+ {
+  "id": "ad8825e7-2d44-4275-a20f-ca8fba5fae69",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In October 2025, Taylor Swift's The Life of a Showgirl set a new record for the biggest sales week ever in the United States. Whose album 25, released in 2015, held the record before her?",
+  "correct_answer": "Adele",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:13:47.280952+00:00"
+ },
+ {
+  "id": "904928da-79d1-47ea-bd1b-4cafc3b82297",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which singer, who had opened for Taylor Swift on the Eras Tour, is the only guest vocalist on The Life of a Showgirl, duetting on its 2025 title track?",
+  "correct_answer": "Sabrina Carpenter",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:13:47.280959+00:00"
+ },
+ {
+  "id": "8a8b8cfc-81ce-4e22-bc79-f11e8f476c5b",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Oasis's 2025 reunion tour was the band's first run of concerts since the Gallagher brothers fell out and split. In which year had Oasis broken up?",
+  "correct_answer": "2009",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:13:47.280991+00:00"
+ },
+ {
+  "id": "f536223a-a81e-4448-9cc0-eb3a46d9db8e",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which British soul singer won Best New Artist at the 2026 Grammys and, a few weeks later, both Artist of the Year and Album of the Year at the 2026 Brit Awards for her album The Art of Loving?",
+  "correct_answer": "Olivia Dean",
+  "boost_until": "2027-02-28T00:00:00+00:00",
+  "created_at": "2026-10-08T11:15:26.763846+00:00"
+ },
+ {
+  "id": "6b58fcaf-7a59-49bd-b095-c57a736e777a",
+  "language": "en",
+  "review_status": "approved",
+  "question": "The Pitt, which won the Emmy for Outstanding Drama Series in both 2025 and 2026, titles its episodes with clock times like \"7:00 A.M.\" and gives every season exactly 15 episodes. What rule behind the show's format explains both of these choices?",
+  "correct_answer": "One real-time hour per episode, one shift",
+  "boost_until": "2027-09-14T00:00:00+00:00",
+  "created_at": "2026-10-08T11:16:47.552207+00:00"
+ },
+ {
+  "id": "9d704f18-0c01-4541-a613-2d10acda0e1d",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Season 5 of Stranger Things, released on Netflix in late 2025, jumps the story forward to the autumn of which year?",
+  "correct_answer": "1987",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947325+00:00"
+ },
+ {
+  "id": "ebca0636-c393-403c-a20f-1135b343c9fd",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In Pluribus, the 2025 Apple TV series from Breaking Bad creator Vince Gilligan, a virus leaves almost all of humanity blissfully happy and sharing one mind. Which Better Call Saul actress plays Carol, the miserable romance novelist who is immune?",
+  "correct_answer": "Rhea Seehorn",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947441+00:00"
+ },
+ {
+  "id": "37132e63-9a4b-4009-9d42-336a08eb4670",
+  "language": "en",
+  "review_status": "approved",
+  "question": "When Netflix's The Witcher returned for its fourth season in October 2025, Henry Cavill was gone. Which Australian actor had taken over the role of Geralt of Rivia?",
+  "correct_answer": "Liam Hemsworth",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947468+00:00"
+ },
+ {
+  "id": "e824d9dc-7e26-40ef-903f-b9bc8ff2a2a3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In January 2026 HBO premiered its second Game of Thrones prequel, following the penniless hedge knight Ser Duncan the Tall and his bald young squire nicknamed Egg. What is the series called?",
+  "correct_answer": "A Knight of the Seven Kingdoms",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947478+00:00"
+ },
+ {
+  "id": "42ea1d74-ad2a-4552-af0f-110cd36845b8",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Season 2 of Prime Video's Fallout, which began in December 2025, moves the story to the irradiated ruins of which famous casino city?",
+  "correct_answer": "Las Vegas",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947492+00:00"
+ },
+ {
+  "id": "c5e8bfc2-f77b-4e87-ade1-02e89cac5cd1",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Noah Wyle won the Golden Globe for Best Actor in a Drama Series in January 2026 for playing a senior doctor in The Pitt. Thirty years earlier he had broken through playing a young doctor on which long-running NBC hospital drama?",
+  "correct_answer": "ER",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947502+00:00"
+ },
+ {
+  "id": "eff998ec-f106-45c0-a83c-3408861bf667",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In October 2025 one of the major streaming services dropped the plus sign from its name. Which service was it?",
+  "correct_answer": "Apple TV+",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947510+00:00"
+ },
+ {
+  "id": "c19a4ab8-4637-436e-b813-8a75186d5612",
+  "language": "en",
+  "review_status": "approved",
+  "question": "HBO's 2025 prequel series IT: Welcome to Derry takes the Stephen King story back to 1962. Which Swedish actor returned to play the clown Pennywise?",
+  "correct_answer": "Bill Skarsgård",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947517+00:00"
+ },
+ {
+  "id": "dbb7072a-3709-4583-b02a-f63d9d1b3706",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Season 4 of Bridgerton, released in early 2026, is a Cinderella-style romance that begins at a masquerade ball. Which Bridgerton brother, the family's painter, is its leading man?",
+  "correct_answer": "Benedict",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:20:26.947528+00:00"
+ },
+ {
+  "id": "6fd32896-6997-47bb-82d2-1771eafc4881",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In the 2025 series Alien: Earth, terminally ill children have their minds transferred into synthetic adult bodies and are renamed Wendy, Nibs, Slightly, Tootles, Curly and Smee. Which classic children's story do those names come from?",
+  "correct_answer": "Peter Pan",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:23:03.847091+00:00"
+ },
+ {
+  "id": "3222f149-a0d7-4b6f-9e5e-f4fe82d030b9",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which turn-based role-playing game from a small debut studio in Montpellier, France, won Game of the Year at The Game Awards in December 2025, collecting a record nine trophies?",
+  "correct_answer": "Clair Obscur: Expedition 33",
+  "boost_until": "2026-12-11T00:00:00+00:00",
+  "created_at": "2026-10-08T11:28:38.956617+00:00"
+ },
+ {
+  "id": "08bf682a-05b4-43c4-b7d3-3987399883f3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Grand Theft Auto VI, which Rockstar pushed back in November 2025 to the following November, is set in the fictional state of Leonida. Which real US state is it based on?",
+  "correct_answer": "Florida",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:28:38.956626+00:00"
+ },
+ {
+  "id": "54135c1a-7932-4e12-9dab-5bdca901a7b3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Dictionary.com's 2025 Word of the Year was not a word but a number, chanted by schoolkids worldwide and boosted by a track from the rapper Skrilla. Which number?",
+  "correct_answer": "67",
+  "boost_until": "2026-11-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:28:38.956650+00:00"
+ },
+ {
+  "id": "2008b006-db2a-4104-b561-26de7f5015e3",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In the 2025 Netflix animated hit KPop Demon Hunters, the girl group Huntr/x, whose song Golden topped the Billboard Hot 100, battle demons posing as a rival boy band. What is that boy band called?",
+  "correct_answer": "Saja Boys",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:39.308138+00:00"
+ },
+ {
+  "id": "7d06f93f-852f-41a0-af68-5b7b9d612bfc",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In 2025 a toothy, pointy-eared elf doll called Labubu became a worldwide craze, sold in sealed blind boxes and clipped to designer handbags from Bangkok to Paris. Which Chinese toy company sells it?",
+  "correct_answer": "Pop Mart",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:39.308165+00:00"
+ },
+ {
+  "id": "8e24ff80-e6b7-4a87-a95e-2c4b24284c55",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Disney's Zootopia 2 opened in late November 2025 with a global debut that was the biggest ever for an animated film at that time. Yet the headline figure covered five days, not the usual three-day weekend. Why five days?",
+  "correct_answer": "It opened Wednesday before US Thanksgiving",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:30:52.123910+00:00"
+ },
+ {
+  "id": "fb7b6e01-6649-443d-b76e-b9d715372bb5",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which 2025 animated film, about a girl group who secretly fight demons between concerts, won Best Animated Feature at the 2026 Oscars?",
+  "correct_answer": "KPop Demon Hunters",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T12:34:41.462936+00:00"
+ },
+ {
+  "id": "e8f6fe3a-eabf-48ce-8680-7adea9372618",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Stranger Things ended with a finale released on New Year's Eve 2025, shown in cinemas as well as on Netflix. In which fictional Indiana town is the series set?",
+  "correct_answer": "Hawkins",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463081+00:00"
+ },
+ {
+  "id": "89e75de4-58e1-4771-ad96-2541149a5b21",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Taylor Swift's 2025 album The Life of a Showgirl opens with the single 'The Fate of Ophelia'. Ophelia is a character from which Shakespeare play?",
+  "correct_answer": "Hamlet",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463124+00:00"
+ },
+ {
+  "id": "ee428820-bfd2-4318-a958-89526a17ed12",
+  "language": "en",
+  "review_status": "approved",
+  "question": "In Zootopia 2 (2025), Judy Hopps and Nick Wilde cross paths with a new character called Gary, voiced by Ke Huy Quan. What kind of animal is Gary?",
+  "correct_answer": "A snake",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463136+00:00"
+ },
+ {
+  "id": "ced92706-e39d-4827-8534-0dd0a397d152",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Coachella 2026 had three headliners: Sabrina Carpenter, Justin Bieber and which Colombian superstar?",
+  "correct_answer": "Karol G",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463176+00:00"
+ },
+ {
+  "id": "f7c93aa0-f3c5-4ca9-9566-443db52d5886",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Nintendo launched the Switch 2 in June 2025. By the end of March 2026, roughly how many consoles had it sold worldwide?",
+  "correct_answer": "About 20 million",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463191+00:00"
+ },
+ {
+  "id": "23f7030c-67e1-4377-ba0b-8ab761a51e56",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Wicked: For Good (2025) added two brand-new songs by Stephen Schwartz. Elphaba sings 'No Place Like Home'; what is the title of Glinda's new solo, named after her preferred way of travelling?",
+  "correct_answer": "The Girl in the Bubble",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463199+00:00"
+ },
+ {
+  "id": "e2e2a494-b15d-4864-b771-a290a84d7129",
+  "language": "en",
+  "review_status": "approved",
+  "question": "Which Oscar-winning actress joined the cast of The Super Mario Galaxy Movie (2026) as the voice of Rosalina, the cosmic guardian of the Lumas?",
+  "correct_answer": "Brie Larson",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:41.463207+00:00"
+ },
+ {
+  "id": "9c5af71e-d97b-4c36-af87-7caa9e915a59",
+  "language": "en",
+  "review_status": "archived",
+  "question": "In 1982, a Los Angeles truck driver tied 45 helium weather balloons to a piece of everyday furniture, sat in it, and floated up to nearly 5,000 metres, where airline pilots radioed in to report him. What was he sitting in?",
+  "correct_answer": "Lawn chair",
+  "boost_until": null,
+  "created_at": "2026-10-10T11:37:08.324778+00:00"
+ },
+ {
+  "id": "f38d9c57-3a6e-44c5-bcb5-809155bfdde1",
+  "language": "en",
+  "review_status": "archived",
+  "question": "A French entertainer known as 'Monsieur Mangetout' ate bicycles, televisions and a supermarket trolley. Between 1978 and 1980 he ate his most famous meal piece by piece, a whole vehicle. What did he eat?",
+  "correct_answer": "An aeroplane",
+  "boost_until": null,
+  "created_at": "2026-10-10T11:37:08.324871+00:00"
+ },
+ {
+  "id": "b3b6f9a4-2376-416b-ba35-b94f3923df55",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorý herec a dramatik založil v roku 1963 Radošinské naivné divadlo?",
+  "correct_answer": "Stanislav Štepka",
+  "boost_until": null,
+  "created_at": "2026-10-08T10:04:26.105553+00:00"
+ },
+ {
+  "id": "e0084f33-6e6a-49fc-a3bb-dc8ff2e692aa",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Kto bol dlhoročným partnerom Milana Lasicu v najslávnejšej komickej dvojici slovenského humoru?",
+  "correct_answer": "Július Satinský",
+  "boost_until": null,
+  "created_at": "2026-10-08T10:06:19.940136+00:00"
+ },
+ {
+  "id": "a95fa08e-7849-4da7-a67d-af07a4c32dd4",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "V roku 2024 bola zrušená verejnoprávna RTVS a nahradila ju nová inštitúcia. Akú skratku používa?",
+  "correct_answer": "STVR",
+  "boost_until": null,
+  "created_at": "2026-10-08T10:09:45.667276+00:00"
+ },
+ {
+  "id": "241d59e8-5b62-424f-8f5d-c4a13ff01b9e",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorý slovenský herec získal za hlavnú úlohu vo filme Otec cenu Slnko v sieti 2026 pre najlepšieho herca v hlavnej úlohe?",
+  "correct_answer": "Milan Ondrík",
+  "boost_until": "2027-03-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:30:03.264526+00:00"
+ },
+ {
+  "id": "92109505-e2c8-48ec-8bdd-91c9aae7f0ee",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Spevácka súťaž SuperStar sa v septembri 2026 po päťročnej pauze vrátila na obrazovky. Ktorý slovenský spevák bol jediným Slovákom v jej štvorčlennej porote?",
+  "correct_answer": "Pavol Habera",
+  "boost_until": "2026-11-30T00:00:00+00:00",
+  "created_at": "2026-10-08T11:30:03.264600+00:00"
+ },
+ {
+  "id": "43151ab7-0a08-46b0-8584-c3c8109085b1",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Víťaz SuperStar 2021, poslednej série pred jej obnovením v roku 2026, neskôr reprezentoval Česko na Eurovízii 2025. Pod akým umeleckým menom vystupuje?",
+  "correct_answer": "ADONXS",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:03.264609+00:00"
+ },
+ {
+  "id": "6ef26136-53bc-432d-9576-adff1b717394",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorá legendárna britská kapela, známa hitmi Friday I'm in Love či Boys Don't Cry, odohrala na festivale Pohoda 2026 svoj vôbec prvý koncert na Slovensku?",
+  "correct_answer": "The Cure",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:03.264639+00:00"
+ },
+ {
+  "id": "9bd651a8-7be4-44e1-92a5-6ce6cf9a4609",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Festival Pohoda v Trenčíne vypredal v roku 2026 všetky vstupenky už v apríli, tri mesiace pred začiatkom. V ktorom roku sa konal jeho úplne prvý ročník?",
+  "correct_answer": "1997",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:03.264649+00:00"
+ },
+ {
+  "id": "83faeb43-3816-4b24-819c-9628aba4fd59",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Slovensko sa nezúčastnilo ani na Eurovízii 2026 vo Viedni. Ktorý rockový spevák bol v roku 2012 posledným slovenským reprezentantom pred touto dlhou prestávkou?",
+  "correct_answer": "Max Jason Mai",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:30:03.264658+00:00"
+ },
+ {
+  "id": "f3b8b585-3073-4233-83f5-9282607ddc4f",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Spevácka šou SuperStar sa v septembri 2026 po päťročnej prestávke vrátila na obrazovky Markízy a českej Novy. Kto ju moderoval?",
+  "correct_answer": "Leoš Mareš",
+  "boost_until": "2026-11-30T00:00:00+00:00",
+  "created_at": "2026-10-08T11:32:29.881404+00:00"
+ },
+ {
+  "id": "de088f81-1ebc-4c95-82b1-b9052aec875e",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorému slovenskému spevákovi, legende sedemdesiatych rokov, je venovaný životopisný film z roku 2025, ktorý na cenách Slnko v sieti 2026 získal cenu za najlepšie masky?",
+  "correct_answer": "Karol Duchoň",
+  "boost_until": "2027-03-01T00:00:00+00:00",
+  "created_at": "2026-10-08T11:34:45.813768+00:00"
+ },
+ {
+  "id": "2b7329d6-2303-4730-a6c3-2937f7abe0f5",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Tretí diel ktorej filmovej série Jamesa Camerona prišiel do kín v decembri 2025 s podtitulom Oheň a popol?",
+  "correct_answer": "Avatar",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:37.212816+00:00"
+ },
+ {
+  "id": "48ee69d1-8e1a-4658-b458-115dd1c95e2e",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Meryl Streep a Anne Hathaway sa v roku 2026 vrátili v pokračovaní komédie z roku 2006 o neľútostnej šéfredaktorke módneho časopisu. Ako sa pokračovanie volá?",
+  "correct_answer": "Diabol nosí Pradu 2",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:37.212834+00:00"
+ },
+ {
+  "id": "4c9f413b-a9f3-4fcc-b1ca-4d9a2c0ece8f",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Dráma Sentimental Value režiséra Joachima Triera so Stellanom Skarsgårdom v hlavnej úlohe získala Oscara za najlepší medzinárodný film v roku 2026. Ktorú krajinu reprezentovala?",
+  "correct_answer": "Nórsko",
+  "boost_until": "2027-03-15T00:00:00+00:00",
+  "created_at": "2026-10-08T11:59:37.213203+00:00"
+ },
+ {
+  "id": "b2455207-1400-4d09-89a3-8ac3122c3a68",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "V piatom filme Toy Story: Príbeh hračiek z roku 2026 majú hračky nového súpera o pozornosť svojej majiteľky. Nie je to hračka, ale aké elektronické zariadenie?",
+  "correct_answer": "Tablet",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:37.213212+00:00"
+ },
+ {
+  "id": "6057c291-a57d-4198-80f8-b6a3331a74c3",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorá popová hviezda sa v druhej sérii seriálu Wednesday z roku 2025 objavila ako tajomná učiteľka Rosaline Rotwood a k seriálu nahrala aj pieseň?",
+  "correct_answer": "Lady Gaga",
+  "boost_until": null,
+  "created_at": "2026-10-08T11:59:37.213241+00:00"
+ },
+ {
+  "id": "98e5e186-86c9-49c9-9c2c-f56372b6648c",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Seriál The Paper zo septembra 2025 je pokračovanie slávneho amerického sitcomu. Rovnaký dokumentárny štáb, ktorý roky nakrúcal zamestnancov firmy predávajúcej papier, sa v ňom presunul do redakcie upadajúcich novín v Ohiu. Z ktorého sitcomu vychádza?",
+  "correct_answer": "The Office",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:03:01.154880+00:00"
+ },
+ {
+  "id": "e03bb006-1542-4924-aabb-fb58b337c136",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Britská minisériu Adolescence z Netflixu získala v septembri 2025 osem cien Emmy. Každá z jej štyroch približne hodinových epizód bola nakrútená technicky mimoriadne náročným spôsobom. Akým?",
+  "correct_answer": "Na jeden záber",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:05:29.320511+00:00"
+ },
+ {
+  "id": "fc0b86c6-1553-4eab-88f5-8e16a19a9e51",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "V animovanom filme Hoppers od štúdia Pixar z roku 2026 prenesie dievča Mabel svoje vedomie do robotickej kópie zvieraťa, aby sa dostala medzi obyvateľov ohrozeného rybníka a mokrade. Do kópie akého zvieraťa?",
+  "correct_answer": "Bobra",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:05:29.320523+00:00"
+ },
+ {
+  "id": "0518901b-e498-49a3-a574-20e0305fdc67",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Koľko divákov prišlo v roku 2025 dokopy do všetkých slovenských kín?",
+  "correct_answer": "približne 5 miliónov",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:34:09.207533+00:00"
+ },
+ {
+  "id": "91077bb8-1629-4952-96cc-47d519cc07a4",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorá speváčka, známa hitom Měls mě vůbec rád, zasadla v septembri 2026 do poroty obnovenej súťaže SuperStar na Markíze a Nove?",
+  "correct_answer": "Ewa Farná",
+  "boost_until": "2026-11-30T00:00:00+00:00",
+  "created_at": "2026-10-08T12:41:26.883523+00:00"
+ },
+ {
+  "id": "61fe387f-4eee-4b00-9cd9-b11dbe71ae64",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "V marci 2026 sa pieseň i was never yours dostala do rebríčka amerického magazínu Billboard, a jej interpretka sa tak stala prvou umelkyňou narodenou na Slovensku, ktorá sa v tomto rebríčku objavila. Ako sa volá?",
+  "correct_answer": "Karin Ann",
+  "boost_until": "2027-03-01T00:00:00+00:00",
+  "created_at": "2026-10-08T12:44:26.444447+00:00"
+ },
+ {
+  "id": "9616dd40-0412-42f6-bace-426a26050fef",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Album Slovenská strela získal v roku 2026 na českých cenách Anděl ocenenie v kategórii slovenský album roka. Richard Müller ho nahral so skupinou, v ktorej začínal už v osemdesiatych rokoch. Ako sa táto kapela volá?",
+  "correct_answer": "Banket",
+  "boost_until": "2027-03-01T00:00:00+00:00",
+  "created_at": "2026-10-08T12:44:26.444471+00:00"
+ },
+ {
+  "id": "7bffe6e8-c298-4295-8e6a-1aa2869b625b",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Festival Pohoda v Trenčíne oslávil v roku 2026 svoj 30. ročník a vypredal sa už v apríli. Ktorá britská kapela, známa tým, že jej členov na verejnosti zastupujú animované postavičky, bola jedným z hlavných headlinerov?",
+  "correct_answer": "Gorillaz",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:44:26.444492+00:00"
+ },
+ {
+  "id": "60d8f443-fb6f-4474-9c06-3bec9aa1ea52",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Dráma Otec Terezy Nvotovej získala na cenách Slnko v sieti v apríli 2026 Najlepší film aj Najlepšiu réžiu. Keď však Slovenská filmová a televízna akadémia v júli 2026 vyberala slovenského kandidáta na Oscara pre ceremoniál v roku 2027, siahla po Potope. Prečo víťazný Otec vôbec neprichádzal do úvahy?",
+  "correct_answer": "Otec už bol kandidátom rok predtým",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:52:23.108933+00:00"
+ },
+ {
+  "id": "fe335f61-7176-4e90-bf55-a91fefbf8563",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Festival Pohoda v Trenčíne bol v roku 2026 vypredaný už v apríli, takmer tri mesiace pred začiatkom. Koľko vstupeniek sa približne predalo?",
+  "correct_answer": "približne 30 000",
+  "boost_until": null,
+  "created_at": "2026-10-08T12:55:21.045853+00:00"
+ },
+ {
+  "id": "20f92ef9-546c-4a4a-b97a-363c5ae5dc8d",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Vo filmovom muzikáli Wicked: For Good z novembra 2025 hrá dobrú čarodejnicu Glindu známa popová speváčka. Ktorá?",
+  "correct_answer": "Ariana Grande",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:05:29.537073+00:00"
+ },
+ {
+  "id": "789b44f9-9dee-440d-9cde-191deb5c1d82",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ryan Gosling hrá vo filme Project Hail Mary z marca 2026 vedca, ktorý sa prebudí sám na vesmírnej lodi. Predloha je od autora, podľa ktorého knihy vznikol aj slávny film s Mattom Damonom o preživšom na Marse. Ako sa ten starší film volá?",
+  "correct_answer": "Marťan",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:05:29.537146+00:00"
+ },
+ {
+  "id": "992c9068-2ef3-4327-9bdf-9ab70709477a",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Španielska speváčka Rosalía vydala v novembri 2025 album nahratý s Londýnskym symfonickým orchestrom, na ktorom spieva v trinástich jazykoch. Jeho názov je jediné latinské slovo, ktoré znamená svetlo. Ako sa album volá?",
+  "correct_answer": "LUX",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:05:29.537156+00:00"
+ },
+ {
+  "id": "c91184c7-1f28-4221-901b-c6fb684f2e6f",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Samurajská hra Ghost of Yōtei z októbra 2025, nástupkyňa Ghost of Tsushima, nesie meno podľa sopky na najsevernejšom z veľkých japonských ostrovov. Na ktorom ostrove sa odohráva?",
+  "correct_answer": "Hokkaido",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:05:29.537211+00:00"
+ },
+ {
+  "id": "e1ecf542-7ecb-4951-83cb-e30d8d565312",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Niektoré hry pre Nintendo Switch 2, ktorý vyšiel v júni 2025, sa predávajú v klasickej krabici s fyzickou kartridžou, no pri prvom spustení konzola žiada internet a sťahuje gigabajty dát. Načo je potom kartridža v krabici?",
+  "correct_answer": "Je to len kľúč, hra sa sťahuje",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:11:56.766400+00:00"
+ },
+ {
+  "id": "c7c4d61d-c518-42ca-afcd-773b6ebd2df3",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Ktorý hollywoodsky herec v roku 2026 opäť prepožičal hlas Mariovi vo filme The Super Mario Galaxy Movie?",
+  "correct_answer": "Chris Pratt",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:14:46.914505+00:00"
+ },
+ {
+  "id": "8ea18554-dab3-4950-9902-94a76f157066",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "Pieseň WILDFLOWER získala na odovzdávaní cien Grammy v roku 2026 cenu za skladbu roka. Ktorá speváčka ju napísala a nahrala spolu so svojím bratom Finneasom?",
+  "correct_answer": "Billie Eilish",
+  "boost_until": "2027-02-01T00:00:00+00:00",
+  "created_at": "2026-10-08T13:14:46.914531+00:00"
+ },
+ {
+  "id": "f32dddd2-7902-4b0c-a792-7784686098bf",
+  "language": "sk",
+  "review_status": "approved",
+  "question": "V roku 2025 uviedol Netflix veľkolepú adaptáciu Frankensteina od režiséra Guillerma del Tora, v ktorej Victora hrá Oscar Isaac. Ktorý austrálsky herec, známy ako Nate zo seriálu Euphoria, stvárnil pod vrstvami masky samotné stvorenie?",
+  "correct_answer": "Jacob Elordi",
+  "boost_until": null,
+  "created_at": "2026-10-08T13:18:58.221651+00:00"
+ }
+]

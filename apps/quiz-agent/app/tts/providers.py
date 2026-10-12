@@ -19,6 +19,7 @@ import httpx
 
 from quiz_shared.llm import factory as llm_factory
 
+from ..monitoring.provider_alerts import report_elevenlabs_refusal
 from .voices import (
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
@@ -112,6 +113,9 @@ class ElevenLabsTTSProvider:
             )
 
         if response.status_code != 200:
+            # #200: a quota/auth refusal is silent otherwise — the fallback
+            # voice keeps the quiz going, so only an alert gets it noticed.
+            report_elevenlabs_refusal("tts", response.status_code, response.text)
             # Quota exhaustion arrives as 401 quota_exceeded, not 429 — surface
             # the upstream body so the log says *why* the fallback kicked in.
             raise RuntimeError(

@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 import httpx
 
+from ..monitoring.provider_alerts import report_elevenlabs_refusal
 from .transcriber import TranscriptionResult
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,9 @@ class ScribeBatchTranscriber:
             raise ScribeUnavailable(f"ElevenLabs STT transport error: {exc}") from exc
 
         if response.status_code != 200:
+            # #200: the fallback hides a quota/auth refusal from the player —
+            # and from the founder, unless it raises an alert.
+            report_elevenlabs_refusal("stt", response.status_code, response.text)
             # Body is truncated and the key never logged: quota exhaustion
             # arrives here as a 401/402 body, which is why the fallback exists.
             raise ScribeUnavailable(

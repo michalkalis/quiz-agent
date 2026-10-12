@@ -12,6 +12,8 @@ its numerals.
 import logging
 import re
 
+from .ordinals import spell_ordinals
+
 logger = logging.getLogger(__name__)
 
 # Languages whose TTS input gets digit→words normalization. English TTS
@@ -83,7 +85,9 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
             return token
 
     try:
-        result = _NUMBER_RE.sub(spell, text)
+        # Ordinals first (#200): "19. storočí" must become one declined word,
+        # not the cardinal plus a sentence-end period ("devätnásť. storočí").
+        result = _NUMBER_RE.sub(spell, spell_ordinals(text, language))
         return result.replace("%", " " + _PERCENT_WORD[language]).replace("  ", " ")
     except Exception:
         logger.exception("TTS number normalization failed — using original text")

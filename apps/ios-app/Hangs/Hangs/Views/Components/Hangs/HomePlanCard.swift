@@ -18,6 +18,10 @@ import SwiftUI
 struct HomePlanCard: View {
     let usage: UsageInfo
 
+    /// Narrowest the free caption may get beside the number before the pill
+    /// and link drop to their own line; grows with Dynamic Type.
+    @ScaledMetric(relativeTo: .body) private var captionIdealWidth: CGFloat = 110
+
     // MARK: - Derived state
 
     /// The six card visuals. `subscriptionStatus` ("active"|"grace"|"expired"|
@@ -81,6 +85,10 @@ struct HomePlanCard: View {
                     freeFamilyBody
                 }
             }
+            // Full height, like Home's setting pills: squeezed by the Home
+            // column at large text, the card shrank its title or cut the
+            // credit chip to one line instead of growing.
+            .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("home.freePlanCard")
     }
@@ -95,18 +103,25 @@ struct HomePlanCard: View {
         let primary = hasCredits ? Self.combinedTotal(usage) : remaining
 
         return VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
-                Text(verbatim: "\(primary)")
-                    .font(.hangsTitle.monospacedDigit())
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                    .lineLimit(1)
-                    .fixedSize()
-                    .accessibilityIdentifier("home.planPrimary")
-                planCaption(hasCredits: hasCredits)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            HomePlanHeadLine {
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
+                    Text(verbatim: "\(primary)")
+                        .font(.hangsTitle.monospacedDigit())
+                        .foregroundStyle(Theme.Hangs.Colors.ink)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .accessibilityIdentifier("home.planPrimary")
+                    // The ideal width lets the one-line layout keep a caption
+                    // that wraps to a couple of lines, but not one squeezed
+                    // into a syllable per line.
+                    planCaption(hasCredits: hasCredits)
+                        .frame(minWidth: 0, idealWidth: captionIdealWidth, maxWidth: .infinity, alignment: .leading)
+                }
+            } pill: {
                 if state == .expired {
                     planPill(text: "ended", color: Theme.Hangs.Colors.muted, icon: nil)
                 }
+            } link: {
                 freeLink
             }
             if showLegend {
@@ -184,15 +199,16 @@ struct HomePlanCard: View {
 
     private var subscriberBody: some View {
         VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
+            HomePlanHeadLine {
                 Text("Trubbo Plus")
                     .font(.hangsTitle)
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .accessibilityIdentifier("home.planName")
+            } pill: {
                 statusPill
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            } link: {
                 subscriberLink
             }
             if state == .subscriberWithCredits {

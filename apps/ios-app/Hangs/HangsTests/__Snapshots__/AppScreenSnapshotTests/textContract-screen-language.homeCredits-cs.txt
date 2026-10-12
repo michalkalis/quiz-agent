@@ -4,6 +4,12 @@ tvůj plán
 118
 otázek k dispozici
 Více
+118
+otázek k dispozici
+Více
+118
+otázek k dispozici
+Více
 18 měsíčně zdarma
 100 kreditů z balíčku
 resets in 13 days · credits never expire
@@ -31,6 +37,12 @@ home.moreSettings
 home.freePlanUpgradeButton
 home.freePlanCard
 home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
 home.planPrimary
 home.planCaption
 home.freePlanUpgrade

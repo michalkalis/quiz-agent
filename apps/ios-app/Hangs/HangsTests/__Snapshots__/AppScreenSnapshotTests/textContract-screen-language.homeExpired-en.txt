@@ -5,6 +5,14 @@ your plan
 of 30 free questions left
 ended
 Resubscribe
+30
+of 30 free questions left
+ended
+Resubscribe
+30
+of 30 free questions left
+ended
+Resubscribe
 resets in 13 days
 History
 Science & Nature
@@ -30,6 +38,14 @@ home.moreSettings
 home.freePlanUpgradeButton
 home.freePlanCard
 home.planLabel
+home.planPrimary
+home.planCaption
+home.planStatusPill
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.planStatusPill
+home.freePlanUpgrade
 home.planPrimary
 home.planCaption
 home.planStatusPill

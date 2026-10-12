@@ -1,6 +1,6 @@
 # #200 — TF test redizajnu 1.1 (2026-10-12): 17 nálezov
 
-**Triage:** bug · in-progress
+**Triage:** bug · ready-for-human (kód hotový v main 2026-10-12; overenie na zariadení)
 **Založené:** 2026-10-12 (founder testuje TF build redizajnu z `main`; beta `release/1.0` sa už neopravuje, redizajn ju nahrádza)
 
 ## Zistenia (recon origin/main 38c3d28a)
@@ -32,17 +32,23 @@
 - **MCQ:** pravidlo písmen ponechať, spresniť: písmená len keď sú odpovede naozaj číselné (roky, počty, sumy), „Apollo 11“ ostane s číslami.
 - **Balík si pamätá odohrané otázky** (na telefóne), hrá ďalších N neodohraných podľa nastavení, karta ukáže „10 / 30“, po dohraní ponuka „Hrať balík odznova?“; vynulovanie histórie balík neovplyvní.
 - **História otázok:** žiadny strop, ktorý blokuje hranie, používateľ nevidí maximum; keď otázky naozaj dôjdu, ponúkne sa vynulovanie (existujúci tok #174). Technicky si appka pamätá posledných 5 000.
-- **AirPods:** founder chce, aby appka minimálne vedela, že sú pripojené (aj iné BT slúchadlá) → zoznam ich ukáže; ťuk zapne režim hovoru a vyberie ich mikrofón (predpoklad, overí founder v TF).
+- **AirPods (upresnené 2026-10-12):** appka ukáže, že sú pripojené BT slúchadlá (zvuk ide do nich, odpovede nahráva mikrofón iPhonu); režim hovoru sa pri slúchadlách **nezapína** (nie je potrebný, zhoršil by zvuk a v aute sa tvári ako hovor); prepínač v nastaveniach ostáva.
 - Kategórie: počet „vybraných“ preč, jedno tlačidlo Hotovo bez vnorenej lišty.
 
 ## Tracky
 
-- [ ] **200.1 — backend (2 PR):** (a) výberový klient DB `pool_pre_ping` (#12), počet otázok balíka = min(nastavenie, balík) (#14), spresnené pravidlo písmen MCQ (#7); (b) čísla v hlase po odpovedi + radové číslovky sk/cs, upozornenie (Sentry), keď TTS/STT prepne na zálohu pre limit (#15). Nasadiť.
-- [ ] **200.2 — iOS pauza a odpočty:** pauza počas čítania otázky pokračuje od miesta zastavenia (#8); pauza počas Premýšľaj pokračuje so zvyškom času (#13); bez prepínača automatického nahrávania a bez „Časového limitu na odpoveď“ (#6).
-- [ ] **200.3 — iOS balíky a história:** „Hraj znova“, „Skús znova“ a hlasové „znova“ ostanú v balíku (#16, #12); počítadlo odohraných otázok balíka + „N / M“ na karte + ponuka odznova (#17); sekcia Moje balíky vždy s nadpisom a stavom načítania / prázdna / chyba + opakovanie (#9); história bez blokujúceho stropu (okno 5 000).
-- [ ] **200.4 — iOS nastavenia a drobnosti:** texty a podnadpisy sk/cs/en (#2, #4, #11, „Oznamovať skóre nahlas“ → zodpovedá tomu, čo robí), Vlastné balíky vedľa Predplatného (#10), história bez „/ 500“, kategórie s jedným tlačidlom Hotovo (#1), odstup testovacieho riadku (#5), koniec kola Správne / Nesprávne / Preskočené.
-- [ ] **200.5 — iOS mikrofón:** pripojené BT slúchadlá v zozname mikrofónov aj v bežnom režime; ťuk zapne režim hovoru a vyberie ich (#3).
-- [ ] **200.6 — founder:** zdvihnúť limit kľúča `carquiz` v ElevenLabs (#15).
+- [x] **200.1 — HOTOVÉ 2026-10-12 (PR #371, #372, nasadené v151; cache nahrávok 1 500 MB PR #374, v152) — backend:** (a) výberový klient DB `pool_pre_ping` (#12), počet otázok balíka = min(nastavenie, balík) (#14), spresnené pravidlo písmen MCQ (#7); (b) čísla v hlase po odpovedi + radové číslovky sk/cs, upozornenie (Sentry), keď TTS/STT prepne na zálohu pre limit (#15). Nasadiť.
+- [x] **200.2 — HOTOVÉ 2026-10-12 (PR #377, #381 zastavené sekundy počas pauzy) — iOS pauza a odpočty:** pauza počas čítania otázky pokračuje od miesta zastavenia (#8); pauza počas Premýšľaj pokračuje so zvyškom času (#13); bez prepínača automatického nahrávania a bez „Časového limitu na odpoveď“ (#6).
+- [x] **200.3 — HOTOVÉ 2026-10-12 (PR #376, RS-24) — iOS balíky a história:** „Hraj znova“, „Skús znova“ a hlasové „znova“ ostanú v balíku (#16, #12); počítadlo odohraných otázok balíka + „N / M“ na karte + ponuka odznova (#17); sekcia Moje balíky vždy s nadpisom a stavom načítania / prázdna / chyba + opakovanie (#9); história bez blokujúceho stropu (okno 5 000).
+- [x] **200.4 — HOTOVÉ 2026-10-12 (PR #373) — iOS nastavenia a drobnosti:** texty a podnadpisy sk/cs/en (#2, #4, #11, „Oznamovať skóre nahlas“ → zodpovedá tomu, čo robí), Vlastné balíky vedľa Predplatného (#10), história bez „/ 500“, kategórie s jedným tlačidlom Hotovo (#1), odstup testovacieho riadku (#5), koniec kola Správne / Nesprávne / Preskočené.
+- [x] **200.5 — HOTOVÉ 2026-10-12 (PR #375) — iOS mikrofón:** zoznam mikrofónov ukáže pripojené BT slúchadlá (zvuk v nich, nahráva iPhone), bez prepínania do režimu hovoru (#3).
+- [x] **200.6 — HOTOVÉ 2026-10-12 — founder:** limit kľúča `carquiz` v ElevenLabs zrušený (#15).
+- [x] **200.7 — odhad spotreby ElevenLabs HOTOVÝ 2026-10-12:** TTS 98 % kreditov, ~185 kreditov pri prvom prečítaní otázky (potom zdieľaná cache), celý korpus raz ~680k kreditov (~$136); Starter nevie dokúpiť → founder žiada o ElevenLabs Startup Grant (rieši iná session, memory `project_elevenlabs_cost_grant_2026_10_12`); plán B 1 mesiac Pro na prečítanie korpusu.
+
+## Zostáva
+
+- Overiť na zariadení (TF build na požiadanie): pauza počas čítania a Premýšľaj, balík (počet otázok, Hraj znova, „Odohrané N / 30“, ponuka odznova), AirPods v zozname mikrofónov, slovenské čísla hlasom ElevenLabs.
+- Neskôr (nízka priorita): rekapitulácia zdieľateľná v cache (menej kreditov na hráča); Moje balíky pri chybe načítania hovorí „prihlás sa“; po aktualizácii začne každý balík od nuly (staré odohrané otázky sa nedajú priradiť).
 
 ## Hotovo, keď
 

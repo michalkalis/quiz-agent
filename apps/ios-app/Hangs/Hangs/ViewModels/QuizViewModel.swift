@@ -342,14 +342,14 @@ final class QuizViewModel: ObservableObject {
     /// freezes, or disappears — the founder rule after the 2026-07-29 field test.
     var answerWindowRemaining: Int {
         if quizState == .recording { return recordingCountdown }
-        return thinkingTimeCountdown
+        return quizTimersController.shownThinkingSeconds
     }
 
     /// The window `answerWindowRemaining` drains from — the Record/Stop button's
     /// fill fraction. 0 means "no countdown is running" (fill hidden).
     var answerWindowTotal: Int {
         if quizState == .recording { return quizTimersController.recordingCountdownTotal }
-        if thinkingTimeCountdown > 0 { return settings.thinkingTime }
+        if answerWindowRemaining > 0 { return settings.thinkingTime }
         return 0
     }
 

@@ -1228,6 +1228,23 @@
         }
       }
     },
+    "Answers are recorded by the iPhone microphone. The headphones' own microphone works only in Call Mode (in Settings). That lowers sound quality, and the car may show the quiz as a phone call." : {
+      "comment" : "Microphone picker footer with Bluetooth headphones connected: where answers are recorded and what the headphones' own microphone costs (Call Mode is the Settings toggle)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovědi nahrává mikrofon iPhonu. Mikrofon sluchátek funguje jen v režimu hovoru (v Nastavení). Ten zhorší kvalitu zvuku a auto může zobrazit kvíz jako telefonát."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovede nahráva mikrofón iPhonu. Mikrofón slúchadiel funguje len v režime hovoru (v Nastaveniach). Ten zhorší kvalitu zvuku a auto môže zobraziť kvíz ako telefonát."
+          }
+        }
+      }
+    },
     "App language" : {
       "localizations" : {
         "cs" : {
@@ -1557,6 +1574,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bluetooth (režim hovoru)"
+          }
+        }
+      }
+    },
+    "Bluetooth, plays the quiz sound" : {
+      "comment" : "Microphone picker row note for connected Bluetooth headphones (information only, not selectable as a microphone)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth, přehrává zvuk kvízu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth, prehráva zvuk kvízu"
           }
         }
       }
@@ -8592,22 +8626,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ak chceš používať Bluetooth mikrofón, prepni v nastaveniach na režim hovoru."
-          }
-        }
-      }
-    },
-    "Switch to Call Mode to use Bluetooth microphones. With a Bluetooth microphone the car treats the quiz as a phone call." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokud chceš používat Bluetooth mikrofon, přepni na režim hovoru. S Bluetooth mikrofonem auto bere kvíz jako telefonát."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ak chceš používať Bluetooth mikrofón, prepni na režim hovoru. S Bluetooth mikrofónom auto berie kvíz ako telefonát."
           }
         }
       }

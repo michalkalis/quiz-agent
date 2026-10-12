@@ -37,9 +37,13 @@ final class AudioDeviceState: ObservableObject {
 
     // MARK: - Device State (computed over AudioService)
 
-    /// Available input devices from AudioService
+    /// What the microphone picker lists: the inputs iOS offers right now plus
+    /// the Bluetooth devices it only reports on the output route (#200).
     var availableInputDevices: [AudioDevice] {
-        audioService.availableInputDevices
+        AudioDevice.pickerList(
+            inputs: audioService.availableInputDevices,
+            bluetoothOutputs: audioService.bluetoothOutputDevices
+        )
     }
 
     /// Currently selected input device (nil = automatic)
@@ -334,6 +338,9 @@ final class AudioDeviceState: ObservableObject {
                 setAudioMode(newMode.id)
 
                 Logger.audio.info("🔄 Switched to \(newMode.name, privacy: .public)")
+                // #200: which inputs iOS offers depends on the mode (a Bluetooth
+                // microphone only in call mode) and nothing else republishes them.
+                refreshAudioDevices()
             } catch {
                 setErrorMessage(String(localized: "Failed to switch audio mode: \(error.localizedDescription)", comment: "Inline error when switching audio output mode fails; placeholder is the underlying error"))
 
@@ -349,7 +356,7 @@ final class AudioDeviceState: ObservableObject {
         // Try to restore saved preferred device
         if let savedId = settings().preferredInputDeviceId {
             // Check if saved device is still available
-            if let device = availableInputDevices.first(where: { $0.id == savedId }) {
+            if let device = audioService.availableInputDevices.first(where: { $0.id == savedId }) {
                 do {
                     try audioService.setPreferredInputDevice(device)
                     Logger.audio.info("🎤 Restored preferred input device: \(device.name, privacy: .public)")
@@ -361,6 +368,15 @@ final class AudioDeviceState: ObservableObject {
                 Logger.audio.info("🎤 Saved input device not available, using automatic")
             }
         }
+
+        republishDeviceLists()
+    }
+
+    /// #200: the device lists live in the audio service, which this object
+    /// cannot observe; a picker or Settings row already on screen re-reads them
+    /// on this signal (after a refresh, a mode toggle or a route change).
+    func republishDeviceLists() {
+        objectWillChange.send()
     }
 
     /// Set preferred input device

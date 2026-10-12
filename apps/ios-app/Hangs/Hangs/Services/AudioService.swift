@@ -54,6 +54,11 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
 
     // Device management
     var availableInputDevices: [AudioDevice] { get }
+    /// #200: Bluetooth headphones/headsets on the current OUTPUT route (A2DP or
+    /// LE). iOS offers their microphone as an input only while the session
+    /// allows Bluetooth HFP (call mode), so in Media Mode they are absent from
+    /// `availableInputDevices` even though they are connected. Defaults to none.
+    var bluetoothOutputDevices: [AudioDevice] { get }
     var currentInputDevice: AudioDevice? { get }
     var currentOutputDeviceName: String { get }
 
@@ -86,6 +91,10 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     func setPreferredInputDevice(_ device: AudioDevice?) throws
 }
 
+extension AudioServiceProtocol {
+    var bluetoothOutputDevices: [AudioDevice] { [] }
+}
+
 /// Main actor audio service for AVFoundation operations
 @MainActor
 final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
@@ -112,6 +121,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// Available input devices (microphones)
     @Published private(set) var availableInputDevices: [AudioDevice] = []
+
+    /// Bluetooth headphones/headsets on the output route (see the protocol).
+    @Published private(set) var bluetoothOutputDevices: [AudioDevice] = []
 
     /// Currently active input device (nil = automatic)
     @Published private(set) var currentInputDevice: AudioDevice?
@@ -477,7 +489,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 self.updateCurrentInputDevice()
             }
         default:
-            break
+            // #200: the headphones on the output route follow every route change
+            // (a category change can move the sound to or from Bluetooth).
+            Task { @MainActor in
+                self.refreshAvailableDevices()
+            }
         }
 
         // #185 track C: the owner re-evaluates the listener's voice processing
@@ -603,6 +619,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// Refresh list of available input devices
     func refreshAvailableDevices() {
         let session = AVAudioSession.sharedInstance()
+
+        // #200: read first, the no-inputs early return below must not skip it.
+        bluetoothOutputDevices = session.currentRoute.outputs
+            .filter { $0.portType == .bluetoothA2DP || $0.portType == .bluetoothLE }
+            .map { AudioDevice.from(port: $0) }
 
         guard let inputs = session.availableInputs else {
             availableInputDevices = []

@@ -116,6 +116,8 @@ import os
 
         // Device management
         var availableInputDevices: [AudioDevice] = [.previewBuiltIn, .previewBluetooth]
+        /// #200: headphones on the output route; empty = none connected.
+        var bluetoothOutputDevices: [AudioDevice] = []
         var currentInputDevice: AudioDevice?
         var currentOutputDeviceName: String = "iPhone"
 
@@ -267,8 +269,12 @@ import os
             streamingChunkHandler?(data)
         }
 
+        /// #200: how often the app re-read the device lists from the session.
+        private(set) var refreshAvailableDevicesCallCount = 0
+
         func refreshAvailableDevices() {
-            // Mock: devices don't change
+            // Mock: devices don't change on their own; a test edits the lists.
+            refreshAvailableDevicesCallCount += 1
         }
 
         func setPreferredInputDevice(_ device: AudioDevice?) throws {

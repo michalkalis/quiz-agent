@@ -215,7 +215,7 @@ struct QuizViewModelAvailabilityTests {
     func packSessionSkipsTheProbe() async {
         let (viewModel, network, _) = makeViewModel(available: 0, requested: 10)
 
-        await viewModel.startNewQuiz(maxQuestions: 10, packId: "pack-1")
+        await viewModel.startNewQuiz(maxQuestions: 10, pack: PackPlay(packId: "pack-1", questionCount: nil))
 
         // A pack is a closed, paid, exactly-sized set served from its own pool,
         // so the shared-corpus count says nothing about it and must not block it.

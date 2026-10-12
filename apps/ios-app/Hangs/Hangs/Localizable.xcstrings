@@ -1940,6 +1940,7 @@
       }
     },
     "Clear your question history in Settings (Reset question history) and start a new game." : {
+      "extractionState" : "stale",
       "comment" : "Error body: how to recover from a full question history",
       "localizations" : {
         "cs" : {
@@ -2303,6 +2304,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nepodarilo sa načítať ďalšiu otázku"
+          }
+        }
+      }
+    },
+    "Couldn't load your packs" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje balíčky se nepodařilo načíst"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje balíky sa nepodarilo načítať"
           }
         }
       }
@@ -4479,6 +4496,22 @@
         }
       }
     },
+    "Loading your packs…" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Načítám tvoje balíčky…"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Načítavam tvoje balíky…"
+          }
+        }
+      }
+    },
     "Loading your plan…" : {
       "localizations" : {
         "cs" : {
@@ -5878,6 +5911,22 @@
         }
       }
     },
+    "Play this pack again from the start?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hrát balíček znovu od začátku?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hrať balík odznova?"
+          }
+        }
+      }
+    },
     "Playback failed" : {
       "comment" : "Audio error: audio could not be played back",
       "localizations" : {
@@ -5891,6 +5940,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prehrávanie zlyhalo"
+          }
+        }
+      }
+    },
+    "Played %lld / %lld" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odehráno %lld / %lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odohrané %lld / %lld"
           }
         }
       }
@@ -6251,6 +6316,7 @@
       }
     },
     "Question history has reached its maximum capacity of 500 questions." : {
+      "extractionState" : "stale",
       "comment" : "Persistence error: the saved-question history hit its cap",
       "localizations" : {
         "cs" : {
@@ -6268,6 +6334,7 @@
       }
     },
     "Question history is full" : {
+      "extractionState" : "stale",
       "comment" : "Error title: saved-question history reached its cap",
       "localizations" : {
         "cs" : {
@@ -6285,6 +6352,7 @@
       }
     },
     "Question history is full. Please reset your history in Settings to continue." : {
+      "extractionState" : "stale",
       "comment" : "Shown when saved-question history hit its cap; user must reset history",
       "localizations" : {
         "cs" : {
@@ -8224,6 +8292,22 @@
         }
       }
     },
+    "Start over" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj od začátku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj odznova"
+          }
+        }
+      }
+    },
     "Start quiz" : {
       "comment" : "Accessibility label: play this custom pack from Home",
       "localizations" : {
@@ -10008,6 +10092,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Povedal si: „%@“"
+          }
+        }
+      }
+    },
+    "You've played every question in this pack." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všechny otázky z tohoto balíčku už máš za sebou."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všetky otázky z tohto balíka už máš za sebou."
           }
         }
       }

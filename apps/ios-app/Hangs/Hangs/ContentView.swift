@@ -76,8 +76,8 @@ struct ContentView: View {
     /// automatic — flipping `quizState` to `.startingQuiz` clears the pushed
     /// stack via `navModel.handleQuizStateChange` (the single `.onReceive`
     /// teardown below), so this closure needs no notification post of its own.
-    private func playPack(_ packId: String) {
-        viewModel.beginQuizStart(packId: packId)
+    private func playPack(_ pack: PackPlay) {
+        viewModel.beginQuizStart(pack: pack)
     }
 
     /// #155: the TestFlight-only rating affordance for the question + result
@@ -143,6 +143,7 @@ struct ContentView: View {
                     case .myPacks:
                         MyPacksView(
                             service: appState.packOrderService,
+                            playedCount: viewModel.playedQuestionCount(inPack:),
                             onPlayPack: playPack,
                             createPack: MyPacksCreatePack(
                                 orderViewModel: appState.orderPackViewModel,
@@ -198,7 +199,9 @@ struct ContentView: View {
                 viewModel: appState.orderPackViewModel,
                 voice: appState.makeFeedbackVoice(for: viewModel),
                 networkService: appState.networkService,
-                onPlayPack: playPack,
+                // A pack just delivered: its size is unknown here and nothing of
+                // it was played, so the start never asks to start over.
+                onPlayPack: { playPack(PackPlay(packId: $0, questionCount: nil)) },
                 onClose: { navModel.orderFlowPresented = false }
             )
         }
@@ -274,6 +277,21 @@ struct ContentView: View {
             } else {
                 Text("Only \(shortfall.available) new questions left for you in \(shortfall.categoryName) (you asked for \(shortfall.requested)).")
             }
+        }
+        // #200: every start of a pack the phone has played through lands
+        // here (Home, My packs, Play Again, spoken "znova"), like the shortfall.
+        .alert(
+            "Play this pack again from the start?",
+            isPresented: Binding(
+                get: { viewModel.packRestartOffer != nil },
+                set: { if !$0 { viewModel.dismissPackRestartOffer() } }
+            ),
+            presenting: viewModel.packRestartOffer
+        ) { pack in
+            Button("Start over") { viewModel.restartPack(pack) }
+            Button("Cancel", role: .cancel) { viewModel.dismissPackRestartOffer() }
+        } message: { _ in
+            Text("You've played every question in this pack.")
         }
         // #197: the one-time beta question about sending answer recordings.
         .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.path.isEmpty))

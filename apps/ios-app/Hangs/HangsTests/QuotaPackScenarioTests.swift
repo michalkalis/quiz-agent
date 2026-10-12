@@ -126,7 +126,7 @@ struct QuotaPackScenarioTests {
 
         // The customer closes the paywall and opens the pack they own instead.
         loop.vm.showPaywall = false
-        await loop.vm.startNewQuiz(packId: "pack-owned-1")
+        await loop.vm.startNewQuiz(pack: PackPlay(packId: "pack-owned-1", questionCount: nil))
 
         #expect(loop.vm.quizState == .askingQuestion, "the paid pack must play behind the free wall")
         #expect(loop.vm.currentQuestion != nil, "…with an actual question to answer")

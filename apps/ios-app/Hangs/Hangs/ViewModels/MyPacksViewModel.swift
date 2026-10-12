@@ -9,6 +9,11 @@
 //  user leaving the screen. The loop lives inside the view's `.task`, so
 //  SwiftUI cancels it when the view disappears.
 //
+//  #200: the pack API scales to zero, so the first list request after idle
+//  can fail. A failed load keeps the last good list and is retried on its own
+//  with a growing pause; Home shows the failure (with Retry) only while there
+//  is no list at all.
+//
 
 import Combine
 import Clocks
@@ -37,27 +42,63 @@ final class MyPacksViewModel: ObservableObject {
     /// The clock the keep-fresh loop sleeps on (#180 track A) — a test drives it.
     private let clock: AnyClock<Duration>
 
-    init(service: PackOrderServiceProtocol, clock: AnyClock<Duration> = .continuous) {
+    /// #200: how many questions of a pack this phone has played.
+    private let playedCount: (String) -> Int
+
+    init(
+        service: PackOrderServiceProtocol,
+        clock: AnyClock<Duration> = .continuous,
+        playedCount: @escaping (String) -> Int = { _ in 0 }
+    ) {
         self.service = service
         self.clock = clock
+        self.playedCount = playedCount
+    }
+
+    /// #200: the pause before the next automatic try of a failed load: 5 s,
+    /// 10 s, 20 s, 40 s, then every minute while the list is on screen.
+    nonisolated static func reloadDelay(afterFailures failures: Int) -> Duration {
+        let doublings = min(max(failures - 1, 0), 4)
+        return .seconds(min(5 << doublings, 60))
     }
 
     /// Initial load, then the keep-fresh loop. The loop stays alive for the
     /// whole on-screen lifetime (it may need to resume after a pull-to-refresh
     /// brings in a new non-terminal order) but only hits the network while some
-    /// order can still change state.
+    /// order can still change state, or while the last load failed.
     func start() async {
-        await initialLoad()
+        await load()
+        var failures = 0
         while !Task.isCancelled {
+            failures = loadFailed ? failures + 1 : 0
+            let pause = loadFailed ? Self.reloadDelay(afterFailures: failures) : .seconds(refreshIntervalSeconds)
             do {
-                try await clock.sleep(for: .seconds(refreshIntervalSeconds))
+                try await clock.sleep(for: pause)
             } catch {
                 return // cancelled — view left the screen
             }
-            if orders.contains(where: { !$0.isTerminal }) {
+            if loadFailed {
+                await load()
+            } else if orders.contains(where: { !$0.isTerminal }) {
                 await refresh()
             }
         }
+    }
+
+    /// Home's "Retry" after a failed load: back to the spinner, then one more try.
+    func retryLoad() async {
+        isLoading = true
+        await load()
+    }
+
+    /// #200: "10 / 30" for a pack this phone has started; nil before its first
+    /// question, and for an order without a pack.
+    func progress(of order: OrderSnapshot) -> PackProgress? {
+        guard let packId = order.packId else { return nil }
+        let played = playedCount(packId)
+        guard played > 0 else { return nil }
+        let total = order.playableQuestionCount ?? order.targetCount
+        return PackProgress(played: min(played, total), total: total)
     }
 
     /// "Try again" on a `failed` row (#146). The order was already PAID for, so
@@ -90,17 +131,21 @@ final class MyPacksViewModel: ObservableObject {
         if let fresh = try? await service.listOrders() {
             orders = fresh
             loadFailed = false
+            isLoading = false
         }
     }
 
-    private func initialLoad() async {
-        isLoading = true
-        loadFailed = false
+    /// The first load, and each retry of a failed one. A cold pack API is
+    /// retried briefly in place (`TransientRetry`, the list GET is
+    /// idempotent). A failure keeps whatever list was already there (#200:
+    /// coming back to Home used to wipe it) and only marks the load failed.
+    private func load() async {
         do {
-            orders = try await service.listOrders()
+            orders = try await TransientRetry.run(label: "pack list", clock: clock) {
+                try await service.listOrders()
+            }
+            loadFailed = false
         } catch {
-            // 401 / no bearer / offline → graceful empty state, never a crash.
-            orders = []
             loadFailed = true
         }
         isLoading = false

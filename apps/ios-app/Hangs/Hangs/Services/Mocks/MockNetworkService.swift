@@ -79,6 +79,9 @@ import os
         /// tests assert exactly ONE submission survives an interleaving.
         var submitTextInputCallCount = 0
         var capturedStartQuizExcludedIds: [String]?
+        /// When set, `startQuiz` throws this — #200 drives the server's
+        /// "nothing left of this pack" answer through it.
+        var startQuizError: Error?
         /// When set, `createSession` throws this error instead of the default behaviour.
         var createSessionError: Error?
         /// #180 track C: mirrors the server's `not session.pack_id` guard — a
@@ -207,6 +210,7 @@ import os
         func startQuiz(sessionId _: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
+            if let error = startQuizError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

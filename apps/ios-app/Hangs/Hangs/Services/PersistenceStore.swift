@@ -8,18 +8,6 @@
 import Foundation
 import os
 
-/// Error types for question history operations
-enum QuestionHistoryError: Error {
-    case capacityReached
-
-    var localizedDescription: String {
-        switch self {
-        case .capacityReached:
-            return String(localized: "Question history has reached its maximum capacity of 500 questions.", comment: "Persistence error: the saved-question history hit its cap")
-        }
-    }
-}
-
 /// Protocol for unified persistence (session + settings + question history).
 /// @MainActor because all callers (QuizViewModel, AppState) are @MainActor.
 @MainActor
@@ -58,21 +46,14 @@ protocol PersistenceStoreProtocol: Sendable {
 
     // MARK: - Question History
 
-    /// All question IDs that have been asked
+    /// Library question IDs already served, oldest first. Packs keep their own
+    /// ledger (`playedPackQuestionIds`) and never land here (#200).
     var askedQuestionIds: [String] { get }
 
-    /// Whether the history has reached maximum capacity (500 questions)
-    var isAtCapacity: Bool { get }
-
-    /// Add a question ID to the history
-    /// - Parameter id: Question ID to add
-    /// - Throws: `QuestionHistoryError.capacityReached` if capacity exceeded
-    func addQuestionId(_ id: String) throws
-
-    /// Add multiple question IDs to the history
-    /// - Parameter ids: Array of question IDs to add
-    /// - Throws: `QuestionHistoryError.capacityReached` if capacity exceeded
-    func addQuestionIds(_ ids: [String]) throws
+    /// Remember a served library question. Keeps only the newest
+    /// `PersistenceStore.historyWindow` ids: the oldest drop off silently,
+    /// because no cap may ever block playing (#200).
+    func addQuestionId(_ id: String)
 
     /// Clear all question history
     func clearHistory()
@@ -80,6 +61,19 @@ protocol PersistenceStoreProtocol: Sendable {
     /// Get list of question IDs for exclusion (alias for askedQuestionIds)
     /// - Returns: Array of question IDs to exclude
     func getExclusionList() -> [String]
+
+    // MARK: - Pack progress (#200)
+
+    /// The questions of custom pack `packId` already shown on this phone, in
+    /// the order they were shown. Resetting the question history leaves them.
+    func playedPackQuestionIds(packId: String) -> [String]
+
+    /// Count one pack question as played. Called when it is on screen, never
+    /// at prefetch, so a set left early does not burn the question it held back.
+    func markPackQuestionPlayed(_ questionId: String, packId: String)
+
+    /// Forget what was played of `packId`: the pack starts over from the top.
+    func clearPackProgress(packId: String)
 
     // MARK: - Quiz Stats
 
@@ -114,9 +108,14 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let settingsKey = "quiz_settings"
     private let legacyMuteClearedKey = "mute_preference_cleared_173"
     private let historyKey = "asked_question_history"
-    private let maxCapacity = 500
+    private let packProgressKey = "pack_played_question_ids"
     private let statsKey = "quiz_stats"
     private let signInPromptCountKey = "sign_in_prompt_shown_count"
+
+    /// How many library question ids the history keeps (#200, founder
+    /// 2026-10-12). Only an exclusion list: older ids may come back, which is
+    /// fine, while a full list must never stop a quiz from starting.
+    static let historyWindow = 5000
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -227,47 +226,17 @@ final class PersistenceStore: PersistenceStoreProtocol {
         userDefaults.stringArray(forKey: historyKey) ?? []
     }
 
-    var isAtCapacity: Bool {
-        return askedQuestionIds.count >= maxCapacity
-    }
-
-    func addQuestionId(_ id: String) throws {
+    func addQuestionId(_ id: String) {
         var history = askedQuestionIds
-
-        // Skip if already in history (deduplication)
-        guard !history.contains(id) else {
-            Logger.persistence.debug("📦 PersistenceStore: Question \(id, privacy: .public) already in history, skipping")
-            return
-        }
-
-        // Check capacity before adding
-        if history.count >= maxCapacity {
-            Logger.persistence.warning("❌ PersistenceStore: Capacity reached (\(self.maxCapacity, privacy: .public) questions)")
-            throw QuestionHistoryError.capacityReached
-        }
+        guard !history.contains(id) else { return }
 
         history.append(id)
-        userDefaults.set(history, forKey: historyKey)
-
-        Logger.persistence.debug("📦 PersistenceStore: Saved question \(id, privacy: .public) (total: \(history.count, privacy: .public)/\(self.maxCapacity, privacy: .public))")
-    }
-
-    func addQuestionIds(_ ids: [String]) throws {
-        var history = askedQuestionIds
-
-        // Filter out duplicates
-        let newIds = ids.filter { !history.contains($0) }
-
-        // Check capacity before adding
-        if history.count + newIds.count > maxCapacity {
-            Logger.persistence.warning("❌ PersistenceStore: Adding \(newIds.count, privacy: .public) questions would exceed capacity")
-            throw QuestionHistoryError.capacityReached
+        if history.count > Self.historyWindow {
+            history.removeFirst(history.count - Self.historyWindow)
         }
-
-        history.append(contentsOf: newIds)
         userDefaults.set(history, forKey: historyKey)
 
-        Logger.persistence.debug("📦 PersistenceStore: Saved \(newIds.count, privacy: .public) questions (total: \(history.count, privacy: .public)/\(self.maxCapacity, privacy: .public))")
+        Logger.persistence.debug("📦 PersistenceStore: Saved question \(id, privacy: .public) (total: \(history.count, privacy: .public))")
     }
 
     func clearHistory() {
@@ -280,6 +249,34 @@ final class PersistenceStore: PersistenceStoreProtocol {
         let history = askedQuestionIds
         Logger.persistence.debug("📦 PersistenceStore: Retrieved \(history.count, privacy: .public) excluded question IDs")
         return history
+    }
+
+    // MARK: - Pack progress (#200)
+
+    /// Every pack's played ids, keyed by pack id.
+    private var packProgress: [String: [String]] {
+        userDefaults.dictionary(forKey: packProgressKey) as? [String: [String]] ?? [:]
+    }
+
+    func playedPackQuestionIds(packId: String) -> [String] {
+        packProgress[packId] ?? []
+    }
+
+    func markPackQuestionPlayed(_ questionId: String, packId: String) {
+        var progress = packProgress
+        var played = progress[packId] ?? []
+        guard !played.contains(questionId) else { return }
+        played.append(questionId)
+        progress[packId] = played
+        userDefaults.set(progress, forKey: packProgressKey)
+    }
+
+    func clearPackProgress(packId: String) {
+        var progress = packProgress
+        progress[packId] = nil
+        userDefaults.set(progress, forKey: packProgressKey)
+
+        Logger.persistence.info("📦 PersistenceStore: Cleared progress of pack \(packId, privacy: .public)")
     }
 
     // MARK: - Quiz Stats

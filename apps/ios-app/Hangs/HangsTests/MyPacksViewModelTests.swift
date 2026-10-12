@@ -301,3 +301,89 @@ struct MyPacksViewLoadingLayoutTests {
         #expect(try progress.flexFrame().maxWidth == .infinity)
     }
 }
+
+// MARK: - #200 failed loads and pack progress
+
+@MainActor
+@Suite("MyPacksViewModel failed loads and progress (#200)")
+struct MyPacksViewModelRecoveryTests {
+    /// WHY: the pack API scales to zero, so the first list request after idle
+    /// can fail. That load was never tried again and Home lost the section.
+    /// It must come back on its own, on a growing schedule rather than a
+    /// hammering one.
+    @Test("a failed first load retries on its own after 5 s, then 10 s, and shows the list")
+    func failedLoadRetriesWithBackoff() async {
+        let clock = TestClock()
+        let service = MockPackOrderService(listResults: [
+            .failure(.init("cold start")),
+            .failure(.init("still cold")),
+            .success([order(status: "delivered")]),
+        ])
+        let vm = MyPacksViewModel(service: service, clock: AnyClock(clock))
+        let task = Task { await vm.start() }
+        await pumpUntil({ vm.loadFailed }, "the first load never failed")
+        #expect(!vm.isLoading)
+        for _ in 0 ..< 10 {
+            await Task.yield() // let the loop park on the clock before time moves
+        }
+
+        await clock.advance(by: .milliseconds(4900))
+        #expect(service.listOrdersCallCount == 1, "retried before the first pause was over")
+        await clock.advance(by: .milliseconds(101))
+        await pumpUntil({ service.listOrdersCallCount == 2 }, "the first retry never ran")
+
+        await clock.advance(by: .milliseconds(9900))
+        #expect(service.listOrdersCallCount == 2, "the second pause must be longer than the first")
+        await clock.advance(by: .milliseconds(101))
+        await pumpUntil({ vm.orders.count == 1 }, "the second retry never brought the list")
+        #expect(!vm.loadFailed)
+        task.cancel()
+    }
+
+    /// WHY: coming back to Home re-runs the load; a failure there used to wipe
+    /// the packs already shown.
+    @Test("a failed reload keeps the list that was already on screen")
+    func failedReloadKeepsList() async {
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResults: [
+                .success([order(status: "delivered")]),
+                .failure(.init("offline")),
+            ]),
+            clock: AnyClock(TestClock())
+        )
+        let first = Task { await vm.start() }
+        await pumpUntil({ vm.orders.count == 1 }, "the first load never landed")
+        first.cancel()
+
+        let again = Task { await vm.start() }
+        await pumpUntil({ vm.loadFailed }, "the reload never failed")
+        again.cancel()
+
+        #expect(vm.orders.count == 1)
+        #expect(!vm.isLoading, "a reload must not put the spinner over the packs")
+    }
+
+    @Test("the automatic retry pause grows to a minute and stays there")
+    func reloadDelaySchedule() {
+        let pauses = [1, 2, 3, 4, 5, 6, 500].map { MyPacksViewModel.reloadDelay(afterFailures: $0) }
+        #expect(pauses == [.seconds(5), .seconds(10), .seconds(20), .seconds(40), .seconds(60), .seconds(60), .seconds(60)])
+    }
+
+    /// WHY (#200): "10 / 30" is counted against what the pack really holds
+    /// once it is generated, so a played-through pack reads 30 / 30 and the
+    /// start can ask before replaying it.
+    @Test("progress counts played questions against the pack's real size")
+    func progressAgainstPackSize() {
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(),
+            playedCount: { ["pack-1": 10, "pack-2": 40, "pack-3": 4][$0] ?? 0 }
+        )
+
+        #expect(vm.progress(of: order(status: "delivered", packId: "pack-1", actualCount: 30)) == PackProgress(played: 10, total: 30))
+        #expect(vm.progress(of: order(status: "delivered", packId: "pack-2", actualCount: 28)) == PackProgress(played: 28, total: 28))
+        #expect(vm.progress(of: order(status: "in_progress", packId: "pack-3", actualCount: 5, packGenerationStatus: "generating"))
+            == PackProgress(played: 4, total: 30), "a growing pack counts against what was ordered")
+        #expect(vm.progress(of: order(status: "delivered", packId: "pack-9", actualCount: 30)) == nil, "nothing played, nothing shown")
+        #expect(vm.progress(of: order(status: "in_progress")) == nil, "no pack yet")
+    }
+}

@@ -19,6 +19,16 @@ struct HomePage {
         app.buttons["home.createPack"]
     }
 
+    /// #200: the play control on the first pack card under "my packs".
+    var packPlayButton: XCUIElement {
+        app.buttons["home.myPacks.play"].firstMatch
+    }
+
+    /// #200: "Played N / M" on a pack card this phone has started.
+    var packProgress: XCUIElement {
+        app.staticTexts["home.myPacks.progress"].firstMatch
+    }
+
     /// Tap the Start Quiz button and return immediately (caller waits for destination).
     func tapStartQuiz() {
         startQuizButton.tap()

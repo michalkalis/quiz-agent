@@ -2,7 +2,7 @@
 moje balíky
 Famous bridges of the world and the engineers who built them
 English
-30 otázok
+Odohrané 4 / 30
 history
 5 z 30 pripravených
 EN
@@ -13,6 +13,7 @@ home.myPacksSection
 home.myPacks.showAll
 home.myPacks.play
 home.myPacks.language
+home.myPacks.progress
 home.myPacks.play
 home.myPacks.readyCount
 home.createPack

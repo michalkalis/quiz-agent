@@ -13,9 +13,6 @@ import UIKit
 struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showingCategoryPicker = false
-    /// The pack the user just tapped play on, so its card can spin while the
-    /// quiz starts. Cleared as soon as the start resolves either way.
-    @State private var startingPackId: String?
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
     /// packs. Nil (inspector tests / previews that don't exercise the packs
@@ -58,12 +55,11 @@ struct HomeView: View {
                         if let packOrderService {
                             HomePacksSection(
                                 service: packOrderService,
+                                playedCount: viewModel.playedQuestionCount(inPack:),
                                 createPack: createPackEntry,
-                                quizStart: packQuizStart
-                            ) { packId in
-                                startingPackId = packId
-                                viewModel.beginQuizStart(packId: packId)
-                            }
+                                quizStart: packQuizStart,
+                                onPlayPack: startPack
+                            )
                         }
 
                         if !dynamicTypeSize.isAccessibilitySize {
@@ -115,11 +111,6 @@ struct HomeView: View {
                 .padding(.bottom, Theme.Hangs.Spacing.sm)
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
-        // A start that ends (quiz began, failed, cancelled) must not leave a
-        // pack id behind for the next, unrelated start (voice "start", Start).
-        .onChange(of: viewModel.quizState) { _, state in
-            if state != .startingQuiz { startingPackId = nil }
-        }
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
@@ -138,11 +129,17 @@ struct HomeView: View {
         }
     }
 
+    /// The pack whose start is running spins: the start request names it
+    /// (#200), so a library start never spins a pack card.
     private var packQuizStart: HomePacksSection.QuizStart {
         HomePacksSection.QuizStart(
             isInFlight: viewModel.quizState == .startingQuiz,
-            packId: startingPackId
+            packId: viewModel.activePackId
         )
+    }
+
+    private func startPack(_ pack: PackPlay) {
+        viewModel.beginQuizStart(pack: pack)
     }
 
     private var createPackEntry: HomePacksSection.CreatePackEntry? {

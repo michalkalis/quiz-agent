@@ -16,20 +16,29 @@ import SwiftUI
 struct MyPacksView: View {
     @StateObject private var viewModel: MyPacksViewModel
     @State private var showingOrderFlow = false
-    /// Play a delivered pack by its packId.
-    let onPlayPack: (String) -> Void
+    /// Play a delivered pack.
+    let onPlayPack: (PackPlay) -> Void
     /// #194 C8: the "Create a pack" entry at the bottom of the list (canvas
     /// Bg-MyPacks). Nil in tests and previews, which render the list alone.
     let createPack: MyPacksCreatePack?
 
-    init(service: PackOrderServiceProtocol, onPlayPack: @escaping (String) -> Void, createPack: MyPacksCreatePack? = nil) {
-        self.init(viewModel: MyPacksViewModel(service: service), onPlayPack: onPlayPack, createPack: createPack)
+    init(
+        service: PackOrderServiceProtocol,
+        playedCount: @escaping (String) -> Int = { _ in 0 },
+        onPlayPack: @escaping (PackPlay) -> Void,
+        createPack: MyPacksCreatePack? = nil
+    ) {
+        self.init(
+            viewModel: MyPacksViewModel(service: service, playedCount: playedCount),
+            onPlayPack: onPlayPack,
+            createPack: createPack
+        )
     }
 
     /// Adopt an already-built list model. Used by previews and by the row
     /// structure tests, which need the list in a known loaded state rather than
     /// racing the `.task` that fetches it.
-    init(viewModel: MyPacksViewModel, onPlayPack: @escaping (String) -> Void, createPack: MyPacksCreatePack? = nil) {
+    init(viewModel: MyPacksViewModel, onPlayPack: @escaping (PackPlay) -> Void, createPack: MyPacksCreatePack? = nil) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.onPlayPack = onPlayPack
         self.createPack = createPack
@@ -68,7 +77,7 @@ struct MyPacksView: View {
             if let createPack {
                 OrderPackFlowView(
                     viewModel: createPack.orderViewModel,
-                    onPlayPack: onPlayPack,
+                    onPlayPack: { onPlayPack(PackPlay(packId: $0, questionCount: nil)) },
                     onClose: { showingOrderFlow = false }
                 )
             }
@@ -119,6 +128,12 @@ struct MyPacksView: View {
                             .foregroundStyle(Theme.Hangs.Colors.muted)
                             .accessibilityIdentifier("myPacks.language")
                     }
+                    if let progress = viewModel.progress(of: order) {
+                        Text("Played \(progress.played) / \(progress.total)")
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .accessibilityIdentifier("myPacks.progress")
+                    }
 
                     // #182: a pack is playable from its FIRST persisted batch, so an
                     // order still `in_progress` with a packId plays now and keeps
@@ -142,9 +157,9 @@ struct MyPacksView: View {
 
     @ViewBuilder
     private func actions(_ order: OrderSnapshot) -> some View {
-        if order.isPlayable, let packId = order.packId {
+        if order.isPlayable, let pack = order.packPlay {
             HangsPrimaryButton(title: "Start quiz", icon: "play.fill", height: 48) {
-                onPlayPack(packId)
+                onPlayPack(pack)
             }
             .accessibilityIdentifier("myPacks.startQuiz")
         } else if order.isRetryable {

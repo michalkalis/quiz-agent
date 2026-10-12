@@ -13,7 +13,11 @@ import SwiftUI
 extension AppScreen {
     func makePacks() async -> AnyView {
         let orders: [OrderSnapshot] = [.mockDelivered, .mockGenerating, .mockPending, .mockFailed]
-        let vm = MyPacksViewModel(service: MockPackOrderService(listResult: .success(orders)))
+        // #200: the pack is part played, so its rows show "4 / 30".
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResult: .success(orders)),
+            playedCount: { _ in 4 }
+        )
         await vm.refresh()
         // No NavigationStack: its bar height differs per device and would tie
         // the baseline to the simulator model.

@@ -3,12 +3,13 @@
 //  HangsTests
 //
 //  #141 Home "my packs" entry. Why these tests matter:
-//  - The section must appear IFF the account has something pack-shaped to
-//    show: a playable delivered pack, or an order still generating (founder
-//    pick 2026-08-05: a fresh buyer must see their order on Home before the
-//    first delivery). An empty account, a signed-out 401, or an account whose
-//    only orders failed must NOT grow a dead section on Home — Home is a play
-//    entry, MyPacksView owns failure comms.
+//  - Cards appear only for something pack-shaped: a playable delivered pack,
+//    or an order still generating (founder pick 2026-08-05: a fresh buyer must
+//    see their order on Home before the first delivery). Failed orders never
+//    become cards — Home is a play entry, MyPacksView owns failure comms.
+//  - #200 (TF 2026-10-12): the section itself never disappears. The title
+//    always shows with a state under it (loading, no pack yet, failed with
+//    Retry), because a vanished section read as "my packs are gone".
 //  - The play button must carry the row's OWN packId into the quiz-start
 //    path; a wrong or nil packId silently starts a generic quiz instead of
 //    the pack the user paid for.
@@ -16,6 +17,7 @@
 //    no pack to play yet.
 //
 
+import Clocks
 import Foundation
 @testable import Hangs
 import SwiftUI
@@ -123,16 +125,17 @@ struct HomePacksSectionVisibilityTests {
 @Suite("HomePacksSection rendering")
 struct HomePacksSectionRenderingTests {
 
-    @Test("tapping play starts the quiz with that row's own packId")
+    @Test("tapping play starts the quiz with that row's own pack and its size")
     func playCarriesPackId() async throws {
-        let vm = await loadedViewModel([order(status: "delivered", orderId: "d1", packId: "pack-xyz")])
-        var played: [String] = []
+        let vm = await loadedViewModel([order(status: "delivered", orderId: "d1", packId: "pack-xyz", actualCount: 30)])
+        var played: [PackPlay] = []
         let view = HomePacksSection(viewModel: vm) { played.append($0) }
 
         try view.inspect()
             .find(viewWithAccessibilityIdentifier: "home.myPacks.play")
             .button().tap()
-        #expect(played == ["pack-xyz"])
+        // #200: the size lets the start ask before replaying a played-through pack.
+        #expect(played == [PackPlay(packId: "pack-xyz", questionCount: 30)])
     }
 
     // #188 G14: Home and the pack list said two different things ("Preparing…"
@@ -157,13 +160,14 @@ struct HomePacksSectionRenderingTests {
         let vm = await loadedViewModel([
             order(status: "in_progress", orderId: "g1", packId: "pack-partial", actualCount: 5, packGenerationStatus: "generating"),
         ])
-        var played: [String] = []
+        var played: [PackPlay] = []
         let view = HomePacksSection(viewModel: vm) { played.append($0) }
 
         let tree = try view.inspect()
         _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.readyCount")
         try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.play").button().tap()
-        #expect(played == ["pack-partial"])
+        // #200: still growing, so no size: it can never count as played through.
+        #expect(played == [PackPlay(packId: "pack-partial", questionCount: nil)])
     }
 
     @Test("the card always links through to the full My packs list")
@@ -173,12 +177,14 @@ struct HomePacksSectionRenderingTests {
         _ = try view.inspect().find(viewWithAccessibilityIdentifier: "home.myPacks.showAll")
     }
 
-    @Test("a failed-only account renders no section at all")
-    func failedOnlyRendersNothing() async throws {
+    @Test("a failed-only account gets the title and Show all, but no card")
+    func failedOnlyRendersNoCard() async throws {
         let vm = await loadedViewModel([order(status: "failed", orderId: "f1")])
-        let view = HomePacksSection(viewModel: vm) { _ in }
+        let tree = try HomePacksSection(viewModel: vm) { _ in }.inspect()
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacksSection")
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.showAll")
         #expect(throws: (any Error).self) {
-            try view.inspect().find(viewWithAccessibilityIdentifier: "home.myPacksSection")
+            try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.play")
         }
     }
 
@@ -189,7 +195,7 @@ struct HomePacksSectionRenderingTests {
     @Test("while a pack's quiz starts, its play control spins and play is disabled")
     func startingPackSpinsAndBlocksPlay() async throws {
         let vm = await loadedViewModel([order(status: "delivered", orderId: "d1", packId: "pack-xyz")])
-        var played: [String] = []
+        var played: [PackPlay] = []
         let starting = HomePacksSection(
             viewModel: vm,
             quizStart: .init(isInFlight: true, packId: "pack-xyz")
@@ -218,10 +224,80 @@ struct HomePacksSectionRenderingTests {
         ) { _ in }
 
         let tree = try view.inspect()
-        #expect(throws: (any Error).self) {
-            try tree.find(viewWithAccessibilityIdentifier: "home.myPacksSection")
-        }
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.empty")
         try tree.find(viewWithAccessibilityIdentifier: "home.createPack").button().tap()
         #expect(opened == 1)
+    }
+}
+
+// MARK: - #200 the section always shows
+
+@Suite("HomePacksSection list state (#200)")
+struct HomePacksSectionListStateTests {
+    /// WHY: the founder saw the section vanish. Every combination must map to
+    /// a visible state, and a list already on screen must survive a later
+    /// failed refresh instead of turning into an error.
+    @Test("loading, failed, empty and the list each have their own state")
+    func everyCombinationIsVisible() {
+        let delivered = order(status: "delivered", orderId: "d1", packId: "p1")
+        #expect(HomePacksSection.listState(orders: [], isLoading: true, loadFailed: false) == .loading)
+        #expect(HomePacksSection.listState(orders: [], isLoading: false, loadFailed: true) == .failed)
+        #expect(HomePacksSection.listState(orders: [], isLoading: false, loadFailed: false) == .empty)
+        #expect(HomePacksSection.listState(orders: [delivered], isLoading: false, loadFailed: true) == .packs([delivered]),
+                "a failed refresh must not hide the packs already shown")
+        #expect(HomePacksSection.listState(orders: [delivered], isLoading: true, loadFailed: false) == .packs([delivered]),
+                "coming back to Home must not flash the spinner over the packs")
+    }
+}
+
+@MainActor
+@Suite("HomePacksSection states rendered (#200)")
+struct HomePacksSectionStateRenderingTests {
+    /// WHY: a cold pack API used to leave Home without the section and with no
+    /// way back. The failure shows under the title and Retry loads again.
+    @Test("a failed first load shows the title and a Retry that brings the packs")
+    func failedLoadRetries() async throws {
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResults: [
+                .failure(.init("cold start")),
+                .success([order(status: "delivered", orderId: "d1", packId: "p1")]),
+            ]),
+            clock: AnyClock(TestClock())
+        )
+        let loop = Task { await vm.start() }
+        await pumpUntil({ vm.loadFailed }, "the first load never failed")
+        loop.cancel()
+
+        let tree = try HomePacksSection(viewModel: vm) { _ in }.inspect()
+        _ = try tree.find(text: "my packs")
+        try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.retry").button().tap()
+        await pumpUntil({ !vm.orders.isEmpty }, "Retry never loaded the packs")
+        #expect(!vm.loadFailed)
+    }
+
+    @Test("before the first answer the title shows with a loading line")
+    func loadingShowsTitle() throws {
+        let vm = MyPacksViewModel(service: MockPackOrderService())
+        let tree = try HomePacksSection(viewModel: vm) { _ in }.inspect()
+        _ = try tree.find(text: "my packs")
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.loading")
+    }
+
+    /// WHY (#200): the card says how far this phone got in the pack.
+    @Test("a pack this phone has started shows its played count")
+    func cardShowsProgress() async throws {
+        let vm = MyPacksViewModel(
+            service: MockPackOrderService(listResult: .success([
+                order(status: "delivered", orderId: "d1", packId: "p1", actualCount: 30),
+                order(status: "delivered", orderId: "d2", packId: "p2", actualCount: 30),
+            ])),
+            playedCount: { $0 == "p1" ? 10 : 0 }
+        )
+        await vm.refresh()
+
+        let tree = try HomePacksSection(viewModel: vm) { _ in }.inspect()
+        let progress = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.progress")
+        #expect(try progress.text().string() == "Played 10 / 30")
+        _ = try tree.find(text: "30 questions") // the unplayed pack keeps its question count
     }
 }

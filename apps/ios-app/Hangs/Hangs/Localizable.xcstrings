@@ -10349,7 +10349,7 @@
         }
       }
     },
-    "Your answer is sent by itself after %lld seconds unless you change it" : {
+    "Your answer is sent automatically after %lld seconds unless you change it" : {
       "comment" : "Subtitle of the Auto-confirm answers settings toggle; the number is the countdown length (Config.autoConfirmDelaySecs).",
       "localizations" : {
         "cs" : {
@@ -10388,13 +10388,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Your answer is sent by itself after %lld second unless you change it"
+                  "value" : "Your answer is sent automatically after %lld second unless you change it"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Your answer is sent by itself after %lld seconds unless you change it"
+                  "value" : "Your answer is sent automatically after %lld seconds unless you change it"
                 }
               }
             }

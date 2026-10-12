@@ -64,7 +64,7 @@ struct SettingsCopyTests {
     func autoConfirmSubtitleUsesConfig() async throws {
         let texts = try await settingsTexts()
         let seconds = Config.autoConfirmDelaySecs
-        #expect(texts.contains("Your answer is sent by itself after \(seconds) seconds unless you change it"))
+        #expect(texts.contains("Your answer is sent automatically after \(seconds) seconds unless you change it"))
     }
 
     @Test("recording sounds says the tone is the mic-on cue and the haptic stays")

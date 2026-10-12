@@ -217,7 +217,7 @@ struct SettingsView: View {
 
             HangsToggleRow(
                 label: "Auto-confirm answers",
-                subtitle: "Your answer is sent by itself after \(Config.autoConfirmDelaySecs) seconds unless you change it",
+                subtitle: "Your answer is sent automatically after \(Config.autoConfirmDelaySecs) seconds unless you change it",
                 isOn: $viewModel.settings.autoConfirmEnabled
             )
             .accessibilityIdentifier("settings.autoConfirm")

@@ -14,7 +14,7 @@ Ready
 Auto-record answers
 
 Auto-confirm answers
-Your answer is sent by itself after 5 seconds unless you change it
+Your answer is sent automatically after 5 seconds unless you change it
 
 Microphone
 Automatic

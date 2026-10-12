@@ -10,6 +10,8 @@ the normalization + engine construction that is genuinely identical.
 
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 
@@ -45,12 +47,25 @@ def normalize_async_url(url: str) -> str:
     return base + ("?" + "&".join(params) if params else "")
 
 
-def build_engine(url: str, *, pool_size: int = 5, echo: bool = False) -> AsyncEngine:
+def build_engine(
+    url: str,
+    *,
+    pool_size: int = 5,
+    echo: bool = False,
+    connect_args: dict[str, Any] | None = None,
+) -> AsyncEngine:
     """Build an async SQLAlchemy engine against ``url`` (normalized first).
 
     Callers own URL sourcing (missing-var behavior, local-dev fallback); this
     only handles the sslmode->ssl normalization + engine construction shared
     by both apps.
+
+    Every long-lived engine in the live apps must come from here, because of
+    ``pool_pre_ping``: a pooled connection the server or the Fly proxy closed
+    while it sat idle is otherwise handed out as if alive, and the first query
+    on it fails with asyncpg "connection is closed" — a 500 on the next quiz
+    start (#200, prod 2026-10-12). The ping replaces such a connection
+    transparently at checkout.
     """
     return create_async_engine(
         normalize_async_url(url),
@@ -58,4 +73,5 @@ def build_engine(url: str, *, pool_size: int = 5, echo: bool = False) -> AsyncEn
         echo=echo,
         pool_pre_ping=True,
         future=True,
+        connect_args=connect_args or {},
     )

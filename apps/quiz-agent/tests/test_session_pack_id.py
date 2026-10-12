@@ -159,13 +159,27 @@ async def test_absent_pack_id_leaves_session_unscoped():
     assert session.pack_id is None
 
 
-async def test_pack_session_length_is_the_pack_target_not_the_client_setting():
-    """#182: a 30-question pack must play all 30 — the client's "questions per
-    quiz" setting (default 10) used to silently truncate it."""
+async def test_pack_session_plays_the_settings_count_not_the_whole_pack():
+    """#200 (founder, 2026-10-12): a pack plays as many questions as the
+    player's "questions per quiz" setting — a 30-question pack started with
+    10 is a set of 10, and the next start continues with unheard questions.
+    (#182 used to force all 30, which ignored the setting the player chose.)"""
     manager = SessionManager()
     session = await _create(
         manager,
         CreateSessionRequest(pack_id=_PACK_ID, max_questions=10),
+        auth_sessionmaker=_sessionmaker(owns=True),
+    )
+    assert session.max_questions == 10
+
+
+async def test_pack_session_never_promises_more_than_the_pack_holds():
+    """A setting of 50 on a 30-question pack must announce 30: the app shows
+    "question N of max_questions", and a set that claims 50 would end at 30."""
+    manager = SessionManager()
+    session = await _create(
+        manager,
+        CreateSessionRequest(pack_id=_PACK_ID, max_questions=50),
         auth_sessionmaker=_sessionmaker(owns=True),
     )
     assert session.max_questions == 30

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "Comma list: listing,review,testflight,iap,screenshots,beta-group"
+        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"

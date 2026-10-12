@@ -5,11 +5,13 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   metadata/review_information/*.txt  App Review contact + notes (phone comes from the
                                      ASC_REVIEW_PHONE secret: the repo is public)
   metadata/copyright.txt, primary_category.txt
+  metadata/age_rating.json           age rating questionnaire answers (ageRatingDeclarations attributes)
+  Hangs.xcodeproj MARKETING_VERSION  the App Store version string
   store_copy.json                    TestFlight Test Information, What to Test, IAP texts
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,beta-group [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -192,6 +194,29 @@ def step_screenshots(app_id: str) -> None:
                                                                          "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
 
 
+def step_version(app_id: str) -> None:
+    """The App Store version record follows the app's MARKETING_VERSION (the redesign ships as 1.1)."""
+    print("version")
+    pbx = (FL.parent / "Hangs.xcodeproj/project.pbxproj").read_text()
+    wanted = {m.split("=")[1].strip(" ;") for m in pbx.splitlines() if "MARKETING_VERSION =" in m}
+    if len(wanted) != 1:
+        raise SystemExit(f"  !! MARKETING_VERSION differs between configurations: {wanted}")
+    ver = editable_version(app_id)
+    if ver["attributes"]["versionString"] != (v := wanted.pop()):
+        send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"versionString": v}}})
+
+
+def step_age_rating(app_id: str) -> None:
+    print("age-rating")
+    info = next(i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION")
+    cur = get(f"/appInfos/{info['id']}/ageRatingDeclaration")["data"]
+    print(f"  current: {json.dumps(cur['attributes'], ensure_ascii=False)}")
+    answers = json.loads((MD / "age_rating.json").read_text()) if (MD / "age_rating.json").exists() else {}
+    diff = {k: v for k, v in answers.items() if not k.startswith("_") and cur["attributes"].get(k) != v}
+    if diff:
+        send("PATCH", f"/ageRatingDeclarations/{cur['id']}", {"data": {"type": "ageRatingDeclarations", "id": cur["id"], "attributes": diff}})
+
+
 PUBLIC_GROUP = "Public beta"
 PUBLIC_LINK_LIMIT = 50  # founder 2026-10-07: public link with a tester limit
 
@@ -240,6 +265,10 @@ def main() -> int:
         step_iap(app_id, copy)
     if "screenshots" in steps:
         step_screenshots(app_id)
+    if "version" in steps:
+        step_version(app_id)
+    if "age-rating" in steps:
+        step_age_rating(app_id)
     if "beta-group" in steps:
         step_beta_group(app_id, args.build, args.submit_beta_review)
     return 0

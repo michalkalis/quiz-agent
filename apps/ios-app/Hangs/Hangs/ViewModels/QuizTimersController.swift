@@ -200,6 +200,15 @@ final class QuizTimersController: ObservableObject {
         cancelThinkingTime()
     }
 
+    /// #200: the think seconds the question screen shows. While the quiz is paused
+    /// there, the countdown task is gone and the live count reads 0 — which the
+    /// listen bar takes for "the question is still being read" — so the seconds
+    /// the pause held stand in for it, frozen. A hold left behind by a pause
+    /// that ended without play is never shown (`isPaused` gates it).
+    var shownThinkingSeconds: Int {
+        isPaused && quizState() == .askingQuestion ? heldThinkingSeconds : thinkingTimeCountdown
+    }
+
     /// #200: the remainder `holdThinkingTime()` kept (0 = none); taking it clears it.
     func takeHeldThinkingTime() -> Int {
         defer { heldThinkingSeconds = 0 }

@@ -9,14 +9,20 @@
 //     half heard.
 //   - Paused while "Premýšľaj" was counting down, then play: the countdown
 //     restarted at full instead of continuing.
+//  - The bar then showed "Reading the question" for the whole pause, because
+//    the paused countdown reads 0: a paused think window has to keep showing
+//    the think state with the seconds it was frozen at.
 //  Time is a `TestClock`; audio and network are the mocks (the mock clip is
 //  held by a pause exactly like the real AVPlayer clip — see MockAudioService).
 //
 
+
 import Clocks
 import Foundation
 @testable import Hangs
+import SwiftUI
 import Testing
+import ViewInspector
 
 @MainActor
 private func drain() async {
@@ -152,5 +158,99 @@ struct QuizPauseResumeTests {
         await clock.advance(by: .milliseconds(200))
         await pumpUntil({ vm.quizState == .recording }, "the remainder ran out but the mic never opened")
         vm.quizTimersController.cancelAutoStopRecordingTimer()
+    }
+
+    // MARK: - What the bar shows while the think window is paused
+
+    /// 4 s of a 10 s window spent, then the toolbar pause: the window is held
+    /// with 6 s left.
+    private func pauseMidThinkWindow(_ vm: QuizViewModel, _ clock: TestClock<Duration>) async {
+        vm.startRecordingOrTimer()
+        await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the think window never started")
+        await clock.advance(by: .seconds(4))
+        vm.togglePause()
+    }
+
+    /// WHY: the paused countdown reads 0, and 0 is how the bar tells "the
+    /// question is still being read" from "the driver is thinking". A paused
+    /// think window therefore fell back to "Reading the question" — the bar
+    /// claimed the app was talking while it was silent and waiting. It has to
+    /// keep the think state, frozen at the seconds the window was held with.
+    @Test("a paused think window keeps showing the think state with its frozen seconds")
+    func pausedThinkWindowKeepsItsBarState() async throws {
+        let clock = TestClock()
+        let (vm, _) = makeVM(clock: clock)
+        let question = try #require(vm.currentQuestion)
+        await pauseMidThinkWindow(vm, clock)
+
+        #expect(vm.listenPhase(for: question) == .thinking(remaining: 6, total: 10),
+                "the bar must not fall back to reading the question")
+        await clock.advance(by: .seconds(60))
+        #expect(vm.listenPhase(for: question) == .thinking(remaining: 6, total: 10),
+                "frozen means the number does not move while paused")
+
+        vm.togglePause()
+        await pumpUntil({ vm.thinkingTimeCountdown == 6 }, "play must continue from the remaining 6 s")
+        #expect(vm.listenPhase(for: question) == .thinking(remaining: 6, total: 10))
+        vm.quizTimersController.cancelThinkingTime()
+    }
+
+    /// WHY: the other half of the same rule. A pause during the read-out holds
+    /// no seconds, and there the bar rightly still says the question is being
+    /// read — the fix must not turn that into an empty think window.
+    @Test("a pause during the question read keeps the bar on reading the question")
+    func pausedReadOutStillReads() async throws {
+        let clock = TestClock()
+        let (vm, audio) = makeVM(clock: clock)
+        let question = try #require(vm.currentQuestion)
+        let readOut = await readAndPause(vm, audio)
+
+        #expect(vm.listenPhase(for: question) == .readingQuestion)
+        vm.togglePause()
+        await readOut.value
+        vm.quizTimersController.cancelThinkingTime()
+    }
+
+    /// WHY: answering or skipping ends a pause without play (see
+    /// `staleHoldIsNotInherited`), so the seconds a pause held can outlive it.
+    /// They must never show on a bar that is not paused — it would count a
+    /// window that is not running.
+    @Test("seconds a finished pause left behind never show on the bar")
+    func staleHeldSecondsDoNotShow() async throws {
+        let clock = TestClock()
+        let (vm, _) = makeVM(clock: clock)
+        let question = try #require(vm.currentQuestion)
+        await pauseMidThinkWindow(vm, clock)
+
+        vm.isPaused = false // what an answer tap or a skip does to the pause
+
+        #expect(vm.listenPhase(for: question) == .readingQuestion, "no window is running, so none may be shown")
+    }
+
+    /// WHY: what the founder tests on device is what the driver SEES, on both
+    /// question types, so the rendered bar is asserted too: the think caption
+    /// and the frozen number, and not the reading caption.
+    @Test("the paused screen renders the think bar with the frozen number, on both question types",
+          arguments: [Question.preview, Question.previewMCQ])
+    func pausedThinkWindowRenders(question: Question) async throws {
+        let clock = TestClock()
+        let (vm, _) = makeVM(clock: clock)
+        vm.currentQuestion = question
+        await pauseMidThinkWindow(vm, clock)
+        #expect(vm.isPaused, "precondition: the toolbar shows the paused play control")
+
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            // The full bar shows the state word and a trailing "6 s"; the slim
+            // bar a short screen gets folds the seconds into its caption.
+            let fullBar = (try? tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds").text().string())
+                == "6 s"
+            let slimBar = (try? tree.find(text: "THINK. LISTENING IN 6 S")) != nil
+            #expect(fullBar || slimBar, "the bar lost the think state and its frozen 6 s")
+            #expect(throws: (any Error).self, "the bar claims the app is reading while it is paused and silent") {
+                try tree.find(text: "Reading the question")
+            }
+        }
     }
 }

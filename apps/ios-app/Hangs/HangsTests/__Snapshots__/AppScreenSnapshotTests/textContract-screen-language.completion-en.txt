@@ -7,8 +7,8 @@ Correct
 7
 Incorrect
 3
-Accuracy
-70%
+Skipped
+0
 QUIZ RESULT · Geography & World
 Question 1 of the round?
 Answer 1
@@ -36,6 +36,7 @@ Play Again
 Home
 # identifiers
 completion.close
+completion.cards
 completion.score
 completion.breakdown
 recap.row.1

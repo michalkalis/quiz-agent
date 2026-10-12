@@ -7,8 +7,8 @@ Správně
 1
 Nesprávně
 1
-Úspěšnost
-10%
+Přeskočeno
+1
 VÝSLEDEK KVÍZU · Geography & World
 Přehraj souhrn
 What is the capital of France?
@@ -23,6 +23,7 @@ Hraj znovu
 Úvod
 # identifiers
 recap.close
+recap.cards
 recap.hero
 completion.breakdown
 recap.playSummary

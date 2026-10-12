@@ -43,17 +43,20 @@ private func entry(
 /// A `.finished` view model whose ledger was filled through the real capture
 /// path (three questions: correct, wrong, skipped).
 @MainActor
-private func makeRecapViewModel() async -> QuizViewModel {
+private func makeRecapViewModel(
+    results: [Evaluation.EvaluationResult] = [.correct, .incorrect, .skipped]
+) async -> QuizViewModel {
     let (vm, _) = Fixtures.makeViewModelWithNetwork()
     vm.settings.answerRevealMode = .endOfSet
     vm.autoReadsRecap = false // recap must not auto-narrate in tests
     vm.currentSession = Fixtures.makeQuizSession()
 
-    for (result, answer) in [
-        (Evaluation.EvaluationResult.correct, "Pyramid"),
-        (.incorrect, "Cylinder"),
-        (.skipped, ""),
-    ] {
+    for result in results {
+        let answer = switch result {
+        case .correct: "Pyramid"
+        case .skipped: ""
+        default: "Cylinder"
+        }
         vm.currentQuestion = Fixtures.makeQuestion(text: "Question about melons?")
         vm.quizState = result == .skipped ? .skipping : .processing
         let response = QuizResponse(
@@ -108,9 +111,42 @@ struct SetRecapViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "completion.breakdown")
             }
-            for label in ["final score", "Correct", "Incorrect", "Accuracy"] {
+            for label in ["final score", "Correct", "Incorrect", "Skipped"] {
                 #expect(throws: Never.self, "\(label) missing") { try tree.find(text: label) }
             }
+            #expect(throws: (any Error).self, "accuracy is no longer on the screen") {
+                _ = try tree.find(text: "Accuracy")
+            }
+        }
+    }
+
+    /// #200 (founder): the end of a round used to show only Correct / Incorrect /
+    /// Accuracy, so a skipped question was counted nowhere and a partly right
+    /// answer in neither bucket. Every question lands in exactly one count, and
+    /// a partly right answer is incorrect, as in the beta's recap.
+    @Test("the breakdown puts every question in one count: partly right is incorrect, skipped is its own")
+    func breakdownCountsEveryQuestionOnce() async throws {
+        let vm = await makeRecapViewModel(
+            results: [.correct, .partiallyCorrect, .partiallyIncorrect, .incorrect, .skipped, .skipped]
+        )
+        let view = SetRecapView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let breakdown = try view.inspect().find(viewWithAccessibilityIdentifier: "completion.breakdown")
+            let texts = try breakdown.findAll(ViewType.Text.self).map { try $0.string() }
+            #expect(texts == ["Correct", "1", "Incorrect", "3", "Skipped", "2"])
+        }
+    }
+
+    /// The small round cards were hidden from VoiceOver. They are the only place
+    /// that says WHICH questions went right, so they speak them in order.
+    @Test("the round cards are one VoiceOver element naming each question's outcome")
+    func roundCardsSpeakEachQuestion() async throws {
+        let vm = await makeRecapViewModel(results: [.correct, .partiallyCorrect, .skipped])
+        let view = SetRecapView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let cards = try view.inspect().find(viewWithAccessibilityIdentifier: "recap.cards")
+            let label = try cards.find(ViewType.LazyVGrid.self).accessibilityLabel().string()
+            #expect(label == "Question 1, correct. Question 2, incorrect. Question 3, skipped")
         }
     }
 

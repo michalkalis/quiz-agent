@@ -7,8 +7,8 @@ Správně
 7
 Nesprávně
 3
-Úspěšnost
-70%
+Přeskočeno
+0
 VÝSLEDEK KVÍZU · Geography & World
 Question 1 of the round?
 Answer 1
@@ -36,6 +36,7 @@ Hraj znovu
 Úvod
 # identifiers
 completion.close
+completion.cards
 completion.score
 completion.breakdown
 recap.row.1

@@ -6,8 +6,8 @@
 //  one per question — a right answer in its card's colour with a check, a miss
 //  as a white card with a pink edge and ✕, a skip blank with a dash. Laid flat
 //  in rows of up to ten, not fanned: the fan is kept for Home, Onboarding,
-//  Paywall and Sign-in (founder 2026-10-10). Decoration; the score card says
-//  the same to VoiceOver.
+//  Paywall and Sign-in (founder 2026-10-10). VoiceOver hears it as one element
+//  naming each question's outcome in order; the score card only has the counts.
 //
 
 import SwiftUI
@@ -42,7 +42,23 @@ struct RoundCardRow: View {
                     .frame(height: Metrics.cardHeight)
             }
         }
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenOutcomes)
+    }
+
+    private var spokenOutcomes: String {
+        outcomes.enumerated().map { index, outcome in
+            let number = index + 1
+            switch outcome {
+            case .correct:
+                return String(localized: "Question \(number), correct", comment: "VoiceOver: one question of the finished round, answered right")
+            case .incorrect:
+                return String(localized: "Question \(number), incorrect", comment: "VoiceOver: one question of the finished round, answered wrong or partly right")
+            case .skipped:
+                return String(localized: "Question \(number), skipped", comment: "VoiceOver: one question of the finished round, skipped")
+            }
+        }
+        .joined(separator: ". ")
     }
 
     @ViewBuilder private func card(_ outcome: Outcome) -> some View {

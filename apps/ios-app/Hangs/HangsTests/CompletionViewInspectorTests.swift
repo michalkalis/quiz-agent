@@ -7,9 +7,10 @@
 //  Why these tests matter:
 //  - The view's `summary` property must derive from QuizCompleteSummary.from(...)
 //    rather than inline viewModel fields; a drift there would show stale values.
-//  - The breakdown card must show Accuracy (not the legacy "Avg points") and use
-//    successText (green) for Correct and .error (red) for Incorrect — matching NPlqf.
-//  - Structural: "Accuracy" row label must be present in the tree; "Avg points" must not.
+//  - The breakdown card shows Correct / Incorrect / Skipped (#200: the round's skipped
+//    questions were counted nowhere); neither "Accuracy" nor the legacy "Avg points".
+//  - Structural: the "Skipped" row label must be present in the tree; "Accuracy" and
+//    "Avg points" must not.
 //
 
 import Foundation
@@ -75,13 +76,13 @@ struct CompletionViewSummaryTests {
     }
 }
 
-// MARK: - Structural: Accuracy row in view tree
+// MARK: - Structural: breakdown rows in view tree
 
 @MainActor
 @Suite("CompletionView — breakdown card structure (NPlqf)")
 struct CompletionViewBreakdownTests {
-    @Test("'Accuracy' label renders in breakdown card")
-    func accuracyRowPresent() async throws {
+    @Test("'Skipped' label renders in the breakdown card, 'Accuracy' does not (#200)")
+    func skippedRowReplacesAccuracy() async throws {
         let vm: QuizViewModel = {
             let v = QuizViewModel(
                 networkService: MockNetworkService(),
@@ -97,12 +98,15 @@ struct CompletionViewBreakdownTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
+                try tree.find(text: "Skipped")
+            }
+            #expect(throws: (any Error).self) {
                 try tree.find(text: "Accuracy")
             }
         }
     }
 
-    @Test("'Avg points' label does NOT render (replaced by Accuracy)")
+    @Test("'Avg points' label does NOT render (replaced by the breakdown)")
     func avgPointsRowAbsent() async throws {
         let vm: QuizViewModel = {
             let v = QuizViewModel(

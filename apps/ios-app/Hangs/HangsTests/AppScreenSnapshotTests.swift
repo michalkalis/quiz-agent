@@ -46,10 +46,10 @@ enum AppScreen: String, CaseIterable {
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for
-    /// Voice through Subscription, and cut before About, whose Version row changes
-    /// with every release bump.
+    /// Voice through Custom packs in every language, and cut above About's Version
+    /// row, which changes with every release bump.
     var height: CGFloat {
-        self == .settings ? 1850 : SnapshotBaseline.height
+        self == .settings ? 1820 : SnapshotBaseline.height
     }
 }
 

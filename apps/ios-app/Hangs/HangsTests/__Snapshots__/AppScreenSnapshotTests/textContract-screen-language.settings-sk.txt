@@ -2,16 +2,17 @@
 NASTAVENIA
 hlas
 Hlasové príkazy
-Hlasové príkazy bez rúk
+Ovládaj kvíz hlasom, bez klepania
 
 Hlasové nápovedy
-Zobrazovať pod lištou počúvania slová, ktoré môžeš povedať
+Zobrazovať hlasové príkazy, ktoré môžeš povedať
 
-Stav
+Rozpoznávanie reči
 Ready
-Stav
+Rozpoznávanie reči
 Ready
 Automaticky potvrdzovať odpovede
+Odpoveď sa odošle sama po 5 sekundách, ak ju nezmeníš
 
 Mikrofón
 Automatic
@@ -47,6 +48,7 @@ kvíz
 10s
 Čas na rozmyslenie
 10s
+Pauza, kým sa zapne mikrofón
 5 questions
 10 questions
 15 questions
@@ -63,6 +65,7 @@ Automatický posun
 8s
 Automatický posun
 8s
+Pauza na výsledku pred ďalšou otázkou
 After each question
 At the end of the quiz
 Odhalenie odpovedí
@@ -70,9 +73,11 @@ After each question
 Odhalenie odpovedí
 After each question
 zvuková odozva
-Oznamovať skóre nahlas
+Čítať nahlas
+Otázky, výsledky aj skóre
 
 Zvuky nahrávania
+Krátky tón, keď sa zapne mikrofón. Vibrácia ostáva.
 
 účet
 Prihlás sa, aby ti po preinštalovaní zostalo Premium aj história.
@@ -89,6 +94,13 @@ Plán
 Loading…
 Plán
 Loading…
+vlastné balíky
+Admin kľúč
+Ulož
+Vytvor balík
+
+Vytvor balík
+
 o aplikácii
 Verzia
 Verzia
@@ -97,9 +109,10 @@ Zobraz úvod znova
 Zobraz úvod znova
 
 Vynuluj históriu otázok
-0 / 500
+0
 Vynuluj históriu otázok
-0 / 500
+0
+Zahrané otázky sa neopakujú. Po vynulovaní sa vrátia.
 Zásady ochrany súkromia
 
 Zásady ochrany súkromia
@@ -113,13 +126,6 @@ spätná väzba
 Odošli spätnú väzbu
 
 Odošli spätnú väzbu
-
-vlastné balíky
-Admin kľúč
-Ulož
-Vytvor balík
-
-Vytvor balík
 
 # identifiers
 settings.voiceCommands
@@ -161,13 +167,13 @@ account.signInWithApple
 account.exportData
 account.deleteMyData
 settings.subscription
+packs.adminKeyField
+packs.saveAdminKey
+packs.createPack
+packs.myPacks
 settings.replayOnboarding
 settings.resetHistory
 settings.privacyPolicy
 settings.termsOfUse
 settings.aiDisclosure
 settings.sendFeedback
-packs.adminKeyField
-packs.saveAdminKey
-packs.createPack
-packs.myPacks

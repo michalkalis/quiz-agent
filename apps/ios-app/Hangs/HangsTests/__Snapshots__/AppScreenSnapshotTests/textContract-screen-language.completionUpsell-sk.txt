@@ -7,8 +7,8 @@ Správne
 7
 Nesprávne
 3
-Úspešnosť
-70%
+Preskočené
+0
 Míňajú sa ti otázky zadarmo
 Tento mesiac ti zostáva 4 otázok zadarmo.
 Získaj Trubbo Plus
@@ -39,6 +39,7 @@ Hraj znova
 Úvod
 # identifiers
 completion.close
+completion.cards
 completion.score
 completion.breakdown
 completion.upsell

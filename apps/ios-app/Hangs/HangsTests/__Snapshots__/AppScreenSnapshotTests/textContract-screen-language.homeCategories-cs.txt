@@ -8,7 +8,6 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
-vybráno: 3
 Hotovo
 # identifiers
 home.category.all

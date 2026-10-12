@@ -4,6 +4,12 @@ tvůj plán
 Trubbo Plus
 obnova selhala
 Oprav platbu
+Trubbo Plus
+obnova selhala
+Oprav platbu
+Trubbo Plus
+obnova selhala
+Oprav platbu
 Aktualizuj způsob platby
 History
 Science & Nature
@@ -29,6 +35,12 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
 home.planName
 home.planStatusPill
 home.planManageCTA

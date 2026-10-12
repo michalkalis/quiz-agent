@@ -4,6 +4,12 @@ tvůj plán
 Trubbo Plus
 aktivní
 Spravuj
+Trubbo Plus
+aktivní
+Spravuj
+Trubbo Plus
+aktivní
+Spravuj
 100 kreditů z balíčku uložených na později
 Ještě 870 z 1 000 · resets in 13 days
 History
@@ -30,6 +36,12 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
 home.planName
 home.planStatusPill
 home.planManageCTA

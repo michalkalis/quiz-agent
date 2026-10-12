@@ -4,6 +4,12 @@ your plan
 118
 questions available
 More
+118
+questions available
+More
+118
+questions available
+More
 18 monthly free
 100 pack credits
 resets in 13 days · credits never expire
@@ -31,6 +37,12 @@ home.moreSettings
 home.freePlanUpgradeButton
 home.freePlanCard
 home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
 home.planPrimary
 home.planCaption
 home.freePlanUpgrade

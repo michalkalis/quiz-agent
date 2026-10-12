@@ -4,6 +4,12 @@ your plan
 Trubbo Plus
 renewal failed
 Fix payment
+Trubbo Plus
+renewal failed
+Fix payment
+Trubbo Plus
+renewal failed
+Fix payment
 Update your payment method
 History
 Science & Nature
@@ -29,6 +35,12 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
 home.planName
 home.planStatusPill
 home.planManageCTA

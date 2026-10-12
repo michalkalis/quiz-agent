@@ -4,6 +4,12 @@ your plan
 Trubbo Plus
 active
 Manage
+Trubbo Plus
+active
+Manage
+Trubbo Plus
+active
+Manage
 100 pack credits kept for later
 870 of 1,000 left · resets in 13 days
 History
@@ -30,6 +36,12 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
 home.planName
 home.planStatusPill
 home.planManageCTA

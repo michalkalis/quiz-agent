@@ -5,6 +5,14 @@ tvůj plán
 z 30 otázek zdarma
 skončilo
 Obnov předplatné
+30
+z 30 otázek zdarma
+skončilo
+Obnov předplatné
+30
+z 30 otázek zdarma
+skončilo
+Obnov předplatné
 resets in 13 days
 History
 Science & Nature
@@ -30,6 +38,14 @@ home.moreSettings
 home.freePlanUpgradeButton
 home.freePlanCard
 home.planLabel
+home.planPrimary
+home.planCaption
+home.planStatusPill
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.planStatusPill
+home.freePlanUpgrade
 home.planPrimary
 home.planCaption
 home.planStatusPill

@@ -4,6 +4,12 @@ tvůj plán
 18
 z 30 otázek zdarma
 Vylepši
+18
+z 30 otázek zdarma
+Vylepši
+18
+z 30 otázek zdarma
+Vylepši
 resets in 13 days
 History
 Science & Nature
@@ -29,6 +35,12 @@ home.moreSettings
 home.freePlanUpgradeButton
 home.freePlanCard
 home.planLabel
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
 home.planPrimary
 home.planCaption
 home.freePlanUpgrade

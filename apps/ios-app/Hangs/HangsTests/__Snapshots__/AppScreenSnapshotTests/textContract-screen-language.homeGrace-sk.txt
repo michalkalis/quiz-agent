@@ -4,6 +4,12 @@ tvoj plán
 Trubbo Plus
 obnova zlyhala
 Oprav platbu
+Trubbo Plus
+obnova zlyhala
+Oprav platbu
+Trubbo Plus
+obnova zlyhala
+Oprav platbu
 Aktualizuj spôsob platby
 History
 Science & Nature
@@ -29,6 +35,12 @@ home.moreSettings
 home.planManageButton
 home.freePlanCard
 home.planLabel
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
 home.planName
 home.planStatusPill
 home.planManageCTA

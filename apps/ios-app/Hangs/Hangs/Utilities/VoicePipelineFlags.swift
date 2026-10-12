@@ -71,10 +71,17 @@ nonisolated enum VoicePipelineFlags {
 
     /// Keep every batch answer recording (WAV + sidecar metadata) in the app's
     /// Documents folder for the offline STT comparison — see
-    /// `AnswerRecordingStore`. Founder opted in 2026-09-21; off by default.
+    /// `AnswerRecordingStore` — and upload it (#197). Founder opted in
+    /// 2026-09-21; off by default; beta testers answer the one-time
+    /// `AnswerRecordingConsent` question. Never on in an App Store build, even
+    /// when a TestFlight install left the stored value on.
     static var saveAnswerRecordings: Bool {
-        get { bool(Key.saveAnswerRecordings, default: false) }
+        get { saveAnswerRecordings(channelAllows: BuildChannel.debugSurfacesEnabled()) }
         set { UserDefaults.standard.set(newValue, forKey: Key.saveAnswerRecordings) }
+    }
+
+    static func saveAnswerRecordings(channelAllows: Bool) -> Bool {
+        channelAllows && bool(Key.saveAnswerRecordings, default: false)
     }
 
     private static func bool(_ key: String, default defaultValue: Bool) -> Bool {

@@ -867,8 +867,8 @@ struct SettingsView: View {
     /// The founder's in-car A/B switches for the answer pipeline plus the car
     /// sample collector. Product-neutral (App Store builds never see it): the
     /// defaults ARE the shipped behaviour; these only let one drive compare
-    /// combinations without a rebuild. Recordings stay on the device until
-    /// exported from here.
+    /// combinations without a rebuild. Saved recordings upload to the backend
+    /// for the replay tests (#197); unsent ones can still be exported here.
     private var voiceDiagnosticsGroup: some View {
         groupSection(label: "voice diagnostics") {
             HangsToggleRow(
@@ -936,8 +936,8 @@ struct SettingsView: View {
             hairline
 
             HangsToggleRow(
-                label: "Save answer recordings",
-                subtitle: "Keeps each spoken answer on this device for the recognition comparison",
+                label: "Send answer recordings",
+                subtitle: "Sends your spoken answers to the developer to improve speech recognition",
                 isOn: Binding(
                     get: { saveAnswerRecordings },
                     set: { saveAnswerRecordings = $0; VoicePipelineFlags.saveAnswerRecordings = $0 }

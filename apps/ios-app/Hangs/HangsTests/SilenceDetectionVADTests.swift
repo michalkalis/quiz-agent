@@ -190,6 +190,38 @@ struct SilenceDetectionVADTests {
         #expect(service.endAnswerDetection() == .empty)
     }
 
+    /// WHY (#197.6): a recording that runs to the 15 s cap is either a late
+    /// START or a late STOP; these two numbers let the replay tell which.
+    /// The end is the release point, not the end of the silence hangover.
+    @Test("report carries when speech first started and when the last speech ended")
+    func speechTimingInReport() async throws {
+        let (service, clock) = makeService()
+        service.beginAnswerDetection(minSpeechDuration: VADTuning.minSpeechDurationSecs)
+        await feed(service, clock, db: noiseDb, seconds: 1.0)
+        await feed(service, clock, db: voiceDb, seconds: 0.6)
+        await feed(service, clock, db: noiseDb, seconds: 1.0)
+
+        let report = service.endAnswerDetection()
+        let first = try #require(report.firstSpeechMs)
+        let last = try #require(report.lastSpeechEndMs)
+        // Onset is stamped when the buffer that completed the 60 ms hold ends.
+        #expect(first >= 1000 && first <= 1000 + 60 + 20, "onset \(first) ms, burst began at 1000")
+        #expect(abs(last - 1600) <= 20, "release \(last) ms, burst ended at 1600 (hangover must not count)")
+        #expect(report.sentryAttributes["firstSpeechMs"] as? Int == first)
+        #expect(report.sentryAttributes["lastSpeechEndMs"] as? Int == last)
+    }
+
+    @Test("a recording with no speech omits both timings")
+    func noSpeechNoTimings() async {
+        let (service, clock) = makeService()
+        service.beginAnswerDetection(minSpeechDuration: VADTuning.minSpeechDurationSecs)
+        await feed(service, clock, db: noiseDb, seconds: 1.0)
+
+        let report = service.endAnswerDetection()
+        #expect(report.firstSpeechMs == nil && report.lastSpeechEndMs == nil)
+        #expect(report.sentryAttributes["firstSpeechMs"] == nil)
+    }
+
     @Test("an unpaired SpeechDetector reports 'unpaired', not a misleading 0")
     func unpairedDetectorReport() {
         let (service, _) = makeService()

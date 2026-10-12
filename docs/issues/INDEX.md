@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 200 | [TF test redizajnu 1.1 (2026-10-12): 17 nálezov](issue-200-tf-redesign-feedback-2026-10-12.md) | bug · in-progress | `[~]` #200 | Založené 2026-10-12; redizajn nahrádza betu; 200.1–200.5 rozbehnuté; founder: limit kľúča ElevenLabs |
 | 199 | [Stráženie zásoby otázok + Trubbo Plus s mesačným limitom](issue-199-question-stock-fair-use.md) | enhancement · in-progress | `[~]` #199 | Založené 2026-10-10; 199.1 kontrola zásoby + 199.2 limit 1 000/mesiac a podmienky nasadené (v149); 199.3 appka (PR #361) a 199.4 obchod + web (PR #357) v main; 199.5 drahší plán odložený |
 | 197 | [Nahrávky odpovedí z auta → automatické testy celej hlasovej cesty](issue-197-voice-replay-corpus.md) | enhancement · ready | `[ ]` #197 | Založené 2026-10-10; upload nahrávok s kontextom na server (len TF, len founder), označovanie chýb, replay skript; iOS zmena → TF build na požiadanie |
 | 198 | [Redizajn: vrátiť farby (čierne karty, vejár všade)](issue-198-redesign-color-fixes.md) | bug · ready | `[~]` #198 | Založené 2026-10-10; dáta kategórií + farby z plátna + logo/vejár + farba balíčka |

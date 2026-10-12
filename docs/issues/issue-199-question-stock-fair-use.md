@@ -39,6 +39,7 @@
 - Admin endpoint `GET /api/v1/admin/question-stock` (admin kľúč) vráti celú tabuľku na vyžiadanie.
 - **Hotovo keď:** testy pokrývajú výpočet aj fingerprinty, nasadené, endpoint v prode vráti tabuľku a jej čísla sú v PR.
 - Implementácia: `app/monitoring/question_stock.py`, `app/api/routes/question_stock.py`, testy `tests/test_question_stock.py` + `tests/db/test_question_stock_counts.py` + `packages/shared/tests/test_where_gt_lt.py`. Navyše `QUESTION_STOCK_INITIAL_DELAY_S` (default 180 s, ako pri kontrole kreditov); prázdna bunka (0) ide do Sentry ako `error`, nízka ako `warning`.
+- **2026-10-12 doplnená čerstvá zábava en:** 39 nových en otázok (vygenerovaných 47, po kurácii 39, všetky strojovo schválené), preklady sk 35/39 a cs 34/39 schválené, žiadny chýbajúci preklad. Čerstvé o 14 dní: en 10 → 34, sk 19 → 43, cs 23 → 47, upozornenia žiadne. Záznam: `docs/testing/runs/fresh-entertainment-2026-10-12/` (`stock.sh` = rovnaký výpočet ako denná kontrola).
 
 ### 199.2 Trubbo Plus limit + podmienky (backend quiz-agent) — `[x]` nasadené 2026-10-10 (v149), podmienky naživo
 - `UsageTracker`: limit pre predplatiteľa je `SUBSCRIBER_MONTHLY_LIMIT` (default 1000), pre ostatných `FREE_MONTHLY_LIMIT`. Ostatok sa nemení: jedno mesačné počítadlo na účet a po limite idú kúpené balíčky. Ak predplatné skončí uprostred mesiaca, platí limit 30 voči tomu istému počítadlu.

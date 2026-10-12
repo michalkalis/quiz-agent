@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
 import subprocess
 import tempfile
@@ -20,46 +21,65 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 FONTS = ROOT / "apps/ios-app/Hangs/Hangs/Fonts"
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 W, H = 1320, 2868
 
-# Brand values mirror Palette in apps/ios-app/Hangs/Hangs/Utilities/Theme.swift.
+# Never the everyday desktop Chrome: render with Playwright's bundled headless Chromium
+# (`uvx playwright install chromium-headless-shell`), or point CHROME_BIN at Chrome for Testing.
+PLAYWRIGHT_CACHE = Path.home() / "Library/Caches/ms-playwright"
+
+
+def chrome_bin() -> str:
+    if os.environ.get("CHROME_BIN"):
+        return os.environ["CHROME_BIN"]
+    shells = sorted(
+        PLAYWRIGHT_CACHE.glob("chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell"),
+        key=lambda p: int(p.parts[-3].rsplit("-", 1)[1]),
+    )
+    if not shells:
+        raise SystemExit("No headless Chromium: run `uvx playwright install chromium-headless-shell` or set CHROME_BIN")
+    return str(shells[-1])
+
+
+# Brand values mirror Palette in apps/ios-app/Hangs/Hangs/Utilities/Theme.swift (#194 redesign,
+# #198 colours): grey page, ink type, cobalt as the one accent; captions in Rethink Sans, the
+# app's content font. Variants b and c predate the redesign; only their font changed.
+REDESIGN = {"bg": "#E8EAEE", "ink": "#111216", "accent": "#2C45F5", "upper": False, "size": 108, "shot": "light", "glow": "rgba(17,18,22,.14)"}
 VARIANTS = {
-    # a: light studio, condensed display caption, app in light mode
-    "a": {"bg": "#F6F7F9", "ink": "#0E1A2B", "accent": "#FF3D8F", "font": "Anton", "upper": True, "size": 128, "shot": "light", "glow": "rgba(14,26,43,.14)"},
-    # b: brand pink field, white caption, app in light mode
-    "b": {"bg": "#FF3D8F", "ink": "#FFFFFF", "accent": "#0E1A2B", "font": "Anton", "upper": True, "size": 128, "shot": "light", "glow": "rgba(120,0,50,.35)"},
-    # c: night, sentence-case Inter caption, app in dark mode
-    "c": {"bg": "#161616", "ink": "#F4F4F4", "accent": "#FF3D8F", "font": "Inter", "upper": False, "size": 112, "shot": "dark", "glow": "rgba(255,61,143,.22)"},
+    # a: the store set. Grey page, ink caption with cobalt accent words, app in light mode
+    "a": REDESIGN,
+    # b: brand pink field, white caption, app in light mode (pre-redesign)
+    "b": {"bg": "#FF3D8F", "ink": "#FFFFFF", "accent": "#0E1A2B", "upper": True, "size": 128, "shot": "light", "glow": "rgba(120,0,50,.35)"},
+    # c: night, app in dark mode (pre-redesign)
+    "c": {"bg": "#161616", "ink": "#F4F4F4", "accent": "#FF3D8F", "upper": False, "size": 112, "shot": "dark", "glow": "rgba(255,61,143,.22)"},
     # p: variant a plus a lifestyle photo behind the caption on scenes listed under "photos" in captions.json
-    "p": {"bg": "#F6F7F9", "ink": "#0E1A2B", "accent": "#FF3D8F", "font": "Anton", "upper": True, "size": 128, "shot": "light", "glow": "rgba(14,26,43,.14)"},
+    "p": REDESIGN,
 }
 
 
 def caption_html(text: str) -> str:
+    # sk/cs typography: a one-letter word (s, a, v, k) never ends a line
+    text = re.sub(r"(?<!\S)(\w) ", "\\1\u00a0", text)
     parts = re.split(r"\*(.+?)\*", html.escape(text))
     return "".join(f'<em>{p}</em>' if i % 2 else p for i, p in enumerate(parts))
 
 
 def page(v: dict, caption: str, shot: Path, photo: Path | None = None) -> str:
-    weight = 400 if v["font"] == "Anton" else 700
     if photo:  # photo fills the upper part and fades into the background; caption turns white on it
-        v = {**v, "ink": "#FFFFFF", "accent": "#FF7AB3"}
+        v = {**v, "ink": "#FFFFFF", "accent": "#8C9BFF"}
         extra = f"""
 .photo {{ position: absolute; inset: 0 0 auto 0; height: 1900px; background: url('{photo.as_uri()}') center 35% / cover; }}
 .photo::after {{ content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(14,26,43,.62) 0%, rgba(14,26,43,.18) 34%, rgba(14,26,43,0) 55%, {v["bg"]} 100%); }}
+  background: linear-gradient(180deg, rgba(17,18,22,.62) 0%, rgba(17,18,22,.18) 34%, rgba(17,18,22,0) 55%, {v["bg"]} 100%); }}
 .cap {{ text-shadow: 0 4px 30px rgba(0,0,0,.35); }}
 .shot {{ top: 900px !important; width: 960px !important; }}"""
         layer = '<div class="photo"></div>'
     else:
         extra, layer = "", ""
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face {{ font-family: Anton; src: url('{(FONTS / "Anton-Regular.ttf").as_uri()}'); }}
-@font-face {{ font-family: Inter; font-weight: 700; src: url('{(FONTS / "Inter-Bold.ttf").as_uri()}'); }}
+@font-face {{ font-family: "Rethink Sans"; font-weight: 800; src: url('{(FONTS / "RethinkSans-ExtraBold.ttf").as_uri()}'); }}
 html, body {{ margin: 0; width: {W}px; height: {H}px; overflow: hidden; background: {v["bg"]}; }}
 .cap {{ position: absolute; left: 110px; right: 110px; top: 190px; color: {v["ink"]};
-  font: {weight} {v["size"]}px/1.12 {v["font"]}, sans-serif; letter-spacing: {"0.5px" if v["upper"] else "-2px"};
+  font: 800 {v["size"]}px/1.08 "Rethink Sans", sans-serif; letter-spacing: {"0.5px" if v["upper"] else "-1px"};
   text-transform: {"uppercase" if v["upper"] else "none"}; text-wrap: balance; }}
 .cap em {{ font-style: normal; color: {v["accent"]}; }}
 .shot {{ position: absolute; left: 50%; top: 700px; width: 1060px; transform: translateX(-50%);
@@ -88,7 +108,7 @@ def render(doc: str, out: Path) -> None:
         src = Path(tmp) / "frame.html"
         src.write_text(doc)
         png = Path(tmp) / "frame.png"
-        subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--force-device-scale-factor=1",
+        subprocess.run([chrome_bin(), "--hide-scrollbars", "--force-device-scale-factor=1",
                         "--allow-file-access-from-files", f"--window-size={W},{H}", f"--screenshot={png}", src.as_uri()],
                        check=True, capture_output=True)
         Image.open(png).convert("RGB").crop((0, 0, W, H)).save(out)

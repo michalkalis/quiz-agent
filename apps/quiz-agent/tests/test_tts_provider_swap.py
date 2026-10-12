@@ -81,6 +81,18 @@ class TestBackendSelection:
         monkeypatch.setenv("TTS_FALLBACK_PROVIDER", "none")
         assert TTSService().fallback is None
 
+    async def test_cache_holds_the_whole_corpus_by_default(self, monkeypatch):
+        """#200: every evicted question clip is bought again from ElevenLabs.
+
+        The corpus is ~850 MB of clips; the old 100 MB default thrashed. The
+        cap must default well above that and stay tunable per deploy.
+        """
+        monkeypatch.delenv("TTS_CACHE_MAX_MB", raising=False)
+        assert TTSService().cache.max_size_bytes >= 1000 * 1024 * 1024
+
+        monkeypatch.setenv("TTS_CACHE_MAX_MB", "200")
+        assert TTSService().cache.max_size_bytes == 200 * 1024 * 1024
+
     async def test_voice_override_applies_to_primary_only(self, monkeypatch):
         """A voice override is vendor-specific, so it must not poison the backup.
 

@@ -20,6 +20,17 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
     /// Port type string (e.g., "builtInMic", "bluetoothHFP")
     let portType: String
 
+    /// #200: a Bluetooth device iOS reports on the OUTPUT route only. Media Mode
+    /// asks the session for A2DP (output) and iOS then offers no Bluetooth
+    /// microphone, so the headphones are connected and playing the quiz yet
+    /// absent from `availableInputs`. The picker lists them for information; they
+    /// are not an input. `id` is the output port's uid, never persisted.
+    var isOutputOnly = false
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, portType
+    }
+
     /// Whether this is a built-in device (mic/speaker)
     var isBuiltIn: Bool {
         portType == AVAudioSession.Port.builtInMic.rawValue ||
@@ -58,7 +69,9 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
 
     /// Display subtitle describing the device type
     var subtitle: String {
-        if isBuiltIn {
+        if isOutputOnly {
+            return String(localized: "Bluetooth, plays the quiz sound", comment: "Microphone picker row note for connected Bluetooth headphones (information only, not selectable as a microphone)")
+        } else if isBuiltIn {
             return String(localized: "Built-in", comment: "Audio device subtitle: the device's built-in microphone")
         } else if isHFP {
             return String(localized: "Bluetooth (Call Mode)", comment: "Audio device subtitle: a Bluetooth mic in hands-free call mode")
@@ -71,6 +84,35 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
         } else {
             return String(localized: "External", comment: "Audio device subtitle: a generic external audio device")
         }
+    }
+
+    /// Whether `other` is the same physical Bluetooth device on another profile.
+    /// One headset exposes an output (A2DP / LE) and an input (HFP) port with
+    /// different uids that share the hardware-address stem before the profile
+    /// suffix ("AA-BB-CC-DD-EE-FF-tacl" vs "...-tsco"); the name is the fallback
+    /// for stacks that number the ports differently.
+    func isSameBluetoothDevice(as other: AudioDevice) -> Bool {
+        guard isBluetooth, other.isBluetooth else { return false }
+        func stem(_ uid: String) -> String {
+            uid.lastIndex(of: "-").map { String(uid[..<$0]) } ?? uid
+        }
+        let ownStem = stem(id)
+        if !ownStem.isEmpty, ownStem.caseInsensitiveCompare(stem(other.id)) == .orderedSame { return true }
+        let ownName = name.trimmingCharacters(in: .whitespaces)
+        return !ownName.isEmpty && ownName.caseInsensitiveCompare(other.name.trimmingCharacters(in: .whitespaces)) == .orderedSame
+    }
+
+    /// The microphone list: the inputs iOS offers plus, for each Bluetooth
+    /// device on the output route that has no input of its own among them, an
+    /// `isOutputOnly` entry. Pure so the rule is testable without a session.
+    static func pickerList(inputs: [AudioDevice], bluetoothOutputs: [AudioDevice]) -> [AudioDevice] {
+        var list = inputs
+        for output in bluetoothOutputs where !list.contains(where: { $0.isSameBluetoothDevice(as: output) }) {
+            var entry = output
+            entry.isOutputOnly = true
+            list.append(entry)
+        }
+        return list
     }
 
     // MARK: - Factory Methods

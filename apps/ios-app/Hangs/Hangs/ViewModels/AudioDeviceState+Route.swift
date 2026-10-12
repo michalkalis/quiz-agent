@@ -24,6 +24,9 @@ extension AudioDeviceState {
     /// decides on the new route anyway. At most one restart per listening
     /// window, so a route change a restart itself causes can never loop.
     func handleAudioRouteChange(_ change: AudioRouteChange) async {
+        // #200: headphones connecting or leaving change the microphone list too.
+        republishDeviceLists()
+
         let service = silenceDetectionService
         guard service.isListening, mayCaptureAudio(), !routeRestartedThisWindow else { return }
 

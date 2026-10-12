@@ -34,8 +34,12 @@ struct AudioDevicePickerView: View {
                     } header: {
                         HangsSectionLabel(text: "Available Devices")
                     } footer: {
-                        if viewModel.selectedAudioMode.id == "media" {
-                            Text("Switch to Call Mode to use Bluetooth microphones. With a Bluetooth microphone the car treats the quiz as a phone call.")
+                        // #200: with Bluetooth headphones connected, say where the
+                        // answers are recorded and what their own microphone costs.
+                        if viewModel.selectedAudioMode.id == "media",
+                           viewModel.availableInputDevices.contains(where: \.isBluetooth)
+                        {
+                            Text("Answers are recorded by the iPhone microphone. The headphones' own microphone works only in Call Mode (in Settings). That lowers sound quality, and the car may show the quiz as a phone call.")
                                 .font(.hangsBody(12))
                                 .foregroundColor(Theme.Hangs.Colors.muted)
                         }
@@ -73,49 +77,61 @@ struct AudioDevicePickerView: View {
 
     @ViewBuilder
     private func deviceRow(device: AudioDevice, isSelected: Bool) -> some View {
-        Button(action: {
-            if device.isAutomatic {
-                viewModel.setPreferredInputDevice(nil)
-            } else {
-                viewModel.setPreferredInputDevice(device)
+        if device.isOutputOnly {
+            // #200: connected Bluetooth headphones iOS offers no microphone for.
+            // Information, not a choice: a tap would put the car on a phone call.
+            rowContent(device: device, isSelected: false)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("micPicker.device.\(device.id)")
+        } else {
+            Button(action: {
+                if device.isAutomatic {
+                    viewModel.setPreferredInputDevice(nil)
+                } else {
+                    viewModel.setPreferredInputDevice(device)
+                }
+            }) {
+                rowContent(device: device, isSelected: isSelected)
             }
-        }) {
-            HStack(spacing: Theme.Hangs.Spacing.sm) {
-                // Device icon
-                Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
-                    .font(.title3)
-                    .foregroundColor(Theme.Hangs.Colors.muted)
-                    .frame(width: Metrics.iconColumn)
+            .contentShape(Rectangle())
+            .accessibilityIdentifier("micPicker.device.\(device.id)")
+        }
+    }
 
-                // Device name and subtitle
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(device.name)
-                        .font(.hangsBody(16, weight: .semibold))
-                        .foregroundColor(Theme.Hangs.Colors.ink)
+    private func rowContent(device: AudioDevice, isSelected: Bool) -> some View {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
+            // Device icon
+            Image(systemName: device.isAutomatic ? "wand.and.stars" : device.icon)
+                .font(.title3)
+                .foregroundColor(Theme.Hangs.Colors.muted)
+                .frame(width: Metrics.iconColumn)
 
-                    if !device.isAutomatic {
-                        Text(device.subtitle)
-                            .font(.hangsBody(12))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                    } else {
-                        Text("Let iOS choose the best microphone")
-                            .font(.hangsBody(12))
-                            .foregroundColor(Theme.Hangs.Colors.muted)
-                    }
+            // Device name and subtitle
+            VStack(alignment: .leading, spacing: 2) {
+                Text(device.name)
+                    .font(.hangsBody(16, weight: .semibold))
+                    .foregroundColor(Theme.Hangs.Colors.ink)
+
+                if !device.isAutomatic {
+                    Text(device.subtitle)
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
+                } else {
+                    Text("Let iOS choose the best microphone")
+                        .font(.hangsBody(12))
+                        .foregroundColor(Theme.Hangs.Colors.muted)
                 }
+            }
 
-                Spacer()
+            Spacer()
 
-                // Checkmark for selected device
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(Theme.Hangs.Colors.rowValue)
-                        .fontWeight(.semibold)
-                }
+            // Checkmark for selected device
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundColor(Theme.Hangs.Colors.rowValue)
+                    .fontWeight(.semibold)
             }
         }
-        .contentShape(Rectangle())
-        .accessibilityIdentifier("micPicker.device.\(device.id)")
     }
 }
 

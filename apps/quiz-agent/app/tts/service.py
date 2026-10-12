@@ -135,7 +135,7 @@ class TTSService:
         fallback_provider: Optional[TTSProvider] = None,
         cache_dir: Optional[str] = None,
         max_concurrent: int = 20,
-        max_cache_mb: int = 100,
+        max_cache_mb: Optional[int] = None,
     ):
         """Initialize TTS service.
 
@@ -145,7 +145,7 @@ class TTSService:
                 `TTS_FALLBACK_PROVIDER` (openai). Set to "none" to disable.
             cache_dir: Directory for audio cache; defaults to `TTS_CACHE_DIR`
             max_concurrent: Max concurrent TTS API requests
-            max_cache_mb: Max cache size in megabytes
+            max_cache_mb: Max cache size in megabytes; defaults to `TTS_CACHE_MAX_MB`
         """
         settings = get_settings()
         self.provider = provider or _resolve_provider(
@@ -174,7 +174,7 @@ class TTSService:
         # cannot serve yesterday's voice out of a warm cache.
         self.cache = TTSCache(
             cache_dir=cache_dir or settings.tts_cache_dir,
-            max_size_mb=max_cache_mb,
+            max_size_mb=max_cache_mb or settings.tts_cache_max_mb,
             provider=self.provider.name,
         )
         self._semaphore = asyncio.Semaphore(max_concurrent)
@@ -360,7 +360,7 @@ class TTSService:
 
         Called on server startup to ensure instant feedback playback. Skipped
         for phrases already on disk, so the real cost is paid once per provider
-        per cache volume: ~250 ElevenLabs credits (1 credit/char) or ~$0.005 on
+        per cache volume: ~100–250 ElevenLabs credits (0.4–1 credit/char by plan) or ~$0.005 on
         OpenAI. Note that an ephemeral cache dir turns "once" into "every
         deploy" — see `TTS_CACHE_DIR`.
 

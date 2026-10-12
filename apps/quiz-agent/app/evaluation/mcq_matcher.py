@@ -10,7 +10,7 @@ what the car test and the founder's labelling decision need.
 **Labels (founder decision 2026-09-24):** options are labelled ``1``–``4``;
 ``A``–``D`` only when the options themselves are numbers, so "tri" can never
 mean both "option 3" and the answer "3". :func:`option_labels` derives that
-deterministically from the options.
+deterministically from the options (what counts as a number: ``numeric_option``).
 
 **Matching order** (every tier must identify exactly ONE option, else it falls
 through; nothing found → ``None``, which the caller reports as *unmatched* —
@@ -34,6 +34,7 @@ from __future__ import annotations
 import re
 from typing import Mapping, Optional
 
+from .numeric_option import is_numeric_option
 from .voice_match import fold, similarity
 
 _LETTERS = "abcdefgh"
@@ -115,17 +116,15 @@ def _is_number_word(token: str) -> bool:
     return token in _CARDINALS
 
 
-def _is_numeric_option(value: str) -> bool:
-    folded = fold(value)
-    if any(ch.isdigit() for ch in folded):
-        return True
-    tokens = folded.split()
-    return bool(tokens) and all(_is_number_word(t) for t in tokens)
-
-
 def label_scheme(options: Mapping[str, str]) -> str:
-    """``"numbers"`` (1–4) unless any option is itself a number → ``"letters"``."""
-    if any(_is_numeric_option(str(v)) for v in options.values()):
+    """``"numbers"`` (1–4) unless any option is itself a number → ``"letters"``.
+
+    "Itself a number" is :func:`is_numeric_option` (#200): a year, count or
+    amount ("1918", "2 milióny"), not a name with a digit in it ("Apollo 11").
+    One numeric option is enough: "jeden" must never be able to mean both
+    "option 1" and the answer "1 deň" sitting in another slot.
+    """
+    if any(is_numeric_option(str(v)) for v in options.values()):
         return "letters"
     return "numbers"
 

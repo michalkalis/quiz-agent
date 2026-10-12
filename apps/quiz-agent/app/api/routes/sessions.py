@@ -32,8 +32,8 @@ async def _require_pack_ownership(
     pack_id, subject_id, auth_sessionmaker
 ) -> tuple[int, str]:
     """Reject unless ``subject_id`` owns the custom pack ``pack_id``; return
-    the pack's ``(target_count, language)`` — the session's authoritative
-    length (#182) and language (#192: a pack is generated natively in the
+    the pack's ``(target_count, language)`` — the cap on the session's length
+    (#182, #200) and its language (#192: a pack is generated natively in the
     language it was ordered in, so it is always played in that language).
 
     Scoping a session to a ``pack_id`` both serves that pack's private, paid
@@ -114,14 +114,18 @@ async def create_session(
     max_questions = body.max_questions
     language = body.language
     if body.pack_id:
-        # #182: a pack session is as long as the pack the customer ordered —
-        # the client's "questions per quiz" setting does not apply to it.
+        # #200 (founder, 2026-10-12): a pack plays as many questions as the
+        # client's "questions per quiz" setting asks for — never more than the
+        # pack holds. Replaying it continues with the questions not yet heard
+        # (the client's history excludes them). Supersedes #182's "always the
+        # whole pack".
         # #192: and it is played in the pack's own language — never translated
         # into the client's quiz language. The client reads it back from the
         # session for its voice stack.
-        max_questions, language = await _require_pack_ownership(
+        target_count, language = await _require_pack_ownership(
             body.pack_id, subject.subject_id, auth_sessionmaker
         )
+        max_questions = min(body.max_questions, target_count)
     try:
         session = session_manager.create_session(
             max_questions=max_questions,

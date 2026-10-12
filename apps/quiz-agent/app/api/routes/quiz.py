@@ -159,6 +159,28 @@ async def start_quiz(
                 awaiting_question=True,
             )
 
+        if not question and session.pack_id:
+            # #200: a closed pack whose every question is already in the
+            # client's history (the player has heard the whole pack across
+            # shorter sets). An expected end state, not a server fault — the
+            # corpus diagnostics below would count the shared library and
+            # answer a misleading 500. Coded like the other client-recognisable
+            # errors ({"code": …}); a build that does not know the code still
+            # gets a plain non-retryable 4xx.
+            logger.info(
+                "Pack %s has no unplayed questions for session %s",
+                session.pack_id,
+                session_id,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "pack_exhausted",
+                    "message": "Every question in this pack has been played",
+                    "pack_id": session.pack_id,
+                },
+            )
+
         if not question:
             logger.error("get_next_question returned None for session %s", session_id)
             total_count = await question_retriever.count(

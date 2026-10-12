@@ -60,13 +60,14 @@ from sqlalchemy import text as sa_text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..models.question import GenerationProvenance, Question
 from ..utils.embeddings import generate_embedding_async
 from ..utils.qa_text import qa_text
 from ..utils.source_hash import source_hash_for
 from ._schema import metadata as _metadata
+from .engine import build_engine
 from .translation_queries import (
     demote_stale_translations,
     fetch_servable_translations,
@@ -240,7 +241,10 @@ class PgvectorQuestionStore:
                 raise ValueError(
                     "PgvectorQuestionStore requires session_factory or database_url"
                 )
-            engine = create_async_engine(
+            # The shared builder, not a bare create_async_engine: it pre-pings
+            # pooled connections, so one the server dropped while idle is
+            # replaced instead of failing the next quiz start (#200).
+            engine = build_engine(
                 database_url,
                 # asyncpg passes these straight to the server on connect.
                 connect_args={

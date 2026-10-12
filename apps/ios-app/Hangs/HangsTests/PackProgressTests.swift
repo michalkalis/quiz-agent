@@ -187,12 +187,29 @@ struct PackProgressTests {
         rig.store.playedPackQuestions = ["pack-1": ["p_1", "p_2", "p_3"]]
         await rig.vm.startNewQuiz(pack: pack)
 
-        await rig.vm.restartPack(pack).value
+        await rig.vm.restartPack(pack)?.value
 
         #expect(rig.vm.packRestartOffer == nil)
         #expect(rig.network.capturedStartQuizExcludedIds == [])
         #expect(rig.store.playedPackQuestionIds(packId: "pack-1") == ["q_002"])
         #expect(rig.store.askedQuestionIds == ["lib_1"], "starting a pack over leaves the library history")
+    }
+
+    /// WHY: the Home voice window stays open under the alert, so a spoken
+    /// "start" can begin a library quiz first. "Start over" must then neither
+    /// wipe the pack's progress nor leave the stale offer up.
+    @Test("Start over after another start got there first keeps the pack's progress")
+    func startOverAfterAnotherStartKeepsProgress() async {
+        let rig = makeRig()
+        rig.store.playedPackQuestions = ["pack-1": ["p_1", "p_2", "p_3"]]
+        await rig.vm.startNewQuiz(pack: pack)
+        #expect(rig.vm.packRestartOffer == pack)
+
+        await rig.vm.startNewQuiz()
+        #expect(rig.vm.packRestartOffer == nil, "a start that went through retires the offer")
+
+        #expect(rig.vm.restartPack(pack) == nil)
+        #expect(rig.store.playedPackQuestionIds(packId: "pack-1") == ["p_1", "p_2", "p_3"])
     }
 
     @Test("a pack still being generated never asks, however much was played")

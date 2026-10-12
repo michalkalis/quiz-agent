@@ -139,6 +139,8 @@ final class MyPacksViewModel: ObservableObject {
     /// retried briefly in place (`TransientRetry`, the list GET is
     /// idempotent). A failure keeps whatever list was already there (#200:
     /// coming back to Home used to wipe it) and only marks the load failed.
+    /// A load cancelled because the screen went away is no answer at all and
+    /// leaves the state as it was for the next appearance.
     private func load() async {
         do {
             orders = try await TransientRetry.run(label: "pack list", clock: clock) {
@@ -146,6 +148,7 @@ final class MyPacksViewModel: ObservableObject {
             }
             loadFailed = false
         } catch {
+            if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled { return }
             loadFailed = true
         }
         isLoading = false

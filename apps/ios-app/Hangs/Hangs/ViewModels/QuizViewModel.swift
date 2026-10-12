@@ -1186,6 +1186,7 @@ final class QuizViewModel: ObservableObject {
         let entryPoint = QuizEntryPoint(packId: pack?.packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
         activePack = pack
+        packRestartOffer = nil
         errorMessage = nil
         #if DEBUG
             lastErrorDebugInfo = nil

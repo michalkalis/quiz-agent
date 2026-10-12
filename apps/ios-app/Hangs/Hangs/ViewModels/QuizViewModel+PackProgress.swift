@@ -25,10 +25,13 @@ extension QuizViewModel {
     }
 
     /// "Start over" on the played-through alert: forget the pack's progress,
-    /// then start it from the top.
+    /// then start it from the top. Nil when another start got there first
+    /// (the Home voice window stays open under the alert): the progress is
+    /// kept, because the start that would replay it cannot run.
     @discardableResult
-    func restartPack(_ pack: PackPlay) -> Task<Void, Never> {
+    func restartPack(_ pack: PackPlay) -> Task<Void, Never>? {
         packRestartOffer = nil
+        guard !isStarting, quizState.validTransitions.contains(QuizState.startingQuiz.label) else { return nil }
         persistenceStore.clearPackProgress(packId: pack.packId)
         return beginQuizStart(pack: pack)
     }

@@ -363,6 +363,23 @@ struct MyPacksViewModelRecoveryTests {
         #expect(!vm.isLoading, "a reload must not put the spinner over the packs")
     }
 
+    /// WHY: leaving Home while a cold load waits cancels it. That is no
+    /// answer; reading it as a failure showed "Couldn't load your packs" over
+    /// the load that runs when Home comes back.
+    @Test("a load cancelled by leaving the screen is not a failure")
+    func cancelledLoadIsNotAFailure() async {
+        let vm = MyPacksViewModel(service: HangingListService(), clock: AnyClock(TestClock()))
+        let task = Task { await vm.start() }
+        for _ in 0 ..< 10 {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(!vm.loadFailed, "leaving the screen must not read as a failed load")
+        #expect(vm.isLoading, "the next appearance still starts from loading")
+    }
+
     @Test("the automatic retry pause grows to a minute and stays there")
     func reloadDelaySchedule() {
         let pauses = [1, 2, 3, 4, 5, 6, 500].map { MyPacksViewModel.reloadDelay(afterFailures: $0) }
@@ -386,4 +403,18 @@ struct MyPacksViewModelRecoveryTests {
         #expect(vm.progress(of: order(status: "delivered", packId: "pack-9", actualCount: 30)) == nil, "nothing played, nothing shown")
         #expect(vm.progress(of: order(status: "in_progress")) == nil, "no pack yet")
     }
+}
+
+/// A pack API that never answers: `listOrders` waits until it is cancelled.
+private final class HangingListService: PackOrderServiceProtocol, Sendable {
+    private let clock = TestClock()
+
+    func listOrders() async throws -> [OrderSnapshot] {
+        try await clock.sleep(for: .seconds(3600))
+        return []
+    }
+
+    func createOrder(intent _: PackOrderIntent) async throws -> OrderCreatedResponse { throw CancellationError() }
+    func getOrder(id _: String) async throws -> OrderSnapshot { throw CancellationError() }
+    func retryOrder(id _: String, paymentProof _: PackPaymentProof?) async throws -> OrderCreatedResponse { throw CancellationError() }
 }

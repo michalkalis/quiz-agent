@@ -27,10 +27,8 @@ extension AudioDeviceState {
             await startSilenceDetectionListening()
             guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.mutedTail") else { return }
 
-            if settings().autoRecordEnabled, !isRerecording() {
+            if !isRerecording() {
                 startThinkingTimeCountdown()
-            } else {
-                startAnswerTimer()
             }
             return
         }
@@ -43,7 +41,7 @@ extension AudioDeviceState {
         setPlayingQuestionTTS(true)
         stopSilenceDetectionListening()
 
-        let heard = await playQuestionTTSWithRetry(from: urlString)
+        let heard = await playQuestionTTSWithRetry(from: urlString, generation: generation)
         // #186 step 2: when the read-out ended — the one timing a field dump
         // needs to replay what the driver heard (and what cut it short).
         attemptLedger.record(.prompt, "questionReadOut.end", heard ? "completed" : "cut")
@@ -57,16 +55,51 @@ extension AudioDeviceState {
             await startSilenceDetectionListening()
         }
 
-        // After TTS finishes (or was interrupted by barge-in), choose next path
+        // After TTS finishes (or was interrupted by barge-in): the think
+        // window, then auto-record (#200: always on). A re-record opens the mic
+        // on its own.
         guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.tail") else { return }
 
-        if settings().autoRecordEnabled, !isRerecording() {
-            // Auto-record path: thinking time countdown → auto-start recording
+        if !isRerecording() {
             startThinkingTimeCountdown()
-        } else {
-            // Legacy path: countdown timer → fixed duration recording
-            startAnswerTimer()
         }
+    }
+
+    /// What became of the question read a pause held (#200).
+    enum HeldReadOut {
+        /// Nothing was being read when the quiz was paused.
+        case notHeld
+        /// The read goes on: the held clip plays on, or it was still
+        /// downloading and starts by itself now.
+        case continuing
+        /// The clip is gone (stopped, interrupted, muted meanwhile).
+        case lost
+    }
+
+    /// #200 (founder, TF 2026-10-12): a pause during the question read HOLDS
+    /// it instead of ending it, so play continues the sentence the driver was
+    /// hearing. `false` when no read is in flight — the caller silences
+    /// whatever else is playing.
+    func holdQuestionReadOut() -> Bool {
+        // An answer or a skip ends a pause without play: never inherit the
+        // hold such a pause left behind.
+        heldQuestionReadOut = nil
+        guard isAskingQuestion(), isPlayingQuestionTTS() else { return false }
+        heldQuestionReadOut = questionReadOutGeneration
+        // Nothing to hold yet while the clip downloads: `playQuestionClip`
+        // then never starts it.
+        _ = audioService.pausePlayback()
+        return true
+    }
+
+    /// #200: let go of the read `holdQuestionReadOut()` held and say what
+    /// became of it, so the caller never lets the think window run over a
+    /// question the driver only half heard.
+    func releaseQuestionReadOut() -> HeldReadOut {
+        guard let held = heldQuestionReadOut else { return .notHeld }
+        heldQuestionReadOut = nil
+        if audioService.resumePlayback() { return .continuing }
+        return isPlayingQuestionTTS() && held == questionReadOutGeneration ? .continuing : .lost
     }
 
     /// Read the question aloud, retrying ONCE after a short settle (#171).
@@ -84,10 +117,9 @@ extension AudioDeviceState {
     /// `CancellationError` and must NOT be retried: the app would talk over
     /// whatever took over.
     /// `true` when the question was read to its end.
-    private func playQuestionTTSWithRetry(from urlString: String) async -> Bool {
+    private func playQuestionTTSWithRetry(from urlString: String, generation: Int) async -> Bool {
         do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            _ = try await audioService.playOpusAudio(audioData)
+            try await playQuestionClip(from: urlString, generation: generation)
             return true
         } catch is CancellationError {
             return false
@@ -103,8 +135,7 @@ extension AudioDeviceState {
         try? await Task.sleep(for: .milliseconds(300))
 
         do {
-            let audioData = try await networkService.downloadAudio(from: urlString)
-            _ = try await audioService.playOpusAudio(audioData)
+            try await playQuestionClip(from: urlString, generation: generation)
             return true
         } catch is CancellationError {
             // superseded — the newer owner speaks
@@ -113,6 +144,15 @@ extension AudioDeviceState {
             Self.reportAudioFailure(error, kind: "question-retry")
         }
         return false
+    }
+
+    /// One question clip: download, then play — unless a pause took hold of
+    /// this read while it downloaded (#200). Then it never starts
+    /// (`CancellationError`), and play reads the question again.
+    private func playQuestionClip(from urlString: String, generation: Int) async throws {
+        let audioData = try await networkService.downloadAudio(from: urlString)
+        guard heldQuestionReadOut != generation else { throw CancellationError() }
+        _ = try await audioService.playOpusAudio(audioData)
     }
 
     /// Whether the on-demand "replay question" control can actually do something:
@@ -124,9 +164,9 @@ extension AudioDeviceState {
     }
 
     /// Replay/restart the current question's TTS on demand WITHOUT re-arming the
-    /// think/answer countdown or auto-record (Decision 2 of the voice-answer
+    /// think countdown or auto-record (Decision 2 of the voice-answer
     /// screen fix). Unlike `playQuestionAudio(from:)`, this plays audio only —
-    /// it never calls `startThinkingTimeCountdown()` / `startAnswerTimer()`, so
+    /// it never calls `startThinkingTimeCountdown()`, so
     /// a running countdown is left untouched and no new one is armed. Harmless
     /// no-op when muted (no audio to replay) or when no question URL is known.
     ///

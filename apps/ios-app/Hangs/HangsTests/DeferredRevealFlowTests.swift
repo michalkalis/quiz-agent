@@ -70,13 +70,11 @@ private func makeResponse(
 @MainActor
 private func makeDeferredViewModel() -> (QuizViewModel, MockNetworkService) {
     // #180 track A: a `TestClock` nobody advances. These tests are about the
-    // reveal FLOW, so no quiz timer (answer timer, thinking time, dead-air cap,
+    // reveal FLOW, so no quiz timer (thinking time, dead-air cap,
     // auto-advance) may fire underneath and move the state out from under an
     // assertion while the shared main actor is busy with parallel suites.
     let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
     vm.settings.answerRevealMode = .endOfSet
-    vm.settings.autoRecordEnabled = false // keep the mic out of these tests
-    vm.settings.answerTimeLimit = 0 // Off — no lingering answer-timer tasks
     vm.currentSession = Fixtures.makeQuizSession()
     vm.currentQuestion = Fixtures.makeQuestion()
     return (vm, network)
@@ -290,8 +288,8 @@ struct RecapNarrationTests {
 
     /// Mute wins everywhere TTS starts (#85) — including the recap, and
     /// including the hands-free auto-read.
-    @Test("muted or hands-on: no auto-narration")
-    func muteAndHandsOnGates() async throws {
+    @Test("muted: no narration, auto-read included")
+    func muteGatesNarration() async throws {
         let (vm, network) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct, nextQuestion: nil, sessionPhase: "finished"))
@@ -299,8 +297,6 @@ struct RecapNarrationTests {
 
         vm.settings.isMuted = true
         vm.playRecapSummary()
-        vm.settings.isMuted = false
-        vm.settings.autoRecordEnabled = false
         vm.autoPlayRecapIfHandsFree()
 
         // Give any wrongly-started narration a chance to surface — scheduler
@@ -309,17 +305,17 @@ struct RecapNarrationTests {
         for _ in 0 ..< 200 {
             await Task.yield()
         }
-        #expect(network.synthesizedTexts.isEmpty, "narration started despite mute / hands-on mode")
+        #expect(network.synthesizedTexts.isEmpty, "narration started despite mute")
     }
 
-    /// The hands-free path (autoRecord ON) auto-reads the recap on appear.
+    /// Auto-record — the hands-free signal — is always on (#200), so the recap
+    /// reads itself on appear.
     @Test("hands-free mode auto-reads the recap")
     func handsFreeAutoReads() async throws {
         let (vm, network) = makeDeferredViewModel()
         vm.quizState = .processing
         await vm.handleQuizResponse(makeResponse(result: .correct, nextQuestion: nil, sessionPhase: "finished"))
         await waitForAudioSettle { vm.quizState == .finished }
-        vm.settings.autoRecordEnabled = true
 
         vm.autoPlayRecapIfHandsFree()
 

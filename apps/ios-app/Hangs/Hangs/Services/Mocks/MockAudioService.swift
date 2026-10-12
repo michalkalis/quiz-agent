@@ -193,6 +193,7 @@ import os
 
         func prepareForRecording() async {
             isPlaying = false
+            if isPlaybackPaused { releaseHeldClip(continuing: false) }
             prepareForRecordingCallCount += 1
             await prepareForRecordingGate?()
         }
@@ -221,8 +222,36 @@ import os
             isPlaying = true
             onPlaybackStarted?()
             try await Task.sleep(nanoseconds: playbackDurationNs)
+            if isPlaybackPaused {
+                let continued = await withCheckedContinuation { heldClip = $0 }
+                guard continued else { throw CancellationError() }
+            }
             isPlaying = false
             return 3.0 // Mock duration
+        }
+
+        /// #200: a clip a pause is holding. `playOpusAudio` stays suspended in
+        /// it until `resumePlayback()` continues it, or `stopPlayback()` ends
+        /// it — its caller then gets `CancellationError`, as from the real service.
+        private(set) var isPlaybackPaused = false
+        private var heldClip: CheckedContinuation<Bool, Never>?
+
+        func pausePlayback() -> Bool {
+            guard isPlaying else { return false }
+            isPlaybackPaused = true
+            return true
+        }
+
+        func resumePlayback() -> Bool {
+            guard isPlaybackPaused else { return false }
+            releaseHeldClip(continuing: true)
+            return true
+        }
+
+        private func releaseHeldClip(continuing: Bool) {
+            isPlaybackPaused = false
+            heldClip?.resume(returning: continuing)
+            heldClip = nil
         }
 
         func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval {
@@ -235,6 +264,7 @@ import os
         func stopPlayback() async {
             stopPlaybackCallCount += 1
             isPlaying = false
+            if isPlaybackPaused { releaseHeldClip(continuing: false) }
         }
 
         /// The real service invokes this on an audio thread with each PCM chunk.

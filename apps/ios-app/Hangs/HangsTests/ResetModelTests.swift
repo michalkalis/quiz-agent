@@ -47,7 +47,7 @@ struct ResetModelTests {
         viewModel.recordingCoordinator.preEditTranscript = "draft"
         viewModel.mcqVoiceMatchedKey = "b"
         viewModel.currentSession = Fixtures.session(score: 5.0, answered: 3)
-        viewModel.answerTimerCountdown = 10
+        viewModel.thinkingTimeCountdown = 10
         viewModel.setError(message: "boom", context: .general)
 
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .armed)
@@ -72,7 +72,7 @@ struct ResetModelTests {
         #expect(viewModel.mcqVoiceMatchedKey == nil)
         #expect(viewModel.score == 0.0)
         #expect(viewModel.questionsAnswered == 0)
-        #expect(viewModel.answerTimerCountdown == 0)
+        #expect(viewModel.thinkingTimeCountdown == 0)
     }
 
     /// WHY: decision 8 — phase state must drop atomically when the quiz leaves

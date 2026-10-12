@@ -145,6 +145,38 @@ struct QuizSettingsBackwardCompatTests {
         #expect(settings.autoConfirmEnabled == true)
     }
 
+    // MARK: - Retired auto-record / answer time limit (#200)
+
+    /// #200 removed both settings, but every install that ever saved Settings
+    /// has the keys on disk — some with auto-record OFF. Those blobs must still
+    /// decode, or the upgrade would wipe the user's language, categories and
+    /// the rest back to defaults.
+    @Test("a blob saved with auto-record off and an answer limit still decodes")
+    func retiredAutoRecordKeysStillDecode() throws {
+        var json = legacyMinimalJSON
+        json["autoRecordEnabled"] = false
+        json["answerTimeLimit"] = 0
+        json["language"] = "sk"
+        json["thinkingTime"] = 30
+
+        let settings = try decodeSettings(json)
+
+        #expect(settings.language == "sk")
+        #expect(settings.thinkingTime == 30)
+    }
+
+    /// The other direction: the beta line (1.0) and the redesign (1.1) are one
+    /// app in TestFlight, and a 1.0 build's decoder REQUIRES `answerTimeLimit`.
+    /// A 1.1 blob without it would reset a tester's settings the moment they
+    /// went back to a 1.0 build.
+    @Test("the saved blob still carries answerTimeLimit for a 1.0 build to read")
+    func encodedBlobKeepsAnswerTimeLimitForOlderBuilds() throws {
+        let data = try JSONEncoder().encode(QuizSettings.default)
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        #expect(object?["answerTimeLimit"] is Int)
+    }
+
     // MARK: - Missing voiceHintsEnabled (#174)
 
     /// A legacy blob must decode to nil = AUTOMATIC (first quizzes only), never

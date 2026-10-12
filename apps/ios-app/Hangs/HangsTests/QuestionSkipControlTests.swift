@@ -33,7 +33,6 @@ private func makeViewModel(question: Question, state: QuizState = .askingQuestio
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = question
     vm.quizState = state
-    vm.settings.autoRecordEnabled = false
     return vm
 }
 

@@ -38,16 +38,29 @@ struct SettingsViewSessionGroupTests {
             .environmentObject(NavigationModel())
     }
 
-    @Test("all four session rows render in the view tree")
+    @Test("the session rows render in the view tree")
     func sessionRowsRender() async throws {
         let view = makeView()
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            for label in [
-                "Thinking time", "Questions per quiz",
-                "Auto-advance delay", "Answer time limit",
-            ] {
+            for label in ["Thinking time", "Questions per quiz", "Auto-advance delay"] {
                 #expect(throws: Never.self, "session row '\(label)' must render") {
+                    try tree.find(text: label)
+                }
+            }
+        }
+    }
+
+    /// #200 (founder, 2026-10-12): auto-record can no longer be turned off, so
+    /// the think window is the only answer window — a Settings row that still
+    /// offered either switch would do nothing.
+    @Test("no Settings row turns auto-record off or sets an answer time limit")
+    func autoRecordCannotBeTurnedOff() async throws {
+        let view = makeView()
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            for label in ["Auto-record answers", "Answer time limit"] {
+                #expect(throws: (any Error).self, "'\(label)' is back in Settings") {
                     try tree.find(text: label)
                 }
             }

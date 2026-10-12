@@ -6,9 +6,9 @@
 //  the backend's generic TTS (`POST /tts/synthesize`, already-translated text,
 //  1000-char cap per call): score first, then every question's verdict +
 //  revealed answer + explanation, chunked per question and played
-//  sequentially. Auto-starts on recap appear when `autoRecordEnabled` — the
-//  app has no single driving-mode flag; auto-record is its hands-free signal —
-//  and never while muted (mute wins everywhere TTS starts, #85).
+//  sequentially. Auto-starts on recap appear — auto-record, the app's
+//  hands-free signal, is always on since #200 — and never while muted (mute
+//  wins everywhere TTS starts, #85).
 //
 
 import Foundation
@@ -30,10 +30,10 @@ extension QuizViewModel {
     }
 
     /// Auto-read on recap appear — the mock's "pri šoférovaní sa súhrn vždy
-    /// číta nahlas". Hands-free proxy: `autoRecordEnabled` (judgment call,
-    /// logged in the issue). Muted or hands-on drivers read the list instead.
+    /// číta nahlas". Its hands-free proxy, auto-record, is always on (#200);
+    /// muted drivers read the list instead.
     func autoPlayRecapIfHandsFree() {
-        guard settings.autoRecordEnabled, !isAudioMuted else { return }
+        guard autoReadsRecap, !isAudioMuted else { return }
         playRecapSummary()
     }
 

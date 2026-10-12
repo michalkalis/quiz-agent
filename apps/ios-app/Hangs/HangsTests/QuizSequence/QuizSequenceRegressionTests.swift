@@ -22,7 +22,7 @@ struct QuizSequenceRegressionTests {
     @Test("muting during the answer read-back still auto-confirms and frees the command window")
     func muteDuringReadBack() async {
         let dump = """
-        # quiz-sequence seed=0 questions=3 mcq=- autoRecord=1 thinking=10 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
+        # quiz-sequence seed=0 questions=3 mcq=- thinking=10 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:05.000 tap mic attempt=q_001#1 state=askingQuestion
         00:00:05.500 speech vad.speechStarted attempt=q_001#2 state=recording
@@ -49,7 +49,7 @@ struct QuizSequenceRegressionTests {
     @Test("an auto-advanced question is read aloud to the end")
     func autoAdvanceReadsNextQuestion() async {
         let dump = """
-        # quiz-sequence seed=0 questions=3 mcq=- autoRecord=1 thinking=10 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
+        # quiz-sequence seed=0 questions=3 mcq=- thinking=10 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:02.943 tap skip attempt=q_001#1 state=askingQuestion
         00:00:03.065 network quizResponse attempt=q_001#2 state=skipping correct
@@ -70,7 +70,7 @@ struct QuizSequenceRegressionTests {
     @Test("a replay during the first read-out keeps the hands-free start waiting")
     func replayKeepsReadOutFlag() async {
         let dump = """
-        # quiz-sequence seed=0 questions=3 mcq=- autoRecord=1 thinking=0 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
+        # quiz-sequence seed=0 questions=3 mcq=- thinking=0 autoConfirm=1 muted=0 commands=1 endOfSet=0 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:00.919 tap replay attempt=q_001#1 state=askingQuestion
         00:00:10.000 timer idle attempt=q_001#1 state=askingQuestion
@@ -128,8 +128,10 @@ struct QuizSequenceRegressionTests {
     /// the late command is dropped and reported, the quiz moves on.
     @Test("stop / again after the answer is sent are dropped, never reopen the question", arguments: ["stop", "again"])
     func commandAfterAnswerSentIsDropped(command: String) async {
+        // #200: recorded with auto-record off, whose 30 s answer timer opened the
+        // mic; auto-record is always on now, so a 30 s think window replays it.
         let dump = """
-        # quiz-sequence seed=186115 questions=4 mcq=4 autoRecord=0 thinking=0 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
+        # quiz-sequence seed=186115 questions=4 mcq=4 thinking=30 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:32.242 tap mute attempt=q_001#1 state=askingQuestion
         00:00:52.891 tap confirm attempt=q_001#3 state=processing

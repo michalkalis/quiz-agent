@@ -157,7 +157,6 @@ struct AttemptOwnershipTests {
         await vm.audioDeviceState.playQuestionAudio(from: "https://example.com/q.mp3")
 
         #expect(vm.taskBag.contains(.thinkingTime) == false, "a countdown for question 2 was armed by question 1's read")
-        #expect(vm.taskBag.contains(.answerTimer) == false)
         #expect(vm.attemptLedger.droppedPaths.contains("questionReadOut.tail"))
     }
 

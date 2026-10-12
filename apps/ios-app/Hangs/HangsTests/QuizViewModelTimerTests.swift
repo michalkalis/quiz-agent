@@ -42,51 +42,25 @@ private func makeNextQuestionResponse(
     )
 }
 
-// MARK: - Answer Timer Tests (split from QuizViewModelTests.swift)
+// MARK: - Answer Window Tests (split from QuizViewModelTests.swift)
 
-@Suite("QuizViewModel Answer Timer Tests")
+/// #200: the think window is the only answer window (auto-record is always
+/// on) — every way of acting on the question must take it down.
+@Suite("QuizViewModel Answer Window Tests")
 struct QuizViewModelAnswerTimerTests {
-    @Test("countdown resets to 0 when user taps mic")
-    @MainActor
-    func countdownResetsOnMicTap() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.settings.answerTimeLimit = 30
-
-        // Manually set countdown as if timer is running
-        viewModel.answerTimerCountdown = 15
-
-        // Tapping mic triggers toggleRecording which calls cancelAnswerTimer
-        await viewModel.toggleRecording()
-
-        #expect(viewModel.answerTimerCountdown == 0)
-        #expect(viewModel.quizState == .recording)
-    }
-
-    @Test("no timer when answerTimeLimit is 0")
-    @MainActor
-    func noTimerWhenTimeLimitOff() async throws {
-        let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.settings.answerTimeLimit = 0
-
-        // After startNewQuiz or proceedToNextQuestion, answerTimerCountdown should stay 0.
-        // We can't easily test startAnswerTimer directly since it's gated, but we can
-        // verify the countdown stays at 0.
-        #expect(viewModel.answerTimerCountdown == 0)
-    }
-
     @Test("resetState clears all timer state")
     @MainActor
     func resetStateClearsTimerState() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.answerTimerCountdown = 20
+        viewModel.thinkingTimeCountdown = 20
 
         viewModel.resetToHome()
 
-        #expect(viewModel.answerTimerCountdown == 0)
+        #expect(viewModel.thinkingTimeCountdown == 0)
         #expect(viewModel.quizState == .idle)
     }
 
-    @Test("skipQuestion cancels answer timer")
+    @Test("skipQuestion cancels the think window")
     @MainActor
     func skipQuestionCancelsAnswerTimer() async throws {
         let mockNetwork = Fixtures.makeFullMockNetwork { mock in
@@ -101,12 +75,12 @@ struct QuizViewModelAnswerTimerTests {
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .askingQuestion
-        viewModel.answerTimerCountdown = 15
+        viewModel.thinkingTimeCountdown = 15
 
         await viewModel.skipQuestion()
 
-        // After skip, answer timer should be cancelled (countdown reset to 0)
-        #expect(viewModel.answerTimerCountdown == 0)
+        // After skip, the think window should be cancelled (countdown reset to 0)
+        #expect(viewModel.thinkingTimeCountdown == 0)
     }
 
     /// #108A (founder-rejected the old countdown-then-record behavior): tapping
@@ -125,19 +99,19 @@ struct QuizViewModelAnswerTimerTests {
         )
         viewModel.currentQuestion = Fixtures.makeQuestion(id: "q_001", source: "Test")
         viewModel.quizState = .processing // the real call site: the confirmation sheet
-        viewModel.answerTimerCountdown = 15 // stale value from a prior countdown
+        viewModel.thinkingTimeCountdown = 15 // stale value from a prior countdown
 
         viewModel.rerecordAnswer()
 
         // Synchronously: the countdown is cancelled right away, before recording
         // has had a chance to actually start on the spawned Task.
-        #expect(viewModel.answerTimerCountdown == 0)
+        #expect(viewModel.thinkingTimeCountdown == 0)
 
         await pumpUntil({ viewModel.quizState == .recording }, "re-record never reached .recording")
 
         #expect(viewModel.isAnswerCaptureActive == true, "the mic must actually open, not just flip state")
         _ = mockAudio
-        #expect(viewModel.answerTimerCountdown == 0, "no answer countdown should be running after re-record")
+        #expect(viewModel.thinkingTimeCountdown == 0, "no answer countdown should be running after re-record")
     }
 }
 
@@ -191,33 +165,9 @@ struct QuizViewModelNoModalFreezeTests {
     /// #81 follow-up (founder 2026-07-06): the answer countdown must keep
     /// running behind any modal (End-Quiz dialog, settings sheet) — a freeze
     /// is exploitable: opening a dialog would buy free thinking time. Same
-    /// rationale as the no-pause-while-typing decision (2a). This test fails
-    /// if anyone reintroduces a modal-freeze hold into the timer loop: on a
-    /// driven clock (#180 track A) the exact per-second value is now assertable,
-    /// so a hold shows up as a number that stops moving.
-    @Test("answer countdown keeps ticking — no freeze mechanism exists")
-    @MainActor
-    func answerTimerKeepsTickingUnconditionally() async throws {
-        let clock = TestClock()
-        let viewModel = Fixtures.makeViewModelForTimerTests(clock: AnyClock(clock))
-        viewModel.settings.answerTimeLimit = 30
-
-        viewModel.quizTimersController.startAnswerTimer()
-        await pumpUntil({ viewModel.answerTimerCountdown == 30 }, "answer countdown never seeded")
-
-        // A reintroduced freeze would hold the tick at the seeded 30; the loop
-        // must decrement once per second regardless of any presented modal.
-        await clock.advance(by: .seconds(1))
-        #expect(viewModel.answerTimerCountdown == 29, "a freeze mechanism is holding the countdown")
-        await clock.advance(by: .seconds(1))
-        #expect(viewModel.answerTimerCountdown == 28)
-
-        viewModel.quizTimersController.cancelAnswerTimer()
-    }
-
-    /// Same fairness guarantee for the thinking-time countdown: it must keep
-    /// ticking behind modals — the user must not be able to stall auto-record
-    /// by opening a dialog.
+    /// rationale as the no-pause-while-typing decision (2a). On a driven clock
+    /// (#180 track A) a reintroduced hold shows up as a number that stops
+    /// moving. (The toolbar pause, #200, is the one deliberate freeze.)
     @Test("thinking countdown keeps ticking — no freeze mechanism exists")
     @MainActor
     func thinkingTimerKeepsTickingUnconditionally() async throws {
@@ -238,24 +188,24 @@ struct QuizViewModelNoModalFreezeTests {
 
     /// Founder decision 2a (#81, superseded recommendation): typing an answer
     /// does NOT pause the countdown — typed input grants no extra thinking
-    /// time. The typed-answer path must never cancel the answer timer on its
+    /// time. The typed-answer path must never cancel the think window on its
     /// way in.
-    @Test("resubmitAnswer leaves the answer timer running (no typing pause)")
+    @Test("resubmitAnswer leaves the think window running (no typing pause)")
     @MainActor
     func typedAnswerDoesNotPauseCountdown() async throws {
         let viewModel = Fixtures.makeViewModelForTimerTests()
-        viewModel.settings.answerTimeLimit = 30
+        viewModel.settings.thinkingTime = 30
         viewModel.currentSession = Fixtures.makeActiveSession()
 
-        viewModel.quizTimersController.startAnswerTimer()
+        viewModel.quizTimersController.startThinkingTimeCountdown()
         await Task.yield()
-        #expect(viewModel.taskBag.contains(.answerTimer))
+        #expect(viewModel.taskBag.contains(.thinkingTime))
 
         await viewModel.resubmitAnswer("Paris", suppressAudio: true)
 
         // The timer task was not cancelled by the typed submission itself —
         // it self-expires once state leaves .askingQuestion.
-        #expect(viewModel.taskBag.contains(.answerTimer))
+        #expect(viewModel.taskBag.contains(.thinkingTime))
     }
 }
 
@@ -613,7 +563,6 @@ struct QuizViewModelBargeInTests {
         #expect(mockSilence.ttsPlaybackActive == false)
         #expect(viewModel.quizState == .recording)
         #expect(viewModel.isAutoRecording == true)
-        #expect(viewModel.answerTimerCountdown == 0) // cancelAnswerTimer was called
     }
 
     /// Regression: barge-in must not fire from a non-asking state. If the

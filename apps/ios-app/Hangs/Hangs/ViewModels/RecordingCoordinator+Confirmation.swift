@@ -187,7 +187,6 @@ extension RecordingCoordinator {
         transcriptWasEdited = false
         preEditTranscript = nil
         setIsRerecording(true)
-        cancelAnswerTimer()
         cancelThinkingTime()
         transition(to: .askingQuestion) // Transient bridge state before recording starts
         setErrorMessage(nil)
@@ -209,7 +208,6 @@ extension RecordingCoordinator {
         clearPause()
         taskBag.cancel(.voiceSubmission)
         taskBag.cancel(.sttCommitWatchdog)
-        cancelAnswerTimer()
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
         cleanupStreamingSTT()

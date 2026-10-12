@@ -3,8 +3,8 @@
 //  Hangs
 //
 //  The timer slice extracted from QuizViewModel (#113 T4): thinking-time,
-//  answer-timer, auto-stop-recording, auto-advance and auto-confirm
-//  start/cancel, plus the countdown state the views read.
+//  auto-stop-recording, auto-advance and auto-confirm start/cancel, plus the
+//  countdown state the views read.
 //
 
 import Combine
@@ -18,7 +18,7 @@ import os
 /// them down). The façade (QuizViewModel) owns this child, re-publishes its
 /// `objectWillChange`, and re-exposes the slice via permanent forwarding
 /// accessors (decision 2) — views never bind it directly. Cross-cluster
-/// state (`quizState`, `settings`, `isAutoRecording`, `isRerecording`,
+/// state (`quizState`, `settings`, `isAutoRecording`,
 /// `showAnswerConfirmation`, `autoConfirmCountdown` — confirmation-semantic,
 /// folds into `ConfirmationState` in T7) stays façade-resident and is
 /// reached ONLY through the injected closures below (decision 4 — a child
@@ -29,8 +29,6 @@ final class QuizTimersController: ObservableObject {
 
     // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
-    // Answer timer countdown (visible on QuestionView)
-    @Published var answerTimerCountdown: Int = 0
     // Thinking time countdown (visible on QuestionView before auto-recording)
     @Published var thinkingTimeCountdown: Int = 0
     /// #131 Track B: seconds left of the auto-stop recording window. The founder
@@ -49,6 +47,10 @@ final class QuizTimersController: ObservableObject {
     /// off the sheet — confirming IS a resume.
     @Published var isPaused: Bool = false
 
+    /// #200 (founder, TF 2026-10-12): what the think window still had when the
+    /// quiz was paused. Play continues from it instead of a fresh full window.
+    private var heldThinkingSeconds = 0
+
     /// The façade's shared task owner (decision 4 register/cancel handle).
     let taskBag: TaskBag
 
@@ -63,7 +65,6 @@ final class QuizTimersController: ObservableObject {
 
     let settings: @MainActor () -> QuizSettings
     let quizState: @MainActor () -> QuizState
-    let isRerecording: @MainActor () -> Bool
     let setIsAutoRecording: @MainActor (Bool) -> Void
     let showAnswerConfirmation: @MainActor () -> Bool
     let setAutoConfirmCountdown: @MainActor (Int) -> Void
@@ -80,7 +81,6 @@ final class QuizTimersController: ObservableObject {
         attemptLedger: AttemptLedger,
         settings: @escaping @MainActor () -> QuizSettings,
         quizState: @escaping @MainActor () -> QuizState,
-        isRerecording: @escaping @MainActor () -> Bool,
         setIsAutoRecording: @escaping @MainActor (Bool) -> Void,
         showAnswerConfirmation: @escaping @MainActor () -> Bool,
         setAutoConfirmCountdown: @escaping @MainActor (Int) -> Void,
@@ -94,7 +94,6 @@ final class QuizTimersController: ObservableObject {
         self.attemptLedger = attemptLedger
         self.settings = settings
         self.quizState = quizState
-        self.isRerecording = isRerecording
         self.setIsAutoRecording = setIsAutoRecording
         self.showAnswerConfirmation = showAnswerConfirmation
         self.setAutoConfirmCountdown = setAutoConfirmCountdown
@@ -109,8 +108,8 @@ final class QuizTimersController: ObservableObject {
     /// the façade's `resetState`/`transition` invokes this once T7 (S6b) lands.
     func reset() {
         autoAdvanceCountdown = 0
-        answerTimerCountdown = 0
         thinkingTimeCountdown = 0
+        heldThinkingSeconds = 0
         recordingCountdown = 0
         recordingCountdownTotal = 0
         isPaused = false
@@ -120,7 +119,8 @@ final class QuizTimersController: ObservableObject {
 
     /// Countdown before auto-recording starts, giving user time to think.
     /// Creates a fire-and-forget Task stored in `taskBag` under `.thinkingTime` for cancellation.
-    func startThinkingTimeCountdown() {
+    /// `heldSeconds` (#200) continues a window a pause held; 0 = the full window.
+    func startThinkingTimeCountdown(resumingAt heldSeconds: Int = 0) {
         // #173: paused means paused. The re-arm guard `startAutoConfirmIfEnabled`
         // has always had, applied to the window the QUESTION screen runs on —
         // without it a question-TTS tail resolved by the pause's own
@@ -131,7 +131,7 @@ final class QuizTimersController: ObservableObject {
             return
         }
 
-        let thinkingSeconds = settings().thinkingTime
+        let thinkingSeconds = heldSeconds > 0 ? heldSeconds : settings().thinkingTime
 
         cancelThinkingTime()
         let owner = attemptLedger.current
@@ -192,54 +192,18 @@ final class QuizTimersController: ObservableObject {
         thinkingTimeCountdown = 0
     }
 
-    // MARK: - Answer Timer
-
-    /// Start countdown timer that auto-starts recording when it expires.
-    /// Skipped while `isRerecording` is true — re-record starts its own
-    /// recording immediately (#108A) instead of going through this countdown.
-    func startAnswerTimer() {
-        // #173: same pause guard as `startThinkingTimeCountdown` — these two are
-        // the one answer window, only ever one of them armed at a time.
-        guard !isPaused else {
-            answerTimerCountdown = 0
-            return
-        }
-
-        let limit = settings().answerTimeLimit
-        guard limit > 0, !isRerecording() else { return }
-
-        cancelAnswerTimer()
-        answerTimerCountdown = limit
-        let owner = attemptLedger.current
-
-        let task = Task { [weak self] in
-            guard let self else { return }
-
-            for remaining in (0 ... limit).reversed() {
-                if Task.isCancelled { return }
-                // Direct assignment is safe: Task inherits @MainActor isolation from QuizTimersController
-                self.answerTimerCountdown = remaining
-
-                if remaining > 0 {
-                    try? await self.clock.sleep(for: .seconds(1))
-                }
-            }
-
-            if Task.isCancelled { return }
-
-            // Auto-start recording when timer expires
-            guard self.quizState() == .askingQuestion,
-                  self.attemptLedger.ownsQuestion(owner, "answerTimer.fire") else { return }
-            self.attemptLedger.record(.timer, "answerTimer.fire")
-            await self.startRecording()
-        }
-        taskBag.add(task, key: .answerTimer)
+    /// #200: freeze the think window for a pause, keeping what it had left.
+    /// Only the question screen's own window counts — the number can still
+    /// read for a frame after the mic opened (see the tick's `.recording` note).
+    func holdThinkingTime() {
+        heldThinkingSeconds = quizState() == .askingQuestion ? thinkingTimeCountdown : 0
+        cancelThinkingTime()
     }
 
-    /// Cancel the answer countdown timer
-    func cancelAnswerTimer() {
-        taskBag.cancel(.answerTimer)
-        answerTimerCountdown = 0
+    /// #200: the remainder `holdThinkingTime()` kept (0 = none); taking it clears it.
+    func takeHeldThinkingTime() -> Int {
+        defer { heldThinkingSeconds = 0 }
+        return heldThinkingSeconds
     }
 
     // MARK: - Auto-Stop Recording Timer

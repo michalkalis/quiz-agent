@@ -175,6 +175,10 @@ final class QuizViewModel: ObservableObject {
     /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
     /// does not set this (it replaces the summary via the shared task key).
     @Published var isNarratingRecap: Bool = false
+    /// Test seam (#200): the recap reads itself aloud on appear. Auto-record,
+    /// which used to gate that, is always on now — a test that freezes the
+    /// recap screen turns this off instead. Production never assigns it.
+    var autoReadsRecap = true
     /// #174: set instead of starting when the pre-flight probe finds fewer
     /// unseen questions than the user asked for. Non-nil drives the
     /// "Not enough questions" alert; the quiz has NOT started while it is set.
@@ -306,13 +310,6 @@ final class QuizViewModel: ObservableObject {
         set { quizTimersController.autoAdvanceCountdown = newValue }
     }
 
-    /// Answer timer countdown (visible on QuestionView) — see
-    /// `QuizTimersController.answerTimerCountdown`.
-    var answerTimerCountdown: Int {
-        get { quizTimersController.answerTimerCountdown }
-        set { quizTimersController.answerTimerCountdown = newValue }
-    }
-
     /// Thinking time countdown (visible on QuestionView before auto-recording)
     /// — see `QuizTimersController.thinkingTimeCountdown`.
     var thinkingTimeCountdown: Int {
@@ -329,13 +326,13 @@ final class QuizViewModel: ObservableObject {
 
     /// #131 Track B — the ONE countdown the question screen shows, from the end
     /// of the question read to submit or expiry. It is a single VALUE, not a
-    /// single timer: the think/answer window while the driver is deciding, the
+    /// single timer: the think window while the driver is deciding, the
     /// recording window once the mic is open. The two hand over synchronously
     /// (see `RecordingCoordinator.startRecording`), so the number never blanks,
     /// freezes, or disappears — the founder rule after the 2026-07-29 field test.
     var answerWindowRemaining: Int {
         if quizState == .recording { return recordingCountdown }
-        return max(thinkingTimeCountdown, answerTimerCountdown)
+        return thinkingTimeCountdown
     }
 
     /// The window `answerWindowRemaining` drains from — the Record/Stop button's
@@ -343,7 +340,6 @@ final class QuizViewModel: ObservableObject {
     var answerWindowTotal: Int {
         if quizState == .recording { return quizTimersController.recordingCountdownTotal }
         if thinkingTimeCountdown > 0 { return settings.thinkingTime }
-        if answerTimerCountdown > 0 { return settings.answerTimeLimit }
         return 0
     }
 
@@ -961,8 +957,7 @@ final class QuizViewModel: ObservableObject {
             onBargeIn: { [weak self] in await self?.handleBargeIn() },
             startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
-            startThinkingTimeCountdown: { [weak self] in self?.quizTimersController.startThinkingTimeCountdown() },
-            startAnswerTimer: { [weak self] in self?.quizTimersController.startAnswerTimer() }
+            startThinkingTimeCountdown: { [weak self] in self?.quizTimersController.startThinkingTimeCountdown() }
         )
     }
 
@@ -1014,7 +1009,6 @@ final class QuizViewModel: ObservableObject {
             },
             continueToNext: { [weak self] in self?.advanceFromResult() },
             pauseQuiz: { [weak self] in self?.enterPause() },
-            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
@@ -1036,7 +1030,6 @@ final class QuizViewModel: ObservableObject {
             attemptLedger: attemptLedger,
             settings: { [weak self] in self?.settings ?? .default },
             quizState: { [weak self] in self?.quizState ?? .idle },
-            isRerecording: { [weak self] in self?.isRerecording ?? false },
             setIsAutoRecording: { [weak self] in self?.isAutoRecording = $0 },
             showAnswerConfirmation: { [weak self] in self?.recordingCoordinator.showAnswerConfirmation ?? false },
             setAutoConfirmCountdown: { [weak self] in self?.recordingCoordinator.autoConfirmCountdown = $0 },
@@ -1092,7 +1085,6 @@ final class QuizViewModel: ObservableObject {
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
             clearPause: { [weak self] in self?.isPaused = false },
             isPaused: { [weak self] in self?.isPaused ?? false },
-            cancelAnswerTimer: { [weak self] in self?.quizTimersController.cancelAnswerTimer() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             startAutoStopRecordingTimer: { [weak self] duration, hardCap in
                 self?.quizTimersController.startAutoStopRecordingTimer(duration: duration, hardCap: hardCap)
@@ -1346,7 +1338,7 @@ final class QuizViewModel: ObservableObject {
                 try? await settleClock.sleep(for: .milliseconds(100))
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
-                // No audio — start silence detection then recording/timer
+                // No audio — start silence detection, then the think window
                 await audioDeviceState.startSilenceDetectionListening()
                 startRecordingOrTimer()
             }
@@ -1730,7 +1722,6 @@ final class QuizViewModel: ObservableObject {
         guard quizState == .askingQuestion, attemptLedger.ownsQuestion(owner, "bargeIn.start") else { return }
 
         // 5. Auto-start recording (same as post-TTS flow)
-        quizTimersController.cancelAnswerTimer()
         isAutoRecording = true
         await recordingCoordinator.startRecording(trigger: .bargeIn)
     }
@@ -1816,7 +1807,6 @@ final class QuizViewModel: ObservableObject {
         // !isPaused` silently kills auto-advance: the result arrives pre-paused
         // and the quiz stops moving hands-free.
         isPaused = false
-        quizTimersController.cancelAnswerTimer()
         // #132: the option grid is on screen during the think phase now, so a tap
         // can land while the THINK countdown is still ticking. Without this the
         // chip keeps counting down over the processing screen for up to a second
@@ -2016,7 +2006,6 @@ final class QuizViewModel: ObservableObject {
         // #173: skipping IS resuming — see `submitMCQAnswer`. A pause carried
         // onto the result screen would kill its auto-advance.
         isPaused = false
-        quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
 
         // Claim .skipping before the first suspension point: a rejected transition
@@ -2064,7 +2053,6 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
         let abandoned = AnalyticsEvent.quizAbandoned(questionsAnswered: questionsAnswered, phase: quizState.label)
 
-        quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelAutoStopRecordingTimer()
 
         do {
@@ -2223,19 +2211,15 @@ final class QuizViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Auto-Record or Timer
+    // MARK: - Auto-Record
 
-    /// Choose between auto-record (Phase 2) or answer timer (Phase 1) based on settings
-    /// (internal so the MCQ guard-removal regression can drive it directly — 45.3).
-    func startRecordingOrTimer() {
-        guard quizState == .askingQuestion else { return }
-
-        if settings.autoRecordEnabled && !isRerecording {
-            // Auto-record path: thinking time countdown → auto-start recording
-            quizTimersController.startThinkingTimeCountdown()
-        } else {
-            quizTimersController.startAnswerTimer()
-        }
+    /// Arm the think window that auto-starts the recording — auto-record is
+    /// always on (#200, founder 2026-10-12). A re-record opens the mic on its
+    /// own. `heldSeconds` continues a window a pause held; 0 = the full window.
+    /// (Internal so the MCQ guard-removal regression can drive it directly — 45.3.)
+    func startRecordingOrTimer(resumingAt heldSeconds: Int = 0) {
+        guard quizState == .askingQuestion, !isRerecording else { return }
+        quizTimersController.startThinkingTimeCountdown(resumingAt: heldSeconds)
     }
 
     /// `owner` (#186 step 1) is the attempt that submitted the answer; `nil`
@@ -2472,7 +2456,7 @@ final class QuizViewModel: ObservableObject {
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil // Clear after use
             } else {
-                // No audio — auto-record or timer based on settings
+                // No audio — straight to the think window, then auto-record
                 startRecordingOrTimer()
             }
 
@@ -2530,7 +2514,6 @@ final class QuizViewModel: ObservableObject {
     private func enterAwaitingQuestion() {
         currentQuestion = nil
         nextQuestionAudioUrl = nil
-        quizTimersController.cancelAnswerTimer()
         quizTimersController.cancelThinkingTime()
         quizTimersController.cancelAutoStopRecordingTimer()
         recordingCoordinator.cancelSilenceDetection()
@@ -2614,7 +2597,7 @@ final class QuizViewModel: ObservableObject {
             guard transition(to: .askingQuestion) else { return true }
             Logger.quiz.info("❓ Pack question arrived after wait: \(question.id, privacy: .public)")
             // Same path a served question normally takes: TTS if we have it,
-            // otherwise straight to the auto-record / answer countdown.
+            // otherwise straight to the think window.
             if let questionUrl = response.audio?.questionUrl {
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
@@ -2636,7 +2619,6 @@ final class QuizViewModel: ObservableObject {
     /// Repeat the current question audio (public for UI button)
     func repeatQuestion() async {
         if quizState == .askingQuestion, let audioUrl = recordingCoordinator.currentQuestionAudioUrl {
-            quizTimersController.cancelAnswerTimer()
             quizTimersController.cancelThinkingTime()
             await audioDeviceState.stopAnyPlayingAudio()
             await audioDeviceState.playQuestionAudio(from: audioUrl)

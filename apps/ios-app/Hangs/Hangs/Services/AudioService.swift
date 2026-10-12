@@ -81,6 +81,15 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
     func playOpusAudio(_ data: Data) async throws -> TimeInterval
     func playOpusAudioFromBase64(_ base64: String) async throws -> TimeInterval
     func stopPlayback() async // Now async for proper cleanup
+    /// #200: hold the clip that is playing where it is — its caller stays
+    /// suspended in `playOpusAudio` — so `resumePlayback()` continues the SAME
+    /// clip. `false` when nothing is playing. `stopPlayback()` still ends a
+    /// held clip (its caller gets `CancellationError`).
+    func pausePlayback() -> Bool
+    /// #200: continue the clip `pausePlayback()` held. `false` when there is
+    /// none any more (stopped, superseded, interrupted) — the caller decides
+    /// what to play instead.
+    func resumePlayback() -> Bool
 
     // Streaming PCM recording (for ElevenLabs STT)
     func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws
@@ -167,6 +176,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     // AsyncThrowingStream.Continuation.finish() is safe to call multiple times (subsequent calls are no-ops),
     // eliminating the double-resume crashes that CheckedContinuation caused.
     private var playbackStreamContinuation: (id: UUID, continuation: AsyncThrowingStream<TimeInterval, Error>.Continuation)?
+
+    /// #200: the current clip is held by a quiz pause (`pausePlayback`). It
+    /// belongs to the current operation only — every new operation starts
+    /// unheld, so a stale hold can never silence the next clip.
+    private(set) var isPlaybackPaused = false
 
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVPlayer?
@@ -1130,6 +1144,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     func beginPlaybackOperation(_ operationId: UUID) -> AsyncThrowingStream<TimeInterval, Error> {
         let (stream, continuation) = AsyncThrowingStream<TimeInterval, Error>.makeStream()
         playbackState = .playing(id: operationId)
+        isPlaybackPaused = false
         playbackStreamContinuation = (id: operationId, continuation: continuation)
         return stream
     }
@@ -1266,7 +1281,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // is a no-op — safe.
         let stalledTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self else { return }
+                // #200: a clip held by a pause is not stalled — it waits for the driver.
+                guard let self, !isPlaybackPaused else { return }
                 guard Self.shouldFailStalledPlayback(
                     isCurrentOperation: playbackContinuation(for: operationId) != nil,
                     playerIsPlaying: audioPlayer?.timeControlStatus == .playing
@@ -1319,7 +1335,11 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             endPlaybackOperation(operationId)
         }
 
-        audioPlayer?.play()
+        // #200: a pause that landed while the asset loaded holds the clip
+        // before its first sample; `resumePlayback()` starts it.
+        if !isPlaybackPaused {
+            audioPlayer?.play()
+        }
         playbackStartedAt = Date()
         Logger.audio.debug("🔊 Started AVPlayer playback")
 
@@ -1358,6 +1378,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
+        isPlaybackPaused = false
         playbackState = .idle
 
         Logger.audio.debug("🔊 Cleaned up playback (id: \(operationId, privacy: .public))")
@@ -1389,10 +1410,60 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         audioPlayer?.pause()
         audioPlayer = nil
         isPlaying = false
+        isPlaybackPaused = false
         playbackState = .idle
 
         Logger.audio.info("🔊 Stopped playback")
         emitPlaybackEndBreadcrumb(reason: "stopped")
+    }
+
+    /// #200 (founder, TF 2026-10-12): a quiz pause HOLDS the clip instead of
+    /// stopping it. The player, its item and the stream its caller awaits all
+    /// stay alive, so `resumePlayback()` continues from the same sample.
+    /// `isPlaying` stays true on purpose: an interruption that arrives while
+    /// held still stops the clip (`handleInterruption`), and the owner falls
+    /// back to reading it again.
+    func pausePlayback() -> Bool {
+        guard case .playing = playbackState, let audioPlayer else { return false }
+        audioPlayer.pause()
+        isPlaybackPaused = true
+        Logger.audio.info("⏸️ Playback held")
+        return true
+    }
+
+    func resumePlayback() -> Bool {
+        guard isPlaybackPaused else { return false }
+        isPlaybackPaused = false
+        guard let operationId = playbackState.playbackId,
+              playbackContinuation(for: operationId) != nil,
+              let audioPlayer else { return false }
+        // A call or another app may have taken the session during the pause.
+        do {
+            try activateSessionForPlayback()
+        } catch {
+            Logger.audio.warning("⚠️ Session reactivation before resume failed: \(error, privacy: .public)")
+        }
+        audioPlayer.play()
+        armResumeStallCheck(operationId)
+        Logger.audio.info("▶️ Playback resumed")
+        return true
+    }
+
+    /// The 5 s stall guard of `performPlaybackBody`, again for a resumed clip:
+    /// a player that never gets going after the pause must fail the clip (the
+    /// question read retries it from the start), never leave its caller
+    /// waiting on silence.
+    private func armResumeStallCheck(_ operationId: UUID) {
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            guard let self, !isPlaybackPaused,
+                  Self.shouldFailStalledPlayback(
+                      isCurrentOperation: playbackContinuation(for: operationId) != nil,
+                      playerIsPlaying: audioPlayer?.timeControlStatus == .playing
+                  ) else { return }
+            Logger.audio.warning("⚠️ Playback timeout - audio failed to resume within 5 seconds")
+            playbackContinuation(for: operationId)?.finish(throwing: AudioError.playbackFailed)
+        }
     }
 
     /// Emit a playback_end breadcrumb with duration since playbackStartedAt.

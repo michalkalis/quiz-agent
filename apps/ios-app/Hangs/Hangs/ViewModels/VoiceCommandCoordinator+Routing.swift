@@ -291,7 +291,6 @@ extension VoiceCommandCoordinator {
         // Question — hands-free START recovery (P4a, founder-overridable flag).
         case (.question, .start):
             guard voiceStartOnQuestionEnabled else { return }
-            cancelAnswerTimer()
             cancelThinkingTime()
             Task { [weak self] in await self?.startRecording() }
 

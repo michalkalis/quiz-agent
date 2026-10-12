@@ -129,19 +129,15 @@
             // (RS-06/07/08) drive the confirmation sheet through accessibility-tree
             // taps and field typing; the timer fires before they can land.
             seededSettings.autoConfirmEnabled = false
-            // #115: the silence service is non-optional now, so the auto-record
-            // gate `autoRecordEnabled && service != nil` would flip ON under UI
-            // test (it was OFF before purely because the service was nil).
-            // Disable it explicitly — UI tests drive recording via the answer
-            // timer + injected STT events, exactly as before the de-opt.
-            seededSettings.autoRecordEnabled = false
-            // Short answer timer so recording auto-starts within ~1s (no mic button in redesigned UI).
-            // #125: the long-stem MCQ fixture needs an observable PRE-reveal window
-            // (options + listening pill still hidden while the countdown runs), so
-            // give that combination a few seconds instead of 1.
-            if wantsMCQ {
-                seededSettings.answerTimeLimit = wantsLong ? 5 : 1
-            }
+            // #200: auto-record is always on, so the think window is what opens
+            // the mic under UI test (recording is then driven by injected STT
+            // events). Voice scenarios keep the 30 s the retired answer timer
+            // gave them — they tap Record well inside it.
+            // MCQ: a short window so recording auto-starts within ~1s (no mic
+            // button in redesigned UI). #125: the long-stem MCQ fixture needs an
+            // observable PRE-reveal window (options + listening pill still hidden
+            // while the countdown runs), so that combination gets a few seconds.
+            seededSettings.thinkingTime = wantsMCQ ? (wantsLong ? 5 : 1) : 30
             // #190: store-screenshot mode — listing-quality content in the quiz
             // language, calm frames (no ticking pills), populated Home.
             if StoreScreenshotFixtures.isActive {
@@ -160,9 +156,8 @@
                 )
                 network.stubbedUsage = StoreScreenshotFixtures.usage
                 seededSettings.language = language
-                // No ticking answer-timer pill. (Thinking / auto-advance countdowns
-                // never start: the scenes are seeded statically in AppState.)
-                seededSettings.answerTimeLimit = 0
+                // No ticking pills: thinking / auto-advance countdowns never
+                // start — the scenes are seeded statically in AppState.
             }
             persistence.savedSettings = seededSettings
 

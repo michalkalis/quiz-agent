@@ -183,8 +183,7 @@ struct QuizEndVoiceTests {
     func recapEndingStaysAsItWas() async {
         let (vm, network) = Fixtures.makeViewModelWithNetwork(clock: AnyClock(TestClock()))
         vm.settings.answerRevealMode = .endOfSet
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 0
+        vm.autoReadsRecap = false
         vm.currentSession = Fixtures.makeQuizSession()
         vm.currentQuestion = Fixtures.makeQuestion()
         vm.quizState = .processing

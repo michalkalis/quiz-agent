@@ -28,14 +28,14 @@ struct TaskBagTests {
             try? await Task.sleep(for: .seconds(3600))
             await firstCancelled.signal()
         }
-        bag.add(first, key: .answerTimer)
+        bag.add(first, key: .thinkingTime)
 
         await firstStarted.wait()
-        #expect(bag.contains(.answerTimer))
+        #expect(bag.contains(.thinkingTime))
 
         // Replace under the same key — first should be cancelled.
         let second = Task { /* no-op */ }
-        bag.add(second, key: .answerTimer)
+        bag.add(second, key: .thinkingTime)
 
         await firstCancelled.wait()
         await second.value
@@ -54,19 +54,19 @@ struct TaskBagTests {
             try? await Task.sleep(for: .seconds(3600)) // parked until cancelled
             await aCancelled.signal()
         }
-        bag.add(a, key: .answerTimer)
+        bag.add(a, key: .thinkingTime)
 
         let b = Task {
             await bRan.signal()
         }
         bag.add(b, key: .autoAdvance)
 
-        bag.cancel(.answerTimer)
+        bag.cancel(.thinkingTime)
 
         await aCancelled.wait()
         await bRan.wait()
         #expect(a.isCancelled)
-        #expect(!bag.contains(.answerTimer))
+        #expect(!bag.contains(.thinkingTime))
         #expect(!b.isCancelled)
     }
 
@@ -77,7 +77,7 @@ struct TaskBagTests {
         let bag = TaskBag()
         let cancellations = AsyncCounter(target: 3)
 
-        for key in [TaskKey.answerTimer, .autoAdvance, .silenceDetection] {
+        for key in [TaskKey.thinkingTime, .autoAdvance, .silenceDetection] {
             let t = Task {
                 try? await Task.sleep(for: .seconds(3600)) // parked until cancelled
                 await cancellations.tick()
@@ -90,7 +90,7 @@ struct TaskBagTests {
 
         await cancellations.waitForTarget()
         #expect(bag.count == 0)
-        #expect(!bag.contains(.answerTimer))
+        #expect(!bag.contains(.thinkingTime))
         #expect(!bag.contains(.autoAdvance))
         #expect(!bag.contains(.silenceDetection))
     }

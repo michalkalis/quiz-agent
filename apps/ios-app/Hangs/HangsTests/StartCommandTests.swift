@@ -10,7 +10,7 @@
 //    • flag OFF → "start" on askingQuestion is inert (button-only START, P4a);
 //    • "start" is inert in every other quiz-flow state…
 //    • …EXCEPT Home (idle), where it always begins the quiz (separate flag);
-//    • NO auto-mic-open: a TTS finish alone never records (P1).
+//    • NO instant mic-open: a TTS finish arms the think window first (P1).
 //
 
 import Clocks
@@ -124,13 +124,13 @@ struct StartCommandTests {
         }
     }
 
-    @Test("NO auto-mic-open: a TTS finish alone never opens the mic (P1)")
+    @Test("NO instant mic-open: a TTS finish arms the think window, not the mic (P1)")
     func noAutoMicOpen() async {
         let (vm, audio) = makeStartVM()
         vm.quizState = .askingQuestion
-        vm.settings.autoRecordEnabled = false
 
-        // Simulate the post-TTS decision point. It arms a timer, never records.
+        // Simulate the post-TTS decision point. It arms the think window (#200:
+        // auto-record is always on), which the parked clock never lets run out.
         vm.startRecordingOrTimer()
 
         for _ in 0..<40 { await Task.yield() }

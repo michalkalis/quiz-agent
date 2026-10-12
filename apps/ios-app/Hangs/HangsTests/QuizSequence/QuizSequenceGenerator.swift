@@ -44,7 +44,6 @@ struct QuizSequenceConfig: Equatable {
     var questionCount = 5
     /// 1-based indices of the multiple-choice questions.
     var mcqQuestions: Set<Int> = []
-    var autoRecord = true
     var thinkingTime = 10
     var autoConfirm = true
     var muted = false
@@ -68,7 +67,9 @@ struct QuizSequenceConfig: Equatable {
         self.seed = seed
         questionCount = Int.random(in: 3 ... 5, using: &rng)
         mcqQuestions = Set((1 ... questionCount).filter { _ in rng.chance(0.3) })
-        autoRecord = rng.chance(0.8)
+        // Was the auto-record draw (#200: always on now) — still drawn so a
+        // recorded seed replays the same config.
+        _ = rng.chance(0.8)
         thinkingTime = [0, 3, 10, 10].randomElement(using: &rng) ?? 10
         autoConfirm = rng.chance(0.85)
         muted = rng.chance(0.2)
@@ -81,7 +82,7 @@ struct QuizSequenceConfig: Equatable {
     var line: String {
         let mcq = mcqQuestions.sorted().map(String.init).joined(separator: ",")
         return "\(QuizSequenceDump.configPrefix) seed=\(seed) questions=\(questionCount) mcq=\(mcq.isEmpty ? "-" : mcq)"
-            + " autoRecord=\(autoRecord ? 1 : 0) thinking=\(thinkingTime) autoConfirm=\(autoConfirm ? 1 : 0)"
+            + " thinking=\(thinkingTime) autoConfirm=\(autoConfirm ? 1 : 0)"
             + " muted=\(muted ? 1 : 0) commands=\(voiceCommands ? 1 : 0) endOfSet=\(endOfSetReveal ? 1 : 0)"
             + " feedbackAudio=\(feedbackAudio ? 1 : 0) deafDetector=\(deafDetector ? 1 : 0)"
     }
@@ -97,7 +98,6 @@ struct QuizSequenceConfig: Equatable {
         func flag(_ key: String, _ fallback: Bool) -> Bool { values[key].map { $0 == "1" } ?? fallback }
         questionCount = values["questions"].flatMap(Int.init) ?? questionCount
         mcqQuestions = Set((values["mcq"] ?? "").split(separator: ",").compactMap { Int($0) })
-        autoRecord = flag("autoRecord", autoRecord)
         thinkingTime = values["thinking"].flatMap(Int.init) ?? thinkingTime
         autoConfirm = flag("autoConfirm", autoConfirm)
         muted = flag("muted", muted)

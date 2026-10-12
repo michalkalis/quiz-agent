@@ -216,14 +216,6 @@ struct SettingsView: View {
             hairline
 
             HangsToggleRow(
-                label: "Auto-record answers",
-                isOn: $viewModel.settings.autoRecordEnabled
-            )
-            .accessibilityIdentifier("settings.autoRecord")
-
-            hairline
-
-            HangsToggleRow(
                 label: "Auto-confirm answers",
                 isOn: $viewModel.settings.autoConfirmEnabled
             )
@@ -347,17 +339,6 @@ struct SettingsView: View {
 
             hairline
 
-            sessionMenuRow(
-                label: "Answer time limit",
-                idPrefix: "settings.answerLimit",
-                options: QuizSettings.answerTimeLimitOptions,
-                selection: $viewModel.settings.answerTimeLimit,
-                display: Self.answerLimitDisplay
-            )
-            .accessibilityIdentifier("settings-answer-limit-menu")
-
-            hairline
-
             // #132 E (founder pick 2026-07-29): when answers are revealed —
             // per question (today's default) or all at once after the set.
             Menu {
@@ -411,13 +392,6 @@ struct SettingsView: View {
     /// "10 questions" per the approved frame.
     private static func questionCountDisplay(_ count: Int) -> String {
         String(localized: "\(count) questions", comment: "Questions-per-session value in session settings")
-    }
-
-    /// Answer time limit: 0 means the timer is disabled.
-    private static func answerLimitDisplay(_ seconds: Int) -> String {
-        seconds == 0
-            ? String(localized: "Off", comment: "Answer time limit disabled")
-            : secondsDisplay(seconds)
     }
 
     private var audioFeedbackGroup: some View {

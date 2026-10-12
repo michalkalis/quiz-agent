@@ -109,7 +109,6 @@ struct QuizViewModelReplayContractTests {
         #expect(viewModel.isPlayingQuestionTTS == false) // no leaked flag from the cancelled run
         #expect(viewModel.autoAdvanceCountdown == 6) // timers never re-armed or cancelled
         #expect(viewModel.thinkingTimeCountdown == 0)
-        #expect(viewModel.answerTimerCountdown == 0)
     }
 
     /// WHY (#185, sequence harness seed 186209): a replay tap racing the mic

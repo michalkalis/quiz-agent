@@ -12,9 +12,17 @@
 //  screen and not a new state-machine case: whatever the driver was looking at
 //  stays on screen, it just stops moving.
 //
-//  Two rules the shape follows:
-//   - Resuming re-arms a FULL window, never the remainder. A pause that quietly
-//     shortens the time left to intervene is not a pause.
+//  The rules the shape follows:
+//   - #200 (founder, TF 2026-10-12): the question screen continues where the
+//     pause stopped it. A question read is HELD, not ended, and play continues
+//     the same clip (read again from the start if it was lost meanwhile —
+//     never straight to the countdown); the think window continues with what
+//     it had left (a full window if nothing was left, or the pause hit during
+//     the read).
+//   - The confirmation sheet's auto-confirm re-arms a FULL window, never the
+//     remainder: after a pause the driver has to look at the answer again
+//     before it sends itself, and the last second or two would not give them
+//     that.
 //   - A live recording cannot simply be frozen — the ElevenLabs stream is not
 //     resumable, and dropping it would lose what was already said. So pausing
 //     mid-recording routes through the EXISTING stop/submit funnel and lands on
@@ -45,16 +53,18 @@ extension QuizViewModel {
         let state = quizState
         isPaused = true
 
-        // Countdowns are CANCELLED, never suspended — `exitPause()` re-arms a
-        // full window, the only reading of "pause" that does not quietly
-        // shorten the time left to intervene.
+        // Auto-confirm is cancelled (play re-arms its full window); the think
+        // window keeps what it had left for play to continue (#200).
         quizTimersController.cancelAutoConfirm()
-        quizTimersController.cancelThinkingTime()
-        quizTimersController.cancelAnswerTimer()
+        quizTimersController.holdThinkingTime()
 
         // Silence anything still speaking: a paused quiz that keeps reading the
         // question out loud is not paused to the passenger who asked for it.
-        Task { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
+        // The question read is held rather than ended (#200), so play can
+        // continue it.
+        if !audioDeviceState.holdQuestionReadOut() {
+            Task { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
+        }
 
         // Takes the mic down via `mayCaptureAudio` (which reports false while
         // the quiz is paused), so it also survives a background/foreground round
@@ -71,7 +81,9 @@ extension QuizViewModel {
         Logger.quiz.info("⏸️ Quiz paused from \(String(describing: state), privacy: .public)")
     }
 
-    /// Un-freeze: a FULL window again, and the command listener back up.
+    /// Un-freeze: the question screen continues where it stopped (#200), the
+    /// confirmation sheet gets a full auto-confirm window, and the command
+    /// listener comes back up.
     /// The toolbar is the only DELIBERATE way back — pausing stopped the
     /// listener, so no spoken word can reach us while paused (by design: a
     /// resume word would need a hot mic, which is what pause just turned off).
@@ -84,22 +96,37 @@ extension QuizViewModel {
 
         if showAnswerConfirmation, !noAnswerCaptured {
             // #185 5.2: the countdown waits for the listener, which this call
-            // brings back up itself.
+            // brings back up itself. Always the FULL window (see the header).
             recordingCoordinator.armConfirmationCountdown()
         } else {
             // The no-answer sheet has no countdown, but its "znova" /
             // "preskoč" listener must come back all the same (PR #199 review).
             if quizState == .askingQuestion {
-                // Re-arms the thinking-time countdown or the answer timer,
-                // whichever this session's settings use — the same entry point
-                // the question flow itself calls, so resume can never diverge
-                // from a fresh ask.
-                startRecordingOrTimer()
+                resumeQuestionScreen()
             }
             voiceCommandCoordinator.refreshCommandWindow()
         }
 
         Logger.quiz.info("▶️ Quiz resumed")
+    }
+
+    /// #200: the read and the think window pick up where the pause left them.
+    /// Re-arming goes through `startRecordingOrTimer`, the entry point the
+    /// question flow itself uses, so resume can never diverge from a fresh ask.
+    private func resumeQuestionScreen() {
+        let heldSeconds = quizTimersController.takeHeldThinkingTime()
+        switch audioDeviceState.releaseQuestionReadOut() {
+        case .continuing:
+            // The initial read's own tail arms the think window. A remainder
+            // means the window was already running under a tap-to-replay.
+            if heldSeconds > 0 { startRecordingOrTimer(resumingAt: heldSeconds) }
+        case .lost where heldSeconds == 0:
+            // Never straight to the countdown over a question the driver only
+            // half heard: read it again; its tail arms the full window.
+            Task { [weak self] in await self?.repeatQuestion() }
+        case .lost, .notHeld:
+            startRecordingOrTimer(resumingAt: heldSeconds)
+        }
     }
 
     /// The toolbar's single pause/resume control (and the spoken "pauza").

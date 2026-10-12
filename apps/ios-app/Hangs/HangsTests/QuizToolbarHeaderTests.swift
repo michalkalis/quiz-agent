@@ -13,8 +13,8 @@
 //     counter was 1-based, so question 1 showed nothing and question 10 never
 //     filled. Question N lights N segments — both ends of the set pinned.
 //   - Pause: it used to exist only on the confirmation sheet. It has to freeze
-//     a running think window and an open mic, and resume has to hand back a
-//     FULL window (a pause that shortens the clock is not a pause).
+//     a running think window and an open mic (how play continues them, #200,
+//     is pinned in QuizPauseResumeTests).
 //   - Evaluating: the sheet stays up with its own button spinning, and every
 //     other control on it goes dead — a live Re-record over an in-flight
 //     submission is the race #133 V14 already had to fix once.
@@ -275,36 +275,18 @@ struct QuizToolbarPauseTests {
     /// a junction — and freezing it must also take the mic down, or "paused" is
     /// still listening.
     @Test("pause freezes a running think window and takes the mic down")
-    func pauseFromThinkingFreezesTheWindow() {
+    func pauseFromThinkingFreezesTheWindow() async {
         let vm = makeQuestionViewModel(question: Question.previewMCQ)
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
-        vm.quizTimersController.startAnswerTimer()
-        #expect(vm.answerTimerCountdown == 30, "precondition: the window is running")
+        vm.settings.thinkingTime = 30
+        vm.quizTimersController.startThinkingTimeCountdown()
+        await pumpUntil({ vm.thinkingTimeCountdown == 30 }, "precondition: the window is running")
 
         vm.togglePause()
 
         #expect(vm.isPaused)
-        #expect(vm.answerTimerCountdown == 0, "a pause that leaves the clock running is not a pause")
+        #expect(vm.thinkingTimeCountdown == 0, "a pause that leaves the clock running is not a pause")
+        #expect(vm.taskBag.contains(.thinkingTime) == false, "a pause that leaves the clock running is not a pause")
         #expect(vm.voiceCommandCoordinator.mayCaptureAudio == false, "the mic comes down with the pause")
-    }
-
-    /// Resume hands back a FULL window, never the remainder — the same rule the
-    /// confirmation sheet's pause already followed (#171 Track D).
-    @Test("resume re-arms the full window")
-    func resumeReArmsAFullWindow() {
-        let vm = makeQuestionViewModel(question: Question.previewMCQ)
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
-        vm.quizTimersController.startAnswerTimer()
-        vm.togglePause()
-        vm.answerTimerCountdown = 0
-
-        vm.togglePause()
-
-        #expect(vm.isPaused == false)
-        #expect(vm.answerTimerCountdown == 30, "resume must re-arm the whole window, not the remainder")
-        vm.quizTimersController.cancelAnswerTimer()
     }
 
     /// An open mic cannot simply be frozen — the stream is not resumable and the
@@ -330,18 +312,13 @@ struct QuizToolbarPauseTests {
     @Test("a late re-arm cannot restart the window while the quiz is paused")
     func pausedQuizRefusesToReArm() {
         let vm = makeQuestionViewModel(question: Question.preview)
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
+        vm.settings.thinkingTime = 5
         vm.togglePause()
 
         // Exactly what the TTS-completion tail calls on the question screen.
         vm.startRecordingOrTimer()
-        #expect(vm.answerTimerCountdown == 0, "a paused quiz must not re-arm the answer window")
-
-        vm.settings.autoRecordEnabled = true
-        vm.settings.thinkingTime = 5
-        vm.startRecordingOrTimer()
-        #expect(vm.thinkingTimeCountdown == 0, "…nor the thinking window")
+        #expect(vm.thinkingTimeCountdown == 0, "a paused quiz must not re-arm the think window")
+        #expect(vm.taskBag.contains(.thinkingTime) == false)
     }
 
     /// Finding 2 of the #173 review: pausing mid-recording LANDS on the
@@ -600,9 +577,8 @@ struct MCQListenBarPlacementTests {
     @Test("the MCQ bar carries the ✕; a bar without a dismiss handler does not")
     func dismissAffordanceIsOptIn() async throws {
         let vm = makeQuestionViewModel(question: Question.previewMCQ)
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
-        vm.answerTimerCountdown = 12
+        vm.settings.thinkingTime = 30
+        vm.thinkingTimeCountdown = 12
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()

@@ -317,7 +317,7 @@ reaches the result. A mishearing is therefore always correctable before it is gr
 **Preconditions**
 - Launch with `--ui-test --ui-test-mcq`
 - `Question.previewMCQ` is loaded: "What is the largest planet?" options a=Mars b=Jupiter c=Saturn d=Neptune
-- `answerTimeLimit = 1` (seeded by UITestSupport for `--ui-test-mcq`): recording auto-starts ~1-2s
+- `thinkingTime = 1` (seeded by UITestSupport for `--ui-test-mcq`): recording auto-starts ~1-2s
   after question audio (no mic button in the redesigned UI)
 - `UITestSupport` seeds `autoConfirmEnabled = false` under `--ui-test`, so the sheet waits for an
   explicit Confirm here. In a real build the 5 s auto-confirm (#171 Track F) would fire instead —

@@ -46,8 +46,7 @@ private func entry(
 private func makeRecapViewModel() async -> QuizViewModel {
     let (vm, _) = Fixtures.makeViewModelWithNetwork()
     vm.settings.answerRevealMode = .endOfSet
-    vm.settings.autoRecordEnabled = false // recap must not auto-narrate in tests
-    vm.settings.answerTimeLimit = 0
+    vm.autoReadsRecap = false // recap must not auto-narrate in tests
     vm.currentSession = Fixtures.makeQuizSession()
 
     for (result, answer) in [

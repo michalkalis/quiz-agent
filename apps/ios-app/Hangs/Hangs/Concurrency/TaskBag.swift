@@ -16,7 +16,6 @@ import Foundation
 enum TaskKey: Hashable, Sendable {
     case autoAdvance
     case voiceSubmission
-    case answerTimer
     case autoStopRecording
     case recordingHardCap // #173: hidden dead-air cap under the visible window
     case silenceDetection

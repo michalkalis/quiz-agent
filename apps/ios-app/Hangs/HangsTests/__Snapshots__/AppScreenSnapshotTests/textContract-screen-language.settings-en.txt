@@ -11,8 +11,6 @@ Status
 Ready
 Status
 Ready
-Auto-record answers
-
 Auto-confirm answers
 
 Microphone
@@ -65,16 +63,6 @@ Auto-advance delay
 8s
 Auto-advance delay
 8s
-Off
-15s
-20s
-30s
-45s
-60s
-Answer time limit
-30s
-Answer time limit
-30s
 After each question
 At the end of the quiz
 Answer reveal
@@ -137,7 +125,6 @@ Create a pack
 settings.voiceCommands
 settings.voiceHints
 settings-voice-commands-status
-settings.autoRecord
 settings.autoConfirm
 settings-microphone-row
 settings-call-mode-toggle
@@ -165,13 +152,6 @@ settings.autoAdvance.5
 settings.autoAdvance.8
 settings.autoAdvance.10
 settings.autoAdvance.15
-settings-answer-limit-menu
-settings.answerLimit.0
-settings.answerLimit.15
-settings.answerLimit.20
-settings.answerLimit.30
-settings.answerLimit.45
-settings.answerLimit.60
 settings-answer-reveal-menu
 settings.answerReveal.per_question
 settings.answerReveal.end_of_set

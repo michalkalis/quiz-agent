@@ -65,7 +65,7 @@ extension AppScreen {
     private static func setRecap() async -> AnyView {
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.settings.answerRevealMode = .endOfSet
-        vm.settings.autoRecordEnabled = false // the recap must not narrate in a snapshot
+        vm.autoReadsRecap = false // the recap must not narrate in a snapshot
         await fillLedger(vm, rounds: [
             (1, "What is the capital of France?", "Paris", .correct, "Paris", "geography-world"),
             (2, "Which river flows through Budapest?", "Danube", .incorrect, "The Vltava", "geography-world"),
@@ -84,9 +84,7 @@ extension AppScreen {
     /// Fills the recap ledger through the real capture path (`handleQuizResponse`).
     private static func fillLedger(_ vm: QuizViewModel, rounds: [Round]) async {
         let reveal = vm.settings.answerRevealMode
-        let autoRecord = vm.settings.autoRecordEnabled
         vm.settings.answerRevealMode = .endOfSet
-        vm.settings.autoRecordEnabled = false
         vm.currentSession = Fixtures.makeQuizSession()
         for round in rounds {
             let question = recapQuestion(round.number, round.text, answer: round.answer, category: round.category)
@@ -114,7 +112,6 @@ extension AppScreen {
         }
         vm.taskBag.cancelAll()
         vm.settings.answerRevealMode = reveal
-        vm.settings.autoRecordEnabled = autoRecord
     }
 
     private static func recapQuestion(_ number: Int, _ text: String, answer: String, category: String) -> Question {

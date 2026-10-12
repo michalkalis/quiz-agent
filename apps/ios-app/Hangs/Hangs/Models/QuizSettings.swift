@@ -55,18 +55,18 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Auto-advance delay in seconds for result screen
     var autoAdvanceDelay: Int
 
-    /// Answer time limit in seconds (0 = Off). MCQ: auto-skips on expiry. Voice: auto-starts recording.
-    var answerTimeLimit: Int
+    /// Retired with the "Answer time limit" setting (#200 — auto-record is
+    /// always on, so the think window is the only answer window). Nothing
+    /// reads it; it is still WRITTEN because a 1.0 build's decoder requires
+    /// the key, and a tester going back to a 1.0 TestFlight build would
+    /// otherwise lose every setting.
+    private var answerTimeLimit = 30
 
     /// Thinking time in seconds before auto-recording starts (0 = immediate 500ms delay)
     var thinkingTime: Int
 
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
-
-    /// Whether auto-record is enabled (auto-start recording after TTS + silence detection to auto-stop)
-    /// Requires iOS 26+ for SpeechDetector VAD
-    var autoRecordEnabled: Bool
 
     /// Whether to auto-confirm transcribed answers after a 2s countdown
     /// When enabled, skips the confirmation modal — say "re-record" to cancel
@@ -123,10 +123,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories: [String] = [],
         difficulty: String,
         autoAdvanceDelay: Int,
-        answerTimeLimit: Int,
         thinkingTime: Int = 10,
         preferredInputDeviceId: String?,
-        autoRecordEnabled: Bool = true,
         autoConfirmEnabled: Bool = true,
         showConfirmSheet: Bool = true,
         isMuted: Bool = false,
@@ -143,10 +141,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.categories = categories
         self.difficulty = difficulty
         self.autoAdvanceDelay = autoAdvanceDelay
-        self.answerTimeLimit = answerTimeLimit
         self.thinkingTime = thinkingTime
         self.preferredInputDeviceId = preferredInputDeviceId
-        self.autoRecordEnabled = autoRecordEnabled
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
         self.isMuted = isMuted
@@ -168,10 +164,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories: [],
         difficulty: "medium",
         autoAdvanceDelay: 8,
-        answerTimeLimit: 30,
         thinkingTime: 10,
         preferredInputDeviceId: nil,
-        autoRecordEnabled: true,
         autoConfirmEnabled: true,
         showConfirmSheet: true,
         isMuted: false,
@@ -184,8 +178,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Custom decoder tolerates missing keys so new fields can be added without
     /// breaking previously-persisted settings. Also silently ignores removed
-    /// keys like `bargeInEnabled` from older builds — Codable drops unrecognized
-    /// keys automatically, no guard needed. (`voiceCommandsEnabled` was dropped
+    /// keys like `bargeInEnabled` or `autoRecordEnabled` (#200) from older
+    /// builds — Codable drops unrecognized keys automatically, no guard needed. (`voiceCommandsEnabled` was dropped
     /// once and is re-introduced in #96 P2 as the master command toggle.)
     /// Pre-multi-select persisted blobs carry a single `category` string.
     private enum LegacyKeys: String, CodingKey {
@@ -213,10 +207,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories = categories.filter { Self.categoryOptions.contains($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
-        answerTimeLimit = try container.decode(Int.self, forKey: .answerTimeLimit)
         thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 10
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
-        autoRecordEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoRecordEnabled) ?? true
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
@@ -241,9 +233,6 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Valid auto-advance delay options (seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
-
-    /// Valid answer time limit options (seconds, 0 = Off)
-    static let answerTimeLimitOptions = [0, 15, 20, 30, 45, 60]
 
     /// Valid thinking time options (seconds, 0 = immediate recording)
     static let thinkingTimeOptions = [0, 10, 15, 30, 45, 60, 90, 120]
@@ -305,7 +294,6 @@ struct QuizSettings: Codable, Equatable, Sendable {
             categories: ["science-nature"],
             difficulty: "hard",
             autoAdvanceDelay: 5,
-            answerTimeLimit: 45,
             preferredInputDeviceId: nil
         )
     }

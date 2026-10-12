@@ -300,7 +300,7 @@ struct QuestionViewListenBarPresenceTests {
     func wordsSurviveTheFifthQuiz(question: Question) async throws {
         let vm = await makeArmedViewModel(question: question)
         vm.quizStats.totalQuizzes = 12 // well past the retired gate
-        vm.answerTimerCountdown = 12
+        vm.thinkingTimeCountdown = 8
         #expect(vm.showsVoiceHints, "the words must not expire with use")
 
         let view = QuestionView(viewModel: vm)
@@ -319,7 +319,7 @@ struct QuestionViewListenBarPresenceTests {
     @Test("the open question's Start · Type · Skip row stays one row with the chips on screen")
     func openQuestionFooterStaysOneRow() async throws {
         let vm = await makeArmedViewModel(question: .preview)
-        vm.answerTimerCountdown = 12
+        vm.thinkingTimeCountdown = 8
 
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
@@ -345,7 +345,7 @@ struct QuestionViewListenBarPresenceTests {
     @Test("the MCQ skip chip stays pinned with the chips on screen")
     func mcqFooterStaysPinned() async throws {
         let vm = await makeArmedViewModel(question: .previewMCQLongOptions)
-        vm.answerTimerCountdown = 12
+        vm.thinkingTimeCountdown = 8
 
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {

@@ -265,7 +265,6 @@ final class RecordingCoordinator: ObservableObject {
     /// #189 M3: the quiz is paused — the empty-answer retry never reopens the
     /// mic under a pause (see RecordingCoordinator+EmptyAnswer).
     let isPaused: @MainActor () -> Bool
-    let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
     /// Test seam (#173): the two window lengths this coordinator arms —
     /// `speechStartWindow` is the visible "time to start speaking",
@@ -336,7 +335,6 @@ final class RecordingCoordinator: ObservableObject {
         cancelAutoConfirm: @escaping @MainActor () -> Void,
         clearPause: @escaping @MainActor () -> Void,
         isPaused: @escaping @MainActor () -> Bool,
-        cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval, TimeInterval) -> Void,
         armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
@@ -382,7 +380,6 @@ final class RecordingCoordinator: ObservableObject {
         self.cancelAutoConfirm = cancelAutoConfirm
         self.clearPause = clearPause
         self.isPaused = isPaused
-        self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.armRecordingDeadAirCap = armRecordingDeadAirCap

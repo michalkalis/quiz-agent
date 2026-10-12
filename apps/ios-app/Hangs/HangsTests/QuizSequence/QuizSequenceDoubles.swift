@@ -404,13 +404,8 @@ final class SequenceAudio: AudioServiceProtocol {
         nextId += 1
         let id = nextId
         parked.register(id)
-        let clock = clock
         let length = clip == .question && questionClipsEndOnCue ? .seconds(3600) : Self.length(of: clip)
-        let timer = Task { [weak self] in
-            guard (try? await clock.sleep(for: length)) != nil else { return }
-            self?.finish(id)
-        }
-        playing = (id, clip, questionId, timer)
+        playing = (id, clip, questionId, endTimer(id, after: length))
         defer { activity += 1 }
         do {
             return try await parked.park(id)
@@ -418,6 +413,7 @@ final class SequenceAudio: AudioServiceProtocol {
             // Still "playing" = nobody stopped it: the awaiting task was cancelled.
             if let current = playing, current.id == id {
                 playing = nil
+                heldRemaining = nil
                 current.timer.cancel()
                 onCutShort(current.clip, .callerCancelled, current.questionId)
             }
@@ -425,9 +421,42 @@ final class SequenceAudio: AudioServiceProtocol {
         }
     }
 
+    /// The clip ends when the test clock has run `length` — unless a pause
+    /// holds it first (#200).
+    private func endTimer(_ id: Int, after length: Duration) -> Task<Void, Never> {
+        let clock = clock
+        playingEndsAt = clock.now.advanced(by: length)
+        return Task { [weak self] in
+            guard (try? await clock.sleep(for: length)) != nil else { return }
+            self?.finish(id)
+        }
+    }
+
+    /// #200: what a clip held by a pause still had to play.
+    private var heldRemaining: Duration?
+    private var playingEndsAt: AnyClock<Duration>.Instant?
+
+    /// Like the real service: the clip stops where it is and its caller keeps
+    /// waiting; `resumePlayback()` plays the rest.
+    func pausePlayback() -> Bool {
+        guard let current = playing, heldRemaining == nil else { return false }
+        current.timer.cancel()
+        heldRemaining = max(.zero, clock.now.duration(to: playingEndsAt ?? clock.now))
+        return true
+    }
+
+    func resumePlayback() -> Bool {
+        guard let remaining = heldRemaining else { return false }
+        heldRemaining = nil
+        guard let current = playing else { return false }
+        playing = (current.id, current.clip, current.questionId, endTimer(current.id, after: remaining))
+        return true
+    }
+
     private func finish(_ id: Int) {
         guard let current = playing, current.id == id else { return }
         playing = nil
+        heldRemaining = nil
         if let questionId = current.questionId { completedQuestionClips.append(questionId) }
         parked.resolve(id, .success(4))
     }
@@ -436,6 +465,7 @@ final class SequenceAudio: AudioServiceProtocol {
         guard let current = playing else { return }
         activity += 1
         playing = nil
+        heldRemaining = nil
         current.timer.cancel()
         parked.resolve(current.id, .failure(CancellationError()))
         onCutShort(current.clip, cut, current.questionId)

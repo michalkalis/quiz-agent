@@ -99,7 +99,6 @@ struct QuizAudioSessionStabilityTests {
         #expect(audio.playOpusCallCount == 1, "the first question is read exactly once")
 
         vm.quizTimersController.cancelThinkingTime()
-        vm.quizTimersController.cancelAnswerTimer()
     }
 
     @Test("the audio session is configured once and never touched again during the quiz")
@@ -109,7 +108,6 @@ struct QuizAudioSessionStabilityTests {
         await vm.startNewQuiz() // question read
         #expect(audio.setupAudioSessionCallCount == 1)
         vm.quizTimersController.cancelThinkingTime()
-        vm.quizTimersController.cancelAnswerTimer()
 
         // Listening for commands on the question screen.
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()

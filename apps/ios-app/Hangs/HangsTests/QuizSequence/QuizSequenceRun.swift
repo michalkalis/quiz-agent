@@ -95,7 +95,6 @@ final class QuizSequenceRun {
         let store = MockPersistenceStore()
         var settings = QuizSettings.default
         settings.numberOfQuestions = config.questionCount
-        settings.autoRecordEnabled = config.autoRecord
         settings.thinkingTime = config.thinkingTime
         settings.autoConfirmEnabled = config.autoConfirm
         settings.isMuted = config.muted

@@ -82,6 +82,11 @@ final class AudioDeviceState: ObservableObject {
     /// clear the flag or re-arm the listener under the newer read.
     var questionReadOutGeneration = 0
 
+    /// #200: the read-out (its generation) a quiz pause is holding, nil when
+    /// none. Keyed by generation so a hold the pause never released (answering
+    /// also ends a pause) can never silence a later read.
+    var heldQuestionReadOut: Int?
+
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
     let settings: @MainActor () -> QuizSettings
@@ -127,7 +132,6 @@ final class AudioDeviceState: ObservableObject {
     let startCommandConsumer: @MainActor () -> Void
     let stopCommandConsumer: @MainActor () -> Void
     let startThinkingTimeCountdown: @MainActor () -> Void
-    let startAnswerTimer: @MainActor () -> Void
 
     // MARK: - Initialization
 
@@ -158,8 +162,7 @@ final class AudioDeviceState: ObservableObject {
         onBargeIn: @escaping @MainActor () async -> Void,
         startCommandConsumer: @escaping @MainActor () -> Void,
         stopCommandConsumer: @escaping @MainActor () -> Void,
-        startThinkingTimeCountdown: @escaping @MainActor () -> Void,
-        startAnswerTimer: @escaping @MainActor () -> Void
+        startThinkingTimeCountdown: @escaping @MainActor () -> Void
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -188,7 +191,6 @@ final class AudioDeviceState: ObservableObject {
         self.startCommandConsumer = startCommandConsumer
         self.stopCommandConsumer = stopCommandConsumer
         self.startThinkingTimeCountdown = startThinkingTimeCountdown
-        self.startAnswerTimer = startAnswerTimer
     }
 
     /// T7 unified reset model: clears this child's own scoped device-UI state.
@@ -196,6 +198,7 @@ final class AudioDeviceState: ObservableObject {
     /// T7 (S6b) wires the per-child `reset()` calls.
     func reset() {
         showingMicrophonePicker = false
+        heldQuestionReadOut = nil
     }
 
     // MARK: - Silence Detection Choke Points

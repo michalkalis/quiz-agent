@@ -89,7 +89,6 @@ struct PersistenceStoreSessionTests {
             categories: ["science-nature"],
             difficulty: "hard",
             autoAdvanceDelay: 5,
-            answerTimeLimit: 45,
             preferredInputDeviceId: "device_123"
         )
 

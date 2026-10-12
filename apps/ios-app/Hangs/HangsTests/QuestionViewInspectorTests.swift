@@ -95,7 +95,7 @@ struct QuestionViewMCQInspectorTests {
     @Test("MCQ body shows Skip button while the countdown is still running")
     func mcqShowsSkipButton() async throws {
         let vm = makeMCQViewModel()
-        vm.answerTimerCountdown = 12 // the countdown is still running
+        vm.thinkingTimeCountdown = 8 // the countdown is still running
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -128,9 +128,8 @@ struct QuestionViewMCQOptionVisibilityTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Question.previewMCQLong
         vm.quizState = .askingQuestion
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
-        vm.answerTimerCountdown = 12 // the answer countdown is still running
+        vm.settings.thinkingTime = 30
+        vm.thinkingTimeCountdown = 12 // the think countdown is still running
         return (vm, network)
     }
 
@@ -172,7 +171,7 @@ struct QuestionViewMCQOptionVisibilityTests {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
             // The think state counts the running window down (12 s left in the
-            // fixture's legacy answer window — the bar covers both timer paths)…
+            // fixture's think window)…
             let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             #expect(bar.findAll(ViewType.Text.self).contains { ((try? $0.string()) ?? "").contains("12") })
             // …and never claims a live mic during the think phase.
@@ -182,7 +181,7 @@ struct QuestionViewMCQOptionVisibilityTests {
         }
 
         vm.quizState = .recording
-        vm.answerTimerCountdown = 0
+        vm.thinkingTimeCountdown = 0
         let recording = QuestionView(viewModel: vm)
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
@@ -759,9 +758,8 @@ struct QuestionViewMCQPinnedFooterTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Question.previewMCQLongOptions
         vm.quizState = .askingQuestion
-        vm.settings.autoRecordEnabled = false
-        vm.settings.answerTimeLimit = 30
-        vm.answerTimerCountdown = 12
+        vm.settings.thinkingTime = 30
+        vm.thinkingTimeCountdown = 12
         return vm
     }
 

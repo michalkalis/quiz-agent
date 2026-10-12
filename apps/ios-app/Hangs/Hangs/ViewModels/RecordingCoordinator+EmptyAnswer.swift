@@ -90,7 +90,6 @@ extension RecordingCoordinator {
     /// a stale question-TTS tail cannot arm a think/answer countdown on top.
     private func retryAfterEmptyAnswer(prompt: SpokenPrompt, owner: AttemptID) {
         cancelAutoConfirm()
-        cancelAnswerTimer()
         cancelThinkingTime()
         setIsRerecording(true)
 

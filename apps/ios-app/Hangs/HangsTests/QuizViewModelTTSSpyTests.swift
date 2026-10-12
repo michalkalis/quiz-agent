@@ -58,9 +58,9 @@ struct QuizViewModelTTSSpyTests {
         #expect(mockAudio.playOpusCallCount == 1)
         #expect(mockAudio.lastPlayedData == Data("opus-bytes".utf8))
 
-        // Stop the answer-timer scheduled in the post-TTS branch so it can't fire
-        // mid-suite (silenceDetectionService is nil → legacy startAnswerTimer path).
-        viewModel.quizTimersController.cancelAnswerTimer()
+        // Stop the think window scheduled in the post-TTS branch so it can't fire
+        // mid-suite.
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 
     @Test("a failed TTS playback is retried once, swallowed, and re-attempted on the next question")
@@ -75,13 +75,13 @@ struct QuizViewModelTTSSpyTests {
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q1.mp3")
         #expect(mockAudio.playOpusCallCount == 2, "a silent question must be retried once before we give up")
         #expect(viewModel.quizState == .askingQuestion)
-        viewModel.quizTimersController.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelThinkingTime()
 
         // Next question: TTS is attempted again (it is not disabled by a prior fail).
         viewModel.quizState = .askingQuestion
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q2.mp3")
         #expect(mockAudio.playOpusCallCount == 4)
-        viewModel.quizTimersController.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 
     @Test("a successful read is played exactly once — the retry is failure-only")
@@ -92,6 +92,6 @@ struct QuizViewModelTTSSpyTests {
 
         // The #171 retry must never double-speak a question that was heard.
         #expect(mockAudio.playOpusCallCount == 1)
-        viewModel.quizTimersController.cancelAnswerTimer()
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 }

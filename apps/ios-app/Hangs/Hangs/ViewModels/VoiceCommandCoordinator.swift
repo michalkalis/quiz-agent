@@ -272,7 +272,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// #171 Track D / #173: spoken "pause"/"pauza" — on the question screen and
     /// on the confirmation sheet alike.
     let pauseQuiz: @MainActor () -> Void
-    let cancelAnswerTimer: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
     /// #188 G1/G3: the error / set-end screen has spoken its line and may listen.
     let quizEndCommandsArmed: @MainActor () -> Bool
@@ -320,7 +319,6 @@ final class VoiceCommandCoordinator: ObservableObject {
         noteConfirmationUtteranceEnded: @escaping @MainActor (ConfirmationUtterance) -> Void,
         continueToNext: @escaping @MainActor () -> Void,
         pauseQuiz: @escaping @MainActor () -> Void,
-        cancelAnswerTimer: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         quizEndCommandsArmed: @escaping @MainActor () -> Bool,
         retryFromError: @escaping @MainActor () async -> Void,
@@ -354,7 +352,6 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.noteConfirmationUtteranceEnded = noteConfirmationUtteranceEnded
         self.continueToNext = continueToNext
         self.pauseQuiz = pauseQuiz
-        self.cancelAnswerTimer = cancelAnswerTimer
         self.cancelThinkingTime = cancelThinkingTime
         self.quizEndCommandsArmed = quizEndCommandsArmed
         self.retryFromError = retryFromError
@@ -421,7 +418,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// `duration` is injectable so tests don't wait the full 2.5 s.
     func beginSkipUndoWindow(duration: TimeInterval = UndoWindow.defaultDuration) {
         guard quizState() == .askingQuestion, pendingSkipWindow == nil else { return }
-        cancelAnswerTimer()
         cancelThinkingTime()
         pendingSkipWindow = UndoWindow(duration: duration)
         emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened

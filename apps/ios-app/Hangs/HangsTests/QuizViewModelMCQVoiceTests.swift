@@ -161,22 +161,19 @@ struct QuizViewModelMCQVoiceTests {
     // MARK: - Test 5: guard removal — recording no longer short-circuited for MCQ
 
     /// Regression: re-introducing any `isMultipleChoice != true` guard would make
-    /// `startRecordingOrTimer` bail for MCQ, so the answer timer never starts and
-    /// the question can't be answered by voice. With the guard removed it starts
-    /// the answer timer (autoRecordEnabled off → timer, not auto-record).
-    @Test("startRecordingOrTimer starts the answer timer for an MCQ question")
+    /// `startRecordingOrTimer` bail for MCQ, so the think window never starts,
+    /// auto-record never opens the mic and the question can't be answered by
+    /// voice. With the guard removed it starts the think window.
+    @Test("startRecordingOrTimer starts the think window for an MCQ question")
     func mcqRecordingNotShortCircuited() async throws {
         let (viewModel, _) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = makeMCQQuestion()
         viewModel.quizState = .askingQuestion
-        // #115: the service is always present now, so pin the legacy timer
-        // branch explicitly — the guard-regression this test protects against
-        // would zero the countdown in either branch.
-        viewModel.settings.autoRecordEnabled = false
 
         viewModel.startRecordingOrTimer()
 
-        #expect(viewModel.answerTimerCountdown > 0)
+        await pumpUntil({ viewModel.thinkingTimeCountdown > 0 }, "the MCQ question got no think window")
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 }

@@ -205,6 +205,41 @@ def answerability_check() -> bool:
     return _default_on(os.getenv("ANSWERABILITY_CHECK"))
 
 
+def casual_player_gate() -> str:
+    """#201: the "casual player" check in ScoringStage — ``off`` / ``shadow`` / ``on``.
+
+    ``CASUAL_PLAYER_GATE=1`` drops questions a casual adult in the player's
+    country has no real chance at (or whose stem gives the answer away);
+    ``shadow`` only records the verdict. Default ``off`` until the founder's
+    blind comparison (issue-201 201.4) shows no quality loss.
+    """
+    raw = (os.getenv("CASUAL_PLAYER_GATE") or "").strip().lower()
+    if raw == "shadow":
+        return "shadow"
+    return "on" if raw in _TRUTHY else "off"
+
+
+def casual_player_applies(category: str | None) -> bool:
+    """#201: whether the casual-player check covers ``category``.
+
+    One switch for both readers — ScoringStage (runs the check) and the
+    answerability checker (skips its open-text ``wrong_answer`` drop, which a
+    pre-cutoff blind model fails on every fair post-cutoff question).
+    ``CASUAL_PLAYER_CATEGORIES`` is a comma list, default ``entertainment``.
+    """
+    if casual_player_gate() == "off" or not category:
+        return False
+    raw = os.getenv("CASUAL_PLAYER_CATEGORIES") or "entertainment"
+    return category.strip().lower() in {
+        c.strip().lower() for c in raw.split(",") if c.strip()
+    }
+
+
+def casual_player_floor() -> int:
+    """#201: minimum estimated % of casual adults who'd get it (default 25)."""
+    return _int_env("CASUAL_PLAYER_FLOOR", 25, minimum=0)
+
+
 def overgen_multiplier() -> int:
     """#135 D6 (T5): best-of-N over-generation factor.
 

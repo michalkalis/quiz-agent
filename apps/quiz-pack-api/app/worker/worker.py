@@ -136,8 +136,11 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     # #135 D10 — round-trip answerability checker (cheap blind-player proxy);
     # stage inclusion is flag-gated in tasks._build_stages.
     from app.verification.answerability import AnswerabilityChecker
+    from app.verification.casual_player import CasualPlayerChecker
 
     ctx["answerability_checker"] = AnswerabilityChecker()
+    # #201 — runs only where CASUAL_PLAYER_GATE / _CATEGORIES say so.
+    ctx["casual_player_checker"] = CasualPlayerChecker()
     # #160 — answer-blind auditor of the logical_puzzle routing marker (P4:
     # no model-controlled routing); same mid-class model role as answerability.
     from app.verification.shape_classifier import ShapeClassifier

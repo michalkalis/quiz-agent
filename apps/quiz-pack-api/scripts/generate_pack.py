@@ -333,6 +333,7 @@ def _build_stages(
     from app.sourcing.fact_sourcer import FactSourcer
     from app.sourcing.topic_pool import TopicPool
     from app.verification.answerability import AnswerabilityChecker
+    from app.verification.casual_player import CasualPlayerChecker
     from app.verification.fact_verifier import FactVerifier
     from app.verification.logical_verifier import LogicalConsistencyVerifier
     from app.verification.shape_classifier import ShapeClassifier
@@ -381,7 +382,12 @@ def _build_stages(
     verification = VerificationStage(FactVerifier(), LogicalConsistencyVerifier())
     # #166 D21b parity with `tasks._build_stages`: judges off means
     # `ScoringStage(None)` — deterministic craft + distractor gates still run.
-    scoring = ScoringStage(MultiModelScorer() if judges else None)
+    # #201 — the casual-player checker is always wired; the flag decides per
+    # category whether it runs (worker parity: `tasks._build_stages`).
+    scoring = ScoringStage(
+        MultiModelScorer() if judges else None,
+        casual_checker=CasualPlayerChecker(),
+    )
     # #170 D6 — one strictness object for both stages (the spent-fact filter
     # and the dedup content check must read the same profile).
     strictness = build_strictness()

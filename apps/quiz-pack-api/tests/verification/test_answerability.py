@@ -174,3 +174,52 @@ async def test_english_answers_get_no_stem_tolerance() -> None:
     question = _question(correct_answer="Mars rover")
     checker = _checker_returning('{"answer": "Marseille rovers", "gave_up": false, "issue": null}')
     assert (await checker.check(question)).passed is False
+
+
+# --- #201 casual-player leniency ---------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_casual_gate_skips_text_miss_for_covered_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pre-cutoff blind model cannot know a fair 2026 fact; with the #201
+    check covering entertainment, a text miss is no longer a drop."""
+    monkeypatch.setenv("CASUAL_PLAYER_GATE", "shadow")
+    checker = _checker_returning('{"answer": "cinnamon", "gave_up": false, "issue": null}')
+
+    result = await checker.check(_question(category="entertainment"))
+
+    assert result.passed
+
+
+@pytest.mark.asyncio
+async def test_casual_gate_keeps_mcq_mismatch_drop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The MCQ mismatch drop is the second-defensible-option guard — it must
+    survive the leniency, or the 3-option MCQs #201 adds go unguarded."""
+    monkeypatch.setenv("CASUAL_PLAYER_GATE", "1")
+    checker = _checker_returning('{"answer": "b", "gave_up": false, "issue": null}')
+
+    result = await checker.check(
+        _question(
+            category="entertainment",
+            possible_answers={"a": "Nutmeg", "b": "Cinnamon", "c": "Pepper"},
+        )
+    )
+
+    assert not result.passed
+    assert result.reason == "wrong_answer"
+
+
+@pytest.mark.asyncio
+async def test_casual_gate_off_keeps_text_miss_drop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("CASUAL_PLAYER_GATE", raising=False)
+    checker = _checker_returning('{"answer": "cinnamon", "gave_up": false, "issue": null}')
+
+    result = await checker.check(_question(category="entertainment"))
+
+    assert result.reason == "wrong_answer"

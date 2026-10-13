@@ -180,6 +180,11 @@ ANSWERABILITY = "deepseek-v4-flash"
 # cheap FACTCHECK-class model is enough and stays family-disjoint from the
 # generator. Session tier: sonnet (via the gpt-5-mini alias below).
 DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
+# #201: "casual player" check — estimates how many ordinary adults in the
+# player's country would get an entertainment question. Sonnet, not the
+# flash-class ANSWERABILITY proxy: it must know small-market (sk/cs) pop
+# culture, which haiku barely does (#195 run notes).
+CASUAL_PLAYER = _role("LLM_ROLE_CASUAL_PLAYER", "claude-sonnet-5-5")
 EMBED = "text-embedding-3-small"
 # #196 track 196.4 — offline quiz-pack-api helper roles. Each has its own env
 # override so one secret rolls a single role back (topic planner + expiry used

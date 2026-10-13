@@ -51,6 +51,7 @@ Both default off until validated against the founder's 36-rating ground truth.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import sentry_sdk
@@ -70,8 +71,16 @@ from app.scoring.multi_model_scorer import (
     compute_distractor_quality,
     is_judge_verdict,
 )
+from app.verification.casual_player import (
+    CasualPlayerChecker,
+    CasualVerdict,
+    stamp_verdict,
+)
 
 logger = logging.getLogger(__name__)
+
+# #201: in-flight bound for the casual-player calls (same as answerability).
+_MAX_CONCURRENT_CASUAL_CHECKS = 8
 
 
 class JudgePanelUnavailable(RuntimeError):
@@ -176,8 +185,46 @@ class ScoringStage:
 
     name = "scoring"
 
-    def __init__(self, scorer: MultiModelScorer | None) -> None:
+    def __init__(
+        self,
+        scorer: MultiModelScorer | None,
+        casual_checker: CasualPlayerChecker | None = None,
+    ) -> None:
         self._scorer = scorer
+        # #201: optional "casual player" check, gated per category by
+        # CASUAL_PLAYER_GATE / CASUAL_PLAYER_CATEGORIES. Lives here (not in
+        # its own stage) because scoring runs after verification attaches the
+        # direct-mode source, and TopUpStage reuses this same instance.
+        self._casual_checker = casual_checker
+
+    async def _casual_verdicts(self, questions: list) -> dict[str, CasualVerdict]:
+        """Verdicts for the questions the check covers; failures are omitted.
+
+        Fail-open inside a fail-closed stage: a checker error keeps the
+        question and never counts toward ``judge_failures``.
+        """
+        if self._casual_checker is None:
+            return {}
+        covered = [
+            q for q in questions if feature_flags.casual_player_applies(q.category)
+        ]
+        if not covered:
+            return {}
+        floor = feature_flags.casual_player_floor()
+        semaphore = asyncio.Semaphore(_MAX_CONCURRENT_CASUAL_CHECKS)
+
+        async def _one(q):
+            async with semaphore:
+                return await self._casual_checker.check(q, floor)
+
+        results = await asyncio.gather(
+            *(_one(q) for q in covered), return_exceptions=True
+        )
+        return {
+            q.id: r
+            for q, r in zip(covered, results)
+            if isinstance(r, CasualVerdict) and r.pct is not None
+        }
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         if not ctx.questions:
@@ -223,6 +270,9 @@ class ScoringStage:
                 tf_items.append((q.id, key))
         tf_excess = set(craft_guards.tf_imbalance_excess(tf_items))
 
+        casual_mode = feature_flags.casual_player_gate()
+        casual_verdicts = await self._casual_verdicts(ctx.questions)
+
         kept: list = []
         dropped = 0
         veto_flagged = 0
@@ -230,6 +280,8 @@ class ScoringStage:
         craft_flagged = 0
         craft_dropped = 0
         undated_flagged = 0
+        casual_flagged = 0
+        casual_dropped = 0
         judge_failures = 0
         for q in ctx.questions:
             model_scores = scores_by_id.get(q.id, [])
@@ -319,6 +371,29 @@ class ScoringStage:
                         veto_reason,
                     )
 
+            verdict = casual_verdicts.get(q.id)
+            if verdict is not None:
+                stamp_verdict(q, verdict, casual_mode)
+                if verdict.drop_reason is not None:
+                    if casual_mode == "on":
+                        casual_dropped += 1
+                        logger.warning(
+                            "ScoringStage casual-player dropped id=%s reason=%s "
+                            "pct=%s",
+                            q.id,
+                            verdict.drop_reason,
+                            verdict.pct,
+                        )
+                        continue
+                    casual_flagged += 1
+                    logger.warning(
+                        "ScoringStage casual-player would-drop id=%s reason=%s "
+                        "pct=%s (shadow mode: kept)",
+                        q.id,
+                        verdict.drop_reason,
+                        verdict.pct,
+                    )
+
             if not judges_on:
                 # #166: judge score gate off — the deterministic distractor
                 # check (in judge mode attached to every panel score dict,
@@ -373,6 +448,8 @@ class ScoringStage:
             "craft_flagged": craft_flagged,
             "craft_dropped": craft_dropped,
             "undated_shadow_flagged": undated_flagged,
+            "casual_flagged": casual_flagged,
+            "casual_dropped": casual_dropped,
             "judge_failures": judge_failures,
         }
         if judge_failures:

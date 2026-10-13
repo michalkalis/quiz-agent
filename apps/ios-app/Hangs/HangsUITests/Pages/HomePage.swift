@@ -29,6 +29,19 @@ struct HomePage {
         app.staticTexts["home.myPacks.progress"].firstMatch
     }
 
+    /// The "Create your own pack" row closes the packs card, below the deck
+    /// and the pills (Home order since 2026-10-13), so on a phone it starts
+    /// off screen: scroll Home until it is there.
+    func revealCreatePack(maxSwipes: Int = 3) -> XCUIElement {
+        let row = createPackButton
+        var swipes = 0
+        while !row.waitForExistence(timeout: 2), swipes < maxSwipes {
+            app.scrollViews.firstMatch.swipeUp()
+            swipes += 1
+        }
+        return row
+    }
+
     /// Tap the Start Quiz button and return immediately (caller waits for destination).
     func tapStartQuiz() {
         startQuizButton.tap()

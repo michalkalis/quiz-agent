@@ -123,6 +123,9 @@ struct HomePacksSection: View {
                 }
             }
         }
+        // A container, so the section's id doesn't replace the ids of the
+        // rows inside it (UI tests reach each row's play and create control).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home.myPacksSection")
         .task { await viewModel.start() }
     }

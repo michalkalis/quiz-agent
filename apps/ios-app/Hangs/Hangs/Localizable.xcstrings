@@ -2290,6 +2290,29 @@
         }
       }
     },
+    "Correct. %@." : {
+      "comment" : "Recap narration verdict for a correct answer, then the answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správně. %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct. %@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správne. %@."
+          }
+        }
+      }
+    },
     "Could not evaluate your answer. Please try again." : {
       "comment" : "Shown when the server response contained no evaluation",
       "localizations" : {
@@ -4810,6 +4833,29 @@
         }
       }
     },
+    "Missed. The answer: %@." : {
+      "comment" : "Recap narration verdict for a wrong answer, then the revealed answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vedle. Správná odpověď: %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed. The answer: %@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vedľa. Správna odpoveď: %@."
+          }
+        }
+      }
+    },
     "Monthly" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6297,75 +6343,6 @@
         }
       }
     },
-    "Question %lld — correct. %@." : {
-      "comment" : "Recap narration line for a correct answer: number, then the answer",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, správně. %2$@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Question %1$lld, correct. %2$@."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, správne. %2$@."
-          }
-        }
-      }
-    },
-    "Question %lld — missed. The answer: %@." : {
-      "comment" : "Recap narration line for a wrong answer: number, then the revealed answer",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, vedle. Správná odpověď: %2$@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Question %1$lld, missed. The answer: %2$@."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, vedľa. Správna odpoveď: %2$@."
-          }
-        }
-      }
-    },
-    "Question %lld — skipped. The answer: %@." : {
-      "comment" : "Recap narration line for a skipped question: number, then the revealed answer",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, přeskočená. Správná odpověď: %2$@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Question %1$lld, skipped. The answer: %2$@."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázka %1$lld, preskočená. Správna odpoveď: %2$@."
-          }
-        }
-      }
-    },
     "Question %lld, correct" : {
       "comment" : "VoiceOver: one question of the finished round, answered right.",
       "localizations" : {
@@ -6413,6 +6390,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázka %lld, preskočená"
+          }
+        }
+      }
+    },
+    "Question %lld." : {
+      "comment" : "Recap narration: the question number, spoken right before its verdict",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Question %lld."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld."
           }
         }
       }
@@ -8140,6 +8140,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preskočené"
+          }
+        }
+      }
+    },
+    "Skipped. The answer: %@." : {
+      "comment" : "Recap narration verdict for a skipped question, then the revealed answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přeskočená. Správná odpověď: %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipped. The answer: %@."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preskočená. Správna odpoveď: %@."
           }
         }
       }

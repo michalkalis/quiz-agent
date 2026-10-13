@@ -221,7 +221,8 @@ struct RecapNarrationTests {
     private func entry(
         number: Int,
         result: Evaluation.EvaluationResult,
-        explanation: String? = nil
+        explanation: String? = nil,
+        answer: String = "Expected Answer"
     ) -> RecapEntry {
         RecapEntry(
             number: number,
@@ -230,7 +231,7 @@ struct RecapNarrationTests {
                 userAnswer: result == .skipped ? "" : "Said",
                 result: result,
                 points: 0,
-                correctAnswer: "Expected Answer",
+                correctAnswer: answer,
                 questionId: "q_001",
                 explanation: explanation,
                 headlineAnswer: nil
@@ -238,9 +239,9 @@ struct RecapNarrationTests {
         )
     }
 
-    /// Score first, then one line per question (verdict + revealed answer),
-    /// then its explanation as its own chunk.
-    @Test("chunks: intro, per-question verdict lines, explanations")
+    /// Score first, then per question: its number, its verdict + revealed
+    /// answer, then its explanation, each as its own chunk.
+    @Test("chunks: intro, then number, verdict line and explanation per question")
     func chunkComposition() {
         let chunks = QuizViewModel.narrationChunks(for: [
             entry(number: 1, result: .correct, explanation: "Because."),
@@ -248,12 +249,37 @@ struct RecapNarrationTests {
             entry(number: 3, result: .skipped),
         ])
 
-        #expect(chunks.count == 5)
+        #expect(chunks.count == 8)
         #expect(chunks[0].contains("1") && chunks[0].contains("3"), "intro carries score 1/3")
-        #expect(chunks[1].contains("Expected Answer"))
-        #expect(chunks[2] == "Because.")
-        #expect(chunks[3].contains("Expected Answer"))
-        #expect(chunks[4].contains("Expected Answer"))
+        #expect(chunks[1].contains("1"))
+        #expect(chunks[2].contains("Expected Answer"))
+        #expect(chunks[3] == "Because.")
+        #expect(chunks[4].contains("2"))
+        #expect(chunks[5].contains("Expected Answer"))
+        #expect(chunks[6].contains("3"))
+        #expect(chunks[7].contains("Expected Answer"))
+    }
+
+    /// Why the number is its own clip (#200): the server caches each clip by
+    /// its exact text and pays ElevenLabs only on a miss. A question met at
+    /// position 2 by one player and at position 5 by the next must cost the
+    /// second player nothing, so every clip it narrates for that question has
+    /// to be one the first player's recap already put in the cache.
+    @Test("same question at another position is narrated entirely from cache")
+    func sharedQuestionHitsCache() {
+        let paris = { (number: Int) in
+            self.entry(number: number, result: .correct, explanation: "Seine.", answer: "Paris")
+        }
+        let filler = { (number: Int) in self.entry(number: number, result: .incorrect, answer: "Other \(number)") }
+        let firstPlayer = [filler(1), paris(2), filler(3), filler(4), filler(5)]
+        let secondPlayer = [filler(1), filler(2), filler(3), filler(4), paris(5)]
+
+        let serverCache = Set(QuizViewModel.narrationChunks(for: firstPlayer))
+        let secondChunks = QuizViewModel.narrationChunks(for: secondPlayer)
+        let parisClips = Array(secondChunks.suffix(3))
+
+        #expect(parisClips.contains { $0.contains("Paris") }, "the verdict clip carries the answer")
+        #expect(parisClips.allSatisfy { serverCache.contains($0) }, "uncached clips: \(parisClips.filter { !serverCache.contains($0) })")
     }
 
     /// The server rejects >1000-char text; long explanations split at

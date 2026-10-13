@@ -117,7 +117,7 @@ enum VoiceCommandLexicon {
         // for the answer again. The two-word phrases arrive as ONE token
         // (`phrases(for:)`). "no" and "wrong" start sentences, so they act on a
         // final only (`finalOnlyVariants`).
-        case (.english, .again): return ["again", "retry", "no", "wrong", "onemoretime", "oncemore", "tryagain"]
+        case (.english, .again): return ["again", "retry", "no", "wrong", "onemoretime", "oncemore", "tryagain", "playagain"]
         case (.english, .repeatQuestion): return ["repeat"]
         case (.english, .skip): return ["skip", "pass"]
         // #185 5.3: "stop" only HOLDS the auto-confirm countdown — the voice
@@ -143,7 +143,9 @@ enum VoiceCommandLexicon {
         // benign (auto-advance was coming anyway).
         case (.slovak, .next): return ["dalej", "pokracuj"]
         // #185 5.3: "nie", "zle", "ešte raz", "znova" = record the answer again.
-        case (.slovak, .again): return ["znova", "znovu", "nie", "zle", "esteraz"]
+        // Founder 2026-10-13: the "Skús znova" / "Hraj znova" buttons
+        // (`VoiceCommandLexicon+Buttons.swift`).
+        case (.slovak, .again): return ["znova", "znovu", "nie", "zle", "esteraz", "skusznova", "hrajznova"]
         case (.slovak, .repeatQuestion): return ["zopakuj", "opakuj"]
         case (.slovak, .skip): return ["preskoc", "vynechaj"]
         // ⚠️ FLAGGED (minor): "stoj" scores 0.75 vs "stop" — above the final
@@ -166,7 +168,7 @@ enum VoiceCommandLexicon {
         // reason as Slovak "ďalej": result-screen-only and benign (advance was
         // coming anyway). "dále" is the formal form, "dál" the spoken one.
         case (.czech, .next): return ["dal", "dale", "pokracuj"]
-        case (.czech, .again): return ["znovu", "znova", "ne", "spatne", "jestejednou"]
+        case (.czech, .again): return ["znovu", "znova", "ne", "spatne", "jestejednou", "zkusznovu", "hrajznovu"]
         case (.czech, .repeatQuestion): return ["zopakuj", "opakuj"]
         case (.czech, .skip): return ["preskoc", "vynech"]
         case (.czech, .stop): return ["stop", "pockej"]
@@ -252,6 +254,10 @@ enum VoiceCommandLexicon {
     /// spelling variants + edit distance, so every command form we accept is
     /// listed, in its display spelling.
     static func contextualVocabulary(for language: CommandLanguage) -> [String] {
+        commandVocabulary(for: language) + buttonVocabulary(for: language)
+    }
+
+    private static func commandVocabulary(for language: CommandLanguage) -> [String] {
         switch language {
         case .english:
             return [

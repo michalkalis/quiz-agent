@@ -383,7 +383,8 @@ enum VoiceCommandMatcher {
 
     /// Replace every run of a lexicon phrase's words with its single token.
     private static func joinPhrases(_ tokens: [String], language: CommandLanguage) -> [String] {
-        let phrases = VoiceCommandLexicon.phrases(for: language).map { phrase in
+        let all = VoiceCommandLexicon.phrases(for: language) + VoiceCommandLexicon.buttonPhrases(for: language)
+        let phrases = all.map { phrase in
             (words: phrase.words.map { phoneticFold($0, language: language) }, token: phrase.token)
         }
         var result: [String] = []

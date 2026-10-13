@@ -39,14 +39,15 @@ extension VoiceCommandLexicon {
         on screen: VoiceCommandScreen
     ) -> [String] {
         let base = variants(for: command, language: language)
+        let buttons = buttonVariants(for: command, language: language, on: screen)
         switch screen {
         case .confirmation:
-            return base + confirmationOnlyVariants(for: command, language: language)
+            return base + confirmationOnlyVariants(for: command, language: language) + buttons
         case .error, .setEnd:
             let excluded = quizEndExcludedVariants(for: language)
-            return base.filter { !excluded.contains($0) }
+            return base.filter { !excluded.contains($0) } + buttons
         default:
-            return base
+            return base + buttons
         }
     }
 

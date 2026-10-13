@@ -1,0 +1,170 @@
+<title>Hodnotenie zábavy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Hodnotenie zábavy</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Otázky zo zábavy z dvoch spôsobov generovania, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "E1", "lang": "en", "question": "A24's 2026 horror hit Backrooms made its 20-year-old director, Kane Parsons, the youngest ever to top the box office. On which video platform did he first build the story as a web series?", "answer": "YouTube", "options": [], "explanation": "Parsons began his Backrooms series on YouTube in 2022, based on the creepypasta about endless empty yellow office rooms."}, {"id": "E2", "lang": "en", "question": "In January 2022 Pinkfong's 'Baby Shark Dance' became the first YouTube video ever to pass a milestone greater than the number of people on Earth. What view count did it reach?", "answer": "10 billion", "options": [], "explanation": "It reached ten billion views, more than one for every person on the planet, after overtaking 'Despacito' in 2020."}, {"id": "E3", "lang": "en", "question": "When the first Harry Potter book came out in Britain in June 1997, roughly how many hardback copies were in its first print run?", "answer": "Hundreds", "options": ["Hundreds", "Thousands", "Tens of thousands", "Hundreds of thousands"], "explanation": "Only 500 hardbacks were printed, and 300 of them went to libraries, which is why those first editions are now worth a fortune."}, {"id": "E4", "lang": "en", "question": "Minecraft started as a hobby project called 'Cave Game', built by one Swedish programmer. In 2014 Microsoft bought his studio, Mojang. Roughly how much did it pay?", "answer": "Billions of dollars", "options": ["Tens of millions of dollars", "Hundreds of millions of dollars", "Billions of dollars", "Tens of billions of dollars"], "explanation": "Microsoft paid 2.5 billion dollars, and Minecraft went on to become the best-selling video game ever made."}, {"id": "E5", "lang": "en", "question": "In summer 2026 one actor starred in the year's biggest film, Spider-Man: Brand New Day, and also played Odysseus's son Telemachus in Christopher Nolan's The Odyssey. Who is he?", "answer": "Tom Holland", "options": [], "explanation": "Tom Holland's two films opened only two weeks apart in July 2026, and both went on to gross well over a billion dollars."}, {"id": "E6", "lang": "en", "question": "Netflix's 2026 Monster season retells the 1892 axe murders behind the rhyme 'Lizzie Borden took an axe'. What was the verdict at Lizzie's real trial in 1893?", "answer": "Not guilty", "options": [], "explanation": "The jury acquitted her after about an hour, and the rhyme is wrong anyway: the first victim was her stepmother, and the real blows were far fewer than forty."}, {"id": "E7", "lang": "en", "question": "The Wile E. Coyote comedy Coyote vs. Acme, which finally reached US cinemas in August 2026, had been fully finished back in 2023. Its own studio, Warner Bros., shelved it instead of releasing it. Why would a studio bury a finished film?", "answer": "For a tax write-off", "options": [], "explanation": "In November 2023 Warner Bros. Discovery decided to shelve the completed film and write it off for a tax benefit of roughly 30 million dollars rather than spend money marketing and releasing it. This was the same tactic the company had used on its Batgirl movie. Fans and filmmakers protested loudly. In March 2025 the independent distributor Ketchup Entertainment bought the film for about 50 million dollars, and Wile E. Coyote's lawsuit against the Acme Corporation finally opened in US cinemas on 28 August 2026."}, {"id": "E8", "lang": "en", "question": "Spider-Man: Brand New Day, the biggest film of summer 2026, was directed by Destin Daniel Cretton. His first Marvel film, released in 2021, introduced Simu Liu as a martial-arts hero. What is that hero's name?", "answer": "Shang-Chi", "options": [], "explanation": "Shang-Chi and the Legend of the Ten Rings was Marvel's first film with an Asian lead hero. Its success earned Cretton the Spider-Man job."}, {"id": "E9", "lang": "en", "question": "Yoda in Star Wars, Miss Piggy on The Muppet Show and Cookie Monster on Sesame Street were all brought to life by the same puppeteer. Who?", "answer": "Frank Oz", "options": [], "explanation": "Frank Oz also performed Fozzie Bear, Bert and Grover, so a good part of your childhood had the same person inside it."}, {"id": "E10", "lang": "en", "question": "When a total solar eclipse crossed Spain and Iceland in August 2026, streams of Bonnie Tyler's 'Total Eclipse of the Heart' jumped worldwide. Songwriter Jim Steinman originally wrote it as a love song about which creatures?", "answer": "Vampires", "options": [], "explanation": "It began as 'Vampires in Love', written for a planned Nosferatu musical, which explains lines like 'forever's gonna start tonight'."}, {"id": "E11", "lang": "en", "question": "In August 2026, after more than six decades, which British band announced its break-up? It is famous for 'He Ain't Heavy, He's My Brother' and 'The Air That I Breathe', and Graham Nash left it in 1968 to form Crosby, Stills & Nash.", "answer": "The Hollies", "options": [], "explanation": "The Hollies formed in Manchester in 1962. They called it a day when guitarist Tony Hicks stopped touring and drummer Bobby Elliott retired alongside him."}, {"id": "E12", "lang": "en", "question": "In October 2026 Paramount completed its takeover of Warner Bros. Discovery, owner of HBO and DC. Which streaming giant had agreed a deal to buy Warner Bros. in December 2025, before stepping back?", "answer": "Netflix", "options": [], "explanation": "Netflix withdrew in February 2026 after the Warner board judged Paramount's offer the better one."}, {"id": "E13", "lang": "en", "question": "The 2026 animated film Minions & Monsters is set in Hollywood in 1927, just as movies were learning to talk. What kind of films are the Minions starring in?", "answer": "Silent films", "options": [], "explanation": "Characters who speak mostly gibberish are a perfect fit for the silent era, and the plot runs on the panic as sound arrives."}, {"id": "E14", "lang": "en", "question": "Ariana Grande's 2026 album Petal gave her the biggest US sales week she'd had since a 2019 album named after her break-up hit in which she thanks her exes by name. What is that album called?", "answer": "Thank U, Next", "options": [], "explanation": "Petal opened with 295,000 units, almost a third of them vinyl, which made it her strongest debut since Thank U, Next."}, {"id": "E15", "lang": "en", "question": "Mario became a plumber only in 1983's Mario Bros., because that game was set in sewers. In his 1981 debut, Donkey Kong, climbing a construction site, what was his job?", "answer": "Carpenter", "options": [], "explanation": "In Donkey Kong he was a carpenter named Jumpman, and he got the name Mario later, reportedly from the landlord of Nintendo of America's warehouse."}, {"id": "E16", "lang": "en", "question": "In September 2026, BTS played four nights at SoFi Stadium near Los Angeles on their Arirang World Tour. Roughly how many people attended those four shows in total?", "answer": "About 280,000", "options": ["About 28,000", "About 280,000", "About 2.8 million", "About 28 million"], "explanation": "About 282,000 fans came over the four nights, or around 70,000 a night. That is roughly the population of a mid-sized city filling one stadium."}, {"id": "E17", "lang": "en", "question": "Ella Beatty, who plays Lizzie Borden in Netflix's 2026 Monster season, is Warren Beatty's daughter. Her mother is also a film star, known for American Beauty and The Kids Are All Right. Who?", "answer": "Annette Bening", "options": [], "explanation": "Annette Bening met Warren Beatty on the set of Bugsy in 1991. Their daughter now leads the fourth season of Netflix's true-crime drama."}, {"id": "E18", "lang": "en", "question": "Nintendo's September 2026 Direct announced Metroid Ravenous for Switch 2. What is the name of the armour-suited bounty hunter who stars in the Metroid series?", "answer": "Samus Aran", "options": [], "explanation": "Metroid is actually the name of the energy-draining alien species. Samus surprised players in 1986 when the end of the game revealed she was a woman."}, {"id": "E19", "lang": "en", "question": "Christopher Nolan's The Odyssey, released in July 2026, became the first feature film shot entirely on 70-millimetre film cameras from which giant-screen company?", "answer": "IMAX", "options": [], "explanation": "Nolan had used IMAX film cameras for some scenes since The Dark Knight, but The Odyssey was the first feature shot entirely on them."}, {"id": "E20", "lang": "en", "question": "Sandra Bullock won the Best Actress Oscar for The Blind Side in March 2010. Just one night earlier, she personally collected a very different award for the comedy All About Steve. Which award?", "answer": "Razzie for Worst Actress", "options": [], "explanation": "She accepted the Golden Raspberry in person, carrying a wagon of DVDs, and won the Oscar the next evening, a double no other actor has achieved for the same year."}, {"id": "E21", "lang": "en", "question": "Apple TV's 2026 comedy Brothers has Matthew McConaughey playing a version of himself who discovers that his long-time friend and True Detective co-star might really be his brother. Who is that co-star?", "answer": "Woody Harrelson", "options": [], "explanation": "McConaughey and Harrelson have joked for years that they might be related, and in 2026 they turned the joke into an eight-episode series."}, {"id": "E22", "lang": "en", "question": "In August 2026 a Romanian drama won the Golden Leopard, the top prize of the Locarno Film Festival. In which country is that festival held?", "answer": "Switzerland", "options": [], "explanation": "Locarno sits on Lake Maggiore in Switzerland's Italian-speaking canton of Ticino. Its signature screenings take place on a giant open-air screen in the Piazza Grande."}, {"id": "E23", "lang": "en", "question": "'I Knew It, I Knew You', from Toy Story 5, debuted at number one on the Billboard Hot 100 in 2026, giving Pixar its first-ever chart-topper. Which superstar wrote and sings it?", "answer": "Taylor Swift", "options": [], "explanation": "Swift made the song with her longtime collaborator Jack Antonoff, and it beat every earlier Pixar song to the top spot, including 'You've Got a Friend in Me'."}, {"id": "E24", "lang": "en", "question": "In August 2026 the BBC announced that Top Gear will return. The show had been off air since a crash during filming in December 2022 injured which presenter, a former England cricket captain?", "answer": "Freddie Flintoff", "options": [], "explanation": "Flintoff was seriously hurt in an open-top car at the show's Dunsfold test track, and the BBC rested Top Gear soon afterwards."}, {"id": "S1", "lang": "sk", "question": "Ktorá americká legenda country hudby, autorka piesní Jolene a I Will Always Love You, zomrela v auguste 2026 v Nashville vo veku 80 rokov?", "answer": "Dolly Parton", "options": [], "explanation": "Pieseň I Will Always Love You napísala a nahrala už v roku 1974. Svetovým megahitom sa stala až v podaní Whitney Houston vo filme Osobný strážca."}, {"id": "S2", "lang": "sk", "question": "Na Zlatých glóbusoch v januári 2026 sa po prvý raz udeľovala cena v úplne novej kategórii a historicky prvú sošku v nej získala komička Amy Poehler za svoju reláciu Good Hang. Čo je Good Hang?", "answer": "Podcast", "options": [], "explanation": "Zlaté glóbusy v roku 2026 pridali kategóriu najlepší podcast a prvenstvo v nej patrí Amy Poehler, známej zo seriálu Parks and Recreation."}, {"id": "S3", "lang": "sk", "question": "Raper Calin, ktorý v septembri 2026 zasadol do poroty obnovenej SuperStar, vyrastal v Česku, ale narodil sa inde. Jeho meno znie rumunsky, no nenarodil sa v Rumunsku. V ktorej krajine prišiel na svet?", "answer": "Moldavsko", "options": [], "explanation": "Calin sa narodil v roku 1997 v moldavskom hlavnom meste Kišiňov, kde sa hovorí po rumunsky. Jeho album Roadtrip s Viktorom Sheenom bol najpredávanejším českým albumom roka 2023."}, {"id": "S4", "lang": "sk", "question": "Film Obchod na korze, nakrútený v Sabinove, získal Oscara za najlepší cudzojazyčný film. Ktorý slovenský herec v ňom hral hlavnú úlohu, stolára Tóna Brtka?", "answer": "Jozef Kroner", "options": [], "explanation": "Jozef Kroner vytvoril Tóna Brtka v réžii Jána Kadára a Elmara Klosa. Je to dodnes jedna z najslávnejších rolí slovenského filmu."}, {"id": "S5", "lang": "sk", "question": "Ktorá slovenská komédia z východného Slovenska, pokračovanie domáceho kasového hitu, mala v júli 2026 v slovenských kinách silnejší štart než Nolanova Odysea aj životopisný film Michael?", "answer": "Kavej 2", "options": [], "explanation": "Kavej 2 prilákal na štarte takmer 45-tisíc divákov a Odyseu predbehol o vyše päťtisíc. Prvý Kavej pritom videlo v kinách viac ako 290-tisíc ľudí."}, {"id": "S6", "lang": "sk", "question": "Na cenách SOZA v októbri 2026 vyhlásili pieseň Domov za najhranejšiu slovenskú skladbu roka 2025. Ktorý spevák ju napísal aj naspieval, hoci kedysi pracoval ako kaderník a v predajni bicyklov?", "answer": "Alan Murin", "options": [], "explanation": "Alan Murin si napísal hudbu aj text sám. Domov zvíťazil aj v poslucháčskej ankete hitov Rádia Expres."}, {"id": "S7", "lang": "sk", "question": "Bad Bunny odspieval polčasovú show Super Bowlu vo februári 2026 takmer celú po španielsky. Ktorá americká hviezda sa k nemu pridala a zaspievala salsovú verziu svojho hitu Die with a Smile, ktorý pôvodne nahrala s Brunom Marsom?", "answer": "Lady Gaga", "options": [], "explanation": "Lady Gaga prerobila svoju baladu na salsu a ďalším hosťom bol Ricky Martin. Show podľa organizátorov sledovalo vyše 128 miliónov divákov, najviac v histórii."}, {"id": "S8", "lang": "sk", "question": "V Nolanovom veľkofilme Odysea z roku 2026 hrá Zendaya grécku bohyňu, ktorá Odyseovi pomáha na ceste domov. Ktorú?", "answer": "Athéna", "options": [], "explanation": "Athéna, bohyňa múdrosti, je v Homérovom epose Odyseova verná ochrankyňa. Tom Holland vo filme hrá jeho syna Telemacha."}, {"id": "S9", "lang": "sk", "question": "Speváčka ľudových piesní a folkloristka Darina Laščiaková, ktorá zomrela v auguste 2026 vo veku 94 rokov, pochádzala z Tvrdošína. Piesne ktorého regiónu celý život preslávovala?", "answer": "Orava", "options": [], "explanation": "Laščiaková spievala s Lúčnicou, od roku 1961 pracovala v rozhlase a oravské piesne priniesla do éteru celým generáciám poslucháčov."}, {"id": "S10", "lang": "sk", "question": "Slovensko oficiálne debutovalo na Eurovízii v roku 1994. O rok skôr sa však do súťaže pokúsila prebojovať najslávnejšia slovenská kapela s piesňou Amnestia na neveru, a v kvalifikácii jej chýbal jediný bod. Ktorá kapela to bola?", "answer": "Elán", "options": [], "explanation": "Elán skončil v kvalifikácii štvrtý a postupovali iba prví traja. Preto sa tento pokus dodnes nepočíta ako slovenská účasť na Eurovízii."}, {"id": "S11", "lang": "sk", "question": "Komédia Kavej 2 režiséra Lukáša Zednikoviča vstúpila do kín koncom júla 2026 a hneď zabodovala. Približne koľko divákov na ňu prišlo za prvý týždeň aj s predpremiérami?", "answer": "približne 75 000", "options": ["približne 7 500", "približne 75 000", "približne 300 000", "približne 750 000"], "explanation": "Bolo ich 74 381. Prvý Kavej z roku 2024 mal za celý čas v kinách vyše 290-tisíc divákov, takže pokračovanie štartovalo na veľmi slušnej trati."}, {"id": "S12", "lang": "sk", "question": "Rodičia amerického kráľa pop-artu Andyho Warhola pochádzali z obce Miková na severovýchode Slovenska. V ktorom neďalekom meste je od roku 1991 múzeum moderného umenia nesúce jeho meno?", "answer": "Medzilaborce", "options": [], "explanation": "Múzeum v Medzilaborciach vzniklo ešte za Warholovho života krátko po jeho smrti a patrilo medzi prvé na svete, ktoré mu boli venované. Vystavuje aj jeho slávne sieťotlače, napríklad plechovky polievky Campbell."}, {"id": "S13", "lang": "sk", "question": "Skôr než pieseň I Will Always Love You od Dolly Parton preslávila Whitney Houston, chcel ju nahrať iný hudobný velikán. Dolly ho však odmietla, lebo jeho manažér žiadal polovicu autorských práv. O koho išlo?", "answer": "Elvis Presley", "options": [], "explanation": "Elvisov manažér plukovník Parker chcel polovicu práv a Dolly povedala nie. Vďaka tomu na piesni neskôr zarobila majland, keď verzia Whitney Houston vládla rebríčkom 14 týždňov."}, {"id": "S14", "lang": "sk", "question": "Elán, ktorý v októbri 2026 dostal Špeciálnu cenu SOZA, chcel už v roku 1993 reprezentovať samostatné Slovensko na Eurovízii s piesňou Amnestia na neveru. Oficiálne však Slovensko na Eurovízii debutovalo až o rok neskôr. Prečo sa Elán do veľkého finále nedostal?", "answer": "Nepostúpil z predkola pre nové krajiny", "options": [], "explanation": "Po rozpade Československa a Juhoslávie sa v roku 1993 o miesto na Eurovízii uchádzalo naraz viacero nových krajín. Usporiadatelia im preto pripravili samostatné predkolo, Kvalifikáciu za Millstreet v Ľubľane. Do írskeho finále v Millstreete postupovali len prvé tri krajiny, a to Bosna a Hercegovina, Chorvátsko a Slovinsko. Elán skončil štvrtý, tesne pod postupovou čiarou. Keďže sa do samotnej súťaže nedostal, Európska vysielacia únia túto snahu neráta ako účasť Slovenska. Slovensko tak oficiálne debutovalo až v roku 1994. Elán neskôr ako druhý v histórii po Jeanovi-Michelovi Jarrovi získal Špeciálnu cenu SOZA na jej 30. ročníku 7. októbra 2026."}, {"id": "S15", "lang": "sk", "question": "Na hrade Devín v Bratislave sa v júni 2026 konal druhý ročník festivalu Sútok, kde boli hlavnými hviezdami Fallgrapp a FVCK_KVLT. Sútok ktorých dvoch riek dal festivalu meno?", "answer": "Dunaj a Morava", "options": [], "explanation": "Pod Devínom sa Morava vlieva do Dunaja, a tak tam na jednom mieste splýva rap s metalom aj dve rieky."}, {"id": "S16", "lang": "sk", "question": "Robert Aramayo získal vo februári 2026 cenu BAFTA pre najlepšieho herca za film I Swear. Hrá v ňom skutočného Škóta Johna Davidsona, ktorý od detstva žije s neurologickou poruchou spôsobujúcou mimovoľné pohyby a výkriky. S akou?", "answer": "Tourettov syndróm", "options": [], "explanation": "Davidson sa stal tvárou boja proti predsudkom voči Tourettovmu syndrómu. Názov filmu, po slovensky Prisahám aj Nadávam, naráža na nechcené nadávky, ktoré táto porucha niekedy spôsobuje."}, {"id": "S17", "lang": "sk", "question": "Markízin seriál Sľub, ktorého štvrtá séria sa začala vysielať v septembri 2026, sa odohráva na škole v socialistickom Československu. V ktorom desaťročí?", "answer": "80. roky", "options": [], "explanation": "Dej sa odohráva v školskom roku 1984/85. Školské scény sa nakrúcajú v skutočnej bratislavskej škole pre zrakovo postihnutých žiakov."}, {"id": "S18", "lang": "sk", "question": "Životopisný film Michael o Michaelovi Jacksonovi sa v júni 2026 stal najzárobkovejším hudobným životopisným filmom v histórii. Predbehol pritom film o ktorej britskej kapele?", "answer": "Queen", "options": [], "explanation": "Bohemian Rhapsody o Freddiem Mercurym z roku 2018 zarobila niečo vyše 900 miliónov dolárov. Michael prekročil hranicu miliardy."}, {"id": "S19", "lang": "sk", "question": "Ktorý operný tenor z Partizánskeho, ktorý spieval aj v newyorskej Metropolitnej opere, dostal prezývku Pavarotti zo Slovenska?", "answer": "Peter Dvorský", "options": [], "explanation": "Dvorský v roku 1974 vyhral Čajkovského súťaž v Moskve a začiatkom osemdesiatych rokov ho rátali k najlepším tenoristom sveta vedľa Pavarottiho, Dominga a Carrerasa."}, {"id": "S20", "lang": "sk", "question": "Gangsterka Černák prilákala podľa správy o slovenskej audiovízii za rok 2025 takmer 419-tisíc divákov. Napriek tomu zaostala o necelých 14-tisíc za ktorým historickým veľkofilmom Juraja Jakubiska z roku 2008?", "answer": "Bathory", "options": [], "explanation": "Jakubiskova Bathory mala vyše 432-tisíc divákov a v tom čase zostala najnavštevovanejším filmom samostatného Slovenska."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

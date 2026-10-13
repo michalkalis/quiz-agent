@@ -1,6 +1,6 @@
 # #201 — Zábava, na ktorú sa dá odpovedať
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · done
 **Založené:** 2026-10-13 (founder: „entertainment otázky sú trochu nudné, takmer bez šance vedieť odpoveď“)
 **Súvisí:** #195 (čerstvá zábava, 2× zvýhodnenie), #199 (zásoba čerstvej zábavy), [prior art](../research/question-craft-prior-art-2026-07-10.md), [kalibrácia](../research/question-quality-founder-calibration-2026-07-09.md)
 
@@ -67,13 +67,30 @@ Mix (páka 3) sa v tomto kroku iba **meria** (rozdelenie odhadov); výberová lo
 ### 201.4 Slepé porovnanie
 
 - Rovnaký deň, počet a **pripnutý `GENERATION_MODEL`** (inak `GEN_ALT` náhodne prehodí časť behov na iný model). Rameno A = dnešný recept (brief + seedy ako 10-12, kontrola OFF). Rameno B = 201.1 + 201.2 + kontrola v režime `shadow`.
-- en: 10 z A + 10 z B, ktoré kontrola prepustila, + ~4 z B, ktoré by vyradila — zamiešané, bez označenia (`generate_blind_maps.py`). Founder hodnotí zábavu 1–10 a „mal som šancu“ áno/nie. Vyradené vs prepustené ukáže, či kontrola sama pomáha (ablácia bez ďalšieho ramena).
-- Potom sk rovnako — overí domácu scénu a kontrolu Sonnetom.
+- en: 10 z A + 10 z B, ktoré kontrola prepustila, + ~5 z B, ktoré by vyradila — zamiešané, bez označenia, kľúč k ramenám v run adresári `docs/testing/runs/gettable-entertainment-2026-10-13/`. Founder hodnotí zábavu 1–10 a „mal som šancu“ áno/nie. Vyradené vs prepustené ukáže, či kontrola sama pomáha (ablácia bez ďalšieho ramena).
+- sk v tom istom hodnotení (8 + 8 + ~4, jedno kolo pre foundera namiesto dvoch) — overí domácu scénu a kontrolu Sonnetom.
 - Výsledok + rozhodnutie sem a do pamäte.
+
+**Výsledok (2026-10-13, 44 otázok, `analyze_ratings.py` v run adresári):**
+
+| Skupina | n | Zábava ⌀ | Šanca | Zábava 9–10 |
+|---|---|---|---|---|
+| A (starý recept) en / sk | 10 / 8 | 7,9 / 9,2 | 10/10 / 8/8 | 4 / 7 |
+| B prepustené en / sk | 10 / 8 | 7,7 / 9,2 | 8/10 / 8/8 | 1 / 6 |
+| B vyradené kontrolou en / sk | 4 / 4 | 7,8 / 8,2 | 3/4 / 4/4 | 1 / 1 |
+
+- **B neporazil A.** Spolu 8,4 vs 8,5, šanca 16/18 vs 18/18. Recept seedov + brief v2 merateľne nepomohol.
+- **Kontrola „bežný hráč“ nepredpovedá hodnotenie** (korelácia odhadu so zábavou 0,10; otázky, ktoré by vyradila, 8,4 a šanca 11/12 — vrátane dvoch za 10). Zapnutie by vyhadzovalo dobré otázky → `CASUAL_PLAYER_GATE` ostáva `off`.
+- **Najsilnejší signál je jazyk/národ:** sk 9,0 vs en 7,8 v oboch ramenách; founder: „fakt je rozdiel či sú to slovenské alebo anglické otázky, toto je veľmi dôležité pre zábavnosť“.
+- Najnižšie hodnotené (6–7): ocenenia („kto čo kedy vyhral“), štáb a tvorcovia (režisér, bábkoherec), americky/niche témy (Nintendo, BTS čísla, Razzie). Najvyššie: veľmi známe veci s prekvapivým uhlom (Netflix, Tom Holland, McConaughey/Harrelson, Harry Potter, Eurovízia/Elán, Warhol/Medzilaborce).
+- Otvorená číselná otázka (Baby Shark „10 billion“) nehovorí, aká odchýlka sa ráta → číselné otázky len ako MCQ alebo s uvedenou presnosťou.
+- Founder upozorňuje, že jeho hodnotenie je jeden hráč; skutočný signál prinesie beta.
 
 ### 201.5 Nasadenie receptu
 
-Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čerstvej zábavy (#199), `CASUAL_PLAYER_GATE=1` pre zábavu v prode (pack-api). Ostatné kategórie = nové rozhodnutie foundera.
+Pôvodne: po víťazstve B recept + `CASUAL_PLAYER_GATE=1` v prode. B nevyhral → **rozhodnutie foundera 2026-10-13: „jednoduché pravidlá“.** Do receptu dopĺňania idú len poučenia z hodnotenia: sk/cs ~7 z 10 domáca scéna, slávna vec + prekvapivý uhol, bez ocenení / štábu / americky niche tém, číselná odpoveď len ako MCQ. Kontrola ostáva vypnutá (kód v main, nenasadzuje sa), skutočný signál prinesie beta. Ostatné kategórie sa nemenia. Recept: `docs/setup/fresh-entertainment-recipe.md`.
+
+Skúška receptu 2026-10-13 (`run_recipe_check.sh`, seedy ramena B, 10 en + 9 sk): po sprísnení vety o oceneniach a štábe („ani opačne“) žiadna otázka o oceneniach ani štábe, číselný fakt prišiel ako MCQ, sk 6 z 9 domáce, všetky so zdrojom. Prvá verzia vety ešte pustila Frank Oz (opačne položené) a Razzie.
 
 ## Riziká
 
@@ -83,8 +100,8 @@ Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čers
 
 ## Stav
 
-- [ ] 201.1 recept seedov + `entity_fame.py`
-- [ ] 201.2 brief v2
-- [ ] 201.3 `CasualPlayerChecker` v scoringu za vypínačom + testy
-- [ ] 201.4 slepé porovnanie en, potom sk
-- [ ] 201.5 nasadenie receptu
+- [x] 201.1 recept seedov + `entity_fame.py`
+- [x] 201.2 brief v2
+- [x] 201.3 `CasualPlayerChecker` v scoringu za vypínačom + testy (PR #394, vypnuté)
+- [x] 201.4 slepé porovnanie en + sk — B ≈ A, kontrola nepomáha
+- [x] 201.5 recept dopĺňania = jednoduché pravidlá (`docs/setup/fresh-entertainment-recipe.md`), kontrola vypnutá

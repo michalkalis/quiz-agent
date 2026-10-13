@@ -29,7 +29,7 @@ Focus:
 - **cs:** the same as sk, with Czech and Czechia in place of Slovak and Slovakia.
 
 Player:
-> Who must be able to answer: an ordinary adult who follows film, TV, music and celebrities only loosely. Pick a famous thing first, then a surprising angle. Both the subject and the detail you ask for must be something such a player could have caught, half-remembers or can reason their way to. Do not ask who won an award or award category, who directed, produced or worked behind the camera, or about topics only US audiences or fans would know. Never ask an open question whose answer is a number: make it a multiple-choice question with 3 clearly different options, or pick another fact. No giveaways: the wording must not name or uniquely describe the answer.
+> Who must be able to answer: an ordinary adult who follows film, TV, music and celebrities only loosely. Pick a famous thing first, then a surprising angle. Both the subject and the detail you ask for must be something such a player could have caught, half-remembers or can reason their way to. Do not build questions around awards (who won, what was won) or around people behind the camera (directors, producers, puppeteers and other crew; famous singers and songwriters are fine), not even by asking it the other way round, and skip topics only US audiences or fans would know. If a seed is about these, skip it. Never ask an open question whose answer is a number: make it a multiple-choice question with 3 clearly different options, or pick another fact. No giveaways: the wording must not name or uniquely describe the answer.
 
 ## Run
 

@@ -90,6 +90,8 @@ Mix (páka 3) sa v tomto kroku iba **meria** (rozdelenie odhadov); výberová lo
 
 Pôvodne: po víťazstve B recept + `CASUAL_PLAYER_GATE=1` v prode. B nevyhral → **rozhodnutie foundera 2026-10-13: „jednoduché pravidlá“.** Do receptu dopĺňania idú len poučenia z hodnotenia: sk/cs ~7 z 10 domáca scéna, slávna vec + prekvapivý uhol, bez ocenení / štábu / americky niche tém, číselná odpoveď len ako MCQ. Kontrola ostáva vypnutá (kód v main, nenasadzuje sa), skutočný signál prinesie beta. Ostatné kategórie sa nemenia. Recept: `docs/setup/fresh-entertainment-recipe.md`.
 
+Skúška receptu 2026-10-13 (`run_recipe_check.sh`, seedy ramena B, 10 en + 9 sk): po sprísnení vety o oceneniach a štábe („ani opačne“) žiadna otázka o oceneniach ani štábe, číselný fakt prišiel ako MCQ, sk 6 z 9 domáce, všetky so zdrojom. Prvá verzia vety ešte pustila Frank Oz (opačne položené) a Razzie.
+
 ## Riziká
 
 - Slovenská Wikipédia má o domácich celebritách krátke alebo žiadne články → zdroj z cs/en Wikipédie alebo autority; inak otázka vypadne. Domácich otázok môže byť spočiatku menej.

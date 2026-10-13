@@ -106,7 +106,10 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
     verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
     # #166 D21b: the LLM judge panel is out of the default flow (JUDGE_GATE=1
     # restores it); scorer=None keeps the stage's deterministic gates only.
-    scoring = ScoringStage(ctx["scorer"] if feature_flags.judge_gate() else None)
+    scoring = ScoringStage(
+        ctx["scorer"] if feature_flags.judge_gate() else None,
+        casual_checker=ctx.get("casual_player_checker"),  # #201
+    )
     dedup = DedupStage(ctx["question_store"], ctx.get("gold_standard_path"))
     answerability = None
     if feature_flags.answerability_check() and ctx.get("answerability_checker"):

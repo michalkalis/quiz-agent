@@ -180,6 +180,16 @@ class AnswerabilityChecker:
             # gave-up/issue signals above are the whole check for open shapes.
             return AnswerabilityResult(passed=True, model_answer=model_answer)
 
+        if not question.possible_answers and feature_flags.casual_player_applies(
+            question.category
+        ):
+            # #201: a pre-cutoff blind model cannot know a fair post-cutoff
+            # fact, so a text miss here mostly drops fair questions and keeps
+            # giveaways; the casual-player check in ScoringStage judges these
+            # instead. MCQ keeps its mismatch drop (second-defensible-option
+            # guard).
+            return AnswerabilityResult(passed=True, model_answer=model_answer)
+
         if question.possible_answers:
             matched = _mcq_answers_match(
                 model_answer, question.possible_answers, question.correct_answer

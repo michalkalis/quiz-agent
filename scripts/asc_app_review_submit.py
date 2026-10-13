@@ -30,8 +30,12 @@ SHOTS = up.FL / "iap_review"
 def upload_review_screenshot(iap: dict) -> None:
     pid = iap["attributes"]["productId"]
     cur = get(f"{V2}/inAppPurchases/{iap['id']}/appStoreReviewScreenshot")
-    if cur.get("data") and cur["data"]["attributes"].get("assetDeliveryState", {}).get("state") == "COMPLETE":
-        return
+    if cur.get("data"):
+        state = (cur["data"]["attributes"].get("assetDeliveryState") or {}).get("state")
+        print(f"    existing screenshot: {state}")
+        if state == "COMPLETE":
+            return
+        up.send("DELETE", f"/inAppPurchaseAppStoreReviewScreenshots/{cur['data']['id']}")  # stale upload blocks a new one (409)
     f = SHOTS / f"{pid}.png"
     if not f.exists():
         raise SystemExit(f"  !! {pid}: no review screenshot in ASC and none at {f}")

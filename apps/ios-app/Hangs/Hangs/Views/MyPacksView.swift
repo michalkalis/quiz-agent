@@ -206,22 +206,49 @@ struct MyPacksView: View {
         static let barHeight: CGFloat = 6
     }
 
+    /// #200: the sign-in prompt is for a signed-out user only. Any other
+    /// failed load (offline, cold pack API) says so and offers Retry, with
+    /// Home's wording and behaviour.
+    @ViewBuilder
     private var emptyState: some View {
+        if viewModel.needsSignIn {
+            emptyMessage(
+                icon: "person.crop.circle.badge.questionmark",
+                title: "Sign in to see your packs",
+                detail: "Your ordered packs appear here once you're signed in."
+            )
+            .accessibilityIdentifier("myPacks.signIn")
+        } else if viewModel.loadFailed {
+            VStack(spacing: Theme.Hangs.Spacing.md) {
+                emptyMessage(icon: "exclamationmark.triangle", title: "Couldn't load your packs", detail: nil)
+                HangsSecondaryButton(title: "Retry", icon: "arrow.clockwise", height: 48) {
+                    Task { await viewModel.retryLoad() }
+                }
+                .accessibilityIdentifier("myPacks.retryLoad")
+            }
+            .accessibilityIdentifier("myPacks.loadFailed")
+        } else {
+            emptyMessage(icon: "tray", title: "No packs yet", detail: "Create a pack to see it here.")
+                .accessibilityIdentifier("myPacks.empty")
+        }
+    }
+
+    private func emptyMessage(icon: String, title: LocalizedStringKey, detail: LocalizedStringKey?) -> some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
-            Image(systemName: viewModel.loadFailed ? "person.crop.circle.badge.questionmark" : "tray")
+            Image(systemName: icon)
                 .font(.hangsTitle)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
-            Text(viewModel.loadFailed
-                 ? "Sign in to see your packs"
-                 : "No packs yet")
+                .accessibilityHidden(true)
+            Text(title)
                 .font(.hangsLabel)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
-            Text(viewModel.loadFailed
-                 ? "Your ordered packs appear here once you're signed in."
-                 : "Create a pack to see it here.")
-                .font(.hangsBody)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
                 .multilineTextAlignment(.center)
+            if let detail {
+                Text(detail)
+                    .font(.hangsBody)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 40)

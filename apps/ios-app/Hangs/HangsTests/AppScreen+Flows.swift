@@ -31,6 +31,8 @@ extension AppScreen {
             await makeHome()
         case .myPacks:
             await makePacks()
+        case .myPacksLoadFailed:
+            await makePacksLoadFailed()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

@@ -48,7 +48,8 @@
 ## Zostáva
 
 - Overiť na zariadení (TF build na požiadanie): pauza počas čítania a Premýšľaj, balík (počet otázok, Hraj znova, „Odohrané N / 30“, ponuka odznova), AirPods v zozname mikrofónov, slovenské čísla hlasom ElevenLabs.
-- Neskôr (nízka priorita): rekapitulácia zdieľateľná v cache (menej kreditov na hráča); Moje balíky pri chybe načítania hovorí „prihlás sa“; po aktualizácii začne každý balík od nuly (staré odohrané otázky sa nedajú priradiť).
+- Neskôr (nízka priorita): po aktualizácii začne každý balík od nuly (staré odohrané otázky sa nedajú priradiť).
+- **Hotové 2026-10-13:** rekapitulácia zdieľateľná v cache, číslo otázky je samostatná nahrávka, verdikt s odpoveďou sa zdieľa medzi hráčmi (PR #387); Moje balíky výzvu na prihlásenie ukážu len odhláseným, inak „Tvoje balíky sa nepodarilo načítať“ + Skús znova (PR #388).
 
 ## Hotovo, keď
 

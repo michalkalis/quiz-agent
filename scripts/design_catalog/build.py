@@ -134,7 +134,7 @@ Use the named styles, `Font.hangs*` in code ({tok("displaySM", "content", "butto
 
 ## Iconography
 
-SF Symbols (Apple system icons) throughout; there is no custom icon set. The logo is a question mark whose dot is a wave of tilted category cards (`TrubboMark`, the app icon's artwork), set beside the wordmark \u201c{brand.word}\u201d in {face} {brand.font_weight} (`HangsBrandMark`). The cover shows both.
+SF Symbols (Apple system icons) throughout; there is no custom icon set. The logo is the mascot, a flat orangutan head (`TrubboMark`, the app icon's artwork), set beside the wordmark \u201c{brand.word}\u201d in {face} {brand.font_weight} (`HangsBrandMark`). The cover shows both.
 
 ## Known gaps
 

@@ -5,7 +5,6 @@ winner on its own. The catalog shows what the app renders (#194 — font + logo
 change), never the argument a view passes. Run: python3 -m unittest scripts.design_catalog.test_sync
 """
 
-import re
 import subprocess
 import tempfile
 import unittest
@@ -239,15 +238,17 @@ class TypeTests(unittest.TestCase):
 
 
 class CoverTests(unittest.TestCase):
-    """The cover is the app's own logo, in token colours so it follows the themes."""
+    """The cover is the app's own logo: the icon on its token ground and the in-app lockup."""
 
-    def test_logo_is_drawn_from_the_icon_in_token_colours(self):
+    def test_logo_is_drawn_from_the_icon_and_the_mascot_master(self):
         tokens, brand = build_tokens(ROOT), read_brand(ROOT)
         html = cover_html(tokens, brand)
         self.assertIn(f"{brand.word}</p>", html)
-        self.assertNotRegex(html, r'(fill|stroke)="#')  # every colour goes through a token
-        self.assertIn("s-ink", html)  # the lockup's question mark takes the text colour, like TrubboMark
-        self.assertEqual(len(re.findall(r"<rect ", html)), 1 + 2 * (len(brand.layers) - 1))  # ground + cards in icon and lockup
+        # the icon ground follows the palette token, so a theme change reaches the cover
+        self.assertRegex(html, r'<rect class="f-[\w-]+" width="100" height="100"')
+        # the mascot appears twice, once in the icon and once in the lockup: a lost layer or mark shows here
+        self.assertEqual(html.count('d="M100 52 '), 2)
+        self.assertIn(f'viewBox="{" ".join(map(str, brand.crop))}"', html)  # the lockup crops to the head
 
     def test_a_logo_colour_without_a_token_fails(self):
         tokens, brand = build_tokens(ROOT), read_brand(ROOT)

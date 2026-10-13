@@ -6,10 +6,10 @@
     {
       "layers": [
         {
-          "glass": true,
+          "glass": false,
           "hidden": false,
-          "image-name": "question.svg",
-          "name": "question",
+          "image-name": "features.svg",
+          "name": "features",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -20,10 +20,10 @@
           }
         },
         {
-          "glass": true,
+          "glass": false,
           "hidden": false,
-          "image-name": "card4.svg",
-          "name": "card4",
+          "image-name": "face.svg",
+          "name": "face",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -34,10 +34,10 @@
           }
         },
         {
-          "glass": true,
+          "glass": false,
           "hidden": false,
-          "image-name": "card3.svg",
-          "name": "card3",
+          "image-name": "mane.svg",
+          "name": "mane",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -48,24 +48,10 @@
           }
         },
         {
-          "glass": true,
+          "glass": false,
           "hidden": false,
-          "image-name": "card2.svg",
-          "name": "card2",
-          "opacity": 1,
-          "position": {
-            "scale": 1,
-            "translation-in-points": [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "glass": true,
-          "hidden": false,
-          "image-name": "card1.svg",
-          "name": "card1",
+          "image-name": "ears.svg",
+          "name": "ears",
           "opacity": 1,
           "position": {
             "scale": 1,

@@ -1,11 +1,12 @@
 """The catalog cover (components/Cover/preview.html): the logo as the app draws it.
 
-#194 — font + logo change: the logo is a question mark whose dot is a wave of
-four tilted category cards, beside the wordmark. Sources: the app icon
-(`AppIcon.icon`: its ground colour and the SVG layers of the question mark and
-the cards), the in-app crop of that artwork (`TrubboMark`) and the lockup's
-proportions and font (`HangsBrandMark`). Every colour is a token found by value,
-so a colour the tokens do not hold fails the build.
+The logo is the mascot, a flat orangutan head (founder 2026-10-13), beside the
+wordmark. Sources: the app icon (`AppIcon.icon`: its ground colour and the
+mascot's SVG layers), the mascot master that `TrubboMark` shows in the app
+(`docs/design/brand/trubbo-mascot.svg`, its viewBox is the in-app crop) and the
+lockup's proportions and font (`HangsBrandMark`). The icon ground is a token
+found by value, so a ground the tokens do not hold fails the build; the mascot
+keeps its own artwork colours in both themes.
 """
 
 from __future__ import annotations
@@ -20,9 +21,8 @@ from .swift_tokens import THEME
 from .swift_type import APP, GROUPS, FontResolver, _block, _num
 
 ICON = APP / "AppIcon.icon"
-MARK = APP / "Views/Components/Hangs/TrubboMark.swift"
+MASTER = Path("docs/design/brand/trubbo-mascot.svg")
 LOCKUP = APP / "Views/Components/Hangs/HangsChrome.swift"
-HOOK = "question"  # the icon layer TrubboMark strokes in the text colour (the cards keep theirs)
 NAME_PX = 104  # wordmark size on the cover; the lockup keeps its in-app proportions around it
 ICON_PX = 224
 ICON_CORNER = 22.37  # % of the side: the iOS app icon mask, drawn as a rounded rect
@@ -36,9 +36,10 @@ class Brand:
     tracking_ratio: float  # tracking / wordmark size
     font_key: str  # tokens.json type family key
     font_weight: int
-    crop: tuple[float, ...]  # TrubboMark's window on the icon's 100-unit grid: x, y, width, height
+    crop: tuple[float, ...]  # TrubboMark's window on the master's 200-unit grid: x, y, width, height
     ground: str  # icon background, hex
     layers: list[tuple[str, list[ET.Element]]]  # (icon layer name, shapes), bottom first
+    mark: list[ET.Element]  # the master's groups, as TrubboMark draws them
 
 
 def _one(pattern: str, text: str, where: Path) -> re.Match:
@@ -64,7 +65,9 @@ def read_brand(root: Path) -> Brand:
         layers.append((layer["name"], list(svg)))
     rgb = [float(c) for c in icon["fill"]["solid"].removeprefix("srgb:").split(",")[:3]]
 
-    crop = _one(r"static let crop = CGRect\(x: ([\d.]+), y: ([\d.]+), width: ([\d.]+), height: ([\d.]+)\)", (root / MARK).read_text(encoding="utf-8"), MARK)
+    master = ET.parse(root / MASTER).getroot()
+    for el in master.iter():
+        el.tag = el.tag.rpartition("}")[2]
     lockup = _block((root / LOCKUP).read_text(encoding="utf-8"), "struct HangsBrandMark")
     size = _num(_one(r"var size: CGFloat = ([\d.]+)", lockup, LOCKUP).group(1))
     fn, weight = _one(r"\.font\(Theme\.Hangs\.Fonts\.(\w+)\(size, weight: \.(\w+)\)\)", lockup, LOCKUP).groups()
@@ -76,9 +79,10 @@ def read_brand(root: Path) -> Brand:
         tracking_ratio=-float(_one(r"\.tracking\(-size \* ([\d.]+)\)", lockup, LOCKUP).group(1)),
         font_key=GROUPS[font.fn],
         font_weight=font.weight,
-        crop=tuple(_num(v) for v in crop.groups()),
+        crop=tuple(_num(v) for v in master.get("viewBox").split()),
         ground="#" + "".join(f"{round(c * 255):02x}" for c in rgb),
         layers=layers,
+        mark=[g for g in master if g.tag == "g"],
     )
 
 
@@ -97,26 +101,24 @@ class _Paint:
         self.rules[name] = f".cover .{name}{{{prop}:var(--{token})}}"
         return name
 
+    def svg(self, shapes: list[ET.Element]) -> str:
+        """Shapes as markup; a colour a palette token holds is bound to it, the mascot's own stay as drawn."""
+        out = []
+        for shape in shapes:
+            shape = ET.fromstring(ET.tostring(shape))  # a copy: the icon and the lockup share the source
+            for el in shape.iter():
+                for prop in ("fill", "stroke"):
+                    value = el.get(prop, "")
+                    if value.lower() in self.by_hex:
+                        el.attrib.pop(prop)
+                        el.set("class", f"{el.get('class', '')} {self.cls(prop, self.by_hex[value.lower()])}".strip())
+            out.append(ET.tostring(shape, encoding="unicode"))
+        return "".join(out)
+
     def token(self, hex_value: str) -> str:
         if hex_value.lower() not in self.by_hex:
             raise ValueError(f"the logo uses {hex_value}, which no palette token holds")
         return self.by_hex[hex_value.lower()]
-
-    def svg(self, layers: list[tuple[str, list[ET.Element]]], hook_token: str | None = None) -> str:
-        out = []
-        for name, shapes in layers:
-            for shape in shapes:
-                shape = ET.fromstring(ET.tostring(shape))  # a copy: the icon and the lockup paint differently
-                for el in shape.iter():
-                    classes = []
-                    for prop in ("fill", "stroke"):
-                        if el.get(prop, "").startswith("#"):
-                            value = el.attrib.pop(prop)
-                            classes.append(self.cls(prop, hook_token if name == HOOK and hook_token else self.token(value)))
-                    if classes:
-                        el.set("class", " ".join(classes))
-                out.append(ET.tostring(shape, encoding="unicode"))
-        return "".join(out)
 
 
 def cover_html(tokens: dict, brand: Brand) -> str:
@@ -126,8 +128,8 @@ def cover_html(tokens: dict, brand: Brand) -> str:
         raise ValueError(f"cover uses tokens that no longer exist: {missing}")
     paint = _Paint(tokens)
     ground = paint.cls("fill", paint.token(brand.ground))
-    icon = paint.svg(brand.layers)
-    mark = paint.svg(brand.layers, hook_token="ink")
+    icon = paint.svg([shape for _, shapes in brand.layers for shape in shapes])
+    mark = paint.svg(brand.mark)
     mark_w = round(brand.mark_ratio * brand.crop[2] / brand.crop[3], 4)
     rules = "\n".join(sorted(paint.rules.values()))
     return f"""<!-- @dsCard height=288 -->
@@ -142,7 +144,7 @@ def cover_html(tokens: dict, brand: Brand) -> str:
 </style>
 <svg class="icon" width="{ICON_PX}" height="{ICON_PX}" viewBox="0 0 100 100" aria-hidden="true">
 <!-- block: the app icon, ground and layers from AppIcon.icon, each colour bound to the palette token that holds it
-     pattern: the logo's own wave of four tilted cards; the lockup on the left is HangsBrandMark (TrubboMark + wordmark) at its in-app proportions -->
+     pattern: the mascot head; the lockup on the left is HangsBrandMark (TrubboMark + wordmark) at its in-app proportions -->
 <rect class="{ground}" width="100" height="100" rx="{ICON_CORNER}"/>
 {icon}
 </svg>

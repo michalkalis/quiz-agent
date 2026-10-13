@@ -273,9 +273,13 @@ enum VoiceCommandMatcher {
     /// is treated as a truncation rather than a different word.
     static let truncationPrefix = 2
 
-    /// Whether `token` looks like `variant` with its tail cut off.
+    /// Whether `token` looks like `variant` with its tail cut off. The token
+    /// must also carry at least half the variant: a whole short word that
+    /// happens to open a longer command ("na" → "na úvod", "za" → "zavri")
+    /// is that word, not a half-heard command.
     private static func isTruncation(_ token: String, of variant: String) -> Bool {
-        guard token.count < variant.count, token.count >= truncationPrefix else { return false }
+        guard token.count < variant.count, token.count >= truncationPrefix,
+              token.count * 2 >= variant.count else { return false }
         return token.prefix(truncationPrefix) == variant.prefix(truncationPrefix)
     }
 
@@ -383,7 +387,8 @@ enum VoiceCommandMatcher {
 
     /// Replace every run of a lexicon phrase's words with its single token.
     private static func joinPhrases(_ tokens: [String], language: CommandLanguage) -> [String] {
-        let phrases = VoiceCommandLexicon.phrases(for: language).map { phrase in
+        let all = VoiceCommandLexicon.phrases(for: language) + VoiceCommandLexicon.buttonPhrases(for: language)
+        let phrases = all.map { phrase in
             (words: phrase.words.map { phoneticFold($0, language: language) }, token: phrase.token)
         }
         var result: [String] = []

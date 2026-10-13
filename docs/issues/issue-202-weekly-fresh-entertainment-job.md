@@ -60,7 +60,7 @@ Jadro `scripts/import_questions_json.py` presunuté do `app/corpus/importer.py` 
 
 ## Úlohy
 
-- [ ] 202.1 Presuny bez zmeny správania: importer, zostava stupňov, wiki_fame, covered + testy parity (CLI a funkcia dajú rovnaké stavy).
+- [x] 202.1 Presuny bez zmeny správania: importer, zostava stupňov, wiki_fame, covered + testy parity (CLI a funkcia dajú rovnaké stavy).
 - [ ] 202.2 Seed researcher (Claude + web search/fetch) + filtre + testy.
 - [ ] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
 - [ ] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.

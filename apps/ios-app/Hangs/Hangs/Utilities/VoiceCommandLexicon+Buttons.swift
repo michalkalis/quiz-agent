@@ -30,7 +30,7 @@ extension VoiceCommandLexicon {
         case (.question, .start, .czech): return ["odpovez"]
         // The error screen's "Go Home" / "Dismiss" both leave for Home — the
         // route its "stop" already takes.
-        case (.error, .stop, .english): return ["gohome", "home", "dismiss"]
+        case (.error, .stop, .english): return ["gohome", "dismiss"]
         case (.error, .stop, .slovak): return ["nauvod", "uvod", "zavri"]
         case (.error, .stop, .czech): return ["nauvod", "uvod", "zavri"]
         // The set-end "Home" button reads "Úvod" in sk / cs.

@@ -185,9 +185,9 @@ struct HomeFreePlanCardTests {
                 try tree.find(viewWithAccessibilityIdentifier: "home.freePlanLoading")
             }
             // #123 Track B: the loading card holds the loaded card's full
-            // scaffold — the "your plan" label row and a skeleton meta line —
-            // so the slot doesn't jump when /usage resolves. A single-row
-            // spinner (the pre-Track-B shape) would fail this.
+            // scaffold (a skeleton meta line) under the "your plan" section
+            // label, so the slot doesn't jump when /usage resolves. A
+            // single-row spinner (the pre-Track-B shape) would fail this.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "home.planLabel")
             }
@@ -250,7 +250,7 @@ struct HomeFreePlanCardTests {
     // The card is the Home upgrade entry point: paywall was previously
     // reachable only via the 429 quota handlers.
 
-    @Test("Free card shows Upgrade affordance; tap presents paywall and clears stale 429 error")
+    @Test("Free card shows the Get Plus link; tap presents paywall and clears stale 429 error")
     func freeCardTapPresentsPaywall() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage()
@@ -267,9 +267,10 @@ struct HomeFreePlanCardTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade")
-            }
+            // Founder 2026-10-13: the link names where it leads (the Plus
+            // offer); sk "Vylepši" read as a calque of "Upgrade".
+            let link = try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgrade").text()
+            #expect(try link.string() == "Get Plus")
             try tree.find(viewWithAccessibilityIdentifier: "home.freePlanUpgradeButton")
                 .button().tap()
             #expect(vm.showPaywall)

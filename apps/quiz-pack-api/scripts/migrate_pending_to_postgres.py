@@ -60,7 +60,7 @@ import sqlite3
 import sys
 import uuid
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -70,16 +70,22 @@ from app.image_generation.env_loader import load_env  # noqa: E402
 load_env()
 
 from openai import OpenAI  # noqa: E402
-from sqlalchemy import select  # noqa: E402
 from sqlalchemy.dialects.postgresql import insert as pg_insert  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
 from app.db import (  # noqa: E402
-    PIPELINE_OWNED_COLUMNS,
     QuestionRow,
     engine,
     normalize_async_url,
     question_to_row,
+)
+from app.corpus.importer import (  # noqa: E402  (shared with import_questions_json, #202)
+    EMBEDDING_DIM,
+    EMBEDDING_MODEL,
+    _batched,
+    _embed_batch,
+    _existing_ids,
+    _row_to_insert_dict,
 )
 from quiz_shared.models.question import Question  # noqa: E402
 
@@ -94,9 +100,6 @@ DEFAULT_SQLITE_PATHS = [
     ROOT / "data" / "pending.db",
     Path.cwd() / "pending.db",
 ]
-
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIM = 1536
 
 
 def _legacy_to_uuid(legacy_id: str) -> uuid.UUID:
@@ -136,40 +139,6 @@ def _build_question(legacy_id: str, raw: dict) -> Question:
     payload.setdefault("embedding_model", EMBEDDING_MODEL)
     payload.setdefault("embedding_dim", EMBEDDING_DIM)
     return Question.model_validate(payload)
-
-
-def _batched(items: Sequence, size: int) -> Iterable[Sequence]:
-    for i in range(0, len(items), size):
-        yield items[i:i + size]
-
-
-def _embed_batch(client: OpenAI, texts: List[str]) -> List[List[float]]:
-    response = client.embeddings.create(model=EMBEDDING_MODEL, input=texts)
-    return [d.embedding for d in response.data]
-
-
-async def _existing_ids(session: AsyncSession, ids: Sequence[str]) -> set[str]:
-    if not ids:
-        return set()
-    uuids = [uuid.UUID(i) for i in ids]
-    result = await session.execute(
-        select(QuestionRow.id).where(QuestionRow.id.in_(uuids))
-    )
-    return {str(row[0]) for row in result.all()}
-
-
-def _row_to_insert_dict(row: QuestionRow) -> dict:
-    """Plain ``{column_name: value}`` dict for a dialect-level INSERT.
-
-    ``PIPELINE_OWNED_COLUMNS`` is excluded: those columns are not this writer's
-    to set, and a transient ORM object has not yet had its Python-side defaults
-    applied, so sending them would insert an explicit NULL.
-    """
-    return {
-        c.name: getattr(row, c.name)
-        for c in QuestionRow.__table__.columns
-        if c.name not in PIPELINE_OWNED_COLUMNS
-    }
 
 
 async def _run(args: argparse.Namespace) -> int:

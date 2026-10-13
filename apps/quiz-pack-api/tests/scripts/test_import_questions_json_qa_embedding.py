@@ -13,6 +13,7 @@ Live-DB test: needs TEST_DATABASE_URL; skipped otherwise.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -20,6 +21,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+import app.corpus.importer as lib
 import scripts.import_questions_json as importer
 from app.db.engine import normalize_async_url
 from quiz_shared.utils.qa_text import qa_text
@@ -78,7 +80,7 @@ async def test_import_embeds_question_and_qa_text_in_one_batch(
         },
     ]
     path = tmp_path / "batch.json"
-    path.write_text(importer.json.dumps(rows))
+    path.write_text(json.dumps(rows))
 
     calls: list[list[str]] = []
 
@@ -86,14 +88,14 @@ async def test_import_embeds_question_and_qa_text_in_one_batch(
         calls.append(list(texts))
         vectors = []
         for i, _ in enumerate(texts):
-            vec = [0.0] * importer.EMBEDDING_DIM
+            vec = [0.0] * lib.EMBEDDING_DIM
             vec[i] = 1.0
             vectors.append(vec)
         return vectors
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-placeholder")
-    monkeypatch.setattr(importer, "OpenAI", lambda: object())
-    monkeypatch.setattr(importer, "_embed_batch", fake_embed_batch)
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(lib, "_embed_batch", fake_embed_batch)
 
     args = argparse.Namespace(
         json_path=[str(path)],
@@ -132,8 +134,8 @@ async def test_import_embeds_question_and_qa_text_in_one_batch(
         assert set(landed) == set(ids)
         for r in landed.values():
             assert r.has_q and r.has_qa
-            assert r.embedding_model == importer.EMBEDDING_MODEL
-            assert r.embedding_qa_model == importer.EMBEDDING_MODEL
+            assert r.embedding_model == lib.EMBEDDING_MODEL
+            assert r.embedding_qa_model == lib.EMBEDDING_MODEL
             assert r.differ  # the QA vector is its own embedding, not a copy
     finally:
         async with engine.begin() as conn:

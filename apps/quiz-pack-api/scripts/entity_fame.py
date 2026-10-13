@@ -20,47 +20,15 @@ Prints ``views<TAB>title`` lines, highest first. A title with no data prints 0.
 from __future__ import annotations
 
 import argparse
-import calendar
 import sys
-from urllib.parse import quote
+from pathlib import Path
 
-import httpx
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
-_API = "https://wikimedia.org/api/rest_v1/metrics/pageviews"
-# Wikimedia requires an identifying User-Agent for API clients.
-_HEADERS = {"User-Agent": "TrubboQuiz/1.0 (https://trubbo.app; hi@trubbo.app)"}
-# Namespace prefixes / portal pages that are not topics (en, sk, cs).
-_NOT_TOPICS = (
-    "Special:", "Špeciálne:", "Speciální:", "Main_Page", "Hlavná_stránka",
-    "Hlavní_strana", "Wikipedia:", "Wikipédia:", "Wikipedie:", "wiki.phtml",
-)
+import httpx  # noqa: E402
 
-
-def top(client: httpx.Client, lang: str, year: int, month: int, limit: int) -> list[tuple[int, str]]:
-    url = f"{_API}/top/{lang}.wikipedia/all-access/{year}/{month:02d}/all-days"
-    resp = client.get(url)
-    resp.raise_for_status()
-    articles = resp.json()["items"][0]["articles"]
-    rows = [
-        (a["views"], a["article"].replace("_", " "))
-        for a in articles
-        if not a["article"].startswith(_NOT_TOPICS)
-    ]
-    return rows[:limit]
-
-
-def views(client: httpx.Client, lang: str, year: int, month: int, title: str) -> int:
-    last_day = calendar.monthrange(year, month)[1]
-    article = quote(title.replace(" ", "_"), safe="")
-    url = (
-        f"{_API}/per-article/{lang}.wikipedia/all-access/user/{article}/monthly/"
-        f"{year}{month:02d}0100/{year}{month:02d}{last_day}00"
-    )
-    resp = client.get(url, follow_redirects=True)
-    if resp.status_code == 404:
-        return 0
-    resp.raise_for_status()
-    return sum(item["views"] for item in resp.json().get("items", []))
+from app.sourcing.wiki_fame import HEADERS, top, views  # noqa: E402  (logic: #202)
 
 
 def main() -> int:
@@ -73,7 +41,7 @@ def main() -> int:
     args = parser.parse_intermixed_args()
     year, month = (int(part) for part in args.month.split("-"))
 
-    with httpx.Client(headers=_HEADERS, timeout=30) as client:
+    with httpx.Client(headers=HEADERS, timeout=30) as client:
         if args.mode == "top":
             rows = top(client, args.lang, year, month, args.limit)
         else:

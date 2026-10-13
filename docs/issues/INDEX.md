@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 202 | [Týždenné automatické dopĺňanie čerstvej zábavy](issue-202-weekly-fresh-entertainment-job.md) | enhancement · in-progress | `[~]` #202 | Job na serveri každú stredu: en/sk/cs natívne ~15/jazyk, strop $15, auto-approve cez brány |
 | 201 | [Zábava, na ktorú sa dá odpovedať](issue-201-gettable-entertainment.md) | enhancement · done | `[x]` #201 | HOTOVÉ 2026-10-13: nový recept ≈ starý, kontrola „bežný hráč“ vypnutá (nepredpovedá hodnotenie); jednoduché pravidlá v [recepte dopĺňania](../setup/fresh-entertainment-recipe.md) |
 | 200 | [TF test redizajnu 1.1 (2026-10-12): 17 nálezov](issue-200-tf-redesign-feedback-2026-10-12.md) | bug · ready-for-human | `[~]` #200 | Založené 2026-10-12; kód hotový (backend v152, iOS v main); open = overenie na zariadení cez TF build |
 | 199 | [Stráženie zásoby otázok + Trubbo Plus s mesačným limitom](issue-199-question-stock-fair-use.md) | enhancement · in-progress | `[~]` #199 | Založené 2026-10-10; 199.1 kontrola zásoby + 199.2 limit 1 000/mesiac a podmienky nasadené (v149); 199.3 appka (PR #361) a 199.4 obchod + web (PR #357) v main; 199.5 drahší plán odložený |

@@ -43,17 +43,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from app import feature_flags
 from app.orchestrator.context import OrderContext
-from app.orchestrator.stages.dedup import AsyncDuplicateFinder, DedupStage
-from app.orchestrator.stages.grayzone_judge import (
-    DEFAULT_MAX_CALLS,
-    GrayZoneJudge,
+from app.orchestrator.offline_stages import (  # noqa: F401  (re-exported: one definition, #202)
+    build_dedup_stage,
+    build_grayzone_judge,
+    build_strictness,
 )
-from app.orchestrator.stages.strictness import (
-    Strictness,
-    parse_strictness,
-)
+from app.orchestrator.stages.dedup import AsyncDuplicateFinder
 from quiz_shared.models.question import Question
 
 logger = logging.getLogger("replay_dedup_json")
@@ -78,46 +74,6 @@ class _NullSink:
         self, event_id: int, step: str, progress: int, info: Any = None
     ) -> None:
         return None
-
-
-def build_grayzone_judge() -> GrayZoneJudge | None:
-    """#170 D7 — the judge from env, deliberately NOT gated by the session-mode
-    judge cut (`generate_pack._judges_enabled`): it is a dedup verdict, not a
-    quality judge, and is allowed on the subscription."""
-    if not feature_flags.dedup_grayzone_judge():
-        return None
-    max_calls = feature_flags.grayzone_judge_max_calls()
-    return GrayZoneJudge(
-        max_calls=max_calls if max_calls is not None else DEFAULT_MAX_CALLS
-    )
-
-
-def build_strictness() -> Strictness:
-    """#170 D6 — the per-category profile from env. `DedupStage` and
-    `TopUpStage` must read the SAME object (the spent-fact filter mirrors the
-    dedup content check), so both callers compose it here."""
-    return Strictness(
-        profiles=parse_strictness(feature_flags.dedup_strictness_per_category()),
-        answer_cap=feature_flags.answer_cap(),
-    )
-
-
-def build_dedup_stage(
-    store: AsyncDuplicateFinder,
-    gold_standard_path: str | Path | None = None,
-    strictness: Strictness | None = None,
-) -> DedupStage:
-    """Compose `DedupStage` from the #170 env flags — the one place the corpus
-    CLI and this harness share, so a replay reproduces a run's switches."""
-    strictness = strictness if strictness is not None else build_strictness()
-    return DedupStage(
-        store,
-        gold_standard_path=gold_standard_path,
-        strictness=strictness,
-        answer_counter=store if strictness.answer_cap else None,  # type: ignore[arg-type]
-        qa_embedding=feature_flags.dedup_qa_embedding(),
-        grayzone_judge=build_grayzone_judge(),
-    )
 
 
 def _build_store(name: str) -> AsyncDuplicateFinder:

@@ -3685,6 +3685,23 @@
         }
       }
     },
+    "Get Plus" : {
+      "comment" : "Home plan card link for a free player: opens the Trubbo Plus offer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Získej Plus"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Získaj Plus"
+          }
+        }
+      }
+    },
     "Get Trubbo Plus" : {
       "comment" : "Completion upsell pill that opens the paywall",
       "localizations" : {
@@ -6555,6 +6572,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázky, výsledky aj skóre"
+          }
+        }
+      }
+    },
+    "Quiz" : {
+      "comment" : "Home section label above the category deck and the quiz settings",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz"
           }
         }
       }
@@ -9836,22 +9870,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktualizuj spôsob platby"
-          }
-        }
-      }
-    },
-    "Upgrade" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vylepši"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vylepši"
           }
         }
       }

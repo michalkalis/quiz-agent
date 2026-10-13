@@ -1,19 +1,6 @@
 # texts
 trubbo
-tvoj plán
-30
-z 30 otázok zadarmo
-skončilo
-Obnov predplatné
-30
-z 30 otázok zadarmo
-skončilo
-Obnov predplatné
-30
-z 30 otázok zadarmo
-skončilo
-Obnov predplatné
-resets in 13 days
+Kvíz
 History
 Science & Nature
 Geography & World
@@ -32,12 +19,37 @@ Náročnosť
 Medium
 Kategórie
 All Categories
+tvoj plán
+30
+z 30 otázok zadarmo
+skončilo
+Obnov predplatné
+30
+z 30 otázok zadarmo
+skončilo
+Obnov predplatné
+30
+z 30 otázok zadarmo
+skončilo
+Obnov predplatné
+resets in 13 days
+resets in 13 days
 Štart
 # identifiers
 home.moreSettings
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
 home.freePlanUpgradeButton
 home.freePlanCard
-home.planLabel
 home.planPrimary
 home.planCaption
 home.planStatusPill
@@ -51,14 +63,5 @@ home.planCaption
 home.planStatusPill
 home.freePlanUpgrade
 home.freePlanReset
-home-language-menu
-home.language.en
-home.language.sk
-home.language.cs
-home-difficulty-menu
-home.difficulty.easy
-home.difficulty.medium
-home.difficulty.hard
-home.difficulty.random
-home-categories-menu
+home.freePlanReset
 home.startQuiz

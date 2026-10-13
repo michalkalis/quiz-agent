@@ -72,12 +72,12 @@ struct HomePlanCard: View {
     // MARK: - Body
 
     var body: some View {
-        // #194 C1: the R-Home plan card — sentence-case label, title-size
-        // number, one ink meter. Same structure in every state, so the card
-        // never jumps when /usage resolves (`HomePlanCardScaffold` mirrors it).
+        // Home redesign P1 (founder pick 2026-10-13): a compact card under
+        // Home's "your plan" section label: the number line, then the meter
+        // with its caption. Same structure in every state, so the card never
+        // jumps when /usage resolves (HomeView's loading card mirrors it).
         HangsCard(padding: HomePlanCardMetrics.padding) {
             VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
-                HomePlanCardLabel()
                 switch state {
                 case .subscriber, .subscriberWithCredits, .grace:
                     subscriberBody
@@ -127,11 +127,12 @@ struct HomePlanCard: View {
             if showLegend {
                 legendRow(free: remaining, credits: credits)
             }
-            HomePlanMeter(segments: freeTrackSegments(remaining: remaining, credits: credits))
-            Text(freeMetaText(hasCredits: hasCredits))
-                .font(.hangsCaption)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
-                .accessibilityIdentifier("home.freePlanReset")
+            HomePlanMeterRow(meter: HomePlanMeter(segments: freeTrackSegments(remaining: remaining, credits: credits))) {
+                Text(freeMetaText(hasCredits: hasCredits))
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .accessibilityIdentifier("home.freePlanReset")
+            }
         }
     }
 
@@ -190,8 +191,10 @@ struct HomePlanCard: View {
         case .freeWithCredits:
             linkLabel("More", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
         default:
-            // #198 (canvas Bg-Home): the plan's links are blue.
-            linkLabel("Upgrade", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
+            // #198 (canvas Bg-Home): the plan's links are blue. Founder
+            // 2026-10-13: "Vylepši" was a calque of "Upgrade"; the link names
+            // what it leads to, like the paywall's "Get Trubbo Plus".
+            linkLabel("Get Plus", color: Theme.Hangs.Colors.blue, id: "home.freePlanUpgrade")
         }
     }
 
@@ -214,8 +217,9 @@ struct HomePlanCard: View {
             if state == .subscriberWithCredits {
                 creditChip
             }
-            HomePlanMeter(segments: [.init(color: subscriberTrackColor, fraction: subscriberTrackFraction)])
-            subscriberMeta
+            HomePlanMeterRow(meter: HomePlanMeter(segments: [.init(color: subscriberTrackColor, fraction: subscriberTrackFraction)])) {
+                subscriberMeta
+            }
         }
     }
 
@@ -344,15 +348,24 @@ struct HomePlanCard: View {
     }
 }
 
-/// "your plan" — the label every plan-card state (and its loading/failed
-/// placeholders) opens with.
-struct HomePlanCardLabel: View {
+/// Home redesign P1 (founder pick 2026-10-13): the meter and its caption
+/// share one line while they fit; a longer caption (sk/cs, large text, the
+/// credits note) drops under the meter.
+struct HomePlanMeterRow<Meta: View>: View {
+    let meter: HomePlanMeter
+    @ViewBuilder let meta: Meta
+
     var body: some View {
-        Text("your plan")
-            .font(.hangsOverline)
-            // #198 (canvas Bg-Home): "tvoj plán" in the link blue.
-            .foregroundStyle(Theme.Hangs.Colors.blue)
-            .accessibilityIdentifier("home.planLabel")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
+                meter.frame(minWidth: HomePlanCardMetrics.meterMinWidth)
+                meta.fixedSize()
+            }
+            VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
+                meter
+                meta
+            }
+        }
     }
 }
 
@@ -400,6 +413,8 @@ enum HomePlanCardMetrics {
     static let padding = EdgeInsets(top: 12, leading: 16, bottom: 14, trailing: 16)
     static let rowGap: CGFloat = 6
     static let meterHeight: CGFloat = 6
+    /// Below this the meter beside its caption stops reading as a meter.
+    static let meterMinWidth: CGFloat = 96
     static let legendDot: CGFloat = 6
 }
 

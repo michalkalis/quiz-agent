@@ -1,16 +1,6 @@
 # texts
 trubbo
-your plan
-Trubbo Plus
-renewal failed
-Fix payment
-Trubbo Plus
-renewal failed
-Fix payment
-Trubbo Plus
-renewal failed
-Fix payment
-Update your payment method
+Quiz
 History
 Science & Nature
 Geography & World
@@ -29,22 +19,21 @@ Difficulty
 Medium
 Categories
 All Categories
+your plan
+Trubbo Plus
+renewal failed
+Fix payment
+Trubbo Plus
+renewal failed
+Fix payment
+Trubbo Plus
+renewal failed
+Fix payment
+Update your payment method
+Update your payment method
 Start
 # identifiers
 home.moreSettings
-home.planManageButton
-home.freePlanCard
-home.planLabel
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planMeta
 home-language-menu
 home.language.en
 home.language.sk
@@ -55,4 +44,18 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
+home.planLabel
+home.planManageButton
+home.freePlanCard
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planMeta
+home.planMeta
 home.startQuiz

@@ -2,9 +2,11 @@
 //  HomeView.swift
 //  Hangs
 //
-//  Home — #194 C1 "Sklo nad kartami" (canvas R-Home): plan card, my packs,
-//  the category deck, three glass setting pills, then the slim command bar
-//  and Start pinned at the bottom.
+//  Home — #194 C1 "Sklo nad kartami" (canvas R-Home), sections reordered by
+//  the founder on 2026-10-13 (canvas "Home: poradie a plán", A + C + P1):
+//  the quiz (category deck and its three setting pills), my packs, your plan,
+//  each under the same section label; the slim command bar and Start stay
+//  pinned at the bottom.
 //
 
 import SwiftUI
@@ -36,56 +38,39 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.moreSettings")
             }
 
-            // The deck takes whatever height the content leaves; when the
-            // content outgrows the screen (packs, notice, large text) the page
-            // scrolls and the deck keeps only its floor. The reader sits
-            // outside the scroll view, so measuring never feeds its own layout.
-            GeometryReader { viewport in
-                ScrollView {
-                    VStack(spacing: Theme.Hangs.Spacing.md) {
-                        if let appConfig {
-                            AppNoticeBanner(store: appConfig)
-                        }
-
-                        freePlanCard
-
-                        // #141: pick-and-play entry for owned custom packs
-                        // (variant B — founder 2026-08-05), plus the always-on
-                        // "Create your own pack" card.
-                        if let packOrderService {
-                            HomePacksSection(
-                                service: packOrderService,
-                                playedCount: viewModel.playedQuestionCount(inPack:),
-                                createPack: createPackEntry,
-                                quizStart: packQuizStart,
-                                onPlayPack: startPack
-                            )
-                        }
-
-                        if !dynamicTypeSize.isAccessibilitySize {
-                            HomeCategoryDeck(
-                                selectedCategories: viewModel.settings.categories,
-                                title: viewModel.settings.categoryDisplayName(),
-                                questionCount: viewModel.settings.numberOfQuestions
-                            )
-                            .frame(minHeight: Metrics.deckFloor, maxHeight: .infinity)
-                        }
-
-                        settingPills
-
-                        // #96 P3: the "Image questions" toggle is hidden until
-                        // image content ships (founder, 2026-07-12). Wiring
-                        // stays; only the UI is gated behind a Config flag.
-                        if Config.imageQuestionsToggleVisible {
-                            HangsCard { imageQuestionsRow }
-                        }
+            ScrollView {
+                VStack(spacing: Theme.Hangs.Spacing.xl) {
+                    if let appConfig {
+                        AppNoticeBanner(store: appConfig)
                     }
-                    .padding(.horizontal, Theme.Hangs.Spacing.md)
-                    .padding(.vertical, Theme.Hangs.Spacing.sm)
-                    .frame(minHeight: viewport.size.height, alignment: .top)
+
+                    quizSection
+
+                    // #141: pick-and-play entry for owned custom packs, plus
+                    // the always-on "Create your own pack" row.
+                    if let packOrderService {
+                        HomePacksSection(
+                            service: packOrderService,
+                            playedCount: viewModel.playedQuestionCount(inPack:),
+                            createPack: createPackEntry,
+                            quizStart: packQuizStart,
+                            onPlayPack: startPack
+                        )
+                    }
+
+                    planSection
+
+                    // #96 P3: the "Image questions" toggle is hidden until
+                    // image content ships (founder, 2026-07-12). Wiring
+                    // stays; only the UI is gated behind a Config flag.
+                    if Config.imageQuestionsToggleVisible {
+                        HangsCard { imageQuestionsRow }
+                    }
                 }
-                .scrollBounceBehavior(.basedOnSize)
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.vertical, Theme.Hangs.Spacing.sm)
             }
+            .scrollBounceBehavior(.basedOnSize)
 
             // #77/#96 P2: listening indicator above the primary action — visible
             // only while the Home command window is armed. #131 Track F: the one
@@ -147,9 +132,45 @@ struct HomeView: View {
         return HomePacksSection.CreatePackEntry(appConfig: appConfig, action: onCreatePack)
     }
 
+    // MARK: - Sections (founder 2026-10-13: one label style for every section)
+
+    private var quizSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+            sectionLabel("Quiz")
+            // The deck now opens the page, so it gets a fixed height instead
+            // of whatever the content left: it overlapped the pills and lost
+            // its bottom under Start once packs filled the screen.
+            if !dynamicTypeSize.isAccessibilitySize {
+                HomeCategoryDeck(
+                    selectedCategories: viewModel.settings.categories,
+                    title: viewModel.settings.categoryDisplayName(),
+                    questionCount: viewModel.settings.numberOfQuestions
+                )
+                .frame(height: Metrics.deckHeight)
+                // The fanned back cards turn on their bottom edge, so one
+                // corner dips below the frame.
+                .padding(.bottom, Theme.Hangs.Spacing.lg)
+            }
+            settingPills
+        }
+    }
+
+    private var planSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+            sectionLabel("your plan")
+                .accessibilityIdentifier("home.planLabel")
+            freePlanCard
+        }
+    }
+
+    private func sectionLabel(_ text: LocalizedStringKey) -> some View {
+        HangsSectionLabel(text: text)
+            .padding(.horizontal, Theme.Hangs.Spacing.xxs)
+    }
+
     private enum Metrics {
-        /// Below this the fanned cards stop reading as a deck.
-        static let deckFloor: CGFloat = 160
+        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256).
+        static let deckHeight: CGFloat = 256
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)
@@ -234,13 +255,12 @@ struct HomeView: View {
 
     // Shown only while /usage's launch/foreground fetch is still in flight and
     // nothing is cached yet (#123 Track A). Holds the loaded card's full
-    // scaffold — the "your plan" label, a number-height spinner row, an empty
-    // meter and a skeleton meta line — so the slot doesn't jump when /usage
-    // resolves into the loaded (or failed) state.
+    // scaffold — a number-height spinner row, then an empty meter beside a
+    // skeleton meta line — so the slot doesn't jump when /usage resolves into
+    // the loaded (or failed) state.
     private var freePlanCardLoading: some View {
         HangsCard(padding: HomePlanCardMetrics.padding) {
             VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
-                HomePlanCardLabel()
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                     Text(verbatim: "00")
                         .font(.hangsTitle)
@@ -252,14 +272,15 @@ struct HomeView: View {
                         .font(.hangsBodyLG)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                 }
-                HomePlanMeter(segments: [])
-                Text(verbatim: "resets in 13 days")
-                    .font(.hangsCaption)
-                    .hidden()
-                    .overlay(alignment: .leading) {
-                        Capsule().fill(Theme.Hangs.Colors.track)
-                    }
-                    .accessibilityIdentifier("home.planLoadingSkeleton")
+                HomePlanMeterRow(meter: HomePlanMeter(segments: [])) {
+                    Text(verbatim: "resets in 13 days")
+                        .font(.hangsCaption)
+                        .hidden()
+                        .overlay(alignment: .leading) {
+                            Capsule().fill(Theme.Hangs.Colors.track)
+                        }
+                        .accessibilityIdentifier("home.planLoadingSkeleton")
+                }
             }
         }
         .accessibilityIdentifier("home.freePlanLoading")

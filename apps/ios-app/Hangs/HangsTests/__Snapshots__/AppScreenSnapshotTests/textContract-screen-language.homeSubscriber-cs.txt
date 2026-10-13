@@ -1,17 +1,6 @@
 # texts
 trubbo
-tvůj plán
-Trubbo Plus
-aktivní
-Spravuj
-Trubbo Plus
-aktivní
-Spravuj
-Trubbo Plus
-aktivní
-Spravuj
-100 kreditů z balíčku uložených na později
-Ještě 870 z 1 000 · resets in 13 days
+Kvíz
 History
 Science & Nature
 Geography & World
@@ -30,12 +19,35 @@ Obtížnost
 Medium
 Kategorie
 All Categories
+tvůj plán
+Trubbo Plus
+aktivní
+Spravuj
+Trubbo Plus
+aktivní
+Spravuj
+Trubbo Plus
+aktivní
+Spravuj
+100 kreditů z balíčku uložených na později
+Ještě 870 z 1 000 · resets in 13 days
+Ještě 870 z 1 000 · resets in 13 days
 Start
 # identifiers
 home.moreSettings
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
 home.planManageButton
 home.freePlanCard
-home.planLabel
 home.planName
 home.planStatusPill
 home.planManageCTA
@@ -47,14 +59,5 @@ home.planStatusPill
 home.planManageCTA
 home.planCreditChip
 home.planMeta
-home-language-menu
-home.language.en
-home.language.sk
-home.language.cs
-home-difficulty-menu
-home.difficulty.easy
-home.difficulty.medium
-home.difficulty.hard
-home.difficulty.random
-home-categories-menu
+home.planMeta
 home.startQuiz

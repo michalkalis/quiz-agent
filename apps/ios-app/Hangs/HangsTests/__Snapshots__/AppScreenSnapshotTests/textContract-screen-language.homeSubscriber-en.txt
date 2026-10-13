@@ -1,17 +1,6 @@
 # texts
 trubbo
-your plan
-Trubbo Plus
-active
-Manage
-Trubbo Plus
-active
-Manage
-Trubbo Plus
-active
-Manage
-100 pack credits kept for later
-870 of 1,000 left · resets in 13 days
+Quiz
 History
 Science & Nature
 Geography & World
@@ -30,12 +19,35 @@ Difficulty
 Medium
 Categories
 All Categories
+your plan
+Trubbo Plus
+active
+Manage
+Trubbo Plus
+active
+Manage
+Trubbo Plus
+active
+Manage
+100 pack credits kept for later
+870 of 1,000 left · resets in 13 days
+870 of 1,000 left · resets in 13 days
 Start
 # identifiers
 home.moreSettings
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
 home.planManageButton
 home.freePlanCard
-home.planLabel
 home.planName
 home.planStatusPill
 home.planManageCTA
@@ -47,14 +59,5 @@ home.planStatusPill
 home.planManageCTA
 home.planCreditChip
 home.planMeta
-home-language-menu
-home.language.en
-home.language.sk
-home.language.cs
-home-difficulty-menu
-home.difficulty.easy
-home.difficulty.medium
-home.difficulty.hard
-home.difficulty.random
-home-categories-menu
+home.planMeta
 home.startQuiz

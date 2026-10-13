@@ -48,7 +48,7 @@ final nonisolated class RSAppConfigTests: XCTestCase {
         app.buttons["home.notice.dismiss"].tap()
         XCTAssertTrue(notice.waitForNonExistence(timeout: 5), "RS-23: notice still shown after dismiss")
 
-        let homeCreatePack = HomePage(app: app).createPackButton
+        let homeCreatePack = HomePage(app: app).revealCreatePack()
         XCTAssertTrue(homeCreatePack.waitForExistence(timeout: 5), "RS-23: Home create-pack card hidden while orders are paused")
         XCTAssertFalse(homeCreatePack.isEnabled, "RS-23: Home create-pack card is enabled while orders are paused")
 

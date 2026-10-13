@@ -273,9 +273,13 @@ enum VoiceCommandMatcher {
     /// is treated as a truncation rather than a different word.
     static let truncationPrefix = 2
 
-    /// Whether `token` looks like `variant` with its tail cut off.
+    /// Whether `token` looks like `variant` with its tail cut off. The token
+    /// must also carry at least half the variant: a whole short word that
+    /// happens to open a longer command ("na" → "na úvod", "za" → "zavri")
+    /// is that word, not a half-heard command.
     private static func isTruncation(_ token: String, of variant: String) -> Bool {
-        guard token.count < variant.count, token.count >= truncationPrefix else { return false }
+        guard token.count < variant.count, token.count >= truncationPrefix,
+              token.count * 2 >= variant.count else { return false }
         return token.prefix(truncationPrefix) == variant.prefix(truncationPrefix)
     }
 

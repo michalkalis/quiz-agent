@@ -96,4 +96,17 @@ struct VoiceCommandButtonWordTests {
         let tryAgain = buttonTitles[9].title(language)
         #expect(VoiceCommandMatcher.match(transcript: tryAgain, on: .confirmation, isFinal: true, language: language) == .again)
     }
+
+    /// WHY: "na" / "za" / "go" open the "Na úvod" / "Zavri" / "Go Home"
+    /// titles but are everyday words; read as a truncated title they would
+    /// abandon the quiz from the error or set-end screen.
+    @Test("a short word that opens a title does not leave the screen", arguments: CommandLanguage.allCases)
+    func shortHeadIsNotATitle(_ language: CommandLanguage) {
+        let heads = language == .english ? ["go"] : ["na", "za", "No na!"]
+        for head in heads {
+            for screen in [VoiceCommandScreen.error, .setEnd] {
+                #expect(VoiceCommandMatcher.match(transcript: head, on: screen, isFinal: true, language: language) == nil, "\(language) '\(head)' on \(screen)")
+            }
+        }
+    }
 }

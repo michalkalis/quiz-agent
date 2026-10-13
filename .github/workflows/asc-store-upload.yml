@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group"
+        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group — or app-review alone (needs build) to submit the version to App Review"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"
@@ -48,4 +48,10 @@ jobs:
           [[ -n "$BUILD" ]] && args+=(--build "$BUILD")
           [[ "$SUBMIT" == "true" ]] && args+=(--submit-beta-review)
           [[ "$APPLY" == "true" ]] && args+=(--apply)
-          python scripts/asc_store_upload.py "${args[@]}"
+          if [[ "$STEPS" == "app-review" ]]; then
+            [[ -n "$BUILD" ]] || { echo "app-review needs build"; exit 1; }
+            apply=(); [[ "$APPLY" == "true" ]] && apply=(--apply)
+            python scripts/asc_app_review_submit.py --build "$BUILD" "${apply[@]}"
+          else
+            python scripts/asc_store_upload.py "${args[@]}"
+          fi

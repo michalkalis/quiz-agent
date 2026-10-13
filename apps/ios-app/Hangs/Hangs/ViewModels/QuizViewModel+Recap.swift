@@ -98,22 +98,29 @@ extension QuizViewModel {
             localized: "Set finished. You got \(correct) out of \(recapEntries.count) right.",
             comment: "Recap narration intro: correct count out of total"
         ))
+        // The question number is its own clip: the server caches clips by
+        // exact text, so "verdict + answer" stays identical for every player
+        // who met that question, whatever its position in their set (#200).
         for entry in recapEntries {
+            pieces.append(String(
+                localized: "Question \(entry.id).",
+                comment: "Recap narration: the question number, spoken right before its verdict"
+            ))
             switch entry.result {
             case .correct:
                 pieces.append(String(
-                    localized: "Question \(entry.id) — correct. \(entry.correctAnswerDisplay).",
-                    comment: "Recap narration line for a correct answer: number, then the answer"
+                    localized: "Correct. \(entry.correctAnswerDisplay).",
+                    comment: "Recap narration verdict for a correct answer, then the answer"
                 ))
             case .skipped:
                 pieces.append(String(
-                    localized: "Question \(entry.id) — skipped. The answer: \(entry.correctAnswerDisplay).",
-                    comment: "Recap narration line for a skipped question: number, then the revealed answer"
+                    localized: "Skipped. The answer: \(entry.correctAnswerDisplay).",
+                    comment: "Recap narration verdict for a skipped question, then the revealed answer"
                 ))
             default:
                 pieces.append(String(
-                    localized: "Question \(entry.id) — missed. The answer: \(entry.correctAnswerDisplay).",
-                    comment: "Recap narration line for a wrong answer: number, then the revealed answer"
+                    localized: "Missed. The answer: \(entry.correctAnswerDisplay).",
+                    comment: "Recap narration verdict for a wrong answer, then the revealed answer"
                 ))
             }
             if let explanation = entry.explanation {

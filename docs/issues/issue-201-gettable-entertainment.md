@@ -71,6 +71,21 @@ Mix (páka 3) sa v tomto kroku iba **meria** (rozdelenie odhadov); výberová lo
 - sk v tom istom hodnotení (8 + 8 + ~4, jedno kolo pre foundera namiesto dvoch) — overí domácu scénu a kontrolu Sonnetom.
 - Výsledok + rozhodnutie sem a do pamäte.
 
+**Výsledok (2026-10-13, 44 otázok, `analyze_ratings.py` v run adresári):**
+
+| Skupina | n | Zábava ⌀ | Šanca | Zábava 9–10 |
+|---|---|---|---|---|
+| A (starý recept) en / sk | 10 / 8 | 7,9 / 9,2 | 10/10 / 8/8 | 4 / 7 |
+| B prepustené en / sk | 10 / 8 | 7,7 / 9,2 | 8/10 / 8/8 | 1 / 6 |
+| B vyradené kontrolou en / sk | 4 / 4 | 7,8 / 8,2 | 3/4 / 4/4 | 1 / 1 |
+
+- **B neporazil A.** Spolu 8,4 vs 8,5, šanca 16/18 vs 18/18. Recept seedov + brief v2 merateľne nepomohol.
+- **Kontrola „bežný hráč“ nepredpovedá hodnotenie** (korelácia odhadu so zábavou 0,10; otázky, ktoré by vyradila, 8,4 a šanca 11/12 — vrátane dvoch za 10). Zapnutie by vyhadzovalo dobré otázky → `CASUAL_PLAYER_GATE` ostáva `off`.
+- **Najsilnejší signál je jazyk/národ:** sk 9,0 vs en 7,8 v oboch ramenách; founder: „fakt je rozdiel či sú to slovenské alebo anglické otázky, toto je veľmi dôležité pre zábavnosť“.
+- Najnižšie hodnotené (6–7): ocenenia („kto čo kedy vyhral“), štáb a tvorcovia (režisér, bábkoherec), americky/niche témy (Nintendo, BTS čísla, Razzie). Najvyššie: veľmi známe veci s prekvapivým uhlom (Netflix, Tom Holland, McConaughey/Harrelson, Harry Potter, Eurovízia/Elán, Warhol/Medzilaborce).
+- Otvorená číselná otázka (Baby Shark „10 billion“) nehovorí, aká odchýlka sa ráta → číselné otázky len ako MCQ alebo s uvedenou presnosťou.
+- Founder upozorňuje, že jeho hodnotenie je jeden hráč; skutočný signál prinesie beta.
+
 ### 201.5 Nasadenie receptu
 
 Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čerstvej zábavy (#199), `CASUAL_PLAYER_GATE=1` pre zábavu v prode (pack-api). Ostatné kategórie = nové rozhodnutie foundera.
@@ -83,8 +98,8 @@ Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čers
 
 ## Stav
 
-- [ ] 201.1 recept seedov + `entity_fame.py`
-- [ ] 201.2 brief v2
-- [ ] 201.3 `CasualPlayerChecker` v scoringu za vypínačom + testy
-- [ ] 201.4 slepé porovnanie en, potom sk
+- [x] 201.1 recept seedov + `entity_fame.py`
+- [x] 201.2 brief v2
+- [x] 201.3 `CasualPlayerChecker` v scoringu za vypínačom + testy (PR #394, vypnuté)
+- [x] 201.4 slepé porovnanie en + sk — B ≈ A, kontrola nepomáha
 - [ ] 201.5 nasadenie receptu

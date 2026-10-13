@@ -16,11 +16,10 @@ struct HangsBrandMark: View {
     var size: CGFloat = 28
 
     var body: some View {
-        // #194 D2: logo = question mark with a card-wave dot + "trubbo" in
-        // Rethink Sans ExtraBold (founder 2026-10-09).
+        // Logo = the mascot head (founder 2026-10-13) + "trubbo" in Rethink Sans
+        // ExtraBold (#194, founder 2026-10-09).
         HStack(spacing: 6) {
-            TrubboMark(height: size * 1.15)
-                .foregroundStyle(Theme.Hangs.Colors.ink)
+            TrubboMark(height: size * 1.3)
             Text(verbatim: "trubbo")
                 .font(Theme.Hangs.Fonts.content(size, weight: .heavy))
                 .tracking(-size * 0.03)

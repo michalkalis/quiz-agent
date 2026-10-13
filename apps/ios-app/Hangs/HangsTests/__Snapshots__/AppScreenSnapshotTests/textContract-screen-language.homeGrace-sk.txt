@@ -1,16 +1,6 @@
 # texts
 trubbo
-tvoj plán
-Trubbo Plus
-obnova zlyhala
-Oprav platbu
-Trubbo Plus
-obnova zlyhala
-Oprav platbu
-Trubbo Plus
-obnova zlyhala
-Oprav platbu
-Aktualizuj spôsob platby
+Kvíz
 History
 Science & Nature
 Geography & World
@@ -29,22 +19,21 @@ Náročnosť
 Medium
 Kategórie
 All Categories
+tvoj plán
+Trubbo Plus
+obnova zlyhala
+Oprav platbu
+Trubbo Plus
+obnova zlyhala
+Oprav platbu
+Trubbo Plus
+obnova zlyhala
+Oprav platbu
+Aktualizuj spôsob platby
+Aktualizuj spôsob platby
 Štart
 # identifiers
 home.moreSettings
-home.planManageButton
-home.freePlanCard
-home.planLabel
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planMeta
 home-language-menu
 home.language.en
 home.language.sk
@@ -55,4 +44,18 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
+home.planLabel
+home.planManageButton
+home.freePlanCard
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planName
+home.planStatusPill
+home.planManageCTA
+home.planMeta
+home.planMeta
 home.startQuiz

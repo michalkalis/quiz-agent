@@ -1,8 +1,8 @@
 # texts
 my packs
 Famous bridges of the world and the engineers who built them
-English
 Played 4 / 30
+· English
 history
 5 of 30 ready
 EN
@@ -12,8 +12,8 @@ Create your own pack
 home.myPacksSection
 home.myPacks.showAll
 home.myPacks.play
-home.myPacks.language
 home.myPacks.progress
+home.myPacks.language
 home.myPacks.play
 home.myPacks.readyCount
 home.createPack

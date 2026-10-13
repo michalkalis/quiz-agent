@@ -1,18 +1,6 @@
 # texts
 trubbo
-your plan
-118
-questions available
-More
-118
-questions available
-More
-118
-questions available
-More
-18 monthly free
-100 pack credits
-resets in 13 days · credits never expire
+Quiz
 History
 Science & Nature
 Geography & World
@@ -31,12 +19,36 @@ Difficulty
 Medium
 Categories
 All Categories
+your plan
+118
+questions available
+More
+118
+questions available
+More
+118
+questions available
+More
+18 monthly free
+100 pack credits
+resets in 13 days · credits never expire
+resets in 13 days · credits never expire
 Start
 # identifiers
 home.moreSettings
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
 home.freePlanUpgradeButton
 home.freePlanCard
-home.planLabel
 home.planPrimary
 home.planCaption
 home.freePlanUpgrade
@@ -48,14 +60,5 @@ home.planCaption
 home.freePlanUpgrade
 home.planLegend
 home.freePlanReset
-home-language-menu
-home.language.en
-home.language.sk
-home.language.cs
-home-difficulty-menu
-home.difficulty.easy
-home.difficulty.medium
-home.difficulty.hard
-home.difficulty.random
-home-categories-menu
+home.freePlanReset
 home.startQuiz

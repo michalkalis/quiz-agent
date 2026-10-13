@@ -67,8 +67,8 @@ Mix (páka 3) sa v tomto kroku iba **meria** (rozdelenie odhadov); výberová lo
 ### 201.4 Slepé porovnanie
 
 - Rovnaký deň, počet a **pripnutý `GENERATION_MODEL`** (inak `GEN_ALT` náhodne prehodí časť behov na iný model). Rameno A = dnešný recept (brief + seedy ako 10-12, kontrola OFF). Rameno B = 201.1 + 201.2 + kontrola v režime `shadow`.
-- en: 10 z A + 10 z B, ktoré kontrola prepustila, + ~4 z B, ktoré by vyradila — zamiešané, bez označenia (`generate_blind_maps.py`). Founder hodnotí zábavu 1–10 a „mal som šancu“ áno/nie. Vyradené vs prepustené ukáže, či kontrola sama pomáha (ablácia bez ďalšieho ramena).
-- Potom sk rovnako — overí domácu scénu a kontrolu Sonnetom.
+- en: 10 z A + 10 z B, ktoré kontrola prepustila, + ~5 z B, ktoré by vyradila — zamiešané, bez označenia, kľúč k ramenám v run adresári `docs/testing/runs/gettable-entertainment-2026-10-13/`. Founder hodnotí zábavu 1–10 a „mal som šancu“ áno/nie. Vyradené vs prepustené ukáže, či kontrola sama pomáha (ablácia bez ďalšieho ramena).
+- sk v tom istom hodnotení (8 + 8 + ~4, jedno kolo pre foundera namiesto dvoch) — overí domácu scénu a kontrolu Sonnetom.
 - Výsledok + rozhodnutie sem a do pamäte.
 
 ### 201.5 Nasadenie receptu

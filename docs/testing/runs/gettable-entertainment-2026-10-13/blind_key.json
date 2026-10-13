@@ -1,0 +1,404 @@
+{
+ "E1": {
+  "arm": "B-pass",
+  "qid": "22544824-8a8a-4f58-97a2-295d9d86d723",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 85,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "\"Web series\" plus \"video platform\" makes YouTube the obvious everyday-knowledge guess, and many also know the Backrooms viral origin, though the wording doesn't name it outright.",
+   "excerpt_missing": false
+  }
+ },
+ "E2": {
+  "arm": "B-pass",
+  "qid": "3cdbdef3-3662-490f-96e6-b16f6a17071a",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 55,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The clue 'more than the number of people on Earth' (~8 billion) lets players reason to a round figure like 10 billion, though some may guess 8 or 9 billion, but the milestone is fairly well known.",
+   "excerpt_missing": false
+  }
+ },
+ "E3": {
+  "arm": "B-drop",
+  "qid": "f2e8341f-b54f-4123-bc7d-2a1bfdc4c842",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 12,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Most casual players assume a book that became a global phenomenon had a print run in the thousands or tens of thousands, and only those who know the 500-copy trivia would pick 'hundreds'; the wording ",
+   "excerpt_missing": false
+  }
+ },
+ "E4": {
+  "arm": "B-pass",
+  "qid": "cbf4bc51-8a65-4a28-9575-d96b7337de60",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 62,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Many casual players know Microsoft paid about $2.5 billion for Mojang, and others can reason that a huge game would fetch billions, though 'hundreds of millions' and 'tens of billions' are plausible d",
+   "excerpt_missing": false
+  }
+ },
+ "E5": {
+  "arm": "A",
+  "qid": "02c0b638-b185-4f28-8279-66a836d7ded8",
+  "casual_player": null
+ },
+ "E6": {
+  "arm": "B-pass",
+  "qid": "d2a51f3e-b58b-4da9-b2c1-4c105873ef46",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 62,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Many casual players know Lizzie Borden was acquitted (the rhyme and 'got off' story are widely known), though some will assume guilty given the rhyme, and the question's wording doesn't reveal the ans",
+   "excerpt_missing": false
+  }
+ },
+ "E7": {
+  "arm": "B-pass",
+  "qid": "1b91c0d9-262c-4978-98fc-e9a56b4d9bef",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 55,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The question is open-ended, but 'tax write-off' is a widely reported story and the most common-sense guess for why a studio would bury a finished film, so many casual players would get it by reasoning",
+   "excerpt_missing": false
+  }
+ },
+ "E8": {
+  "arm": "A",
+  "qid": "d5dffe7c-a3a1-4ea6-837b-eb0b9055801d",
+  "casual_player": null
+ },
+ "E9": {
+  "arm": "B-drop",
+  "qid": "2f2abae6-3c3d-49a0-8dec-996b692b3fd7",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 12,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Frank Oz is a name most casual players wouldn't recall, as the puppeteer is far less famous than the characters, and the question gives no wording that points to the name.",
+   "excerpt_missing": false
+  }
+ },
+ "E10": {
+  "arm": "B-drop",
+  "qid": "cb7bd361-4b45-4e0b-844d-94a8727dbe8a",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 22,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "The vampire origin (originally from Steinman's 'Nosferatu' musical idea) is a niche piece of trivia, though the song's gothic, dramatic feel and the video's imagery make 'vampires' a plausible guess f",
+   "excerpt_missing": false
+  }
+ },
+ "E11": {
+  "arm": "A",
+  "qid": "5460db8d-5012-497c-9f8a-08b45a781098",
+  "casual_player": null
+ },
+ "E12": {
+  "arm": "B-pass",
+  "qid": "d6ab5608-693b-42d4-bf63-a57d62032ff6",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 35,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The Netflix-Warner Bros. deal was widely covered in headlines and 'streaming giant' makes Netflix a natural guess, but many casual players would not recall which company it was and might guess Amazon,",
+   "excerpt_missing": false
+  }
+ },
+ "E13": {
+  "arm": "B-pass",
+  "qid": "9df1bfdb-61fd-4c4d-a205-2b4cd83c56af",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 85,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The wording 'Hollywood in 1927, just as movies were learning to talk' strongly implies silent films, so most players would deduce it from everyday knowledge, but the answer isn't named outright.",
+   "excerpt_missing": false
+  }
+ },
+ "E14": {
+  "arm": "A",
+  "qid": "287f6bf3-524f-45c7-8a4d-31cb19303bef",
+  "casual_player": null
+ },
+ "E15": {
+  "arm": "B-drop",
+  "qid": "aeaf887c-8347-4abd-923f-b4f92519b58c",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 22,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "The question rules out plumber and 'construction site' hints at a trade, but most casual players don't know the original job was carpenter; they'd guess builder, construction worker or similar, and on",
+   "excerpt_missing": false
+  }
+ },
+ "E16": {
+  "arm": "A",
+  "qid": "bb973636-3b97-413c-8cda-97d31d0fe577",
+  "casual_player": null
+ },
+ "E17": {
+  "arm": "B-pass",
+  "qid": "9f668d54-cf8d-460f-958a-9d25fb10e3e4",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 40,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Annette Bening is well known as Warren Beatty's wife and the clues (American Beauty, The Kids Are All Right) help, but many casual players won't recall her name without prompting, so it's not a giveaw",
+   "excerpt_missing": false
+  }
+ },
+ "E18": {
+  "arm": "A",
+  "qid": "e5ecc414-1d10-48e7-b30f-65c86bcfb67c",
+  "casual_player": null
+ },
+ "E19": {
+  "arm": "A",
+  "qid": "8f8bdd86-ab04-4ed8-9324-2ce6c474f862",
+  "casual_player": null
+ },
+ "E20": {
+  "arm": "B-pass",
+  "qid": "be2afed0-435b-41e0-82f1-2bd7425fd908",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 40,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The wording ('very different award' for a comedy, one night before the Oscars) invites a guess at Razzie, and the story is well known, but many casual players would not recall it or would guess other ",
+   "excerpt_missing": false
+  }
+ },
+ "E21": {
+  "arm": "A",
+  "qid": "84319135-4d51-4ecf-a094-9048951b6a1a",
+  "casual_player": null
+ },
+ "E22": {
+  "arm": "A",
+  "qid": "48299339-42f0-4a9b-a5ea-668ea70d5d64",
+  "casual_player": null
+ },
+ "E23": {
+  "arm": "B-pass",
+  "qid": "31911df1-4a11-4a8e-a08f-48e255c066da",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 40,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Casual players must know or guess that a superstar behind a record-breaking chart-topper is Taylor Swift; she's the most obvious guess for 'superstar' with a Billboard #1, but nothing in the wording n",
+   "excerpt_missing": false
+  }
+ },
+ "E24": {
+  "arm": "A",
+  "qid": "1a846d14-cd5f-41b8-8d44-5e5e31d11875",
+  "casual_player": null
+ },
+ "S1": {
+  "arm": "A",
+  "qid": "fc1620fe-3d72-4315-9601-c5669ead1779",
+  "casual_player": null
+ },
+ "S2": {
+  "arm": "A",
+  "qid": "61f1d635-b3f7-4c9f-9292-d451cabe41db",
+  "casual_player": null
+ },
+ "S3": {
+  "arm": "B-drop",
+  "qid": "195403ab-4ae9-4f6b-abc9-c568aa7955e2",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 12,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Few casual Slovak players know Calin's birthplace; the hint that it's not Romania leaves guesses like Moldova, Ukraine, Bulgaria or Slovakia, and Moldova is a plausible but uncertain deduction.",
+   "excerpt_missing": false
+  }
+ },
+ "S4": {
+  "arm": "B-pass",
+  "qid": "a7d48657-276e-43c9-9ae4-dcfc7ac32317",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 55,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Obchod na korze is a well-known Slovak classic and Jozef Kroner is its iconic star, but many casual players might confuse him with Ladislav Chudík (who also appears in the film) or not recall the lead",
+   "excerpt_missing": false
+  }
+ },
+ "S5": {
+  "arm": "B-pass",
+  "qid": "a7458013-561d-4d15-b415-9308935a47fe",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 30,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The question describes a Slovak comedy sequel from eastern Slovakia, and the original Kavej was a well-known hit, so many casual players would guess it, but the sequel's title and July 2026 release ar",
+   "excerpt_missing": false
+  }
+ },
+ "S6": {
+  "arm": "B-drop",
+  "qid": "37fa357f-d00f-46c5-85a5-e5a6fd8380de",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 12,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Alan Murín is a known Slovak singer-songwriter (Billy Barman-era, 'Domov' hit), but the question gives only an obscure career detail and no name hint, so most casual players would guess other popular ",
+   "excerpt_missing": false
+  }
+ },
+ "S7": {
+  "arm": "A",
+  "qid": "ca92f35d-7406-4304-b31d-5c19dc20adf1",
+  "casual_player": null
+ },
+ "S8": {
+  "arm": "B-drop",
+  "qid": "40d163b8-bc67-4f07-a20a-eafcf0d41c51",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 22,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Casual players would need to guess among Greek goddesses who help Odysseus; Athena is the well-known helper in the myth so some deduce it, but few know Zendaya's role, and the question's description (",
+   "excerpt_missing": false
+  }
+ },
+ "S9": {
+  "arm": "A",
+  "qid": "a3921040-7968-489a-985c-d76b0d87f979",
+  "casual_player": null
+ },
+ "S10": {
+  "arm": "B-pass",
+  "qid": "74eabe6c-4f03-4206-96be-1f01c3a8003c",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 85,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Elán is by far the most famous Slovak band, so most Slovaks would guess it from 'najslávnejšia slovenská kapela' even without knowing the Eurovision story, though the wording only strongly hints rathe",
+   "excerpt_missing": false
+  }
+ },
+ "S11": {
+  "arm": "A",
+  "qid": "cc8eaa43-048b-4ec9-8a77-af2a9e418d12",
+  "casual_player": null
+ },
+ "S12": {
+  "arm": "B-pass",
+  "qid": "dcf38b3f-15b0-484e-9044-8042d35e7128",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 80,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The Warhol museum in Medzilaborce is well-known in Slovakia and widely taught/visited, and the question context (northeast, near Miková) helps; no wording names the answer.",
+   "excerpt_missing": false
+  }
+ },
+ "S13": {
+  "arm": "B-pass",
+  "qid": "5c0c1f96-1b07-4bab-8850-abfa83f2a046",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 55,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "The story is a well-known anecdote, and 'music giant with a manager' points to Elvis (with Colonel Parker), so many would guess him, though some might say Michael Jackson, Frank Sinatra or others.",
+   "excerpt_missing": false
+  }
+ },
+ "S14": {
+  "arm": "B-drop",
+  "qid": "68c28151-4574-495b-b96b-e7773de91a74",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 12,
+   "giveaway": false,
+   "would_drop": "casual_below_25",
+   "reason": "Few casual players know Elán lost in the 1993 Kvalifikacija za Millstreet pre-qualification; guessers might say 'didn't qualify' but the specific 'pre-round for new countries' wording is obscure, thou",
+   "excerpt_missing": false
+  }
+ },
+ "S15": {
+  "arm": "A",
+  "qid": "5c64e118-9f3a-4559-86d1-a31b8efb2917",
+  "casual_player": null
+ },
+ "S16": {
+  "arm": "A",
+  "qid": "f3fcbfdb-7f59-4c33-85d5-91147475fba9",
+  "casual_player": null
+ },
+ "S17": {
+  "arm": "B-pass",
+  "qid": "6c5140c9-8329-4c03-ba3d-620768eb450a",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 55,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Socialist Czechoslovakia spanned roughly 1948-1989, so players must pick among the 50s-80s; Sľub is well known as a Markíza hit with 80s-style school settings, so many will know or guess the 80s, but ",
+   "excerpt_missing": false
+  }
+ },
+ "S18": {
+  "arm": "B-pass",
+  "qid": "91df39eb-a810-4d8f-a073-673659afd18a",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 62,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Bohemian Rhapsody (Queen) is the best-known music biopic and the obvious benchmark, so many casual players would guess Queen, though some might name Elton John (Rocketman) or the Beatles.",
+   "excerpt_missing": false
+  }
+ },
+ "S19": {
+  "arm": "B-pass",
+  "qid": "74e7933d-d795-4f17-8ee5-6f0bd7e44c57",
+  "casual_player": {
+   "mode": "shadow",
+   "pct": 35,
+   "giveaway": false,
+   "would_drop": null,
+   "reason": "Peter Dvorský is the best-known Slovak operatic tenor and many Slovaks would recall him, but the wording doesn't name him and few casual players know opera singers, so many would guess wrongly or not ",
+   "excerpt_missing": false
+  }
+ },
+ "S20": {
+  "arm": "A",
+  "qid": "12a739e7-0039-444b-bca5-10d109769da5",
+  "casual_player": null
+ }
+}

@@ -1,6 +1,6 @@
 # #201 — Zábava, na ktorú sa dá odpovedať
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · done
 **Založené:** 2026-10-13 (founder: „entertainment otázky sú trochu nudné, takmer bez šance vedieť odpoveď“)
 **Súvisí:** #195 (čerstvá zábava, 2× zvýhodnenie), #199 (zásoba čerstvej zábavy), [prior art](../research/question-craft-prior-art-2026-07-10.md), [kalibrácia](../research/question-quality-founder-calibration-2026-07-09.md)
 
@@ -88,7 +88,7 @@ Mix (páka 3) sa v tomto kroku iba **meria** (rozdelenie odhadov); výberová lo
 
 ### 201.5 Nasadenie receptu
 
-Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čerstvej zábavy (#199), `CASUAL_PLAYER_GATE=1` pre zábavu v prode (pack-api). Ostatné kategórie = nové rozhodnutie foundera.
+Pôvodne: po víťazstve B recept + `CASUAL_PLAYER_GATE=1` v prode. B nevyhral → **rozhodnutie foundera 2026-10-13: „jednoduché pravidlá“.** Do receptu dopĺňania idú len poučenia z hodnotenia: sk/cs ~7 z 10 domáca scéna, slávna vec + prekvapivý uhol, bez ocenení / štábu / americky niche tém, číselná odpoveď len ako MCQ. Kontrola ostáva vypnutá (kód v main, nenasadzuje sa), skutočný signál prinesie beta. Ostatné kategórie sa nemenia. Recept: `docs/setup/fresh-entertainment-recipe.md`.
 
 ## Riziká
 
@@ -102,4 +102,4 @@ Po víťazstve B: recept seedov + brief v2 ako predvolené pre dopĺňanie čers
 - [x] 201.2 brief v2
 - [x] 201.3 `CasualPlayerChecker` v scoringu za vypínačom + testy (PR #394, vypnuté)
 - [x] 201.4 slepé porovnanie en + sk — B ≈ A, kontrola nepomáha
-- [ ] 201.5 nasadenie receptu
+- [x] 201.5 recept dopĺňania = jednoduché pravidlá (`docs/setup/fresh-entertainment-recipe.md`), kontrola vypnutá

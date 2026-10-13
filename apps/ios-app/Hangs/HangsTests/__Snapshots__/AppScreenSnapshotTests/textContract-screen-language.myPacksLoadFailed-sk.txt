@@ -1,0 +1,6 @@
+# texts
+Tvoje balíky sa nepodarilo načítať
+Skús znova
+# identifiers
+myPacks.loadFailed
+myPacks.retryLoad

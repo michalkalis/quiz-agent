@@ -3,7 +3,8 @@
 //  HangsTests
 //
 //  #194 C8: the My packs list — delivered, generating, pending and failed
-//  orders in one screen.
+//  orders in one screen. #200: a signed-in user whose list failed to load
+//  sees Retry, not the sign-in prompt.
 //
 
 import Foundation
@@ -32,5 +33,11 @@ extension AppScreen {
             defaultLanguage: "en"
         )
         return AnyView(MyPacksView(viewModel: vm, onPlayPack: { _ in }, createPack: createPack))
+    }
+
+    func makePacksLoadFailed() async -> AnyView {
+        let vm = MyPacksViewModel(service: MockPackOrderService(listResults: [.failure(.init("offline"))]))
+        await vm.retryLoad()
+        return AnyView(MyPacksView(viewModel: vm, onPlayPack: { _ in }))
     }
 }

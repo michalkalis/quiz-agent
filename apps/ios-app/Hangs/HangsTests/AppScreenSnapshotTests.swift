@@ -42,7 +42,7 @@ enum AppScreen: String, CaseIterable {
     case errorRetry, errorGoHome, errorDismiss
     case paywallPack, paywallAllowanceSpent, paywallOffline
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
-    case myPacks
+    case myPacks, myPacksLoadFailed
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

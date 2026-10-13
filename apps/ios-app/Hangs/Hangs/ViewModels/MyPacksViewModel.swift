@@ -24,6 +24,10 @@ final class MyPacksViewModel: ObservableObject {
     @Published private(set) var orders: [OrderSnapshot] = []
     @Published private(set) var isLoading = true
     @Published private(set) var loadFailed = false
+    /// The last load failed because nobody is signed in (a 401 that survived
+    /// the token refresh). Only then does My packs ask the user to sign in;
+    /// any other failure offers Retry (#200).
+    @Published private(set) var needsSignIn = false
     /// Order ids with a retry request in flight — the row shows progress and
     /// stops offering the button, so one tap can't fan out into several
     /// re-enqueues of the same paid order.
@@ -131,6 +135,7 @@ final class MyPacksViewModel: ObservableObject {
         if let fresh = try? await service.listOrders() {
             orders = fresh
             loadFailed = false
+            needsSignIn = false
             isLoading = false
         }
     }
@@ -147,9 +152,11 @@ final class MyPacksViewModel: ObservableObject {
                 try await service.listOrders()
             }
             loadFailed = false
+            needsSignIn = false
         } catch {
             if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled { return }
             loadFailed = true
+            if case PackOrderError.unauthorized = error { needsSignIn = true } else { needsSignIn = false }
         }
         isLoading = false
     }

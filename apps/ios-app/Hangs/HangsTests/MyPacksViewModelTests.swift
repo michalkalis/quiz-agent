@@ -302,6 +302,50 @@ struct MyPacksViewLoadingLayoutTests {
     }
 }
 
+// MARK: - #200 sign-in prompt only when signed out
+
+/// Field report (#200 TF test): with the network down, a signed-in user was told
+/// to sign in, a dead end that hides the real problem and offers no way back.
+/// The sign-in prompt must follow a genuine 401 only; any other failure gets
+/// Home's "Couldn't load your packs" + Retry.
+@MainActor
+@Suite("MyPacks failed load: sign in vs retry")
+struct MyPacksFailedLoadStateTests {
+    private func failedView(_ failure: PackOrderError?) async -> (MyPacksView, MyPacksViewModel, MockPackOrderService) {
+        let service = failure.map { MockPackOrderService(listFailure: $0) }
+            ?? MockPackOrderService(listResults: [.failure(.init("offline"))])
+        let viewModel = MyPacksViewModel(service: service, clock: AnyClock(TestClock()))
+        let task = Task { await viewModel.start() }
+        await pumpUntil({ !viewModel.isLoading }, "the failed load never cleared the spinner")
+        task.cancel()
+        return (MyPacksView(viewModel: viewModel, onPlayPack: { _ in }), viewModel, service)
+    }
+
+    @Test("signed out (401): asks to sign in, offers no Retry")
+    func signedOutAsksToSignIn() async throws {
+        let (view, viewModel, _) = await failedView(.unauthorized)
+        #expect(viewModel.needsSignIn)
+
+        let tree = try view.inspect()
+        _ = try tree.find(viewWithAccessibilityIdentifier: "myPacks.signIn")
+        #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "myPacks.retryLoad") }
+    }
+
+    @Test("signed in, load failed: says it couldn't load and Retry fetches again")
+    func otherFailureOffersRetry() async throws {
+        let (view, viewModel, service) = await failedView(nil)
+        #expect(viewModel.loadFailed && !viewModel.needsSignIn)
+
+        let tree = try view.inspect()
+        _ = try tree.find(text: String(localized: "Couldn't load your packs"))
+        #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "myPacks.signIn") }
+
+        let callsBefore = service.listOrdersCallCount
+        try tree.find(viewWithAccessibilityIdentifier: "myPacks.retryLoad").button().tap()
+        await pumpUntil({ service.listOrdersCallCount > callsBefore }, "Retry never fetched the list again")
+    }
+}
+
 // MARK: - #200 failed loads and pack progress
 
 @MainActor

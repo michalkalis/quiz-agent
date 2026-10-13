@@ -1,0 +1,6 @@
+# texts
+Couldn't load your packs
+Retry
+# identifiers
+myPacks.loadFailed
+myPacks.retryLoad

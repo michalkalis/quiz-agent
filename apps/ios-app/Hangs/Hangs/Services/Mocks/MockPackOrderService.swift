@@ -44,6 +44,9 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// test inject the exact `PackOrderError` the real service maps a status to
     /// (e.g. `.retryRefused` for the 422 retry-budget refusal, #146).
     private let retryFailure: PackOrderError?
+    /// Typed failure for `listOrders`, thrown ahead of the list results — lets
+    /// a test tell a signed-out 401 (`.unauthorized`) from any other failure.
+    private let listFailure: PackOrderError?
     /// Artificial latency on `createOrder`, in seconds. Default 0 (instant).
     /// A test that needs to observe the `.submitting` window — where the sheet
     /// blocks dismissal because the purchase call is in flight — has to hold
@@ -86,9 +89,11 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         createDelaySeconds: Double = 0,
         listResults: [Result<[OrderSnapshot], PackFailure>] = [],
         retryFailure: PackOrderError? = nil,
+        listFailure: PackOrderError? = nil,
         clock: AnyClock<Duration> = .continuous
     ) {
         self.retryFailure = retryFailure
+        self.listFailure = listFailure
         self.createDelaySeconds = createDelaySeconds
         self.clock = clock
         self.createResult = createResult
@@ -124,6 +129,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
 
     func listOrders() async throws -> [OrderSnapshot] {
         listCalls.withLock { $0 += 1 }
+        if let listFailure { throw listFailure }
         guard !listResults.isEmpty else { return try listResult.get() }
         return try listCallIndex.withLock { index in
             let result = listResults[min(index, listResults.count - 1)]

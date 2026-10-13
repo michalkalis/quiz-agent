@@ -1,0 +1,6 @@
+# texts
+Tvoje balíčky se nepodařilo načíst
+Zkus znovu
+# identifiers
+myPacks.loadFailed
+myPacks.retryLoad

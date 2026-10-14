@@ -1,0 +1,152 @@
+{
+ "R1": {
+  "arm": "A",
+  "qid": "3dae45c5-393d-4453-be6f-739493715d01",
+  "topic": "Time zones and territories"
+ },
+ "R2": {
+  "arm": "E",
+  "qid": "6b1ab892-5683-4178-9fdd-d95d1598ea93",
+  "topic": "Animals that break the rules"
+ },
+ "R3": {
+  "arm": "K",
+  "qid": "5783843b-a7f1-467b-ba54-9eebd650f4d5",
+  "topic": "Zvieratá, ktoré porušujú pravidlá"
+ },
+ "R4": {
+  "arm": "A",
+  "qid": "8b1e5421-34b6-4645-8e1a-eb5da89851b8",
+  "topic": "Household chemistry"
+ },
+ "R5": {
+  "arm": "E",
+  "qid": "baa6e241-ad25-42b9-af54-a92dfa810f3e",
+  "topic": "Kitchen science"
+ },
+ "R6": {
+  "arm": "E",
+  "qid": "2afd8615-478a-4849-bb71-e411679e221c",
+  "topic": "Animals that break the rules"
+ },
+ "R7": {
+  "arm": "C",
+  "qid": "3d58cd0d-cdbc-4e5a-94ed-c079a3e49bda",
+  "topic": "Původ kostkového cukru"
+ },
+ "R8": {
+  "arm": "C",
+  "qid": "c4e2fa33-8c92-4b55-865a-dcc63bf5005e",
+  "topic": "Mapy a hranice"
+ },
+ "R9": {
+  "arm": "K",
+  "qid": "c336c04d-4838-488a-b825-6ab3882d0957",
+  "topic": "Kuchynská veda"
+ },
+ "R10": {
+  "arm": "K",
+  "qid": "cfb918ea-8b34-45a4-a467-4435f11649d7",
+  "topic": "Pôvod slov – dni v týždni"
+ },
+ "R11": {
+  "arm": "A",
+  "qid": "b9800c31-ba66-4d29-a01b-ecb4d3746a4f",
+  "topic": "Physics of water"
+ },
+ "R12": {
+  "arm": "C",
+  "qid": "dff1f9bd-6a0e-4759-b687-68d4db076f30",
+  "topic": "Původ slova robot"
+ },
+ "R13": {
+  "arm": "C",
+  "qid": "1aa93807-323d-4a9f-a762-38cdc81a3fc4",
+  "topic": "Zvířata, která porušují pravidla"
+ },
+ "R14": {
+  "arm": "K",
+  "qid": "862f48da-55d8-4cdd-944f-dab403174f36",
+  "topic": "Kuchynská veda"
+ },
+ "R15": {
+  "arm": "E",
+  "qid": "f015ef19-4563-4e26-95ee-9c4047456caf",
+  "topic": "Air travel"
+ },
+ "R16": {
+  "arm": "C",
+  "qid": "94f01af9-fab6-4437-ab5c-d7b1a24958d9",
+  "topic": "Původ slova brambory"
+ },
+ "R17": {
+  "arm": "K",
+  "qid": "d4d813af-a59c-4b0e-9e12-319752c8b258",
+  "topic": "Kuchynská veda"
+ },
+ "R18": {
+  "arm": "A",
+  "qid": "2f527e0e-08df-4f80-9c83-d80dac7af46b",
+  "topic": "Kitchen physics"
+ },
+ "R19": {
+  "arm": "K",
+  "qid": "adf77782-7fff-4100-94af-0e214a222399",
+  "topic": "Zvieratá, ktoré porušujú pravidlá"
+ },
+ "R20": {
+  "arm": "C",
+  "qid": "ee5a92c7-7017-4f6a-893e-19a7b427f762",
+  "topic": "Mapy a hranice"
+ },
+ "R21": {
+  "arm": "E",
+  "qid": "e7c0aa2e-5418-480d-af47-742a0b63ddcb",
+  "topic": "Kitchen science"
+ },
+ "R22": {
+  "arm": "A",
+  "qid": "8d8f6f54-37bd-4473-ac07-987adc242181",
+  "topic": "Bratislava"
+ },
+ "R23": {
+  "arm": "E",
+  "qid": "15504141-555e-4075-9b32-5f22c57577d9",
+  "topic": "Why things are named what they are"
+ },
+ "R24": {
+  "arm": "E",
+  "qid": "12cea7f0-775a-42fb-aa07-a52c7d843c4f",
+  "topic": "Kitchen science"
+ },
+ "R25": {
+  "arm": "K",
+  "qid": "875eeaff-9c17-427c-bf14-fde8d55c39ae",
+  "topic": "Mapy a hranice sveta"
+ },
+ "R26": {
+  "arm": "E",
+  "qid": "c12c3b29-493c-49c6-86ea-a635626bf75d",
+  "topic": "Maps and borders puzzles"
+ },
+ "R27": {
+  "arm": "C",
+  "qid": "c63367bb-fb9e-4f8a-9c82-a7e07cb7a0c3",
+  "topic": "Původ slova pistole"
+ },
+ "R28": {
+  "arm": "K",
+  "qid": "35b0ccf3-6423-4123-9fb1-a8f93f95f545",
+  "topic": "Mapy a hranice"
+ },
+ "R29": {
+  "arm": "C",
+  "qid": "1da55d58-5ce1-49e8-8ee4-809c2fc976cb",
+  "topic": "Zvířata, která porušují pravidla"
+ },
+ "R30": {
+  "arm": "A",
+  "qid": "8d89e983-7286-40ed-a840-e327e4ebbfca",
+  "topic": "Cooking science"
+ }
+}

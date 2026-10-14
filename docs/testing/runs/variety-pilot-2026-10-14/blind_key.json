@@ -1,0 +1,152 @@
+{
+ "R1": {
+  "arm": "V",
+  "qid": "4419c071-3fe7-4342-be99-5545c0e7c453",
+  "topic": "Inventions and products that went wrong"
+ },
+ "R2": {
+  "arm": "V",
+  "qid": "b021d81c-9463-44db-939c-a87ef9aab26c",
+  "topic": "Everyday things with a funny backstory"
+ },
+ "R3": {
+  "arm": "C",
+  "qid": "d3427237-bb1b-4762-aedb-14407ea17669",
+  "topic": "Kuchyňská věda – var vody"
+ },
+ "R4": {
+  "arm": "W",
+  "qid": "f1a62a0d-632d-4436-9f8e-9ab3d82a5a8c",
+  "topic": "Zvláštne zákony vo svete"
+ },
+ "R5": {
+  "arm": "W",
+  "qid": "490578c7-ed23-4e51-9113-e71536a125da",
+  "topic": "Ježko v záhrade"
+ },
+ "R6": {
+  "arm": "V",
+  "qid": "d00aa38a-97a6-4f25-baf9-d32f4e5e8312",
+  "topic": "Engineering blunders"
+ },
+ "R7": {
+  "arm": "K",
+  "qid": "0ae7bd14-031a-4d43-a67f-5de3dcc05467",
+  "topic": "Pôvod Kofoly"
+ },
+ "R8": {
+  "arm": "W",
+  "qid": "bdc51d47-2fcb-41ad-a1a5-47d31b4d7580",
+  "topic": "Zámena Slovenska a Slovinska"
+ },
+ "R9": {
+  "arm": "K",
+  "qid": "fd995e7b-7241-4040-afe0-efcb814a4cf7",
+  "topic": "Pôvod slova dolár"
+ },
+ "R10": {
+  "arm": "Y",
+  "qid": "5ded0a25-04c9-4742-822d-ed1d84b114f0",
+  "topic": "České vynálezy"
+ },
+ "R11": {
+  "arm": "Y",
+  "qid": "b304d8c5-6815-44d6-bd23-ee78d081ab0b",
+  "topic": "Neobvyklá pravidla silničního provozu"
+ },
+ "R12": {
+  "arm": "C",
+  "qid": "e204a431-be61-405c-94fa-b25408ecdf29",
+  "topic": "Kuchyňská věda – pečivo"
+ },
+ "R13": {
+  "arm": "E",
+  "qid": "401624a3-e6b5-498e-917d-3b785b023eb6",
+  "topic": "Why things are named what they are"
+ },
+ "R14": {
+  "arm": "E",
+  "qid": "f551eca2-6c5e-44f5-b03a-d3147315cadd",
+  "topic": "Maps and borders puzzles"
+ },
+ "R15": {
+  "arm": "W",
+  "qid": "cf08dc5a-405c-48a2-89d8-4ceb66cb9469",
+  "topic": "Pôvod bežných vecí"
+ },
+ "R16": {
+  "arm": "K",
+  "qid": "c14cbd97-ed85-4bd7-883a-a2fcecf8da43",
+  "topic": "Mapy a hranice"
+ },
+ "R17": {
+  "arm": "Y",
+  "qid": "e998e8c8-d3a9-4d3f-9a8a-0870ecdf565b",
+  "topic": "Shakespearovo české moře"
+ },
+ "R18": {
+  "arm": "Y",
+  "qid": "98b42e58-48b5-4534-835e-960b164ddcc7",
+  "topic": "Mojžíšovy rohy"
+ },
+ "R19": {
+  "arm": "Y",
+  "qid": "c82e2a6f-60bc-49eb-893a-edc3561094ed",
+  "topic": "Krtek a jeho vznik"
+ },
+ "R20": {
+  "arm": "W",
+  "qid": "1bdf2252-b0d7-450e-ba26-c5a3e90b1f1f",
+  "topic": "Zradné poľské slová"
+ },
+ "R21": {
+  "arm": "Y",
+  "qid": "81acb8d5-e9f2-43a8-984b-f2ec98a1bc48",
+  "topic": "Podivné zákony ve světě"
+ },
+ "R22": {
+  "arm": "E",
+  "qid": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+  "topic": "Maps and borders puzzles"
+ },
+ "R23": {
+  "arm": "V",
+  "qid": "1a4a6245-69cb-4294-9753-610e9d2bbb2f",
+  "topic": "Weird laws and rules around the world"
+ },
+ "R24": {
+  "arm": "C",
+  "qid": "85efb889-3c08-4180-add2-3a0f29ee1f92",
+  "topic": "Zvířata, která porušují pravidla"
+ },
+ "R25": {
+  "arm": "V",
+  "qid": "881b3b70-8116-494a-bef9-5bb595128e5d",
+  "topic": "Everyday things with a funny backstory"
+ },
+ "R26": {
+  "arm": "V",
+  "qid": "6b173654-f4ef-4d75-b090-8b5505cad0e1",
+  "topic": "Weird laws and rules around the world"
+ },
+ "R27": {
+  "arm": "W",
+  "qid": "00374548-b424-4b75-ba05-6e55aedbd011",
+  "topic": "Slovenské dopravné pravidlá"
+ },
+ "R28": {
+  "arm": "V",
+  "qid": "9ec28ecc-f489-4520-8350-366c13eb0ab4",
+  "topic": "Animals behaving oddly or comically"
+ },
+ "R29": {
+  "arm": "Y",
+  "qid": "517d4c31-e99e-4b85-940d-a644cade31e2",
+  "topic": "Výrobky, které narazily na pravidla"
+ },
+ "R30": {
+  "arm": "W",
+  "qid": "4d184126-86ce-4e5f-a817-47c078bf69c3",
+  "topic": "Slávne chyby v preklade"
+ }
+}

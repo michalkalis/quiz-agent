@@ -1,0 +1,170 @@
+<title>Pestrosť otázok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Pestrosť otázok</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Nové otázky po anglicky, slovensky aj česky, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "en", "question": "Riddle time! I was invented to be trendy wallpaper. Nobody wanted me on their walls, so I ended up inside boxes instead, and now people squeeze me just for fun. What am I?", "answer": "Bubble wrap", "options": [], "explanation": "Two American engineers sealed two shower curtains together hoping to sell textured wallpaper. It flopped as decor, but it turned out to be perfect for protecting fragile computers in the post."}, {"id": "R2", "lang": "en", "question": "Fact or fiction: tomato ketchup was once sold as a medicine, in pill form.", "answer": "Fact", "options": ["Fact", "Fiction"], "explanation": "In 19th-century America, a doctor promoted tomatoes as a cure for indigestion and diarrhoea, and 'tomato pills' made from ketchup were sold until the craze collapsed amid fraud."}, {"id": "R3", "lang": "cs", "question": "Na vrcholu Sněžky se vajíčko natvrdo vaří déle než doma v nížině, i když voda v hrnci normálně bublá. Proč?", "answer": "Nižší tlak vzduchu", "options": [], "explanation": "Na Sněžce je nižší tlak vzduchu, a proto tam voda vře už zhruba při 95 °C místo při 100 °C. Bublá stejně, ale je chladnější, takže vajíčko potřebuje víc času."}, {"id": "R4", "lang": "sk", "question": "Švajčiar si v obchode chce kúpiť jedno jediné morča. Čo mu k nemu podľa švajčiarskeho zákona chýba?", "answer": "Druhé morča", "options": [], "explanation": "Morčatá sú spoločenské zvieratá, preto ich švajčiarsky zákon o ochrane zvierat zakazuje chovať osamote. Morča tam musí mať aspoň jedného kamaráta svojho druhu."}, {"id": "R5", "lang": "sk", "question": "Pravda alebo nepravda: Keď ježko zacíti nový silný pach, začne si robiť penu zo slín a natiera si ju jazykom na pichliače.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Pravda. Vedci to volajú samonatieranie a dodnes presne nevedia, prečo to ježkovia robia. Môže to byť maskovanie pachu alebo ochrana pred predátormi."}, {"id": "R6", "lang": "en", "question": "NASA once lost a whole spacecraft at Mars, not because of rocket science, but because two engineering teams disagreed about something every schoolchild learns. What was it?", "answer": "Metric versus imperial units", "options": [], "explanation": "One team worked in pounds, the other in metric newtons, so the Mars Climate Orbiter flew far too low and was lost in the Martian atmosphere. It is a very expensive reminder to always label your units."}, {"id": "R7", "lang": "sk", "question": "Kofola nevznikla v pivovare, ale v laboratóriu farmaceutickej firmy v Československu. Chemici hľadali využitie pre látku, ktorá zostávala ako odpad pri pražení kávy. Aká látka to bola?", "answer": "Kofeín", "options": [], "explanation": "Pri pražení kávy zostával nadbytočný kofeín a chemici z neho namiešali sirup. Stopu nájdete aj v samotnom mene: KOfeín, KOla, KOfola."}, {"id": "R8", "lang": "sk", "question": "Hádanka: Moje meno sa od vášho líši len pár písmenami, aj ja mám bielo-modro-červenú vlajku so štítom a cudzinci si ma s vami pletú tak často, že ambasády si posielajú poštu, ktorá prišla na zlú adresu. Kto som?", "answer": "Slovinsko", "options": [], "explanation": "Slovensko a Slovinsko si zamieňajú novinári, športoví usporiadatelia aj prezidenti. George W. Bush si ich kedysi pomýlil v rozhovore."}, {"id": "R9", "lang": "sk", "question": "Americký dolár dostal meno podľa strieborných mincí z jedného malého baníckeho mestečka. V ktorej dnešnej krajine to mestečko leží?", "answer": "Česko", "options": ["Nemecko", "Česko", "Rakúsko", "Švajčiarsko"], "explanation": "Mince z Jáchymova, po nemecky Joachimsthal, sa volali joachimstaler, skrátene toliar. Z toliara sa napokon stal dolár."}, {"id": "R10", "lang": "cs", "question": "Hádanka: Narodila jsem se v Dačicích, protože si jedna paní při kuchyňské práci pořezala prst. Jsem malá, bílá, mám šest stěn a nejradši se koupu v kávě. Co jsem?", "answer": "kostka cukru", "options": [], "explanation": "Juliana Radová se pořezala při sekání tvrdé cukrové homole. Její manžel, ředitel dačického cukrovaru, proto vymyslel cukr lisovaný do kostiček a dal si ho patentovat."}, {"id": "R11", "lang": "cs", "question": "Co když se večer vydáte pěšky po okresce z jedné vesnice do druhé a nikde nesvítí lampa? Co musíte mít podle českého zákona na sobě, jinak riskujete pokutu?", "answer": "Reflexní prvky", "options": [], "explanation": "Od roku 2016 musí mít chodec mimo obec za snížené viditelnosti reflexní prvky tak, aby byly vidět i pro ostatní řidiče. Řidič takového chodce zahlédne až několikanásobně dřív."}, {"id": "R12", "lang": "cs", "question": "Pravda, nebo nepravda: Chleba uložený v lednici okorá rychleji než chleba, který necháte ležet na kuchyňské lince.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Okorání není hlavně vysychání. Škrob v chlebu znovu krystalizuje, a nejrychleji se to děje právě při teplotách, jaké jsou v lednici. Mrazák ten proces naopak skoro zastaví, takže chleba je lepší zamrazit."}, {"id": "R13", "lang": "en", "question": "The wireless technology Bluetooth is named after a real man who lived over a thousand years ago and was famous for uniting rival tribes. Who was he?", "answer": "Viking king Harald Bluetooth", "options": [], "explanation": "The engineers chose King Harald 'Bluetooth' of Denmark because he united the Danish tribes, just as the technology unites devices. The Bluetooth logo is made from his initials written in Viking runes."}, {"id": "R14", "lang": "en", "question": "Only one US state shares a land border with exactly one other state. Which state is it?", "answer": "Maine", "options": [], "explanation": "Maine, in the far north-east corner, is boxed in by Canada and the Atlantic, so New Hampshire is its only US neighbour. Alaska and Hawaii don't count, because they border no states at all."}, {"id": "R15", "lang": "sk", "question": "Dokončite príbeh: Bublinkovú fóliu, ktorú dnes s radosťou praská každé dieťa, vymysleli dvaja Američania pôvodne ako módnu novinku na steny do obývačky. Mala to byť nová, plastická... čo?", "answer": "tapeta", "options": [], "explanation": "Ako tapeta ani ako izolácia skleníkov neuspela. Slávnou ju urobila až firma IBM, ktorá do nej začala baliť svoje počítače."}, {"id": "R16", "lang": "sk", "question": "Bratislava je jediné hlavné mesto na svete, ktoré hraničí priamo s dvoma inými štátmi. S ktorými?", "answer": "Rakúsko a Maďarsko", "options": [], "explanation": "Z Petržalky sa dá dôjsť pešo do Rakúska aj do Maďarska. Žiadna iná metropola sveta nestojí hneď pri dvoch cudzích štátoch."}, {"id": "R17", "lang": "cs", "question": "William Shakespeare nechal v jedné své hře přistát loď na mořském pobřeží země, která žádné moře nemá. Která země to byla?", "answer": "Čechy", "options": [], "explanation": "V Zimní pohádce vystupují postavy z lodi přímo na „pobřeží Čech“ a už Shakespearův současník Ben Jonson se mu za to posmíval."}, {"id": "R18", "lang": "cs", "question": "Co se stane, když překladatel Bible splete hebrejské slovo pro „zářit“ s jiným, velmi podobným slovem? Michelangelův slavný Mojžíš pak má na hlavě… co?", "answer": "rohy", "options": [], "explanation": "Mojžíšova tvář po setkání s Bohem zářila, jenže latinský překlad z toho udělal „rohatou“, a tak mu umělci po staletí dávali na hlavu růžky."}, {"id": "R19", "lang": "cs", "question": "Zdeněk Miler hledal hrdinu pro animovaný film. Chtěl zvíře, které ještě nepoužil Walt Disney. Nápad ho doslova srazil k zemi, protože na procházce o něco zakopl. O co?", "answer": "O krtinu", "options": [], "explanation": "Miler zakopl o krtinu a měl hrdinu: Krtka, kterého Disney opravdu ještě neměl. Z jednoho klopýtnutí tak vznikla postavička, kterou dnes znají děti po celém světě."}, {"id": "R20", "lang": "sk", "question": "Dokončite vetu: Keď vám Poliak v Zakopanom povie, že si odbehne do „sklepu“, nejde do pivnice, ale ide…", "answer": "do obchodu", "options": [], "explanation": "Po poľsky je „sklep“ obyčajný obchod. Podobne zradná je „uroda“, ktorá v poľštine neznamená úrodu, ale krásu."}, {"id": "R21", "lang": "cs", "question": "Pravda, nebo výmysl? Ve Švýcarsku zákon zakazuje chovat doma jen jedno jediné morče, protože by se samo nudilo.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Švýcarský zákon na ochranu zvířat řadí morčata mezi společenská zvířata, takže musí žít aspoň ve dvojici. Když jedno uhyne, dá se tam dokonce půjčit náhradní parťák, aby to druhé nezůstalo samo."}, {"id": "R22", "lang": "en", "question": "France's longest land border isn't with any European country at all. Which country is it shared with?", "answer": "Brazil", "options": [], "explanation": "French Guiana in South America is a full part of France, and its border with Brazil runs about 730 kilometres, longer than France's border with Spain. So in a sense, Brazil is France's biggest neighbour."}, {"id": "R23", "lang": "en", "question": "Fact or fiction: in Switzerland, it's against the law to keep just one guinea pig on its own.", "answer": "Fact", "options": ["Fact", "Fiction"], "explanation": "Swiss law treats guinea pigs as social animals that get lonely, so they must have company. When one of a pair dies, some owners rent a stand-in friend so the survivor isn't left alone."}, {"id": "R24", "lang": "cs", "question": "Úhoř, kterého rybáři chytají i v Labi, se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?", "answer": "Sargasové moře", "options": [], "explanation": "Úhoři se třou v Sargasovém moři nedaleko Bermud a pak tam umírají. Jejich drobné larvy se nechají unášet proudy zpátky do Evropy, kde jejich rodiče žili."}, {"id": "R25", "lang": "en", "question": "What am I? I was invented as a trendy textured wallpaper. Nobody wanted me on their walls, so now I protect parcels, and people love to pop me.", "answer": "Bubble wrap", "options": [], "explanation": "Its two inventors were trying to sell plastic wallpaper with bubbles in it. Only after that flopped did someone realise the bubbles made perfect cushioning for shipping."}, {"id": "R26", "lang": "en", "question": "Riddle time: I can blow bubbles but I'm not soap. I end up stuck under school desks. And in Singapore, shops aren't allowed to sell me. What am I?", "answer": "Chewing gum", "options": [], "explanation": "Singapore banned ordinary chewing gum partly because vandals stuck it on the doors of its new metro trains and stopped them closing. Today you can only buy medical gum, from a pharmacy."}, {"id": "R27", "lang": "sk", "question": "Hádanka: Nie som baterka, a predsa svietim, ale iba keď na mňa posvietiš ty. Keď ideš po tme po ceste mimo obce, zákon ťa núti nosiť ma na sebe. Čo som?", "answer": "Reflexný prvok", "options": [], "explanation": "Chodec mimo obce musí za zníženej viditeľnosti nosiť reflexný prvok alebo reflexnú vestu. Vodič ho potom vidí aj zo vzdialenosti viac ako sto metrov, nie až na poslednú chvíľu."}, {"id": "R28", "lang": "en", "question": "Riddle time: I float on my back, smash shellfish open with a rock on my belly, and hold paws with my friends while I nap so we don't drift apart. What am I?", "answer": "Sea otter", "options": [], "explanation": "Sea otters really do link paws while sleeping, and a resting group is called a raft. When no friend is around, they wrap themselves in kelp to stay anchored."}, {"id": "R29", "lang": "cs", "question": "Doplňte: Po vstupu do Evropské unie se oblíbený český „rum“ z lihu a rumové esence nesměl dál jmenovat rum, protože pravý rum vzniká z cukrové třtiny. Dnes ho proto v obchodě koupíte pod jménem…", "answer": "Tuzemák", "options": [], "explanation": "Evropská pravidla dovolují slovo rum jen pro destiláty z cukrové třtiny. Vánoční grog a bábovka tak přežily, jen láhev dostala nové jméno."}, {"id": "R30", "lang": "sk", "question": "Michelangelov Mojžiš má na hlave niečo, čo tam podľa pôvodnej Biblie nepatrí. Prekladateľ do latinčiny totiž namiesto „tvár mu žiarila“ napísal niečo celkom iné. Čo teda Mojžišovi vyrástlo na hlave?", "answer": "Rohy", "options": [], "explanation": "Hebrejské slovo pre „žiariť“ je príbuzné so slovom „roh“, a tak svätý Hieronym v latinskej Biblii napísal, že Mojžišova tvár bola „rohatá“. Umelci potom Mojžiša celé stáročia poctivo zobrazovali s rohmi."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

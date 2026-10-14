@@ -29,6 +29,7 @@ from quiz_shared.models.question import Question
 
 from app import llm_usage
 from app.corpus.fresh_roles import ANSWERABILITY_PIN, OPUS
+from app.corpus.numeric_answer import is_numeric_answer
 
 logger = logging.getLogger(__name__)
 
@@ -141,10 +142,21 @@ async def generate_language(lang: str, brief: str, count: int) -> GenerationResu
     return result
 
 
+def _numeric_open(q: Question) -> bool:
+    """A non-multiple-choice question whose answer is a quantity."""
+    if q.type == "text_multichoice" or q.possible_answers:
+        return False
+    answers = q.correct_answer
+    answers = [answers] if isinstance(answers, str) else list(answers)
+    return bool(answers) and all(is_numeric_answer(a) for a in answers)
+
+
 def post_filter(
     questions: list[Question], lang: str
 ) -> tuple[list[Question], dict[str, int]]:
-    """Drop rows with no ``source_url`` or in another language (plan Krok 4)."""
+    """Drop rows with no ``source_url``, in another language, or with an open
+    numeric answer (plan Krok 4; founder 2026-10-14: numbers only as
+    multiple choice - the brief says so, the gates let one through)."""
     kept: list[Question] = []
     dropped: dict[str, int] = {}
     for q in questions:
@@ -153,6 +165,8 @@ def post_filter(
             reason = "no_source_url"
         elif q.language != lang:
             reason = "wrong_language"
+        elif _numeric_open(q):
+            reason = "numeric_open"
         if reason:
             dropped[reason] = dropped.get(reason, 0) + 1
         else:

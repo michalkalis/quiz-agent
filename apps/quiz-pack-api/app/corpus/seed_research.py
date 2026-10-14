@@ -1,8 +1,8 @@
 """Seed facts for the weekly fresh-entertainment run (#202 task 202.2).
 
-One Claude call per language (Opus 5.5 still picks the seeds) with the
-server-side ``web_search`` tool only does what the #201 recipe's "Seeds" step
-did by hand (``docs/setup/fresh-entertainment-recipe.md``): collect ~36
+One Claude call per language (Haiku 5.5 picks the seeds; founder 2026-10-14:
+"Novinky hľadá Haiku") with the server-side ``web_search`` tool only does
+what the #201 recipe's "Seeds" step did by hand (``docs/setup/fresh-entertainment-recipe.md``): collect ~36
 candidate facts people in the player's country talked about, each with a
 surprising angle and a source page. Deterministic filters then cut them to ~25:
 
@@ -13,14 +13,20 @@ surprising angle and a source page. Deterministic filters then cut them to ~25:
    known tabloid / social site (Reddit is never a source, recipe rule).
 3. **page_mismatch** — the source page, fetched without a model
    (``seed_page_check``), does not mention the subject.
-4. **low_fame** — the bottom third by monthly Wikipedia views of the subject
+4. **same_subject** — more than 2 seeds about one subject (founder: "Max. 2 na
+   tému"; diacritics-insensitive, ``subject_cap``), applied before the fame cut.
+5. **low_fame** — the bottom third by monthly Wikipedia views of the subject
    (``wiki_fame.views``); a famous subject is one a casual player can guess at.
 
 Cost (founder decision 2026-10-14, after a dry run spent $6.17 en / $15.89 sk
-on seeds alone): no ``web_fetch`` (every server-tool iteration re-reads all
-earlier results, so fetched pages multiplied the input tokens), searches capped
+on seeds alone; the third run still cost ~$3.1 per language on Opus, so seeds
+moved to Haiku 5.5 at $0.10 / $0.50 per MTok for prompts up to 100k tokens,
+$0.50 / $2.50 beyond — the larger tier is not modelled in ``llm_usage``, the
+$10/1k searches fee dominates anyway): no ``web_fetch`` (every server-tool
+iteration re-reads all earlier results, so fetched pages multiplied the input
+tokens), searches capped
 by ``FRESH_TOPUP_SEED_SEARCHES`` (default 8), and no further ``pause_turn``
-resume once the call has cost ``FRESH_TOPUP_SEED_MAX_USD`` (default $2.50) —
+resume once the call has cost ``FRESH_TOPUP_SEED_MAX_USD`` (default $1.00) —
 the seeds then come from whatever text the call has produced. A seed call can
 therefore overshoot that max by at most one segment.
 
@@ -45,16 +51,22 @@ from quiz_shared.llm import factory as llm_factory
 
 from app import llm_usage
 from app.corpus.fresh_brief import AUDIENCE, freshness_window
-from app.corpus.seed_filters import Seed, cite_filter, domestic_share, fame_cut
+from app.corpus.seed_filters import (
+    Seed,
+    cite_filter,
+    domestic_share,
+    fame_cut,
+    subject_cap,
+)
 from app.corpus.seed_page_check import FetchText, check_pages
 from app.sourcing import wiki_fame
 from app.sourcing.openai_web_search_source import _anthropic_text_and_urls
 
 logger = logging.getLogger(__name__)
 
-SEED_MODEL = "claude-opus-5-5"
+SEED_MODEL = "claude-haiku-5-5"
 DEFAULT_MAX_SEARCHES = 8
-DEFAULT_SEED_MAX_USD = 2.5
+DEFAULT_SEED_MAX_USD = 1.0
 MAX_TOKENS = 32000
 EFFORT = "high"
 MAX_PAUSE_RESUMES = 4
@@ -313,6 +325,7 @@ async def research_seeds(
     seeds, result.page_check = await check_pages(seeds, fetch_page)
     if result.page_check["page_mismatch"]:
         dropped["page_mismatch"] = result.page_check["page_mismatch"]
+    seeds = subject_cap(seeds, dropped)
     if fame_of is None:
         fame_of = _wiki_fame_lookup(lang, today)
     seeds, fame_checked = await asyncio.to_thread(fame_cut, seeds, fame_of, dropped)

@@ -63,3 +63,10 @@ def test_seeds_covered_and_quality_rules_are_present():
     assert "Never ask an open question whose answer is a number" in brief
     assert "multiple-choice question with 3 clearly different options" in brief
     assert "not only in the US" in brief
+
+
+def test_brief_limits_questions_per_subject():
+    """Founder 2026-10-14 ("Max. 2 na tému"): the seed cap alone cannot stop the
+    generator from writing four questions off one seed's subject."""
+    brief = build_fresh_brief("en", date(2026, 10, 14), [SEED], COVERED)
+    assert "At most 2 questions about the same person, band, film" in brief

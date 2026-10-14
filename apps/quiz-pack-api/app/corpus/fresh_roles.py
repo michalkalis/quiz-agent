@@ -33,6 +33,10 @@ OFF = "off"
 # (recipe § Run; #195). Passed in code to build_stages, so env cannot move it.
 ANSWERABILITY_PIN = {"en": HAIKU, "sk": SONNET, "cs": SONNET}
 
+# Seeds: Haiku 5.5 (founder 2026-10-14: "Novinky hľadá Haiku"); it only searches
+# and picks topics, so the Opus-priced seed call is not needed. Pinned like
+# the rest: ``seed_research.SEED_MODEL`` must equal ``HAIKU`` or the run stops.
+
 # The pinned env lives in fresh_pins (imported before any pipeline module).
 
 
@@ -55,7 +59,7 @@ def expected_roles(lang: str) -> dict[str, str]:
         "verify": OPUS,
         "judges": OFF,
         "casual_player": OFF,
-        "seeds": OPUS,
+        "seeds": HAIKU,
     }
 
 

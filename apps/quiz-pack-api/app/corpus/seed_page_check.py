@@ -32,7 +32,7 @@ from collections.abc import Awaitable, Callable
 
 import httpx
 
-from app.corpus.seed_filters import Seed
+from app.corpus.seed_filters import Seed, seed_names
 from app.translation_verification.normalize import fold
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,6 @@ _DROP_BLOCKS = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 _TAG = re.compile(r"<[^>]+>")
-_WIKI_SUFFIX = re.compile(r"\s*\([^)]*\)\s*$")
 
 FetchText = Callable[[str], Awaitable[str | None]]
 
@@ -92,13 +91,6 @@ def page_mentions(text: str, names: list[str]) -> bool:
         if found >= math.ceil(len(tokens) * 2 / 3):
             return True
     return False
-
-
-def seed_names(seed: Seed) -> list[str]:
-    names = [seed.subject]
-    if seed.wiki_title:
-        names.append(_WIKI_SUFFIX.sub("", seed.wiki_title))
-    return names
 
 
 async def fetch_page_text(client: httpx.AsyncClient, url: str) -> str | None:

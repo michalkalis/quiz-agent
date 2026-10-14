@@ -68,7 +68,8 @@ PLAYER = (
     "topics only US audiences or fans would know. If a seed is about these, skip "
     "it. Never ask an open question whose answer is a number: make it a "
     "multiple-choice question with 3 clearly different options, or pick another "
-    "fact. No giveaways: the wording must not name or uniquely describe the answer."
+    "fact. At most 2 questions about the same person, band, film, series or "
+    "game. No giveaways: the wording must not name or uniquely describe the answer."
 )
 
 ANCHOR = (

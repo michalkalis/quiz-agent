@@ -9,13 +9,17 @@ for the why of each filter.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.sourcing.openai_web_search_source import _cited_url
 from app.sourcing.web_search_source import _extract_domain, classify_credibility
+from app.translation_verification.normalize import fold
 
 MAX_SEEDS = 25
+MAX_PER_SUBJECT = 2
+WIKI_SUFFIX = re.compile(r"\s*\([^)]*\)\s*$")  # "Barbie (film)" -> "Barbie"
 
 # Tabloid / social domains classify_credibility does not know (sk/cs press).
 TABLOID_DOMAINS = frozenset(
@@ -98,6 +102,41 @@ def cite_filter(
             )
         )
     return kept, dropped
+
+
+def seed_names(seed: Seed) -> list[str]:
+    """Subject and wiki title without a "(film)"-style suffix."""
+    names = [seed.subject]
+    if seed.wiki_title:
+        names.append(WIKI_SUFFIX.sub("", seed.wiki_title))
+    return names
+
+
+def _subject_keys(seed: Seed) -> set[str]:
+    """Folded names (same ``fold`` as ``seed_page_check``)."""
+    return {key for key in (fold(n) for n in seed_names(seed)) if key}
+
+
+def subject_cap(kept: list[Seed], dropped: dict[str, int]) -> list[Seed]:
+    """At most ``MAX_PER_SUBJECT`` seeds per subject (founder: "Max. 2 na tému").
+
+    Why: the 2026-10-14 sk dry run had 3 of 5 questions about one singer — the
+    seed list is where one name can multiply. Seeds are compared by folded
+    subject and wiki title, so "Šimon Pleško" and "Simon Plesko" (or the same
+    article under another subject label) are one subject. Earlier seeds win;
+    runs before ``fame_cut`` so the kept ones are the ones fame ranks.
+    """
+    counts: dict[str, int] = {}
+    out: list[Seed] = []
+    for seed in kept:
+        keys = _subject_keys(seed)
+        if any(counts.get(k, 0) >= MAX_PER_SUBJECT for k in keys):
+            _bump(dropped, "same_subject")
+            continue
+        for k in keys:
+            counts[k] = counts.get(k, 0) + 1
+        out.append(seed)
+    return out
 
 
 def fame_cut(

@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Triage local issue files (docs/issues/issue-NN-*.md) and the TODO list through a state machine. Use when user wants to create an issue, triage incoming bugs/feature requests, prepare an issue for an autonomous agent run, prioritize the TODO, or surface what needs attention.
+description: Triage local issue files (docs/issues/issue-NN-*.md) and the TODO list through a state machine. Use when user wants to create an issue, triage incoming bugs/feature requests, prepare an issue for an agent session, prioritize the TODO, or surface what needs attention.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
@@ -22,7 +22,7 @@ Every comment or new section the agent appends during triage **must** start with
 
 ## The `## Acceptance` block (required for `ready-for-agent`)
 
-Every issue moving to `ready-for-agent` must carry a top-level `## Acceptance` block — the canonical, **machine-evaluable** done-state. It is the contract the autonomous loop checks: the independent reviewer (#57 57.5) and the `/goal` stop-condition (#57 57.7) both read this exact heading to decide whether the work is accepted and whether the run may stop. Without it the loop has nothing falsifiable to stop on.
+Every issue moving to `ready-for-agent` must carry a top-level `## Acceptance` block — the canonical, **machine-evaluable** done-state the implementing session and the PR reviewer check the work against.
 
 Shape — a flat checklist under the exact heading `## Acceptance`:
 
@@ -99,7 +99,7 @@ Six **state** roles:
 
 - `needs-triage` — needs evaluation
 - `needs-info` — waiting on the user / external info
-- `ready-for-agent` — fully specified, ready for an autonomous (AFK) agent run. **Requires a machine-evaluable `## Acceptance` block** (see below) **and a cleared Definition-of-Ready** (C1–C7, scaled by task size) including a declared `**Reversibility:**` class — the autonomous loop's stop-condition and independent reviewer evaluate against these (#57). The loop only runs class `a`.
+- `ready-for-agent` — fully specified, ready for an agent session. **Requires a machine-evaluable `## Acceptance` block** (see below) **and a cleared Definition-of-Ready** (C1–C7, scaled by task size) including a declared `**Reversibility:**` class.
 - `ready-for-human` — needs human implementation (judgment call, external access, manual testing)
 - `done` — the work shipped (commit / deploy / release). The file stays as historical record.
 - `wontfix` — will not be actioned
@@ -143,7 +143,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
    - Run pytest / iOS unit tests if relevant.
    Report what happened — successful repro with code path, failed repro, or insufficient detail (a strong `needs-info` signal). A confirmed repro makes a much stronger agent brief.
 
-4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants `/to-prd`.
+4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants a PRD.
 
 5. **Apply the outcome:**
    - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see above), and **clear the Definition-of-Ready** (C1–C7 scaled to the task — see "Definition-of-Ready" above): set the `**Reversibility:**` header field (C6), and at the issue's scale tier confirm C1/C3/C5 are present. Do **not** move to `ready-for-agent` when C1/C3/C5 are absent or C6 is undeclared. For a `30+`-turn / cross-cutting issue, also run `/design-soundness` and require `SOUND`. A small reversible (class `a`) bug-fix is not forced through the full 7-point gate (apply C1+C3+C5 soft). Update the `**Triage:**` line. Optionally surface to TODO.md.

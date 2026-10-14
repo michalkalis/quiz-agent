@@ -29,6 +29,8 @@ nonisolated enum VoicePipelineFlags {
         static let conditionAnswerUpload = "voicePipeline.conditionAnswerUpload"
         static let realtimeSTT = "voicePipeline.realtimeSTTEnabled"
         static let saveAnswerRecordings = "voicePipeline.saveAnswerRecordings"
+        static let echoCancelledInputOnExternalRoutes = "voicePipeline.echoCancelledInputOnExternalRoutes"
+        static let frontCardioidMic = "voicePipeline.frontCardioidMic"
     }
 
     /// Apple voice processing (echo cancellation, noise suppression, AGC) on
@@ -78,6 +80,25 @@ nonisolated enum VoicePipelineFlags {
     static var saveAnswerRecordings: Bool {
         get { saveAnswerRecordings(channelAllows: BuildChannel.debugSurfacesEnabled()) }
         set { UserDefaults.standard.set(newValue, forKey: Key.saveAnswerRecordings) }
+    }
+
+    /// #204.4: Apple's echo-cancelled input (iOS 18.2+, 2024+ iPhones) on the
+    /// routes voice processing stays off on — Bluetooth A2DP/LE, CarPlay,
+    /// wired — so the car mic is no longer raw. Needs the session's default
+    /// mode, so the quiz switches from `.spokenAudio` only while such a route
+    /// is the output (`MicCapturePolicy`). Off by default until the car test.
+    static var echoCancelledInputOnExternalRoutes: Bool {
+        get { bool(Key.echoCancelledInputOnExternalRoutes, default: false) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.echoCancelledInputOnExternalRoutes) }
+    }
+
+    /// #204.5: record with the iPhone's front built-in mic in a cardioid
+    /// pattern when the built-in mic is the input and voice processing is
+    /// off — less road noise from behind the phone. Never overrides a
+    /// Bluetooth/HFP or user-chosen mic. Off by default until the car test.
+    static var frontCardioidMic: Bool {
+        get { bool(Key.frontCardioidMic, default: false) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.frontCardioidMic) }
     }
 
     static func saveAnswerRecordings(channelAllows: Bool) -> Bool {

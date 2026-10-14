@@ -12,6 +12,8 @@ from dataclasses import dataclass
 
 from quiz_shared.llm import factory as llm_factory
 
+from quiz_shared.utils.text_normalization import normalize_text
+
 from ..config import get_settings
 from ..quiz.errors import InvalidSubmission
 
@@ -37,6 +39,10 @@ HALLUCINATION_PATTERNS = [
     "you",
     "...",
 ]
+
+
+# Any value other than the default (unset) decoding; fixed so a retry is reproducible.
+RETRY_SEED = 7
 
 
 @dataclass
@@ -238,6 +244,7 @@ class VoiceTranscriber:
                 filename=filename,
                 prompt=prompt,
                 language=effective_language,
+                keyterms=keyterms,
             )
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {str(e)}")
@@ -258,6 +265,7 @@ class VoiceTranscriber:
         language: Optional[str],
         keyterms: Optional[list[str]],
         settings,
+        seed: Optional[int] = None,
     ) -> TranscriptionResult:
         # Imported here, not at module scope: scribe.py imports
         # TranscriptionResult from this module.
@@ -273,6 +281,7 @@ class VoiceTranscriber:
             filename=filename,
             language=language,
             keyterms=keyterms,
+            seed=seed,
         )
 
     async def _transcribe_openai(
@@ -281,6 +290,7 @@ class VoiceTranscriber:
         filename: str,
         prompt: Optional[str],
         language: Optional[str],
+        keyterms: Optional[list[str]] = None,
     ) -> TranscriptionResult:
         # `verbose_json` (and the per-segment no_speech_prob / avg_logprob that
         # is_valid() leans on) is a whisper-1-only response format; the newer
@@ -292,10 +302,26 @@ class VoiceTranscriber:
             "file": (filename, audio_file),
             "response_format": "verbose_json" if is_whisper else "json",
         }
-        if language:
-            params["language"] = language
         if prompt:
             params["prompt"] = prompt
+        if self.model.startswith("gpt-transcribe"):
+            # #204.1: gpt-transcribe takes `languages` (array) INSTEAD of
+            # `language` ("Don't send both"); the SDK has no typed argument for
+            # either it or `keywords`, so both go through extra_body.
+            extra: dict = {}
+            if language:
+                extra["languages"] = [language]
+            # Same hygiene as Scribe: the sanitiser strips `<`, `>` and folds
+            # line breaks, which are what make this API reject the request.
+            from .scribe import sanitize_keyterms
+
+            keywords = sanitize_keyterms(keyterms)
+            if keywords:
+                extra["keywords"] = keywords
+            if extra:
+                params["extra_body"] = extra
+        elif language:
+            params["language"] = language
 
         response = await self.client.audio.transcriptions.create(**params)
 
@@ -339,6 +365,15 @@ class VoiceTranscriber:
             duration=duration,
         )
 
+    @staticmethod
+    def quiz_prompt(current_question: Optional[str] = None) -> str:
+        """Context prompt for the recogniser: the question, never its answer."""
+        prompt = "Quiz answer. "
+        if current_question:
+            prompt += f"Question: {current_question}. "
+        prompt += "Expected: short answers, place names, proper nouns, numbers."
+        return prompt
+
     async def transcribe_with_quiz_context(
         self,
         audio_file: BinaryIO,
@@ -373,19 +408,82 @@ class VoiceTranscriber:
             >>> print(result.is_valid())
             True
         """
-        # Build context prompt
-        prompt = "Quiz answer. "
-        if current_question:
-            prompt += f"Question: {current_question}. "
-        prompt += "Expected: short answers, place names, proper nouns, numbers."
-
         return await self.transcribe(
             audio_file=audio_file,
             filename=filename,
-            prompt=prompt,
+            prompt=self.quiz_prompt(current_question),
             language=language,
             keyterms=keyterms,
         )
+
+    async def transcribe_avoiding_rejected(
+        self,
+        audio_file: BinaryIO,
+        filename: str,
+        first: TranscriptionResult,
+        rejected: set[str],
+        language: Optional[str],
+        keyterms: list[str],
+        prompt: Optional[str] = None,
+        min_chars: int = 2,
+    ) -> tuple[TranscriptionResult, int]:
+        """Re-recognise a clip whose transcript the player already rejected (#204.2).
+
+        ``rejected`` holds ``normalize_text``-ed transcripts. If ``first`` is not
+        among them it is returned untouched (0 extra calls). Otherwise at most
+        two other hypotheses are tried — Scribe with a different seed, then the
+        OpenAI fallback — with the same ``keyterms`` as the first pass (never the answer); the first valid one
+        that is not a rejected transcript wins, else ``first`` comes back.
+        Returns (result, extra_calls). Only counts are logged (#193 privacy).
+        """
+        if normalize_text(first.text) not in rejected:
+            return first, 0
+
+        settings = get_settings()
+        audio_file.seek(0)
+        audio_bytes = audio_file.read()
+        steps = []
+        if settings.stt_provider == "elevenlabs":
+            steps.append("scribe")
+        steps.append("openai")
+
+        attempts = 0
+        for step in steps[:2]:
+            attempts += 1
+            try:
+                if step == "scribe":
+                    candidate = await self._transcribe_scribe(
+                        audio_bytes=audio_bytes,
+                        filename=filename,
+                        language=language,
+                        keyterms=keyterms,
+                        settings=settings,
+                        seed=RETRY_SEED,
+                    )
+                else:
+                    audio_file.seek(0)
+                    candidate = await self._transcribe_openai(
+                        audio_file=audio_file,
+                        filename=filename,
+                        prompt=prompt,
+                        language=language,
+                        keyterms=keyterms,
+                    )
+            except Exception as e:
+                logger.warning(
+                    "Retry recognition step=%s failed: %s", step, type(e).__name__
+                )
+                continue
+            if candidate.is_valid(min_chars=min_chars) and (
+                normalize_text(candidate.text) not in rejected
+            ):
+                logger.info(
+                    "Retry recognition avoided rejected transcript attempts=%d",
+                    attempts,
+                )
+                return candidate, attempts
+        logger.info("Retry recognition kept original transcript attempts=%d", attempts)
+        return first, attempts
 
     def _get_file_extension(self, filename: str) -> str:
         """Extract file extension from filename.

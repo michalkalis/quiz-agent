@@ -2837,6 +2837,22 @@
         }
       }
     },
+    "Echo cancellation on car audio" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potlačení ozvěny při zvuku v autě"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potlačenie ozveny pri zvuku v aute"
+          }
+        }
+      }
+    },
     "Edit answer" : {
       "comment" : "Accessibility label for the edit-answer button on the answer confirmation sheet",
       "localizations" : {
@@ -3647,6 +3663,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Francúzština"
+          }
+        }
+      }
+    },
+    "Front microphone, directional" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přední mikrofon, směrový"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predný mikrofón, smerový"
           }
         }
       }
@@ -6947,6 +6979,22 @@
         }
       }
     },
+    "Records with the iPhone's front microphone in a cardioid pattern when the iPhone's own microphone is used without voice processing" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahrává předním mikrofonem iPhonu s kardioidní charakteristikou, když se používá vlastní mikrofon iPhonu bez zpracování hlasu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahráva predným mikrofónom iPhonu s kardioidnou charakteristikou, keď sa používa vlastný mikrofón iPhonu bez spracovania hlasu"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "localizations" : {
         "cs" : {
@@ -6992,6 +7040,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odstráň snímku obrazovky"
+          }
+        }
+      }
+    },
+    "Removes the quiz's own sound from the microphone on Bluetooth, CarPlay or wired output, without moving the sound. iPhone models from 2024 on" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odstraní zvuk kvízu z mikrofonu při výstupu přes Bluetooth, CarPlay nebo kabel a zvuk zůstane, kde je. iPhony od roku 2024"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odstráni zvuk kvízu z mikrofónu pri výstupe cez Bluetooth, CarPlay alebo kábel a zvuk ostane, kde je. iPhony od roku 2024"
           }
         }
       }

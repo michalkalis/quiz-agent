@@ -28,7 +28,7 @@ Research the latest developments in Claude Code and agentic coding workflows. Us
 2. High-signal community: Simon Willison's blog, active awesome-claude-code lists, credible engineering blogs. No SEO spam.
 3. Emerging agentic-coding patterns (orchestration, background/CI agents, memory, spec-driven dev).
 
-Context (judge relevance only, don't audit): solo-founder monorepo (FastAPI + SwiftUI iOS), ~30 custom skills, hooks, subagent model routing (cheap workers / frontier decisions), overnight autonomous loop on a second Mac, file-based memory, issue/handoff docs discipline, XcodeBuildMCP + Pencil MCP.
+Context (judge relevance only, don't audit): solo-founder monorepo (FastAPI + SwiftUI iOS), ~20 custom skills, hooks, subagent model routing (cheap workers / frontier decisions), file-based memory, issue/handoff docs discipline, XcodeBuildMCP.
 
 Return ≤120 lines: (A) official changes, 1 line each + why it matters for a setup like ours; (B) 5-10 community tools/repos with links + honest signal assessment; (C) 3-6 emerging patterns with fit high/medium/low. Include URLs; mark anything unverified.
 ```

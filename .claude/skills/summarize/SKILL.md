@@ -45,7 +45,7 @@ Key files:
 - path/to/file.ext:LINE — what's there
 - ...
 
-Start by: {exact command or first read — e.g. "run /test-ios", "read docs/issues/issue-N.md"}
+Start by: {exact command or first read — e.g. "run the ios-tester agent", "read docs/issues/issue-N.md"}
 
 Plan file: docs/issues/issue-N-{slug}.md  (omit if none)
 ````

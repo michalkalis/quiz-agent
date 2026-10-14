@@ -42,10 +42,3 @@ Run pytest, capture output, and report only essential information.
      AssertionError: Session should expire after TTL
      > assert session is None
    ```
-
-## If No Tests Exist
-Report: "No tests found. Backend needs test infrastructure."
-
-Suggest creating:
-- `apps/quiz-agent/tests/conftest.py` - Fixtures
-- `apps/quiz-agent/tests/test_session_manager.py` - Session tests

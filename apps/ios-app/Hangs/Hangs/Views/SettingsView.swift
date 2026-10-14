@@ -780,6 +780,32 @@ struct SettingsView: View {
 
             hairline
 
+            // #204.4: echo cancellation without voice processing, car routes only.
+            HangsToggleRow(
+                label: "Echo cancellation on car audio",
+                subtitle: "Removes the quiz's own sound from the microphone on Bluetooth, CarPlay or wired output, without moving the sound. iPhone models from 2024 on",
+                isOn: Binding(
+                    get: { diagnostics.echoCancelledInputOnExternalRoutes },
+                    set: diagnostics.setEchoCancelledInputOnExternalRoutes
+                )
+            )
+            .accessibilityIdentifier("settings.echoCancelledInputToggle")
+
+            hairline
+
+            // #204.5: the front built-in mic, directional.
+            HangsToggleRow(
+                label: "Front microphone, directional",
+                subtitle: "Records with the iPhone's front microphone in a cardioid pattern when the iPhone's own microphone is used without voice processing",
+                isOn: Binding(
+                    get: { diagnostics.frontCardioidMic },
+                    set: diagnostics.setFrontCardioidMic
+                )
+            )
+            .accessibilityIdentifier("settings.frontCardioidMicToggle")
+
+            hairline
+
             audioRouteRow
 
             hairline

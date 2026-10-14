@@ -96,6 +96,8 @@ extension RecordingCoordinator {
                 "vpMode": voiceProcessing?.mode.rawValue ?? "none",
                 "upload": conditionUpload ? AnswerAudioConditioning.conditionedLabel : AnswerAudioConditioning.rawLabel,
             ]
+            // #204.4 / #204.5: the mic-capture switches and what the mic ran with.
+            attributes.merge(MicCapturePolicy.captureAttributes()) { current, _ in current }
             attributes.merge(detection.sentryAttributes) { current, _ in current }
             SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
             noSpeechWindowDeferral = nil

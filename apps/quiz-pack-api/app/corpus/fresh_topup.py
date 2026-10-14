@@ -103,7 +103,9 @@ def rotate(languages: Sequence[str], today: date) -> list[str]:
 
 
 def refuse_session_gateway() -> None:
-    if llm_factory.gateway() == llm_factory.SESSION:
+    from app.corpus import fresh_pins
+
+    if llm_factory.gateway() == llm_factory.SESSION and not fresh_pins.session_run():
         raise SessionGatewayRefused(
             "fresh_topup refuses LLM_GATEWAY=session: the weekly job runs on the "
             "Anthropic API, never on the Claude Code subscription."

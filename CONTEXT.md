@@ -2,7 +2,7 @@
 
 The shared domain language used in this codebase, in PRDs, in issue files, and in conversations with Claude. Use these terms exactly. Don't drift into synonyms — when a synonym sneaks into a PR or doc, rename it back to the canonical term.
 
-This file is consulted by `/to-prd`, `/zoom-out`, `/diagnose`, `/improve-codebase-architecture`, and `/triage` — keep it accurate or those skills drift with it.
+This file is consulted by `/improve-codebase-architecture` and `/triage` — keep it accurate or those skills drift with it.
 
 ## Product
 
@@ -25,7 +25,7 @@ The core experience: TTS reads the question, the user answers by speaking, evalu
 ## Quiz mechanics
 
 **Quiz session**
-A single play-through containing N questions. Server-side state in memory; not persisted across restarts.
+A single play-through containing N questions. Server-side state in memory with a 30-minute TTL, written through to SQLite so active sessions survive a restart.
 
 **Question**
 A unit of content with prompt, expected answer, optional images/sources, difficulty, category, language. Backend Pydantic model in `packages/shared/`.
@@ -46,8 +46,8 @@ _Avoid_: app state (too generic — that's `AppState`).
 **Streaming STT**
 Real-time speech-to-text via SpeechAnalyzer + SpeechTranscriber (iOS 26+). Default voice path. The user's device runs iOS 26+; SpeechAnalyzer is always active.
 
-**Whisper STT**
-OpenAI Whisper as a fallback / Slovak-quality path. Round-trip via the backend.
+**Server STT**
+ElevenLabs Scribe v2 batch transcription on the backend, with an OpenAI transcription model as fallback (`apps/quiz-agent/app/voice/`).
 
 **Confirmation sheet**
 The `AnswerConfirmationView` that appears after the user finishes speaking. Lets the user edit the transcript, re-record, or confirm.
@@ -59,15 +59,15 @@ A timer that fires `confirmAnswer()` ~10s after the confirmation sheet appears w
 Interrupting the question being read aloud to start answering early.
 
 **Voice commands**
-A small English-only spoken grammar layered on top of the on-screen buttons (buttons always work as the fallback). The command set is screen-scoped: "start" begins the quiz / recording, "ok" confirms, "next" advances the result, "repeat" replays the question, "skip" advances without scoring. English by design — the words are fixed English tokens, not localized, so the recognizer stays reliable in the Slovak-accented cabin.
+A small spoken grammar layered on top of the on-screen buttons (buttons always work as the fallback). The command set is screen-scoped: "start" begins the quiz / recording, "ok" confirms, "next" advances the result, "repeat" replays the question, "skip" advances without scoring. Each command is recognised in sk, cs and en at once (e.g. "ďalej", "preskoč").
 
 ## Question pipeline
 
 **gen-verify-score pipeline**
 The three-stage content pipeline:
-1. **Generate** (`/gen-questions`) — Claude produces candidate questions.
-2. **Verify** (`/verify-qs`) — fact-check against sources, populate `source_url` + `source_excerpt`.
-3. **Score** (`/score-qs`) — rate on 5 quality dimensions, recommend approve / revise / reject.
+1. **Generate** (`/generate-questions`) — Claude produces candidate questions.
+2. **Verify** (`/verify-questions`) — fact-check against sources, populate `source_url` + `source_excerpt`.
+3. **Score** (`/score-questions`) — rate on 5 quality dimensions, recommend approve / revise / reject.
 
 The full pipeline is operational for **Group A**. **Groups B-E** are the remaining content tranches.
 
@@ -75,7 +75,7 @@ The full pipeline is operational for **Group A**. **Groups B-E** are the remaini
 A tranche of questions generated together with a shared topic / difficulty profile. A, B, C, D, E.
 
 **5 quality dimensions**
-The scoring axes used by `/score-qs`. (Domain-internal; see the skill for definitions.)
+The scoring axes used by `/score-questions`. (Domain-internal; see the skill for definitions.)
 
 **Review status × build channel (founder rule, 2026-08-28; reaffirmed 2026-09-04; amended 2026-09-10 by #177 — machine-approved review status)**
 `review_status` on a **shared-corpus** question (`pack_id IS NULL`) encodes *whether it is vouched for*, by a human or by the machine gates — the state decides what serves, not who set it:
@@ -91,11 +91,11 @@ Corollary (rewritten 2026-09-10, #177): only the **trusted CLI importer** may st
 
 Re-import never promotes an existing row: the importer inserts `ON CONFLICT DO NOTHING`, so rows already in the corpus keep their status. Backfilling pre-#177 rows is a separate, deliberate call, not a side effect of an import.
 
-**ChromaDB**
-Vector store for question semantic search. Production volume mount: `/app/data/chroma`. The `CHROMA_PATH` Fly secret must match the mount.
+**Question store**
+Postgres + pgvector: canonical store for questions and their embeddings (`PgvectorQuestionStore`). ChromaDB is retired; never reintroduce it.
 
 **SQLite ratings**
-Persistent question ratings store, separate from ChromaDB.
+Persistent question ratings store, separate from the question store.
 
 ## Testing
 
@@ -130,10 +130,10 @@ Lite RS-01 variant at `scripts/pre-push-rs01-smoke.sh`. Opt-in git hook installe
 `docs/issues/issue-NN-{slug}.md`. Plan + history for sizable tasks. Header carries `**Triage:**` (machine-readable category + state) and `**Status:**` (human prose).
 
 **PRD**
-Product requirement doc in `docs/product/prds/<slug>.md`. Created via `/to-prd` (synthesize current conversation) or `/write-prd` (interactive interview).
+Product requirement doc in `docs/product/prds/<slug>.md`. Written from the conversation or an interview with the founder.
 
 **Indices**
-`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by `/triage` and `/to-prd`.
+`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by `/triage`.
 
 **ADR**
 Architecture decision record in `docs/adr/NNNN-<slug>.md`. Created lazily by `/improve-codebase-architecture` when an architectural decision needs to be recorded so it isn't re-litigated.

@@ -93,15 +93,17 @@ list available ids and stop.
 1. Confirm simulator is booted (`list_sims` → `boot_sim` if needed,
    `open_sim` to bring up Simulator.app).
 2. Build once at the top of the run, even if running a single scenario,
-   so we know the app is fresh:
+   so we know the app is fresh. XcodeBuildMCP tools take the project,
+   scheme, configuration, simulator and bundle id from session defaults:
    ```
-   clean({ scheme: "Hangs-Local", configuration: "Debug-Local" })
-   build_sim({
+   session_set_defaults({
+     projectPath: "apps/ios-app/Hangs/Hangs.xcodeproj",
      scheme: "Hangs-Local",
      configuration: "Debug-Local",
-     simulatorName: "iPhone 18 Pro",
-     workspacePath or projectPath: <discovered>
+     simulatorName: "iPhone 18 Pro"
    })
+   clean({})
+   build_sim({})
    ```
 3. Resolve app path via `get_sim_app_path` (must end in
    `Debug-Local-iphonesimulator/Hangs.app` — not `Debug-iphonesimulator`).
@@ -116,11 +118,7 @@ For each scenario id (in order if `all`):
 #### 1a. Launch in UI-test mode (order matters)
 
 ```
-launch_app_sim({
-  simulatorUuid: "918FD36A-...",
-  bundleId: <bundle id>,
-  args: ["--ui-test"]
-})
+launch_app_sim({ launchArgs: ["--ui-test"] })
 ```
 
 Confirm the HTTP listener bound:
@@ -164,7 +162,7 @@ Immediately after the final `snapshot_ui`, capture a screenshot and perform a
 visual check:
 
 ```
-screenshot({ simulatorUuid: "918FD36A-..." })
+screenshot({})
 ```
 
 Read the returned image. Evaluate it against the per-screen checklist in
@@ -186,7 +184,7 @@ Crash check: scan the captured log for `EXC_`, `signal `, or
 #### 1d. Kill app
 
 ```
-stop_app_sim({ simulatorUuid: "918FD36A-...", bundleId: <bundle id> })
+stop_app_sim({})
 ```
 
 The captured log file stays on disk at the path `launch_app_sim` returned.
@@ -276,7 +274,7 @@ decides whether to triage and re-run.
    *after* the next-state, missing the assertion window.
 6. **Two booted sims.** If multiple are booted, always pin to
    `D14252B4-9605-4E17-BF8A-222179A6FDD2` explicitly in raw `xcrun simctl`
-   calls. XcodeBuildMCP picks it up via `simulatorUuid:`.
+   calls. XcodeBuildMCP takes it from the `simulatorName` session default.
 7. **WIP files.** If `git status` shows unrelated WIP that breaks the build,
    stop and ask the user to stash. Don't silently revert.
 8. **Auto-confirm race (bug-A).** RS-05 fails today because the
@@ -342,7 +340,7 @@ To remove: `rm .git/hooks/pre-push`.
 - `SKIP — no booted simulator`: env issue, push proceeds. Boot a sim with
   `open -a Simulator` if you want the gate active next time.
 - `SKIP — Hangs.app not installed`: build+install once via Xcode or
-  `/build-ios`, push again.
+  XcodeBuildMCP, push again.
 - `FAIL — HTTP listener never bound`: real regression. Run the full RS-01
   via this skill (`/regression RS-01`) before pushing again, or bypass with
   `--no-verify` if you've already triaged.

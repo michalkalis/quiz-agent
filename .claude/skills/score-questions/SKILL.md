@@ -77,7 +77,7 @@ Create `data/scored/` directory if it doesn't exist. Save to `data/scored/scored
   "metadata": {
     "scored_at": "<ISO timestamp>",
     "source_file": "<path>",
-    "scored_by": "claude-sonnet-5",
+    "scored_by": "claude-sonnet-5-5",
     "total_questions": 10,
     "recommendations": {
       "approve": 7,
@@ -119,7 +119,7 @@ Sort questions by overall score (descending) and display:
 Scoring Complete
 ================
 Source: data/generated/claude_batch_016.json
-Scored by: claude-sonnet-5
+Scored by: claude-sonnet-5-5
 
   #  Score  Rec      Diff    Topic         CS  S/D  Tell DrF  CF   Question (truncated)
   1   9.2   approve  hard    Nature        9   10   9    8    10   Which creature can...
@@ -154,7 +154,7 @@ If `--save-to-db` was passed:
    for q in data['questions']:
        db.add_model_score(
            question_id=q['id'],
-           scored_by='claude-sonnet-5',
+           scored_by='claude-sonnet-5-5',
            scores=q['scores'],
            overall_score=q['overall_score']
        )
@@ -162,12 +162,12 @@ If `--save-to-db` was passed:
    "
    ```
 
-3. If not running: "To save scores to DB, start the service with `/start-local questions` and re-run with `--save-to-db`."
+3. If not running: "To save scores to DB, start the service with `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` and re-run with `--save-to-db`."
 
 ### 8. Suggest Next Steps
 
 After presenting results:
-- For `approve` questions: "Run `/verify-questions <file>` to fact-check before importing to ChromaDB."
+- For `approve` questions: "Run `/verify-questions <file>` to fact-check before importing to the question store."
 - For `revise` questions: "Consider regenerating with `/generate-questions` focusing on weak dimensions."
 - For `reject` questions: "These should be dropped or completely reworked."
 

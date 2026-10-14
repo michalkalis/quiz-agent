@@ -1,6 +1,7 @@
 """Voice transcription and submission endpoints."""
 
 import asyncio
+import json
 import logging
 from difflib import SequenceMatcher
 from typing import Optional
@@ -8,6 +9,7 @@ from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
     HTTPException,
     Query,
     Request,
@@ -35,7 +37,9 @@ from ...retrieval.question_retriever import QuestionRetriever
 from ...quiz.errors import InvalidSubmission, QuestionUnavailable
 from ...quiz.flow import QuizFlowService
 from ...quiz.resubmission import reanswers_finished_session
+from ...config import get_settings
 from ...rate_limit import limiter
+from quiz_shared.utils.text_normalization import normalize_text
 from quiz_shared.models.phase import SessionPhase
 
 logger = logging.getLogger(__name__)
@@ -81,6 +85,34 @@ def mcq_keyterms(current_question, session) -> list[str]:
     )
 
 
+REJECTED_MAX_ITEMS = 5
+REJECTED_MAX_CHARS = 200
+
+
+def parse_rejected_transcripts(raw: Optional[str]) -> set[str]:
+    """Normalised transcripts the player already rejected for this question (#204.2).
+
+    The field is optional (a 1.0 client never sends it), but a present-yet-
+    malformed one is a client bug worth a typed 400 — before any STT is paid for.
+    """
+    if raw is None or not raw.strip():
+        return set()
+    try:
+        items = json.loads(raw)
+    except ValueError:
+        items = None
+    if (
+        not isinstance(items, list)
+        or len(items) > REJECTED_MAX_ITEMS
+        or not all(isinstance(i, str) and len(i) <= REJECTED_MAX_CHARS for i in items)
+    ):
+        raise InvalidSubmission(
+            "rejected_transcripts must be a JSON array of at most "
+            f"{REJECTED_MAX_ITEMS} strings of at most {REJECTED_MAX_CHARS} characters"
+        )
+    return {n for n in (normalize_text(i) for i in items) if n}
+
+
 # NOTE: a bare ``POST /voice/transcribe`` (transcribe-only, no session) used to
 # live here. It was removed 2026-07-30 (#133 audit V6a): no client ever called it,
 # yet it billed a Whisper transcription per request at 30/min on the same
@@ -111,6 +143,16 @@ async def transcribe_and_submit(
         ),
     ),
     include_audio: bool = True,
+    rejected_transcripts: Optional[str] = Form(
+        default=None,
+        description=(
+            "#204.2, optional. JSON array (max 5 strings, each max 200 chars) of "
+            "transcripts the player already rejected for this question. If the "
+            "new transcript equals one (normalised), the server re-recognises "
+            "with the answer as bias and returns a different hypothesis when it "
+            "finds one. Missing = legacy behaviour."
+        ),
+    ),
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
@@ -158,6 +200,8 @@ async def transcribe_and_submit(
                     question_id or session.current_question_id, stage="current"
                 )
 
+            rejected = parse_rejected_transcripts(rejected_transcripts)
+
             # Transcribe with quiz context
             transcription_result = await voice_transcriber.transcribe_with_quiz_context(
                 audio_file=audio.file,
@@ -202,6 +246,31 @@ async def transcribe_and_submit(
                     "no_speech",
                     "No clear speech detected. Please speak clearly and try again.",
                 )
+
+            if rejected and get_settings().stt_retry_avoid_rejected:
+                (
+                    transcription_result,
+                    extra_calls,
+                ) = await voice_transcriber.transcribe_avoiding_rejected(
+                    audio_file=audio.file,
+                    filename=audio.filename,
+                    first=transcription_result,
+                    rejected=rejected,
+                    language=session.language,
+                    # Same terms as the first pass: MCQ options (unbiased among
+                    # them), nothing for open questions. Never the expected
+                    # answer, or mumble → reject → retry would hand it over.
+                    keyterms=mcq_keyterms(current_question, session),
+                    prompt=VoiceTranscriber.quiz_prompt(current_question.question),
+                    min_chars=min_chars,
+                )
+                if extra_calls:
+                    # #193: a flag and a count, never the player's words.
+                    logger.info(
+                        "Voice retry re-recognised session=%s extra_calls=%d",
+                        session_id,
+                        extra_calls,
+                    )
 
             transcribed_text = transcription_result.text
             logger.info(

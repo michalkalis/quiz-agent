@@ -12,7 +12,9 @@ from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
 
 from .. import hot_path_llm
+from ..config import get_settings
 from .mcq_matcher import match_option
+from .phonetic_match import phonetic_matches
 from .voice_match import sounds_like_any
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,14 @@ class AnswerEvaluator:
                 user_answer,
                 str(scoring_answer),
             )
+            return "correct", 1.0
+
+        # #204.6: same pronunciation key (sk/cs/en spelling rules) as the answer
+        # or an alternative, and not that of a wrong option. Flag-gated.
+        if get_settings().answer_phonetic_match and phonetic_matches(
+            user_answer, [str(scoring_answer), *question.alternative_answers]
+        ):
+            logger.info("Phonetic key accepted without LLM")
             return "correct", 1.0
 
         # LLM evaluation for nuanced scoring

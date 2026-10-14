@@ -224,3 +224,21 @@ def test_gather_runs_at_low_effort():
     """At high effort Haiku spent its whole token budget thinking and wrote no
     digest (2026-10-14), leaving Opus only bare headlines to pick from."""
     assert seed_gather.EFFORT == "low"
+
+
+def test_digest_lines_parse_from_tables_and_markdown_links():
+    """Live run 2026-10-14: the en and sk digests came back as markdown, parsed
+    to 0 lines, and Opus had only bare headlines to pick from (6 seeds)."""
+    trusted = [
+        "https://www.markiza.sk/farma/1",
+        "https://en.wikipedia.org/wiki/Lanterns_(TV_series)",
+    ]
+    text = (
+        "| Headline | Date | Source | Fact |\n"
+        "|---|---|---|---|\n"
+        "| Farma moves to a vineyard | 2026-08-20 | [Markíza](https://www.markiza.sk/farma/1) | The 18th season is shot near Modra. |\n"
+        "- Lanterns finale | 2026-10-01 | https://en.wikipedia.org/wiki/Lanterns_(TV_series) | 10.5 million viewers. |\n"
+    )
+    lines, unsourced = seed_gather.parse_digest(text, trusted)
+    assert [url for _, url in lines] == trusted
+    assert unsourced == 0

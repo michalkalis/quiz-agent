@@ -127,6 +127,7 @@ class ScribeBatchTranscriber:
         filename: str,
         language: Optional[str] = None,
         keyterms: Optional[list[str]] = None,
+        seed: Optional[int] = None,
     ) -> TranscriptionResult:
         api_key = self.api_key
         if not api_key:
@@ -144,6 +145,9 @@ class ScribeBatchTranscriber:
         }
         if language:
             data["language_code"] = language
+        if seed is not None:
+            # #204.2: a different seed is a different decoding of the same audio.
+            data["seed"] = str(seed)
         terms = sanitize_keyterms(keyterms)
         if terms:
             data["keyterms"] = terms

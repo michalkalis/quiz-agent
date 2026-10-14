@@ -79,6 +79,21 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
   - Founder: zvyšovanie zábavnosti rieši session quiz-agent-43 → odovzdané.
 - **Plný beh pripravený:** `general-corpus-2026-10-14/run_arm.sh`, 45 tém × 4 = 180/jazyk + 20 z pilotu; pokračuje po limite predplatného. Spustiť až po ⌀ ≥ 7: `GATEWAY=session ./run_arm.sh E en taste_brief.txt` (K sk, C cs).
 
+### 203.8 Témy vymyslí model (founder 2026-10-14, do pilotu 203.7)
+
+Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad modelov sa nevyužíva.
+**Meranie prod zásoby (2026-10-14, 1 303 schválených en, sk/cs z 93 % preklady):** konkrétne témy sa neopakujú (297 rôznych, žiadna nad 1,2 %, najčastejší pojem Paríž 1,6 %). Opakujú sa okruhy a rámec: prírodné vedy + dejepis 50 %, „krajina“ v 11 % otázok, „slávny“ 82×, typ „priamy fakt“ 39 %, prevaha Európy a USA. 78 % zásoby je z jedného behu 10-01 (jeden model a zadanie, jeden „hlas“). Natívne sk/cs sú z ~50 % zábava.
+**Príčina:** témy píše človek alebo školský zoznam kategórií a model každú vyplní najznámejšími faktami. Nič neťahá do šírky: dedup vyhodí len takmer rovnakú otázku, mapa podtém #170 (`COVERAGE_STEERING`) je vypnutá, len en a školská; pamäť „už pokryté“ má len týždenná zábava #202.
+
+**Rameno M v pilote 203.7** (vedľa ručných tém H, rovnaké nastavenie podľa receptu):
+1. Opus 5.5 navrhne ~150 úzkych tém na jazyk zo všetkých oblastí života (remeslá, povolania, predmety okolo nás, jazyk, telo, zvyky, technika, kuriozity…), nie školské predmety. Dostane zoznam tém, ktoré už v zásobe sú (pole `topic` z prod), a nechute z `taste_brief.txt`; tie vynechá.
+   Founderove tipy (2026-10-14, príklady, nie úplný zoznam): techno a rave scéna, bežné činnosti, Red Bull a extrémne športy. Teda subkultúry, scény, záľuby a veci, ktoré ľudia naozaj robia, ktoré v zásobe chýbajú. „Nečakaná téma, ale nie úplne náhodný fakt“: téma prekvapí, otázka je o niečom, k čomu má človek vzťah.
+2. Z návrhu sa náhodne vyberie, na tému **2 otázky** (nie 4), aby sa pilot rozložil na čo najviac tém.
+3. Slepá vzorka 20 na jazyk = 10 H + 10 M zamiešané v jednom kole (stupnica sa medzi kolami posúva). Founder nehodnotí viac ako doteraz.
+4. M vyhrá, ak jeho ⌀ ≥ H a ≥ 7 → plný beh 200/jazyk ide z tém od modelu. Pri remíze rozhodne founder.
+
+Žiadny filter ani hodnotiteľ zábavy: mení sa len zdroj tém.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou
@@ -86,4 +101,5 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 - [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
 - [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
+- [ ] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

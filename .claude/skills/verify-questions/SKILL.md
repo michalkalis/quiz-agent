@@ -166,16 +166,6 @@ Reports saved to:
   data/verification/enriched_YYYY-MM-DD.json
 ```
 
-### 7. Offer Source Backfill
-
-Ask the user:
-> "Would you like to backfill source URLs into ChromaDB? This will update N questions with source attribution data."
-
-If yes, run:
-```bash
-.venv/bin/python scripts/backfill_sources.py data/verification/enriched_YYYY-MM-DD.json
-```
-
 ## Important
 
 - **Accuracy is critical.** When uncertain, mark as `needs_review` rather than `correct`.

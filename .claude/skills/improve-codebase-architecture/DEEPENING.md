@@ -30,7 +30,7 @@ Examples in this repo: iOS `NetworkService` calling the FastAPI backend — the 
 
 Third-party services (OpenAI, Sentry, StoreKit) you don't control. The deepened module takes the external dependency as an injected port; tests provide a mock adapter.
 
-Examples in this repo: OpenAI Whisper / GPT-4 / TTS calls; the existing `MockSTT` (used in UI-test mode) is exactly this pattern.
+Examples in this repo: ElevenLabs STT/TTS and the LLM provider calls; the existing `MockElevenLabsSTTService` (used in UI-test mode) is exactly this pattern.
 
 ## Seam discipline
 

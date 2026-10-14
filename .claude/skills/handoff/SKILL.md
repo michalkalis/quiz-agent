@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write a structured handoff doc to docs/handoffs/handoff-YYYY-MM-DD-HHMM.md so a fresh session can resume the current work without re-explaining context. Use when the user wants to save state before ending a session, when context is filling up, or when explicitly invoked.
+description: Write a structured handoff doc to docs/handoffs/handoff-YYYY-MM-DD-HHMM.md so a fresh session can resume the current work without re-explaining context. Use when the user wants to save state before ending a session, when work must continue in another session, day or machine, or when explicitly invoked.
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit
 model: sonnet
 ---
@@ -11,7 +11,7 @@ Write a checked-in markdown file at `docs/handoffs/handoff-$(date +%Y-%m-%d-%H%M
 
 This is the **file-on-disk** counterpart to `/summarize` (which prints a one-shot copy-pasteable block). Use `/handoff` when the work is incomplete and you want a durable record committed to the repo.
 
-**When NOT to use this.** If you're staying in the same session/terminal and context just grew, native compaction handles it — don't write a file. If you're resuming after a break and only need "what was I doing", `/catchup` reconstructs from the git diff. Reach for `/handoff` specifically when the work crosses a session, day, or machine boundary (e.g. a fresh session, or an autonomous Ralph run on `mba`) and the reasoning/blockers — not just the diff — must survive.
+**When NOT to use this.** If you're staying in the same session/terminal and context just grew, native compaction handles it — don't write a file. If you're resuming after a break and only need "what was I doing", `/catchup` reconstructs from the git diff. Reach for `/handoff` specifically when the work crosses a session, day, or machine boundary (e.g. a fresh session, or the agent Mac `mba`) and the reasoning/blockers — not just the diff — must survive.
 
 ## Gather signals
 
@@ -71,7 +71,7 @@ Non-obvious choices made and their rationale. The point of this section is preve
 
 Per CLAUDE.md rule 2 (fail loud), be explicit — never let the next session assume green:
 - **Verified:** what actually passed, at which SHA, by what means (e.g. "Backend CI green at `abc1234`"; "RS-01..04 ran on sim, 0 failures").
-- **Unverified / assumed:** what has *not* been exercised yet, and why it matters (e.g. "MCQ batch unproven live — first overnight run is the real test").
+- **Unverified / assumed:** what has *not* been exercised yet, and why it matters (e.g. "MCQ batch unproven live — first TestFlight session is the real test").
 - **Dead ends:** approaches tried that didn't work, so the next session doesn't repeat them. Omit only if none.
 
 ## Blockers / open questions
@@ -104,4 +104,4 @@ Anything unresolved, awaiting a human, or blocked on an external system. If none
 - **Don't summarize what's already in CLAUDE.md or memory.** The handoff is for *this session's state*, not project-wide knowledge.
 - **Don't speculate about next steps you haven't thought through.** Three solid next steps beat seven hand-wavy ones.
 - **One file per invocation.** If the user runs `/handoff` twice in the same minute, suffix `-2`.
-- **Read-only on git.** Never commit, push, or stash from this skill.
+- **No commits from this skill.** `git mv` for archiving is fine; never commit, push, or stash — the session commits the handoff through the normal PR flow.

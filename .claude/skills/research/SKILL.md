@@ -56,7 +56,7 @@ Conduct deep research on a topic and produce a structured report with sources.
 ## Notes
 
 - If `$ARGUMENTS` is empty, ask what topic to research
-- Prioritize recent sources (2025-2026)
+- Prioritize sources from the last ~12 months
 - Always cite sources — never present unsourced claims as fact
 - If a WebFetch fails, note the source but don't block on it
 - Keep reports focused — 1-3 pages, not an encyclopedia

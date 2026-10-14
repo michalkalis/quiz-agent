@@ -1,6 +1,6 @@
 # Writing Agent Briefs
 
-An agent brief is a structured section appended to a `docs/issues/issue-NN-*.md` file when it moves to `ready-for-agent`. It is the authoritative spec an autonomous agent will work from. The original issue body and discussion are context — the agent brief is the contract.
+An agent brief is a structured section appended to a `docs/issues/issue-NN-*.md` file when it moves to `ready-for-agent`. It is the authoritative spec the implementing agent works from. The original issue body and discussion are context — the agent brief is the contract.
 
 ## Principles
 
@@ -27,7 +27,7 @@ Describe **what** the system should do, not **how** to implement it. The agent w
 
 ### Complete acceptance criteria
 
-The agent needs to know when it's done. Every `ready-for-agent` issue must carry a **top-level `## Acceptance` block** (not nested inside the brief) — the canonical, machine-evaluable done-state that the autonomous loop's stop-condition (#57 57.7) and independent reviewer (#57 57.5) evaluate against. See "The `## Acceptance` block" in [SKILL.md](SKILL.md) for the exact shape. The brief *references* it; it does not duplicate the criteria. Each criterion must be concrete and independently verifiable.
+The agent needs to know when it's done. Every `ready-for-agent` issue must carry a **top-level `## Acceptance` block** (not nested inside the brief) — the canonical, machine-evaluable done-state the implementing session and the PR reviewer evaluate against. See "The `## Acceptance` block" in [SKILL.md](SKILL.md) for the exact shape. The brief *references* it; it does not duplicate the criteria. Each criterion must be concrete and independently verifiable.
 
 - **Good:** "RS-05 reaches its terminal assertion (state `evaluated`, evaluation surface populated) without going through a REJECTED `processing → processing` transition."
 - **Bad:** "Auto-confirm should work correctly."

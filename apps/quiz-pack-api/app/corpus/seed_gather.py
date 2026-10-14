@@ -92,6 +92,7 @@ Reply with the digest only: one line per distinct news item, 40 to 60 lines, eac
 headline | YYYY-MM-DD or unknown | URL of the search result it came from | one or two sentences stating the checkable fact"""
 
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s*")
+_URL_IN = re.compile(r"https?://[^\s|<>\"\]\[]+")
 
 
 def seed_tools() -> list[dict]:
@@ -191,6 +192,15 @@ def harvest(blocks: list) -> list[tuple[str, str, str | None]]:
     return out
 
 
+def _clean_url(url: str) -> str:
+    """Drop trailing punctuation, and a ')' only when it closes a markdown
+    link, not a Wikipedia title such as ``Foo_(film)``."""
+    url = url.rstrip(".,;>")
+    while url.endswith(")") and url.count(")") > url.count("("):
+        url = url[:-1].rstrip(".,;>")
+    return url
+
+
 def parse_digest(text: str, trusted: list[str]) -> tuple[list[tuple[str, str]], int]:
     """Model digest lines → [(line, tool url)], and how many cited no search hit."""
     lines: list[tuple[str, str]] = []
@@ -198,10 +208,15 @@ def parse_digest(text: str, trusted: list[str]) -> tuple[list[tuple[str, str]], 
     unsourced = 0
     for raw in text.splitlines():
         parts = [p.strip() for p in _BULLET.sub("", raw).split("|")]
-        parts = [p for p in parts if p]
-        at = next((i for i, p in enumerate(parts) if p.startswith("http")), None)
+        parts = [p for p in parts if p and not set(p) <= set("-: ")]
+        # The URL may come bare, in <...> or as a markdown link [title](url),
+        # and the line may be a markdown table row (live run 2026-10-14: en
+        # and sk digests parsed to 0 lines while cs, written plainly, gave 45).
+        found = [(i, _URL_IN.search(p)) for i, p in enumerate(parts)]
+        at = next((i for i, m in found if m), None)
         if at is None or len(parts) < 3:
             continue
+        parts[at] = _clean_url(found[at][1].group(0))
         url = _cited_url(parts[at], trusted)
         if url is None:
             unsourced += 1
@@ -286,6 +301,10 @@ async def gather_digest(
     # Every segment's text: digest lines are recognisable wherever they are.
     text, trusted = _anthropic_text_and_urls(blocks)
     lines, g.unsourced = parse_digest(text, trusted)
+    if not lines:
+        logger.warning(
+            "seed gather %s: no digest lines parsed from %r", lang, text[:400]
+        )
     g.digest, g.urls, g.digest_lines, g.harvested = merge_digest(lines, harvest(blocks))
     if not g.digest:
         g.error = f"seed gather ended {stop!r} with an empty digest"

@@ -15,6 +15,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -381,4 +382,36 @@ class VoiceSample(Base):
     label: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False, index=True
+    )
+
+
+class VoiceExperimentArm(Base):
+    """One automatic voice-settings test: one setting on one audio route (#204.9).
+
+    The app reads these via ``GET /app-config`` and flips a coin with ``p_on``
+    once per quiz round; the weekly evaluator moves a row from ``running`` to
+    ``winner_on`` (``p_on`` 1.0) or ``off`` (0.0). Kept in the DB, not Fly
+    secrets, so the job can change it without a restart. ``generation`` is
+    bumped when a row's test restarts, so old answers never count again.
+    """
+
+    __tablename__ = "voice_experiment_arms"
+
+    flag: Mapped[str] = mapped_column(Text, primary_key=True)
+    route_group: Mapped[str] = mapped_column(Text, primary_key=True)
+    status: Mapped[str] = mapped_column(Text, nullable=False)  # running|winner_on|off
+    p_on: Mapped[float] = mapped_column(Float, nullable=False)
+    generation: Mapped[int] = mapped_column(
+        Integer, default=1, nullable=False, server_default="1"
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # winner|harm|no_difference|not_applicable
+    decision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )

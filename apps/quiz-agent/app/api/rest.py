@@ -20,6 +20,7 @@ from .routes import (
     question_stock,
     app_config,
     voice_samples,
+    voice_experiment,
 )
 
 # Main router with /api/v1 prefix
@@ -39,3 +40,4 @@ router.include_router(provider_balances.router)
 router.include_router(question_stock.router)
 router.include_router(app_config.router)
 router.include_router(voice_samples.router)
+router.include_router(voice_experiment.router)

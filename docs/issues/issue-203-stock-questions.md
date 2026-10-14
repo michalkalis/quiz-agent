@@ -133,7 +133,7 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - Prod zapnutie: `GEN_HOUSE_STYLE=1`, `PACK_SUBTHEMES=1`, `GENERATION_MODEL` cez Fly secrets (founder potvrdí, `fly secrets` je za povolením), deploy z `main` po zelenom CI. Vrátenie = unset.
 
 **Výsledok (2026-10-14).** PR #429 plán, #430 štýl domu, #432 podtémy + kosínus v balíku + `--customer-order` v CLI, #435 zapnutie na mba workeri.
-- Slepé kolo (https://claude.ai/artifact/Ahux3VyPAWN44oa9hn5frV, `docs/testing/runs/pack-ab-2026-10-15/`): balíky **nový 8,9 vs starý 8,3** (Harry Potter 9,7 vs 9,0; hokej/futbal 8,8 vs 7,5; kuchyňa 8,3 vs 8,7). #202 so štýlom domu 8,2 vs 8,6 bez neho (5 + 5) → ostáva vypnutý (`FRESH_HOUSE_STYLE=0`), čaká na founderovo rozhodnutie.
+- Slepé kolo (https://claude.ai/artifact/Ahux3VyPAWN44oa9hn5frV, `docs/testing/runs/pack-ab-2026-10-15/`): balíky **nový 8,9 vs starý 8,3** (Harry Potter 9,7 vs 9,0; hokej/futbal 8,8 vs 7,5; kuchyňa 8,3 vs 8,7). #202 so štýlom domu 8,2 vs 8,6 bez neho (5 + 5) → ostáva vypnutý (`FRESH_HOUSE_STYLE=0`); founder 2026-10-14: „môžeme upraviť potom“.
 - Cesty overené mini balíkom (pečiatka štýlu, podtémy, Opus 5.5): predplatné (mba), Max kredit (Anthropic API, ~27 c), OpenRouter (~25 c); cloud session v behu.
 - **Prod zapnuté (founder 2026-10-14):** Fly secrets `GEN_HOUSE_STYLE=1`, `PACK_SUBTHEMES=1`, `GENERATION_MODEL=claude-opus-5-5` + deploy; mba session worker (spracúva objednávky) reštartovaný s rovnakými hodnotami. Vrátenie = unset secrets / env pri `session_worker_local.sh`.
 - Pozor: Fly login na mba bol vypršaný a tunely workera ťahali staré spojenie z 8. 10.; po reštarte sa founder prihlásil (`fly auth login`).
@@ -148,5 +148,5 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
 - [x] 203.7 200 natívnych otázok na jazyk cez predplatné: import 574 (en 184 · sk 194 · cs 196), vzorka 8,05 / 8,15 / 8,10
 - [x] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
-- [~] 203.9 rovnaká kvalita v balíkoch: nový recept 8,9 vs 8,3, zapnutý v prode; open = cloud session test, rozhodnutie o #202
+- [~] 203.9 rovnaká kvalita v balíkoch: nový recept 8,9 vs 8,3, zapnutý v prode; open = cloud session test; #202 štýl domu neskôr (founder)
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

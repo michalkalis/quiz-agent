@@ -342,7 +342,7 @@ To remove: `rm .git/hooks/pre-push`.
 - `SKIP — no booted simulator`: env issue, push proceeds. Boot a sim with
   `open -a Simulator` if you want the gate active next time.
 - `SKIP — Hangs.app not installed`: build+install once via Xcode or
-  `/build-ios`, push again.
+  XcodeBuildMCP, push again.
 - `FAIL — HTTP listener never bound`: real regression. Run the full RS-01
   via this skill (`/regression RS-01`) before pushing again, or bypass with
   `--no-verify` if you've already triaged.

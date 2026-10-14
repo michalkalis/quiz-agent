@@ -37,7 +37,7 @@ curl -s -o /dev/null -w '%{http_code}' http://localhost:8003/api/v1/health
 ```
 
 If NOT running (non-200 response):
-- Inform the user: "FactVerifier service is not running at localhost:8003. Start it with `/start-local questions`."
+- Inform the user: "FactVerifier service is not running at localhost:8003. Start it with `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003`."
 - Ask: "Would you like to fall back to manual web search verification? (slower, but doesn't require the service)"
 - If yes → use the **Fallback: Manual Verification** method at the bottom of this document.
 - If no → stop.

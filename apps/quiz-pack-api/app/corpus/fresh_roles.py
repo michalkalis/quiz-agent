@@ -125,9 +125,13 @@ def check_roles(languages: list[str]) -> dict[str, dict[str, str]]:
     for model in sorted(models):
         if llm_usage.cost_cents_for(model, 1_000_000, 0) <= 0:
             problems.append(f"model {model!r} has no list price")
-        if anthropic_route.is_claude_model(
-            model
-        ) and not anthropic_route.routes_to_anthropic(model):
+        # A manual session run (fresh_pins.session_run) is meant to bypass the
+        # API for chat calls; only the API-route rule is waived then.
+        if (
+            not session_run()
+            and anthropic_route.is_claude_model(model)
+            and not anthropic_route.routes_to_anthropic(model)
+        ):
             problems.append(f"model {model!r} would not go to the Anthropic API")
     for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DATABASE_URL"):
         if not (os.getenv(key) or "").strip():

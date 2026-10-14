@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
-from app.generation.prompt_builder import order_brief_section
+from app.generation.prompt_builder import HOUSE_STYLE_VERSION, order_brief_section
 from app.generation.classification import normalize_category, normalize_difficulty
 from app.generation.mcq_answer import is_bare_option_key, resolve_mcq_answer
 from app.generation.expiry_classifier import (
@@ -246,6 +246,9 @@ class GenerationStage:
         if open_count == 0 and ctx.target_count >= OPEN_SHAPE_MIN_ORDER:
             open_count = 1
 
+        # #203 203.9 — read once, so the prompt and the stamp below agree.
+        house_style = feature_flags.gen_house_style()
+
         # Founder blind rating 2026-09-03 — the deterministic inline-option
         # repair. A question that recites "closer to 400 years, 1,400 years,
         # or 3,800 years?" inside a `text` stem is an MCQ the model forgot to
@@ -310,6 +313,7 @@ class GenerationStage:
                     (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0],
                     ctx.language,
                     [q.question for q in ctx.questions],
+                    house_style=house_style,
                 ),
                 **coverage_kwargs,
             )
@@ -372,6 +376,17 @@ class GenerationStage:
             # loop used to restore it afterwards; that loop is gone).
             if ctx.facts and provenance.pipeline != "logical_puzzle":
                 provenance = provenance.model_copy(update={"pipeline": "fact_first"})
+            # #203 203.9 — every path (worker, CLI, #202) proves it ran with
+            # the house style; flag off adds nothing.
+            if house_style:
+                provenance = provenance.model_copy(
+                    update={
+                        "extra": {
+                            **provenance.extra,
+                            "house_style": HOUSE_STYLE_VERSION,
+                        }
+                    }
+                )
             q.generation_metadata = provenance
 
             # Issue #195 — fresh-question boost window + reviewable verdict

@@ -30,7 +30,15 @@ ENV_PINS: dict[str, str] = {
     "EXPIRY_CLASSIFICATION": "0",
     "CASUAL_PLAYER_GATE": "off",
     "JUDGE_GATE": "0",
+    # #203 203.9: pack sub-themes are a customer-order feature; the weekly job
+    # never plans them, whatever the worker's secret says.
+    "PACK_SUBTHEMES": "0",
 }
+
+# #203 203.9: the house style has its own switch here, so the worker's
+# GEN_HOUSE_STYLE secret (same Fly app) never reaches the weekly job. Only an
+# explicit FRESH_HOUSE_STYLE=1 turns it on (the #202 blind-round arm).
+HOUSE_STYLE_ENV = "FRESH_HOUSE_STYLE"
 
 
 # Founder 2026-10-14: a manual run may use the Claude Code subscription
@@ -46,6 +54,9 @@ def session_run() -> bool:
 def apply() -> None:
     """Override whatever the environment (prod secrets) says with the pins."""
     os.environ.update(ENV_PINS)
+    os.environ["GEN_HOUSE_STYLE"] = (
+        "1" if os.environ.get(HOUSE_STYLE_ENV, "0").strip() == "1" else "0"
+    )
     if session_run():
         if os.environ.get("FLY_APP_NAME"):
             raise RuntimeError(

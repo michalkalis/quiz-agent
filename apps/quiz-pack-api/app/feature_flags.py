@@ -325,6 +325,18 @@ def generation_prompt_version() -> str:
     return (os.getenv("GEN_PROMPT_VERSION") or "").strip() or "direct_v1"
 
 
+def gen_house_style() -> bool:
+    """#203 203.9: append the house style (``prompts/house_style.md`` — the
+    founder's taste brief, hard rules, and for sk/cs the home-country share)
+    to every generation prompt as its own section after the order brief.
+
+    OFF by default until the blind round; ``GEN_HOUSE_STYLE=1`` turns it on.
+    The #202 weekly job ignores this secret: ``fresh_pins`` sets it from
+    ``FRESH_HOUSE_STYLE`` instead.
+    """
+    return _truthy(os.getenv("GEN_HOUSE_STYLE"))
+
+
 def best_of_n() -> bool:
     """#166: best-of-N over-generation + critique + pairwise duels, now OFF
     by default (duels already ruled out in D21 #164; critique added no signal

@@ -1638,3 +1638,41 @@ async def test_seed_is_deterministic_per_order_and_steps_per_round() -> None:
 
     assert allocator.calls[0][2] == other.calls[0][2]
     assert allocator.calls[1][2] == allocator.calls[0][2] + 1
+
+
+@pytest.mark.asyncio
+async def test_house_style_off_keeps_the_brief_and_stamps_nothing(monkeypatch) -> None:
+    """#203 203.9: until the blind round, GEN_HOUSE_STYLE is off and a paid
+    order must reach the generator exactly as before — same brief, no stamp."""
+    from app.generation.prompt_builder import order_brief_section
+
+    monkeypatch.delenv("GEN_HOUSE_STYLE", raising=False)
+    gen = _FakeGenerator([_stub_question(1)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(prompt="Slovenské hrady", language="sk")
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert gen.calls[0]["order_brief"] == order_brief_section("Slovenské hrady", "sk")
+    meta = ctx.questions[0].generation_metadata
+    assert meta is None or "house_style" not in meta.extra
+
+
+@pytest.mark.asyncio
+async def test_house_style_on_reaches_the_prompt_and_is_stamped(monkeypatch) -> None:
+    """#203 203.9 "done" = every generation path proves it ran with the house
+    style through a stamp on the question, and the stamp must agree with the
+    prompt the generator actually got."""
+    from app.generation.prompt_builder import HOUSE_STYLE_VERSION
+
+    monkeypatch.setenv("GEN_HOUSE_STYLE", "1")
+    gen = _FakeGenerator([_stub_question(1)])
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    ctx = _make_ctx(prompt="Slovenské hrady", language="sk")
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    brief = gen.calls[0]["order_brief"]
+    assert "## HOUSE STYLE" in brief
+    assert "The players live in Slovakia" in brief
+    assert ctx.questions, "the stub question must survive the stage"
+    meta = ctx.questions[0].generation_metadata
+    assert meta is not None and meta.extra["house_style"] == HOUSE_STYLE_VERSION

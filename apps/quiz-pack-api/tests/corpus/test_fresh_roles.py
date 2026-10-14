@@ -175,3 +175,26 @@ def test_session_run_is_local_only_and_switches_the_gateway():
         check=False,
     )
     assert on_fly.returncode != 0 and "manual local run" in on_fly.stderr
+
+
+@pytest.mark.parametrize(
+    ("env", "expected"),
+    [
+        ({"GEN_HOUSE_STYLE": "1"}, "0"),
+        ({}, "0"),
+        ({"GEN_HOUSE_STYLE": "1", "FRESH_HOUSE_STYLE": "0"}, "0"),
+        ({"FRESH_HOUSE_STYLE": "1"}, "1"),
+        ({"GEN_HOUSE_STYLE": "0", "FRESH_HOUSE_STYLE": "1"}, "1"),
+    ],
+)
+def test_weekly_job_house_style_follows_only_its_own_switch(monkeypatch, env, expected):
+    """#203 203.9: the weekly job runs in the worker's Fly app and sees its
+    secrets. Turning house style on for customer packs must not change the
+    #202 arm of the blind round; only FRESH_HOUSE_STYLE=1 turns it on there."""
+    from app.corpus import fresh_pins
+
+    fake_env = {"PACK_SUBTHEMES": "1", **env}
+    monkeypatch.setattr(fresh_pins.os, "environ", fake_env)
+    fresh_pins.apply()
+    assert fake_env["GEN_HOUSE_STYLE"] == expected
+    assert fake_env["PACK_SUBTHEMES"] == "0"  # sub-themes are customer-only

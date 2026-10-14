@@ -1,6 +1,6 @@
 # Product Index
 
-Dashboard of all PRDs and user-story sets. Updated by `/to-prd` and during `/triage` reviews.
+Dashboard of all PRDs and user-story sets. Updated during `/triage` reviews.
 
 ## How to read this
 
@@ -21,7 +21,7 @@ Dashboard of all PRDs and user-story sets. Updated by `/to-prd` and during `/tri
 
 ## Conventions
 
-- New PRD: save to `prds/<kebab-slug>.md` via `/to-prd` or `/write-prd`. Add a row above. Add a TODO line linking the PRD.
-- New user-story set: save to `stories/<kebab-slug>.md` via `/user-stories`.
+- New PRD: save to `prds/<kebab-slug>.md` Add a row above. Add a TODO line linking the PRD.
+- New user-story set: save to `stories/<kebab-slug>.md`.
 - A PRD ships when all its tracked issues reach `done` and the user explicitly marks the PRD `Shipped`.
 - `Deferred` ≠ `Wontfix`. Deferred PRDs sit here. Rejected concepts go to `.out-of-scope/`.

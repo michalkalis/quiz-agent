@@ -66,7 +66,7 @@ about edge cases and error conditions.
 - Adjacent feature that might seem related but is separate
 
 **Suggested feedback loop:**
-What `/diagnose` Phase 1 loop the agent should reach for first
+What feedback loop the agent should reach for first
 (e.g. "RS-05 via `/regression`", "pytest tests/<dir>/test_<x>.py", "curl
 against `localhost:8002/...`").
 ```

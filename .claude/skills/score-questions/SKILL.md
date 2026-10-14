@@ -162,7 +162,7 @@ If `--save-to-db` was passed:
    "
    ```
 
-3. If not running: "To save scores to DB, start the service with `/start-local questions` and re-run with `--save-to-db`."
+3. If not running: "To save scores to DB, start the service with `cd apps/quiz-pack-api && uvicorn app.main:app --reload --port 8003` and re-run with `--save-to-db`."
 
 ### 8. Suggest Next Steps
 

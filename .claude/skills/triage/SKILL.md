@@ -143,7 +143,7 @@ After the bucket display, also point out any TODO `[~]` items — work-in-progre
    - Run pytest / iOS unit tests if relevant.
    Report what happened — successful repro with code path, failed repro, or insufficient detail (a strong `needs-info` signal). A confirmed repro makes a much stronger agent brief.
 
-4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants `/to-prd`.
+4. **Grill (if needed).** If the issue needs fleshing out, run a brief targeted question session (1–4 questions). Don't blow it up into a full PRD interview unless the scope warrants a PRD.
 
 5. **Apply the outcome:**
    - `ready-for-agent` — append an Agent Brief section ([AGENT-BRIEF.md](AGENT-BRIEF.md)) **and a top-level `## Acceptance` block** (see above), and **clear the Definition-of-Ready** (C1–C7 scaled to the task — see "Definition-of-Ready" above): set the `**Reversibility:**` header field (C6), and at the issue's scale tier confirm C1/C3/C5 are present. Do **not** move to `ready-for-agent` when C1/C3/C5 are absent or C6 is undeclared. For a `30+`-turn / cross-cutting issue, also run `/design-soundness` and require `SOUND`. A small reversible (class `a`) bug-fix is not forced through the full 7-point gate (apply C1+C3+C5 soft). Update the `**Triage:**` line. Optionally surface to TODO.md.

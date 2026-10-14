@@ -2,7 +2,7 @@
 
 The shared domain language used in this codebase, in PRDs, in issue files, and in conversations with Claude. Use these terms exactly. Don't drift into synonyms — when a synonym sneaks into a PR or doc, rename it back to the canonical term.
 
-This file is consulted by `/to-prd`, `/zoom-out`, `/diagnose`, `/improve-codebase-architecture`, and `/triage` — keep it accurate or those skills drift with it.
+This file is consulted by `/improve-codebase-architecture` and `/triage` — keep it accurate or those skills drift with it.
 
 ## Product
 
@@ -130,10 +130,10 @@ Lite RS-01 variant at `scripts/pre-push-rs01-smoke.sh`. Opt-in git hook installe
 `docs/issues/issue-NN-{slug}.md`. Plan + history for sizable tasks. Header carries `**Triage:**` (machine-readable category + state) and `**Status:**` (human prose).
 
 **PRD**
-Product requirement doc in `docs/product/prds/<slug>.md`. Created via `/to-prd` (synthesize current conversation) or `/write-prd` (interactive interview).
+Product requirement doc in `docs/product/prds/<slug>.md`. Written from the conversation or an interview with the founder.
 
 **Indices**
-`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by `/triage` and `/to-prd`.
+`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by `/triage`.
 
 **ADR**
 Architecture decision record in `docs/adr/NNNN-<slug>.md`. Created lazily by `/improve-codebase-architecture` when an architectural decision needs to be recorded so it isn't re-litigated.

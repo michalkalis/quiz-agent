@@ -339,10 +339,11 @@ def test_main_prints_json_and_fails_when_a_language_failed(
     fake.research_seeds = no_seeds
     code = fresh_topup.main(["--languages", "sk", "--cron-checkin"], deps=fake.deps())
     stdout = capsys.readouterr().out
-    json_part, block = stdout.split(fresh_report.SUMMARY_START)
-    summary = json.loads(json_part[json_part.index("{") :])
+    # The compact block comes first (survives a truncated log), then the JSON.
+    _, rest = stdout.split(fresh_report.SUMMARY_START)
+    block, json_part = rest.split(fresh_report.SUMMARY_END)
+    summary = json.loads(json_part.strip())
     assert "sk | failed | seed call ended 'refusal'" in block
-    assert block.rstrip().endswith(fresh_report.SUMMARY_END)
     assert code == 1
     assert summary["languages"]["sk"]["status"] == "failed"
     assert summary["spent_usd"] == 0.5  # a refused call still costs

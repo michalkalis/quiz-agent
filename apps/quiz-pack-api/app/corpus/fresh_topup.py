@@ -300,8 +300,14 @@ def main(argv: Sequence[str] | None = None, deps: Deps | None = None) -> int:
         summary = asyncio.run(run(args, deps))
         ok = not any(e["status"] == "failed" for e in summary["languages"].values())
         fresh_report.send_summary(summary)
-        json.dump(summary, sys.stdout, ensure_ascii=False, indent=2, default=str)
-        sys.stdout.write("\n" + fresh_report.compact_summary(summary) + "\n")
+        # Compact block first, flushed: Fly's log shipping dropped the tail of
+        # the big JSON dump on 2026-10-14, block and all. The JSON stays for
+        # the artifact; losing its end no longer loses the summary.
+        sys.stdout.write(fresh_report.compact_summary(summary) + "\n")
+        sys.stdout.flush()
+        json.dump(summary, sys.stdout, ensure_ascii=False, default=str)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
     except BaseException as exc:
         import sentry_sdk
 

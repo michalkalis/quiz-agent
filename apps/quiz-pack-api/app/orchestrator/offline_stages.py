@@ -19,6 +19,7 @@ import argparse
 import json
 import uuid
 from pathlib import Path
+from types import SimpleNamespace
 
 from quiz_shared.llm import factory as llm_factory
 
@@ -131,6 +132,26 @@ def build_dedup_stage(
     )
 
 
+class InMemoryPackStage:
+    """#203 203.9: the #182 incremental persist surface TopUpStage drives,
+    writing nothing — a dry-run ``--customer-order`` walks the worker's rounds
+    without a database. The returned stand-in is not a ``QuestionPack``, so
+    ``PackGenerator.run`` still returns ``None`` (the CLI prints ``dry-run``).
+    """
+
+    name = "persisting"
+    _pack = SimpleNamespace(id="dry-run")
+
+    async def load_existing(self, ctx) -> None:
+        return None
+
+    async def persist_batch(self, ctx, new_questions) -> SimpleNamespace:
+        return self._pack
+
+    async def finalize(self, ctx, status: str) -> SimpleNamespace:
+        return self._pack
+
+
 class FactsFileSourcingStage:
     """Stands in for SourcingStage when ``--facts-file`` is given (#153).
 
@@ -173,6 +194,7 @@ def build_stages(
     coverage_seed: int | None = None,
     generation_model: str | None = None,
     answerability_model: str | None = None,
+    customer_order: bool = False,
 ) -> list[Stage]:
     """Construct the standard pipeline. Persist is omitted in dry-run mode.
 
@@ -207,6 +229,15 @@ def build_stages(
     ``pack_id``-free rows passes ``False``). ``answerability_model`` is handed
     to ``AnswerabilityChecker`` (only built when ``ANSWERABILITY_CHECK`` is on)
     and to ``ShapeClassifier``, which runs on the same blind-answer model.
+
+    #203 203.9 ``customer_order`` (``--customer-order``, default ``False`` =
+    every corpus run unchanged): build the run as the worker builds a paid
+    order — ``GenerationStage(customer_order=True)`` (sub-themes when
+    ``PACK_SUBTHEMES`` is on), the worker's plain ``DedupStage`` (+ in-pack
+    cosine under the same flag, none of the #170 corpus levers) and, when
+    ``PACK_BATCH_SCHEDULE`` is not ``0``, the worker's incremental round walk.
+    Without ``persist`` the rounds go to an in-memory stand-in, so a blind
+    test can generate customer packs without touching the database.
     """
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.expiry_classifier import ExpiryClassifier
@@ -262,6 +293,7 @@ def build_stages(
         # #170 170.13 — `None` unless COVERAGE_STEERING is on (worker default).
         coverage_allocator=coverage_allocator,
         coverage_seed=coverage_seed,
+        customer_order=customer_order,
     )
     # 46.B6 / #169 parity: the logical-consistency judge for lateral puzzles
     # is wired in the worker; without it here a CLI run silently verified
@@ -278,7 +310,14 @@ def build_stages(
     # #170 D6 — one strictness object for both stages (the spent-fact filter
     # and the dedup content check must read the same profile).
     strictness = build_strictness()
-    dedup = build_dedup_stage(dedup_store, None, strictness)
+    if customer_order:
+        # Worker parity (`tasks._build_stages`): no #170 corpus levers.
+        strictness = None
+        dedup = DedupStage(
+            dedup_store, None, in_pack_cosine=feature_flags.pack_subthemes()
+        )
+    else:
+        dedup = build_dedup_stage(dedup_store, None, strictness)
     composition = CompositionStage(per_topic_cap=per_topic_cap)
     # #135 D10 — early round-trip answerability check between dedup and
     # verification, behind the same flag the worker honours.
@@ -288,18 +327,44 @@ def build_stages(
         else None
     )
 
+    # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
+    # no-category run samples a diverse concrete topic set (no per-pack LLM
+    # call). The worker/live path deliberately does NOT (stays byte-identical
+    # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
+    sourcing = (
+        FactsFileSourcingStage(facts_file)
+        if facts_file
+        else SourcingStage(
+            FactSourcer(), topic_pool=TopicPool(), forced_topics=forced_topics
+        )
+    )
+    batch_schedule = feature_flags.pack_batch_schedule()
+    if customer_order and batch_schedule:
+        # #203 203.9 / #182 worker parity: sourcing, then the round walk that
+        # persists as it goes (here: to memory on a dry run).
+        if persist:
+            from app.db.session import AsyncSessionLocal
+
+            pack_store = PersistStage(AsyncSessionLocal)
+        else:
+            pack_store = InMemoryPackStage()
+        return [
+            sourcing,
+            TopUpStage(
+                generation,
+                verification,
+                scoring,
+                dedup,
+                answerability_stage=answerability,
+                composition_stage=composition,
+                persist_stage=pack_store,
+                batch_schedule=batch_schedule,
+                **({} if floor_fraction is None else {"floor_fraction": floor_fraction}),
+            ),
+        ]
+
     stages: list[Stage] = [
-        # #72 F-1 (Scope A): the CLI/batch path wires the curated TopicPool so a
-        # no-category run samples a diverse concrete topic set (no per-pack LLM
-        # call). The worker/live path deliberately does NOT (stays byte-identical
-        # until Scope B). Refresh the pool offline via scripts/refresh_topic_pool.py.
-        (
-            FactsFileSourcingStage(facts_file)
-            if facts_file
-            else SourcingStage(
-                FactSourcer(), topic_pool=TopicPool(), forced_topics=forced_topics
-            )
-        ),
+        sourcing,
         generation,
         # 2026-08 perf fix: dedup runs right after generation, before
         # verification/scoring — a question dedup would discard anyway

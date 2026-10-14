@@ -37,7 +37,7 @@ Nerobiť (rešerš): odšumenie pred STT, audio-LLM so správnou odpoveďou v pr
 ## Kontrakt 204.2 — zamietnuté prepisy
 
 - `POST /voice/submit` prijme **voliteľné** pole formulára `rejected_transcripts` = JSON pole reťazcov (prepisy, ktoré hráč pri tejto otázke už zamietol cez „nie / znova“). Chýbajúce pole = dnešné správanie (appka 1.0 ostáva funkčná).
-- Backend: ak normalizovaný nový prepis zodpovedá niektorému zamietnutému, skúsi ďalšiu hypotézu — Scribe s `keyterms` = správna odpoveď + alternatívy (+ MCQ možnosti) a iným `seed`; potom `gpt-transcribe` s `keywords` rovnako. Vráti prvý prepis, ktorý sa nezhoduje so zamietnutým; ak sa zhodujú všetky, vráti pôvodný. Do logu len príznak a počet pokusov, nie slová.
+- Backend: ak normalizovaný nový prepis zodpovedá niektorému zamietnutému, skúsi ďalšiu hypotézu — Scribe s iným `seed`, potom `gpt-transcribe`. **Nápoveda nikdy neobsahuje správnu odpoveď samotnú:** MCQ dostane všetky možnosti (ako dnes), otvorená otázka žiadne `keyterms` (inak by hráč mohol zamumlať, zamietnuť a dostať uznanú správnu odpoveď). Správna odpoveď v nápovede až s podobne znejúcimi nesprávnymi odpoveďami z 204.7. Vráti prvý prepis, ktorý sa nezhoduje so zamietnutým; ak sa zhodujú všetky, vráti pôvodný. Do logu len príznak a počet pokusov, nie slová.
 - iOS: zamietnuté prepisy sa držia pre aktuálnu otázku (vynulujú sa pri ďalšej otázke) a posielajú sa len pri zapnutom prepínači.
 
 ## Meranie

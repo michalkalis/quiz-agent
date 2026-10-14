@@ -77,7 +77,7 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
   - Výsledok: pestré en 4,6 · sk 5,2 · cs 5,9 vs kontrola ⌀ 7,6. **Hádanky = 1/10 (všetkých 7)**, founder: „detinský a primitívny formát, klišé nezmysel“ → nikdy. Bez hádaniek pestré ⌀ ~7,2 ≈ kontrola, žiadny zisk.
   - Poznámky: „fakt alebo výmysel“ je len pravda/nepravda, pomenovanie nič nepridáva; opakovane „nejasne položená otázka“; klišé floskuly („ktorú s radosťou praská každé dieťa“) vadia; ľahko predpovedateľné odpovede pravda/nepravda nudia; znalosť zo ZŠ (Bratislava) slabá.
   - Founder: zvyšovanie zábavnosti rieši session quiz-agent-43 → odovzdané.
-- **Plný beh pripravený:** `general-corpus-2026-10-14/run_arm.sh`, 45 tém × 4 = 180/jazyk + 20 z pilotu; pokračuje po limite predplatného. Spustiť až po ⌀ ≥ 7: `GATEWAY=session ./run_arm.sh E en taste_brief.txt` (K sk, C cs).
+- **Plný beh pripravený (mix, founder 2026-10-14):** `general-corpus-2026-10-14/`, `themes_full.json` = 37 ručných (zvyšok zo 45) + 37 od modelu na jazyk, 2 otázky na tému ≈ 148 nových + ~54 z pilotov (general-pilot + topics-pilot) ≈ 200/jazyk. Spustí ho vzdialená session na mba (founder: „generovanie dáme novej remote session“); postup v handoffe `docs/handoffs/handoff-2026-10-14-1630.md`.
 
 ### 203.8 Témy vymyslí model (founder 2026-10-14, do pilotu 203.7)
 
@@ -94,7 +94,10 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 
 Žiadny filter ani hodnotiteľ zábavy: mení sa len zdroj tém.
 
-**Beh (2026-10-14, session d3 prevzala celé #203):** `topics-pilot-2026-10-14/`. Opus 5.5 cez predplatné navrhol 150 tém/jazyk (`themes_M_*.json`, vylúčené 563 tém z prod). Náhodne 10 M tém a 8 H tém (zo 45 tém plného behu) na jazyk, 2 otázky na tému, rovnaké nastavenie. Slepo 10 H + 10 M na jazyk: https://claude.ai/artifact/MpbH17cJvwtdMox7m8bCdc — čaká na foundera.
+**Beh (2026-10-14, session d3 prevzala celé #203):** `topics-pilot-2026-10-14/`. Opus 5.5 cez predplatné navrhol 150 tém/jazyk (`themes_M_*.json`, vylúčené 563 tém z prod). Náhodne 10 M tém a 8 H tém (zo 45 tém plného behu) na jazyk, 2 otázky na tému, rovnaké nastavenie. Slepo 10 H + 10 M na jazyk: https://claude.ai/artifact/MpbH17cJvwtdMox7m8bCdc
+**Výsledok:** H en 8,9 · sk 8,5 · cs 8,7 (⌀ 8,7) · M en 7,6 · sk 8,1 · cs 8,2 (⌀ 8,0). Founder: „parádne otázky, toto je úplne iný level.“ M podľa pravidla nevyhral, ale obe nad 7; founder zvolil **mix pol na pol**. Pravdepodobný dôvod skoku oproti pilotu (7,9): 2 otázky na tému namiesto 4 (rôzne kolá, stupnica sa posúva). Poznámky: priveľa pôvodu slov, ľahké / zjavné odpovede (fantasy draft, parkrun), nápoveda v otázke („čo si ráno dávate na chlieb“).
+
+**Archív (founder 2026-10-14):** celý beh 2026-10-01 (942 en, 933 approved + 9 pending) → `archived`, hneď, pred novými otázkami; ID na obnovu v `docs/testing/runs/archive-2026-10-01-batch/`. Staršie nehodnotené dávky (júl–17. 9., 345) ostávajú (founder). Živá zásoba: approved en 370 · sk 91 · cs 98.
 
 ## Stav
 
@@ -103,5 +106,5 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
 - [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
-- [~] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
+- [x] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

@@ -64,7 +64,11 @@ class FakeDeps:
         return SeedResult(
             seeds=[seed],
             candidates=1,
+            digest_lines=40,
+            harvested=30,
             domestic_share=1.0,
+            gather_cents=self.seed_cents * 0.4,
+            pick_cents=self.seed_cents * 0.6,
             cost_cents=self.seed_cents,
             page_check={"page_ok": 1, "page_mismatch": 0, "page_unchecked": 0},
         )
@@ -165,11 +169,15 @@ async def test_generation_is_skipped_when_seeds_left_less_than_its_worst_case(
     assert entry["cost"]["total_usd"] == 2.5
 
 
-def test_lang_worst_case_default_covers_seed_max_plus_generation():
+def test_lang_worst_case_default_covers_both_seed_steps_plus_generation():
+    """The start gate is the only check before the seed pick, so it must
+    cover the gather max, the pick worst case and the generation worst case."""
     from app.corpus import seed_research
 
     assert fresh_topup.DEFAULT_LANG_WORST_USD >= (
-        seed_research.DEFAULT_SEED_MAX_USD + fresh_topup.DEFAULT_GEN_WORST_USD
+        seed_research.DEFAULT_SEED_MAX_USD
+        + seed_research.PICK_WORST_USD
+        + fresh_topup.DEFAULT_GEN_WORST_USD
     )
 
 
@@ -207,6 +215,8 @@ async def test_dry_run_writes_nothing_and_reports_the_questions(roles_ok):
     # Generation spend is reported under a key Sentry does not scrub ("token").
     assert entry["cost"] == {
         "seeds_usd": 1.0,
+        "seed_gather_usd": 0.4,
+        "seed_pick_usd": 0.6,
         "model_usd": 4.0,
         "factcheck_search_usd": 0.0,
         "total_usd": 5.0,
@@ -240,7 +250,8 @@ async def test_compact_summary_block_lists_languages_then_questions(roles_ok):
     assert lines[-1] == fresh_report.SUMMARY_END
     assert lines[1].startswith("fresh-topup 2026-W42 (dry run): 2 approved")
     assert lines[2] == (
-        "en | done | seeds 1/1 (page ok 1, mismatch 0, unchecked 0) | "
+        "en | done | seeds 1/1 (digest 40 + harvested 30, page ok 1, mismatch 0, "
+        "unchecked 0) | "
         "generated 3: approved 1, pending 0, dropped 2 | $5.00"
     )
     assert lines[4] == "lang | status | question | answer | boost_until"

@@ -33,9 +33,10 @@ OFF = "off"
 # (recipe § Run; #195). Passed in code to build_stages, so env cannot move it.
 ANSWERABILITY_PIN = {"en": HAIKU, "sk": SONNET, "cs": SONNET}
 
-# Seeds: Haiku 5.5 (founder 2026-10-14: "Novinky hľadá Haiku"); it only searches
-# and picks topics, so the Opus-priced seed call is not needed. Pinned like
-# the rest: ``seed_research.SEED_MODEL`` must equal ``HAIKU`` or the run stops.
+# Seeds in two steps (founder 2026-10-14: "čítanie celých stránok môže robiť
+# Haiku"): Haiku 5.5 searches and writes the digest (``seed_gather``), Opus 5.5
+# picks the seeds from it without tools (``seed_research``). Pinned like the
+# rest: either model moving stops the run.
 
 # The pinned env lives in fresh_pins (imported before any pipeline module).
 
@@ -59,7 +60,8 @@ def expected_roles(lang: str) -> dict[str, str]:
         "verify": OPUS,
         "judges": OFF,
         "casual_player": OFF,
-        "seeds": HAIKU,
+        "seed_gather": HAIKU,
+        "seed_pick": OPUS,
     }
 
 
@@ -70,7 +72,8 @@ def resolve_roles(lang: str) -> dict[str, str]:
     it constructs; the generation, answerability and shape models are passed as
     explicit pins there, judges are off by construction (``judges=False``).
     """
-    from app.corpus.seed_research import SEED_MODEL
+    from app.corpus.seed_gather import GATHER_MODEL
+    from app.corpus.seed_research import PICK_MODEL
     from app.generation import topicality_classifier
 
     critique = feature_flags.critique_model() or llm_factory.CRITIQUE
@@ -94,7 +97,8 @@ def resolve_roles(lang: str) -> dict[str, str]:
         "verify": feature_flags.verify_model() or llm_factory.VERIFY,
         "judges": OFF,
         "casual_player": feature_flags.casual_player_gate(),
-        "seeds": SEED_MODEL,
+        "seed_gather": GATHER_MODEL,
+        "seed_pick": PICK_MODEL,
     }
 
 

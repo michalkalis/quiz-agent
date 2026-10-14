@@ -3,13 +3,12 @@
 Why: seeds are the only input that changes week to week, and nobody curates
 them by hand any more. A fact web search never returned, a tabloid source or an
 obscure subject goes straight into a brief and from there into the App Store
-corpus, so each filter must actually cut. The cost must include the search
-fees, or the $15 cap would under-count. And the seed call must stay cheap
-(founder 2026-10-14, after $6.17 en / $15.89 sk on seeds in one dry run): no
-web_fetch, searches capped from env, and no resume past the seed max.
+corpus, so each filter must actually cut. Since 2026-10-14 the seeds come in
+two steps (founder: "čítanie celých stránok môže robiť Haiku"): Haiku gathers a
+digest (``test_seed_gather``), Opus picks from it without tools. The pick must
+only cite digest URLs, and the seed cost must hold both steps, or the $15 cap
+under-counts.
 """
-
-from __future__ import annotations
 
 import json
 from datetime import date
@@ -82,266 +81,109 @@ def test_domestic_share_only_for_sk_cs():
     assert domestic_share("en", seeds) is None
 
 
-def _response(stop, content, searches=0):
+def _response(stop, content, tokens_in=10_000, tokens_out=1_000):
     usage = SimpleNamespace(
-        input_tokens=100_000,
-        output_tokens=10_000,
-        server_tool_use=SimpleNamespace(web_search_requests=searches),
+        input_tokens=tokens_in,
+        output_tokens=tokens_out,
+        server_tool_use=SimpleNamespace(web_search_requests=0),
     )
     return SimpleNamespace(stop_reason=stop, content=content, usage=usage)
 
 
-def _hits(*urls):
-    return SimpleNamespace(
-        type="web_search_tool_result", content=[SimpleNamespace(url=u) for u in urls]
+def _text(text):
+    return SimpleNamespace(type="text", text=text, citations=None)
+
+
+def _gather(*urls, lines=None, searches=1):
+    """A gather call whose search returned ``urls`` (and wrote ``lines``)."""
+    hits = SimpleNamespace(
+        type="web_search_tool_result",
+        content=[SimpleNamespace(url=u, title=f"T {u}", page_age=None) for u in urls],
     )
+    content = [hits] + ([_text("\n".join(lines))] if lines else [])
+    search = SimpleNamespace(type="server_tool_use", name="web_search")
+
+    async def call(messages):
+        return _response("end_turn", content + [search] * searches, 100_000, 10_000)
+
+    return call
+
+
+def _picker(*replies):
+    calls: list[list[dict]] = []
+
+    async def call(messages):
+        calls.append(messages)
+        return replies[len(calls) - 1]
+
+    return call, calls
 
 
 async def _unreadable(url):
     return None
 
 
-def test_seed_call_searches_only_with_max_uses_from_env(monkeypatch):
-    """web_fetch made every later iteration re-read whole pages; it must stay off."""
-    monkeypatch.delenv("FRESH_TOPUP_SEED_SEARCHES", raising=False)
-    assert seed_research.seed_tools() == [
-        {"type": "web_search_20260209", "name": "web_search", "max_uses": 8}
-    ]
-    monkeypatch.setenv("FRESH_TOPUP_SEED_SEARCHES", "5")
-    (tool,) = seed_research.seed_tools()
-    assert tool["name"] == "web_search" and tool["max_uses"] == 5
+async def _run(lang, gather_call, pick_call, **kw):
+    return await seed_research.research_seeds(
+        lang,
+        TODAY,
+        gather_call=gather_call,
+        pick_call=pick_call,
+        ideas=kw.pop("ideas", ["- Idea (1 views)"]),
+        fame_of=lambda _t: None,
+        fetch_page=kw.pop("fetch_page", _unreadable),
+    )
 
 
 @pytest.mark.asyncio
-async def test_research_resumes_pause_checks_pages_and_counts_cost(monkeypatch):
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "5")
+async def test_pick_sees_the_digest_and_drops_seeds_citing_urls_outside_it():
+    """Opus reads only the digest; a source it did not get from there is not a
+    page web search returned, so the seed is uncited however plausible it is."""
+    kept_url = "https://cs.wikipedia.org/wiki/Kept"
+    wrong_url = "https://www.irozhlas.cz/kultura/1"
     items = [
-        _item("Kept", "https://cs.wikipedia.org/wiki/Kept"),
-        _item("Wrong page", "https://www.irozhlas.cz/kultura/1"),
-        _item("Fetch only", "https://cs.wikipedia.org/wiki/Fetch_only"),
+        _item("Kept", kept_url),
+        _item("Wrong page", wrong_url),
+        _item("Invented", "https://cs.wikipedia.org/wiki/Not_in_digest"),
     ]
-    final = [
-        _hits(
-            "https://cs.wikipedia.org/wiki/Kept", "https://www.irozhlas.cz/kultura/1"
-        ),
-        SimpleNamespace(type="text", text=json.dumps(items), citations=None),
-    ]
-    calls: list[list[dict]] = []
-    replies = [
-        _response("pause_turn", ["partial"], searches=3),
-        _response("end_turn", final, searches=2),
-    ]
-
-    async def fake_call(messages):
-        calls.append(messages)
-        return replies[len(calls) - 1]
-
-    pages = {
-        "https://cs.wikipedia.org/wiki/Kept": "Kept " * 100,
-        "https://www.irozhlas.cz/kultura/1": "Something else entirely. " * 30,
-    }
+    gather = _gather(
+        kept_url, wrong_url, lines=[f"Kept news | unknown | {kept_url} | F."]
+    )
+    pick, calls = _picker(_response("end_turn", [_text(json.dumps(items))]))
+    pages = {kept_url: "Kept " * 100, wrong_url: "Something else entirely. " * 30}
 
     async def fetch(url):
         return pages.get(url)
 
-    result = await seed_research.research_seeds(
-        "cs",
-        TODAY,
-        call=fake_call,
-        ideas=["- Idea (1 views)"],
-        fame_of=lambda _t: None,
-        fetch_page=fetch,
-    )
+    result = await _run("cs", gather, pick, fetch_page=fetch)
+    prompt = calls[0][0]["content"]
+    assert f"Kept news | unknown | {kept_url} | F." in prompt
+    assert wrong_url in prompt  # harvested hit
     assert [s.subject for s in result.seeds] == ["Kept"]
-    # A URL web search never returned stays uncited (web_fetch is gone).
     assert result.dropped == {"uncited": 1, "page_mismatch": 1}
-    assert result.page_check == {"page_ok": 1, "page_mismatch": 1, "page_unchecked": 0}
-    assert len(calls) == 2 and calls[1][1] == {
-        "role": "assistant",
-        "content": ["partial"],
-    }
-    assert result.searches == 5 and not result.budget_stopped
-    # 2 calls x (100k in @ $0.10/M + 10k out @ $0.50/M) = $0.03, + 5 searches x 1 cent.
-    assert result.cost_cents == pytest.approx(3 + 5)
+    assert (result.candidates, result.digest_lines, result.harvested) == (3, 1, 1)
 
 
 @pytest.mark.asyncio
-async def test_resume_stops_once_seed_spend_passes_its_max(monkeypatch):
-    """Each resume re-reads the whole context; past the seed max the job must
-    stop paying for more and use the seeds already written."""
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.04")  # one segment = $0.025
-    url = "https://sk.wikipedia.org/wiki/Early"
-    partial = [
-        _hits(url),
-        SimpleNamespace(
-            type="text", text=json.dumps([_item("Early", url)]), citations=None
-        ),
-    ]
-    calls = []
-
-    async def fake_call(messages):
-        calls.append(messages)
-        return _response("pause_turn", partial if len(calls) == 2 else [], searches=1)
-
-    result = await seed_research.research_seeds(
-        "sk",
-        TODAY,
-        call=fake_call,
-        ideas=[],
-        fame_of=lambda _t: None,
-        fetch_page=_unreadable,
-    )
-    assert len(calls) == 2  # $0.025 < $0.04 resumes once; $0.05 stops
-    assert result.budget_stopped and result.error is None
-    assert [s.subject for s in result.seeds] == ["Early"]
-    assert result.page_check["page_unchecked"] == 1
+async def test_seed_cost_sums_the_haiku_gather_and_the_opus_pick():
+    """Both steps are paid; leaving either out under-counts the $15 cap. The
+    gather counts its search blocks (Haiku reports 0) and the long-prompt
+    price (here 100k is not over the 100k line)."""
+    url = "https://en.wikipedia.org/wiki/A"
+    pick, _ = _picker(_response("end_turn", [_text(json.dumps([_item("A", url)]))]))
+    result = await _run("en", _gather(url, searches=2), pick)
+    # Gather: 100k in @ $0.10/M + 10k out @ $0.50/M = 1.5 cents, + 2 searches.
+    assert result.gather_cents == pytest.approx(1.5 + 2)
+    # Pick: 10k in @ $4/M + 1k out @ $20/M = 6 cents.
+    assert result.pick_cents == pytest.approx(6)
+    assert result.cost_cents == pytest.approx(9.5)
+    assert result.searches == 2
 
 
 @pytest.mark.asyncio
-async def test_budget_stop_without_any_seed_text_is_an_error(monkeypatch):
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.02")  # one segment = $0.025
-
-    async def fake_call(messages):
-        return _response("pause_turn", [], searches=1)
-
-    result = await seed_research.research_seeds(
-        "sk", TODAY, call=fake_call, ideas=[], fame_of=lambda _t: None
-    )
-    assert result.seeds == [] and "seed budget" in result.error
-    assert result.cost_cents == pytest.approx(2.5)
-
-
-@pytest.mark.asyncio
-async def test_url_found_before_a_pause_still_cites_its_seed(monkeypatch):
-    """A resumed response carries only its new blocks: a source searched in the
-    first segment must still count as cited, or a correctly sourced seed is
-    dropped as uncited. Every resume resends all earlier blocks."""
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "5")
-    url = "https://sk.wikipedia.org/wiki/Early"
-    early = SimpleNamespace(
-        type="web_search_tool_result", content=[SimpleNamespace(url=url)]
-    )
-    items = [_item("Early", url)]
-    final = [SimpleNamespace(type="text", text=json.dumps(items), citations=None)]
-    calls: list[list[dict]] = []
-    replies = [
-        _response("pause_turn", [early], searches=1),
-        _response("pause_turn", ["more"], searches=1),
-        _response("end_turn", final),
-    ]
-
-    async def fake_call(messages):
-        calls.append(messages)
-        return replies[len(calls) - 1]
-
-    result = await seed_research.research_seeds(
-        "sk",
-        TODAY,
-        call=fake_call,
-        ideas=["- Idea (1 views)"],
-        fame_of=lambda _t: None,
-        fetch_page=_unreadable,
-    )
-    assert [s.subject for s in result.seeds] == ["Early"]
-    assert calls[2][1]["content"] == [early, "more"]
-
-
-@pytest.mark.asyncio
-async def test_refusal_gives_no_seeds_but_keeps_the_cost():
-    async def fake_call(messages):
-        return _response("refusal", [], searches=1)
-
-    result = await seed_research.research_seeds(
-        "sk", TODAY, call=fake_call, ideas=[], fame_of=lambda _t: None
-    )
-    assert result.seeds == [] and "refusal" in result.error
-    assert result.cost_cents > 1
-
-
-def test_prompt_carries_the_recipe_rules():
-    en = seed_research.build_seed_prompt("en", TODAY, ["- Taylor Swift (9 views)"])
-    cs = seed_research.build_seed_prompt("cs", TODAY, [])
-    assert "Taylor Swift" in en and "not only in the US" in en
-    assert (
-        "Czech scene" in cs
-        and "Skip the Slovak scene" in cs
-        and "Slovak celebrities" not in cs
-    )
-    for prompt in (en, cs):
-        assert "web fetch" not in prompt  # the call has no fetch tool
-        assert "Reddit" in prompt and "award categories" in prompt
-        assert (
-            "current politics" in prompt and "between August and October 2026" in prompt
-        )
-
-
-def test_seed_array_found_after_prose_with_brackets():
-    """Prose before the array may contain '[' (the sk dry run of 2026-10-14
-    parsed nothing): the first array of objects anywhere must still be read."""
-    items = [_item("Zrádci", "https://cs.wikipedia.org/wiki/Zr%C3%A1dci")]
-    text = "Searched [3 sources] first.\n" + json.dumps(items, ensure_ascii=False)
-    assert seed_research._parse_seed_array(text) == items
-    assert seed_research._parse_seed_array("no array here [1, 2]") == []
-
-
-@pytest.mark.asyncio
-async def test_reply_without_array_gets_one_nudge_then_a_clear_error():
-    """A reply with prose only gets one cheap follow-up asking for the array;
-    if that also fails the language reports what came back instead of a bare
-    'no usable seeds'."""
-    url = "https://sk.wikipedia.org/wiki/Early"
-    search = SimpleNamespace(
-        type="web_search_tool_result", content=[SimpleNamespace(url=url)]
-    )
-    prose = SimpleNamespace(type="text", text="Here is what I found.", citations=None)
-    array = SimpleNamespace(
-        type="text", text=json.dumps([_item("Early", url)]), citations=None
-    )
-    calls: list[list[dict]] = []
-    replies = [_response("end_turn", [search, prose]), _response("end_turn", [array])]
-
-    async def fake_call(messages):
-        calls.append(messages)
-        return replies[len(calls) - 1]
-
-    result = await seed_research.research_seeds(
-        "sk",
-        TODAY,
-        call=fake_call,
-        ideas=["- Idea (1 views)"],
-        fame_of=lambda _t: None,
-        fetch_page=_unreadable,
-    )
-    assert [s.subject for s in result.seeds] == ["Early"]
-    assert calls[1][-1] == {"role": "user", "content": seed_research.JSON_NUDGE}
-
-    calls.clear()
-    replies[:] = [_response("end_turn", [prose]), _response("end_turn", [prose])]
-    result = await seed_research.research_seeds(
-        "sk",
-        TODAY,
-        call=fake_call,
-        ideas=["- Idea (1 views)"],
-        fame_of=lambda _t: None,
-        fetch_page=_unreadable,
-    )
-    assert len(calls) == 2 and not result.seeds
-    assert "no JSON array" in result.error and "Here is what I found" in result.error
-
-
-def test_seed_research_runs_on_haiku_with_a_one_dollar_default_stop(monkeypatch):
-    """Founder 2026-10-14 ("Novinky hľadá Haiku"): searching and picking topics
-    is cheap work; Opus made the seeds ~$3.1 per language against ~$0.85 for the
-    whole generation. The default stop must shrink with it ($1.00)."""
-    monkeypatch.delenv("FRESH_TOPUP_SEED_MAX_USD", raising=False)
-    assert seed_research.SEED_MODEL == "claude-haiku-5-5"
-    assert seed_research.seed_max_cents() == 100
-
-
-@pytest.mark.asyncio
-async def test_the_seed_request_goes_to_haiku_with_web_search_only(monkeypatch):
-    """The real request (not just the constant) must name the Haiku model and
-    carry the capped web_search tool, or the pinned role check proves nothing."""
+async def test_the_pick_request_goes_to_opus_without_tools(monkeypatch):
+    """Opus with web_search cost $0.8–3.2 per language (2026-10-14); the pick
+    must never carry a tool, and runs at medium effort."""
     sent: dict = {}
 
     class _Stream:
@@ -364,9 +206,90 @@ async def test_the_seed_request_goes_to_haiku_with_web_search_only(monkeypatch):
     monkeypatch.setattr(
         seed_research.llm_factory, "anthropic_client", lambda **_k: _Client()
     )
-    await seed_research._default_call([{"role": "user", "content": "x"}])
-    assert sent["model"] == "claude-haiku-5-5"
-    assert [t["name"] for t in sent["tools"]] == ["web_search"]
+    await seed_research._pick_call([{"role": "user", "content": "x"}])
+    assert sent["model"] == "claude-opus-5-5"
+    assert "tools" not in sent
+    assert sent["output_config"] == {"effort": "medium"}
+
+
+@pytest.mark.asyncio
+async def test_gather_failure_skips_the_pick_but_keeps_the_cost():
+    async def gather(messages):
+        return _response("refusal", [], 100_000, 10_000)
+
+    pick, calls = _picker()
+    result = await _run("sk", gather, pick)
+    assert calls == [] and result.seeds == [] and "refusal" in result.error
+    assert result.cost_cents == pytest.approx(1.5)
+
+
+@pytest.mark.asyncio
+async def test_pick_refusal_gives_no_seeds_but_keeps_both_costs():
+    url = "https://sk.wikipedia.org/wiki/A"
+    pick, _ = _picker(_response("refusal", []))
+    result = await _run("sk", _gather(url), pick)
+    assert result.seeds == [] and "seed pick ended 'refusal'" in result.error
+    assert result.cost_cents == pytest.approx(1.5 + 1 + 6)
+
+
+def test_pick_prompt_carries_the_recipe_rules():
+    en = seed_research.build_pick_prompt(
+        "en", TODAY, ["- Taylor Swift (9 views)"], ["Line | unknown | https://x.org/a"]
+    )
+    cs = seed_research.build_pick_prompt("cs", TODAY, [], [])
+    assert "Taylor Swift" in en and "not only in the US" in en
+    assert "Line | unknown | https://x.org/a" in en
+    assert (
+        "Czech scene" in cs
+        and "Skip the Slovak scene" in cs
+        and "Slovak celebrities" not in cs
+    )
+    for prompt in (en, cs):
+        assert "Reddit" in prompt and "award categories" in prompt
+        assert "At most 2 seeds about the same subject" in prompt
+        assert "MUST be copied exactly from one digest line" in prompt
+        assert (
+            "current politics" in prompt and "between August and October 2026" in prompt
+        )
+
+
+def test_seed_array_found_after_prose_with_brackets():
+    """Prose before the array may contain '[' (the sk dry run of 2026-10-14
+    parsed nothing): the first array of objects anywhere must still be read."""
+    items = [_item("Zrádci", "https://cs.wikipedia.org/wiki/Zr%C3%A1dci")]
+    text = "Searched [3 sources] first.\n" + json.dumps(items, ensure_ascii=False)
+    assert seed_research._parse_seed_array(text) == items
+    assert seed_research._parse_seed_array("no array here [1, 2]") == []
+
+
+@pytest.mark.asyncio
+async def test_pick_without_array_gets_one_nudge_then_a_clear_error():
+    """A reply with prose only gets one follow-up asking for the array; if
+    that also fails the language reports what came back instead of a bare
+    'no usable seeds'."""
+    url = "https://sk.wikipedia.org/wiki/Early"
+    prose = _text("Here is what I found.")
+    array = _text(json.dumps([_item("Early", url)]))
+    pick, calls = _picker(
+        _response("end_turn", [prose]), _response("end_turn", [array])
+    )
+    result = await _run("sk", _gather(url), pick)
+    assert [s.subject for s in result.seeds] == ["Early"]
+    assert calls[1][-1] == {"role": "user", "content": seed_research.JSON_NUDGE}
+    assert calls[1][1] == {"role": "assistant", "content": [prose]}
+
+    pick, calls = _picker(
+        _response("end_turn", [prose]), _response("end_turn", [prose])
+    )
+    result = await _run("sk", _gather(url), pick)
+    assert len(calls) == 2 and not result.seeds
+    assert "no JSON array" in result.error and "Here is what I found" in result.error
+
+
+def test_seed_steps_run_on_haiku_then_opus():
+    """Founder 2026-10-14: the cheap model reads, the strong one decides."""
+    assert seed_research.seed_gather.GATHER_MODEL == "claude-haiku-5-5"
+    assert seed_research.PICK_MODEL == "claude-opus-5-5"
 
 
 def _seed(subject, wiki=None):
@@ -407,46 +330,11 @@ async def test_research_applies_the_subject_cap_before_the_fame_cut():
     never reach the fame cut (skipped here: no fame data) or the brief."""
     urls = [f"https://en.wikipedia.org/wiki/P{i}" for i in range(4)]
     items = [_item("Taylor Swift", u) for u in urls[:3]] + [_item("Other", urls[3])]
-    reply = [
-        _hits(*urls),
-        SimpleNamespace(type="text", text=json.dumps(items), citations=None),
-    ]
-
-    async def fake_call(messages):
-        return _response("end_turn", reply)
-
-    result = await seed_research.research_seeds(
-        "en",
-        TODAY,
-        call=fake_call,
-        ideas=[],
-        fame_of=lambda _t: None,
-        fetch_page=_unreadable,
-    )
+    pick, _ = _picker(_response("end_turn", [_text(json.dumps(items))]))
+    result = await _run("en", _gather(*urls), pick, ideas=[])
     assert result.dropped["same_subject"] == 1
     assert sorted(s.subject for s in result.seeds) == [
         "Other",
         "Taylor Swift",
         "Taylor Swift",
     ]
-
-
-def test_seed_cost_counts_search_blocks_and_long_prompt_price():
-    """The spend cap must not under-count: Haiku 5.5 reported 0 searches for a
-    reply with two search blocks (2026-10-14), and prompts over 100k tokens bill
-    at 5x the table price."""
-    search = SimpleNamespace(type="server_tool_use", name="web_search")
-    usage = SimpleNamespace(
-        input_tokens=200_000,
-        output_tokens=0,
-        server_tool_use=SimpleNamespace(web_search_requests=0),
-    )
-    result = seed_research.SeedResult()
-    seed_research._add_usage(
-        result, SimpleNamespace(content=[search, search], usage=usage)
-    )
-    assert result.searches == 2
-    base = seed_research.llm_usage.cost_cents_for(seed_research.SEED_MODEL, 200_000, 0)
-    assert result.cost_cents == pytest.approx(
-        base * 5 + 2 * seed_research.SEARCH_FEE_CENTS
-    )

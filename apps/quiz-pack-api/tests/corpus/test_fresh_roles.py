@@ -121,19 +121,30 @@ def test_pins_beat_prod_secrets_and_the_workflow_runs_the_pinning_entry_point():
     assert "--env " not in workflow
 
 
-def test_seeds_are_pinned_to_haiku_and_priced(pinned):
-    """Founder 2026-10-14: seeds run on Haiku 5.5. The check must see the model
-    the seed call REALLY uses and a list price for it (no silent $0)."""
+def test_seed_steps_are_pinned_and_priced(pinned):
+    """Founder 2026-10-14: Haiku 5.5 gathers, Opus 5.5 picks. The check must
+    see the models the seed calls REALLY use and a list price for each."""
     for lang in ("en", "sk", "cs"):
-        assert check_roles([lang])[lang]["seeds"] == "claude-haiku-5-5"
-    assert fresh_roles.llm_usage.cost_cents_for("claude-haiku-5-5", 1_000_000, 0) > 0
+        roles = check_roles([lang])[lang]
+        assert roles["seed_gather"] == "claude-haiku-5-5"
+        assert roles["seed_pick"] == "claude-opus-5-5"
+    for model in ("claude-haiku-5-5", "claude-opus-5-5"):
+        assert fresh_roles.llm_usage.cost_cents_for(model, 1_000_000, 0) > 0
 
 
-def test_a_seed_model_other_than_haiku_fails_the_role_check(pinned):
-    """Someone moving the seed call back to Opus would multiply the seed spend
-    ~40x unnoticed; the pinned map must refuse to start instead."""
-    from app.corpus import seed_research
+@pytest.mark.parametrize(
+    ("module", "attr", "role", "moved_to"),
+    [
+        ("seed_gather", "GATHER_MODEL", "seed_gather", "claude-opus-5-5"),
+        ("seed_research", "PICK_MODEL", "seed_pick", "claude-haiku-5-5"),
+    ],
+)
+def test_a_moved_seed_model_fails_the_role_check(pinned, module, attr, role, moved_to):
+    """Opus doing the searching multiplied the seed spend (up to $3.2 per
+    language); Haiku picking returned 3 candidates for en. Either swap must stop
+    the run before the first paid call."""
+    import importlib
 
-    pinned.setattr(seed_research, "SEED_MODEL", "claude-opus-5-5")
-    with pytest.raises(RoleMapError, match=r"\.seeds: resolved 'claude-opus-5-5'"):
+    pinned.setattr(importlib.import_module(f"app.corpus.{module}"), attr, moved_to)
+    with pytest.raises(RoleMapError, match=rf"\.{role}: resolved '{moved_to}'"):
         check_roles(["en"])

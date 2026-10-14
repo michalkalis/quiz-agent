@@ -18,6 +18,8 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     @Published private(set) var conditionAnswerUpload = VoicePipelineFlags.conditionAnswerUpload
     @Published private(set) var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
     @Published private(set) var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
+    @Published private(set) var echoCancelledInputOnExternalRoutes = VoicePipelineFlags.echoCancelledInputOnExternalRoutes
+    @Published private(set) var frontCardioidMic = VoicePipelineFlags.frontCardioidMic
     /// Output · input · session mode · the voice-processing mode a mic engine
     /// would get now (#185 track C).
     @Published private(set) var audioRouteSummary: String
@@ -64,6 +66,16 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     func setSaveAnswerRecordings(_ isOn: Bool) {
         saveAnswerRecordings = isOn
         VoicePipelineFlags.saveAnswerRecordings = isOn
+    }
+
+    func setEchoCancelledInputOnExternalRoutes(_ isOn: Bool) {
+        echoCancelledInputOnExternalRoutes = isOn
+        VoicePipelineFlags.echoCancelledInputOnExternalRoutes = isOn
+    }
+
+    func setFrontCardioidMic(_ isOn: Bool) {
+        frontCardioidMic = isOn
+        VoicePipelineFlags.frontCardioidMic = isOn
     }
 
     func refresh() {

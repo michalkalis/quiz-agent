@@ -104,6 +104,10 @@ extension AudioService {
     /// processing is off on A2DP), so the car path costs two property reads.
     func restoreSessionAfterVoiceProcessing() {
         guard !isStreamingEngineActive else { return }
+        // #204.4 / #204.5: the same no-engine choke point follows a route
+        // change (car connected or gone) for the mic-capture switches. A no-op
+        // with both switches off.
+        reconcileMicCapture()
         let session = AVAudioSession.sharedInstance()
         guard let configuration = appliedSessionConfiguration,
               Self.sessionNeedsRestore(configured: configuration, category: session.category, mode: session.mode)

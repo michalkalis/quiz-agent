@@ -188,7 +188,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
     /// The configuration the session was last set up with (quiz or quiet Home)
     /// — what `restoreSessionAfterVoiceProcessing` puts back (#185 track C).
-    private(set) var appliedSessionConfiguration: SessionConfiguration?
+    /// Internal setter: the #204.4 route reconcile (AudioService+MicCapture)
+    /// moves it between `.spokenAudio` and `.default`.
+    var appliedSessionConfiguration: SessionConfiguration?
+
+    /// #204.4 / #204.5: what the mic-capture reconcile applied (see
+    /// AudioService+MicCapture).
+    var micCapture = MicCaptureState()
 
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
     private var recordingStartedAt: Date?
@@ -284,10 +290,15 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// 2026-09-05) — the swap is gone; a louder read belongs on the TTS asset,
     /// not on a session mutation. Pure for the same simulator-testability
     /// reason as `categoryOptions(for:)`.
-    nonisolated static func quizSessionConfiguration(for mode: AudioMode) -> SessionConfiguration {
+    /// #204.4: `echoCancelledInput` swaps `.spokenAudio` for `.default`, the
+    /// only `.playAndRecord` mode Apple's echo-cancelled input works in.
+    nonisolated static func quizSessionConfiguration(
+        for mode: AudioMode,
+        echoCancelledInput: Bool = false
+    ) -> SessionConfiguration {
         SessionConfiguration(
             category: .playAndRecord,
-            mode: .spokenAudio,
+            mode: echoCancelledInput ? .default : .spokenAudio,
             options: categoryOptions(for: mode)
         )
     }
@@ -333,6 +344,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         registerSessionObservers()
 
+        // #204.4 / #204.5: route-dependent, so decided on the live route.
+        micCapture.quizModeId = mode.id
+        reconcileMicCapture()
+
         Logger.audio.info("🎤 Audio session configured for background playback and recording")
     }
 
@@ -348,6 +363,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             mode: .default,
             options: Self.quietListeningCategoryOptions
         )
+        resetMicCapture() // #204.4 / #204.5 are quiz-only
         try session.setCategory(
             configuration.category,
             mode: configuration.mode,
@@ -677,6 +693,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// - Parameter device: Device to use, or nil for automatic selection
     func setPreferredInputDevice(_ device: AudioDevice?) throws {
         let session = AVAudioSession.sharedInstance()
+        // #204.5: the player's choice replaces any built-in mic pin of ours.
+        micCapture.pinnedBuiltInMicUID = nil
 
         if let device = device, !device.isAutomatic {
             // Find matching AVAudioSessionPortDescription

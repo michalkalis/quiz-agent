@@ -87,6 +87,21 @@ struct VoiceDiagnosticsSettingsModelTests {
         }
     }
 
+    @Test("the #204 mic-capture switches write their flags")
+    func micCaptureSwitchesWriteFlags() {
+        preservingFlag(VoicePipelineFlags.Key.echoCancelledInputOnExternalRoutes) {
+            preservingFlag(VoicePipelineFlags.Key.frontCardioidMic) {
+                let model = VoiceDiagnosticsSettingsModel(routeSummary: { "" }, recordingsDirectory: tempDir(), presentShareSheet: { _ in })
+
+                model.setEchoCancelledInputOnExternalRoutes(true)
+                model.setFrontCardioidMic(true)
+
+                #expect(VoicePipelineFlags.echoCancelledInputOnExternalRoutes && model.echoCancelledInputOnExternalRoutes)
+                #expect(VoicePipelineFlags.frontCardioidMic && model.frontCardioidMic)
+            }
+        }
+    }
+
     @Test("refresh picks up recordings saved while Settings was closed")
     func refreshRecountsRecordings() {
         let dir = tempDir()

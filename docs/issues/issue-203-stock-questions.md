@@ -53,6 +53,8 @@ Zistené (2026-10-14): 25 z 30 hodnotených otázok pochádza z hromadného behu
 
 Slepé porovnanie: Opus 5.5 pripnutý, nastavenie ako ostrá prevádzka (`fresh_pins.py` + `--no-judges`), rovnaké 4 témy z behu 10-01, 6 otázok na tému a rameno, `--dry-run`. A = `v2_cot` (23 prešlo bránami), B = `direct_v1` (24). Na hodnotenie 12 + 12: https://claude.ai/artifact/XKvYqK8iAYrykwWeQwH31K. Run adresár: `docs/testing/runs/prompt-ab-2026-10-14/`.
 
+**Výsledok (2026-10-14, 12 + 12):** A (`v2_cot`) zábava ⌀ 7,4, šanca 12/12 · B (`direct_v1`) ⌀ 7,3, šanca 10/12; v oboch 6× hodnotenie ≥ 8. **Zadanie nie je príčina**, rozdiel je v šume. Founder: „možno trochu lepšie celkovo, ale stále nič extra … je to proste nudný kvíz“. Najvyššie (9): prekvapivé otočenie bežnej skúsenosti (kovová vs drevená lyžica, dochádzanie z Európy do Ázie v Istanbule, wasabi je chren). Najnižšie (5–6): roky a trvanie ríš, Rusko (2× „nemám rád“), neznáme historické postavy (Mansa Musa, Bukefalos), porovnania s očakávanou odpoveďou (Briti a čaj).
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou

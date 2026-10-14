@@ -112,4 +112,15 @@ struct RejectedTranscriptRetryTests {
         #expect(sent.last?.count == RejectedTranscripts.maxLength)
         #expect(list.transcripts(for: "other").isEmpty)
     }
+
+    @Test("the length cap counts what the backend counts, so a decomposed transcript never earns a 400")
+    func lengthCapCountsUnicodeScalars() {
+        // "á" as a + combining acute: 1 Swift Character, 2 Python characters.
+        var list = RejectedTranscripts()
+        list.add(String(repeating: "a\u{301}", count: 150), questionKey: "q")
+
+        let sent = list.transcripts(for: "q")
+        #expect(sent.first?.unicodeScalars.count == RejectedTranscripts.maxLength,
+                "the backend rejects any item over 200 characters, and that 400 loses the answer")
+    }
 }

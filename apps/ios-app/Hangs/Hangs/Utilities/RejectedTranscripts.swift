@@ -14,8 +14,9 @@
 import Foundation
 
 nonisolated struct RejectedTranscripts: Equatable, Sendable {
-    /// The contract's caps (issue #204): at most 5 transcripts, each at most
-    /// 200 characters. The newest ones are kept.
+    /// The contract's caps (issue #204, enforced by the backend with a 400):
+    /// at most 5 transcripts, each at most 200 Unicode scalars. The newest
+    /// ones are kept.
     static let maxCount = 5
     static let maxLength = 200
 
@@ -66,7 +67,12 @@ nonisolated struct RejectedTranscripts: Equatable, Sendable {
     private static func cleaned(_ transcript: String) -> String? {
         let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        return String(trimmed.prefix(maxLength))
+        // The backend counts Python characters = Unicode scalars, and answers
+        // a longer item with a 400. A Swift `Character` can hold several
+        // scalars (a decomposed "á"), so the cap is applied to the scalars.
+        var scalars = String.UnicodeScalarView()
+        scalars.append(contentsOf: trimmed.unicodeScalars.prefix(maxLength))
+        return String(scalars)
     }
 
     private static func same(_ lhs: String, _ rhs: String) -> Bool {

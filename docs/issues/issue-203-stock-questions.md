@@ -76,6 +76,7 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 
 **Rameno M v pilote 203.7** (vedľa ručných tém H, rovnaké nastavenie podľa receptu):
 1. Opus 5.5 navrhne ~150 úzkych tém na jazyk zo všetkých oblastí života (remeslá, povolania, predmety okolo nás, jazyk, telo, zvyky, technika, kuriozity…), nie školské predmety. Dostane zoznam tém, ktoré už v zásobe sú (pole `topic` z prod), a nechute z `taste_brief.txt`; tie vynechá.
+   Founderove tipy (2026-10-14, príklady, nie úplný zoznam): techno a rave scéna, bežné činnosti, Red Bull a extrémne športy. Teda subkultúry, scény, záľuby a veci, ktoré ľudia naozaj robia, ktoré v zásobe chýbajú. „Nečakaná téma, ale nie úplne náhodný fakt“: téma prekvapí, otázka je o niečom, k čomu má človek vzťah.
 2. Z návrhu sa náhodne vyberie, na tému **2 otázky** (nie 4), aby sa pilot rozložil na čo najviac tém.
 3. Slepá vzorka 20 na jazyk = 10 H + 10 M zamiešané v jednom kole (stupnica sa medzi kolami posúva). Founder nehodnotí viac ako doteraz.
 4. M vyhrá, ak jeho ⌀ ≥ H a ≥ 7 → plný beh 200/jazyk ide z tém od modelu. Pri remíze rozhodne founder.

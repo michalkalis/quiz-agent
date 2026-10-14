@@ -1,0 +1,582 @@
+You plan topics for Trubbo, a voice trivia game that adults play on car trips, at parties and at the cottage. The players live in Czechia and play in Czech. At least 7 of every 10 themes must be rooted in life in Czechia (local scenes, hobbies, habits, brands, places people actually go), the rest may be world themes Czechs would enjoy.
+
+Propose exactly 150 narrow themes for question batches. Each theme will get two questions.
+
+What we want:
+- Themes from all areas of real life, not school subjects: subcultures and scenes (for example the techno and rave scene), hobbies, things people actually do (everyday activities, chores, rituals), energy drinks and extreme sports, crafts and trades, jobs, objects around us, food culture, language and slang, the body, customs, technology people use, fandoms, games, nightlife, travel habits, curiosities.
+- "An unexpected topic, but not a random fact": the theme should surprise ("oh, a question about that?"), yet be about something an ordinary adult has a relationship with, so the question lands as "huh, I never thought about that".
+- Make the list wide: no two themes from the same narrow area, and no more than about 10 themes from any one broad area.
+
+Avoid:
+- School-curriculum themes (history periods, chemistry, geography of countries, famous scientists).
+- Russia, years and dates, award winners, people an ordinary adult has never heard of, politics and current wars.
+- Anything already covered by the themes in the list below.
+
+Write each theme in English, 3 to 10 words, specific enough that two different questions could come from it.
+Output ONLY a JSON array of 150 strings, no other text.
+
+Themes already covered (do not repeat or closely paraphrase):
+20th-century leaders
+20th-century Russia
+A$AP Rocky
+Academy Awards 2026
+Academy Awards history
+Africa: countries
+Africa: countries, wildlife and history
+Africa: history
+Africa: wildlife
+Alfons Mucha
+American history
+Ancient civilisations
+Ancient civilizations
+ancient civilizations daily life
+Ancient civilizations daily life
+Ancient Egypt
+Ancient engineering
+Ancient Greece
+Ancient monuments
+Ancient Olympics
+Ancient Rome
+Ancient technology
+Ancient writing systems
+Animal biology
+Animal biology oddities
+Animal communication
+Animal survival
+Animals
+Animals and their abilities
+Animated film
+Animated films
+Animation
+Animovaný film
+Anthems
+Antonín Dvořák
+Arcades
+Architecture
+Art
+Art and artists surprises
+Art history
+Asia: countries, cultures and landmarks
+Asian landmarks
+Astronomy
+Athletics world records
+Australia, Oceania and the Pacific
+Aviation
+Aviation engineering
+Ballet
+Basketball
+Basketball rules history
+Beer
+Bees, honey and pollination
+Biggest Music Artists Recent Releases And Chart Records
+Billboard 200 number ones 2026
+Billboard Hot 100 chart history
+Biology
+Birds and flight
+Blockbuster film history
+Blockbuster Films And Famous Directors Recent Releases
+Board games
+Book adaptations
+Borders
+Botany
+Box office
+Brands and business
+Brands and famous companies
+Bratislava v dejinách
+Bread, cheese and dairy around the world
+Bridgerton
+Bridges of Europe
+Brit Awards 2026
+Buildings, bridges and engineering marvels
+Byzantine Empire
+Cabaret
+Capital cities
+Capitals
+Capitals of South America
+Cards
+Castles, palaces and famous houses
+Celebrity
+Česká atletika
+Česká filmová klasika
+Česká hudba
+Česká hudba – Yo Yo Band
+Česká hudební scéna
+Česká hymna
+Česká kina 2025
+Česká klasická hudba
+Česká literatura
+Česká populární hudba
+Česká televizní zábava
+Česká věda
+České filmy
+České hudební ceny
+České kino 2025
+České pivo
+České seriály
+České sýry
+České vynálezy
+České vynálezy a města
+Český animovaný film
+Český film
+Český lev
+Český lev 2026
+Český pravopis
+Český rap
+Český rozhlas
+Český slavík
+Český sport
+Čeští olympionici
+Charli XCX at Reading 2026
+Chemistry discoveries
+Chemistry in everyday life
+Chemistry of elements
+Chemistry of the kitchen and household
+Chess
+Chinese empires
+Christmas traditions in Japan
+Circus
+Circus, magic and famous illusionists
+Classic films and pop culture history
+Classical music
+Climate extremes of capital cities
+Coffee
+Cold War
+Comics, superheroes and animation
+Consoles
+Continents and climate zones
+Countries and borders
+Countries of Central Europe
+Country records
+Cricket
+Cricket rules
+Cricket statistics
+Curious conflicts
+Cycling
+Cyklistika
+Daily life in ancient Greece
+Dance
+Dance, theatre and the performing arts
+Darts
+Deep-sea life
+Dejiny slovenčiny
+Desert plants
+Deserts
+Desserts of the world
+Dice and board games
+Dinosaur fossils
+Dinosaurs and deep time
+Dinosaurs, fossils and prehistoric life
+Dreams
+Drinks
+Drinks: coffee, tea, wine and beer
+Earliest life on Earth
+Earth and atmosphere
+Earth science
+Electronic music
+Emil Zátopek
+Emmy Awards
+Engineering marvels
+Eurovision Song Contest
+Eurovízia
+Everyday food science
+Everyday objects
+Everyday optics
+Everyday Science
+Everyday-life history
+Fallout
+Famous Artist Collaborations And Reunions Recent
+Famous cities of Europe
+Famous directors
+Famous explorers and voyages of discovery
+Famous firsts
+Famous hoaxes, mistakes and accidents in history
+Famous illusionists
+Famous inventors and accidental discoveries
+Famous landmarks and their secrets
+Famous Music Producers And The Artists They Make Hits For
+Famous paintings, sculptors and museums
+Famous rivalries, duels and feuds in history
+Famous rulers and royal quirks
+Famous scientists and Nobel Prizes
+Famous speeches, quotes and misquotes
+Famous women in history and science
+Fashion, clothing and design through history
+Festivaly
+Film
+Film a streamovanie
+Film awards
+Film box office
+Film budgets and box office
+Film composers
+Film festivals
+Film music
+Film production
+Film soundtracks
+Filmová ocenění
+Filmová pokračování
+Filmové ceny
+Filmové festivaly
+Flags
+Flags of the world
+Flags, anthems, capitals and national symbols
+Food
+Food and drink origins
+Food origins
+Food, drink and cooking
+Food, drink and cooking around the world
+Football
+Football history
+Football World Cup
+Fruit botany
+Gambling
+Game of Thrones
+Games and toys history
+Gems
+General
+Geography
+Geography & Geology
+Geography of the United States
+Geography, countries, cities and landmarks
+Geography, places and landmarks
+Gold and precious metals
+Golden Globes 2026
+Golf
+Grammys 2026
+Grammys and Brit Awards
+Gymnastics
+Halloween origins
+Harry Styles
+Historic African cities
+Historical connections
+Historická města
+History
+History and famous people
+History and Prehistory
+History of famous drinks
+History of food preservation
+History of inventions
+History of Science
+History, empires and famous people
+Hokej
+Holidays, festivals and traditions around the world
+Hollywoodske filmy
+Hory a rozvodí
+Household Objects
+Hrady a zámky
+Hrady a zámky Slovenska
+Hrady Slovenska
+Hudba
+Hudba a sport
+Hudobné festivaly
+Human anatomy
+Human body
+Human body in space
+Human body, health and medicine
+Husitství
+Ice, snow and the polar regions
+Inca Empire
+Indian empires
+Insect life cycles
+Insects, spiders and tiny creatures
+Internet culture
+Inventions
+Inventions and everyday objects
+Island nations
+Islands
+Islands and coastlines
+IT: Welcome to Derry
+Jan Janský
+Jaroslav Heyrovský
+Jaroslav Seifert
+Jewellery
+Jewellery, gems, gold and precious metals
+Jezera a Šumava
+K-pop
+Karel IV.
+Každodenný život
+Kings, queens and royal families
+Kofola
+Komédie
+Korunovácie v Bratislave
+La Tomatina festival
+Landlocked countries
+Languages and words
+Languages, alphabets and writing systems
+Latin music
+Light and astronomy
+Light and rainbows
+Literature
+Logic
+Madonna at the 2026 VMAs
+Magic and famous illusionists
+major music and film awards recent winners
+Major music and film awards recent winners
+Major Music And Film Awards Recent Winners
+Maps and borders quirks
+Marathons, cycling and endurance sports
+Marine mammals
+Mathematics
+Mathematics, numbers and puzzles
+Measurements, units and calendars
+Medieval castles, knights and kings
+Medieval justice
+Medieval papacy
+Megadeth
+Mercury Prize 2026
+Města a hory
+Mexican national holidays
+Mid-Autumn Festival
+Minerálne vody
+Modern pop history
+Money
+Money and business
+Money and trade
+Money, coins, banks and economics
+Motorsport
+Mountains and Earth's shape
+Mountains and extremes
+Mountains and volcanoes
+Mountains of Africa
+Movie musicals
+Movie sound effects lore
+Movies
+MTV VMAs 2026
+Music
+Music & Artists
+Music awards
+Music festivals
+Music history milestones
+Music videos
+Music, instruments and famous musicians
+Myths, legends, religion and folklore
+Naadam festival in Mongolia
+Napoleonic Wars
+Národní divadlo
+National symbols
+Natural disasters and extreme weather
+Natural History
+Natural wonders
+Nature, weather and planet Earth
+New Year traditions in Japan
+New Year traditions in Spain
+New Year's Eve in Times Square
+Oasis reunion 2025
+ocean and deep sea mysteries
+Ocean and deep sea mysteries
+Ocean life
+Oceans
+Oceans, rivers, lakes and the water world
+Ochrana přírody
+Oktoberfest
+Olympic basketball
+Olympic basketball history
+Olympic Games
+Olympic gymnastics
+Olympic gymnastics history
+Olympic history
+Olympic rugby
+One-hit wonders
+Optics of the human eye
+Origins of sports
+Oscars 2026
+Otto Wichterle
+Paleontology
+Pamiatky UNESCO na Slovensku
+Parasitic plants
+Particle physics
+Pets: cats
+Pets: dogs
+Pets: dogs, cats and domestic animals
+Pets: small animals
+Photography, cameras and cinema technology
+Physical geography of the Middle East
+Physics
+Physics in everyday life
+Physics on the Moon
+Pieniny a Dunajec
+Plant biology
+Plant growth records
+Plants and fungi oddities
+Plants, trees and flowers
+Pluribus
+Plzeňské pivo
+Polar exploration
+Pop albums
+Pop culture
+Pop groups
+Pop music history
+Population statistics
+Post, stamps and communication before the internet
+Povodí českých řek
+Přemyslovci
+Prírodné zaujímavosti Slovenska
+Přírodní památky
+Puzzles
+Rané dejiny Slovenska
+Reality show
+Record-breaking albums
+Records and extremes in nature
+Regiony a města
+Řeky Česka
+Reliéf Česka
+Reptiles, amphibians and strange animals
+Rieky Slovenska
+Rivers
+Rivers of Europe
+Rivers, bridges and famous cities of Europe
+Robots, AI and the future of technology
+Rock album covers
+Rock music history
+Roman Empire
+Roman food culture
+Roman timekeeping
+Rugby history
+Russian Empire
+Rybníky a Třeboňsko
+Sailing history
+San Fermín festival in Pamplona
+Sci-fi filmy
+Science
+Science history
+Second World War
+Seriály a streaming
+Sharks
+Shipwrecks, pirates and the high seas
+Size of continents
+Škoda Auto
+Sleep
+Slovenská hudba
+Slovenská kuchyňa
+Slovenská literatúra
+Slovenská popová hudba
+Slovenská televízia
+Slovenské alkoholické nápoje
+Slovenské divadlo
+Slovenské euromince
+Slovenské inštitúcie
+Slovenské korene svetových osobností
+Slovenské mestá
+Slovenské nápoje a značky
+Slovenské osobnosti 20. storočia
+Slovenské pivo
+Slovenské reality šou – Farma
+Slovenské rozprávky
+Slovenské zvyky
+Slovenskí športovci
+Slovenskí vedci
+Slovenskí vynálezcovia
+Slovenský film
+Slovenský hokej
+Slovenský humor
+Slovenský humor a divadlo
+Slovenský jazyk
+Slovenský pravopis
+Slovenský šport
+Snooker
+Songs behind film soundtracks
+Sound in everyday life
+Space
+Space exploration
+Space race
+Speed skating
+Spice origins
+Spies
+Sports history
+Sports, games and Olympic records
+Sports, games and records
+Stage musicals
+StarDance
+Straits and borders
+Stranger Things
+Streaming
+Streaming services
+Streamovací filmy
+Streamovací seriály a filmy
+Superhero films
+Supermarket science: packaging, labels and shopping
+SuperStar 2026
+Svatomartinské tradice
+Svetové filmy
+Swimming
+T. G. Masaryk
+Taylor Swift 2025
+Taylor Swift at the 2026 VMAs
+Tea
+Technology origins and firsts
+Technology, computers and the internet
+Television
+Television awards
+Television drama
+Television, series and famous TV moments
+Televize
+Televízia
+Televízia a streaming
+Televízne šou
+Tennis
+Tennis, golf and racket sports
+The Americas: countries, history and landmarks
+The Beatles
+The brain
+The dinosaur extinction
+The human body
+The human mind: memory, illusions and psychology
+The Pitt
+The senses
+The Witcher
+Theatre
+Thunderstorm sound
+Toys
+Toys, games, hobbies and childhood
+Tradičné slovenské pečivo
+Trains, railways and famous journeys
+Transport and aviation firsts
+Transport: cars
+Transport: cars, trains, ships and planes
+Transport: planes
+Transport: ships
+Transport: trains
+Tudor England
+Tuzemák a pravidla EU
+TV
+TV & streaming
+TV & Streaming
+TV and streaming
+TV and streaming series
+TV drama series
+TV sitcoms
+Uhorskí panovníci
+Večerníčky
+Veľkonočné zvyky
+Video game events
+Video games
+Video games and TV
+Video games, consoles and arcades
+Video-game films
+Videohry
+Viking age
+Viral / Trending
+Viral and pop culture
+Viral pop culture
+Vodopády Slovenska
+Volcanic rocks
+Volcanoes
+Vysoké Tatry
+Vysoké Tatry a plesá
+Weather and climate
+weather and natural phenomena
+Weather and natural phenomena
+Weather phenomena
+Wine
+Winter Olympic sports
+Winter Olympics
+Wonder Man (TV series)
+Words and language
+World capitals
+World cities and latitude
+World cuisines
+World Cultures
+World geography surprises
+World Languages
+World wars and the 20th century
+Značka Jawa
+

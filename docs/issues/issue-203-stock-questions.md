@@ -94,6 +94,8 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 
 Žiadny filter ani hodnotiteľ zábavy: mení sa len zdroj tém.
 
+**Beh (2026-10-14, session d3 prevzala celé #203):** `topics-pilot-2026-10-14/`. Opus 5.5 cez predplatné navrhol 150 tém/jazyk (`themes_M_*.json`, vylúčené 563 tém z prod). Náhodne 10 M tém a 8 H tém (zo 45 tém plného behu) na jazyk, 2 otázky na tému, rovnaké nastavenie. Slepo 10 H + 10 M na jazyk: https://claude.ai/artifact/MpbH17cJvwtdMox7m8bCdc — čaká na foundera.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou
@@ -101,5 +103,5 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
 - [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
-- [ ] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
+- [~] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

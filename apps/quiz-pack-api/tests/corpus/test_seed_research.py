@@ -1,12 +1,12 @@
 """Seed research for the weekly fresh run (#202 task 202.2).
 
 Why: seeds are the only input that changes week to week, and nobody curates
-them by hand any more. A fact the tools never opened, a tabloid source or an
+them by hand any more. A fact web search never returned, a tabloid source or an
 obscure subject goes straight into a brief and from there into the App Store
-corpus, so each filter must actually cut — and a fact verified only via
-web_fetch must survive (otherwise sk/cs, where fetch is how pages get read,
-would lose most of its seeds). The cost must include the search fees, or the
-$15 cap would under-count.
+corpus, so each filter must actually cut. The cost must include the search
+fees, or the $15 cap would under-count. And the seed call must stay cheap
+(founder 2026-10-14, after $6.17 en / $15.89 sk on seeds in one dry run): no
+web_fetch, searches capped from env, and no resume past the seed max.
 """
 
 from __future__ import annotations
@@ -82,64 +82,141 @@ def test_domestic_share_only_for_sk_cs():
     assert domestic_share("en", seeds) is None
 
 
-def _response(stop, content, searches=0, fetches=0):
+def _response(stop, content, searches=0):
     usage = SimpleNamespace(
         input_tokens=100_000,
         output_tokens=10_000,
-        server_tool_use=SimpleNamespace(
-            web_search_requests=searches, web_fetch_requests=fetches
-        ),
+        server_tool_use=SimpleNamespace(web_search_requests=searches),
     )
     return SimpleNamespace(stop_reason=stop, content=content, usage=usage)
 
 
+def _hits(*urls):
+    return SimpleNamespace(
+        type="web_search_tool_result", content=[SimpleNamespace(url=u) for u in urls]
+    )
+
+
+async def _unreadable(url):
+    return None
+
+
+def test_seed_call_searches_only_with_max_uses_from_env(monkeypatch):
+    """web_fetch made every later iteration re-read whole pages; it must stay off."""
+    monkeypatch.delenv("FRESH_TOPUP_SEED_SEARCHES", raising=False)
+    assert seed_research.seed_tools() == [
+        {"type": "web_search_20260209", "name": "web_search", "max_uses": 8}
+    ]
+    monkeypatch.setenv("FRESH_TOPUP_SEED_SEARCHES", "5")
+    (tool,) = seed_research.seed_tools()
+    assert tool["name"] == "web_search" and tool["max_uses"] == 5
+
+
 @pytest.mark.asyncio
-async def test_research_keeps_fetch_only_seed_resumes_pause_and_counts_cost():
+async def test_research_resumes_pause_checks_pages_and_counts_cost(monkeypatch):
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "5")
     items = [
-        _item("Fetched", "https://cs.wikipedia.org/wiki/Fetched"),
-        _item("Searched", "https://www.irozhlas.cz/kultura/1"),
+        _item("Kept", "https://cs.wikipedia.org/wiki/Kept"),
+        _item("Wrong page", "https://www.irozhlas.cz/kultura/1"),
+        _item("Fetch only", "https://cs.wikipedia.org/wiki/Fetch_only"),
     ]
     final = [
-        SimpleNamespace(
-            type="web_search_tool_result",
-            content=[SimpleNamespace(url="https://www.irozhlas.cz/kultura/1")],
-        ),
-        SimpleNamespace(
-            type="web_fetch_tool_result",
-            content=SimpleNamespace(
-                type="web_fetch_result", url="https://cs.wikipedia.org/wiki/Fetched"
-            ),
+        _hits(
+            "https://cs.wikipedia.org/wiki/Kept", "https://www.irozhlas.cz/kultura/1"
         ),
         SimpleNamespace(type="text", text=json.dumps(items), citations=None),
     ]
     calls: list[list[dict]] = []
     replies = [
         _response("pause_turn", ["partial"], searches=3),
-        _response("end_turn", final, searches=2, fetches=4),
+        _response("end_turn", final, searches=2),
     ]
 
     async def fake_call(messages):
         calls.append(messages)
         return replies[len(calls) - 1]
 
+    pages = {
+        "https://cs.wikipedia.org/wiki/Kept": "Kept " * 100,
+        "https://www.irozhlas.cz/kultura/1": "Something else entirely. " * 30,
+    }
+
+    async def fetch(url):
+        return pages.get(url)
+
     result = await seed_research.research_seeds(
-        "cs", TODAY, call=fake_call, ideas=["- Idea (1 views)"], fame_of=lambda _t: None
+        "cs",
+        TODAY,
+        call=fake_call,
+        ideas=["- Idea (1 views)"],
+        fame_of=lambda _t: None,
+        fetch_page=fetch,
     )
-    assert {s.subject for s in result.seeds} == {"Fetched", "Searched"}
+    assert [s.subject for s in result.seeds] == ["Kept"]
+    # A URL web search never returned stays uncited (web_fetch is gone).
+    assert result.dropped == {"uncited": 1, "page_mismatch": 1}
+    assert result.page_check == {"page_ok": 1, "page_mismatch": 1, "page_unchecked": 0}
     assert len(calls) == 2 and calls[1][1] == {
         "role": "assistant",
         "content": ["partial"],
     }
-    assert (result.searches, result.fetches) == (5, 4)
+    assert result.searches == 5 and not result.budget_stopped
     # 2 calls x (100k in @ $4/M + 10k out @ $20/M) = $1.20, + 5 searches x 1 cent.
     assert result.cost_cents == pytest.approx(120 + 5)
 
 
 @pytest.mark.asyncio
-async def test_url_found_before_a_pause_still_cites_its_seed():
+async def test_resume_stops_once_seed_spend_passes_its_max(monkeypatch):
+    """Each resume re-reads the whole context; past the seed max the job must
+    stop paying for more and use the seeds already written."""
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "1")  # one segment = $0.61
+    url = "https://sk.wikipedia.org/wiki/Early"
+    partial = [
+        _hits(url),
+        SimpleNamespace(
+            type="text", text=json.dumps([_item("Early", url)]), citations=None
+        ),
+    ]
+    calls = []
+
+    async def fake_call(messages):
+        calls.append(messages)
+        return _response("pause_turn", partial if len(calls) == 2 else [], searches=1)
+
+    result = await seed_research.research_seeds(
+        "sk",
+        TODAY,
+        call=fake_call,
+        ideas=[],
+        fame_of=lambda _t: None,
+        fetch_page=_unreadable,
+    )
+    assert len(calls) == 2  # $0.61 < $1 resumes once; $1.22 stops
+    assert result.budget_stopped and result.error is None
+    assert [s.subject for s in result.seeds] == ["Early"]
+    assert result.page_check["page_unchecked"] == 1
+
+
+@pytest.mark.asyncio
+async def test_budget_stop_without_any_seed_text_is_an_error(monkeypatch):
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.5")
+
+    async def fake_call(messages):
+        return _response("pause_turn", [], searches=1)
+
+    result = await seed_research.research_seeds(
+        "sk", TODAY, call=fake_call, ideas=[], fame_of=lambda _t: None
+    )
+    assert result.seeds == [] and "seed budget" in result.error
+    assert result.cost_cents == pytest.approx(61)
+
+
+@pytest.mark.asyncio
+async def test_url_found_before_a_pause_still_cites_its_seed(monkeypatch):
     """A resumed response carries only its new blocks: a source searched in the
     first segment must still count as cited, or a correctly sourced seed is
     dropped as uncited. Every resume resends all earlier blocks."""
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "5")
     url = "https://sk.wikipedia.org/wiki/Early"
     early = SimpleNamespace(
         type="web_search_tool_result", content=[SimpleNamespace(url=url)]
@@ -158,7 +235,12 @@ async def test_url_found_before_a_pause_still_cites_its_seed():
         return replies[len(calls) - 1]
 
     result = await seed_research.research_seeds(
-        "sk", TODAY, call=fake_call, ideas=["- Idea (1 views)"], fame_of=lambda _t: None
+        "sk",
+        TODAY,
+        call=fake_call,
+        ideas=["- Idea (1 views)"],
+        fame_of=lambda _t: None,
+        fetch_page=_unreadable,
     )
     assert [s.subject for s in result.seeds] == ["Early"]
     assert calls[2][1]["content"] == [early, "more"]
@@ -186,6 +268,7 @@ def test_prompt_carries_the_recipe_rules():
         and "Slovak celebrities" not in cs
     )
     for prompt in (en, cs):
+        assert "web fetch" not in prompt  # the call has no fetch tool
         assert "Reddit" in prompt and "award categories" in prompt
         assert (
             "current politics" in prompt and "between August and October 2026" in prompt

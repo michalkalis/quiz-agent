@@ -31,7 +31,7 @@ Vstupný bod: `python -m app.corpus.fresh_topup --languages en,sk,cs [--dry-run]
 
 ### Krok 1 — semienka (seedy) na serveri
 - Pageviews z Wikimedie (top článkov za posledných 7 dní + minulý mesiac v jazyku hráča) ako zdroj nápadov: logika z `scripts/entity_fame.py` presunutá do `app/sourcing/wiki_fame.py`, skript ostane ako tenký obal.
-- Jedno volanie Claude (Opus 5.5) na jazyk s nástrojmi `web_search` + `web_fetch`, prompt = pravidlá sekcie „Seeds“ receptu. Výstup ~36 kandidátov {téma, článok na Wiki, domáce/svet, dátum udalosti, fakt, uhol, source_url}. Fakt prejde len s URL, ktorú nástroj naozaj vrátil (vzor z `app/sourcing/openai_web_search_source.py`; `_anthropic_text_and_urls` :265 treba rozšíriť o `web_fetch_tool_result`, inak vypadnú seedy overené len cez fetch), dôveryhodnosť domény cez `classify_credibility`.
+- Jedno volanie Claude (Opus 5.5) na jazyk s nástrojmi `web_search` + `web_fetch` (od 2026-10-14 len `web_search`, pozri Strop útraty), prompt = pravidlá sekcie „Seeds“ receptu. Výstup ~36 kandidátov {téma, článok na Wiki, domáce/svet, dátum udalosti, fakt, uhol, source_url}. Fakt prejde len s URL, ktorú nástroj naozaj vrátil (vzor z `app/sourcing/openai_web_search_source.py`; `_anthropic_text_and_urls` :265 treba rozšíriť o `web_fetch_tool_result`, inak vypadnú seedy overené len cez fetch), dôveryhodnosť domény cez `classify_credibility`.
 - Deterministické filtre: bez URL / bulvár preč, sláva (`views`) → dolná tretina preč, ~25 seedov. Podiel domácich pre sk/cs sa zapíše do súhrnu (varovanie pod 60 %).
 
 ### Krok 2 — zoznam už pokrytých faktov
@@ -48,10 +48,14 @@ Jadro `scripts/import_questions_json.py` presunuté do `app/corpus/importer.py` 
 ### Strop útraty a kredit
 - Útrata = tokeny z `UsageRecorder` (fact-check tam ide cez `record_direct`, `fact_verifier.py:324`) + poplatky za web search fact-checku (`ctx.cost_cents` mínus jeho tokeny, `fact_verifier.py:329-332`) + server-tool poplatky seed volania (`usage.server_tool_use`). Nič sa nepočíta dvakrát. Každý model v mape rolí musí mať cenu, inak štart zlyhá (žiadne tiché $0).
 - Jazyk sa začne len vtedy, keď zostatok do `FRESH_TOPUP_MAX_USD` (default 15) ≥ najhorší prípad jazyka (seedy + generovanie s top-up kolami `MAX_TOPUP_ROUNDS`); prvý odhad $6, potom z nameraných behov. Poradie jazykov sa každý týždeň otáča, aby pri strope nevypadával vždy ten istý (cs). Seed volanie má `max_uses` (search ~20, fetch ~15) a `max_content_tokens` pre fetch.
+- **Namerané 2026-10-14** (suchý beh, count 5): $24.26 pri strope $15. Seedy en $6.17, sk $15.89 (každé kolo server nástrojov znova číta všetky skoršie výsledky, s `web_fetch` stránkami kontext rástol), generovanie + fact-check len ~$1.2 na jazyk. Strop strážil len štart jazyka, takže jeden jazyk ho prestrelil.
+- **Rozhodnutie foundera 2026-10-14:** „zlacniť a znova overiť; čítanie celých stránok môže robiť Haiku, alebo cez kľúčové slová“. Zavedené: seedy stále vyberá Opus 5.5, ale len `web_search` (`FRESH_TOPUP_SEED_SEARCHES`, default 8), bez `web_fetch`. Zdrojová stránka každého seedu sa stiahne bez modelu (httpx) a seed ostane, len ak stránka spomína tému (porovnanie bez diakritiky, skloňovanie); nečitateľná stránka = seed ostáva, počíta sa `page_unchecked` (`app/corpus/seed_page_check.py`).
+- **Nové hranice:** seed volanie prestane pokračovať po `pause_turn`, keď minie `FRESH_TOPUP_SEED_MAX_USD` (default $2.5); po seedoch sa generovanie spustí len ak zostatok pokryje `FRESH_TOPUP_GEN_WORST_USD` (default $3), inak jazyk `skipped`; štart jazyka `FRESH_TOPUP_LANG_WORST_USD` default $5.5 (= seed max + generovanie). Beh môže prekročiť `--max-usd` len o to, čo jeden krok minie nad svoj odhad (jeden seed segment alebo generovanie nad $3), nikdy o celý jazyk. Treba znova overiť suchým behom, najmä odhad generovania pri count 15.
 - Kredit z Max sa neriadi: keď sa minie, beh pokračuje z bežného zostatku pod tým istým stropom (founder 2026-10-13). `credit_gate` sa v jobe nepoužíva, takže netreba mesačne prepisovať dátumy kreditu.
 
 ### Hlásenie
 - Sentry Crons check-in `fresh-topup` (zmeškaný alebo zlyhaný beh = e-mail, ako alerty #199).
+- Workflow streamuje log stroja od štartu do `machine.log` (artefakt, 14 dní) a krátky súhrn (jazyky, potom otázka po otázke) z bloku `=== FRESH-TOPUP SUMMARY ===` dáva do súhrnu behu na GitHube; `--no-tail` dával len posledných ~100 riadkov a JSON s otázkami sa stratil (2026-10-14). Kľúč `tokens_usd` Sentry vymazal (filter citlivých polí na „token“), preto `model_usd`.
 - Jedna Sentry správa so súhrnom na beh: na jazyk seedy, vygenerované, approved / pending / zahodené s dôvodmi, útrata. Warning, keď je niečo pending, preskočené alebo strop.
 - Denná kontrola zásoby (#199) ostáva ako poistka.
 

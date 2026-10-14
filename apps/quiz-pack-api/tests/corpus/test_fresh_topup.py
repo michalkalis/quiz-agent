@@ -3,9 +3,11 @@
 Why: this job spends real money and publishes to the App Store with nobody
 watching. It must never run on the subscription, never start a paid call on a
 moved role map, stop starting languages when the $15 cap cannot cover the next
-one, count every cent once, rotate which language risks the cap, write nothing
-on a dry run, and raise its Sentry summary to "warning" when a human should
-look. All seeds / generation / DB are faked here.
+one, skip generation when the seeds left too little for it, count every cent
+once, rotate which language risks the cap, write nothing on a dry run, raise
+its Sentry summary to "warning" when a human should look, and print a compact
+block the workflow can cut out of the log (the JSON alone was lost on
+2026-10-14). All seeds / generation / DB are faked here.
 """
 
 from __future__ import annotations
@@ -60,7 +62,11 @@ class FakeDeps:
         self.calls.append(f"seeds:{lang}")
         seed = Seed("S", "fact", "angle", "https://en.wikipedia.org/wiki/S", "domestic")
         return SeedResult(
-            seeds=[seed], candidates=1, domestic_share=1.0, cost_cents=self.seed_cents
+            seeds=[seed],
+            candidates=1,
+            domestic_share=1.0,
+            cost_cents=self.seed_cents,
+            page_check={"page_ok": 1, "page_mismatch": 0, "page_unchecked": 0},
         )
 
     async def load_covered(self, today):
@@ -140,6 +146,33 @@ async def test_language_is_skipped_when_remaining_budget_is_below_worst_case(
     assert fresh_report.summary_level(summary) == "warning"
 
 
+@pytest.mark.asyncio
+async def test_generation_is_skipped_when_seeds_left_less_than_its_worst_case(
+    monkeypatch, roles_ok
+):
+    """The start gate alone let one language's seeds blow the cap; after the
+    seeds the budget is checked again, so generation never starts uncovered."""
+    monkeypatch.setenv("FRESH_TOPUP_LANG_WORST_USD", "5")
+    monkeypatch.setenv("FRESH_TOPUP_GEN_WORST_USD", "3")
+    fake = FakeDeps(seed_cents=250)  # $5 budget - $2.50 seeds = $2.50 < $3
+    summary = await fresh_topup.run(
+        _args("--languages", "sk", "--max-usd", "5"), fake.deps(), TODAY
+    )
+    entry = summary["languages"]["sk"]
+    assert entry["status"] == "skipped" and "generation worst case" in entry["reason"]
+    assert "generate:sk" not in fake.calls
+    assert summary["cap_hit"] and summary["spent_usd"] == 2.5
+    assert entry["cost"]["total_usd"] == 2.5
+
+
+def test_lang_worst_case_default_covers_seed_max_plus_generation():
+    from app.corpus import seed_research
+
+    assert fresh_topup.DEFAULT_LANG_WORST_USD >= (
+        seed_research.DEFAULT_SEED_MAX_USD + fresh_topup.DEFAULT_GEN_WORST_USD
+    )
+
+
 def test_factcheck_search_fees_are_counted_once():
     usage = {
         "total_cost_cents_known": 500.0,  # includes the fact-check's 100 token cents
@@ -171,6 +204,15 @@ async def test_dry_run_writes_nothing_and_reports_the_questions(roles_ok):
     assert [q["source_url"] for q in entry["questions"]] == [
         "https://en.wikipedia.org/wiki/Good"
     ]
+    # Generation spend is reported under a key Sentry does not scrub ("token").
+    assert entry["cost"] == {
+        "seeds_usd": 1.0,
+        "model_usd": 4.0,
+        "factcheck_search_usd": 0.0,
+        "total_usd": 5.0,
+    }
+    assert not any("token" in key for key in entry["cost"])
+    assert entry["page_check"]["page_ok"] == 1
 
 
 @pytest.mark.asyncio
@@ -178,8 +220,34 @@ async def test_live_run_imports_with_execute(roles_ok):
     fake = FakeDeps()
     summary = await fresh_topup.run(_args("--languages", "en"), fake.deps(), TODAY)
     assert fake.import_kwargs[0]["execute"] is True
-    assert "questions" not in summary["languages"]["en"]
+    # Live rows are listed too: the founder spot-checks what went live.
+    assert [q["review_status"] for q in summary["languages"]["en"]["questions"]] == [
+        "approved"
+    ]
     assert fresh_report.summary_level(summary) == "info"
+
+
+@pytest.mark.asyncio
+async def test_compact_summary_block_lists_languages_then_questions(roles_ok):
+    summary = await fresh_topup.run(
+        _args("--languages", "en,cs", "--max-usd", "15", "--dry-run"),
+        FakeDeps().deps(),
+        TODAY,
+    )
+    summary["languages"]["cs"]["questions"][0]["question"] = "A | B\nC?"
+    lines = fresh_report.compact_summary(summary).splitlines()
+    assert lines[0] == fresh_report.SUMMARY_START
+    assert lines[-1] == fresh_report.SUMMARY_END
+    assert lines[1].startswith("fresh-topup 2026-W42 (dry run): 2 approved")
+    assert lines[2] == (
+        "en | done | seeds 1/1 (page ok 1, mismatch 0, unchecked 0) | "
+        "generated 3: approved 1, pending 0, dropped 2 | $5.00"
+    )
+    assert lines[4] == "lang | status | question | answer | boost_until"
+    # One line per question; a "|" or newline inside a text never breaks a row.
+    assert lines[5].startswith("en | approved | In which 2026 film")
+    assert lines[6] == "cs | approved | A / B C? | Dogtown | -"
+    assert len(lines) == 8
 
 
 @pytest.mark.asyncio
@@ -271,7 +339,10 @@ def test_main_prints_json_and_fails_when_a_language_failed(
     fake.research_seeds = no_seeds
     code = fresh_topup.main(["--languages", "sk", "--cron-checkin"], deps=fake.deps())
     stdout = capsys.readouterr().out
-    summary = json.loads(stdout[stdout.index("{") :])
+    json_part, block = stdout.split(fresh_report.SUMMARY_START)
+    summary = json.loads(json_part[json_part.index("{") :])
+    assert "sk | failed | seed call ended 'refusal'" in block
+    assert block.rstrip().endswith(fresh_report.SUMMARY_END)
     assert code == 1
     assert summary["languages"]["sk"]["status"] == "failed"
     assert summary["spent_usd"] == 0.5  # a refused call still costs

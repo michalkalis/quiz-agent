@@ -32,6 +32,11 @@ class FactSourcer:
                 f"(expected one of {_WEB_SEARCH_PROVIDERS})"
             )
         self.sources = {}
+        # The web-search source is built on first gather_facts, not here: a
+        # --direct run never sources facts, so it must not need TAVILY_API_KEY
+        # (#203 — cloud-session generation). A grounded run still fails loud
+        # with the source's own error, raised before any source runs.
+        self._web_search_factory = None
 
         if enable_wikipedia:
             self.sources["wikipedia"] = WikipediaSource(
@@ -42,7 +47,7 @@ class FactSourcer:
         if enable_web_search and web_search_provider == "openai":
             # #167 D5: OpenAI Responses web_search. No news mode exists on this
             # path by design (D4) — recency comes from the topic list.
-            self.sources["web_search"] = OpenAIWebSearchSource()
+            self._web_search_factory = OpenAIWebSearchSource
         elif enable_web_search:
             # #76 F-3b: recency-aware news sourcing, default off. Follows the
             # inline os.getenv() truthy convention used across the gen layer.
@@ -52,7 +57,13 @@ class FactSourcer:
                 "yes",
                 "on",
             }
-            self.sources["web_search"] = WebSearchSource(news_mode=news_mode)
+            self._web_search_factory = lambda: WebSearchSource(news_mode=news_mode)
+
+    def _ensure_sources(self) -> None:
+        """Build the deferred web-search source; raises if it isn't configured."""
+        if self._web_search_factory is not None:
+            self.sources["web_search"] = self._web_search_factory()
+            self._web_search_factory = None
 
     async def gather_facts(
         self,
@@ -68,6 +79,7 @@ class FactSourcer:
         Returns:
             Deduplicated FactBatch with facts from all sources
         """
+        self._ensure_sources()
         per_source = max(count // len(self.sources), 5) if self.sources else 0
         # #153 round-2: the per-source budget must scale with the topic list,
         # or each source's own `facts[:count]` truncation starves every topic

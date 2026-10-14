@@ -94,6 +94,39 @@ async def test_sourcing_short_circuits_in_direct_mode():
 
 
 @pytest.mark.asyncio
+async def test_direct_run_needs_no_tavily_key(monkeypatch):
+    """#203: a direct run never sources, so building the default sourcer (as
+    the CLI does) must not demand TAVILY_API_KEY — cloud sessions have none."""
+    from app.sourcing.fact_sourcer import FactSourcer
+
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    ctx = OrderContext(
+        order_id=uuid.uuid4(),
+        prompt="anything",
+        language="en",
+        target_count=10,
+        direct_generation=True,
+    )
+
+    result = await SourcingStage(FactSourcer()).run(ctx, _NullSink())
+
+    assert result.info == {"direct_generation": True, "facts": 0}
+
+
+@pytest.mark.asyncio
+async def test_grounded_run_without_tavily_key_fails_loud(monkeypatch):
+    """The lazy web-search source must not turn a missing key into a silent
+    zero-fact run: the first gather raises the same error construction used to."""
+    from app.sourcing.fact_sourcer import FactSourcer
+
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    sourcer = FactSourcer(enable_wikipedia=False, enable_opentdb=False)
+
+    with pytest.raises(ValueError, match="TAVILY_API_KEY not set"):
+        await sourcer.gather_facts(count=10, topics=["kitchen science"])
+
+
+@pytest.mark.asyncio
 async def test_generation_mode_column_sets_context_flag():
     from app.orchestrator import PackGenerator
 

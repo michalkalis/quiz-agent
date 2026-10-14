@@ -236,14 +236,42 @@ def test_is_error_envelope_raises_runtime_error(tmp_path, monkeypatch):
         ChatClaudeSession(alias="opus").invoke("hi")
 
 
-def test_auth_api_key_login_is_refused(tmp_path, monkeypatch):
-    """API-key auth is the exact thing the session gateway exists to avoid —
-    refusing it is the safety property, not an incidental check."""
-    setup_fake_claude(
-        monkeypatch,
-        tmp_path,
-        control={"auth": {"loggedIn": True, "authMethod": "api-key"}},
-    )
+# Field values as `claude auth status` reports them (checked 2026-10-14):
+# interactive login → claude.ai; Claude Code cloud session (subscription
+# OAuth token) → oauth_token; ANTHROPIC_API_KEY → api_key.
+
+
+@pytest.mark.parametrize(
+    "auth",
+    [
+        {"loggedIn": True, "authMethod": "claude.ai", "apiProvider": "firstParty"},
+        # #203: cloud sessions run on the subscription via an OAuth token —
+        # refusing it blocked generation in cloud sessions entirely.
+        {"loggedIn": True, "authMethod": "oauth_token", "apiProvider": "firstParty"},
+    ],
+    ids=["claude.ai", "oauth_token-firstParty"],
+)
+def test_auth_subscription_logins_are_accepted(tmp_path, monkeypatch, auth):
+    setup_fake_claude(monkeypatch, tmp_path, control={"auth": auth})
+    ensure_subscription_login()
+
+
+@pytest.mark.parametrize(
+    "auth",
+    [
+        {"loggedIn": True, "authMethod": "api_key", "apiProvider": "firstParty"},
+        # An OAuth token through a non-Anthropic provider is not the
+        # subscription — it bills that provider's account.
+        {"loggedIn": True, "authMethod": "oauth_token", "apiProvider": "bedrock"},
+        {"loggedIn": True, "authMethod": "oauth_token"},
+    ],
+    ids=["api_key", "oauth_token-bedrock", "oauth_token-no-provider"],
+)
+def test_auth_non_subscription_logins_are_refused(tmp_path, monkeypatch, auth):
+    """API-key (or third-party) billing is the exact thing the session gateway
+    exists to avoid — refusing it is the safety property, not an incidental
+    check."""
+    setup_fake_claude(monkeypatch, tmp_path, control={"auth": auth})
     with pytest.raises(RuntimeError, match="subscription"):
         ChatClaudeSession(alias="opus").invoke("hi")
 

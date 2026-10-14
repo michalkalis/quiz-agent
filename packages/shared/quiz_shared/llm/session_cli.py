@@ -130,7 +130,7 @@ _login_checked = False
 
 
 def ensure_subscription_login() -> None:
-    """Fail loud unless ``claude`` is on PATH and logged in via claude.ai.
+    """Fail loud unless ``claude`` is on PATH and logged in on a subscription.
 
     Checked once per process. API-key auth is deliberately refused: the
     whole point of the session gateway is that these runs never bill the API.
@@ -156,7 +156,14 @@ def ensure_subscription_login() -> None:
         status = json.loads(proc.stdout)
     except json.JSONDecodeError:
         status = {}
-    if not status.get("loggedIn") or status.get("authMethod") != "claude.ai":
+    # Subscription logins only: an interactive claude.ai login, or the
+    # subscription OAuth token Claude Code cloud sessions run on (#203), which
+    # reports `oauth_token` and must be first-party Anthropic.
+    method = status.get("authMethod")
+    subscription = method == "claude.ai" or (
+        method == "oauth_token" and status.get("apiProvider") == "firstParty"
+    )
+    if not status.get("loggedIn") or not subscription:
         detail = (proc.stdout or proc.stderr).strip()[:200]
         raise RuntimeError(
             "The session gateway requires a Claude subscription login "

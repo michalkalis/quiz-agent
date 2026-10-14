@@ -76,5 +76,6 @@ def test_env_flag_default_leaves_news_off(
         enable_opentdb=False,
         enable_web_search=True,
     )
+    sourcer._ensure_sources()
 
     assert sourcer.sources["web_search"].news_mode is False

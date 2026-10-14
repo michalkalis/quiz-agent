@@ -8,7 +8,7 @@ paths: ["apps/ios-app/**"]
 - **Architecture:** MVVM with Service Layer
 - **Voice-first** for hands-free driving use
 - **Layout & implementation rules:** `.claude/rules/ios-swiftui-layout.md`, `.claude/rules/ios-swift-conventions.md` and the component guide `.claude/rules/ios-components.md` (auto-loaded for `apps/ios-app/**/*.swift`; read them explicitly before creating a brand-new Swift file).
-- **Design catalog (#188 — unified design system):** run `/design-sync` before UI work (the founder may have proposed values or left comments in the claude.ai catalog, or changed variables in Pen) and after a PR touching `Theme.swift`, shared components or their snapshots merges (republish the catalog and Pen variables). Code is the truth; catalog and Pen edits are proposals.
+- **Design catalog (#188 — unified design system):** run `/design-sync` before UI work (the founder may have proposed values or left comments in the claude.ai catalog) and after a PR touching `Theme.swift`, shared components or their snapshots merges (republish the catalog). Code is the truth; catalog edits are proposals.
 
 ## Knowledge Reference
 
@@ -98,7 +98,7 @@ Endpoints are authoritative in backend OpenAPI spec — `curl http://localhost:8
 
 ## Verification Altitude (#57)
 
-Tests — and the autonomous loop's gate — verify **the right flow and correct states, not design fidelity.** Write tests at this altitude:
+Tests verify **the right flow and correct states, not design fidelity.** Write tests at this altitude:
 
 - **Gate on flow, state-machine correctness, and presence of expected UI elements.** Assert the user can click through the flow and the expected buttons/text/elements are present and the state machine reaches the right state. This is what HangsTests already does (ViewInspector `find(text:)`/`find(button:)` structure assertions + `.stableDump`/`.dump` textual state snapshots + the `HangsUITests` RS click-through scenarios) — keep tests there.
 - **Do NOT gate on pixel / `.pen` design fidelity.** The screenshot-verify-against-`docs/design/frames/` step (#44/#52) is a *separate, non-gating* visual check, not part of `xcodebuild test`. The design is still moving, so 1:1-with-`.pen` would trip on cosmetic drift. It stays on-demand / human until the design stabilizes.

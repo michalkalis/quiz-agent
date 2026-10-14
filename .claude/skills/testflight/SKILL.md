@@ -24,9 +24,9 @@ Triggers the `ios-release.yml` GitHub Actions workflow which:
 | `staging` | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | **Trubbo Beta** |
 | `production` (default) | `release` | `Hangs-Prod` / `Release-Prod` | prod `*.fly.dev` | **Trubbo** |
 
-Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Build staging ONLY when the founder explicitly asks for it (e.g. to test the sandbox money path).
+Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Don't propose staging builds (founder 2026-10-08).
 
-⚠️ **Purchases:** TestFlight ALWAYS uses the StoreKit sandbox. Sandbox purchases route to the staging backend and are dropped by the prod gate — so the **money path is only testable on the staging build**. A production TF build validates the prod app surface (questions, voice, auth), not payments; attempting a purchase there will look odd by design (RC sandbox entitlement, no backend grant).
+**Purchases:** TestFlight always uses the StoreKit sandbox, and prod honours sandbox purchases (`RC_ALLOWED_ENVIRONMENT` = `PRODUCTION,SANDBOX`, `apps/quiz-agent/app/config.py`), so the money path is tested on the production build.
 
 ## Prerequisites (one-time, already done)
 
@@ -43,7 +43,7 @@ git status
 git log origin/main..HEAD --oneline   # must be empty
 ```
 
-If there are unpushed commits, ask the user before pushing (per `feedback_commit_autonomy` memory: push needs explicit confirmation).
+`main` changes only through merged PRs (`.claude/rules/shared.md`); local commits that aren't on `origin/main` are not in the build — land them through a PR first.
 
 ### 2. Pre-flight — verify prod backend is healthy
 
@@ -63,19 +63,14 @@ Stop and tell the user **before triggering the workflow** if any of these are tr
 - admin-health `total_approved == 0` (CRITICAL: No questions in database)
 - admin-health `runway_days < 7` (warn — questions will run out soon)
 
-Common fix for empty DB: `CHROMA_PATH` Fly secret out of sync with `fly.toml` mount destination — chroma initializes on the ephemeral filesystem and gets wiped on every deploy. Verify with `fly logs -a quiz-agent-api --no-tail | grep "QuestionStore initialized"` and compare the path to the `[mounts]` destination in `apps/quiz-agent/fly.toml`. See memory `project_prod_chroma_mount.md`.
+Questions live in Postgres + pgvector; an empty count means the question store, not the app — check `fly logs -a quiz-agent-api --no-tail` for the store's startup errors before triggering.
 
 ### 3. Trigger the workflow
 
 ```bash
-# Production build (DEFAULT — prod APIs; money path NOT testable here — see warning above):
+# Production build (prod APIs, sandbox purchases included):
 gh workflow run ios-release.yml --ref main -f environment=production -f notes="<short release notes>"
-
-# Staging build (ONLY on explicit founder request — sandbox purchases land in staging):
-gh workflow run ios-release.yml --ref main -f environment=staging -f notes="<short release notes>"
 ```
-
-For staging builds, run the §2 health checks against the staging hosts instead (`https://quiz-agent-api-staging.fly.dev/...`); note staging machines auto-stop, so the first request may take a few seconds to wake them.
 
 Notes are optional. Keep them short — they show up in workflow run metadata, not in TestFlight itself.
 
@@ -85,14 +80,14 @@ Notes are optional. Keep them short — they show up in workflow run metadata, n
 # Get the run ID of the most recent release
 gh run list --workflow=ios-release.yml --limit 1 --json databaseId,status,conclusion,headBranch
 
-# Stream logs live (blocks until done, ~10–15 min)
+# Stream logs live (blocks until done; the job can run up to its 45-min timeout)
 gh run watch <run-id>
 
 # Or poll status without blocking
 gh run view <run-id> --json status,conclusion,jobs
 ```
 
-**Typical timing:** ~10–15 min for build + upload. TestFlight then needs another ~5–10 min before the build is installable (Apple-side processing).
+**Timing:** build + upload can take up to the job's 45-minute timeout (`ios-release.yml`). TestFlight then needs another ~5–10 min before the build is installable (Apple-side processing).
 
 ### 5. Handle failures
 

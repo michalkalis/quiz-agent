@@ -32,27 +32,13 @@ Remove it afterwards (`git worktree remove --force <path>`). `.env` is gitignore
 
 Run all checks before deploying. Stop and report if any fail.
 
-### 1. Git status
+### 1. Deploy dir is `origin/main`
 ```bash
-git status --porcelain
+git -C "$DEPLOY_DIR" status --porcelain && git -C "$DEPLOY_DIR" rev-parse HEAD origin/main
 ```
-- If there are uncommitted changes, **warn the user** and ask whether to proceed.
-- Report the current branch name.
+- Clean and at `origin/main` → proceed. Anything else → recreate the worktree above; never deploy a branch or local commits.
 
-### 2. Branch check
-```bash
-git branch --show-current
-```
-- If on `main` or `master`, proceed (deploying from main is expected).
-- If on a feature branch, **warn** that deploying from a non-main branch is unusual and ask to confirm.
-
-### 3. Remote sync
-```bash
-git log origin/$(git branch --show-current)..HEAD --oneline 2>/dev/null
-```
-- If there are unpushed commits, **warn** that local changes haven't been pushed to remote.
-
-### 4. Test gate (unless `--skip-tests`)
+### 2. Test gate (unless `--skip-tests`)
 The deployed commit must have a green **Backend CI** run (it runs both app suites, path-filtered):
 ```bash
 gh run list --commit "$(git -C "$DEPLOY_DIR" rev-parse HEAD)" --json name,conclusion,status --jq '.[] | "\(.name): \(.status) \(.conclusion)"'
@@ -60,7 +46,7 @@ gh run list --commit "$(git -C "$DEPLOY_DIR" rev-parse HEAD)" --json name,conclu
 - Require `Backend CI: completed success` for that exact commit. Still running → wait for it; failed or absent → **stop deployment of that target** and report.
 - Do not run pytest inside a fresh worktree (no `.venv` there, and the repo-root build is flaky under `uv sync`). A local run is only meaningful from the shared checkout on `main`: `cd "$CLAUDE_PROJECT_DIR/<App dir>" && uv run --no-sync pytest tests/ -x -q --tb=short -m "not integration"`.
 
-### 5. Check fly CLI is available
+### 3. Check fly CLI is available
 ```bash
 fly version 2>/dev/null
 ```

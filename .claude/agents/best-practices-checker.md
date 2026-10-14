@@ -87,7 +87,7 @@ Overall: X/10 - [Summary assessment]
 ## Web Search Usage
 
 If asked, search for latest Claude Code features and patterns:
-- "Claude Code best practices 2025"
+- "Claude Code best practices" (current year)
 - "Claude Code MCP servers recommended"
 - "Claude Code hooks examples"
 

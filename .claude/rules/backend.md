@@ -7,13 +7,13 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 ## Architecture
 
 ### Session Management
-- In-memory with TTL (not persistent)
-- UUID4 session IDs, no authentication (MVP)
+- In-memory with TTL, write-through to SQLite so active sessions survive a restart (`app/session/manager.py`)
+- UUID4 session IDs; accounts via Sign in with Apple + App Attest (`app/auth/`)
 
 ### AI Integration
-- **Transcription:** OpenAI Whisper (audio file upload)
-- **Evaluation:** GPT-4 for answer correctness + feedback
-- **TTS:** OpenAI TTS API (Opus format)
+- **Transcription:** ElevenLabs Scribe v2 batch, OpenAI fallback (`stt_fallback_model`) — `app/voice/`
+- **Evaluation:** `EVAL_MODEL`, default Claude Haiku 5.5 (`app/evaluation/evaluator.py`)
+- **TTS:** ElevenLabs primary, OpenAI TTS as live fallback — `app/tts/providers.py`
 - **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)
 
 ### LLM client factory — never instantiate SDK clients directly (issue #53)
@@ -42,7 +42,7 @@ Do NOT use it for routing, retries, status-code handling, deterministic transfor
 - **Timestamps:** ISO 8601 with timezone (required for mobile)
 - **Audio endpoints:** Accept multipart/form-data, MP3/M4A, max 10MB
 - **CORS:** Allow all origins in development
-- **OpenAPI spec** at `/docs` — consumed by iOS Swift OpenAPI Generator
+- **OpenAPI spec** at `/docs` — the contract the hand-written iOS Codable structs must match (`/verify-api`)
 
 ## Shared Package
 
@@ -61,7 +61,7 @@ When updating shared models, verify iOS still builds (`/verify-api`).
 
 ## Deployment
 
-Known Fly.io pitfalls (Dockerfile dep drift, CHROMA_PATH/mount mismatch): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.
+Known Fly.io pitfalls (Dockerfile dep drift, volume mounts): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.
 
 ## Migrations
 

@@ -8,15 +8,14 @@ reads the image against a written checklist, and emits a `VISUAL:` verdict.
 For regression runs, the `/regression` skill embeds it at the assertion point
 of each RS scenario.
 
-**HIG grounding:** For deeper per-screen HIG critique, call the `/review-ui`
-skill and pass the captured screenshot path. This procedure's checklists focus
-on the most likely defects for this codebase — they are not exhaustive.
+This procedure's checklists focus on the most likely defects for this
+codebase — they are not exhaustive.
 
 ---
 
 ## Pre-conditions
 
-- iPhone 17 Pro simulator booted (`918FD36A-8869-48F8-A1F8-3047CB122582`).
+- iPhone 18 Pro simulator booted, set as the XcodeBuildMCP `simulatorName` session default.
 - `Debug-Local` build installed and launched (HTTP listener required for
   navigation; do **not** use a `Debug` or Release build).
 - `mcp__XcodeBuildMCP__screenshot` available — it is in the `regression`
@@ -34,7 +33,7 @@ clean({ scheme: "Hangs-Local", configuration: "Debug-Local" })
 build_sim({
   scheme: "Hangs-Local",
   configuration: "Debug-Local",
-  simulatorName: "iPhone 17 Pro",
+  simulatorName: "iPhone 18 Pro",
   workspacePath or projectPath: <discovered>
 })
 install_app_sim({ ... })
@@ -47,11 +46,7 @@ fix the build invocation.
 ### Step 2 — Launch in UI-test mode
 
 ```
-launch_app_sim({
-  simulatorUuid: "918FD36A-8869-48F8-A1F8-3047CB122582",
-  bundleId: <bundle id>,
-  args: ["--ui-test"]
-})
+launch_app_sim({ launchArgs: ["--ui-test"] })
 ```
 
 Confirm the HTTP listener bound:
@@ -80,9 +75,7 @@ than sleeping.
 
 At each affected screen, call:
 ```
-mcp__XcodeBuildMCP__screenshot({
-  simulatorUuid: "918FD36A-8869-48F8-A1F8-3047CB122582"
-})
+mcp__XcodeBuildMCP__screenshot({})
 ```
 
 Read the returned image immediately (the tool returns it as a visual artifact).
@@ -189,8 +182,8 @@ container is a `VISUAL: FAIL` even if the state machine passed.
   The screenshot is the source of truth for visual checks.
 - **Hidden probe is expected absent.** `question.state` is a `.hidden()`
   Text — its absence in the screenshot is correct, not a defect.
-- **Two booted sims.** Always pass `simulatorUuid: "918FD36A-8869-48F8-A1F8-3047CB122582"`
-  explicitly to `screenshot`.
+- **Two booted sims.** `screenshot` targets the `simulatorName` session
+  default (iPhone 18 Pro); check it with `session_show_defaults`.
 - **WIP build breaks.** If `git status` shows unrelated WIP in
   `QuestionView.swift` / `AnswerConfirmationView.swift` that breaks the
   build, stop and ask the user to stash before proceeding.

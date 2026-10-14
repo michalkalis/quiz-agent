@@ -46,7 +46,7 @@ Target is iOS 26+, so every API below is available without gating.
   fakes "as tall as the tallest page"; asymmetric top/bottom padding fakes
   "centred, slightly above the middle". Express the rule (Spacer ratios,
   alignment, `minHeight` floor) instead.
-- Values that are real design inputs from the `.pen` source (illustration box,
+- Values that are real design inputs (illustration box,
   CTA width, mic button size) live in a small `private enum Metrics` in the view.
   Keep it short; it is not a dumping ground for paddings.
 - Fonts through the `.hangs*` font helpers (`.hangsBody`, `.hangsDisplay`,

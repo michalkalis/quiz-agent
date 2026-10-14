@@ -15,11 +15,12 @@ Scan recent code changes and the broader codebase for security vulnerabilities.
 
 1. **Get recent changes:**
    ```bash
-   git log --oneline -10
-   git diff HEAD~3..HEAD --stat
-   git diff HEAD~3..HEAD
+   git fetch origin main
+   git log --oneline origin/main..HEAD
+   git diff origin/main...HEAD --stat
+   git diff origin/main...HEAD
    ```
-   Adjust the range if the user specifies a commit or number of commits to review.
+   This is the PR's change set. Adjust the range if the user specifies commits or a PR.
 
 2. **Scan changed files for:**
 

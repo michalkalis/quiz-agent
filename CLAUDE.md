@@ -42,7 +42,7 @@ Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the 
 
 New files go in their typed home — never at repo root, never as plan/research docs inside an app.
 
-- **Repo-root docs:** only `README.md`, `CLAUDE.md`, `CONTEXT.md`. (Out-of-scope root entries that stay: `pyproject.toml`, `uv.lock`, `.env*`, `chroma_data/`, `infra/`, `design/` — the live Pencil source `design/quiz-agent.pen`.)
+- **Repo-root docs:** only `README.md`, `CLAUDE.md`, `CONTEXT.md`. (Out-of-scope root entries that stay: `pyproject.toml`, `uv.lock`, `.env*`, `chroma_data/`, `infra/`, `design/` — `design/quiz-agent.pen`, the Pen file, no longer in use.)
 - **Apps:** each `apps/*` keeps exactly one `README.md`; no plan/research/setup docs inside app source.
 - **Everything else under `docs/` by type:** issues → `docs/issues/` · research → `docs/research/` · HTML reports → `docs/artifacts/` · handoffs → `docs/handoffs/` (archive old ones in `docs/handoffs/archive/`) · test runs → `docs/testing/runs/` · setup guides → `docs/setup/` · design → `docs/design/`.
 - **Outdated docs** → `docs/archive/<area>/`, never deleted ad hoc (git history is the safety net).

@@ -35,6 +35,12 @@ extension RecordingCoordinator {
         return rejectedTranscripts.transcripts(for: rejectionQuestionKey)
     }
 
+    /// Rejections on the current question so far, whatever the switch says
+    /// (#204.9 `answer_captured`).
+    func rejectedTranscriptCount() -> Int {
+        rejectedTranscripts.rejectionCount(for: rejectionQuestionKey)
+    }
+
     /// Telemetry for the A/B: whether the switch is on and how many rejected
     /// transcripts the upload carries — never the words themselves.
     func rejectedTranscriptAttributes() -> [String: Any] {

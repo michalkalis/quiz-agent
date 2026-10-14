@@ -33,6 +33,9 @@ nonisolated enum VoicePipelineFlags {
         static let frontCardioidMic = "voicePipeline.frontCardioidMic"
         static let neuralVAD = "voicePipeline.neuralVADEnabled"
         static let avoidRejectedTranscriptOnRetry = "voicePipeline.avoidRejectedTranscriptOnRetry"
+        static let autoTesting = "voicePipeline.autoTesting"
+        static let aecBlockedGeneration = "voicePipeline.experiment.aecBlockedGeneration"
+        static let echoCancelledInputCapable = "voicePipeline.experiment.echoCancelledInputCapable"
     }
 
     /// Apple voice processing (echo cancellation, noise suppression, AGC) on
@@ -90,7 +93,7 @@ nonisolated enum VoicePipelineFlags {
     /// mode, so the quiz switches from `.spokenAudio` only while such a route
     /// is the output (`MicCapturePolicy`). Off by default until the car test.
     static var echoCancelledInputOnExternalRoutes: Bool {
-        get { bool(Key.echoCancelledInputOnExternalRoutes, default: false) }
+        get { manualValue(.aec) }
         set { UserDefaults.standard.set(newValue, forKey: Key.echoCancelledInputOnExternalRoutes) }
     }
 
@@ -99,7 +102,7 @@ nonisolated enum VoicePipelineFlags {
     /// off — less road noise from behind the phone. Never overrides a
     /// Bluetooth/HFP or user-chosen mic. Off by default until the car test.
     static var frontCardioidMic: Bool {
-        get { bool(Key.frontCardioidMic, default: false) }
+        get { manualValue(.frontMic) }
         set { UserDefaults.standard.set(newValue, forKey: Key.frontCardioidMic) }
     }
 
@@ -108,7 +111,7 @@ nonisolated enum VoicePipelineFlags {
     /// shows fewer recordings running to the cap; read when the mic engine
     /// starts, so a change applies from the next listening window.
     static var neuralVADEnabled: Bool {
-        get { bool(Key.neuralVAD, default: false) }
+        get { manualValue(.neuralVAD) }
         set { UserDefaults.standard.set(newValue, forKey: Key.neuralVAD) }
     }
 
@@ -122,12 +125,35 @@ nonisolated enum VoicePipelineFlags {
         set { UserDefaults.standard.set(newValue, forKey: Key.avoidRejectedTranscriptOnRetry) }
     }
 
+    /// #204.9 (founder 2026-10-14): the app runs the A/B of the three switches
+    /// above itself (`VoiceExperimentStore`), with the odds the server sends in
+    /// `/app-config`. On by default; off = the manual switches apply as before.
+    /// The capture code reads the store's effective values, never these three
+    /// directly, and the experiment never writes them.
+    static var autoTesting: Bool {
+        get { autoTesting(in: .standard) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.autoTesting) }
+    }
+
+    static func autoTesting(in defaults: UserDefaults) -> Bool {
+        bool(Key.autoTesting, default: true, in: defaults)
+    }
+
+    /// The manual switch behind an experiment flag (all three default off).
+    static func manualValue(_ flag: VoiceExperimentFlag, in defaults: UserDefaults = .standard) -> Bool {
+        let key = switch flag {
+        case .neuralVAD: Key.neuralVAD
+        case .aec: Key.echoCancelledInputOnExternalRoutes
+        case .frontMic: Key.frontCardioidMic
+        }
+        return bool(key, default: false, in: defaults)
+    }
+
     static func saveAnswerRecordings(channelAllows: Bool) -> Bool {
         channelAllows && bool(Key.saveAnswerRecordings, default: false)
     }
 
-    private static func bool(_ key: String, default defaultValue: Bool) -> Bool {
-        let defaults = UserDefaults.standard
+    private static func bool(_ key: String, default defaultValue: Bool, in defaults: UserDefaults = .standard) -> Bool {
         guard defaults.object(forKey: key) != nil else { return defaultValue }
         return defaults.bool(forKey: key)
     }

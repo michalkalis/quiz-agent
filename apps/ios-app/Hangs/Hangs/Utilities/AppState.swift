@@ -359,7 +359,8 @@ final class AppState: ObservableObject {
                 return VoicePipelineFlags.realtimeSTTEnabled
             },
             analytics: analytics,
-            answerRecordingUploader: answerRecordingUploader
+            answerRecordingUploader: answerRecordingUploader,
+            voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment }
         )
 
         #if DEBUG

@@ -22,6 +22,9 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     @Published private(set) var frontCardioidMic = VoicePipelineFlags.frontCardioidMic
     @Published private(set) var neuralVADEnabled = VoicePipelineFlags.neuralVADEnabled
     @Published private(set) var avoidRejectedTranscriptOnRetry = VoicePipelineFlags.avoidRejectedTranscriptOnRetry
+    /// #204.9: while on, the app runs the three switches it tests itself and
+    /// their manual rows are inactive.
+    @Published private(set) var autoTesting = VoicePipelineFlags.autoTesting
     /// Output · input · session mode · the voice-processing mode a mic engine
     /// would get now (#185 track C).
     @Published private(set) var audioRouteSummary: String
@@ -83,6 +86,14 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     func setNeuralVADEnabled(_ isOn: Bool) {
         neuralVADEnabled = isOn
         VoicePipelineFlags.neuralVADEnabled = isOn
+    }
+
+    /// Off applies at once: the round's experiment values are dropped and the
+    /// manual switches take over. On applies from the next quiz.
+    func setAutoTesting(_ isOn: Bool) {
+        autoTesting = isOn
+        VoicePipelineFlags.autoTesting = isOn
+        if !isOn { VoiceExperimentStore.shared.endRound() }
     }
 
     func setAvoidRejectedTranscriptOnRetry(_ isOn: Bool) {

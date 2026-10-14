@@ -58,17 +58,53 @@ nonisolated enum MicCapturePolicy {
 
     /// What the mic actually runs with right now — logged with every answer
     /// (`answer recording stopped`) next to the two switches, for the A/B.
+    /// #204.9: the switches as the capture used them (the round's experiment
+    /// value or the manual one) and where each came from.
     @MainActor
-    static func captureAttributes() -> [String: Any] {
+    static func captureAttributes(experiment: VoiceExperimentStore = .shared) -> [String: Any] {
         let session = AVAudioSession.sharedInstance()
-        let source = session.currentRoute.inputs.first?.selectedDataSource
-        return [
-            "ecFlag": VoicePipelineFlags.echoCancelledInputOnExternalRoutes,
+        var attributes: [String: Any] = [
+            "ecFlag": experiment.isOn(.aec),
             "ecAvailable": session.isEchoCancelledInputAvailable,
             "ecEnabled": session.isEchoCancelledInputEnabled,
-            "frontMicFlag": VoicePipelineFlags.frontCardioidMic,
-            "micDataSource": source?.orientation?.rawValue ?? "none",
-            "micPolarPattern": source?.selectedPolarPattern?.rawValue ?? "none",
+            "frontMicFlag": experiment.isOn(.frontMic),
+            "micDataSource": micDataSource(session),
+            "micPolarPattern": micPolarPattern(session),
         ]
+        attributes.merge(experiment.sentryAttributes) { current, _ in current }
+        return attributes
+    }
+
+    @MainActor
+    static func micDataSource(_ session: AVAudioSession = .sharedInstance()) -> String {
+        session.currentRoute.inputs.first?.selectedDataSource?.orientation?.rawValue ?? "none"
+    }
+
+    @MainActor
+    static func micPolarPattern(_ session: AVAudioSession = .sharedInstance()) -> String {
+        session.currentRoute.inputs.first?.selectedDataSource?.selectedPolarPattern?.rawValue ?? "none"
+    }
+}
+
+/// #204.9: the mic side of one answer capture, read while the engine that
+/// recorded is still up (releasing it may move the route).
+nonisolated struct MicCaptureSnapshot: Sendable, Equatable {
+    let inputRoute: String
+    /// The iPhone's own mic is the only input (where 204.5 applies).
+    let builtInMicOnly: Bool
+    let ecEnabled: Bool
+    let micDataSource: String
+    let micPolarPattern: String
+
+    @MainActor
+    static func current() -> MicCaptureSnapshot {
+        let session = AVAudioSession.sharedInstance()
+        return MicCaptureSnapshot(
+            inputRoute: VoiceProcessingPolicy.currentInputPort(),
+            builtInMicOnly: session.currentRoute.inputs.map(\.portType) == [.builtInMic],
+            ecEnabled: session.isEchoCancelledInputEnabled,
+            micDataSource: MicCapturePolicy.micDataSource(session),
+            micPolarPattern: MicCapturePolicy.micPolarPattern(session)
+        )
     }
 }

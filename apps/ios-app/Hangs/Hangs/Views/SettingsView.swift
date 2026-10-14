@@ -780,6 +780,20 @@ struct SettingsView: View {
 
             hairline
 
+            // #204.9: the app A/B tests the three switches below it marks
+            // inactive (echo cancellation, front mic, neural detection).
+            HangsToggleRow(
+                label: "Automatic testing",
+                subtitle: "The app sets echo cancellation, the front microphone and neural speech detection for each quiz and measures which works better. When off, you set them yourself",
+                isOn: Binding(
+                    get: { diagnostics.autoTesting },
+                    set: diagnostics.setAutoTesting
+                )
+            )
+            .accessibilityIdentifier("settings.autoTestingToggle")
+
+            hairline
+
             // #204.4: echo cancellation without voice processing, car routes only.
             HangsToggleRow(
                 label: "Echo cancellation on car audio",
@@ -789,6 +803,7 @@ struct SettingsView: View {
                     set: diagnostics.setEchoCancelledInputOnExternalRoutes
                 )
             )
+            .disabled(diagnostics.autoTesting)
             .accessibilityIdentifier("settings.echoCancelledInputToggle")
 
             hairline
@@ -802,6 +817,7 @@ struct SettingsView: View {
                     set: diagnostics.setFrontCardioidMic
                 )
             )
+            .disabled(diagnostics.autoTesting)
             .accessibilityIdentifier("settings.frontCardioidMicToggle")
 
             hairline
@@ -845,6 +861,7 @@ struct SettingsView: View {
                     set: diagnostics.setNeuralVADEnabled
                 )
             )
+            .disabled(diagnostics.autoTesting)
             .accessibilityIdentifier("settings.neuralVADToggle")
 
             hairline

@@ -52,7 +52,7 @@ extension AudioService {
         let session = AVAudioSession.sharedInstance()
         let wanted = MicCapturePolicy.wantsEchoCancelledInput(
             outputs: session.currentRoute.outputs.map(\.portType),
-            enabled: VoicePipelineFlags.echoCancelledInputOnExternalRoutes
+            enabled: VoiceExperimentStore.shared.isOn(.aec)
         )
         let desired = Self.quizSessionConfiguration(for: audioMode, echoCancelledInput: wanted)
         guard desired != appliedSessionConfiguration || session.prefersEchoCancelledInput != wanted else { return }
@@ -73,6 +73,11 @@ extension AudioService {
             failure = error.localizedDescription
         }
         appliedSessionConfiguration = desired
+        // #204.9: the one moment the session is in the mode where iOS reports
+        // the device capability (`aec_applicable` on every later capture).
+        if wanted, failure == nil, session.mode == .default {
+            VoiceExperimentStore.shared.noteEchoCancelledInputCapability(session.isEchoCancelledInputAvailable)
+        }
 
         var attributes: [String: Any] = [
             "wanted": wanted,
@@ -93,7 +98,7 @@ extension AudioService {
         let input = session.currentRoute.inputs.first
         let wanted = MicCapturePolicy.wantsFrontCardioidMic(
             inputs: session.currentRoute.inputs.map(\.portType),
-            enabled: VoicePipelineFlags.frontCardioidMic,
+            enabled: VoiceExperimentStore.shared.isOn(.frontMic),
             voiceProcessing: VoiceProcessingPolicy.currentMode().armsVoiceProcessing
         )
         let foreignPreferredInput = session.preferredInput.map { $0.uid != micCapture.pinnedBuiltInMicUID } ?? false

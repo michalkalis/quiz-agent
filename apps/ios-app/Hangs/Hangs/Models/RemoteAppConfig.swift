@@ -34,6 +34,9 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     let minVersionTestflight: String?
     let ordersEnabled: Bool
     let notice: Notice?
+    /// #204.9: the voice-settings experiment; nil when the server has none or
+    /// sent something unreadable, and then every switch stays manual.
+    let voiceExperiment: VoiceExperimentConfig?
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -48,13 +51,21 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case minVersionTestflight = "min_version_testflight"
         case ordersEnabled = "orders_enabled"
         case notice
+        case voiceExperiment = "voice_experiment"
     }
 
-    init(minVersionAppStore: String?, minVersionTestflight: String?, ordersEnabled: Bool, notice: Notice?) {
+    init(
+        minVersionAppStore: String?,
+        minVersionTestflight: String?,
+        ordersEnabled: Bool,
+        notice: Notice?,
+        voiceExperiment: VoiceExperimentConfig? = nil
+    ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
         self.ordersEnabled = ordersEnabled
         self.notice = notice
+        self.voiceExperiment = voiceExperiment
     }
 
     init(from decoder: Decoder) throws {
@@ -63,5 +74,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         minVersionTestflight = try container.decodeIfPresent(String.self, forKey: .minVersionTestflight)
         ordersEnabled = try container.decodeIfPresent(Bool.self, forKey: .ordersEnabled) ?? true
         notice = try container.decodeIfPresent(Notice.self, forKey: .notice)
+        // Never the reason the rest of the config is lost.
+        voiceExperiment = try? container.decodeIfPresent(VoiceExperimentConfig.self, forKey: .voiceExperiment)
     }
 }

@@ -1,0 +1,122 @@
+{
+ "P1": {
+  "arm": "A",
+  "qid": "9b52f1f2-d41e-47a6-82e2-3e1995dfe389",
+  "topic": "Landmarks"
+ },
+ "P2": {
+  "arm": "B",
+  "qid": "8ee890de-d62b-4206-b89b-fbdd12c27d5a",
+  "topic": "Baking science"
+ },
+ "P3": {
+  "arm": "A",
+  "qid": "9889707f-3e37-4e61-b298-960c55803856",
+  "topic": "Empires"
+ },
+ "P4": {
+  "arm": "A",
+  "qid": "6b90c4ff-c38a-4ae0-8b9a-77e195d06df8",
+  "topic": "Famous people"
+ },
+ "P5": {
+  "arm": "B",
+  "qid": "fe0cb259-2c73-4cda-baeb-4fbdf813dd4a",
+  "topic": "Alexander the Great"
+ },
+ "P6": {
+  "arm": "A",
+  "qid": "161b9b05-3f02-4e1a-ae66-359db73ca38c",
+  "topic": "Physics in everyday life"
+ },
+ "P7": {
+  "arm": "B",
+  "qid": "6e7325f0-644f-48d3-8d31-24b4e8856ef0",
+  "topic": "Radioactivity at home"
+ },
+ "P8": {
+  "arm": "A",
+  "qid": "543ed7d6-9860-4aff-a3e6-7fff9d284f90",
+  "topic": "Chemistry in everyday life"
+ },
+ "P9": {
+  "arm": "A",
+  "qid": "b7c04538-c4c9-439f-9a38-f3ad61735308",
+  "topic": "Cities"
+ },
+ "P10": {
+  "arm": "B",
+  "qid": "2d77855b-c092-4ef4-93be-35f298f91dc6",
+  "topic": "Roman Empire"
+ },
+ "P11": {
+  "arm": "A",
+  "qid": "31935bf1-f7e1-4ef1-963c-ed0e8ee4bec8",
+  "topic": "Food, drink and cooking around the world"
+ },
+ "P12": {
+  "arm": "B",
+  "qid": "f5762d5b-0fcd-4f38-9847-a61ff5ac7812",
+  "topic": "Japanese food"
+ },
+ "P13": {
+  "arm": "A",
+  "qid": "21906d87-b591-4190-ac96-e23feac94dd3",
+  "topic": "Countries"
+ },
+ "P14": {
+  "arm": "B",
+  "qid": "7112c891-1e5b-4d98-a25a-39961cfbba65",
+  "topic": "Russian Empire"
+ },
+ "P15": {
+  "arm": "B",
+  "qid": "a1962355-6c39-45e4-9be8-06bb4537a659",
+  "topic": "Peter the Great and Imperial Russia"
+ },
+ "P16": {
+  "arm": "A",
+  "qid": "2075b5d8-4b8b-45b6-ac94-265a8adecca3",
+  "topic": "Food, drink and cooking around the world"
+ },
+ "P17": {
+  "arm": "A",
+  "qid": "9bc6668a-9a78-48f3-84ea-9ada2e941d2f",
+  "topic": "History"
+ },
+ "P18": {
+  "arm": "B",
+  "qid": "b1e1ef52-c8fb-4181-a94a-1268c3a2c480",
+  "topic": "Kitchen chemistry"
+ },
+ "P19": {
+  "arm": "B",
+  "qid": "07a34076-4744-4ce1-ac17-71ea33382ab6",
+  "topic": "Islands"
+ },
+ "P20": {
+  "arm": "A",
+  "qid": "f1b219b1-67f0-4a2c-b96c-289a852aa584",
+  "topic": "History"
+ },
+ "P21": {
+  "arm": "A",
+  "qid": "b61009bc-0d2a-47e8-9470-013cd072db7b",
+  "topic": "Food, drink and cooking around the world"
+ },
+ "P22": {
+  "arm": "B",
+  "qid": "f01da7f0-bb97-4f58-b159-a959d1585185",
+  "topic": "Countries"
+ },
+ "P23": {
+  "arm": "B",
+  "qid": "8d0e2f28-584e-4498-a306-c10e40158770",
+  "topic": "Capital cities"
+ },
+ "P24": {
+  "arm": "B",
+  "qid": "dd529181-c58b-440e-bea2-3703c1575445",
+  "topic": "Spices"
+ }
+}

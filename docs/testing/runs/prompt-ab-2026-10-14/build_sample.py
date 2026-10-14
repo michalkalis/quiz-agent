@@ -13,7 +13,7 @@ PER_ARM = 12
 
 
 def load(arm):
-    return [q for p in sorted(RUN.glob(f"{arm}-*.json")) for q in json.loads(p.read_text())]
+    return [q for p in sorted(RUN.glob(f"{arm}-[0-9].json")) for q in json.loads(p.read_text())]
 
 
 def options(q):

@@ -44,6 +44,15 @@ Označené otázky → `archived` s poznámkou `#203 stock question`. Návrat je
 
 Kontrola sa zapojí do `ScoringStage` rovnako ako kontrola „bežný hráč“ z #201 (CLI + worker, aj týždenný job #202), za vypínačom `STOCK_QUESTION_GATE`. Zapne sa po 203.2. Otrepaná otázka vypadne a top-up ju nahradí.
 
+
+### 203.5 Pokles kvality generovania
+
+Zistené (2026-10-14): 25 z 30 hodnotených otázok pochádza z hromadného behu 2026-10-01. Dávku s hodnotením 9,15 (2026-09-03) vyrobil prompt `v2_cot` (vzory zábavných otázok + „Boring Detector“). Commit 56fba3fb (2026-09-02, PR #71) prepol hromadné behy na `direct_v1`, ktorý výslovne dovoľuje „jednoduchú priamu otázku na fakt“. Od #177 (2026-09-10) schvaľuje stroj (88 % schválených), ktorý zábavnosť nemeria. Prompty sa od 08-18 nemenili.
+
+**Rozhodnutia foundera (2026-10-14):** slepé porovnanie `v2_cot` vs `direct_v1`; októbrovú dávku riešiť až keď bude jasná oprava (prípadne ju prehnať kontrolou); každý ďalší hromadný beh pred zverejnením → slepá vzorka ~20 otázok, do hry len pri priemere ≥ 7/10.
+
+Slepé porovnanie: Opus 5.5 pripnutý, nastavenie ako ostrá prevádzka (`fresh_pins.py` + `--no-judges`), rovnaké 4 témy z behu 10-01, 6 otázok na tému a rameno, `--dry-run`. A = `v2_cot` (23 prešlo bránami), B = `direct_v1` (24). Na hodnotenie 12 + 12: https://claude.ai/artifact/XKvYqK8iAYrykwWeQwH31K. Run adresár: `docs/testing/runs/prompt-ab-2026-10-14/`.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou

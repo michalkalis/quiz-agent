@@ -27,11 +27,17 @@ struct AnswerDetectionSession {
     let startedAt: AnyClock<Duration>.Instant
     var speechDetectorResults = 0
     var energyHeardSpeech = false
+    /// #204: the neural detector's verdicts, and whether it stopped scoring
+    /// and handed this recording back to the energy detector.
+    var neuralHeardSpeech = false
+    var neuralFellBack = false
+    /// Audio time since the model last scored a buffer (fallback trigger).
+    var neuralUnscoredSecs: TimeInterval = 0
     var speechDetectorHeardSpeech = false
     var levelBuffers = 0
     var speechSecs: TimeInterval = 0
     /// Audio time (sum of buffer durations, not wall clock) elapsed so far,
-    /// and the energy detector's first onset / latest release on that clock.
+    /// and the deciding detector's first onset / latest release on that clock.
     var audioSecs: TimeInterval = 0
     var firstSpeechSecs: TimeInterval?
     var lastSpeechEndSecs: TimeInterval?
@@ -46,22 +52,26 @@ extension SilenceDetectionService {
     /// One tap buffer's level (drained on the main actor from the tap).
     func handleInputLevel(_ sample: InputLevelSample) {
         lastLevelAt = clock.now
-        let wasSpeaking = energySpeaking || speechDetectorSpeaking
-        let wasEnergySpeaking = energySpeaking
+        let wasSpeaking = primarySpeaking || speechDetectorSpeaking
+        let wasPrimarySpeaking = primarySpeaking
         energySpeaking = energyVAD.process(sample)
+        let probability = currentProbability(sample)
+        neuralSpeaking = neuralGate.process(probability: probability, duration: sample.duration)
         inputLevelChannel.yield(InputLevel(db: sample.db, noiseFloorDb: energyVAD.noiseFloorDb))
         if var session = answerSession {
             session.levelBuffers += 1
             // Timing for #197.6: onset is stamped when the buffer that
             // declared it ends; a release at the START of the buffer whose
             // level fell below the margin — not after the silence hangover.
-            if energySpeaking && !wasEnergySpeaking && session.firstSpeechSecs == nil {
+            if primarySpeaking && !wasPrimarySpeaking && session.firstSpeechSecs == nil {
                 session.firstSpeechSecs = session.audioSecs + sample.duration
             }
-            if !energySpeaking && wasEnergySpeaking { session.lastSpeechEndSecs = session.audioSecs }
+            if !primarySpeaking && wasPrimarySpeaking { session.lastSpeechEndSecs = session.audioSecs }
             session.audioSecs += sample.duration
             if energySpeaking { session.energyHeardSpeech = true }
-            if energySpeaking || speechDetectorSpeaking { session.speechSecs += sample.duration }
+            if neuralSpeaking { session.neuralHeardSpeech = true }
+            if primarySpeaking || speechDetectorSpeaking { session.speechSecs += sample.duration }
+            fallBackIfNeuralSilent(&session, scored: probability != nil, duration: sample.duration)
             answerSession = session
         }
         applyCombinedSpeech(wasSpeaking: wasSpeaking)
@@ -72,7 +82,7 @@ extension SilenceDetectionService {
     /// device test can see it, and a `speechDetected` result — should an iOS
     /// update ever deliver one — counts as speech.
     func handleSpeechDetectorResult(speechDetected: Bool) {
-        let wasSpeaking = energySpeaking || speechDetectorSpeaking
+        let wasSpeaking = primarySpeaking || speechDetectorSpeaking
         speechDetectorSpeaking = speechDetected
         if var session = answerSession {
             session.speechDetectorResults += 1
@@ -88,7 +98,7 @@ extension SilenceDetectionService {
     /// every detector input, it only acts on a change (plus the per-event
     /// silence re-check the clock-driven check backs up).
     private func applyCombinedSpeech(wasSpeaking: Bool) {
-        let speaking = energySpeaking || speechDetectorSpeaking
+        let speaking = primarySpeaking || speechDetectorSpeaking
         guard speaking else {
             switch state {
             case let .speechActive(speechStart):
@@ -200,6 +210,9 @@ extension SilenceDetectionService {
         state = .idle
         energyVAD = EnergyVAD()
         energySpeaking = false
+        neuralGate = NeuralVADGate()
+        neuralSpeaking = false
+        neuralEpoch = sileroVAD?.reset() ?? 0
         speechDetectorSpeaking = false
         lastLevelAt = nil
         pendingFirstHypothesisSince = nil
@@ -217,16 +230,20 @@ extension SilenceDetectionService {
         guard let session = answerSession else { return .empty }
         logDeafAnalyzerIfNeeded(session)
         // Still speaking when the recording ended (e.g. the cap): speech ran to the end.
-        let lastSpeechEndSecs = energySpeaking ? session.audioSecs : session.lastSpeechEndSecs
+        let lastSpeechEndSecs = primarySpeaking ? session.audioSecs : session.lastSpeechEndSecs
+        let detector = answerSpeechDetector
         return AnswerDetectionReport(
+            detector: detector,
             energyHeardSpeech: session.energyHeardSpeech,
+            neuralHeardSpeech: neuralVADActive ? session.neuralHeardSpeech : nil,
+            neuralPeakProbability: neuralGate.peakProbability,
             speechDetectorHeardSpeech: session.speechDetectorHeardSpeech,
             speechDetectorResults: speechDetectorPaired ? session.speechDetectorResults : nil,
             levelBuffers: session.levelBuffers,
             noiseFloorDb: energyVAD.noiseFloorDb,
             peakDb: energyVAD.peakDb,
             speechMs: Int((session.speechSecs * 1000).rounded()),
-            ambiguousMs: Int((energyVAD.ambiguousSecs * 1000).rounded()),
+            ambiguousMs: Int((primaryAmbiguousSecs * 1000).rounded()),
             minSpeechMs: Int((session.minSpeechDuration * 1000).rounded()),
             firstSpeechMs: session.firstSpeechSecs.map { Int(($0 * 1000).rounded()) },
             lastSpeechEndMs: lastSpeechEndSecs.map { Int(($0 * 1000).rounded()) }
@@ -235,12 +252,14 @@ extension SilenceDetectionService {
 
     var noSpeechWindowVerdict: NoSpeechWindowVerdict {
         guard let session = answerSession else { return .noAudio }
-        if session.energyHeardSpeech || session.speechDetectorHeardSpeech { return .speechHeard }
+        let primaryHeardSpeech = usesNeuralDetector ? session.neuralHeardSpeech : session.energyHeardSpeech
+        if primaryHeardSpeech || session.speechDetectorHeardSpeech { return .speechHeard }
         let staleAfter = Duration.milliseconds(Int((VADTuning.levelStaleAfterSecs * 1000).rounded()))
         guard let lastLevelAt, lastLevelAt.duration(to: clock.now) <= staleAfter else { return .noAudio }
         guard let floor = energyVAD.noiseFloorDb else { return .calibrating }
         guard floor > VADTuning.digitalSilenceDbfs else { return .noAudio }
-        guard energyVAD.ambiguousSecs < VADTuning.ambiguousActivityMaxSecs else { return .possibleSpeech }
+        if usesNeuralDetector, neuralGate.peakProbability == nil { return .calibrating }
+        guard primaryAmbiguousSecs < VADTuning.ambiguousActivityMaxSecs else { return .possibleSpeech }
         return .quiet
     }
 
@@ -257,11 +276,15 @@ extension SilenceDetectionService {
     }
 
     private var speechSourceTag: String {
-        switch (energySpeaking, speechDetectorSpeaking) {
+        switch (primarySpeaking, speechDetectorSpeaking) {
         case (true, true): "both"
         case (false, true): "speechDetector"
-        default: "energy"
+        default: usesNeuralDetector ? "neural" : "energy"
         }
+    }
+
+    private var primaryAmbiguousSecs: TimeInterval {
+        usesNeuralDetector ? neuralGate.ambiguousSecs : energyVAD.ambiguousSecs
     }
 
     static func milliseconds(_ duration: Duration) -> Int {

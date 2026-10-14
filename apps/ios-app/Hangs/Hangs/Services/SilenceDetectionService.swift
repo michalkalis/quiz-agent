@@ -289,6 +289,23 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// The answer recording in progress, if any (`beginAnswerDetection`).
     var answerSession: AnswerDetectionSession?
 
+    // MARK: Neural speech detection (#204 track 204.3 — +NeuralVAD.swift)
+
+    /// The bundled Silero model, loaded once by the first window that asks
+    /// for it; `neuralVADLoadFailed` keeps a broken model from being retried
+    /// every window.
+    var sileroVAD: SileroVAD?
+    var neuralVADLoadFailed = false
+    /// Whether this listening window started with `neuralVADEnabled`, and
+    /// whether the model actually runs on its tap.
+    var neuralVADRequested = false
+    var neuralVADActive = false
+    var neuralGate = NeuralVADGate()
+    var neuralSpeaking = false
+    /// The `SileroVAD` epoch of the last reset — scores from before it are
+    /// stale (`currentProbability`).
+    var neuralEpoch = 0
+
     /// Fail-loud command availability (#77). Written by `prepareAssets()` and by
     /// every failure path that previously swallowed its error silently. Each
     /// mutation is pushed to `commandAvailabilityUpdates` so an observer (the

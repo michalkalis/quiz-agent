@@ -20,6 +20,7 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     @Published private(set) var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
     @Published private(set) var echoCancelledInputOnExternalRoutes = VoicePipelineFlags.echoCancelledInputOnExternalRoutes
     @Published private(set) var frontCardioidMic = VoicePipelineFlags.frontCardioidMic
+    @Published private(set) var neuralVADEnabled = VoicePipelineFlags.neuralVADEnabled
     /// Output · input · session mode · the voice-processing mode a mic engine
     /// would get now (#185 track C).
     @Published private(set) var audioRouteSummary: String
@@ -76,6 +77,11 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     func setFrontCardioidMic(_ isOn: Bool) {
         frontCardioidMic = isOn
         VoicePipelineFlags.frontCardioidMic = isOn
+    }
+
+    func setNeuralVADEnabled(_ isOn: Bool) {
+        neuralVADEnabled = isOn
+        VoicePipelineFlags.neuralVADEnabled = isOn
     }
 
     func refresh() {

@@ -836,6 +836,19 @@ struct SettingsView: View {
 
             hairline
 
+            // #204 track 204.3: A/B of the end-of-answer detector in the car.
+            HangsToggleRow(
+                label: "Neural speech detection",
+                subtitle: "An on-device speech model decides when you finished answering, instead of the sound level",
+                isOn: Binding(
+                    get: { diagnostics.neuralVADEnabled },
+                    set: diagnostics.setNeuralVADEnabled
+                )
+            )
+            .accessibilityIdentifier("settings.neuralVADToggle")
+
+            hairline
+
             HangsToggleRow(
                 label: "Send answer recordings",
                 subtitle: "Sends your spoken answers to the developer to improve speech recognition",

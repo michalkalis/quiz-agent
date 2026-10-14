@@ -119,6 +119,14 @@ nonisolated enum VADTuning {
     /// a stalled engine is not "silence".
     static let levelStaleAfterSecs: TimeInterval = 0.5
 
+    // MARK: - Neural VAD (SileroVAD + NeuralVADGate, #204 track 204.3)
+
+    /// Speech starts when a 32 ms window scores at least this probability and
+    /// ends when one drops below the release — Silero's own defaults
+    /// (`VADIterator`: threshold 0.5, neg_threshold = threshold − 0.15).
+    static let neuralSpeechOnsetProbability: Float = 0.5
+    static let neuralSpeechReleaseProbability: Float = 0.35
+
     // MARK: - ElevenLabs Scribe v2 Realtime streaming VAD
 
     /// Silence (seconds) after which ElevenLabs commits the streaming transcript.

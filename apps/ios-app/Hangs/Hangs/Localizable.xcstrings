@@ -1514,13 +1514,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyhnout se zamítnutému přepisu"
+            "value" : "Vyhni se zamítnutému přepisu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyhnúť sa zamietnutému prepisu"
+            "value" : "Vyhni sa zamietnutému prepisu"
           }
         }
       }

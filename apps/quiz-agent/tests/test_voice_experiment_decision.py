@@ -152,3 +152,38 @@ def test_secondary_metrics_are_reported():
     summary = aggregate(caps, ROW, verdicts)[True].summary()
     assert summary["median_end_delay_ms"] == 600
     assert summary["correct_share"] == 0.5
+
+
+def test_only_the_attempt_right_before_a_rejection_counts_as_rejected():
+    """rejected_count is cumulative: after one rejection every later capture
+    carries 1. A retry that was not a rejection (e.g. no speech) followed by
+    a rejected one must blame only the capture right before the count rose."""
+    t = START
+    caps = [
+        Capture("s1", t + timedelta(seconds=s), {"question_id": "q1", "rejected_count": rc})
+        for s, rc in ((0, 0), (10, 0), (20, 1), (30, 1))
+    ]  # fmt: skip
+    flags = rejected_flags(caps)
+    assert [flags[id(c)] for c in caps] == [False, True, False, False]
+
+
+def _stats(n_on, n_off):
+    return ArmStats(n=n_on, bad=0), ArmStats(n=n_off, bad=0)
+
+
+def test_winner_also_needs_a_small_expected_loss():
+    """P(better) alone is not enough: if choosing ON could still cost ≥ 1
+    point of bad captures, keep testing rather than switch everyone."""
+    on, off = _stats(40, 40)
+    post = {"p_on_better": 0.97, "p_on_worse": 0.03, "expected_loss_on": 0.01}
+    assert decide(ROW, on, off, post, START + timedelta(days=7)) is None
+    post["expected_loss_on"] = 0.0099
+    assert decide(ROW, on, off, post, START + timedelta(days=7)).reason == "winner"
+
+
+def test_harm_needs_20_answers_in_each_arm():
+    post = {"p_on_better": 0.01, "p_on_worse": 0.99, "expected_loss_on": 0.3}
+    now = START + timedelta(days=7)
+    assert decide(ROW, *_stats(19, 20), post, now) is None
+    assert decide(ROW, *_stats(20, 19), post, now) is None
+    assert decide(ROW, *_stats(20, 20), post, now).reason == "harm"

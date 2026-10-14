@@ -89,23 +89,23 @@ def _key(c: Capture) -> tuple[str, str] | None:
 
 
 def rejected_flags(captures: list[Capture]) -> dict[int, bool]:
-    """``id(capture)`` → rejected: a later capture of the same question in the
+    """``id(capture)`` → rejected: the NEXT capture of the same question in the
     same session carries a higher ``rejected_count`` (the player said "no,
-    again" to this one's transcript)."""
-    by_key: dict[tuple[str, str], list[Capture]] = {}
-    for c in captures:
-        if (k := _key(c)) is not None:
-            by_key.setdefault(k, []).append(c)
+    again" to this one's transcript). The count is cumulative, so comparing
+    with any later capture would also blame earlier attempts. One sort,
+    O(n log n), computed once per evaluation."""
+    keyed = sorted(
+        ((k, c) for c in captures if (k := _key(c)) is not None),
+        key=lambda kc: (kc[0], kc[1].occurred_at),
+    )
     out: dict[int, bool] = {}
-    for group in by_key.values():
-        for c in group:
-            rc = c.properties.get("rejected_count") or 0
-            out[id(c)] = any(
-                o.occurred_at > c.occurred_at
-                and (o.properties.get("rejected_count") or 0) > rc
-                for o in group
-            )
+    for (k, c), (next_k, nxt) in zip(keyed, keyed[1:] + [(None, None)]):
+        out[id(c)] = next_k == k and _rc(nxt) > _rc(c)
     return out
+
+
+def _rc(c: Capture) -> int:
+    return c.properties.get("rejected_count") or 0
 
 
 def is_bad(c: Capture, rejected: bool) -> bool:
@@ -133,11 +133,14 @@ def aggregate(
     captures: list[Capture],
     row: ArmRow,
     verdicts: dict[tuple[str, str], str] | None = None,
+    rejected: dict[int, bool] | None = None,
 ) -> dict[bool, ArmStats]:
     """Per-arm counts for one row. ``captures`` is every answer_captured event
     in the window (the rejection lookup needs the retries too); ``verdicts``
-    maps (session_id, question_id) → answer_evaluated result, report only."""
-    rejected = rejected_flags(captures)
+    maps (session_id, question_id) → answer_evaluated result, report only;
+    ``rejected`` is ``rejected_flags(captures)`` when the caller has it."""
+    if rejected is None:
+        rejected = rejected_flags(captures)
     arms = {True: ArmStats(), False: ArmStats()}
     graded_keys: dict[bool, set] = {True: set(), False: set()}
     for c in captures:
@@ -190,3 +193,23 @@ def decide(
     if now - row.started_at >= MAX_RUNNING:
         return Decision(row.flag, row.route_group, "off", 0.0, "no_difference")
     return None
+
+
+def score_rows(
+    rows: list[ArmRow],
+    captures: list[Capture],
+    verdicts: dict[tuple[str, str], str],
+    now: datetime,
+) -> list[tuple[ArmRow, dict[bool, ArmStats], dict[str, float], Decision | None]]:
+    """Everything CPU-bound for one evaluation, so the caller can run it off
+    the event loop: rejection flags once, then per row counts, posterior and
+    verdict."""
+    rejected = rejected_flags(captures)
+    out = []
+    for row in rows:
+        stats = aggregate(captures, row, verdicts, rejected)
+        post = posterior(stats[True], stats[False])
+        out.append(
+            (row, stats, post, decide(row, stats[True], stats[False], post, now))
+        )
+    return out

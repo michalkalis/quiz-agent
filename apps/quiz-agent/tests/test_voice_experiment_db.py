@@ -13,18 +13,20 @@ Why these tests matter:
 
 from __future__ import annotations
 
+import asyncio
+import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.analytics.taxonomy import CLIENT_EVENTS, clean_properties
 from app.api.routes import app_config as app_config_routes
 from app.api.routes import voice_experiment as voice_experiment_routes
 from app.db.models import AnalyticsEvent, VoiceExperimentArm
-from app.voice_experiment import served
+from app.voice_experiment import evaluator, served
 
 pytestmark = pytest.mark.asyncio
 
@@ -160,7 +162,8 @@ async def test_dry_run_reports_but_writes_nothing(monkeypatch, db_sessionmaker):
     body = (await _evaluate(db_sessionmaker, True)).json()
 
     assert body["decisions"] == [{"flag": "neural_vad", "route_group": "bt_car",
-                                  "status": "winner_on", "p_on": 1.0, "reason": "winner"}]  # fmt: skip
+                                  "status": "winner_on", "p_on": 1.0, "reason": "winner",
+                                  "recent": False}]  # fmt: skip
     (arm,) = body["arms"]
     assert (arm["on"]["n"], arm["on"]["bad"], arm["off"]["n"], arm["off"]["bad"]) == (
         50,
@@ -185,5 +188,65 @@ async def test_real_run_writes_the_decision(monkeypatch, db_sessionmaker):
     row = await _row(db_sessionmaker)
     assert (row.status, row.p_on, row.decision_reason) == ("winner_on", 1.0, "winner")
     assert row.decided_at is not None
-    # A decided row is not evaluated again next week.
-    assert (await _evaluate(db_sessionmaker, False)).json()["decisions"] == []
+    # A retry (lost response) decides nothing new but reports the decision
+    # again, so the job can still announce it.
+    again = (await _evaluate(db_sessionmaker, False)).json()
+    assert again["arms"] == []
+    assert [(d["reason"], d["recent"]) for d in again["decisions"]] == [
+        ("winner", True)
+    ]
+
+
+async def test_a_row_restarted_meanwhile_is_not_overwritten(
+    monkeypatch, db_sessionmaker
+):
+    """If the founder restarts a test (generation bump) while the job scores
+    it, the verdict about the old answers must not land on the new test."""
+    monkeypatch.setenv("ADMIN_API_KEY", "k")
+    await _seed(db_sessionmaker, ("neural_vad", "bt_car", "running", 0.5))
+    await _seed_winner_events(db_sessionmaker)
+    original = evaluator._compute
+
+    async def _restart_during_scoring(*args):
+        scored = await original(*args)
+        async with db_sessionmaker() as s:
+            await s.execute(update(VoiceExperimentArm).values(generation=2))
+            await s.commit()
+        return scored
+
+    monkeypatch.setattr(evaluator, "_compute", _restart_during_scoring)
+    body = (await _evaluate(db_sessionmaker, False)).json()
+
+    assert body["decisions"] == []
+    row = await _row(db_sessionmaker)
+    assert (row.status, row.p_on, row.generation) == ("running", 0.5, 2)
+
+
+async def test_slow_db_never_stalls_app_config(monkeypatch):
+    """A hung DB read must not hold up a launch: capped, then fail open."""
+    monkeypatch.setattr(served, "READ_TIMEOUT_SECONDS", 0.05)
+
+    async def _hang(_):
+        await asyncio.sleep(5)
+
+    monkeypatch.setattr(served, "_read", _hang)
+    started = time.monotonic()
+    assert await served.voice_experiment_config(object()) is None
+    assert time.monotonic() - started < 1
+
+
+async def test_cache_expiry_refreshes_once_for_concurrent_requests(monkeypatch):
+    """At expiry a burst of launches must cause one DB read, not one each."""
+    calls = 0
+
+    async def _read(_):
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0.01)
+        return {"aec": {"bt_car": {"status": "running", "p_on": 0.5, "generation": 1}}}
+
+    monkeypatch.setattr(served, "_read", _read)
+    results = await asyncio.gather(
+        *(served.voice_experiment_config(object()) for _ in range(10))
+    )
+    assert calls == 1 and all(r == results[0] for r in results)

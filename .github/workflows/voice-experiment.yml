@@ -44,6 +44,10 @@ jobs:
       # dry run unless the box is unticked.
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
     steps:
+      # The POST is retried even on a real run: a retry after a committed run
+      # whose response was lost decides nothing new, but the endpoint reports
+      # rows decided in the last hour again (`recent: true`), so the decision
+      # is still announced; the issue step below skips a duplicate.
       - name: Score the test
         env:
           ADMIN_KEY: ${{ secrets.QUIZ_AGENT_ADMIN_API_KEY }}
@@ -88,7 +92,16 @@ jobs:
                   f"| {pct(a['p_on_better'])} | {ms(on['median_end_delay_ms'])} / {ms(off['median_end_delay_ms'])} "
                   f"| {pct(on['correct_share'])} / {pct(off['correct_share'])} | {verdict} |"
               )
-          if not r["arms"]:
+          # Decided in the last hour by an earlier call (a retried run): the
+          # row no longer runs, so it has no counts here, only the verdict.
+          shown = {(a["flag"], a["route_group"]) for a in r["arms"]}
+          for d in r["decisions"]:
+              if (d["flag"], d["route_group"]) not in shown:
+                  lines.append(
+                      f"| {FLAG.get(d['flag'], d['flag'])} | {ROUTE.get(d['route_group'], d['route_group'])} "
+                      f"| | | | | | {VERDICT[d['reason']]} |"
+                  )
+          if not r["arms"] and not r["decisions"]:
               lines.append("| žiadny test nebeží | | | | | | | |")
           body = "\n".join(lines)
           mode = "na sucho, nič sa nezmenilo" if r["dry_run"] else "naostro"
@@ -116,5 +129,13 @@ jobs:
         run: |
           gh label create voice-experiment --color 5319e7 \
             --description "Automatické testovanie hlasových nastavení (#204.9)" 2>/dev/null || true
-          gh issue create --title "$(cat issue_title.txt)" --body-file issue_body.md \
+          title="$(cat issue_title.txt)"
+          since="$(date -u -d '-2 hours' +%Y-%m-%dT%H:%M:%SZ)"
+          if gh issue list --label voice-experiment --state all --limit 20 \
+              --search "created:>=${since}" --json title --jq '.[].title' \
+              | grep -Fxq "$title"; then
+            echo "already announced: $title"
+            exit 0
+          fi
+          gh issue create --title "$title" --body-file issue_body.md \
             --label voice-experiment

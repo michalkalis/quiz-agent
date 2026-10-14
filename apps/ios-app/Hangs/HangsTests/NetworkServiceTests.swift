@@ -607,6 +607,51 @@ struct NetworkServiceTests {
         #expect(request.url?.query == nil)
     }
 
+    // #204.2: the rejected transcripts ride as their own form part. Lost on
+    // the wire, the backend re-grades the very transcript the player rejected.
+    @Test("submitVoiceAnswer sends rejected_transcripts as a JSON-array form field")
+    func voiceSubmitCarriesRejectedTranscripts() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitVoiceAnswer(
+            sessionId: "s1", audioData: Data([0x1]), fileName: "answer.wav",
+            questionId: "q_001", rejectedTranscripts: ["mokrá", "\"quoted\""]
+        )
+
+        let request = try #require(captured.withLock { $0 })
+        let body = try #require(readBody(from: request).flatMap { String(data: $0, encoding: .utf8) })
+        let part = try #require(body.components(separatedBy: "name=\"rejected_transcripts\"\r\n\r\n").last)
+        let json = try #require(part.components(separatedBy: "\r\n--").first)
+        let decoded = try JSONDecoder().decode([String].self, from: Data(json.utf8))
+        #expect(decoded == ["mokrá", "\"quoted\""], "the backend parses this field as JSON — quotes and diacritics must survive")
+    }
+
+    @Test("submitVoiceAnswer leaves rejected_transcripts out when there are none")
+    func voiceSubmitOmitsEmptyRejectedTranscripts() async throws {
+        let service = makeService()
+        let captured = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        StubURLProtocol.handler = { req in
+            captured.withLock { $0 = req }
+            return (.make(status: 200), Data())
+        }
+        defer { StubURLProtocol.handler = nil }
+
+        _ = try? await service.submitVoiceAnswer(sessionId: "s1", audioData: Data([0x1]), fileName: "answer.wav", questionId: "q_001")
+
+        let request = try #require(captured.withLock { $0 })
+        let body = try #require(readBody(from: request))
+        #expect(
+            body.range(of: Data("rejected_transcripts".utf8)) == nil,
+            "a first attempt is today's request, byte for byte"
+        )
+    }
+
     @Test("submitTextInput sends question_id in the JSON body")
     func textSubmitCarriesQuestionIdInBody() async throws {
         let service = makeService()

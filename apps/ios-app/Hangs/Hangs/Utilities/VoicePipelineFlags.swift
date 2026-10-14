@@ -32,6 +32,7 @@ nonisolated enum VoicePipelineFlags {
         static let echoCancelledInputOnExternalRoutes = "voicePipeline.echoCancelledInputOnExternalRoutes"
         static let frontCardioidMic = "voicePipeline.frontCardioidMic"
         static let neuralVAD = "voicePipeline.neuralVADEnabled"
+        static let avoidRejectedTranscriptOnRetry = "voicePipeline.avoidRejectedTranscriptOnRetry"
     }
 
     /// Apple voice processing (echo cancellation, noise suppression, AGC) on
@@ -109,6 +110,16 @@ nonisolated enum VoicePipelineFlags {
     static var neuralVADEnabled: Bool {
         get { bool(Key.neuralVAD, default: false) }
         set { UserDefaults.standard.set(newValue, forKey: Key.neuralVAD) }
+    }
+
+    /// #204.2 (founder 2026-10-14): a re-recorded answer must not come back
+    /// as the transcript the player just rejected ("modrá" heard as "mokrá",
+    /// "znova", heard as "mokrá" again). Sends the transcripts rejected for the
+    /// current question with the next upload (`rejected_transcripts`), so the
+    /// backend tries another hypothesis. On by default; off = today's upload.
+    static var avoidRejectedTranscriptOnRetry: Bool {
+        get { bool(Key.avoidRejectedTranscriptOnRetry, default: true) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.avoidRejectedTranscriptOnRetry) }
     }
 
     static func saveAnswerRecordings(channelAllows: Bool) -> Bool {

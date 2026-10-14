@@ -849,6 +849,19 @@ struct SettingsView: View {
 
             hairline
 
+            // #204.2: a re-record must not bring back the rejected transcript.
+            HangsToggleRow(
+                label: "Avoid rejected transcript",
+                subtitle: "When you record an answer again, transcription looks for a different result than the one you rejected",
+                isOn: Binding(
+                    get: { diagnostics.avoidRejectedTranscriptOnRetry },
+                    set: diagnostics.setAvoidRejectedTranscriptOnRetry
+                )
+            )
+            .accessibilityIdentifier("settings.avoidRejectedTranscriptToggle")
+
+            hairline
+
             HangsToggleRow(
                 label: "Send answer recordings",
                 subtitle: "Sends your spoken answers to the developer to improve speech recognition",

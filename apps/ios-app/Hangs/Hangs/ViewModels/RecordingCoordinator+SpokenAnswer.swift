@@ -185,6 +185,9 @@ extension RecordingCoordinator {
         cancelAutoConfirm()
         taskBag.cancel(.confirmationSpeechHold)
         if countdownHold != .driverStop { countdownHold = .awaitingListener }
+        // #204.2: speaking over the shown answer rejects it — the new upload
+        // must not come back as the same transcript.
+        rememberRejectedTranscript(transcribedAnswer)
         spokenReplacement = SpokenReplacement(previousAnswer: transcribedAnswer)
         pendingResponse = nil
         transcribedAnswer = "" // the sheet shows "Transcribing…"
@@ -192,6 +195,7 @@ extension RecordingCoordinator {
 
         var attributes: [String: Any] = ["durationMs": capture.durationMs, "attempt": owner.description]
         attributes.merge(VoiceCommandCoordinator.heardTextAttributes(heard)) { current, _ in current }
+        attributes.merge(rejectedTranscriptAttributes()) { current, _ in current }
         SentryLog.info("confirmation answer spoken again", category: .audio, attributes: attributes)
 
         Task { [weak self] in
@@ -244,6 +248,7 @@ extension RecordingCoordinator {
     /// backend graded the newer audio last — so confirming it re-grades the
     /// text (`confirmAnswer`'s resubmit path).
     private func restorePreviousAnswer(_ replacement: SpokenReplacement, readBack: Bool) {
+        forgetRejectedTranscript(replacement.previousAnswer) // #204.2: it stands again
         pendingResponse = nil
         guard readBack else {
             transcribedAnswer = replacement.previousAnswer

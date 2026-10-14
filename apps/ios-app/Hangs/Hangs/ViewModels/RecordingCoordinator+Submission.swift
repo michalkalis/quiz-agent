@@ -99,6 +99,7 @@ extension RecordingCoordinator {
             // #204.4 / #204.5: the mic-capture switches and what the mic ran with.
             attributes.merge(MicCapturePolicy.captureAttributes()) { current, _ in current }
             attributes.merge(detection.sentryAttributes) { current, _ in current }
+            attributes.merge(rejectedTranscriptAttributes()) { current, _ in current }
             SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
             noSpeechWindowDeferral = nil
 
@@ -167,6 +168,8 @@ extension RecordingCoordinator {
         // any response can advance it. A retry of this upload is then replayed
         // against THAT question instead of grading the next, unseen one.
         let answeredQuestionId = currentQuestion()?.id
+        // #204.2: read with the question id, for the same reason.
+        let rejectedTranscripts = rejectedTranscriptsForUpload()
         trackVoiceAnswerSubmitted(questionId: answeredQuestionId)
         // #197: the saved car sample this upload answers, if any.
         let recordingStamp = savedRecordingStamp
@@ -207,7 +210,8 @@ extension RecordingCoordinator {
                             sessionId: sessionId,
                             audioData: audioData,
                             fileName: fileName,
-                            questionId: answeredQuestionId
+                            questionId: answeredQuestionId,
+                            rejectedTranscripts: rejectedTranscripts
                         )
                     }
                 }

@@ -1509,6 +1509,22 @@
         }
       }
     },
+    "Avoid rejected transcript" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhnout se zamítnutému přepisu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhnúť sa zamietnutému prepisu"
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "cs" : {
@@ -10169,6 +10185,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Čo fungovalo alebo nefungovalo? Povedz to alebo napíš."
+          }
+        }
+      }
+    },
+    "When you record an answer again, transcription looks for a different result than the one you rejected" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Když odpověď nahraješ znovu, přepis hledá jiný výsledek než ten, který jsi zamítl"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keď odpoveď nahráš znova, prepis hľadá iný výsledok ako ten, ktorý si zamietol"
           }
         }
       }

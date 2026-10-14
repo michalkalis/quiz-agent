@@ -2,6 +2,22 @@
 # Session start hook - lightweight reminder only.
 # Skill names are already surfaced via the standard skills list; no need to re-print them.
 
+# #204.9: the weekly voice-experiment job opens an issue labelled
+# voice-experiment when it switches a voice setting on or off by itself. The
+# founder hears about it from the agent here, not from an email that gets lost.
+# Quiet on any failure (no gh, no auth, offline); capped so startup stays fast.
+TIMEOUT_CMD=$(command -v timeout || command -v gtimeout)
+if command -v gh >/dev/null 2>&1 && [ -n "$TIMEOUT_CMD" ]; then
+    VOICE_ISSUES=$(cd "$CLAUDE_PROJECT_DIR" && "$TIMEOUT_CMD" 3 gh issue list \
+        --label voice-experiment --state open --limit 5 \
+        --json number,title,url --jq '.[] | "  #\(.number) \(.title) \(.url)"' 2>/dev/null)
+    if [ -n "$VOICE_ISSUES" ]; then
+        echo "Voice experiment decided something (issue #204 — answer recognition, task 204.9):"
+        echo "$VOICE_ISSUES"
+        echo "Tell the founder in plain words what changed in the app, then close each issue (gh issue close N)."
+    fi
+fi
+
 LAST_CHECK_FILE="$CLAUDE_PROJECT_DIR/.claude/.last-check"
 
 if [ ! -f "$LAST_CHECK_FILE" ]; then

@@ -21,7 +21,7 @@ from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 
 from app import feature_flags, llm_usage
-from app.corpus.fresh_pins import ENV_PINS  # noqa: F401  (re-export)
+from app.corpus.fresh_pins import ENV_PINS, session_run  # noqa: F401  (re-export)
 
 OPUS = "claude-opus-5-5"
 SONNET = "claude-sonnet-5-5"
@@ -47,7 +47,7 @@ class RoleMapError(RuntimeError):
 
 def expected_roles(lang: str) -> dict[str, str]:
     return {
-        "gateway": "direct",
+        "gateway": "session" if session_run() else "direct",
         "generation": OPUS,
         "gen_alt_share": "0",
         "critique": OPUS,
@@ -103,7 +103,9 @@ def resolve_roles(lang: str) -> dict[str, str]:
 
 
 def _is_model(value: str) -> bool:
-    return value not in (OFF, "direct") and not value.replace(".", "").isdigit()
+    return (
+        value not in (OFF, "direct", "session") and not value.replace(".", "").isdigit()
+    )
 
 
 def check_roles(languages: list[str]) -> dict[str, dict[str, str]]:

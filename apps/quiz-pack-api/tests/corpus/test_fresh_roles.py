@@ -148,3 +148,30 @@ def test_a_moved_seed_model_fails_the_role_check(pinned, module, attr, role, mov
     pinned.setattr(importlib.import_module(f"app.corpus.{module}"), attr, moved_to)
     with pytest.raises(RoleMapError, match=rf"\.{role}: resolved '{moved_to}'"):
         check_roles(["en"])
+
+
+def test_session_run_is_local_only_and_switches_the_gateway():
+    """Founder 2026-10-14: a manual run may use the subscription, the weekly
+    server job never: the switch flips the gateway locally and refuses on Fly."""
+    base = {**os.environ, "LLM_GATEWAY": "openrouter", "FRESH_TOPUP_SESSION": "1"}
+    base.pop("FLY_APP_NAME", None)
+    probe = (
+        "from app.corpus import fresh_pins; fresh_pins.apply();"
+        "from quiz_shared.llm import factory as f; print(f.gateway())"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", probe],
+        env=base,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert out == ["session"]
+    on_fly = subprocess.run(
+        [sys.executable, "-c", probe],
+        env={**base, "FLY_APP_NAME": "quiz-pack-api"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert on_fly.returncode != 0 and "manual local run" in on_fly.stderr

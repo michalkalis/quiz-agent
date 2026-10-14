@@ -33,6 +33,23 @@ ENV_PINS: dict[str, str] = {
 }
 
 
+# Founder 2026-10-14: a manual run may use the Claude Code subscription
+# ("spusti ostrý beh, ale cez subscription"); the weekly job stays on the API.
+# Local only: on Fly (FLY_APP_NAME set) a session run is refused.
+SESSION_ENV = "FRESH_TOPUP_SESSION"
+
+
+def session_run() -> bool:
+    return os.environ.get(SESSION_ENV) == "1"
+
+
 def apply() -> None:
     """Override whatever the environment (prod secrets) says with the pins."""
     os.environ.update(ENV_PINS)
+    if session_run():
+        if os.environ.get("FLY_APP_NAME"):
+            raise RuntimeError(
+                f"{SESSION_ENV}=1 is for a manual local run; the server job "
+                "always runs on the Anthropic API"
+            )
+        os.environ["LLM_GATEWAY"] = "session"

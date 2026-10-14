@@ -104,7 +104,8 @@ jobs:
             --env EXPIRY_CLASSIFICATION=0 \
             --env CASUAL_PLAYER_GATE=off \
             --env JUDGE_GATE=0 \
-            -- python -m app.corpus.fresh_topup "${args[@]}"
+            -- python -m app.corpus.fresh_topup "${args[@]}" \
+            || echo "machine run returned non-zero (a job that exits fast does this); the exit code is checked below"
           flyctl machines list --app "$APP" --json \
             | jq -r --arg n "$MACHINE_NAME" '.[] | select(.name == $n) | .id' > machine_id
           [ -s machine_id ] || { echo "machine did not start"; exit 1; }

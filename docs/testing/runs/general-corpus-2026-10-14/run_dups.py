@@ -17,7 +17,7 @@ import json
 import sys
 from pathlib import Path
 
-for run in map(Path, sys.argv[1:]):
+for run in (Path(a).resolve() for a in sys.argv[1:]):
     for p in sorted(run.glob("[A-Z]-[0-9]*.json")):
         if p.name.endswith("usage.json"):
             continue

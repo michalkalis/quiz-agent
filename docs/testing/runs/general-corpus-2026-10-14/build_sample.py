@@ -1,7 +1,7 @@
 """#203 full run gate: blind founder sample of 20 per language (founder 2026-10-14: every bulk batch,
 import only at ⌀ ≥ 7). Draws from the new full-run questions only (the pilot ones were rated already),
 after same-fact duplicates were removed. Arms: E/F en, S/T sk, C/D cs (H / M themes).
-Usage: build_sample.py [drop-file]   drop-file = lines "<arm>-<n>#<i>" removed by the duplicate review.
+Usage: build_sample.py [drop-file]   drop-file = ids exactly as run_dups.py prints them ("general-corpus-2026-10-14/E-3#2"), one per line.
 """
 
 import json
@@ -9,7 +9,7 @@ import random
 import sys
 from pathlib import Path
 
-RUN = Path(__file__).parent
+RUN = Path(__file__).resolve().parent
 LANGS = {"en": "EF", "sk": "ST", "cs": "CD"}
 drops = set(Path(sys.argv[1]).read_text().split()) if len(sys.argv) > 1 else set()
 
@@ -19,7 +19,7 @@ def load(arm):
     for p in sorted(RUN.glob(f"{arm}-*.json")):
         if not p.stem.split("-")[1].isdigit():
             continue
-        out += [q for i, q in enumerate(json.loads(p.read_text()), 1) if f"{p.stem}#{i}" not in drops]
+        out += [q for i, q in enumerate(json.loads(p.read_text()), 1) if f"{RUN.name}/{p.stem}#{i}" not in drops]
     return out
 
 

@@ -273,3 +273,57 @@ def test_prompt_carries_the_recipe_rules():
         assert (
             "current politics" in prompt and "between August and October 2026" in prompt
         )
+
+
+def test_seed_array_found_after_prose_with_brackets():
+    """Prose before the array may contain '[' (the sk dry run of 2026-10-14
+    parsed nothing): the first array of objects anywhere must still be read."""
+    items = [_item("Zrádci", "https://cs.wikipedia.org/wiki/Zr%C3%A1dci")]
+    text = "Searched [3 sources] first.\n" + json.dumps(items, ensure_ascii=False)
+    assert seed_research._parse_seed_array(text) == items
+    assert seed_research._parse_seed_array("no array here [1, 2]") == []
+
+
+@pytest.mark.asyncio
+async def test_reply_without_array_gets_one_nudge_then_a_clear_error():
+    """A reply with prose only gets one cheap follow-up asking for the array;
+    if that also fails the language reports what came back instead of a bare
+    'no usable seeds'."""
+    url = "https://sk.wikipedia.org/wiki/Early"
+    search = SimpleNamespace(
+        type="web_search_tool_result", content=[SimpleNamespace(url=url)]
+    )
+    prose = SimpleNamespace(type="text", text="Here is what I found.", citations=None)
+    array = SimpleNamespace(
+        type="text", text=json.dumps([_item("Early", url)]), citations=None
+    )
+    calls: list[list[dict]] = []
+    replies = [_response("end_turn", [search, prose]), _response("end_turn", [array])]
+
+    async def fake_call(messages):
+        calls.append(messages)
+        return replies[len(calls) - 1]
+
+    result = await seed_research.research_seeds(
+        "sk",
+        TODAY,
+        call=fake_call,
+        ideas=["- Idea (1 views)"],
+        fame_of=lambda _t: None,
+        fetch_page=_unreadable,
+    )
+    assert [s.subject for s in result.seeds] == ["Early"]
+    assert calls[1][-1] == {"role": "user", "content": seed_research.JSON_NUDGE}
+
+    calls.clear()
+    replies[:] = [_response("end_turn", [prose]), _response("end_turn", [prose])]
+    result = await seed_research.research_seeds(
+        "sk",
+        TODAY,
+        call=fake_call,
+        ideas=["- Idea (1 views)"],
+        fame_of=lambda _t: None,
+        fetch_page=_unreadable,
+    )
+    assert len(calls) == 2 and not result.seeds
+    assert "no JSON array" in result.error and "Here is what I found" in result.error

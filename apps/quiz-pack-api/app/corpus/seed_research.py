@@ -33,6 +33,7 @@ nothing here reports into the ``UsageRecorder``, so nothing is counted twice.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from collections.abc import Awaitable, Callable
@@ -47,10 +48,7 @@ from app.corpus.fresh_brief import AUDIENCE, freshness_window
 from app.corpus.seed_filters import Seed, cite_filter, domestic_share, fame_cut
 from app.corpus.seed_page_check import FetchText, check_pages
 from app.sourcing import wiki_fame
-from app.sourcing.openai_web_search_source import (
-    _anthropic_text_and_urls,
-    _parse_fact_array,
-)
+from app.sourcing.openai_web_search_source import _anthropic_text_and_urls
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +197,31 @@ def _add_usage(result: SeedResult, response: Any) -> None:
     )
 
 
+JSON_NUDGE = (
+    "Reply now with ONLY the JSON array of seed objects described above: "
+    "no prose, no code fence."
+)
+
+
+def _parse_seed_array(text: str) -> list:
+    """First JSON array of objects anywhere in ``text``, or ``[]``.
+
+    Prose before the array may itself contain ``[`` (a citation mark, a
+    bracketed aside), so every ``[`` is tried, not only the first one.
+    """
+    decoder = json.JSONDecoder()
+    start = text.find("[")
+    while start != -1:
+        try:
+            data, _ = decoder.raw_decode(text[start:])
+        except ValueError:
+            data = None
+        if isinstance(data, list) and any(isinstance(x, dict) for x in data):
+            return [x for x in data if isinstance(x, dict)]
+        start = text.find("[", start + 1)
+    return []
+
+
 async def research_seeds(
     lang: str,
     today: date,
@@ -255,8 +278,32 @@ async def research_seeds(
         if result.budget_stopped
         else _anthropic_text_and_urls(response.content)[0]
     )
-    items = _parse_fact_array(text)
+    items = _parse_seed_array(text)
+    if not items and not result.budget_stopped and result.cost_cents < max_cents:
+        # One nudge: the reply had prose but no array (sk, 2026-10-14 dry run).
+        try:
+            response = await call(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": list(blocks)},
+                    {"role": "user", "content": JSON_NUDGE},
+                ]
+            )
+        except Exception as exc:  # spend so far still counted
+            logger.exception("seed research %s nudge failed", lang)
+            result.error = f"seed nudge failed: {type(exc).__name__}: {exc}"
+            return result
+        _add_usage(result, response)
+        blocks.extend(response.content)
+        text, urls = (
+            _anthropic_text_and_urls(response.content)[0],
+            _anthropic_text_and_urls(blocks)[1],
+        )
+        items = _parse_seed_array(text)
     result.candidates = len(items)
+    if not items and not result.budget_stopped:
+        result.error = f"seed reply had no JSON array: {text[:200]!r}"
+        return result
     if not items and result.budget_stopped:
         result.error = (
             f"seed budget ${max_cents / 100:.2f} reached before the call replied"

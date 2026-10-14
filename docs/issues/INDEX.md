@@ -162,9 +162,9 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 |---|---|---|
 | 86 | [Pencil sync of approved UI proposals (2026-07)](issue-86-pencil-sync-approved-ui.md) | Done 2026-07-06 — all 8 items (`54c8f44`), founder frame review confirmed; design gate lifted for #80–#85/#68/#58 |
 | 73 | [mba Postgres + Redis dev env](issue-73-mba-postgres-redis-dev-env.md) | Resolved 2026-06-23 (`e3e378a`); gate green ×2 |
+| 71 | [Process: GitHub mirror refresh](issue-71-restore-ralph-and-process-drift.md) | Wontfix 2026-10-14 — Ralph retired for good (founder); mirror script archived in `docs/archive/ralph/` |
 | 69 | [Translation cache → durable store](issue-69-translation-cache-serving-cost.md) | Shipped 2026-07-06 — SQLite on `/data`, 271 tests green |
 | 66 | [Voice submit ghost-question](issue-66-voice-submit-ghost-question.md) | Shipped via #77 77.1 (`5cabfd8`) |
-| 71 | [Process: GitHub mirror refresh](issue-71-restore-ralph-and-process-drift.md) | Wontfix 2026-10-14 — Ralph retired for good (founder); mirror script archived in `docs/archive/ralph/` |
 | 65 | [Security: authenticate prod endpoints](issue-65-security-harden-production-endpoints.md) | Fully closed 2026-07-06 — grace-mode silence fixed (`aa5e43c`), `LEGACY_USER_ID_GRACE=off` flipped in prod + verified, `ENVIRONMENT=production` set |
 | 60 | [Auth Phase 1 — anonymous identity](issue-60-auth-phase1-anonymous-identity.md) | Closed 2026-06-26 — prod-activated, device E2E pass, founder sign-off |
 | 58 | [Authentication — research + design](issue-58-authentication.md) | Closed 2026-07-06 — impl spun off to #60/#61/#62; §9 screens → #61 (done) + #86 |

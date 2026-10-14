@@ -16,6 +16,7 @@ Start from `docs/testing/runs/taste-2026-10-14/run_arm.sh`. Copy it to the new r
 - **Brief:** `--prompt` = `docs/testing/runs/taste-2026-10-14/taste_brief.txt`, built from 507 founder-rated questions. For sk/cs the script appends the home-country paragraph: about 7 in 10 questions about that country or its everyday life.
 - **Batch shape:** 4 questions per theme (`--target-count 4 --per-topic-cap 4`), many narrow themes. Never 15 per broad theme.
 - **Themes:** narrow and everyday rather than curriculum-style. For example "kitchen science", "words we borrowed", "why things are named what they are", "hidden reasons behind everyday habits", "famous things with a twist", "maps and borders puzzles", "animals that break the rules". Avoid Russia, years and dates, award winners and obscure people (the brief says so too).
+- **Pilot arms (task 203.8, themes from the model):** the pilot compares hand-written themes (H) with themes the model brainstorms itself (M: ~150 narrow everyday themes per language, minus topics already in the stock, 2 questions per theme). Blind sample per language = 10 H + 10 M in one round. The full run uses whichever wins.
 - **Languages:** native en, sk and cs runs, each language generated directly. A native sk/cs row is served only to players of that language.
 
 ## Gate before anything goes live

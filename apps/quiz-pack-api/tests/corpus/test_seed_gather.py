@@ -218,3 +218,9 @@ def test_gather_prompt_asks_for_a_broad_digest_by_the_recipe():
         assert "headline | YYYY-MM-DD or unknown | URL" in prompt
         assert "current politics" in prompt and "crime" in prompt
         assert "between August and October 2026" in prompt
+
+
+def test_gather_runs_at_low_effort():
+    """At high effort Haiku spent its whole token budget thinking and wrote no
+    digest (2026-10-14), leaving Opus only bare headlines to pick from."""
+    assert seed_gather.EFFORT == "low"

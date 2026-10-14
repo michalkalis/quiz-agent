@@ -1,0 +1,282 @@
+[
+ {
+  "id": "4e99af74bd",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 7.5
+ },
+ {
+  "id": "8ea75202e4",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": false
+  },
+  "score": 8.5
+ },
+ {
+  "id": "1c8ff01f56",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 9.0
+ },
+ {
+  "id": "6115e9a647",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": false
+  },
+  "score": 7.5
+ },
+ {
+  "id": "c5209b72c9",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": true,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": true
+  },
+  "score": 4.5
+ },
+ {
+  "id": "39fa4f1bf4",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": false
+  },
+  "score": 3.0
+ },
+ {
+  "id": "36dfe8d396",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": true
+  },
+  "score": 5.5
+ },
+ {
+  "id": "1c9a18e2f0",
+  "claims": {
+   "russia_war_politics": true,
+   "answer_is_year": true,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": true,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": true
+  },
+  "score": 3.0
+ },
+ {
+  "id": "abc3ca4a1e",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": false
+  },
+  "score": 2.0
+ },
+ {
+  "id": "89f49da628",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 8.0
+ },
+ {
+  "id": "c8ccc4c9e1",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": true
+  },
+  "score": 3.5
+ },
+ {
+  "id": "00f3314e26",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 7.5
+ },
+ {
+  "id": "9a3580c57a",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 8.5
+ },
+ {
+  "id": "6840df6fc8",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": true
+  },
+  "score": 6.0
+ },
+ {
+  "id": "bf185486d7",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 7.5
+ },
+ {
+  "id": "43c954028d",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": true,
+   "school_fact": true,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": false
+  },
+  "score": 4.0
+ },
+ {
+  "id": "3bcca14d33",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 8.0
+ },
+ {
+  "id": "714da89e9c",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": true,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 8.0
+ },
+ {
+  "id": "14be11cf10",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": false,
+   "tellable": false,
+   "guessable": false
+  },
+  "score": 3.0
+ },
+ {
+  "id": "a7be37f19d",
+  "claims": {
+   "russia_war_politics": false,
+   "answer_is_year": false,
+   "obscure_person": false,
+   "expected_comparison": false,
+   "school_fact": false,
+   "surprising_twist": true,
+   "tellable": true,
+   "guessable": true
+  },
+  "score": 6.5
+ }
+]

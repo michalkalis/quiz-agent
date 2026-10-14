@@ -266,6 +266,65 @@ def test_low_domestic_share_is_a_warning():
     assert fresh_report.summary_level(summary) == "warning"
 
 
+def _open(answer, *, type="text", options=None, lang="en") -> Question:
+    q = _q(lang)
+    q.type, q.correct_answer, q.possible_answers = type, answer, options
+    return q
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Two",  # the en question the third dry run let through
+        "2",
+        "2.5 billion dollars",
+        "1,200",
+        "about 40 %",
+        "twenty one",
+        "dva filmy",
+        "dvadsať",
+        "päť",
+        "miliarda",
+        "dvě",
+        "čtyřicet",
+        "sto",
+        "tisíc",
+    ],
+)
+def test_open_numeric_answers_are_dropped_in_en_sk_cs(answer):
+    """A voice player cannot reach "Two" by reasoning and speech-to-text mangles
+    numbers, so the brief allows numbers only as multiple choice; this is the
+    deterministic backstop for when the generator and gates miss it."""
+    kept, dropped = post_filter([_open(answer)], "en")
+    assert kept == [] and dropped == {"numeric_open": 1}
+
+
+def test_numeric_options_in_multiple_choice_are_kept():
+    q = _open("b", type="text_multichoice", options={"a": "One", "b": "Two", "c": "3"})
+    kept, dropped = post_filter([q], "en")
+    assert kept == [q] and dropped == {}
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Albuquerque",
+        "Star Wars: The Force Awakens",
+        "Penelope",
+        "21 Jump Street",
+        "Two and a Half Men",
+        "Apollo 13",
+        "2026 Emmys",
+        "Woodstock 1969",
+    ],
+)
+def test_names_and_titles_that_contain_numbers_are_kept(answer):
+    """The filter targets quantities, not any answer with a digit or number word:
+    wrongly cutting a title would silently thin the weekly top-up."""
+    kept, dropped = post_filter([_open(answer)], "en")
+    assert len(kept) == 1 and dropped == {}
+
+
 def test_post_filter_drops_rows_without_source_or_in_another_language():
     kept, dropped = post_filter([_q("sk"), _q("sk", source=""), _q("en")], "sk")
     assert len(kept) == 1 and dropped == {"no_source_url": 1, "wrong_language": 1}

@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 from app.corpus import seed_research
-from app.corpus.seed_filters import domestic_share, filter_seeds
+from app.corpus.seed_filters import Seed, domestic_share, filter_seeds, subject_cap
 
 TODAY = date(2026, 10, 14)
 
@@ -161,15 +161,15 @@ async def test_research_resumes_pause_checks_pages_and_counts_cost(monkeypatch):
         "content": ["partial"],
     }
     assert result.searches == 5 and not result.budget_stopped
-    # 2 calls x (100k in @ $4/M + 10k out @ $20/M) = $1.20, + 5 searches x 1 cent.
-    assert result.cost_cents == pytest.approx(120 + 5)
+    # 2 calls x (100k in @ $0.10/M + 10k out @ $0.50/M) = $0.03, + 5 searches x 1 cent.
+    assert result.cost_cents == pytest.approx(3 + 5)
 
 
 @pytest.mark.asyncio
 async def test_resume_stops_once_seed_spend_passes_its_max(monkeypatch):
     """Each resume re-reads the whole context; past the seed max the job must
     stop paying for more and use the seeds already written."""
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "1")  # one segment = $0.61
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.04")  # one segment = $0.025
     url = "https://sk.wikipedia.org/wiki/Early"
     partial = [
         _hits(url),
@@ -191,7 +191,7 @@ async def test_resume_stops_once_seed_spend_passes_its_max(monkeypatch):
         fame_of=lambda _t: None,
         fetch_page=_unreadable,
     )
-    assert len(calls) == 2  # $0.61 < $1 resumes once; $1.22 stops
+    assert len(calls) == 2  # $0.025 < $0.04 resumes once; $0.05 stops
     assert result.budget_stopped and result.error is None
     assert [s.subject for s in result.seeds] == ["Early"]
     assert result.page_check["page_unchecked"] == 1
@@ -199,7 +199,7 @@ async def test_resume_stops_once_seed_spend_passes_its_max(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_budget_stop_without_any_seed_text_is_an_error(monkeypatch):
-    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.5")
+    monkeypatch.setenv("FRESH_TOPUP_SEED_MAX_USD", "0.02")  # one segment = $0.025
 
     async def fake_call(messages):
         return _response("pause_turn", [], searches=1)
@@ -208,7 +208,7 @@ async def test_budget_stop_without_any_seed_text_is_an_error(monkeypatch):
         "sk", TODAY, call=fake_call, ideas=[], fame_of=lambda _t: None
     )
     assert result.seeds == [] and "seed budget" in result.error
-    assert result.cost_cents == pytest.approx(61)
+    assert result.cost_cents == pytest.approx(2.5)
 
 
 @pytest.mark.asyncio
@@ -327,3 +327,126 @@ async def test_reply_without_array_gets_one_nudge_then_a_clear_error():
     )
     assert len(calls) == 2 and not result.seeds
     assert "no JSON array" in result.error and "Here is what I found" in result.error
+
+
+def test_seed_research_runs_on_haiku_with_a_one_dollar_default_stop(monkeypatch):
+    """Founder 2026-10-14 ("Novinky hľadá Haiku"): searching and picking topics
+    is cheap work; Opus made the seeds ~$3.1 per language against ~$0.85 for the
+    whole generation. The default stop must shrink with it ($1.00)."""
+    monkeypatch.delenv("FRESH_TOPUP_SEED_MAX_USD", raising=False)
+    assert seed_research.SEED_MODEL == "claude-haiku-5-5"
+    assert seed_research.seed_max_cents() == 100
+
+
+@pytest.mark.asyncio
+async def test_the_seed_request_goes_to_haiku_with_web_search_only(monkeypatch):
+    """The real request (not just the constant) must name the Haiku model and
+    carry the capped web_search tool, or the pinned role check proves nothing."""
+    sent: dict = {}
+
+    class _Stream:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc):
+            return False
+
+        async def get_final_message(self):
+            return _response("end_turn", [])
+
+    class _Client:
+        class messages:
+            @staticmethod
+            def stream(**kwargs):
+                sent.update(kwargs)
+                return _Stream()
+
+    monkeypatch.setattr(
+        seed_research.llm_factory, "anthropic_client", lambda **_k: _Client()
+    )
+    await seed_research._default_call([{"role": "user", "content": "x"}])
+    assert sent["model"] == "claude-haiku-5-5"
+    assert [t["name"] for t in sent["tools"]] == ["web_search"]
+
+
+def _seed(subject, wiki=None):
+    return Seed(
+        subject=subject,
+        fact="f",
+        angle="a",
+        source_url="https://en.wikipedia.org/wiki/X",
+        wiki_title=wiki,
+    )
+
+
+def test_subject_cap_keeps_two_and_drops_the_third_across_diacritics():
+    """Founder: "Max. 2 na tému" - the sk dry run had 3 of 5 questions about one
+    singer. "Šimon Pleško", "Simon Plesko" and an article titled "Šimon Pleško
+    (spevák)" are one person, so the third spelling must be cut."""
+    dropped: dict[str, int] = {}
+    seeds = [
+        _seed("Šimon Pleško"),
+        _seed("Other act"),
+        _seed("simon plesko"),
+        _seed("Singer", wiki="Šimon Pleško (spevák)"),
+        _seed("Yet another"),
+    ]
+    kept = subject_cap(seeds, dropped)
+    assert [s.subject for s in kept] == [
+        "Šimon Pleško",
+        "Other act",
+        "simon plesko",
+        "Yet another",
+    ]
+    assert dropped == {"same_subject": 1}
+
+
+@pytest.mark.asyncio
+async def test_research_applies_the_subject_cap_before_the_fame_cut():
+    """Run through research_seeds: capped seeds are counted as same_subject and
+    never reach the fame cut (skipped here: no fame data) or the brief."""
+    urls = [f"https://en.wikipedia.org/wiki/P{i}" for i in range(4)]
+    items = [_item("Taylor Swift", u) for u in urls[:3]] + [_item("Other", urls[3])]
+    reply = [
+        _hits(*urls),
+        SimpleNamespace(type="text", text=json.dumps(items), citations=None),
+    ]
+
+    async def fake_call(messages):
+        return _response("end_turn", reply)
+
+    result = await seed_research.research_seeds(
+        "en",
+        TODAY,
+        call=fake_call,
+        ideas=[],
+        fame_of=lambda _t: None,
+        fetch_page=_unreadable,
+    )
+    assert result.dropped["same_subject"] == 1
+    assert sorted(s.subject for s in result.seeds) == [
+        "Other",
+        "Taylor Swift",
+        "Taylor Swift",
+    ]
+
+
+def test_seed_cost_counts_search_blocks_and_long_prompt_price():
+    """The spend cap must not under-count: Haiku 5.5 reported 0 searches for a
+    reply with two search blocks (2026-10-14), and prompts over 100k tokens bill
+    at 5x the table price."""
+    search = SimpleNamespace(type="server_tool_use", name="web_search")
+    usage = SimpleNamespace(
+        input_tokens=200_000,
+        output_tokens=0,
+        server_tool_use=SimpleNamespace(web_search_requests=0),
+    )
+    result = seed_research.SeedResult()
+    seed_research._add_usage(
+        result, SimpleNamespace(content=[search, search], usage=usage)
+    )
+    assert result.searches == 2
+    base = seed_research.llm_usage.cost_cents_for(seed_research.SEED_MODEL, 200_000, 0)
+    assert result.cost_cents == pytest.approx(
+        base * 5 + 2 * seed_research.SEARCH_FEE_CENTS
+    )

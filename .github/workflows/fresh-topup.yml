@@ -42,6 +42,10 @@ on:
         description: "Questions to generate per language"
         default: "15"
         type: string
+      max_usd:
+        description: "Hard spend cap for this run in USD (keep test runs low)"
+        default: "15"
+        type: string
 
 permissions: {}
 
@@ -60,6 +64,7 @@ jobs:
       MACHINE_NAME: fresh-topup-${{ github.run_id }}-${{ github.run_attempt }}
       LANGS: ${{ inputs.languages || 'en,sk,cs' }}
       COUNT: ${{ inputs.count || '15' }}
+      MAX_USD: ${{ inputs.max_usd || '15' }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
       SCHEDULED: ${{ github.event_name == 'schedule' }}
     steps:
@@ -69,6 +74,7 @@ jobs:
         run: |
           [[ "$LANGS" =~ ^(en|sk|cs)(,(en|sk|cs))*$ ]] || { echo "bad languages: $LANGS"; exit 1; }
           [[ "$COUNT" =~ ^[0-9]{1,3}$ ]] || { echo "bad count: $COUNT"; exit 1; }
+          [[ "$MAX_USD" =~ ^[0-9]{1,2}(\.[0-9]{1,2})?$ ]] || { echo "bad max_usd: $MAX_USD"; exit 1; }
 
       # The image and region of the app's current web machine = what is deployed.
       - name: Resolve current image and region
@@ -88,7 +94,7 @@ jobs:
       # (app/corpus/fresh_pins.py) and refuses to start on any difference.
       - name: Start the top-up machine
         run: |
-          args=(--languages "$LANGS" --count "$COUNT")
+          args=(--languages "$LANGS" --count "$COUNT" --max-usd "$MAX_USD")
           [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
           [ "$SCHEDULED" = "true" ] && args+=(--cron-checkin)
           flyctl machine run "$IMAGE" \

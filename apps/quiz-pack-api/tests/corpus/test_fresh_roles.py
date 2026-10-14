@@ -119,3 +119,21 @@ def test_pins_beat_prod_secrets_and_the_workflow_runs_the_pinning_entry_point():
     workflow = WORKFLOW.read_text()
     assert "python -m app.corpus.run_fresh_topup" in workflow
     assert "--env " not in workflow
+
+
+def test_seeds_are_pinned_to_haiku_and_priced(pinned):
+    """Founder 2026-10-14: seeds run on Haiku 5.5. The check must see the model
+    the seed call REALLY uses and a list price for it (no silent $0)."""
+    for lang in ("en", "sk", "cs"):
+        assert check_roles([lang])[lang]["seeds"] == "claude-haiku-5-5"
+    assert fresh_roles.llm_usage.cost_cents_for("claude-haiku-5-5", 1_000_000, 0) > 0
+
+
+def test_a_seed_model_other_than_haiku_fails_the_role_check(pinned):
+    """Someone moving the seed call back to Opus would multiply the seed spend
+    ~40x unnoticed; the pinned map must refuse to start instead."""
+    from app.corpus import seed_research
+
+    pinned.setattr(seed_research, "SEED_MODEL", "claude-opus-5-5")
+    with pytest.raises(RoleMapError, match=r"\.seeds: resolved 'claude-opus-5-5'"):
+        check_roles(["en"])

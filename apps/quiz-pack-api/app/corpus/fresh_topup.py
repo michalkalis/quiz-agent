@@ -19,14 +19,14 @@ language, the order rotated by ISO week so the cap never always hits the same
 language:
 
 1. A language starts only while the remaining budget covers its worst case
-   (env ``FRESH_TOPUP_LANG_WORST_USD``, default $5.50 = seed max + generation
+   (env ``FRESH_TOPUP_LANG_WORST_USD``, default $4.00 = seed max + generation
    worst case).
 2. After its seeds, it generates only while the remaining budget still covers
    the generation worst case (env ``FRESH_TOPUP_GEN_WORST_USD``, default $3);
    otherwise it is skipped with the reason.
 
 The seed call itself stops resuming at ``FRESH_TOPUP_SEED_MAX_USD`` (default
-$2.50, ``seed_research``). Bound: every paid step starts only when the budget
+$1.00, ``seed_research``). Bound: every paid step starts only when the budget
 left covers that step's worst case, so the run total can exceed ``--max-usd``
 only by what one step spends beyond its estimate — one seed segment past the
 seed max, or a generation past ``FRESH_TOPUP_GEN_WORST_USD`` — never by a
@@ -62,7 +62,7 @@ logger = logging.getLogger("fresh_topup")
 
 LANGUAGES = ("en", "sk", "cs")
 DEFAULT_MAX_USD = 15.0
-DEFAULT_LANG_WORST_USD = 5.5  # seed max $2.50 + generation worst case $3
+DEFAULT_LANG_WORST_USD = 4.0  # seed max $1.00 + generation worst case $3
 DEFAULT_GEN_WORST_USD = 3.0
 DEFAULT_COUNT = 15
 

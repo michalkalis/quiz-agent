@@ -102,6 +102,15 @@ extension RecordingCoordinator {
             attributes.merge(rejectedTranscriptAttributes()) { current, _ in current }
             SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
             noSpeechWindowDeferral = nil
+            // #204.9: the same capture in our own events table, for the A/B.
+            trackAnswerCaptured(
+                reason: reason,
+                heardSpeech: heardSpeech,
+                detection: detection,
+                durationMs: capture.durationMs,
+                voiceProcessing: voiceProcessing?.armed ?? false,
+                outputPort: outputPort
+            )
 
             // Under a fifth of a second of audio is dead air or an engine that
             // never delivered — not a transcription job. #171 Track B funnel.

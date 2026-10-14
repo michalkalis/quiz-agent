@@ -28,6 +28,14 @@ private let backendClientEvents: [String: Set<String>] = [
     "quiz_abandoned": ["questions_answered", "phase"],
     "answer_submitted": ["input_mode", "question_id", "is_retry"],
     "voice_capture_failed": ["reason", "question_id"],
+    "answer_captured": [
+        "question_id", "is_retry", "auto_test", "src_neural_vad", "src_aec", "src_front_mic",
+        "neural_vad", "aec", "front_mic", "exp_gen_neural_vad", "exp_gen_aec", "exp_gen_front_mic",
+        "route_group", "output_route", "input_route", "stop_reason", "detector", "heard_speech",
+        "speech_ms", "end_delay_ms", "duration_ms", "voice_processing", "ec_enabled", "aec_applicable",
+        "front_mic_applicable", "mic_data_source", "mic_polar_pattern", "rejected_count",
+    ],
+    "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome"],
@@ -42,6 +50,17 @@ private let everyEvent: [AnalyticsEvent] = [
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
+    .answerCaptured(AnswerCapturedReport(
+        questionId: "q_001", isRetry: false, autoTest: true,
+        flags: Dictionary(uniqueKeysWithValues: VoiceExperimentFlag.allCases.map {
+            ($0, VoiceFlagAssignment(isOn: true, source: .auto, generation: 1))
+        }),
+        routeGroup: .btCar, outputRoute: "CarAudio", inputRoute: "CarAudio", stopReason: .vad,
+        detector: "energy", heardSpeech: true, speechMs: 800, endDelayMs: 600, durationMs: 2000,
+        voiceProcessing: false, ecEnabled: false, aecApplicable: true, frontMicApplicable: false,
+        micDataSource: "none", micPolarPattern: "none", rejectedCount: 0
+    )),
+    .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
     .paywallViewed(source: .quota),
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),

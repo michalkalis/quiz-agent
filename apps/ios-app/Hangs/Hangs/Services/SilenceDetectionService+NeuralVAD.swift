@@ -31,7 +31,7 @@ extension SilenceDetectionService {
     /// The model for a window that starts now, or `nil` (flag off, model
     /// broken). Loaded once; Core ML does the loading off the main thread.
     func neuralVADForWindow() async -> SileroVAD? {
-        neuralVADRequested = VoicePipelineFlags.neuralVADEnabled
+        neuralVADRequested = VoiceExperimentStore.shared.isOn(.neuralVAD)
         guard neuralVADRequested else { return nil }
         if let sileroVAD {
             guard sileroVAD.isFailed else { return sileroVAD }

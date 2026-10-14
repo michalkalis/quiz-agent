@@ -752,6 +752,10 @@ final class QuizViewModel: ObservableObject {
 
     /// Product analytics (#51) — see `QuizViewModel+Analytics`.
     let analytics: AnalyticsClient
+    /// #204.9: the server's voice-settings experiment (AppState reads it from
+    /// `AppConfigStore`), and the store that assigns it per quiz round.
+    let voiceExperimentConfig: @MainActor () -> VoiceExperimentConfig?
+    let voiceExperiment: VoiceExperimentStore
 
     /// #197: sends saved car recordings to the backend; kicked, never awaited.
     let answerRecordingUploader: AnswerRecordingUploading?
@@ -849,10 +853,14 @@ final class QuizViewModel: ObservableObject {
         clock: AnyClock<Duration> = .continuous,
         flightRecorder: QuizFlightRecorder = .shared,
         analytics: AnalyticsClient = NoopAnalyticsClient(),
-        answerRecordingUploader: AnswerRecordingUploading? = nil
+        answerRecordingUploader: AnswerRecordingUploading? = nil,
+        voiceExperimentConfig: @escaping @MainActor () -> VoiceExperimentConfig? = { nil },
+        voiceExperiment: VoiceExperimentStore = .shared
     ) {
         self.networkService = networkService
         self.analytics = analytics
+        self.voiceExperimentConfig = voiceExperimentConfig
+        self.voiceExperiment = voiceExperiment
         self.answerRecordingUploader = answerRecordingUploader
         self.audioService = audioService
         self.persistenceStore = persistenceStore
@@ -889,6 +897,10 @@ final class QuizViewModel: ObservableObject {
                 "routeChange.\(AudioService.routeChangeReasonName(change.reason))",
                 "\(change.previousOutputPort)→\(change.outputPort) vp=\(change.voiceProcessingMode.rawValue)"
             )
+            // #204.9: the AEC guard of the voice-settings experiment.
+            if let event = self?.voiceExperiment.handleRouteChange(change) {
+                self?.trackAnalytics(event)
+            }
             Task { await self?.audioDeviceState.handleAudioRouteChange(change) }
         }
 
@@ -1249,6 +1261,10 @@ final class QuizViewModel: ObservableObject {
             // #173: a new quiz starts audible unless Settings says otherwise —
             // drop any mute the in-quiz button set during a previous run.
             quizMuteOverride = nil
+
+            // #204.9: this round's voice settings, before the session setup
+            // applies the mic-capture switches and before the first mic opens.
+            voiceExperiment.beginRound(config: voiceExperimentConfig(), routeGroup: .current)
 
             // Configure audio session with user's preferred mode
             do {

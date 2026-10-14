@@ -23,6 +23,10 @@ nonisolated struct RejectedTranscripts: Equatable, Sendable {
     /// The question these rejections belong to (`questionId ?? ""`).
     private(set) var questionKey: String?
     private(set) var transcripts: [String] = []
+    /// #204.9: every rejection on this question, including a transcript
+    /// rejected twice and ones past the upload cap. The `answer_captured`
+    /// metric reads a rise in it as "the player threw that capture away".
+    private(set) var rejectionCount = 0
 
     /// Remember a transcript the player rejected on `questionKey`. A different
     /// question starts a fresh list.
@@ -31,6 +35,7 @@ nonisolated struct RejectedTranscripts: Equatable, Sendable {
             self = RejectedTranscripts(questionKey: questionKey)
         }
         guard let cleaned = Self.cleaned(transcript) else { return }
+        rejectionCount += 1
         transcripts.removeAll { Self.same($0, cleaned) }
         transcripts.append(cleaned)
         if transcripts.count > Self.maxCount {
@@ -41,7 +46,14 @@ nonisolated struct RejectedTranscripts: Equatable, Sendable {
     /// Take a rejection back — the player kept that answer after all.
     mutating func remove(_ transcript: String, questionKey: String) {
         guard self.questionKey == questionKey, let cleaned = Self.cleaned(transcript) else { return }
+        let before = transcripts.count
         transcripts.removeAll { Self.same($0, cleaned) }
+        if transcripts.count < before { rejectionCount = max(0, rejectionCount - 1) }
+    }
+
+    /// Rejections on `questionKey` so far; 0 for any other question.
+    func rejectionCount(for questionKey: String) -> Int {
+        self.questionKey == questionKey ? rejectionCount : 0
     }
 
     /// What the next upload for `questionKey` sends; empty for any other question.

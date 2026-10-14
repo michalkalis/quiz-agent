@@ -109,7 +109,13 @@ final class AttemptLedger {
     /// attempt on the same question came first, i.e. this one is a retry.
     func noteAnswerAttempt(questionId: String?) -> Bool {
         defer { lastAnsweredQuestionId = questionId }
-        return questionId != nil && questionId == lastAnsweredQuestionId
+        return isRetryAttempt(questionId: questionId)
+    }
+
+    /// Whether an attempt on `questionId` now would be a retry, without
+    /// recording one (#204.9 `answer_captured` fires before the attempt counts).
+    func isRetryAttempt(questionId: String?) -> Bool {
+        questionId != nil && questionId == lastAnsweredQuestionId
     }
 
     /// Owner check for an ATTEMPT-scoped result (upload, transcript, read-back,

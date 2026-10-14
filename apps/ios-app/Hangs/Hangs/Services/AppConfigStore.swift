@@ -41,6 +41,9 @@ final class AppConfigStore: ObservableObject {
 
     var ordersEnabled: Bool { config.ordersEnabled }
 
+    /// #204.9: the voice-settings experiment, read when a quiz round starts.
+    var voiceExperiment: VoiceExperimentConfig? { config.voiceExperiment }
+
     /// The notice to show on Home, nil once the player dismissed this text.
     /// A new text from the server shows again.
     var notice: String? {

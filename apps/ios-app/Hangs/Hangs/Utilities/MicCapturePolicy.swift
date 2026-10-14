@@ -58,17 +58,30 @@ nonisolated enum MicCapturePolicy {
 
     /// What the mic actually runs with right now — logged with every answer
     /// (`answer recording stopped`) next to the two switches, for the A/B.
+    /// #204.9: the switches as the capture used them (the round's experiment
+    /// value or the manual one) and where each came from.
     @MainActor
-    static func captureAttributes() -> [String: Any] {
+    static func captureAttributes(experiment: VoiceExperimentStore = .shared) -> [String: Any] {
         let session = AVAudioSession.sharedInstance()
-        let source = session.currentRoute.inputs.first?.selectedDataSource
-        return [
-            "ecFlag": VoicePipelineFlags.echoCancelledInputOnExternalRoutes,
+        var attributes: [String: Any] = [
+            "ecFlag": experiment.isOn(.aec),
             "ecAvailable": session.isEchoCancelledInputAvailable,
             "ecEnabled": session.isEchoCancelledInputEnabled,
-            "frontMicFlag": VoicePipelineFlags.frontCardioidMic,
-            "micDataSource": source?.orientation?.rawValue ?? "none",
-            "micPolarPattern": source?.selectedPolarPattern?.rawValue ?? "none",
+            "frontMicFlag": experiment.isOn(.frontMic),
+            "micDataSource": micDataSource(session),
+            "micPolarPattern": micPolarPattern(session),
         ]
+        attributes.merge(experiment.sentryAttributes) { current, _ in current }
+        return attributes
+    }
+
+    @MainActor
+    static func micDataSource(_ session: AVAudioSession = .sharedInstance()) -> String {
+        session.currentRoute.inputs.first?.selectedDataSource?.orientation?.rawValue ?? "none"
+    }
+
+    @MainActor
+    static func micPolarPattern(_ session: AVAudioSession = .sharedInstance()) -> String {
+        session.currentRoute.inputs.first?.selectedDataSource?.selectedPolarPattern?.rawValue ?? "none"
     }
 }

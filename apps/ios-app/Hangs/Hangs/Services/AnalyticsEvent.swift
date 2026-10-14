@@ -20,6 +20,10 @@ enum AnalyticsEvent: Equatable {
     case quizAbandoned(questionsAnswered: Int, phase: String)
     case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool)
     case voiceCaptureFailed(reason: VoiceCaptureFailure, questionId: String?)
+    /// #204.9: one recorded answer and the voice settings it ran with.
+    case answerCaptured(AnswerCapturedReport)
+    /// #204.9: the app turned an experiment arm off on this device.
+    case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
     case voiceCommand(command: VoiceCommand, phase: String)
     case paywallViewed(source: PaywallSource)
     case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome)
@@ -33,6 +37,8 @@ enum AnalyticsEvent: Equatable {
         case .quizAbandoned: "quiz_abandoned"
         case .answerSubmitted: "answer_submitted"
         case .voiceCaptureFailed: "voice_capture_failed"
+        case .answerCaptured: "answer_captured"
+        case .voiceExperimentGuard: "voice_experiment_guard"
         case .voiceCommand: "voice_command"
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
@@ -63,6 +69,16 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .voiceCaptureFailed(reason, questionId):
             [("reason", .string(reason.rawValue)), ("question_id", questionId.map { .string($0) })]
+        case let .answerCaptured(report):
+            report.propertyPairs
+        case let .voiceExperimentGuard(flag, fromRoute, toRoute, expGen):
+            [
+                ("flag", .string(flag.rawValue)),
+                ("reason", .string("output_route_changed")),
+                ("from_route", .string(fromRoute)),
+                ("to_route", .string(toRoute)),
+                ("exp_gen", .int(expGen)),
+            ]
         case let .voiceCommand(command, phase):
             [("command", .string(command.rawValue)), ("phase", .string(phase))]
         case let .paywallViewed(source):

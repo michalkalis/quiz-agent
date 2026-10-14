@@ -19,14 +19,14 @@ language, the order rotated by ISO week so the cap never always hits the same
 language:
 
 1. A language starts only while the remaining budget covers its worst case
-   (env ``FRESH_TOPUP_LANG_WORST_USD``, default $4.00 = seed max + generation
-   worst case).
+   (env ``FRESH_TOPUP_LANG_WORST_USD``, default $5.00 = seed gather max $1 +
+   seed pick worst case $1 + generation worst case $3).
 2. After its seeds, it generates only while the remaining budget still covers
    the generation worst case (env ``FRESH_TOPUP_GEN_WORST_USD``, default $3);
    otherwise it is skipped with the reason.
 
-The seed call itself stops resuming at ``FRESH_TOPUP_SEED_MAX_USD`` (default
-$1.00, ``seed_research``). Bound: every paid step starts only when the budget
+The seed gather stops resuming at ``FRESH_TOPUP_SEED_MAX_USD`` (default
+$1.00, ``seed_gather``); the seed pick has bounded input (``seed_research``). Bound: every paid step starts only when the budget
 left covers that step's worst case, so the run total can exceed ``--max-usd``
 only by what one step spends beyond its estimate — one seed segment past the
 seed max, or a generation past ``FRESH_TOPUP_GEN_WORST_USD`` — never by a
@@ -62,7 +62,7 @@ logger = logging.getLogger("fresh_topup")
 
 LANGUAGES = ("en", "sk", "cs")
 DEFAULT_MAX_USD = 15.0
-DEFAULT_LANG_WORST_USD = 4.0  # seed max $1.00 + generation worst case $3
+DEFAULT_LANG_WORST_USD = 5.0  # seed gather $1 + seed pick $1 + generation $3
 DEFAULT_GEN_WORST_USD = 3.0
 DEFAULT_COUNT = 15
 
@@ -138,6 +138,8 @@ async def run_language(
     entry.update(
         seeds=len(seeds.seeds),
         seed_candidates=seeds.candidates,
+        seed_digest_lines=seeds.digest_lines,
+        seed_harvested=seeds.harvested,
         seed_dropped=seeds.dropped,
         page_check=seeds.page_check,
         domestic_share=seeds.domestic_share,
@@ -147,7 +149,12 @@ async def run_language(
         entry["seed_budget_stopped"] = True
     # Sentry scrubs keys containing "token" (tokens_usd arrived as null in the
     # 2026-10-14 summary), so the generation's model spend is "model_usd".
-    cost = {"seeds_usd": _usd(seeds.cost_cents), "total_usd": _usd(spent)}
+    cost = {
+        "seeds_usd": _usd(seeds.cost_cents),
+        "seed_gather_usd": _usd(seeds.gather_cents),
+        "seed_pick_usd": _usd(seeds.pick_cents),
+        "total_usd": _usd(spent),
+    }
     entry["cost"] = cost
     if seeds.error or not seeds.seeds:
         entry.update(status="failed", reason=seeds.error or "no usable seeds")

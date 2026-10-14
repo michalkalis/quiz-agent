@@ -124,7 +124,8 @@ def _language_line(lang: str, entry: dict[str, Any]) -> str:
         page = entry.get("page_check") or {}
         parts.append(
             f"seeds {entry['seeds']}/{entry.get('seed_candidates', 0)} "
-            f"(page ok {page.get('page_ok', 0)}, mismatch "
+            f"(digest {entry.get('seed_digest_lines', 0)} + harvested "
+            f"{entry.get('seed_harvested', 0)}, page ok {page.get('page_ok', 0)}, mismatch "
             f"{page.get('page_mismatch', 0)}, unchecked {page.get('page_unchecked', 0)})"
         )
     if "generated" in entry:

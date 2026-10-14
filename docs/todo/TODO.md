@@ -144,11 +144,11 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [ ] #64 — Full-project review, findings ledger — [plan](../issues/issue-64-full-project-review.md) · [report](../artifacts/full-project-review-2026-06-21.html) — 126 findings (2 critical / 25 high); actionable subset odštiepený do #65–#71
 - [~] #67 — Bug: audio interruption + barge-in — [plan](../issues/issue-67-audio-interruption-and-barge-in.md) — Part A shipped cez 77.2; Part B barge-in deferred post-MVP; remaining = `[HUMAN]` phone-call recovery check
 - [ ] #77 — Voice commands for hands-free driving — [plan](../issues/issue-77-voice-commands-handsfree.md) · [sessions](../issues/issue-77-execution-prompts.md) — všetkých 7 agent sessions DONE 2026-07-03; remaining = `[HUMAN]` gate 77.15 + `.pen` ⌘S pre 77.12
-- [ ] #71 — Process: GitHub mirror refresh — [plan](../issues/issue-71-restore-ralph-and-process-drift.md) — scope reduced 2026-07-06; ostáva len spustiť `mirror-issues.sh`
+- [x] #71 — Process: GitHub mirror refresh — [plan](../issues/issue-71-restore-ralph-and-process-drift.md) — scope reduced 2026-07-06; ostáva len spustiť `mirror-issues.sh` — zrušené 2026-10-14 (Ralph vyradený, founder)
 - [~] #59 — Quiz-flow bug cluster (8 voice-screen regressions) — [plan](../issues/issue-59-quiz-flow-bug-cluster.md) — všetkých 8 bugov opravených; remaining = `[HUMAN]` 59.1 real-device TTS confirm + sim legy cez `/regression`
 - [~] #61 — Auth Phase 2: Sign in with Apple — [plan](../issues/issue-61-auth-phase2-sign-in-with-apple.md) · [session prompts](../issues/issue-61-execution-prompts.md) — backend LIVE + iOS Session D DONE; remaining = 3 `[HUMAN]` (SK sign-in, privacy label, security review)
 - [ ] #62 — Auth Phase 3: cross-device + full purchase binding — [plan](../issues/issue-62-auth-phase3-cross-device-purchase-binding.md) — StoreKit V2 receipt→`apple_sub`, passkey decision gate; depends #61 + #50, post-MVP
-- [ ] #57 — Autonomous loop hardening (enforced verification backbone) — [plan](../issues/issue-57-loop-verification-backbone.md) — tracks A–E shipped + proven offline; remaining = **Track F** (57.11–57.14 plan-readiness gate)
+- [x] #57 — Autonomous loop hardening (enforced verification backbone) — [plan](../issues/issue-57-loop-verification-backbone.md) — tracks A–E shipped + proven offline; remaining = **Track F** (57.11–57.14 plan-readiness gate) — zrušené 2026-10-14 (Ralph vyradený, founder)
 - [~] #56 — iOS text localization (String Catalog) — [plan](../issues/issue-56-ios-localization.md) — 56.1–56.4 done; next = 56.5 full-suite confirm → 56.6 `[HUMAN]` Xcode catalog populate + plural varianty
 - [~] #55 — Repo file-structure cleanup — [plan](../issues/issue-55-repo-structure-cleanup.md) — A/B/C/E/F/G done; deferred = D (artifacts mass-move) + `design/quiz-agent.pen` relocation (za #52)
 - [~] #63 — Question-quality review: generation audit + corpus verification — [plan](../issues/issue-63-question-quality-review.md) — live run 2026-07-27 = 164 `pending_review` otázok lokálne; remaining = review pass + backfill
@@ -165,7 +165,7 @@ States: `[ ]` todo · `[~]` wip · `[x]` done. Numbers continue the `docs/issues
 - [~] Continue Pencil design review (interactive) — Theme #1 color semantics done (`c9ea7fc`); next: English-only fix + zmazať stale v2 question frames + zvyšné témy
 
 - [~] Complete UI/UX review of iOS app (Phase 1 ~85% done, screenshoty + findings zachytené) — see `docs/handoffs/handoff-2026-07-03-1003.md`
-- [ ] Review + merge mba-only #56 localization work — [detail](TODO-details.md) — 8 commitov na `origin/ralph/overnight-20260613-1034` + verify `ralph/overnight-20260622-2142`
+- [x] Review + merge mba-only #56 localization work — [detail](TODO-details.md) — 8 commitov na `origin/ralph/overnight-20260613-1034` + verify `ralph/overnight-20260622-2142` — zrušené 2026-10-14 (Ralph vyradený, founder)
 - [ ] #67-B barge-in — **founder decision 2026-07-05: MVP ships without barge-in**; revisit post-MVP po reálnom testovaní v aute
 - [ ] Doc refresh — zosúladiť PRD/READMEs/backend rules so shipped realitou (auth existuje); **remove web-ui** z monorepo layoutu + CI (founder decision #11)
 - [ ] Debt fixes (typed question API contract + `/verify-api` · Dockerfile deps z pyproject · CHROMA_PATH deploy check) — **overiť, že each surface sa reálne používa** (founder decision #10)

@@ -1,6 +1,6 @@
 # Issue Index
 
-Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triage:**` line changes. The active queue (what's next) lives in `docs/todo/TODO.md` — this index is the full state.
+Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**` line changes. The active queue (what's next) lives in `docs/todo/TODO.md` — this index is the full state.
 
 ## How to read this
 
@@ -196,7 +196,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 ## Conventions
 
-- New issue: created by `/triage` (free text → file) or by hand. Numbering continues the sequence — find next via `ls issue-*-*.md \| sort -V \| tail -1`.
+- New issue: created by hand. Numbering continues the sequence — find next via `ls issue-*-*.md \| sort -V \| tail -1`.
 - File header must carry `**Triage:** <category> · <state>` and a `**Status:**` line (free-text human commentary).
 - Backfill old files with the `**Triage:**` line opportunistically — when you touch an old issue for any reason, add the line.
-- The index is regenerable. If it drifts, run `/triage "regenerate INDEX.md"`.
+- The index is regenerable from the `**Triage:**` lines of the issue files.

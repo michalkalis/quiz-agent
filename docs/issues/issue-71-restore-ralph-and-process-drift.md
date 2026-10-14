@@ -1,6 +1,6 @@
 # Issue #71 — Process: restore Ralph scheduler, push held auth commits, refresh GitHub mirror
 
-**Triage:** chore · reduced scope — GitHub mirror refresh only
+**Triage:** chore · wontfix — cancelled 2026-10-14 (Ralph retired for good, founder)
 
 **Note (2026-07-06):** gutted to the one surviving task — run `scripts/mirror-issues.sh` to refresh the stale GitHub Issues mirror. Ralph scheduler restore is CONTRADICTED by founder decision 2026-07-05 (no autonomous loops); push audit already resolved 2026-06-22; AI-news routine disabled 2026-06-25.
 

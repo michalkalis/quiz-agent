@@ -35,4 +35,4 @@ Return ≤120 lines: (A) official changes, 1 line each + why it matters for a se
 
 ## Output
 
-Findings go in chat (tight markdown). No report files unless the founder explicitly asks. If an adoption candidate is sizable, file it via `/triage` instead of implementing inline.
+Findings go in chat (tight markdown). No report files unless the founder explicitly asks. If an adoption candidate is sizable, file it as a new issue (`docs/issues/`) instead of implementing inline.

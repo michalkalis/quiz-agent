@@ -1,6 +1,6 @@
 # Issue Index
 
-Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triage:**` line changes. The active queue (what's next) lives in `docs/todo/TODO.md` — this index is the full state.
+Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**` line changes. The active queue (what's next) lives in `docs/todo/TODO.md` — this index is the full state.
 
 ## How to read this
 
@@ -139,7 +139,6 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 | 75 | [Automated issue-prep orchestrator](issue-75-prep-orchestrator.md) | infra · done (retired 2026-09-24) | `[x]` #75 | Retired 2026-09-24: pipeline dropped, skills archived; /design-soundness kept |
 | 74 | [Best OpenRouter models for creative gen](../research/openrouter-creative-question-models-2026-06-26.md) | research · superseded by #134 frontier policy (2026-07-30) | | Feeds #72 Phase 6 Lever-A (`GENERATION_MODEL` swap). Validate live before the paid flip |
 | 72 | [Question fun/engagement redesign](issue-72-question-fun-engagement-redesign.md) | enhancement · **done** (closed via #134, 2026-07-30) | `[x]` #72 | Phases 0–5 done; Phase 6b quality PASSED 2026-06-27. Everything dormant behind toggles. Un-park = founder go (scale + categories) |
-| 71 | [Process: GitHub mirror refresh](issue-71-restore-ralph-and-process-drift.md) | chore · reduced scope | `[ ]` #71 | Ralph-restore struck (founder 2026-07-05: no autonomous loops); push audit + AI-news moot. Survives: run `mirror-issues.sh` |
 | 70 | [Backend: ARQ worker Docker-path crash](issue-70-content-pipeline-residual-bugs.md) | bug · **done 2026-07-07** | `[x]` #70 | Closed on verification: worker crash already fixed by `649b1b9` (#60.P3, cites #70 — `find_in_ancestors`); dedup half superseded by #41 |
 | 68 | [UX: driving defaults + image render](issue-68-driving-ux-defaults-and-earcon.md) | enhancement · **done 2026-07-06** | `[x]` #68 | thinkingTime 10s default, Settings session group, recording-sounds toggle, image-questions opt-in, `ImageQuestionView` de-orphaned. ⚠ image rows in prod pgvector unverified |
 | 67 | [Audio interruption + barge-in](issue-67-audio-interruption-and-barge-in.md) | bug · A done via #77 · B deferred | `[ ]` #67 | Part A shipped (77.2). Part B barge-in deferred by founder. Open: `[HUMAN]` on-device interruption-recovery check |
@@ -163,6 +162,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 |---|---|---|
 | 86 | [Pencil sync of approved UI proposals (2026-07)](issue-86-pencil-sync-approved-ui.md) | Done 2026-07-06 — all 8 items (`54c8f44`), founder frame review confirmed; design gate lifted for #80–#85/#68/#58 |
 | 73 | [mba Postgres + Redis dev env](issue-73-mba-postgres-redis-dev-env.md) | Resolved 2026-06-23 (`e3e378a`); gate green ×2 |
+| 71 | [Process: GitHub mirror refresh](issue-71-restore-ralph-and-process-drift.md) | Wontfix 2026-10-14 — Ralph retired for good (founder); mirror script archived in `docs/archive/ralph/` |
 | 69 | [Translation cache → durable store](issue-69-translation-cache-serving-cost.md) | Shipped 2026-07-06 — SQLite on `/data`, 271 tests green |
 | 66 | [Voice submit ghost-question](issue-66-voice-submit-ghost-question.md) | Shipped via #77 77.1 (`5cabfd8`) |
 | 65 | [Security: authenticate prod endpoints](issue-65-security-harden-production-endpoints.md) | Fully closed 2026-07-06 — grace-mode silence fixed (`aa5e43c`), `LEGACY_USER_ID_GRACE=off` flipped in prod + verified, `ENVIRONMENT=production` set |
@@ -196,7 +196,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 ## Conventions
 
-- New issue: created by `/triage` (free text → file) or by hand. Numbering continues the sequence — find next via `ls issue-*-*.md \| sort -V \| tail -1`.
+- New issue: created by hand. Numbering continues the sequence — find next via `ls issue-*-*.md \| sort -V \| tail -1`.
 - File header must carry `**Triage:** <category> · <state>` and a `**Status:**` line (free-text human commentary).
 - Backfill old files with the `**Triage:**` line opportunistically — when you touch an old issue for any reason, add the line.
-- The index is regenerable. If it drifts, run `/triage "regenerate INDEX.md"`.
+- The index is regenerable from the `**Triage:**` lines of the issue files.

@@ -80,8 +80,8 @@ jobs:
       # No --rm: a removed machine takes its exit code with it, and the
       # workflow must fail when the job fails. The cleanup step destroys it.
       # --vm-memory explicitly: fly.toml's [[vm]] does not apply to machine run.
-      # The --env pins must equal app/corpus/fresh_roles.py ENV_PINS (a test
-      # checks it); they override the app's own LLM_* / VERIFY_MODEL secrets.
+      # No env pins on the command: app secrets win over them. The job pins its own roles
+      # (app/corpus/fresh_pins.py) and refuses to start on any difference.
       - name: Start the top-up machine
         run: |
           args=(--languages "$LANGS" --count "$COUNT")
@@ -90,21 +90,7 @@ jobs:
           flyctl machine run "$IMAGE" \
             --app "$APP" --name "$MACHINE_NAME" --region "$REGION" \
             --restart no --vm-memory 1024 --detach \
-            --env LLM_GATEWAY=direct \
-            --env LLM_ROLE_GEN=claude-opus-5-5 \
-            --env GENERATION_MODEL=claude-opus-5-5 \
-            --env GEN_ALT_SHARE=0 \
-            --env LLM_ROLE_CRITIQUE=claude-opus-5-5 \
-            --env CRITIQUE_MODEL=claude-opus-5-5 \
-            --env LLM_ROLE_FACTCHECK=claude-sonnet-5-5 \
-            --env LLM_ROLE_DEDUP_JUDGE=claude-sonnet-5-5 \
-            --env VERIFY_MODEL=claude-opus-5-5 \
-            --env ANSWERABILITY_CHECK=1 \
-            --env TOPICALITY_CLASSIFICATION=1 \
-            --env EXPIRY_CLASSIFICATION=0 \
-            --env CASUAL_PLAYER_GATE=off \
-            --env JUDGE_GATE=0 \
-            -- python -m app.corpus.fresh_topup "${args[@]}" \
+            -- python -m app.corpus.run_fresh_topup "${args[@]}" \
             || echo "machine run returned non-zero (a job that exits fast does this); the exit code is checked below"
           flyctl machines list --app "$APP" --json \
             | jq -r --arg n "$MACHINE_NAME" '.[] | select(.name == $n) | .id' > machine_id

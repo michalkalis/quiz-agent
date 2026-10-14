@@ -10,7 +10,9 @@ every Wednesday (or, worse, pass on a different map).
 
 from __future__ import annotations
 
-import re
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -84,6 +86,36 @@ def test_claude_without_anthropic_key_fails(pinned):
         check_roles(["en"])
 
 
-def test_workflow_env_pins_equal_the_code_pins():
-    pins = dict(re.findall(r"--env (\w+)=(\S+)", WORKFLOW.read_text()))
-    assert pins == ENV_PINS
+def test_pins_beat_prod_secrets_and_the_workflow_runs_the_pinning_entry_point():
+    """Fly app secrets win over `machine run --env`: the first dry run still
+    resolved prod's openrouter gateway and bedrock roles. The pins must be
+    applied in-process before the factory reads its role ids at import time,
+    and the workflow must start that entry point, not the job module."""
+    probe = (
+        "from app.corpus import fresh_pins; fresh_pins.apply();"
+        "from quiz_shared.llm import factory as f;"
+        "print(f.gateway(), f.CRITIQUE, f.GEN, f.FACTCHECK)"
+    )
+    prod_like = {
+        **os.environ,
+        "LLM_GATEWAY": "openrouter",
+        "LLM_ROLE_CRITIQUE": "bedrock:deepseek.v3.2",
+        "LLM_ROLE_GEN": "bedrock:zai.glm-5",
+        "LLM_ROLE_FACTCHECK": "gpt-5-mini",
+    }
+    out = subprocess.run(
+        [sys.executable, "-c", probe],
+        env=prod_like,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert out == [
+        "direct",
+        ENV_PINS["LLM_ROLE_CRITIQUE"],
+        ENV_PINS["LLM_ROLE_GEN"],
+        ENV_PINS["LLM_ROLE_FACTCHECK"],
+    ]
+    workflow = WORKFLOW.read_text()
+    assert "python -m app.corpus.run_fresh_topup" in workflow
+    assert "--env " not in workflow

@@ -85,3 +85,26 @@ nonisolated enum MicCapturePolicy {
         session.currentRoute.inputs.first?.selectedDataSource?.selectedPolarPattern?.rawValue ?? "none"
     }
 }
+
+/// #204.9: the mic side of one answer capture, read while the engine that
+/// recorded is still up (releasing it may move the route).
+nonisolated struct MicCaptureSnapshot: Sendable, Equatable {
+    let inputRoute: String
+    /// The iPhone's own mic is the only input (where 204.5 applies).
+    let builtInMicOnly: Bool
+    let ecEnabled: Bool
+    let micDataSource: String
+    let micPolarPattern: String
+
+    @MainActor
+    static func current() -> MicCaptureSnapshot {
+        let session = AVAudioSession.sharedInstance()
+        return MicCaptureSnapshot(
+            inputRoute: VoiceProcessingPolicy.currentInputPort(),
+            builtInMicOnly: session.currentRoute.inputs.map(\.portType) == [.builtInMic],
+            ecEnabled: session.isEchoCancelledInputEnabled,
+            micDataSource: MicCapturePolicy.micDataSource(session),
+            micPolarPattern: MicCapturePolicy.micPolarPattern(session)
+        )
+    }
+}

@@ -2127,6 +2127,7 @@ final class QuizViewModel: ObservableObject {
         await audioDeviceState.stopAnyPlayingAudio()
         audioService.deactivateSession()
         persistenceStore.clearSession()
+        voiceExperiment.endRound() // #204.9
 
         do {
             try await networkService.endSession(sessionId: sessionId)
@@ -2481,6 +2482,7 @@ final class QuizViewModel: ObservableObject {
         persistenceStore.saveStats(quizStats)
         transition(to: .finished)
         persistenceStore.clearSession()
+        voiceExperiment.endRound() // #204.9: the next round assigns afresh
         // #189 M4: the result screen's command listener was still live — the
         // mic stayed hot on the results and the recap played over a running
         // engine. Down before the session goes, like `endQuizWithResults`.
@@ -2640,6 +2642,10 @@ final class QuizViewModel: ObservableObject {
 
         // Stop silence detection / barge-in listening
         audioDeviceState.stopSilenceDetectionListening()
+
+        // #204.9: the quiz round is over; the manual switches apply until the
+        // next one (resumeSession starts a new round via startNewQuiz).
+        voiceExperiment.endRound()
 
         // Reset all state
         // Note: audio stop must be awaited by async callers (endQuiz) before resetState().

@@ -9,7 +9,7 @@
 //  (`answer_captured`), the data the voice-settings experiment decides on.
 //
 
-@preconcurrency import AVFoundation
+import Foundation
 
 extension RecordingCoordinator {
     func trackVoiceAnswerSubmitted(questionId: String?) {
@@ -23,9 +23,10 @@ extension RecordingCoordinator {
         trackAnalytics(.voiceCaptureFailed(reason: reason, questionId: questionId))
     }
 
-    /// One batch recording just stopped. Reads the same live state as
-    /// "answer recording stopped"; must run before the attempt is counted
-    /// (submit or capture failure), which would turn `is_retry` on.
+    /// One batch recording just stopped. Takes the route and mic state read
+    /// before the engine was released, like "answer recording stopped"; must
+    /// run before the attempt is counted (submit or capture failure), which
+    /// would turn `is_retry` on.
     func trackAnswerCaptured(
         reason: RecordingStopReason,
         heardSpeech: Bool,
@@ -33,9 +34,9 @@ extension RecordingCoordinator {
         durationMs: Int,
         voiceProcessing: Bool,
         outputPort: String,
+        mic: MicCaptureSnapshot,
         experiment: VoiceExperimentStore = .shared
     ) {
-        let session = AVAudioSession.sharedInstance()
         let questionId = currentQuestion()?.id
         let flags = Dictionary(uniqueKeysWithValues: VoiceExperimentFlag.allCases.map { ($0, experiment.flag($0)) })
         let report = AnswerCapturedReport(
@@ -45,7 +46,7 @@ extension RecordingCoordinator {
             flags: flags,
             routeGroup: experiment.routeGroup,
             outputRoute: outputPort,
-            inputRoute: VoiceProcessingPolicy.currentInputPort(),
+            inputRoute: mic.inputRoute,
             stopReason: reason,
             detector: detection.detector.rawValue,
             heardSpeech: heardSpeech,
@@ -53,11 +54,11 @@ extension RecordingCoordinator {
             endDelayMs: AnswerCapturedReport.endDelayMs(durationMs: durationMs, lastSpeechEndMs: detection.lastSpeechEndMs),
             durationMs: durationMs,
             voiceProcessing: voiceProcessing,
-            ecEnabled: session.isEchoCancelledInputEnabled,
-            aecApplicable: VoiceRouteGroup(outputPortName: outputPort) == .btCar && session.isEchoCancelledInputAvailable,
-            frontMicApplicable: session.currentRoute.inputs.map(\.portType) == [.builtInMic] && !voiceProcessing,
-            micDataSource: MicCapturePolicy.micDataSource(session),
-            micPolarPattern: MicCapturePolicy.micPolarPattern(session),
+            ecEnabled: mic.ecEnabled,
+            aecApplicable: experiment.aecApplicable(outputPort: outputPort),
+            frontMicApplicable: mic.builtInMicOnly && !voiceProcessing,
+            micDataSource: mic.micDataSource,
+            micPolarPattern: mic.micPolarPattern,
             rejectedCount: rejectedTranscriptCount()
         )
         trackAnalytics(.answerCaptured(report))

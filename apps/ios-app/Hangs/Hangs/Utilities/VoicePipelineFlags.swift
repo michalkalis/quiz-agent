@@ -35,6 +35,7 @@ nonisolated enum VoicePipelineFlags {
         static let avoidRejectedTranscriptOnRetry = "voicePipeline.avoidRejectedTranscriptOnRetry"
         static let autoTesting = "voicePipeline.autoTesting"
         static let aecBlockedGeneration = "voicePipeline.experiment.aecBlockedGeneration"
+        static let echoCancelledInputCapable = "voicePipeline.experiment.echoCancelledInputCapable"
     }
 
     /// Apple voice processing (echo cancellation, noise suppression, AGC) on

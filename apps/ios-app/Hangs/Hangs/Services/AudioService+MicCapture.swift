@@ -73,6 +73,11 @@ extension AudioService {
             failure = error.localizedDescription
         }
         appliedSessionConfiguration = desired
+        // #204.9: the one moment the session is in the mode where iOS reports
+        // the device capability (`aec_applicable` on every later capture).
+        if wanted, failure == nil, session.mode == .default {
+            VoiceExperimentStore.shared.noteEchoCancelledInputCapability(session.isEchoCancelledInputAvailable)
+        }
 
         var attributes: [String: Any] = [
             "wanted": wanted,

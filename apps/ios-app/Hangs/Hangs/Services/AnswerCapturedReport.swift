@@ -29,7 +29,8 @@ nonisolated struct AnswerCapturedReport: Equatable, Sendable {
     var durationMs: Int
     var voiceProcessing: Bool
     var ecEnabled: Bool
-    var aecApplicable: Bool
+    /// nil while the device's echo-cancelled input capability is unknown.
+    var aecApplicable: Bool?
     var frontMicApplicable: Bool
     var micDataSource: String
     var micPolarPattern: String
@@ -59,7 +60,7 @@ nonisolated struct AnswerCapturedReport: Equatable, Sendable {
             ("duration_ms", .int(durationMs)),
             ("voice_processing", .bool(voiceProcessing)),
             ("ec_enabled", .bool(ecEnabled)),
-            ("aec_applicable", .bool(aecApplicable)),
+            ("aec_applicable", aecApplicable.map { .bool($0) }),
             ("front_mic_applicable", .bool(frontMicApplicable)),
             ("mic_data_source", .string(micDataSource)),
             ("mic_polar_pattern", .string(micPolarPattern)),

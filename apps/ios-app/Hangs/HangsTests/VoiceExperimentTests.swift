@@ -170,6 +170,56 @@ struct VoiceExperimentAssignmentTests {
         #expect(assignment[.aec] == .manual(false))
     }
 
+    @Test("master switch off: a manual switch flipped mid-round applies at the next read, as before 204.9")
+    func masterOffStaysLive() {
+        let defaults = freshDefaults()
+        defaults.set(false, forKey: VoicePipelineFlags.Key.autoTesting)
+        let store = VoiceExperimentStore(defaults: defaults)
+        store.beginRound(config: config(p: 1), routeGroup: .btCar)
+        #expect(store.assignment == nil, "nothing frozen for the round")
+        #expect(!store.isOn(.neuralVAD))
+        defaults.set(true, forKey: VoicePipelineFlags.Key.neuralVAD)
+        #expect(store.isOn(.neuralVAD))
+    }
+
+    @Test("a switch without a server row stays live too")
+    func manualSourcedFlagIsLive() {
+        let defaults = freshDefaults()
+        let store = VoiceExperimentStore(defaults: defaults)
+        store.beginRound(config: VoiceExperimentConfig(arms: [.aec: [.btCar: arm(p: 1)]]), routeGroup: .btCar)
+        defaults.set(true, forKey: VoicePipelineFlags.Key.frontCardioidMic)
+        #expect(store.isOn(.frontMic))
+        #expect(store.isOn(.aec))
+    }
+
+    @Test("ending the round drops the experiment values")
+    func endRoundRestoresManual() {
+        let store = VoiceExperimentStore(defaults: freshDefaults())
+        store.beginRound(config: config(p: 1), routeGroup: .btCar)
+        #expect(store.isOn(.neuralVAD))
+        store.endRound()
+        #expect(!store.isOn(.neuralVAD))
+        #expect(!store.isRoundActive)
+    }
+
+    @Test("aec_applicable: unknown until iOS reported the capability, then fixed at the round's start for both arms")
+    func aecApplicableIsArmIndependent() {
+        let store = VoiceExperimentStore(defaults: freshDefaults())
+        store.beginRound(config: config(p: 1), routeGroup: .btCar)
+        #expect(store.aecApplicable(outputPort: "BluetoothA2DPOutput") == nil)
+        store.noteEchoCancelledInputCapability(true)
+        #expect(store.aecApplicable(outputPort: "BluetoothA2DPOutput") == nil, "an ON round must not make only its own arm applicable")
+
+        store.beginRound(config: config(p: 0), routeGroup: .btCar)
+        #expect(store.aecApplicable(outputPort: "BluetoothA2DPOutput") == true, "the OFF arm counts once the device is known capable")
+        #expect(store.aecApplicable(outputPort: "CarAudio") == true)
+        #expect(store.aecApplicable(outputPort: "BluetoothHFP") == false, "AEC is never applied on hands-free")
+        #expect(store.aecApplicable(outputPort: "Speaker") == false)
+
+        store.noteEchoCancelledInputCapability(false)
+        #expect(store.echoCancelledInputCapable == true, "a false read outside the right mode never undoes a known capability")
+    }
+
     @Test("the master switch defaults on")
     func masterDefaultsOn() {
         #expect(VoicePipelineFlags.autoTesting(in: freshDefaults()))
@@ -226,6 +276,23 @@ struct VoiceExperimentGuardTests {
 
         let newGen = VoiceExperimentStore(defaults: defaults).beginRound(config: config(p: 1, gen: 4), routeGroup: .btCar)
         #expect(newGen[.aec] == VoiceFlagAssignment(isOn: true, source: .auto, generation: 4))
+    }
+
+    @Test("hands-free to speaker never trips: AEC is not applied on HFP")
+    func hfpDoesNotTrip() {
+        let store = VoiceExperimentStore(defaults: freshDefaults())
+        store.beginRound(config: config(p: 1), routeGroup: .btCar)
+        #expect(store.handleRouteChange(routeChange(.override, from: "BluetoothHFP", to: "Speaker")) == nil)
+        #expect(store.isOn(.aec))
+    }
+
+    @Test("after the quiz ended a route change is not the guard")
+    func noGuardOutsideRound() {
+        let store = VoiceExperimentStore(defaults: freshDefaults())
+        store.beginRound(config: config(p: 1), routeGroup: .btCar)
+        store.endRound()
+        #expect(store.handleRouteChange(routeChange(.override, from: "BluetoothA2DPOutput", to: "Speaker")) == nil)
+        #expect(store.aecBlockedGeneration == nil)
     }
 
     @Test("the car going away is a disconnect, not the guard")
@@ -294,6 +361,9 @@ struct VoiceExperimentEventTests {
         #expect(AnswerCapturedReport.endDelayMs(durationMs: 2400, lastSpeechEndMs: 1760) == 640)
         #expect(AnswerCapturedReport.endDelayMs(durationMs: 2400, lastSpeechEndMs: nil) == nil)
         #expect(AnalyticsEvent.answerCaptured(report(flags: [:], endDelayMs: nil)).properties["end_delay_ms"] == nil)
+        var unknown = report(flags: [:])
+        unknown.aecApplicable = nil
+        #expect(AnalyticsEvent.answerCaptured(unknown).properties["aec_applicable"] == nil, "unknown capability is left out, not sent as false")
     }
 
     @Test("voice_experiment_guard says which arm, why, between which routes and in which generation")
@@ -313,7 +383,7 @@ struct VoiceExperimentEventTests {
         rejected.add("mokrá", questionKey: "q1")
         #expect(rejected.rejectionCount(for: "q1") == 2, "a second rejection of the same words is still a bad capture")
         rejected.remove("mokrá", questionKey: "q1")
-        #expect(rejected.rejectionCount(for: "q1") == 1)
+        #expect(rejected.rejectionCount(for: "q1") == 2, "a take back never lowers it: the evaluator compares cumulative counts")
         #expect(rejected.rejectionCount(for: "q2") == 0)
         rejected.add("modrá", questionKey: "q2")
         #expect(rejected.rejectionCount(for: "q2") == 1, "a new question starts from zero")

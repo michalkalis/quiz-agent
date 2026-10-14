@@ -192,8 +192,9 @@ nonisolated struct VoiceExperimentAssignment: Sendable, Equatable {
 
     /// The AEC guard: the experiment turned AEC on and the sound left the car
     /// for the iPhone's own speaker or receiver while the car was still there.
-    /// `.oldDeviceUnavailable` is the car going away, not AEC's doing. The
-    /// manual switch never trips it.
+    /// Only from a car output AEC is actually applied on (A2DP, LE, CarPlay;
+    /// never hands-free HFP). `.oldDeviceUnavailable` is the car going away,
+    /// not AEC's doing. The manual switch never trips it.
     func aecGuardTrips(
         reason: AVAudioSession.RouteChangeReason,
         previousOutput: String,
@@ -203,7 +204,9 @@ nonisolated struct VoiceExperimentAssignment: Sendable, Equatable {
               reason != .oldDeviceUnavailable
         else { return false }
         let phoneOutputs: Set<AVAudioSession.Port> = [.builtInSpeaker, .builtInReceiver]
-        return VoiceRouteGroup(outputPortName: previousOutput) == .btCar
+        let previous = AVAudioSession.Port(rawValue: previousOutput)
+        return VoiceRouteGroup(output: previous) == .btCar
+            && MicCapturePolicy.echoCancelledInputOutputs.contains(previous)
             && phoneOutputs.contains(AVAudioSession.Port(rawValue: newOutput))
     }
 }

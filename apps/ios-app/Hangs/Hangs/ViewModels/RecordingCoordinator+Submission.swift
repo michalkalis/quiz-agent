@@ -79,6 +79,9 @@ extension RecordingCoordinator {
             let voiceProcessing = silenceDetectionService.voiceProcessingStatus
             let outputPort = VoiceProcessingPolicy.currentOutputPort()
             let conditionUpload = VoicePipelineFlags.conditionAnswerUpload
+            // #204.4 / .5 / .9: the mic side too, before the release.
+            let mic = MicCaptureSnapshot.current()
+            let micAttributes = MicCapturePolicy.captureAttributes()
             releaseAnswerEngineIfOwned()
 
             // #185 track A: why it stopped and what the detectors saw — the
@@ -97,7 +100,7 @@ extension RecordingCoordinator {
                 "upload": conditionUpload ? AnswerAudioConditioning.conditionedLabel : AnswerAudioConditioning.rawLabel,
             ]
             // #204.4 / #204.5: the mic-capture switches and what the mic ran with.
-            attributes.merge(MicCapturePolicy.captureAttributes()) { current, _ in current }
+            attributes.merge(micAttributes) { current, _ in current }
             attributes.merge(detection.sentryAttributes) { current, _ in current }
             attributes.merge(rejectedTranscriptAttributes()) { current, _ in current }
             SentryLog.info("answer recording stopped", category: .audio, attributes: attributes)
@@ -109,7 +112,8 @@ extension RecordingCoordinator {
                 detection: detection,
                 durationMs: capture.durationMs,
                 voiceProcessing: voiceProcessing?.armed ?? false,
-                outputPort: outputPort
+                outputPort: outputPort,
+                mic: mic
             )
 
             // Under a fifth of a second of audio is dead air or an engine that
@@ -133,7 +137,7 @@ extension RecordingCoordinator {
                 sidecar: AnswerRecordingStore.Sidecar(
                     recordedAt: Date(),
                     language: currentSession()?.language ?? settings().language,
-                    inputPort: VoiceProcessingPolicy.currentInputPort(),
+                    inputPort: mic.inputRoute,
                     voiceProcessing: voiceProcessing?.armed ?? false,
                     outputPort: outputPort,
                     voiceProcessingMode: voiceProcessing?.mode.rawValue,

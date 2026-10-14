@@ -68,11 +68,17 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 
 **Hra (founder 2026-10-14):** z výskumu sa mu páči bod 2, porovnanie s ostatnými hráčmi („túto trafilo len 23 %“), „možno najskôr zo všetkých, ale nie teraz“. Ostatné body zatiaľ nie.
 
+### 203.7 Plný korpus 200/jazyk cez predplatné
+
+- **Pilot (2026-10-14):** `general-pilot-2026-10-14/`, predplatné, 5 úzkych tém × 4 → en 18, sk 20, cs 20. Slepé hodnotenie 30 (E/K/C po 8 + 6 kotiev A = nehodnotené T/S z `taste-2026-10-14`): https://claude.ai/artifact/7EgUpVsJSJmvggLLdNbRQx — čaká na foundera.
+- Zistenia: 4-otázkové dávky padali celé pri 3/4 → `--floor-fraction 0`. Duplicity v rámci behu (8 párov v 58, aj naprieč jazykmi) → krok v recepte (zoznam `run_dups.py` + Sonnet nájde páry; embedding medzi jazykmi nestačí).
+- **Plný beh pripravený:** `general-corpus-2026-10-14/run_arm.sh`, 45 tém × 4 = 180/jazyk + 20 z pilotu; pokračuje po limite predplatného. Spustiť až po ⌀ ≥ 7: `GATEWAY=session ./run_arm.sh E en taste_brief.txt` (K sk, C cs).
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou
 - [x] 203.2 slepé overenie founderom: kontrola nepredpovedá jeho hodnotenie, zásoba ~2/10
 - [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
-- [ ] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
+- [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

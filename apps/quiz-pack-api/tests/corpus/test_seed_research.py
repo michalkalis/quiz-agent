@@ -136,6 +136,35 @@ async def test_research_keeps_fetch_only_seed_resumes_pause_and_counts_cost():
 
 
 @pytest.mark.asyncio
+async def test_url_found_before_a_pause_still_cites_its_seed():
+    """A resumed response carries only its new blocks: a source searched in the
+    first segment must still count as cited, or a correctly sourced seed is
+    dropped as uncited. Every resume resends all earlier blocks."""
+    url = "https://sk.wikipedia.org/wiki/Early"
+    early = SimpleNamespace(
+        type="web_search_tool_result", content=[SimpleNamespace(url=url)]
+    )
+    items = [_item("Early", url)]
+    final = [SimpleNamespace(type="text", text=json.dumps(items), citations=None)]
+    calls: list[list[dict]] = []
+    replies = [
+        _response("pause_turn", [early], searches=1),
+        _response("pause_turn", ["more"], searches=1),
+        _response("end_turn", final),
+    ]
+
+    async def fake_call(messages):
+        calls.append(messages)
+        return replies[len(calls) - 1]
+
+    result = await seed_research.research_seeds(
+        "sk", TODAY, call=fake_call, ideas=["- Idea (1 views)"], fame_of=lambda _t: None
+    )
+    assert [s.subject for s in result.seeds] == ["Early"]
+    assert calls[2][1]["content"] == [early, "more"]
+
+
+@pytest.mark.asyncio
 async def test_refusal_gives_no_seeds_but_keeps_the_cost():
     async def fake_call(messages):
         return _response("refusal", [], searches=1)

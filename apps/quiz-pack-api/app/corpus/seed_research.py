@@ -204,15 +204,19 @@ async def research_seeds(
     messages: list[dict] = [{"role": "user", "content": prompt}]
     result = SeedResult()
     response = None
+    # A resumed response carries only its own new blocks, so every segment's
+    # blocks are kept: resent as the assistant prefix and searched for cited URLs.
+    blocks: list = []
     try:
         for _ in range(1 + MAX_PAUSE_RESUMES):
             response = await call(messages)
             _add_usage(result, response)
+            blocks.extend(response.content)
             if response.stop_reason != "pause_turn":
                 break
             messages = [
                 {"role": "user", "content": prompt},
-                {"role": "assistant", "content": response.content},
+                {"role": "assistant", "content": list(blocks)},
             ]
     except Exception as exc:  # API error: no seeds, spend so far still counted
         logger.exception("seed research %s failed", lang)
@@ -222,7 +226,8 @@ async def research_seeds(
         result.error = f"seed call ended {getattr(response, 'stop_reason', None)!r}"
         return result
 
-    text, urls = _anthropic_text_and_urls(response.content)
+    text, _ = _anthropic_text_and_urls(response.content)
+    _, urls = _anthropic_text_and_urls(blocks)
     items = _parse_fact_array(text)
     result.candidates = len(items)
     if fame_of is None:

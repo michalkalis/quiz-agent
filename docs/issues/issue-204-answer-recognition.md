@@ -31,8 +31,23 @@ Prepínače iOS sú v Settings › voice diagnostics (`VoicePipelineFlags`), bac
 | 204.6 | Fonetická úroveň sk/cs/en v hodnotení (i/y, ch/h, znelosť, sh→š, w→v, ph→f, zahodená diakritika) medzi „znie ako“ a LLM sudcom | backend | `ANSWER_PHONETIC_MATCH` = OFF |
 | 204.7 | Pri tvorbe otázky: výslovnostné varianty + podobne znejúce nesprávne odpovede → nápoveda aj pre otvorené otázky | quiz-pack-api + backend | neskôr, po meraní |
 | 204.8 | A/B inej služby (Soniox v5, gpt-transcribe s nápovedou) na replay korpuse | skript | neskôr |
+| 204.9 | Appka testuje nastavenia sama (automatické A/B), víťaza zapne sama a agent to oznámi founderovi | iOS + backend + job | sekcia nižšie |
 
 Nerobiť (rešerš): odšumenie pred STT, audio-LLM so správnou odpoveďou v prompte, Apple STT na odpovede.
+
+## 204.9 — Automatické testovanie nastavení (founder 2026-10-14)
+
+Founder: „appka by si mala sama riadiť nastavenia a testovať ich, bojím sa, že zabudnem, a nastavení je veľa“. Víťaza **zapne sama**, ale founder sa to má dozvedieť **od agenta v session, nie cez Sentry e-mail** („to sa stratí“). Rešerš: Feit & Berman „Test & Roll“ https://arxiv.org/pdf/1811.00457, rozhodovacie pravidlo očakávanej straty https://chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html, carryover pri switchback https://arxiv.org/pdf/2009.00148.
+
+- **Čo sa testuje:** neurónová VAD (204.3), AEC na externej trase (204.4), predný kardioidný mikrofón (204.5). Opakovaný pokus (204.2) ostáva ON, netestuje sa.
+- **Pridelenie:** nezávislá minca pre každý prepínač, **raz na kvízové kolo** (pred prvým zapnutím mikrofónu), počas kola sa nemení. Pravdepodobnosti a stav experimentu (beží / víťaz zapnutý / vypnutý) prídu zo servera v `/api/v1/app-config` (už sa číta pri štarte a návrate do appky), aby sa experiment dal meniť bez TF buildu. Uložené v DB, nie vo Fly secrets, aby ho job mohol meniť bez reštartu.
+- **Ručné prepínače:** v Settings › voice diagnostics hlavný prepínač „Automatické testovanie“ (default ON); keď je vypnutý, platia ručné prepínače ako dnes. Pridelenie nikdy neprepíše ručnú voľbu do UserDefaults (samostatná vrstva).
+- **Záznam:** nová udalosť v `analytics_events` (taxonomy.py + `docs/product/analytics-events.md`) pri každej nahratej odpovedi: pridelené prepínače, `stopReason`, `detector`, `heardSpeech`, časy reči, trasa zvuku, `ecEnabled`, `micDataSource`, počet zamietnutých prepisov, `session_id` + `question_id` (spojenie s `answer_evaluated`). Dnes tieto polia idú len do Sentry, ktoré ich po čase maže.
+- **Metrika:** hlavná = „zlé zachytenie“ (nahrávka do stropu ALEBO bez reči ALEBO hráč prepis zamietol); vedľajšie = oneskorenie konca po reči, podiel správnych verdiktov. AEC a mikrofón sa hodnotia len na odpovediach, kde mali účinok (trasa, `ecEnabled`).
+- **Poistky v appke:** ak po zapnutí AEC odíde zvuk z autorádia (zmena výstupnej trasy), appka AEC na tomto zariadení vypne, zaznamená udalosť a do konca experimentu ho nepridelí. Pád neurónového modelu už padá na energetickú VAD.
+- **Týždenný vyhodnocovač** (GitHub Actions podľa vzoru `fresh-topup.yml` / `prod-monitor.yml`, logy len agregáty, repo je verejné): Beta-Bernoulli na prepínač, oddelene podľa trasy (BT/CarPlay vs. ostatné). Víťaz = P(lepší) ≥ 0,95, očakávaná strata < 1 p. b., ≥ 40 odpovedí na rameno a trasu → job ho zapne natrvalo (pridelenie 100 %). Poistka: rameno s výrazne horším „zlým zachytením“ vypne skôr. Po 6 týždňoch bez rozdielu ostane default OFF.
+- **Oznámenie cez agenta:** job pri každom rozhodnutí (víťaz, vypnuté rameno, koniec bez rozdielu) otvorí GitHub issue so štítkom `voice-experiment` a súhrnom (len agregáty). `.claude/hooks/session-start.sh` ho pri štarte každej session vypíše (rýchle `gh issue list`, s časovým limitom, potichu pri chybe), agent to povie founderovi a issue po oznámení zavrie.
+- **Hotovo** = assignment + udalosť + job + hook v main, backend nasadený, job prešiel na sucho (dry-run) aj s pravou DB, TF build z `main` vydaný (founder 2026-10-14 o build požiadal).
 
 ## Kontrakt 204.2 — zamietnuté prepisy
 

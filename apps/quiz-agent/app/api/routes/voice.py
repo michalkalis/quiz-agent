@@ -113,24 +113,6 @@ def parse_rejected_transcripts(raw: Optional[str]) -> set[str]:
     return {n for n in (normalize_text(i) for i in items) if n}
 
 
-def retry_keyterms(current_question, session) -> list[str]:
-    """Bias terms for re-recognition after a rejected transcript: the options (MCQ)
-    plus the expected answer and its alternatives.
-
-    Safe here only because the first hypothesis was already rejected by the
-    player; first-pass open questions never get the answer (see mcq_keyterms).
-    """
-    answers = current_question.correct_answer
-    answers = [answers] if isinstance(answers, str) else list(answers or [])
-    options = served_options(current_question, session) or {}
-    answers = [options.get(a, a) for a in answers]
-    return (
-        mcq_keyterms(current_question, session)
-        + [str(a) for a in answers if a]
-        + [str(a) for a in (current_question.alternative_answers or []) if a]
-    )
-
-
 # NOTE: a bare ``POST /voice/transcribe`` (transcribe-only, no session) used to
 # live here. It was removed 2026-07-30 (#133 audit V6a): no client ever called it,
 # yet it billed a Whisper transcription per request at 30/min on the same
@@ -275,7 +257,11 @@ async def transcribe_and_submit(
                     first=transcription_result,
                     rejected=rejected,
                     language=session.language,
-                    keyterms=retry_keyterms(current_question, session),
+                    # Same terms as the first pass: MCQ options (unbiased among
+                    # them), nothing for open questions. Never the expected
+                    # answer, or mumble → reject → retry would hand it over.
+                    keyterms=mcq_keyterms(current_question, session),
+                    prompt=VoiceTranscriber.quiz_prompt(current_question.question),
                     min_chars=min_chars,
                 )
                 if extra_calls:

@@ -365,6 +365,15 @@ class VoiceTranscriber:
             duration=duration,
         )
 
+    @staticmethod
+    def quiz_prompt(current_question: Optional[str] = None) -> str:
+        """Context prompt for the recogniser: the question, never its answer."""
+        prompt = "Quiz answer. "
+        if current_question:
+            prompt += f"Question: {current_question}. "
+        prompt += "Expected: short answers, place names, proper nouns, numbers."
+        return prompt
+
     async def transcribe_with_quiz_context(
         self,
         audio_file: BinaryIO,
@@ -399,16 +408,10 @@ class VoiceTranscriber:
             >>> print(result.is_valid())
             True
         """
-        # Build context prompt
-        prompt = "Quiz answer. "
-        if current_question:
-            prompt += f"Question: {current_question}. "
-        prompt += "Expected: short answers, place names, proper nouns, numbers."
-
         return await self.transcribe(
             audio_file=audio_file,
             filename=filename,
-            prompt=prompt,
+            prompt=self.quiz_prompt(current_question),
             language=language,
             keyterms=keyterms,
         )
@@ -421,6 +424,7 @@ class VoiceTranscriber:
         rejected: set[str],
         language: Optional[str],
         keyterms: list[str],
+        prompt: Optional[str] = None,
         min_chars: int = 2,
     ) -> tuple[TranscriptionResult, int]:
         """Re-recognise a clip whose transcript the player already rejected (#204.2).
@@ -428,7 +432,7 @@ class VoiceTranscriber:
         ``rejected`` holds ``normalize_text``-ed transcripts. If ``first`` is not
         among them it is returned untouched (0 extra calls). Otherwise at most
         two other hypotheses are tried — Scribe with a different seed, then the
-        OpenAI fallback — each biased toward ``keyterms``; the first valid one
+        OpenAI fallback — with the same ``keyterms`` as the first pass (never the answer); the first valid one
         that is not a rejected transcript wins, else ``first`` comes back.
         Returns (result, extra_calls). Only counts are logged (#193 privacy).
         """
@@ -461,7 +465,7 @@ class VoiceTranscriber:
                     candidate = await self._transcribe_openai(
                         audio_file=audio_file,
                         filename=filename,
-                        prompt=None,
+                        prompt=prompt,
                         language=language,
                         keyterms=keyterms,
                     )

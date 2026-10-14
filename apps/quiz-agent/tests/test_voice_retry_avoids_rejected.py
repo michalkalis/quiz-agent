@@ -21,7 +21,13 @@ import pytest  # noqa: E402
 
 from app.voice.transcriber import TranscriptionResult, VoiceTranscriber  # noqa: E402
 from tests import test_answer_retry_contract as base  # noqa: E402
-from tests.test_answer_retry_contract import _SID, _Q1, _Harness, _mcq  # noqa: E402
+from tests.test_answer_retry_contract import (  # noqa: E402
+    _SID,
+    _Q1,
+    _Harness,
+    _mcq,
+    _open,
+)
 
 client_for = base.client_for  # the fixture, re-exported for pytest
 
@@ -73,8 +79,28 @@ async def test_rejected_mokra_is_replaced_by_the_second_hypothesis(
     assert _graded_text(h) == "modrá"
     kwargs = h.transcriber._transcribe_scribe.await_args.kwargs
     assert kwargs["seed"] is not None  # a different decoding, not a replay
-    assert "Jupiter" in kwargs["keyterms"]  # MCQ options bias the second try
+    assert "Jupiter" in kwargs["keyterms"]  # same options as the first pass
     h.transcriber._transcribe_openai.assert_not_awaited()
+
+
+async def test_open_question_retry_never_carries_the_expected_answer(
+    client_for, monkeypatch
+):
+    """Otherwise mumble -> reject -> retry would bias the recogniser toward the
+    answer and get it accepted without the player knowing it."""
+    h = _Harness(_open())  # correct answer: "curling"
+    h.transcriber = _transcriber(
+        monkeypatch, first="kurling", scribe=_res("kurling"), openai=_res("kurling")
+    )
+    client = await client_for(h)
+
+    await _submit(h, client, rejected=["kurling"])
+
+    for call in (h.transcriber._transcribe_scribe, h.transcriber._transcribe_openai):
+        kw = call.await_args.kwargs
+        assert not kw["keyterms"]
+        assert "curling" not in json.dumps(kw, default=str).lower()
+    assert "prompt" in h.transcriber._transcribe_openai.await_args.kwargs
 
 
 async def test_falls_through_to_openai_then_keeps_the_original(client_for, monkeypatch):

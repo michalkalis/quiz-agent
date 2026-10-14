@@ -482,8 +482,16 @@ class PgvectorQuestionStore:
                 :n_results
             ]
 
+    async def embed(self, text: str) -> List[float]:
+        """The embedding ``find_duplicates`` compares with (#203 203.9: the
+        pack-api keeps it in memory for its in-pack cosine check)."""
+        return await self._embed(text)
+
     async def find_duplicates(
-        self, question_text: str, threshold: float = 0.85
+        self,
+        question_text: str,
+        threshold: float = 0.85,
+        query_embedding: Optional[List[float]] = None,
     ) -> List[Tuple[Question, float]]:
         """Return stored questions whose cosine similarity to ``question_text``
         is ``>= threshold`` (a port of ``ChromaDBQuestionStore.find_duplicates``).
@@ -493,9 +501,12 @@ class PgvectorQuestionStore:
         ``(Question, score)`` tuples ``DedupStage`` expects. Self-matches are
         **not** filtered here — the text-only signature carries no id — so a
         question already in the store is returned; ``DedupStage`` excludes the
-        self-match by id, keeping a re-run idempotent.
+        self-match by id, keeping a re-run idempotent. A caller that already
+        holds ``embed(question_text)`` passes it as ``query_embedding`` so the
+        text is not embedded twice.
         """
-        query_embedding = await self._embed(question_text)
+        if query_embedding is None:
+            query_embedding = await self._embed(question_text)
         distance = questions_table.c.embedding.cosine_distance(query_embedding)
         async with self._session_factory() as session:
             stmt = (

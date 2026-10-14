@@ -28,6 +28,7 @@ import re
 
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.stages.subthemes import stamp_of
 from app.scoring import craft_guards
 
 logger = logging.getLogger(__name__)
@@ -107,7 +108,10 @@ class CompositionStage:
         topic_dropped = 0
         tf_dropped = 0
         for index, q in ranked:
-            topic = _normalize_topic(q.topic)
+            # #203 203.9: a sub-theme question's spread is already set by its
+            # plan quota (3-4 on one narrow sub-theme, by design); the model's
+            # own topic label would repeat across them and cap the quota at 2.
+            topic = _normalize_topic(q.topic) if stamp_of(q) is None else ""
             if index < locked:
                 if topic:
                     topic_counts[topic] = topic_counts.get(topic, 0) + 1

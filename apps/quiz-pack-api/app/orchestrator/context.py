@@ -60,6 +60,23 @@ class OrderContext:
     # the pack (and possibly being played). Batch-level stages must count them
     # but never drop them — a played question cannot be un-delivered.
     locked_count: int = 0
+    # #203 203.9 (PACK_SUBTHEMES): the order's full size. `target_count` is
+    # retargeted to each round's shortfall by TopUpStage, so the sub-theme
+    # quotas need the original. Defaults to the construction-time target.
+    pack_target: int | None = None
+    # #203 203.9: the sub-theme plan — `[{"name": str, "quota": int}, ...]`,
+    # `[]` once the planner failed (the pack then runs as before), `None`
+    # until it is known. `subtheme_task` is the planner call running
+    # concurrently with round 1.
+    subtheme_plan: list[dict[str, Any]] | None = None
+    subtheme_task: Any = None
+    # #203 203.9 change 4: question id → question embedding, in memory only
+    # (pack rows are persisted without embeddings), for the in-pack cosine.
+    pack_embeddings: dict[str, list[float]] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.pack_target is None:
+            self.pack_target = self.target_count
 
 
 @dataclass

@@ -135,9 +135,17 @@ class _NoopQuestionStore:
     """
 
     async def find_duplicates(
-        self, question_text: str, threshold: float = 0.85
+        self, question_text: str, threshold: float = 0.85, **_: object
     ) -> list[tuple[Question, float]]:
         return []
+
+    async def embed(self, text: str) -> list[float]:
+        """#203 203.9: `--customer-order` with PACK_SUBTHEMES runs the in-pack
+        cosine check, which needs the question embedding even without a
+        corpus (OpenAI embeddings, as the pgvector store uses)."""
+        from quiz_shared.utils.embeddings import generate_embedding_async
+
+        return await generate_embedding_async(text)
 
 
 # ---------------------------------------------------------------------------
@@ -271,6 +279,7 @@ async def _run(args: argparse.Namespace) -> int:
         floor_fraction=args.floor_fraction,
         coverage_allocator=_build_coverage_allocator(args.dedup_store),
         coverage_seed=args.coverage_seed,
+        customer_order=args.customer_order,
     )
 
     def _sink_factory(_order_id: str) -> ProgressSink:
@@ -424,6 +433,16 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "Skip the persist stage (no DB writes). Pipeline still runs; "
             "HTTP calls hit real providers unless respx mocks are installed."
+        ),
+    )
+    parser.add_argument(
+        "--customer-order",
+        action="store_true",
+        help=(
+            "#203 203.9: generate the way the worker builds a paid custom "
+            "pack: customer-order flag (sub-themes + in-pack cosine when "
+            "PACK_SUBTHEMES=1), worker dedup, and the PACK_BATCH_SCHEDULE "
+            "round walk. With --dry-run nothing is written. Off by default."
         ),
     )
     parser.add_argument(

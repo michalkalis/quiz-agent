@@ -11,6 +11,7 @@ F8 (task 2.15) + the e2e assertion in task 2.11 depend on.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import uuid
@@ -43,6 +44,8 @@ from app.generation.pattern_routing import (
 )
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
+from app.orchestrator.stages import subthemes
+from app.sourcing.topic_planner import TopicPlanner
 from app.verification.shape_classifier import ShapeClassifier
 from app.scoring.multi_model_scorer import _ANSWER_TAIL_MARKERS, _ANSWER_WORD_CAP
 from quiz_shared.models.question import GenerationProvenance, Question
@@ -159,6 +162,11 @@ def _merge_explanation(existing: str | None, tail: str) -> str:
     return f"{existing} {tail}".strip()
 
 
+def _player_request(ctx: OrderContext) -> str:
+    """The customer's own words, without the pipeline's MCQ-emphasis footer."""
+    return (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0].strip()
+
+
 def _compute_prompt_seed(
     prompt: str, language: str, category: str | None, theme: str | None
 ) -> str:
@@ -182,8 +190,17 @@ class GenerationStage:
         shape_classifier: ShapeClassifier | None = None,
         coverage_allocator: CoverageAllocator | None = None,
         coverage_seed: int | None = None,
+        customer_order: bool = False,
+        subtheme_planner: subthemes.SubthemeProposer | None = None,
     ) -> None:
         self._generator = generator
+        # #203 203.9 change 2 — only the customer-pack worker passes
+        # `customer_order=True`; with `PACK_SUBTHEMES` on, its rounds after the
+        # first generate on narrow sub-themes (see `stages/subthemes.py`). The
+        # corpus CLI and #202 never pass it, so the flag cannot reach them.
+        # `ctx.pack_id` cannot stand in: it only exists after round 1 persists.
+        self._customer_order = customer_order
+        self._subtheme_planner = subtheme_planner
         # Issue #46 task 46.A2b — optional LLM normalizer for the ambiguous
         # comma-tailed remainder the deterministic splitter can't recover.
         # `None` keeps the 46.A2 fail-safe behaviour (those answers drop).
@@ -234,17 +251,16 @@ class GenerationStage:
         if allocation is not None:
             coverage_kwargs["avoid_questions"] = list(allocation.avoid_questions)
 
-        # Issue #46 task 46.B4c — route the open-shape slice (~4% per audit) of
-        # the order through `question_generation_open.md`; the generator emits
-        # `headline_answer` + tags pure lateral puzzles `pipeline=logical_puzzle`
-        # (46.B4b). Issue #72 P1.5 — bare `round` dropped the slice to zero on a
-        # standard order (round(10 * 0.04) == 0), leaving the branch dead at the
-        # most common size. Floor at 1 once the order is at least a standard pack
-        # (`OPEN_SHAPE_MIN_ORDER`) while keeping `round`'s proportional ~4% slice
-        # at scale; smaller orders still round to zero and stay factual.
-        open_count = round(ctx.target_count * self._open_fraction)
-        if open_count == 0 and ctx.target_count >= OPEN_SHAPE_MIN_ORDER:
-            open_count = 1
+        # #203 203.9 — `None` = today's single call on the whole topic.
+        calls = None
+        if self._customer_order and feature_flags.pack_subthemes():
+            if self._subtheme_planner is None:
+                self._subtheme_planner = TopicPlanner()
+            calls = await subthemes.round_calls(
+                ctx,
+                self._subtheme_planner,
+                _player_request(ctx) or ctx.theme or ctx.category or "",
+            )
 
         # #203 203.9 — read once, so the prompt and the stamp below agree.
         house_style = feature_flags.gen_house_style()
@@ -263,61 +279,141 @@ class GenerationStage:
         # question. The collector is call-local (a ContextVar), so two
         # concurrent orders in one worker cannot mix their counts.
         with inline_options.collect() as inline_counts:
-            questions = await self._generator.generate_questions(
-                count=ctx.target_count,
-                open_count=open_count,
-                # #166 D21b — best-of-N (overgen + critique + pairwise duels) is
-                # flag-gated and OFF by default: on D21b data critique predicted
-                # neither fun nor factuality, duels were ruled out in D21 (#164).
-                # BEST_OF_N=1 restores the full selection pipeline.
-                enable_best_of_n=feature_flags.best_of_n(),
-                # 2026-07-27 live-run F-e: None = mixed batch with per-question
-                # assessment; an explicit order difficulty becomes the prompt's
-                # target level (the model still reports its honest per-question
-                # value, normalized below).
-                difficulty=ctx.difficulty,
-                topics=topics,
-                categories=categories,
-                source_facts=ctx.facts or None,
-                # Issue #42 task 42.9b — the generator passes these into the
-                # `{mcq_patterns_section}` of the prompt so the LLM emits
-                # `possible_answers` + key-letter `correct_answer` for any
-                # MCQ-routed pattern. The downstream 42.9a step (below) then
-                # tags the question type from the LLM's chosen pattern.
-                mcq_patterns=set(PATTERNS_TO_MCQ),
-                # #42 task 42.20 blocker fix (root cause D): the order prompt is
-                # never handed to the generation LLM, so MCQ emphasis travels as
-                # this explicit bool and the generator injects the hard quota
-                # into `{mcq_patterns_section}` itself.
-                mcq_emphasis=ctx.mcq_emphasis,
-                # V18 (2026-07-30) — the gold-bias exemplar sampler keys off
-                # `question_type == "text_multichoice"`
-                # (`app/generation/examples.py:76`) and the example pack is built
-                # ONCE per invocation (`advanced_generator.py:445`), before the MCQ
-                # sub-batch fan-out. Leaving this at the "text" default meant
-                # MCQ-emphasis orders got type-blind exemplars — the MCQ sub-batches
-                # never saw the option-dict payload shape. `ctx.mcq_emphasis` is the
-                # trigger because `mcq_patterns` above is a constant (non-empty on
-                # every order, so it can't discriminate) and emphasis is the same
-                # flag the generator itself gates its MCQ path on
-                # (`advanced_generator.py:482`).
-                question_type="text_multichoice" if ctx.mcq_emphasis else "text",
-                # #192 — the player's request and the order language reach the
-                # generation LLM (root cause D of #42: until now `ctx.prompt`
-                # never did). The CLI's `--mcq-bias` footer is cut off: it is
-                # pipeline steering, carried by `mcq_emphasis` above.
-                # On a top-up round `ctx.questions` still holds the questions
-                # already accepted into the pack (TopUpStage merges after this
-                # stage), so the next round is told not to repeat their facts.
-                order_brief=order_brief_section(
-                    (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0],
-                    ctx.language,
-                    [q.question for q in ctx.questions],
-                    house_style=house_style,
-                ),
-                **coverage_kwargs,
-            )
+            if calls is None or calls == [(None, ctx.target_count)]:
+                questions = await self._generate(
+                    ctx, ctx.target_count, topics, categories, coverage_kwargs,
+                    house_style,
+                )
+            else:
+                questions = await self._generate_subthemes(
+                    ctx, calls, topics, categories, coverage_kwargs, house_style
+                )
 
+        return await self._postprocess(
+            ctx, questions, allocation, inline_counts, house_style
+        )
+
+    async def _generate_subthemes(
+        self,
+        ctx: OrderContext,
+        calls: list[subthemes.Call],
+        topics: list[str] | None,
+        categories: list[str] | None,
+        coverage_kwargs: dict[str, Any],
+        house_style: bool,
+    ) -> list[Question]:
+        """#203 203.9: one generation call per sub-theme (topics = just that
+        sub-theme), a few concurrently. Concurrent calls cannot see each
+        other's questions; the in-pack cosine in DedupStage catches overlap."""
+        gate = asyncio.Semaphore(subthemes.SUBTHEME_CONCURRENCY)
+        plan = ctx.subtheme_plan or []
+
+        async def one(name: str | None, count: int) -> list[Question]:
+            async with gate:
+                batch = await self._generate(
+                    ctx,
+                    count,
+                    [name] if name else topics,
+                    categories,
+                    coverage_kwargs,
+                    house_style,
+                )
+            if name:
+                subthemes.stamp(batch, name, plan)
+            return batch
+
+        batches = await asyncio.gather(*(one(name, n) for name, n in calls))
+        logger.info(
+            "GenerationStage sub-theme round order_id=%s calls=%s",
+            ctx.order_id,
+            calls,
+        )
+        return [q for batch in batches for q in batch]
+
+    async def _generate(
+        self,
+        ctx: OrderContext,
+        count: int,
+        topics: list[str] | None,
+        categories: list[str] | None,
+        coverage_kwargs: dict[str, Any],
+        house_style: bool,
+    ) -> list[Question]:
+        # Issue #46 task 46.B4c — route the open-shape slice (~4% per audit) of
+        # the order through `question_generation_open.md`; the generator emits
+        # `headline_answer` + tags pure lateral puzzles `pipeline=logical_puzzle`
+        # (46.B4b). Issue #72 P1.5 — bare `round` dropped the slice to zero on a
+        # standard order (round(10 * 0.04) == 0), leaving the branch dead at the
+        # most common size. Floor at 1 once the order is at least a standard pack
+        # (`OPEN_SHAPE_MIN_ORDER`) while keeping `round`'s proportional ~4% slice
+        # at scale; smaller orders still round to zero and stay factual.
+        open_count = round(count * self._open_fraction)
+        if open_count == 0 and count >= OPEN_SHAPE_MIN_ORDER:
+            open_count = 1
+
+        return await self._generator.generate_questions(
+            count=count,
+            open_count=open_count,
+            # #166 D21b — best-of-N (overgen + critique + pairwise duels) is
+            # flag-gated and OFF by default: on D21b data critique predicted
+            # neither fun nor factuality, duels were ruled out in D21 (#164).
+            # BEST_OF_N=1 restores the full selection pipeline.
+            enable_best_of_n=feature_flags.best_of_n(),
+            # 2026-07-27 live-run F-e: None = mixed batch with per-question
+            # assessment; an explicit order difficulty becomes the prompt's
+            # target level (the model still reports its honest per-question
+            # value, normalized below).
+            difficulty=ctx.difficulty,
+            topics=topics,
+            categories=categories,
+            source_facts=ctx.facts or None,
+            # Issue #42 task 42.9b — the generator passes these into the
+            # `{mcq_patterns_section}` of the prompt so the LLM emits
+            # `possible_answers` + key-letter `correct_answer` for any
+            # MCQ-routed pattern. The downstream 42.9a step (below) then
+            # tags the question type from the LLM's chosen pattern.
+            mcq_patterns=set(PATTERNS_TO_MCQ),
+            # #42 task 42.20 blocker fix (root cause D): the order prompt is
+            # never handed to the generation LLM, so MCQ emphasis travels as
+            # this explicit bool and the generator injects the hard quota
+            # into `{mcq_patterns_section}` itself.
+            mcq_emphasis=ctx.mcq_emphasis,
+            # V18 (2026-07-30) — the gold-bias exemplar sampler keys off
+            # `question_type == "text_multichoice"`
+            # (`app/generation/examples.py:76`) and the example pack is built
+            # ONCE per invocation (`advanced_generator.py:445`), before the MCQ
+            # sub-batch fan-out. Leaving this at the "text" default meant
+            # MCQ-emphasis orders got type-blind exemplars — the MCQ sub-batches
+            # never saw the option-dict payload shape. `ctx.mcq_emphasis` is the
+            # trigger because `mcq_patterns` above is a constant (non-empty on
+            # every order, so it can't discriminate) and emphasis is the same
+            # flag the generator itself gates its MCQ path on
+            # (`advanced_generator.py:482`).
+            question_type="text_multichoice" if ctx.mcq_emphasis else "text",
+            # #192 — the player's request and the order language reach the
+            # generation LLM (root cause D of #42: until now `ctx.prompt`
+            # never did). The CLI's `--mcq-bias` footer is cut off: it is
+            # pipeline steering, carried by `mcq_emphasis` above.
+            # On a top-up round `ctx.questions` still holds the questions
+            # already accepted into the pack (TopUpStage merges after this
+            # stage), so the next round is told not to repeat their facts.
+            order_brief=order_brief_section(
+                (ctx.prompt or "").split(MCQ_EMPHASIS_MARKER)[0],
+                ctx.language,
+                [q.question for q in ctx.questions],
+                house_style=house_style,
+            ),
+            **coverage_kwargs,
+        )
+
+    async def _postprocess(
+        self,
+        ctx: OrderContext,
+        questions: list[Question],
+        allocation: CoverageAllocation | None,
+        inline_counts: inline_options.Counts,
+        house_style: bool,
+    ) -> StageResult:
         prompt_seed = _compute_prompt_seed(
             ctx.prompt, ctx.language, ctx.category, ctx.theme
         )

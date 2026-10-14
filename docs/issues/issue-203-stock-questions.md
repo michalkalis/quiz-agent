@@ -1,6 +1,6 @@
 # #203 — Otrepané otázky: vyčistiť zásobu a zabrániť novým
 
-**Triage:** enhancement · in-progress
+**Triage:** bug · in-progress
 **Založené:** 2026-10-14 (founder z TF: otázka „Ktorá žena v roku 1955 v Alabame odmietla uvoľniť miesto v autobuse…“ = „hrozná otázka … nezaujímavá“; „nezábavnosť otázok je úplne kritická vec“)
 **Súvisí:** [kalibrácia 07-09](../research/question-quality-founder-calibration-2026-07-09.md) (founder: otrepané otázky rovno vyradiť, bez prepisovania), [prior art 07-10](../research/question-craft-prior-art-2026-07-10.md) (4.6: rozhoduje otázka, nie známosť faktu), #201 — zábava, na ktorú sa dá odpovedať (kontrola „bežný hráč“ nepredpovedala hodnotenie → preto slepé overenie pred nasadením)
 
@@ -34,6 +34,8 @@ Zo schválenej zásoby zmiznú otrepané učebnicové otázky a nové sa do nej 
 30 otázok (15 označených + 15 ponechaných, seed 203, zamiešané): https://claude.ai/artifact/36gGSiEMXVdpZeouTKPDLk. Kľúč je v `blind_key.json`.
 Prah: ≥ 12/15 označených founder vyhodí a ≤ 3/15 ponechaných by vyhodil → ide sa ďalej. Inak sa podľa jeho poznámok upraví prompt a overenie sa zopakuje.
 
+**Výsledok (2026-10-14): kontrola NEPREŠLA, nenasadzuje sa.** Z 15 označených founder vyhodil 4, z 14 ponechaných 7 (jedna bez hodnotenia), čiže kontrola je horšia ako náhoda. Celkovo dal vzorke **~2/10**: „veľmi nudné, veľmi fact-based, veľmi ťažké vedieť odpoveď“. Ako problém vidí úzke, špecifické fakty, ktoré bežný človek nemôže vedieť (Titanicove sesterské lode, etiópsky kalendár, Ibn Battúta, Einsteinova Nobelova cena). Otrepanosť nie je hlavný problém, Rosa Parks je skôr výnimka. Founder sa pýta, či sa niečo nepokazilo, keďže nedávno sa generovali dobré otázky → prešetruje sa zmena generovania medzi dobre hodnotenými dávkami (08/09) a dnešnou zásobou (hromadný beh 2026-10-01). Výsledky: `ratings_raw/`.
+
 ### 203.3 Archív
 
 Označené otázky → `archived` s poznámkou `#203 stock question`. Návrat je jeden UPDATE. Pred zápisom sa skontroluje zásoba po kategóriách proti hranici #199. Rozšíriť `archive_questions.py` o zoznam id.
@@ -45,6 +47,7 @@ Kontrola sa zapojí do `ScoringStage` rovnako ako kontrola „bežný hráč“ 
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou
-- [ ] 203.2 slepé overenie founderom
+- [x] 203.2 slepé overenie founderom: kontrola nepredpovedá jeho hodnotenie, zásoba ~2/10
+- [ ] 203.5 prešetriť pokles kvality generovania (pred 203.3/203.4)
 - [ ] 203.3 archív v prode
 - [ ] 203.4 zapojenie do generovania + zapnutie

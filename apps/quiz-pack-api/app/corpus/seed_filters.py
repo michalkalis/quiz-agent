@@ -1,8 +1,10 @@
 """Deterministic seed filters of the weekly fresh run (#202 task 202.2).
 
 Split out of ``seed_research`` (file-size rule): the ``Seed`` row and the
-uncited / low-credibility / bottom-third-fame cut, all pure so tests pin them
-without a model call. See ``seed_research`` for the why of each filter.
+uncited / low-credibility cut (``cite_filter``) and the bottom-third-fame cut
+(``fame_cut``), all pure so tests pin them without a model call. The keyword
+page check (``seed_page_check``) runs between the two. See ``seed_research``
+for the why of each filter.
 """
 
 from __future__ import annotations
@@ -61,20 +63,11 @@ def _is_low_credibility(url: str) -> bool:
     return tabloid or classify_credibility(url) == "low"
 
 
-def filter_seeds(
-    items: list, trusted_urls: list[str], fame_of: Callable[[str], int | None]
-) -> tuple[list[Seed], dict[str, int], bool]:
-    """Apply the uncited / low-credibility / bottom-third-fame filters.
-
-    ``fame_of(wiki_title)`` returns monthly views or ``None`` when unknown; if
-    no subject has a known value (Wikimedia down) the fame cut is skipped and
-    the third return value is ``False``, so the summary shows it.
-    """
+def cite_filter(
+    items: list, trusted_urls: list[str]
+) -> tuple[list[Seed], dict[str, int]]:
+    """Drop malformed, uncited and low-credibility items; the URL kept is the tool's."""
     dropped: dict[str, int] = {}
-
-    def _drop(reason: str, n: int = 1) -> None:
-        dropped[reason] = dropped.get(reason, 0) + n
-
     kept: list[Seed] = []
     for item in items:
         if (
@@ -82,14 +75,14 @@ def filter_seeds(
             or not item.get("subject")
             or not item.get("fact")
         ):
-            _drop("malformed")
+            _bump(dropped, "malformed")
             continue
         url = _cited_url(item.get("source_url"), trusted_urls)
         if url is None:
-            _drop("uncited")
+            _bump(dropped, "uncited")
             continue
         if _is_low_credibility(url):
-            _drop("low_credibility")
+            _bump(dropped, "low_credibility")
             continue
         kept.append(
             Seed(
@@ -104,20 +97,45 @@ def filter_seeds(
                 event_date=str(item["event_date"]) if item.get("event_date") else None,
             )
         )
+    return kept, dropped
 
+
+def fame_cut(
+    kept: list[Seed], fame_of: Callable[[str], int | None], dropped: dict[str, int]
+) -> tuple[list[Seed], bool]:
+    """Drop the bottom third by fame, then cap at ``MAX_SEEDS``.
+
+    ``fame_of(wiki_title)`` returns monthly views or ``None`` when unknown; if
+    no subject has a known value (Wikimedia down) the fame cut is skipped and
+    the second return value is ``False``, so the summary shows it. ``dropped``
+    is updated in place.
+    """
     for seed in kept:
         seed.views = fame_of(seed.wiki_title) if seed.wiki_title else 0
     fame_checked = any(seed.views for seed in kept)
     if fame_checked:
-        kept.sort(key=lambda s: s.views or 0, reverse=True)
+        kept = sorted(kept, key=lambda s: s.views or 0, reverse=True)
         cut = len(kept) // 3
         if cut:
             kept = kept[:-cut]
-            _drop("low_fame", cut)
+            _bump(dropped, "low_fame", cut)
     if len(kept) > MAX_SEEDS:
-        _drop("over_cap", len(kept) - MAX_SEEDS)
+        _bump(dropped, "over_cap", len(kept) - MAX_SEEDS)
         kept = kept[:MAX_SEEDS]
+    return kept, fame_checked
+
+
+def filter_seeds(
+    items: list, trusted_urls: list[str], fame_of: Callable[[str], int | None]
+) -> tuple[list[Seed], dict[str, int], bool]:
+    """``cite_filter`` then ``fame_cut`` (no page check)."""
+    kept, dropped = cite_filter(items, trusted_urls)
+    kept, fame_checked = fame_cut(kept, fame_of, dropped)
     return kept, dropped, fame_checked
+
+
+def _bump(counts: dict[str, int], reason: str, n: int = 1) -> None:
+    counts[reason] = counts.get(reason, 0) + n
 
 
 def domestic_share(lang: str, seeds: list[Seed]) -> float | None:

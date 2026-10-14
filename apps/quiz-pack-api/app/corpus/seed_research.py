@@ -1,30 +1,40 @@
 """Seed facts for the weekly fresh-entertainment run (#202 task 202.2).
 
-One Claude call per language with the server-side ``web_search`` and
-``web_fetch`` tools does what the #201 recipe's "Seeds" step did by hand
-(``docs/setup/fresh-entertainment-recipe.md``): collect ~36 candidate facts
-people in the player's country talked about, each with a surprising angle and
-a source page. Deterministic filters then cut them to ~25 seeds:
+One Claude call per language (Opus 5.5 still picks the seeds) with the
+server-side ``web_search`` tool only does what the #201 recipe's "Seeds" step
+did by hand (``docs/setup/fresh-entertainment-recipe.md``): collect ~36
+candidate facts people in the player's country talked about, each with a
+surprising angle and a source page. Deterministic filters then cut them to ~25:
 
-1. **uncited** — the stated ``source_url`` is not a page the tools really
-   returned (search hit, fetched page or text citation). Same integrity rule as
+1. **uncited** — the stated ``source_url`` is not a page web search really
+   returned (search hit or text citation). Same integrity rule as
    ``app/sourcing/openai_web_search_source.py``; the shipped URL is the tool's.
 2. **low_credibility** — ``classify_credibility`` says low, or the domain is a
    known tabloid / social site (Reddit is never a source, recipe rule).
-3. **low_fame** — the bottom third by monthly Wikipedia views of the subject
+3. **page_mismatch** — the source page, fetched without a model
+   (``seed_page_check``), does not mention the subject.
+4. **low_fame** — the bottom third by monthly Wikipedia views of the subject
    (``wiki_fame.views``); a famous subject is one a casual player can guess at.
+
+Cost (founder decision 2026-10-14, after a dry run spent $6.17 en / $15.89 sk
+on seeds alone): no ``web_fetch`` (every server-tool iteration re-reads all
+earlier results, so fetched pages multiplied the input tokens), searches capped
+by ``FRESH_TOPUP_SEED_SEARCHES`` (default 8), and no further ``pause_turn``
+resume once the call has cost ``FRESH_TOPUP_SEED_MAX_USD`` (default $2.50) —
+the seeds then come from whatever text the call has produced. A seed call can
+therefore overshoot that max by at most one segment.
 
 Ideas come from the most-read Wikipedia articles (last 7 days + last finished
 month) in the player's language. The result carries its own cost (tokens at
-list price + $10/1k searches; fetch is not metered), which the job adds to the
-pipeline spend — nothing here reports into the ``UsageRecorder``, so nothing is
-counted twice.
+list price + $10/1k searches), which the job adds to the pipeline spend —
+nothing here reports into the ``UsageRecorder``, so nothing is counted twice.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -34,7 +44,8 @@ from quiz_shared.llm import factory as llm_factory
 
 from app import llm_usage
 from app.corpus.fresh_brief import AUDIENCE, freshness_window
-from app.corpus.seed_filters import Seed, domestic_share, filter_seeds
+from app.corpus.seed_filters import Seed, cite_filter, domestic_share, fame_cut
+from app.corpus.seed_page_check import FetchText, check_pages
 from app.sourcing import wiki_fame
 from app.sourcing.openai_web_search_source import (
     _anthropic_text_and_urls,
@@ -44,25 +55,25 @@ from app.sourcing.openai_web_search_source import (
 logger = logging.getLogger(__name__)
 
 SEED_MODEL = "claude-opus-5-5"
-MAX_SEARCHES = 20
-MAX_FETCHES = 15
-MAX_FETCH_CONTENT_TOKENS = 6000
+DEFAULT_MAX_SEARCHES = 8
+DEFAULT_SEED_MAX_USD = 2.5
 MAX_TOKENS = 32000
 EFFORT = "high"
 MAX_PAUSE_RESUMES = 4
 TARGET_CANDIDATES = 36
-SEARCH_FEE_CENTS = 1.0  # $10 per 1,000 web searches; web fetch has no fee
+SEARCH_FEE_CENTS = 1.0  # $10 per 1,000 web searches
 IDEAS_LIMIT = 60
 
-TOOLS = [
-    {"type": "web_search_20260209", "name": "web_search", "max_uses": MAX_SEARCHES},
-    {
-        "type": "web_fetch_20260209",
-        "name": "web_fetch",
-        "max_uses": MAX_FETCHES,
-        "max_content_tokens": MAX_FETCH_CONTENT_TOKENS,
-    },
-]
+
+def seed_tools() -> list[dict]:
+    """Web search only (no web_fetch: pages are checked in ``seed_page_check``)."""
+    searches = int(os.getenv("FRESH_TOPUP_SEED_SEARCHES") or DEFAULT_MAX_SEARCHES)
+    return [{"type": "web_search_20260209", "name": "web_search", "max_uses": searches}]
+
+
+def seed_max_cents() -> float:
+    return float(os.getenv("FRESH_TOPUP_SEED_MAX_USD") or DEFAULT_SEED_MAX_USD) * 100
+
 
 WIKI_LANGUAGE = {"en": "English", "sk": "Slovak", "cs": "Czech"}
 _SCENE = {
@@ -87,7 +98,7 @@ _SCENE = {
 
 _PROMPT = """Today is {today}. Research {count} seed facts for a voice trivia quiz played by {audience}.
 
-A seed is one thing people talked about, one surprising angle a question can ask about, and a trusted source page that you actually opened with web search or web fetch and that states the fact.
+A seed is one thing people talked about, one surprising angle a question can ask about, and a trusted source page that your web search returned and that states the fact.
 
 What to pick:
 - Fame first: pick a subject an ordinary adult who follows film, TV, music and celebrities only loosely has heard of, then find the surprising angle.
@@ -101,7 +112,7 @@ Ideas: the most-read {wiki} Wikipedia articles of the last week and the last mon
 {ideas}
 
 Reply with ONLY a JSON array, no prose and no code fence, one object per seed:
-[{{"subject": "<the famous thing>", "wiki_title": "<exact title of the subject's article on {wiki} Wikipedia, or null>", "scope": "domestic|world", "event_date": "<YYYY-MM-DD, or null if evergreen>", "fact": "<one checkable sentence>", "angle": "<the surprising detail a question would ask about>", "source_url": "<URL of the page you opened that states the fact>"}}]"""
+[{{"subject": "<the famous thing>", "wiki_title": "<exact title of the subject's article on {wiki} Wikipedia, or null>", "scope": "domestic|world", "event_date": "<YYYY-MM-DD, or null if evergreen>", "fact": "<one checkable sentence>", "angle": "<the surprising detail a question would ask about>", "source_url": "<URL of a web search result that states the fact>"}}]"""
 
 
 @dataclass
@@ -111,10 +122,11 @@ class SeedResult:
     dropped: dict[str, int] = field(default_factory=dict)
     domestic_share: float | None = None
     fame_checked: bool = False
+    page_check: dict[str, int] = field(default_factory=dict)
+    budget_stopped: bool = False
     input_tokens: int = 0
     output_tokens: int = 0
     searches: int = 0
-    fetches: int = 0
     cost_cents: float = 0.0
     error: str | None = None
 
@@ -164,7 +176,7 @@ async def _default_call(messages: list[dict]) -> Any:
     async with client.messages.stream(
         model=SEED_MODEL,
         max_tokens=MAX_TOKENS,
-        tools=TOOLS,
+        tools=seed_tools(),
         output_config={"effort": EFFORT},
         messages=messages,
     ) as stream:
@@ -181,7 +193,6 @@ def _add_usage(result: SeedResult, response: Any) -> None:
     result.input_tokens += tokens_in
     result.output_tokens += tokens_out
     result.searches += searches
-    result.fetches += getattr(tools, "web_fetch_requests", 0) or 0
     result.cost_cents += (
         llm_usage.cost_cents_for(SEED_MODEL, tokens_in, tokens_out)
         + searches * SEARCH_FEE_CENTS
@@ -195,6 +206,7 @@ async def research_seeds(
     call: ModelCall | None = None,
     ideas: list[str] | None = None,
     fame_of: Callable[[str], int | None] | None = None,
+    fetch_page: FetchText | None = None,
 ) -> SeedResult:
     """One research call (pause_turn resumed) → filtered seeds + own cost."""
     call = call or _default_call
@@ -207,12 +219,21 @@ async def research_seeds(
     # A resumed response carries only its own new blocks, so every segment's
     # blocks are kept: resent as the assistant prefix and searched for cited URLs.
     blocks: list = []
+    max_cents = seed_max_cents()
     try:
         for _ in range(1 + MAX_PAUSE_RESUMES):
             response = await call(messages)
             _add_usage(result, response)
             blocks.extend(response.content)
             if response.stop_reason != "pause_turn":
+                break
+            if result.cost_cents >= max_cents:
+                result.budget_stopped = True
+                logger.warning(
+                    "seed research %s: $%.2f spent, not resuming",
+                    lang,
+                    result.cost_cents / 100,
+                )
                 break
             messages = [
                 {"role": "user", "content": prompt},
@@ -222,19 +243,32 @@ async def research_seeds(
         logger.exception("seed research %s failed", lang)
         result.error = f"seed call failed: {type(exc).__name__}: {exc}"
         return result
-    if response is None or response.stop_reason not in ("end_turn", "stop_sequence"):
-        result.error = f"seed call ended {getattr(response, 'stop_reason', None)!r}"
+    stop = getattr(response, "stop_reason", None)
+    if not result.budget_stopped and stop not in ("end_turn", "stop_sequence"):
+        result.error = f"seed call ended {stop!r}"
         return result
 
-    text, _ = _anthropic_text_and_urls(response.content)
-    _, urls = _anthropic_text_and_urls(blocks)
+    # Budget stop: the reply is unfinished, so use any text of every segment.
+    all_text, urls = _anthropic_text_and_urls(blocks)
+    text = (
+        all_text
+        if result.budget_stopped
+        else _anthropic_text_and_urls(response.content)[0]
+    )
     items = _parse_fact_array(text)
     result.candidates = len(items)
+    if not items and result.budget_stopped:
+        result.error = (
+            f"seed budget ${max_cents / 100:.2f} reached before the call replied"
+        )
+        return result
+    seeds, dropped = cite_filter(items, urls)
+    seeds, result.page_check = await check_pages(seeds, fetch_page)
+    if result.page_check["page_mismatch"]:
+        dropped["page_mismatch"] = result.page_check["page_mismatch"]
     if fame_of is None:
         fame_of = _wiki_fame_lookup(lang, today)
-    seeds, dropped, fame_checked = await asyncio.to_thread(
-        filter_seeds, items, urls, fame_of
-    )
+    seeds, fame_checked = await asyncio.to_thread(fame_cut, seeds, fame_of, dropped)
     result.seeds, result.dropped, result.fame_checked = seeds, dropped, fame_checked
     result.domestic_share = domestic_share(lang, seeds)
     return result

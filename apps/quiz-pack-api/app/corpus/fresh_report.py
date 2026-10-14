@@ -8,6 +8,9 @@
 - One summary message per run, fingerprinted per ISO week, ``warning`` when
   anything needs a look (pending rows, a skipped or failed language, the cap,
   a low domestic share), else ``info``.
+- ``compact_summary``: a few human lines (per language, then per question)
+  between ``SUMMARY_START`` / ``SUMMARY_END``, printed after the JSON so the
+  workflow can cut it out of the machine log into the GitHub step summary.
 """
 
 from __future__ import annotations
@@ -30,6 +33,8 @@ MONITOR_CONFIG = {
 }
 # sk/cs: below this domestic share the week's seeds missed the recipe (~7/10).
 MIN_DOMESTIC_SHARE = 0.6
+SUMMARY_START = "=== FRESH-TOPUP SUMMARY ==="
+SUMMARY_END = "=== END FRESH-TOPUP SUMMARY ==="
 
 
 def iso_week(today: date) -> str:
@@ -105,3 +110,57 @@ def send_summary(summary: dict[str, Any]) -> None:
         scope.set_tag("job", "fresh-topup")
         scope.set_context("fresh_topup", context)
         sentry_sdk.capture_message(_title(summary), level=summary_level(summary))
+
+
+def _cell(value: Any) -> str:
+    return " ".join(str(value if value is not None else "-").split()).replace("|", "/")
+
+
+def _language_line(lang: str, entry: dict[str, Any]) -> str:
+    parts = [lang, entry.get("status", "?")]
+    if entry.get("reason"):
+        parts.append(_cell(entry["reason"]))
+    if "seeds" in entry:
+        page = entry.get("page_check") or {}
+        parts.append(
+            f"seeds {entry['seeds']}/{entry.get('seed_candidates', 0)} "
+            f"(page ok {page.get('page_ok', 0)}, mismatch "
+            f"{page.get('page_mismatch', 0)}, unchecked {page.get('page_unchecked', 0)})"
+        )
+    if "generated" in entry:
+        dropped = sum((entry.get("dropped") or {}).values())
+        parts.append(
+            f"generated {entry['generated']}: approved {entry.get('approved', 0)}, "
+            f"pending {entry.get('pending', 0)}, dropped {dropped}"
+        )
+    cost = (entry.get("cost") or {}).get("total_usd")
+    if cost is not None:
+        parts.append(f"${cost:.2f}")
+    return " | ".join(parts)
+
+
+def compact_summary(summary: dict[str, Any]) -> str:
+    """Human lines between the markers: per language, then one per question."""
+    langs = summary.get("languages", {})
+    cap = f"cap ${summary.get('max_usd', 0):.2f}"
+    if summary.get("cap_hit"):
+        cap += ", HIT"
+    lines = [SUMMARY_START, f"{_title(summary)} ({cap})"]
+    lines += [_language_line(lang, entry) for lang, entry in langs.items()]
+    lines.append("lang | status | question | answer | boost_until")
+    for lang, entry in langs.items():
+        for q in entry.get("questions") or []:
+            lines.append(
+                " | ".join(
+                    _cell(v)
+                    for v in (
+                        lang,
+                        q.get("review_status"),
+                        q.get("question"),
+                        q.get("correct_answer"),
+                        q.get("boost_until"),
+                    )
+                )
+            )
+    lines.append(SUMMARY_END)
+    return "\n".join(lines)

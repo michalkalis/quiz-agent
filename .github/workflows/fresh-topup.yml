@@ -16,9 +16,13 @@
 # FRESH_TOPUP_ENABLED is 'true' (founder approval, task 202.6). A manual run
 # (workflow_dispatch) always works and defaults to a dry run.
 #
-# The job prints its JSON summary (generated quiz questions, counts, cost) to
-# the machine log. Logs are public: print states and corpus content only, never
-# customer data or secrets.
+# The job prints its JSON summary (generated quiz questions, counts, cost) and
+# a compact human block between "=== FRESH-TOPUP SUMMARY ===" markers to the
+# machine log. `flyctl logs --no-tail` only returns the last ~100 lines, so the
+# log is streamed to machine.log from the start, uploaded as an artifact
+# (14 days) and the compact block goes to the run's step summary. Logs and
+# artifacts are public: print states and corpus content only, never customer
+# data or secrets.
 name: fresh-topup
 
 on:
@@ -96,6 +100,9 @@ jobs:
             | jq -r --arg n "$MACHINE_NAME" '.[] | select(.name == $n) | .id' > machine_id
           [ -s machine_id ] || { echo "machine did not start"; exit 1; }
           echo "MACHINE_ID=$(cat machine_id)" >> "$GITHUB_ENV"
+          # Background processes outlive the step; stopped after the wait.
+          nohup flyctl logs --app "$APP" --machine "$(cat machine_id)" > machine.log 2>&1 &
+          echo $! > logs.pid
 
       - name: Wait for the run to finish (max 2 h)
         run: |
@@ -118,7 +125,44 @@ jobs:
 
       - name: Machine log
         if: always() && env.MACHINE_ID != ''
-        run: flyctl logs --app "$APP" --machine "$MACHINE_ID" --no-tail || true
+        run: |
+          sleep 15  # let the stream catch the last lines
+          [ -f logs.pid ] && kill "$(cat logs.pid)" 2>/dev/null || true
+          flyctl logs --app "$APP" --machine "$MACHINE_ID" --no-tail > tail.log 2>&1 || true
+          cat tail.log
+
+      - name: Run summary
+        if: always() && env.MACHINE_ID != ''
+        run: |
+          # Strip flyctl's "<time> app[<id>] <region> [info]" prefix, keep the block.
+          extract() {
+            sed -E 's/^[^ ]+ [^ ]+ [^ ]+ \[[a-z]+\]//' "$1" \
+              | sed -n '/=== FRESH-TOPUP SUMMARY ===/,/=== END FRESH-TOPUP SUMMARY ===/p'
+          }
+          block=$(extract machine.log 2>/dev/null)
+          [ -n "$block" ] || block=$(extract tail.log 2>/dev/null)
+          {
+            echo "## fresh-topup"
+            echo
+            if [ -n "$block" ]; then
+              echo '```'
+              echo "$block"
+              echo '```'
+            else
+              echo "No summary block in the machine log (see the machine-log artifact)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the machine log
+        if: always() && env.MACHINE_ID != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-topup-machine-log
+          path: |
+            machine.log
+            tail.log
+          retention-days: 14
+          if-no-files-found: warn
 
       - name: Destroy the machine
         if: always() && env.MACHINE_ID != ''

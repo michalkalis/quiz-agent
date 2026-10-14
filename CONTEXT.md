@@ -2,7 +2,7 @@
 
 The shared domain language used in this codebase, in PRDs, in issue files, and in conversations with Claude. Use these terms exactly. Don't drift into synonyms — when a synonym sneaks into a PR or doc, rename it back to the canonical term.
 
-This file is consulted by `/improve-codebase-architecture` and `/triage` — keep it accurate or those skills drift with it.
+This file is consulted by `/improve-codebase-architecture` — keep it accurate or that skill drifts with it.
 
 ## Product
 
@@ -37,7 +37,7 @@ The interest-based filter axis the app's picker exposes (2026-08 revamp, PR #39)
 The five `QuestionType` values: `text`, `text_multichoice`, `audio`, `image`, `video`. Full taxonomy — data shapes, pattern→type routing, evaluation, and per-surface implementation status — in `docs/reference/question-types.md`. Use those exact identifiers; don't invent type names.
 
 **Participant**
-A player in a quiz session. MVP is single-participant. Multiplayer is post-MVP (see `.out-of-scope/multiplayer-mvp.md` if rejected as enhancement).
+A player in a quiz session. MVP is single-participant. Multiplayer is post-MVP.
 
 **QuizState**
 The iOS state machine driving QuestionView. Transitions are gated by `validTransitions`. The probe `accessibilityIdentifier == "question.state"` exposes current state for UI tests.
@@ -133,7 +133,7 @@ Lite RS-01 variant at `scripts/pre-push-rs01-smoke.sh`. Opt-in git hook installe
 Product requirement doc in `docs/product/prds/<slug>.md`. Written from the conversation or an interview with the founder.
 
 **Indices**
-`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by `/triage`.
+`docs/issues/INDEX.md` and `docs/product/INDEX.md` are dashboards. Updated by hand whenever an issue's `**Triage:**` line or a PRD status changes.
 
 **ADR**
 Architecture decision record in `docs/adr/NNNN-<slug>.md`. Created lazily by `/improve-codebase-architecture` when an architectural decision needs to be recorded so it isn't re-litigated.
@@ -154,5 +154,5 @@ For any architecture conversation, use the deepening vocabulary in `.claude/skil
 ## Flagged ambiguities
 
 - "CarQuiz" is still the legal identity in Sentry slug + StoreKit IDs; "Hangs" is still the legal identity in the bundle ID, URL scheme, logger subsystem, and Fly app names. Renaming any of those would break alert routing, in-flight purchases, or TestFlight/CI continuity. Resolution: those identifiers stay; everything user-facing is Trubbo.
-- "Issue tracker" in mattpocock-skills documentation refers to GitHub Issues. **This repo has no GitHub Issues.** State lives in `docs/issues/issue-NN-*.md` files (`**Triage:**` line) and `docs/todo/TODO.md`. The `/triage` skill is adapted for that.
+- "Issue tracker" in mattpocock-skills documentation refers to GitHub Issues. **This repo has no GitHub Issues.** State lives in `docs/issues/issue-NN-*.md` files (`**Triage:**` line) and `docs/todo/TODO.md`. The `/triage` skill was archived 2026-10-14 (built for the retired Ralph loop); agents keep the `**Triage:**` line and INDEX current by hand.
 - "AppState" vs "QuizState" — `AppState` is the iOS app-level singleton; `QuizState` is the per-question UI state machine. Don't conflate.

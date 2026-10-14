@@ -1141,6 +1141,22 @@
         }
       }
     },
+    "An on-device speech model decides when you finished answering, instead of the sound level" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O konci odpovědi rozhoduje model řeči přímo v telefonu, ne hlasitost zvuku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O konci odpovede rozhoduje model reči priamo v telefóne, nie hlasitosť zvuku"
+          }
+        }
+      }
+    },
     "Annual" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5036,6 +5052,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Na kontrolu"
+          }
+        }
+      }
+    },
+    "Neural speech detection" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuronové rozpoznání řeči"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neurónové rozpoznanie reči"
           }
         }
       }

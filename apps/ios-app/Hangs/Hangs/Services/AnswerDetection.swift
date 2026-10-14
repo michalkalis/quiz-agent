@@ -67,7 +67,13 @@ nonisolated enum RecordingStopReason: String, Sendable, Equatable {
 /// on "answer recording stopped" so the next car test proves which detector
 /// heard speech, whether audio reached them at all, and how loud it was.
 nonisolated struct AnswerDetectionReport: Sendable, Equatable {
+    /// #204: which detector decided the recording (A/B of the neural one).
+    var detector: AnswerSpeechDetector = .energy
     var energyHeardSpeech = false
+    /// `nil` when the neural detector did not run on this window.
+    var neuralHeardSpeech: Bool?
+    /// Highest Silero probability in the recording; `nil` when none scored.
+    var neuralPeakProbability: Float?
     var speechDetectorHeardSpeech = false
     /// Results Apple's `SpeechDetector` delivered (any kind) — expected 0 or
     /// errors only; `nil` when the detector is not paired at all.
@@ -104,6 +110,7 @@ nonisolated struct AnswerDetectionReport: Sendable, Equatable {
     /// Flat Sentry attributes (dB rounded to 0.1 so the values stay readable).
     var sentryAttributes: [String: Any] {
         var attributes: [String: Any] = [
+            "detector": detector.rawValue,
             "speechHeardBy": speechHeardBy,
             "speechDetectorResults": speechDetectorResults.map { "\($0)" } ?? "unpaired",
             "levelBuffers": levelBuffers,
@@ -115,6 +122,10 @@ nonisolated struct AnswerDetectionReport: Sendable, Equatable {
         if let lastSpeechEndMs { attributes["lastSpeechEndMs"] = lastSpeechEndMs }
         if let noiseFloorDb { attributes["noiseFloorDb"] = Self.rounded(noiseFloorDb) }
         if let peakDb { attributes["peakDb"] = Self.rounded(peakDb) }
+        if let neuralHeardSpeech { attributes["neuralHeardSpeech"] = neuralHeardSpeech }
+        if let neuralPeakProbability {
+            attributes["neuralPeakProbability"] = (Double(neuralPeakProbability) * 100).rounded() / 100
+        }
         return attributes
     }
 

@@ -31,6 +31,7 @@ nonisolated enum VoicePipelineFlags {
         static let saveAnswerRecordings = "voicePipeline.saveAnswerRecordings"
         static let echoCancelledInputOnExternalRoutes = "voicePipeline.echoCancelledInputOnExternalRoutes"
         static let frontCardioidMic = "voicePipeline.frontCardioidMic"
+        static let neuralVAD = "voicePipeline.neuralVADEnabled"
     }
 
     /// Apple voice processing (echo cancellation, noise suppression, AGC) on
@@ -99,6 +100,15 @@ nonisolated enum VoicePipelineFlags {
     static var frontCardioidMic: Bool {
         get { bool(Key.frontCardioidMic, default: false) }
         set { UserDefaults.standard.set(newValue, forKey: Key.frontCardioidMic) }
+    }
+
+    /// #204 track 204.3: the Silero model (`SileroVAD`) instead of the level
+    /// detector decides when the answer is over. Off until the car replay
+    /// shows fewer recordings running to the cap; read when the mic engine
+    /// starts, so a change applies from the next listening window.
+    static var neuralVADEnabled: Bool {
+        get { bool(Key.neuralVAD, default: false) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.neuralVAD) }
     }
 
     static func saveAnswerRecordings(channelAllows: Bool) -> Bool {

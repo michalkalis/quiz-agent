@@ -65,6 +65,11 @@ prepare() {  # env + tunnels, shared by start and supervise
   export WORKER_MAX_JOBS="${WORKER_MAX_JOBS:-1}"
   export WORKER_JOB_TIMEOUT_S="${WORKER_JOB_TIMEOUT_S:-14400}"
   export ENVIRONMENT=production
+  # #203 203.9 (founder blind test 2026-10-14, new 8.9 vs old 8.3): the custom-pack recipe,
+  # same values as the quiz-pack-api Fly secrets. Override with the env var to roll back.
+  export GEN_HOUSE_STYLE="${GEN_HOUSE_STYLE:-1}"
+  export PACK_SUBTHEMES="${PACK_SUBTHEMES:-1}"
+  export GENERATION_MODEL="${GENERATION_MODEL:-claude-opus-5-5}"
   unset JUDGE_GATE JUDGE_MODELS ANTHROPIC_API_KEY CLAUDECODE CLAUDE_CODE_ENTRYPOINT
 }
 

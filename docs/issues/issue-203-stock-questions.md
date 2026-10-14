@@ -63,6 +63,11 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 - Slepé hodnotenie 30 otázok: T = vkus en, S = vkus + domáce sk, N = recept natívnych sk z 10-08, X = 6 nehodnotených `direct_v1` en ako kotva. https://claude.ai/artifact/QMM2TsFpBN3wEBqQJf2LGv
 - Výskum hry: `docs/research/quiz-game-fun-2026-10-14.md`. Top 5: stávka v každom kole, odhalenie odpovede ako moment („trafilo len 23 %“), hra pre viacerých v aute, moderátor s osobnosťou, rôzne formáty v kole.
 
+**Výsledok (2026-10-14, 30 otázok):** T (vkus en) ⌀ 8,4 · S (vkus + domáce sk) ⌀ 8,1 · N (recept sk z 10-08) ⌀ 7,5 · X (dnešný `direct_v1` en, kotva) ⌀ 8,3. Žiadna otázka ≤ 5. Kotva X dostala minule 7,3 a teraz 8,3, takže founderova stupnica sa medzi kolami posúva. **Vkus v en nad dnešný recept nepreukázaný (T ≈ X); v sk zadanie podľa vkusu porazilo recept z 10-08 (8,1 vs 7,5): menej rokov a „školských“ otázok.**
+**Hlavné zistenie dňa:** čerstvo generované otázky (Opus 5.5) dostávajú 7,3 až 8,4 pri akomkoľvek zadaní, kým vzorka zo zásoby (25/30 z behu 2026-10-01, Fable 5 cez predplatné, 15 otázok na jednu širokú tému) dostala ~2/10. Problém je teda hromadný beh 10-01, nie súčasné generovanie. Cena: ~9 centov za otázku (malé dávky, väčšinu tvorí overovanie).
+
+**Hra (founder 2026-10-14):** z výskumu sa mu páči bod 2, porovnanie s ostatnými hráčmi („túto trafilo len 23 %“), „možno najskôr zo všetkých, ale nie teraz“. Ostatné body zatiaľ nie.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou

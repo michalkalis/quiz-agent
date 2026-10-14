@@ -49,7 +49,10 @@ GATHER_MODEL = "claude-haiku-5-5"
 DEFAULT_MAX_SEARCHES = 8
 DEFAULT_SEED_MAX_USD = 1.0
 MAX_TOKENS = 32000
-EFFORT = "high"
+# Low: reading results and writing digest lines is mechanical, and at "high"
+# all three languages ran out of tokens thinking before writing a single
+# digest line (dry run 2026-10-14: digest 0 in en/cs, ended max_tokens).
+EFFORT = "low"
 MAX_PAUSE_RESUMES = 4
 SEARCH_FEE_CENTS = 1.0  # $10 per 1,000 web searches
 HAIKU_LONG_PROMPT_TOKENS = 100_000

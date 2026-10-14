@@ -4,7 +4,7 @@
 > **Allowlist in code:** `apps/quiz-agent/app/analytics/taxonomy.py` is the source of truth — names and property keys not listed there are dropped, never stored. Change both together.
 > **No PII:** no transcript or answer text, no names/emails. Identity = the anonymous/account `subject_id` (same id `daily_usage` uses). Rows are deleted on account erase.
 > **Viewing:** ask Claude to query the table (recipes below). Dashboard deferred.
-> Founder-approved: original 10 events 2026-07-14; extra groups (money, voice & controls, usage context, first run) 2026-10-07.
+> Founder-approved: original 10 events 2026-07-14; extra groups (money, voice & controls, usage context, first run) 2026-10-07; automatic voice-settings test (#204 task 204.9) 2026-10-14.
 
 ## Server events (emitted by the API — where the truth lives)
 
@@ -31,6 +31,8 @@
 | `paywall_viewed` | paywall shown | `source` (quota / home / settings / completion) |
 | `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending) |
 | `restore_result` | restore purchases ends | `outcome` |
+| `answer_captured` | every recorded voice answer (#204.9 voice-settings test) | `question_id`, `is_retry`; test: `auto_test`, `src_neural_vad` / `src_aec` / `src_front_mic` (auto = set by the server's coin, manual = the player's switch), effective `neural_vad` / `aec` / `front_mic`, `exp_gen_neural_vad` / `exp_gen_aec` / `exp_gen_front_mic` (test generation, auto only); route: `route_group` (bt_car / other), `output_route`, `input_route`; capture: `stop_reason` (vad / noSpeechWindow / cap / manual), `detector`, `heard_speech`, `speech_ms`, `end_delay_ms`, `duration_ms`; mic: `voice_processing`, `ec_enabled`, `aec_applicable`, `front_mic_applicable`, `mic_data_source`, `mic_polar_pattern`; `rejected_count` (transcripts already rejected for this question) |
+| `voice_experiment_guard` | the app switched echo cancellation off mid-round because the sound left the car (#204.9) | `flag` (aec), `reason` (output_route_changed), `from_route`, `to_route`, `exp_gen` |
 
 ## Already in other tables — query there, don't duplicate
 
@@ -52,5 +54,32 @@
 | Quota pressure | `quota_hit` per subject per month; share followed by `paywall_viewed` / purchase |
 | Usage context | `quiz_context.audio_route` mix (car vs. home vs. party) |
 | Voice command usage | `voice_command` counts by `command` |
+| Voice-settings test (#204.9) | per setting × `route_group`, answers where the coin decided it: bad capture = `stop_reason` = cap OR `heard_speech` = false OR rejected (a later `answer_captured` of the same session + question has a higher `rejected_count`); compare the rate between the ON and OFF arms. The weekly job (`POST /api/v1/admin/voice-experiment/evaluate`) does this; SQL below for ad-hoc checks |
+
+Bad-capture rate per arm, here neural VAD on the car / Bluetooth route, generation 1. For `aec` / `front_mic` swap the flag keys and add `AND (c.p->>'aec_applicable')::boolean` (or `front_mic_applicable`):
+
+```sql
+WITH cap AS (
+  SELECT session_id, occurred_at, properties AS p
+  FROM analytics_events WHERE name = 'answer_captured'
+), arm AS (
+  SELECT (c.p->>'neural_vad')::boolean AS arm_on,
+         (c.p->>'stop_reason' = 'cap'
+          OR c.p->>'heard_speech' = 'false'
+          OR EXISTS (SELECT 1 FROM cap l
+                     WHERE l.session_id = c.session_id
+                       AND l.p->>'question_id' = c.p->>'question_id'
+                       AND l.occurred_at > c.occurred_at
+                       AND COALESCE((l.p->>'rejected_count')::int, 0)
+                         > COALESCE((c.p->>'rejected_count')::int, 0))) AS bad
+  FROM cap c
+  WHERE c.p->>'src_neural_vad' = 'auto'
+    AND (c.p->>'exp_gen_neural_vad')::int = 1
+    AND c.p->>'route_group' = 'bt_car'
+)
+SELECT arm_on, count(*) AS n, count(*) FILTER (WHERE bad) AS bad,
+       round(avg(bad::int), 3) AS bad_rate
+FROM arm GROUP BY arm_on;
+```
 
 Always filter `app_version` / `environment` when sandbox or TestFlight noise matters.

@@ -3,7 +3,8 @@
 ``GET /app-config`` lets a public build be steered without an app release:
 force builds below a minimum version to update, pause custom-pack ordering,
 or show a short notice. Values come from env (``app.config.Settings``), so a
-Fly secret/env change flips them on the running deploy.
+Fly secret/env change flips them on the running deploy. The voice-settings test
+(#204.9) is the exception: it lives in the DB so the weekly job can change it.
 
 Public and unauthenticated: the client calls it at launch before any token
 exists, and treats any failure as "no switches set" (fail open), so this route
@@ -14,10 +15,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
 from ...config import get_settings
+from ...voice_experiment.served import voice_experiment_config
+from ..deps import get_auth_sessionmaker
 
 router = APIRouter()
 
@@ -34,6 +37,14 @@ class AppNotice(BaseModel):
     en: Optional[str] = None
 
 
+class VoiceExperimentArmConfig(BaseModel):
+    """How the app sets one voice setting on one route group."""
+
+    status: str  # running | winner_on | off
+    p_on: float
+    generation: int
+
+
 class AppConfigResponse(BaseModel):
     """Switches the client applies. ``None`` minimum = no forced update."""
 
@@ -41,10 +52,15 @@ class AppConfigResponse(BaseModel):
     min_version_testflight: Optional[str] = None
     orders_enabled: bool = True
     notice: Optional[AppNotice] = None
+    # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
+    # there is no DB or the read fails; the app then uses its manual switches.
+    voice_experiment: Optional[dict[str, dict[str, VoiceExperimentArmConfig]]] = None
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
-async def get_app_config(response: Response) -> AppConfigResponse:
+async def get_app_config(
+    response: Response, sessionmaker=Depends(get_auth_sessionmaker)
+) -> AppConfigResponse:
     settings = get_settings()
     notice = AppNotice(
         sk=settings.app_notice_sk,
@@ -57,4 +73,5 @@ async def get_app_config(response: Response) -> AppConfigResponse:
         min_version_testflight=settings.min_app_version_testflight,
         orders_enabled=settings.pack_orders_enabled,
         notice=notice if (notice.sk or notice.cs or notice.en) else None,
+        voice_experiment=await voice_experiment_config(sessionmaker),
     )

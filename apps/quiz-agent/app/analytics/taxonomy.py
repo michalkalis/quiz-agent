@@ -47,6 +47,42 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "paywall_viewed": frozenset({"source"}),
     "purchase_result": frozenset({"product_id", "kind", "outcome"}),
     "restore_result": frozenset({"outcome"}),
+    # #204.9: one per recorded answer, for the automatic voice-settings test.
+    "answer_captured": frozenset(
+        {
+            "question_id",
+            "is_retry",
+            "auto_test",
+            "src_neural_vad",
+            "src_aec",
+            "src_front_mic",
+            "neural_vad",
+            "aec",
+            "front_mic",
+            "exp_gen_neural_vad",
+            "exp_gen_aec",
+            "exp_gen_front_mic",
+            "route_group",
+            "output_route",
+            "input_route",
+            "stop_reason",
+            "detector",
+            "heard_speech",
+            "speech_ms",
+            "end_delay_ms",
+            "duration_ms",
+            "voice_processing",
+            "ec_enabled",
+            "aec_applicable",
+            "front_mic_applicable",
+            "mic_data_source",
+            "mic_polar_pattern",
+            "rejected_count",
+        }
+    ),
+    "voice_experiment_guard": frozenset(
+        {"flag", "reason", "from_route", "to_route", "exp_gen"}
+    ),
 }
 
 # Property values are short scalars only: a long string is either a bug or free

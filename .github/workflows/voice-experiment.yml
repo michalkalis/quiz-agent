@@ -1,0 +1,120 @@
+# Voice-settings test, weekly verdict (#204 — answer recognition, task 204.9).
+#
+# The app flips a coin per quiz round for three voice settings (neural speech
+# detection, echo cancellation on the car route, front mic) and logs every
+# recorded answer. Once a week this job asks quiz-agent to score the test:
+# a clear winner is switched on for everyone, a setting that hurts is
+# switched off, and after 6 weeks with no difference the setting stays off.
+# The server writes that to the DB and the app picks it up through
+# /app-config within a minute — no app release needed.
+#
+# Why a GitHub issue: the founder must hear about a decision from the agent in
+# a session (the session-start hook lists open `voice-experiment` issues), not
+# from an e-mail that gets lost. Why here: the repo is public, so Actions
+# minutes are free. Logs and issues are public too: they carry aggregates
+# only (counts, rates), never ids or transcripts — the endpoint returns none.
+name: voice-experiment
+
+on:
+  schedule:
+    # Monday early morning UTC, off the hour so it is not delayed by the
+    # top-of-the-hour scheduler rush.
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report only, change nothing"
+        type: boolean
+        default: true
+
+# Opening the issue (and creating its label on first use) is the only write.
+permissions:
+  issues: write
+
+concurrency:
+  group: voice-experiment
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # A scheduled run has no inputs: it decides for real. A manual run is a
+      # dry run unless the box is unticked.
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+    steps:
+      - name: Score the test
+        env:
+          ADMIN_KEY: ${{ secrets.QUIZ_AGENT_ADMIN_API_KEY }}
+        run: |
+          curl -fsS --retry 3 --retry-all-errors --retry-delay 15 --max-time 60 \
+            -X POST -H "X-Admin-Key: ${ADMIN_KEY}" \
+            "https://quiz-agent-api.fly.dev/api/v1/admin/voice-experiment/evaluate?dry_run=${DRY_RUN}" \
+            -o result.json
+
+      - name: Write the summary
+        run: |
+          python3 - <<'EOF'
+          import json, os
+          r = json.load(open("result.json"))
+          FLAG = {"neural_vad": "neurónová detekcia reči",
+                  "aec": "potlačenie ozveny",
+                  "front_mic": "predný mikrofón"}
+          ROUTE = {"bt_car": "Bluetooth / CarPlay", "other": "ostatné trasy"}
+          VERDICT = {"winner": "víťaz, zapnuté pre všetkých",
+                     "harm": "vypnuté, zhoršovalo zachytenie",
+                     "no_difference": "vypnuté, po 6 týždňoch bez rozdielu"}
+          def pct(x):
+              return "?" if x is None else f"{x * 100:.0f} %"
+          def ms(x):
+              return "?" if x is None else f"{x} ms"
+          decided = {(d["flag"], d["route_group"]): d for d in r["decisions"]}
+          lines = [
+              "Zlé zachytenie = nahrávka do stropu, bez reči, alebo hráč prepis zamietol.",
+              "",
+              "| Nastavenie | Trasa | Zapnuté: odpovede, zlé | Vypnuté: odpovede, zlé "
+              "| Šanca, že zapnuté je lepšie | Koniec po reči (zap. / vyp.) "
+              "| Správne odpovede (zap. / vyp.) | Rozhodnutie |",
+              "|---|---|---|---|---|---|---|---|",
+          ]
+          for a in r["arms"]:
+              on, off = a["on"], a["off"]
+              d = decided.get((a["flag"], a["route_group"]))
+              verdict = VERDICT[d["reason"]] if d else f"beží ({a['days_running']} dní)"
+              lines.append(
+                  f"| {FLAG.get(a['flag'], a['flag'])} | {ROUTE.get(a['route_group'], a['route_group'])} "
+                  f"| {on['n']}, {pct(on['bad_rate'])} | {off['n']}, {pct(off['bad_rate'])} "
+                  f"| {pct(a['p_on_better'])} | {ms(on['median_end_delay_ms'])} / {ms(off['median_end_delay_ms'])} "
+                  f"| {pct(on['correct_share'])} / {pct(off['correct_share'])} | {verdict} |"
+              )
+          if not r["arms"]:
+              lines.append("| žiadny test nebeží | | | | | | | |")
+          body = "\n".join(lines)
+          mode = "na sucho, nič sa nezmenilo" if r["dry_run"] else "naostro"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(f"## Hlasový experiment ({mode})\n\n{body}\n")
+          print(body)
+          if not r["dry_run"] and r["decisions"]:
+              title = "Hlasový experiment: " + "; ".join(
+                  f"{d['flag']} {d['route_group']} — {VERDICT[d['reason']]}"
+                  for d in r["decisions"]
+              )
+              open("issue_title.txt", "w").write(title)
+              open("issue_body.md", "w").write(
+                  body + "\n\nAppka si zmenu načíta do minúty. "
+                  "Agent: povedz to founderovi a issue zavri.\n"
+              )
+          EOF
+
+      # One issue per run, only when something was actually decided.
+      - name: Tell the founder via an issue
+        if: hashFiles('issue_title.txt') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create voice-experiment --color 5319e7 \
+            --description "Automatické testovanie hlasových nastavení (#204.9)" 2>/dev/null || true
+          gh issue create --title "$(cat issue_title.txt)" --body-file issue_body.md \
+            --label voice-experiment

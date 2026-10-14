@@ -52,6 +52,8 @@ async def test_defaults_never_block_or_hide_anything():
         "min_version_testflight": None,
         "orders_enabled": True,
         "notice": None,
+        # No DB in this test app: the voice test block is null (fail open).
+        "voice_experiment": None,
     }
     # Public and cacheable: hit at every launch/foreground, no per-user data.
     assert cache_control == "public, max-age=60"

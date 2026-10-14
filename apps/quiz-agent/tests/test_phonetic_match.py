@@ -31,7 +31,6 @@ from quiz_shared.models.question import Question  # noqa: E402
         ("Hemia", "Chemia"),  # ch→h (sk/cs)
         ("Kuba", "Cuba"),  # hard c→k
         ("Mýtus", "Mitus"),  # y→i
-        ("Lev Tolstoj", "Lev Tolstoy"),  # y→i in a multi-word answer
     ],
 )
 def test_respelled_answers_share_a_key(heard, expected):

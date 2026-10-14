@@ -1,6 +1,6 @@
 """Weekly fresh-entertainment top-up (#202 task 202.3).
 
-    python -m app.corpus.fresh_topup --languages en,sk,cs [--dry-run]
+    python -m app.corpus.run_fresh_topup --languages en,sk,cs [--dry-run]
         [--max-usd 15] [--count 15] [--cron-checkin]
 
 Per language: seeds (``seed_research``) → brief (``fresh_brief``) → pinned

@@ -3,8 +3,9 @@
 The job must run on exactly the roles the founder rated in the #201 blind
 comparison (``gettable-entertainment-2026-10-13/B-*.usage.json``). Prod
 secrets (``LLM_ROLE_*``, ``VERIFY_MODEL``, ``JUDGE_MODELS``, ``LLM_GATEWAY``)
-would otherwise change them silently, so the workflow overrides them with
-``ENV_PINS`` and :func:`check_roles` re-reads what the pipeline will REALLY
+would otherwise change them silently, so ``run_fresh_topup`` writes
+``fresh_pins.ENV_PINS`` into the process env before any pipeline module is
+imported, and :func:`check_roles` re-reads what the pipeline will REALLY
 resolve and refuses to start on any difference — before the first paid call.
 
 Every model in the map must also have a list price (no silent $0 in the spend
@@ -20,6 +21,7 @@ from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 
 from app import feature_flags, llm_usage
+from app.corpus.fresh_pins import ENV_PINS  # noqa: F401  (re-export)
 
 OPUS = "claude-opus-5-5"
 SONNET = "claude-sonnet-5-5"
@@ -31,23 +33,7 @@ OFF = "off"
 # (recipe § Run; #195). Passed in code to build_stages, so env cannot move it.
 ANSWERABILITY_PIN = {"en": HAIKU, "sk": SONNET, "cs": SONNET}
 
-# What the workflow sets on the one-off machine (`--env`), overriding prod.
-ENV_PINS: dict[str, str] = {
-    "LLM_GATEWAY": "direct",
-    "LLM_ROLE_GEN": OPUS,
-    "GENERATION_MODEL": OPUS,
-    "GEN_ALT_SHARE": "0",
-    "LLM_ROLE_CRITIQUE": OPUS,
-    "CRITIQUE_MODEL": OPUS,
-    "LLM_ROLE_FACTCHECK": SONNET,
-    "LLM_ROLE_DEDUP_JUDGE": SONNET,
-    "VERIFY_MODEL": OPUS,
-    "ANSWERABILITY_CHECK": "1",
-    "TOPICALITY_CLASSIFICATION": "1",
-    "EXPIRY_CLASSIFICATION": "0",
-    "CASUAL_PLAYER_GATE": "off",
-    "JUDGE_GATE": "0",
-}
+# The pinned env lives in fresh_pins (imported before any pipeline module).
 
 
 class RoleMapError(RuntimeError):

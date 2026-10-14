@@ -1,4 +1,4 @@
-# #203 — Otrepané otázky: vyčistiť zásobu a zabrániť novým
+# #203 — Nudné otázky: príčina a náhrada (pôvodne „otrepané otázky“)
 
 **Triage:** bug · in-progress
 **Založené:** 2026-10-14 (founder z TF: otázka „Ktorá žena v roku 1955 v Alabame odmietla uvoľniť miesto v autobuse…“ = „hrozná otázka … nezaujímavá“; „nezábavnosť otázok je úplne kritická vec“)
@@ -72,6 +72,7 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 
 - [x] 203.1 kontrola + beh nad zásobou
 - [x] 203.2 slepé overenie founderom: kontrola nepredpovedá jeho hodnotenie, zásoba ~2/10
-- [ ] 203.5 prešetriť pokles kvality generovania (pred 203.3/203.4)
-- [ ] 203.3 archív v prode
-- [ ] 203.4 zapojenie do generovania + zapnutie
+- [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
+- [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
+- [ ] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
+- [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

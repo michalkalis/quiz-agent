@@ -1,0 +1,170 @@
+<title>Porovnanie zadaní</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Porovnanie zadaní</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Otázky z viacerých zadaní pre AI, po slovensky aj po anglicky, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "sk", "question": "Najnižšie položené miesto Slovenska leží len asi 94 metrov nad morom, a to tam, kde istá rieka opúšťa naše územie smerom do Maďarska. Ktorá je to rieka?", "answer": "Bodrog", "options": [], "explanation": "Rieka Bodrog odteká zo Slovenska pri obci Klin nad Bodrogom na východe krajiny. Od Gerlachovského štítu ju delí vyše 2 500 výškových metrov."}, {"id": "R2", "lang": "en", "question": "Canary birds are named after the Canary Islands, but the islands themselves are named after a different animal. Which one?", "answer": "Dogs", "options": [], "explanation": "The Romans called them 'Canariae Insulae', the Islands of the Dogs, from the Latin 'canis'. Two dogs still appear on the islands' coat of arms."}, {"id": "R3", "lang": "sk", "question": "Prečo ovocné želé s čerstvým ananásom nestuhne, ale s ananásom z konzervy áno?", "answer": "Enzým rozkladá želatínu", "options": [], "explanation": "Čerstvý ananás obsahuje enzým bromelaín, ktorý štiepi bielkoviny, a želatína je bielkovina. Pri zaváraní sa enzým teplom zničí. Ten istý enzým vás pri jedení ananásu štípe na jazyku."}, {"id": "R4", "lang": "sk", "question": "Ktorá slovenská limonáda, známa ešte z čias Československa, sa vyrába z hroznovej šťavy?", "answer": "Vinea", "options": [], "explanation": "Vinea vznikla na Slovensku v sedemdesiatych rokoch ako nealkoholická alternatíva k vínu. Dodnes ju poznáme v bielej aj červenej verzii."}, {"id": "R5", "lang": "en", "question": "Real wasabi is rare and expensive, so the green paste served with most sushi outside Japan is mainly a different root, dyed green. Which one?", "answer": "Horseradish", "options": ["Horseradish", "Ginger", "Daikon radish", "Celeriac"], "explanation": "Most 'wasabi' paste is largely horseradish with green colouring, because true wasabi is very hard to grow. Real wasabi also loses its flavour within minutes of being grated."}, {"id": "R6", "lang": "sk", "question": "Slovo paradajka sme prevzali z rakúskej nemčiny. Pôvodne v nej toto slovo znamenalo „jablko z…“ čoho?", "answer": "Z raja", "options": [], "explanation": "Rakúske slovo Paradeiser pochádza z výrazu Paradeisapfel, teda rajské jablko. Preto sa paradajkám hovorí aj rajčiny a omáčke rajská."}, {"id": "R7", "lang": "sk", "question": "Dobšinská ľadová jaskyňa patrila medzi prvé jaskyne v Európe s elektrickým osvetlením. V ktorom roku ju rozsvietili?", "answer": "1887", "options": ["1887", "1912", "1936", "1958"], "explanation": "Elektrické svetlo v nej zažiarilo už v roku 1887, len niekoľko rokov po Edisonovej žiarovke. Dnes je jaskyňa súčasťou svetového dedičstva UNESCO."}, {"id": "R8", "lang": "sk", "question": "Anton Bernolák vydal prvú kodifikáciu spisovnej slovenčiny, založenú na západoslovenských nárečiach. V ktorom roku to bolo?", "answer": "1787", "options": ["1787", "1762", "1815", "1843"], "explanation": "Bernolák vydal svoju jazykovednú prácu Dissertatio philologico-critica v roku 1787. Štúrova slovenčina na základe stredoslovenských nárečí prišla až v roku 1843, teda o 56 rokov neskôr."}, {"id": "R9", "lang": "sk", "question": "Pravda alebo nepravda? Bryndza, ktorá smie niesť chránené označenie Slovenská bryndza, môže legálne obsahovať aj syr z kravského mlieka.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Pravda: podľa chráneného označenia EÚ musí ovčí hrudkový syr tvoriť viac ako polovicu, zvyšok môže byť kravský. Čisto ovčia bryndza je teda kvalitnejšia voľba, nie povinnosť."}, {"id": "R10", "lang": "sk", "question": "Milan Rastislav Štefánik bol skôr astronóm než generál. Pri pozorovaniach Slnka a planét niekoľkokrát vystúpil až na observatórium na vrchole najvyššej hory Álp. Ako sa táto hora volá?", "answer": "Mont Blanc", "options": [], "explanation": "Štefánik pracoval na observatóriu v Meudone pri Paríži u Julesa Janssena. Na Mont Blanc vystúpil viackrát, hoci mal krehké zdravie. Pri prvom výstupe ho do cieľa takmer museli doniesť."}, {"id": "R11", "lang": "en", "question": "When South Korea sent its first astronaut into space in 2008, scientists had spent years developing a space-safe version of which spicy fermented cabbage dish for her to take along?", "answer": "Kimchi", "options": [], "explanation": "Korean food scientists sterilised the kimchi so its live bacteria could not misbehave in orbit. Yi So-yeon took it to the International Space Station."}, {"id": "R12", "lang": "en", "question": "At sea level, water boils at 100 degrees Celsius. At roughly what temperature does it boil on the summit of Mount Everest?", "answer": "About 70 °C", "options": [], "explanation": "With only about a third of sea-level air pressure pushing down, water boils at around 70 degrees on Everest. That's why climbers' tea is lukewarm and pasta never cooks properly up there."}, {"id": "R13", "lang": "sk", "question": "Na vrchole veže bratislavského Dómu svätého Martina nie je kríž, ako by ste čakali. Čo tam namiesto neho je?", "answer": "Koruna", "options": [], "explanation": "Je to pozlátená replika uhorskej kráľovskej koruny, ktorá váži asi 300 kilogramov. Pripomína, že v tomto dóme korunovali uhorských kráľov a kráľovné vrátane Márie Terézie."}, {"id": "R14", "lang": "en", "question": "In 1206 a Mongol chieftain named Temüjin was proclaimed supreme ruler of the steppe tribes. By what title is he known to history?", "answer": "Genghis Khan", "options": [], "explanation": "Temüjin took the title Genghis Khan and went on to found what became the largest contiguous land empire in history."}, {"id": "R15", "lang": "en", "question": "Which South American country is simply named after an imaginary line on the globe that runs through it?", "answer": "Ecuador", "options": [], "explanation": "Ecuador is the Spanish word for the equator. Near Quito there is a monument called 'Middle of the World' where tourists pose with one foot in each hemisphere."}, {"id": "R16", "lang": "sk", "question": "Kofola vznikla v Československu ako domáca náhrada za Coca-Colu. Chemici pri jej zrode hľadali, čo robiť so zvyškami pri pražení istej suroviny. Ktorej?", "answer": "Káva", "options": [], "explanation": "Základ Kofoly, sirup Kofo, vznikol z vedľajších produktov praženia kávy. Preto má Kofola aj kofeín, a to celkom bez kokových listov."}, {"id": "R17", "lang": "en", "question": "Measured from the centre of the Earth rather than from sea level, the highest point on the planet isn't Everest but a volcano almost on the equator. In which country does it stand?", "answer": "Ecuador", "options": [], "explanation": "The Earth bulges at the equator, so the summit of Chimborazo sits roughly 2 km farther from the planet's centre than Everest's. That is despite Chimborazo being only about 6,260 m above sea level."}, {"id": "R18", "lang": "sk", "question": "Slovenské euromince sa razia v mincovni, ktorá pracuje bez prestávky už takmer sedemsto rokov a patrí k najstarším na svete. V ktorom meste stojí?", "answer": "Kremnica", "options": [], "explanation": "Zlaté kremnické dukáty boli v stredoveku cenené po celej Európe. Tá istá mincovňa dnes vyrába aj eurá, ktoré nosíte v peňaženke."}, {"id": "R19", "lang": "sk", "question": "Jaskyňa pri obci Ochtiná, zapísaná v UNESCO, je svetovým unikátom vďaka bielym ihlicovitým kryštálom. Chemicky ide o ten istý uhličitan vápenatý ako pri kalcite, len inak vykryštalizovaný. Ako sa tento minerál volá?", "answer": "aragonit", "options": [], "explanation": "Preto sa jaskyňa oficiálne volá Ochtinská aragonitová jaskyňa. Jej aragonitové „kríčky“ a „ježky“ patria medzi najvzácnejšie jaskynné výzdoby na svete."}, {"id": "R20", "lang": "en", "question": "The inventor of the telephone, Alexander Graham Bell, wanted people to answer calls with a sailor's greeting. Which word?", "answer": "Ahoy", "options": [], "explanation": "Bell kept saying 'Ahoy' for years, but his rival Thomas Edison pushed 'Hello', and Edison's word took over the world."}, {"id": "R21", "lang": "en", "question": "Saffron, the world's most expensive spice by weight, is made from tiny threads plucked by hand from the centre of which purple flower?", "answer": "Crocus", "options": [], "explanation": "Each saffron crocus gives just three red stigmas. Making a single kilogram of saffron takes well over a hundred thousand flowers."}, {"id": "R22", "lang": "en", "question": "Abraham Lincoln is honoured in the American hall of fame of which combat sport?", "answer": "Wrestling", "options": [], "explanation": "As a young man on the frontier, Lincoln was a formidable wrestler who reportedly lost only one match in about 300 bouts."}, {"id": "R23", "lang": "en", "question": "You can buy pistachios and peanuts in their shells, but never cashews. Why not?", "answer": "The shell is toxic", "options": [], "explanation": "Cashew shells contain urushiol, the same irritant found in poison ivy, which can burn the skin. That is why cashews are always shelled and heat-treated before they reach the shop."}, {"id": "R24", "lang": "sk", "question": "Pri akej teplote zhruba vrie voda na vrchole Lomnického štítu, vo výške vyše 2 600 metrov?", "answer": "91 °C", "options": ["100 °C", "91 °C", "80 °C", "70 °C"], "explanation": "Vo výške je nižší tlak vzduchu, a tak voda vrie už okolo 91 °C. Čaj alebo cestoviny sa tam preto pripravujú dlhšie a horšie."}, {"id": "R25", "lang": "en", "question": "The German word for emperor, 'Kaiser', comes from the name of which famous Roman?", "answer": "Julius Caesar", "options": [], "explanation": "Caesar's family name became a title for Roman emperors. German speakers pronounced it 'Kaiser', and the title outlived the empire by well over a thousand years."}, {"id": "R26", "lang": "sk", "question": "Samo, vládca prvého známeho kmeňového zväzu Slovanov zo 7. storočia, nebol podľa Fredegarovej kroniky domáci náčelník. Prišiel k Slovanom ako Frank. Akým povolaním sa živil?", "answer": "kupec", "options": [], "explanation": "Samo prišiel k Slovanom s obchodnou výpravou. Pomohol im poraziť Avarov a potom im vládol približne 35 rokov. Mal dvanásť slovanských manželiek a 37 detí."}, {"id": "R27", "lang": "sk", "question": "Trojvršie v slovenskom štátnom znaku tradične predstavuje Tatru, Fatru a Mátru. V ktorej krajine leží pohorie Mátra dnes?", "answer": "v Maďarsku", "options": [], "explanation": "Mátra je dnes maďarské pohorie s najvyšším vrchom Maďarska, Kékesom. Na našom znaku však zostala ako spomienka na Horné Uhorsko."}, {"id": "R28", "lang": "sk", "question": "V ktorom roku získala Slovenská bryndza ochranu Európskej únie ako výrobok s chráneným zemepisným označením?", "answer": "2008", "options": ["1993", "2004", "2008", "2015"], "explanation": "Slovenská bryndza je od roku 2008 chránená v celej Únii. Bryndzou s týmto názvom sa preto smie nazývať len syr vyrobený podľa slovenskej tradície."}, {"id": "R29", "lang": "en", "question": "True or false: old cathedral windows are thicker at the bottom because glass is really a very slow-flowing liquid that has sagged over the centuries.", "answer": "False", "options": ["True", "False"], "explanation": "False. Medieval panes came out uneven, and glaziers often fitted the heavy edge at the bottom. At room temperature, glass wouldn't visibly sag even over the age of the universe."}, {"id": "R30", "lang": "en", "question": "Despite the name, pencil 'lead' contains no lead at all. It is made from a form of the very same element that makes up diamonds. Which element?", "answer": "Carbon", "options": [], "explanation": "The pencil core is graphite, a form of pure carbon, mixed with clay. Diamond and graphite differ only in how their carbon atoms are arranged: graphite in soft, sliding sheets and diamond in a rigid 3D lattice."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

@@ -55,6 +55,14 @@ Slepé porovnanie: Opus 5.5 pripnutý, nastavenie ako ostrá prevádzka (`fresh_
 
 **Výsledok (2026-10-14, 12 + 12):** A (`v2_cot`) zábava ⌀ 7,4, šanca 12/12 · B (`direct_v1`) ⌀ 7,3, šanca 10/12; v oboch 6× hodnotenie ≥ 8. **Zadanie nie je príčina**, rozdiel je v šume. Founder: „možno trochu lepšie celkovo, ale stále nič extra … je to proste nudný kvíz“. Najvyššie (9): prekvapivé otočenie bežnej skúsenosti (kovová vs drevená lyžica, dochádzanie z Európy do Ázie v Istanbule, wasabi je chren). Najnižšie (5–6): roky a trvanie ríš, Rusko (2× „nemám rád“), neznáme historické postavy (Mansa Musa, Bukefalos), porovnania s očakávanou odpoveďou (Briti a čaj).
 
+
+### 203.6 Zadanie podľa vkusu + domáce otázky + hra (founder 2026-10-14)
+
+Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a výskum, prečo je to nudná hra.
+- Vkus: `founder_ratings_all.json` (507 hodnotených otázok, 194 s ≥ 9, 62 s ≤ 5) → `taste-2026-10-14/taste_brief.txt` (len slot `--prompt`, jadro promptu bez zmeny).
+- Slepé hodnotenie 30 otázok: T = vkus en, S = vkus + domáce sk, N = recept natívnych sk z 10-08, X = 6 nehodnotených `direct_v1` en ako kotva. https://claude.ai/artifact/QMM2TsFpBN3wEBqQJf2LGv
+- Výskum hry: `docs/research/quiz-game-fun-2026-10-14.md`. Top 5: stávka v každom kole, odhalenie odpovede ako moment („trafilo len 23 %“), hra pre viacerých v aute, moderátor s osobnosťou, rôzne formáty v kole.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou

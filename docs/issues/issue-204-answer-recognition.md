@@ -67,7 +67,7 @@ Replay (`scripts/voice_replay.py`) na nahrávkach z auta s prepínačmi zapnutý
   - Sentry „answer recording stopped“ nesie `detector`, `neuralHeardSpeech`, `avoidRejected`, `rejectedCount`, `ecFlag/ecAvailable/ecEnabled`, `micDataSource`, `micPolarPattern`.
 - 2026-10-14 večer: **204.9 v main** — server PR #428 (tabuľka `voice_experiment_arms`, `voice_experiment` v app-config, udalosti `answer_captured` + `voice_experiment_guard`, vyhodnocovač `POST /api/v1/admin/voice-experiment/evaluate`, job `.github/workflows/voice-experiment.yml`), backend v155; iOS PR #431 (prepínač „Automatické testovanie“ v Settings › voice diagnostics, default ON). Vyhodnocovač na sucho nad prod DB: 5 bežiacich ramien, 0 rozhodnutí (zatiaľ bez dát). TF build z main spustený.
   - Odchýlky: `aec_applicable` sa na zariadení pozná až po prvom kole s AEC ON (iOS hlási podporu len v default móde); `answer_captured` len na batch ceste; zablokované AEC = `src_aec=auto` bez `exp_gen_aec` (vyhodnocovač ho vynechá).
-  - **Open (founder):** GitHub secret `QUIZ_AGENT_ADMIN_API_KEY` (bez neho týždenný job zlyhá) a upozornenie v `.claude/hooks/session-start.sh` (agent nesmie meniť vlastné háčiky).
+  - Secret `QUIZ_AGENT_ADMIN_API_KEY` nastavil founder; oznámenie v `.claude/hooks/session-start.sh` v main (PR #434); `voice-experiment.yml` na sucho z GitHubu prešiel. **204.9 hotové.**
 - **Open:** TF build na požiadanie → test v aute:
   - 204.3: s prepínačom ON/OFF porovnať podiel nahrávok do stropu a oneskorenie konca.
   - 204.4: na A2DP/CarPlay musí zvuk ostať v autorádiu; `ecEnabled=false` = iOS to na A2DP nepodporuje; mód sa na externej trase mení `.spokenAudio` → `.default`, skontrolovať stlmenie hudby.

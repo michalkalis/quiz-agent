@@ -1,6 +1,7 @@
 """Dynamic prompt builder for question generation."""
 
 import os
+from functools import lru_cache
 from typing import List, Optional, Sequence
 
 from quiz_shared.llm import factory as llm_factory
@@ -203,14 +204,52 @@ ask about the same facts again, not even from another angle (asking for the
 place when a question already asks for the person, or the reverse)."""
 
 
-def order_brief_section(
-    request: str | None, language: str, already_in_pack: Sequence[str] = ()
-) -> str:
-    """Per-order prompt tail: the player's request, the output language and,
-    on a top-up round, the questions the pack already holds.
+# #203 203.9 — the house style (taste brief + hard rules) that made the
+# general corpus fun, for every generation path. Its own section after the
+# order brief, never inside <request>: the request slot carries the player's
+# words. Bump the version whenever house_style.md changes; it is stamped on
+# every question generated with it (`generation_metadata.extra.house_style`).
+HOUSE_STYLE_VERSION = "2026-10-14"
+_HOUSE_STYLE_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "prompts", "house_style.md"
+)
+_HOME_MARKER = "<!-- home"
+_HOME_COUNTRY = {
+    "sk": {"country": "Slovakia", "people": "Slovaks", "tongue": "Slovak"},
+    "cs": {"country": "Czechia", "people": "Czechs", "tongue": "Czech"},
+}
 
-    Empty for an English order without a request, so corpus/CLI runs that
-    carry no prompt render byte-identical to before #192.
+
+@lru_cache(maxsize=1)
+def _house_style_parts() -> tuple[str, str]:
+    """(body for every language, home-country paragraph template)."""
+    with open(_HOUSE_STYLE_PATH, encoding="utf-8") as f:
+        text = f.read()
+    body, _, home = text.partition(_HOME_MARKER)
+    return body.strip(), home.split("\n", 1)[1].strip()
+
+
+def house_style_section(language: str) -> str:
+    """The house style section; sk/cs add the home-country paragraph."""
+    body, home = _house_style_parts()
+    section = f"\n\n## HOUSE STYLE\n\n{body}"
+    if language in _HOME_COUNTRY:
+        section += "\n\n" + home.format(**_HOME_COUNTRY[language])
+    return section
+
+
+def order_brief_section(
+    request: str | None,
+    language: str,
+    already_in_pack: Sequence[str] = (),
+    house_style: bool = False,
+) -> str:
+    """Per-order prompt tail: the player's request, the output language,
+    on a top-up round the questions the pack already holds and, with
+    ``house_style`` (``GEN_HOUSE_STYLE``), the house style section.
+
+    Empty for an English order without a request and without house style, so
+    corpus/CLI runs that carry no prompt render byte-identical to before #192.
     """
     section = ""
     if request and request.strip():
@@ -228,6 +267,10 @@ def order_brief_section(
         section += _ALREADY_IN_PACK_SECTION + "".join(
             f"\n- {q}" for q in already_in_pack
         )
+    # After the ALREADY IN THIS PACK check on purpose: house style must not
+    # turn an English corpus top-up (no request) into one that lists the pack.
+    if house_style:
+        section += house_style_section(language)
     return section
 
 

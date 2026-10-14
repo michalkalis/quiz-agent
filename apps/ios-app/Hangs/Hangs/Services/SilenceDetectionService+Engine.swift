@@ -98,6 +98,10 @@ extension SilenceDetectionService {
             return
         }
 
+        // #204: before the engine exists, like the other suspensions above.
+        let neuralVAD = await neuralVADForWindow()
+        neuralVADActive = neuralVAD != nil
+
         let engine = AVAudioEngine()
         audioEngine = engine
         observeEngineEvents(engine) // #189 P8 telemetry (+Telemetry)
@@ -167,7 +171,8 @@ extension SilenceDetectionService {
         answerAudioSampleRate = analyzerFormat.sampleRate
         installInputTap(
             on: inputNode, format: inputFormat, analyzerFormat: analyzerFormat,
-            continuation: continuation, levels: levels, answerSink: answerAudioSink
+            continuation: continuation, levels: levels, answerSink: answerAudioSink,
+            neuralVAD: neuralVAD
         )
 
         // Fail loud (#77): a swallowed throw here was the silent death of both
@@ -363,6 +368,7 @@ extension SilenceDetectionService {
         voiceProcessingStatus = nil
 
         analyzer = nil
+        neuralVADActive = false
         resetSpeechDetection()
 
         Logger.voice.info("🔇 SilenceDetection: listening stopped")
@@ -385,6 +391,7 @@ extension SilenceDetectionService {
         audioEngine = nil
         voiceProcessingStatus = nil
         analyzer = nil
+        neuralVADActive = false
         resetSpeechDetection()
     }
 

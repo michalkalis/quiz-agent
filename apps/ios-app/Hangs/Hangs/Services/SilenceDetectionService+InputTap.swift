@@ -36,13 +36,23 @@ extension SilenceDetectionService {
         analyzerFormat: AVAudioFormat,
         continuation: AsyncStream<AnalyzerInput>.Continuation,
         levels: AsyncStream<InputLevelSample>.Continuation,
-        answerSink: OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>
+        answerSink: OSAllocatedUnfairLock<(@Sendable (Data) -> Void)?>,
+        neuralVAD: SileroVAD?
     ) {
         let tapFormat = format
         let tapAnalyzerFormat = analyzerFormat
         let tapConverter = format == analyzerFormat ? nil : AVAudioConverter(from: format, to: analyzerFormat)
         // Filter state carries across buffers; the tap is its only user.
         let meter = OSAllocatedUnfairLock(initialState: InputLevelMeter(sampleRate: analyzerFormat.sampleRate))
+        // #204: the neural detector scores the same analyzer-format audio,
+        // resampled to its 16 kHz only on a route that runs at another rate
+        // (8 kHz narrowband). No resampler, no scoring: the answer then falls
+        // back to the energy detector (`fallBackIfNeuralSilent`).
+        let needsResampling = analyzerFormat.sampleRate != SileroVAD.sampleRate
+        let neuralResampler = neuralVAD != nil && needsResampling ? Self.neuralVADFormat.flatMap {
+            AVAudioConverter(from: analyzerFormat, to: $0)
+        } : nil
+        let tapNeuralVAD = needsResampling && neuralResampler == nil ? nil : neuralVAD
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { @Sendable buffer, _ in
             if let tapConverter {
@@ -75,25 +85,31 @@ extension SilenceDetectionService {
                 if error == nil {
                     continuation.yield(AnalyzerInput(buffer: convertedBuffer))
                     Self.tee(convertedBuffer, into: answerSink)
-                    Self.measure(convertedBuffer, with: meter, into: levels)
+                    Self.measure(convertedBuffer, with: meter, neural: tapNeuralVAD, resampler: neuralResampler, into: levels)
                 }
             } else {
                 continuation.yield(AnalyzerInput(buffer: buffer))
                 Self.tee(buffer, into: answerSink)
-                Self.measure(buffer, with: meter, into: levels)
+                Self.measure(buffer, with: meter, neural: tapNeuralVAD, resampler: neuralResampler, into: levels)
             }
         }
     }
 
     /// #185 track A: the buffer's band-limited level for the energy VAD — on
     /// the analyzer-format audio, the same samples the answer capture keeps.
-    /// Audio-thread code: one uncontended lock, one pass over the samples.
+    /// Audio-thread code: one uncontended lock, one pass over the samples —
+    /// plus, with #204's neural detector on, one Core ML call per 32 ms.
     nonisolated static func measure(
         _ buffer: AVAudioPCMBuffer,
         with meter: OSAllocatedUnfairLock<InputLevelMeter>,
+        neural: SileroVAD?,
+        resampler: AVAudioConverter?,
         into levels: AsyncStream<InputLevelSample>.Continuation
     ) {
-        guard let sample = meter.withLockUnchecked({ $0.measure(buffer) }) else { return }
+        guard var sample = meter.withLockUnchecked({ $0.measure(buffer) }) else { return }
+        if let neural {
+            sample.speechProbability = speechProbability(of: buffer, vad: neural, resampler: resampler)
+        }
         levels.yield(sample)
     }
 

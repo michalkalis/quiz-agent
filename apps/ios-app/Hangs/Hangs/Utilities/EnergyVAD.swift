@@ -22,6 +22,9 @@ import Foundation
 nonisolated struct InputLevelSample: Sendable, Equatable {
     let db: Float
     let duration: TimeInterval
+    /// #204: the neural detector's speech probability for this buffer, when
+    /// it runs on the tap (`SileroVAD.process`); `nil` otherwise.
+    var speechProbability: Float?
 }
 
 /// Band-limited RMS level of each buffer the mic tap delivers. Filter state

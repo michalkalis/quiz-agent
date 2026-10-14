@@ -429,3 +429,24 @@ async def test_research_applies_the_subject_cap_before_the_fame_cut():
         "Taylor Swift",
         "Taylor Swift",
     ]
+
+
+def test_seed_cost_counts_search_blocks_and_long_prompt_price():
+    """The spend cap must not under-count: Haiku 5.5 reported 0 searches for a
+    reply with two search blocks (2026-10-14), and prompts over 100k tokens bill
+    at 5x the table price."""
+    search = SimpleNamespace(type="server_tool_use", name="web_search")
+    usage = SimpleNamespace(
+        input_tokens=200_000,
+        output_tokens=0,
+        server_tool_use=SimpleNamespace(web_search_requests=0),
+    )
+    result = seed_research.SeedResult()
+    seed_research._add_usage(
+        result, SimpleNamespace(content=[search, search], usage=usage)
+    )
+    assert result.searches == 2
+    base = seed_research.llm_usage.cost_cents_for(seed_research.SEED_MODEL, 200_000, 0)
+    assert result.cost_cents == pytest.approx(
+        base * 5 + 2 * seed_research.SEARCH_FEE_CENTS
+    )

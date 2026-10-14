@@ -199,14 +199,27 @@ def _add_usage(result: SeedResult, response: Any) -> None:
         return
     tokens_in, tokens_out = usage.input_tokens or 0, usage.output_tokens or 0
     tools = getattr(usage, "server_tool_use", None)
-    searches = getattr(tools, "web_search_requests", 0) or 0
+    reported = getattr(tools, "web_search_requests", 0) or 0
+    # Haiku 5.5 reported 0 searches for a reply with two search blocks
+    # (smoke test 2026-10-14), so the blocks are counted too; the larger wins.
+    blocks = sum(
+        1
+        for b in getattr(response, "content", None) or []
+        if getattr(b, "type", None) == "server_tool_use"
+        and getattr(b, "name", None) == "web_search"
+    )
+    searches = max(reported, blocks)
     result.input_tokens += tokens_in
     result.output_tokens += tokens_out
     result.searches += searches
-    result.cost_cents += (
-        llm_usage.cost_cents_for(SEED_MODEL, tokens_in, tokens_out)
-        + searches * SEARCH_FEE_CENTS
-    )
+    token_cents = llm_usage.cost_cents_for(SEED_MODEL, tokens_in, tokens_out)
+    if tokens_in > HAIKU_LONG_PROMPT_TOKENS:
+        # Long prompts bill at 5x ($0.50/$2.50); the price table can't tell.
+        token_cents *= 5
+    result.cost_cents += token_cents + searches * SEARCH_FEE_CENTS
+
+
+HAIKU_LONG_PROMPT_TOKENS = 100_000
 
 
 JSON_NUDGE = (

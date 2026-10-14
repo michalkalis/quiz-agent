@@ -205,7 +205,8 @@ def build_stages(
     ``GEN_ALT`` mix draw, so a scheduled run is reproducible. ``persist`` is
     the pre-existing switch for ``PersistStage`` (a job that stamps its own
     ``pack_id``-free rows passes ``False``). ``answerability_model`` is handed
-    to ``AnswerabilityChecker`` (only built when ``ANSWERABILITY_CHECK`` is on).
+    to ``AnswerabilityChecker`` (only built when ``ANSWERABILITY_CHECK`` is on)
+    and to ``ShapeClassifier``, which runs on the same blind-answer model.
     """
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.expiry_classifier import ExpiryClassifier
@@ -256,7 +257,8 @@ def build_stages(
             else None
         ),
         # #160 — answer-blind auditor of the logical_puzzle routing marker.
-        shape_classifier=ShapeClassifier(),
+        # #202: shares the answerability pin (None = today's default).
+        shape_classifier=ShapeClassifier(model=answerability_model),
         # #170 170.13 — `None` unless COVERAGE_STEERING is on (worker default).
         coverage_allocator=coverage_allocator,
         coverage_seed=coverage_seed,

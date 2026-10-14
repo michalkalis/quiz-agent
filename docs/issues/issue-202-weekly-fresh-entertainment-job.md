@@ -61,9 +61,10 @@ Jadro `scripts/import_questions_json.py` presunuté do `app/corpus/importer.py` 
 ## Úlohy
 
 - [x] 202.1 Presuny bez zmeny správania: importer, zostava stupňov, wiki_fame, covered + testy parity (CLI a funkcia dajú rovnaké stavy).
-- [ ] 202.2 Seed researcher (Claude + web search/fetch) + filtre + testy.
-- [ ] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
-- [ ] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.
+- [x] 202.2 Seed researcher (Claude + web search/fetch) + filtre + testy.
+- [x] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
+- [x] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.
+  - Odchýlky: stroj bez `--rm` (odstránený stroj stratí exit kód; workflow ho po skončení zmaže sám), Sentry Crons check-in len pri plánovanom behu (`--cron-checkin`), aby ručné/suché behy pred zapnutím nezaložili monitor, ktorý by potom hlásil zmeškané stredy. ShapeClassifier dostáva rovnaký pin ako zodpovedateľnosť. Moduly: `app/corpus/{seed_research,seed_filters,fresh_brief,fresh_roles,fresh_generate,fresh_report,fresh_topup}.py`.
 - [ ] 202.5 Nasadenie, ručný beh na sucho en/sk/cs → founder pozrie vzorku.
 - [ ] 202.6 Ostrý ručný beh → stav zásoby → súhlas foundera → zapnúť plánovaný beh.
 

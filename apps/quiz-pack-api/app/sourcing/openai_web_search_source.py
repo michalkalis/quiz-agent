@@ -269,6 +269,10 @@ def _anthropic_text_and_urls(content) -> tuple[str, list[str]]:
     really returned) plus any ``web_search_result_location`` citations on the
     text — the Anthropic analogue of ``_trusted_urls``. A tool error result
     is an object, not a list, and contributes nothing.
+
+    #202: a ``web_fetch_tool_result`` (a page the ``web_fetch`` tool really
+    opened) is trusted the same way, so a fact read only via fetch is kept.
+    Its error result has no ``web_fetch_result`` type and contributes nothing.
     """
     text_parts: list[str] = []
     urls: list[str] = []
@@ -288,6 +292,10 @@ def _anthropic_text_and_urls(content) -> tuple[str, list[str]]:
             if isinstance(results, list):
                 for result in results:
                     _add(getattr(result, "url", None))
+        elif kind == "web_fetch_tool_result":
+            result = getattr(block, "content", None)
+            if getattr(result, "type", None) == "web_fetch_result":
+                _add(getattr(result, "url", None))
     return "".join(text_parts), urls
 
 

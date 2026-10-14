@@ -238,6 +238,7 @@ class VoiceTranscriber:
                 filename=filename,
                 prompt=prompt,
                 language=effective_language,
+                keyterms=keyterms,
             )
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {str(e)}")
@@ -281,6 +282,7 @@ class VoiceTranscriber:
         filename: str,
         prompt: Optional[str],
         language: Optional[str],
+        keyterms: Optional[list[str]] = None,
     ) -> TranscriptionResult:
         # `verbose_json` (and the per-segment no_speech_prob / avg_logprob that
         # is_valid() leans on) is a whisper-1-only response format; the newer
@@ -292,10 +294,26 @@ class VoiceTranscriber:
             "file": (filename, audio_file),
             "response_format": "verbose_json" if is_whisper else "json",
         }
-        if language:
-            params["language"] = language
         if prompt:
             params["prompt"] = prompt
+        if self.model.startswith("gpt-transcribe"):
+            # #204.1: gpt-transcribe takes `languages` (array) INSTEAD of
+            # `language` ("Don't send both"); the SDK has no typed argument for
+            # either it or `keywords`, so both go through extra_body.
+            extra: dict = {}
+            if language:
+                extra["languages"] = [language]
+            # Same hygiene as Scribe: the sanitiser strips `<`, `>` and folds
+            # line breaks, which are what make this API reject the request.
+            from .scribe import sanitize_keyterms
+
+            keywords = sanitize_keyterms(keyterms)
+            if keywords:
+                extra["keywords"] = keywords
+            if extra:
+                params["extra_body"] = extra
+        elif language:
+            params["language"] = language
 
         response = await self.client.audio.transcriptions.create(**params)
 

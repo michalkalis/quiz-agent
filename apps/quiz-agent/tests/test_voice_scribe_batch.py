@@ -213,7 +213,9 @@ async def test_scribe_quota_error_falls_back_to_openai(monkeypatch, key):
     kwargs = create.await_args.kwargs
     assert kwargs["model"] == "gpt-transcribe"
     assert kwargs["response_format"] == "json"
-    assert kwargs["language"] == "sk"
+    # gpt-transcribe: `languages` replaces `language` ("Don't send both").
+    assert "language" not in kwargs
+    assert kwargs["extra_body"]["languages"] == ["sk"]
 
 
 async def test_missing_api_key_skips_the_http_call(monkeypatch):
@@ -366,3 +368,37 @@ async def test_mcq_keyterms_include_the_labels_the_player_says():
 async def test_scribe_unavailable_is_typed():
     """The fallback branch keys off one exception type, not string matching."""
     assert issubclass(ScribeUnavailable, RuntimeError)
+
+
+async def test_gpt_transcribe_gets_keywords_and_languages_never_language(
+    monkeypatch, key
+):
+    """#204.1: sending `language` to gpt-transcribe was a request bug; MCQ
+    options are the hints that make a noisy "modrá" land on the right option."""
+    _mock_scribe(monkeypatch, status=402)
+    t = VoiceTranscriber()
+    create = _openai_stub(t, text="modrá")
+
+    await t.transcribe(
+        io.BytesIO(b"x"), "a.wav", language="sk", keyterms=["modrá", "zelená<x>"]
+    )
+
+    kwargs = create.await_args.kwargs
+    assert "language" not in kwargs
+    assert kwargs["extra_body"] == {
+        "languages": ["sk"],
+        "keywords": ["modrá", "zelená x"],
+    }
+
+
+async def test_whisper_keeps_plain_language_and_no_extra_body(monkeypatch, key):
+    """Rollback model whisper-1 must behave exactly as before."""
+    monkeypatch.setenv("STT_PROVIDER", "openai")
+    t = VoiceTranscriber(model="whisper-1")
+    create = _openai_stub(t, text="Paris", segments=[], language="sk", duration=1.0)
+
+    await t.transcribe(io.BytesIO(b"x"), "a.wav", language="sk", keyterms=["Paris"])
+
+    kwargs = create.await_args.kwargs
+    assert kwargs["language"] == "sk"
+    assert "extra_body" not in kwargs

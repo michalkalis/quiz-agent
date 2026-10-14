@@ -99,6 +99,40 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 
 **Archív (founder 2026-10-14):** celý beh 2026-10-01 (942 en, 933 approved + 9 pending) → `archived`, hneď, pred novými otázkami; ID na obnovu v `docs/testing/runs/archive-2026-10-01-batch/`. Staršie nehodnotené dávky (júl–17. 9., 345) ostávajú (founder). Živá zásoba: approved en 370 · sk 91 · cs 98.
 
+### 203.9 Rovnaká kvalita vo vlastných balíkoch a na každej ceste generovania (founder 2026-10-14)
+
+**Cieľ.** To, čo urobilo korpus zábavným (203.6–203.8), platí aj pre balíky na objednávku a pre každú cestu: predplatné (`LLM_GATEWAY=session`), priame API (OpenRouter v prode), Max kredit (Claude id cez `ANTHROPIC_API_KEY`, #196), cloud sessions (session brána v cloudovom kontajneri), prod order worker, týždenný job #202.
+**Hotovo** = recept je v zdieľanom pipeline (nie v run skriptoch), každá cesta to dokáže pečiatkou v `generation_metadata`, founder naslepo potvrdil nový balík ≥ starý.
+
+**Rozhodnutia foundera (2026-10-14, in-session):**
+- Téma zákazníka sa rozloží na úzke podtémy, **3–4 otázky na podtému** (nie 2 ako korpus).
+- **Výslovné prianie zákazníka vyhráva** nad vkusom (chce roky alebo hádanky → dostane ich); vkus platí všade inde.
+- sk/cs „7 z 10 o domove“ **len keď téma sedí** (všeobecná téma áno; cudzia téma ako Harry Potter, NBA nie, najviac domáci uhol, kde sa hodí).
+- Testové objednávky: en „Harry Potter“, sk „slovenský hokej a futbal“, cs „jídlo a vaření“.
+
+**Kde je to dnes:** vkus ide cez `--prompt` do slotu „THE PLAYER'S REQUEST“ (`prompt_builder.py:158`), ktorý v balíku nesie slová zákazníka, takže by sa bili. Balík má jednu tému a jedno volanie generovania. Opus 5.5 pripnutý len v run skriptoch a `fresh_pins.py`; worker má default 15 % Fable (`GEN_ALT_SHARE`). Pravidlo proti hádankám a pôvodu slov nie je nikde v kóde, len v texte vkusu. Worker skladá stages zvlášť (`worker/tasks.py:_build_stages`), CLI a #202 cez `offline_stages.build_stages`; oba používajú rovnaký `GenerationStage` a `prompt_builder`.
+
+**Zmeny (každá za vlastným vypínačom, default OFF do slepého testu; zapína sa len env/secret, nie kódom):**
+1. **Štýl domu** (`GEN_HOUSE_STYLE`). Text v `prompts/house_style.md` = `taste_brief.txt` + tvrdé pravidlá: nikdy hádanky „čo som“, najviac 1 otázka o pôvode slova na dávku, žiadna nápoveda prezrádzajúca odpoveď, a veta „ak požiadavka hráča výslovne chce opak, platí požiadavka“. Pre sk/cs odsek o domove s podmienkou „len pri všeobecnej téme“. Pripája sa na koniec `order_brief_section` ako vlastná sekcia (nie do `<request>`), takže ju dostane worker, CLI, #202, top-up aj MCQ a open dávky (ContextVar v `_build_batch_prompt`, `advanced_generator.py:1202`). Prompt cache tu nič nesľubuje (šablóna `direct_v1` nemá breakpoint), ~500 tokenov navyše na volanie. Podmienka pre „ALREADY IN THIS PACK“ (`prompt_builder.py:227`) sa vyhodnotí pred pridaním štýlu, aby sa správanie top-upu v en korpuse nezmenilo. Pečiatka `generation_metadata.house_style = <verzia>`.
+2. **Podtémy balíka** (`PACK_SUBTHEMES`). Spúšťa sa **len pri objednávke zákazníka**: worker odovzdá `GenerationStage` príznak „objednávka zákazníka“ v `_build_stages` (`worker/tasks.py:96`); `ctx.pack_id` sa nedá použiť, vzniká až po prvom kole (`persist.py:200`). Korpus ani #202 príznak nikdy nedávajú. Prod skladá balík v kolách 1, 2, 4, 8 (`PACK_BATCH_SCHEDULE`) a `TopUpStage` pred každým kolom prepíše `ctx.target_count` na výpadok (`topup.py:180, 210`). Preto:
+   - Kolo 1 sa generuje na celú tému ako dnes, aby prvá otázka prišla hneď (#182). Plánovač beží súbežne s ním.
+   - Plánovač vráti `ceil(cieľ/3.5)` úzkych podtém s kvótou 3–4. Do `OrderContext` sa uloží plán a pôvodný cieľ (nové pole, `target_count` ostáva výpadok kola). Kvóty sa delia z `pôvodný cieľ − otázky bez pečiatky` (otázka z kola 1), aby balík nepresiahol cieľ.
+   - Každé ďalšie kolo berie podtémy s najväčšou zostávajúcou kvótou; zostávajúca kvóta sa počíta z pečiatok `generation_metadata.subtheme` uložených otázok, takže retry pokusu pokračuje, nerozdelí znova.
+   - Plánovač znovu použije klienta a JSON kontrakt `app/sourcing/topic_planner.py:50` (vlastná rola `TOPIC_PLAN`, `None` pri chybe). Pri chybe ide balík postaru, nepadne.
+   - Testy proti skutočnému rozvrhu (1,2,4,8), nie proti jednému kolu.
+3. **Pripnutý Opus 5.5** pre generovanie: bez nového kódu, cez existujúci `GENERATION_MODEL=claude-opus-5-5` (vypne aj Fable mix, `worker.py:111-117`) vo Fly secrets po teste. Overenie: log `generation_model()` a že nie je `generator_alt` pri štarte workera (nie `fresh_roles.check_roles`, ten je len pre #202).
+4. **Duplicity v balíku.** Kosínus v rámci balíka dnes neexistuje: embedding otázky sa počíta len pre dotaz do korpusu a zahodí sa (`pgvector_client.py:498`), uložené riadky balíka ho nemajú. Doplní sa: embedding sa ponechá na otázke a nová otázka sa porovná s celým zoznamom balíka (`ctx.questions`, všetky kolá), prah ako proti korpusu. Za vypínačom `PACK_SUBTHEMES` (riziko vzniká paralelnými podtémami). Korpusové behy ostávajú pri `run_dups.py` + Sonnet.
+5. **Korpusový recept** (`run_arm.sh`, `general-corpus-recipe.md`): po zapnutí 1 už nepredáva vkus cez `--prompt`; `--floor-fraction 0` ostáva len korpusu, balík drží presný počet cez top-up.
+6. **#202 týždenný job** beží v tej istej Fly app ako worker, dostal by teda aj prod secrets. `fresh_pins` preto nastaví `GEN_HOUSE_STYLE` z vlastnej premennej `FRESH_HOUSE_STYLE` (default 0, prebije app secret); podtémy #202 nedostane vôbec (príznak zákazníka). Rameno #202 v slepom kole aj neskoršie zapnutie = len env.
+
+**Overenie.**
+- Unit testy: prompt so zapnutým/vypnutým 1 (vypnutý = bajtovo zhodný s dneškom), plánovač podtém (počet, fallback pri chybe), rozdelenie do kôl a top-up, kosínus v balíku, pečiatky.
+- Každá cesta: 1 mini balík (6 otázok) cez session (mba), Max kredit (Anthropic kľúč), OpenRouter, cloud session (JSON von, bez prod DB); kontrola pečiatok. Prod worker: 1 objednávka cez `quiz-pack:session` frontu na mba, potom prod po zapnutí secrets.
+- **Slepé kolo (jedno):** 3 objednávky × starý (dnešné defaulty) vs nový (1+2+3+4), 20 otázok spolu, zamiešané; + #202 rameno 5 starý / 5 nový. Generuje sa na predplatnom ($0). Nový musí mať ⌀ ≥ starý a ≥ 7; inak stop a otázka na foundera.
+- Prod zapnutie: `GEN_HOUSE_STYLE=1`, `PACK_SUBTHEMES=1`, `GENERATION_MODEL` cez Fly secrets (founder potvrdí, `fly secrets` je za povolením), deploy z `main` po zelenom CI. Vrátenie = unset.
+
+**Mimo rozsahu:** zákazník podtémy nevidí ani neupravuje; zmeny UI; „trafilo len 23 %“ (203.6, „nie teraz“).
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou
@@ -107,4 +141,5 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
 - [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
 - [x] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
+- [ ] 203.9 rovnaká kvalita v balíkoch a na každej ceste (plán prešiel /design-soundness 0,82 SOUND; ďalej implementácia)
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

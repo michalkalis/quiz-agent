@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 204 | [Spoľahlivejšie rozpoznanie hlasovej odpovede](issue-204-answer-recognition.md) | enhancement · in-progress | `[~]` #204 | 2026-10-14: rešerš vs. Wispr Flow; zmeny za prepínačmi (A/B): neurónová VAD, AEC na BT, opakovaný pokus bez zamietnutého prepisu, oprava záložného STT, fonetická zhoda |
 | 203 | [Nudné otázky: príčina a náhrada](issue-203-stock-questions.md) | bug · in-progress | `[~]` #203 | 2026-10-14: zásoba ~2/10 (beh 10-01), čerstvé generovanie 7,3–8,4; open = 200/jazyk cez predplatné podľa receptu, pilot + slepá vzorka ≥ 7 |
 | 202 | [Týždenné automatické dopĺňanie čerstvej zábavy](issue-202-weekly-fresh-entertainment-job.md) | enhancement · in-progress | `[~]` #202 | Job na serveri každú stredu: en/sk/cs natívne ~15/jazyk, strop $15, auto-approve cez brány |
 | 201 | [Zábava, na ktorú sa dá odpovedať](issue-201-gettable-entertainment.md) | enhancement · done | `[x]` #201 | HOTOVÉ 2026-10-13: nový recept ≈ starý, kontrola „bežný hráč“ vypnutá (nepredpovedá hodnotenie); jednoduché pravidlá v [recepte dopĺňania](../setup/fresh-entertainment-recipe.md) |

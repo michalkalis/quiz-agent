@@ -46,4 +46,12 @@ Replay (`scripts/voice_replay.py`) na nahrávkach z auta s prepínačmi zapnutý
 
 ## Stav
 
-- 2026-10-14: rešerš hotová, tracky 204.1–204.6 v práci.
+- 2026-10-14: rešerš hotová (PR #408). **Kód 204.1–204.6 v main:**
+  - Backend v154 (204.1 záložné STT `languages` + `keywords`, PR #409; 204.2 server, PR #412). 204.6 fonetická zhoda v main (PR #416), ešte nenasadená, OFF; Šekspír/Shakespeare nepokrýva (ostáva na sudcovi), Tolstoj/Tolstoy tiež nie.
+  - iOS: 204.2 zamietnuté prepisy pri opakovanom pokuse (PR #413, ON), 204.3 Silero v6 VAD (PR #415, OFF, +0,65 MB, pád modelu → energetická VAD), 204.4 + 204.5 AEC na externej trase a predný kardioidný mikrofón (PR #414, OFF; 204.5 len bez voice processing).
+  - Sentry „answer recording stopped“ nesie `detector`, `neuralHeardSpeech`, `avoidRejected`, `rejectedCount`, `ecFlag/ecAvailable/ecEnabled`, `micDataSource`, `micPolarPattern`.
+- **Open:** TF build na požiadanie → test v aute:
+  - 204.3: s prepínačom ON/OFF porovnať podiel nahrávok do stropu a oneskorenie konca.
+  - 204.4: na A2DP/CarPlay musí zvuk ostať v autorádiu; `ecEnabled=false` = iOS to na A2DP nepodporuje; mód sa na externej trase mení `.spokenAudio` → `.default`, skontrolovať stlmenie hudby.
+  - 204.5: `micDataSource=Front`, `micPolarPattern=Cardioid`; v režime hovoru musí prevziať mikrofón auta.
+  - Potom replay na nahrávkach → rozhodnúť, čo ostane zapnuté, a 204.6 zmerať pred zapnutím. 204.7/204.8 až po meraní.

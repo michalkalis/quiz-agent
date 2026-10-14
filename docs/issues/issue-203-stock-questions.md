@@ -73,6 +73,10 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 - **Pilot (2026-10-14):** `general-pilot-2026-10-14/`, predplatné, 5 úzkych tém × 4 → en 18, sk 20, cs 20. Slepé hodnotenie 30 (E/K/C po 8 + 6 kotiev A = nehodnotené T/S z `taste-2026-10-14`): https://claude.ai/artifact/7EgUpVsJSJmvggLLdNbRQx
 - **Výsledok pilotu:** en ⌀ 7,9 · sk ⌀ 8,5 · cs ⌀ 7,6 · kotva A ⌀ 6,7 (ráno 8,1–8,4 → stupnica dnes prísnejšia). Brána ≥ 7 splnená. Founder slovne: „ok, dá sa, nadšený nie som; stále príliš kvízovito nudné, chýba variabilita a väčší zdroj zábavnosti.“
 - Zistenia: 4-otázkové dávky padali celé pri 3/4 → `--floor-fraction 0`. Duplicity v rámci behu (8 párov v 58, aj naprieč jazykmi) → krok v recepte (zoznam `run_dups.py` + Sonnet nájde páry; embedding medzi jazykmi nestačí).
+- **Skúška pestrosti (2026-10-14):** `variety-pilot-2026-10-14/`, `variety_brief.txt` = vkus + tvary (hádanka, fakt/výmysel, dokonči vetu, „čo sa stane, keď“) + zábavné témy. Slepo 21 pestrých vs 9 kontrolných z pilotu: https://claude.ai/artifact/2XP3studeaSAFfRGww4tLX
+  - Výsledok: pestré en 4,6 · sk 5,2 · cs 5,9 vs kontrola ⌀ 7,6. **Hádanky = 1/10 (všetkých 7)**, founder: „detinský a primitívny formát, klišé nezmysel“ → nikdy. Bez hádaniek pestré ⌀ ~7,2 ≈ kontrola, žiadny zisk.
+  - Poznámky: „fakt alebo výmysel“ je len pravda/nepravda, pomenovanie nič nepridáva; opakovane „nejasne položená otázka“; klišé floskuly („ktorú s radosťou praská každé dieťa“) vadia; ľahko predpovedateľné odpovede pravda/nepravda nudia; znalosť zo ZŠ (Bratislava) slabá.
+  - Founder: zvyšovanie zábavnosti rieši session quiz-agent-43 → odovzdané.
 - **Plný beh pripravený:** `general-corpus-2026-10-14/run_arm.sh`, 45 tém × 4 = 180/jazyk + 20 z pilotu; pokračuje po limite predplatného. Spustiť až po ⌀ ≥ 7: `GATEWAY=session ./run_arm.sh E en taste_brief.txt` (K sk, C cs).
 
 ## Stav

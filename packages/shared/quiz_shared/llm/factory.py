@@ -185,10 +185,6 @@ DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
 # flash-class ANSWERABILITY proxy: it must know small-market (sk/cs) pop
 # culture, which haiku barely does (#195 run notes).
 CASUAL_PLAYER = _role("LLM_ROLE_CASUAL_PLAYER", "claude-sonnet-5-5")
-# #203: "stock question" check — is this a quiz chestnut asked straight?
-# Opus: the line between a staple and a fresh angle on a famous subject is a
-# taste call; batched, so the cost per question stays small.
-STOCK_QUESTION = _role("LLM_ROLE_STOCK_QUESTION", "claude-opus-5-5")
 EMBED = "text-embedding-3-small"
 # #196 track 196.4 — offline quiz-pack-api helper roles. Each has its own env
 # override so one secret rolls a single role back (topic planner + expiry used

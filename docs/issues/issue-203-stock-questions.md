@@ -23,11 +23,11 @@ Zo schválenej zásoby zmiznú otrepané učebnicové otázky a nové sa do nej 
 
 ## Riešenie
 
-### 203.1 Kontrola „otrepaná otázka“ (hotové v PR)
+### 203.1 Kontrola „otrepaná otázka“ (vyskúšané, kód odstránený po 203.2)
 
 `app/verification/stock_question.py`: jedno dávkové volanie (20 otázok), Opus 5.5 (`LLM_ROLE_STOCK_QUESTION`). Pri chybe sa otázka ponechá. Kotvy sú founderove hodnotenia z 07-09 (King of Pop, mendelévium, Monopoly, Rio → otrepané; míľa, Point Nemo, Kleopatra, Dumbledore → nie) plus Rosa Parks.
 - v1 promptu hodnotila očami kvízového fanúšika → 63 % otrepaných (aj „hroch je príbuzný veľryby“). v2 = očami bežného dospelého, ktorý hrá kvíz raz za čas, „pri pochybnosti nie“ → **273 / 1 212 (23 %)**, sedí s ručnou vzorkou. Rosa Parks označená.
-- Skript `scripts/classify_stock_questions.py` (len čítanie). Výsledky sú v `docs/testing/runs/stock-questions-2026-10-14/verdicts.json` (v1 v `verdicts-v1-too-strict.json`).
+- Kód (kontrola + skript len na čítanie) bol v PR #403 a po neúspešnom slepom overení sa z PR odstránil (je v histórii commitu e48f2d48). Výsledky sú v `docs/testing/runs/stock-questions-2026-10-14/verdicts.json` (v1 v `verdicts-v1-too-strict.json`).
 
 ### 203.2 Slepé overenie (čaká na foundera)
 

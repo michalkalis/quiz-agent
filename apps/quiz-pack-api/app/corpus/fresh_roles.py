@@ -21,7 +21,7 @@ from quiz_shared.llm import anthropic_route
 from quiz_shared.llm import factory as llm_factory
 
 from app import feature_flags, llm_usage
-from app.corpus.fresh_pins import ENV_PINS  # noqa: F401  (re-export)
+from app.corpus.fresh_pins import ENV_PINS, session_run  # noqa: F401  (re-export)
 
 OPUS = "claude-opus-5-5"
 SONNET = "claude-sonnet-5-5"
@@ -47,7 +47,7 @@ class RoleMapError(RuntimeError):
 
 def expected_roles(lang: str) -> dict[str, str]:
     return {
-        "gateway": "direct",
+        "gateway": "session" if session_run() else "direct",
         "generation": OPUS,
         "gen_alt_share": "0",
         "critique": OPUS,
@@ -103,7 +103,9 @@ def resolve_roles(lang: str) -> dict[str, str]:
 
 
 def _is_model(value: str) -> bool:
-    return value not in (OFF, "direct") and not value.replace(".", "").isdigit()
+    return (
+        value not in (OFF, "direct", "session") and not value.replace(".", "").isdigit()
+    )
 
 
 def check_roles(languages: list[str]) -> dict[str, dict[str, str]]:
@@ -123,9 +125,13 @@ def check_roles(languages: list[str]) -> dict[str, dict[str, str]]:
     for model in sorted(models):
         if llm_usage.cost_cents_for(model, 1_000_000, 0) <= 0:
             problems.append(f"model {model!r} has no list price")
-        if anthropic_route.is_claude_model(
-            model
-        ) and not anthropic_route.routes_to_anthropic(model):
+        # A manual session run (fresh_pins.session_run) is meant to bypass the
+        # API for chat calls; only the API-route rule is waived then.
+        if (
+            not session_run()
+            and anthropic_route.is_claude_model(model)
+            and not anthropic_route.routes_to_anthropic(model)
+        ):
             problems.append(f"model {model!r} would not go to the Anthropic API")
     for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DATABASE_URL"):
         if not (os.getenv(key) or "").strip():

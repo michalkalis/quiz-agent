@@ -1,0 +1,152 @@
+{
+ "R1": {
+  "arm": "old-hp",
+  "qid": "8d413f7c-57d1-49fe-96e4-dfa48fa23f68",
+  "topic": "Harry Potter – Prisoner of Azkaban"
+ },
+ "R2": {
+  "arm": "weekly-old",
+  "qid": "0b9fd5dd-984c-4690-957f-3b975d01c692",
+  "topic": "Superhero films"
+ },
+ "R3": {
+  "arm": "weekly-old",
+  "qid": "5edc5dcc-85b9-4946-83ba-28cfac6d4a01",
+  "topic": "Box office"
+ },
+ "R4": {
+  "arm": "new-hp",
+  "qid": "8df87cff-0545-4f73-a239-decb97f2fc0c",
+  "topic": "Harry Potter film locations"
+ },
+ "R5": {
+  "arm": "old-sport",
+  "qid": "cfc91e01-24af-42c5-b1ad-c818524cd7a2",
+  "topic": "Slovenský futbal – MS 2010"
+ },
+ "R6": {
+  "arm": "old-food",
+  "qid": "c2dbedd2-4e14-45a3-8410-4a59f5e1ed51",
+  "topic": "Koření"
+ },
+ "R7": {
+  "arm": "new-hp",
+  "qid": "1ad84e21-0d1e-4c05-8795-11ff2830966a",
+  "topic": "Diagon Alley shops and businesses"
+ },
+ "R8": {
+  "arm": "weekly-old",
+  "qid": "02dbb4ce-fa10-40b1-a66d-750205519f4e",
+  "topic": "Streaming TV"
+ },
+ "R9": {
+  "arm": "new-sport",
+  "qid": "e282921a-e299-496a-a4df-c0536249a9e1",
+  "topic": "Slovensko na MS vo futbale 2010"
+ },
+ "R10": {
+  "arm": "new-food",
+  "qid": "f56ac473-2ca2-4ba1-82e1-000bb127179f",
+  "topic": "Chemie pečení"
+ },
+ "R11": {
+  "arm": "old-sport",
+  "qid": "77e89bca-6741-4173-8099-b837b0d7be8d",
+  "topic": "Slovenský hokej"
+ },
+ "R12": {
+  "arm": "old-hp",
+  "qid": "ec50aadb-814f-442a-a909-51543967f0ea",
+  "topic": "Harry Potter – Patronuses"
+ },
+ "R13": {
+  "arm": "old-food",
+  "qid": "57967146-19b0-4bee-abe8-876254b6111f",
+  "topic": "Původ slavných jídel"
+ },
+ "R14": {
+  "arm": "old-food",
+  "qid": "d9c7cc04-6681-4e3b-bfee-2a67027aa08c",
+  "topic": "Pečivo"
+ },
+ "R15": {
+  "arm": "old-sport",
+  "qid": "b7b6ba0b-9875-42c0-a523-1c35e2fb3819",
+  "topic": "Slovenský hokej – legendy NHL"
+ },
+ "R16": {
+  "arm": "new-hp",
+  "qid": "dd125008-6325-4349-8904-53e1bec5861a",
+  "topic": "Horcruxes and their destruction"
+ },
+ "R17": {
+  "arm": "new-sport",
+  "qid": "b96ba769-ba36-4766-81d4-f9f835df346c",
+  "topic": "Slováci v NHL"
+ },
+ "R18": {
+  "arm": "weekly-new",
+  "qid": "a765ed25-2efb-43d4-8914-a89c2cda2de8",
+  "topic": "Video games"
+ },
+ "R19": {
+  "arm": "weekly-old",
+  "qid": "5ca79ca1-c66a-4174-87ba-77178680844d",
+  "topic": "Box office"
+ },
+ "R20": {
+  "arm": "old-sport",
+  "qid": "eace3dc6-b5ae-401b-af48-65e08eb064da",
+  "topic": "Slovenský futbal"
+ },
+ "R21": {
+  "arm": "weekly-new",
+  "qid": "fdabfec9-557f-44bf-9139-af7dd4812778",
+  "topic": "Film quotes"
+ },
+ "R22": {
+  "arm": "weekly-new",
+  "qid": "28d03e84-7404-4ae5-b9e0-b12975ce8639",
+  "topic": "Video games"
+ },
+ "R23": {
+  "arm": "new-food",
+  "qid": "0849f2e2-e120-4944-959a-709bee81a876",
+  "topic": "Chemie pečení"
+ },
+ "R24": {
+  "arm": "weekly-old",
+  "qid": "6b301035-18e6-44fc-848b-060adfcc3315",
+  "topic": "Music & film"
+ },
+ "R25": {
+  "arm": "new-sport",
+  "qid": "07d3e4f3-219c-48df-a692-11281282883d",
+  "topic": "Zlato slovenských hokejistov 2002"
+ },
+ "R26": {
+  "arm": "old-hp",
+  "qid": "6a283100-94ce-4bc7-b769-4ed29327c719",
+  "topic": "Harry Potter – Hogwarts"
+ },
+ "R27": {
+  "arm": "new-sport",
+  "qid": "22f01963-7143-48b1-a460-9153aa04c86d",
+  "topic": "Slováci v NHL"
+ },
+ "R28": {
+  "arm": "weekly-new",
+  "qid": "b97add41-81f7-46ed-9d5a-33db989dd3cf",
+  "topic": "Film"
+ },
+ "R29": {
+  "arm": "new-food",
+  "qid": "0b1aa279-2a0e-480d-9b2e-332729244fff",
+  "topic": "Původ koření"
+ },
+ "R30": {
+  "arm": "weekly-new",
+  "qid": "da183b8b-9887-4c2a-8761-a287467ccce1",
+  "topic": "Music and film"
+ }
+}

@@ -1,0 +1,302 @@
+{
+ "R1": {
+  "arm": "F",
+  "qid": "8449221f-8162-4ebf-b276-65567a50d685",
+  "topic": "Speedrunning video games and glitch skips"
+ },
+ "R2": {
+  "arm": "F",
+  "qid": "565e6179-01f4-42f2-a0f5-6f13198c8f0c",
+  "topic": "Autocorrect fails and predictive keyboards"
+ },
+ "R3": {
+  "arm": "E",
+  "qid": "47049a19-40af-40ee-8ddf-964df5670c91",
+  "topic": "Origin of high heels"
+ },
+ "R4": {
+  "arm": "F",
+  "qid": "ff7a038a-b07d-4562-a7f3-012eebc39e6e",
+  "topic": "Shivering and fever"
+ },
+ "R5": {
+  "arm": "W",
+  "qid": "eb1bbd6d-1e20-4eb7-b41d-0ec944fae3eb",
+  "topic": "Harry Potter – kúzla"
+ },
+ "R6": {
+  "arm": "T",
+  "qid": "6e45aaa9-48bf-4e1e-a040-23b131097d68",
+  "topic": "Slovenská elektronická diaľničná známka"
+ },
+ "R7": {
+  "arm": "E",
+  "qid": "cd1eab23-c5ad-4601-b2db-9178eb84df9e",
+  "topic": "Famous songs with a surprising backstory"
+ },
+ "R8": {
+  "arm": "T",
+  "qid": "1c6d8224-7fdf-425b-9ad4-f9d15aa7d3ee",
+  "topic": "Pôvod slova emoji"
+ },
+ "R9": {
+  "arm": "C",
+  "qid": "218f5c87-e767-4d6a-9231-a947b84b0133",
+  "topic": "Zvláštní zeměpis Česka"
+ },
+ "R10": {
+  "arm": "C",
+  "qid": "c432e877-cbfa-488d-8e27-81c11ee3ed68",
+  "topic": "Krtek a jeho cesta do vesmíru"
+ },
+ "R11": {
+  "arm": "S",
+  "qid": "ec671dd3-2ff6-48c9-875e-a30d2672cc58",
+  "topic": "Prečo vyzerá oblečenie tak, ako vyzerá"
+ },
+ "R12": {
+  "arm": "S",
+  "qid": "bbac6ab1-ed2b-4089-aa75-6f46c34e28f9",
+  "topic": "Rebarbora"
+ },
+ "R13": {
+  "arm": "F",
+  "qid": "f32924aa-366b-482c-be75-d347d594e5ee",
+  "topic": "Car sickness and motion sickness remedies"
+ },
+ "R14": {
+  "arm": "T",
+  "qid": "e2821ec7-f543-4c1c-abf6-5c136ff3f244",
+  "topic": "Zabíjačka"
+ },
+ "R15": {
+  "arm": "C",
+  "qid": "4af0f85c-b11e-4480-99df-5b364fa6ad69",
+  "topic": "Slova převzatá z jiných jazyků"
+ },
+ "R16": {
+  "arm": "F",
+  "qid": "d743dc60-dc25-4f1c-a1fe-26f20b947510",
+  "topic": "Bungee jumping"
+ },
+ "R17": {
+  "arm": "D",
+  "qid": "bd19b87f-d229-4b5a-8dd8-5b7f70a17dc7",
+  "topic": "Rave kultura v Česku"
+ },
+ "R18": {
+  "arm": "F",
+  "qid": "ae7172dc-358d-4eec-9ee0-8b37f136358c",
+  "topic": "Gym equipment names and gym etiquette"
+ },
+ "R19": {
+  "arm": "E",
+  "qid": "9d858ca0-6265-4b41-87d1-19ddc37b28a0",
+  "topic": "First names and their meanings"
+ },
+ "R20": {
+  "arm": "U",
+  "qid": "305224aa-bd7f-4e73-a5e8-330ee22a8533",
+  "topic": "České slová, ktorým Slováci rozumejú inak"
+ },
+ "R21": {
+  "arm": "E",
+  "qid": "c1b7d837-800b-459b-bb64-53be50a6e192",
+  "topic": "Islands and odd geography"
+ },
+ "R22": {
+  "arm": "T",
+  "qid": "7fd70645-883a-40c8-92b9-6e64e2bb170d",
+  "topic": "Hrnčiari na slovenských jarmokoch"
+ },
+ "R23": {
+  "arm": "C",
+  "qid": "2c2ebb54-4169-4840-a24c-208a7e478dd6",
+  "topic": "Smysly a iluze"
+ },
+ "R24": {
+  "arm": "F",
+  "qid": "6a9b3893-a90f-4faf-8efd-48251fa37e04",
+  "topic": "Hangover remedies around the world"
+ },
+ "R25": {
+  "arm": "D",
+  "qid": "b27083a1-7f7f-4920-a138-ba3083a9dd8d",
+  "topic": "Vinylové desky"
+ },
+ "R26": {
+  "arm": "C",
+  "qid": "59de1a14-68ed-43de-b809-221f304a33df",
+  "topic": "Lidské tělo – svraštělé prsty ve vodě"
+ },
+ "R27": {
+  "arm": "T",
+  "qid": "6a737928-4c43-4228-9d94-c1635378a1ff",
+  "topic": "Slovenské pranostiky o počasí"
+ },
+ "R28": {
+  "arm": "S",
+  "qid": "37046825-9efe-4c1e-93a7-f695ecf91ba5",
+  "topic": "Čokoláda v teple"
+ },
+ "R29": {
+  "arm": "V",
+  "qid": "b47c5372-ac71-42f0-8a78-a41337326a02",
+  "topic": "PIN kódy a bankomaty"
+ },
+ "R30": {
+  "arm": "E",
+  "qid": "a94de76e-ae48-48c6-957d-c15ee16e12ca",
+  "topic": "Birds that do surprising things"
+ },
+ "R31": {
+  "arm": "D",
+  "qid": "9c1a3631-b24a-4d47-a3b4-825f8f274e27",
+  "topic": "České eufemismy za nadávky"
+ },
+ "R32": {
+  "arm": "D",
+  "qid": "445438b7-f13f-4e1b-8d23-ac1c21ac3d38",
+  "topic": "Švédský stůl"
+ },
+ "R33": {
+  "arm": "D",
+  "qid": "677760d2-f1f9-4b5a-8220-80a176d5e3bf",
+  "topic": "Pokojové rostliny – orchideje"
+ },
+ "R34": {
+  "arm": "F",
+  "qid": "282e55bd-3680-4bf0-88d2-4702dda6af4b",
+  "topic": "Jet lag and the body clock"
+ },
+ "R35": {
+  "arm": "V",
+  "qid": "62dfeab0-1a0e-46bd-bb63-c62d0566be6e",
+  "topic": "Animefest"
+ },
+ "R36": {
+  "arm": "D",
+  "qid": "95fc2918-d677-48f8-9483-849128e69a59",
+  "topic": "Kutilské nářadí"
+ },
+ "R37": {
+  "arm": "D",
+  "qid": "8d2e5b49-e562-4ac8-99cc-47441acbad35",
+  "topic": "Třídění skla"
+ },
+ "R38": {
+  "arm": "E",
+  "qid": "ed6a0428-cc95-4d0c-97ad-69508831394c",
+  "topic": "Record breakers in nature"
+ },
+ "R39": {
+  "arm": "C",
+  "qid": "b6e8303d-8938-4dd4-819c-d588c2fe5a96",
+  "topic": "Původ slov"
+ },
+ "R40": {
+  "arm": "D",
+  "qid": "3a3f9998-bbfd-4340-a1dd-5f03a0ad4113",
+  "topic": "Tatra"
+ },
+ "R41": {
+  "arm": "S",
+  "qid": "6b7b63d0-2673-44e7-a1b2-609f49da6ae1",
+  "topic": "Slovenské rieky"
+ },
+ "R42": {
+  "arm": "D",
+  "qid": "bafd4f97-1f1d-4c85-afa5-f9f10bc0aaf3",
+  "topic": "Vánoční kapr ve vaně"
+ },
+ "R43": {
+  "arm": "S",
+  "qid": "6bb25426-f343-4fae-ac7f-d2d6f456ca99",
+  "topic": "Prevzaté slová"
+ },
+ "R44": {
+  "arm": "T",
+  "qid": "32941dc7-b0dc-4304-9ed2-1c8f4cf4455c",
+  "topic": "Saunový ceremoniál"
+ },
+ "R45": {
+  "arm": "F",
+  "qid": "9f539cda-feb4-4d18-8c07-5147a94c4435",
+  "topic": "Car dashboard warning lights"
+ },
+ "R46": {
+  "arm": "C",
+  "qid": "52110e08-6cd3-4c33-995e-c834b2dfea0e",
+  "topic": "Slova převzatá z jiných jazyků"
+ },
+ "R47": {
+  "arm": "F",
+  "qid": "237cf4f5-9369-41d2-8ea6-6dea84c3af48",
+  "topic": "Esports tournaments and pro gamer life"
+ },
+ "R48": {
+  "arm": "T",
+  "qid": "c7843f64-2cd4-4f6b-99c2-cba92c1b98b0",
+  "topic": "Umývačka riadu a domácnosť"
+ },
+ "R49": {
+  "arm": "T",
+  "qid": "bde931fe-4d53-4411-84b2-1714ed202c9d",
+  "topic": "Modelová železnica slávnych ľudí"
+ },
+ "R50": {
+  "arm": "S",
+  "qid": "7e206209-6bb4-4d25-bcf3-05d7f83fec7f",
+  "topic": "Korenie a jeho pôvod"
+ },
+ "R51": {
+  "arm": "F",
+  "qid": "78d895db-dbed-4752-9c48-e5304098de9d",
+  "topic": "Wedding customs: cake"
+ },
+ "R52": {
+  "arm": "V",
+  "qid": "74f0f168-fe40-488c-8916-5709b6282985",
+  "topic": "Drum and bass a jeho kořeny"
+ },
+ "R53": {
+  "arm": "S",
+  "qid": "e4c116d3-89be-4c49-9409-84259902bbf6",
+  "topic": "Spoločenské hry"
+ },
+ "R54": {
+  "arm": "S",
+  "qid": "0910e36d-9ea8-4591-a28d-a141bd0871ee",
+  "topic": "Prevzaté slová"
+ },
+ "R55": {
+  "arm": "C",
+  "qid": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+  "topic": "Mořští živočichové"
+ },
+ "R56": {
+  "arm": "T",
+  "qid": "65364ff0-e759-4bf6-9e56-52c2b0b55bf1",
+  "topic": "Rýchle občerstvenie vo svete"
+ },
+ "R57": {
+  "arm": "T",
+  "qid": "10a0404f-ef53-4da9-b76e-cc258ef10b31",
+  "topic": "Umývačka verzus ručné umývanie"
+ },
+ "R58": {
+  "arm": "E",
+  "qid": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+  "topic": "Flags and national symbols"
+ },
+ "R59": {
+  "arm": "E",
+  "qid": "a39eb9e9-f42f-4702-a051-674e6f220940",
+  "topic": "Everyday life in the past"
+ },
+ "R60": {
+  "arm": "E",
+  "qid": "bfb01c59-3e8c-487f-a065-d64d55107459",
+  "topic": "Everyday sayings and where they come from"
+ }
+}

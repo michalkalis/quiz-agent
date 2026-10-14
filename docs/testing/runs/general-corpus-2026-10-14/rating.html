@@ -1,0 +1,170 @@
+<title>Plný beh: vzorka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Plný beh: vzorka</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Nové otázky po anglicky, slovensky aj česky, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "en", "question": "During a Super Mario 64 speedrun, Mario once suddenly shot up to a higher floor, and nobody has ever managed to repeat it. The favourite explanation is a single bit flipped in the console's memory by something arriving from outer space. What?", "answer": "A cosmic ray", "options": [], "explanation": "Particles from space hit Earth constantly, and occasionally one flips a 0 to a 1 inside a computer chip. A single flip in Mario's height value matches the jump exactly, and an unclaimed bounty for reproducing it any other way helped make it famous."}, {"id": "R2", "lang": "en", "question": "Before touchscreens, phones guessed your words with a predictive text system called T9. Think of the old keypad: what did the '9' stand for?", "answer": "Nine keys", "options": [], "explanation": "T9 meant 'Text on 9 keys'. You pressed each key once and the phone worked out which word you meant, instead of you tapping 7 four times to get an S."}, {"id": "R3", "lang": "en", "question": "High heels weren't invented for fashion. They began as practical footwear for men doing which activity?", "answer": "Horse riding", "options": [], "explanation": "Persian cavalrymen wore heels so their feet would stay locked in the stirrups while they stood up to shoot arrows. European noblemen later copied the look, and only after that did heels become a women's fashion."}, {"id": "R4", "lang": "en", "question": "At the start of a fever you often shiver and feel freezing, even though your body temperature is actually rising. What has your brain just done?", "answer": "Raised its internal thermostat", "options": [], "explanation": "The brain resets its target temperature higher to fight infection, so your normal temperature suddenly feels too cold and your muscles shiver to heat you up. When the fever breaks the thermostat drops again, which is why you then sweat."}, {"id": "R5", "lang": "sk", "question": "Smrtiaca kliatba Avada Kedavra podľa J. K. Rowlingovej súvisí so slovom, ktoré pozná každé dieťa z vystúpení kúzelníkov. O aké slovo ide?", "answer": "abrakadabra", "options": [], "explanation": "Rowlingová povedala, že ide o starú aramejskú formulu, z ktorej vzniklo „abrakadabra“. V jej verzii však znamená zhruba „nech je to zničené“, takže z nevinného kúzelníckeho slova sa stala vražedná kliatba."}, {"id": "R6", "lang": "sk", "question": "Pravda alebo nepravda: Ak ťaháte za autom karavan alebo prívesný vozík, musíte mu na slovenskú diaľnicu kúpiť samostatnú diaľničnú známku.", "answer": "Nepravda", "options": ["Pravda", "Nepravda"], "explanation": "Nepravda. Diaľničná známka sa na Slovensku platí len za motorové vozidlo, takže vozík či karavan sa vezie na známke vášho auta."}, {"id": "R7", "lang": "en", "question": "Nirvana's anthem 'Smells Like Teen Spirit' took its title from a friend's graffiti. But Teen Spirit was actually the brand name of what product?", "answer": "Deodorant", "options": [], "explanation": "Kathleen Hanna scrawled 'Kurt smells like Teen Spirit' on his wall, meaning he smelled of his girlfriend's deodorant. Cobain thought it sounded revolutionary and only learned later that it was a teen deodorant brand."}, {"id": "R8", "lang": "sk", "question": "Slovo emoji znie takmer ako emócia, no s emóciami nemá nič spoločné. Z ktorého jazyka pochádza?", "answer": "Z japončiny", "options": [], "explanation": "Japonské „e“ znamená obrázok a „moji“ znak, takže emoji je doslova obrázkový znak. Podobnosť so slovom emócia je čistá náhoda."}, {"id": "R9", "lang": "cs", "question": "Česko nemá moře, a přesto má dlouhodobě pronajatý kousek námořního přístavu v Německu, na řece, která k nám teče z Krkonoš. Ve kterém městě?", "answer": "Hamburk", "options": [], "explanation": "Pronájem pochází z Versailleské smlouvy po první světové válce, aby se vnitrozemské Československo dostalo k moři. Jedna z přístavních nádrží se dodnes jmenuje Vltavský přístav, německy Moldauhafen."}, {"id": "R10", "lang": "cs", "question": "Který hrdina českých večerníčků se jako plyšová hračka proletěl s americkým astronautem až na Mezinárodní vesmírnou stanici?", "answer": "Krtek", "options": [], "explanation": "Plyšového Krtka vzal na palubu raketoplánu Endeavour astronaut NASA Andrew Feustel, jehož manželka má české kořeny. Krtek se tak dostal dál než kterýkoli jiný český animovaný hrdina."}, {"id": "R11", "lang": "sk", "question": "Niektoré košele majú na cípoch goliera malé gombíky. Vymysleli ich preto, lebo hráčom istého športu golier pri cvale na koni plieskal do tváre. O aký šport išlo?", "answer": "pólo", "options": [], "explanation": "Pán Brooks z firmy Brooks Brothers videl anglických pólistov, ktorí mali golier pripnutý ku košeli, a tak začal šiť košele s gombíkmi na goliere. Firma ich dodnes volá „originálna pólo košeľa“."}, {"id": "R12", "lang": "sk", "question": "Rebarboru pečieme do sladkých koláčov ako ovocie, no v skutočnosti je to zelenina. Ktorú časť rastliny z nej jeme?", "answer": "Stopky listov", "options": [], "explanation": "Jeme dužinaté listové stopky, a listy sa vyhadzujú dobrým dôvodom: majú toľko kyseliny šťaveľovej, že sú jedovaté."}, {"id": "R13", "lang": "en", "question": "The word 'nausea' comes from an Ancient Greek word for a means of transport. Which one?", "answer": "Ship", "options": [], "explanation": "The Greek 'naus' meant ship, the same root as 'nautical', so nausea literally means seasickness. Sailors had the feeling long before anyone got carsick."}, {"id": "R14", "lang": "sk", "question": "Zabíjačka sa na slovenskom vidieku tradične robila v zime, najčastejšie od decembra do februára. Aký praktický dôvod to malo?", "answer": "Mäso sa v chlade nekazilo", "options": [], "explanation": "Bez chladničiek bol mráz jediná spoľahlivá chladnička, takže mäso, klobásy a jaternice vydržali, kým sa nevyúdili alebo nespracovali. Navyše v zime neboli muchy."}, {"id": "R15", "lang": "cs", "question": "Slovo brambory vzniklo z názvu německé země, odkud k nám tyto hlízy kdysi přišly. Která země to byla?", "answer": "Braniborsko", "options": [], "explanation": "Brambory k nám přicházely z Braniborska, a tak se jim říkalo braniborky, z čehož časem vznikly brambory. Na Moravě se proto dodnes drží jiné názvy, třeba kobzole nebo zemáky."}, {"id": "R16", "lang": "en", "question": "A bungee cord is not really a rope. Its core is a thick bundle of hundreds of thin strands of which stretchy material?", "answer": "Rubber", "options": [], "explanation": "The cord is basically a huge bundle of rubber bands, so it can stretch to several times its resting length. That stretch spreads the stop over many metres, which is why it feels like a bounce instead of a jolt."}, {"id": "R17", "lang": "cs", "question": "Jak se jmenovala technoparty, kterou v roce 2005 na louce u Mlýnce na Tachovsku rozehnaly stovky policistů a která pak týdny rozdělovala celé Česko?", "answer": "CzechTek", "options": [], "explanation": "Policie proti tisícům tanečníků nasadila vodní děla i slzný plyn. Spor o to, jestli šlo o nutný zásah, nebo o přehnanou brutalitu, se dostal až do Poslanecké sněmovny."}, {"id": "R18", "lang": "en", "question": "Long before treadmills appeared in gyms, Victorian Britain installed giant walking wheels in buildings full of people who had no choice but to climb them. What kind of buildings were they?", "answer": "Prisons", "options": [], "explanation": "The treadmill was invented as a punishment, with convicts trudging for hours to grind grain or pump water. Today we pay a monthly fee for the privilege."}, {"id": "R19", "lang": "en", "question": "The name Philip comes from ancient Greek, and its second half shares a root with the word 'hippopotamus'. So what was a Philip originally a lover of?", "answer": "Horses", "options": [], "explanation": "Philippos means 'fond of horses', and a hippopotamus is literally a 'river horse'. Philip of Macedon, father of Alexander the Great, carried a fitting name for a cavalry king."}, {"id": "R20", "lang": "sk", "question": "Pre Slováka je pivnica tmavá miestnosť pod domom na zemiaky a zaváraniny. Kam vás však v skutočnosti pozýva Čech, keď navrhne, že spolu zájdete do pivnice?", "answer": "Do krčmy", "options": [], "explanation": "Česká pivnice je hostinec, kde sa čapuje pivo. Pivnicu v slovenskom zmysle Česi volajú sklep."}, {"id": "R21", "lang": "en", "question": "The Canary Islands weren't named after the little yellow bird. The bird was named after the islands. So which animal did the islands' name originally come from?", "answer": "Dogs", "options": [], "explanation": "The Romans called them 'Canariae Insulae', the Islands of the Dogs, from the Latin 'canis', after the big dogs found there. That's why dogs, not birds, appear on the islands' coat of arms."}, {"id": "R22", "lang": "sk", "question": "Hrnčiar na jarmoku pred točením na kruhu dlho prehnetáva hlinu, podobne ako gazdiná cesto. Čoho sa ňou hlavne zbavuje?", "answer": "Vzduchových bublín", "options": [], "explanation": "Bublinka uväznená v hline sa pri vypaľovaní v peci rozpína. Hrnček potom môže prasknúť alebo doslova vybuchnúť a poškodiť aj ostatné nádoby v peci."}, {"id": "R23", "lang": "cs", "question": "Po mátové žvýkačce vám obyčejná voda z kohoutku připadá ledová, i když teplota v ústech se vůbec nezměnila. Která látka z máty takhle oklame nervy, které hlásí chlad?", "answer": "Mentol", "options": [], "explanation": "Mentol spouští stejné receptory jako skutečný chlad, takže mozek dostane falešné hlášení 'zima'. Voda pak tento pocit ještě zesílí."}, {"id": "R24", "lang": "en", "question": "Mexico's favourite hangover cure is menudo, a spicy red soup. It is traditionally made from which part of the cow?", "answer": "Stomach (tripe)", "options": [], "explanation": "Menudo is slow-cooked beef tripe in a chilli broth, and it's so linked to rough mornings that many Mexican families make it as a weekend ritual."}, {"id": "R25", "lang": "cs", "question": "Když se podíváte na gramofonovou desku, vidíte spoustu tenkých soustředných kroužků. Kolik drážek ale ve skutečnosti má jedna strana desky?", "answer": "Jednu", "options": [], "explanation": "Celá strana desky je jediná souvislá spirála, po které jehla putuje od okraje ke středu. Kdybyste ji natáhli, měřila by stovky metrů."}, {"id": "R26", "lang": "cs", "question": "Po dlouhé koupeli ve vaně máte svraštělé prsty. Nejde přitom o nasáklou kůži, vrásky totiž zapínají nervy. K čemu nám podle vědců nejspíš slouží?", "answer": "lepší úchop ve vodě", "options": [], "explanation": "Vrásky fungují jako vzorek na pneumatice a odvádějí vodu, takže mokré věci tolik neklouzou. Při pokusu přendávali lidé se svraštělými prsty mokré kuličky rychleji. Kdo má nervy v prstu přerušené, ten se mu ve vodě vůbec nesvraští."}, {"id": "R27", "lang": "sk", "question": "Stará pranostika hovorí: „Na Hromnice o hodinu viac.“ Čoho je na Hromnice o hodinu viac?", "answer": "dňa", "options": [], "explanation": "Od zimného slnovratu sa deň na Slovensku do začiatku februára naozaj predĺži zhruba o hodinu, ba aj o niečo viac. Naši predkovia to bez hodiniek odhadli takmer presne."}, {"id": "R28", "lang": "sk", "question": "Čokoláda, ktorú ste nechali v horúcom aute, po vychladnutí niekedy na povrchu zbelie. Nie je to pleseň. Čo je teda ten biely povlak?", "answer": "Kakaové maslo", "options": [], "explanation": "Teplo roztopí kakaové maslo, ktoré vystúpi na povrch a pri chladnutí znova stuhne do bielych kryštálikov. Čokoláda je úplne v poriadku, len sa jej trochu pokazil vzhľad."}, {"id": "R29", "lang": "cs", "question": "Vynálezce bankomatu John Shepherd-Barron chtěl původně, aby PIN měl šest číslic. Kvůli komu nakonec zůstalo jen u čtyř?", "answer": "jeho manželka", "options": [], "explanation": "Jeho žena Caroline mu u kuchyňského stolu řekla, že si spolehlivě zapamatuje nejvýš čtyři číslice. Proto dnes v každé peněžence nosíme čtyřmístný PIN."}, {"id": "R30", "lang": "en", "question": "In Japanese cities, crows place walnuts on the road when the lights are red. What are they waiting for to crack the nuts open for them?", "answer": "Passing cars", "options": [], "explanation": "The crows let the traffic run over the walnuts, and some wait for the next red light so they can safely hop out and collect the broken pieces."}, {"id": "R31", "lang": "cs", "question": "Když Čech zakleje „kruci“ nebo „krucinál“, vyslovuje vlastně zkomolený název jednoho křesťanského symbolu. Kterého?", "answer": "kříž", "options": [], "explanation": "„Kruci“ vzniklo zkomolením slova krucifix, tedy kříž s Kristem, z latinského crux. Z původní zbožné přísahy se postupně stalo nevinné zaklení."}, {"id": "R32", "lang": "cs", "question": "Hotelovému bufetu říkáme švédský stůl. Švédsky se mu říká smörgåsbord, kde „bord“ znamená stůl. Co znamená „smörgås“? Nápověda: v Česku ho nesmí chybět na žádné oslavě.", "answer": "obložený chlebíček", "options": [], "explanation": "Smörgås je obložený chléb, takže švédský stůl je doslova stůl chlebíčků. A ještě lepší je, že samo slovo smörgås znamená doslova „máslová husa“."}, {"id": "R33", "lang": "cs", "question": "Orchideje ze supermarketu se prodávají v průhledných květináčích. Co jejich kořeny na světle dělají stejně jako listy?", "answer": "Fotosyntézu", "options": [], "explanation": "Kořeny můrovce obsahují chlorofyl, protože v přírodě visí volně ve vzduchu na stromech. Průhledný květináč navíc prozradí, kdy zalít: suché kořeny zestříbří, mokré zezelenají."}, {"id": "R34", "lang": "en", "question": "Your body clock naturally runs a little longer than 24 hours, so staying up late is easier for it than going to bed early. Knowing that, which direction of flight usually brings the worse jet lag?", "answer": "Flying east", "options": [], "explanation": "Flying east shortens your day and forces you to sleep earlier, which pushes against your body's natural drift. Flying west just asks you to stay up later, and your body clock already prefers that."}, {"id": "R35", "lang": "cs", "question": "Ve kterém českém městě se každoročně koná Animefest, největší festival anime a japonské popkultury v Česku, kam se sjíždějí tisíce fanoušků v kostýmech?", "answer": "Brno", "options": [], "explanation": "Animefest se v Brně koná už od roku 2004. Kdo tam ten víkend přijede, potká v ulicích Moravy samurajské meče a růžové paruky."}, {"id": "R36", "lang": "cs", "question": "Plechový háček na konci svinovacího metru se trochu viklá, i když je metr úplně nový. Není to vada. Proč ho tam výrobci nechávají volný?", "answer": "Kvůli tloušťce háčku", "options": [], "explanation": "Když metr zaháknete za hranu, háček se vysune. Když ho opřete o zeď, zasune se. Pokaždé se posune přesně o svou tloušťku, takže měření sedí v obou případech."}, {"id": "R37", "lang": "cs", "question": "Vedle zeleného kontejneru na sklo stojí v Česku často i bílý, určený jen pro čiré sklo. Proč se čiré sklo musí třídit zvlášť?", "answer": "Barevné sklo by ho zabarvilo", "options": [], "explanation": "Barvu ze skla po roztavení už nikdo nevytáhne, takže i pár zelených střepů by zničilo celou tavbu čirého skla. Naopak čiré střepy v zeleném kontejneru nevadí, proto se smí házet do obou."}, {"id": "R38", "lang": "en", "question": "The world's largest single flower grows nearly a metre wide in the rainforests of Southeast Asia. To lure the flies that pollinate it, what does it smell like?", "answer": "Rotting meat", "options": [], "explanation": "Rafflesia is nicknamed the 'corpse flower' because it reeks of decaying flesh, which tricks carrion flies into visiting. Stranger still, it has no leaves, stem or roots at all and lives as a parasite inside a jungle vine."}, {"id": "R39", "lang": "cs", "question": "České slovo „král“ vzniklo ze jména jednoho slavného středověkého panovníka. Kterého?", "answer": "Karel Veliký", "options": [], "explanation": "Slované tak velkého vládce nikdy neviděli, a tak se jeho jméno Karel změnilo na „král“. Proto i Poláci říkají „król“."}, {"id": "R40", "lang": "cs", "question": "Většina náklaďáků stojí na rámu ze dvou podélných nosníků, ale Tatrovky mají uprostřed jedinou silnou rouru. Podle které části lidského těla se tomuto rámu říká?", "answer": "páteř", "options": [], "explanation": "Páteřový rám je jedna centrální roura, ve které vedou i hnací hřídele, a na ní jsou výkyvné poloosy. Každé kolo se tak samo přizpůsobí terénu, a proto Tatrovky tak dobře zvládají pouště i bláto."}, {"id": "R41", "lang": "sk", "question": "Keď sa ľudí spýtate na najdlhšiu rieku Slovenska, mnohí povedia Dunaj. Ten však tečie po našom území len asi 170 kilometrov. Ktorá rieka je na Slovensku naozaj najdlhšia?", "answer": "Váh", "options": [], "explanation": "Váh meria vyše 400 kilometrov, teda viac než dvakrát toľko ako slovenský úsek Dunaja. Celý tečie po Slovensku, od prameňov pod Tatrami a Kráľovou hoľou až po ústie do Dunaja pri Komárne."}, {"id": "R42", "lang": "cs", "question": "Proč se podle tradice nechával vánoční kapr pár dní plavat ve vaně v čisté vodě? Čeho se jeho maso mělo zbavit?", "answer": "Pachuti bahna", "options": [], "explanation": "Kapři žijí v rybnících s bahnitým dnem a v čisté vodě se měli „vyčistit“, aby maso nebylo cítit bahnem. Dnešní rybáři ale říkají, že kapr z dobrého rybníka bahnem nepáchne a pobyt ve vaně mu spíš přidá stres."}, {"id": "R43", "lang": "sk", "question": "Slovo paradajka sme prevzali z rakúskej nemčiny. Pôvodne znamenalo jablko z akého miesta?", "answer": "z raja", "options": [], "explanation": "Rakúšania volajú paradajku Paradeiser, čo je skrátený Paradiesapfel, teda rajské jablko. Preto Česi dodnes hovoria rajče."}, {"id": "R44", "lang": "sk", "question": "Keď saunér počas saunového ceremoniálu poleje rozpálené kamene vodou, teplomer v saune sa takmer nepohne, a predsa vás zaleje vlna horúčavy. Čo sa v saune v skutočnosti prudko zvýši?", "answer": "Vlhkosť vzduchu", "options": [], "explanation": "Para sa zrážajúca na chladnejšej koži odovzdá telu svoje teplo a vlhký vzduch navyše nedovolí potu odparovať sa a chladiť nás. Preto horúčavu cítime oveľa silnejšie, aj keď teplota stojí."}, {"id": "R45", "lang": "en", "question": "One red dashboard warning light looks like a little genie's lamp with a single drop falling from its spout. What object is it really a picture of?", "answer": "An oil can", "options": [], "explanation": "It's an old-fashioned oil can, and it means your engine has lost oil pressure. Unlike most lights, this one means pull over and switch off the engine straight away."}, {"id": "R46", "lang": "cs", "question": "Husité používali ruční palnou zbraň s dlouhou úzkou hlavní. Pojmenovali ji podle hudebního nástroje, kterému se podobala, a z toho slova vzniklo anglické pistol i německé Pistole. Jak se ta husitská zbraň jmenovala?", "answer": "Píšťala", "options": [], "explanation": "Husitská píšťala se přes němčinu dostala do půlky Evropy jako pistole. Spolu s houfnicí, z níž vznikl anglický howitzer, patří mezi nejúspěšnější české vývozy do světových jazyků."}, {"id": "R47", "lang": "en", "question": "In 2019, a 16-year-old American won 3 million dollars, more than Tiger Woods got that year for winning the Masters. Which hugely popular video game was he playing?", "answer": "Fortnite", "options": [], "explanation": "Kyle 'Bugha' Giersdorf won the first solo Fortnite World Cup in a New York tennis stadium. Tiger Woods received about 2 million dollars for his Masters win that spring."}, {"id": "R48", "lang": "sk", "question": "Do mnohých umývačiek riadu sa okrem tabletky dopĺňa aj špeciálna soľ do samostatného zásobníka. Na čo táto soľ v skutočnosti slúži?", "answer": "Na zmäkčovanie vody", "options": [], "explanation": "Soľ neumýva riad. Obnovuje živicu v zabudovanom zmäkčovači, ktorá z vody vychytáva vápnik a horčík. Bez nej by sa na pohároch a vo vnútri stroja usádzal vodný kameň, čo pri tvrdej vode, akú má veľa slovenských regiónov, poznáme až príliš dobre."}, {"id": "R49", "lang": "sk", "question": "Ktorý svetoznámy britský rocker s chrapľavým hlasom si roky staval obrovskú modelovú železnicu s veľkomestom a mrakodrapmi a na turné si v hoteloch objednával izbu navyše, aby na nej mohol pracovať?", "answer": "Rod Stewart", "options": [], "explanation": "Rod Stewart staval svoje mesto inšpirované Amerikou zo štyridsiatych rokov vyše dvadsať rokov. Mrakodrapy vyrábal vlastnoručne, a keď ho v roku 2019 ukázal v modelárskom časopise, modelári boli úplne ohromení."}, {"id": "R50", "lang": "sk", "question": "Sušené púčiky, ktoré dávame do vareného vína a do medovníkov, dostali v slovenčine, nemčine aj angličtine meno podľa toho istého obyčajného predmetu. Akého?", "answer": "Klinec", "options": [], "explanation": "Klinček totiž vyzerá ako malý klinec s hlavičkou. Rovnako po nemecky Nelke pochádza z Nagel a anglické clove z francúzskeho clou. Pôvodne rastie na indonézskych Moluckách, na takzvaných Ostrovoch korenia."}, {"id": "R51", "lang": "en", "question": "In the old British custom, the top tier of a wedding cake was not eaten on the day. It was stored away for a later family event, which is why it was made of fruitcake that keeps for months. What event was it saved for?", "answer": "First child's christening", "options": [], "explanation": "Rich, boozy fruitcake could last until the first baby arrived, so the top tier was eaten at the christening. Today most couples save it for their first anniversary instead."}, {"id": "R52", "lang": "cs", "question": "Pravda, nebo nepravda: Rytmus, na který se tančí na drum and bassových párty i v Česku, z velké části vychází z pouhých několika sekund bubenického sóla jediné soulové písničky ze šedesátých let.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Je to tzv. Amen break, asi šestisekundové bubenické sólo ze skladby Amen, Brother od skupiny The Winstons. Producenti ho rozstříhali a zrychlili, a tak se stal páteří celého žánru."}, {"id": "R53", "lang": "sk", "question": "Hra Človeče, nehnevaj sa nie je európsky vynález, je to zjednodušená stáročná hra z ďalekej krajiny. Z ktorej? Pomôcka: tamojší panovník ju vraj hrával na nádvorí paláca a namiesto figúrok mal živých ľudí.", "answer": "Z Indie", "options": [], "explanation": "Pôvodná indická hra sa volá pačísi a Nemec Josef Friedrich Schmidt z nej začiatkom 20. storočia urobil Mensch ärgere Dich nicht, ktorú poznáme ako Človeče. Mogulský cisár Akbar mal vraj na nádvorí obrovskú hraciu plochu z dlaždíc, po ktorej sa namiesto figúrok presúvali ľudia."}, {"id": "R54", "lang": "sk", "question": "Bryndza je symbolom slovenskej kuchyne, no jej názov k nám priniesli valašskí pastieri. Z ktorého jazyka slovo bryndza pochádza?", "answer": "z rumunčiny", "options": [], "explanation": "V rumunčine brânză neznamená nič zvláštne, je to jednoducho syr. Náš najslovenskejší syr sa teda vlastne volá „syr“."}, {"id": "R55", "lang": "cs", "question": "Symbol @ v e-mailu říkáme zavináč podle stočené naložené mořské ryby z lahůdek. O jakou rybu jde?", "answer": "Sleď", "options": [], "explanation": "Zavináč je stočený marinovaný sleď, často spíchnutý párátkem kolem okurky nebo cibule. Zakroucený tvar symbolu @ Čechům připomněl právě tuhle rybí ruličku."}, {"id": "R56", "lang": "sk", "question": "Kým na Slovensku je na Štedrý večer kapor so šalátom, v ktorej ázijskej krajine si rodiny týždne vopred objednávajú vianočnú večeru z KFC?", "answer": "Japonsko", "options": [], "explanation": "Vďaka úspešnej reklamnej kampani KFC zo sedemdesiatych rokov sa vyprážané kura stalo v Japonsku vianočnou tradíciou. Pred pobočkami sa na Štedrý večer tvoria dlhé rady."}, {"id": "R57", "lang": "sk", "question": "Koľko vody približne spotrebuje moderná umývačka riadu na jedno celé umytie plnej náplne?", "answer": "približne 10 litrov", "options": ["približne 10 litrov", "približne 40 litrov", "približne 80 litrov", "približne 150 litrov"], "explanation": "Modernej umývačke stačí zhruba 10 litrov, teda menej, než sa zmestí do jedného drezu. Pri ručnom umývaní pod tečúcou vodou pritom ľahko pretečú aj desiatky litrov."}, {"id": "R58", "lang": "en", "question": "Hardly any national flag uses the colour purple. What's the historical reason?", "answer": "Purple dye was too expensive", "options": [], "explanation": "For centuries purple dye came from thousands of crushed sea snails and cost more than gold, so it was reserved for royalty. Today only a handful of flags, such as Dominica's parrot, show any purple at all."}, {"id": "R59", "lang": "en", "question": "Before rubber erasers existed, artists and schoolchildren rubbed out pencil marks with something you would normally find on the kitchen table. What was it?", "answer": "Bread", "options": [], "explanation": "Soft, slightly damp bread lifted the graphite off the paper. When Joseph Priestley noticed around 1770 that a new tree gum did the job better, the material was named for what it did: 'rubber', because it rubbed out."}, {"id": "R60", "lang": "en", "question": "Hat makers in the 1800s were famous for trembling and acting strangely, which gave us the phrase 'mad as a hatter'. Which toxic metal in their workshops was to blame?", "answer": "Mercury", "options": [], "explanation": "Hatters brushed a mercury solution onto animal fur to make it mat into felt, and years of breathing the fumes poisoned their nervous systems. Doctors even called the tremors 'hatter's shakes'."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

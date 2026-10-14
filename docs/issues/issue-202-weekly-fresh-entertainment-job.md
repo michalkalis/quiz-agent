@@ -1,6 +1,6 @@
 # #202 — Týždenné automatické dopĺňanie čerstvej zábavy
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · done
 **Založené:** 2026-10-13 (founder: „na backende stačí, keď bude bežať job, ktorý bude pravidelne kontrolovať a dopĺňať otázky“)
 **Súvisí:** #195 (čerstvá zábava, 2× zvýhodnenie), #199 (stráženie zásoby), #201 (recept: [fresh-entertainment-recipe](../setup/fresh-entertainment-recipe.md)), #196 (Claude priamo cez Anthropic API + kredit)
 
@@ -71,8 +71,8 @@ Jadro `scripts/import_questions_json.py` presunuté do `app/corpus/importer.py` 
 - [x] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
 - [x] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.
   - Odchýlky: stroj bez `--rm` (odstránený stroj stratí exit kód; workflow ho po skončení zmaže sám), Sentry Crons check-in len pri plánovanom behu (`--cron-checkin`), aby ručné/suché behy pred zapnutím nezaložili monitor, ktorý by potom hlásil zmeškané stredy. ShapeClassifier dostáva rovnaký pin ako zodpovedateľnosť. Moduly: `app/corpus/{seed_research,seed_filters,fresh_brief,fresh_roles,fresh_generate,fresh_report,fresh_topup}.py`.
-- [ ] 202.5 Nasadenie, ručný beh na sucho en/sk/cs → founder pozrie vzorku.
-- [ ] 202.6 Ostrý ručný beh → stav zásoby → súhlas foundera → zapnúť plánovaný beh.
+- [x] 202.5 Nasadenie, ručný beh na sucho en/sk/cs → founder pozrie vzorku. 5 suchých behov 2026-10-14 (PR #400–#406): piny modelov v procese, lacnejšie seedy (Haiku zbiera prehľad, Opus vyberá: ~$0,35/jazyk), strop aj vnútri jazyka, max. 2 na tému, číselné odpovede len MCQ. Skúšky spolu $41,23.
+- [x] 202.6 Ostrý ručný beh → stav zásoby → súhlas foundera → zapnúť plánovaný beh. 2026-10-14 cez predplatné (founder: „spusti ostrý beh ale cez subscription … pravidelné generovanie nechaj cez API“, PR #407, `FRESH_TOPUP_SESSION=1` len lokálne): 42 importovaných (en 13 / sk 14 / cs 15), API $0,71. V en/sk sa neprečítal prehľad noviniek (markdown), takže väčšina boli klasiky; oprava v PR #407. Founder: duplikát + klišé archivované (15 otázok). `FRESH_TOPUP_ENABLED=true` od 2026-10-14, prvý plánovaný beh st 2026-10-21 03:00 UTC. Záznam: `docs/testing/runs/fresh-entertainment-2026-10-14/`.
 
 ## Testy (zámer)
 - Pri `session` gatewayi job odmietne bežať (nikdy z predplatného).

@@ -242,6 +242,7 @@ class TestProviderSwitch:
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
 
         sourcer = FactSourcer(enable_wikipedia=False, enable_opentdb=False)
+        sourcer._ensure_sources()
 
         assert isinstance(sourcer.sources["web_search"], WebSearchSource)
 
@@ -256,6 +257,7 @@ class TestProviderSwitch:
             enable_opentdb=False,
             web_search_provider="openai",
         )
+        sourcer._ensure_sources()
 
         assert isinstance(sourcer.sources["web_search"], OpenAIWebSearchSource)
         # The key stays "web_search" so sources_used and every downstream

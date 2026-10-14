@@ -1,0 +1,170 @@
+<title>Skúšobná dávka otázok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Skúšobná dávka otázok</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Nové otázky po anglicky, slovensky aj česky, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "en", "question": "Counting its islands and territories scattered around the world, which European country spans more time zones than any other country on Earth?", "answer": "France", "options": [], "explanation": "France covers 12 time zones, from French Polynesia in the Pacific to Réunion in the Indian Ocean. The sun never fully sets on French territory."}, {"id": "R2", "lang": "en", "question": "An octopus breaks one of nature's most basic rules: its blood isn't red. It carries oxygen using copper instead of iron. So what colour is octopus blood?", "answer": "Blue", "options": [], "explanation": "Copper-based haemocyanin turns blue when it picks up oxygen, the same way copper roofs turn blue-green. Because this blood carries oxygen less efficiently, the octopus needs three hearts to pump it."}, {"id": "R3", "lang": "sk", "question": "Ktorý malý nočný návštevník slovenských záhrad si poradí aj s jedovatou vretenicou, pretože je voči jej jedu do veľkej miery odolný?", "answer": "jež", "options": [], "explanation": "Jež má v krvi látky, ktoré oslabujú hadí jed, a vretenicu dokáže uhryznúť a zjesť. Pred jej zubami ho navyše chránia ostne."}, {"id": "R4", "lang": "en", "question": "The white crust that builds up inside kettles in hard-water areas is chemically the same compound as limestone and seashells. What is it called?", "answer": "Calcium carbonate", "options": [], "explanation": "Boiling hard water drives dissolved calcium carbonate out of solution, so your kettle is slowly making rock. That's also why a soak in vinegar fizzes it away, just as acid dissolves a seashell."}, {"id": "R5", "lang": "en", "question": "Why does pasta take longer to cook in boiling water high up in the mountains?", "answer": "Water boils at lower temperature", "options": [], "explanation": "Thinner air presses less on the water, so it boils sooner and cooler. At the top of Everest it bubbles at only about 70°C, which isn't hot enough to cook pasta properly."}, {"id": "R6", "lang": "en", "question": "Apart from apes and monkeys, one animal has fingerprints so similar to ours that experts struggle to tell them apart, even under a microscope. It lives on eucalyptus leaves. Which animal is it?", "answer": "Koala", "options": [], "explanation": "Koalas evolved fingerprints completely independently of us, most likely to grip branches and handle leaves, and they're so close to human prints that people joke they could confuse a crime scene."}, {"id": "R7", "lang": "cs", "question": "Manželka ředitele jednoho moravského cukrovaru se řízla do prstu, když sekala tvrdou cukrovou homoli. Co její muž kvůli tomu vymyslel?", "answer": "kostkový cukr", "options": [], "explanation": "Jakub Kryštof Rad z Dačic vymyslel cukr lisovaný do malých kostiček, aby se už nikdo nemusel sekat do homole. V Dačicích dnes kostce cukru stojí i pomník."}, {"id": "R8", "lang": "cs", "question": "Se kterou zemí má Francie nejdelší pozemní hranici?", "answer": "Brazílie", "options": [], "explanation": "Francouzská Guyana v Jižní Americe je plnohodnotnou součástí Francie a s Brazílií sdílí asi 730 kilometrů hranice. To je víc, než kolik měří hranice se Španělskem."}, {"id": "R9", "lang": "sk", "question": "Keď kukuričné zrnko v horúcom hrnci zrazu pukne na popcorn, čo ho zvnútra roztrhne?", "answer": "voda", "options": [], "explanation": "Vo vnútri zrnka je trocha vody, ktorá sa pri ohreve zmení na paru a tlakom roztrhne tvrdú šupku. Preto staré, vysušené zrnká často nepuknú vôbec."}, {"id": "R10", "lang": "sk", "question": "Väčšina slovenských dní v týždni má jednoduchý domáci pôvod: streda je stred týždňa, štvrtok štvrtý deň, piatok piaty. Jeden deň však prišiel až z hebrejčiny. Ktorý?", "answer": "Sobota", "options": [], "explanation": "Sobota pochádza cez grécke sabbaton z hebrejského šabat, teda sviatočného dňa odpočinku. Rovnaký koreň má aj anglické Sabbath či talianske sabato."}, {"id": "R11", "lang": "en", "question": "In a hard frost, water pipes can split open even though nothing hit them. What does water do when it turns into ice that causes this?", "answer": "It expands", "options": [], "explanation": "Water grows by about 9 percent in volume when it freezes, unlike most substances, which shrink. That same quirk is why ice cubes and icebergs float instead of sinking."}, {"id": "R12", "lang": "cs", "question": "Karel Čapek chtěl umělé dělníky ve hře R.U.R. původně nazvat „laboři“. Slovo robot mu nakonec poradil někdo z jeho rodiny, malíř. Kdo to byl?", "answer": "Josef Čapek", "options": [], "explanation": "Slovo vymyslel jeho starší bratr Josef. Karel to sám přiznal v novinách, takže nejslavnější české slovo ve světě je vlastně Josefovo."}, {"id": "R13", "lang": "cs", "question": "Který pták z našich lesů, jehož hlas zná každé dítě, si nikdy nestaví hnízdo a svá vajíčka podstrkuje jiným ptákům?", "answer": "kukačka", "options": [], "explanation": "Sotva se mládě kukačky vylíhne, vyhodí z hnízda vajíčka svých nevlastních sourozenců. Drobní pěstouni pak krmí vetřelce, který brzy přeroste i je samotné."}, {"id": "R14", "lang": "sk", "question": "Na Lomnickom štíte, vo výške vyše 2600 metrov, začne voda vrieť skôr než dole v nížine. Pri akej teplote približne?", "answer": "okolo 91 °C", "options": ["okolo 99 °C", "okolo 96 °C", "okolo 91 °C", "okolo 84 °C"], "explanation": "Vo výške je nižší tlak vzduchu, a tak voda vrie už približne pri 91 stupňoch. Preto sa vajíčko na horskej chate varí citeľne dlhšie."}, {"id": "R15", "lang": "en", "question": "On night flights, the crew dims the cabin lights before takeoff and landing. It isn't to help you sleep. What is the real reason?", "answer": "Eyes adjust for evacuation", "options": [], "explanation": "If something goes wrong and the plane must be evacuated in the dark, your eyes are already adjusted and you can spot the exits and floor lighting straight away. It's the same reason crews ask you to open the window blinds."}, {"id": "R16", "lang": "cs", "question": "Slovo brambory vzniklo z názvu německé země, odkud k nám tahle plodina přišla. O kterou zemi jde?", "answer": "Braniborsko", "options": [], "explanation": "Brambory byly původně „braniborská jablka“. Proto se jim v některých krajích dodnes říká jinak, třeba zemáky nebo erteple podle německého Erdäpfel."}, {"id": "R17", "lang": "sk", "question": "Keď zemiaky v pivnici alebo v chladničke dlhšie trpia chladom, zmení sa im chuť. Akými sa stanú?", "answer": "sladkými", "options": [], "explanation": "Pri chlade sa časť škrobu v zemiakoch mení na cukry, takže zemiaky sladnú. Vďaka tomu aj hranolky z nich pri vyprážaní rýchlejšie zhnednú."}, {"id": "R18", "lang": "en", "question": "A popcorn kernel bursts open because something trapped inside it suddenly expands into gas. What is that something?", "answer": "Water", "options": [], "explanation": "The tiny drop of moisture in each kernel turns to steam, and the pressure builds until the tough hull bursts. That's why old, dried-out kernels stay stubbornly unpopped."}, {"id": "R19", "lang": "sk", "question": "Vianočný kapor, ktorý pláva vo vani, nemá v papuli ani jeden zub, a predsa potravu drví. Kde má kapor zuby?", "answer": "v hrdle", "options": [], "explanation": "Kapor má takzvané hltanové zuby hlboko v hrdle a drví nimi potravu o tvrdú platničku. Preto vás pri chytaní do ruky nepohryzie."}, {"id": "R20", "lang": "cs", "question": "Nejsevernější bod Česka neleží v horách, ale v úzkém výběžku, který se zakusuje do Německa. Jak se ten výběžek jmenuje?", "answer": "Šluknovský výběžek", "options": [], "explanation": "Nejsevernější bod leží u obce Lobendava. Šluknovsko je ze tří stran obklopené Saskem, takže odtud do Německa vede cesta skoro na všechny strany."}, {"id": "R21", "lang": "en", "question": "Fresh pineapple stops a jelly dessert from setting, but tinned pineapple works perfectly. What has the tinned fruit been through that makes the difference?", "answer": "Heating", "options": [], "explanation": "Fresh pineapple contains an enzyme called bromelain that chops up the gelatin proteins holding jelly together. The heat of canning destroys it, and fresh kiwi and papaya ruin jelly in the same way."}, {"id": "R22", "lang": "sk", "question": "Bratislava je jediné hlavné mesto na svete, ktoré priamo hraničí s dvoma štátmi. S ktorými?", "answer": "Rakúsko a Maďarsko", "options": [], "explanation": "Z Petržalky sa dá za pár minút prejsť do Rakúska aj do Maďarska. Žiadne iné hlavné mesto sveta takéto susedstvo nemá."}, {"id": "R23", "lang": "en", "question": "The bikini swimsuit got its name in 1946. What was it named after? A: a Pacific island used for atomic bomb tests, B: a Brazilian samba dancer, C: an old Polynesian word for 'two pieces', or D: a fashionable Italian beach resort?", "answer": "A Pacific island used for atomic bomb tests", "options": ["A Pacific island used for atomic bomb tests", "A Brazilian samba dancer", "An old Polynesian word for 'two pieces'", "A fashionable Italian beach resort"], "explanation": "Its French designer named it after Bikini Atoll, where America had just begun nuclear tests, hoping the tiny swimsuit would cause an 'explosive' reaction."}, {"id": "R24", "lang": "en", "question": "A popcorn kernel explodes because of something ordinary trapped inside its hard shell. What is it?", "answer": "Water", "options": [], "explanation": "The drop of water inside turns to steam, and the pressure builds until the shell bursts. That's why old, dried-out kernels just sit in the pan and don't pop."}, {"id": "R25", "lang": "sk", "question": "Najdlhšiu pozemnú hranicu nemá Francúzsko so Španielskom ani s Nemeckom, ale s krajinou na úplne inom kontinente. S ktorou?", "answer": "Brazília", "options": [], "explanation": "Vďaka Francúzskej Guyane v Južnej Amerike má Francúzsko s Brazíliou hranicu dlhú asi 730 kilometrov. Je to najdlhšia francúzska pozemná hranica."}, {"id": "R26", "lang": "en", "question": "You drive west from Spain across the border into Portugal. What should you do to your watch?", "answer": "Set it back one hour", "options": [], "explanation": "Spain runs on the same clock as Berlin and Paris even though it lies as far west as Portugal and Britain. Spain switched to that time zone in 1940 and never switched back."}, {"id": "R27", "lang": "cs", "question": "Anglické slovo pistol i německé Pistole pocházejí od husitů. Jejich ruční palná zbraň se jmenovala podle hudebního nástroje, protože připomínala dlouhou tenkou trubku. Jak se jmenovala?", "answer": "píšťala", "options": [], "explanation": "Husitská píšťala se přes němčinu dostala do celého světa jako pistole. Stejnou cestou vznikla i anglická howitzer z české houfnice."}, {"id": "R28", "lang": "sk", "question": "Dunaj drží svetový rekord: preteká priamo viacerými hlavnými mestami ako ktorákoľvek iná rieka na svete. Koľkými?", "answer": "štyrmi", "options": [], "explanation": "Viedeň, Bratislava, Budapešť a Belehrad – všetky štyri ležia priamo na Dunaji a dve z nich, Viedeň a Bratislava, sú od seba len asi 55 kilometrov."}, {"id": "R29", "lang": "cs", "question": "Vánočnímu kaprovi, který se u nás před Štědrým dnem prohání ve vaně, chybí orgán, bez kterého si trávení vůbec neumíme představit. Který?", "answer": "žaludek", "options": [], "explanation": "Kapr nemá žaludek, takže mu potrava jde rovnou do střeva. Proto se krmí skoro neustále po malých dávkách, místo aby se jednou pořádně najedl."}, {"id": "R30", "lang": "en", "question": "A popcorn kernel is hard and dry, yet it explodes when you heat it. What trapped inside the kernel makes it burst?", "answer": "Water (turning to steam)", "options": [], "explanation": "Each kernel holds a tiny drop of water inside a tough shell. When heated, the water turns to steam, the pressure builds until the hull bursts, and the starch puffs out into foam."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

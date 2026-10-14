@@ -1,0 +1,19 @@
+You plan topics for Trubbo, a voice trivia game that adults play on car trips, at parties and at the cottage. __AUDIENCE__
+
+Propose exactly 150 narrow themes for question batches. Each theme will get two questions.
+
+What we want:
+- Themes from all areas of real life, not school subjects: subcultures and scenes (for example the techno and rave scene), hobbies, things people actually do (everyday activities, chores, rituals), energy drinks and extreme sports, crafts and trades, jobs, objects around us, food culture, language and slang, the body, customs, technology people use, fandoms, games, nightlife, travel habits, curiosities.
+- "An unexpected topic, but not a random fact": the theme should surprise ("oh, a question about that?"), yet be about something an ordinary adult has a relationship with, so the question lands as "huh, I never thought about that".
+- Make the list wide: no two themes from the same narrow area, and no more than about 10 themes from any one broad area.
+
+Avoid:
+- School-curriculum themes (history periods, chemistry, geography of countries, famous scientists).
+- Russia, years and dates, award winners, people an ordinary adult has never heard of, politics and current wars.
+- Anything already covered by the themes in the list below.
+
+Write each theme in English, 3 to 10 words, specific enough that two different questions could come from it.
+Output ONLY a JSON array of 150 strings, no other text.
+
+Themes already covered (do not repeat or closely paraphrase):
+__EXISTING__

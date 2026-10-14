@@ -10,7 +10,7 @@ What the founder's ratings showed:
 
 ## Settings
 
-Start from `docs/testing/runs/taste-2026-10-14/run_arm.sh`. Copy it to the new run directory and edit only the `THEMES` list.
+Start from `docs/testing/runs/general-corpus-2026-10-14/run_arm.sh`. Copy it to the new run directory and edit only the `THEMES` list. It keeps every question that cleared all gates even when a 4-question batch comes out short (`--floor-fraction 0`; the default floor threw away whole batches), stops on a subscription-limit error, and skips finished themes when rerun.
 - **Model:** Opus 5.5, pinned (`GENERATION_MODEL`, `GEN_ALT_SHARE=0`). With `GATEWAY=session` the subscription runs it through the `opus` alias.
 - **Pipeline:** the prod-parity pins in the script (= `app/corpus/fresh_pins.py`), plus `--no-judges --direct --dry-run`. Dedup runs against prod through the `fly proxy` tunnel on :15432.
 - **Brief:** `--prompt` = `docs/testing/runs/taste-2026-10-14/taste_brief.txt`, built from 507 founder-rated questions. For sk/cs the script appends the home-country paragraph: about 7 in 10 questions about that country or its everyday life.
@@ -24,7 +24,8 @@ Start from `docs/testing/runs/taste-2026-10-14/run_arm.sh`. Copy it to the new r
 1. A pilot of about 20 questions per language through the exact production path (the same gateway as the full run).
 2. The founder blind-rates a sample of 20 on the rating page. Reuse `build_sample.py` and `rating_template.html` from `taste-2026-10-14`.
 3. Run the full batch only when the pilot averages ≥ 7/10. The same rule holds for every bulk batch (founder 2026-10-14): a 20-question blind sample, and import only at ≥ 7.
-4. Import with `scripts/import_questions_json.py`, following the pattern of `docs/testing/runs/native-sk-cs-2026-10-08/run_import.sh`.
+4. Before import, remove same-fact duplicates inside the run. Generation dedups only against prod, so one fact can come out in several batches and languages (pilot 2026-10-14: 8 pairs in 58 questions). `run_dups.py <run-dir>` lists the questions; a Sonnet subagent names the same-fact pairs (same language, or en vs sk/cs, since en rows reach every player; never sk vs cs). Keep the en row, drop the sk/cs copy; within a language drop the later one. Embedding similarity alone missed most cross-language pairs.
+5. Import with `scripts/import_questions_json.py`, following the pattern of `docs/testing/runs/native-sk-cs-2026-10-08/run_import.sh`.
 
 ## Cost
 

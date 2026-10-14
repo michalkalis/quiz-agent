@@ -1,0 +1,302 @@
+{
+ "R1": {
+  "arm": "H",
+  "qid": "655198de-7863-43ef-b71f-c130e4aa6dbd",
+  "topic": "Farm animal surprises"
+ },
+ "R2": {
+  "arm": "L",
+  "qid": "b1cbcd1f-6cd5-4b51-a76b-5e6730900637",
+  "topic": "Rostliny, které porušují pravidla"
+ },
+ "R3": {
+  "arm": "J",
+  "qid": "d933e419-62c6-481d-a7ef-3740696ed8a2",
+  "topic": "Zmysly a ilúzie"
+ },
+ "R4": {
+  "arm": "L",
+  "qid": "63813a60-162c-4614-a666-849ab1d39793",
+  "topic": "Jak se chladilo před ledničkou"
+ },
+ "R5": {
+  "arm": "H",
+  "qid": "e2d80f64-7d4a-4e3e-add3-b1df969f6fcd",
+  "topic": "Cities and capitals you can reason out"
+ },
+ "R6": {
+  "arm": "J",
+  "qid": "d534c48c-9e5d-4d8f-b3d4-c23ba585e1e4",
+  "topic": "Slovenské rieky"
+ },
+ "R7": {
+  "arm": "J",
+  "qid": "7c63ffb9-49f8-42fe-840b-119fb0ea4f61",
+  "topic": "Pôvod slova klavír"
+ },
+ "R8": {
+  "arm": "M",
+  "qid": "942f6919-0fca-4ead-ae6c-3743cea9e541",
+  "topic": "Zippers: teeth, sliders and the letters on the pull"
+ },
+ "R9": {
+  "arm": "O",
+  "qid": "790fa873-814c-4f57-ae50-7e83d56ea958",
+  "topic": "Brutal Assault a pevnost Josefov"
+ },
+ "R10": {
+  "arm": "M",
+  "qid": "26377b42-a54b-41c2-8ebb-62e7965e0d60",
+  "topic": "Fantasy football draft formats"
+ },
+ "R11": {
+  "arm": "O",
+  "qid": "c1d85eaa-bc25-462a-ae9f-b47a39e0ef9d",
+  "topic": "Historie zavařování"
+ },
+ "R12": {
+  "arm": "O",
+  "qid": "2b5e54e5-5dca-4a2d-a748-3812c48153cc",
+  "topic": "Překážkové závody – Spartan Race"
+ },
+ "R13": {
+  "arm": "O",
+  "qid": "1709ebea-27ee-46b9-b0fd-26ef7f60c882",
+  "topic": "Zavařování"
+ },
+ "R14": {
+  "arm": "H",
+  "qid": "12bbe09b-e5a5-4f4b-b6e4-c94cc5eda19e",
+  "topic": "Soft drinks"
+ },
+ "R15": {
+  "arm": "L",
+  "qid": "a6f63f03-591a-4217-8a45-0c3f04fea0c9",
+  "topic": "Koření a jeho původ"
+ },
+ "R16": {
+  "arm": "H",
+  "qid": "99b44897-59cd-4b88-a5d6-5109b16dc0d3",
+  "topic": "Weather and sky puzzles"
+ },
+ "R17": {
+  "arm": "O",
+  "qid": "d192e405-c28d-4d82-807f-bd48e943fae2",
+  "topic": "Dechovka a taneční zábavy"
+ },
+ "R18": {
+  "arm": "J",
+  "qid": "adfe95be-5b7c-4fda-b26b-d505dccd9093",
+  "topic": "Názvy miest s prekvapivým významom"
+ },
+ "R19": {
+  "arm": "L",
+  "qid": "49001c32-bc7e-4c0d-b83b-4168a85ed4cf",
+  "topic": "Původ slova koláč"
+ },
+ "R20": {
+  "arm": "M",
+  "qid": "6046e395-c8af-4314-b3f7-1adf8a6740f3",
+  "topic": "Making the bed: duvets, pillows and fitted sheets"
+ },
+ "R21": {
+  "arm": "N",
+  "qid": "086a967e-a379-4b09-ab0a-8ce9faf989c3",
+  "topic": "Lanovky v Jasnej"
+ },
+ "R22": {
+  "arm": "H",
+  "qid": "a9450d1e-fc0c-40fe-af28-b2af439c6f19",
+  "topic": "Coffee"
+ },
+ "R23": {
+  "arm": "J",
+  "qid": "ffe2b860-714d-4346-aadc-df4a2bca9c9c",
+  "topic": "Pôvod názvov značiek"
+ },
+ "R24": {
+  "arm": "L",
+  "qid": "84e280c1-bfd5-4005-9175-bcba553308f9",
+  "topic": "Původ slova robot"
+ },
+ "R25": {
+  "arm": "N",
+  "qid": "9ffdb1cb-ab42-44c9-8dec-8f928c45f803",
+  "topic": "Slovenské svadobné zvyky: čepčenie"
+ },
+ "R26": {
+  "arm": "L",
+  "qid": "c0721e4a-298a-4fe8-ae31-ff8124c351c6",
+  "topic": "Tenis – Wimbledon"
+ },
+ "R27": {
+  "arm": "N",
+  "qid": "22b9fd02-d244-4838-929e-27f747da0c2f",
+  "topic": "Znamenia zverokruhu"
+ },
+ "R28": {
+  "arm": "J",
+  "qid": "1daa384a-f049-442a-a8ff-f6c704d7500c",
+  "topic": "Dunaj"
+ },
+ "R29": {
+  "arm": "O",
+  "qid": "ccdacee2-1b31-45d1-b98b-3309ff41b1d6",
+  "topic": "Online nákupy potravin: Rohlík.cz"
+ },
+ "R30": {
+  "arm": "M",
+  "qid": "94a719b0-a428-4cce-83ae-a66aa79c17f3",
+  "topic": "Lift etiquette and the door close button"
+ },
+ "R31": {
+  "arm": "L",
+  "qid": "cdaa8e80-c30b-4c6c-add8-f460c54cfbb0",
+  "topic": "Původ plzeňského piva"
+ },
+ "R32": {
+  "arm": "J",
+  "qid": "689983bc-6b79-430e-8bc8-b8ad911bfaba",
+  "topic": "Pôvod názvov značiek"
+ },
+ "R33": {
+  "arm": "M",
+  "qid": "5fc99873-4e67-4a6f-86df-b9549fff1f83",
+  "topic": "Home fermentation: sauerkraut"
+ },
+ "R34": {
+  "arm": "O",
+  "qid": "6e4bca76-20c0-4ca0-a13b-b09953cd8658",
+  "topic": "Burčák"
+ },
+ "R35": {
+  "arm": "M",
+  "qid": "dfdf9a35-5aa0-4a29-a81f-06122843b117",
+  "topic": "Making the bed: duvets, pillows and fitted sheets"
+ },
+ "R36": {
+  "arm": "N",
+  "qid": "bfe82d3f-cb95-449f-a8dd-67423bfda5e2",
+  "topic": "Papuče a prezúvanie"
+ },
+ "R37": {
+  "arm": "N",
+  "qid": "4ab407cb-de6e-4628-936b-ba95bce85911",
+  "topic": "Štepenie ovocných stromov"
+ },
+ "R38": {
+  "arm": "J",
+  "qid": "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2",
+  "topic": "Škola a detstvo"
+ },
+ "R39": {
+  "arm": "H",
+  "qid": "7dc96fea-ee84-4ad6-ad27-26269cf70887",
+  "topic": "Cities and capitals you can reason out"
+ },
+ "R40": {
+  "arm": "H",
+  "qid": "32950759-1d9e-4fca-845a-2ca4840fd3f3",
+  "topic": "Why food goes off, keeps or ripens"
+ },
+ "R41": {
+  "arm": "M",
+  "qid": "d0bd27d5-d0f6-4adf-9bbe-7f140f3be374",
+  "topic": "Home fermentation: kimchi"
+ },
+ "R42": {
+  "arm": "N",
+  "qid": "d0a8ba33-0714-4f48-9b77-1cd5cc904162",
+  "topic": "Nordic walking na Slovensku"
+ },
+ "R43": {
+  "arm": "O",
+  "qid": "92c75bb5-8b36-4a11-bb03-9ecc29d0cbda",
+  "topic": "Původ Red Bullu a thajský Krating Daeng"
+ },
+ "R44": {
+  "arm": "N",
+  "qid": "44afa1e7-c3d5-4cb2-bd60-80adaa4e0634",
+  "topic": "Nákupy v Rakúsku"
+ },
+ "R45": {
+  "arm": "H",
+  "qid": "e8075361-4551-4821-851d-e7087460d26b",
+  "topic": "Baking and bread puzzles"
+ },
+ "R46": {
+  "arm": "J",
+  "qid": "3f36e369-b2df-4343-a22f-48787b432c38",
+  "topic": "Zmysly a ilúzie"
+ },
+ "R47": {
+  "arm": "N",
+  "qid": "e7158bb4-43d9-40e5-bfcd-e59c059aee66",
+  "topic": "Domáce pečenie kváskového chleba"
+ },
+ "R48": {
+  "arm": "J",
+  "qid": "eb83f19f-d2fb-4bc4-b870-d1e04ff148ee",
+  "topic": "Pôvod slov"
+ },
+ "R49": {
+  "arm": "O",
+  "qid": "fdb1ebee-5e24-4b6b-a5a5-a2d070d1ffd4",
+  "topic": "Původ slova trafika"
+ },
+ "R50": {
+  "arm": "H",
+  "qid": "f30607ef-bf42-4deb-9107-8078a4eca141",
+  "topic": "Weather and sky puzzles"
+ },
+ "R51": {
+  "arm": "L",
+  "qid": "41d5c551-7268-46c2-a4a3-709386fb4f3e",
+  "topic": "Auta a historie Škody"
+ },
+ "R52": {
+  "arm": "M",
+  "qid": "4beb0381-dbf8-4cda-8700-b4ceb10829c7",
+  "topic": "Big-wave surfing"
+ },
+ "R53": {
+  "arm": "H",
+  "qid": "ad9cc263-cb80-4bc7-bafc-9f690bee08ba",
+  "topic": "Why food goes off, keeps or ripens"
+ },
+ "R54": {
+  "arm": "N",
+  "qid": "af12128b-c182-4c1b-abbd-3e3e2f689469",
+  "topic": "Hubárčenie v slovenských lesoch"
+ },
+ "R55": {
+  "arm": "L",
+  "qid": "17a04a10-42d0-4090-a467-f2bd58ce3e06",
+  "topic": "Silnice a doprava"
+ },
+ "R56": {
+  "arm": "M",
+  "qid": "e4f1f0a7-7149-4ccd-920e-fb4b1e9022b8",
+  "topic": "Punk DIY culture: zines"
+ },
+ "R57": {
+  "arm": "O",
+  "qid": "26275b3b-c62d-4d75-af22-a2242fe449bf",
+  "topic": "Trafiky a původ rčení „dostat trafiku“"
+ },
+ "R58": {
+  "arm": "N",
+  "qid": "f1f90366-31fb-4c8c-aec7-05936446f1b1",
+  "topic": "Parkovanie v Bratislave"
+ },
+ "R59": {
+  "arm": "M",
+  "qid": "0aef3ba3-e9bd-4dea-8847-48c499ea61e1",
+  "topic": "Running clubs and weekend parkrun events"
+ },
+ "R60": {
+  "arm": "L",
+  "qid": "1bb74196-a01e-4247-b57d-096923d3ae67",
+  "topic": "Rostliny, které porušují pravidla"
+ }
+}

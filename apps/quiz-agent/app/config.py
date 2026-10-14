@@ -171,6 +171,10 @@ class Settings(BaseSettings):
     # grading the same wrong words again. Only acts when the client sends
     # `rejected_transcripts`; this is the server-side kill switch.
     stt_retry_avoid_rejected: bool = True
+    # #204.6: deterministic sk/cs/en pronunciation-key tier between the
+    # sound-alike check and the LLM judge (open answers). OFF until measured on
+    # car replays: a false accept awards a point for a wrong answer.
+    answer_phonetic_match: bool = False
     # Provider credit balances (#193 — beta hardening). The daily background
     # check is opt-in (on in fly.toml) so tests and local dev make no outbound
     # calls; the admin endpoint works regardless. Thresholds: OpenRouter in USD

@@ -1,0 +1,34 @@
+{
+  "stages": {
+    "generating": {
+      "gpt-5.6-sol": {
+        "calls": 6,
+        "input_tokens": 2393,
+        "output_tokens": 432,
+        "calls_without_usage": 0,
+        "cost_cents": null
+      },
+      "claude-opus-5-5": {
+        "calls": 6,
+        "input_tokens": 30441,
+        "output_tokens": 7635,
+        "calls_without_usage": 0,
+        "cost_cents": 27.4464
+      }
+    },
+    "verifying": {
+      "gpt-5-mini": {
+        "calls": 7,
+        "input_tokens": 135675,
+        "output_tokens": 10895,
+        "calls_without_usage": 0,
+        "cost_cents": 5.5709
+      }
+    }
+  },
+  "total_cost_cents_known": 33.0173,
+  "unpriced_models": [
+    "gpt-5.6-sol"
+  ],
+  "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
+}

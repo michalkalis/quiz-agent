@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 RUN = Path(__file__).resolve().parent
-LANGS = {"en": "EF", "sk": "ST", "cs": "CD"}
+LANGS = {"en": "EF", "sk": "STUW", "cs": "CDVX"}  # U/W, V/X = sk/cs top-up arms (model themes)
 drops = set(Path(sys.argv[1]).read_text().split()) if len(sys.argv) > 1 else set()
 
 

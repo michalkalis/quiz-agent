@@ -1,0 +1,170 @@
+<title>Vlastné balíky: vzorka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Vlastné balíky: vzorka</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Otázky z vlastných balíkov (Harry Potter po anglicky, slovenský hokej a futbal, české jídlo a vaření) a z týždennej zábavy, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "en", "question": "In Harry's third year, someone anonymously sends him a Firebolt, the fastest broom in the world. Hermione fears it came from a dangerous killer, and she is right about who sent it. Who was it?", "answer": "Sirius Black", "options": [], "explanation": "It was his godfather, Sirius, who ordered it by owl using money from Harry's own Gringotts vault. He was trying to make up for twelve missed birthdays."}, {"id": "R2", "lang": "en", "question": "The 2026 re-release of Avengers: Endgame added four new scenes that lead into the next Avengers film. In it, Robert Downey Jr. returns to Marvel, but not as Iron Man. Which masked villain does he play?", "answer": "Doctor Doom", "options": [], "explanation": "Downey plays Victor von Doom, the armoured ruler of Latveria and the Fantastic Four's arch-enemy, a complete reversal of the hero who died saving the universe."}, {"id": "R3", "lang": "en", "question": "By October 2026, Spider-Man: Brand New Day had earned about 957 million dollars in North America and passed the film that had held the region's all-time record for over a decade. Which film was it?", "answer": "Star Wars: The Force Awakens", "options": ["Avatar", "Star Wars: The Force Awakens", "Avengers: Endgame"], "explanation": "Star Wars: The Force Awakens had led the North American chart since 2015 with about 936 million dollars, ahead of both Endgame and Avatar."}, {"id": "R4", "lang": "en", "question": "In the films, the Hogwarts Express steams across a dramatic curving viaduct through the mountains, and every summer you can ride that same line on a real steam train. In which country is it?", "answer": "Scotland", "options": [], "explanation": "It's the Glenfinnan Viaduct in the Scottish Highlands, on the Jacobite steam train route from Fort William to Mallaig. Despite its old-stone look, the viaduct is made of concrete and was built in the 1890s."}, {"id": "R5", "lang": "sk", "question": "Na majstrovstvách sveta 2010 Slovensko v poslednom zápase skupiny vyhralo 3:2 a vyradilo tak úradujúceho majstra sveta. Ktorý tím to bol?", "answer": "Taliansko", "options": [], "explanation": "Dva góly strelil Róbert Vittek a jeden Kamil Kopúnek, takže Slovensko na svojom prvom šampionáte postúpilo do osemfinále a obhajca titulu išiel domov už po skupine."}, {"id": "R6", "lang": "cs", "question": "Šafrán, nejdražší koření světa, tvoří drobné blizny z květů, a z každého květu se ručně vyškubou jen tři. Kolik květů zhruba padne na jediný kilogram usušeného šafránu?", "answer": "zhruba 150 000", "options": ["zhruba 1 500", "zhruba 15 000", "zhruba 150 000", "zhruba 15 milionů"], "explanation": "Na kilogram je potřeba zhruba sto padesát tisíc květů, a všechny se sbírají a loupou ručně. Proto se cena šafránu počítá spíš v gramech než v kilech."}, {"id": "R7", "lang": "en", "question": "Fred and George Weasley could afford to open their Diagon Alley joke shop only because Harry handed them a bag of gold he had won. In which contest did Harry win that gold?", "answer": "The Triwizard Tournament", "options": [], "explanation": "Harry gave them all 1,000 Galleons because he wanted everyone to have a laugh after Cedric's death. Weasleys' Wizard Wheezes became the busiest shop on the street."}, {"id": "R8", "lang": "en", "question": "Netflix's Monster series turned in 2026 to Lizzie Borden, the Massachusetts woman tried in 1893 for the murder of her father and stepmother. According to the famous children's rhyme, what weapon did she use?", "answer": "An axe", "options": [], "explanation": "'Lizzie Borden took an axe and gave her mother forty whacks', yet the jury acquitted her, and the case is still officially unsolved."}, {"id": "R9", "lang": "sk", "question": "Na svojich prvých majstrovstvách sveta ako samostatný štát slovenskí futbalisti v Južnej Afrike vyradili zo skupiny úradujúcich majstrov sveta, ktorí v nej skončili až poslední. Ktorý tím to bol?", "answer": "Taliansko", "options": [], "explanation": "Slovensko zdolalo Talianov v Johannesburgu 3:2 a dva góly strelil Robert Vittek. Obhajcovia titulu z roku 2006 tak skončili v skupine dokonca za Novým Zélandom."}, {"id": "R10", "lang": "cs", "question": "Kvasinky v kynoucím těstě dělají totéž co v pivu. Vyrábějí plyn, který tvoří díry ve střídce, a ještě jednu látku, která se při pečení skoro celá vypaří. Jakou?", "answer": "alkohol", "options": [], "explanation": "Kynutí je vlastně kvašení, stejně jako v pivovaru. Vůni čerstvě kynoucího těsta proto zčásti tvoří právě alkohol, který se v troubě odpaří."}, {"id": "R11", "lang": "sk", "question": "V roku 1980 emigrovali bratia Peter a Anton Šťastní z Československa, aby mohli hrať v NHL. Za ktorý kanadský klub, ktorý dnes už neexistuje, potom hrali?", "answer": "Quebec Nordiques", "options": [], "explanation": "O rok neskôr sa k nim pridal aj brat Marián. Klub sa v roku 1995 presťahoval do Denveru a dnes hrá ako Colorado Avalanche."}, {"id": "R12", "lang": "en", "question": "Hermione's Patronus is an otter. Ron Weasley's Patronus is a small, scrappy breed of dog. Which breed?", "answer": "Jack Russell terrier", "options": [], "explanation": "Ron's Patronus is a Jack Russell terrier, and fans love that terriers are known for chasing otters. It is a hint at the couple long before they got together."}, {"id": "R13", "lang": "cs", "question": "Salát Caesar nemá s antickým Římem nic společného. Ve 20. letech minulého století ho vymyslel restauratér italského původu Caesar Cardini. Ve které zemi stála jeho restaurace?", "answer": "Mexiko", "options": [], "explanation": "Cardini vařil v mexické Tijuaně, kam za prohibice jezdili Američané, protože tam se mohlo legálně pít. Salát se k nim pak dostal i domů."}, {"id": "R14", "lang": "cs", "question": "Croissanty, briošky a podobné máslové pečivo nazývají Francouzi souhrnně slovem odvozeným od jednoho evropského města. Právě odtud se totiž v 19. století tohle pečení dostalo do Paříže. O které město jde?", "answer": "Vídeň", "options": [], "explanation": "Francouzi mu říkají viennoiserie, tedy vídeňské pečivo. Ve 30. letech 19. století otevřel rakouský podnikatel August Zang v Paříži vídeňskou pekárnu a jeho rohlíčky kipferl byly předchůdcem croissantu."}, {"id": "R15", "lang": "sk", "question": "Stan Mikita sa narodil v Sokolčiach na Liptove ako Stanislav Gvoth a stal sa jednou z najväčších legiend NHL. Celú kariéru tam odohral za jediný klub. Ktorý?", "answer": "Chicago Blackhawks", "options": [], "explanation": "Mikita hral za Chicago vyše dvadsať rokov. Ako prvý hráč v histórii získal v jednej sezóne trofej pre najužitočnejšieho hráča, pre najlepšieho strelca aj cenu za férovú hru, a to dokonca dvakrát po sebe."}, {"id": "R16", "lang": "en", "question": "Dumbledore's blackened, cursed hand came from putting on a Horcrux ring he knew was dangerous. Its stone was a legendary object he couldn't resist. What was that stone?", "answer": "The Resurrection Stone", "options": [], "explanation": "Voldemort set one of the three Deathly Hallows into a Horcrux without realising it. Dumbledore put the ring on hoping to see his lost family again, and the curse left him with about a year to live."}, {"id": "R17", "lang": "sk", "question": "Stan Mikita, rodák zo Sokoliec na Liptove, spolu s Bobbym Hullom v Chicagu v 60. rokoch spopularizoval úpravu hokejky, ktorú dnes používa takmer každý hráč. Čo na nej bolo inak?", "answer": "Zahnutá čepeľ", "options": [], "explanation": "Rovná čepeľ sa prestala používať, lebo zahnutá dáva puku rotáciu a prudšiu, ťažšie čitateľnú strelu. Zakrivenie sa časom museli obmedziť pravidlami."}, {"id": "R18", "lang": "en", "question": "A new Resident Evil film hit cinemas in September 2026, but in Japan, where the games are made, the series has a different English name. What is it, a hint at its zombie-making viruses?", "answer": "Biohazard", "options": [], "explanation": "In Japan it has always been Biohazard. The name was changed for the West partly because a rock band and other products already used it."}, {"id": "R19", "lang": "en", "question": "In October 2026, Spider-Man: Brand New Day became only the third film ever to earn 2.5 billion dollars worldwide. One of the others is Avengers: Endgame. What is the third?", "answer": "Avatar", "options": [], "explanation": "The 2009 Avatar is the other member. Titanic and Avatar's own sequels both finished short of 2.5 billion dollars."}, {"id": "R20", "lang": "sk", "question": "Slovan Bratislava je jediný slovenský klub, ktorý vyhral európsku pohárovú súťaž: vo finále Pohára víťazov pohárov v Bazileji porazil Barcelonu 3:2. V ktorom roku?", "answer": "1969", "options": ["1965", "1969", "1973", "1976"], "explanation": "Stalo sa to v máji 1969, necelý rok po okupácii, takže víťazstvo malo pre ľudí obrovský význam. Mnohí hráči Slovana potom o sedem rokov neskôr vyhrali s Československom aj Euro 1976."}, {"id": "R21", "lang": "en", "question": "Everyone quotes Darth Vader as saying 'Luke, I am your father', but that is not what he says in The Empire Strikes Back. What is the actual first word of that famous line?", "answer": "No", "options": [], "explanation": "Luke has just accused Vader of killing his father, so Vader answers 'No, I am your father.' Luke's name never appears in the line."}, {"id": "R22", "lang": "en", "question": "Mario is the world's most famous plumber, but in his very first game, Donkey Kong, climbing girders on a building site, he had a different job. What was it?", "answer": "Carpenter", "options": [], "explanation": "Nintendo made him a carpenter to suit the construction-site setting. He only took up plumbing a couple of years later, when Mario Bros. sent him down into the sewers."}, {"id": "R23", "lang": "cs", "question": "Pravé bavorské preclíky mají tmavě hnědou lesklou kůrku proto, že se před pečením na pár vteřin namočí do roztoku látky, kterou doma znáte spíš jako čistič odpadů. Jaká je to látka?", "answer": "Louh (hydroxid sodný)", "options": [], "explanation": "Zásaditý povrch těsta výrazně urychlí Maillardovu reakci, a proto kůrka tak rychle zhnědne. Při pečení louh zreaguje s oxidem uhličitým, takže hotový preclík je úplně bezpečný. Němci mu podle toho říkají Laugenbrezel, tedy louhový preclík."}, {"id": "R24", "lang": "en", "question": "Taylor Swift scored a 2026 number-one hit with 'I Knew It, I Knew You', a song from the fifth film in which Pixar franchise?", "answer": "Toy Story", "options": [], "explanation": "It came from Toy Story 5, so Swift's catalogue of chart-toppers now includes a song from the same franchise as Woody and Buzz."}, {"id": "R25", "lang": "sk", "question": "Vo finále majstrovstiev sveta 2002 bolo 3:3 a do konca zápasu zostávali necelé dve minúty. Ktorý útočník, dlhoročný kanonier Washingtonu Capitals, vtedy strelil víťazný gól, ktorý Slovensku priniesol zlato?", "answer": "Peter Bondra", "options": [], "explanation": "Bondra skóroval približne sto sekúnd pred koncom a Slovensko vyhralo finále 4:3. Za Washington strelil v NHL vyše štyristo gólov."}, {"id": "R26", "lang": "en", "question": "The Hogwarts school motto sounds grand in Latin, but in plain English it is simply a warning never to tickle a certain sleeping creature. Which creature?", "answer": "Dragon", "options": [], "explanation": "The motto is 'Draco dormiens nunquam titillandus', or 'Never tickle a sleeping dragon'. It is probably the most sensible school motto ever written."}, {"id": "R27", "lang": "sk", "question": "Zdeno Chára je najvyšší hráč v histórii NHL. Ktorú súťaž zručností na Zápase hviezd opakovane vyhral a v roku 2012 v nej vytvoril rekord?", "answer": "Najtvrdšia strela", "options": [], "explanation": "Jeho puk letel rýchlosťou približne 175 km/h. Táto rýchlosť platila roky ako rekord súťaže."}, {"id": "R28", "lang": "en", "question": "The summer 2026 blockbuster The Odyssey, starring Matt Damon, follows a Greek king's long voyage home. Which war is he sailing home from?", "answer": "The Trojan War", "options": [], "explanation": "Odysseus thought up the wooden horse that ended the Trojan War. The gods then punished him with ten more years at sea before he reached Ithaca."}, {"id": "R29", "lang": "cs", "question": "Hřebíček dáváte do svařáku, perníku i do svíčkové. Kterou částí rostliny ve skutečnosti je?", "answer": "Květní poupě", "options": [], "explanation": "Hřebíček je usušené poupě, které se otrhá dřív, než se květ stihne rozvinout. Pochází z Moluk, indonéských Ostrovů koření, a česky se mu říká hřebíček proto, že vypadá jako malý hřebík."}, {"id": "R30", "lang": "en", "question": "In 1992 Queen's Bohemian Rhapsody suddenly returned to the charts, after a film scene of friends in a small car headbanging along to it. Which comedy film?", "answer": "Wayne's World", "options": [], "explanation": "Mike Myers and friends headbanging in a battered AMC Pacer sent the song to number two in the US. That was higher than it had reached there on its first release."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

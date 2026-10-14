@@ -78,6 +78,7 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
   - Poznámky: „fakt alebo výmysel“ je len pravda/nepravda, pomenovanie nič nepridáva; opakovane „nejasne položená otázka“; klišé floskuly („ktorú s radosťou praská každé dieťa“) vadia; ľahko predpovedateľné odpovede pravda/nepravda nudia; znalosť zo ZŠ (Bratislava) slabá.
   - Founder: zvyšovanie zábavnosti rieši session quiz-agent-43 → odovzdané.
 - **Plný beh pripravený (mix, founder 2026-10-14):** `general-corpus-2026-10-14/`, `themes_full.json` = 37 ručných (zvyšok zo 45) + 37 od modelu na jazyk, 2 otázky na tému ≈ 148 nových + ~54 z pilotov (general-pilot + topics-pilot) ≈ 200/jazyk. Spustí ho vzdialená session na mba (founder: „generovanie dáme novej remote session“); postup v handoffe `docs/handoffs/handoff-2026-10-14-1630.md`.
+- **Plný beh hotový (2026-10-14, session na mba):** 6 ramien × 37 tém cez predplatné, bez limitov a chýb (en 142, sk 140, cs 144). 75 párov rovnakého faktu odstránených; sk/cs doplnené z nepoužitých tém od modelu (ramená U/W sk, V/X cs, 2 otázky na tému, 7 ďalších duplicít). Slepá vzorka 60 (https://claude.ai/artifact/XGeSAqB6VBnq28HvCbgHyn): **en 8,05 · sk 8,15 · cs 8,10**, ručné témy 8,08 vs od modelu 8,11. Otázky hodnotené ≤ 5 vyradené. **Import 574** (571 approved, 3 pending), živá zásoba approved en 552 · sk 285 · cs 293. Poznámky foundera: odpoveď zjavná z otázky (2/10), „každý vie“.
 
 ### 203.8 Témy vymyslí model (founder 2026-10-14, do pilotu 203.7)
 
@@ -131,6 +132,12 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - **Slepé kolo (jedno):** 3 objednávky × starý (dnešné defaulty) vs nový (1+2+3+4), 20 otázok spolu, zamiešané; + #202 rameno 5 starý / 5 nový. Generuje sa na predplatnom ($0). Nový musí mať ⌀ ≥ starý a ≥ 7; inak stop a otázka na foundera.
 - Prod zapnutie: `GEN_HOUSE_STYLE=1`, `PACK_SUBTHEMES=1`, `GENERATION_MODEL` cez Fly secrets (founder potvrdí, `fly secrets` je za povolením), deploy z `main` po zelenom CI. Vrátenie = unset.
 
+**Výsledok (2026-10-14).** PR #429 plán, #430 štýl domu, #432 podtémy + kosínus v balíku + `--customer-order` v CLI, #435 zapnutie na mba workeri.
+- Slepé kolo (https://claude.ai/artifact/Ahux3VyPAWN44oa9hn5frV, `docs/testing/runs/pack-ab-2026-10-15/`): balíky **nový 8,9 vs starý 8,3** (Harry Potter 9,7 vs 9,0; hokej/futbal 8,8 vs 7,5; kuchyňa 8,3 vs 8,7). #202 so štýlom domu 8,2 vs 8,6 bez neho (5 + 5) → ostáva vypnutý (`FRESH_HOUSE_STYLE=0`), čaká na founderovo rozhodnutie.
+- Cesty overené mini balíkom (pečiatka štýlu, podtémy, Opus 5.5): predplatné (mba), Max kredit (Anthropic API, ~27 c), OpenRouter (~25 c); cloud session v behu.
+- **Prod zapnuté (founder 2026-10-14):** Fly secrets `GEN_HOUSE_STYLE=1`, `PACK_SUBTHEMES=1`, `GENERATION_MODEL=claude-opus-5-5` + deploy; mba session worker (spracúva objednávky) reštartovaný s rovnakými hodnotami. Vrátenie = unset secrets / env pri `session_worker_local.sh`.
+- Pozor: Fly login na mba bol vypršaný a tunely workera ťahali staré spojenie z 8. 10.; po reštarte sa founder prihlásil (`fly auth login`).
+
 **Mimo rozsahu:** zákazník podtémy nevidí ani neupravuje; zmeny UI; „trafilo len 23 %“ (203.6, „nie teraz“).
 
 ## Stav
@@ -139,7 +146,7 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 - [x] 203.2 slepé overenie founderom: kontrola nepredpovedá jeho hodnotenie, zásoba ~2/10
 - [x] 203.5 pokles kvality: príčina = hromadný beh 10-01, nie zadanie
 - [x] 203.6 zadanie podľa vkusu + recept `docs/setup/general-corpus-recipe.md`
-- [~] 203.7 200 natívnych otázok na jazyk cez predplatné (pilot + slepá vzorka ≥ 7), potom founder rozhodne o archíve dávky 10-01
+- [x] 203.7 200 natívnych otázok na jazyk cez predplatné: import 574 (en 184 · sk 194 · cs 196), vzorka 8,05 / 8,15 / 8,10
 - [x] 203.8 pilot porovná ručné témy (H) s témami od modelu (M); H = `general-pilot-2026-10-14` hotové
-- [ ] 203.9 rovnaká kvalita v balíkoch a na každej ceste (plán prešiel /design-soundness 0,82 SOUND; ďalej implementácia)
+- [~] 203.9 rovnaká kvalita v balíkoch: nový recept 8,9 vs 8,3, zapnutý v prode; open = cloud session test, rozhodnutie o #202
 - [—] 203.3 / 203.4 archív a zapojenie kontroly otrepaných otázok: zrušené (kontrola nepredpovedá hodnotenie)

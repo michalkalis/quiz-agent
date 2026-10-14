@@ -10194,13 +10194,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Když odpověď nahraješ znovu, přepis hledá jiný výsledek než ten, který jsi zamítl"
+            "value" : "Když odpověď nahraješ znovu, přepis hledá jiný výsledek než ten zamítnutý"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keď odpoveď nahráš znova, prepis hľadá iný výsledok ako ten, ktorý si zamietol"
+            "value" : "Keď odpoveď nahráš znova, prepis hľadá iný výsledok ako ten zamietnutý"
           }
         }
       }

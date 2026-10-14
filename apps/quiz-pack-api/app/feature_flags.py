@@ -450,3 +450,15 @@ def pack_batch_schedule() -> tuple[int, ...]:
     if not sizes or any(n < 1 for n in sizes):
         return DEFAULT_PACK_BATCH_SCHEDULE
     return sizes
+
+
+def pack_subthemes() -> bool:
+    """#203 203.9 changes 2 + 4: split a customer pack into narrow sub-themes
+    (3-4 questions each) and drop a question whose embedding cosine to one
+    already in the pack reaches the corpus threshold.
+
+    Read only by the customer-pack worker (``app/worker/tasks.py``); the corpus
+    CLI and the #202 weekly job never ask for sub-themes. ``False`` by default
+    until the founder's blind round; OFF is behaviour-identical to before.
+    """
+    return _truthy(os.getenv("PACK_SUBTHEMES"))

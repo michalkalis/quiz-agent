@@ -35,6 +35,10 @@ Two independent checks, either of which is enough to drop a question:
   gets one pairwise "same fact?" model verdict (``GrayZoneJudge``); "yes"
   drops under its own reason, everything else falls back to today's
   below-threshold pass. Bounded per run, warns when the budget is gone.
+- **In-pack cosine (#203 203.9, ``in_pack_cosine=True``, worker with
+  ``PACK_SUBTHEMES`` only)** — the question's embedding against every question
+  already in the pack and earlier batchmates, same threshold as the corpus
+  check. Embeddings live in ``ctx.pack_embeddings`` (memory only).
 
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
@@ -53,6 +57,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import re
 from collections.abc import Iterable
 from pathlib import Path
@@ -171,8 +176,21 @@ class DedupStage:
         qa_embedding: bool = False,
         qa_cosine_threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
         grayzone_judge: GrayZoneJudge | None = None,
+        in_pack_cosine: bool = False,
     ) -> None:
         self._store = question_store
+        # #203 203.9 change 4 (worker only, PACK_SUBTHEMES): the corpus check
+        # never sees the pack's own questions (pack rows carry no embedding),
+        # and concurrent sub-theme calls cannot see each other. ON, every
+        # question's embedding is kept in memory (`ctx.pack_embeddings`) and a
+        # question at or above the corpus cosine threshold to one already in
+        # the pack is dropped.
+        self._in_pack_cosine = in_pack_cosine
+        if in_pack_cosine and not hasattr(question_store, "embed"):
+            raise ValueError(
+                "DedupStage: in_pack_cosine is ON but the question store has no "
+                "embed() — the in-pack check would silently never run"
+            )
         self._gold_standard_path = (
             Path(gold_standard_path) if gold_standard_path is not None else None
         )
@@ -240,8 +258,16 @@ class DedupStage:
             "fact_key": 0,
             "fact_content": 0,
         }
-        for q in ctx.questions:
-            verdict, pair = await self._cosine_verdict(q, self._cosine_for(q))
+        if self._in_pack_cosine:
+            reasons["in_pack_cosine"] = 0
+        kept_embeddings: list[tuple[list[float], float]] = []  # (vector, norm)
+        for index, q in enumerate(ctx.questions):
+            embedding = (
+                await self._pack_embedding(ctx, q) if self._in_pack_cosine else None
+            )
+            verdict, pair = await self._cosine_verdict(
+                q, self._cosine_for(q), embedding
+            )
             if verdict is not None:
                 dropped += 1
                 reasons[verdict] += 1
@@ -276,6 +302,26 @@ class DedupStage:
                 reasons["in_batch"] += 1
                 decisions.append(_decision(q, "in_batch", None))
                 continue
+            # #203 203.9 change 4: same meaning as a question already in the
+            # pack (any round) or an earlier batchmate. A persisted question
+            # (#182 locked prefix) is never dropped — it may be mid-play.
+            vector = _with_norm(embedding)
+            if vector is not None and index >= ctx.locked_count:
+                threshold = self._cosine_for(q)
+                similarity = max(
+                    (_cosine(vector, k) for k in kept_embeddings), default=0.0
+                )
+                if similarity >= threshold:
+                    dropped += 1
+                    reasons["in_pack_cosine"] += 1
+                    logger.info(
+                        "DedupStage in-pack cosine dropped id=%s (%.3f >= %.2f)",
+                        q.id,
+                        similarity,
+                        threshold,
+                    )
+                    decisions.append(_decision(q, "in_pack_cosine", None))
+                    continue
             # Same-fact reuse (#153 Phase 0.1): one fact backs one question
             # per pack, across formats and top-up rounds (top-up merges
             # survivors before this stage re-runs, so earlier rounds are in
@@ -345,6 +391,8 @@ class DedupStage:
             kept_fact_tokens.append(fact_tokens)
             if fact_key is not None:
                 kept_fact_keys.add(fact_key)
+            if vector is not None:
+                kept_embeddings.append(vector)
 
         ctx.questions = kept
         self.last_decisions = decisions
@@ -365,8 +413,33 @@ class DedupStage:
             cost_cents=0,
         )
 
+    async def _pack_embedding(
+        self, ctx: OrderContext, question: Question
+    ) -> list[float] | None:
+        """#203 203.9: the question's embedding, computed once per order and
+        kept in memory. A resumed attempt re-embeds what it loaded. An
+        embedding outage skips the in-pack check for that question (same
+        fail-safe as the corpus lookup: an outage never drops)."""
+        cached = ctx.pack_embeddings.get(question.id)
+        if cached is not None:
+            return cached
+        try:
+            embedding = list(await self._store.embed(question.question))  # type: ignore[attr-defined]
+        except Exception:
+            logger.warning(
+                "DedupStage could not embed id=%s for the in-pack check",
+                question.id,
+                exc_info=True,
+            )
+            return None
+        ctx.pack_embeddings[question.id] = embedding
+        return embedding
+
     async def _cosine_verdict(
-        self, question: Question, threshold: float
+        self,
+        question: Question,
+        threshold: float,
+        embedding: list[float] | None = None,
     ) -> tuple[str | None, tuple[Question, float] | None]:
         """Question-only corpus check → (drop reason or None, nearest pair).
 
@@ -374,13 +447,16 @@ class DedupStage:
         ``_is_cosine_duplicate`` call. With one, the store is asked down to
         ``GRAYZONE_LOW`` so the nearest below-threshold match is visible; only
         the single nearest gray-zone pair is judged (one call per candidate).
+        ``embedding`` (in-pack check on) is handed to the store so the text is
+        not embedded twice.
         """
+        reuse = {"query_embedding": embedding} if embedding is not None else {}
         if self._grayzone_judge is None:
-            is_dup = await self._is_cosine_duplicate(question, threshold)
+            is_dup = await self._is_cosine_duplicate(question, threshold, reuse)
             return ("cosine" if is_dup else None), None
         try:
             matches = await self._store.find_duplicates(
-                question.question, threshold=GRAYZONE_LOW
+                question.question, threshold=GRAYZONE_LOW, **reuse
             )
         except Exception:  # noqa: BLE001 — mirrors the legacy store fail-safe
             # Same fail-safe as the legacy branch: a store outage never drops.
@@ -410,13 +486,16 @@ class DedupStage:
         return None, nearest
 
     async def _is_cosine_duplicate(
-        self, question: Question, threshold: float | None = None
+        self,
+        question: Question,
+        threshold: float | None = None,
+        reuse: dict[str, Any] | None = None,
     ) -> bool:
         if threshold is None:
             threshold = self._cosine_threshold
         try:
             duplicates = await self._store.find_duplicates(
-                question.question, threshold=threshold
+                question.question, threshold=threshold, **(reuse or {})
             )
         except Exception:
             # A failing store must not silently approve dups; surface via
@@ -557,6 +636,19 @@ def _fact_tokens(question: Question) -> frozenset[str]:
         f"{question.question} {question.correct_answer or ''}".lower()
     )
     return frozenset(t for t in tokens if t not in _STOPWORDS)
+
+
+def _with_norm(embedding: list[float] | None) -> tuple[list[float], float] | None:
+    if not embedding:
+        return None
+    norm = math.sqrt(sum(x * x for x in embedding))
+    return (embedding, norm) if norm > 0 else None
+
+
+def _cosine(a: tuple[list[float], float], b: tuple[list[float], float]) -> float:
+    if len(a[0]) != len(b[0]):
+        return 0.0
+    return sum(x * y for x, y in zip(a[0], b[0])) / (a[1] * b[1])
 
 
 def _jaccard(a: frozenset[str], b: frozenset[str]) -> float:

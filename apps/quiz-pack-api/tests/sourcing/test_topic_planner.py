@@ -122,3 +122,49 @@ def test_parse_empty_list_returns_none() -> None:
     rather than passing an empty topic list to the sources."""
     assert TopicPlanner()._parse("[]") is None
     assert TopicPlanner()._parse('[123, ""]') is None
+
+
+# --- #203 203.9: sub-themes of a customer pack -----------------------------
+# The same client and contract now sit on the generation path once per order,
+# so the fail-safe matters more there: a planner fault must leave the pack on
+# its whole topic, never fail a paid order.
+
+
+@pytest.mark.asyncio
+async def test_subthemes_capped_at_the_requested_count(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The quota arithmetic assumes at most `count` sub-themes; a chatty model
+    returning more must not inflate the plan. Sub-themes may be longer than a
+    pool topic (a narrow angle needs a few words), up to 80 chars."""
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    planner = TopicPlanner()
+    seventy = "the Weasley family and their many jobs at the Ministry of Magic ok"
+    planner._client = _fake_client(
+        f'["Quidditch rules", "{seventy}", "Hogwarts ghosts", "wands"]'
+    )
+
+    assert await planner.propose_subthemes("Harry Potter", "en", 3) == [
+        "Quidditch rules",
+        seventy,
+        "Hogwarts ghosts",
+    ]
+    prompt = planner._client.ainvoke.call_args.args[0]
+    # Customer text is fenced as data, and the count reaches the model.
+    assert "<request>\nHarry Potter\n</request>" in prompt
+    assert "exactly 3 NARROW sub-themes" in prompt
+
+
+@pytest.mark.asyncio
+async def test_subthemes_none_on_failure_or_empty_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    planner = TopicPlanner()
+    planner._client = SimpleNamespace(
+        ainvoke=AsyncMock(side_effect=RuntimeError("boom"))
+    )
+    assert await planner.propose_subthemes("Harry Potter", "sk", 9) is None
+    # Nothing to split → no model call at all.
+    assert await planner.propose_subthemes("  ", "en", 9) is None
+    assert planner._client.ainvoke.await_count == 1

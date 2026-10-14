@@ -102,6 +102,9 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         expiry_classifier=ctx.get("expiry_classifier"),
         topicality_classifier=ctx.get("topicality_classifier"),
         shape_classifier=ctx.get("shape_classifier"),
+        # #203 203.9: this is a customer order — the only caller that may
+        # split a pack into sub-themes (PACK_SUBTHEMES decides whether it does).
+        customer_order=True,
     )
     verification = VerificationStage(ctx["fact_verifier"], ctx.get("logical_verifier"))
     # #166 D21b: the LLM judge panel is out of the default flow (JUDGE_GATE=1
@@ -110,7 +113,11 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         ctx["scorer"] if feature_flags.judge_gate() else None,
         casual_checker=ctx.get("casual_player_checker"),  # #201
     )
-    dedup = DedupStage(ctx["question_store"], ctx.get("gold_standard_path"))
+    dedup = DedupStage(
+        ctx["question_store"],
+        ctx.get("gold_standard_path"),
+        in_pack_cosine=feature_flags.pack_subthemes(),  # #203 203.9 change 4
+    )
     answerability = None
     if feature_flags.answerability_check() and ctx.get("answerability_checker"):
         answerability = AnswerabilityStage(ctx["answerability_checker"])

@@ -97,6 +97,8 @@ Founder: otázky sa „točia okolo niekoľkých tém“ a široký rozhľad mod
 **Beh (2026-10-14, session d3 prevzala celé #203):** `topics-pilot-2026-10-14/`. Opus 5.5 cez predplatné navrhol 150 tém/jazyk (`themes_M_*.json`, vylúčené 563 tém z prod). Náhodne 10 M tém a 8 H tém (zo 45 tém plného behu) na jazyk, 2 otázky na tému, rovnaké nastavenie. Slepo 10 H + 10 M na jazyk: https://claude.ai/artifact/MpbH17cJvwtdMox7m8bCdc
 **Výsledok:** H en 8,9 · sk 8,5 · cs 8,7 (⌀ 8,7) · M en 7,6 · sk 8,1 · cs 8,2 (⌀ 8,0). Founder: „parádne otázky, toto je úplne iný level.“ M podľa pravidla nevyhral, ale obe nad 7; founder zvolil **mix pol na pol**. Pravdepodobný dôvod skoku oproti pilotu (7,9): 2 otázky na tému namiesto 4 (rôzne kolá, stupnica sa posúva). Poznámky: priveľa pôvodu slov, ľahké / zjavné odpovede (fantasy draft, parkrun), nápoveda v otázke („čo si ráno dávate na chlieb“).
 
+**Archív (founder 2026-10-14):** celý beh 2026-10-01 (942 en, 933 approved + 9 pending) → `archived`, hneď, pred novými otázkami; ID na obnovu v `docs/testing/runs/archive-2026-10-01-batch/`. Staršie nehodnotené dávky (júl–17. 9., 345) ostávajú (founder). Živá zásoba: approved en 370 · sk 91 · cs 98.
+
 ## Stav
 
 - [x] 203.1 kontrola + beh nad zásobou

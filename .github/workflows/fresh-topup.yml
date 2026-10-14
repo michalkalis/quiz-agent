@@ -1,0 +1,139 @@
+# Weekly fresh-entertainment top-up (#202 — weekly fresh entertainment job, task 202.4).
+#
+# Every Wednesday 03:00 UTC (05:00 Prague in summer, 04:00 in winter: fresh for
+# the weekend) a one-off Fly machine from the current quiz-pack-api image runs
+# `python -m app.corpus.fresh_topup`: seeds -> generation -> import, en/sk/cs,
+# hard cap $15 per run, Claude on the direct Anthropic API. The machine carries
+# the app's secrets (Anthropic, OpenAI for embeddings, DATABASE_URL, Sentry), so
+# GitHub only holds the app-scoped deploy token FLY_TOPUP_TOKEN.
+#
+# Why here: the repo is public, so Actions minutes are free (same pattern as
+# prod-monitor.yml). Not an ARQ cron: the Fly worker is stopped while orders go
+# to the session queue, and the same WorkerSettings runs on mba on the
+# subscription. Not an always-on machine: we would pay 7 days for ~1 h of work.
+#
+# Switch: the scheduled run is a no-op until the repo variable
+# FRESH_TOPUP_ENABLED is 'true' (founder approval, task 202.6). A manual run
+# (workflow_dispatch) always works and defaults to a dry run.
+#
+# The job prints its JSON summary (generated quiz questions, counts, cost) to
+# the machine log. Logs are public: print states and corpus content only, never
+# customer data or secrets.
+name: fresh-topup
+
+on:
+  schedule:
+    - cron: "0 3 * * 3"
+  workflow_dispatch:
+    inputs:
+      languages:
+        description: "Languages, comma separated (subset of en,sk,cs)"
+        default: "en,sk,cs"
+        type: string
+      dry_run:
+        description: "Dry run: generate and report, write nothing to the DB"
+        default: true
+        type: boolean
+      count:
+        description: "Questions to generate per language"
+        default: "15"
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: fresh-topup
+  cancel-in-progress: false
+
+jobs:
+  topup:
+    if: github.event_name == 'workflow_dispatch' || vars.FRESH_TOPUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_TOPUP_TOKEN }}
+      APP: quiz-pack-api
+      MACHINE_NAME: fresh-topup-${{ github.run_id }}-${{ github.run_attempt }}
+      LANGS: ${{ inputs.languages || 'en,sk,cs' }}
+      COUNT: ${{ inputs.count || '15' }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+      SCHEDULED: ${{ github.event_name == 'schedule' }}
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Validate inputs
+        run: |
+          [[ "$LANGS" =~ ^(en|sk|cs)(,(en|sk|cs))*$ ]] || { echo "bad languages: $LANGS"; exit 1; }
+          [[ "$COUNT" =~ ^[0-9]{1,3}$ ]] || { echo "bad count: $COUNT"; exit 1; }
+
+      # The image and region of the app's current web machine = what is deployed.
+      - name: Resolve current image and region
+        run: |
+          flyctl machines list --app "$APP" --json > machines.json
+          image=$(jq -r '[.[] | select(.config.metadata.fly_process_group == "web")][0].config.image // empty' machines.json)
+          region=$(jq -r '[.[] | select(.config.metadata.fly_process_group == "web")][0].region // empty' machines.json)
+          [ -n "$image" ] && [ -n "$region" ] || { echo "no web machine found"; exit 1; }
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+          echo "REGION=$region" >> "$GITHUB_ENV"
+          echo "image=$image region=$region"
+
+      # No --rm: a removed machine takes its exit code with it, and the
+      # workflow must fail when the job fails. The cleanup step destroys it.
+      # --vm-memory explicitly: fly.toml's [[vm]] does not apply to machine run.
+      # The --env pins must equal app/corpus/fresh_roles.py ENV_PINS (a test
+      # checks it); they override the app's own LLM_* / VERIFY_MODEL secrets.
+      - name: Start the top-up machine
+        run: |
+          args=(--languages "$LANGS" --count "$COUNT")
+          [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
+          [ "$SCHEDULED" = "true" ] && args+=(--cron-checkin)
+          flyctl machine run "$IMAGE" \
+            --app "$APP" --name "$MACHINE_NAME" --region "$REGION" \
+            --restart no --vm-memory 1024 --detach \
+            --env LLM_GATEWAY=direct \
+            --env LLM_ROLE_GEN=claude-opus-5-5 \
+            --env GENERATION_MODEL=claude-opus-5-5 \
+            --env GEN_ALT_SHARE=0 \
+            --env LLM_ROLE_CRITIQUE=claude-opus-5-5 \
+            --env CRITIQUE_MODEL=claude-opus-5-5 \
+            --env LLM_ROLE_FACTCHECK=claude-sonnet-5-5 \
+            --env LLM_ROLE_DEDUP_JUDGE=claude-sonnet-5-5 \
+            --env VERIFY_MODEL=claude-opus-5-5 \
+            --env ANSWERABILITY_CHECK=1 \
+            --env TOPICALITY_CLASSIFICATION=1 \
+            --env EXPIRY_CLASSIFICATION=0 \
+            --env CASUAL_PLAYER_GATE=off \
+            --env JUDGE_GATE=0 \
+            -- python -m app.corpus.fresh_topup "${args[@]}" \
+            || echo "machine run returned non-zero (a job that exits fast does this); the exit code is checked below"
+          flyctl machines list --app "$APP" --json \
+            | jq -r --arg n "$MACHINE_NAME" '.[] | select(.name == $n) | .id' > machine_id
+          [ -s machine_id ] || { echo "machine did not start"; exit 1; }
+          echo "MACHINE_ID=$(cat machine_id)" >> "$GITHUB_ENV"
+
+      - name: Wait for the run to finish (max 2 h)
+        run: |
+          for _ in $(seq 1 240); do
+            flyctl machines list --app "$APP" --json > machines.json
+            state=$(jq -r --arg id "$MACHINE_ID" '.[] | select(.id == $id) | .state' machines.json)
+            case "$state" in stopped|destroyed|failed) break ;; esac
+            sleep 30
+          done
+          echo "final state: $state"
+          [ "$state" = "stopped" ] || { echo "machine did not finish cleanly"; exit 1; }
+          # Events are newest first; exit_code is omitted when it is 0.
+          exit_event=$(jq -c --arg id "$MACHINE_ID" \
+            '.[] | select(.id == $id) | [.events[] | select(.type == "exit")][0].request.exit_event' machines.json)
+          echo "exit event: $exit_event"
+          code=$(echo "$exit_event" | jq -r '.exit_code // 0')
+          oom=$(echo "$exit_event" | jq -r '.oom_killed // false')
+          [ "$oom" = "false" ] || { echo "machine was OOM-killed"; exit 1; }
+          [ "$code" = "0" ] || { echo "fresh_topup exited $code"; exit 1; }
+
+      - name: Machine log
+        if: always() && env.MACHINE_ID != ''
+        run: flyctl logs --app "$APP" --machine "$MACHINE_ID" --no-tail || true
+
+      - name: Destroy the machine
+        if: always() && env.MACHINE_ID != ''
+        run: flyctl machine destroy "$MACHINE_ID" --app "$APP" --force

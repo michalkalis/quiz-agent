@@ -23,7 +23,7 @@ Každú stredu ráno server sám vygeneruje čerstvé otázky zo zábavy natívn
 ## Návrh
 
 ### Kde to beží
-Jednorazový Fly stroj z aktuálneho obrazu `quiz-pack-api` (`fly machine run … --rm`, reštart nikdy), spustený naplánovaným GitHub Actions workflow `fresh-topup.yml` (cron `0 3 * * 3` UTC = 05:00 Praha v lete, 04:00 v zime; `workflow_dispatch` so vstupmi `languages`, `dry_run`). Stroj má dostať secrets appky (Anthropic, OpenAI na embeddingy, DATABASE_URL, Sentry), takže do GitHubu ide len app-scoped deploy token `FLY_TOPUP_TOKEN` (dedenie secrets overiť v 202.5 ako prvé; `--vm-memory 1024` explicitne, `[[vm]]` z fly.toml sa na `machine run` nevzťahuje a 256 MB zabilo workera).
+Jednorazový Fly stroj z aktuálneho obrazu `quiz-pack-api` (`fly machine run`, reštart nikdy, po skončení ho workflow zmaže), spustený naplánovaným GitHub Actions workflow `fresh-topup.yml` (cron `0 3 * * 3` UTC = 05:00 Praha v lete, 04:00 v zime; `workflow_dispatch` so vstupmi `languages`, `dry_run`). Stroj má dostať secrets appky (Anthropic, OpenAI na embeddingy, DATABASE_URL, Sentry), takže do GitHubu ide len app-scoped deploy token `FLY_TOPUP_TOKEN` (overené 2026-10-14 skúšobným strojom: secrets appky aj nenulový exit code sa prenesú; `--vm-memory 1024` explicitne, `[[vm]]` z fly.toml sa na `machine run` nevzťahuje a 256 MB zabilo workera).
 
 Prečo nie ARQ cron vo workeri: Fly `worker` je zámerne zastavený, kým objednávky idú na session frontu (`docs/setup/session-worker-mba.md`), a ten istý `WorkerSettings` beží aj na mba cez predplatné. Cron tam by buď nebežal, alebo by išiel z predplatného. Prečo nie stále bežiaci stroj: platili by sme ho 7 dní za 1 h práce. Repo je verejné, Actions minúty sú zadarmo (rovnaký vzor ako `prod-monitor.yml`).
 
@@ -61,9 +61,10 @@ Jadro `scripts/import_questions_json.py` presunuté do `app/corpus/importer.py` 
 ## Úlohy
 
 - [x] 202.1 Presuny bez zmeny správania: importer, zostava stupňov, wiki_fame, covered + testy parity (CLI a funkcia dajú rovnaké stavy).
-- [ ] 202.2 Seed researcher (Claude + web search/fetch) + filtre + testy.
-- [ ] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
-- [ ] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.
+- [x] 202.2 Seed researcher (Claude + web search/fetch) + filtre + testy.
+- [x] 202.3 Orchestrátor `app/corpus/fresh_topup.py` (brief, generovanie, import, strop, mapa rolí, Sentry súhrn + check-in) + testy.
+- [x] 202.4 Workflow `fresh-topup.yml` + `FLY_TOPUP_TOKEN` + premenná vypínača.
+  - Odchýlky: stroj bez `--rm` (odstránený stroj stratí exit kód; workflow ho po skončení zmaže sám), Sentry Crons check-in len pri plánovanom behu (`--cron-checkin`), aby ručné/suché behy pred zapnutím nezaložili monitor, ktorý by potom hlásil zmeškané stredy. ShapeClassifier dostáva rovnaký pin ako zodpovedateľnosť. Moduly: `app/corpus/{seed_research,seed_filters,fresh_brief,fresh_roles,fresh_generate,fresh_report,fresh_topup}.py`.
 - [ ] 202.5 Nasadenie, ručný beh na sucho en/sk/cs → founder pozrie vzorku.
 - [ ] 202.6 Ostrý ručný beh → stav zásoby → súhlas foundera → zapnúť plánovaný beh.
 

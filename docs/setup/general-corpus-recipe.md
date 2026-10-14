@@ -1,0 +1,30 @@
+# General corpus recipe (non-entertainment)
+
+The default way to generate questions for the general categories (history, science, geography, food, sports, movies-music). It comes from the #203 blind tests of 2026-10-14: `docs/issues/issue-203-stock-questions.md`. Entertainment has its own recipe: `fresh-entertainment-recipe.md`.
+
+What the founder's ratings showed:
+- The 2026-10-01 bulk batch (Fable 5, 15 questions per broad theme) scored about 2/10. Questions generated fresh on Opus 5.5 scored 7.3 to 8.4, whatever the prompt.
+- The old `v2_cot` prompt and today's `direct_v1` tied (7.4 vs 7.3), so the prompt stays `direct_v1`.
+- The founder-taste brief beat the 10-08 native Slovak recipe (8.1 vs 7.5): fewer years and school-textbook questions. In English it tied today's recipe (8.4 vs 8.3 for the anchor).
+- Ratings drift between rounds (the same anchor recipe got 7.3, then 8.3). Always compare arms within one round.
+
+## Settings
+
+Start from `docs/testing/runs/taste-2026-10-14/run_arm.sh`. Copy it to the new run directory and edit only the `THEMES` list.
+- **Model:** Opus 5.5, pinned (`GENERATION_MODEL`, `GEN_ALT_SHARE=0`). With `GATEWAY=session` the subscription runs it through the `opus` alias.
+- **Pipeline:** the prod-parity pins in the script (= `app/corpus/fresh_pins.py`), plus `--no-judges --direct --dry-run`. Dedup runs against prod through the `fly proxy` tunnel on :15432.
+- **Brief:** `--prompt` = `docs/testing/runs/taste-2026-10-14/taste_brief.txt`, built from 507 founder-rated questions. For sk/cs the script appends the home-country paragraph: about 7 in 10 questions about that country or its everyday life.
+- **Batch shape:** 4 questions per theme (`--target-count 4 --per-topic-cap 4`), many narrow themes. Never 15 per broad theme.
+- **Themes:** narrow and everyday rather than curriculum-style. For example "kitchen science", "words we borrowed", "why things are named what they are", "hidden reasons behind everyday habits", "famous things with a twist", "maps and borders puzzles", "animals that break the rules". Avoid Russia, years and dates, award winners and obscure people (the brief says so too).
+- **Languages:** native en, sk and cs runs, each language generated directly. A native sk/cs row is served only to players of that language.
+
+## Gate before anything goes live
+
+1. A pilot of about 20 questions per language through the exact production path (the same gateway as the full run).
+2. The founder blind-rates a sample of 20 on the rating page. Reuse `build_sample.py` and `rating_template.html` from `taste-2026-10-14`.
+3. Run the full batch only when the pilot averages ≥ 7/10. The same rule holds for every bulk batch (founder 2026-10-14): a 20-question blind sample, and import only at ≥ 7.
+4. Import with `scripts/import_questions_json.py`, following the pattern of `docs/testing/runs/native-sk-cs-2026-10-08/run_import.sh`.
+
+## Cost
+
+About 9 cents per question on the direct API with 4-question batches; verification is most of it. On the subscription the money cost is zero, but watch the 5-hour window and keep about 20 % in reserve.

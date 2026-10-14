@@ -1,0 +1,182 @@
+{
+ "Q1": {
+  "arm": "stock",
+  "qid": "801257cd-3f44-4219-817e-e721cd265e97",
+  "category": "geography-world",
+  "reason": "Kilimanjaro being in Tanzania is common geography recall."
+ },
+ "Q2": {
+  "arm": "stock",
+  "qid": "0ea3251c-44e7-4b65-becb-6fd6f0f13b94",
+  "category": "history",
+  "reason": "Masaryk taking his wife's surname is a Czech school staple."
+ },
+ "Q3": {
+  "arm": "keep",
+  "qid": "1d992ff6-9e15-41fb-ad9e-41e27d47ecd0",
+  "category": "history",
+  "reason": "The Lewis chessmen's origin is not common knowledge"
+ },
+ "Q4": {
+  "arm": "keep",
+  "qid": "328b4b1c-bc67-4259-a230-f100f23f5d43",
+  "category": "science-nature",
+  "reason": "A fun psychology fact, even if some players have seen the video"
+ },
+ "Q5": {
+  "arm": "stock",
+  "qid": "79468f36-7a16-4b97-bd46-d992bcb592ad",
+  "category": "science-nature",
+  "reason": "Komodo dragons of Indonesia are a well-known general-culture staple."
+ },
+ "Q6": {
+  "arm": "keep",
+  "qid": "9e7f25e2-1fc8-4346-9b77-bc5995ecfc8f",
+  "category": "history",
+  "reason": "Ibn Battuta's travels are unfamiliar to most ordinary adults"
+ },
+ "Q7": {
+  "arm": "keep",
+  "qid": "8407eb4f-4972-44ef-b8b5-dc99a304618b",
+  "category": "geography-world",
+  "reason": "Moscow time on all Russian train timetables surprises most people."
+ },
+ "Q8": {
+  "arm": "stock",
+  "qid": "140279ab-242f-4f29-811b-1b11a98e7730",
+  "category": "history",
+  "reason": "The Defenestration of Prague starting the Thirty Years' War is a textbook history staple"
+ },
+ "Q9": {
+  "arm": "stock",
+  "qid": "adacc1b8-6ee3-41b3-943e-07f4fd4b550d",
+  "category": "science-nature",
+  "reason": "Limescale as calcium carbonate is school chemistry recall."
+ },
+ "Q10": {
+  "arm": "keep",
+  "qid": "127dc9ac-581e-411f-b3ae-26f764815bc4",
+  "category": "movies-music",
+  "reason": "Few casual players know Giselle isn't Tchaikovsky."
+ },
+ "Q11": {
+  "arm": "keep",
+  "qid": "4e54defd-19a4-4762-aaab-b70965ac24ed",
+  "category": "history",
+  "reason": "Olympic is not widely known outside Titanic buffs."
+ },
+ "Q12": {
+  "arm": "keep",
+  "qid": "a0a879f3-7f8b-4f72-84e7-98d9b3a35e08",
+  "category": "food-everyday",
+  "reason": "Crushed insects in sweets and lipstick surprises most"
+ },
+ "Q13": {
+  "arm": "keep",
+  "qid": "7b6ec4c2-af64-4b65-8c21-88762ca6309f",
+  "category": "history",
+  "reason": "Few people know the battle was fought in modern Turkey."
+ },
+ "Q14": {
+  "arm": "keep",
+  "qid": "7b5833a0-ae2c-489f-a79d-65ce00b10602",
+  "category": "geography-world",
+  "reason": "A thirteen-month calendar is surprising to most adults."
+ },
+ "Q15": {
+  "arm": "keep",
+  "qid": "67a93fe0-5bed-48de-bef4-adf7fe6d89de",
+  "category": "science-nature",
+  "reason": "Most people assume he won for relativity"
+ },
+ "Q16": {
+  "arm": "stock",
+  "qid": "34d6b218-46f7-430a-bed3-69d8dfac68b7",
+  "category": "history",
+  "reason": "The House of Windsor is common general knowledge and easy to recall"
+ },
+ "Q17": {
+  "arm": "stock",
+  "qid": "3682081e-b709-4632-9a33-92a81d1d49c5",
+  "category": "geography-world",
+  "reason": "Recent news recall, and the answer is obvious from the ship's name"
+ },
+ "Q18": {
+  "arm": "stock",
+  "qid": "a9c72797-ecf8-4f7f-a1b2-107fb67760ce",
+  "category": "geography-world",
+  "reason": "South Africa's three capitals is a much-asked quiz staple."
+ },
+ "Q19": {
+  "arm": "keep",
+  "qid": "cb16489b-0ef0-4534-8a12-07c0a7617e5c",
+  "category": "science-nature",
+  "reason": "Counterintuitive answer that surprises most ordinary adults."
+ },
+ "Q20": {
+  "arm": "stock",
+  "qid": "f069f304-b2fb-4447-a690-b69dc00a72e8",
+  "category": "science-nature",
+  "reason": "For a Czech audience, Janský and the blood groups is a school staple."
+ },
+ "Q21": {
+  "arm": "stock",
+  "qid": "4309b697-aa3e-4722-ac36-23712d31276b",
+  "category": "history",
+  "reason": "Rosa Parks is a textbook staple, asked straight"
+ },
+ "Q22": {
+  "arm": "keep",
+  "qid": "44188e4e-0867-4d5d-8a66-fc80bbf794fa",
+  "category": "science-nature",
+  "reason": "The hyrax being kin to the elephant surprises most adults"
+ },
+ "Q23": {
+  "arm": "keep",
+  "qid": "9aecbe93-4407-40b3-b4b1-b5c94db36325",
+  "category": "history",
+  "reason": "The etymology of camera is a small 'huh, really?'"
+ },
+ "Q24": {
+  "arm": "stock",
+  "qid": "0fc222b2-5985-4675-8945-ee627f6a92e5",
+  "category": "history",
+  "reason": "Mandela's 27 years in prison is a well-known staple."
+ },
+ "Q25": {
+  "arm": "keep",
+  "qid": "43431f53-5ae2-4576-b534-f6c4c8eebdbf",
+  "category": "science-nature",
+  "reason": "Few people know Fuji's last eruption was in 1707"
+ },
+ "Q26": {
+  "arm": "stock",
+  "qid": "3f9bf4cb-00f7-4a39-a8b7-01f889e41e52",
+  "category": "history",
+  "reason": "Cook dying in Hawaii is a standard history staple, asked as plain recall."
+ },
+ "Q27": {
+  "arm": "stock",
+  "qid": "334c9c31-818c-4aa8-8ae4-a3f41beac691",
+  "category": "geography-world",
+  "reason": "Angel Falls as the world's tallest waterfall is a classic staple"
+ },
+ "Q28": {
+  "arm": "stock",
+  "qid": "6ca82e28-64fa-448a-a3eb-98bb8886a347",
+  "category": "science-nature",
+  "reason": "Largest reptile is a common quiz staple; stem detail doesn't help"
+ },
+ "Q29": {
+  "arm": "stock",
+  "qid": "84a82a8f-b5f4-44da-80d0-58f7da931d58",
+  "category": "food-everyday",
+  "reason": "Gouda and Edam being Dutch is common general knowledge"
+ },
+ "Q30": {
+  "arm": "keep",
+  "qid": "7843ee3a-607c-42a4-886e-9742dd0fb833",
+  "category": "history",
+  "reason": "Many know the bridge by name but not what it connects."
+ }
+}

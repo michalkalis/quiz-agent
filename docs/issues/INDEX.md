@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by `/triage` whenever a `**Triag
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 203 | [Nudné otázky: príčina a náhrada](issue-203-stock-questions.md) | bug · in-progress | `[~]` #203 | 2026-10-14: zásoba ~2/10 (beh 10-01), čerstvé generovanie 7,3–8,4; open = 200/jazyk cez predplatné podľa receptu, pilot + slepá vzorka ≥ 7 |
 | 202 | [Týždenné automatické dopĺňanie čerstvej zábavy](issue-202-weekly-fresh-entertainment-job.md) | enhancement · in-progress | `[~]` #202 | Job na serveri každú stredu: en/sk/cs natívne ~15/jazyk, strop $15, auto-approve cez brány |
 | 201 | [Zábava, na ktorú sa dá odpovedať](issue-201-gettable-entertainment.md) | enhancement · done | `[x]` #201 | HOTOVÉ 2026-10-13: nový recept ≈ starý, kontrola „bežný hráč“ vypnutá (nepredpovedá hodnotenie); jednoduché pravidlá v [recepte dopĺňania](../setup/fresh-entertainment-recipe.md) |
 | 200 | [TF test redizajnu 1.1 (2026-10-12): 17 nálezov](issue-200-tf-redesign-feedback-2026-10-12.md) | bug · ready-for-human | `[~]` #200 | Založené 2026-10-12; kód hotový (backend v152, iOS v main); open = overenie na zariadení cez TF build |

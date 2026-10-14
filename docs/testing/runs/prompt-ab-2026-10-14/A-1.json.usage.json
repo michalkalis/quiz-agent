@@ -1,0 +1,25 @@
+{
+  "stages": {
+    "generating": {
+      "claude-opus-5-5": {
+        "calls": 1,
+        "input_tokens": 13402,
+        "output_tokens": 6188,
+        "calls_without_usage": 0,
+        "cost_cents": 17.7368
+      }
+    },
+    "verifying": {
+      "claude-sonnet-5-5": {
+        "calls": 6,
+        "input_tokens": 164501,
+        "output_tokens": 5430,
+        "calls_without_usage": 0,
+        "cost_cents": 38.3302
+      }
+    }
+  },
+  "total_cost_cents_known": 56.067,
+  "unpriced_models": [],
+  "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
+}

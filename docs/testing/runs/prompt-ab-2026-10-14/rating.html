@@ -1,0 +1,170 @@
+<title>Porovnanie zadaní</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Porovnanie zadaní</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Otázky z dvoch zadaní pre AI (rovnaký model aj témy), zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "P1", "lang": "en", "question": "Measured from the centre of the Earth instead of from sea level, the world's highest peak isn't Everest but a volcano close to the equator. In what country is it?", "answer": "Ecuador", "options": [], "explanation": "Mount Chimborazo in Ecuador is the point on Earth's surface farthest from the planet's centre, about 2 kilometres farther out than Everest's summit. Earth bulges at the equator, so equatorial peaks get a boost."}, {"id": "P2", "lang": "en", "question": "When yeast feeds on the sugars in bread dough, it gives off a gas that makes the dough rise. Which gas?", "answer": "Carbon dioxide", "options": [], "explanation": "The holes in a slice of bread are bubbles of carbon dioxide trapped by stretchy gluten. Yeast also makes a little alcohol, which mostly evaporates in the oven."}, {"id": "P3", "lang": "en", "question": "In 1324, Mansa Musa of the Mali Empire passed through Cairo on his pilgrimage to Mecca and gave away so much of one thing that its value in Egypt fell for years. What was it?", "answer": "Gold", "options": [], "explanation": "Mansa Musa travelled with a vast caravan carrying tonnes of gold. He handed out so much in Cairo that the price of gold there stayed depressed for over a decade. Historians often call him one of the richest people who ever lived."}, {"id": "P4", "lang": "en", "question": "After touring Western Europe in the 1690s, Peter the Great personally shaved his nobles and later made Russian men pay a tax to keep what?", "answer": "Their beards", "options": [], "explanation": "Peter wanted Russia to look like clean-shaven Western Europe. Men who kept their beards had to pay a tax and carry a token proving they had paid. The tax was formalised in 1705."}, {"id": "P5", "lang": "en", "question": "Alexander the Great founded a city in present-day Pakistan named after his beloved warhorse. What was the horse called?", "answer": "Bucephalus", "options": [], "explanation": "According to legend, a young Alexander tamed Bucephalus by turning the horse to face the sun so it couldn't see its own shadow. The city of Bucephala was founded on the Hydaspes river after the horse died."}, {"id": "P6", "lang": "en", "question": "Two spoons, one metal and one wooden, have sat in the same drawer all night, so both are at room temperature. Why does the metal one feel colder when you pick it up?", "answer": "Metal conducts heat away faster", "options": [], "explanation": "Both spoons really are the same temperature. Metal is a far better conductor of heat than wood, so it draws warmth out of your skin much more quickly. Your nerves sense that rapid heat loss as 'cold'. Wood is an insulator, so it barely pulls heat from your hand and feels warmer."}, {"id": "P7", "lang": "en", "question": "Many household smoke detectors contain a tiny speck of a radioactive element named after a continent. Which element is it?", "answer": "Americium", "options": [], "explanation": "Americium-241 gives off particles that make the air inside the detector conduct a tiny current. Smoke interrupts that current and sets off the alarm, and the amount inside is far too small to harm you."}, {"id": "P8", "lang": "en", "question": "Name the gas that makes bread dough rise and also puts the fizz in soft drinks.", "answer": "Carbon dioxide", "options": [], "explanation": "Yeast feeds on sugars in dough and releases carbon dioxide, which forms the air pockets in bread. Soft drinks are carbonated by dissolving carbon dioxide under pressure. When you open the bottle, the gas escapes as bubbles. The same gas is what we breathe out."}, {"id": "P9", "lang": "en", "question": "Every morning, millions of commuters in one city travel from Europe to Asia just to get to work. Name the city.", "answer": "Istanbul", "options": [], "explanation": "Istanbul straddles the Bosphorus Strait, which divides Europe from Asia. Bridges, a rail tunnel, a road tunnel and ferries carry commuters between the two continents every day."}, {"id": "P10", "lang": "en", "question": "Which Roman emperor, notorious for his erratic behaviour, was said to have planned to make his favourite horse a consul?", "answer": "Caligula", "options": [], "explanation": "According to Suetonius, the horse Incitatus had a marble stall, an ivory manger and servants of its own. Many historians think the consul plan was Caligula mocking the Senate."}, {"id": "P11", "lang": "en", "question": "Per person, who drinks more tea?", "answer": "The Turks", "options": ["The British", "The Turks"], "explanation": "Turkey leads the world in tea drinking per person, at roughly 3 kg of tea per person per year. That is well ahead of the UK, at around 2 kg or less. Tea, or 'çay', is served constantly in Turkey in small tulip-shaped glasses. Much of it is grown along the country's Black Sea coast around Rize."}, {"id": "P12", "lang": "en", "question": "Real wasabi is expensive and hard to grow. Most of the green paste served with sushi outside Japan is made mainly from which cheaper root, dyed green?", "answer": "Horseradish", "options": [], "explanation": "Imitation wasabi is mostly horseradish with a little mustard and green colouring. Genuine wasabi is often grated fresh at the table and has a milder, sweeter heat."}, {"id": "P13", "lang": "en", "question": "Look beyond Europe: France's longest land border is shared with what country?", "answer": "Brazil", "options": [], "explanation": "French Guiana, an overseas region of France in South America, shares a border of about 730 kilometres with Brazil. That is longer than France's borders with Spain or Belgium."}, {"id": "P14", "lang": "en", "question": "Determined to make his nobles look more Western European, which Russian tsar introduced a tax on men who kept their beards?", "answer": "Peter the Great", "options": [], "explanation": "Bearded men who paid were given a token stamped with the words 'the beard is a superfluous burden'. Peter also reportedly cut off some courtiers' beards himself."}, {"id": "P15", "lang": "en", "question": "After touring Western Europe, Russia's Peter the Great put a tax on something many Russian men wore proudly. Those who paid had to carry a metal token as proof. What was taxed?", "answer": "Beards", "options": [], "explanation": "Peter saw beards as a symbol of old-fashioned Russia and wanted his court to look European. He reportedly shaved some nobles' beards off himself."}, {"id": "P16", "lang": "en", "question": "Who drinks more coffee per person each year: the average Finn or the average Italian?", "answer": "The average Finn", "options": ["The average Finn", "The average Italian"], "explanation": "Finland regularly tops the world rankings for coffee consumption, at roughly 12 kg per person per year. That is around double Italy's figure. Italians drink small espressos, while Finns drink many large cups of lighter-roast filter coffee throughout the long dark days."}, {"id": "P17", "lang": "en", "question": "When the Great Pyramid of Giza was being built, were woolly mammoths still alive somewhere on Earth?", "answer": "Yes", "options": [], "explanation": "The Great Pyramid was built around 2560 BC. A small population of woolly mammoths survived on Wrangel Island, in the Arctic Ocean off Siberia, until roughly 2000 BC. That is centuries after the pyramid was finished."}, {"id": "P18", "lang": "en", "question": "Slicing an onion releases a gas that stings your eyes. Which chemical element is at the heart of that gas? It's the same one behind the smell of rotten eggs and struck matches.", "answer": "Sulfur", "options": [], "explanation": "Cutting the onion breaks open its cells, and enzymes convert its sulfur compounds into an irritating gas. Your eyes then flood with tears to wash it away, which is why chilling the onion first helps."}, {"id": "P19", "lang": "en", "question": "Roughly how many islands does Sweden have, according to its official statistics agency?", "answer": "About 250,000", "options": ["About 2,500", "About 25,000", "About 250,000", "About 2.5 million"], "explanation": "Statistics Sweden counted about 267,570 islands, which may be the most of any country. Fewer than 1,000 of them are inhabited."}, {"id": "P20", "lang": "en", "question": "After the Western Roman Empire fell in 476 AD, how long did the Eastern Roman (Byzantine) Empire survive?", "answer": "1,000 years", "options": ["About 100 years", "500 years", "1,000 years"], "explanation": "The Eastern Roman Empire lasted until Constantinople fell to the Ottoman Turks in 1453. That is nearly 1,000 years after the West collapsed. Its citizens called themselves Romans the whole time."}, {"id": "P21", "lang": "en", "question": "British colonists in India mixed gin into their tonic water to mask its bitter taste. The bitterness came from quinine, taken to protect against what disease?", "answer": "Malaria", "options": [], "explanation": "Quinine, extracted from the bark of the South American cinchona tree, was the main treatment and preventive for malaria. Colonial officers added gin, sugar and lime to make their daily dose drinkable, and the gin and tonic was born. Modern tonic water contains far too little quinine to protect anyone."}, {"id": "P22", "lang": "en", "question": "Which kingdom is completely surrounded by South Africa and has the highest 'lowest point' of any country, at roughly 1,400 metres above sea level?", "answer": "Lesotho", "options": [], "explanation": "Every part of Lesotho lies above about 1,400 m, which earns it the nickname 'Kingdom in the Sky'. It is one of only three countries entirely enclosed by another, alongside San Marino and Vatican City."}, {"id": "P23", "lang": "en", "question": "Sydney and Melbourne each wanted to be Australia's capital, so the country built a brand-new city between them instead. What is it called?", "answer": "Canberra", "options": [], "explanation": "The site was picked in 1908, and the city was designed by American architects Walter Burley Griffin and Marion Mahony Griffin. Parliament moved there from Melbourne in 1927."}, {"id": "P24", "lang": "en", "question": "Which spice comes from a Mexican orchid and could only be grown widely abroad after a 12-year-old boy on the island of Réunion worked out how to pollinate its flowers by hand in 1841?", "answer": "Vanilla", "options": [], "explanation": "Edmond Albius's method is still used today, because outside Mexico the orchid lacks its natural pollinators. Every flower on the plantations of Madagascar is pollinated by hand."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

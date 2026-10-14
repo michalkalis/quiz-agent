@@ -1,0 +1,152 @@
+{
+ "R1": {
+  "arm": "N",
+  "qid": "7b6120eb-e8ae-4e8a-b562-9e2e85bf1345",
+  "topic": "Najnižší bod Slovenska"
+ },
+ "R2": {
+  "arm": "T",
+  "qid": "63020e5f-71b7-48ab-95ea-abaf76e694af",
+  "topic": "Place name origins"
+ },
+ "R3": {
+  "arm": "S",
+  "qid": "3bf762a6-9cd9-4c02-aa33-7afad5b3c5cb",
+  "topic": "Chémia v kuchyni"
+ },
+ "R4": {
+  "arm": "N",
+  "qid": "0a1e0ef4-6aa2-483b-bb08-57bfe069db4e",
+  "topic": "Slovenské nápoje"
+ },
+ "R5": {
+  "arm": "T",
+  "qid": "58e2c910-4237-4a1d-b37d-888144d3251b",
+  "topic": "Japanese food"
+ },
+ "R6": {
+  "arm": "S",
+  "qid": "65d65242-256f-4388-b4c1-e779aadc2e74",
+  "topic": "Pôvod slov z kuchyne"
+ },
+ "R7": {
+  "arm": "N",
+  "qid": "c9b7291a-1820-4d97-8304-5cc3b060bebf",
+  "topic": "Dobšinská ľadová jaskyňa"
+ },
+ "R8": {
+  "arm": "N",
+  "qid": "afeb8af8-3baa-4ae6-a6a0-b1afd34e9e8f",
+  "topic": "Anton Bernolák a spisovná slovenčina"
+ },
+ "R9": {
+  "arm": "S",
+  "qid": "ff7b3077-b000-4d50-8ee2-4bdd9ea17089",
+  "topic": "Bryndza a slovenské syry"
+ },
+ "R10": {
+  "arm": "N",
+  "qid": "00a634d1-0aa3-433f-b52b-906ac14de759",
+  "topic": "Milan Rastislav Štefánik"
+ },
+ "R11": {
+  "arm": "X",
+  "qid": "b43a6b4b-77e9-4549-a1f0-19ea14018262",
+  "topic": "Korean food"
+ },
+ "R12": {
+  "arm": "X",
+  "qid": "4a5b5698-852e-4d29-8c7d-4a169e40b4f5",
+  "topic": "Physics of boiling"
+ },
+ "R13": {
+  "arm": "S",
+  "qid": "6a5b3f56-1bd6-48dc-8f26-4df8e154d283",
+  "topic": "Bratislava a korunovácie"
+ },
+ "R14": {
+  "arm": "X",
+  "qid": "f7ce81c0-4d3a-4b0e-9ea7-19fe3fa91b9e",
+  "topic": "Mongol Empire"
+ },
+ "R15": {
+  "arm": "T",
+  "qid": "54b537f2-384b-402d-9e2b-95365c1cd289",
+  "topic": "Country name origins"
+ },
+ "R16": {
+  "arm": "S",
+  "qid": "d6c2aac4-ce79-4f7f-9ed6-4342df4e297c",
+  "topic": "Slovenské a československé nápoje"
+ },
+ "R17": {
+  "arm": "X",
+  "qid": "00985513-b4b2-4c68-b7bf-d52c36dc44f1",
+  "topic": "Mountains"
+ },
+ "R18": {
+  "arm": "S",
+  "qid": "aa85a963-1fc3-44a6-bda5-9fa5c8186a54",
+  "topic": "Kremnická mincovňa"
+ },
+ "R19": {
+  "arm": "N",
+  "qid": "f313703f-eb45-4f45-86f9-84abeb699b21",
+  "topic": "Jaskyne a minerály"
+ },
+ "R20": {
+  "arm": "T",
+  "qid": "4e755464-8efb-43d4-a18a-cc8c7f630677",
+  "topic": "Inventors and the telephone"
+ },
+ "R21": {
+  "arm": "X",
+  "qid": "7a2b426c-8ac6-42b6-bad1-e5c2502383c9",
+  "topic": "Spices"
+ },
+ "R22": {
+  "arm": "T",
+  "qid": "3c5fa417-efad-447d-9b7c-b2c1f39d41ed",
+  "topic": "Abraham Lincoln"
+ },
+ "R23": {
+  "arm": "T",
+  "qid": "ea7b2cc6-d700-4827-8ddf-29edc1fe297e",
+  "topic": "Nuts and food processing"
+ },
+ "R24": {
+  "arm": "S",
+  "qid": "d47fba31-8134-448e-a4f0-63085ca5f79e",
+  "topic": "Fyzika v horách"
+ },
+ "R25": {
+  "arm": "T",
+  "qid": "67cdf5d4-0c9d-48c6-a4d1-dae12d45d4a4",
+  "topic": "Roman Empire"
+ },
+ "R26": {
+  "arm": "N",
+  "qid": "489d1d77-cf70-4067-baca-0cc5388827b4",
+  "topic": "Samova ríša"
+ },
+ "R27": {
+  "arm": "S",
+  "qid": "c0c8d6c5-2de1-401e-98b2-7717e82d2bb0",
+  "topic": "Slovenský štátny znak"
+ },
+ "R28": {
+  "arm": "N",
+  "qid": "fdd0d482-8e37-4a11-b9b0-900f9ec3bcdc",
+  "topic": "Slovenská bryndza"
+ },
+ "R29": {
+  "arm": "X",
+  "qid": "ad9032ac-5bed-4e8a-9d29-4f3624ff4438",
+  "topic": "Materials science myths"
+ },
+ "R30": {
+  "arm": "T",
+  "qid": "eec642f2-96b0-4ef5-8af1-e37701bd8f57",
+  "topic": "Everyday chemistry"
+ }
+}

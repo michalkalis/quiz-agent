@@ -70,7 +70,8 @@ Founder zvolil tri smery: domáce sk/cs otázky, zadanie podľa jeho vkusu a vý
 
 ### 203.7 Plný korpus 200/jazyk cez predplatné
 
-- **Pilot (2026-10-14):** `general-pilot-2026-10-14/`, predplatné, 5 úzkych tém × 4 → en 18, sk 20, cs 20. Slepé hodnotenie 30 (E/K/C po 8 + 6 kotiev A = nehodnotené T/S z `taste-2026-10-14`): https://claude.ai/artifact/7EgUpVsJSJmvggLLdNbRQx — čaká na foundera.
+- **Pilot (2026-10-14):** `general-pilot-2026-10-14/`, predplatné, 5 úzkych tém × 4 → en 18, sk 20, cs 20. Slepé hodnotenie 30 (E/K/C po 8 + 6 kotiev A = nehodnotené T/S z `taste-2026-10-14`): https://claude.ai/artifact/7EgUpVsJSJmvggLLdNbRQx
+- **Výsledok pilotu:** en ⌀ 7,9 · sk ⌀ 8,5 · cs ⌀ 7,6 · kotva A ⌀ 6,7 (ráno 8,1–8,4 → stupnica dnes prísnejšia). Brána ≥ 7 splnená. Founder slovne: „ok, dá sa, nadšený nie som; stále príliš kvízovito nudné, chýba variabilita a väčší zdroj zábavnosti.“
 - Zistenia: 4-otázkové dávky padali celé pri 3/4 → `--floor-fraction 0`. Duplicity v rámci behu (8 párov v 58, aj naprieč jazykmi) → krok v recepte (zoznam `run_dups.py` + Sonnet nájde páry; embedding medzi jazykmi nestačí).
 - **Plný beh pripravený:** `general-corpus-2026-10-14/run_arm.sh`, 45 tém × 4 = 180/jazyk + 20 z pilotu; pokračuje po limite predplatného. Spustiť až po ⌀ ≥ 7: `GATEWAY=session ./run_arm.sh E en taste_brief.txt` (K sk, C cs).
 

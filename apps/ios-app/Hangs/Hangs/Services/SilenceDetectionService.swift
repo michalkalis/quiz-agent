@@ -302,6 +302,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var neuralVADActive = false
     var neuralGate = NeuralVADGate()
     var neuralSpeaking = false
+    /// The `SileroVAD` epoch of the last reset — scores from before it are
+    /// stale (`currentProbability`).
+    var neuralEpoch = 0
 
     /// Fail-loud command availability (#77). Written by `prepareAssets()` and by
     /// every failure path that previously swallowed its error silently. Each

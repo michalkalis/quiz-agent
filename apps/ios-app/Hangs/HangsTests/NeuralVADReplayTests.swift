@@ -82,13 +82,14 @@ struct NeuralVADReplayTests {
     }
 
     /// WHY: a broken model must never leave the answer without a detector —
-    /// a model that stops scoring hands the recording back to the energy
-    /// detector (which still ends a steady-road answer), and Sentry says so.
-    @Test("a model that never scores falls back to the energy detector")
-    func silentModelFallsBack() async throws {
+    /// a model that stops scoring (before its first window, or mid-answer
+    /// while it last said "speech") hands the recording back to the energy
+    /// detector, which still ends a steady-road answer, and Sentry says so.
+    @Test("a model that stops scoring falls back to the energy detector", arguments: [0.0, 1.6])
+    func silentModelFallsBack(scoreUntilSecs: Double) async throws {
         let vad = try await SileroVAD.loadBundled()
         let cabin = try CabinAnswer(speech: ReplayFixture.speech("vad_answer_en"))
-        let outcome = await DetectorReplay.run(cabin.mix(), neural: vad, modelScores: false)
+        let outcome = await DetectorReplay.run(cabin.mix(), neural: vad, scoreUntilSecs: scoreUntilSecs)
 
         #expect(outcome.report.detector == .energyFallback)
         let stop = try #require(outcome.stopSecs, "the fallback never ended the answer: \(outcome.report)")

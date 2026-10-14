@@ -31,6 +31,8 @@ struct AnswerDetectionSession {
     /// and handed this recording back to the energy detector.
     var neuralHeardSpeech = false
     var neuralFellBack = false
+    /// Audio time since the model last scored a buffer (fallback trigger).
+    var neuralUnscoredSecs: TimeInterval = 0
     var speechDetectorHeardSpeech = false
     var levelBuffers = 0
     var speechSecs: TimeInterval = 0
@@ -53,7 +55,8 @@ extension SilenceDetectionService {
         let wasSpeaking = primarySpeaking || speechDetectorSpeaking
         let wasPrimarySpeaking = primarySpeaking
         energySpeaking = energyVAD.process(sample)
-        neuralSpeaking = neuralGate.process(probability: sample.speechProbability, duration: sample.duration)
+        let probability = currentProbability(sample)
+        neuralSpeaking = neuralGate.process(probability: probability, duration: sample.duration)
         inputLevelChannel.yield(InputLevel(db: sample.db, noiseFloorDb: energyVAD.noiseFloorDb))
         if var session = answerSession {
             session.levelBuffers += 1
@@ -68,7 +71,7 @@ extension SilenceDetectionService {
             if energySpeaking { session.energyHeardSpeech = true }
             if neuralSpeaking { session.neuralHeardSpeech = true }
             if primarySpeaking || speechDetectorSpeaking { session.speechSecs += sample.duration }
-            fallBackIfNeuralSilent(&session)
+            fallBackIfNeuralSilent(&session, scored: probability != nil, duration: sample.duration)
             answerSession = session
         }
         applyCombinedSpeech(wasSpeaking: wasSpeaking)
@@ -209,7 +212,7 @@ extension SilenceDetectionService {
         energySpeaking = false
         neuralGate = NeuralVADGate()
         neuralSpeaking = false
-        if neuralVADActive { sileroVAD?.reset() }
+        neuralEpoch = sileroVAD?.reset() ?? 0
         speechDetectorSpeaking = false
         lastLevelAt = nil
         pendingFirstHypothesisSince = nil

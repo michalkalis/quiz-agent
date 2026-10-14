@@ -124,9 +124,10 @@ enum DetectorReplay {
 
     /// Feed `samples` buffer by buffer as the tap does; stop at the first
     /// auto-stop, like the recording coordinator.
-    /// `modelScores: false` keeps the model switched on for the window but
-    /// never lets it score — a model that broke after loading.
-    static func run(_ samples: [Float], neural vad: SileroVAD?, modelScores: Bool = true) async -> ReplayOutcome {
+    /// `scoreUntilSecs` keeps the model switched on for the window but stops
+    /// it scoring from that audio time on — a model that broke (0 = before
+    /// its first window).
+    static func run(_ samples: [Float], neural vad: SileroVAD?, scoreUntilSecs: Double = .infinity) async -> ReplayOutcome {
         let clock = TestClock()
         let service = SilenceDetectionService(clock: AnyClock(clock))
         if let vad {
@@ -150,7 +151,7 @@ enum DetectorReplay {
         for start in stride(from: 0, to: samples.count, by: bufferFrames) {
             let buffer = Array(samples[start ..< min(start + bufferFrames, samples.count)])
             guard var sample = meter.measure(buffer) else { continue }
-            if let vad, modelScores { sample.speechProbability = vad.process(buffer) }
+            if let vad, audioSecs < scoreUntilSecs { sample.speechScore = vad.process(buffer) }
             service.handleInputLevel(sample)
             await clock.advance(by: .milliseconds(20))
             await Task.yield()

@@ -108,7 +108,7 @@ extension SilenceDetectionService {
     ) {
         guard var sample = meter.withLockUnchecked({ $0.measure(buffer) }) else { return }
         if let neural {
-            sample.speechProbability = speechProbability(of: buffer, vad: neural, resampler: resampler)
+            sample.speechScore = speechScore(of: buffer, vad: neural, resampler: resampler)
         }
         levels.yield(sample)
     }

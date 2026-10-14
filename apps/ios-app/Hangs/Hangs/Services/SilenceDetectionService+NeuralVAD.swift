@@ -33,7 +33,12 @@ extension SilenceDetectionService {
     func neuralVADForWindow() async -> SileroVAD? {
         neuralVADRequested = VoicePipelineFlags.neuralVADEnabled
         guard neuralVADRequested else { return nil }
-        if let sileroVAD { return sileroVAD }
+        if let sileroVAD {
+            guard sileroVAD.isFailed else { return sileroVAD }
+            // A model that failed mid-recording is not retried every window.
+            self.sileroVAD = nil
+            neuralVADLoadFailed = true
+        }
         guard !neuralVADLoadFailed else { return nil }
         do {
             let vad = try await SileroVAD.loadBundled()
@@ -64,12 +69,20 @@ extension SilenceDetectionService {
         return neuralVADRequested ? .energyFallback : .energy
     }
 
-    /// A model that has scored nothing after the stale bar of audio is not
-    /// listening — the energy detector takes the rest of the recording.
-    func fallBackIfNeuralSilent(_ session: inout AnswerDetectionSession) {
-        guard usesNeuralDetector, neuralGate.peakProbability == nil,
-              session.audioSecs >= VADTuning.levelStaleAfterSecs
-        else { return }
+    /// This window's probability for the sample, or `nil` when the model did
+    /// not score it (off, failed, or a buffer queued before the last reset).
+    func currentProbability(_ sample: InputLevelSample) -> Float? {
+        guard let score = sample.speechScore, score.epoch == neuralEpoch else { return nil }
+        return score.probability
+    }
+
+    /// A model that has scored nothing for the stale bar of audio — never, or
+    /// not since it failed mid-recording — is not listening: the energy
+    /// detector takes the rest of the recording.
+    func fallBackIfNeuralSilent(_ session: inout AnswerDetectionSession, scored: Bool, duration: TimeInterval) {
+        guard usesNeuralDetector else { return }
+        session.neuralUnscoredSecs = scored ? 0 : session.neuralUnscoredSecs + duration
+        guard session.neuralUnscoredSecs + 1e-6 >= VADTuning.levelStaleAfterSecs else { return }
         session.neuralFellBack = true
         SentryLog.warn("neural vad silent, energy fallback", category: .voice, attributes: [
             "atMs": Int((session.audioSecs * 1000).rounded()),
@@ -79,11 +92,11 @@ extension SilenceDetectionService {
     /// Tap thread: the buffer's speech probability, the analyzer-format audio
     /// brought to the model's 16 kHz mono Float32 first (`resampler` is only
     /// set when the analyzer runs at another rate, e.g. 8 kHz narrowband).
-    nonisolated static func speechProbability(
+    nonisolated static func speechScore(
         of buffer: AVAudioPCMBuffer,
         vad: SileroVAD,
         resampler: AVAudioConverter?
-    ) -> Float? {
+    ) -> SileroVAD.Score? {
         guard let samples = modelSamples(of: buffer, resampler: resampler) else { return nil }
         return vad.process(samples)
     }

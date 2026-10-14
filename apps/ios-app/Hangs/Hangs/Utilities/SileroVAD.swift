@@ -38,6 +38,14 @@ nonisolated final class SileroVAD: Sendable {
         case modelMissing
     }
 
+    /// One probability, tagged with the reset it was scored after — buffers
+    /// already queued for the main actor when a recording starts carry the
+    /// previous epoch and are ignored there.
+    struct Score: Sendable, Equatable {
+        let probability: Float
+        let epoch: Int
+    }
+
     private let stream: Mutex<Stream>
 
     init(model: sending MLModel) throws {
@@ -61,13 +69,22 @@ nonisolated final class SileroVAD: Sendable {
     /// choice, so an answer is never cut on one low window — or the previous
     /// value when none completed. `nil` before the first window and after a
     /// model failure (the caller then falls back to the energy detector).
-    func process(_ samples: [Float]) -> Float? {
-        stream.withLock { $0.process(samples) }
+    func process(_ samples: [Float]) -> Score? {
+        stream.withLock { stream in
+            stream.process(samples).map { Score(probability: $0, epoch: stream.epoch) }
+        }
     }
 
-    /// Forget everything heard so far (a new recording starts clean, #185 H3).
-    func reset() {
+    /// Forget everything heard so far (a new recording starts clean, #185 H3);
+    /// returns the epoch the scores from now on carry.
+    @discardableResult
+    func reset() -> Int {
         stream.withLock { $0.reset() }
+    }
+
+    /// A prediction failed; the model scores nothing until the app restarts.
+    var isFailed: Bool {
+        stream.withLock { $0.failed }
     }
 }
 
@@ -81,6 +98,7 @@ nonisolated private extension SileroVAD {
         var pending: [Float] = []
         var lastProbability: Float?
         var failed = false
+        var epoch = 0
 
         init(model: MLModel) throws {
             self.model = model
@@ -111,8 +129,9 @@ nonisolated private extension SileroVAD {
             return lastProbability
         }
 
-        mutating func reset() {
-            guard !failed else { return }
+        mutating func reset() -> Int {
+            epoch += 1
+            guard !failed else { return epoch }
             if let hidden = try? Self.zeroState(), let cell = try? Self.zeroState() {
                 self.hidden = hidden
                 self.cell = cell
@@ -120,6 +139,7 @@ nonisolated private extension SileroVAD {
             context = [Float](repeating: 0, count: contextSamples)
             pending = []
             lastProbability = nil
+            return epoch
         }
 
         private mutating func predict(_ chunk: ArraySlice<Float>) -> Float? {

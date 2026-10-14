@@ -67,6 +67,8 @@ import os
         var capturedVoiceAnswerFileName: String?
         var capturedVoiceAnswerBytes = 0
         var capturedVoiceAnswerQuestionId: String?
+        /// #204.2: the rejected transcripts each voice upload carried, in order.
+        var capturedVoiceAnswerRejectedTranscripts: [[String]] = []
         /// When set, `submitTextInput` throws this instead of returning — the
         /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
         /// failure (e.g. the #133 409 `question_mismatch`) on the text path
@@ -220,8 +222,9 @@ import os
             return response
         }
 
-        func submitVoiceAnswer(sessionId _: String, audioData: Data, fileName: String, questionId: String?) async throws -> QuizResponse {
+        func submitVoiceAnswer(sessionId _: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
+            capturedVoiceAnswerRejectedTranscripts.append(rejectedTranscripts)
             capturedVoiceAnswerQuestionId = questionId
             capturedVoiceAnswerFileName = fileName
             capturedVoiceAnswerBytes = audioData.count

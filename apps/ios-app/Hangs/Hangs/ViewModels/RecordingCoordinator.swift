@@ -93,6 +93,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
     }
 
+    /// See `RecordingState.rejectedTranscripts` (#204.2).
+    var rejectedTranscripts: RejectedTranscripts {
+        get { recordingState.rejectedTranscripts }
+        set { recordingState.rejectedTranscripts = newValue }
+    }
+
     // MARK: - Confirmation-cluster accessors
 
     /// Answer confirmation modal visibility (QuestionView sheet binding via façade forward)

@@ -170,6 +170,9 @@ extension RecordingCoordinator {
         // #186 step 1: the rejected recording's attempt ends here — its upload,
         // read-back or late 400 can no longer land on the re-record.
         let owner = attemptLedger.begin("rerecord")
+        // #204.2: the transcript on the sheet is what the driver just rejected
+        // (the recognizer's, not an edit typed over it).
+        rememberRejectedTranscript(preEditTranscript ?? transcribedAnswer)
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()
@@ -203,6 +206,7 @@ extension RecordingCoordinator {
         guard !attemptLedger.refuseAfterAnswerSent("cancelProcessing.afterAnswerSent") else { return }
         // #186 step 1: whatever the cancelled attempt still has in flight is void.
         attemptLedger.begin("cancelProcessing")
+        rememberRejectedTranscript(preEditTranscript ?? transcribedAnswer) // #204.2
         cancelAnswerReadBack()
         cancelAutoConfirm()
         clearPause()

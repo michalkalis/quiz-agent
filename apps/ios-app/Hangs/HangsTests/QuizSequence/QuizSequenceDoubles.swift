@@ -270,7 +270,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
 
     private var requestKeys: [Int: String] = [:]
 
-    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?, rejectedTranscripts _: [String]) async throws -> QuizResponse {
         try await send(sessionId: sessionId, isVoice: true, questionId: questionId, input: nil)
     }
 

@@ -59,6 +59,11 @@ struct RecordingState {
     /// the SECOND miss must still find the budget used and open the sheet.
     var emptyAnswerRetryQuestionKey: String?
 
+    /// #204.2: the transcripts the player rejected on the current question —
+    /// sent with the next upload. Question-scoped for the same reason: the
+    /// re-record leaves the recording/processing pair before its upload.
+    var rejectedTranscripts = RejectedTranscripts()
+
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         liveTranscript = ""

@@ -25,7 +25,10 @@ protocol NetworkServiceProtocol: Sendable {
     /// unseen question and burning a second freemium question. An id the session
     /// cannot grade comes back as `NetworkError.questionMismatch`; `nil` selects
     /// the legacy, un-scoped behaviour.
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?) async throws -> QuizResponse
+    /// `rejectedTranscripts` (#204.2): what the player already rejected on this
+    /// question, sent as the `rejected_transcripts` form field (JSON array);
+    /// empty = the field is left out (today's request).
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse
     /// #182: fetch the next question of a custom pack that was still generating
     /// when the previous answer was graded (`QuizResponse.awaitingQuestion`).
@@ -485,7 +488,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Voice Submission
 
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil, rejectedTranscripts: [String] = []) async throws -> QuizResponse {
         // #133 1a: the route takes `question_id` as a QUERY param (the body is the
         // multipart audio), and rejects a mismatch BEFORE paying for transcription.
         guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)"), resolvingAgainstBaseURL: false) else {
@@ -514,6 +517,12 @@ actor NetworkService: NetworkServiceProtocol {
         body.append(Data("Content-Disposition: form-data; name=\"audio\"; filename=\"\(fileName)\"\r\n".utf8))
         body.append(Data("Content-Type: audio/m4a\r\n\r\n".utf8))
         body.append(audioData)
+        // #204.2: a backend without the field ignores the extra form part.
+        if let rejected = RejectedTranscripts.formValue(rejectedTranscripts) {
+            body.append(Data("\r\n--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"rejected_transcripts\"\r\n\r\n".utf8))
+            body.append(Data(rejected.utf8))
+        }
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
 
         request.httpBody = body

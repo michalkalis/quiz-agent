@@ -37,6 +37,10 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// #204.9: the voice-settings experiment; nil when the server has none or
     /// sent something unreadable, and then every switch stays manual.
     let voiceExperiment: VoiceExperimentConfig?
+    /// #205: the daily challenge card on Home. Off unless the server says on,
+    /// also in `permissive`: a missing key must never show a card whose
+    /// endpoints answer 404.
+    let dailyChallengeEnabled: Bool
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -52,6 +56,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case ordersEnabled = "orders_enabled"
         case notice
         case voiceExperiment = "voice_experiment"
+        case dailyChallengeEnabled = "daily_challenge_enabled"
     }
 
     init(
@@ -59,13 +64,15 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         minVersionTestflight: String?,
         ordersEnabled: Bool,
         notice: Notice?,
-        voiceExperiment: VoiceExperimentConfig? = nil
+        voiceExperiment: VoiceExperimentConfig? = nil,
+        dailyChallengeEnabled: Bool = false
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
         self.ordersEnabled = ordersEnabled
         self.notice = notice
         self.voiceExperiment = voiceExperiment
+        self.dailyChallengeEnabled = dailyChallengeEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -76,5 +83,6 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         notice = try container.decodeIfPresent(Notice.self, forKey: .notice)
         // Never the reason the rest of the config is lost.
         voiceExperiment = try? container.decodeIfPresent(VoiceExperimentConfig.self, forKey: .voiceExperiment)
+        dailyChallengeEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .dailyChallengeEnabled)) ?? false
     }
 }

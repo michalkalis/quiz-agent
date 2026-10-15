@@ -23,6 +23,9 @@ struct HomeView: View {
     /// #193 task 193.9: source of the server notice. Nil in inspector tests and
     /// previews, which then render Home without it.
     var appConfig: AppConfigStore?
+    /// #205: today's daily challenge. Nil (inspector tests, previews) — or the
+    /// server switch off — renders Home without the card.
+    var dailyChallenge: DailyChallengeViewModel?
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
@@ -40,6 +43,18 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(spacing: Theme.Hangs.Spacing.xl) {
+                    // #205.4: the daily challenge opens the page, above the quiz.
+                    if let appConfig, let dailyChallenge {
+                        HomeDailyChallengeSection(
+                            appConfig: appConfig,
+                            viewModel: dailyChallenge,
+                            language: Language.selectable(viewModel.settings.language).id,
+                            isStarting: viewModel.isStartingDailyChallenge,
+                            isStartDisabled: viewModel.quizState == .startingQuiz,
+                            onPlay: startDailyChallenge
+                        )
+                    }
+
                     if let appConfig {
                         AppNoticeBanner(store: appConfig)
                     }
@@ -125,6 +140,10 @@ struct HomeView: View {
 
     private func startPack(_ pack: PackPlay) {
         viewModel.beginQuizStart(pack: pack)
+    }
+
+    private func startDailyChallenge(_ day: DailyChallengeDay) {
+        viewModel.beginDailyChallenge(day: day)
     }
 
     private var createPackEntry: HomePacksSection.CreatePackEntry? {

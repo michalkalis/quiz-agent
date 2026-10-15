@@ -19,9 +19,11 @@ extension QuizViewModel {
     /// Play Again, Try Again and the spoken "znova": the same kind of set as
     /// the latest start, the same pack when it was one. These used to start
     /// the shared library, which dropped a driver out of the pack they chose.
+    /// A failed daily challenge start (#205) retries the daily challenge; its
+    /// round end offers no Play Again, and a played day answers with its result.
     @discardableResult
     func playAgain() -> Task<Void, Never> {
-        beginQuizStart(pack: activePack)
+        beginQuizStart(pack: activePack, daily: activeDaily?.day)
     }
 
     /// "Start over" on the played-through alert: forget the pack's progress,

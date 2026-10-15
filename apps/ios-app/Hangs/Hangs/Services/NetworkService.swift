@@ -68,6 +68,14 @@ protocol NetworkServiceProtocol: Sendable {
     /// #51: one batch of client analytics events. Callers fire and forget —
     /// a failure is theirs to drop, never to surface.
     func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws
+    /// #205: `GET /daily-challenge` — played or not, and the live crowd
+    /// numbers. `date` is the device's local calendar date (`YYYY-MM-DD`),
+    /// `language` the quiz language. 404 while the server switch is off.
+    func fetchDailyChallenge(date: String, language: String) async throws -> DailyChallengeState
+    /// #205: `POST /daily-challenge/start` — a session to play through the
+    /// usual `/sessions/{id}/start`, or no session when today's challenge is
+    /// already played (the state then carries the result).
+    func startDailyChallenge(date: String, language: String) async throws -> DailyStartResult
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -820,6 +828,48 @@ actor NetworkService: NetworkServiceProtocol {
         request.httpBody = try batch.encoded()
 
         try await performRequest(request, endpointPath: "/api/v1/analytics/events")
+    }
+
+    // MARK: - Daily challenge (#205)
+
+    func fetchDailyChallenge(date: String, language: String) async throws -> DailyChallengeState {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/daily-challenge"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        components.queryItems = [
+            URLQueryItem(name: "date", value: date),
+            URLQueryItem(name: "language", value: language),
+        ]
+        guard let url = components.url else { throw NetworkError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10
+
+        let data = try await performRequestData(request, endpointPath: "/api/v1/daily-challenge")
+        return try JSONDecoder().decode(DailyChallengeState.self, from: data)
+    }
+
+    func startDailyChallenge(date: String, language: String) async throws -> DailyStartResult {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/daily-challenge/start")
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // Same headers as createSession: the server builds an ordinary quiz
+        // session from this request.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+        request.setValue(Self.clientCapabilities, forHTTPHeaderField: "X-Client-Capabilities")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["date": date, "language": language])
+
+        let data = try await performRequestData(request, endpointPath: "/api/v1/daily-challenge/start")
+        return try await MainActor.run {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(DailyStartResult.self, from: data)
+        }
     }
 
     // MARK: - Helper Methods

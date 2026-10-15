@@ -526,6 +526,10 @@ final class AppState: ObservableObject {
                     )
                 )
             }
+            // #205: `--ui-test-daily-*` lands on a daily result or round end.
+            if UITestSupport.isUITesting {
+                DailyChallengeFixtures.seed(viewModel)
+            }
             // #190 store-screenshot mode: seed the named static scene (no timers
             // run, so no ticking pills) and preset the custom-pack topic.
             if StoreScreenshotFixtures.isActive {

@@ -161,6 +161,26 @@ import os
         /// concurrent syncs).
         var syncEntitlementsGate: (@Sendable () async -> Void)?
 
+        // MARK: #205 daily challenge (see +Daily)
+
+        /// What `fetchDailyChallenge` returns; nil = today not played yet.
+        var stubbedDailyState: DailyChallengeState?
+        /// When set, `fetchDailyChallenge` throws this.
+        var fetchDailyChallengeError: Error?
+        var fetchDailyChallengeCallCount = 0
+        var capturedDailyFetchDate: String?
+        var capturedDailyFetchLanguage: String?
+        /// What `startDailyChallenge` returns; nil = a session from `mockSession`.
+        var stubbedDailyStart: DailyStartResult?
+        /// When set, `startDailyChallenge` throws this.
+        var startDailyChallengeError: Error?
+        var startDailyChallengeCallCount = 0
+        var capturedDailyStartDate: String?
+        var capturedDailyStartLanguage: String?
+        /// UI-test mode: a scripted challenge the mock plays like the backend
+        /// (five questions, crowd strips, the result once it is played).
+        var dailyScript: DailyMockScript?
+
         func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions
@@ -209,9 +229,10 @@ import os
             return QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
         }
 
-        func startQuiz(sessionId _: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
+        func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
+            if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -268,7 +289,7 @@ import os
             if shouldFail { throw NetworkError.invalidResponse }
         }
 
-        func submitTextInput(sessionId _: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse {
+        func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse {
             submitTextInputCallCount += 1
             capturedTextInputAudio = audio
             capturedTextInputInput = input
@@ -289,6 +310,7 @@ import os
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
+            if let scripted = dailyScript?.answer(sessionId: sessionId, input: input) { return scripted }
             guard let response = mockTextInputResponse ?? mockResponse else {
                 throw NetworkError.invalidResponse
             }

@@ -3492,6 +3492,28 @@
         }
       }
     },
+    "Five questions. The same for everyone." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pět otázek. Stejné pro všechny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Five questions. The same for everyone."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päť otázok. Rovnaké pre všetkých."
+          }
+        }
+      }
+    },
     "Five simple words" : {
       "localizations" : {
         "cs" : {
@@ -6120,6 +6142,28 @@
         }
       }
     },
+    "Play today" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj dnešní výzvu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play today"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj dnešnú výzvu"
+          }
+        }
+      }
+    },
     "Playback failed" : {
       "comment" : "Audio error: audio could not be played back",
       "localizations" : {
@@ -6486,6 +6530,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázka %lld, nesprávne"
+          }
+        }
+      }
+    },
+    "Question %lld, not answered" : {
+      "comment" : "VoiceOver: one question of the daily challenge, not answered yet",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld, nezodpovězená"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Question %lld, not answered"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld, nezodpovedaná"
           }
         }
       }
@@ -10997,6 +11064,28 @@
         }
       }
     },
+    "daily challenge · %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "denní výzva · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "daily challenge · %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "denná výzva · %@"
+          }
+        }
+      }
+    },
     "developer" : {
       "localizations" : {
         "cs" : {
@@ -11790,6 +11879,28 @@
         }
       }
     },
+    "your best hit" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvůj nejlepší zásah"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your best hit"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoj najlepší zásah"
+          }
+        }
+      }
+    },
     "your feedback" : {
       "localizations" : {
         "cs" : {
@@ -11818,6 +11929,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tvoj plán"
+          }
+        }
+      }
+    },
+    "your rarest hit" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvůj nejvzácnější zásah"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your rarest hit"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoj najvzácnejší zásah"
           }
         }
       }

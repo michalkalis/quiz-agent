@@ -1,0 +1,25 @@
+# texts
+HOTOVO
+konečné skóre
+4
+z 5
+Lepšie skóre ako 2 z 3 hráčov.
+tvoj najvzácnejší zásah
+Libanon
+Ktorá krajina má na vlajke cédrový strom?
+Vedel to len 1 z 3.
+Zdieľaj
+Úvod
+Zdieľaj
+Úvod
+# identifiers
+daily.end
+daily.close
+daily.tiles
+daily.score
+daily.comparison
+daily.bestHit
+daily.share
+daily.home
+daily.share
+daily.home

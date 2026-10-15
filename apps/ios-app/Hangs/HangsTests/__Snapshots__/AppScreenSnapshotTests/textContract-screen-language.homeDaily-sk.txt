@@ -1,0 +1,66 @@
+# texts
+trubbo
+denná výzva · Oct 15
+Päť otázok. Rovnaké pre všetkých.
+Hraj dnešnú výzvu
+Kvíz
+History
+Science & Nature
+Geography & World
+10 otázok
+All Categories
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+Slovenčina
+Easy
+Medium
+Hard
+Random
+Náročnosť
+Medium
+Kategórie
+All Categories
+tvoj plán
+18
+z 30 otázok zadarmo
+Získaj Plus
+18
+z 30 otázok zadarmo
+Získaj Plus
+18
+z 30 otázok zadarmo
+Získaj Plus
+resets in 13 days
+resets in 13 days
+Štart
+# identifiers
+home.moreSettings
+home.daily
+home.daily.play
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
+home.freePlanUpgradeButton
+home.freePlanCard
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.freePlanReset
+home.freePlanReset
+home.startQuiz

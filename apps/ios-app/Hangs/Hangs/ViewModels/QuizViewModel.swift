@@ -91,7 +91,9 @@ extension QuizState {
     var validTransitions: Set<String> {
         switch self {
         case .idle: return ["startingQuiz"]
-        case .startingQuiz: return ["askingQuestion", "awaitingQuestion", "error", "idle"]
+        // "finished" is the #205 daily challenge already played today: the
+        // start returns its result instead of a session.
+        case .startingQuiz: return ["askingQuestion", "awaitingQuestion", "finished", "error", "idle"]
         // "finished" on askingQuestion/recording is the early-exit-with-results
         // path (founder 2026-08-03): X → "End & See Results" lands on the
         // score screen mid-question.
@@ -147,6 +149,10 @@ final class QuizViewModel: ObservableObject {
     /// alert; the quiz has NOT started while it is set. Written only by
     /// `QuizViewModel+PackProgress`.
     @Published var packRestartOffer: PackPlay?
+    /// #205: set while the round plays (or just played) the daily challenge;
+    /// the rules it changes are listed on `DailyRound`. Set by the start,
+    /// cleared by the next start and by every return Home.
+    @Published var activeDaily: DailyRound?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -1150,10 +1156,11 @@ final class QuizViewModel: ObservableObject {
         difficulty: String? = nil,
         language: String? = nil,
         pack: PackPlay? = nil,
+        daily: DailyChallengeDay? = nil,
         skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, skipAvailabilityCheck: skipAvailabilityCheck)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1170,11 +1177,14 @@ final class QuizViewModel: ObservableObject {
     /// `skipAvailabilityCheck` is set only by the "Start with N questions"
     /// button, which already knows the honest count — re-probing there would
     /// re-open the alert it just answered.
+    /// `daily` (#205) plays that day's challenge: the server picks the
+    /// questions and hands back the session (or, already played, the result).
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
         pack: PackPlay? = nil,
+        daily: DailyChallengeDay? = nil,
         skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
@@ -1189,7 +1199,7 @@ final class QuizViewModel: ObservableObject {
 
         let entryPoint = QuizEntryPoint(packId: pack?.packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
-        activePack = pack
+        activePack = daily == nil ? pack : nil
         packRestartOffer = nil
         errorMessage = nil
         #if DEBUG
@@ -1203,13 +1213,14 @@ final class QuizViewModel: ObservableObject {
         // #168 DD14: a stored preference for a language that is no longer
         // servable degrades to the default rather than 422-ing the start call.
         let quizLanguage = Language.selectable(language ?? settings.language).id
+        activeDaily = daily.map { DailyRound(day: $0, language: quizLanguage) }
 
         // #174: ask BEFORE promising a length. A set of 10 that ends after 3
         // (the corpus ran out of unseen questions and the backend quietly
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, !skipAvailabilityCheck,
+        if pack == nil, daily == nil, !skipAvailabilityCheck,
            let shortfall = await probeQuestionShortfall(
                requestedCount: quizMaxQuestions,
                difficulty: quizDifficulty,
@@ -1229,8 +1240,26 @@ final class QuizViewModel: ObservableObject {
             // #200: a pack excludes only what this phone played of it, so each
             // play continues with the next unplayed questions; the library
             // excludes the global history.
-            let excludedIds = pack.map { persistenceStore.playedPackQuestionIds(packId: $0.packId) }
+            // #205: the server fixes the daily set, so it excludes nothing.
+            let excludedIds = daily != nil ? []
+                : pack.map { persistenceStore.playedPackQuestionIds(packId: $0.packId) }
                 ?? persistenceStore.getExclusionList()
+
+            // #205: the daily start comes first. Already played today, it
+            // returns the result and no session: the round end shows it, and
+            // nothing below (audio session, mic) is touched.
+            var dailySession: QuizSession?
+            if let daily {
+                let result = try await withTransientStartRetry {
+                    try await networkService.startDailyChallenge(date: daily.isoDate, language: quizLanguage)
+                }
+                activeDaily?.state = result.state
+                guard let session = result.session else {
+                    transition(to: .finished)
+                    return
+                }
+                dailySession = session
+            }
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
 
@@ -1284,16 +1313,21 @@ final class QuizViewModel: ObservableObject {
             // theoretically orphan a session, but the retry stays bounded
             // (`TransientRetry.retryWindow`) and sessions expire, so the risk is
             // accepted.
-            let session = try await withTransientStartRetry {
-                try await networkService.createSession(
-                    maxQuestions: quizMaxQuestions,
-                    difficulty: quizDifficulty,
-                    language: quizLanguage,
-                    categories: settings.categories,
-                    userId: persistenceStore.deviceId,
-                    includeImages: settings.includeImageQuestions,
-                    packId: pack?.packId
-                )
+            let session: QuizSession
+            if let dailySession {
+                session = dailySession
+            } else {
+                session = try await withTransientStartRetry {
+                    try await networkService.createSession(
+                        maxQuestions: quizMaxQuestions,
+                        difficulty: quizDifficulty,
+                        language: quizLanguage,
+                        categories: settings.categories,
+                        userId: persistenceStore.deviceId,
+                        includeImages: settings.includeImageQuestions,
+                        packId: pack?.packId
+                    )
+                }
             }
 
             currentSession = session
@@ -1761,7 +1795,7 @@ final class QuizViewModel: ObservableObject {
             errorMessage = nil
         default:
             // Fallback to starting new quiz — the same pack, if it was one (#200).
-            await startNewQuiz(pack: activePack)
+            await startNewQuiz(pack: activePack, daily: activeDaily?.day)
         }
     }
 
@@ -2305,6 +2339,11 @@ final class QuizViewModel: ObservableObject {
             return
         }
 
+        // #205: the crowd strip belongs to this question's result card.
+        if let crowd = response.crowd {
+            activeDaily?.crowds[question.id] = crowd
+        }
+
         // Update quiz stats (streak tracking)
         if evaluation.result != .skipped {
             streakBeforeLastAnswer = quizStats.currentStreak
@@ -2360,7 +2399,7 @@ final class QuizViewModel: ObservableObject {
         // isProcessingResponse through the next question's TTS would drop a
         // fast tap-answer on that question.
         let resultOwner = currentAttempt
-        if settings.answerRevealMode == .endOfSet {
+        if answerRevealMode == .endOfSet {
             taskBag.add(Task { [weak self] in
                 guard let self, self.attemptLedger.ownsQuestion(resultOwner, "deferredAdvance") else { return }
                 await self.advanceToNextQuestionOrFinish()
@@ -2487,7 +2526,9 @@ final class QuizViewModel: ObservableObject {
         // mic stayed hot on the results and the recap played over a running
         // engine. Down before the session goes, like `endQuizWithResults`.
         audioDeviceState.stopSilenceDetectionListening()
-        if endsOnRecap {
+        // #205: the daily round end has no "again" to listen for and says
+        // nothing (the crowd lines rode the answers' feedback).
+        if endsOnRecap || activeDaily != nil {
             // Release the audio session so Spotify/podcasts resume full volume.
             audioService.deactivateSession()
         } else {
@@ -2503,7 +2544,14 @@ final class QuizViewModel: ObservableObject {
     /// Whether `.finished` shows the end-of-set recap (which narrates itself)
     /// rather than the score screen — the same test ContentView routes on.
     var endsOnRecap: Bool {
-        settings.answerRevealMode == .endOfSet && !recapEntries.isEmpty
+        answerRevealMode == .endOfSet && !recapEntries.isEmpty
+    }
+
+    /// The reveal this round uses: the setting, except that the daily
+    /// challenge (#205) always reveals per question — its crowd strip lives on
+    /// the result card.
+    var answerRevealMode: AnswerRevealMode {
+        activeDaily == nil ? settings.answerRevealMode : .perQuestion
     }
 
     /// #189: a submit, skip or re-answer came back `session_finished` — the set
@@ -2661,6 +2709,7 @@ final class QuizViewModel: ObservableObject {
         sessionCorrectCount = 0
         sessionIncorrectCount = 0
         recapEntries = []
+        activeDaily = nil
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil

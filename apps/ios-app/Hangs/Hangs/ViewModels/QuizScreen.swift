@@ -16,6 +16,8 @@ enum QuizScreen: Equatable {
     /// #132 E: an end-of-set reveal ends on the recap, not the score screen.
     case setRecap
     case completion
+    /// #205: the daily challenge's own round end (score, the crowd, best hit).
+    case dailyEnd
     case error(AppErrorModel)
 }
 
@@ -35,7 +37,9 @@ extension QuizViewModel {
             return .result
         // #132 E: deferred reveal ends on the recap; an empty recap degrades to
         // the score screen (`endsOnRecap` requires entries).
+        // #205: a daily round always ends on its own round end.
         case .finished:
+            if activeDaily != nil { return .dailyEnd }
             return endsOnRecap ? .setRecap : .completion
         // `activeErrorModel` is built by setError (localised copy + context-correct
         // CTA — 54.15); the context fallback covers direct transitions.

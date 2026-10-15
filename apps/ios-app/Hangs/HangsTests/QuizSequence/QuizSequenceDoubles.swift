@@ -322,6 +322,14 @@ final class SequenceNetwork: NetworkServiceProtocol {
 
     func postAnalyticsEvents(_: AnalyticsBatch) async throws {}
 
+    func fetchDailyChallenge(date _: String, language _: String) async throws -> DailyChallengeState {
+        throw NetworkError.invalidResponse // the harness never plays the daily challenge
+    }
+
+    func startDailyChallenge(date _: String, language _: String) async throws -> DailyStartResult {
+        throw NetworkError.invalidResponse
+    }
+
     func getUsage() async throws -> UsageInfo {
         UsageInfo(
             userId: "harness", isPremium: true, questionsUsed: 0, questionsLimit: nil, remaining: nil,

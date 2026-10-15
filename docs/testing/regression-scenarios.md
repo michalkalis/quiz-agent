@@ -73,6 +73,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-20 | `RSPaywallTests.testRS20…` | Restore with nothing → `paywall.nothingToRestore` |
 | RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
 | RS-24 | `RSPackTests.testRS24…` (+ unit `PackProgressTests`) | alert buttons matched by label (system alert) |
+| RS-25 | `RSDailyChallengeTests.testRS25…` (+ unit `QuizViewModelDailyChallengeTests`) | scripted mock challenge (`DailyChallengeFixtures`), questions skipped |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -671,6 +672,26 @@ mock's delivered pack marked played); tap `home.myPacks.play`; tap
 **Asserts:** `home.myPacks.progress` present; the alert appears and no
 question is on screen behind it; after "Start over" `question.text` appears.
 App alive.
+
+---
+
+## RS-25: The daily challenge plays through to its own round end
+
+**Type:** XCUITest (`RSDailyChallengeTests`). #205 (daily challenge: player vs the crowd).
+
+**Hypothesis:** The daily challenge plays through the ordinary quiz screens,
+shows the crowd strip only on the answers the server sent one for, ends on
+its own round end (Share + Home, never Play Again), and back on Home the day
+shows as played instead of being offered again.
+
+**Steps:** launch with `--ui-test-daily-home` (server switch on, a scripted
+five-question challenge on the mocks); tap `home.daily.play`; skip each of
+the five questions and continue from each result; tap `daily.home`.
+
+**Asserts:** `result.crowd` present on results 3 and 4, absent on 1, 2 and 5;
+`daily.end`, `daily.tiles` and `daily.share` present, `completion.playAgain`
+absent; back Home `home.daily.open` present and `home.daily.play` gone. App
+alive.
 
 ---
 

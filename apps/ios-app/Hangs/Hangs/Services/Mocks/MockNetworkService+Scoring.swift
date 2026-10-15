@@ -74,7 +74,8 @@ import Foundation
                 evaluation: evaluation,
                 feedbackReceived: template.feedbackReceived,
                 audio: template.audio,
-                awaitingQuestion: template.awaitingQuestion
+                awaitingQuestion: template.awaitingQuestion,
+                crowd: template.crowd
             )
         }
     }

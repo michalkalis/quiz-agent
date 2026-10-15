@@ -179,6 +179,7 @@ struct ResultView: View {
                     explanation: explanationText,
                     userAnswer: metaUserAnswer,
                     style: cardStyle,
+                    crowd: viewModel.resultCrowd,
                     onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
                 // Rank 3 — the source, small, last.
